@@ -1,11 +1,11 @@
-import { ICircuitBreaker } from "@lindorm/breaker";
-import { SessionOptions } from "../classes/ProteusSource";
-import { IProteusRepositoryProvider } from "./ProteusRepositoryProvider";
-import { IProteusSession } from "./ProteusSession";
-import { EntityScannerInput, ProteusSourceEventMap } from "../types";
-import type { EntityMetadata } from "../internal/entity/types/metadata";
+import type { ICircuitBreaker } from "@lindorm/breaker";
+import type { SessionOptions } from "../classes/ProteusSource.js";
+import type { IProteusRepositoryProvider } from "./ProteusRepositoryProvider.js";
+import type { IProteusSession } from "./ProteusSession.js";
+import type { EntityScannerInput, ProteusSourceEventMap } from "../types/index.js";
+import type { EntityMetadata } from "../internal/entity/types/metadata.js";
 
-export { FilterRegistry, FilterRegistryEntry } from "./ProteusRepositoryProvider";
+export type { FilterRegistry, FilterRegistryEntry } from "./ProteusRepositoryProvider.js";
 
 export interface IProteusSource<C = unknown> extends IProteusRepositoryProvider<C> {
   readonly migrationsTable: string | undefined;

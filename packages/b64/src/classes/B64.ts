@@ -1,5 +1,5 @@
-import { Base64Encoding } from "../types";
-import { decode, encodeBase64, encodeBase64Url } from "../internal/index";
+import type { Base64Encoding } from "../types/index.js";
+import { decode, encodeBase64, encodeBase64Url } from "../internal/index.js";
 
 export class B64 {
   public static encode(

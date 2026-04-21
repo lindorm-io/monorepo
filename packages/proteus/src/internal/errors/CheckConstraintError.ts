@@ -1,1 +1,1 @@
-export { CheckConstraintError } from "../../errors/CheckConstraintError";
+export { CheckConstraintError } from "../../errors/CheckConstraintError.js";

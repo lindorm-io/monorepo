@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { MemoryTable } from "../types/memory-store";
-import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { MemoryTable } from "../types/memory-store.js";
+import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
 
 export const checkUniqueConstraints = (
   table: MemoryTable,

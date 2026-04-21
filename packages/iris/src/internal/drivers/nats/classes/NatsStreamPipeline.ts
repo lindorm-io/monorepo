@@ -1,18 +1,18 @@
 import { randomUUID } from "@lindorm/random";
-import type { NatsSharedState } from "../types/nats-types";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic";
-import { resolveSubject } from "../utils/resolve-subject";
-import { serializeNatsMessage } from "../utils/serialize-nats-message";
-import { parseNatsMessage } from "../utils/parse-nats-message";
-import { createNatsConsumer } from "../utils/create-nats-consumer";
-import { stopNatsConsumer } from "../utils/stop-nats-consumer";
+import type { NatsSharedState } from "../types/nats-types.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import { resolveSubject } from "../utils/resolve-subject.js";
+import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
+import { parseNatsMessage } from "../utils/parse-nats-message.js";
+import { createNatsConsumer } from "../utils/create-nats-consumer.js";
+import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
-} from "../../../classes/DriverStreamPipelineBase";
+} from "../../../classes/DriverStreamPipelineBase.js";
 
 export type NatsStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
   state: NatsSharedState;

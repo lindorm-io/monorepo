@@ -1,5 +1,5 @@
-import { EcAlgorithm, EcBuffer, EcCurve, EcJwk, EcString } from "../types";
-import { IKryptos } from "./Kryptos";
+import type { EcAlgorithm, EcBuffer, EcCurve, EcJwk, EcString } from "../types/index.js";
+import type { IKryptos } from "./Kryptos.js";
 
 export interface IKryptosEc extends IKryptos {
   algorithm: EcAlgorithm;

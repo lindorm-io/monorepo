@@ -1,7 +1,7 @@
-import { PkceMethod } from "@lindorm/types";
-import { PkceResult } from "../types";
-import { createBaseHash } from "./create-base-hash";
-import { randomBaseString } from "./random-base-string";
+import type { PkceMethod } from "@lindorm/types";
+import type { PkceResult } from "../types/index.js";
+import { createBaseHash } from "./create-base-hash.js";
+import { randomBaseString } from "./random-base-string.js";
 
 export const createPkce = (method: PkceMethod, length: number): PkceResult => {
   const verifier = randomBaseString(length);

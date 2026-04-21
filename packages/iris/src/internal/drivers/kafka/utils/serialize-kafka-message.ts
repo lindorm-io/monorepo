@@ -1,5 +1,5 @@
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import type { KafkaMessage } from "../types/kafka-types";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import type { KafkaMessage } from "../types/kafka-types.js";
 
 export const serializeKafkaMessage = (envelope: IrisEnvelope): KafkaMessage => {
   const headers: Record<string, string> = {

@@ -1,5 +1,5 @@
-import type { DiscriminatorValue as DiscriminatorValueType } from "../internal/entity/types/inheritance";
-import { stageDiscriminatorValue } from "../internal/entity/metadata/stage-metadata";
+import type { DiscriminatorValue as DiscriminatorValueType } from "../internal/entity/types/inheritance.js";
+import { stageDiscriminatorValue } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Specify the discriminator value for this subtype in a table inheritance hierarchy.

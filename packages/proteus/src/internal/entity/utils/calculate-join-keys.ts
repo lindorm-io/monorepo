@@ -1,6 +1,6 @@
 import { camelCase, snakeCase } from "@lindorm/case";
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata } from "../types/metadata";
+import type { EntityMetadata } from "../types/metadata.js";
 
 export const calculateJoinKeys = (
   relation: { key: string },

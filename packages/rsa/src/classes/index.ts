@@ -1,1 +1,1 @@
-export * from "./RsaKit";
+export * from "./RsaKit.js";

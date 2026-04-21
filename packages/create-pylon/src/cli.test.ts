@@ -1,33 +1,33 @@
-vi.mock("./prompts", async () => ({ runPrompts: vi.fn() }));
-vi.mock("./scaffold", () => ({
+vi.mock("./prompts.js", async () => ({ runPrompts: vi.fn() }));
+vi.mock("./scaffold.js", () => ({
   scaffold: vi.fn(),
   buildDependencyList: vi.fn(() => []),
   buildDevDependencyList: vi.fn(() => []),
 }));
-vi.mock("./install", () => ({
+vi.mock("./install.js", () => ({
   installDependencies: vi.fn(),
   installDevDependencies: vi.fn(),
 }));
-vi.mock("./git", () => ({ initGit: vi.fn() }));
-vi.mock("./drivers", () => ({
+vi.mock("./git.js", () => ({ initGit: vi.fn() }));
+vi.mock("./drivers.js", () => ({
   runProteusInit: vi.fn(),
   runProteusGenerateSampleEntity: vi.fn(),
   runIrisInit: vi.fn(),
   runIrisGenerateSampleMessage: vi.fn(),
 }));
 
-import { runPrompts } from "./prompts";
-import { scaffold } from "./scaffold";
-import { installDependencies, installDevDependencies } from "./install";
-import { initGit } from "./git";
+import { runPrompts } from "./prompts.js";
+import { scaffold } from "./scaffold.js";
+import { installDependencies, installDevDependencies } from "./install.js";
+import { initGit } from "./git.js";
 import {
   runIrisGenerateSampleMessage,
   runIrisInit,
   runProteusGenerateSampleEntity,
   runProteusInit,
-} from "./drivers";
-import { run } from "./cli";
-import type { Answers } from "./types";
+} from "./drivers.js";
+import { run } from "./cli.js";
+import type { Answers } from "./types.js";
 import {
   afterEach,
   beforeEach,

@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { IPylonSession } from "../../../interfaces";
+import type { IPylonSession } from "../../../interfaces/index.js";
 
 export function assertSessionStillValid(
   session: IPylonSession | null | undefined,

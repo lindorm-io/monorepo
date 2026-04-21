@@ -11,20 +11,20 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import mysql from "mysql2/promise";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../interfaces";
-import { mockScannerImport } from "../../__fixtures__/mock-scanner-import";
-import { ProteusSource } from "../../classes/ProteusSource";
-import { MySqlMigrationManager } from "../drivers/mysql/classes/MySqlMigrationManager";
-import type { MysqlQueryClient } from "../drivers/mysql/types/mysql-query-client";
-import { getEntityMetadata } from "../entity/metadata/get-entity-metadata";
+import type { IEntity } from "../../interfaces/index.js";
+import { mockScannerImport } from "../../__fixtures__/mock-scanner-import.js";
+import { ProteusSource } from "../../classes/ProteusSource.js";
+import { MySqlMigrationManager } from "../drivers/mysql/classes/MySqlMigrationManager.js";
+import type { MysqlQueryClient } from "../drivers/mysql/types/mysql-query-client.js";
+import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
 import {
   createMigrationTckEntities,
   type MigrationTckEntities,
-} from "../__fixtures__/tck/create-migration-tck-entities";
+} from "../__fixtures__/tck/create-migration-tck-entities.js";
 import {
   migrationsSuite,
   type MigrationTckContext,
-} from "../__fixtures__/tck/migrations.tck";
+} from "../__fixtures__/tck/migrations.tck.js";
 
 mockScannerImport();
 

@@ -1,5 +1,9 @@
-import { KryptosError } from "../../../errors";
-import { KryptosAlgorithm, KryptosEncryption, OctSize } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type {
+  KryptosAlgorithm,
+  KryptosEncryption,
+  OctSize,
+} from "../../../types/index.js";
 
 type Options = {
   algorithm: KryptosAlgorithm;

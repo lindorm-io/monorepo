@@ -1,14 +1,14 @@
 import { createCipheriv, CipherGCM, randomBytes } from "crypto";
 import { FlattenedEncrypt, flattenedDecrypt } from "jose";
-import { encryptAes, decryptAes } from "../src/internal/utils/encryption";
-import { createHmacAuthTag } from "../src/internal/utils/data/auth-tag-hmac";
-import { splitContentEncryptionKey } from "../src/internal/utils/data/split-content-encryption-key";
-import { toUint8Array } from "./helpers/buffer-utils";
+import { encryptAes, decryptAes } from "../src/internal/utils/encryption.js";
+import { createHmacAuthTag } from "../src/internal/utils/data/auth-tag-hmac.js";
+import { splitContentEncryptionKey } from "../src/internal/utils/data/split-content-encryption-key.js";
+import { toUint8Array } from "./helpers/buffer-utils.js";
 import {
   buildProtectedHeader,
   toFlattenedJWE,
   fromFlattenedJWE,
-} from "./helpers/jwe-adapter";
+} from "./helpers/jwe-adapter.js";
 import {
   RAW_KEY_128,
   RAW_KEY_192,
@@ -20,7 +20,7 @@ import {
   KEK_192,
   KEK_256,
   createOctKryptos,
-} from "./fixtures/keys";
+} from "./fixtures/keys.js";
 import { describe, expect, test } from "vitest";
 
 const PLAINTEXT = "hello jose interop";
@@ -287,7 +287,7 @@ describe("jose JWE interop: A*GCMKW + AES-GCM", () => {
       // We can recover the CEK by unwrapping the encrypted_key.
       const unwrapKryptos = createOctKryptos(kek, alg, enc);
       const { contentEncryptionKey } = (
-        await import("../src/internal/utils/key-wrap/gcm-key-wrap")
+        await import("../src/internal/utils/key-wrap/gcm-key-wrap.js")
       ).gcmKeyUnwrap({
         keyEncryptionKey: kek,
         kryptos: unwrapKryptos,

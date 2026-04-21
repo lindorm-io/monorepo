@@ -1,4 +1,4 @@
-import { Constructor } from "@lindorm/types";
+import type { Constructor } from "@lindorm/types";
 
 export type PylonSubscribeOptions = {
   topic: string;

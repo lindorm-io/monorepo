@@ -1,4 +1,7 @@
-import type { CircuitBreakerState, StateChangeListener } from "../types/circuit-breaker";
+import type {
+  CircuitBreakerState,
+  StateChangeListener,
+} from "../types/circuit-breaker.js";
 
 export interface ICircuitBreaker {
   readonly name: string;

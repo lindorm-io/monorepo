@@ -1,4 +1,4 @@
-import { generateTokenId } from "./generate-token-id";
+import { generateTokenId } from "./generate-token-id.js";
 import { describe, expect, test } from "vitest";
 
 describe("generateTokenId", () => {

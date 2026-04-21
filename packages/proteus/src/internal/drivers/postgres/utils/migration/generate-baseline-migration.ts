@@ -1,24 +1,24 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import type {
   SerializedMigration,
   SerializeMigrationOptions,
-} from "./serialize-migration";
-import type { MigrationTableOptions } from "../../types/migration";
-import { computeHash } from "../../../../utils/migration/compute-hash";
-import { loadMigrations } from "./load-migrations";
-import { introspectSchema } from "../sync/introspect-schema";
-import { projectDesiredSchema } from "../sync/project-desired-schema";
-import { diffSchema } from "../sync/diff-schema";
-import { serializeMigration } from "./serialize-migration";
-import { writeMigrationFile } from "./write-migration-file";
+} from "./serialize-migration.js";
+import type { MigrationTableOptions } from "../../types/migration.js";
+import { computeHash } from "../../../../utils/migration/compute-hash.js";
+import { loadMigrations } from "./load-migrations.js";
+import { introspectSchema } from "../sync/introspect-schema.js";
+import { projectDesiredSchema } from "../sync/project-desired-schema.js";
+import { diffSchema } from "../sync/diff-schema.js";
+import { serializeMigration } from "./serialize-migration.js";
+import { writeMigrationFile } from "./write-migration-file.js";
 import {
   ensureMigrationTable,
   insertMigrationRecord,
   markMigrationFinished,
-} from "./migration-table";
+} from "./migration-table.js";
 
 export type GenerateBaselineMigrationOptions = {
   name?: string;

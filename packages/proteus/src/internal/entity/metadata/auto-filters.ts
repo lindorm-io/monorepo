@@ -1,5 +1,5 @@
-import type { MetaInheritance } from "../types/inheritance";
-import type { MetaField, MetaFilter } from "../types/metadata";
+import type { MetaInheritance } from "../types/inheritance.js";
+import type { MetaField, MetaFilter } from "../types/metadata.js";
 
 /**
  * System filter name for soft-delete.

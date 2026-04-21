@@ -1,8 +1,8 @@
-import { ReadableTime } from "@lindorm/date";
-import { ILogger } from "@lindorm/logger";
-import { RetryOptions } from "@lindorm/retry";
-import { LindormWorkerCallback, LindormWorkerErrorCallback } from "./context";
-import { LindormWorkerListenerConfig } from "./listener";
+import type { ReadableTime } from "@lindorm/date";
+import type { ILogger } from "@lindorm/logger";
+import type { RetryOptions } from "@lindorm/retry";
+import type { LindormWorkerCallback, LindormWorkerErrorCallback } from "./context.js";
+import type { LindormWorkerListenerConfig } from "./listener.js";
 
 export type LindormWorkerConfig = {
   alias: string;

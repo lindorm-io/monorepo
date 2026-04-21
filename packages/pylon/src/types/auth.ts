@@ -1,6 +1,6 @@
-import { ReadableTime } from "@lindorm/date";
-import { PkceMethod } from "@lindorm/types";
-import {
+import type { ReadableTime } from "@lindorm/date";
+import type { PkceMethod } from "@lindorm/types";
+import type {
   DeepPartial,
   OpenIdPromptMode,
   OpenIdResponseType,

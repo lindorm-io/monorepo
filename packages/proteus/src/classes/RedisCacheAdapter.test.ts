@@ -1,4 +1,4 @@
-import { RedisCacheAdapter } from "./RedisCacheAdapter";
+import { RedisCacheAdapter } from "./RedisCacheAdapter.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────

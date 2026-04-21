@@ -6,15 +6,15 @@
 
 import { randomUUID } from "@lindorm/random";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../interfaces";
-import { IrisSource } from "../../../classes/IrisSource";
-import { Field } from "../../../decorators/Field";
-import { Message } from "../../../decorators/Message";
-import { Retry } from "../../../decorators/Retry";
-import { DeadLetter } from "../../../decorators/DeadLetter";
-import { Expiry } from "../../../decorators/Expiry";
-import { Topic } from "../../../decorators/Topic";
-import type { RabbitDriver } from "./classes/RabbitDriver";
+import type { IMessage } from "../../../interfaces/index.js";
+import { IrisSource } from "../../../classes/IrisSource.js";
+import { Field } from "../../../decorators/Field.js";
+import { Message } from "../../../decorators/Message.js";
+import { Retry } from "../../../decorators/Retry.js";
+import { DeadLetter } from "../../../decorators/DeadLetter.js";
+import { Expiry } from "../../../decorators/Expiry.js";
+import { Topic } from "../../../decorators/Topic.js";
+import type { RabbitDriver } from "./classes/RabbitDriver.js";
 import { afterAll, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 30_000 });

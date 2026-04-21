@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
-import { stageHook } from "../internal/entity/metadata/stage-metadata";
-import type { HookCallback } from "../types";
+import { stageHook } from "../internal/entity/metadata/stage-metadata.js";
+import type { HookCallback } from "../types/index.js";
 
 /**
  * Register a callback that fires after a soft-deleted entity is restored.

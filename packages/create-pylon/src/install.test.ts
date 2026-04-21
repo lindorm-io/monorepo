@@ -7,7 +7,7 @@ vi.mock("cross-spawn", async () => ({
 }));
 
 import spawn from "cross-spawn";
-import { installDependencies, installDevDependencies } from "./install";
+import { installDependencies, installDevDependencies } from "./install.js";
 
 const mockedSpawn = spawn as unknown as Mock;
 

@@ -1,14 +1,14 @@
 import {
   Conduit,
-  ConduitMiddleware,
-  ConduitOptions,
+  type ConduitMiddleware,
+  type ConduitOptions,
   conduitChangeResponseDataMiddleware,
   conduitCorrelationMiddleware,
   conduitSessionMiddleware,
 } from "@lindorm/conduit";
 import { ServerError } from "@lindorm/errors";
 import { isArray } from "@lindorm/is";
-import { PylonContext, PylonMiddleware } from "../../types";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type Options = Omit<ConduitOptions, "alias" | "baseUrl" | "logger"> & {
   alias: string;

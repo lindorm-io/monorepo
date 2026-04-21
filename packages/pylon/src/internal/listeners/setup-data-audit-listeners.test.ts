@@ -1,4 +1,4 @@
-import { setupDataAuditListeners } from "./setup-data-audit-listeners";
+import { setupDataAuditListeners } from "./setup-data-audit-listeners.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 class AuditedEntity {}

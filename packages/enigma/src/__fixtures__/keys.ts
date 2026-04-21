@@ -1,4 +1,4 @@
-import { IKryptosOct, KryptosFromString, KryptosKit } from "@lindorm/kryptos";
+import { type IKryptosOct, type KryptosFromString, KryptosKit } from "@lindorm/kryptos";
 
 const OCT: KryptosFromString = {
   id: "ff589ac2-061a-5930-9b10-9b515a91cc4b",

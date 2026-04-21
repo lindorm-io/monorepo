@@ -1,17 +1,17 @@
-import { KryptosError } from "../../errors";
-import {
+import { KryptosError } from "../../errors/index.js";
+import type {
   KryptosAlgorithm,
   KryptosCertificateOption,
   KryptosCurve,
   KryptosType,
   KryptosUse,
   X509SubjectAltNameInput,
-} from "../../types";
-import { computeSpkiKeyIdentifier } from "./x509/compute-spki-key-identifier";
-import { X509KeyUsageFlag } from "./x509/encode-extensions";
-import { X509NameInput } from "./x509/encode-name";
-import { generateX509Certificate } from "./x509/generate-x509";
-import { resolveSignAlgorithmForCert } from "./resolve-sign-algorithm";
+} from "../../types/index.js";
+import { computeSpkiKeyIdentifier } from "./x509/compute-spki-key-identifier.js";
+import type { X509KeyUsageFlag } from "./x509/encode-extensions.js";
+import type { X509NameInput } from "./x509/encode-name.js";
+import { generateX509Certificate } from "./x509/generate-x509.js";
+import { resolveSignAlgorithmForCert } from "./resolve-sign-algorithm.js";
 
 type StampInput = {
   certificate: KryptosCertificateOption;

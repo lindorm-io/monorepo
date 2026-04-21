@@ -1,4 +1,4 @@
-import { resolveConsumerName } from "./resolve-consumer-name";
+import { resolveConsumerName } from "./resolve-consumer-name.js";
 import { describe, expect, it } from "vitest";
 
 describe("resolveConsumerName", () => {

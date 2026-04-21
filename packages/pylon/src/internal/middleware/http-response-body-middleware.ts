@@ -1,7 +1,7 @@
 import { changeKeys } from "@lindorm/case";
 import { isArray, isObject } from "@lindorm/is";
 import { Stream } from "stream";
-import { PylonHttpMiddleware } from "../../types";
+import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const httpResponseBodyMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   try {

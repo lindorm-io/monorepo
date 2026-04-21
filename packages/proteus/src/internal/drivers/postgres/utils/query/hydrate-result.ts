@@ -1,13 +1,13 @@
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { IncludeSpec } from "../../../../types/query";
-import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity";
-import type { HydrateOptions } from "../../../../entity/utils/default-hydrate-entity";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import type { AliasMap } from "./compile-select";
-import { extractFieldDictFromAliased } from "./extract-field-dict";
-import { getRelationMetadata } from "./get-relation-metadata";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec } from "../../../../types/query.js";
+import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity.js";
+import type { HydrateOptions } from "../../../../entity/utils/default-hydrate-entity.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import type { AliasMap } from "./compile-select.js";
+import { extractFieldDictFromAliased } from "./extract-field-dict.js";
+import { getRelationMetadata } from "./get-relation-metadata.js";
 
 type IncludeInfo = {
   inc: IncludeSpec;

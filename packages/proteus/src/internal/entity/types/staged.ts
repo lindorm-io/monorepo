@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import type { z } from "zod";
-import type { IEntity } from "../../../interfaces";
-import type { DiscriminatorValue, InheritanceStrategy } from "./inheritance";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { DiscriminatorValue, InheritanceStrategy } from "./inheritance.js";
 import type {
   EmbeddedListLoadingScope,
   MetaCheck,
@@ -23,7 +23,7 @@ import type {
   RelationDestroy,
   RelationLoading,
   RelationOrphan,
-} from "./metadata";
+} from "./metadata.js";
 
 export type StagedRelation = {
   key: string;

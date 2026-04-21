@@ -1,6 +1,6 @@
-import { encodeSequence } from "./containers";
-import { encodeInteger } from "./primitives";
-import { readTlv } from "./walker";
+import { encodeSequence } from "./containers.js";
+import { encodeInteger } from "./primitives.js";
+import { readTlv } from "./walker.js";
 import { describe, expect, test } from "vitest";
 
 describe("readTlv", () => {

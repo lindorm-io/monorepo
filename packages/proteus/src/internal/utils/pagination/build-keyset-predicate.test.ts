@@ -1,4 +1,4 @@
-import { buildKeysetPredicate } from "./build-keyset-predicate";
+import { buildKeysetPredicate } from "./build-keyset-predicate.js";
 import { describe, expect, it } from "vitest";
 
 describe("buildKeysetPredicate", () => {

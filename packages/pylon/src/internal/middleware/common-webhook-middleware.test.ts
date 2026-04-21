@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createWebhookMiddleware } from "./common-webhook-middleware";
+import { createWebhookMiddleware } from "./common-webhook-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createWebhookMiddleware", () => {

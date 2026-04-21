@@ -1,5 +1,5 @@
-import { CorsOptions } from "../../types";
-import { createHttpCorsMiddleware } from "./http-cors-middleware";
+import type { CorsOptions } from "../../types/index.js";
+import { createHttpCorsMiddleware } from "./http-cors-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpCorsMiddleware", () => {

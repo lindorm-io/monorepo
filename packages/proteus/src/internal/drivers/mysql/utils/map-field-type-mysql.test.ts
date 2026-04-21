@@ -1,6 +1,6 @@
-import { makeField } from "../../../__fixtures__/make-field";
-import { ProteusError } from "../../../../errors";
-import { mapFieldTypeMysql } from "./map-field-type-mysql";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import { ProteusError } from "../../../../errors/index.js";
+import { mapFieldTypeMysql } from "./map-field-type-mysql.js";
 import { describe, expect, test } from "vitest";
 
 describe("mapFieldTypeMysql", () => {

@@ -1,13 +1,13 @@
 import { randomUUID } from "@lindorm/random";
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions, SubscribeOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { MemorySharedState } from "../types/memory-store";
-import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase";
-import { publishMessages } from "../utils/publish-messages";
-import { wrapConsumerCallback } from "../utils/wrap-consumer-callback";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { MemorySharedState } from "../types/memory-store.js";
+import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase.js";
+import { publishMessages } from "../utils/publish-messages.js";
+import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
 export type MemoryMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
   store: MemorySharedState;

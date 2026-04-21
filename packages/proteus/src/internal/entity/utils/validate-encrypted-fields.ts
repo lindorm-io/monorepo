@@ -1,6 +1,6 @@
 import type { IAmphora } from "@lindorm/amphora";
-import { ProteusError } from "../../../errors";
-import type { EntityMetadata } from "../types/metadata";
+import { ProteusError } from "../../../errors/index.js";
+import type { EntityMetadata } from "../types/metadata.js";
 
 const SYSTEM_DECORATORS = new Set([
   "Version",

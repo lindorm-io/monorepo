@@ -1,7 +1,10 @@
-import { MySqlMigrationError } from "../../errors/MySqlMigrationError";
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
-import type { MigrationRecord, MysqlMigrationTableOptions } from "../../types/migration";
-import { quoteIdentifier } from "../quote-identifier";
+import { MySqlMigrationError } from "../../errors/MySqlMigrationError.js";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
+import type {
+  MigrationRecord,
+  MysqlMigrationTableOptions,
+} from "../../types/migration.js";
+import { quoteIdentifier } from "../quote-identifier.js";
 
 const getQuotedTable = (options?: MysqlMigrationTableOptions): string =>
   quoteIdentifier(options?.table ?? "proteus_migrations");

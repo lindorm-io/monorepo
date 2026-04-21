@@ -1,5 +1,5 @@
-import type { IDelayStore } from "../../interfaces/IrisDelayStore";
-import type { DelayedEntry } from "../../types/delay";
+import type { IDelayStore } from "../../interfaces/IrisDelayStore.js";
+import type { DelayedEntry } from "../../types/delay.js";
 
 export class MemoryDelayStore implements IDelayStore {
   private readonly entries = new Map<string, DelayedEntry>();

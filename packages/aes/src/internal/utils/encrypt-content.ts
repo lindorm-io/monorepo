@@ -1,13 +1,13 @@
-import { CipherGCM, CipherGCMOptions, createCipheriv } from "crypto";
-import {
+import { type CipherGCM, type CipherGCMOptions, createCipheriv } from "crypto";
+import type {
   EncryptContentOptions,
   EncryptContentResult,
-} from "../types/prepared-encryption";
-import { calculateAesEncryption } from "./calculate/calculate-aes-encryption";
-import { calculateContentType, contentToBuffer } from "./content";
-import { createAuthTag } from "./data/auth-tag";
-import { getInitialisationVector } from "./data/get-initialisation-vector";
-import { splitContentEncryptionKey } from "./data/split-content-encryption-key";
+} from "../types/prepared-encryption.js";
+import { calculateAesEncryption } from "./calculate/calculate-aes-encryption.js";
+import { calculateContentType, contentToBuffer } from "./content.js";
+import { createAuthTag } from "./data/auth-tag.js";
+import { getInitialisationVector } from "./data/get-initialisation-vector.js";
+import { splitContentEncryptionKey } from "./data/split-content-encryption-key.js";
 
 export const encryptAesContent = (
   options: EncryptContentOptions,

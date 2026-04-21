@@ -1,12 +1,12 @@
 import type { Constructor } from "@lindorm/types";
-import type { IrisDriverType } from "../types";
-import type { IIrisMessageBus } from "./IrisMessageBus";
-import type { IIrisPublisher } from "./IrisPublisher";
-import type { IIrisRpcClient } from "./IrisRpcClient";
-import type { IIrisRpcServer } from "./IrisRpcServer";
-import type { IIrisStreamProcessor } from "./IrisStreamProcessor";
-import type { IIrisWorkerQueue } from "./IrisWorkerQueue";
-import type { IMessage } from "./Message";
+import type { IrisDriverType } from "../types/index.js";
+import type { IIrisMessageBus } from "./IrisMessageBus.js";
+import type { IIrisPublisher } from "./IrisPublisher.js";
+import type { IIrisRpcClient } from "./IrisRpcClient.js";
+import type { IIrisRpcServer } from "./IrisRpcServer.js";
+import type { IIrisStreamProcessor } from "./IrisStreamProcessor.js";
+import type { IIrisWorkerQueue } from "./IrisWorkerQueue.js";
+import type { IMessage } from "./Message.js";
 
 export interface IIrisMessagingProvider {
   readonly driver: IrisDriverType;

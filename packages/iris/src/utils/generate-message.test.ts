@@ -1,4 +1,4 @@
-import { generateMessageSource } from "./generate-message";
+import { generateMessageSource } from "./generate-message.js";
 import { describe, expect, it } from "vitest";
 
 describe("generateMessageSource", () => {

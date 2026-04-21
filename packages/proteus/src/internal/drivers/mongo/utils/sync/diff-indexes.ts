@@ -1,5 +1,5 @@
 import { isEqual } from "@lindorm/is";
-import type { DesiredMongoIndex, ExistingMongoIndex, MongoSyncPlan } from "./types";
+import type { DesiredMongoIndex, ExistingMongoIndex, MongoSyncPlan } from "./types.js";
 
 /**
  * Compare an existing index with a desired index to determine if they match.

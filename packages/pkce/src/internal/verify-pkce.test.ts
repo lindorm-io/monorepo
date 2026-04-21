@@ -1,5 +1,5 @@
 import { createHash } from "crypto";
-import { verifyPkce } from "./verify-pkce";
+import { verifyPkce } from "./verify-pkce.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 describe("verifyPkce", () => {

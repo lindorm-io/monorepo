@@ -9,7 +9,7 @@ import {
   isString,
   isUndefined,
 } from "@lindorm/is";
-import { MetaType } from "./MetaType";
+import { MetaType } from "./MetaType.js";
 
 export const getMetaType = (value: any): string => {
   if (isDate(value)) return MetaType.Date;

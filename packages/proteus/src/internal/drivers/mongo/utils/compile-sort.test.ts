@@ -1,5 +1,5 @@
-import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
-import { compileSort } from "./compile-sort";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
+import { compileSort } from "./compile-sort.js";
 import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────

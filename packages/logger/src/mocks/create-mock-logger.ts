@@ -1,6 +1,6 @@
 import type { Function } from "@lindorm/types";
-import { ILogger } from "../interfaces";
-import { ILoggerTimer } from "../interfaces/LoggerTimer";
+import type { ILogger } from "../interfaces/index.js";
+import type { ILoggerTimer } from "../interfaces/LoggerTimer.js";
 
 const createMockTimer = (mockFn: () => any): ILoggerTimer => ({
   error: mockFn(),

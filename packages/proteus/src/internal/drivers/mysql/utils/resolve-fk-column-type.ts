@@ -1,7 +1,7 @@
 import type { Constructor } from "@lindorm/types";
-import { ProteusError } from "../../../../errors";
-import type { IEntity } from "../../../../interfaces";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
+import { ProteusError } from "../../../../errors/index.js";
+import type { IEntity } from "../../../../interfaces/index.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
 
 /**
  * Resolves the MySQL column type for a foreign key column by looking up the

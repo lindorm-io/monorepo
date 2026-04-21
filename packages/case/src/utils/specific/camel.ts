@@ -1,5 +1,5 @@
-import { KeysInput } from "../../types";
-import { camelCase, convertArray, convertObject } from "../../internal/index";
+import type { KeysInput } from "../../types/index.js";
+import { camelCase, convertArray, convertObject } from "../../internal/index.js";
 
 export { camelCase };
 

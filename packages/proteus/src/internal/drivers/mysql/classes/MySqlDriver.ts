@@ -2,49 +2,49 @@ import type { ICircuitBreaker } from "@lindorm/breaker";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { Pool, PoolConnection } from "mysql2/promise";
-import type { IEntity, IProteusQueryBuilder } from "../../../../interfaces";
+import type { IEntity, IProteusQueryBuilder } from "../../../../interfaces/index.js";
 import type {
   IProteusDriver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusMysqlOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { ProteusResult } from "../../../types/proteus-result";
+} from "../../../../types/index.js";
+import type { ProteusResult } from "../../../types/proteus-result.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type {
   FilterRegistryGetter,
   MetadataResolver,
-} from "../../../interfaces/ProteusDriver";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { IProteusRepository } from "../../../../interfaces/ProteusRepository";
-import { MySqlDriverError } from "../errors/MySqlDriverError";
-import { MySqlMigrationError } from "../errors/MySqlMigrationError";
-import type { MysqlQueryClient } from "../types/mysql-query-client";
-import type { MysqlTransactionHandle } from "../types/mysql-transaction-handle";
-import { beginTransaction } from "../utils/transaction/begin-transaction";
-import { commitTransaction } from "../utils/transaction/commit-transaction";
-import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
-import { isRetryableTransactionError } from "../utils/transaction/is-retryable-transaction-error";
-import { MySqlTransactionContext } from "./MySqlTransactionContext";
-import { MySqlExecutor } from "./MySqlExecutor";
-import { MySqlRepository, type WithImplicitTransaction } from "./MySqlRepository";
-import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl";
-import { introspectSchema } from "../utils/sync/introspect-schema";
-import { projectDesiredSchemaMysql } from "../utils/sync/project-desired-schema-mysql";
-import { diffSchema } from "../utils/sync/diff-schema";
-import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
-import { quoteIdentifier } from "../utils/quote-identifier";
-import { buildMysqlLockName } from "../../../utils/advisory-lock-name";
-import { MySqlMigrationManager } from "./MySqlMigrationManager";
-import { MySqlQueryBuilder } from "./MySqlQueryBuilder";
-import { BreakerExecutor } from "../../../classes/BreakerExecutor";
-import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
+} from "../../../interfaces/ProteusDriver.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { IProteusRepository } from "../../../../interfaces/ProteusRepository.js";
+import { MySqlDriverError } from "../errors/MySqlDriverError.js";
+import { MySqlMigrationError } from "../errors/MySqlMigrationError.js";
+import type { MysqlQueryClient } from "../types/mysql-query-client.js";
+import type { MysqlTransactionHandle } from "../types/mysql-transaction-handle.js";
+import { beginTransaction } from "../utils/transaction/begin-transaction.js";
+import { commitTransaction } from "../utils/transaction/commit-transaction.js";
+import { rollbackTransaction } from "../utils/transaction/rollback-transaction.js";
+import { isRetryableTransactionError } from "../utils/transaction/is-retryable-transaction-error.js";
+import { MySqlTransactionContext } from "./MySqlTransactionContext.js";
+import { MySqlExecutor } from "./MySqlExecutor.js";
+import { MySqlRepository, type WithImplicitTransaction } from "./MySqlRepository.js";
+import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl.js";
+import { introspectSchema } from "../utils/sync/introspect-schema.js";
+import { projectDesiredSchemaMysql } from "../utils/sync/project-desired-schema-mysql.js";
+import { diffSchema } from "../utils/sync/diff-schema.js";
+import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan.js";
+import { quoteIdentifier } from "../utils/quote-identifier.js";
+import { buildMysqlLockName } from "../../../utils/advisory-lock-name.js";
+import { MySqlMigrationManager } from "./MySqlMigrationManager.js";
+import { MySqlQueryBuilder } from "./MySqlQueryBuilder.js";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
 
 export class MySqlDriver implements IProteusDriver {
   private readonly options: ProteusMysqlOptions;
@@ -506,7 +506,7 @@ export class MySqlDriver implements IProteusDriver {
     };
 
     if (options?.retry) {
-      const { withRetry } = await import("../../../utils/transaction/with-retry");
+      const { withRetry } = await import("../../../utils/transaction/with-retry.js");
 
       const retryOptions = {
         ...options.retry,

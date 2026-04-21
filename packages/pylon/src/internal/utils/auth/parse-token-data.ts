@@ -1,9 +1,9 @@
-import { AegisError, IAegis, isParsedJwt } from "@lindorm/aegis";
-import { ReadableTime, ms } from "@lindorm/date";
-import { OpenIdAuthorizeResponseQuery, OpenIdTokenResponse } from "@lindorm/types";
+import { AegisError, type IAegis, isParsedJwt } from "@lindorm/aegis";
+import { type ReadableTime, ms } from "@lindorm/date";
+import type { OpenIdAuthorizeResponseQuery, OpenIdTokenResponse } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import { CannotEstablishSessionIdentity } from "../../../errors";
-import { IPylonSession } from "../../../interfaces";
+import { CannotEstablishSessionIdentity } from "../../../errors/index.js";
+import type { IPylonSession } from "../../../interfaces/index.js";
 
 type Data = OpenIdTokenResponse | OpenIdAuthorizeResponseQuery;
 

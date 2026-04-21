@@ -1,4 +1,4 @@
-import type { Answers } from "./types";
+import type { Answers } from "./types.js";
 
 const buildImports = (answers: Answers): Array<string> => {
   const lines: Array<string> = [`import { Pylon } from "@lindorm/pylon";`];

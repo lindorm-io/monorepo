@@ -1,6 +1,6 @@
 import type { Constructor, DeepPartial } from "@lindorm/types";
-import { IEntity } from "../../../interfaces";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 /**
  * Removes user-facing readonly fields (decorator === "Field" && readonly === true).

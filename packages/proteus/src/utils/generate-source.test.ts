@@ -1,4 +1,4 @@
-import { generateSource } from "./generate-source";
+import { generateSource } from "./generate-source.js";
 import { describe, expect, it } from "vitest";
 
 describe("generateSource", () => {

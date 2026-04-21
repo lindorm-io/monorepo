@@ -1,6 +1,6 @@
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { SqlDialect } from "./sql-dialect";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { SqlDialect } from "./sql-dialect.js";
 
 export const buildDiscriminatorPredicateQualified = (
   metadata: EntityMetadata,

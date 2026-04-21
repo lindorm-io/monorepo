@@ -1,7 +1,7 @@
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
 import { Logger as _Logger } from "@lindorm/logger";
 import { resolve, join } from "path";
-import { generateWorker } from "./generate-worker";
+import { generateWorker } from "./generate-worker.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("fs/promises", async () => ({
@@ -115,7 +115,7 @@ describe("generateWorker", () => {
     vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
     vi.resetModules();
-    const { generateWorker: freshGenerate } = await import("./generate-worker");
+    const { generateWorker: freshGenerate } = await import("./generate-worker.js");
 
     vi.doMock("fs/promises", () => ({
       mkdir: vi.fn().mockResolvedValue(undefined),

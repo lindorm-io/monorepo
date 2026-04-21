@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
-import type { MetaFieldType } from "../internal/entity/types/metadata";
-import { stageEmbeddedList } from "../internal/entity/metadata/stage-metadata";
+import type { MetaFieldType } from "../internal/entity/types/metadata.js";
+import { stageEmbeddedList } from "../internal/entity/metadata/stage-metadata.js";
 
 export type EmbeddedListOptions = {
   tableName?: string;

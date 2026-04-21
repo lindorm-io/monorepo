@@ -1,4 +1,4 @@
-import { encodeCursor } from "./encode-cursor";
+import { encodeCursor } from "./encode-cursor.js";
 import { describe, expect, it } from "vitest";
 
 describe("encodeCursor", () => {

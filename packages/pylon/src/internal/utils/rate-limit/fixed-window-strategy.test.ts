@@ -1,4 +1,4 @@
-import { fixedWindowStrategy } from "./fixed-window-strategy";
+import { fixedWindowStrategy } from "./fixed-window-strategy.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("fixedWindowStrategy", () => {

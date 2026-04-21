@@ -1,5 +1,5 @@
-import { RsaAlgorithm, RsaBuffer, RsaJwk, RsaString } from "../types";
-import { IKryptos } from "./Kryptos";
+import type { RsaAlgorithm, RsaBuffer, RsaJwk, RsaString } from "../types/index.js";
+import type { IKryptos } from "./Kryptos.js";
 
 export interface IKryptosRsa extends IKryptos {
   algorithm: RsaAlgorithm;

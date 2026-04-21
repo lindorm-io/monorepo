@@ -2,8 +2,8 @@ import { createMockHermes } from "@lindorm/hermes/mocks/vitest";
 import { createMockIrisSource } from "@lindorm/iris/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
-import { RATE_LIMIT_SOURCE } from "../constants/symbols";
-import { createDependenciesMiddleware } from "./common-dependencies-middleware";
+import { RATE_LIMIT_SOURCE } from "../constants/symbols.js";
+import { createDependenciesMiddleware } from "./common-dependencies-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createDependenciesMiddleware", () => {

@@ -1,8 +1,8 @@
-import { Dict, Param, Query } from "@lindorm/types";
-import { CreateUrlOptions } from "../types/types";
-import { createBaseUrl } from "./create-base-url";
-import { extractSearchParams } from "./extract-search-params";
-import { addToUrl } from "../internal/index";
+import type { Dict, Param, Query } from "@lindorm/types";
+import type { CreateUrlOptions } from "../types/types.js";
+import { createBaseUrl } from "./create-base-url.js";
+import { extractSearchParams } from "./extract-search-params.js";
+import { addToUrl } from "../internal/index.js";
 
 export const createUrl = <P extends Dict<Param> = Dict<Param>, Q = Dict<Query>>(
   pathOrUrl: URL | string,

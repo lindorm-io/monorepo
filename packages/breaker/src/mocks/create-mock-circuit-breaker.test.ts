@@ -1,4 +1,4 @@
-import { createMockCircuitBreaker } from "./vitest";
+import { createMockCircuitBreaker } from "./vitest.js";
 import { describe, expect, test } from "vitest";
 
 describe("createMockCircuitBreaker", () => {

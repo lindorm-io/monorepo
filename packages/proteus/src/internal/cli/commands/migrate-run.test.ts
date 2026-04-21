@@ -1,14 +1,14 @@
 import { resolve } from "path";
-import { migrateRun } from "./migrate-run";
-import { withSource } from "../with-source";
-import { withMigrationManager } from "../with-migration-manager";
-import { formatApplyResult } from "../output/format-migration-result";
+import { migrateRun } from "./migrate-run.js";
+import { withSource } from "../with-source.js";
+import { withMigrationManager } from "../with-migration-manager.js";
+import { formatApplyResult } from "../output/format-migration-result.js";
 import { Logger } from "@lindorm/logger";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("../with-source");
-vi.mock("../with-migration-manager");
-vi.mock("../output/format-migration-result");
+vi.mock("../with-source.js");
+vi.mock("../with-migration-manager.js");
+vi.mock("../output/format-migration-result.js");
 
 vi.mock("@lindorm/logger", async () => ({
   Logger: {

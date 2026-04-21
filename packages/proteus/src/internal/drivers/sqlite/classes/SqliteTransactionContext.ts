@@ -5,15 +5,15 @@ import type {
   IProteusQueryBuilder,
   IProteusRepository,
   ITransactionContext,
-} from "../../../../interfaces";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import { SqliteTransactionError } from "../errors/SqliteTransactionError";
-import type { SqliteTransactionHandle } from "../types/sqlite-transaction-handle";
-import { commitTransaction } from "../utils/transaction/commit-transaction";
-import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
-import { withSavepoint } from "../utils/transaction/with-savepoint";
-import { SqliteQueryBuilder } from "./SqliteQueryBuilder";
+} from "../../../../interfaces/index.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import { SqliteTransactionError } from "../errors/SqliteTransactionError.js";
+import type { SqliteTransactionHandle } from "../types/sqlite-transaction-handle.js";
+import { commitTransaction } from "../utils/transaction/commit-transaction.js";
+import { rollbackTransaction } from "../utils/transaction/rollback-transaction.js";
+import { withSavepoint } from "../utils/transaction/with-savepoint.js";
+import { SqliteQueryBuilder } from "./SqliteQueryBuilder.js";
 
 export class SqliteTransactionContext implements ITransactionContext {
   private readonly handle: SqliteTransactionHandle;

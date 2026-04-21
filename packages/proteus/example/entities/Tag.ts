@@ -1,4 +1,4 @@
-import { Entity, Field, PrimaryKeyField, Unique } from "../../src";
+import { Entity, Field, PrimaryKeyField, Unique } from "../../src/index.js";
 
 @Entity()
 export class Tag {

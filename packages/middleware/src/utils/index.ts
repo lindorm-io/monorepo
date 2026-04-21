@@ -1,1 +1,1 @@
-export * from "./compose-middleware";
+export * from "./compose-middleware.js";

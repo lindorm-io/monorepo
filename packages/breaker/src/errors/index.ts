@@ -1,2 +1,2 @@
-export * from "./BreakerError";
-export * from "./CircuitOpenError";
+export * from "./BreakerError.js";
+export * from "./CircuitOpenError.js";

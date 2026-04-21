@@ -1,5 +1,5 @@
-import { DecodedTokenHeader } from "../../types";
-import { parseTokenHeader } from "./token-header";
+import type { DecodedTokenHeader } from "../../types/index.js";
+import { parseTokenHeader } from "./token-header.js";
 import { describe, expect, test } from "vitest";
 
 describe("parseTokenHeader", () => {

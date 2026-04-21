@@ -1,7 +1,7 @@
 import { resolve, join } from "path";
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
 import { Logger as _Logger } from "@lindorm/logger";
-import { generateHandler } from "./generate-handler";
+import { generateHandler } from "./generate-handler.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("fs/promises", async () => ({
@@ -128,7 +128,7 @@ describe("generateHandler", () => {
     vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
     vi.resetModules();
-    const { generateHandler: freshGenerate } = await import("./generate-handler");
+    const { generateHandler: freshGenerate } = await import("./generate-handler.js");
 
     vi.doMock("fs/promises", () => ({
       mkdir: vi.fn().mockResolvedValue(undefined),

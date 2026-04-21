@@ -1,5 +1,5 @@
-import { Dict } from "@lindorm/types";
-import { ParsedSegment } from "./PylonScannerBase";
+import type { Dict } from "@lindorm/types";
+import type { ParsedSegment } from "./PylonScannerBase.js";
 
 export type EventSegment = {
   type: "literal" | "param" | "catchAll";

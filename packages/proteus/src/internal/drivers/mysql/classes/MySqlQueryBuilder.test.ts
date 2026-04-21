@@ -1,9 +1,9 @@
-import { ProteusError } from "../../../../errors";
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { SqlFragment } from "../../../types/query";
-import type { MysqlQueryClient } from "../types/mysql-query-client";
-import { MySqlQueryBuilder } from "./MySqlQueryBuilder";
+import { ProteusError } from "../../../../errors/index.js";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { SqlFragment } from "../../../types/query.js";
+import type { MysqlQueryClient } from "../types/mysql-query-client.js";
+import { MySqlQueryBuilder } from "./MySqlQueryBuilder.js";
 import { describe, expect, test, vi } from "vitest";
 
 const fragment = (sql: string, params: Array<unknown> = []): SqlFragment =>

@@ -1,13 +1,13 @@
 import { B64 } from "@lindorm/b64";
-import { B64U } from "../constants/format";
-import { TOKEN_HEADER_ALGORITHMS } from "../constants/header";
-import {
+import { B64U } from "../constants/format.js";
+import { TOKEN_HEADER_ALGORITHMS } from "../constants/header.js";
+import type {
   CertificateHeaderFields,
   DecodedTokenHeader,
   TokenHeaderClaims,
   TokenHeaderOptions,
-} from "../../types";
-import { mapTokenHeader } from "./token-header";
+} from "../../types/index.js";
+import { mapTokenHeader } from "./token-header.js";
 
 export const encodeJoseHeader = (
   options: TokenHeaderOptions,

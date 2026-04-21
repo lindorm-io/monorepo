@@ -1,9 +1,9 @@
-import { resolveIris } from "../../internal/utils/resolve-iris";
+import { resolveIris } from "../../internal/utils/resolve-iris.js";
 import { camelCase } from "@lindorm/case";
-import { IIrisSource, IMessage } from "@lindorm/iris";
-import { Constructor, Dict } from "@lindorm/types";
+import type { IIrisSource, IMessage } from "@lindorm/iris";
+import type { Constructor, Dict } from "@lindorm/types";
 import { lazyFactory } from "@lindorm/utils";
-import { PylonContext, PylonMiddleware } from "../../types";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 export const createWorkerQueueMiddleware = <C extends PylonContext = PylonContext>(
   messages: Array<Constructor<IMessage>>,

@@ -1,4 +1,4 @@
-import { createChecksum } from "./create-checksum";
+import { createChecksum } from "./create-checksum.js";
 import { describe, expect, test } from "vitest";
 
 describe("createChecksum", () => {

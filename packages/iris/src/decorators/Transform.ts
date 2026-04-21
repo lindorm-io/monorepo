@@ -1,5 +1,5 @@
-import type { MetaTransform } from "../internal/message/types/types";
-import { stageTransform } from "../internal/message/metadata/stage-metadata";
+import type { MetaTransform } from "../internal/message/types/types.js";
+import { stageTransform } from "../internal/message/metadata/stage-metadata.js";
 
 export const Transform =
   (options: MetaTransform) =>

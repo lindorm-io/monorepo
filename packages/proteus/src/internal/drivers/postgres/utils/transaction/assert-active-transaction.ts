@@ -1,5 +1,5 @@
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
 
 export const assertActiveTransaction = (handle: PostgresTransactionHandle): void => {
   if (handle.state !== "active") {

@@ -1,11 +1,11 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { Document } from "mongodb";
-import type { IEntity } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value";
-import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value";
-import { buildCompoundId } from "./build-compound-id";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value.js";
+import { buildCompoundId } from "./build-compound-id.js";
 
 /**
  * Convert an entity instance into a MongoDB document for persistence.

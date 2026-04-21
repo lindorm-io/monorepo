@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { configuration } from "./configuration";
+import { configuration } from "./configuration.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("configuration", () => {

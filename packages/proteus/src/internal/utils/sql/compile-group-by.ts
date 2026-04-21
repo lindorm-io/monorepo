@@ -1,7 +1,7 @@
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { resolveColumnName } from "./resolve-column-name";
-import type { SqlDialect } from "./sql-dialect";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { resolveColumnName } from "./resolve-column-name.js";
+import type { SqlDialect } from "./sql-dialect.js";
 
 export const compileGroupBy = <E extends IEntity>(
   groupBy: Array<keyof E> | null,

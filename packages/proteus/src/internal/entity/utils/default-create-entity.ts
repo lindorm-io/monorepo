@@ -1,10 +1,10 @@
 import { isFunction, isObject } from "@lindorm/is";
 import type { Constructor, DeepPartial, Dict } from "@lindorm/types";
-import { IEntity } from "../../../interfaces";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
-import { isLazyRelation } from "./lazy-relation";
-import { isLazyCollection } from "./lazy-collection";
-import { parseField } from "./parse-field";
+import type { IEntity } from "../../../interfaces/index.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
+import { isLazyRelation } from "./lazy-relation.js";
+import { isLazyCollection } from "./lazy-collection.js";
+import { parseField } from "./parse-field.js";
 
 export const createEntity = <
   E extends IEntity,

@@ -1,7 +1,7 @@
 import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { runPrompts } from "./prompts";
+import { runPrompts } from "./prompts.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 vi.mock("@inquirer/prompts", async () => ({

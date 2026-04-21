@@ -2,51 +2,51 @@ import type { IAmphora } from "@lindorm/amphora";
 import type { Constructor, DeepPartial, Dict, Predicate } from "@lindorm/types";
 import type { ILogger } from "@lindorm/logger";
 import type { Redis } from "ioredis";
-import type { IEntity } from "../../../../interfaces";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { DeleteOptions, FindOptions } from "../../../../types";
-import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
+import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
+import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { Predicated } from "@lindorm/utils";
-import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
-import { generateAutoFilters } from "../../../entity/metadata/auto-filters";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
+import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
+import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
 import {
   matchesRow,
   applySelect,
   applyResolvedFilters,
   applyPagination,
-} from "../../../utils/query/in-memory-row-ops";
-import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides";
-import { resolveFilters } from "../../../utils/query/resolve-filters";
-import { applyOrdering } from "../../../utils/query/apply-ordering";
-import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug";
-import { buildEntityKey, buildEntityKeyFromRow } from "../utils/build-entity-key";
-import { buildScanPattern } from "../utils/build-scan-pattern";
-import { dehydrateToRow } from "../utils/dehydrate-entity";
+} from "../../../utils/query/in-memory-row-ops.js";
+import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
+import { resolveFilters } from "../../../utils/query/resolve-filters.js";
+import { applyOrdering } from "../../../utils/query/apply-ordering.js";
+import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
+import { buildEntityKey, buildEntityKeyFromRow } from "../utils/build-entity-key.js";
+import { buildScanPattern } from "../utils/build-scan-pattern.js";
+import { dehydrateToRow } from "../utils/dehydrate-entity.js";
 // deserializeHash parses array/json/object fields from JSON strings to native JS
 // types via JSON.parse (see coerceFromString). This happens BEFORE any criteria
 // matching (matchesRow/Predicated.filter), so complex predicate operators like
 // $all, $has, $overlap work correctly on deserialized values.
-import { deserializeHash } from "../utils/deserialize-hash";
-import { extractExactPk } from "../utils/is-pk-exact";
-import { scanAllRows } from "../utils/scan-all-rows";
-import { scanEntityKeys } from "../utils/scan-entity-keys";
-import { serializeHash } from "../utils/serialize-hash";
-import { applyRedisAutoIncrement } from "../utils/redis-auto-increment";
+import { deserializeHash } from "../utils/deserialize-hash.js";
+import { extractExactPk } from "../utils/is-pk-exact.js";
+import { scanAllRows } from "../utils/scan-all-rows.js";
+import { scanEntityKeys } from "../utils/scan-entity-keys.js";
+import { serializeHash } from "../utils/serialize-hash.js";
+import { applyRedisAutoIncrement } from "../utils/redis-auto-increment.js";
 import {
   VERSION_CHECK_HSET,
   GUARDED_HINCRBY,
   GUARDED_HINCRBYFLOAT,
   GUARDED_HSET,
-} from "../utils/lua-scripts";
-import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value";
-import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
-import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root";
-import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata";
-import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
-import { RedisOptimisticLockError } from "../errors/RedisOptimisticLockError";
-import { RedisDriverError } from "../errors/RedisDriverError";
+} from "../utils/lua-scripts.js";
+import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
+import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
+import { RedisOptimisticLockError } from "../errors/RedisOptimisticLockError.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

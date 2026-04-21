@@ -1,21 +1,21 @@
 import type { ConsumeMessage } from "amqplib";
 import type { ILogger } from "@lindorm/logger";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import { IrisTransportError } from "../../../../errors/IrisTransportError";
-import type { ConsumeStrategies } from "../../../types/consume-strategies";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
+import type { ConsumeStrategies } from "../../../types/consume-strategies.js";
 import {
   consumeMessageCore,
   type ConsumerCallbackHost,
-} from "../../../utils/consume-message-core";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { buildAmqpHeaders } from "./build-amqp-headers";
-import { buildRabbitEnvelope } from "./build-rabbit-envelope";
-import { parseAmqpHeaders } from "./parse-amqp-headers";
-import { publishToExchange } from "./publish-to-exchange";
-import { sanitizeRoutingKey } from "./sanitize-routing-key";
+} from "../../../utils/consume-message-core.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { buildAmqpHeaders } from "./build-amqp-headers.js";
+import { buildRabbitEnvelope } from "./build-rabbit-envelope.js";
+import { parseAmqpHeaders } from "./parse-amqp-headers.js";
+import { publishToExchange } from "./publish-to-exchange.js";
+import { sanitizeRoutingKey } from "./sanitize-routing-key.js";
 
 export type RabbitConsumerCallbackHost<M extends IMessage> = ConsumerCallbackHost<M>;
 

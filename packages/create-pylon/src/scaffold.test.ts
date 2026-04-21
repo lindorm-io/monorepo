@@ -13,8 +13,8 @@ import {
   writePackageJson,
   writePylonFile,
   writeWorkerFiles,
-} from "./scaffold";
-import type { Answers } from "./types";
+} from "./scaffold.js";
+import type { Answers } from "./types.js";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const baseFeatures = (

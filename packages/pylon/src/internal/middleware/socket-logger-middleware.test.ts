@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { socketLoggerMiddleware } from "./socket-logger-middleware";
+import { socketLoggerMiddleware } from "./socket-logger-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("socketLoggerMiddleware", () => {

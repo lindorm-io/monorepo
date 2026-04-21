@@ -1,4 +1,4 @@
-import { lazyFactory } from "./lazy-factory";
+import { lazyFactory } from "./lazy-factory.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("lazyFactory", () => {

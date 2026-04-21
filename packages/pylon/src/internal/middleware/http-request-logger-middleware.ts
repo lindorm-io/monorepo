@@ -1,4 +1,4 @@
-import { PylonHttpMiddleware } from "../../types";
+import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const httpRequestLoggerMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   ctx.logger.info("Service request", {

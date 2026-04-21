@@ -1,4 +1,4 @@
-import { IProteusRepositoryProvider } from "./ProteusRepositoryProvider";
+import type { IProteusRepositoryProvider } from "./ProteusRepositoryProvider.js";
 
 // Request-scoped data access handle. Extends provider with no additions.
 // Named type for use on framework contexts (e.g. Pylon's ctx.proteus).

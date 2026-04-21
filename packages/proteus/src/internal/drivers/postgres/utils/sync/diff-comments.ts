@@ -1,7 +1,7 @@
-import type { DbTable } from "../../types/db-snapshot";
-import type { DesiredTable } from "../../types/desired-schema";
-import type { SyncOperation } from "../../types/sync-plan";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
+import type { DbTable } from "../../types/db-snapshot.js";
+import type { DesiredTable } from "../../types/desired-schema.js";
+import type { SyncOperation } from "../../types/sync-plan.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 
 /**
  * Diffs table and column comments between the DB snapshot and desired schema.

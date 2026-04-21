@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import { stageEmbedded } from "../internal/entity/metadata/stage-metadata";
+import { stageEmbedded } from "../internal/entity/metadata/stage-metadata.js";
 
 export type EmbeddedOptions = {
   prefix?: string;

@@ -1,5 +1,5 @@
-import { TEST_OCT_KEY } from "../../../__fixtures__/keys";
-import { pbkdf } from "./pbkdf";
+import { TEST_OCT_KEY } from "../../../__fixtures__/keys.js";
+import { pbkdf } from "./pbkdf.js";
 import { describe, expect, test } from "vitest";
 
 describe("pbkdf", () => {

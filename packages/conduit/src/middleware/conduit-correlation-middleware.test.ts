@@ -1,4 +1,4 @@
-import { conduitCorrelationMiddleware } from "./conduit-correlation-middleware";
+import { conduitCorrelationMiddleware } from "./conduit-correlation-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitCorrelationMiddleware", () => {

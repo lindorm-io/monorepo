@@ -1,4 +1,4 @@
-import { diffAny, diffArray, diffObject } from "./diff";
+import { diffAny, diffArray, diffObject } from "./diff.js";
 import { describe, expect, test } from "vitest";
 
 describe("diff", () => {

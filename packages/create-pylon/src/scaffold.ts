@@ -9,19 +9,19 @@ import {
   writeFileSync,
 } from "fs";
 import { dirname, join, resolve } from "path";
-import { buildConfigFile } from "./build-config-file";
-import { buildDockerCompose } from "./build-docker-compose";
-import { buildIrisSamples } from "./build-iris-samples";
-import { buildPylonFile } from "./build-pylon-file";
-import { buildWorkerFile } from "./build-worker-file";
-import type { Answers } from "./types";
+import { buildConfigFile } from "./build-config-file.js";
+import { buildDockerCompose } from "./build-docker-compose.js";
+import { buildIrisSamples } from "./build-iris-samples.js";
+import { buildPylonFile } from "./build-pylon-file.js";
+import { buildWorkerFile } from "./build-worker-file.js";
+import type { Answers } from "./types.js";
 import {
   AUTH_ENV_VARS,
   IRIS_DRIVER_PACKAGES,
   IRIS_ENV_VARS,
   PROTEUS_DRIVER_PACKAGES,
   PROTEUS_ENV_VARS,
-} from "./types";
+} from "./types.js";
 
 // Far-future expiry — the KEK protects every @Encrypted field in the DB;
 // rotating it is a re-encryption migration, not a routine rotation, so a

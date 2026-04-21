@@ -12,19 +12,19 @@ import {
   ViewAlreadyCreatedError,
   ViewDestroyedError,
   ViewNotCreatedError,
-} from "../../errors";
-import type { ErrorDispatchOptions } from "../../types";
-import type { HermesViewEntity } from "../../entities/HermesViewEntity";
-import type { HermesRegistry } from "../registry";
-import type { HandlerRegistration, RegisteredView } from "../registry/types";
-import { CausationRecord } from "../entities";
+} from "../../errors/index.js";
+import type { ErrorDispatchOptions } from "../../types/index.js";
+import type { HermesViewEntity } from "../../entities/HermesViewEntity.js";
+import type { HermesRegistry } from "../registry/index.js";
+import type { HandlerRegistration, RegisteredView } from "../registry/types.js";
+import { CausationRecord } from "../entities/index.js";
 import type {
   HermesCommandMessage,
   HermesErrorMessage,
   HermesEventMessage,
-} from "../messages";
-import { causationExists } from "../stores";
-import { applyUpcasters } from "../utils";
+} from "../messages/index.js";
+import { causationExists } from "../stores/index.js";
+import { applyUpcasters } from "../utils/index.js";
 
 export type ViewDomainOptions = {
   registry: HermesRegistry;

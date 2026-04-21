@@ -1,6 +1,6 @@
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
-import { AesContent, AesContentType } from "../../types/content";
-import { PublicEncryptionJwk } from "../../types/types";
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import type { AesContent, AesContentType } from "../../types/content.js";
+import type { PublicEncryptionJwk } from "../../types/types.js";
 
 export type PrepareEncryptionOptions = {
   encryption?: KryptosEncryption;

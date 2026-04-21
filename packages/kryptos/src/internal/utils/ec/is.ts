@@ -1,11 +1,11 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
-import { EcBuffer, EcJwk, EcString, KryptosCurve } from "../../../types";
-import {
+import type { EcBuffer, EcJwk, EcString, KryptosCurve } from "../../../types/index.js";
+import type {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
   IsStringFormatOptions,
-} from "../../types/is-options";
+} from "../../types/is-options.js";
 
 const CURVES: Array<KryptosCurve> = ["P-256", "P-384", "P-521"] as const;
 

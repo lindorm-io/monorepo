@@ -1,4 +1,4 @@
-import { parseTokenHeader } from "../internal/index";
+import { parseTokenHeader } from "../internal/index.js";
 
 const JWE_LENGTH = 5;
 const JWE_REGEX =

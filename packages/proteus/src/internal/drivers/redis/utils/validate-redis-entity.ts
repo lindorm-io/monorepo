@@ -1,8 +1,8 @@
 import type { ILogger } from "@lindorm/logger";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { RedisDriverError } from "../errors/RedisDriverError";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
 
 /**
  * Validates that an entity's metadata is compatible with the Redis driver.

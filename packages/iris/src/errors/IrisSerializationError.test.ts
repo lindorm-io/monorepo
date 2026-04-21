@@ -1,5 +1,5 @@
-import { IrisError } from "./IrisError";
-import { IrisSerializationError } from "./IrisSerializationError";
+import { IrisError } from "./IrisError.js";
+import { IrisSerializationError } from "./IrisSerializationError.js";
 import { describe, expect, it } from "vitest";
 
 describe("IrisSerializationError", () => {

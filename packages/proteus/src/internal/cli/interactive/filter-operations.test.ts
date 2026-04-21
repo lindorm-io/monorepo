@@ -1,6 +1,6 @@
-import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
-import type { EntityGroup } from "./group-operations";
-import { filterOperationsByEntities } from "./filter-operations";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan.js";
+import type { EntityGroup } from "./group-operations.js";
+import { filterOperationsByEntities } from "./filter-operations.js";
 import { describe, expect, it } from "vitest";
 
 const makeOp = (overrides: Partial<SyncOperation>): SyncOperation => ({

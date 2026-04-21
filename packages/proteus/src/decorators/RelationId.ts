@@ -1,4 +1,4 @@
-import { stageRelationId } from "../internal/entity/metadata/stage-metadata";
+import { stageRelationId } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Expose a relation's FK value as a read-only property on the entity.

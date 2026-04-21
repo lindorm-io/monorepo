@@ -1,7 +1,7 @@
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { PostgresExecutor } from "./PostgresExecutor";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { PostgresExecutor } from "./PostgresExecutor.js";
 import { describe, expect, test, vi, type Mock } from "vitest";
 
 class UserEntity {

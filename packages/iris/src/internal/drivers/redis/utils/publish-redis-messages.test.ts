@@ -1,10 +1,13 @@
-import type { IMessage } from "../../../../interfaces";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { OutboundPayload } from "../../../message/utils/prepare-outbound";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { RedisSharedState } from "../types/redis-types";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
-import { publishRedisMessages, type RedisPublishDriver } from "./publish-redis-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { OutboundPayload } from "../../../message/utils/prepare-outbound.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { RedisSharedState } from "../types/redis-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
+import {
+  publishRedisMessages,
+  type RedisPublishDriver,
+} from "./publish-redis-messages.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({

@@ -1,6 +1,6 @@
 import type { z } from "zod";
-import type { IEntity } from "../../../interfaces";
-import type { DiscriminatorValue, InheritanceStrategy } from "../types/inheritance";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { DiscriminatorValue, InheritanceStrategy } from "../types/inheritance.js";
 import type {
   MetaCheck,
   MetaEntity,
@@ -13,7 +13,7 @@ import type {
   MetaPrimaryKey,
   MetaUnique,
   MetaVersionKey,
-} from "../types/metadata";
+} from "../types/metadata.js";
 import type {
   StagedCache,
   StagedEmbedded,
@@ -26,7 +26,7 @@ import type {
   StagedRelationCount,
   StagedRelationId,
   StagedRelationModifier,
-} from "../types/staged";
+} from "../types/staged.js";
 
 const ensureOwnArray = <K extends keyof StagedMetadata>(
   metadata: DecoratorMetadataObject,

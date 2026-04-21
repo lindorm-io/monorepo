@@ -1,5 +1,5 @@
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import { beginTransaction } from "./begin-transaction";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import { beginTransaction } from "./begin-transaction.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockPoolClient = {

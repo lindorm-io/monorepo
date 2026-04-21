@@ -1,6 +1,6 @@
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { wrapPgError } from "../repository/wrap-pg-error";
-import { assertActiveTransaction } from "./assert-active-transaction";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { wrapPgError } from "../repository/wrap-pg-error.js";
+import { assertActiveTransaction } from "./assert-active-transaction.js";
 
 export const commitTransaction = async (
   handle: PostgresTransactionHandle,

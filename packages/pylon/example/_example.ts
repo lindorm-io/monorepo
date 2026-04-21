@@ -2,7 +2,7 @@ import { Amphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
 import { Logger, LogLevel } from "@lindorm/logger";
 import { join } from "path";
-import { Environment, Pylon } from "../src";
+import { Environment, Pylon } from "../src/index.js";
 
 const logger = new Logger({
   level: LogLevel.Silly,

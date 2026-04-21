@@ -1,4 +1,4 @@
-import { sortKeys } from "./sort-keys";
+import { sortKeys } from "./sort-keys.js";
 import { describe, expect, test } from "vitest";
 
 describe("sortKeys", () => {

@@ -1,4 +1,4 @@
-import { PersistentField } from "./PersistentField";
+import { PersistentField } from "./PersistentField.js";
 import { describe, expect, it } from "vitest";
 
 describe("PersistentField", () => {

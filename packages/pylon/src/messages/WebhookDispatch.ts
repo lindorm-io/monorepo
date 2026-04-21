@@ -1,6 +1,6 @@
 import { CorrelationField, Field, Message, Namespace, Topic } from "@lindorm/iris";
-import { Dict } from "@lindorm/types";
-import { IWebhookSubscription } from "../interfaces";
+import type { Dict } from "@lindorm/types";
+import type { IWebhookSubscription } from "../interfaces/index.js";
 
 @Namespace("pylon")
 @Message()

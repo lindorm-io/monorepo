@@ -5,12 +5,12 @@ import {
   AggregateDestroyedError,
   AggregateNotDestroyedError,
   HandlerNotRegisteredError,
-} from "../../errors";
-import type { AggregateEventCtx } from "../../types";
-import type { HermesRegistry } from "../registry";
-import type { RegisteredAggregate, HandlerRegistration } from "../registry";
-import { HermesEventMessage } from "../messages";
-import { applyUpcasters, extractDto } from "../utils";
+} from "../../errors/index.js";
+import type { AggregateEventCtx } from "../../types/index.js";
+import type { HermesRegistry } from "../registry/index.js";
+import type { RegisteredAggregate, HandlerRegistration } from "../registry/index.js";
+import { HermesEventMessage } from "../messages/index.js";
+import { applyUpcasters, extractDto } from "../utils/index.js";
 
 export type AggregateModelOptions = {
   id: string;

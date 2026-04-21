@@ -1,10 +1,10 @@
 import { CircuitOpenError as BreakerCircuitOpenError } from "@lindorm/breaker";
 import { createMockCircuitBreaker } from "@lindorm/breaker/mocks/vitest";
 import { beforeEach, describe, expect, it, vi, type Mocked } from "vitest";
-import { CircuitOpenError } from "../../errors/CircuitOpenError";
-import { BreakerExecutor } from "./BreakerExecutor";
-import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
-import type { IEntity } from "../../interfaces/Entity";
+import { CircuitOpenError } from "../../errors/CircuitOpenError.js";
+import { BreakerExecutor } from "./BreakerExecutor.js";
+import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor.js";
+import type { IEntity } from "../../interfaces/Entity.js";
 
 interface StubEntity extends IEntity {
   name: string;

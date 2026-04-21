@@ -1,12 +1,12 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import type { CompiledSql } from "./compiled-sql";
-import { resolveTableName } from "./resolve-table-name";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import type { CompiledSql } from "./compiled-sql.js";
+import { resolveTableName } from "./resolve-table-name.js";
 import {
   buildInheritanceAliases,
   compileInheritanceJoin,
-} from "./compile-inheritance-join";
+} from "./compile-inheritance-join.js";
 
 /**
  * Compile a SELECT by primary key for an entity instance.

@@ -1,5 +1,5 @@
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import type { KafkaEachMessagePayload } from "../types/kafka-types";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import type { KafkaEachMessagePayload } from "../types/kafka-types.js";
 
 const readHeader = (
   rawHeaders: Record<string, Buffer | undefined>,

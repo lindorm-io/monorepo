@@ -1,5 +1,5 @@
-import type { MessageMetadata } from "../types/metadata";
-import { resolveTopic } from "./resolve-topic";
+import type { MessageMetadata } from "../types/metadata.js";
+import { resolveTopic } from "./resolve-topic.js";
 import { describe, expect, it } from "vitest";
 
 describe("resolveTopic", () => {

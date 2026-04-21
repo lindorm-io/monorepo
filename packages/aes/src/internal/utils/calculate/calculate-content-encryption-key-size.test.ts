@@ -1,6 +1,6 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
-import { AesError } from "../../../errors";
-import { calculateContentEncryptionKeySize } from "./calculate-content-encryption-key-size";
+import type { KryptosEncryption } from "@lindorm/kryptos";
+import { AesError } from "../../../errors/index.js";
+import { calculateContentEncryptionKeySize } from "./calculate-content-encryption-key-size.js";
 import { describe, expect, test } from "vitest";
 
 describe("calculateContentEncryptionKeySize", () => {

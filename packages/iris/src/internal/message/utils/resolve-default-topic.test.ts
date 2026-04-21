@@ -1,5 +1,5 @@
-import type { MessageMetadata } from "../types/metadata";
-import { resolveDefaultTopic } from "./resolve-default-topic";
+import type { MessageMetadata } from "../types/metadata.js";
+import { resolveDefaultTopic } from "./resolve-default-topic.js";
 import { describe, expect, it } from "vitest";
 
 describe("resolveDefaultTopic", () => {

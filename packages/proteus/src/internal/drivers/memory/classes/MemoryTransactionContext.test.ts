@@ -7,10 +7,10 @@ import {
   PrimaryKeyField,
   UpdateDateField,
   VersionField,
-} from "../../../../decorators";
-import { ProteusSource } from "../../../../classes/ProteusSource";
-import { MemoryDriverError } from "../errors/MemoryDriverError";
-import type { IProteusRepository } from "../../../../interfaces";
+} from "../../../../decorators/index.js";
+import { ProteusSource } from "../../../../classes/ProteusSource.js";
+import { MemoryDriverError } from "../errors/MemoryDriverError.js";
+import type { IProteusRepository } from "../../../../interfaces/index.js";
 
 // ─── Entities ─────────────────────────────────────────────────────────────────
 
@@ -81,7 +81,7 @@ describe("MemoryTransactionContext.repository", () => {
     const handle = await driver.beginTransaction();
 
     // Construct a context with no factory
-    const { MemoryTransactionContext } = await import("./MemoryTransactionContext");
+    const { MemoryTransactionContext } = await import("./MemoryTransactionContext.js");
     const ctx = new MemoryTransactionContext(handle, driver);
 
     expect(() => ctx.repository(TxCtxUser)).toThrow(MemoryDriverError);
@@ -118,7 +118,7 @@ describe("MemoryTransactionContext.queryBuilder", () => {
     const handleA = await driver.beginTransaction();
     const handleB = await driver.beginTransaction();
 
-    const { MemoryTransactionContext } = await import("./MemoryTransactionContext");
+    const { MemoryTransactionContext } = await import("./MemoryTransactionContext.js");
     const ctxA = new MemoryTransactionContext(handleA, driver, (t: any) =>
       driver.createTransactionalRepository(t, handleA),
     );
@@ -191,7 +191,7 @@ describe("MemoryTransactionContext.commit / rollback", () => {
     const driver = (source as any)._driver;
     const handle = await driver.beginTransaction();
 
-    const { MemoryTransactionContext } = await import("./MemoryTransactionContext");
+    const { MemoryTransactionContext } = await import("./MemoryTransactionContext.js");
     const ctx = new MemoryTransactionContext(handle, driver, (t: any) =>
       driver.createTransactionalRepository(t, handle),
     );
@@ -210,7 +210,7 @@ describe("MemoryTransactionContext.commit / rollback", () => {
     const driver = (source as any)._driver;
     const handle = await driver.beginTransaction();
 
-    const { MemoryTransactionContext } = await import("./MemoryTransactionContext");
+    const { MemoryTransactionContext } = await import("./MemoryTransactionContext.js");
     const ctx = new MemoryTransactionContext(handle, driver, (t: any) =>
       driver.createTransactionalRepository(t, handle),
     );

@@ -1,10 +1,10 @@
-import { Amphora, IAmphora } from "@lindorm/amphora";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 
 import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import axios from "axios";
 import { randomBytes } from "crypto";
 import { readFileSync } from "fs";
@@ -20,13 +20,13 @@ axios.defaults.proxy = false;
 import {
   OPEN_ID_CONFIGURATION_RESPONSE,
   OPEN_ID_JWKS_RESPONSE,
-} from "../__fixtures__/auth0";
+} from "../__fixtures__/auth0.js";
 import {
   conduitSignedRequestMiddleware,
   createHttpSignedRequestMiddleware,
-} from "../middleware";
-import { Pylon } from "./Pylon";
-import { PylonRouter } from "./PylonRouter";
+} from "../middleware/index.js";
+import { Pylon } from "./Pylon.js";
+import { PylonRouter } from "./PylonRouter.js";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);

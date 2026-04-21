@@ -1,4 +1,4 @@
-import { PylonRouter } from "../../classes";
+import { PylonRouter } from "../../classes/index.js";
 
 export const router = new PylonRouter();
 router.get("/", async (ctx: any) => {

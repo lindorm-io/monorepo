@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { program } from "commander";
 import { existsSync, readFileSync } from "fs";
 import { load } from "js-yaml";

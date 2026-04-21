@@ -1,4 +1,4 @@
-import { ILogger, Logger, LoggerOptions } from "@lindorm/logger";
+import { type ILogger, Logger, type LoggerOptions } from "@lindorm/logger";
 
 export const getLogger = (options: ILogger | LoggerOptions | undefined): ILogger => {
   const scope = ["Typewriter"];

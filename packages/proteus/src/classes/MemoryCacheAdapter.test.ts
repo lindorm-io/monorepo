@@ -1,4 +1,4 @@
-import { MemoryCacheAdapter } from "./MemoryCacheAdapter";
+import { MemoryCacheAdapter } from "./MemoryCacheAdapter.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("MemoryCacheAdapter", () => {

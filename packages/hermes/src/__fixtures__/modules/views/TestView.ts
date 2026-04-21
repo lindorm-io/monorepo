@@ -6,18 +6,23 @@ import {
   ViewEventHandler,
   ViewIdHandler,
   ViewQueryHandler,
-} from "../../../decorators";
-import { DomainError, ViewAlreadyCreatedError } from "../../../errors";
-import type { ViewErrorCtx, ViewEventCtx, ViewIdCtx, ViewQueryCtx } from "../../../types";
-import { TestAggregate } from "../aggregates/TestAggregate";
-import { TestCommandCreate } from "../commands/TestCommandCreate";
-import { TestEventCreate } from "../events/TestEventCreate";
-import { TestEventDestroy } from "../events/TestEventDestroy";
-import { TestEventMergeState } from "../events/TestEventMergeState";
-import { TestEventSetState } from "../events/TestEventSetState";
-import { TestEventThrows } from "../events/TestEventThrows";
-import { TestViewQuery } from "../queries/TestViewQuery";
-import { TestViewEntity } from "./TestViewEntity";
+} from "../../../decorators/index.js";
+import { DomainError, ViewAlreadyCreatedError } from "../../../errors/index.js";
+import type {
+  ViewErrorCtx,
+  ViewEventCtx,
+  ViewIdCtx,
+  ViewQueryCtx,
+} from "../../../types/index.js";
+import { TestAggregate } from "../aggregates/TestAggregate.js";
+import { TestCommandCreate } from "../commands/TestCommandCreate.js";
+import { TestEventCreate } from "../events/TestEventCreate.js";
+import { TestEventDestroy } from "../events/TestEventDestroy.js";
+import { TestEventMergeState } from "../events/TestEventMergeState.js";
+import { TestEventSetState } from "../events/TestEventSetState.js";
+import { TestEventThrows } from "../events/TestEventThrows.js";
+import { TestViewQuery } from "../queries/TestViewQuery.js";
+import { TestViewEntity } from "./TestViewEntity.js";
 
 @View(TestAggregate, TestViewEntity)
 export class TestView {

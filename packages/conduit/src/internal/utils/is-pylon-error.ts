@@ -1,5 +1,5 @@
 import { isObjectLike, isString } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 
 type PylonError = {
   __meta: {

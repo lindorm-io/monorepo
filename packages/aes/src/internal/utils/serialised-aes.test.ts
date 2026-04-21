@@ -1,7 +1,7 @@
-import { KryptosEncAlgorithm, KryptosKit } from "@lindorm/kryptos";
-import { AesEncryptionRecord, SerialisedAesEncryption } from "../../types";
-import { encryptAes } from "./encryption";
-import { createSerialisedAesRecord, parseSerialisedAesRecord } from "./serialised-aes";
+import { type KryptosEncAlgorithm, KryptosKit } from "@lindorm/kryptos";
+import type { AesEncryptionRecord, SerialisedAesEncryption } from "../../types/index.js";
+import { encryptAes } from "./encryption.js";
+import { createSerialisedAesRecord, parseSerialisedAesRecord } from "./serialised-aes.js";
 import { describe, expect, test } from "vitest";
 
 describe("serialised-aes", () => {

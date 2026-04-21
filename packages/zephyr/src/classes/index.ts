@@ -1,2 +1,2 @@
-export { Zephyr } from "./Zephyr";
-export { ZephyrRoom } from "./ZephyrRoom";
+export { Zephyr } from "./Zephyr.js";
+export { ZephyrRoom } from "./ZephyrRoom.js";

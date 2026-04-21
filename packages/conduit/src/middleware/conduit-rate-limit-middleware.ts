@@ -1,5 +1,5 @@
-import { ConduitError } from "../errors";
-import { ConduitMiddleware } from "../types";
+import { ConduitError } from "../errors/index.js";
+import type { ConduitMiddleware } from "../types/index.js";
 
 type Config = {
   maxRequests?: number;

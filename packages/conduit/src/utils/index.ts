@@ -1,1 +1,1 @@
-export * from "./web-crypto-to-dpop-signer";
+export * from "./web-crypto-to-dpop-signer.js";

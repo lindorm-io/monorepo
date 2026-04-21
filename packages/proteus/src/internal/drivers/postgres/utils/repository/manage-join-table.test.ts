@@ -1,10 +1,10 @@
-import type { MetaRelation } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { deleteJoinTableRows, syncJoinTableRows } from "./manage-join-table";
+import type { MetaRelation } from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { deleteJoinTableRows, syncJoinTableRows } from "./manage-join-table.js";
 import { describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock the external utilities before importing the module under test
-vi.mock("../../../../entity/utils/get-join-name", async () => ({
+vi.mock("../../../../entity/utils/get-join-name.js", async () => ({
   getJoinName: vi.fn(() => ({
     namespace: "public",
     name: "test_join_table",
@@ -13,7 +13,7 @@ vi.mock("../../../../entity/utils/get-join-name", async () => ({
   })),
 }));
 
-vi.mock("../quote-identifier", () => ({
+vi.mock("../quote-identifier.js", () => ({
   quoteIdentifier: vi.fn((name: string) => `"${name}"`),
   quoteQualifiedName: vi.fn((namespace: string | null, name: string) =>
     namespace ? `"${namespace}"."${name}"` : `"${name}"`,

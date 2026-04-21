@@ -1,18 +1,22 @@
 import { randomUUID } from "@lindorm/random";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope, ConsumeOptions, PublishOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { KafkaConsumer, KafkaSharedState } from "../types/kafka-types";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase";
-import { publishKafkaMessages } from "../utils/publish-kafka-messages";
-import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer";
-import { getOrCreatePooledConsumer } from "../utils/create-kafka-consumer";
-import { releasePooledConsumer } from "../utils/stop-kafka-consumer";
-import { resolveTopicName } from "../utils/resolve-topic-name";
-import { resolveGroupId } from "../utils/resolve-group-id";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type {
+  ConsumeEnvelope,
+  ConsumeOptions,
+  PublishOptions,
+} from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { KafkaConsumer, KafkaSharedState } from "../types/kafka-types.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
+import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
+import { getOrCreatePooledConsumer } from "../utils/create-kafka-consumer.js";
+import { releasePooledConsumer } from "../utils/stop-kafka-consumer.js";
+import { resolveTopicName } from "../utils/resolve-topic-name.js";
+import { resolveGroupId } from "../utils/resolve-group-id.js";
 
 export type KafkaWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: KafkaSharedState;

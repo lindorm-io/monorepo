@@ -1,5 +1,5 @@
-import { Dict } from "@lindorm/types";
-import { merge } from "./merge";
+import type { Dict } from "@lindorm/types";
+import { merge } from "./merge.js";
 import { describe, expect, test } from "vitest";
 
 describe("merge", () => {

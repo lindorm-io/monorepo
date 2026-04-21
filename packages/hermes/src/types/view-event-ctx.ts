@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
-import type { HermesViewEntity } from "../entities/HermesViewEntity";
+import type { HermesViewEntity } from "../entities/HermesViewEntity.js";
 
 export type ViewEventCtx<E, V extends HermesViewEntity> = {
   event: E;

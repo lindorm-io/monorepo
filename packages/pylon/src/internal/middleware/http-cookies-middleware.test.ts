@@ -2,16 +2,16 @@ import { AesKit } from "@lindorm/aes";
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { B64 } from "@lindorm/b64";
-import { PylonCookieConfig } from "../../types";
-import { parseCookieHeader as _parseCookieHeader } from "../utils/cookies/parse-cookie-header";
-import { signCookie as _signCookie } from "../utils/cookies/sign-cookie";
-import { verifyCookie as _verifyCookie } from "../utils/cookies/verify-cookie";
-import { createHttpCookiesMiddleware } from "./http-cookies-middleware";
+import type { PylonCookieConfig } from "../../types/index.js";
+import { parseCookieHeader as _parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
+import { signCookie as _signCookie } from "../utils/cookies/sign-cookie.js";
+import { verifyCookie as _verifyCookie } from "../utils/cookies/verify-cookie.js";
+import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../utils/cookies/parse-cookie-header");
-vi.mock("../utils/cookies/sign-cookie");
-vi.mock("../utils/cookies/verify-cookie");
+vi.mock("../utils/cookies/parse-cookie-header.js");
+vi.mock("../utils/cookies/sign-cookie.js");
+vi.mock("../utils/cookies/verify-cookie.js");
 
 const parseCookieHeader = _parseCookieHeader as Mock;
 const signCookie = _signCookie as Mock;

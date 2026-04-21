@@ -1,1 +1,1 @@
-export * from "./ShaKit";
+export * from "./ShaKit.js";

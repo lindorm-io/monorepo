@@ -1,4 +1,4 @@
-import { Primitive } from "../classes/Primitive";
+import { Primitive } from "../classes/Primitive.js";
 
 export const deserialise = (value: any, type: string | null): any => {
   switch (type) {

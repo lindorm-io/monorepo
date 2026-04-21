@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { createLoginHandler } from "./login-handler";
+import { createLoginHandler } from "./login-handler.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createLoginHandler", () => {

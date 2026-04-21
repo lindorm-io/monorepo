@@ -1,6 +1,6 @@
-import { KryptosError } from "../../../errors";
-import { KryptosBuffer, KryptosFromString } from "../../../types";
-import { getOctSize } from "../oct/get-size";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosBuffer, KryptosFromString } from "../../../types/index.js";
+import { getOctSize } from "../oct/get-size.js";
 
 const allocate = (options: KryptosFromString): Buffer => {
   const size = getOctSize(options);

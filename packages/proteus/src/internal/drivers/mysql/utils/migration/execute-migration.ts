@@ -1,19 +1,19 @@
-import { buildMysqlLockName } from "../../../../utils/advisory-lock-name";
-import { MySqlMigrationError } from "../../errors/MySqlMigrationError";
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
+import { buildMysqlLockName } from "../../../../utils/advisory-lock-name.js";
+import { MySqlMigrationError } from "../../errors/MySqlMigrationError.js";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
 import type {
   MigrationInterface,
   MigrationQueryContext,
   MigrationQueryRunner,
   MysqlMigrationTableOptions,
-} from "../../types/migration";
+} from "../../types/migration.js";
 import {
   ensureMigrationTable,
   insertMigrationRecord,
   markMigrationFailed,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "./migration-table";
+} from "./migration-table.js";
 
 export type ExecuteMigrationResult = {
   name: string;

@@ -1,6 +1,6 @@
 import type { ClientSession, Collection, Db } from "mongodb";
-import type { MigrationRecord } from "../../../../types/migration";
-import { MongoMigrationError } from "../../errors/MongoMigrationError";
+import type { MigrationRecord } from "../../../../types/migration.js";
+import { MongoMigrationError } from "../../errors/MongoMigrationError.js";
 
 const COLLECTION_NAME = "_proteus_migrations";
 

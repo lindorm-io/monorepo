@@ -17,9 +17,9 @@ import {
   ScopeField,
   UpdateDateField,
   VersionField,
-} from "../../../decorators";
-import { ProteusSource } from "../../../classes/ProteusSource";
-import type { IProteusRepository } from "../../../interfaces";
+} from "../../../decorators/index.js";
+import { ProteusSource } from "../../../classes/ProteusSource.js";
+import type { IProteusRepository } from "../../../interfaces/index.js";
 
 // ─── Test Entity ──────────────────────────────────────────────────
 

@@ -1,12 +1,12 @@
-import type { DbSnapshot, DbTrigger } from "../../types/db-snapshot";
-import type { DesiredSchema, DesiredTrigger } from "../../types/desired-schema";
-import type { SyncOperation, SyncPlan } from "../../types/sync-plan";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { diffColumns } from "./diff-columns";
-import { diffComments } from "./diff-comments";
-import { diffConstraints } from "./diff-constraints";
-import { diffEnums } from "./diff-enums";
-import { diffIndexes } from "./diff-indexes";
+import type { DbSnapshot, DbTrigger } from "../../types/db-snapshot.js";
+import type { DesiredSchema, DesiredTrigger } from "../../types/desired-schema.js";
+import type { SyncOperation, SyncPlan } from "../../types/sync-plan.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { diffColumns } from "./diff-columns.js";
+import { diffComments } from "./diff-comments.js";
+import { diffConstraints } from "./diff-constraints.js";
+import { diffEnums } from "./diff-enums.js";
+import { diffIndexes } from "./diff-indexes.js";
 
 // Execution ordering from the design doc — determines sort order
 const OPERATION_ORDER: Record<string, number> = {

@@ -1,5 +1,5 @@
-import { KryptosError } from "../../errors";
-import { KryptosAlgorithm, KryptosCurve, KryptosType } from "../../types";
+import { KryptosError } from "../../errors/index.js";
+import type { KryptosAlgorithm, KryptosCurve, KryptosType } from "../../types/index.js";
 
 type Input = {
   type: KryptosType;

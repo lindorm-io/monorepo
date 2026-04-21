@@ -1,23 +1,23 @@
-import { AesError } from "../../../errors/AesError";
-import {
+import { AesError } from "../../../errors/AesError.js";
+import type {
   CreateCekOptions,
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "../../types/content-encryption-key";
+} from "../../types/content-encryption-key.js";
 import {
   getDiffieHellmanDecryptionKey as _getDiffieHellmanDecryptionKey,
   getDiffieHellmanEncryptionKey as _getDiffieHellmanEncryptionKey,
-} from "../diffie-hellman/diffie-hellman";
+} from "../diffie-hellman/diffie-hellman.js";
 import {
   getDiffieHellmanKeyWrapDecryptionKey as _getDiffieHellmanKeyWrapDecryptionKey,
   getDiffieHellmanKeyWrapEncryptionKey as _getDiffieHellmanKeyWrapEncryptionKey,
-} from "../diffie-hellman/diffie-hellman-key-wrap";
-import { getEcDecryptionKey, getEcEncryptionKey } from "./get-ec-keys";
+} from "../diffie-hellman/diffie-hellman-key-wrap.js";
+import { getEcDecryptionKey, getEcEncryptionKey } from "./get-ec-keys.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../diffie-hellman/diffie-hellman");
-vi.mock("../diffie-hellman/diffie-hellman-key-wrap");
+vi.mock("../diffie-hellman/diffie-hellman.js");
+vi.mock("../diffie-hellman/diffie-hellman-key-wrap.js");
 
 const getDiffieHellmanDecryptionKey = _getDiffieHellmanDecryptionKey as Mock;
 const getDiffieHellmanEncryptionKey = _getDiffieHellmanEncryptionKey as Mock;

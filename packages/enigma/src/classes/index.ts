@@ -1,2 +1,2 @@
-export * from "./ArgonKit";
-export * from "./Enigma";
+export * from "./ArgonKit.js";
+export * from "./Enigma.js";

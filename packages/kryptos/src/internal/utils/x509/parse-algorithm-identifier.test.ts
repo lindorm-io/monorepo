@@ -1,6 +1,6 @@
-import { encodeNull, encodeOid, encodeSequence } from "../asn1";
-import { X509_OID_ECDSA_WITH_SHA256, X509_OID_SHA256_WITH_RSA } from "./oids";
-import { parseX509AlgorithmIdentifier } from "./parse-algorithm-identifier";
+import { encodeNull, encodeOid, encodeSequence } from "../asn1/index.js";
+import { X509_OID_ECDSA_WITH_SHA256, X509_OID_SHA256_WITH_RSA } from "./oids.js";
+import { parseX509AlgorithmIdentifier } from "./parse-algorithm-identifier.js";
 import { describe, expect, test } from "vitest";
 
 describe("parseX509AlgorithmIdentifier", () => {

@@ -2,7 +2,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { importJWK, jwtVerify, SignJWT } from "jose";
 import jsonwebtoken, { type JwtPayload } from "jsonwebtoken";
-import { JwtKit } from "../src/classes/JwtKit";
+import { JwtKit } from "../src/classes/JwtKit.js";
 import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------

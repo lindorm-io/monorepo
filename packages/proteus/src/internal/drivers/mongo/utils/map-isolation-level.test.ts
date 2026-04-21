@@ -1,4 +1,4 @@
-import { mapIsolationLevel } from "./map-isolation-level";
+import { mapIsolationLevel } from "./map-isolation-level.js";
 import { describe, expect, test } from "vitest";
 
 describe("mapIsolationLevel", () => {

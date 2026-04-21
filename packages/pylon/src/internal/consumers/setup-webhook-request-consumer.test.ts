@@ -1,7 +1,7 @@
 import {
   setupWebhookRequestConsumer,
   WEBHOOK_REQUEST_QUEUE,
-} from "./setup-webhook-request-consumer";
+} from "./setup-webhook-request-consumer.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("setupWebhookRequestConsumer", () => {

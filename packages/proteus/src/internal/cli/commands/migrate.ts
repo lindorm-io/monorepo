@@ -1,11 +1,11 @@
 import type { Command } from "commander";
-import { migrateGenerate } from "./migrate-generate";
-import { migrateRun } from "./migrate-run";
-import { migrateRollback } from "./migrate-rollback";
-import { migrateStatus } from "./migrate-status";
-import { migrateBaseline } from "./migrate-baseline";
-import { migrateCreate } from "./migrate-create";
-import { migrateResolve } from "./migrate-resolve";
+import { migrateGenerate } from "./migrate-generate.js";
+import { migrateRun } from "./migrate-run.js";
+import { migrateRollback } from "./migrate-rollback.js";
+import { migrateStatus } from "./migrate-status.js";
+import { migrateBaseline } from "./migrate-baseline.js";
+import { migrateCreate } from "./migrate-create.js";
+import { migrateResolve } from "./migrate-resolve.js";
 
 export const registerMigrateCommands = (program: Command): void => {
   const migrate = program.command("migrate").description("Migration management commands");

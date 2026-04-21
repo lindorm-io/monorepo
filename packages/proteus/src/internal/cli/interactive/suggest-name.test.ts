@@ -1,5 +1,5 @@
-import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
-import { suggestMigrationName } from "./suggest-name";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan.js";
+import { suggestMigrationName } from "./suggest-name.js";
 import { describe, expect, it } from "vitest";
 
 const makeOp = (type: SyncOperation["type"]): SyncOperation => ({

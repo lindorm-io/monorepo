@@ -1,6 +1,6 @@
-import { ILogger } from "@lindorm/logger";
-import { IScanData, IScanner, Scanner } from "@lindorm/scanner";
-import { PylonError } from "../../errors";
+import type { ILogger } from "@lindorm/logger";
+import { type IScanData, type IScanner, Scanner } from "@lindorm/scanner";
+import { PylonError } from "../../errors/index.js";
 
 const MIDDLEWARE_FILE = "_middleware";
 const GROUP_PATTERN = /^\(.*\)$/;

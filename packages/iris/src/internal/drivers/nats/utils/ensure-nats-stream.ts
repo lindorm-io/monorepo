@@ -1,4 +1,4 @@
-import type { EnsureNatsStreamOptions } from "../types/nats-types";
+import type { EnsureNatsStreamOptions } from "../types/nats-types.js";
 
 export type { EnsureNatsStreamOptions };
 

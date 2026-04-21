@@ -1,7 +1,7 @@
 import type { Constructor, DeepPartial } from "@lindorm/types";
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import { IEntity } from "../../../interfaces";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import type { IEntity } from "../../../interfaces/index.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 /**
  * Blocks ALL readonly fields regardless of decorator type.

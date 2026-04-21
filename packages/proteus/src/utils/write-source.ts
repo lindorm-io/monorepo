@@ -3,10 +3,10 @@ import { join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
 import {
   generateSource,
-  GenerateSourceOptions,
+  type GenerateSourceOptions,
   PROTEUS_ALL_DRIVERS,
   PROTEUS_SQL_DRIVERS,
-} from "./generate-source";
+} from "./generate-source.js";
 
 export type WriteSourceOptions = GenerateSourceOptions & {
   directory: string;

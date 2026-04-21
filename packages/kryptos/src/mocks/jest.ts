@@ -1,5 +1,5 @@
-import type { IKryptos } from "../interfaces";
-import { _createMockKryptos } from "./create-mock-kryptos";
+import type { IKryptos } from "../interfaces/index.js";
+import { _createMockKryptos } from "./create-mock-kryptos.js";
 
 type MockKryptos = jest.Mocked<IKryptos>;
 

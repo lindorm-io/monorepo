@@ -1,5 +1,9 @@
-import { KryptosError } from "../../../errors";
-import { ASN1_CONTEXT_CONSTRUCTED_BASE, ASN1_TAG_SEQUENCE, readTlv } from "../asn1";
+import { KryptosError } from "../../../errors/index.js";
+import {
+  ASN1_CONTEXT_CONSTRUCTED_BASE,
+  ASN1_TAG_SEQUENCE,
+  readTlv,
+} from "../asn1/index.js";
 
 export const extractLeafSpki = (der: Buffer): Buffer => {
   let outer;

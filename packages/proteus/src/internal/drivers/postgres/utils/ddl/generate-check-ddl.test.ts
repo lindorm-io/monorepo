@@ -1,6 +1,6 @@
-import { generateCheckDDL } from "./generate-check-ddl";
-import { ProteusError } from "../../../../../errors";
-import type { MetaCheck } from "../../../../entity/types/metadata";
+import { generateCheckDDL } from "./generate-check-ddl.js";
+import { ProteusError } from "../../../../../errors/index.js";
+import type { MetaCheck } from "../../../../entity/types/metadata.js";
 import { describe, expect, test } from "vitest";
 
 const TABLE = "users";

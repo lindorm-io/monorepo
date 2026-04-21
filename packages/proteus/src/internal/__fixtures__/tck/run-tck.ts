@@ -5,42 +5,45 @@
 
 import { afterAll, beforeAll, describe, test, vi } from "vitest";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { TckCapabilities, TckDriverFactory, TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import type { ProteusSource } from "../../../classes/ProteusSource";
-import { createTckEntities } from "./create-tck-entities";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { TckCapabilities, TckDriverFactory, TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import type { ProteusSource } from "../../../classes/ProteusSource.js";
+import { createTckEntities } from "./create-tck-entities.js";
 
-import { crudSuite } from "./crud.tck";
-import { queriesSuite } from "./queries.tck";
-import { softDeleteSuite } from "./soft-delete.tck";
-import { versioningSuite } from "./versioning.tck";
-import { relationsOneToOneSuite } from "./relations-one-to-one.tck";
-import { relationsOneToManySuite } from "./relations-one-to-many.tck";
-import { relationsManyToManySuite } from "./relations-many-to-many.tck";
-import { aggregatesSuite } from "./aggregates.tck";
-import { incrementsSuite } from "./increments.tck";
-import { upsertSuite } from "./upsert.tck";
-import { cursorSuite } from "./cursor.tck";
-import { expirySuite } from "./expiry.tck";
-import { hooksSuite } from "./hooks.tck";
-import { edgeCasesSuite } from "./edge-cases.tck";
+import { crudSuite } from "./crud.tck.js";
+import { queriesSuite } from "./queries.tck.js";
+import { softDeleteSuite } from "./soft-delete.tck.js";
+import { versioningSuite } from "./versioning.tck.js";
+import { relationsOneToOneSuite } from "./relations-one-to-one.tck.js";
+import { relationsOneToManySuite } from "./relations-one-to-many.tck.js";
+import { relationsManyToManySuite } from "./relations-many-to-many.tck.js";
+import { aggregatesSuite } from "./aggregates.tck.js";
+import { incrementsSuite } from "./increments.tck.js";
+import { upsertSuite } from "./upsert.tck.js";
+import { cursorSuite } from "./cursor.tck.js";
+import { expirySuite } from "./expiry.tck.js";
+import { hooksSuite } from "./hooks.tck.js";
+import { edgeCasesSuite } from "./edge-cases.tck.js";
 import {
   transactionsRollbackSuite,
   transactionsSavepointsSuite,
-} from "./transactions.tck";
-import { queryBuilderSuite } from "./query-builder.tck";
-import { scopeSuite } from "./scope.tck";
-import { lazyLoadingSuite } from "./lazy-loading.tck";
-import { embeddedListLoadingSuite } from "./embedded-list-loading.tck";
-import { unversionedSuite } from "./unversioned.tck";
-import { streamSuite } from "./stream.tck";
-import { clearSuite } from "./clear.tck";
-import { uniqueConstraintsSuite } from "./unique-constraints.tck";
-import { foreignKeysSuite } from "./foreign-keys.tck";
-import { inheritanceSingleTableSuite, inheritanceJoinedSuite } from "./inheritance.tck";
-import { complexPredicatesSuite } from "./complex-predicates.tck";
-import { encryptionSuite } from "./encryption.tck";
+} from "./transactions.tck.js";
+import { queryBuilderSuite } from "./query-builder.tck.js";
+import { scopeSuite } from "./scope.tck.js";
+import { lazyLoadingSuite } from "./lazy-loading.tck.js";
+import { embeddedListLoadingSuite } from "./embedded-list-loading.tck.js";
+import { unversionedSuite } from "./unversioned.tck.js";
+import { streamSuite } from "./stream.tck.js";
+import { clearSuite } from "./clear.tck.js";
+import { uniqueConstraintsSuite } from "./unique-constraints.tck.js";
+import { foreignKeysSuite } from "./foreign-keys.tck.js";
+import {
+  inheritanceSingleTableSuite,
+  inheritanceJoinedSuite,
+} from "./inheritance.tck.js";
+import { complexPredicatesSuite } from "./complex-predicates.tck.js";
+import { encryptionSuite } from "./encryption.tck.js";
 
 const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {
   if (flag) {

@@ -1,4 +1,4 @@
-import { createHttpSocketEmitter, createSocketEmitter } from "./create-socket-emitter";
+import { createHttpSocketEmitter, createSocketEmitter } from "./create-socket-emitter.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("createHttpSocketEmitter", () => {

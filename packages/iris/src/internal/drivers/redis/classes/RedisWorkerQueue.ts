@@ -1,18 +1,22 @@
 import { randomUUID } from "@lindorm/random";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope, ConsumeOptions, PublishOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { RedisSharedState } from "../types/redis-types";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase";
-import { publishRedisMessages } from "../utils/publish-redis-messages";
-import { wrapRedisConsumer } from "../utils/wrap-redis-consumer";
-import { createConsumerLoop } from "../utils/create-consumer-loop";
-import { resolveStreamKey } from "../utils/resolve-stream-key";
-import { resolveGroupName } from "../utils/resolve-group-name";
-import { stopConsumerLoop } from "../utils/stop-consumer-loop";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type {
+  ConsumeEnvelope,
+  ConsumeOptions,
+  PublishOptions,
+} from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { RedisSharedState } from "../types/redis-types.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { publishRedisMessages } from "../utils/publish-redis-messages.js";
+import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
+import { createConsumerLoop } from "../utils/create-consumer-loop.js";
+import { resolveStreamKey } from "../utils/resolve-stream-key.js";
+import { resolveGroupName } from "../utils/resolve-group-name.js";
+import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 
 export type RedisWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: RedisSharedState;

@@ -1,5 +1,5 @@
 import { access } from "fs/promises";
-import { fileExists } from "./file-exists";
+import { fileExists } from "./file-exists.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 vi.mock("fs/promises");

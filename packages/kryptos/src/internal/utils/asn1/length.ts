@@ -1,4 +1,4 @@
-import { KryptosError } from "../../../errors";
+import { KryptosError } from "../../../errors/index.js";
 
 export const encodeLength = (n: number): Buffer => {
   if (!Number.isInteger(n) || n < 0) {

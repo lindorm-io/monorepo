@@ -1,5 +1,5 @@
-import { Dict } from "@lindorm/types";
-import { Primitive } from "./Primitive";
+import type { Dict } from "@lindorm/types";
+import { Primitive } from "./Primitive.js";
 
 export class JsonKit {
   public static buffer<T extends Array<any> | Dict = Dict>(input: T): Buffer {

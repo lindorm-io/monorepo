@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { useScope } from "./use-scope";
+import { useScope } from "./use-scope.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("useScope", () => {

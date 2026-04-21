@@ -1,8 +1,8 @@
-export * from "./classes";
-export * from "./errors";
-export * from "./interfaces";
-export * from "./middleware";
-export * from "./types";
-export * from "./utils";
+export * from "./classes/index.js";
+export * from "./errors/index.js";
+export * from "./interfaces/index.js";
+export * from "./middleware/index.js";
+export * from "./types/index.js";
+export * from "./utils/index.js";
 
-export { RetryStrategy } from "@lindorm/retry";
+export type { RetryStrategy } from "@lindorm/retry";

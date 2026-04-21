@@ -1,3 +1,3 @@
-export * from "./coerce-all";
-export * from "./load-config";
-export * from "./load-node-config";
+export * from "./coerce-all.js";
+export * from "./load-config.js";
+export * from "./load-node-config.js";

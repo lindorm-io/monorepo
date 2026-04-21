@@ -1,7 +1,11 @@
-import { KryptosError } from "../../../errors";
-import { encodeLength } from "./length";
-import { ASN1_CONTEXT_CONSTRUCTED_BASE, ASN1_TAG_SEQUENCE, ASN1_TAG_SET } from "./tags";
-import { readTlv } from "./walker";
+import { KryptosError } from "../../../errors/index.js";
+import { encodeLength } from "./length.js";
+import {
+  ASN1_CONTEXT_CONSTRUCTED_BASE,
+  ASN1_TAG_SEQUENCE,
+  ASN1_TAG_SET,
+} from "./tags.js";
+import { readTlv } from "./walker.js";
 
 const wrap = (tag: number, content: Buffer): Buffer =>
   Buffer.concat([Buffer.from([tag]), encodeLength(content.length), content]);

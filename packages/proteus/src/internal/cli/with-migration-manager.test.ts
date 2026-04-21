@@ -1,15 +1,15 @@
-import { ProteusError } from "../../errors/ProteusError";
-import { ProteusSource } from "../../classes/ProteusSource";
-import { MigrationManager } from "../drivers/postgres/classes/MigrationManager";
-import { MySqlMigrationManager } from "../drivers/mysql/classes/MySqlMigrationManager";
-import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager";
-import { withMigrationManager, wrapPoolClient } from "./with-migration-manager";
+import { ProteusError } from "../../errors/ProteusError.js";
+import { ProteusSource } from "../../classes/ProteusSource.js";
+import { MigrationManager } from "../drivers/postgres/classes/MigrationManager.js";
+import { MySqlMigrationManager } from "../drivers/mysql/classes/MySqlMigrationManager.js";
+import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager.js";
+import { withMigrationManager, wrapPoolClient } from "./with-migration-manager.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-vi.mock("../../classes/ProteusSource");
-vi.mock("../drivers/postgres/classes/MigrationManager");
-vi.mock("../drivers/mysql/classes/MySqlMigrationManager");
-vi.mock("../drivers/sqlite/classes/SqliteMigrationManager");
+vi.mock("../../classes/ProteusSource.js");
+vi.mock("../drivers/postgres/classes/MigrationManager.js");
+vi.mock("../drivers/mysql/classes/MySqlMigrationManager.js");
+vi.mock("../drivers/sqlite/classes/SqliteMigrationManager.js");
 
 const createMockSource = (driverType: string, migrationsTable?: string) => {
   const source = {

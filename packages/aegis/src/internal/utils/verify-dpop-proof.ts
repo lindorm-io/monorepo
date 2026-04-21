@@ -1,11 +1,11 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
-import { JwtError } from "../../errors";
-import { ParsedDpopProof } from "../../types/jwt/jwt-dpop";
-import { computeJwkThumbprint } from "./compute-jwk-thumbprint";
-import { decodeJoseHeader } from "./jose-header";
-import { verifyJoseSignature } from "./jose-signature";
-import { decodeJwtPayload } from "./jwt-payload";
+import { JwtError } from "../../errors/index.js";
+import type { ParsedDpopProof } from "../../types/jwt/jwt-dpop.js";
+import { computeJwkThumbprint } from "./compute-jwk-thumbprint.js";
+import { decodeJoseHeader } from "./jose-header.js";
+import { verifyJoseSignature } from "./jose-signature.js";
+import { decodeJwtPayload } from "./jwt-payload.js";
 
 type Options = {
   proof: string;

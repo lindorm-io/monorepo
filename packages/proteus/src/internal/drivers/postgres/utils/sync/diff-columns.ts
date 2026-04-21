@@ -1,11 +1,11 @@
-import { classifyTypeCast } from "../../../../drivers/postgres/utils/sync/classify-type-cast";
-import type { DbColumn } from "../../types/db-snapshot";
-import type { DesiredColumn } from "../../types/desired-schema";
-import type { SyncOperation } from "../../types/sync-plan";
-import { PostgresSyncError } from "../../errors/PostgresSyncError";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { normalizeDefaultExpressions } from "./normalize-default-expressions";
-import { normalizePgType } from "./normalize-pg-type";
+import { classifyTypeCast } from "../../../../drivers/postgres/utils/sync/classify-type-cast.js";
+import type { DbColumn } from "../../types/db-snapshot.js";
+import type { DesiredColumn } from "../../types/desired-schema.js";
+import type { SyncOperation } from "../../types/sync-plan.js";
+import { PostgresSyncError } from "../../errors/PostgresSyncError.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { normalizeDefaultExpressions } from "./normalize-default-expressions.js";
+import { normalizePgType } from "./normalize-pg-type.js";
 
 // Zero-value defaults for NOT NULL backfill when going nullable → not null
 const ZERO_VALUES: Record<string, string> = {

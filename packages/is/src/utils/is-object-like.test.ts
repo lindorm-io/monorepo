@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isObjectLike } from "./is-object-like";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isObjectLike } from "./is-object-like.js";
 import { describe, expect, test } from "vitest";
 
 describe("isObjectLike", () => {

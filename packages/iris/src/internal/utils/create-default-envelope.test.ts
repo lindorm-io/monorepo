@@ -1,5 +1,5 @@
-import type { OutboundPayload } from "../message/utils/prepare-outbound";
-import { createDefaultEnvelope } from "./create-default-envelope";
+import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
+import { createDefaultEnvelope } from "./create-default-envelope.js";
 import { describe, expect, it } from "vitest";
 
 describe("createDefaultEnvelope", () => {

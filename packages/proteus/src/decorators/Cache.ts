@@ -1,6 +1,6 @@
 import { ms } from "@lindorm/date";
 import type { ReadableTime } from "@lindorm/date";
-import { stageCache } from "../internal/entity/metadata/stage-metadata";
+import { stageCache } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Enable query-level caching for this entity.

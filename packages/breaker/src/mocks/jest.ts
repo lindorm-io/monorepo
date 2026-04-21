@@ -1,5 +1,5 @@
-import type { ICircuitBreaker } from "../interfaces/CircuitBreaker";
-import { _createMockCircuitBreaker } from "./create-mock-circuit-breaker";
+import type { ICircuitBreaker } from "../interfaces/CircuitBreaker.js";
+import { _createMockCircuitBreaker } from "./create-mock-circuit-breaker.js";
 
 type MockCircuitBreaker = jest.Mocked<ICircuitBreaker>;
 

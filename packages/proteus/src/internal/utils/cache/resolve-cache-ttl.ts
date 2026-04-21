@@ -1,6 +1,6 @@
 import { ms } from "@lindorm/date";
-import type { MetaCache } from "../../entity/types/metadata";
-import type { FindCacheOption } from "../../../types/find-options";
+import type { MetaCache } from "../../entity/types/metadata.js";
+import type { FindCacheOption } from "../../../types/find-options.js";
 
 export type ResolveCacheTtlInput = {
   findCacheOption?: FindCacheOption;

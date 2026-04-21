@@ -1,12 +1,12 @@
 import { ClientError } from "@lindorm/errors";
-import { OpenIdAuthorizeRequestQuery } from "@lindorm/types";
+import type { OpenIdAuthorizeRequestQuery } from "@lindorm/types";
 import { z } from "zod";
-import {
+import type {
   PylonAuthRouterConfig,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonLoginCookie,
-} from "../../../types";
+} from "../../../types/index.js";
 
 export const loginSchema = z.object({
   acrValues: z.string().optional(),

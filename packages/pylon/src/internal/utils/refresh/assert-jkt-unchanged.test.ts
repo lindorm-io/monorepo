@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { assertJktUnchanged } from "./assert-jkt-unchanged";
+import { assertJktUnchanged } from "./assert-jkt-unchanged.js";
 import { describe, expect, test } from "vitest";
 
 describe("assertJktUnchanged", () => {

@@ -1,34 +1,37 @@
 import type { ILogger } from "@lindorm/logger";
-import { QueryBuilder } from "../../../../classes/QueryBuilder";
-import { ProteusError } from "../../../../errors";
+import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
+import { ProteusError } from "../../../../errors/index.js";
 import type {
   IDeleteQueryBuilder,
   IEntity,
   IInsertQueryBuilder,
   IProteusQueryBuilder,
   IUpdateQueryBuilder,
-} from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
+} from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type {
   SetOperationType,
   SqlFragment,
   SubqueryPredicateSpec,
-} from "../../../types/query";
-import type { SqliteQueryClient } from "../types/sqlite-query-client";
-import { compileAggregate, type AggregateType } from "../utils/query/compile-aggregate";
+} from "../../../types/query.js";
+import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
+import {
+  compileAggregate,
+  type AggregateType,
+} from "../utils/query/compile-aggregate.js";
 import {
   compileQuery,
   compileCount,
   type CompiledQuery,
-} from "../utils/query/compile-query";
-import { executeQueryIncludes } from "../utils/query/execute-query-includes";
-import { hydrateRows } from "../utils/query/hydrate-result";
-import { partitionIncludes } from "../utils/query/partition-includes";
-import { warnCartesianIncludes } from "../utils/query/warn-cartesian-includes";
-import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
-import { SqliteInsertQueryBuilder } from "./SqliteInsertQueryBuilder";
-import { SqliteUpdateQueryBuilder } from "./SqliteUpdateQueryBuilder";
-import { SqliteDeleteQueryBuilder } from "./SqliteDeleteQueryBuilder";
+} from "../utils/query/compile-query.js";
+import { executeQueryIncludes } from "../utils/query/execute-query-includes.js";
+import { hydrateRows } from "../utils/query/hydrate-result.js";
+import { partitionIncludes } from "../utils/query/partition-includes.js";
+import { warnCartesianIncludes } from "../utils/query/warn-cartesian-includes.js";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
+import { SqliteInsertQueryBuilder } from "./SqliteInsertQueryBuilder.js";
+import { SqliteUpdateQueryBuilder } from "./SqliteUpdateQueryBuilder.js";
+import { SqliteDeleteQueryBuilder } from "./SqliteDeleteQueryBuilder.js";
 
 export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly client: SqliteQueryClient;

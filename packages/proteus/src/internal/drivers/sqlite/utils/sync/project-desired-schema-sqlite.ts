@@ -7,26 +7,29 @@ import type {
   SqliteDesiredTable,
   SqliteDesiredTrigger,
   SqliteDesiredUnique,
-} from "../../types/desired-schema";
-import type { RelationChange, RelationDestroy } from "../../../../entity/types/metadata";
+} from "../../types/desired-schema.js";
+import type {
+  RelationChange,
+  RelationDestroy,
+} from "../../../../entity/types/metadata.js";
 import type {
   EntityMetadata,
   MetaField,
   MetaGenerated,
-} from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import { getEntityName } from "../../../../entity/utils/get-entity-name";
-import { getJoinName } from "../../../../entity/utils/get-join-name";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { extractEnumValues } from "../../../../utils/extract-enum-values";
-import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl";
-import { hashIdentifier } from "../hash-identifier";
-import { mapFieldTypeSqlite } from "../map-field-type-sqlite";
-import { SQLITE_IDENTIFIER_LIMIT } from "../../constants/sqlite-constants";
-import { SqliteSyncError } from "../../errors/SqliteSyncError";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { resolveFkColumnType } from "../resolve-fk-column-type";
+} from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { getJoinName } from "../../../../entity/utils/get-join-name.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { extractEnumValues } from "../../../../utils/extract-enum-values.js";
+import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
+import { hashIdentifier } from "../hash-identifier.js";
+import { mapFieldTypeSqlite } from "../map-field-type-sqlite.js";
+import { SQLITE_IDENTIFIER_LIMIT } from "../../constants/sqlite-constants.js";
+import { SqliteSyncError } from "../../errors/SqliteSyncError.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { resolveFkColumnType } from "../resolve-fk-column-type.js";
 
 const mapOnDeleteAction = (onDestroy: RelationDestroy): string => {
   switch (onDestroy) {

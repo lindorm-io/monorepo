@@ -8,26 +8,26 @@ import {
   type MockedFunction,
 } from "vitest";
 import type { ILogger } from "@lindorm/logger";
-import { PostgresMigrationError } from "../errors/PostgresMigrationError";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
+import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
 import type {
   LoadedMigration,
   MigrationInterface,
   MigrationRecord,
-} from "../types/migration";
-import { MigrationManager } from "./MigrationManager";
+} from "../types/migration.js";
+import { MigrationManager } from "./MigrationManager.js";
 
 // Mock all migration utilities
-vi.mock("../utils/advisory-lock", async () => ({
+vi.mock("../utils/advisory-lock.js", async () => ({
   withAdvisoryLock: vi.fn(
     async (_client: unknown, _k1: unknown, _k2: unknown, fn: () => Promise<unknown>) =>
       fn(),
   ),
 }));
-vi.mock("../utils/migration/load-migrations", () => ({
+vi.mock("../utils/migration/load-migrations.js", () => ({
   loadMigrations: vi.fn(),
 }));
-vi.mock("../utils/migration/migration-table", () => ({
+vi.mock("../utils/migration/migration-table.js", () => ({
   ensureMigrationTable: vi.fn(),
   getAppliedMigrations: vi.fn(),
   getPartiallyAppliedMigrations: vi.fn(),
@@ -36,10 +36,10 @@ vi.mock("../utils/migration/migration-table", () => ({
   markMigrationFinished: vi.fn(),
   markMigrationRolledBack: vi.fn(),
 }));
-vi.mock("../utils/migration/resolve-pending", () => ({
+vi.mock("../utils/migration/resolve-pending.js", () => ({
   resolvePending: vi.fn(),
 }));
-vi.mock("../utils/migration/execute-migration", () => ({
+vi.mock("../utils/migration/execute-migration.js", () => ({
   executeMigrationUp: vi.fn(),
   executeMigrationDown: vi.fn(),
 }));
@@ -47,19 +47,19 @@ vi.mock("@lindorm/sha", () => ({
   ShaKit: { S256: vi.fn(() => "hash-xxx") },
 }));
 
-import { withAdvisoryLock } from "../utils/advisory-lock";
-import { loadMigrations } from "../utils/migration/load-migrations";
+import { withAdvisoryLock } from "../utils/advisory-lock.js";
+import { loadMigrations } from "../utils/migration/load-migrations.js";
 import {
   ensureMigrationTable,
   getAppliedMigrations,
   getPartiallyAppliedMigrations,
   getAllMigrationRecords,
-} from "../utils/migration/migration-table";
-import { resolvePending } from "../utils/migration/resolve-pending";
+} from "../utils/migration/migration-table.js";
+import { resolvePending } from "../utils/migration/resolve-pending.js";
 import {
   executeMigrationUp,
   executeMigrationDown,
-} from "../utils/migration/execute-migration";
+} from "../utils/migration/execute-migration.js";
 
 const mockAdvisoryLock = withAdvisoryLock as MockedFunction<typeof withAdvisoryLock>;
 const mockLoadMigrations = loadMigrations as MockedFunction<typeof loadMigrations>;

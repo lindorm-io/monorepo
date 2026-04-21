@@ -1,2 +1,2 @@
-export * from "./is-aes";
-export * from "./parse-aes";
+export * from "./is-aes.js";
+export * from "./parse-aes.js";

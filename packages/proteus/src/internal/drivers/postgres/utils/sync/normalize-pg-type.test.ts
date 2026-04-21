@@ -1,4 +1,4 @@
-import { normalizePgType } from "../../../../drivers/postgres/utils/sync/normalize-pg-type";
+import { normalizePgType } from "../../../../drivers/postgres/utils/sync/normalize-pg-type.js";
 import { describe, expect, it } from "vitest";
 
 describe("normalizePgType", () => {

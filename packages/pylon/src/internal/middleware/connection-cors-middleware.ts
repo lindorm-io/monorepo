@@ -1,6 +1,6 @@
-import { CorsOptions, PylonConnectionMiddleware } from "../../types";
-import { assertAllowedOrigin } from "../utils/cors/assert-allowed-origin";
-import { validateCorsOptions } from "../utils/cors/validate-cors-options";
+import type { CorsOptions, PylonConnectionMiddleware } from "../../types/index.js";
+import { assertAllowedOrigin } from "../utils/cors/assert-allowed-origin.js";
+import { validateCorsOptions } from "../utils/cors/validate-cors-options.js";
 
 export const createConnectionCorsMiddleware = (
   options: CorsOptions = {},

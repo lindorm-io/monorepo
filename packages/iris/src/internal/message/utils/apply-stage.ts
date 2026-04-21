@@ -1,4 +1,4 @@
-import type { PipelineStage } from "../../types/pipeline-stage";
+import type { PipelineStage } from "../../types/pipeline-stage.js";
 
 export const applyStage = (
   stage: Exclude<PipelineStage, { type: "batch" }>,

@@ -1,8 +1,13 @@
-import { Aegis, IAegis, ParsedJwt, VerifyJwtOptions } from "@lindorm/aegis";
+import {
+  Aegis,
+  type IAegis,
+  type ParsedJwt,
+  type VerifyJwtOptions,
+} from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { assertDpopHandshakeMatch } from "../dpop/assert-dpop-handshake-match";
-import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler";
-import { PylonSocket, PylonSocketAuth } from "../../../types";
+import { assertDpopHandshakeMatch } from "../dpop/assert-dpop-handshake-match.js";
+import { createBearerRefreshHandler } from "../refresh/create-bearer-refresh-handler.js";
+import type { PylonSocket, PylonSocketAuth } from "../../../types/index.js";
 
 export type HandshakeDpopMode = "required" | "optional" | "disabled";
 

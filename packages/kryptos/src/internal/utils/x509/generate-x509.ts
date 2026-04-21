@@ -1,29 +1,33 @@
 import { randomBytes } from "crypto";
-import { KryptosError } from "../../../errors";
-import { KryptosAlgorithm, KryptosType, X509SubjectAltNameInput } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type {
+  KryptosAlgorithm,
+  KryptosType,
+  X509SubjectAltNameInput,
+} from "../../../types/index.js";
 import {
   encodeBitString,
   encodeExplicitTag,
   encodeInteger,
   encodeSequence,
-} from "../asn1";
+} from "../asn1/index.js";
 import {
   encodeX509AlgorithmIdentifier,
   resolveSignatureDescriptor,
-} from "./encode-algorithm-identifier";
+} from "./encode-algorithm-identifier.js";
 import {
   authorityKeyIdentifierExt,
   basicConstraintsExt,
   keyUsageExt,
   subjectAlternativeNameExt,
   subjectKeyIdentifierExt,
-  X509BasicConstraints,
-  X509KeyUsageFlag,
-} from "./encode-extensions";
-import { encodeX509Name, X509NameInput } from "./encode-name";
-import { encodeX509Validity } from "./encode-validity";
-import { detectOkpCurve, signX509Tbs } from "./sign-tbs";
-import { spkiFromPublicKey } from "./spki-from-public-key";
+  type X509BasicConstraints,
+  type X509KeyUsageFlag,
+} from "./encode-extensions.js";
+import { encodeX509Name, type X509NameInput } from "./encode-name.js";
+import { encodeX509Validity } from "./encode-validity.js";
+import { detectOkpCurve, signX509Tbs } from "./sign-tbs.js";
+import { spkiFromPublicKey } from "./spki-from-public-key.js";
 
 export type GenerateX509Options = {
   subjectKryptos: { publicKey: Buffer; type: KryptosType; algorithm: KryptosAlgorithm };

@@ -1,10 +1,10 @@
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { RedisSharedState } from "../types/redis-types";
-import { DriverPublisherBase } from "../../../classes/DriverPublisherBase";
-import { publishRedisMessages } from "../utils/publish-redis-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions } from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { RedisSharedState } from "../types/redis-types.js";
+import { DriverPublisherBase } from "../../../classes/DriverPublisherBase.js";
+import { publishRedisMessages } from "../utils/publish-redis-messages.js";
 
 export type RedisPublisherOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: RedisSharedState;

@@ -1,9 +1,9 @@
 import { resolve } from "path";
 import { Logger } from "@lindorm/logger";
-import { formatStatusTable } from "../output/format-status-table";
-import type { GlobalOptions } from "../with-source";
-import { withSource } from "../with-source";
-import { withMigrationManager } from "../with-migration-manager";
+import { formatStatusTable } from "../output/format-status-table.js";
+import type { GlobalOptions } from "../with-source.js";
+import { withSource } from "../with-source.js";
+import { withMigrationManager } from "../with-migration-manager.js";
 
 type StatusOptions = GlobalOptions & {
   directory?: string;

@@ -1,7 +1,7 @@
-import { makeField } from "../../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../../entity/types/metadata";
-import { createEmptyState } from "../../../../../../classes/QueryBuilder";
-import { compileQuery, compileCount } from "../compile-query";
+import { makeField } from "../../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../../entity/types/metadata.js";
+import { createEmptyState } from "../../../../../../classes/QueryBuilder.js";
+import { compileQuery, compileCount } from "../compile-query.js";
 import { describe, expect, test } from "vitest";
 
 const metadata = {

@@ -1,4 +1,4 @@
-import { PylonCookie } from "./PylonCookie";
+import { PylonCookie } from "./PylonCookie.js";
 import { describe, expect, test } from "vitest";
 
 describe("PylonCookie", () => {

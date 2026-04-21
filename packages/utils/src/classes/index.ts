@@ -1,1 +1,1 @@
-export * from "./Predicated";
+export * from "./Predicated.js";

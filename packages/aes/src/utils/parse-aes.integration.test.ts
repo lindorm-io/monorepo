@@ -1,7 +1,7 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { AesKit } from "../classes/AesKit";
-import { parseAes } from "./parse-aes";
-import { ParsedAesDecryptionRecord } from "../types";
+import { AesKit } from "../classes/AesKit.js";
+import { parseAes } from "./parse-aes.js";
+import type { ParsedAesDecryptionRecord } from "../types/index.js";
 import { describe, expect, test } from "vitest";
 
 describe("parseAes (integration — strict return type)", () => {

@@ -1,8 +1,8 @@
 import {
   Aegis,
-  AegisIntrospection,
-  AegisIntrospectionActive,
-  AegisUserinfo,
+  type AegisIntrospection,
+  type AegisIntrospectionActive,
+  type AegisUserinfo,
   isParsedJwt,
 } from "@lindorm/aegis";
 import {
@@ -15,10 +15,10 @@ import {
   conduitCorrelationMiddleware,
 } from "@lindorm/conduit";
 import { sec } from "@lindorm/date";
-import { IConduit } from "@lindorm/conduit";
+import type { IConduit } from "@lindorm/conduit";
 import { isNumberString } from "@lindorm/is";
 import { PKCE } from "@lindorm/pkce";
-import {
+import type {
   OpenIdAuthorizeRequestQuery,
   OpenIdClaims,
   OpenIdConfiguration,
@@ -30,9 +30,9 @@ import {
 import { createUrl } from "@lindorm/url";
 import { merge, sortKeys } from "@lindorm/utils";
 import { randomBytes } from "crypto";
-import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed";
-import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed";
-import {
+import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed.js";
+import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed.js";
+import type {
   AuthorizeQuery,
   AuthorizeResult,
   LogoutQuery,
@@ -43,8 +43,8 @@ import {
   PylonContext,
   PylonHttpContext,
   TokenRequest,
-} from "../../../types";
-import { getOpenIdConfiguration } from "./get-open-id-configuration";
+} from "../../../types/index.js";
+import { getOpenIdConfiguration } from "./get-open-id-configuration.js";
 
 // --- Claims client (works on both HTTP and socket) ---
 

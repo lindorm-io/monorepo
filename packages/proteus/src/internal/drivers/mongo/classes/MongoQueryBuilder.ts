@@ -7,30 +7,30 @@ import type {
   IInsertQueryBuilder,
   IProteusQueryBuilder,
   IUpdateQueryBuilder,
-} from "../../../../interfaces";
-import type { LockMode } from "../../../../types/find-options";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { AggregateSelection } from "../utils/compile-aggregation-pipeline";
-import { QueryBuilder } from "../../../../classes/QueryBuilder";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { generateAutoFilters } from "../../../entity/metadata/auto-filters";
-import { resolveFilters } from "../../../utils/query/resolve-filters";
-import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides";
-import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
-import { compileFilter } from "../utils/compile-filter";
-import { compileSort } from "../utils/compile-sort";
-import { compileProjection } from "../utils/compile-projection";
-import { hydrateEntity, hydrateEntities } from "../utils/hydrate";
+} from "../../../../interfaces/index.js";
+import type { LockMode } from "../../../../types/find-options.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { AggregateSelection } from "../utils/compile-aggregation-pipeline.js";
+import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
+import { resolveFilters } from "../../../utils/query/resolve-filters.js";
+import { mergeSystemFilterOverrides } from "../../../utils/query/merge-system-filter-overrides.js";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { compileFilter } from "../utils/compile-filter.js";
+import { compileSort } from "../utils/compile-sort.js";
+import { compileProjection } from "../utils/compile-projection.js";
+import { hydrateEntity, hydrateEntities } from "../utils/hydrate.js";
 import {
   compileAggregationPipeline,
   compilePredicatesToFilter,
-} from "../utils/compile-aggregation-pipeline";
-import { MongoInsertQueryBuilder } from "./MongoInsertQueryBuilder";
-import { MongoUpdateQueryBuilder } from "./MongoUpdateQueryBuilder";
-import { MongoDeleteQueryBuilder } from "./MongoDeleteQueryBuilder";
-import { resolveCollectionName as resolveBaseCollectionName } from "../utils/resolve-collection-name";
+} from "../utils/compile-aggregation-pipeline.js";
+import { MongoInsertQueryBuilder } from "./MongoInsertQueryBuilder.js";
+import { MongoUpdateQueryBuilder } from "./MongoUpdateQueryBuilder.js";
+import { MongoDeleteQueryBuilder } from "./MongoDeleteQueryBuilder.js";
+import { resolveCollectionName as resolveBaseCollectionName } from "../utils/resolve-collection-name.js";
 
 /**
  * Resolve the MongoDB field name for a given entity field key.

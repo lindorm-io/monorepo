@@ -12,20 +12,20 @@ import {
   SagaAlreadyCreatedError,
   SagaDestroyedError,
   SagaNotCreatedError,
-} from "../../errors";
-import type { ErrorDispatchOptions, SagaErrorCtx } from "../../types";
-import type { HermesRegistry } from "../registry";
-import type { HandlerRegistration, RegisteredSaga } from "../registry/types";
-import { CausationRecord, SagaRecord } from "../entities";
+} from "../../errors/index.js";
+import type { ErrorDispatchOptions, SagaErrorCtx } from "../../types/index.js";
+import type { HermesRegistry } from "../registry/index.js";
+import type { HandlerRegistration, RegisteredSaga } from "../registry/types.js";
+import { CausationRecord, SagaRecord } from "../entities/index.js";
 import type {
   HermesCommandMessage,
   HermesErrorMessage,
   HermesEventMessage,
   HermesTimeoutMessage,
-} from "../messages";
-import { causationExists, loadSaga, clearMessages } from "../stores";
-import { SagaModel } from "./saga-model";
-import type { SagaPendingMessage } from "./saga-model";
+} from "../messages/index.js";
+import { causationExists, loadSaga, clearMessages } from "../stores/index.js";
+import { SagaModel } from "./saga-model.js";
+import type { SagaPendingMessage } from "./saga-model.js";
 
 export type SagaDomainOptions = {
   registry: HermesRegistry;

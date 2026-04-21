@@ -1,14 +1,14 @@
-import type { ScopedName } from "../../../types/types";
-import { buildJoinSetKey, buildReverseJoinSetKey } from "./build-join-set-key";
+import type { ScopedName } from "../../../types/types.js";
+import { buildJoinSetKey, buildReverseJoinSetKey } from "./build-join-set-key.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../../../entity/utils/get-join-name", () => ({
+vi.mock("../../../entity/utils/get-join-name.js", () => ({
   getJoinName: vi.fn(),
 }));
 
-import { getJoinName } from "../../../entity/utils/get-join-name";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
 
 const mockGetJoinName = getJoinName as MockedFunction<typeof getJoinName>;
 

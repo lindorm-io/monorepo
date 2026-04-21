@@ -1,5 +1,5 @@
-import type { LockMode } from "../../../../types/find-options";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
+import type { LockMode } from "../../../../types/find-options.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
 
 const EXTENDED_LOCK_MODES = new Set<LockMode>([
   "pessimistic_read_skip",

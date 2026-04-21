@@ -1,5 +1,9 @@
-import { EventSegment } from "../internal/classes/EventMatcher";
-import { PylonListenerMethod, PylonSocketContext, PylonSocketMiddleware } from "../types";
+import type { EventSegment } from "../internal/classes/EventMatcher.js";
+import type {
+  PylonListenerMethod,
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "../types/index.js";
 
 type Listener<C extends PylonSocketContext> = {
   event: string;

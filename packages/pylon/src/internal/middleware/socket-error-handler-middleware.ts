@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { PylonSocketMiddleware } from "../../types";
+import type { PylonSocketMiddleware } from "../../types/index.js";
 
 export const socketErrorHandlerMiddleware: PylonSocketMiddleware = async (ctx, next) => {
   try {

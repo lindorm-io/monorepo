@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
-import { ILogger } from "../interfaces";
-import { Logger } from "./Logger";
+import type { ILogger } from "../interfaces/index.js";
+import { Logger } from "./Logger.js";
 import {
   afterEach,
   beforeEach,

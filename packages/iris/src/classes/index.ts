@@ -1,2 +1,2 @@
-export * from "./IrisSession";
-export * from "./IrisSource";
+export * from "./IrisSession.js";
+export * from "./IrisSource.js";

@@ -1,4 +1,4 @@
-import { PylonGetCookie, PylonSetCookie } from "../types";
+import type { PylonGetCookie, PylonSetCookie } from "../types/index.js";
 
 export interface IPylonCookies {
   set<T = any>(name: string, value: T, options?: PylonSetCookie): Promise<void>;

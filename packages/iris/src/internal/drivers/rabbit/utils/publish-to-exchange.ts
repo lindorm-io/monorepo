@@ -1,5 +1,5 @@
 import type { ConfirmChannel, Options } from "amqplib";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 
 export const publishToExchange = (
   channel: ConfirmChannel,

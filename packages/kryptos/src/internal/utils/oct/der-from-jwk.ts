@@ -1,5 +1,5 @@
-import { KryptosError } from "../../../errors";
-import { KryptosFromJwk, OctBuffer } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosFromJwk, OctBuffer } from "../../../types/index.js";
 
 type Options = Omit<KryptosFromJwk, "kid" | "alg" | "use">;
 

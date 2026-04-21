@@ -1,6 +1,6 @@
-import type { HermesRegistry } from "../registry";
-import type { HermesCommandMessage, HermesEventMessage } from "../messages";
-import { recoverCommand, recoverEvent } from "./recover-dto";
+import type { HermesRegistry } from "../registry/index.js";
+import type { HermesCommandMessage, HermesEventMessage } from "../messages/index.js";
+import { recoverCommand, recoverEvent } from "./recover-dto.js";
 import { describe, expect, test } from "vitest";
 
 class FakeCommand {

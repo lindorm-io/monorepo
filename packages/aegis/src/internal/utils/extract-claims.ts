@@ -1,15 +1,18 @@
 import { isArray, isFinite, isObject, isString } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
-import { ActClaim } from "../../types/claims/act-claim";
-import { ConfirmationClaim } from "../../types/claims/confirmation-claim";
-import { LindormClaims } from "../../types/claims/lindorm-claims";
-import { OAuthClaims } from "../../types/claims/oauth-claims";
-import { OidcClaims } from "../../types/claims/oidc-claims";
-import { PopClaims } from "../../types/claims/pop-claims";
-import { DelegationClaims } from "../../types/claims/delegation-claims";
-import { StdClaims } from "../../types/claims/std-claims";
-import { AdjustedAccessLevel, LevelOfAssurance } from "../../types/level-of-assurance";
+import type { ActClaim } from "../../types/claims/act-claim.js";
+import type { ConfirmationClaim } from "../../types/claims/confirmation-claim.js";
+import type { LindormClaims } from "../../types/claims/lindorm-claims.js";
+import type { OAuthClaims } from "../../types/claims/oauth-claims.js";
+import type { OidcClaims } from "../../types/claims/oidc-claims.js";
+import type { PopClaims } from "../../types/claims/pop-claims.js";
+import type { DelegationClaims } from "../../types/claims/delegation-claims.js";
+import type { StdClaims } from "../../types/claims/std-claims.js";
+import type {
+  AdjustedAccessLevel,
+  LevelOfAssurance,
+} from "../../types/level-of-assurance.js";
 
 // Unified domain claim set — RFC-grouped intersection that JWT parsing,
 // introspection parsing, and userinfo parsing all share.

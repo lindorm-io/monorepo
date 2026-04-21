@@ -1,8 +1,12 @@
-import { IKryptosAkp, KryptosKit } from "@lindorm/kryptos";
-import { IKeyKit, KeyData } from "@lindorm/types";
-import { AkpError } from "../errors";
-import { AkpKitOptions } from "../types";
-import { assertAkpSignature, createAkpSignature, verifyAkpSignature } from "../internal";
+import { type IKryptosAkp, KryptosKit } from "@lindorm/kryptos";
+import type { IKeyKit, KeyData } from "@lindorm/types";
+import { AkpError } from "../errors/index.js";
+import type { AkpKitOptions } from "../types/index.js";
+import {
+  assertAkpSignature,
+  createAkpSignature,
+  verifyAkpSignature,
+} from "../internal/index.js";
 
 export class AkpKit implements IKeyKit {
   private readonly encoding: BufferEncoding;

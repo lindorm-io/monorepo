@@ -1,4 +1,4 @@
-import { OpenIdScope } from "@lindorm/types";
+import type { OpenIdScope } from "@lindorm/types";
 
 export interface IPylonSession {
   id: string;

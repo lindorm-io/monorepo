@@ -1,5 +1,5 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { Query } from "./Query";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { Query } from "./Query.js";
 import { describe, expect, test } from "vitest";
 
 const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>

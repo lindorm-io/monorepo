@@ -1,18 +1,18 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { Retry } from "../../../../decorators/Retry";
-import { DeadLetter } from "../../../../decorators/DeadLetter";
-import { BeforePublish } from "../../../../decorators/BeforePublish";
-import { AfterPublish } from "../../../../decorators/AfterPublish";
-import { BeforeConsume } from "../../../../decorators/BeforeConsume";
-import { AfterConsume } from "../../../../decorators/AfterConsume";
-import { OnConsumeError } from "../../../../decorators/OnConsumeError";
-import { clearRegistry } from "../../../message/metadata/registry";
-import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore";
-import { IrisSource } from "../../../../classes/IrisSource";
-import { MemoryDriver } from "./MemoryDriver";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { Retry } from "../../../../decorators/Retry.js";
+import { DeadLetter } from "../../../../decorators/DeadLetter.js";
+import { BeforePublish } from "../../../../decorators/BeforePublish.js";
+import { AfterPublish } from "../../../../decorators/AfterPublish.js";
+import { BeforeConsume } from "../../../../decorators/BeforeConsume.js";
+import { AfterConsume } from "../../../../decorators/AfterConsume.js";
+import { OnConsumeError } from "../../../../decorators/OnConsumeError.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore.js";
+import { IrisSource } from "../../../../classes/IrisSource.js";
+import { MemoryDriver } from "./MemoryDriver.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---

@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 export type CreateNatsConsumerOptions = {
   js: NatsJetStreamClient;
   jsm: NatsJetStreamManager;

@@ -1,5 +1,5 @@
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
-import { signCookie } from "./sign-cookie";
+import { signCookie } from "./sign-cookie.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("@lindorm/aegis", async () => ({

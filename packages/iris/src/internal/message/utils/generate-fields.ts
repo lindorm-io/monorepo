@@ -1,7 +1,7 @@
 import { randomUUID } from "@lindorm/random";
 import { randomInt, randomBytes } from "crypto";
-import type { MetaGenerated } from "../types/metadata";
-import type { MessageMetadata } from "../types/metadata";
+import type { MetaGenerated } from "../types/metadata.js";
+import type { MessageMetadata } from "../types/metadata.js";
 
 const generateValue = (gen: MetaGenerated): unknown => {
   switch (gen.strategy) {

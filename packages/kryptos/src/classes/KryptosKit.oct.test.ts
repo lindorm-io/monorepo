@@ -4,8 +4,8 @@ import {
   TEST_OCT_KEY_JWK,
   TEST_OCT_KEY_PEM,
   TEST_OCT_KEY_UTF,
-} from "../__fixtures__/oct-keys";
-import { KryptosKit } from "./KryptosKit";
+} from "../__fixtures__/oct-keys.js";
+import { KryptosKit } from "./KryptosKit.js";
 import { describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

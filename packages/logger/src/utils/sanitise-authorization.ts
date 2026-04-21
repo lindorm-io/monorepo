@@ -1,5 +1,5 @@
-import { defaultFilterCallback } from "../internal/utils/default-filter-callback";
-import { sanitiseToken } from "./sanitise-token";
+import { defaultFilterCallback } from "../internal/utils/default-filter-callback.js";
+import { sanitiseToken } from "./sanitise-token.js";
 
 export const sanitiseAuthorization = (authorization: string): string => {
   if (!authorization) return authorization;

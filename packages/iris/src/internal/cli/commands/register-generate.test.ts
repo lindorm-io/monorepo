@@ -1,9 +1,9 @@
 import { Command } from "commander";
-import { registerGenerateCommands } from "./register-generate";
-import { generateMessage } from "./generate-message";
+import { registerGenerateCommands } from "./register-generate.js";
+import { generateMessage } from "./generate-message.js";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./generate-message", async () => ({
+vi.mock("./generate-message.js", async () => ({
   generateMessage: vi.fn(),
 }));
 

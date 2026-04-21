@@ -1,14 +1,14 @@
 import { composeMiddleware } from "@lindorm/middleware";
-import { PylonListener } from "../../classes";
-import {
+import { PylonListener } from "../../classes/index.js";
+import type {
   IoServer,
   PylonListenerMethod,
   PylonSocket,
   PylonSocketContext,
   PylonSocketMiddleware,
-} from "../../types";
-import { EventMatcher, EventSegment } from "../classes/EventMatcher";
-import { composePylonSocketContextBase } from "./compose-pylon-socket-context";
+} from "../../types/index.js";
+import { EventMatcher, type EventSegment } from "../classes/EventMatcher.js";
+import { composePylonSocketContextBase } from "./compose-pylon-socket-context.js";
 
 type DynamicEntry<C extends PylonSocketContext> = {
   middleware: Array<PylonSocketMiddleware<C>>;

@@ -1,5 +1,8 @@
-import { ReadableTime } from "@lindorm/date";
-import { LindormWorkerCallback, LindormWorkerListenerConfig } from "../../types";
+import type { ReadableTime } from "@lindorm/date";
+import type {
+  LindormWorkerCallback,
+  LindormWorkerListenerConfig,
+} from "../../types/index.js";
 
 export const CALLBACK: LindormWorkerCallback = async (ctx) => {
   ctx.logger.debug("Hello world");

@@ -1,13 +1,13 @@
 import { ClientError } from "@lindorm/errors";
 import MockDate from "mockdate";
-import { parseTokenData as _parseTokenData } from "./parse-token-data";
-import { createRefreshMiddleware } from "./refresh-middleware";
+import { parseTokenData as _parseTokenData } from "./parse-token-data.js";
+import { createRefreshMiddleware } from "./refresh-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-vi.mock("./parse-token-data");
+vi.mock("./parse-token-data.js");
 
 const parseTokenData = _parseTokenData as Mock;
 

@@ -2,8 +2,8 @@ import { test, expect, beforeEach } from "vitest";
 // TCK: Scope Suite
 // Tests multi-tenant scope field isolation.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const scopeSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   const { TckScoped } = entities;

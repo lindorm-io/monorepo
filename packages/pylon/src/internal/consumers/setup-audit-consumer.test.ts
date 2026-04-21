@@ -1,4 +1,4 @@
-import { setupAuditConsumer, AUDIT_QUEUE } from "./setup-audit-consumer";
+import { setupAuditConsumer, AUDIT_QUEUE } from "./setup-audit-consumer.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("setupAuditConsumer", () => {

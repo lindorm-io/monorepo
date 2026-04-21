@@ -10,9 +10,9 @@ import {
   TEST_X509_RSA_LEAF_PEM,
   TEST_X509_RSA_LEAF_PRIVATE_KEY_B64,
   TEST_X509_RSA_LEAF_PUBLIC_KEY_B64,
-} from "../__fixtures__/x509";
-import { KryptosError } from "../errors";
-import { Kryptos } from "./Kryptos";
+} from "../__fixtures__/x509.js";
+import { KryptosError } from "../errors/index.js";
+import { Kryptos } from "./Kryptos.js";
 import { describe, expect, test, vi } from "vitest";
 
 vi.mock("crypto", async () => ({

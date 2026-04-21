@@ -1,8 +1,8 @@
 import * as x509 from "@peculiar/x509";
 import { createPublicKey, generateKeyPairSync, X509Certificate } from "crypto";
-import { KryptosType } from "../../../types";
-import { generateX509Certificate } from "./generate-x509";
-import { parseX509Certificate } from "./parse-certificate";
+import type { KryptosType } from "../../../types/index.js";
+import { generateX509Certificate } from "./generate-x509.js";
+import { parseX509Certificate } from "./parse-certificate.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const toU8 = (buf: Buffer): Uint8Array<ArrayBuffer> => {

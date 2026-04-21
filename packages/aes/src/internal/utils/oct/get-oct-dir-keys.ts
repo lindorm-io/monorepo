@@ -1,12 +1,12 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   CreateCekOptions,
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "../../types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
+} from "../../types/content-encryption-key.js";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size.js";
 
 export const getOctDirEncryptionKey = ({
   encryption,

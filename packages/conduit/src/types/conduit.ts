@@ -1,12 +1,12 @@
-import { ILogger } from "@lindorm/logger";
-import { Middleware } from "@lindorm/middleware";
-import { RetryOptions } from "@lindorm/retry";
-import { Dict, Environment } from "@lindorm/types";
-import { ConduitAdapter } from "./adapter";
-import { AppContext, RequestContext } from "./context";
-import { ConfigOptions } from "./overrides";
-import { ConduitResponse } from "./response";
-import { RetryCallback } from "./retry";
+import type { ILogger } from "@lindorm/logger";
+import type { Middleware } from "@lindorm/middleware";
+import type { RetryOptions } from "@lindorm/retry";
+import type { Dict, Environment } from "@lindorm/types";
+import type { ConduitAdapter } from "./adapter.js";
+import type { AppContext, RequestContext } from "./context.js";
+import type { ConfigOptions } from "./overrides.js";
+import type { ConduitResponse } from "./response.js";
+import type { RetryCallback } from "./retry.js";
 
 export type ConduitContext<
   ResponseData = any,

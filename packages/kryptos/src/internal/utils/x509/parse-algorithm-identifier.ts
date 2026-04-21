@@ -1,11 +1,11 @@
-import { KryptosError } from "../../../errors";
+import { KryptosError } from "../../../errors/index.js";
 import {
   ASN1_TAG_OID,
   ASN1_TAG_SEQUENCE,
   decodeOid,
   readSequenceChildren,
   readTlv,
-} from "../asn1";
+} from "../asn1/index.js";
 
 export const parseX509AlgorithmIdentifier = (der: Buffer): string => {
   const tlv = readTlv(der, 0);

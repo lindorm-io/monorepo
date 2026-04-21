@@ -1,5 +1,5 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { getRsaDecryptionKey, getRsaEncryptionKey } from "./get-rsa-keys";
+import { getRsaDecryptionKey, getRsaEncryptionKey } from "./get-rsa-keys.js";
 import { describe, expect, test } from "vitest";
 
 describe("get-rsa-keys", () => {

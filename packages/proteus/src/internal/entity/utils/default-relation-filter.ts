@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
-import { EntityManagerError } from "../errors/EntityManagerError";
-import { IEntity } from "../../../interfaces";
-import { MetaRelation } from "../types/metadata";
+import { EntityManagerError } from "../errors/EntityManagerError.js";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { MetaRelation } from "../types/metadata.js";
 
 export const defaultRelationFilter = (relation: MetaRelation, entity: IEntity): Dict => {
   if (!relation.findKeys) {

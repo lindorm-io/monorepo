@@ -1,12 +1,12 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { buildPrimaryMetadata } from "../internal/entity/metadata/build-primary";
-import { AbstractEntity } from "./AbstractEntity";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { CreateDateField } from "./CreateDateField";
-import { UpdateDateField } from "./UpdateDateField";
-import { BeforeInsert } from "./BeforeInsert";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { buildPrimaryMetadata } from "../internal/entity/metadata/build-primary.js";
+import { AbstractEntity } from "./AbstractEntity.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { CreateDateField } from "./CreateDateField.js";
+import { UpdateDateField } from "./UpdateDateField.js";
+import { BeforeInsert } from "./BeforeInsert.js";
 import { describe, expect, test, vi } from "vitest";
 
 const setTimestamps = vi.fn();

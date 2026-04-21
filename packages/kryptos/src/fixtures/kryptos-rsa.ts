@@ -1,5 +1,5 @@
-import { IKryptosRsa } from "../interfaces";
-import { KryptosKit } from "../classes";
+import type { IKryptosRsa } from "../interfaces/index.js";
+import { KryptosKit } from "../classes/index.js";
 
 export const KRYPTOS_RSA_SIG_RS256 = KryptosKit.from.b64({
   id: "587fd323-46d5-46d7-a22a-56200991c20b",

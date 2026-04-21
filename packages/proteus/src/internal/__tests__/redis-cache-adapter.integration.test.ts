@@ -6,8 +6,8 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 
 import Redis from "ioredis";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { RedisCacheAdapter } from "../../classes/RedisCacheAdapter";
-import { ProteusSource } from "../../classes/ProteusSource";
+import { RedisCacheAdapter } from "../../classes/RedisCacheAdapter.js";
+import { ProteusSource } from "../../classes/ProteusSource.js";
 import {
   Cache,
   CreateDateField,
@@ -17,7 +17,7 @@ import {
   PrimaryKeyField,
   UpdateDateField,
   VersionField,
-} from "../../decorators";
+} from "../../decorators/index.js";
 
 vi.setConfig({ testTimeout: 30_000 });
 

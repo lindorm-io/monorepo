@@ -1,13 +1,13 @@
-import { ProteusError } from "../../../../../errors";
-import type { MetaField, MetaUnique } from "../../../../entity/types/metadata";
+import { ProteusError } from "../../../../../errors/index.js";
+import type { MetaField, MetaUnique } from "../../../../entity/types/metadata.js";
 import {
   INDEX_PREFIX_LENGTH,
   MYSQL_IDENTIFIER_LIMIT,
-} from "../../constants/mysql-constants";
-import { hashIdentifier } from "../hash-identifier";
-import { quoteIdentifier } from "../quote-identifier";
-import { requiresIndexPrefix } from "../requires-index-prefix";
-import { resolveColumnNameSafe } from "../resolve-column-name";
+} from "../../constants/mysql-constants.js";
+import { hashIdentifier } from "../hash-identifier.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { requiresIndexPrefix } from "../requires-index-prefix.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
 
 /**
  * Generates inline `UNIQUE KEY ...` clauses for use inside `CREATE TABLE`.

@@ -1,4 +1,4 @@
-import { noopHandler } from "./noop-handler";
+import { noopHandler } from "./noop-handler.js";
 import { describe, expect, test } from "vitest";
 
 describe("noopHandler", () => {

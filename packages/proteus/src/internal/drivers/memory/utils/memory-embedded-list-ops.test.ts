@@ -1,11 +1,11 @@
 import { describe, expect, test } from "vitest";
-import type { MetaEmbeddedList } from "../../../entity/types/metadata";
-import type { MemoryStore } from "../types/memory-store";
+import type { MetaEmbeddedList } from "../../../entity/types/metadata.js";
+import type { MemoryStore } from "../types/memory-store.js";
 import {
   deleteMemoryEmbeddedListRows,
   loadMemoryEmbeddedListRows,
   saveMemoryEmbeddedListRows,
-} from "./memory-embedded-list-ops";
+} from "./memory-embedded-list-ops.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

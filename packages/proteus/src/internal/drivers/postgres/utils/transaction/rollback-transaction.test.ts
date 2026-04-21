@@ -1,6 +1,6 @@
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { rollbackTransaction } from "./rollback-transaction";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { rollbackTransaction } from "./rollback-transaction.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const makeHandle = (

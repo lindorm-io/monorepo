@@ -1,7 +1,7 @@
 import { resolve, join } from "path";
 import { Logger } from "@lindorm/logger";
 import { mkdir, writeFile as _writeFile } from "fs/promises";
-import { generateEntity } from "./generate-entity";
+import { generateEntity } from "./generate-entity.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 const writeFile = _writeFile as unknown as Mock;
@@ -150,7 +150,7 @@ describe("generateEntity", () => {
     vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
     vi.resetModules();
-    const { generateEntity: freshGenerate } = await import("./generate-entity");
+    const { generateEntity: freshGenerate } = await import("./generate-entity.js");
 
     vi.doMock("fs/promises", () => ({
       mkdir: vi.fn().mockResolvedValue(undefined),

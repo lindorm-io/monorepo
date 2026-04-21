@@ -3,8 +3,8 @@ import {
   TEST_RSA_KEY_B64,
   TEST_RSA_KEY_JWK,
   TEST_RSA_KEY_PEM,
-} from "../__fixtures__/rsa-keys";
-import { KryptosKit } from "./KryptosKit";
+} from "../__fixtures__/rsa-keys.js";
+import { KryptosKit } from "./KryptosKit.js";
 import { describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

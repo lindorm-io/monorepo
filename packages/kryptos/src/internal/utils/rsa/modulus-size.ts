@@ -1,5 +1,5 @@
-import { KryptosError } from "../../../errors";
-import { RsaBuffer, RsaModulus } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type { RsaBuffer, RsaModulus } from "../../../types/index.js";
 
 type Options = Omit<RsaBuffer, "id" | "algorithm" | "type" | "use">;
 

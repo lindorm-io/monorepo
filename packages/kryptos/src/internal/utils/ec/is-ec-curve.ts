@@ -1,4 +1,4 @@
-import { EcCurve } from "../../../types";
+import type { EcCurve } from "../../../types/index.js";
 
 export const isEcCurve = (curve?: any): curve is EcCurve =>
   curve === "P-256" || curve === "P-384" || curve === "P-521";

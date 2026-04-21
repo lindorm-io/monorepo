@@ -6,13 +6,13 @@
 import amqplib from "amqplib";
 import { randomUUID } from "@lindorm/random";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../interfaces";
-import type { DeadLetterEntry } from "../../types/dead-letter";
-import { IrisSource } from "../../classes/IrisSource";
-import type { RabbitDriver } from "../drivers/rabbit/classes/RabbitDriver";
-import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
-import { runTck } from "../__fixtures__/tck/run-tck";
-import { createMockAesModule } from "../__fixtures__/tck/mock-aes";
+import type { IMessage } from "../../interfaces/index.js";
+import type { DeadLetterEntry } from "../../types/dead-letter.js";
+import { IrisSource } from "../../classes/IrisSource.js";
+import type { RabbitDriver } from "../drivers/rabbit/classes/RabbitDriver.js";
+import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import { runTck } from "../__fixtures__/tck/run-tck.js";
+import { createMockAesModule } from "../__fixtures__/tck/mock-aes.js";
 import { describe, vi } from "vitest";
 
 vi.mock("@lindorm/aes", () => createMockAesModule());

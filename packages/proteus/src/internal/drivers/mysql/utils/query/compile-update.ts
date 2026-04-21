@@ -1,27 +1,27 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { DeepPartial, Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value";
-import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { coerceWriteValue } from "./coerce-value";
-import type { CompiledSql } from "./compiled-sql";
-import { compileWhere } from "./compile-where";
-import { dehydrateEntity } from "./dehydrate-entity";
-import { buildDiscriminatorPredicate, resolveTableName } from "./resolve-table-name";
-import { buildJoinedChildContext } from "./joined-child-context";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
+import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { coerceWriteValue } from "./coerce-value.js";
+import type { CompiledSql } from "./compiled-sql.js";
+import { compileWhere } from "./compile-where.js";
+import { dehydrateEntity } from "./dehydrate-entity.js";
+import { buildDiscriminatorPredicate, resolveTableName } from "./resolve-table-name.js";
+import { buildJoinedChildContext } from "./joined-child-context.js";
 import {
   buildDiscriminatorPredicateUnqualified,
   buildPrimaryKeyConditions,
   getDiscriminatorColumnName,
-} from "./compile-helpers";
-import { mysqlDialect } from "../mysql-dialect";
+} from "./compile-helpers.js";
+import { mysqlDialect } from "../mysql-dialect.js";
 import {
   compileSoftDelete as sharedCompileSoftDelete,
   compileRestore as sharedCompileRestore,
-} from "../../../../utils/sql/compile-soft-delete";
-import { compileDeleteExpired as sharedCompileDeleteExpired } from "../../../../utils/sql/compile-delete-expired";
+} from "../../../../utils/sql/compile-soft-delete.js";
+import { compileDeleteExpired as sharedCompileDeleteExpired } from "../../../../utils/sql/compile-delete-expired.js";
 
 /**
  * Compile an UPDATE statement for a single entity.

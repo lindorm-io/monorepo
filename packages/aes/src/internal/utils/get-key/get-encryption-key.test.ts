@@ -1,20 +1,20 @@
-import { getEcEncryptionKey as _getEcEncryptionKey } from "../key-types/get-ec-keys";
-import { getOctEncryptionKey as _getOctEncryptionKey } from "../key-types/get-oct-keys";
-import { getOkpEncryptionKey as _getOkpEncryptionKey } from "../key-types/get-okp-keys";
-import { getRsaEncryptionKey as _getRsaEncryptionKey } from "../key-types/get-rsa-keys";
+import { getEcEncryptionKey as _getEcEncryptionKey } from "../key-types/get-ec-keys.js";
+import { getOctEncryptionKey as _getOctEncryptionKey } from "../key-types/get-oct-keys.js";
+import { getOkpEncryptionKey as _getOkpEncryptionKey } from "../key-types/get-okp-keys.js";
+import { getRsaEncryptionKey as _getRsaEncryptionKey } from "../key-types/get-rsa-keys.js";
 import {
   TEST_EC_KEY,
   TEST_OCT_KEY,
   TEST_OKP_KEY,
   TEST_RSA_KEY,
-} from "../../../__fixtures__/keys";
-import { getEncryptionKey } from "./get-encryption-key";
+} from "../../../__fixtures__/keys.js";
+import { getEncryptionKey } from "./get-encryption-key.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../key-types/get-ec-keys");
-vi.mock("../key-types/get-oct-keys");
-vi.mock("../key-types/get-okp-keys");
-vi.mock("../key-types/get-rsa-keys");
+vi.mock("../key-types/get-ec-keys.js");
+vi.mock("../key-types/get-oct-keys.js");
+vi.mock("../key-types/get-okp-keys.js");
+vi.mock("../key-types/get-rsa-keys.js");
 
 const getEcEncryptionKey = _getEcEncryptionKey as Mock;
 const getOctEncryptionKey = _getOctEncryptionKey as Mock;

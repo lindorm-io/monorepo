@@ -1,5 +1,5 @@
-import { DeepPartial, Dict } from "@lindorm/types";
-import { matches } from "../internal/index";
+import type { DeepPartial, Dict } from "@lindorm/types";
+import { matches } from "../internal/index.js";
 
 export const remove = <T extends Dict>(
   array: Array<T>,

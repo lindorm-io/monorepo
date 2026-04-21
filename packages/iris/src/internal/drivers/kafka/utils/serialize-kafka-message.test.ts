@@ -1,5 +1,5 @@
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import { serializeKafkaMessage } from "./serialize-kafka-message";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import { serializeKafkaMessage } from "./serialize-kafka-message.js";
 import { describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({

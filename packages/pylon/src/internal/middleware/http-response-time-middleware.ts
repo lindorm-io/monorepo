@@ -1,4 +1,4 @@
-import { PylonHttpMiddleware } from "../../types";
+import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const httpResponseTimeMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   const start = Date.now();

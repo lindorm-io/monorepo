@@ -1,5 +1,5 @@
 import type { IProteusRepository } from "@lindorm/proteus";
-import type { SagaRecord } from "../entities";
+import type { SagaRecord } from "../entities/index.js";
 
 export type SagaIdentifier = {
   id: string;

@@ -1,6 +1,9 @@
 import { randomUUID } from "@lindorm/random";
-import type { CreateConsumerLoopOptions, RedisConsumerLoop } from "../types/redis-types";
-import { parseStreamEntry } from "./parse-stream-entry";
+import type {
+  CreateConsumerLoopOptions,
+  RedisConsumerLoop,
+} from "../types/redis-types.js";
+import { parseStreamEntry } from "./parse-stream-entry.js";
 
 export type { CreateConsumerLoopOptions };
 

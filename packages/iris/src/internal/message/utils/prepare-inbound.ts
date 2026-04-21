@@ -1,10 +1,10 @@
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
-import type { IrisCompressionAlgorithm } from "../../../types/compression";
-import type { MessageMetadata } from "../types/metadata";
-import { decompress } from "./compress";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
+import type { IrisCompressionAlgorithm } from "../../../types/compression.js";
+import type { MessageMetadata } from "../types/metadata.js";
+import { decompress } from "./compress.js";
 import type { IAmphora } from "@lindorm/amphora";
-import { decryptPayload } from "./encrypt";
-import { deserializeMessage } from "./deserialize-message";
+import { decryptPayload } from "./encrypt.js";
+import { deserializeMessage } from "./deserialize-message.js";
 
 export const prepareInbound = async (
   payload: Buffer | string,

@@ -2,8 +2,8 @@ import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Stream Suite
 // Verifies that stream() returns an AsyncIterable that yields entities.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const streamSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   describe("Stream", () => {

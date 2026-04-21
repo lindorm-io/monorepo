@@ -1,7 +1,7 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { AegisError } from "../../errors";
-import { CertBindingMode } from "../../types";
+import type { IKryptos } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
+import { AegisError } from "../../errors/index.js";
+import type { CertBindingMode } from "../../types/index.js";
 
 type VerifyCertBindingOptions = {
   header: { x5tS256: string | undefined };

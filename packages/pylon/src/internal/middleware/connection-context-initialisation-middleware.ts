@@ -1,8 +1,8 @@
-import { ILogger } from "@lindorm/logger";
-import { Environment } from "@lindorm/types";
+import type { ILogger } from "@lindorm/logger";
+import type { Environment } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import { PylonConnectionMiddleware } from "../../types";
-import { getSocketAuthorization } from "../utils/get-socket-authorization";
+import type { PylonConnectionMiddleware } from "../../types/index.js";
+import { getSocketAuthorization } from "../utils/get-socket-authorization.js";
 
 export const createConnectionContextInitialisationMiddleware = (
   logger: ILogger,

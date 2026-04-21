@@ -1,1 +1,1 @@
-export type { CompiledSql } from "../../../../utils/sql/compiled-sql";
+export type { CompiledSql } from "../../../../utils/sql/compiled-sql.js";

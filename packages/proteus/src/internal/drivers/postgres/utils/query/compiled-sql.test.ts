@@ -1,4 +1,4 @@
-import type { CompiledSql } from "./compiled-sql";
+import type { CompiledSql } from "./compiled-sql.js";
 import { describe, expect, test } from "vitest";
 
 // compiled-sql.ts only exports a type — these tests verify the structural

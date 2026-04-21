@@ -1,4 +1,4 @@
-import { zephyrChangeIncomingDataMiddleware } from "./zephyr-change-incoming-data-middleware";
+import { zephyrChangeIncomingDataMiddleware } from "./zephyr-change-incoming-data-middleware.js";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 describe("zephyrChangeIncomingDataMiddleware", () => {

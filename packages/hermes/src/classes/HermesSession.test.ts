@@ -1,8 +1,8 @@
 import { LindormError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import type { HermesStatus } from "../types/hermes-status";
-import { HermesSession } from "./HermesSession";
-import type { HermesSessionOptions } from "./HermesSession";
+import type { HermesStatus } from "../types/hermes-status.js";
+import { HermesSession } from "./HermesSession.js";
+import type { HermesSessionOptions } from "./HermesSession.js";
 import { describe, expect, it, vi } from "vitest";
 
 // Minimal stubs for the dependencies HermesSession actually uses
@@ -28,7 +28,7 @@ const createOptions = (
 });
 
 // extractDto is used internally — mock it to return predictable data
-vi.mock("../internal/utils", async () => ({
+vi.mock("../internal/utils/index.js", async () => ({
   extractDto: vi.fn().mockReturnValue({ data: { foo: "bar" } }),
 }));
 

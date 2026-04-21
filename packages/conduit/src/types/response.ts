@@ -1,4 +1,4 @@
-import { Dict, Header } from "@lindorm/types";
+import type { Dict, Header } from "@lindorm/types";
 
 export type ConduitResponse<D = any> = {
   data: D;

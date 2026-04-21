@@ -1,4 +1,4 @@
-import { randomId } from "../src";
+import { randomId } from "../src/index.js";
 
 console.log("random id (8)  > ", randomId({ bytes: 8 }));
 console.log("random id (16) > ", randomId({ bytes: 16 }));

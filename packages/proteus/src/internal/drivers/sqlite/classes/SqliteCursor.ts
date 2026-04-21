@@ -1,15 +1,15 @@
 import type { Dict } from "@lindorm/types";
-import type { IEntity, IProteusCursor } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { AliasMap } from "../utils/query/compile-select";
-import type { SqliteQueryClient } from "../types/sqlite-query-client";
-import { SqliteDriverError } from "../errors/SqliteDriverError";
-import { hydrateRows } from "../utils/query/hydrate-result";
+import type { IEntity, IProteusCursor } from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { AliasMap } from "../utils/query/compile-select.js";
+import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
+import { SqliteDriverError } from "../errors/SqliteDriverError.js";
+import { hydrateRows } from "../utils/query/hydrate-result.js";
 import {
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
-} from "../utils/repository/embedded-list-ops";
-import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-embedded-lists";
+} from "../utils/repository/embedded-list-ops.js";
+import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-embedded-lists.js";
 
 export type SqliteCursorOptions = {
   sql: string;

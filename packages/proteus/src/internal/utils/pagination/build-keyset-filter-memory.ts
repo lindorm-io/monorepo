@@ -1,4 +1,4 @@
-import type { KeysetOrderEntry } from "./build-keyset-order";
+import type { KeysetOrderEntry } from "./build-keyset-order.js";
 
 /**
  * Create an in-memory predicate function implementing keyset (seek) pagination

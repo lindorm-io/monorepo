@@ -6,14 +6,14 @@ import {
   conduitCorrelationMiddleware,
 } from "@lindorm/conduit";
 import { ClientError } from "@lindorm/errors";
-import { OpenIdAuthorizeResponseQuery, OpenIdClaims } from "@lindorm/types";
-import {
+import type { OpenIdAuthorizeResponseQuery, OpenIdClaims } from "@lindorm/types";
+import type {
   PylonAuthConfig,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonLoginCookie,
-} from "../../../types";
-import { parseTokenData } from "./parse-token-data";
+} from "../../../types/index.js";
+import { parseTokenData } from "./parse-token-data.js";
 
 const resolveSubjectViaUserinfo = (
   ctx: PylonHttpContext,

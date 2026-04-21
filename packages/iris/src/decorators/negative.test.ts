@@ -1,19 +1,19 @@
-import { IrisMetadataError } from "../errors";
-import { findMessageByName } from "../internal/message/metadata/registry";
-import { AbstractMessage } from "./AbstractMessage";
-import { Broadcast } from "./Broadcast";
-import { Compressed } from "./Compressed";
-import { Default } from "./Default";
-import { Enum } from "./Enum";
-import { Field } from "./Field";
-import { Generated } from "./Generated";
-import { Header } from "./Header";
-import { Max } from "./Max";
-import { Message } from "./Message";
-import { Min } from "./Min";
-import { Namespace } from "./Namespace";
-import { OnCreate } from "./OnCreate";
-import { Transform } from "./Transform";
+import { IrisMetadataError } from "../errors/index.js";
+import { findMessageByName } from "../internal/message/metadata/registry.js";
+import { AbstractMessage } from "./AbstractMessage.js";
+import { Broadcast } from "./Broadcast.js";
+import { Compressed } from "./Compressed.js";
+import { Default } from "./Default.js";
+import { Enum } from "./Enum.js";
+import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
+import { Header } from "./Header.js";
+import { Max } from "./Max.js";
+import { Message } from "./Message.js";
+import { Min } from "./Min.js";
+import { Namespace } from "./Namespace.js";
+import { OnCreate } from "./OnCreate.js";
+import { Transform } from "./Transform.js";
 import { describe, expect, it } from "vitest";
 
 describe("negative and edge-case decorator usage", () => {

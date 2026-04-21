@@ -1,5 +1,5 @@
-import type { IMessage } from "./Message";
-import type { ConsumeEnvelope, ConsumeOptions, PublishOptions } from "../types";
+import type { IMessage } from "./Message.js";
+import type { ConsumeEnvelope, ConsumeOptions, PublishOptions } from "../types/index.js";
 
 export interface IIrisWorkerQueue<M extends IMessage = IMessage> {
   create(options?: Partial<M>): M;

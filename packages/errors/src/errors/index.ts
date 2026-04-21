@@ -1,3 +1,3 @@
-export * from "./ClientError";
-export * from "./LindormError";
-export * from "./ServerError";
+export * from "./ClientError.js";
+export * from "./LindormError.js";
+export * from "./ServerError.js";

@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 
 export type AesContent = Array<any> | boolean | Buffer | Dict | number | string;
 

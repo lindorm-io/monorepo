@@ -1,4 +1,4 @@
-import { KeyData } from "../types";
+import type { KeyData } from "../types/index.js";
 
 export interface IKeyKit {
   sign(data: KeyData): Buffer;

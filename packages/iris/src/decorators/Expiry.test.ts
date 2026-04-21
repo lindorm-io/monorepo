@@ -1,4 +1,4 @@
-import { Expiry } from "./Expiry";
+import { Expiry } from "./Expiry.js";
 import { describe, expect, it } from "vitest";
 
 describe("Expiry", () => {

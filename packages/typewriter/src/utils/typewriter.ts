@@ -1,5 +1,5 @@
-import { ILogger, LoggerOptions } from "@lindorm/logger";
-import { getLogger, getTypes, loadSamples, writeLinesToFile } from "../internal/index";
+import type { ILogger, LoggerOptions } from "@lindorm/logger";
+import { getLogger, getTypes, loadSamples, writeLinesToFile } from "../internal/index.js";
 
 type Options = {
   fileName?: string;

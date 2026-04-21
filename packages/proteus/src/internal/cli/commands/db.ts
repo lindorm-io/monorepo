@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import { dbPing } from "./db-ping";
+import { dbPing } from "./db-ping.js";
 
 export const registerDbCommands = (program: Command): void => {
   const db = program.command("db").description("Database diagnostic commands");

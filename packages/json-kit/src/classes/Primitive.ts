@@ -1,5 +1,5 @@
 import { isArray, isBuffer, isObjectLike, isString } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import {
   getMetaArray,
   getMetaObject,
@@ -7,7 +7,7 @@ import {
   parseObjectValues,
   stringifyArrayValues,
   stringifyObjectValues,
-} from "../internal/index";
+} from "../internal/index.js";
 
 export class Primitive<T extends Array<any> | Dict = Dict> {
   private readonly _data: T;

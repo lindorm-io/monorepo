@@ -1,4 +1,4 @@
-import { removeUndefined } from "./remove-undefined";
+import { removeUndefined } from "./remove-undefined.js";
 import { describe, expect, test } from "vitest";
 
 describe("removeUndefined", () => {

@@ -1,5 +1,5 @@
-import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
-import type { EntityGroup } from "./group-operations";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan.js";
+import type { EntityGroup } from "./group-operations.js";
 
 export const filterOperationsByEntities = (
   allOperations: Array<SyncOperation>,

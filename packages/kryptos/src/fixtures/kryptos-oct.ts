@@ -1,5 +1,5 @@
-import { IKryptosOct } from "../interfaces";
-import { KryptosKit } from "../classes";
+import type { IKryptosOct } from "../interfaces/index.js";
+import { KryptosKit } from "../classes/index.js";
 
 export const KRYPTOS_OCT_SIG_HS256 = KryptosKit.from.b64({
   id: "245fb48b-c9fb-408a-882f-46589efb6611",

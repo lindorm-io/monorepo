@@ -2,16 +2,16 @@ import { randomUUID } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { ConsumeMessage } from "amqplib";
-import { IrisSerializationError } from "../../../../errors/IrisSerializationError";
-import { IrisTransportError } from "../../../../errors/IrisTransportError";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import type { IMessage } from "../../../../interfaces";
+import { IrisSerializationError } from "../../../../errors/IrisSerializationError.js";
+import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import type { IMessage } from "../../../../interfaces/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import { prepareInbound } from "../../../message/utils/prepare-inbound";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase";
-import { buildAmqpHeaders } from "../utils/build-amqp-headers";
-import { parseAmqpHeaders } from "../utils/parse-amqp-headers";
+import { prepareInbound } from "../../../message/utils/prepare-inbound.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
+import { buildAmqpHeaders } from "../utils/build-amqp-headers.js";
+import { parseAmqpHeaders } from "../utils/parse-amqp-headers.js";
 
 const REPLY_TO = "amq.rabbitmq.reply-to";
 

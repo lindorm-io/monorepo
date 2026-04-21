@@ -1,8 +1,8 @@
 import type { Constructor, DeepPartial } from "@lindorm/types";
 import { randomBytes, randomInt, randomUUID } from "crypto";
-import { IEntity } from "../../../interfaces";
-import type { MetaGenerated } from "../types/metadata";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { MetaGenerated } from "../types/metadata.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 const generate = (config: MetaGenerated): any => {
   switch (config.strategy) {

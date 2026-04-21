@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { createConnectionCorsMiddleware } from "./connection-cors-middleware";
+import { createConnectionCorsMiddleware } from "./connection-cors-middleware.js";
 import { describe, expect, test, vi } from "vitest";
 
 const buildCtx = (origin: string | undefined): any => ({

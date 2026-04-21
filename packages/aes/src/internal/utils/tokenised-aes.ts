@@ -1,14 +1,14 @@
 import { B64 } from "@lindorm/b64";
-import { AesError } from "../../errors/AesError";
-import { ParsedAesDecryptionRecord } from "../../types/aes-decryption-data";
-import { AesEncryptionRecord } from "../../types/aes-encryption-data";
+import { AesError } from "../../errors/AesError.js";
+import type { ParsedAesDecryptionRecord } from "../../types/aes-decryption-data.js";
+import type { AesEncryptionRecord } from "../../types/aes-encryption-data.js";
 import {
   buildAesHeader,
   computeAad,
   decodeAesHeader,
   encodeAesHeader,
   headerToDecryptionParams,
-} from "./aes-header";
+} from "./aes-header.js";
 
 /**
  * New tokenised format (v1.0):

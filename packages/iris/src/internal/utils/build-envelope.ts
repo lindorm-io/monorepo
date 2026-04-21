@@ -1,7 +1,7 @@
-import type { MessageMetadata } from "../message/types/metadata";
-import type { OutboundPayload } from "../message/utils/prepare-outbound";
-import type { EnvelopeOverrides } from "../types/envelope-overrides";
-import type { IrisEnvelope } from "../types/iris-envelope";
+import type { MessageMetadata } from "../message/types/metadata.js";
+import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
+import type { EnvelopeOverrides } from "../types/envelope-overrides.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
 
 export type { EnvelopeOverrides };
 

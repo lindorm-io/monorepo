@@ -6,13 +6,13 @@ export type {
   MigrationApplyResult,
   MigrationStatus,
   SqlMigrationInterface as MigrationInterface,
-} from "../../../types/migration";
+} from "../../../types/migration.js";
 
 // Re-export as the names this file historically used
 export type {
   SqlMigrationContext as MigrationQueryContext,
   SqlMigrationRunner as MigrationQueryRunner,
-} from "../../../types/migration";
+} from "../../../types/migration.js";
 
 // Postgres-specific: LoadedMigration references the shared SqlMigrationInterface
 export type LoadedMigration = {

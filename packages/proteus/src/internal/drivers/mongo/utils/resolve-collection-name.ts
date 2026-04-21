@@ -1,5 +1,5 @@
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
 
 /**
  * Resolve the MongoDB collection name for an entity.

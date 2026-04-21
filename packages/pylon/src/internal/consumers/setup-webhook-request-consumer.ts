@@ -1,8 +1,8 @@
-import { IIrisSource } from "@lindorm/iris";
-import { ILogger } from "@lindorm/logger";
-import { IProteusSource } from "@lindorm/proteus";
-import { WebhookSubscription } from "../../entities";
-import { WebhookDispatch, WebhookRequest } from "../../messages";
+import type { IIrisSource } from "@lindorm/iris";
+import type { ILogger } from "@lindorm/logger";
+import type { IProteusSource } from "@lindorm/proteus";
+import { WebhookSubscription } from "../../entities/index.js";
+import { WebhookDispatch, WebhookRequest } from "../../messages/index.js";
 
 export const WEBHOOK_REQUEST_QUEUE = "pylon.webhook.request.fanout";
 

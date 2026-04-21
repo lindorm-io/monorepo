@@ -1,8 +1,8 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import { ProteusError } from "../../../../../errors/ProteusError";
-import { compileJoin } from "./compile-join";
-import type { AliasMap } from "./compile-select";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import { ProteusError } from "../../../../../errors/ProteusError.js";
+import { compileJoin } from "./compile-join.js";
+import type { AliasMap } from "./compile-select.js";
 import { describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock getEntityMetadata so we control what metadata the join compiler sees
@@ -148,7 +148,7 @@ const versionedProfileMetadata = {
   primaryKeys: ["id"],
 } as unknown as EntityMetadata;
 
-vi.mock("../../../../entity/metadata/get-entity-metadata", () => ({
+vi.mock("../../../../entity/metadata/get-entity-metadata.js", () => ({
   getEntityMetadata: vi.fn((ctor: any) => {
     if (ctor._name === "Post") return postMetadata;
     if (ctor._name === "Tag") return tagMetadata;

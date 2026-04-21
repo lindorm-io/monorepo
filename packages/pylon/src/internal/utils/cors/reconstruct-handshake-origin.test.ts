@@ -1,4 +1,4 @@
-import { reconstructHandshakeOrigin } from "./reconstruct-handshake-origin";
+import { reconstructHandshakeOrigin } from "./reconstruct-handshake-origin.js";
 import { describe, expect, test } from "vitest";
 
 describe("reconstructHandshakeOrigin", () => {

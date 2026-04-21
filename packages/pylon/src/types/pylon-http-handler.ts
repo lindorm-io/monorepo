@@ -1,5 +1,5 @@
 import { Readable } from "stream";
-import { PylonHttpContext } from "./context-http";
+import type { PylonHttpContext } from "./context-http.js";
 
 export type PylonHandlerFileDownloadOptions = {
   immutable?: boolean;

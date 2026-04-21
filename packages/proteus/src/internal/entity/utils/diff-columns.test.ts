@@ -1,6 +1,6 @@
-import { makeField } from "../../__fixtures__/make-field";
-import type { EntityMetadata } from "../types/metadata";
-import { diffColumns } from "./diff-columns";
+import { makeField } from "../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../types/metadata.js";
+import { diffColumns } from "./diff-columns.js";
 import { describe, expect, test } from "vitest";
 
 const metadata = {

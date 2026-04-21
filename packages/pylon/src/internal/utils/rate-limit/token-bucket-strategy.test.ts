@@ -1,4 +1,4 @@
-import { tokenBucketStrategy } from "./token-bucket-strategy";
+import { tokenBucketStrategy } from "./token-bucket-strategy.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("tokenBucketStrategy", () => {

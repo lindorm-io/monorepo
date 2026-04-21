@@ -1,5 +1,5 @@
 import { Client } from "pg";
-import { PostgresQueryClient } from "../drivers/postgres/types/postgres-query-client";
+import type { PostgresQueryClient } from "../drivers/postgres/types/postgres-query-client.js";
 
 const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
 

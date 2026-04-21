@@ -1,4 +1,4 @@
-import { ITransactionContext } from "../interfaces";
+import type { ITransactionContext } from "../interfaces/index.js";
 
 /**
  * Callback executed within a transaction scope.

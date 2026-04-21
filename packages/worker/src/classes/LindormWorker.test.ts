@@ -1,8 +1,11 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { sleep } from "@lindorm/utils";
-import { LindormWorkerError } from "../errors";
-import { LindormWorkerCallback, LindormWorkerErrorCallback } from "../types";
-import { LindormWorker } from "./LindormWorker";
+import { LindormWorkerError } from "../errors/index.js";
+import type {
+  LindormWorkerCallback,
+  LindormWorkerErrorCallback,
+} from "../types/index.js";
+import { LindormWorker } from "./LindormWorker.js";
 import {
   afterEach,
   beforeEach,

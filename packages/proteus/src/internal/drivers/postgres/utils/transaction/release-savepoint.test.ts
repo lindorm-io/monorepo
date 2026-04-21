@@ -1,6 +1,6 @@
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { releaseSavepoint } from "./release-savepoint";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { releaseSavepoint } from "./release-savepoint.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const makeHandle = (

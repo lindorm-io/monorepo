@@ -1,6 +1,6 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
+import type { KryptosEncryption } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { AesError } from "../../../errors";
+import { AesError } from "../../../errors/index.js";
 
 export const getInitialisationVector = (encryption: KryptosEncryption): Buffer => {
   switch (encryption) {

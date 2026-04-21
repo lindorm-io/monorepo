@@ -1,4 +1,4 @@
-import { stageRelationCount } from "../internal/entity/metadata/stage-metadata";
+import { stageRelationCount } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Populates a field with the count of a related collection via a batched

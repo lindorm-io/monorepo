@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isDateString } from "./is-date-string";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isDateString } from "./is-date-string.js";
 import { describe, expect, test } from "vitest";
 
 describe("isDateString", () => {

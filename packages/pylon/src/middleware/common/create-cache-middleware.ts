@@ -1,9 +1,9 @@
-import { resolveProteus } from "../../internal/utils/resolve-proteus";
+import { resolveProteus } from "../../internal/utils/resolve-proteus.js";
 import { camelCase } from "@lindorm/case";
-import { IEntity, IProteusSource } from "@lindorm/proteus";
-import { Constructor, Dict } from "@lindorm/types";
+import type { IEntity, IProteusSource } from "@lindorm/proteus";
+import type { Constructor, Dict } from "@lindorm/types";
 import { lazyFactory } from "@lindorm/utils";
-import { PylonContext, PylonMiddleware } from "../../types";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 export const createCacheMiddleware = <C extends PylonContext = PylonContext>(
   entities: Array<Constructor<IEntity>>,

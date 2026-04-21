@@ -1,5 +1,5 @@
-import { encodeOid, encodeSequence, encodeSet, encodeUtf8String } from "../asn1";
-import { X509_OID_COMMON_NAME, X509_OID_ORGANIZATION_NAME } from "./oids";
+import { encodeOid, encodeSequence, encodeSet, encodeUtf8String } from "../asn1/index.js";
+import { X509_OID_COMMON_NAME, X509_OID_ORGANIZATION_NAME } from "./oids.js";
 
 export type X509NameInput =
   | {

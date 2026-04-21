@@ -1,4 +1,4 @@
-import { calculateWorkers } from "./calculate-workers";
+import { calculateWorkers } from "./calculate-workers.js";
 import { describe, expect, test } from "vitest";
 
 describe("calculateWorkers", () => {

@@ -1,6 +1,6 @@
 import { isArray, isObject } from "@lindorm/is";
-import { getMetaObject } from "./get-meta-object";
-import { getMetaType } from "./get-meta-type";
+import { getMetaObject } from "./get-meta-object.js";
+import { getMetaType } from "./get-meta-type.js";
 
 export const getMetaArray = (input: Array<any>): Array<string> => {
   const result: Array<any> = [];

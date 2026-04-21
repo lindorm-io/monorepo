@@ -2,11 +2,11 @@
 // Tests request/response pattern with timeouts.
 // Uses REAL timers for cross-driver portability.
 
-import { IrisTimeoutError } from "../../../errors/IrisTimeoutError";
-import { IrisError } from "../../../errors/IrisError";
-import type { TckDriverHandle } from "./types";
-import type { TckMessages } from "./create-tck-messages";
-import { wait } from "./wait";
+import { IrisTimeoutError } from "../../../errors/IrisTimeoutError.js";
+import { IrisError } from "../../../errors/IrisError.js";
+import type { TckDriverHandle } from "./types.js";
+import type { TckMessages } from "./create-tck-messages.js";
+import { wait } from "./wait.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 export const rpcSuite = (

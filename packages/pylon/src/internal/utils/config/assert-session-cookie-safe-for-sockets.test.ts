@@ -1,5 +1,5 @@
-import { PylonError } from "../../../errors/PylonError";
-import { assertSessionCookieSafeForSockets } from "./assert-session-cookie-safe-for-sockets";
+import { PylonError } from "../../../errors/PylonError.js";
+import { assertSessionCookieSafeForSockets } from "./assert-session-cookie-safe-for-sockets.js";
 import { describe, expect, test } from "vitest";
 
 describe("assertSessionCookieSafeForSockets", () => {

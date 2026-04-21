@@ -1,8 +1,8 @@
 import dotenvx from "@dotenvx/dotenvx";
 import { merge } from "@lindorm/utils";
 import { z } from "zod";
-import { NpmInformation } from "../types";
-import { coerceAll, loadConfig, loadNodeConfig } from "../internal/index";
+import type { NpmInformation } from "../types/index.js";
+import { coerceAll, loadConfig, loadNodeConfig } from "../internal/index.js";
 
 export const configuration = <T extends Record<string, z.ZodType>>(
   schema: T,

@@ -1,21 +1,21 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { ConsumeStrategies } from "../../../types/consume-strategies";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { ConsumeStrategies } from "../../../types/consume-strategies.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import {
   consumeMessageCore,
   type ConsumerCallbackHost,
-} from "../../../utils/consume-message-core";
+} from "../../../utils/consume-message-core.js";
 import type {
   RedisSharedState,
   RedisStreamEntry,
   WrapRedisConsumerOptions,
-} from "../types/redis-types";
-import { resolveStreamKey } from "./resolve-stream-key";
-import { serializeStreamFields } from "./serialize-stream-fields";
-import { xaddToStream } from "./xadd-to-stream";
+} from "../types/redis-types.js";
+import { resolveStreamKey } from "./resolve-stream-key.js";
+import { serializeStreamFields } from "./serialize-stream-fields.js";
+import { xaddToStream } from "./xadd-to-stream.js";
 
 export type RedisConsumerCallbackHost<M extends IMessage> = ConsumerCallbackHost<M>;
 

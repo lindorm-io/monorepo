@@ -1,4 +1,4 @@
-import { cloneDocument } from "./clone-with-getters";
+import { cloneDocument } from "./clone-with-getters.js";
 import { describe, expect, test } from "vitest";
 
 describe("cloneDocument", () => {

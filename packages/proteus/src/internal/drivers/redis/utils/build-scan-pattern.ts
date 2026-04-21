@@ -1,7 +1,7 @@
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../../interfaces";
-import { getEntityName } from "../../../entity/utils/get-entity-name";
-import { encodePkSegment } from "./encode-pk-segment";
+import type { IEntity } from "../../../../interfaces/index.js";
+import { getEntityName } from "../../../entity/utils/get-entity-name.js";
+import { encodePkSegment } from "./encode-pk-segment.js";
 
 /**
  * Build a SCAN MATCH pattern for all keys of a given entity.

@@ -1,1 +1,1 @@
-export { HermesViewEntity } from "./HermesViewEntity";
+export { HermesViewEntity } from "./HermesViewEntity.js";

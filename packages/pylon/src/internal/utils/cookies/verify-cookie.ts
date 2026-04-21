@@ -1,6 +1,6 @@
 import { SignatureKit } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { PylonCommonContext } from "../../../types";
+import type { PylonCommonContext } from "../../../types/index.js";
 
 export const verifyCookie = async (
   ctx: Pick<PylonCommonContext, "amphora">,

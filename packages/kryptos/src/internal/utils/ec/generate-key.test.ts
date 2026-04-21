@@ -1,4 +1,4 @@
-import { generateEcKey } from "./generate-key";
+import { generateEcKey } from "./generate-key.js";
 import { describe, expect, test } from "vitest";
 
 describe("generateEcKey", () => {

@@ -1,12 +1,12 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor, DeepPartial, Predicate } from "@lindorm/types";
-import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError";
+import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError.js";
 import type {
   IEntity,
   IProteusCursor,
   IProteusQueryBuilder,
   IProteusRepository,
-} from "../../interfaces";
+} from "../../interfaces/index.js";
 import type {
   ClearOptions,
   CursorOptions,
@@ -17,42 +17,42 @@ import type {
   PaginateOptions,
   PaginateResult,
   UpsertOptions,
-} from "../../types";
-import { EntityManager } from "../entity/classes/EntityManager";
-import { getEntityMetadata } from "../entity/metadata/get-entity-metadata";
-import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
+} from "../../types/index.js";
+import { EntityManager } from "../entity/classes/EntityManager.js";
+import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
+import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor.js";
 import type {
   EntityMetadata,
   MetaEmbeddedList,
   QueryScope,
-} from "../entity/types/metadata";
-import type { RepositoryFactory } from "../types/repository-factory";
-import type { AggregateFunction } from "../types/aggregate";
-import type { LazyRelationLoader } from "../entity/utils/install-lazy-relations";
-import type { LazyEmbeddedListLoader } from "../entity/utils/install-lazy-embedded-lists";
-import { installLazyEmbeddedLists } from "../entity/utils/install-lazy-embedded-lists";
-import type { EntityEmitFn } from "../../types/event-map";
-import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate";
+} from "../entity/types/metadata.js";
+import type { RepositoryFactory } from "../types/repository-factory.js";
+import type { AggregateFunction } from "../types/aggregate.js";
+import type { LazyRelationLoader } from "../entity/utils/install-lazy-relations.js";
+import type { LazyEmbeddedListLoader } from "../entity/utils/install-lazy-embedded-lists.js";
+import { installLazyEmbeddedLists } from "../entity/utils/install-lazy-embedded-lists.js";
+import type { EntityEmitFn } from "../../types/event-map.js";
+import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
   guardDeleteDateField,
   guardExpiryDateField,
   guardUpsertBlocked,
-} from "../utils/repository/repository-guards";
-import { installLazyRelations } from "../entity/utils/install-lazy-relations";
-import { isLazyRelation } from "../entity/utils/lazy-relation";
-import { isLazyCollection } from "../entity/utils/lazy-collection";
-import { filterHiddenSelections } from "../utils/query/filter-hidden-selections";
-import { validatePaginateOptions } from "../utils/pagination/validate-paginate-options";
+} from "../utils/repository/repository-guards.js";
+import { installLazyRelations } from "../entity/utils/install-lazy-relations.js";
+import { isLazyRelation } from "../entity/utils/lazy-relation.js";
+import { isLazyCollection } from "../entity/utils/lazy-collection.js";
+import { filterHiddenSelections } from "../utils/query/filter-hidden-selections.js";
+import { validatePaginateOptions } from "../utils/pagination/validate-paginate-options.js";
 import {
   buildKeysetOrder,
   keysetOrderToRecord,
   type KeysetOrderEntry,
-} from "../utils/pagination/build-keyset-order";
-import { buildKeysetPredicate } from "../utils/pagination/build-keyset-predicate";
-import { encodeCursor } from "../utils/pagination/encode-cursor";
-import { decodeCursor } from "../utils/pagination/decode-cursor";
-import { extractCursorValues } from "../utils/pagination/extract-cursor-values";
+} from "../utils/pagination/build-keyset-order.js";
+import { buildKeysetPredicate } from "../utils/pagination/build-keyset-predicate.js";
+import { encodeCursor } from "../utils/pagination/encode-cursor.js";
+import { decodeCursor } from "../utils/pagination/decode-cursor.js";
+import { extractCursorValues } from "../utils/pagination/extract-cursor-values.js";
 
 export type DriverRepositoryBaseOptions<E extends IEntity> = {
   target: Constructor<E>;

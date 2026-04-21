@@ -1,4 +1,4 @@
-import { Amphora, IAmphora } from "@lindorm/amphora";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
@@ -7,10 +7,10 @@ import {
 } from "@lindorm/proteus/mocks/vitest";
 import { Server as HttpServer } from "http";
 import { join } from "path";
-import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner";
-import { PylonError } from "../errors/PylonError";
-import { PylonListener } from "./PylonListener";
-import { PylonIo } from "./PylonIo";
+import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner.js";
+import { PylonError } from "../errors/PylonError.js";
+import { PylonListener } from "./PylonListener.js";
+import { PylonIo } from "./PylonIo.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("PylonIo (handshake chain)", () => {

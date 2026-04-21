@@ -1,6 +1,6 @@
-import { expiresAt, ReadableTime } from "@lindorm/date";
+import { expiresAt, type ReadableTime } from "@lindorm/date";
 import { ServerError } from "@lindorm/errors";
-import { PylonSecurityTxt } from "../../types";
+import type { PylonSecurityTxt } from "../../types/index.js";
 
 const MAX_EXPIRES: ReadableTime = "1 year";
 

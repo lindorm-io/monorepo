@@ -1,5 +1,11 @@
-import { OkpAlgorithm, OkpBuffer, OkpCurve, OkpJwk, OkpString } from "../types";
-import { IKryptos } from "./Kryptos";
+import type {
+  OkpAlgorithm,
+  OkpBuffer,
+  OkpCurve,
+  OkpJwk,
+  OkpString,
+} from "../types/index.js";
+import type { IKryptos } from "./Kryptos.js";
 
 export interface IKryptosOkp extends IKryptos {
   algorithm: OkpAlgorithm;

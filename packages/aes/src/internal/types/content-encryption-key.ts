@@ -1,5 +1,5 @@
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
-import { PublicEncryptionJwk } from "../../types/types";
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import type { PublicEncryptionJwk } from "../../types/types.js";
 
 export type CreateCekOptions = {
   encryption: KryptosEncryption;

@@ -1,14 +1,18 @@
-import { ReadableTime, ms } from "@lindorm/date";
+import { type ReadableTime, ms } from "@lindorm/date";
 import { ClientError, ServerError } from "@lindorm/errors";
-import { IProteusSession, IProteusSource } from "@lindorm/proteus";
-import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols";
-import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
-import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-window-strategy";
-import { RateLimitResult } from "../../internal/utils/rate-limit/fixed-window-strategy";
-import { slidingWindowStrategy } from "../../internal/utils/rate-limit/sliding-window-strategy";
-import { tokenBucketStrategy } from "../../internal/utils/rate-limit/token-bucket-strategy";
-import { RateLimitBucket, RateLimitFixed, RateLimitSliding } from "../../entities";
-import { PylonContext, PylonMiddleware } from "../../types";
+import type { IProteusSession, IProteusSource } from "@lindorm/proteus";
+import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols.js";
+import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
+import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-window-strategy.js";
+import type { RateLimitResult } from "../../internal/utils/rate-limit/fixed-window-strategy.js";
+import { slidingWindowStrategy } from "../../internal/utils/rate-limit/sliding-window-strategy.js";
+import { tokenBucketStrategy } from "../../internal/utils/rate-limit/token-bucket-strategy.js";
+import {
+  RateLimitBucket,
+  RateLimitFixed,
+  RateLimitSliding,
+} from "../../entities/index.js";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type RateLimitStrategy = "fixed" | "sliding" | "token-bucket";
 

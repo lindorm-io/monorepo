@@ -1,12 +1,12 @@
-import type { IMessage } from "../../interfaces";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import { Field } from "../../decorators/Field";
-import { Message } from "../../decorators/Message";
-import { clearRegistry } from "../message/metadata/registry";
+import type { IMessage } from "../../interfaces/index.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { Field } from "../../decorators/Field.js";
+import { Message } from "../../decorators/Message.js";
+import { clearRegistry } from "../message/metadata/registry.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
-} from "./DriverStreamPipelineBase";
+} from "./DriverStreamPipelineBase.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Test messages ---

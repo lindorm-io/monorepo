@@ -1,9 +1,9 @@
-import type { ComposedOptions } from "../../types";
-import { composeDown } from "./compose-down";
-import { composeUp } from "./compose-up";
-import { composed } from "./composed";
-import { resolveComposeFile } from "./resolve-compose-file";
-import { spawnCommand } from "./spawn-command";
+import type { ComposedOptions } from "../../types/index.js";
+import { composeDown } from "./compose-down.js";
+import { composeUp } from "./compose-up.js";
+import { composed } from "./composed.js";
+import { resolveComposeFile } from "./resolve-compose-file.js";
+import { spawnCommand } from "./spawn-command.js";
 import {
   afterEach,
   beforeEach,
@@ -15,10 +15,10 @@ import {
   type MockInstance,
 } from "vitest";
 
-vi.mock("./resolve-compose-file");
-vi.mock("./compose-up");
-vi.mock("./compose-down");
-vi.mock("./spawn-command");
+vi.mock("./resolve-compose-file.js");
+vi.mock("./compose-up.js");
+vi.mock("./compose-down.js");
+vi.mock("./spawn-command.js");
 
 const mockResolveComposeFile = resolveComposeFile as MockedFunction<
   typeof resolveComposeFile

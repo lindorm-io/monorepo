@@ -1,13 +1,13 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { PredicateEntry } from "../../../../types/query";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../../../types/query.js";
 import {
   compileWhere as sharedCompileWhere,
   compilePredicate as sharedCompilePredicate,
   type FieldAliasOverrides,
-} from "../../../../utils/sql/compile-where";
-import { sqliteDialect } from "../sqlite-dialect";
+} from "../../../../utils/sql/compile-where.js";
+import { sqliteDialect } from "../sqlite-dialect.js";
 
 export type { FieldAliasOverrides };
 

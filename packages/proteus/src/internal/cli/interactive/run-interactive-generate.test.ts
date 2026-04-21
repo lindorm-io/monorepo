@@ -1,15 +1,15 @@
-import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
-import type { EntityGroup } from "./group-operations";
-import { runInteractiveGenerate } from "./run-interactive-generate";
-import { projectDesiredSchema } from "../../drivers/postgres/utils/sync/project-desired-schema";
-import { introspectSchema } from "../../drivers/postgres/utils/sync/introspect-schema";
-import { diffSchema } from "../../drivers/postgres/utils/sync/diff-schema";
-import { serializeMigration } from "../../drivers/postgres/utils/migration/serialize-migration";
-import { writeMigrationFile } from "../../drivers/postgres/utils/migration/write-migration-file";
-import { groupOperationsByEntity } from "./group-operations";
-import { filterOperationsByEntities } from "./filter-operations";
-import { suggestMigrationName } from "./suggest-name";
-import { previewOperations } from "./preview-operations";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan.js";
+import type { EntityGroup } from "./group-operations.js";
+import { runInteractiveGenerate } from "./run-interactive-generate.js";
+import { projectDesiredSchema } from "../../drivers/postgres/utils/sync/project-desired-schema.js";
+import { introspectSchema } from "../../drivers/postgres/utils/sync/introspect-schema.js";
+import { diffSchema } from "../../drivers/postgres/utils/sync/diff-schema.js";
+import { serializeMigration } from "../../drivers/postgres/utils/migration/serialize-migration.js";
+import { writeMigrationFile } from "../../drivers/postgres/utils/migration/write-migration-file.js";
+import { groupOperationsByEntity } from "./group-operations.js";
+import { filterOperationsByEntities } from "./filter-operations.js";
+import { suggestMigrationName } from "./suggest-name.js";
+import { previewOperations } from "./preview-operations.js";
 import { Logger } from "@lindorm/logger";
 import {
   beforeEach,
@@ -21,15 +21,15 @@ import {
   type MockedFunction,
 } from "vitest";
 
-vi.mock("../../drivers/postgres/utils/sync/project-desired-schema");
-vi.mock("../../drivers/postgres/utils/sync/introspect-schema");
-vi.mock("../../drivers/postgres/utils/sync/diff-schema");
-vi.mock("../../drivers/postgres/utils/migration/serialize-migration");
-vi.mock("../../drivers/postgres/utils/migration/write-migration-file");
-vi.mock("./group-operations");
-vi.mock("./filter-operations");
-vi.mock("./suggest-name");
-vi.mock("./preview-operations");
+vi.mock("../../drivers/postgres/utils/sync/project-desired-schema.js");
+vi.mock("../../drivers/postgres/utils/sync/introspect-schema.js");
+vi.mock("../../drivers/postgres/utils/sync/diff-schema.js");
+vi.mock("../../drivers/postgres/utils/migration/serialize-migration.js");
+vi.mock("../../drivers/postgres/utils/migration/write-migration-file.js");
+vi.mock("./group-operations.js");
+vi.mock("./filter-operations.js");
+vi.mock("./suggest-name.js");
+vi.mock("./preview-operations.js");
 
 vi.mock("@lindorm/logger", async () => ({
   Logger: {

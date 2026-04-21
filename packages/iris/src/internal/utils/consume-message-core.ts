@@ -1,11 +1,11 @@
 import type { ILogger } from "@lindorm/logger";
 import { computeDelay } from "@lindorm/retry";
-import type { IMessage } from "../../interfaces";
-import type { ConsumeEnvelope } from "../../types";
-import type { MessageMetadata } from "../message/types/metadata";
-import type { ConsumeStrategies } from "../types/consume-strategies";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import { isExpired } from "./is-expired";
+import type { IMessage } from "../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../types/index.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
+import type { ConsumeStrategies } from "../types/consume-strategies.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { isExpired } from "./is-expired.js";
 
 export type { ConsumeStrategies };
 

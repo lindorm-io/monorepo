@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 import {
   guardAppendOnly,
   guardDeleteDateField,
@@ -8,7 +8,7 @@ import {
   guardVersionFields,
   guardUpsertBlocked,
   validateRelationNames,
-} from "./repository-guards";
+} from "./repository-guards.js";
 
 const makeMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetadata =>
   ({

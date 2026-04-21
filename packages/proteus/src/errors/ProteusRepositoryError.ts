@@ -1,4 +1,4 @@
-import { ProteusError } from "./ProteusError";
+import { ProteusError } from "./ProteusError.js";
 
 /**
  * Thrown when a repository operation fails.

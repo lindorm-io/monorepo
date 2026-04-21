@@ -1,5 +1,5 @@
-import { PylonError } from "../../../errors/PylonError";
-import { PylonOptions } from "../../../types";
+import { PylonError } from "../../../errors/PylonError.js";
+import type { PylonOptions } from "../../../types/index.js";
 
 export const assertSessionCookieSafeForSockets = (
   options: Pick<PylonOptions, "session" | "cors">,

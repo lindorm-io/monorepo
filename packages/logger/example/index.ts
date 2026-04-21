@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm/errors";
-import { Logger } from "../src";
+import { Logger } from "../src/index.js";
 
 const logger = new Logger({ level: "silly", readable: true });
 

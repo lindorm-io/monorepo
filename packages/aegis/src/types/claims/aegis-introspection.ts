@@ -1,9 +1,9 @@
-import { LindormClaims } from "./lindorm-claims";
-import { OAuthClaims } from "./oauth-claims";
-import { OidcClaims } from "./oidc-claims";
-import { PopClaims } from "./pop-claims";
-import { DelegationClaims } from "./delegation-claims";
-import { StdClaims } from "./std-claims";
+import type { LindormClaims } from "./lindorm-claims.js";
+import type { OAuthClaims } from "./oauth-claims.js";
+import type { OidcClaims } from "./oidc-claims.js";
+import type { PopClaims } from "./pop-claims.js";
+import type { DelegationClaims } from "./delegation-claims.js";
+import type { StdClaims } from "./std-claims.js";
 
 // When the token is active, the full claim surface is available.
 // No individual claim is required per RFC 7662 §2.2 — all are MAY —

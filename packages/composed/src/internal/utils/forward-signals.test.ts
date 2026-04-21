@@ -1,5 +1,5 @@
 import type { ChildProcess } from "child_process";
-import { forwardSignals } from "./forward-signals";
+import { forwardSignals } from "./forward-signals.js";
 import { describe, expect, test, vi } from "vitest";
 
 const SIGNALS: Array<NodeJS.Signals> = ["SIGINT", "SIGTERM", "SIGHUP", "SIGQUIT"];

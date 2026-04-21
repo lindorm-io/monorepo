@@ -1,5 +1,5 @@
 import { SignatureKit } from "@lindorm/aegis";
-import { PylonCommonContext } from "../../../types";
+import type { PylonCommonContext } from "../../../types/index.js";
 
 export const signCookie = async (
   ctx: Pick<PylonCommonContext, "amphora">,

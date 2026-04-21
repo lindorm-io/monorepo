@@ -1,12 +1,12 @@
 import {
   setupWebhookDispatchConsumer,
   WEBHOOK_DISPATCH_QUEUE,
-} from "./setup-webhook-dispatch-consumer";
+} from "./setup-webhook-dispatch-consumer.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../utils/dispatch-webhook");
+vi.mock("../utils/dispatch-webhook.js");
 
-import { createDispatchWebhook } from "../utils/dispatch-webhook";
+import { createDispatchWebhook } from "../utils/dispatch-webhook.js";
 
 describe("setupWebhookDispatchConsumer", async () => {
   const mockDispatchWebhook = vi.fn().mockResolvedValue(undefined);

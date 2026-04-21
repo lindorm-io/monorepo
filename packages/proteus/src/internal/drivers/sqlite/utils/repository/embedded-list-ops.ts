@@ -1,8 +1,8 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { MetaEmbeddedList } from "../../../../entity/types/metadata";
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
-import { quoteIdentifier } from "../quote-identifier";
-import { deserialise } from "../../../../entity/utils/deserialise";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { MetaEmbeddedList } from "../../../../entity/types/metadata.js";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { deserialise } from "../../../../entity/utils/deserialise.js";
 
 /**
  * Insert collection table rows for an entity's @EmbeddedList fields.

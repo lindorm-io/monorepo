@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import type { Middleware } from "@lindorm/middleware";
 import type { Dict, Environment } from "@lindorm/types";
 

@@ -1,1 +1,1 @@
-export * from "./AmphoraError";
+export * from "./AmphoraError.js";

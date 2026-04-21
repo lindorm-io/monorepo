@@ -1,14 +1,14 @@
-import { ProteusError } from "../../../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { CheckConstraintError } from "../../../../errors/CheckConstraintError";
-import { DeadlockError } from "../../../../errors/DeadlockError";
-import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError";
-import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError";
-import { NotNullViolationError } from "../../../../errors/NotNullViolationError";
-import { OptimisticLockError } from "../../../../errors/OptimisticLockError";
-import { SerializationError } from "../../../../errors/SerializationError";
-import { PostgresExecutorError } from "../../errors/PostgresExecutorError";
-import { wrapPgError } from "./wrap-pg-error";
+import { ProteusError } from "../../../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
+import { CheckConstraintError } from "../../../../errors/CheckConstraintError.js";
+import { DeadlockError } from "../../../../errors/DeadlockError.js";
+import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError.js";
+import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError.js";
+import { NotNullViolationError } from "../../../../errors/NotNullViolationError.js";
+import { OptimisticLockError } from "../../../../errors/OptimisticLockError.js";
+import { SerializationError } from "../../../../errors/SerializationError.js";
+import { PostgresExecutorError } from "../../errors/PostgresExecutorError.js";
+import { wrapPgError } from "./wrap-pg-error.js";
 import { describe, expect, test } from "vitest";
 
 type PgErrorFields = {

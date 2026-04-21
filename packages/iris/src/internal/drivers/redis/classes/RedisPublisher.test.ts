@@ -1,14 +1,14 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RedisSharedState } from "../types/redis-types";
-import { RedisPublisher } from "./RedisPublisher";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RedisSharedState } from "../types/redis-types.js";
+import { RedisPublisher } from "./RedisPublisher.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock publish-redis-messages ---
 const mockPublishRedisMessages = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/publish-redis-messages", async () => ({
+vi.mock("../utils/publish-redis-messages.js", async () => ({
   publishRedisMessages: (...args: Array<unknown>) => mockPublishRedisMessages(...args),
 }));
 

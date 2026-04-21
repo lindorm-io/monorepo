@@ -1,4 +1,4 @@
-import type { PostgresQueryClient } from "../types/postgres-query-client";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
 
 export const withAdvisoryLock = async <T>(
   client: PostgresQueryClient,

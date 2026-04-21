@@ -1,3 +1,3 @@
-import { EncryptKitOptions } from "../kit";
+import type { EncryptKitOptions } from "../kit.js";
 
 export type JweKitOptions = EncryptKitOptions;

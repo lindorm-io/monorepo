@@ -1,1 +1,1 @@
-export * from "./amphora";
+export * from "./amphora.js";

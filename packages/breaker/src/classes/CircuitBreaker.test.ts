@@ -1,10 +1,10 @@
-import { CircuitBreaker } from "./CircuitBreaker";
-import { CircuitOpenError } from "../errors/CircuitOpenError";
+import { CircuitBreaker } from "./CircuitBreaker.js";
+import { CircuitOpenError } from "../errors/CircuitOpenError.js";
 import type {
   CircuitBreakerOptions,
   ErrorClassification,
   StateChangeEvent,
-} from "../types/circuit-breaker";
+} from "../types/circuit-breaker.js";
 import { afterEach, beforeEach, describe, expect, it, test, vi } from "vitest";
 
 describe("CircuitBreaker", () => {

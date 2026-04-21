@@ -1,4 +1,4 @@
-import { DeadLetter } from "./DeadLetter";
+import { DeadLetter } from "./DeadLetter.js";
 import { describe, expect, it } from "vitest";
 
 describe("DeadLetter", () => {

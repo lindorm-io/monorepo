@@ -11,9 +11,9 @@ import {
   TestUser,
   TestUserWithProfile,
   TestVersionKeyed,
-} from "../../../../__fixtures__/test-entities";
-import { generateEntityDDL } from "./generate-entity-ddl";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
+} from "../../../../__fixtures__/test-entities.js";
+import { generateEntityDDL } from "./generate-entity-ddl.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
 
 const OPTS = {};
 

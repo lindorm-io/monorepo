@@ -1,13 +1,13 @@
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store";
-import { createStore } from "./create-store";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
+import { createStore } from "./create-store.js";
 import {
   wrapConsumerCallback,
   type ConsumerCallbackHost,
-} from "./wrap-consumer-callback";
+} from "./wrap-consumer-callback.js";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({

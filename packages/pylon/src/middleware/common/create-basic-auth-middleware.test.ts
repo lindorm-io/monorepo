@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { PylonError } from "../../errors";
-import { createBasicAuthMiddleware } from "./create-basic-auth-middleware";
+import { PylonError } from "../../errors/index.js";
+import { createBasicAuthMiddleware } from "./create-basic-auth-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createBasicAuthMiddleware", () => {

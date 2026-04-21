@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import type { IAmphora } from "@lindorm/amphora";
 import { AesKit } from "@lindorm/aes";
-import { ProteusError } from "../../../errors";
+import { ProteusError } from "../../../errors/index.js";
 
 export const encryptFieldValue = (
   value: unknown,

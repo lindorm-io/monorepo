@@ -1,8 +1,8 @@
-import { Constructor, Dict, Predicate } from "@lindorm/types";
+import type { Constructor, Dict, Predicate } from "@lindorm/types";
 import { z } from "zod";
-import { IEntity } from "../../../interfaces";
-import { IndexDirection } from "../../types/types";
-import { MetaInheritance } from "./inheritance";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { IndexDirection } from "../../types/types.js";
+import type { MetaInheritance } from "./inheritance.js";
 
 export type MetaFieldType =
   // boolean

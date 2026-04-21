@@ -1,10 +1,10 @@
 import type { IAmphora } from "@lindorm/amphora";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { defaultDehydrateEntity } from "../../../../entity/utils/default-dehydrate-entity";
-import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity";
-import { coerceWriteValue } from "./coerce-value";
-import type { DehydratedColumn } from "./dehydrate-entity";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { defaultDehydrateEntity } from "../../../../entity/utils/default-dehydrate-entity.js";
+import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity.js";
+import { coerceWriteValue } from "./coerce-value.js";
+import type { DehydratedColumn } from "./dehydrate-entity.js";
 
 /**
  * Postgres-specific dehydration adapter.

@@ -1,1 +1,1 @@
-export * from "./ConduitError";
+export * from "./ConduitError.js";

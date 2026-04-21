@@ -1,7 +1,7 @@
-import { IKryptosOct } from "@lindorm/kryptos";
+import type { IKryptosOct } from "@lindorm/kryptos";
 import { hash, verify } from "argon2";
-import { ArgonError } from "../errors";
-import { CreateArgonHashOptions, VerifyArgonHashOptions } from "../types";
+import { ArgonError } from "../errors/index.js";
+import type { CreateArgonHashOptions, VerifyArgonHashOptions } from "../types/index.js";
 
 const getSecret = (kryptos?: IKryptosOct): Buffer | undefined => {
   if (!kryptos) return;

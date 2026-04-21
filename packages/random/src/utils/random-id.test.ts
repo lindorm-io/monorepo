@@ -1,4 +1,4 @@
-import { randomId } from "./random-id";
+import { randomId } from "./random-id.js";
 import { describe, expect, test } from "vitest";
 
 describe("randomId", () => {

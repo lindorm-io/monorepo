@@ -1,19 +1,19 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { KafkaSharedState } from "../types/kafka-types";
-import { KafkaWorkerQueue } from "./KafkaWorkerQueue";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import { KafkaWorkerQueue } from "./KafkaWorkerQueue.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
 const mockPublishKafkaMessages = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/publish-kafka-messages", async () => ({
+vi.mock("../utils/publish-kafka-messages.js", async () => ({
   publishKafkaMessages: (...args: Array<unknown>) => mockPublishKafkaMessages(...args),
 }));
 
 const mockWrapKafkaConsumer = vi.fn().mockReturnValue(vi.fn());
-vi.mock("../utils/wrap-kafka-consumer", () => ({
+vi.mock("../utils/wrap-kafka-consumer.js", () => ({
   wrapKafkaConsumer: (...args: Array<unknown>) => mockWrapKafkaConsumer(...args),
 }));
 
@@ -21,13 +21,13 @@ let mockGetOrCreateResult: { consumerTag: string };
 const mockGetOrCreatePooledConsumer = vi
   .fn()
   .mockImplementation(async () => mockGetOrCreateResult);
-vi.mock("../utils/create-kafka-consumer", () => ({
+vi.mock("../utils/create-kafka-consumer.js", () => ({
   getOrCreatePooledConsumer: (...args: Array<unknown>) =>
     mockGetOrCreatePooledConsumer(...args),
 }));
 
 const mockReleasePooledConsumer = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/stop-kafka-consumer", () => ({
+vi.mock("../utils/stop-kafka-consumer.js", () => ({
   releasePooledConsumer: (...args: Array<unknown>) => mockReleasePooledConsumer(...args),
 }));
 

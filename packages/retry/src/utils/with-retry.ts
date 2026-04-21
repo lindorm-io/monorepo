@@ -1,6 +1,6 @@
-import { WithRetryOptions } from "../types";
-import { computeDelay } from "./compute-delay";
-import { sleep } from "./sleep";
+import type { WithRetryOptions } from "../types/index.js";
+import { computeDelay } from "./compute-delay.js";
+import { sleep } from "./sleep.js";
 
 export const withRetry = async <T>(
   fn: () => Promise<T>,

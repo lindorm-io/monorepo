@@ -4,13 +4,13 @@ import type {
   KafkaEachMessagePayload,
   KafkaPooledConsumer,
   KafkaSharedState,
-} from "../types/kafka-types";
+} from "../types/kafka-types.js";
 import {
   awaitConsumerReady,
   createKafkaConsumer,
   getOrCreatePooledConsumer,
   createPooledDispatcher,
-} from "./create-kafka-consumer";
+} from "./create-kafka-consumer.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({

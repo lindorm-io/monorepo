@@ -1,11 +1,11 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
-import { AkpBuffer, AkpJwk, AkpString } from "../../../types";
-import {
+import type { AkpBuffer, AkpJwk, AkpString } from "../../../types/index.js";
+import type {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
   IsStringFormatOptions,
-} from "../../types/is-options";
+} from "../../types/is-options.js";
 
 export const isAkpB64 = (options: IsStringFormatOptions): options is AkpString => {
   if (options.type !== "AKP") return false;

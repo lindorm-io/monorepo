@@ -1,8 +1,8 @@
 import { isObject, isString } from "@lindorm/is";
-import { IScanData, Scanner } from "@lindorm/scanner";
-import { Constructor, Dict } from "@lindorm/types";
-import type { MessageScannerInput } from "../../../types/source-options";
-import { IrisScannerError } from "../errors/IrisScannerError";
+import { type IScanData, Scanner } from "@lindorm/scanner";
+import type { Constructor, Dict } from "@lindorm/types";
+import type { MessageScannerInput } from "../../../types/source-options.js";
+import { IrisScannerError } from "../errors/IrisScannerError.js";
 
 export class MessageScanner {
   public static async scan<T extends Dict = Dict>(

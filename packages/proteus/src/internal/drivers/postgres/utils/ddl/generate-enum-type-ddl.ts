@@ -1,8 +1,8 @@
-import { ProteusError } from "../../../../../errors";
-import type { MetaField } from "../../../../entity/types/metadata";
-import { extractEnumValues } from "../extract-enum-values";
-import { getEnumTypeName } from "../get-enum-type-name";
-import { quoteQualifiedName } from "../quote-identifier";
+import { ProteusError } from "../../../../../errors/index.js";
+import type { MetaField } from "../../../../entity/types/metadata.js";
+import { extractEnumValues } from "../extract-enum-values.js";
+import { getEnumTypeName } from "../get-enum-type-name.js";
+import { quoteQualifiedName } from "../quote-identifier.js";
 
 /**
  * Generates `CREATE TYPE ... AS ENUM (...)` statements for enum-typed fields. Each

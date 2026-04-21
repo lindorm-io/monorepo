@@ -1,5 +1,5 @@
 import { isArray } from "@lindorm/is";
-import { CorsOptions } from "../../../types";
+import type { CorsOptions } from "../../../types/index.js";
 
 const normalize = (origin: string): string => {
   const lower = origin.toLowerCase();

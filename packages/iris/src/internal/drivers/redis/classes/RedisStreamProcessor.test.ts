@@ -1,10 +1,10 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RedisSharedState } from "../types/redis-types";
-import { RedisStreamProcessor } from "./RedisStreamProcessor";
-import { RedisStreamPipeline } from "./RedisStreamPipeline";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RedisSharedState } from "../types/redis-types.js";
+import { RedisStreamProcessor } from "./RedisStreamProcessor.js";
+import { RedisStreamPipeline } from "./RedisStreamPipeline.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test messages ---

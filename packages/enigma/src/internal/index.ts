@@ -1,1 +1,1 @@
-export * from "./argon-hash";
+export * from "./argon-hash.js";

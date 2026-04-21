@@ -1,1 +1,1 @@
-export * from "./sha-hash";
+export * from "./sha-hash.js";

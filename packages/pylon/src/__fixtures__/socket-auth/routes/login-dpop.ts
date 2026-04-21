@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { KryptosKit } from "@lindorm/kryptos";
-import { mintTestAccessToken } from "../mint-test-access-token";
+import { mintTestAccessToken } from "../mint-test-access-token.js";
 
 type DpopProofHeader = {
   jwk?: Record<string, unknown>;

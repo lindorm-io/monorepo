@@ -1,7 +1,7 @@
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
 import { Logger as _Logger } from "@lindorm/logger";
 import { resolve, join } from "path";
-import { generateMiddleware } from "./generate-middleware";
+import { generateMiddleware } from "./generate-middleware.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("fs/promises", async () => ({
@@ -181,7 +181,8 @@ describe("generateMiddleware", () => {
     vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
     vi.resetModules();
-    const { generateMiddleware: freshGenerate } = await import("./generate-middleware");
+    const { generateMiddleware: freshGenerate } =
+      await import("./generate-middleware.js");
 
     vi.doMock("fs/promises", () => ({
       mkdir: vi.fn().mockResolvedValue(undefined),

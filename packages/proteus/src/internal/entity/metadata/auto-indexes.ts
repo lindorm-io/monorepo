@@ -1,4 +1,4 @@
-import type { MetaField, MetaFieldDecorator, MetaIndex } from "../types/metadata";
+import type { MetaField, MetaFieldDecorator, MetaIndex } from "../types/metadata.js";
 
 type AutoIndexSpec = {
   requires: Array<MetaFieldDecorator>;

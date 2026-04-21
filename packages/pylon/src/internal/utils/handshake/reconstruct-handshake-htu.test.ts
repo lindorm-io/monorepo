@@ -1,4 +1,4 @@
-import { reconstructHandshakeHtu } from "./reconstruct-handshake-htu";
+import { reconstructHandshakeHtu } from "./reconstruct-handshake-htu.js";
 import { describe, expect, test } from "vitest";
 
 describe("reconstructHandshakeHtu", () => {

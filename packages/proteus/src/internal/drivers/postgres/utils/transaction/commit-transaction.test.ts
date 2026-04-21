@@ -1,8 +1,8 @@
-import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import { SerializationError } from "../../../../errors/SerializationError";
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { commitTransaction } from "./commit-transaction";
+import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import { SerializationError } from "../../../../errors/SerializationError.js";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { commitTransaction } from "./commit-transaction.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const makeHandle = (

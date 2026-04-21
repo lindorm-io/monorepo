@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisDriver } from "../interfaces/IrisDriver";
+import type { IIrisDriver } from "../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -10,8 +10,8 @@ import type {
   IIrisStreamProcessor,
   IIrisWorkerQueue,
   IMessage,
-} from "../interfaces";
-import type { IrisDriverType } from "../types";
+} from "../interfaces/index.js";
+import type { IrisDriverType } from "../types/index.js";
 
 export type IrisSessionOptions = {
   logger: ILogger;

@@ -1,4 +1,4 @@
-import { createZephyrContext } from "./create-zephyr-context";
+import { createZephyrContext } from "./create-zephyr-context.js";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@lindorm/random", () => ({

@@ -1,18 +1,22 @@
 import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
-import type { IEntity, IUpdateQueryBuilder, WriteResult } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { PredicateEntry } from "../../../types/query";
-import { ProteusError } from "../../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier";
-import { coerceWriteValue } from "../utils/query/coerce-value";
-import { compileWhere } from "../utils/query/compile-where";
-import { hydrateReturning } from "../utils/query/hydrate-returning";
+import type {
+  IEntity,
+  IUpdateQueryBuilder,
+  WriteResult,
+} from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../../types/query.js";
+import { ProteusError } from "../../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
+import { coerceWriteValue } from "../utils/query/coerce-value.js";
+import { compileWhere } from "../utils/query/compile-where.js";
+import { hydrateReturning } from "../utils/query/hydrate-returning.js";
 import {
   buildDiscriminatorPredicate,
   resolveTableName,
-} from "../utils/query/resolve-table-name";
+} from "../utils/query/resolve-table-name.js";
 
 export class PostgresUpdateQueryBuilder<
   E extends IEntity,

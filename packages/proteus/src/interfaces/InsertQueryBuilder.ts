@@ -1,5 +1,5 @@
 import type { DeepPartial } from "@lindorm/types";
-import type { IEntity } from "./Entity";
+import type { IEntity } from "./Entity.js";
 
 /**
  * Result returned by write query builder terminal methods.

@@ -1,5 +1,5 @@
-import { DecodedTokenHeader } from "../../types/header";
-import { validateCrit } from "./validate-crit";
+import type { DecodedTokenHeader } from "../../types/header.js";
+import { validateCrit } from "./validate-crit.js";
 import { describe, expect, test } from "vitest";
 
 const base: DecodedTokenHeader = {

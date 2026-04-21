@@ -1,6 +1,6 @@
 import { createPrivateKey, createPublicKey } from "crypto";
-import { KryptosError } from "../../../errors";
-import { AkpJwk, KryptosBuffer, KryptosExportMode } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type { AkpJwk, KryptosBuffer, KryptosExportMode } from "../../../types/index.js";
 
 type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;

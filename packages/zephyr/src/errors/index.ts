@@ -1,1 +1,1 @@
-export * from "./ZephyrError";
+export * from "./ZephyrError.js";

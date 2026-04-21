@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { normalizeHtu } from "../normalize-htu";
+import { normalizeHtu } from "../normalize-htu.js";
 
 export type DpopProofClaims = {
   httpMethod: string;

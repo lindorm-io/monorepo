@@ -1,5 +1,5 @@
 import type { Db } from "mongodb";
-import type { ExistingMongoIndex } from "./types";
+import type { ExistingMongoIndex } from "./types.js";
 
 const MANAGED_PREFIXES = ["proteus_idx_", "proteus_ttl_", "proteus_uniq_"];
 

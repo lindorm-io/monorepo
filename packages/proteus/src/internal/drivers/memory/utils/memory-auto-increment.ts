@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { MemoryStore } from "../types/memory-store";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { MemoryStore } from "../types/memory-store.js";
 
 export const applyAutoIncrement = (
   row: Dict,

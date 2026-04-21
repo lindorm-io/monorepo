@@ -1,6 +1,6 @@
-import { ZephyrError } from "../../errors/ZephyrError";
-import type { ZephyrContext } from "../../types/context";
-import type { PylonAck } from "../../types/pylon-envelope";
+import { ZephyrError } from "../../errors/ZephyrError.js";
+import type { ZephyrContext } from "../../types/context.js";
+import type { PylonAck } from "../../types/pylon-envelope.js";
 
 export const unwrapAckResponse = (ctx: ZephyrContext, response: any): void => {
   if (response?.__pylon) {

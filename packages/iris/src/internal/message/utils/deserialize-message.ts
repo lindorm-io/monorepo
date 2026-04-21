@@ -1,5 +1,5 @@
 import { JsonKit } from "@lindorm/json-kit";
-import type { MessageMetadata } from "../types/metadata";
+import type { MessageMetadata } from "../types/metadata.js";
 
 export const deserializeMessage = (
   body: string,

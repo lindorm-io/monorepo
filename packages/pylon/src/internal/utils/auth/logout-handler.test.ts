@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { createLogoutHandler } from "./logout-handler";
+import { createLogoutHandler } from "./logout-handler.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createLogoutHandler", () => {

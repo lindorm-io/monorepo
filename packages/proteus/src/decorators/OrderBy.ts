@@ -1,4 +1,4 @@
-import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata";
+import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Specifies default ordering for a relation's loaded results.

@@ -1,6 +1,6 @@
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
-import type { MetaField } from "../types/metadata";
-import { deserialise } from "./deserialise";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
+import type { MetaField } from "../types/metadata.js";
+import { deserialise } from "./deserialise.js";
 
 export const parseField = (field: MetaField, message: any, options: any): any => {
   const hasExplicitOption = field.key in options;

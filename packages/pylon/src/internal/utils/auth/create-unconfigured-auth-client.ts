@@ -1,5 +1,5 @@
 import { ServerError } from "@lindorm/errors";
-import { PylonAuthClient } from "../../../types";
+import type { PylonAuthClient } from "../../../types/index.js";
 
 const notConfigured = (method: string): never => {
   throw new ServerError(

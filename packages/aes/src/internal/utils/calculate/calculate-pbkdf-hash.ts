@@ -1,6 +1,6 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { ShaAlgorithm } from "@lindorm/types";
-import { AesError } from "../../../errors";
+import type { IKryptos } from "@lindorm/kryptos";
+import type { ShaAlgorithm } from "@lindorm/types";
+import { AesError } from "../../../errors/index.js";
 
 export const calculatePbkdfAlgorithm = (kryptos: IKryptos): ShaAlgorithm => {
   switch (kryptos.algorithm) {

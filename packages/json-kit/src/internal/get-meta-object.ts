@@ -1,7 +1,7 @@
 import { isArray, isObject } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
-import { getMetaArray } from "./get-meta-array";
-import { getMetaType } from "./get-meta-type";
+import type { Dict } from "@lindorm/types";
+import { getMetaArray } from "./get-meta-array.js";
+import { getMetaType } from "./get-meta-type.js";
 
 export const getMetaObject = (input: Dict): Dict<string> => {
   const result: Dict = {};

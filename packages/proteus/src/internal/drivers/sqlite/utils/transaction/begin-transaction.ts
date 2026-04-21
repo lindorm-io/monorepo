@@ -1,6 +1,6 @@
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
-import type { SqliteTransactionHandle } from "../../types/sqlite-transaction-handle";
-import { SqliteTransactionError } from "../../errors/SqliteTransactionError";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
+import type { SqliteTransactionHandle } from "../../types/sqlite-transaction-handle.js";
+import { SqliteTransactionError } from "../../errors/SqliteTransactionError.js";
 
 export const beginTransaction = (client: SqliteQueryClient): SqliteTransactionHandle => {
   try {

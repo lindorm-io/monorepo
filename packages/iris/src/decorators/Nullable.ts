@@ -1,4 +1,4 @@
-import { stageFieldModifier } from "../internal/message/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/message/metadata/stage-metadata.js";
 
 export const Nullable =
   () =>

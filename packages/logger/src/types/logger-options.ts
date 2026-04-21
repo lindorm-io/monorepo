@@ -1,4 +1,4 @@
-import { LogCorrelation, LogFilters, LogLevel, LogScope } from "../types";
+import type { LogCorrelation, LogFilters, LogLevel, LogScope } from "../types/index.js";
 
 export type LoggerOptions = {
   correlation?: LogCorrelation;

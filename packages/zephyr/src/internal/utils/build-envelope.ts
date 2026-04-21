@@ -1,5 +1,5 @@
-import type { ZephyrContext } from "../../types/context";
-import type { PylonEnvelope } from "../../types/pylon-envelope";
+import type { ZephyrContext } from "../../types/context.js";
+import type { PylonEnvelope } from "../../types/pylon-envelope.js";
 
 export const buildEnvelope = (ctx: ZephyrContext): PylonEnvelope => ({
   __pylon: true,

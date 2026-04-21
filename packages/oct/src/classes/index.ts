@@ -1,1 +1,1 @@
-export * from "./OctKit";
+export * from "./OctKit.js";

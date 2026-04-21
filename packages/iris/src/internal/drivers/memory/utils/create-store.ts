@@ -1,4 +1,4 @@
-import type { MemorySharedState } from "../types/memory-store";
+import type { MemorySharedState } from "../types/memory-store.js";
 
 export const createStore = (): MemorySharedState => ({
   subscriptions: [],

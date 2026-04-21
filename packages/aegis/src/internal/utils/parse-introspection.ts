@@ -1,9 +1,9 @@
 import { isBoolean, isString } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
-import { AegisError } from "../../errors";
-import { AegisIntrospection } from "../../types";
-import { extractDomainClaims } from "./extract-claims";
+import { AegisError } from "../../errors/index.js";
+import type { AegisIntrospection } from "../../types/index.js";
+import { extractDomainClaims } from "./extract-claims.js";
 
 // Locally-defined input shape — permissive structural type so a consumer's
 // `OpenIdIntrospectResponse` (or a plain JSON body from a fetch call) still

@@ -1,4 +1,4 @@
-import { Event } from "../../../decorators";
+import { Event } from "../../../decorators/index.js";
 
 @Event()
 export class FundsDeposited_V1 {

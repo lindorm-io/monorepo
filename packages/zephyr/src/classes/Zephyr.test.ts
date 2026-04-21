@@ -1,8 +1,8 @@
-import { ZephyrError } from "../errors/ZephyrError";
-import type { ZephyrMiddleware } from "../types/context";
-import type { ZephyrOptions } from "../types/options";
+import { ZephyrError } from "../errors/ZephyrError.js";
+import type { ZephyrMiddleware } from "../types/context.js";
+import type { ZephyrOptions } from "../types/options.js";
 import { io as _io } from "socket.io-client";
-import { Zephyr } from "./Zephyr";
+import { Zephyr } from "./Zephyr.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("@lindorm/random", async () => ({

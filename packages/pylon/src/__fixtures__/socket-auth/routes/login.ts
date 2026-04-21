@@ -1,4 +1,4 @@
-import { mintTestAccessToken } from "../mint-test-access-token";
+import { mintTestAccessToken } from "../mint-test-access-token.js";
 
 export const POST = async (ctx: any) => {
   const subject = ctx.data?.subject ?? "alice";

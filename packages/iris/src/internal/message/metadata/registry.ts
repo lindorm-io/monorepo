@@ -1,4 +1,4 @@
-import type { MessageMetadata } from "../types/metadata";
+import type { MessageMetadata } from "../types/metadata.js";
 
 const messageRegistry = new Map<string, Function>();
 const targetToName = new Map<Function, string>();

@@ -1,4 +1,4 @@
-import { PylonListener } from "../../../src";
+import { PylonListener } from "../../../src/index.js";
 
 export const listener = new PylonListener();
 

@@ -1,5 +1,5 @@
-import { KryptosJwk } from "../../types/kryptos";
-import { ParsedX509Certificate } from "../../types/x509";
+import type { KryptosJwk } from "../../types/kryptos.js";
+import type { ParsedX509Certificate } from "../../types/x509.js";
 
 export type CachedKeys = Readonly<{ privateKey?: string; publicKey?: string }>;
 export type CachedJwkKeys = Readonly<Omit<KryptosJwk, "kid" | "alg" | "kty" | "use">>;

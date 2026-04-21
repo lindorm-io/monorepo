@@ -1,4 +1,4 @@
-import { stagePrimaryKey } from "../internal/entity/metadata/stage-metadata";
+import { stagePrimaryKey } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Mark one or more fields as the primary key.

@@ -1,10 +1,10 @@
-import { defaultUpdateEntity } from "./default-update-entity";
-import { CreateDateField } from "../../../decorators/CreateDateField";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { UpdateDateField } from "../../../decorators/UpdateDateField";
-import { VersionField } from "../../../decorators/VersionField";
+import { defaultUpdateEntity } from "./default-update-entity.js";
+import { CreateDateField } from "../../../decorators/CreateDateField.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { UpdateDateField } from "../../../decorators/UpdateDateField.js";
+import { VersionField } from "../../../decorators/VersionField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "UpdateEntityVersioned" })

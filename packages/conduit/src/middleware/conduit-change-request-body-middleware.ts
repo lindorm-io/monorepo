@@ -1,6 +1,6 @@
-import { ChangeCase, changeKeys } from "@lindorm/case";
+import { type ChangeCase, changeKeys } from "@lindorm/case";
 import { isArray, isObject } from "@lindorm/is";
-import { ConduitMiddleware } from "../types";
+import type { ConduitMiddleware } from "../types/index.js";
 
 export const conduitChangeRequestBodyMiddleware = (
   mode: ChangeCase = "snake",

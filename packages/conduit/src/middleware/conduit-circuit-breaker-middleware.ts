@@ -1,12 +1,12 @@
-import { defaultConduitClassifier } from "../internal/utils/default-conduit-classifier";
+import { defaultConduitClassifier } from "../internal/utils/default-conduit-classifier.js";
 import { CircuitBreaker, CircuitOpenError } from "@lindorm/breaker";
-import { ILogger } from "@lindorm/logger";
-import { ConduitError } from "../errors";
+import type { ILogger } from "@lindorm/logger";
+import { ConduitError } from "../errors/index.js";
 import type {
   ConduitCircuitBreakerCache,
   ConduitCircuitBreakerConfig,
   ConduitMiddleware,
-} from "../types";
+} from "../types/index.js";
 
 export const createConduitCircuitBreakerMiddleware = (
   config: ConduitCircuitBreakerConfig = {},

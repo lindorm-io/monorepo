@@ -1,6 +1,6 @@
-import { ProteusError } from "../../../../../errors";
-import type { MetaUnique } from "../../../../entity/types/metadata";
-import { generateUniqueDDL } from "./generate-unique-ddl";
+import { ProteusError } from "../../../../../errors/index.js";
+import type { MetaUnique } from "../../../../entity/types/metadata.js";
+import { generateUniqueDDL } from "./generate-unique-ddl.js";
 import { describe, expect, test } from "vitest";
 
 const TABLE = "products";

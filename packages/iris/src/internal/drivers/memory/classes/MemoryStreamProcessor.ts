@@ -1,13 +1,13 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../../interfaces";
-import type { MemorySharedState } from "../types/memory-store";
-import type { PipelineStage } from "../../../types/pipeline-stage";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { MemorySharedState } from "../types/memory-store.js";
+import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
-} from "../../../classes/DriverStreamProcessorBase";
-import { MemoryStreamPipeline } from "./MemoryStreamPipeline";
+} from "../../../classes/DriverStreamProcessorBase.js";
+import { MemoryStreamPipeline } from "./MemoryStreamPipeline.js";
 
 export type MemoryStreamProcessorOptions =
   DriverStreamProcessorBaseOptions<MemorySharedState>;

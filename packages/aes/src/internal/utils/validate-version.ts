@@ -1,5 +1,5 @@
-import { AES_FORMAT_MAJOR } from "../constants/version";
-import { AesError } from "../../errors/AesError";
+import { AES_FORMAT_MAJOR } from "../constants/version.js";
+import { AesError } from "../../errors/AesError.js";
 
 /**
  * Validates an AES format version string.

@@ -1,5 +1,5 @@
 import { add, addMilliseconds } from "date-fns";
-import { DurationDict } from "../../types";
+import type { DurationDict } from "../../types/index.js";
 
 export const addWithMilliseconds = (date: Date, duration: DurationDict): Date => {
   const added = add(date, duration);

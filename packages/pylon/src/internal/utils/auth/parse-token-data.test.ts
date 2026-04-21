@@ -1,7 +1,7 @@
 import { AegisError } from "@lindorm/aegis";
 import MockDate from "mockdate";
-import { CannotEstablishSessionIdentity } from "../../../errors";
-import { parseTokenData } from "./parse-token-data";
+import { CannotEstablishSessionIdentity } from "../../../errors/index.js";
+import { parseTokenData } from "./parse-token-data.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

@@ -1,7 +1,7 @@
 import { createPrivateKey, createSign, sign as cryptoSign, KeyObject } from "crypto";
-import { KryptosError } from "../../../errors";
-import { KryptosType } from "../../../types";
-import { X509SignatureDescriptor } from "./encode-algorithm-identifier";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosType } from "../../../types/index.js";
+import type { X509SignatureDescriptor } from "./encode-algorithm-identifier.js";
 
 export type SignTbsOptions = {
   tbsBytes: Buffer;

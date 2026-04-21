@@ -1,19 +1,19 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { ConsumeStrategies } from "../../../types/consume-strategies";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { ConsumeStrategies } from "../../../types/consume-strategies.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import {
   consumeMessageCore,
   type ConsumerCallbackHost,
-} from "../../../utils/consume-message-core";
+} from "../../../utils/consume-message-core.js";
 import type {
   NatsJsMsg,
   NatsSharedState,
   WrapNatsConsumerOptions,
-} from "../types/nats-types";
-import { parseNatsMessage } from "./parse-nats-message";
+} from "../types/nats-types.js";
+import { parseNatsMessage } from "./parse-nats-message.js";
 
 export type NatsConsumerCallbackHost<M extends IMessage> = ConsumerCallbackHost<M>;
 

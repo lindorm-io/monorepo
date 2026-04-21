@@ -1,10 +1,10 @@
-import { ProteusError } from "../../../../../errors";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import { getEntityName } from "../../../../entity/utils/get-entity-name";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
+import { ProteusError } from "../../../../../errors/index.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
 
 const mapOnDelete = (onDestroy: MetaRelation["options"]["onDestroy"]): string => {
   switch (onDestroy) {

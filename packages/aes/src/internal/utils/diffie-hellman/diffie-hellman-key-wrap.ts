@@ -1,16 +1,16 @@
 import { randomBytes } from "crypto";
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   CreateCekOptions,
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "../../types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
-import { concatKdf } from "../key-derivation/concat-kdf";
-import { keyUnwrap, keyWrap } from "../key-wrap/key-wrap";
-import { calculateSharedSecret, generateSharedSecret } from "./shared-secret";
+} from "../../types/content-encryption-key.js";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size.js";
+import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size.js";
+import { concatKdf } from "../key-derivation/concat-kdf.js";
+import { keyUnwrap, keyWrap } from "../key-wrap/key-wrap.js";
+import { calculateSharedSecret, generateSharedSecret } from "./shared-secret.js";
 
 export const getDiffieHellmanKeyWrapEncryptionKey = ({
   encryption,

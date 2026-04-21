@@ -1,7 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import { DeadLetterManager } from "./DeadLetterManager";
-import { MemoryDeadLetterStore } from "./MemoryDeadLetterStore";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { DeadLetterManager } from "./DeadLetterManager.js";
+import { MemoryDeadLetterStore } from "./MemoryDeadLetterStore.js";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const createLogger = (): ILogger =>

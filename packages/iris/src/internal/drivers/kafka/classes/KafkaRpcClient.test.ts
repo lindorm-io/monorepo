@@ -1,9 +1,9 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { KafkaSharedState, KafkaConsumerHandle } from "../types/kafka-types";
-import { KafkaRpcClient } from "./KafkaRpcClient";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { KafkaSharedState, KafkaConsumerHandle } from "../types/kafka-types.js";
+import { KafkaRpcClient } from "./KafkaRpcClient.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
@@ -11,28 +11,28 @@ let mockCreateKafkaConsumerResult: KafkaConsumerHandle;
 const mockCreateKafkaConsumer = vi
   .fn()
   .mockImplementation(async () => mockCreateKafkaConsumerResult);
-vi.mock("../utils/create-kafka-consumer", async () => ({
+vi.mock("../utils/create-kafka-consumer.js", async () => ({
   createKafkaConsumer: (...args: Array<unknown>) => mockCreateKafkaConsumer(...args),
 }));
 
 const mockStopKafkaConsumer = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/stop-kafka-consumer", () => ({
+vi.mock("../utils/stop-kafka-consumer.js", () => ({
   stopKafkaConsumer: (...args: Array<unknown>) => mockStopKafkaConsumer(...args),
 }));
 
 const mockEnsureKafkaTopicFromState = vi.fn().mockResolvedValue(undefined);
-vi.mock("../utils/ensure-kafka-topic", () => ({
+vi.mock("../utils/ensure-kafka-topic.js", () => ({
   ensureKafkaTopicFromState: (...args: Array<unknown>) =>
     mockEnsureKafkaTopicFromState(...args),
 }));
 
-vi.mock("../utils/serialize-kafka-message", () => ({
+vi.mock("../utils/serialize-kafka-message.js", () => ({
   serializeKafkaMessage: vi
     .fn()
     .mockReturnValue({ key: null, value: Buffer.from("test"), headers: {} }),
 }));
 
-vi.mock("../utils/parse-kafka-message", () => ({
+vi.mock("../utils/parse-kafka-message.js", () => ({
   parseKafkaMessage: vi.fn(),
 }));
 

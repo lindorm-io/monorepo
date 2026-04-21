@@ -1,9 +1,12 @@
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types";
-import { wrapRedisConsumer, type RedisConsumerCallbackHost } from "./wrap-redis-consumer";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types.js";
+import {
+  wrapRedisConsumer,
+  type RedisConsumerCallbackHost,
+} from "./wrap-redis-consumer.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({

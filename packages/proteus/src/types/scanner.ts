@@ -1,5 +1,5 @@
-import { Constructor } from "@lindorm/types";
-import { IEntity } from "../interfaces";
+import type { Constructor } from "@lindorm/types";
+import type { IEntity } from "../interfaces/index.js";
 
 /**
  * Accepted input for entity registration.

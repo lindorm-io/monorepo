@@ -1,6 +1,6 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
-import { AesKeyLength } from "@lindorm/types";
-import { AesError } from "../../../errors";
+import type { KryptosEncryption } from "@lindorm/kryptos";
+import type { AesKeyLength } from "@lindorm/types";
+import { AesError } from "../../../errors/index.js";
 
 type Result = {
   encryptionKey: Buffer;

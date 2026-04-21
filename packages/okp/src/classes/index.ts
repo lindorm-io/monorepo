@@ -1,1 +1,1 @@
-export * from "./OkpKit";
+export * from "./OkpKit.js";

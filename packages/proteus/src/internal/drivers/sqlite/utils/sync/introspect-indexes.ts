@@ -1,8 +1,8 @@
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
 import type {
   SqliteSnapshotIndex,
   SqliteSnapshotIndexColumn,
-} from "../../types/db-snapshot";
+} from "../../types/db-snapshot.js";
 
 /**
  * Introspects all indexes for a given table using PRAGMA queries.

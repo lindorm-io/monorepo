@@ -1,11 +1,15 @@
 import type { Constructor } from "@lindorm/types";
-import type { EntityEmitFn, TransactionCallback, TransactionOptions } from "../../types";
-import type { EntityMetadata } from "../entity/types/metadata";
-import type { FilterRegistry } from "../utils/query/filter-registry";
-import { IEntity } from "../../interfaces/Entity";
-import { IProteusQueryBuilder } from "../../interfaces/ProteusQueryBuilder";
-import { IProteusRepository } from "../../interfaces/ProteusRepository";
-import { IRepositoryExecutor } from "./RepositoryExecutor";
+import type {
+  EntityEmitFn,
+  TransactionCallback,
+  TransactionOptions,
+} from "../../types/index.js";
+import type { EntityMetadata } from "../entity/types/metadata.js";
+import type { FilterRegistry } from "../utils/query/filter-registry.js";
+import type { IEntity } from "../../interfaces/Entity.js";
+import type { IProteusQueryBuilder } from "../../interfaces/ProteusQueryBuilder.js";
+import type { IProteusRepository } from "../../interfaces/ProteusRepository.js";
+import type { IRepositoryExecutor } from "./RepositoryExecutor.js";
 
 export type MetadataResolver = (target: Constructor<IEntity>) => EntityMetadata;
 

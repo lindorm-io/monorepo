@@ -1,5 +1,13 @@
-import { ReadableTime } from "../../types";
-import { DAYS, HOURS, MINUTES, MONTHS, SECONDS, WEEKS, YEARS } from "../constants/time";
+import type { ReadableTime } from "../../types/index.js";
+import {
+  DAYS,
+  HOURS,
+  MINUTES,
+  MONTHS,
+  SECONDS,
+  WEEKS,
+  YEARS,
+} from "../constants/time.js";
 
 type Bucket = { unit: string; size: number; tolerance: number };
 

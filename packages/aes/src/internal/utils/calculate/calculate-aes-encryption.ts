@@ -1,6 +1,6 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
-import { AesError } from "../../../errors";
-import { AesInternalEncryption } from "../../../types";
+import type { KryptosEncryption } from "@lindorm/kryptos";
+import { AesError } from "../../../errors/index.js";
+import type { AesInternalEncryption } from "../../../types/index.js";
 
 export const calculateAesEncryption = (
   encryption: KryptosEncryption,

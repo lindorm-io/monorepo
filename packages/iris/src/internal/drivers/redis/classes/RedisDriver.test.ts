@@ -1,16 +1,16 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import type { IrisConnectionState } from "../../../../types";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RedisSharedState } from "../types/redis-types";
-import { RedisDriver } from "./RedisDriver";
-import { RedisPublisher } from "./RedisPublisher";
-import { RedisMessageBus } from "./RedisMessageBus";
-import { RedisWorkerQueue } from "./RedisWorkerQueue";
-import { RedisStreamProcessor } from "./RedisStreamProcessor";
-import { RedisRpcClient } from "./RedisRpcClient";
-import { RedisRpcServer } from "./RedisRpcServer";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import type { IrisConnectionState } from "../../../../types/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RedisSharedState } from "../types/redis-types.js";
+import { RedisDriver } from "./RedisDriver.js";
+import { RedisPublisher } from "./RedisPublisher.js";
+import { RedisMessageBus } from "./RedisMessageBus.js";
+import { RedisWorkerQueue } from "./RedisWorkerQueue.js";
+import { RedisStreamProcessor } from "./RedisStreamProcessor.js";
+import { RedisRpcClient } from "./RedisRpcClient.js";
+import { RedisRpcServer } from "./RedisRpcServer.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock ioredis ---

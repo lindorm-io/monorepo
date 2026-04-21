@@ -1,7 +1,7 @@
 import type { ClassLike, Constructor } from "@lindorm/types";
-import type { HermesRegistry } from "../registry";
-import type { HermesCommandMessage } from "../messages";
-import type { HermesEventMessage } from "../messages";
+import type { HermesRegistry } from "../registry/index.js";
+import type { HermesCommandMessage } from "../messages/index.js";
+import type { HermesEventMessage } from "../messages/index.js";
 
 export const recoverCommand = (
   registry: HermesRegistry,

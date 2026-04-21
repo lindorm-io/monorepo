@@ -1,5 +1,5 @@
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import { buildAmqpHeaders } from "./build-amqp-headers";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import { buildAmqpHeaders } from "./build-amqp-headers.js";
 import { describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({

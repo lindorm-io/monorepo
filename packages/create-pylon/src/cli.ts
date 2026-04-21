@@ -12,18 +12,18 @@ import {
   runIrisInit,
   runProteusGenerateSampleEntity,
   runProteusInit,
-} from "./drivers";
-import { initGit } from "./git";
-import { installDependencies, installDevDependencies } from "./install";
-import { runPrompts } from "./prompts";
-import { buildDependencyList, buildDevDependencyList, scaffold } from "./scaffold";
+} from "./drivers.js";
+import { initGit } from "./git.js";
+import { installDependencies, installDevDependencies } from "./install.js";
+import { runPrompts } from "./prompts.js";
+import { buildDependencyList, buildDevDependencyList, scaffold } from "./scaffold.js";
 import {
   BASE_DEV_DEPENDENCIES,
   BASE_RUNTIME_DEPENDENCIES,
   IRIS_DRIVER_DEV_PACKAGES,
   PROTEUS_DRIVER_DEV_PACKAGES,
-} from "./types";
-import type { Answers } from "./types";
+} from "./types.js";
+import type { Answers } from "./types.js";
 
 const pkg = JSON.parse(
   readFileSync(resolve(__dirname, "..", "package.json"), "utf-8"),

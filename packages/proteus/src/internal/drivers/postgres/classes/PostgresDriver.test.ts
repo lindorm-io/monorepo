@@ -36,7 +36,7 @@ vi.mock("pg", async () => {
   };
 });
 
-vi.mock("./PostgresExecutor", async () => ({
+vi.mock("./PostgresExecutor.js", async () => ({
   PostgresExecutor: vi.fn(function () {
     return {
       executeFind: vi.fn(),
@@ -57,44 +57,44 @@ vi.mock("./PostgresExecutor", async () => ({
   }),
 }));
 
-vi.mock("./PostgresQueryBuilder", () => ({
+vi.mock("./PostgresQueryBuilder.js", () => ({
   PostgresQueryBuilder: vi.fn(function () {
     return { build: vi.fn() };
   }),
 }));
 
-vi.mock("./PostgresRepository", () => ({
+vi.mock("./PostgresRepository.js", () => ({
   PostgresRepository: vi.fn(function (opts: any) {
     return { _opts: opts, target: opts.target };
   }),
 }));
 
-vi.mock("./MigrationManager", () => ({
+vi.mock("./MigrationManager.js", () => ({
   MigrationManager: vi.fn(function () {
     return { apply: vi.fn().mockResolvedValue({ applied: [] }) };
   }),
 }));
 
-vi.mock("../utils/sync/diff-schema", () => ({
+vi.mock("../utils/sync/diff-schema.js", () => ({
   diffSchema: vi.fn().mockReturnValue({ operations: [] }),
 }));
 
 const mockSyncExecute = vi.fn().mockResolvedValue({ statementsExecuted: 0 });
-vi.mock("../utils/sync/execute-sync-plan", () => ({
+vi.mock("../utils/sync/execute-sync-plan.js", () => ({
   SyncPlanExecutor: vi.fn(function () {
     return { execute: mockSyncExecute };
   }),
 }));
 
-vi.mock("../utils/sync/introspect-schema", () => ({
+vi.mock("../utils/sync/introspect-schema.js", () => ({
   introspectSchema: vi.fn().mockResolvedValue({ tables: [] }),
 }));
 
-vi.mock("../utils/sync/project-desired-schema", () => ({
+vi.mock("../utils/sync/project-desired-schema.js", () => ({
   projectDesiredSchema: vi.fn().mockReturnValue({ tables: [] }),
 }));
 
-vi.mock("../utils/transaction/begin-transaction", () => ({
+vi.mock("../utils/transaction/begin-transaction.js", () => ({
   beginTransaction: vi.fn().mockResolvedValue({
     client: { query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }) },
     release: vi.fn(),
@@ -103,23 +103,23 @@ vi.mock("../utils/transaction/begin-transaction", () => ({
   }),
 }));
 
-vi.mock("../utils/transaction/commit-transaction", () => ({
+vi.mock("../utils/transaction/commit-transaction.js", () => ({
   commitTransaction: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("../utils/transaction/rollback-transaction", () => ({
+vi.mock("../utils/transaction/rollback-transaction.js", () => ({
   rollbackTransaction: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("../utils/transaction/is-retryable-transaction-error", () => ({
+vi.mock("../utils/transaction/is-retryable-transaction-error.js", () => ({
   isRetryableTransactionError: vi.fn().mockReturnValue(false),
 }));
 
-vi.mock("../utils/transaction/with-retry", () => ({
+vi.mock("../utils/transaction/with-retry.js", () => ({
   withRetry: vi.fn().mockImplementation(async (fn: any) => fn()),
 }));
 
-vi.mock("./TransactionContext", () => ({
+vi.mock("./TransactionContext.js", () => ({
   TransactionContext: vi.fn(function (
     handle: any,
     namespace: any,
@@ -140,26 +140,26 @@ vi.mock("./TransactionContext", () => ({
 import type { ILogger } from "@lindorm/logger";
 import * as pg from "pg";
 import { Pool } from "pg";
-import * as projectDesiredSchemaMod from "../utils/sync/project-desired-schema";
-import * as introspectSchemaMod from "../utils/sync/introspect-schema";
-import * as diffSchemaMod from "../utils/sync/diff-schema";
-import * as migrationManagerMod from "./MigrationManager";
-import { PostgresDriver } from "./PostgresDriver";
-import { PostgresRepository } from "./PostgresRepository";
-import { PostgresExecutor } from "./PostgresExecutor";
-import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
-import { beginTransaction } from "../utils/transaction/begin-transaction";
-import { commitTransaction } from "../utils/transaction/commit-transaction";
-import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
-import { withRetry } from "../utils/transaction/with-retry";
-import { TransactionContext } from "./TransactionContext";
-import { PostgresDriverError } from "../errors/PostgresDriverError";
-import { PostgresMigrationError } from "../errors/PostgresMigrationError";
-import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
-import type { IEntity } from "../../../../interfaces";
+import * as projectDesiredSchemaMod from "../utils/sync/project-desired-schema.js";
+import * as introspectSchemaMod from "../utils/sync/introspect-schema.js";
+import * as diffSchemaMod from "../utils/sync/diff-schema.js";
+import * as migrationManagerMod from "./MigrationManager.js";
+import { PostgresDriver } from "./PostgresDriver.js";
+import { PostgresRepository } from "./PostgresRepository.js";
+import { PostgresExecutor } from "./PostgresExecutor.js";
+import { PostgresQueryBuilder } from "./PostgresQueryBuilder.js";
+import { beginTransaction } from "../utils/transaction/begin-transaction.js";
+import { commitTransaction } from "../utils/transaction/commit-transaction.js";
+import { rollbackTransaction } from "../utils/transaction/rollback-transaction.js";
+import { withRetry } from "../utils/transaction/with-retry.js";
+import { TransactionContext } from "./TransactionContext.js";
+import { PostgresDriverError } from "../errors/PostgresDriverError.js";
+import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
+import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan.js";
+import type { IEntity } from "../../../../interfaces/index.js";
 import type { Constructor } from "@lindorm/types";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { makeField } from "../../../__fixtures__/make-field";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { makeField } from "../../../__fixtures__/make-field.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────

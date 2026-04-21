@@ -1,18 +1,18 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols";
-import { useRateLimit } from "./use-rate-limit";
+import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols.js";
+import { useRateLimit } from "./use-rate-limit.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("../../internal/utils/rate-limit/fixed-window-strategy");
-vi.mock("../../internal/utils/rate-limit/sliding-window-strategy");
-vi.mock("../../internal/utils/rate-limit/token-bucket-strategy");
-vi.mock("../../internal/utils/is-context");
+vi.mock("../../internal/utils/rate-limit/fixed-window-strategy.js");
+vi.mock("../../internal/utils/rate-limit/sliding-window-strategy.js");
+vi.mock("../../internal/utils/rate-limit/token-bucket-strategy.js");
+vi.mock("../../internal/utils/is-context.js");
 
-import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-window-strategy";
-import { slidingWindowStrategy } from "../../internal/utils/rate-limit/sliding-window-strategy";
-import { tokenBucketStrategy } from "../../internal/utils/rate-limit/token-bucket-strategy";
-import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
+import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-window-strategy.js";
+import { slidingWindowStrategy } from "../../internal/utils/rate-limit/sliding-window-strategy.js";
+import { tokenBucketStrategy } from "../../internal/utils/rate-limit/token-bucket-strategy.js";
+import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
 
 describe("useRateLimit", () => {
   let ctx: any;

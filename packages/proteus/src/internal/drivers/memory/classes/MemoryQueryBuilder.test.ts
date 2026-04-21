@@ -9,11 +9,11 @@ import {
   PrimaryKeyField,
   UpdateDateField,
   VersionField,
-} from "../../../../decorators";
-import { ProteusSource } from "../../../../classes/ProteusSource";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import type { IProteusRepository } from "../../../../interfaces";
+} from "../../../../decorators/index.js";
+import { ProteusSource } from "../../../../classes/ProteusSource.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import type { IProteusRepository } from "../../../../interfaces/index.js";
 
 // ─── Entities ─────────────────────────────────────────────────────────────────
 

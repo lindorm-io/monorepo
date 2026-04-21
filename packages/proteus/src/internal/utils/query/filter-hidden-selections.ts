@@ -1,4 +1,4 @@
-import type { EntityMetadata, QueryScope } from "../../entity/types/metadata";
+import type { EntityMetadata, QueryScope } from "../../entity/types/metadata.js";
 
 export const filterHiddenSelections = (
   metadata: EntityMetadata,

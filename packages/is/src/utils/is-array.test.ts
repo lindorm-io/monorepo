@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isArray } from "./is-array";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isArray } from "./is-array.js";
 import { describe, expect, test } from "vitest";
 
 describe("isArray", () => {

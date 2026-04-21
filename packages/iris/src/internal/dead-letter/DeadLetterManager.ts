@@ -1,13 +1,13 @@
 import type { ILogger } from "@lindorm/logger";
 import { randomUUID } from "@lindorm/random";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import type { IDeadLetterStore } from "../../interfaces/IrisDeadLetterStore";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import type { IDeadLetterStore } from "../../interfaces/IrisDeadLetterStore.js";
 import type {
   DeadLetterEntry,
   DeadLetterFilterOptions,
   DeadLetterListOptions,
-} from "../../types/dead-letter";
-import type { DeadLetterManagerOptions } from "./types";
+} from "../../types/dead-letter.js";
+import type { DeadLetterManagerOptions } from "./types.js";
 
 export class DeadLetterManager {
   private readonly store: IDeadLetterStore;

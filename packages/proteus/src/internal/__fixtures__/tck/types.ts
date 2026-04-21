@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
-import type { IEntity, IProteusRepository } from "../../../interfaces";
-import type { MetaDriver } from "../../entity/types/metadata";
+import type { IEntity, IProteusRepository } from "../../../interfaces/index.js";
+import type { MetaDriver } from "../../entity/types/metadata.js";
 
 export type TckCapabilities = {
   // ─── Always-on (tested unconditionally) ──────────────────────────────────────

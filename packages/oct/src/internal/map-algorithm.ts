@@ -1,6 +1,10 @@
-import { IKryptosOct, OCT_SIG_ALGORITHMS, OctSigAlgorithm } from "@lindorm/kryptos";
-import { ShaAlgorithm } from "@lindorm/types";
-import { OctError } from "../errors";
+import {
+  type IKryptosOct,
+  OCT_SIG_ALGORITHMS,
+  type OctSigAlgorithm,
+} from "@lindorm/kryptos";
+import type { ShaAlgorithm } from "@lindorm/types";
+import { OctError } from "../errors/index.js";
 
 const OCT_SIG_ALGORITHM_MAP: Record<OctSigAlgorithm, ShaAlgorithm> = {
   HS256: "SHA256",

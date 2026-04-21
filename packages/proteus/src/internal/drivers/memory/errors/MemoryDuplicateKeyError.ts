@@ -1,1 +1,1 @@
-export { DuplicateKeyError as MemoryDuplicateKeyError } from "../../../errors/DuplicateKeyError";
+export { DuplicateKeyError as MemoryDuplicateKeyError } from "../../../errors/DuplicateKeyError.js";

@@ -1,4 +1,4 @@
-import { createHealthRouter } from "./create-health-router";
+import { createHealthRouter } from "./create-health-router.js";
 import { describe, expect, test, vi } from "vitest";
 
 describe("createHealthRouter", () => {

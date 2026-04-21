@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isEmpty } from "./is-empty";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isEmpty } from "./is-empty.js";
 import { describe, expect, test } from "vitest";
 
 describe("isEmpty", () => {

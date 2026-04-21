@@ -1,12 +1,12 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor, Dict } from "@lindorm/types";
-import type { HermesEventName } from "../types/hermes-event-name";
-import type { HermesViewEntity } from "../entities/HermesViewEntity";
-import type { AggregateState } from "../types/aggregate-state";
-import type { ReplayHandle, ReplayOptions } from "../types/replay-types";
-import type { SagaState } from "../types/saga-state";
-import type { IHermesProvider } from "./IHermesProvider";
-import type { IHermesSession } from "./IHermesSession";
+import type { HermesEventName } from "../types/hermes-event-name.js";
+import type { HermesViewEntity } from "../entities/HermesViewEntity.js";
+import type { AggregateState } from "../types/aggregate-state.js";
+import type { ReplayHandle, ReplayOptions } from "../types/replay-types.js";
+import type { SagaState } from "../types/saga-state.js";
+import type { IHermesProvider } from "./IHermesProvider.js";
+import type { IHermesSession } from "./IHermesSession.js";
 
 export interface IHermes extends IHermesProvider {
   setup(): Promise<void>;

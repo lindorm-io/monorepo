@@ -1,4 +1,4 @@
-import { CorsOptions } from "../../../types";
+import type { CorsOptions } from "../../../types/index.js";
 
 export const validateCorsOptions = (options: CorsOptions): void => {
   if (options.allowOrigins === "*" && options.allowCredentials) {

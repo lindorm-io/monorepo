@@ -1,7 +1,7 @@
 import { Conduit } from "@lindorm/conduit";
 import { Logger, LogLevel } from "@lindorm/logger";
 import io from "socket.io-client";
-import { EXAMPLE_PYLON } from "./_example";
+import { EXAMPLE_PYLON } from "./_example.js";
 
 const logger = new Logger({ level: LogLevel.Silly, readable: true });
 

@@ -1,8 +1,8 @@
 // default options
 
-import { Optional } from "@lindorm/types";
-import { KryptosAttributes } from "./attributes";
-import { KryptosCertificateOption } from "./certificate";
+import type { Optional } from "@lindorm/types";
+import type { KryptosAttributes } from "./attributes.js";
+import type { KryptosCertificateOption } from "./certificate.js";
 
 type Attributes = Omit<KryptosAttributes, "certificateChain" | "operations" | "use">;
 

@@ -1,4 +1,4 @@
-import { classifyPostgresError } from "./classify-breaker-error";
+import { classifyPostgresError } from "./classify-breaker-error.js";
 import { describe, expect, it } from "vitest";
 
 describe("classifyPostgresError", () => {

@@ -1,16 +1,16 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { createEmptyState } from "../../../../../classes/QueryBuilder";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { resolveColumnName } from "../resolve-column-name";
-import type { CompiledSql } from "./compiled-sql";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { createEmptyState } from "../../../../../classes/QueryBuilder.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { resolveColumnName } from "../resolve-column-name.js";
+import type { CompiledSql } from "./compiled-sql.js";
 import {
   buildInheritanceAliases,
   compileInheritanceFrom,
-} from "./compile-inheritance-join";
-import { compileWhereWithFilters } from "./compile-system-filters";
-import { resolveTableName } from "./resolve-table-name";
+} from "./compile-inheritance-join.js";
+import { compileWhereWithFilters } from "./compile-system-filters.js";
+import { resolveTableName } from "./resolve-table-name.js";
 
 export const compileIncrement = <E extends IEntity>(
   criteria: Predicate<E>,

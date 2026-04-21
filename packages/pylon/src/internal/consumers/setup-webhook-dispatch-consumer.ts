@@ -1,11 +1,11 @@
-import { ConduitClientCredentialsCache } from "@lindorm/conduit";
-import { IIrisSource } from "@lindorm/iris";
-import { IKryptos } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { IProteusSource } from "@lindorm/proteus";
-import { WebhookSubscription } from "../../entities";
-import { WebhookDispatch } from "../../messages";
-import { createDispatchWebhook } from "../utils/dispatch-webhook";
+import type { ConduitClientCredentialsCache } from "@lindorm/conduit";
+import type { IIrisSource } from "@lindorm/iris";
+import type { IKryptos } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
+import type { IProteusSource } from "@lindorm/proteus";
+import { WebhookSubscription } from "../../entities/index.js";
+import { WebhookDispatch } from "../../messages/index.js";
+import { createDispatchWebhook } from "../utils/dispatch-webhook.js";
 
 export const WEBHOOK_DISPATCH_QUEUE = "pylon.webhook.dispatch.send";
 

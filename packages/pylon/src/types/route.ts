@@ -1,5 +1,5 @@
-import { PylonHttpMiddleware } from "./context-http";
-import { PylonSocketContext, PylonSocketMiddleware } from "./context-socket";
+import type { PylonHttpMiddleware } from "./context-http.js";
+import type { PylonSocketContext, PylonSocketMiddleware } from "./context-socket.js";
 
 export type PylonHttpRoute = PylonHttpMiddleware | Array<PylonHttpMiddleware>;
 export type PylonSocketRoute<Payload = any> =

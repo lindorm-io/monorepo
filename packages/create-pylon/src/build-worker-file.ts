@@ -1,4 +1,4 @@
-import type { WorkerKey } from "./types";
+import type { WorkerKey } from "./types.js";
 
 const amphoraEntitySync = (): string =>
   [

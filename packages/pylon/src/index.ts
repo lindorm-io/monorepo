@@ -1,12 +1,12 @@
-export * from "./classes";
-export * from "./enums";
-export * from "./errors";
-export * from "./middleware";
-export * from "./types";
-export * from "./workers";
+export * from "./classes/index.js";
+export * from "./enums/index.js";
+export * from "./errors/index.js";
+export * from "./middleware/index.js";
+export * from "./types/index.js";
+export * from "./workers/index.js";
 
-export { DataAuditLog } from "./entities/DataAuditLog";
-export { RequestAuditLog } from "./entities/RequestAuditLog";
-export { WebhookSubscription } from "./entities/WebhookSubscription";
+export { DataAuditLog } from "./entities/DataAuditLog.js";
+export { RequestAuditLog } from "./entities/RequestAuditLog.js";
+export { WebhookSubscription } from "./entities/WebhookSubscription.js";
 
-export { Files } from "formidable";
+export type { Files } from "formidable";

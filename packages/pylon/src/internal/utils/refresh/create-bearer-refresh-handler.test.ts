@@ -1,7 +1,7 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
-import { PylonSocketAuth } from "../../../types";
-import { createBearerRefreshHandler } from "./create-bearer-refresh-handler";
+import type { PylonSocketAuth } from "../../../types/index.js";
+import { createBearerRefreshHandler } from "./create-bearer-refresh-handler.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createBearerRefreshHandler", () => {

@@ -1,5 +1,5 @@
-import { KryptosError } from "../../errors";
-import {
+import { KryptosError } from "../../errors/index.js";
+import type {
   AkpBuffer,
   EcBuffer,
   KryptosAlgorithm,
@@ -7,13 +7,13 @@ import {
   OkpBuffer,
   RsaBuffer,
   RsaModulus,
-} from "../../types";
-import { KryptosGenerate } from "../types/generate";
-import { generateAkpKey, generateAkpKeyAsync } from "./akp/generate-key";
-import { generateEcKey, generateEcKeyAsync } from "./ec/generate-key";
-import { generateOctKey, generateOctKeyAsync } from "./oct/generate-key";
-import { generateOkpKey, generateOkpKeyAsync } from "./okp/generate-key";
-import { generateRsaKey, generateRsaKeyAsync } from "./rsa/generate-key";
+} from "../../types/index.js";
+import type { KryptosGenerate } from "../types/generate.js";
+import { generateAkpKey, generateAkpKeyAsync } from "./akp/generate-key.js";
+import { generateEcKey, generateEcKeyAsync } from "./ec/generate-key.js";
+import { generateOctKey, generateOctKeyAsync } from "./oct/generate-key.js";
+import { generateOkpKey, generateOkpKeyAsync } from "./okp/generate-key.js";
+import { generateRsaKey, generateRsaKeyAsync } from "./rsa/generate-key.js";
 
 type GenerateResult =
   | Omit<AkpBuffer, "id" | "algorithm" | "type" | "use">

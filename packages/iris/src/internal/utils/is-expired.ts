@@ -1,4 +1,4 @@
-import type { IrisEnvelope } from "../types/iris-envelope";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
 
 export const isExpired = (
   envelope: Pick<IrisEnvelope, "expiry" | "timestamp">,

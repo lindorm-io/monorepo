@@ -1,5 +1,5 @@
-import { DurationString } from "../../types";
-import { getDuration } from "./get-duration";
+import type { DurationString } from "../../types/index.js";
+import { getDuration } from "./get-duration.js";
 
 type MatchString = {
   duration: DurationString;

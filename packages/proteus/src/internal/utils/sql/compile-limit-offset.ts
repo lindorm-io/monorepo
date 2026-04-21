@@ -1,4 +1,4 @@
-import type { SqlDialect } from "./sql-dialect";
+import type { SqlDialect } from "./sql-dialect.js";
 
 export const compileLimitOffset = (
   skip: number | null,

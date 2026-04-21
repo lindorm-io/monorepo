@@ -1,8 +1,8 @@
 import { sec } from "@lindorm/date";
 import { isArray, isBoolean, isFinite, isString } from "@lindorm/is";
-import { HttpMethod } from "@lindorm/types";
-import { CorsError } from "../../errors";
-import { CorsOptions, PylonHttpContext } from "../../types";
+import type { HttpMethod } from "@lindorm/types";
+import { CorsError } from "../../errors/index.js";
+import type { CorsOptions, PylonHttpContext } from "../../types/index.js";
 
 export const handleAccessControlOrigin = (
   ctx: PylonHttpContext,

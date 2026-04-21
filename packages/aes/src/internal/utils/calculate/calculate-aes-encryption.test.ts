@@ -1,6 +1,6 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
-import { AesError } from "../../../errors";
-import { calculateAesEncryption } from "./calculate-aes-encryption";
+import type { KryptosEncryption } from "@lindorm/kryptos";
+import { AesError } from "../../../errors/index.js";
+import { calculateAesEncryption } from "./calculate-aes-encryption.js";
 import { describe, expect, test } from "vitest";
 
 describe("calculateAesEncryption", () => {

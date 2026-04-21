@@ -1,8 +1,8 @@
 import { isArray, isObject } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import type { IndexDecoratorOptions } from "../internal/entity/types/decorators";
-import type { IndexDirection } from "../internal/types/types";
-import { stageIndex } from "../internal/entity/metadata/stage-metadata";
+import type { IndexDecoratorOptions } from "../internal/entity/types/decorators.js";
+import type { IndexDirection } from "../internal/types/types.js";
+import { stageIndex } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Declare a database index on one or more fields.

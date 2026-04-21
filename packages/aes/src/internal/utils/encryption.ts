@@ -1,19 +1,19 @@
-import { CipherGCMOptions, DecipherGCM, createDecipheriv } from "crypto";
-import { LATEST_AES_VERSION } from "../constants/version";
-import { AesError } from "../../errors/AesError";
-import { AesContent } from "../../types/content";
-import { AesEncryptionRecord } from "../../types/aes-encryption-data";
-import {
+import { type CipherGCMOptions, type DecipherGCM, createDecipheriv } from "crypto";
+import { LATEST_AES_VERSION } from "../constants/version.js";
+import { AesError } from "../../errors/AesError.js";
+import type { AesContent } from "../../types/content.js";
+import type { AesEncryptionRecord } from "../../types/aes-encryption-data.js";
+import type {
   PrivateAesDecryptionOptions,
   PrivateAesEncryptionOptions,
-} from "../types/aes-data";
-import { calculateAesEncryption } from "./calculate/calculate-aes-encryption";
-import { parseContent } from "./content";
-import { assertAuthTag } from "./data/auth-tag";
-import { splitContentEncryptionKey } from "./data/split-content-encryption-key";
-import { getDecryptionKey } from "./get-key/get-decryption-key";
-import { getEncryptionKey } from "./get-key/get-encryption-key";
-import { encryptAesContent } from "./encrypt-content";
+} from "../types/aes-data.js";
+import { calculateAesEncryption } from "./calculate/calculate-aes-encryption.js";
+import { parseContent } from "./content.js";
+import { assertAuthTag } from "./data/auth-tag.js";
+import { splitContentEncryptionKey } from "./data/split-content-encryption-key.js";
+import { getDecryptionKey } from "./get-key/get-decryption-key.js";
+import { getEncryptionKey } from "./get-key/get-encryption-key.js";
+import { encryptAesContent } from "./encrypt-content.js";
 
 export const encryptAes = (options: PrivateAesEncryptionOptions): AesEncryptionRecord => {
   const { aad, data, encryption = "A256GCM", kryptos } = options;

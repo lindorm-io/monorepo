@@ -1,12 +1,12 @@
 import { uniq } from "@lindorm/utils";
-import { introspectComments } from "../../../../drivers/postgres/utils/sync/introspect-comments";
-import { introspectConstraints } from "../../../../drivers/postgres/utils/sync/introspect-constraints";
-import { introspectEnums } from "../../../../drivers/postgres/utils/sync/introspect-enums";
-import { introspectIndexes } from "../../../../drivers/postgres/utils/sync/introspect-indexes";
-import { introspectTriggers } from "../../../../drivers/postgres/utils/sync/introspect-triggers";
-import type { DbSnapshot, DbTable } from "../../types/db-snapshot";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { introspectTables } from "./introspect-tables";
+import { introspectComments } from "../../../../drivers/postgres/utils/sync/introspect-comments.js";
+import { introspectConstraints } from "../../../../drivers/postgres/utils/sync/introspect-constraints.js";
+import { introspectEnums } from "../../../../drivers/postgres/utils/sync/introspect-enums.js";
+import { introspectIndexes } from "../../../../drivers/postgres/utils/sync/introspect-indexes.js";
+import { introspectTriggers } from "../../../../drivers/postgres/utils/sync/introspect-triggers.js";
+import type { DbSnapshot, DbTable } from "../../types/db-snapshot.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { introspectTables } from "./introspect-tables.js";
 
 type ManagedTable = {
   schema: string;

@@ -1,4 +1,4 @@
-import { LindormError, LindormErrorOptions } from "@lindorm/errors";
+import { LindormError, type LindormErrorOptions } from "@lindorm/errors";
 
 export type DomainErrorOptions = LindormErrorOptions & {
   permanent?: boolean;

@@ -1,7 +1,7 @@
-import type { IIrisMessageBus, IMessage } from "../../interfaces";
-import type { PublishOptions, SubscribeOptions } from "../../types";
-import { DriverBase } from "./DriverBase";
-import type { DriverBaseOptions } from "./DriverBase";
+import type { IIrisMessageBus, IMessage } from "../../interfaces/index.js";
+import type { PublishOptions, SubscribeOptions } from "../../types/index.js";
+import { DriverBase } from "./DriverBase.js";
+import type { DriverBaseOptions } from "./DriverBase.js";
 
 export type DriverMessageBusBaseOptions<M extends IMessage> = DriverBaseOptions<M>;
 

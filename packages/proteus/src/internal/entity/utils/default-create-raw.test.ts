@@ -1,12 +1,12 @@
-import { defaultCreateRaw } from "./default-create-raw";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { JoinKey } from "../../../decorators/JoinKey";
-import { ManyToOne } from "../../../decorators/ManyToOne";
-import { OneToMany } from "../../../decorators/OneToMany";
-import { OneToOne } from "../../../decorators/OneToOne";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { VersionField } from "../../../decorators/VersionField";
+import { defaultCreateRaw } from "./default-create-raw.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { JoinKey } from "../../../decorators/JoinKey.js";
+import { ManyToOne } from "../../../decorators/ManyToOne.js";
+import { OneToMany } from "../../../decorators/OneToMany.js";
+import { OneToOne } from "../../../decorators/OneToOne.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { VersionField } from "../../../decorators/VersionField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CreateRawOwner" })

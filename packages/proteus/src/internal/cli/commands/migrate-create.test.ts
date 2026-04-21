@@ -1,14 +1,18 @@
 import { resolve } from "path";
-import { migrateCreate } from "./migrate-create";
-import { withSourceConfig } from "../with-source";
-import { writeMigrationFile } from "../../utils/migration/write-migration-file";
-import { formatTimestamp, sanitizeName, kebabToPascal } from "../utils/migration-naming";
+import { migrateCreate } from "./migrate-create.js";
+import { withSourceConfig } from "../with-source.js";
+import { writeMigrationFile } from "../../utils/migration/write-migration-file.js";
+import {
+  formatTimestamp,
+  sanitizeName,
+  kebabToPascal,
+} from "../utils/migration-naming.js";
 import { Logger } from "@lindorm/logger";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("../with-source");
-vi.mock("../../utils/migration/write-migration-file");
-vi.mock("../utils/migration-naming", async () => ({
+vi.mock("../with-source.js");
+vi.mock("../../utils/migration/write-migration-file.js");
+vi.mock("../utils/migration-naming.js", async () => ({
   formatTimestamp: vi.fn(),
   sanitizeName: vi.fn(),
   kebabToPascal: vi.fn(),

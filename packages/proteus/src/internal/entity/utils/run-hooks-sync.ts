@@ -1,5 +1,5 @@
-import { ProteusError } from "../../../errors";
-import type { MetaHook, MetaHookDecorator } from "../types/metadata";
+import { ProteusError } from "../../../errors/index.js";
+import type { MetaHook, MetaHookDecorator } from "../types/metadata.js";
 
 export const runHooksSync = (
   decorator: MetaHookDecorator,

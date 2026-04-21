@@ -1,5 +1,5 @@
-import { TOKEN_TYPE_TO_SHORT_NAME, TokenType } from "../../constants/token-type";
-import { BaseTokenFormat } from "../../types/header";
+import { TOKEN_TYPE_TO_SHORT_NAME, type TokenType } from "../../constants/token-type.js";
+import type { BaseTokenFormat } from "../../types/header.js";
 
 export type KitFormat = "jwt" | "jws" | "jwe";
 

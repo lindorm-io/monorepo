@@ -1,4 +1,4 @@
-import { KryptosUse } from "../types";
+import type { KryptosUse } from "../types.js";
 
 export const OKP_ENC_ALGORITHMS = [
   "ECDH-ES",

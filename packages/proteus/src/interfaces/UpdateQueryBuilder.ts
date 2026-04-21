@@ -1,6 +1,6 @@
 import type { DeepPartial, Predicate } from "@lindorm/types";
-import type { IEntity } from "./Entity";
-import type { WriteResult } from "./InsertQueryBuilder";
+import type { IEntity } from "./Entity.js";
+import type { WriteResult } from "./InsertQueryBuilder.js";
 
 /**
  * Raw SQL UPDATE builder — no hooks, no cascades, no version checks.

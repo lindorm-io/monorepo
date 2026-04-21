@@ -1,6 +1,6 @@
-import { Expiry } from "@lindorm/date";
-import { Dict } from "@lindorm/types";
-import {
+import type { Expiry } from "@lindorm/date";
+import type { Dict } from "@lindorm/types";
+import type {
   AegisProfile,
   LindormClaims,
   OAuthClaims,
@@ -8,8 +8,8 @@ import {
   PopClaims,
   DelegationClaims,
   StdClaims,
-} from "../claims";
-import { BindCertificateMode, TokenEncryptOrSignOptions } from "../header";
+} from "../claims/index.js";
+import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.js";
 
 export type SignJwtContent<C extends Dict = Dict> = Omit<
   StdClaims,

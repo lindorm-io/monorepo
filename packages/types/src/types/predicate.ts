@@ -1,4 +1,4 @@
-import { DeepPartial, Dict } from "./types";
+import type { DeepPartial, Dict } from "./types.js";
 
 export type PredicateOperator<T> = {
   // existence

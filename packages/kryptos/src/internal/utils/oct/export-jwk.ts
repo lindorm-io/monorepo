@@ -1,6 +1,10 @@
 import { B64 } from "@lindorm/b64";
-import { KryptosError } from "../../../errors";
-import { KryptosExportMode, KryptosFromBuffer, OctJwk } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type {
+  KryptosExportMode,
+  KryptosFromBuffer,
+  OctJwk,
+} from "../../../types/index.js";
 
 type Options = Omit<KryptosFromBuffer, "id" | "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;

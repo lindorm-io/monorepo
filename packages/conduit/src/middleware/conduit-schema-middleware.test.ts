@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { ConduitError } from "../errors";
-import { conduitSchemaMiddleware } from "./conduit-schema-middleware";
+import { ConduitError } from "../errors/index.js";
+import { conduitSchemaMiddleware } from "./conduit-schema-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitSchemaMiddleware", () => {

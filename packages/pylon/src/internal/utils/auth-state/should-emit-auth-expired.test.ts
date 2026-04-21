@@ -1,4 +1,4 @@
-import { shouldEmitAuthExpired } from "./should-emit-auth-expired";
+import { shouldEmitAuthExpired } from "./should-emit-auth-expired.js";
 import { describe, expect, test } from "vitest";
 
 describe("shouldEmitAuthExpired", () => {

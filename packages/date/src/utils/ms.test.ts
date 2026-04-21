@@ -1,4 +1,4 @@
-import { ms } from "./ms";
+import { ms } from "./ms.js";
 import { describe, expect, test } from "vitest";
 
 describe("ms", () => {

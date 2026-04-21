@@ -4,9 +4,9 @@ import {
   ConduitError,
   conduitHeadersMiddleware,
 } from "@lindorm/conduit";
-import { WebhookAuth, WebhookMethod } from "../../enums";
-import { IWebhookSubscription } from "../../interfaces";
-import { createConduitWebhookAuthMiddleware } from "./conduit-webhook-auth-middleware";
+import { WebhookAuth, WebhookMethod } from "../../enums/index.js";
+import type { IWebhookSubscription } from "../../interfaces/index.js";
+import { createConduitWebhookAuthMiddleware } from "./conduit-webhook-auth-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("@lindorm/conduit", async () => {

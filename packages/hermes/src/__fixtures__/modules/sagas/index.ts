@@ -1,2 +1,2 @@
-export { TestSaga } from "./TestSaga";
-export type { TestSagaState } from "./TestSaga";
+export { TestSaga } from "./TestSaga.js";
+export type { TestSagaState } from "./TestSaga.js";

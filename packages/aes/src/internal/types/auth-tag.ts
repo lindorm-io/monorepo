@@ -1,5 +1,5 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
-import { CipherGCM, Cipheriv, DecipherGCM, Decipheriv } from "crypto";
+import type { KryptosEncryption } from "@lindorm/kryptos";
+import { type CipherGCM, Cipheriv, type DecipherGCM, Decipheriv } from "crypto";
 
 export type GetAuthTagOptions = {
   aad?: Buffer;

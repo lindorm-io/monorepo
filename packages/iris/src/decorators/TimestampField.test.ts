@@ -1,4 +1,4 @@
-import { TimestampField } from "./TimestampField";
+import { TimestampField } from "./TimestampField.js";
 import { describe, expect, it } from "vitest";
 
 describe("TimestampField", () => {

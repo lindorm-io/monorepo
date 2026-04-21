@@ -1,7 +1,7 @@
 import { createPrivateKey, createPublicKey } from "crypto";
-import { KryptosError } from "../../../errors";
-import { KryptosBuffer, KryptosExportMode, OkpJwk } from "../../../types";
-import { isOkpCurve } from "./is-okp-curve";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosBuffer, KryptosExportMode, OkpJwk } from "../../../types/index.js";
+import { isOkpCurve } from "./is-okp-curve.js";
 
 type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;

@@ -1,6 +1,6 @@
-import { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
-import { AesContent, AesContentType } from "./content";
-import { PublicEncryptionJwk } from "./types";
+import type { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
+import type { AesContent, AesContentType } from "./content.js";
+import type { PublicEncryptionJwk } from "./types.js";
 
 export type AesEncryptionMode = "encoded" | "record" | "serialised" | "tokenised";
 

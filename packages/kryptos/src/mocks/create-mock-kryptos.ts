@@ -1,4 +1,4 @@
-import { IKryptos } from "../interfaces";
+import type { IKryptos } from "../interfaces/index.js";
 
 export const _createMockKryptos = (
   mockFn: () => any,

@@ -1,11 +1,11 @@
-import { Amphora, IAmphora } from "@lindorm/amphora";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import { join } from "path";
 import { Socket as ClientSocket, io as ioClient } from "socket.io-client";
 import request from "supertest";
-import { Pylon } from "./Pylon";
+import { Pylon } from "./Pylon.js";
 import {
   afterAll,
   afterEach,

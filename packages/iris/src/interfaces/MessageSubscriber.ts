@@ -1,4 +1,4 @@
-import type { IMessage } from "./Message";
+import type { IMessage } from "./Message.js";
 
 export interface IMessageSubscriber {
   beforePublish?(message: IMessage): void | Promise<void>;

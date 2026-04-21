@@ -4,11 +4,11 @@ import type {
   IrisEvents,
   MessageScannerInput,
   SessionOptions,
-} from "../types";
-import type { IMessage } from "./Message";
-import type { IMessageSubscriber } from "./MessageSubscriber";
-import type { IIrisMessagingProvider } from "./IrisMessagingProvider";
-import type { IIrisSession } from "./IrisSession";
+} from "../types/index.js";
+import type { IMessage } from "./Message.js";
+import type { IMessageSubscriber } from "./MessageSubscriber.js";
+import type { IIrisMessagingProvider } from "./IrisMessagingProvider.js";
+import type { IIrisSession } from "./IrisSession.js";
 
 export interface IIrisSource extends IIrisMessagingProvider {
   readonly messages: ReadonlyArray<Constructor<IMessage>>;

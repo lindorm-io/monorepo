@@ -1,13 +1,13 @@
 import type { Redis } from "ioredis";
-import type { IEntity } from "../../../../interfaces";
-import type { MetaRelation } from "../../../entity/types/metadata";
-import type { JoinTableOps } from "../../../types/join-table-ops";
-import { getJoinName } from "../../../entity/utils/get-join-name";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { buildJoinSetKey, buildReverseJoinSetKey } from "./build-join-set-key";
-import { encodePkSegment } from "./encode-pk-segment";
-import { scanEntityKeys } from "./scan-entity-keys";
-import { RedisDriverError } from "../errors/RedisDriverError";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { MetaRelation } from "../../../entity/types/metadata.js";
+import type { JoinTableOps } from "../../../types/join-table-ops.js";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { buildJoinSetKey, buildReverseJoinSetKey } from "./build-join-set-key.js";
+import { encodePkSegment } from "./encode-pk-segment.js";
+import { scanEntityKeys } from "./scan-entity-keys.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
 
 /**
  * Build a SCAN MATCH pattern for all reverse join SET keys of a given join table.

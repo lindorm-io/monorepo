@@ -1,7 +1,7 @@
 import { KRYPTOS_RSA_ENC, KRYPTOS_RSA_SIG_RS256 } from "@lindorm/kryptos/fixtures";
 import { randomBytes } from "crypto";
-import { RsaError } from "../errors";
-import { RsaKit } from "./RsaKit";
+import { RsaError } from "../errors/index.js";
+import { RsaKit } from "./RsaKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 describe("RsaKit", () => {

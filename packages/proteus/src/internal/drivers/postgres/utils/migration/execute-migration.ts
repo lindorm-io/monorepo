@@ -1,18 +1,18 @@
-import { PostgresMigrationError } from "../../errors/PostgresMigrationError";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import { PostgresMigrationError } from "../../errors/PostgresMigrationError.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import type {
   MigrationInterface,
   MigrationQueryContext,
   MigrationQueryRunner,
   MigrationTableOptions,
-} from "../../types/migration";
+} from "../../types/migration.js";
 import {
   deleteMigrationRecord,
   ensureMigrationTable,
   insertMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "./migration-table";
+} from "./migration-table.js";
 
 export type ExecuteMigrationResult = {
   name: string;

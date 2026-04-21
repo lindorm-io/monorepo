@@ -1,5 +1,5 @@
-import { TokenType } from "../../constants/token-type";
-import { BindCertificateMode, TokenEncryptOrSignOptions } from "../header";
+import type { TokenType } from "../../constants/token-type.js";
+import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.js";
 
 export type JweEncryptOptions = {
   bindCertificate?: BindCertificateMode;

@@ -1,4 +1,4 @@
-import type { MetaHook, MetaHookDecorator } from "../types/metadata";
+import type { MetaHook, MetaHookDecorator } from "../types/metadata.js";
 
 export const runHooksAsync = async (
   decorator: MetaHookDecorator,

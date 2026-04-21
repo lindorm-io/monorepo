@@ -1,10 +1,10 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import { MemoryStreamProcessor } from "./MemoryStreamProcessor";
-import { MemoryStreamPipeline } from "./MemoryStreamPipeline";
-import { createStore } from "../utils/create-store";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import { MemoryStreamProcessor } from "./MemoryStreamProcessor.js";
+import { MemoryStreamPipeline } from "./MemoryStreamPipeline.js";
+import { createStore } from "../utils/create-store.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---

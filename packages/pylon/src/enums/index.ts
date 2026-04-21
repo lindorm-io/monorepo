@@ -1,2 +1,2 @@
-export * from "./WebhookAuth";
-export * from "./WebhookMethod";
+export * from "./WebhookAuth.js";
+export * from "./WebhookMethod.js";

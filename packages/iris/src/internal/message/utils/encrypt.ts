@@ -1,5 +1,5 @@
-import { IrisNotSupportedError } from "../../../errors/IrisNotSupportedError";
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
+import { IrisNotSupportedError } from "../../../errors/IrisNotSupportedError.js";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
 import type { AmphoraPredicate } from "@lindorm/amphora";
 import type { IAmphora } from "@lindorm/amphora";
 

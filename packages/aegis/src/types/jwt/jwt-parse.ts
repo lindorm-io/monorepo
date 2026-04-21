@@ -1,6 +1,6 @@
-import { KryptosSigAlgorithm } from "@lindorm/kryptos";
-import { Dict } from "@lindorm/types";
-import {
+import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
+import type { Dict } from "@lindorm/types";
+import type {
   AegisProfile,
   LindormClaims,
   OAuthClaims,
@@ -8,11 +8,11 @@ import {
   PopClaims,
   DelegationClaims,
   StdClaims,
-} from "../claims";
-import { RefinedTokenHeader } from "../header";
-import { DecodedJwt } from "./jwt-decode";
-import { TokenDelegation } from "./jwt-delegation";
-import { ParsedDpopProof } from "./jwt-dpop";
+} from "../claims/index.js";
+import type { RefinedTokenHeader } from "../header.js";
+import type { DecodedJwt } from "./jwt-decode.js";
+import type { TokenDelegation } from "./jwt-delegation.js";
+import type { ParsedDpopProof } from "./jwt-dpop.js";
 
 export type ParsedJwtHeader = RefinedTokenHeader<KryptosSigAlgorithm>;
 

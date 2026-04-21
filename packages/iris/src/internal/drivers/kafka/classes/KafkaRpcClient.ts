@@ -1,17 +1,17 @@
 import { randomUUID } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import type { IMessage } from "../../../../interfaces";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import type { IMessage } from "../../../../interfaces/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { KafkaSharedState } from "../types/kafka-types";
-import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase";
-import { resolveTopicName } from "../utils/resolve-topic-name";
-import { serializeKafkaMessage } from "../utils/serialize-kafka-message";
-import { parseKafkaMessage } from "../utils/parse-kafka-message";
-import { createKafkaConsumer } from "../utils/create-kafka-consumer";
-import { ensureKafkaTopicFromState } from "../utils/ensure-kafka-topic";
-import { stopKafkaConsumer } from "../utils/stop-kafka-consumer";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
+import { resolveTopicName } from "../utils/resolve-topic-name.js";
+import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
+import { parseKafkaMessage } from "../utils/parse-kafka-message.js";
+import { createKafkaConsumer } from "../utils/create-kafka-consumer.js";
+import { ensureKafkaTopicFromState } from "../utils/ensure-kafka-topic.js";
+import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
 
 export type KafkaRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
   state: KafkaSharedState;

@@ -1,10 +1,10 @@
 import { isArray, isObject } from "@lindorm/is";
 import fastSafeStringify from "fast-safe-stringify";
 import { blue, cyan, gray, green, red, white, yellow } from "picocolors";
-import { Formatter } from "picocolors/types";
-import { LogContent, LogLevel } from "../../types";
-import { InternalLog } from "../types/internal-log";
-import { inspectDictionary } from "../../utils/inspect-dictionary";
+import type { Formatter } from "picocolors/types";
+import type { LogContent, LogLevel } from "../../types/index.js";
+import type { InternalLog } from "../types/internal-log.js";
+import { inspectDictionary } from "../../utils/inspect-dictionary.js";
 
 const colourise = (
   formatter: Formatter,

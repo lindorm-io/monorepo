@@ -1,8 +1,8 @@
-import { ILogger } from "@lindorm/logger";
-import { PylonRouter } from "../../classes/PylonRouter";
-import { PylonError } from "../../errors";
-import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
-import { PylonScannerBase, ScannedFile } from "./PylonScannerBase";
+import type { ILogger } from "@lindorm/logger";
+import { PylonRouter } from "../../classes/PylonRouter.js";
+import { PylonError } from "../../errors/index.js";
+import type { PylonHttpContext, PylonHttpMiddleware } from "../../types/index.js";
+import { PylonScannerBase, type ScannedFile } from "./PylonScannerBase.js";
 
 const HTTP_METHODS = [
   "GET",

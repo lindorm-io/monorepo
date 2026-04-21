@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { createQueueMiddleware } from "./common-queue-middleware";
+import { createQueueMiddleware } from "./common-queue-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createQueueMiddleware", () => {

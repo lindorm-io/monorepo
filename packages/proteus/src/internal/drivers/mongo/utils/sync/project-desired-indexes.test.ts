@@ -5,8 +5,8 @@ import type {
   MetaIndex,
   MetaRelation,
   MetaUnique,
-} from "../../../../entity/types/metadata";
-import { projectDesiredIndexes } from "./project-desired-indexes";
+} from "../../../../entity/types/metadata.js";
+import { projectDesiredIndexes } from "./project-desired-indexes.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

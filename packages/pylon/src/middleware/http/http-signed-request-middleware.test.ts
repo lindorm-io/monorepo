@@ -5,7 +5,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ShaError, ShaKit } from "@lindorm/sha";
 import MockDate from "mockdate";
 import { EcError } from "@lindorm/ec";
-import { createHttpSignedRequestMiddleware } from "./http-signed-request-middleware";
+import { createHttpSignedRequestMiddleware } from "./http-signed-request-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

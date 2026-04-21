@@ -1,7 +1,7 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import type { MetaFilter } from "../../entity/types/metadata";
-import type { FilterRegistry } from "./filter-registry";
-import { ProteusError } from "../../../errors";
+import type { MetaFilter } from "../../entity/types/metadata.js";
+import type { FilterRegistry } from "./filter-registry.js";
+import { ProteusError } from "../../../errors/index.js";
 
 /**
  * A resolved filter predicate ready to be applied to a query.

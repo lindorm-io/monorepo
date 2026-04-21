@@ -1,6 +1,6 @@
 import { createPublicKey, verify } from "crypto";
-import { KryptosError } from "../../../errors";
-import { ParsedX509Certificate } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type { ParsedX509Certificate } from "../../../types/index.js";
 import {
   X509_OID_ECDSA_WITH_SHA256,
   X509_OID_ECDSA_WITH_SHA384,
@@ -13,9 +13,9 @@ import {
   X509_OID_SHA256_WITH_RSA,
   X509_OID_SHA384_WITH_RSA,
   X509_OID_SHA512_WITH_RSA,
-} from "./oids";
-import { parseX509Certificate } from "./parse-certificate";
-import { parseX509 } from "./parse-x509";
+} from "./oids.js";
+import { parseX509Certificate } from "./parse-certificate.js";
+import { parseX509 } from "./parse-x509.js";
 
 const SIG_ALG_HASH: Record<string, string | null> = {
   [X509_OID_SHA256_WITH_RSA]: "sha256",

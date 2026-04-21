@@ -1,19 +1,22 @@
-import type { IIrisMessageBus } from "../interfaces/IrisMessageBus";
-import type { IIrisPublisher } from "../interfaces/IrisPublisher";
-import type { IIrisRpcClient } from "../interfaces/IrisRpcClient";
-import type { IIrisSession } from "../interfaces/IrisSession";
-import type { IIrisSource } from "../interfaces/IrisSource";
-import type { IIrisWorkerQueue } from "../interfaces/IrisWorkerQueue";
-import type { IMessage } from "../interfaces/Message";
-import { _createMockMessageBus, type MessageBusExtras } from "./create-mock-message-bus";
-import { _createMockIrisSession } from "./create-mock-iris-session";
-import { _createMockIrisSource } from "./create-mock-iris-source";
-import { _createMockPublisher, type PublisherExtras } from "./create-mock-publisher";
-import { _createMockRpcClient, type RpcClientExtras } from "./create-mock-rpc-client";
+import type { IIrisMessageBus } from "../interfaces/IrisMessageBus.js";
+import type { IIrisPublisher } from "../interfaces/IrisPublisher.js";
+import type { IIrisRpcClient } from "../interfaces/IrisRpcClient.js";
+import type { IIrisSession } from "../interfaces/IrisSession.js";
+import type { IIrisSource } from "../interfaces/IrisSource.js";
+import type { IIrisWorkerQueue } from "../interfaces/IrisWorkerQueue.js";
+import type { IMessage } from "../interfaces/Message.js";
+import {
+  _createMockMessageBus,
+  type MessageBusExtras,
+} from "./create-mock-message-bus.js";
+import { _createMockIrisSession } from "./create-mock-iris-session.js";
+import { _createMockIrisSource } from "./create-mock-iris-source.js";
+import { _createMockPublisher, type PublisherExtras } from "./create-mock-publisher.js";
+import { _createMockRpcClient, type RpcClientExtras } from "./create-mock-rpc-client.js";
 import {
   _createMockWorkerQueue,
   type WorkerQueueExtras,
-} from "./create-mock-worker-queue";
+} from "./create-mock-worker-queue.js";
 
 type MockIrisSource = jest.Mocked<IIrisSource>;
 type MockIrisSession = jest.Mocked<IIrisSession>;

@@ -5,7 +5,7 @@ import {
   disableFilter,
   enableFilter,
   setFilterParams,
-} from "./filter-registry";
+} from "./filter-registry.js";
 
 describe("createFilterRegistry", () => {
   test("should create an empty registry", () => {

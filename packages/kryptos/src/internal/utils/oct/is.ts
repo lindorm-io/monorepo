@@ -1,11 +1,11 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
-import { OctBuffer, OctJwk, OctString } from "../../../types";
-import {
+import type { OctBuffer, OctJwk, OctString } from "../../../types/index.js";
+import type {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
   IsStringFormatOptions,
-} from "../../types/is-options";
+} from "../../types/is-options.js";
 
 export const isOctB64 = (options: IsStringFormatOptions): options is OctString => {
   if (options.type !== "oct") return false;

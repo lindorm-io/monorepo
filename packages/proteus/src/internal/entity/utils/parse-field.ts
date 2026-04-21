@@ -1,8 +1,8 @@
 import type { DeepPartial } from "@lindorm/types";
-import { EntityManagerError } from "../errors/EntityManagerError";
-import { IEntity } from "../../../interfaces";
-import type { MetaField } from "../types/metadata";
-import { deserialise } from "./deserialise";
+import { EntityManagerError } from "../errors/EntityManagerError.js";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { MetaField } from "../types/metadata.js";
+import { deserialise } from "./deserialise.js";
 
 /**
  * Phase 1 of two-phase validation: parse and coerce values.

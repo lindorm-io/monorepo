@@ -1,6 +1,6 @@
-import type { JoinTableOps } from "../../../../types/join-table-ops";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { syncJoinTableRows, deleteJoinTableRows } from "./manage-join-table";
+import type { JoinTableOps } from "../../../../types/join-table-ops.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { syncJoinTableRows, deleteJoinTableRows } from "./manage-join-table.js";
 
 export const createPostgresJoinTableOps = (
   client: PostgresQueryClient,

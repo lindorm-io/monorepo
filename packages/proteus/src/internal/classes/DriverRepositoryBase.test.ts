@@ -20,19 +20,19 @@ import {
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../entity/classes/EntityManager", async () => ({
+vi.mock("../entity/classes/EntityManager.js", async () => ({
   EntityManager: vi.fn(),
 }));
 
-vi.mock("../entity/metadata/get-entity-metadata", () => ({
+vi.mock("../entity/metadata/get-entity-metadata.js", () => ({
   getEntityMetadata: vi.fn(),
 }));
 
-vi.mock("../utils/repository/build-pk-predicate", () => ({
+vi.mock("../utils/repository/build-pk-predicate.js", () => ({
   buildPrimaryKeyPredicate: vi.fn(),
 }));
 
-vi.mock("../utils/repository/repository-guards", () => ({
+vi.mock("../utils/repository/repository-guards.js", () => ({
   guardAppendOnly: vi.fn(),
   guardDeleteDateField: vi.fn(),
   guardExpiryDateField: vi.fn(),
@@ -41,44 +41,44 @@ vi.mock("../utils/repository/repository-guards", () => ({
   validateRelationNames: vi.fn(),
 }));
 
-vi.mock("../entity/utils/install-lazy-relations", () => ({
+vi.mock("../entity/utils/install-lazy-relations.js", () => ({
   installLazyRelations: vi.fn(),
 }));
 
-vi.mock("../entity/utils/lazy-relation", () => ({
+vi.mock("../entity/utils/lazy-relation.js", () => ({
   isLazyRelation: vi.fn().mockReturnValue(false),
 }));
 
-vi.mock("../entity/utils/lazy-collection", () => ({
+vi.mock("../entity/utils/lazy-collection.js", () => ({
   isLazyCollection: vi.fn().mockReturnValue(false),
 }));
 
-vi.mock("../utils/query/filter-hidden-selections", () => ({
+vi.mock("../utils/query/filter-hidden-selections.js", () => ({
   filterHiddenSelections: vi.fn().mockReturnValue(null),
 }));
 
-vi.mock("../utils/pagination/validate-paginate-options", () => ({
+vi.mock("../utils/pagination/validate-paginate-options.js", () => ({
   validatePaginateOptions: vi.fn(),
 }));
 
-vi.mock("../utils/pagination/build-keyset-order", () => ({
+vi.mock("../utils/pagination/build-keyset-order.js", () => ({
   buildKeysetOrder: vi.fn().mockReturnValue([]),
   keysetOrderToRecord: vi.fn().mockReturnValue({}),
 }));
 
-vi.mock("../utils/pagination/build-keyset-predicate", () => ({
+vi.mock("../utils/pagination/build-keyset-predicate.js", () => ({
   buildKeysetPredicate: vi.fn().mockReturnValue({}),
 }));
 
-vi.mock("../utils/pagination/encode-cursor", () => ({
+vi.mock("../utils/pagination/encode-cursor.js", () => ({
   encodeCursor: vi.fn().mockReturnValue("cursor-token"),
 }));
 
-vi.mock("../utils/pagination/decode-cursor", () => ({
+vi.mock("../utils/pagination/decode-cursor.js", () => ({
   decodeCursor: vi.fn().mockReturnValue({ values: ["val1"] }),
 }));
 
-vi.mock("../utils/pagination/extract-cursor-values", () => ({
+vi.mock("../utils/pagination/extract-cursor-values.js", () => ({
   extractCursorValues: vi.fn().mockReturnValue(["val1"]),
 }));
 
@@ -87,36 +87,40 @@ vi.mock("../utils/pagination/extract-cursor-values", () => ({
 import type { ILogger } from "@lindorm/logger";
 import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { Constructor } from "@lindorm/types";
-import { EntityManager } from "../entity/classes/EntityManager";
-import { getEntityMetadata } from "../entity/metadata/get-entity-metadata";
-import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate";
+import { EntityManager } from "../entity/classes/EntityManager.js";
+import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
+import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
   guardDeleteDateField,
   guardExpiryDateField,
   guardUpsertBlocked,
-} from "../utils/repository/repository-guards";
-import { filterHiddenSelections } from "../utils/query/filter-hidden-selections";
-import { makeField } from "../__fixtures__/make-field";
-import type { EntityMetadata } from "../entity/types/metadata";
-import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
-import type { IEntity, IProteusCursor, IProteusQueryBuilder } from "../../interfaces";
+} from "../utils/repository/repository-guards.js";
+import { filterHiddenSelections } from "../utils/query/filter-hidden-selections.js";
+import { makeField } from "../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../entity/types/metadata.js";
+import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor.js";
+import type {
+  IEntity,
+  IProteusCursor,
+  IProteusQueryBuilder,
+} from "../../interfaces/index.js";
 import type {
   ClearOptions,
   CursorOptions,
   FindOptions,
   UpsertOptions,
-} from "../../types";
-import type { QueryScope } from "../entity/types/metadata";
-import type { AggregateFunction } from "../types/aggregate";
-import type { LazyRelationLoader } from "../entity/utils/install-lazy-relations";
-import { isLazyRelation } from "../entity/utils/lazy-relation";
-import { isLazyCollection } from "../entity/utils/lazy-collection";
+} from "../../types/index.js";
+import type { QueryScope } from "../entity/types/metadata.js";
+import type { AggregateFunction } from "../types/aggregate.js";
+import type { LazyRelationLoader } from "../entity/utils/install-lazy-relations.js";
+import { isLazyRelation } from "../entity/utils/lazy-relation.js";
+import { isLazyCollection } from "../entity/utils/lazy-collection.js";
 import {
   DriverRepositoryBase,
   type DriverRepositoryBaseOptions,
-} from "./DriverRepositoryBase";
-import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError";
+} from "./DriverRepositoryBase.js";
+import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError.js";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 

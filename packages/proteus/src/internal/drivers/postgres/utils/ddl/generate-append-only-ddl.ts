@@ -1,4 +1,4 @@
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 
 /**
  * Generates SQL trigger DDL to enforce append-only semantics at the database level.

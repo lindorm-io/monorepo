@@ -2,7 +2,7 @@ import { EventEmitter } from "node:events";
 import amqplib from "amqplib";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
+import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -10,20 +10,20 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   IrisConnectionState,
   IrisEvents,
   RabbitConnectionOptions,
-} from "../../../../types";
+} from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { RabbitMessageBus } from "./RabbitMessageBus";
-import { RabbitPublisher } from "./RabbitPublisher";
-import { RabbitRpcClient } from "./RabbitRpcClient";
-import { RabbitRpcServer } from "./RabbitRpcServer";
-import { RabbitStreamProcessor } from "./RabbitStreamProcessor";
-import { RabbitWorkerQueue } from "./RabbitWorkerQueue";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { RabbitMessageBus } from "./RabbitMessageBus.js";
+import { RabbitPublisher } from "./RabbitPublisher.js";
+import { RabbitRpcClient } from "./RabbitRpcClient.js";
+import { RabbitRpcServer } from "./RabbitRpcServer.js";
+import { RabbitStreamProcessor } from "./RabbitStreamProcessor.js";
+import { RabbitWorkerQueue } from "./RabbitWorkerQueue.js";
 
 const DEFAULT_PREFETCH = 10;
 const DEFAULT_EXCHANGE = "iris";

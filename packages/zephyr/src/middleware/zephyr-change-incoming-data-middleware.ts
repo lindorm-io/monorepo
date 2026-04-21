@@ -1,6 +1,6 @@
-import { ChangeCase, changeKeys } from "@lindorm/case";
+import { type ChangeCase, changeKeys } from "@lindorm/case";
 import { isArray, isObject } from "@lindorm/is";
-import { ZephyrMiddleware } from "../types/context";
+import type { ZephyrMiddleware } from "../types/context.js";
 
 export const zephyrChangeIncomingDataMiddleware = (
   mode: ChangeCase = "camel",

@@ -7,7 +7,7 @@ import type {
   MysqlDesiredCheck,
   MysqlDesiredUnique,
   MysqlDesiredTrigger,
-} from "../../types/desired-schema";
+} from "../../types/desired-schema.js";
 import type {
   MysqlDbSnapshot,
   MysqlSnapshotTable,
@@ -15,10 +15,10 @@ import type {
   MysqlSnapshotForeignKey,
   MysqlSnapshotTrigger,
   MysqlSnapshotUnique,
-} from "../../types/db-snapshot";
-import type { MysqlSyncOperation, MysqlSyncPlan } from "../../types/sync-plan";
-import { quoteIdentifier } from "../quote-identifier";
-import { MySqlSyncError } from "../../errors/MySqlSyncError";
+} from "../../types/db-snapshot.js";
+import type { MysqlSyncOperation, MysqlSyncPlan } from "../../types/sync-plan.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { MySqlSyncError } from "../../errors/MySqlSyncError.js";
 
 const renderUniqueColumns = (uq: MysqlDesiredUnique): string =>
   uq.columns

@@ -1,5 +1,5 @@
-import { stageField } from "../internal/message/metadata/stage-metadata";
-import type { MetaFieldType } from "../internal/message/types/types";
+import { stageField } from "../internal/message/metadata/stage-metadata.js";
+import type { MetaFieldType } from "../internal/message/types/types.js";
 
 export const Field =
   (type: MetaFieldType) =>

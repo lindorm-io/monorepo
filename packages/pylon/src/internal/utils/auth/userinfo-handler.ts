@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { PylonHttpContext, PylonHttpMiddleware } from "../../../types";
+import type { PylonHttpContext, PylonHttpMiddleware } from "../../../types/index.js";
 
 export const createUserinfoHandler = <
   C extends PylonHttpContext,

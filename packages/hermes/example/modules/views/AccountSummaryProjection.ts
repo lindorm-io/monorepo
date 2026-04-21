@@ -30,14 +30,14 @@ import type {
   ViewErrorCtx,
 } from "@lindorm/hermes";
 
-import { AccountAggregate } from "../aggregates/AccountAggregate";
-import { AccountOpened } from "../events/AccountOpened";
-import { FundsDeposited_V2 } from "../events/FundsDeposited_V2";
-import { FundsWithdrawn } from "../events/FundsWithdrawn";
-import { AccountClosed } from "../events/AccountClosed";
-import { AccountFlagged } from "../events/AccountFlagged";
-import { GetAccountSummary } from "../queries/GetAccountSummary";
-import { AccountSummaryView } from "./AccountSummaryView";
+import { AccountAggregate } from "../aggregates/AccountAggregate.js";
+import { AccountOpened } from "../events/AccountOpened.js";
+import { FundsDeposited_V2 } from "../events/FundsDeposited_V2.js";
+import { FundsWithdrawn } from "../events/FundsWithdrawn.js";
+import { AccountClosed } from "../events/AccountClosed.js";
+import { AccountFlagged } from "../events/AccountFlagged.js";
+import { GetAccountSummary } from "../queries/GetAccountSummary.js";
+import { AccountSummaryView } from "./AccountSummaryView.js";
 
 @View(AccountAggregate, AccountSummaryView)
 @Namespace("banking")

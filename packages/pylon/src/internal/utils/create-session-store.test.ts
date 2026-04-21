@@ -4,8 +4,8 @@ import {
   createMockProteusSource,
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
-import { IPylonSession } from "../../interfaces";
-import { createSessionStore } from "./create-session-store";
+import type { IPylonSession } from "../../interfaces/index.js";
+import { createSessionStore } from "./create-session-store.js";
 import { beforeEach, describe, expect, test, type Mock } from "vitest";
 
 describe("createSessionStore", () => {

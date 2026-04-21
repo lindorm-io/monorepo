@@ -1,5 +1,5 @@
-import type { IEntity } from "../../interfaces";
-import type { MetaRelation } from "../entity/types/metadata";
+import type { IEntity } from "../../interfaces/index.js";
+import type { MetaRelation } from "../entity/types/metadata.js";
 
 export type JoinTableOps = {
   sync: (

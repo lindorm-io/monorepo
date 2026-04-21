@@ -1,4 +1,4 @@
-import { createMockWorkerQueue } from "./vitest";
+import { createMockWorkerQueue } from "./vitest.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type TestMessage = { id: string; body: string };

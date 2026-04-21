@@ -1,6 +1,6 @@
 import type { IKryptos } from "@lindorm/kryptos";
-import { IAesKit } from "../interfaces";
-import { AesContent } from "../types";
+import type { IAesKit } from "../interfaces/index.js";
+import type { AesContent } from "../types/index.js";
 
 const encode = (data: AesContent): string =>
   Buffer.from(JSON.stringify(data)).toString("base64url");

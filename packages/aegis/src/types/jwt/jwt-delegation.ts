@@ -1,4 +1,4 @@
-import { ActClaim } from "../claims/act-claim";
+import type { ActClaim } from "../claims/act-claim.js";
 
 // Delegation summary derived from the token's `act` claim chain.
 // Subject lives on the payload (payload.subject). This type focuses

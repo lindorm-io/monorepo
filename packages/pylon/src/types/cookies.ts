@@ -1,4 +1,4 @@
-import { Expiry } from "@lindorm/date";
+import type { Expiry } from "@lindorm/date";
 
 export type CookieEncoding = "base64" | "base64url" | "hex";
 export type CookiePriority = "low" | "medium" | "high";

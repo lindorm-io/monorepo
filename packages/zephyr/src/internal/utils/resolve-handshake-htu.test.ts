@@ -1,5 +1,5 @@
 import type { Socket } from "socket.io-client";
-import { resolveHandshakeHtu } from "./resolve-handshake-htu";
+import { resolveHandshakeHtu } from "./resolve-handshake-htu.js";
 import { describe, expect, it } from "vitest";
 
 type FakeManager = { uri?: string; opts?: { path?: string } };

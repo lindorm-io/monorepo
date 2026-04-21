@@ -1,7 +1,7 @@
-import { installLazyRelations } from "./install-lazy-relations";
-import { isLazyRelation } from "./lazy-relation";
-import { isLazyCollection } from "./lazy-collection";
-import type { EntityMetadata, MetaRelation } from "../types/metadata";
+import { installLazyRelations } from "./install-lazy-relations.js";
+import { isLazyRelation } from "./lazy-relation.js";
+import { isLazyCollection } from "./lazy-collection.js";
+import type { EntityMetadata, MetaRelation } from "../types/metadata.js";
 import { describe, expect, it, vi } from "vitest";
 
 const makeRelation = (overrides: Partial<MetaRelation>): MetaRelation => ({

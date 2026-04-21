@@ -1,4 +1,4 @@
-import { ProteusError } from "../../../errors";
+import { ProteusError } from "../../../errors/index.js";
 
 export type DecodedCursor = {
   columns: Array<string>;

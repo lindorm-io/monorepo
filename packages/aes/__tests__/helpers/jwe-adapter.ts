@@ -1,6 +1,6 @@
 import type { FlattenedJWE } from "jose";
-import type { AesDecryptionRecord } from "../../src/types/aes-decryption-data";
-import type { AesEncryptionRecord } from "../../src/types/aes-encryption-data";
+import type { AesDecryptionRecord } from "../../src/types/aes-decryption-data.js";
+import type { AesEncryptionRecord } from "../../src/types/aes-encryption-data.js";
 
 /**
  * Build a JWE protected header JSON string, its base64url encoding,

@@ -1,5 +1,5 @@
-import { KeysInput } from "../../types";
-import { constantCase, convertArray, convertObject } from "../../internal/index";
+import type { KeysInput } from "../../types/index.js";
+import { constantCase, convertArray, convertObject } from "../../internal/index.js";
 
 export { constantCase };
 

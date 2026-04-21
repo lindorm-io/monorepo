@@ -1,5 +1,5 @@
 import { CorrelationField, Field, Message, Namespace, Topic } from "@lindorm/iris";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 
 @Namespace("pylon")
 @Message()

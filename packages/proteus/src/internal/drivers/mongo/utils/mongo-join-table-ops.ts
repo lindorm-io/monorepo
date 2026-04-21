@@ -1,7 +1,7 @@
 import type { ClientSession, Db } from "mongodb";
-import type { IEntity } from "../../../../interfaces";
-import type { MetaRelation } from "../../../entity/types/metadata";
-import type { JoinTableOps } from "../../../types/join-table-ops";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { MetaRelation } from "../../../entity/types/metadata.js";
+import type { JoinTableOps } from "../../../types/join-table-ops.js";
 
 /**
  * Create MongoDB collection-based join table operations for M2M relations.

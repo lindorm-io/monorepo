@@ -1,6 +1,6 @@
-import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
-import { AesDecryptionRecord, SerialisedAesDecryption } from "../types";
-import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record";
+import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes.js";
+import type { AesDecryptionRecord, SerialisedAesDecryption } from "../types/index.js";
+import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record.js";
 import { describe, expect, test } from "vitest";
 
 describe("is-aes", () => {

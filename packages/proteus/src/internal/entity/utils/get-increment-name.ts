@@ -1,9 +1,9 @@
 import { snakeCase } from "@lindorm/case";
 import type { Constructor } from "@lindorm/types";
-import { EntityManagerError } from "../errors/EntityManagerError";
-import { IEntity } from "../../../interfaces";
-import type { NamespaceOptions, ScopedName } from "../../types/types";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import { EntityManagerError } from "../errors/EntityManagerError.js";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { NamespaceOptions, ScopedName } from "../../types/types.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 export const getIncrementName = <E extends IEntity>(
   target: Constructor<E>,

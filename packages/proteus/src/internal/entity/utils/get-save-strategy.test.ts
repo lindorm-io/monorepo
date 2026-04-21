@@ -1,10 +1,10 @@
-import { getSaveStrategy } from "./get-save-strategy";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { Generated } from "../../../decorators/Generated";
-import { PrimaryKey } from "../../../decorators/PrimaryKey";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { VersionField } from "../../../decorators/VersionField";
+import { getSaveStrategy } from "./get-save-strategy.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { VersionField } from "../../../decorators/VersionField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GetSaveStrategyVersioned" })

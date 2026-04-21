@@ -1,14 +1,18 @@
 import { randomUUID } from "@lindorm/random";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope, ConsumeOptions, PublishOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { MemorySharedState } from "../types/memory-store";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase";
-import { publishMessages } from "../utils/publish-messages";
-import { wrapConsumerCallback } from "../utils/wrap-consumer-callback";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type {
+  ConsumeEnvelope,
+  ConsumeOptions,
+  PublishOptions,
+} from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { MemorySharedState } from "../types/memory-store.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { publishMessages } from "../utils/publish-messages.js";
+import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
 export type MemoryWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
   store: MemorySharedState;

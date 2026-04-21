@@ -1,4 +1,4 @@
-import { resolveHandshakeTokenSource } from "./resolve-handshake-token-source";
+import { resolveHandshakeTokenSource } from "./resolve-handshake-token-source.js";
 import { describe, expect, test } from "vitest";
 
 const session = {

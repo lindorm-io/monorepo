@@ -1,11 +1,11 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
-import { RsaBuffer, RsaJwk, RsaString } from "../../../types";
-import {
+import type { RsaBuffer, RsaJwk, RsaString } from "../../../types/index.js";
+import type {
   IsBufferFormatOptions,
   IsJwkFormatOptions,
   IsStringFormatOptions,
-} from "../../types/is-options";
+} from "../../types/is-options.js";
 
 export const isRsaB64 = (options: IsStringFormatOptions): options is RsaString => {
   if (options.type !== "RSA") return false;

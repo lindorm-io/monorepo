@@ -1,5 +1,5 @@
 import { Default, Entity, Field, Namespace } from "@lindorm/proteus";
-import { HermesViewEntity } from "../../../entities/HermesViewEntity";
+import { HermesViewEntity } from "../../../entities/HermesViewEntity.js";
 
 @Namespace("test")
 @Entity({ name: "test_view" })

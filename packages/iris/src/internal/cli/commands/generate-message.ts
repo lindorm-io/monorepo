@@ -1,4 +1,4 @@
-import { writeMessage } from "../../../utils/write-message";
+import { writeMessage } from "../../../utils/write-message.js";
 
 type GenerateMessageOptions = {
   directory?: string;

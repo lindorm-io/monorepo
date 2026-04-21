@@ -1,7 +1,7 @@
 import { isArray, isObject } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
-import { MetaType } from "./MetaType";
-import { parseObjectValues } from "./parse-object-values";
+import type { Dict } from "@lindorm/types";
+import { MetaType } from "./MetaType.js";
+import { parseObjectValues } from "./parse-object-values.js";
 
 export const parseArrayValues = (input: any, meta: Dict): Array<any> => {
   const parsed = isArray(input) ? input : (JSON.parse(input) as Array<any>);

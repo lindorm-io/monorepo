@@ -1,4 +1,4 @@
-import { KryptosJwk } from "@lindorm/kryptos";
+import type { KryptosJwk } from "@lindorm/kryptos";
 
 export type AesInternalEncryption =
   | "aes-128-cbc"

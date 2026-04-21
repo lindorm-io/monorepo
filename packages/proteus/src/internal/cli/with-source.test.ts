@@ -1,5 +1,5 @@
-import { withSource, withSourceConfig } from "./with-source";
-import { loadSource } from "./load-source";
+import { withSource, withSourceConfig } from "./with-source.js";
+import { loadSource } from "./load-source.js";
 import { Logger } from "@lindorm/logger";
 import {
   afterEach,
@@ -12,7 +12,7 @@ import {
   type MockedFunction,
 } from "vitest";
 
-vi.mock("./load-source");
+vi.mock("./load-source.js");
 
 vi.mock("@lindorm/logger", async () => ({
   Logger: {

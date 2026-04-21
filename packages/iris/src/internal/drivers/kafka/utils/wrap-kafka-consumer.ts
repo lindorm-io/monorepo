@@ -1,21 +1,21 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { ConsumeStrategies } from "../../../types/consume-strategies";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { ConsumeStrategies } from "../../../types/consume-strategies.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import {
   consumeMessageCore,
   type ConsumerCallbackHost,
-} from "../../../utils/consume-message-core";
+} from "../../../utils/consume-message-core.js";
 import type {
   KafkaEachMessagePayload,
   KafkaSharedState,
   WrapKafkaConsumerOptions,
-} from "../types/kafka-types";
-import { resolveTopicName } from "./resolve-topic-name";
-import { parseKafkaMessage } from "./parse-kafka-message";
-import { serializeKafkaMessage } from "./serialize-kafka-message";
+} from "../types/kafka-types.js";
+import { resolveTopicName } from "./resolve-topic-name.js";
+import { parseKafkaMessage } from "./parse-kafka-message.js";
+import { serializeKafkaMessage } from "./serialize-kafka-message.js";
 
 export type KafkaConsumerCallbackHost<M extends IMessage> = ConsumerCallbackHost<M>;
 

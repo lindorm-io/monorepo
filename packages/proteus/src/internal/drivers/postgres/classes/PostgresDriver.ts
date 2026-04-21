@@ -2,52 +2,52 @@ import type { IAmphora } from "@lindorm/amphora";
 import type { ICircuitBreaker } from "@lindorm/breaker";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { Pool, PoolClient } from "pg";
-import type { IEntity, IProteusQueryBuilder } from "../../../../interfaces";
+import { Pool, type PoolClient } from "pg";
+import type { IEntity, IProteusQueryBuilder } from "../../../../interfaces/index.js";
 import type {
   IProteusDriver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusPostgresOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { ProteusResult } from "../../../types/proteus-result";
+} from "../../../../types/index.js";
+import type { ProteusResult } from "../../../types/proteus-result.js";
 import type {
   FilterRegistryGetter,
   MetadataResolver,
-} from "../../../interfaces/ProteusDriver";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import { BreakerExecutor } from "../../../classes/BreakerExecutor";
-import { PostgresDriverError } from "../errors/PostgresDriverError";
-import { PostgresMigrationError } from "../errors/PostgresMigrationError";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle";
-import { diffSchema } from "../utils/sync/diff-schema";
-import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
-import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl";
-import { introspectSchema } from "../utils/sync/introspect-schema";
-import { projectDesiredSchema } from "../utils/sync/project-desired-schema";
-import { quoteQualifiedName } from "../utils/quote-identifier";
-import { beginTransaction } from "../utils/transaction/begin-transaction";
-import { commitTransaction } from "../utils/transaction/commit-transaction";
-import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
-import { isRetryableTransactionError } from "../utils/transaction/is-retryable-transaction-error";
-import { withRetry } from "../utils/transaction/with-retry";
-import { MigrationManager } from "./MigrationManager";
-import { PostgresExecutor } from "./PostgresExecutor";
-import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
+} from "../../../interfaces/ProteusDriver.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { PostgresDriverError } from "../errors/PostgresDriverError.js";
+import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle.js";
+import { diffSchema } from "../utils/sync/diff-schema.js";
+import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan.js";
+import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl.js";
+import { introspectSchema } from "../utils/sync/introspect-schema.js";
+import { projectDesiredSchema } from "../utils/sync/project-desired-schema.js";
+import { quoteQualifiedName } from "../utils/quote-identifier.js";
+import { beginTransaction } from "../utils/transaction/begin-transaction.js";
+import { commitTransaction } from "../utils/transaction/commit-transaction.js";
+import { rollbackTransaction } from "../utils/transaction/rollback-transaction.js";
+import { isRetryableTransactionError } from "../utils/transaction/is-retryable-transaction-error.js";
+import { withRetry } from "../utils/transaction/with-retry.js";
+import { MigrationManager } from "./MigrationManager.js";
+import { PostgresExecutor } from "./PostgresExecutor.js";
+import { PostgresQueryBuilder } from "./PostgresQueryBuilder.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
 import {
   PostgresRepository,
   type CreateCursorClient,
   type WithImplicitTransaction,
-} from "./PostgresRepository";
-import { TransactionContext } from "./TransactionContext";
+} from "./PostgresRepository.js";
+import { TransactionContext } from "./TransactionContext.js";
 
 export class PostgresDriver implements IProteusDriver {
   private readonly options: ProteusPostgresOptions;

@@ -1,5 +1,5 @@
-import { Expiry, ReadableTime } from "../types";
-import { expiresAt } from "../utils/expires-at";
+import type { Expiry, ReadableTime } from "../types/index.js";
+import { expiresAt } from "../utils/expires-at.js";
 
 type TtlEntry<V> = { value: V; expiresAt: number };
 

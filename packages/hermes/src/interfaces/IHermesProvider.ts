@@ -1,6 +1,6 @@
 import type { ClassLike, Dict } from "@lindorm/types";
-import type { AggregateIdentifier } from "../types/aggregate-identifier";
-import type { HermesStatus } from "../types/hermes-status";
+import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
+import type { HermesStatus } from "../types/hermes-status.js";
 
 export interface IHermesProvider {
   readonly status: HermesStatus;

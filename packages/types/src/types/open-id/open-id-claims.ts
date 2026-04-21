@@ -1,9 +1,9 @@
-import { OpenIdAddress } from "./open-id-address";
-import { OpenIdGeoLocation } from "./open-id-geo-location";
-import { OpenIdIdentityProvider } from "./open-id-identity-provider";
-import { OpenIdInstantMessaging } from "./open-id-instant-messaging";
-import { OpenIdNamingSystem } from "./open-id-naming-system";
-import { OpenIdSocialNetwork } from "./open-id-social-network";
+import type { OpenIdAddress } from "./open-id-address.js";
+import type { OpenIdGeoLocation } from "./open-id-geo-location.js";
+import type { OpenIdIdentityProvider } from "./open-id-identity-provider.js";
+import type { OpenIdInstantMessaging } from "./open-id-instant-messaging.js";
+import type { OpenIdNamingSystem } from "./open-id-naming-system.js";
+import type { OpenIdSocialNetwork } from "./open-id-social-network.js";
 
 type NewLindormClaims = {
   // accessibility

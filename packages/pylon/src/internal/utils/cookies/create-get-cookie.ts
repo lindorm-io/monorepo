@@ -1,9 +1,13 @@
 import { AesKit } from "@lindorm/aes";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { safelyParse } from "@lindorm/utils";
-import { PylonCommonContext, PylonCookieConfig, PylonGetCookie } from "../../../types";
-import { ParsedCookie } from "./parse-cookie-header";
-import { verifyCookie } from "./verify-cookie";
+import type {
+  PylonCommonContext,
+  PylonCookieConfig,
+  PylonGetCookie,
+} from "../../../types/index.js";
+import type { ParsedCookie } from "./parse-cookie-header.js";
+import { verifyCookie } from "./verify-cookie.js";
 
 export type CreateGetCookieOptions = {
   ctx: Pick<PylonCommonContext, "aegis" | "amphora">;

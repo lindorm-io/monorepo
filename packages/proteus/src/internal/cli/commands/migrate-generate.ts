@@ -1,9 +1,9 @@
 import { resolve } from "path";
 import { Logger } from "@lindorm/logger";
 import type { PoolClient } from "pg";
-import type { GlobalOptions } from "../with-source";
-import { withSource } from "../with-source";
-import { withMigrationManager, wrapPoolClient } from "../with-migration-manager";
+import type { GlobalOptions } from "../with-source.js";
+import { withSource } from "../with-source.js";
+import { withMigrationManager, wrapPoolClient } from "../with-migration-manager.js";
 
 type GenerateOptions = GlobalOptions & {
   name: string;
@@ -40,7 +40,7 @@ export const migrateGenerate = async (options: GenerateOptions): Promise<void> =
 
       try {
         const { runInteractiveGenerate } =
-          await import("../interactive/run-interactive-generate");
+          await import("../interactive/run-interactive-generate.js");
         await runInteractiveGenerate({
           client: client as any,
           metadataList,

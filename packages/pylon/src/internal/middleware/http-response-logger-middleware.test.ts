@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { httpResponseLoggerMiddleware } from "./http-response-logger-middleware";
+import { httpResponseLoggerMiddleware } from "./http-response-logger-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpResponseLoggerMiddleware", () => {

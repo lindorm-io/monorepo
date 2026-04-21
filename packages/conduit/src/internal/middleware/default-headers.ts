@@ -1,4 +1,4 @@
-import { ConduitMiddleware } from "../../types";
+import type { ConduitMiddleware } from "../../types/index.js";
 
 export const defaultHeaders: ConduitMiddleware = async (ctx, next) => {
   ctx.req.headers["Date"] = new Date().toUTCString();

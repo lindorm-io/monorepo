@@ -1,4 +1,4 @@
-import { extractNameData } from "./extract-name-data";
+import { extractNameData } from "./extract-name-data.js";
 import { describe, expect, it } from "vitest";
 
 describe("extractNameData", () => {

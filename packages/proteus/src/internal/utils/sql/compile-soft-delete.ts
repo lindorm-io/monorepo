@@ -1,16 +1,16 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { PredicateEntry } from "../../types/query";
-import { ProteusError } from "../../../errors/ProteusError";
-import type { CompiledSql } from "./compiled-sql";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../types/query.js";
+import { ProteusError } from "../../../errors/ProteusError.js";
+import type { CompiledSql } from "./compiled-sql.js";
 import {
   buildDiscriminatorPredicateQualified,
   buildDiscriminatorPredicateUnqualified,
-} from "./compile-helpers";
-import { compileWhere } from "./compile-where";
-import { resolveTableName } from "./resolve-table-name";
-import type { SqlDialect } from "./sql-dialect";
+} from "./compile-helpers.js";
+import { compileWhere } from "./compile-where.js";
+import { resolveTableName } from "./resolve-table-name.js";
+import type { SqlDialect } from "./sql-dialect.js";
 
 /**
  * Compiles an `UPDATE ... SET <deleteDate> = <dateNow>` for soft-delete.

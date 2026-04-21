@@ -1,5 +1,5 @@
-import { Dict } from "@lindorm/types";
-import { LogLevel } from "../types";
+import type { Dict } from "@lindorm/types";
+import type { LogLevel } from "../types/index.js";
 
 export type FilterCallback = (data: any) => string;
 

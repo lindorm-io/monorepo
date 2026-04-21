@@ -1,11 +1,11 @@
-import { Dict } from "@lindorm/types";
-import {
+import type { Dict } from "@lindorm/types";
+import type {
   ParsedJwt,
   SignJwtContent,
   SignJwtOptions,
   SignedJwt,
   VerifyJwtOptions,
-} from "../types";
+} from "../types/index.js";
 
 export interface IJwtKit {
   sign<T extends Dict = Dict>(

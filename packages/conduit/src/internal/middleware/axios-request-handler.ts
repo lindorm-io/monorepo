@@ -1,7 +1,7 @@
-import { ConduitMiddleware, ConduitResponse } from "../../types";
-import { composeAxiosConfig } from "../utils/compose-axios-config";
-import { requestWithRetry } from "../utils/request-with-retry";
-import { useAxios } from "../utils/use-axios";
+import type { ConduitMiddleware, ConduitResponse } from "../../types/index.js";
+import { composeAxiosConfig } from "../utils/compose-axios-config.js";
+import { requestWithRetry } from "../utils/request-with-retry.js";
+import { useAxios } from "../utils/use-axios.js";
 
 export const axiosRequestHandler: ConduitMiddleware = async (ctx, next) => {
   const config = await composeAxiosConfig(ctx);

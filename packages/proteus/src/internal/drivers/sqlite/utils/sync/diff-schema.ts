@@ -4,15 +4,15 @@ import type {
   SqliteDesiredColumn,
   SqliteDesiredIndex,
   SqliteDesiredTrigger,
-} from "../../types/desired-schema";
+} from "../../types/desired-schema.js";
 import type {
   SqliteDbSnapshot,
   SqliteSnapshotTable,
   SqliteSnapshotIndex,
   SqliteSnapshotTrigger,
-} from "../../types/db-snapshot";
-import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan";
-import { quoteIdentifier } from "../quote-identifier";
+} from "../../types/db-snapshot.js";
+import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan.js";
+import { quoteIdentifier } from "../quote-identifier.js";
 
 /**
  * Renders a full CREATE TABLE DDL from a desired table definition.

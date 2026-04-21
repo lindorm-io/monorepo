@@ -1,7 +1,7 @@
 import type { Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import type { AggregateIdentifier } from "../types";
-import { createTestAggregateIdentifier } from "./create-test-aggregate-identifier";
+import type { AggregateIdentifier } from "../types/index.js";
+import { createTestAggregateIdentifier } from "./create-test-aggregate-identifier.js";
 
 type TestCommandMessageOptions = {
   id?: string;

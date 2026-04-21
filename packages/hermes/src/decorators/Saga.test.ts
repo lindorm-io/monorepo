@@ -1,5 +1,5 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { Saga } from "./Saga";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { Saga } from "./Saga.js";
 import { describe, expect, test } from "vitest";
 
 const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>

@@ -1,7 +1,7 @@
-import type { IZephyr } from "../interfaces/Zephyr";
-import type { IZephyrRoom } from "../interfaces/ZephyrRoom";
-import { _createMockZephyr } from "./create-mock-zephyr";
-import { _createMockZephyrRoom } from "./create-mock-zephyr-room";
+import type { IZephyr } from "../interfaces/Zephyr.js";
+import type { IZephyrRoom } from "../interfaces/ZephyrRoom.js";
+import { _createMockZephyr } from "./create-mock-zephyr.js";
+import { _createMockZephyrRoom } from "./create-mock-zephyr-room.js";
 
 type MockZephyr = jest.Mocked<IZephyr>;
 type MockZephyrRoom = jest.Mocked<IZephyrRoom>;

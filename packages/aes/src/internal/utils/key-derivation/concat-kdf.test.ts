@@ -1,4 +1,4 @@
-import { concatKdf } from "./concat-kdf";
+import { concatKdf } from "./concat-kdf.js";
 import { describe, expect, test } from "vitest";
 
 describe("concatKdf", () => {

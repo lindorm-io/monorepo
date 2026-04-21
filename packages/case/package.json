@@ -11,7 +11,7 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "dist/index.js",
+  "type": "module",
   "typings": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
@@ -30,5 +30,11 @@
   },
   "devDependencies": {
     "@lindorm/types": "^0.5.0"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
   }
 }

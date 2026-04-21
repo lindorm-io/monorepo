@@ -1,8 +1,8 @@
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ILindormWorker, LindormWorker } from "@lindorm/worker";
+import { type ILindormWorker, LindormWorker } from "@lindorm/worker";
 import { join } from "path";
-import { scanWorkers } from "./scan-workers";
+import { scanWorkers } from "./scan-workers.js";
 import { describe, expect, test } from "vitest";
 
 describe("scanWorkers", () => {

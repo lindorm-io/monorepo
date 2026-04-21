@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io";
-import { reconstructHandshakeOrigin } from "../cors/reconstruct-handshake-origin";
-import { normalizeHtu } from "../normalize-htu";
+import { reconstructHandshakeOrigin } from "../cors/reconstruct-handshake-origin.js";
+import { normalizeHtu } from "../normalize-htu.js";
 
 type Handshake = Socket["handshake"];
 

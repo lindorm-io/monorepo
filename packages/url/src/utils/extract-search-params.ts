@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 
 export const extractSearchParams = <T = Dict>(url: URL): T => {
   const query: Dict = {};

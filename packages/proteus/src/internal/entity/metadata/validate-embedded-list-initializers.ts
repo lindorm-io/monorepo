@@ -1,5 +1,5 @@
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import type { MetaEmbeddedList } from "../types/metadata";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import type { MetaEmbeddedList } from "../types/metadata.js";
 
 /**
  * Reject TypeScript class field initializers on `@EmbeddedList` fields whose

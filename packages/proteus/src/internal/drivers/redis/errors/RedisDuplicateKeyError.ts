@@ -1,1 +1,1 @@
-export { DuplicateKeyError as RedisDuplicateKeyError } from "../../../errors/DuplicateKeyError";
+export { DuplicateKeyError as RedisDuplicateKeyError } from "../../../errors/DuplicateKeyError.js";

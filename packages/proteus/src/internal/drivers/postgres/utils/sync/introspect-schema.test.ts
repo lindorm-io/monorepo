@@ -1,28 +1,28 @@
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { introspectSchema } from "./introspect-schema";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { introspectSchema } from "./introspect-schema.js";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./introspect-tables", async () => ({
+vi.mock("./introspect-tables.js", async () => ({
   introspectTables: vi.fn(),
 }));
-vi.mock("./introspect-constraints", () => ({
+vi.mock("./introspect-constraints.js", () => ({
   introspectConstraints: vi.fn(),
 }));
-vi.mock("./introspect-indexes", () => ({
+vi.mock("./introspect-indexes.js", () => ({
   introspectIndexes: vi.fn(),
 }));
-vi.mock("./introspect-enums", () => ({
+vi.mock("./introspect-enums.js", () => ({
   introspectEnums: vi.fn(),
 }));
-vi.mock("./introspect-comments", () => ({
+vi.mock("./introspect-comments.js", () => ({
   introspectComments: vi.fn(),
 }));
 
-import { introspectComments } from "../../../../drivers/postgres/utils/sync/introspect-comments";
-import { introspectConstraints } from "../../../../drivers/postgres/utils/sync/introspect-constraints";
-import { introspectEnums } from "../../../../drivers/postgres/utils/sync/introspect-enums";
-import { introspectIndexes } from "../../../../drivers/postgres/utils/sync/introspect-indexes";
-import { introspectTables } from "./introspect-tables";
+import { introspectComments } from "../../../../drivers/postgres/utils/sync/introspect-comments.js";
+import { introspectConstraints } from "../../../../drivers/postgres/utils/sync/introspect-constraints.js";
+import { introspectEnums } from "../../../../drivers/postgres/utils/sync/introspect-enums.js";
+import { introspectIndexes } from "../../../../drivers/postgres/utils/sync/introspect-indexes.js";
+import { introspectTables } from "./introspect-tables.js";
 
 const mockIntrospectTables = introspectTables as MockedFunction<typeof introspectTables>;
 const mockIntrospectConstraints = introspectConstraints as MockedFunction<

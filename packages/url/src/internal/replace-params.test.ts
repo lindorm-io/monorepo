@@ -1,4 +1,4 @@
-import { replaceParams } from "./replace-params";
+import { replaceParams } from "./replace-params.js";
 import { describe, expect, test } from "vitest";
 
 describe("replaceParams", () => {

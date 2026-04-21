@@ -1,4 +1,4 @@
 export {
   resolveColumnName,
   resolveColumnNameSafe,
-} from "../../../utils/sql/resolve-column-name";
+} from "../../../utils/sql/resolve-column-name.js";

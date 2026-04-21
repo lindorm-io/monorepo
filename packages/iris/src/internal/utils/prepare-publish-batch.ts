@@ -1,14 +1,14 @@
-import type { IMessage } from "../../interfaces";
-import type { PublishOptions } from "../../types";
-import type { MessageMetadata } from "../message/types/metadata";
-import type { OutboundPayload } from "../message/utils/prepare-outbound";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import { buildEnvelope, type EnvelopeOverrides } from "./build-envelope";
-import { resolveDelay } from "../message/utils/resolve-delay";
-import { resolveExpiry } from "../message/utils/resolve-expiry";
-import { resolveIdentifierValue } from "./resolve-identifier-value";
-import { resolvePriority } from "../message/utils/resolve-priority";
-import { resolveTopic } from "../message/utils/resolve-topic";
+import type { IMessage } from "../../interfaces/index.js";
+import type { PublishOptions } from "../../types/index.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
+import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { buildEnvelope, type EnvelopeOverrides } from "./build-envelope.js";
+import { resolveDelay } from "../message/utils/resolve-delay.js";
+import { resolveExpiry } from "../message/utils/resolve-expiry.js";
+import { resolveIdentifierValue } from "./resolve-identifier-value.js";
+import { resolvePriority } from "../message/utils/resolve-priority.js";
+import { resolveTopic } from "../message/utils/resolve-topic.js";
 
 export type PublishDriverLike<M extends IMessage> = {
   prepareForPublish: (message: M) => Promise<OutboundPayload>;

@@ -1,7 +1,7 @@
-import { Constructor } from "@lindorm/types";
-import { IEntity } from "./Entity";
-import { IProteusQueryBuilder } from "./ProteusQueryBuilder";
-import { IProteusRepository } from "./ProteusRepository";
+import type { Constructor } from "@lindorm/types";
+import type { IEntity } from "./Entity.js";
+import type { IProteusQueryBuilder } from "./ProteusQueryBuilder.js";
+import type { IProteusRepository } from "./ProteusRepository.js";
 
 /**
  * Context passed to transaction callbacks, providing scoped repositories and query builders.

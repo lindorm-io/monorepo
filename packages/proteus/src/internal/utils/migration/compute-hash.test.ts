@@ -1,4 +1,4 @@
-import { computeHash } from "./compute-hash";
+import { computeHash } from "./compute-hash.js";
 import { describe, expect, it } from "vitest";
 
 describe("computeHash", () => {

@@ -1,4 +1,4 @@
-import { validateCorsOptions } from "./validate-cors-options";
+import { validateCorsOptions } from "./validate-cors-options.js";
 import { describe, expect, test } from "vitest";
 
 describe("validateCorsOptions", () => {

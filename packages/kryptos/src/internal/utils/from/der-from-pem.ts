@@ -1,10 +1,10 @@
-import { KryptosError } from "../../../errors";
-import { KryptosBuffer, KryptosFromString } from "../../../types";
-import { createAkpDerFromPem } from "../akp/der-from-pem";
-import { createEcDerFromPem } from "../ec/der-from-pem";
-import { createOctDerFromPem } from "../oct/der-from-pem";
-import { createOkpDerFromPem } from "../okp/der-from-pem";
-import { createRsaDerFromPem } from "../rsa/der-from-pem";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosBuffer, KryptosFromString } from "../../../types/index.js";
+import { createAkpDerFromPem } from "../akp/der-from-pem.js";
+import { createEcDerFromPem } from "../ec/der-from-pem.js";
+import { createOctDerFromPem } from "../oct/der-from-pem.js";
+import { createOkpDerFromPem } from "../okp/der-from-pem.js";
+import { createRsaDerFromPem } from "../rsa/der-from-pem.js";
 
 export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
   switch (options.type) {

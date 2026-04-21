@@ -1,7 +1,7 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { AfterDestroy } from "./AfterDestroy";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { AfterDestroy } from "./AfterDestroy.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test, vi } from "vitest";
 
 const afterDestroyCallback = vi.fn();

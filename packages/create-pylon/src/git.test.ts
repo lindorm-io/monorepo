@@ -16,7 +16,7 @@ vi.mock("cross-spawn", async () => ({
 }));
 
 import spawn from "cross-spawn";
-import { initGit, isInsideGitRepo } from "./git";
+import { initGit, isInsideGitRepo } from "./git.js";
 
 const mockedSpawn = spawn as unknown as Mock;
 

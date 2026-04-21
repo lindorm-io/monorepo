@@ -1,4 +1,8 @@
-import { AuthorizationState, AuthorizationType, PylonHttpContext } from "../../types";
+import type {
+  AuthorizationState,
+  AuthorizationType,
+  PylonHttpContext,
+} from "../../types/index.js";
 
 const DEFAULT: AuthorizationState = {
   type: "none",

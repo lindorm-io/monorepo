@@ -1,10 +1,10 @@
-import type { NamedDecoratorOptions } from "../internal/entity/types/decorators";
-import type { MetaFieldPrimaryType } from "../internal/entity/types/metadata";
+import type { NamedDecoratorOptions } from "../internal/entity/types/decorators.js";
+import type { MetaFieldPrimaryType } from "../internal/entity/types/metadata.js";
 import {
   stageField,
   stageGenerated,
   stagePrimaryKey,
-} from "../internal/entity/metadata/stage-metadata";
+} from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Shorthand that combines `@Field`, `@PrimaryKey`, and `@Generated` in one decorator.

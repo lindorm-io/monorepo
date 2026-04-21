@@ -6,11 +6,11 @@ import nock from "nock";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 axios.defaults.proxy = false;
-import { WebhookAuth, WebhookMethod } from "../../enums";
-import { IWebhookSubscription } from "../../interfaces";
-import { createDispatchWebhook } from "./dispatch-webhook";
+import { WebhookAuth, WebhookMethod } from "../../enums/index.js";
+import type { IWebhookSubscription } from "../../interfaces/index.js";
+import { createDispatchWebhook } from "./dispatch-webhook.js";
 
-vi.mock("../../middleware", async () => ({
+vi.mock("../../middleware/index.js", async () => ({
   createConduitWebhookAuthMiddleware: vi
     .fn()
     .mockResolvedValue(async (_: any, next: any) => {

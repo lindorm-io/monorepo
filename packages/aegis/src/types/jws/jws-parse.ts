@@ -1,6 +1,6 @@
-import { KryptosSigAlgorithm } from "@lindorm/kryptos";
-import { RefinedTokenHeader } from "../header";
-import { DecodedJws } from "./jws-decode";
+import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
+import type { RefinedTokenHeader } from "../header.js";
+import type { DecodedJws } from "./jws-decode.js";
 
 export type ParsedJwsHeader = RefinedTokenHeader<KryptosSigAlgorithm>;
 

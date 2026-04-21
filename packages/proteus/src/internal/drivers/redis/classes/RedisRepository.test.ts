@@ -13,21 +13,21 @@ import {
 // We mock low-level utilities but keep EntityManager and getEntityMetadata real
 // since real @Entity decorators are used below.
 
-vi.mock("../utils/build-scan-pattern", async () => ({
+vi.mock("../utils/build-scan-pattern.js", async () => ({
   buildScanPattern: vi.fn(() => "entity:test_entity:*"),
 }));
 
-vi.mock("../utils/scan-entity-keys", () => ({
+vi.mock("../utils/scan-entity-keys.js", () => ({
   scanEntityKeys: vi.fn(),
 }));
 
-vi.mock("../utils/redis-join-table-ops", () => ({
+vi.mock("../utils/redis-join-table-ops.js", () => ({
   createRedisJoinTableOps: vi.fn(() => ({ sync: vi.fn(), delete: vi.fn() })),
   buildForwardJoinScanPattern: vi.fn((joinTable: string) => `join:${joinTable}:*`),
   buildReverseJoinScanPattern: vi.fn((joinTable: string) => `join:${joinTable}:rev:*`),
 }));
 
-vi.mock("../utils/build-join-set-key", () => ({
+vi.mock("../utils/build-join-set-key.js", () => ({
   buildJoinSetKey: vi.fn(
     (joinTable: string, col: string, value: unknown) =>
       `join:${joinTable}:${col}:${String(value)}`,
@@ -38,11 +38,11 @@ vi.mock("../utils/build-join-set-key", () => ({
   ),
 }));
 
-vi.mock("../../../utils/repository/build-pk-predicate", () => ({
+vi.mock("../../../utils/repository/build-pk-predicate.js", () => ({
   buildPrimaryKeyPredicate: vi.fn((entity: any) => ({ id: entity.id })),
 }));
 
-vi.mock("../../../utils/repository/repository-guards", () => ({
+vi.mock("../../../utils/repository/repository-guards.js", () => ({
   guardAppendOnly: vi.fn(),
   validateRelationNames: vi.fn(),
   guardDeleteDateField: vi.fn(),
@@ -50,7 +50,7 @@ vi.mock("../../../utils/repository/repository-guards", () => ({
   guardUpsertBlocked: vi.fn(),
 }));
 
-vi.mock("../../../utils/repository/RelationPersister", () => ({
+vi.mock("../../../utils/repository/RelationPersister.js", () => ({
   RelationPersister: vi.fn().mockImplementation(() => ({
     saveOwning: vi.fn().mockResolvedValue(undefined),
     saveInverse: vi.fn().mockResolvedValue(undefined),
@@ -58,57 +58,57 @@ vi.mock("../../../utils/repository/RelationPersister", () => ({
   })),
 }));
 
-vi.mock("../../../utils/repository/build-relation-filter", () => ({
+vi.mock("../../../utils/repository/build-relation-filter.js", () => ({
   buildRelationFilter: vi.fn(() => ({})),
 }));
 
-vi.mock("../../../utils/query/filter-hidden-selections", () => ({
+vi.mock("../../../utils/query/filter-hidden-selections.js", () => ({
   filterHiddenSelections: vi.fn(() => null),
 }));
 
-vi.mock("../../../utils/pagination/build-keyset-filter-memory", () => ({
+vi.mock("../../../utils/pagination/build-keyset-filter-memory.js", () => ({
   buildKeysetFilterMemory: vi.fn(() => () => true),
 }));
 
-vi.mock("../../../entity/utils/snapshot-store", () => ({
+vi.mock("../../../entity/utils/snapshot-store.js", () => ({
   getSnapshot: vi.fn(() => null),
   clearSnapshot: vi.fn(),
 }));
 
-vi.mock("../../../entity/utils/install-lazy-relations", () => ({
+vi.mock("../../../entity/utils/install-lazy-relations.js", () => ({
   installLazyRelations: vi.fn(),
 }));
 
-vi.mock("../../../entity/utils/lazy-relation", () => ({
+vi.mock("../../../entity/utils/lazy-relation.js", () => ({
   isLazyRelation: vi.fn(() => false),
 }));
 
-vi.mock("../../../entity/utils/lazy-collection", () => ({
+vi.mock("../../../entity/utils/lazy-collection.js", () => ({
   isLazyCollection: vi.fn(() => false),
 }));
 
-vi.mock("../../../utils/pagination/validate-paginate-options", () => ({
+vi.mock("../../../utils/pagination/validate-paginate-options.js", () => ({
   validatePaginateOptions: vi.fn(),
 }));
 
-vi.mock("../../../utils/pagination/build-keyset-order", () => ({
+vi.mock("../../../utils/pagination/build-keyset-order.js", () => ({
   buildKeysetOrder: vi.fn(() => []),
   keysetOrderToRecord: vi.fn(() => ({})),
 }));
 
-vi.mock("../../../utils/pagination/build-keyset-predicate", () => ({
+vi.mock("../../../utils/pagination/build-keyset-predicate.js", () => ({
   buildKeysetPredicate: vi.fn(() => ({})),
 }));
 
-vi.mock("../../../utils/pagination/encode-cursor", () => ({
+vi.mock("../../../utils/pagination/encode-cursor.js", () => ({
   encodeCursor: vi.fn(() => "cursor-token"),
 }));
 
-vi.mock("../../../utils/pagination/decode-cursor", () => ({
+vi.mock("../../../utils/pagination/decode-cursor.js", () => ({
   decodeCursor: vi.fn(() => ({ values: [] })),
 }));
 
-vi.mock("../../../utils/pagination/extract-cursor-values", () => ({
+vi.mock("../../../utils/pagination/extract-cursor-values.js", () => ({
   extractCursorValues: vi.fn(() => []),
 }));
 
@@ -129,15 +129,15 @@ import {
   CreateDateField,
   UpdateDateField,
   DeleteDateField,
-} from "../../../../decorators";
-import type { IProteusRepository } from "../../../../interfaces";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { RedisCursor } from "./RedisCursor";
-import { RedisRepository } from "./RedisRepository";
-import { scanEntityKeys } from "../utils/scan-entity-keys";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
+} from "../../../../decorators/index.js";
+import type { IProteusRepository } from "../../../../interfaces/index.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { RedisCursor } from "./RedisCursor.js";
+import { RedisRepository } from "./RedisRepository.js";
+import { scanEntityKeys } from "../utils/scan-entity-keys.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
 
 const mockedScanEntityKeys = scanEntityKeys as MockedFunction<typeof scanEntityKeys>;
 

@@ -1,4 +1,4 @@
-import { TokenDelegation, VerifyActorOptions } from "../../types/jwt";
+import type { TokenDelegation, VerifyActorOptions } from "../../types/jwt/index.js";
 
 export const validateActor = (
   delegation: TokenDelegation,

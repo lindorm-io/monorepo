@@ -1,5 +1,5 @@
-import { Environment } from "@lindorm/types";
-import { PylonSocketData } from "../../types";
+import type { Environment } from "@lindorm/types";
+import type { PylonSocketData } from "../../types/index.js";
 
 type Options = {
   domain?: string;

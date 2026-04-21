@@ -1,4 +1,4 @@
-import { RsaJwk, RsaString } from "../types";
+import type { RsaJwk, RsaString } from "../types/index.js";
 
 export const TEST_RSA_KEY_B64: RsaString = {
   id: "fa659780-0d5c-565b-a76e-d85477c2b00b",

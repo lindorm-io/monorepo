@@ -1,9 +1,9 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { PylonSocketAuth } from "../../../types";
+import type { PylonSocketAuth } from "../../../types/index.js";
 import {
   PYLON_AUTH_REFRESH_EVENT,
   registerAuthRefreshListener,
-} from "./register-auth-refresh-listener";
+} from "./register-auth-refresh-listener.js";
 import { describe, expect, test, vi } from "vitest";
 
 const makeSocket = (auth?: PylonSocketAuth): any => {

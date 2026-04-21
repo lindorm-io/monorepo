@@ -1,10 +1,10 @@
 import { AesKit } from "@lindorm/aes";
-import { Conduit, ConduitClientCredentialsCache } from "@lindorm/conduit";
-import { IKryptos } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { WebhookMethod } from "../../enums";
-import { IWebhookSubscription } from "../../interfaces";
-import { createConduitWebhookAuthMiddleware } from "../../middleware";
+import { Conduit, type ConduitClientCredentialsCache } from "@lindorm/conduit";
+import type { IKryptos } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
+import { WebhookMethod } from "../../enums/index.js";
+import type { IWebhookSubscription } from "../../interfaces/index.js";
+import { createConduitWebhookAuthMiddleware } from "../../middleware/index.js";
 
 type Options = {
   encryptionKey?: IKryptos;

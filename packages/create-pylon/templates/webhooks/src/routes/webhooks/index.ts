@@ -4,11 +4,11 @@ import type { ServerHttpMiddleware } from "../../types/context";
 import {
   createWebhookHandler,
   createWebhookSchema,
-} from "../../handlers/create-webhook-handler";
+} from "../../handlers/create-webhook-handler.js";
 import {
   listWebhooksHandler,
   listWebhooksSchema,
-} from "../../handlers/list-webhooks-handler";
+} from "../../handlers/list-webhooks-handler.js";
 
 export const POST: Array<ServerHttpMiddleware> = [
   useSchema(createWebhookSchema),

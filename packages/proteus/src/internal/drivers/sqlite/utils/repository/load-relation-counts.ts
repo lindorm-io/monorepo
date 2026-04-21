@@ -1,14 +1,14 @@
-import type { IEntity } from "../../../../../interfaces";
+import type { IEntity } from "../../../../../interfaces/index.js";
 import type {
   EntityMetadata,
   MetaRelationCount,
-} from "../../../../entity/types/metadata";
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { getJoinName } from "../../../../entity/utils/get-join-name";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { buildSimpleIn } from "./build-simple-in";
+} from "../../../../entity/types/metadata.js";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getJoinName } from "../../../../entity/utils/get-join-name.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { buildSimpleIn } from "./build-simple-in.js";
 
 export type LoadRelationCountsContext = {
   metadata: EntityMetadata;

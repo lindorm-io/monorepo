@@ -1,7 +1,7 @@
 import type { Options } from "amqplib";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import type { AmqpPublishConfig } from "../types/rabbit-types";
-import { sanitizeRoutingKey } from "./sanitize-routing-key";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import type { AmqpPublishConfig } from "../types/rabbit-types.js";
+import { sanitizeRoutingKey } from "./sanitize-routing-key.js";
 
 export type { AmqpPublishConfig };
 

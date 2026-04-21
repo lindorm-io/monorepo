@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
+import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -9,27 +9,27 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   IrisConnectionState,
   IrisEvents,
   NatsConnectionOptions,
-} from "../../../../types";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
+} from "../../../../types/index.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { NatsConnection, NatsSharedState } from "../types/nats-types";
-import { createNatsConsumer } from "../utils/create-nats-consumer";
-import { ensureNatsStream } from "../utils/ensure-nats-stream";
-import { resolveSubject } from "../utils/resolve-subject";
-import { serializeNatsMessage } from "../utils/serialize-nats-message";
-import { stopAllNatsConsumers } from "../utils/stop-nats-consumer";
-import { NatsMessageBus } from "./NatsMessageBus";
-import { NatsPublisher } from "./NatsPublisher";
-import { NatsRpcClient } from "./NatsRpcClient";
-import { NatsRpcServer } from "./NatsRpcServer";
-import { NatsStreamProcessor } from "./NatsStreamProcessor";
-import { NatsWorkerQueue } from "./NatsWorkerQueue";
+import type { NatsConnection, NatsSharedState } from "../types/nats-types.js";
+import { createNatsConsumer } from "../utils/create-nats-consumer.js";
+import { ensureNatsStream } from "../utils/ensure-nats-stream.js";
+import { resolveSubject } from "../utils/resolve-subject.js";
+import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
+import { stopAllNatsConsumers } from "../utils/stop-nats-consumer.js";
+import { NatsMessageBus } from "./NatsMessageBus.js";
+import { NatsPublisher } from "./NatsPublisher.js";
+import { NatsRpcClient } from "./NatsRpcClient.js";
+import { NatsRpcServer } from "./NatsRpcServer.js";
+import { NatsStreamProcessor } from "./NatsStreamProcessor.js";
+import { NatsWorkerQueue } from "./NatsWorkerQueue.js";
 
 const DEFAULT_PREFETCH = 10;
 const DEFAULT_PREFIX = "iris";

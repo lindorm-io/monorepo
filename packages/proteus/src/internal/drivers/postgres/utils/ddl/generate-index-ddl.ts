@@ -1,9 +1,9 @@
-import { ProteusError } from "../../../../../errors";
-import type { MetaField, MetaIndex } from "../../../../entity/types/metadata";
-import { PG_IDENTIFIER_LIMIT } from "../../constants/postgres-constants";
-import { hashIdentifier } from "../hash-identifier";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
+import { ProteusError } from "../../../../../errors/index.js";
+import type { MetaField, MetaIndex } from "../../../../entity/types/metadata.js";
+import { PG_IDENTIFIER_LIMIT } from "../../constants/postgres-constants.js";
+import { hashIdentifier } from "../hash-identifier.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
 
 const VALID_DIRECTIONS = new Set(["asc", "desc"]);
 

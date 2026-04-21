@@ -1,6 +1,6 @@
 import MockDate from "mockdate";
 import Stream, { Readable } from "stream";
-import { httpResponseBodyMiddleware } from "./http-response-body-middleware";
+import { httpResponseBodyMiddleware } from "./http-response-body-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");

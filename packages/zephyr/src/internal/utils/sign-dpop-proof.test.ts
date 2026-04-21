@@ -1,4 +1,4 @@
-import { signDpopProof, toPublicJwk } from "./sign-dpop-proof";
+import { signDpopProof, toPublicJwk } from "./sign-dpop-proof.js";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
 const decodePart = (part: string): Record<string, unknown> =>

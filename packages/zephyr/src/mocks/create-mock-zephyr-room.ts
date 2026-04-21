@@ -1,4 +1,4 @@
-import type { IZephyrRoom } from "../interfaces/ZephyrRoom";
+import type { IZephyrRoom } from "../interfaces/ZephyrRoom.js";
 
 export const _createMockZephyrRoom = (
   mockFn: () => any,

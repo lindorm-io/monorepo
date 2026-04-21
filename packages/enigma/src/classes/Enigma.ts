@@ -1,8 +1,8 @@
 import { AesKit } from "@lindorm/aes";
 import { OctKit } from "@lindorm/oct";
-import { EnigmaError } from "../errors";
-import { EnigmaOptions } from "../types";
-import { ArgonKit } from "./ArgonKit";
+import { EnigmaError } from "../errors/index.js";
+import type { EnigmaOptions } from "../types/index.js";
+import { ArgonKit } from "./ArgonKit.js";
 
 export class Enigma {
   private aes: AesKit;

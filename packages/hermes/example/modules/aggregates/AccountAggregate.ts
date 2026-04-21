@@ -29,18 +29,18 @@ import type {
   AggregateErrorCtx,
 } from "@lindorm/hermes";
 
-import { OpenAccount, OpenAccountSchema } from "../commands/OpenAccount";
-import { DepositFunds, DepositFundsSchema } from "../commands/DepositFunds";
-import { WithdrawFunds, WithdrawFundsSchema } from "../commands/WithdrawFunds";
-import { CloseAccount } from "../commands/CloseAccount";
-import { FlagAccount } from "../commands/FlagAccount";
+import { OpenAccount, OpenAccountSchema } from "../commands/OpenAccount.js";
+import { DepositFunds, DepositFundsSchema } from "../commands/DepositFunds.js";
+import { WithdrawFunds, WithdrawFundsSchema } from "../commands/WithdrawFunds.js";
+import { CloseAccount } from "../commands/CloseAccount.js";
+import { FlagAccount } from "../commands/FlagAccount.js";
 
-import { AccountOpened } from "../events/AccountOpened";
-import { FundsDeposited_V1 } from "../events/FundsDeposited_V1";
-import { FundsDeposited_V2 } from "../events/FundsDeposited_V2";
-import { FundsWithdrawn } from "../events/FundsWithdrawn";
-import { AccountClosed } from "../events/AccountClosed";
-import { AccountFlagged } from "../events/AccountFlagged";
+import { AccountOpened } from "../events/AccountOpened.js";
+import { FundsDeposited_V1 } from "../events/FundsDeposited_V1.js";
+import { FundsDeposited_V2 } from "../events/FundsDeposited_V2.js";
+import { FundsWithdrawn } from "../events/FundsWithdrawn.js";
+import { AccountClosed } from "../events/AccountClosed.js";
+import { AccountFlagged } from "../events/AccountFlagged.js";
 
 export type AccountState = {
   ownerName: string;

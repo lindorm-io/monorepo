@@ -1,15 +1,18 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions } from "../../../../types";
-import type { KafkaSharedState, PublishKafkaMessagesOptions } from "../types/kafka-types";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions } from "../../../../types/index.js";
+import type {
+  KafkaSharedState,
+  PublishKafkaMessagesOptions,
+} from "../types/kafka-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import {
   preparePublishBatch,
   type PublishDriverLike,
-} from "../../../utils/prepare-publish-batch";
-import { ensureKafkaTopicFromState } from "./ensure-kafka-topic";
-import { resolveTopicName } from "./resolve-topic-name";
-import { serializeKafkaMessage } from "./serialize-kafka-message";
+} from "../../../utils/prepare-publish-batch.js";
+import { ensureKafkaTopicFromState } from "./ensure-kafka-topic.js";
+import { resolveTopicName } from "./resolve-topic-name.js";
+import { serializeKafkaMessage } from "./serialize-kafka-message.js";
 
 export type KafkaPublishDriver<M extends IMessage> = PublishDriverLike<M>;
 

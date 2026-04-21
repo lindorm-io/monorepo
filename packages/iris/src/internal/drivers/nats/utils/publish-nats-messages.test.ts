@@ -1,19 +1,19 @@
-import type { NatsSharedState } from "../types/nats-types";
-import { preparePublishBatch as _preparePublishBatch } from "../../../utils/prepare-publish-batch";
-import { publishNatsMessages } from "./publish-nats-messages";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { preparePublishBatch as _preparePublishBatch } from "../../../utils/prepare-publish-batch.js";
+import { publishNatsMessages } from "./publish-nats-messages.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const preparePublishBatch = _preparePublishBatch as unknown as Mock;
 
-vi.mock("./resolve-subject", async () => ({
+vi.mock("./resolve-subject.js", async () => ({
   resolveSubject: (prefix: string, topic: string) => `${prefix}.${topic}`,
 }));
 
-vi.mock("./serialize-nats-message", () => ({
+vi.mock("./serialize-nats-message.js", () => ({
   serializeNatsMessage: vi.fn().mockReturnValue({ data: new Uint8Array([1, 2, 3]) }),
 }));
 
-vi.mock("../../../utils/prepare-publish-batch", () => ({
+vi.mock("../../../utils/prepare-publish-batch.js", () => ({
   preparePublishBatch: vi.fn().mockResolvedValue([
     {
       message: { body: "hello" },

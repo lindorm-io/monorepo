@@ -1,12 +1,12 @@
-import {
+import type {
   AesContent,
   AesDecryptionRecord,
   AesEncryptionRecord,
   SerialisedAesDecryption,
   SerialisedAesEncryption,
 } from "@lindorm/aes";
-import { Dict } from "@lindorm/types";
-import {
+import type { Dict } from "@lindorm/types";
+import type {
   DecryptedJwe,
   EncryptedJwe,
   JweEncryptOptions,
@@ -19,7 +19,7 @@ import {
   SignedJws,
   SignedJwt,
   VerifyJwtOptions,
-} from "../types";
+} from "../types/index.js";
 
 export interface IAegisAes {
   encrypt(data: AesContent, mode?: "encoded"): Promise<string>;

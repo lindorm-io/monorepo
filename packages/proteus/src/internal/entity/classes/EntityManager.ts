@@ -1,33 +1,37 @@
 import { isFunction } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import type { Constructor, DeepPartial, Dict } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import { IEntity } from "../../../interfaces";
+import type { IEntity } from "../../../interfaces/index.js";
 import type {
   NamespaceOptions,
   SaveStrategy,
   ScopedName,
   UpdateStrategy,
-} from "../../types/types";
-import { EntityManagerError } from "../errors/EntityManagerError";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
-import type { EntityMetadata, MetaFieldDecorator, MetaRelation } from "../types/metadata";
-import type { EntityManagerOptions, GetIncrementFn } from "../types/entity-manager";
-import { defaultCloneEntity } from "../utils/default-clone-entity";
-import { defaultCreateEntity } from "../utils/default-create-entity";
-import { defaultCreateRaw } from "../utils/default-create-raw";
-import { defaultGenerateEntity } from "../utils/default-generate-entity";
-import { defaultRelationFilter } from "../utils/default-relation-filter";
-import { defaultUpdateEntity } from "../utils/default-update-entity";
-import { defaultValidateEntity } from "../utils/default-validate-entity";
-import { getEntityName } from "../utils/get-entity-name";
-import { getIncrementName } from "../utils/get-increment-name";
-import { getSaveStrategy } from "../utils/get-save-strategy";
-import { removeReadonlyDataFields } from "../utils/remove-readonly-data-fields";
-import { runHooksAsync } from "../utils/run-hooks-async";
-import { runHooksSync } from "../utils/run-hooks-sync";
-import { verifyReadonly } from "../utils/verify-readonly";
-import { VersionManager } from "./VersionManager";
+} from "../../types/types.js";
+import { EntityManagerError } from "../errors/EntityManagerError.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
+import type {
+  EntityMetadata,
+  MetaFieldDecorator,
+  MetaRelation,
+} from "../types/metadata.js";
+import type { EntityManagerOptions, GetIncrementFn } from "../types/entity-manager.js";
+import { defaultCloneEntity } from "../utils/default-clone-entity.js";
+import { defaultCreateEntity } from "../utils/default-create-entity.js";
+import { defaultCreateRaw } from "../utils/default-create-raw.js";
+import { defaultGenerateEntity } from "../utils/default-generate-entity.js";
+import { defaultRelationFilter } from "../utils/default-relation-filter.js";
+import { defaultUpdateEntity } from "../utils/default-update-entity.js";
+import { defaultValidateEntity } from "../utils/default-validate-entity.js";
+import { getEntityName } from "../utils/get-entity-name.js";
+import { getIncrementName } from "../utils/get-increment-name.js";
+import { getSaveStrategy } from "../utils/get-save-strategy.js";
+import { removeReadonlyDataFields } from "../utils/remove-readonly-data-fields.js";
+import { runHooksAsync } from "../utils/run-hooks-async.js";
+import { runHooksSync } from "../utils/run-hooks-sync.js";
+import { verifyReadonly } from "../utils/verify-readonly.js";
+import { VersionManager } from "./VersionManager.js";
 
 export class EntityManager<
   E extends IEntity,

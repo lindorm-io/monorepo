@@ -2,11 +2,11 @@ import {
   formatTimestamp,
   kebabToPascal,
   sanitizeName,
-} from "../../../../cli/utils/migration-naming";
+} from "../../../../cli/utils/migration-naming.js";
 import { ShaKit } from "@lindorm/sha";
 import { randomUUID } from "crypto";
-import type { SqliteDbSnapshot } from "../../types/db-snapshot";
-import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan";
+import type { SqliteDbSnapshot } from "../../types/db-snapshot.js";
+import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan.js";
 
 export type SerializedSqliteMigration = {
   filename: string;

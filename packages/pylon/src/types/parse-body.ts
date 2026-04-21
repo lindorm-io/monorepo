@@ -1,6 +1,6 @@
-import { HttpMethod } from "@lindorm/types";
-import { DeepPartial } from "@lindorm/types";
-import { Options as FormidableOptions } from "formidable";
+import type { HttpMethod } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
+import type { Options as FormidableOptions } from "formidable";
 
 type Byte = "B" | "Kb" | "Mb" | "Gb" | "Tb" | "Pb";
 type ByteReverse = "b" | "kB" | "mB" | "gB" | "tB" | "pB";

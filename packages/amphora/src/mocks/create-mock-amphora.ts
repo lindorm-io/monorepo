@@ -1,4 +1,4 @@
-import { IAmphora } from "../interfaces";
+import type { IAmphora } from "../interfaces/index.js";
 
 export const _createMockAmphora = (mockFn: () => any): IAmphora => {
   const returns = (value: any) => {

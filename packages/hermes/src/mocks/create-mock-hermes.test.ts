@@ -1,5 +1,5 @@
-import { HermesViewEntity } from "../entities/HermesViewEntity";
-import { createMockHermes } from "./vitest";
+import { HermesViewEntity } from "../entities/HermesViewEntity.js";
+import { createMockHermes } from "./vitest.js";
 import { describe, expect, it, vi } from "vitest";
 
 class TestView extends HermesViewEntity {}

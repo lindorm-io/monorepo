@@ -1,6 +1,6 @@
 import { createMockAesKit } from "@lindorm/aes/mocks/jest";
-import type { IAegis } from "../interfaces";
-import { _createMockAegis } from "./create-mock-aegis";
+import type { IAegis } from "../interfaces/index.js";
+import { _createMockAegis } from "./create-mock-aegis.js";
 
 type MockAegis = jest.Mocked<IAegis>;
 

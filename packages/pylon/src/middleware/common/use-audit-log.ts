@@ -1,9 +1,9 @@
 import { ServerError } from "@lindorm/errors";
-import { IIrisSource } from "@lindorm/iris";
-import { AUDIT_SOURCE } from "../../internal/constants/symbols";
-import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
-import { RequestAudit } from "../../messages";
-import { PylonContext, PylonMiddleware } from "../../types";
+import type { IIrisSource } from "@lindorm/iris";
+import { AUDIT_SOURCE } from "../../internal/constants/symbols.js";
+import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
+import { RequestAudit } from "../../messages/index.js";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type AuditConfig = {
   iris: IIrisSource;

@@ -1,6 +1,6 @@
-import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects";
-import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings";
-import { lowerArray, lowerCase, lowerKeys } from "./lower";
+import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects.js";
+import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings.js";
+import { lowerArray, lowerCase, lowerKeys } from "./lower.js";
 import { describe, expect, test } from "vitest";
 
 describe("lowerCase", () => {

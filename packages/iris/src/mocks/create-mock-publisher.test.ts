@@ -1,4 +1,4 @@
-import { createMockPublisher } from "./vitest";
+import { createMockPublisher } from "./vitest.js";
 import { beforeEach, describe, expect, it } from "vitest";
 
 type TestMessage = { id: string; body: string };

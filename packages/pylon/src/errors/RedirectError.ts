@@ -1,4 +1,4 @@
-import { LindormError, LindormErrorOptions } from "@lindorm/errors";
+import { LindormError, type LindormErrorOptions } from "@lindorm/errors";
 
 type Options = LindormErrorOptions & {
   redirect: string;

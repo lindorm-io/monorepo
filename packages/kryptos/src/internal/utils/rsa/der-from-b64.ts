@@ -1,6 +1,6 @@
-import { KryptosError } from "../../../errors";
-import { KryptosFromString, RsaBuffer } from "../../../types";
-import { createRsaDerFromDer } from "./der-from-der";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosFromString, RsaBuffer } from "../../../types/index.js";
+import { createRsaDerFromDer } from "./der-from-der.js";
 
 type Options = Omit<KryptosFromString, "id" | "algorithm" | "type" | "use">;
 

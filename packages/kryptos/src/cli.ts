@@ -3,14 +3,14 @@
 import { input, select } from "@inquirer/prompts";
 import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
 import { program } from "commander";
-import { KryptosKit } from "./classes";
+import { KryptosKit } from "./classes/index.js";
 import {
   EC_ENC_ALGORITHMS,
   EC_SIG_ALGORITHMS,
-  KryptosAlgorithm,
-  KryptosEncryption,
-  KryptosType,
-  KryptosUse,
+  type KryptosAlgorithm,
+  type KryptosEncryption,
+  type KryptosType,
+  type KryptosUse,
   OCT_ENC_DIR_ALGORITHMS,
   OCT_ENC_STD_ALGORITHMS,
   OCT_SIG_ALGORITHMS,
@@ -18,7 +18,7 @@ import {
   OKP_SIG_ALGORITHMS,
   RSA_ENC_ALGORITHMS,
   RSA_SIG_ALGORITHMS,
-} from "./types";
+} from "./types/index.js";
 
 program.name("kryptos").description("CLI for managing kryptos keys");
 

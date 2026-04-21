@@ -1,4 +1,4 @@
-import { calculateContentType, contentToBuffer, parseContent } from "./content";
+import { calculateContentType, contentToBuffer, parseContent } from "./content.js";
 import { describe, expect, test } from "vitest";
 
 describe("content", () => {

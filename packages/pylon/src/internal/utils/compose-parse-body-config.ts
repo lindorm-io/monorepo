@@ -1,5 +1,5 @@
-import { HttpMethod } from "@lindorm/types";
-import { ParseBodyConfig, ParseBodyOptions } from "../../types";
+import type { HttpMethod } from "@lindorm/types";
+import type { ParseBodyConfig, ParseBodyOptions } from "../../types/index.js";
 
 export const composeParseBodyConfig = (
   options: ParseBodyOptions = {},

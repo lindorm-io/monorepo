@@ -1,25 +1,25 @@
-import { DEFAULT_TIMEOUT } from "../internal/constants/defaults";
-import { ILogger } from "@lindorm/logger";
+import { DEFAULT_TIMEOUT } from "../internal/constants/defaults.js";
+import type { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
 import type { Socket } from "socket.io-client";
 import { io } from "socket.io-client";
-import type { ZephyrAuthStrategy } from "../auth/zephyr-auth-strategy";
-import { ZephyrError } from "../errors/ZephyrError";
+import type { ZephyrAuthStrategy } from "../auth/zephyr-auth-strategy.js";
+import { ZephyrError } from "../errors/ZephyrError.js";
 import type {
   AuthExpiredEvent,
   AuthExpiredHandler,
   IZephyr,
   IZephyrRoom,
-} from "../interfaces";
-import type { ListenerEntry } from "../internal/types/listener-entry";
-import { buildEnvelope } from "../internal/utils/build-envelope";
-import { createZephyrContext } from "../internal/utils/create-zephyr-context";
-import { dedupPromise } from "../internal/utils/dedup-promise";
-import { unwrapAckResponse } from "../internal/utils/unwrap-ack-response";
-import type { AppContext, ZephyrContext, ZephyrMiddleware } from "../types/context";
-import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map";
-import type { AdvancedOptions, ZephyrOptions } from "../types/options";
-import { ZephyrRoom } from "./ZephyrRoom";
+} from "../interfaces/index.js";
+import type { ListenerEntry } from "../internal/types/listener-entry.js";
+import { buildEnvelope } from "../internal/utils/build-envelope.js";
+import { createZephyrContext } from "../internal/utils/create-zephyr-context.js";
+import { dedupPromise } from "../internal/utils/dedup-promise.js";
+import { unwrapAckResponse } from "../internal/utils/unwrap-ack-response.js";
+import type { AppContext, ZephyrContext, ZephyrMiddleware } from "../types/context.js";
+import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map.js";
+import type { AdvancedOptions, ZephyrOptions } from "../types/options.js";
+import { ZephyrRoom } from "./ZephyrRoom.js";
 
 const AUTH_EXPIRED_EVENT = "$pylon/auth/expired";
 

@@ -1,1 +1,1 @@
-export * from "./create-random-string";
+export * from "./create-random-string.js";

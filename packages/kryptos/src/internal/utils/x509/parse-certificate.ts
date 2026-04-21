@@ -1,5 +1,8 @@
-import { KryptosError } from "../../../errors";
-import { ParsedX509Certificate, ParsedX509Extensions } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type {
+  ParsedX509Certificate,
+  ParsedX509Extensions,
+} from "../../../types/index.js";
 import {
   ASN1_CONTEXT_CONSTRUCTED_BASE,
   ASN1_TAG_BIT_STRING,
@@ -8,11 +11,11 @@ import {
   decodeBitString,
   decodeInteger,
   readTlv,
-} from "../asn1";
-import { parseX509AlgorithmIdentifier } from "./parse-algorithm-identifier";
-import { parseX509Extensions } from "./parse-extensions";
-import { parseX509Name } from "./parse-name";
-import { parseX509Validity } from "./parse-validity";
+} from "../asn1/index.js";
+import { parseX509AlgorithmIdentifier } from "./parse-algorithm-identifier.js";
+import { parseX509Extensions } from "./parse-extensions.js";
+import { parseX509Name } from "./parse-name.js";
+import { parseX509Validity } from "./parse-validity.js";
 
 const EMPTY_EXTENSIONS: ParsedX509Extensions = {
   basicConstraintsCa: false,

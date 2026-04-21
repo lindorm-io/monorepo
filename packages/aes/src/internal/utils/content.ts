@@ -1,6 +1,6 @@
 import { isArray, isBoolean, isBuffer, isNumber, isObject, isString } from "@lindorm/is";
-import { AesError } from "../../errors/AesError";
-import { AesContent, AesContentType } from "../../types/content";
+import { AesError } from "../../errors/AesError.js";
+import type { AesContent, AesContentType } from "../../types/content.js";
 
 export const calculateContentType = (content: any): AesContentType => {
   if (isString(content)) {

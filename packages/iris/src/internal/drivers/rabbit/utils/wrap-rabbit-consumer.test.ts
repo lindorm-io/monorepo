@@ -1,12 +1,12 @@
 import type { ConsumeMessage } from "amqplib";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { RabbitSharedState } from "../types/rabbit-types";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
 import {
   wrapRabbitConsumer,
   type RabbitConsumerCallbackHost,
-} from "./wrap-rabbit-consumer";
+} from "./wrap-rabbit-consumer.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({

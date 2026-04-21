@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import { stageJoinField } from "../internal/entity/metadata/stage-metadata";
+import { stageJoinField } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Mark this relation field as the owning side (has FK column) and optionally

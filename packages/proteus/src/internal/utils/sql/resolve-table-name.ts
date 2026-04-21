@@ -1,6 +1,6 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
-import type { SqlDialect } from "./sql-dialect";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import type { SqlDialect } from "./sql-dialect.js";
 
 export type ResolvedTable = {
   schema: string | null;

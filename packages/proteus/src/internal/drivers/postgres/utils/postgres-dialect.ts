@@ -1,7 +1,7 @@
-import type { MetaField } from "../../../entity/types/metadata";
-import type { SqlDialect } from "../../../utils/sql/sql-dialect";
-import { ProteusError } from "../../../../errors";
-import type { LockMode } from "../../../../types/find-options";
+import type { MetaField } from "../../../entity/types/metadata.js";
+import type { SqlDialect } from "../../../utils/sql/sql-dialect.js";
+import { ProteusError } from "../../../../errors/index.js";
+import type { LockMode } from "../../../../types/find-options.js";
 
 const quoteIdentifier = (name: string): string => {
   if (!name) {

@@ -1,12 +1,16 @@
 import type { DeepPartial, Dict } from "@lindorm/types";
-import type { IEntity, IInsertQueryBuilder, WriteResult } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { ProteusError } from "../../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import type { MysqlQueryClient } from "../types/mysql-query-client";
-import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier";
-import { coerceWriteValue } from "../utils/query/coerce-value";
-import { resolveTableName } from "../utils/query/resolve-table-name";
+import type {
+  IEntity,
+  IInsertQueryBuilder,
+  WriteResult,
+} from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { ProteusError } from "../../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import type { MysqlQueryClient } from "../types/mysql-query-client.js";
+import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
+import { coerceWriteValue } from "../utils/query/coerce-value.js";
+import { resolveTableName } from "../utils/query/resolve-table-name.js";
 
 /**
  * MySQL INSERT query builder.

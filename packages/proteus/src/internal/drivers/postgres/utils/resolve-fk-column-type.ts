@@ -1,10 +1,10 @@
 import type { Constructor } from "@lindorm/types";
-import { ProteusError } from "../../../../errors";
-import type { IEntity } from "../../../../interfaces";
-import type { NamespaceOptions } from "../../../types/types";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { getEntityName } from "../../../entity/utils/get-entity-name";
-import { mapFieldType } from "./map-field-type";
+import { ProteusError } from "../../../../errors/index.js";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { NamespaceOptions } from "../../../types/types.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { getEntityName } from "../../../entity/utils/get-entity-name.js";
+import { mapFieldType } from "./map-field-type.js";
 
 /**
  * Resolves the PostgreSQL column type for a foreign key column by looking up the

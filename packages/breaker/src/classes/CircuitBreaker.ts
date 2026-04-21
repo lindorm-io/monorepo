@@ -1,14 +1,14 @@
 import { EventEmitter } from "events";
-import { CircuitOpenError } from "../errors/CircuitOpenError";
-import type { ICircuitBreaker } from "../interfaces/CircuitBreaker";
-import { calculateBackoff, SlidingWindow } from "../internal/index";
+import { CircuitOpenError } from "../errors/CircuitOpenError.js";
+import type { ICircuitBreaker } from "../interfaces/CircuitBreaker.js";
+import { calculateBackoff, SlidingWindow } from "../internal/index.js";
 import type {
   CircuitBreakerOptions,
   CircuitBreakerState,
   ErrorClassification,
   ErrorClassifier,
   StateChangeListener,
-} from "../types/circuit-breaker";
+} from "../types/circuit-breaker.js";
 
 const DEFAULT_THRESHOLD = 5;
 const DEFAULT_WINDOW = 60_000;

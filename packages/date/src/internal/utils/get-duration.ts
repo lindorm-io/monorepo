@@ -1,4 +1,4 @@
-import { DurationString } from "../../types";
+import type { DurationString } from "../../types/index.js";
 
 export const getDuration = (string: string): DurationString => {
   switch (string) {

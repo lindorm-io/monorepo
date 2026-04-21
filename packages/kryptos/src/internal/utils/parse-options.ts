@@ -1,11 +1,11 @@
-import { KryptosError } from "../../errors";
-import {
+import { KryptosError } from "../../errors/index.js";
+import type {
   KryptosJwk,
   KryptosOperation,
   KryptosOptions,
   KryptosType,
   UnknownJwk,
-} from "../../types";
+} from "../../types/index.js";
 
 const TYPES: Array<KryptosType> = ["AKP", "EC", "oct", "OKP", "RSA"] as const;
 

@@ -1,4 +1,4 @@
-import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware";
+import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitBasicAuthMiddleware", () => {

@@ -3,7 +3,7 @@ import {
   isSocketContext,
   isSocketEventContext,
   isSocketHandshakeContext,
-} from "./is-context";
+} from "./is-context.js";
 import { describe, expect, test } from "vitest";
 
 describe("isSocketEventContext", () => {

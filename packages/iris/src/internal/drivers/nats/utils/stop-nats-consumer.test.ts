@@ -1,5 +1,5 @@
-import type { NatsSharedState } from "../types/nats-types";
-import { stopNatsConsumer, stopAllNatsConsumers } from "./stop-nats-consumer";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { stopNatsConsumer, stopAllNatsConsumers } from "./stop-nats-consumer.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockLoop = (overrides?: Record<string, any>) => ({

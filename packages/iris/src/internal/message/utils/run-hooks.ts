@@ -1,6 +1,6 @@
-import { IrisError } from "../../../errors/IrisError";
-import type { MetaHook } from "../types/metadata";
-import type { MetaHookDecorator } from "../types/types";
+import { IrisError } from "../../../errors/IrisError.js";
+import type { MetaHook } from "../types/metadata.js";
+import type { MetaHookDecorator } from "../types/types.js";
 
 export const runHooksSync = (
   decorator: MetaHookDecorator,

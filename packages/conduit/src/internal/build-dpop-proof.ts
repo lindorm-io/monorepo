@@ -1,4 +1,4 @@
-import { DpopSigner } from "@lindorm/types";
+import type { DpopSigner } from "@lindorm/types";
 
 type Options = {
   signer: DpopSigner;

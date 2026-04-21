@@ -1,13 +1,13 @@
 import {
   conduitBasicAuthMiddleware,
-  ConduitClientCredentialsCache,
+  type ConduitClientCredentialsCache,
   conduitClientCredentialsMiddlewareFactory,
   ConduitError,
   conduitHeadersMiddleware,
-  ConduitMiddleware,
+  type ConduitMiddleware,
 } from "@lindorm/conduit";
-import { WebhookAuth } from "../../enums";
-import { IWebhookSubscription } from "../../interfaces";
+import { WebhookAuth } from "../../enums/index.js";
+import type { IWebhookSubscription } from "../../interfaces/index.js";
 
 const emptyMiddleware: ConduitMiddleware = async (_, next) => {
   await next();

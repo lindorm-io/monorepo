@@ -1,44 +1,47 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { DeepPartial, Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../interfaces";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { DeleteOptions, FindOptions } from "../../../../types";
-import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { MysqlQueryClient } from "../types/mysql-query-client";
-import { OptimisticLockError } from "../../../errors/OptimisticLockError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { MySqlExecutorError } from "../errors/MySqlExecutorError";
-import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug";
-import { wrapMysqlError } from "../utils/repository/wrap-mysql-error";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria";
-import { compileDelete, compileJoinedChildDelete } from "../utils/query/compile-delete";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
+import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
+import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { MysqlQueryClient } from "../types/mysql-query-client.js";
+import { OptimisticLockError } from "../../../errors/OptimisticLockError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { MySqlExecutorError } from "../errors/MySqlExecutorError.js";
+import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
+import { wrapMysqlError } from "../utils/repository/wrap-mysql-error.js";
+import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
+import {
+  compileDelete,
+  compileJoinedChildDelete,
+} from "../utils/query/compile-delete.js";
 import {
   compileDeleteExpired,
   compileRestore,
   compileSoftDelete,
-} from "../utils/query/compile-update";
-import { compileDeleteWithLimit } from "../utils/query/compile-delete-with-limit";
-import { compileExists } from "../utils/query/compile-exists";
-import { compileIncrement } from "../utils/query/compile-increment";
-import { compileInsert, compileInsertBulk } from "../utils/query/compile-insert";
+} from "../utils/query/compile-update.js";
+import { compileDeleteWithLimit } from "../utils/query/compile-delete-with-limit.js";
+import { compileExists } from "../utils/query/compile-exists.js";
+import { compileIncrement } from "../utils/query/compile-increment.js";
+import { compileInsert, compileInsertBulk } from "../utils/query/compile-insert.js";
 import {
   compileJoinedInsert,
   compileJoinedUpdate,
-} from "../utils/query/compile-joined-write";
-import { compileCount, compileQuery } from "../utils/query/compile-query";
-import { compileUpdate, compileUpdateMany } from "../utils/query/compile-update";
+} from "../utils/query/compile-joined-write.js";
+import { compileCount, compileQuery } from "../utils/query/compile-query.js";
+import { compileUpdate, compileUpdateMany } from "../utils/query/compile-update.js";
 import {
   compileSelectByPk,
   compileSelectByPkBatch,
   compileSelectByPkStartLimit,
   compileSelectByPkValues,
-} from "../utils/query/compile-select-by-pk";
-import { executeQueryIncludes } from "../utils/query/execute-query-includes";
-import { findOptionsToQueryState } from "../../../utils/query/find-options-to-query-state";
-import { hydrateRows } from "../utils/query/hydrate-result";
-import { hydrateReturning } from "../utils/query/hydrate-returning";
-import { partitionIncludes } from "../utils/query/partition-includes";
+} from "../utils/query/compile-select-by-pk.js";
+import { executeQueryIncludes } from "../utils/query/execute-query-includes.js";
+import { findOptionsToQueryState } from "../../../utils/query/find-options-to-query-state.js";
+import { hydrateRows } from "../utils/query/hydrate-result.js";
+import { hydrateReturning } from "../utils/query/hydrate-returning.js";
+import { partitionIncludes } from "../utils/query/partition-includes.js";
 
 export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> {
   private readonly client: MysqlQueryClient;

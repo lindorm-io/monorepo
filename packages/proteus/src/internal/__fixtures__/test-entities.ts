@@ -35,7 +35,7 @@ import {
   UpdateDateField,
   VersionField,
   VersionKeyField,
-} from "../../decorators";
+} from "../../decorators/index.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Simple entity with a UUID primary key

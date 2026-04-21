@@ -1,18 +1,18 @@
 import { randomUUID } from "@lindorm/random";
-import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic";
-import { resolveStreamKey } from "../utils/resolve-stream-key";
-import { serializeStreamFields } from "../utils/serialize-stream-fields";
-import { xaddToStream } from "../utils/xadd-to-stream";
-import { createConsumerLoop } from "../utils/create-consumer-loop";
-import { stopConsumerLoop } from "../utils/stop-consumer-loop";
+import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import { resolveStreamKey } from "../utils/resolve-stream-key.js";
+import { serializeStreamFields } from "../utils/serialize-stream-fields.js";
+import { xaddToStream } from "../utils/xadd-to-stream.js";
+import { createConsumerLoop } from "../utils/create-consumer-loop.js";
+import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
-} from "../../../classes/DriverStreamPipelineBase";
+} from "../../../classes/DriverStreamPipelineBase.js";
 
 export type RedisStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
   state: RedisSharedState;

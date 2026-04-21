@@ -1,7 +1,7 @@
-import { IKryptosOct, KryptosKit } from "@lindorm/kryptos";
+import { type IKryptosOct, KryptosKit } from "@lindorm/kryptos";
 import { OctError } from "@lindorm/oct";
-import { ArgonKitOptions } from "../types";
-import { assertArgonHash, createArgonHash, verifyArgonHash } from "../internal/index";
+import type { ArgonKitOptions } from "../types/index.js";
+import { assertArgonHash, createArgonHash, verifyArgonHash } from "../internal/index.js";
 
 export class ArgonKit {
   private readonly hashLength: number | undefined;

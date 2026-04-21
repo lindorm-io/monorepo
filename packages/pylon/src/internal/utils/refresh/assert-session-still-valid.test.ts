@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { assertSessionStillValid } from "./assert-session-still-valid";
+import { assertSessionStillValid } from "./assert-session-still-valid.js";
 import { describe, expect, test } from "vitest";
 
 const baseSession = {

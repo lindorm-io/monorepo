@@ -1,16 +1,16 @@
 import type { ConsumeMessage } from "amqplib";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic";
-import { buildAmqpHeaders } from "../utils/build-amqp-headers";
-import { parseAmqpHeaders } from "../utils/parse-amqp-headers";
-import { sanitizeRoutingKey } from "../utils/sanitize-routing-key";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import { buildAmqpHeaders } from "../utils/build-amqp-headers.js";
+import { parseAmqpHeaders } from "../utils/parse-amqp-headers.js";
+import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
-} from "../../../classes/DriverStreamPipelineBase";
+} from "../../../classes/DriverStreamPipelineBase.js";
 
 export type RabbitStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
   state: RabbitSharedState;

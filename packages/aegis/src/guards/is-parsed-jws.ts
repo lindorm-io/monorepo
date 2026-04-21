@@ -1,4 +1,4 @@
-import { ParsedJws, ParsedJwt } from "../types";
+import type { ParsedJws, ParsedJwt } from "../types/index.js";
 
 export const isParsedJws = <T extends Buffer | string = Buffer | string>(
   token: ParsedJwt | ParsedJws<T>,

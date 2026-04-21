@@ -1,4 +1,4 @@
-import { getBody } from "./get-body";
+import { getBody } from "./get-body.js";
 import { describe, expect, test } from "vitest";
 
 describe("getBody", () => {

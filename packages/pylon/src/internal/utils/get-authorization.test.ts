@@ -1,4 +1,4 @@
-import { getAuthorization } from "./get-authorization";
+import { getAuthorization } from "./get-authorization.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("getAuthorization", () => {

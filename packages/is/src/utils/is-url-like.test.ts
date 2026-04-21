@@ -1,5 +1,5 @@
-import { TEST_FIXTURES } from "../__fixtures__/test-fixtures";
-import { isUrlLike } from "./is-url-like";
+import { TEST_FIXTURES } from "../__fixtures__/test-fixtures.js";
+import { isUrlLike } from "./is-url-like.js";
 import { describe, expect, test } from "vitest";
 
 describe("isUrlLike", () => {

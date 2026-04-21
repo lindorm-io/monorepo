@@ -1,4 +1,4 @@
-import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata";
+import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata.js";
 
 export type DeferrableOptions = {
   /** If `true`, the constraint is `INITIALLY DEFERRED`. Default: `false` (INITIALLY IMMEDIATE). */

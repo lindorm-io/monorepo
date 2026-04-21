@@ -1,27 +1,27 @@
-import { IAmphora } from "@lindorm/amphora";
-import { ReadableTime } from "@lindorm/date";
-import { IHermes } from "@lindorm/hermes";
-import { IIrisSource } from "@lindorm/iris";
-import { ILogger } from "@lindorm/logger";
-import { IProteusSource } from "@lindorm/proteus";
-import { Environment } from "@lindorm/types";
-import { ILindormWorker } from "@lindorm/worker";
+import type { IAmphora } from "@lindorm/amphora";
+import type { ReadableTime } from "@lindorm/date";
+import type { IHermes } from "@lindorm/hermes";
+import type { IIrisSource } from "@lindorm/iris";
+import type { ILogger } from "@lindorm/logger";
+import type { IProteusSource } from "@lindorm/proteus";
+import type { Environment } from "@lindorm/types";
+import type { ILindormWorker } from "@lindorm/worker";
 import Redis from "ioredis";
-import { ServerOptions as SocketOptions } from "socket.io";
-import { PylonListener, PylonRouter } from "../classes";
-import { PylonAuthOptions } from "./auth";
-import {
+import type { ServerOptions as SocketOptions } from "socket.io";
+import { PylonListener, PylonRouter } from "../classes/index.js";
+import type { PylonAuthOptions } from "./auth.js";
+import type {
   PylonConnectionMiddleware,
   PylonSocketHandshakeContext,
-} from "./context-socket-handshake";
-import { PylonHttpContext, PylonHttpMiddleware } from "./context-http";
-import { PylonSocketContext, PylonSocketMiddleware } from "./context-socket";
-import { PylonEventMap } from "./pylon-event-map";
-import { PylonCookieConfig } from "./cookies";
-import { CorsOptions } from "./cors";
-import { OpenIdConfigurationOptions } from "./open-id-configuration";
-import { ParseBodyOptions } from "./parse-body";
-import {
+} from "./context-socket-handshake.js";
+import type { PylonHttpContext, PylonHttpMiddleware } from "./context-http.js";
+import type { PylonSocketContext, PylonSocketMiddleware } from "./context-socket.js";
+import type { PylonEventMap } from "./pylon-event-map.js";
+import type { PylonCookieConfig } from "./cookies.js";
+import type { CorsOptions } from "./cors.js";
+import type { OpenIdConfigurationOptions } from "./open-id-configuration.js";
+import type { ParseBodyOptions } from "./parse-body.js";
+import type {
   PylonAuditOptions,
   PylonHttpCallback,
   PylonKryptosOptions,
@@ -30,11 +30,11 @@ import {
   PylonRoomsOptions,
   PylonSessionOptions,
   PylonWebhookOptions,
-} from "./pylon-callback-options";
+} from "./pylon-callback-options.js";
 
-import { PylonSecurityTxt } from "./security-txt";
-import { PylonSetup, PylonTeardown } from "./setup";
-import { PylonSubscribeOptions } from "./types";
+import type { PylonSecurityTxt } from "./security-txt.js";
+import type { PylonSetup, PylonTeardown } from "./setup.js";
+import type { PylonSubscribeOptions } from "./types.js";
 
 export type PylonHttpRouters<C extends PylonHttpContext> = {
   path: string;

@@ -1,5 +1,5 @@
-import type { IIrisDriver } from "../interfaces/IrisDriver";
-import { IrisSession, type IrisSessionOptions } from "./IrisSession";
+import type { IIrisDriver } from "../interfaces/IrisDriver.js";
+import { IrisSession, type IrisSessionOptions } from "./IrisSession.js";
 import { describe, expect, it, vi } from "vitest";
 
 // --- Helpers ---

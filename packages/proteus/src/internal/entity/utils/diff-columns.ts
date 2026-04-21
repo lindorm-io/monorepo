@@ -1,8 +1,8 @@
 import { isObjectLike } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../types/metadata";
-import { resolveJoinKeyValue } from "./resolve-join-key-value";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../types/metadata.js";
+import { resolveJoinKeyValue } from "./resolve-join-key-value.js";
 
 /**
  * Compare current entity field values against a snapshot and return only

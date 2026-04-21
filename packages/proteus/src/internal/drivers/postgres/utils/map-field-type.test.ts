@@ -1,6 +1,6 @@
-import { makeField } from "../../../__fixtures__/make-field";
-import { ProteusError } from "../../../../errors";
-import { mapFieldType } from "./map-field-type";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import { ProteusError } from "../../../../errors/index.js";
+import { mapFieldType } from "./map-field-type.js";
 import { describe, expect, test } from "vitest";
 
 const TABLE = "test_table";

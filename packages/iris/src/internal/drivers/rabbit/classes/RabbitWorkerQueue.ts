@@ -1,13 +1,17 @@
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope, ConsumeOptions, PublishOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase";
-import { publishRabbitMessages } from "../utils/publish-messages";
-import { wrapRabbitConsumer } from "../utils/wrap-rabbit-consumer";
-import { resolveQueueName } from "../utils/resolve-queue-name";
-import { sanitizeRoutingKey } from "../utils/sanitize-routing-key";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type {
+  ConsumeEnvelope,
+  ConsumeOptions,
+  PublishOptions,
+} from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { publishRabbitMessages } from "../utils/publish-messages.js";
+import { wrapRabbitConsumer } from "../utils/wrap-rabbit-consumer.js";
+import { resolveQueueName } from "../utils/resolve-queue-name.js";
+import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
 
 export type RabbitWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: RabbitSharedState;

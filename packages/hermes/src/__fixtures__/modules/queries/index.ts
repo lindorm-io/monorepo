@@ -1,1 +1,1 @@
-export { TestViewQuery } from "./TestViewQuery";
+export { TestViewQuery } from "./TestViewQuery.js";

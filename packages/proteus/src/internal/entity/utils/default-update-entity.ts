@@ -1,7 +1,7 @@
 import type { Constructor } from "@lindorm/types";
-import { IEntity } from "../../../interfaces";
-import { incrementVersion } from "./increment-version";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import { incrementVersion } from "./increment-version.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 export const defaultUpdateEntity = <E extends IEntity>(
   target: Constructor<E>,

@@ -1,11 +1,11 @@
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { IncludeSpec } from "../../../../types/query";
-import { ProteusError } from "../../../../../errors/ProteusError";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import type { AliasMap } from "./compile-select";
-import { compilePredicate } from "./compile-where";
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec } from "../../../../types/query.js";
+import { ProteusError } from "../../../../../errors/ProteusError.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import type { AliasMap } from "./compile-select.js";
+import { compilePredicate } from "./compile-where.js";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
 
 const getJoinVersionCondition = (
   foreignMeta: EntityMetadata,

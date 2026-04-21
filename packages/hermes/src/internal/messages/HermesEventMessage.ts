@@ -10,7 +10,7 @@ import {
 } from "@lindorm/iris";
 import type { IMessage } from "@lindorm/iris";
 import type { Dict } from "@lindorm/types";
-import type { AggregateIdentifier } from "../../types/aggregate-identifier";
+import type { AggregateIdentifier } from "../../types/aggregate-identifier.js";
 
 @Topic((msg: any) => `${msg.aggregate.namespace}.${msg.aggregate.name}.${msg.name}`)
 @Message({ name: "event" })

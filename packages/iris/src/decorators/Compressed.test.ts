@@ -1,4 +1,4 @@
-import { Compressed } from "./Compressed";
+import { Compressed } from "./Compressed.js";
 import { describe, expect, it } from "vitest";
 
 describe("Compressed", () => {

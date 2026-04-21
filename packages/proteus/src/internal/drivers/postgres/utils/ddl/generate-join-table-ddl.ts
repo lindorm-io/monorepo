@@ -1,14 +1,14 @@
 import { isString } from "@lindorm/is";
-import { ProteusError } from "../../../../../errors";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import { getEntityName } from "../../../../entity/utils/get-entity-name";
-import { getJoinName } from "../../../../entity/utils/get-join-name";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { hashIdentifier } from "../hash-identifier";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { resolveFkColumnType } from "../resolve-fk-column-type";
+import { ProteusError } from "../../../../../errors/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { getJoinName } from "../../../../entity/utils/get-join-name.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { hashIdentifier } from "../hash-identifier.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { resolveFkColumnType } from "../resolve-fk-column-type.js";
 
 export type JoinTableDDLOutput = {
   tables: Array<string>;

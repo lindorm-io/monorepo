@@ -1,7 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
-import { generateEntitySource, PROTEUS_ENTITY_NAME_PATTERN } from "./generate-entity";
+import { generateEntitySource, PROTEUS_ENTITY_NAME_PATTERN } from "./generate-entity.js";
 
 export type WriteEntityOptions = {
   name: string;

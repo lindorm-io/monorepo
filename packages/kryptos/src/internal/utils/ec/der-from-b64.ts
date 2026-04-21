@@ -1,7 +1,7 @@
-import { KryptosError } from "../../../errors";
-import { EcBuffer, KryptosFromString } from "../../../types";
-import { createEcDerFromDer } from "./der-from-der";
-import { isEcCurve } from "./is-ec-curve";
+import { KryptosError } from "../../../errors/index.js";
+import type { EcBuffer, KryptosFromString } from "../../../types/index.js";
+import { createEcDerFromDer } from "./der-from-der.js";
+import { isEcCurve } from "./is-ec-curve.js";
 
 type Options = Omit<KryptosFromString, "id" | "algorithm" | "type" | "use">;
 

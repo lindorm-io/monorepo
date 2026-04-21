@@ -1,5 +1,5 @@
-import { IRIS_ALL_DRIVERS } from "../../../utils/generate-source";
-import { writeSource } from "../../../utils/write-source";
+import { IRIS_ALL_DRIVERS } from "../../../utils/generate-source.js";
+import { writeSource } from "../../../utils/write-source.js";
 
 type InitOptions = {
   driver?: string;

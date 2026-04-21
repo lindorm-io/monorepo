@@ -1,6 +1,6 @@
 import type { IProteusRepository } from "@lindorm/proteus";
-import type { AggregateIdentifier } from "../../types";
-import type { EventRecord } from "../entities";
+import type { AggregateIdentifier } from "../../types/index.js";
+import type { EventRecord } from "../entities/index.js";
 
 export const findEvents = async (
   repo: IProteusRepository<EventRecord>,

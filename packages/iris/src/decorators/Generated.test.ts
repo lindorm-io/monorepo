@@ -1,4 +1,4 @@
-import { Generated } from "./Generated";
+import { Generated } from "./Generated.js";
 import { describe, expect, it } from "vitest";
 
 describe("Generated", () => {

@@ -1,6 +1,6 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
-import { createHttpRoomContext, createRoomContext } from "./create-room-context";
+import { createHttpRoomContext, createRoomContext } from "./create-room-context.js";
 import { describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createRoomContext", () => {

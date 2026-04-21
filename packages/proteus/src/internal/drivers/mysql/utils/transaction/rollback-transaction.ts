@@ -1,6 +1,6 @@
-import { MySqlTransactionError } from "../../errors/MySqlTransactionError";
-import type { MysqlTransactionHandle } from "../../types/mysql-transaction-handle";
-import { assertActiveTransaction } from "./assert-active-transaction";
+import { MySqlTransactionError } from "../../errors/MySqlTransactionError.js";
+import type { MysqlTransactionHandle } from "../../types/mysql-transaction-handle.js";
+import { assertActiveTransaction } from "./assert-active-transaction.js";
 
 export const rollbackTransaction = async (
   handle: MysqlTransactionHandle,

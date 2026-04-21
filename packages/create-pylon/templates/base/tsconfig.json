@@ -6,8 +6,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "strict": true,
-    "experimentalDecorators": false,
-    "emitDecoratorMetadata": false,
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true,
     "rootDir": "./src",

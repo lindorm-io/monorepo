@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
-import type { MetaField } from "../types/metadata";
-import type { MessageMetadata } from "../types/metadata";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
+import type { MetaField } from "../types/metadata.js";
+import type { MessageMetadata } from "../types/metadata.js";
 
 const fieldWithMinMax = ["array", "bigint", "integer", "float", "string"];
 

@@ -1,4 +1,4 @@
-import { RetryCallback } from "../../types";
+import type { RetryCallback } from "../../types/index.js";
 
 export const defaultRetryCallback: RetryCallback = (err, attempt, options) => {
   if (!options.maxAttempts) return false;

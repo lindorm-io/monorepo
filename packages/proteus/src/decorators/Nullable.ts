@@ -1,4 +1,4 @@
-import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Mark a field as nullable, allowing `null` values in the database.

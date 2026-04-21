@@ -1,5 +1,5 @@
-import { PylonRouter } from "../../classes";
-import { PylonHttpCallback, PylonHttpContext } from "../../types";
+import { PylonRouter } from "../../classes/index.js";
+import type { PylonHttpCallback, PylonHttpContext } from "../../types/index.js";
 
 export const createHealthRouter = <C extends PylonHttpContext>(
   callback?: PylonHttpCallback<C>,

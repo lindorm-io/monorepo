@@ -1,5 +1,5 @@
-import { EntityManagerError } from "../errors/EntityManagerError";
-import type { NamespaceOptions, ScopedName } from "../../types/types";
+import { EntityManagerError } from "../errors/EntityManagerError.js";
+import type { NamespaceOptions, ScopedName } from "../../types/types.js";
 
 export const getJoinName = (joinTable: string, options: NamespaceOptions): ScopedName => {
   const ns = options.namespace;

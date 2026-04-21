@@ -1,5 +1,5 @@
-import { DurationDict, ReadableTime } from "../types";
-import { millisecondsToDuration, readableToDuration } from "../internal/utils";
+import type { DurationDict, ReadableTime } from "../types/index.js";
+import { millisecondsToDuration, readableToDuration } from "../internal/utils/index.js";
 
 /**
  * Convert between a `ReadableTime` string and a `DurationDict`. String input

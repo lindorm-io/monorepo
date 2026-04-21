@@ -1,5 +1,5 @@
-import type { RedisClient } from "../types/redis-types";
-import { xaddToStream } from "./xadd-to-stream";
+import type { RedisClient } from "../types/redis-types.js";
+import { xaddToStream } from "./xadd-to-stream.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockConnection = (): RedisClient => ({

@@ -1,6 +1,6 @@
-import { parseNatsMessage } from "./parse-nats-message";
-import { serializeNatsMessage } from "./serialize-nats-message";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
+import { parseNatsMessage } from "./parse-nats-message.js";
+import { serializeNatsMessage } from "./serialize-nats-message.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import { describe, expect, it } from "vitest";
 
 const mockHeadersInit = () => {

@@ -1,10 +1,10 @@
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
-import { AesContentType } from "../../types/content";
-import { PublicEncryptionJwk } from "../../types/types";
-import {
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import type { AesContentType } from "../../types/content.js";
+import type { PublicEncryptionJwk } from "../../types/types.js";
+import type {
   AesEncryptionOptions,
   SerialisedAesDecryption,
-} from "../../types/aes-decryption-data";
+} from "../../types/aes-decryption-data.js";
 
 export type PrivateAesEncryptionOptions = AesEncryptionOptions & { kryptos: IKryptos };
 

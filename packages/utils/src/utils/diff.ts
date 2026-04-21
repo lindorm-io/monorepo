@@ -1,5 +1,5 @@
 import { isArray, isEqual, isObject } from "@lindorm/is";
-import { DeepPartial, Dict } from "@lindorm/types";
+import type { DeepPartial, Dict } from "@lindorm/types";
 
 export const diffArray = <T extends Array<any> = Array<any>>(
   source: Array<any>,

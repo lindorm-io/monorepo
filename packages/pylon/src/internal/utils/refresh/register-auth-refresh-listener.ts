@@ -1,5 +1,5 @@
-import { ILogger } from "@lindorm/logger";
-import { PylonSocket } from "../../../types";
+import type { ILogger } from "@lindorm/logger";
+import type { PylonSocket } from "../../../types/index.js";
 
 export const PYLON_AUTH_REFRESH_EVENT = "$pylon/auth/refresh";
 

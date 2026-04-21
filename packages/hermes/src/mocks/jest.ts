@@ -1,7 +1,7 @@
-import type { IHermes } from "../interfaces/IHermes";
-import type { IHermesSession } from "../interfaces/IHermesSession";
-import { _createMockHermes } from "./create-mock-hermes";
-import { _createMockHermesSession } from "./create-mock-hermes-session";
+import type { IHermes } from "../interfaces/IHermes.js";
+import type { IHermesSession } from "../interfaces/IHermesSession.js";
+import { _createMockHermes } from "./create-mock-hermes.js";
+import { _createMockHermesSession } from "./create-mock-hermes-session.js";
 
 type MockHermes = jest.Mocked<IHermes>;
 type MockHermesSession = jest.Mocked<IHermesSession>;

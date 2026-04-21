@@ -1,4 +1,4 @@
-export { runPrompts, resolveExistingCollision } from "./prompts";
+export { runPrompts, resolveExistingCollision } from "./prompts.js";
 export {
   buildDependencyList,
   buildDevDependencyList,
@@ -12,15 +12,15 @@ export {
   writePackageJson,
   writePylonFile,
   writeWorkerFiles,
-} from "./scaffold";
-export { installDependencies, installDevDependencies } from "./install";
-export { initGit } from "./git";
+} from "./scaffold.js";
+export { installDependencies, installDevDependencies } from "./install.js";
+export { initGit } from "./git.js";
 export {
   runIrisGenerateSampleMessage,
   runIrisInit,
   runProteusGenerateSampleEntity,
   runProteusInit,
-} from "./drivers";
+} from "./drivers.js";
 export type {
   Answers,
   Features,
@@ -28,7 +28,7 @@ export type {
   ProteusDriver,
   WorkerKey,
   EnvEntry,
-} from "./types";
+} from "./types.js";
 export {
   BASE_DEV_DEPENDENCIES,
   BASE_RUNTIME_DEPENDENCIES,
@@ -39,4 +39,4 @@ export {
   PROTEUS_DRIVER_DEV_PACKAGES,
   PROTEUS_DRIVER_PACKAGES,
   PROTEUS_ENV_VARS,
-} from "./types";
+} from "./types.js";

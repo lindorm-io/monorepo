@@ -1,5 +1,5 @@
-import { createAccessTokenMiddleware } from "../../../../middleware/common/create-access-token-middleware";
-import { SOCKET_AUTH_TEST_ISSUER } from "../../shared";
+import { createAccessTokenMiddleware } from "../../../../middleware/common/create-access-token-middleware.js";
+import { SOCKET_AUTH_TEST_ISSUER } from "../../shared.js";
 
 export const secureBranchMiddleware = async (ctx: any, next: any) => {
   ctx.state = ctx.state || {};

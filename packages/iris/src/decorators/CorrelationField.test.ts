@@ -1,4 +1,4 @@
-import { CorrelationField } from "./CorrelationField";
+import { CorrelationField } from "./CorrelationField.js";
 import { describe, expect, it } from "vitest";
 
 describe("CorrelationField", () => {

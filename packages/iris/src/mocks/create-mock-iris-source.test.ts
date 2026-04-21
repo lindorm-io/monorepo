@@ -1,4 +1,4 @@
-import { createMockIrisSource } from "./vitest";
+import { createMockIrisSource } from "./vitest.js";
 import { describe, expect, it, vi } from "vitest";
 
 describe("createMockIrisSource", () => {

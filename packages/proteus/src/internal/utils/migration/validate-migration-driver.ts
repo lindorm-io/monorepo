@@ -1,5 +1,5 @@
-import type { MigrationInterfaceShape } from "./resolve-pending";
-import { ProteusError } from "../../../errors/ProteusError";
+import type { MigrationInterfaceShape } from "./resolve-pending.js";
+import { ProteusError } from "../../../errors/ProteusError.js";
 
 /**
  * Validates that a migration's `driver` field (if set) matches the current

@@ -1,7 +1,7 @@
-import type { DbEnum } from "../../types/db-snapshot";
-import type { DesiredEnum } from "../../types/desired-schema";
-import type { SyncOperation } from "../../types/sync-plan";
-import { quoteQualifiedName } from "../quote-identifier";
+import type { DbEnum } from "../../types/db-snapshot.js";
+import type { DesiredEnum } from "../../types/desired-schema.js";
+import type { SyncOperation } from "../../types/sync-plan.js";
+import { quoteQualifiedName } from "../quote-identifier.js";
 
 /**
  * Diffs existing DB enum types against desired types. Produces `create_enum` ops for new

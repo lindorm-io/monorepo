@@ -1,6 +1,10 @@
-import { IAmphora } from "@lindorm/amphora";
-import { ILogger } from "@lindorm/logger";
-import { ILindormWorker, LindormWorker, LindormWorkerScanner } from "@lindorm/worker";
+import type { IAmphora } from "@lindorm/amphora";
+import type { ILogger } from "@lindorm/logger";
+import {
+  type ILindormWorker,
+  LindormWorker,
+  LindormWorkerScanner,
+} from "@lindorm/worker";
 
 type Options = {
   amphora: IAmphora;

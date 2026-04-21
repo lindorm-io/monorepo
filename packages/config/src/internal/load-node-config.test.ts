@@ -1,4 +1,4 @@
-import { loadNodeConfig } from "./load-node-config";
+import { loadNodeConfig } from "./load-node-config.js";
 import { describe, expect, test } from "vitest";
 
 describe("loadNodeConfig", () => {

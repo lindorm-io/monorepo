@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../types/metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../types/metadata.js";
 
 /**
  * For table inheritance (single-table or joined), resolves the root entity's constructor.

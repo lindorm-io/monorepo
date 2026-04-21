@@ -1,4 +1,4 @@
-import { formatApplyResult, formatRollbackResult } from "./format-migration-result";
+import { formatApplyResult, formatRollbackResult } from "./format-migration-result.js";
 import { describe, expect, it } from "vitest";
 
 describe("formatApplyResult", () => {

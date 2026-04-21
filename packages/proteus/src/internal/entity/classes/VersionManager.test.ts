@@ -1,9 +1,9 @@
-import { VersionManager } from "./VersionManager";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { VersionField } from "../../../decorators/VersionField";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import { VersionManager } from "./VersionManager.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { VersionField } from "../../../decorators/VersionField.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VersionManagerVersioned" })

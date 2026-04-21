@@ -1,10 +1,10 @@
 import { randomUUID } from "crypto";
-import {
+import type {
   IoServer,
   PylonSocket,
   PylonSocketData,
   PylonSocketHandshakeContextBase,
-} from "../../../types";
+} from "../../../types/index.js";
 
 export const composePylonHandshakeContext = <D extends PylonSocketData = PylonSocketData>(
   io: IoServer,

@@ -1,4 +1,4 @@
-import { causationExists, insertCausation, findCausations } from "./causation-store";
+import { causationExists, insertCausation, findCausations } from "./causation-store.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockRepo = () => ({

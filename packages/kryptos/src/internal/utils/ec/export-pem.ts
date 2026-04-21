@@ -1,8 +1,8 @@
 import { isString } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
-import { KryptosError } from "../../../errors";
-import { EcString, KryptosBuffer } from "../../../types";
-import { isEcCurve } from "./is-ec-curve";
+import { KryptosError } from "../../../errors/index.js";
+import type { EcString, KryptosBuffer } from "../../../types/index.js";
+import { isEcCurve } from "./is-ec-curve.js";
 
 type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use">;
 

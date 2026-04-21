@@ -1,1 +1,1 @@
-export { DeadlockError } from "../../errors/DeadlockError";
+export { DeadlockError } from "../../errors/DeadlockError.js";

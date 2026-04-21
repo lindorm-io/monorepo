@@ -1,6 +1,6 @@
 import { ServerError } from "@lindorm/errors";
-import { IIrisSession, IIrisSource } from "@lindorm/iris";
-import { PylonCommonContext } from "../../types";
+import type { IIrisSession, IIrisSource } from "@lindorm/iris";
+import type { PylonCommonContext } from "../../types/index.js";
 
 export const resolveIris = (
   ctx: PylonCommonContext,

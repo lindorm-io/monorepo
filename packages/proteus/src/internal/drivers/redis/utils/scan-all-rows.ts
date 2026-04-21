@@ -1,10 +1,10 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
 import type { Redis } from "ioredis";
-import type { MetaField, MetaRelation } from "../../../entity/types/metadata";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { deserializeHash } from "./deserialize-hash";
-import { scanEntityKeys } from "./scan-entity-keys";
+import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { deserializeHash } from "./deserialize-hash.js";
+import { scanEntityKeys } from "./scan-entity-keys.js";
 
 /**
  * SCAN all keys matching a pattern, HGETALL each, and deserialize to rows.

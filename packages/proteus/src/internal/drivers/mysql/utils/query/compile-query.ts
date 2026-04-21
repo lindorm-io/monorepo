@@ -1,23 +1,23 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { QueryState } from "../../../../types/query";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { QueryState } from "../../../../types/query.js";
 import {
   type CompileQueryResult,
   compileCount as sharedCompileCount,
   compileQuery as sharedCompileQuery,
-} from "../../../../utils/sql/compile-query";
-import type { AliasMap } from "../../../../utils/sql/types";
-import { mysqlDialect } from "../mysql-dialect";
-import { compileCtes } from "./compile-cte";
-import { compileGroupBy } from "./compile-group-by";
-import { compileHaving } from "./compile-having";
-import { compileInheritanceJoin } from "./compile-inheritance-join";
-import { compileJoin } from "./compile-join";
-import { compileLimitOffset } from "./compile-limit-offset";
-import { compileOrderBy } from "./compile-order-by";
-import { buildAliasMap, compileFrom, compileSelect } from "./compile-select";
-import { compileSetOperations } from "./compile-set-operation";
-import { compileWhereWithFilters } from "./compile-system-filters";
+} from "../../../../utils/sql/compile-query.js";
+import type { AliasMap } from "../../../../utils/sql/types.js";
+import { mysqlDialect } from "../mysql-dialect.js";
+import { compileCtes } from "./compile-cte.js";
+import { compileGroupBy } from "./compile-group-by.js";
+import { compileHaving } from "./compile-having.js";
+import { compileInheritanceJoin } from "./compile-inheritance-join.js";
+import { compileJoin } from "./compile-join.js";
+import { compileLimitOffset } from "./compile-limit-offset.js";
+import { compileOrderBy } from "./compile-order-by.js";
+import { buildAliasMap, compileFrom, compileSelect } from "./compile-select.js";
+import { compileSetOperations } from "./compile-set-operation.js";
+import { compileWhereWithFilters } from "./compile-system-filters.js";
 
 export type CompiledQuery = CompileQueryResult;
 export type { AliasMap };

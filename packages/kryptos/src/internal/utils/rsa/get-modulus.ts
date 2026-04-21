@@ -1,5 +1,5 @@
-import { KryptosError } from "../../../errors";
-import { KryptosAlgorithm, RsaModulus } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosAlgorithm, RsaModulus } from "../../../types/index.js";
 
 type Options = {
   algorithm: KryptosAlgorithm;

@@ -1,12 +1,12 @@
 import { composeMiddleware } from "@lindorm/middleware";
-import { PylonListener } from "../../classes";
-import { EventSegment } from "../classes/EventMatcher";
-import { composePylonSocketContextBase } from "./compose-pylon-socket-context";
-import { loadPylonListeners } from "./load-pylon-listener";
+import { PylonListener } from "../../classes/index.js";
+import type { EventSegment } from "../classes/EventMatcher.js";
+import { composePylonSocketContextBase } from "./compose-pylon-socket-context.js";
+import { loadPylonListeners } from "./load-pylon-listener.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 vi.mock("@lindorm/middleware");
-vi.mock("./compose-pylon-socket-context", async () => ({
+vi.mock("./compose-pylon-socket-context.js", async () => ({
   composePylonSocketContextBase: vi.fn().mockReturnValue({ mocked: true, params: {} }),
 }));
 

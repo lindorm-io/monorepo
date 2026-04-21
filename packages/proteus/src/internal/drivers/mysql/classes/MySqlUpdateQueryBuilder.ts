@@ -1,15 +1,19 @@
 import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
-import type { IEntity, IUpdateQueryBuilder, WriteResult } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { PredicateEntry } from "../../../types/query";
-import { ProteusError } from "../../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import type { MysqlQueryClient } from "../types/mysql-query-client";
-import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier";
-import { coerceWriteValue } from "../utils/query/coerce-value";
-import { buildDiscriminatorPredicateUnqualified } from "../utils/query/compile-helpers";
-import { compileWhere } from "../utils/query/compile-where";
-import { resolveTableName } from "../utils/query/resolve-table-name";
+import type {
+  IEntity,
+  IUpdateQueryBuilder,
+  WriteResult,
+} from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../../types/query.js";
+import { ProteusError } from "../../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import type { MysqlQueryClient } from "../types/mysql-query-client.js";
+import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
+import { coerceWriteValue } from "../utils/query/coerce-value.js";
+import { buildDiscriminatorPredicateUnqualified } from "../utils/query/compile-helpers.js";
+import { compileWhere } from "../utils/query/compile-where.js";
+import { resolveTableName } from "../utils/query/resolve-table-name.js";
 
 /**
  * MySQL UPDATE query builder.

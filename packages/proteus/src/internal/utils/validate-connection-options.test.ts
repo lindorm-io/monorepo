@@ -1,4 +1,4 @@
-import { validateConnectionMutualExclusivity } from "./validate-connection-options";
+import { validateConnectionMutualExclusivity } from "./validate-connection-options.js";
 import { describe, expect, it } from "vitest";
 
 describe("validateConnectionMutualExclusivity", () => {

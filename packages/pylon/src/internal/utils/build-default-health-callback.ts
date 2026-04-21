@@ -1,7 +1,7 @@
 import { ServerError } from "@lindorm/errors";
-import { IIrisSource } from "@lindorm/iris";
-import { IProteusSource } from "@lindorm/proteus";
-import { PylonHttpCallback, PylonHttpContext } from "../../types";
+import type { IIrisSource } from "@lindorm/iris";
+import type { IProteusSource } from "@lindorm/proteus";
+import type { PylonHttpCallback, PylonHttpContext } from "../../types/index.js";
 
 type BuildDefaultHealthCallbackOptions = {
   iris?: IIrisSource;

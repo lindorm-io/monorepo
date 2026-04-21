@@ -1,5 +1,5 @@
-import type { MetaFieldDefault } from "../internal/message/types/types";
-import { stageFieldModifier } from "../internal/message/metadata/stage-metadata";
+import type { MetaFieldDefault } from "../internal/message/types/types.js";
+import { stageFieldModifier } from "../internal/message/metadata/stage-metadata.js";
 
 export const Default =
   (value: MetaFieldDefault) =>

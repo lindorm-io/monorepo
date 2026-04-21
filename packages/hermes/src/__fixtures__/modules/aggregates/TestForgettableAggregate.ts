@@ -6,10 +6,10 @@ import {
   Forgettable,
   Namespace,
   RequireNotCreated,
-} from "../../../decorators";
-import type { AggregateCommandCtx, AggregateEventCtx } from "../../../types";
-import { TestCommandCreate } from "../commands/TestCommandCreate";
-import { TestEventCreate } from "../events/TestEventCreate";
+} from "../../../decorators/index.js";
+import type { AggregateCommandCtx, AggregateEventCtx } from "../../../types/index.js";
+import { TestCommandCreate } from "../commands/TestCommandCreate.js";
+import { TestEventCreate } from "../events/TestEventCreate.js";
 
 export type TestForgettableAggregateState = Dict;
 

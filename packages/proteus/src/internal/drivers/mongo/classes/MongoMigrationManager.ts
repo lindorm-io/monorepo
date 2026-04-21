@@ -1,27 +1,27 @@
 import type { Db, MongoClient } from "mongodb";
 import type { ILogger } from "@lindorm/logger";
-import type { EntityMetadata } from "../../../entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type {
   GenerateBaselineResult,
   GenerateMigrationResult,
   IMigrationManager,
   MigrationStatusResult,
-} from "../../../interfaces/MigrationManager";
-import type { MigrationApplyResult, MigrationRecord } from "../../../types/migration";
-import type { NamespaceOptions } from "../../../types/types";
-import { computeHash } from "../../../utils/migration/compute-hash";
-import { loadMigrations } from "../../../utils/migration/load-migrations";
-import { resolvePending } from "../../../utils/migration/resolve-pending";
-import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver";
-import { MongoMigrationError } from "../errors/MongoMigrationError";
-import { detectReplicaSet } from "../utils/detect-replica-set";
-import { acquireLock, releaseLock } from "../utils/migration/advisory-lock";
+} from "../../../interfaces/MigrationManager.js";
+import type { MigrationApplyResult, MigrationRecord } from "../../../types/migration.js";
+import type { NamespaceOptions } from "../../../types/types.js";
+import { computeHash } from "../../../utils/migration/compute-hash.js";
+import { loadMigrations } from "../../../utils/migration/load-migrations.js";
+import { resolvePending } from "../../../utils/migration/resolve-pending.js";
+import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver.js";
+import { MongoMigrationError } from "../errors/MongoMigrationError.js";
+import { detectReplicaSet } from "../utils/detect-replica-set.js";
+import { acquireLock, releaseLock } from "../utils/migration/advisory-lock.js";
 import {
   executeMigrationDown,
   executeMigrationUp,
-} from "../utils/migration/execute-migration";
-import { generateMongoBaseline } from "../utils/migration/generate-baseline";
-import { generateMongoMigration } from "../utils/migration/generate-migration";
+} from "../utils/migration/execute-migration.js";
+import { generateMongoBaseline } from "../utils/migration/generate-baseline.js";
+import { generateMongoMigration } from "../utils/migration/generate-migration.js";
 import {
   ensureMigrationCollection,
   getAllMigrationRecords,
@@ -30,7 +30,7 @@ import {
   insertMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "../utils/migration/migration-tracking";
+} from "../utils/migration/migration-tracking.js";
 
 export type MongoMigrationManagerOptions = {
   client: MongoClient;

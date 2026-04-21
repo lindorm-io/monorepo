@@ -1,4 +1,4 @@
-import { reindexParams } from "./reindex-params";
+import { reindexParams } from "./reindex-params.js";
 import { describe, expect, test } from "vitest";
 
 describe("reindexParams", () => {

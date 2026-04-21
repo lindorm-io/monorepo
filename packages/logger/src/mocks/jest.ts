@@ -1,6 +1,6 @@
 import type { Function } from "@lindorm/types";
-import type { ILogger } from "../interfaces";
-import { _createMockLogger } from "./create-mock-logger";
+import type { ILogger } from "../interfaces/index.js";
+import { _createMockLogger } from "./create-mock-logger.js";
 
 type MockLogger = jest.Mocked<ILogger>;
 

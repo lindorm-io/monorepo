@@ -1,9 +1,9 @@
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
 import type {
   SqliteSnapshotColumn,
   SqliteSnapshotForeignKey,
   SqliteSnapshotTable,
-} from "../../types/db-snapshot";
+} from "../../types/db-snapshot.js";
 
 /**
  * Introspects a single SQLite table using PRAGMA queries.

@@ -1,5 +1,5 @@
-import { ReadableTime } from "@lindorm/date";
-import { HttpMethod } from "@lindorm/types";
+import type { ReadableTime } from "@lindorm/date";
+import type { HttpMethod } from "@lindorm/types";
 
 export type EmbedderPolicy = "credentialless" | "require-corp" | "unsafe-none";
 

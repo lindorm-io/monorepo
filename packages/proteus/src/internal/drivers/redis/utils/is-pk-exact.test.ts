@@ -1,4 +1,4 @@
-import { extractExactPk } from "./is-pk-exact";
+import { extractExactPk } from "./is-pk-exact.js";
 import { describe, expect, test } from "vitest";
 
 describe("extractExactPk", () => {

@@ -1,12 +1,12 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { B64 } from "@lindorm/b64";
-import { PylonCookieConfig } from "../../../types";
-import { createGetCookie } from "./create-get-cookie";
-import { verifyCookie as _verifyCookie } from "./verify-cookie";
+import type { PylonCookieConfig } from "../../../types/index.js";
+import { createGetCookie } from "./create-get-cookie.js";
+import { verifyCookie as _verifyCookie } from "./verify-cookie.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("./verify-cookie");
+vi.mock("./verify-cookie.js");
 
 const verifyCookie = _verifyCookie as Mock;
 

@@ -1,5 +1,5 @@
 import { randomUUID } from "@lindorm/random";
-import { stageField } from "../internal/message/metadata/stage-metadata";
+import { stageField } from "../internal/message/metadata/stage-metadata.js";
 
 export const IdentifierField =
   () =>

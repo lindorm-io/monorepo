@@ -1,17 +1,17 @@
 import type { Constructor } from "@lindorm/types";
-import { Default } from "../../decorators/Default";
-import { Field } from "../../decorators/Field";
-import { IdentifierField } from "../../decorators/IdentifierField";
-import { Message } from "../../decorators/Message";
-import { BeforePublish } from "../../decorators/BeforePublish";
-import { AfterPublish } from "../../decorators/AfterPublish";
-import type { IMessage, IMessageSubscriber } from "../../interfaces";
-import type { PublishOptions } from "../../types";
-import { clearRegistry } from "../message/metadata/registry";
+import { Default } from "../../decorators/Default.js";
+import { Field } from "../../decorators/Field.js";
+import { IdentifierField } from "../../decorators/IdentifierField.js";
+import { Message } from "../../decorators/Message.js";
+import { BeforePublish } from "../../decorators/BeforePublish.js";
+import { AfterPublish } from "../../decorators/AfterPublish.js";
+import type { IMessage, IMessageSubscriber } from "../../interfaces/index.js";
+import type { PublishOptions } from "../../types/index.js";
+import { clearRegistry } from "../message/metadata/registry.js";
 import {
   DriverPublisherBase,
   type DriverPublisherBaseOptions,
-} from "./DriverPublisherBase";
+} from "./DriverPublisherBase.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---

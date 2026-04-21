@@ -1,12 +1,12 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { defaultCreateEntity } from "../internal/entity/utils/default-create-entity";
-import { defaultCloneEntity } from "../internal/entity/utils/default-clone-entity";
-import { Embeddable } from "./Embeddable";
-import { EmbeddedList } from "./EmbeddedList";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { Nullable } from "./Nullable";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { defaultCreateEntity } from "../internal/entity/utils/default-create-entity.js";
+import { defaultCloneEntity } from "../internal/entity/utils/default-clone-entity.js";
+import { Embeddable } from "./Embeddable.js";
+import { EmbeddedList } from "./EmbeddedList.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { Nullable } from "./Nullable.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 // ─── Test Fixtures ──────────────────────────────────────────────────────────

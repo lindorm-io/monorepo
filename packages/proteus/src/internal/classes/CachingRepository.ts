@@ -1,12 +1,12 @@
 import type { ILogger } from "@lindorm/logger";
 import type { DeepPartial, Predicate } from "@lindorm/types";
-import type { ICacheAdapter } from "../../interfaces/CacheAdapter";
+import type { ICacheAdapter } from "../../interfaces/CacheAdapter.js";
 import type {
   IEntity,
   IProteusCursor,
   IProteusQueryBuilder,
   IProteusRepository,
-} from "../../interfaces";
+} from "../../interfaces/index.js";
 import type {
   ClearOptions,
   CursorOptions,
@@ -17,14 +17,14 @@ import type {
   PaginateOptions,
   PaginateResult,
   UpsertOptions,
-} from "../../types";
-import type { EntityMetadata, QueryScope } from "../entity/types/metadata";
-import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError";
-import { buildCacheKey, buildCachePrefix } from "../utils/cache/build-cache-key";
-import { resolveCacheTtl } from "../utils/cache/resolve-cache-ttl";
-import { defaultHydrateEntity } from "../entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "../entity/utils/resolve-polymorphic-metadata";
-import { runHooksAsync } from "../entity/utils/run-hooks-async";
+} from "../../types/index.js";
+import type { EntityMetadata, QueryScope } from "../entity/types/metadata.js";
+import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError.js";
+import { buildCacheKey, buildCachePrefix } from "../utils/cache/build-cache-key.js";
+import { resolveCacheTtl } from "../utils/cache/resolve-cache-ttl.js";
+import { defaultHydrateEntity } from "../entity/utils/default-hydrate-entity.js";
+import { resolvePolymorphicMetadata } from "../entity/utils/resolve-polymorphic-metadata.js";
+import { runHooksAsync } from "../entity/utils/run-hooks-async.js";
 
 // ─── JSON replacer / reviver ─────────────────────────────────────────────
 

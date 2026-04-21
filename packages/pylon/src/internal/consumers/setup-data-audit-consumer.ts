@@ -1,8 +1,8 @@
-import { IIrisSource } from "@lindorm/iris";
-import { ILogger } from "@lindorm/logger";
-import { IProteusSource } from "@lindorm/proteus";
-import { DataAuditLog } from "../../entities";
-import { DataAuditChange } from "../../messages";
+import type { IIrisSource } from "@lindorm/iris";
+import type { ILogger } from "@lindorm/logger";
+import type { IProteusSource } from "@lindorm/proteus";
+import { DataAuditLog } from "../../entities/index.js";
+import { DataAuditChange } from "../../messages/index.js";
 
 export const DATA_AUDIT_QUEUE = "pylon.audit.data.persist";
 

@@ -15,6 +15,7 @@ export default defineConfig(
       "**/__fixtures__/**",
       "**/__mocks__/**",
       "**/__snapshots__/**",
+      "packages/create-pylon/templates/**",
       "**/*.d.ts",
       "**/*.fixture.*",
       "**/*.integration.*",

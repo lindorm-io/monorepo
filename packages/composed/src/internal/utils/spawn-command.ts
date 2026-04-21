@@ -1,5 +1,5 @@
 import { spawn } from "child_process";
-import { forwardSignals } from "./forward-signals";
+import { forwardSignals } from "./forward-signals.js";
 
 const SIGNAL_CODES: Record<string, number> = {
   SIGHUP: 1,

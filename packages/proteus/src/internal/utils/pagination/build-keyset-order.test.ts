@@ -1,5 +1,5 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { buildKeysetOrder, keysetOrderToRecord } from "./build-keyset-order";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { buildKeysetOrder, keysetOrderToRecord } from "./build-keyset-order.js";
 import { describe, expect, it } from "vitest";
 
 const makeMetadata = (primaryKeys: Array<string>): EntityMetadata =>

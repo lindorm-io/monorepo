@@ -1,4 +1,4 @@
-import type { IrisEnvelope } from "../../../types/iris-envelope";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 
 export const parseNatsMessage = (data: Uint8Array): IrisEnvelope => {
   const json = JSON.parse(new TextDecoder().decode(data));

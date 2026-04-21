@@ -1,6 +1,6 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { socketErrorHandlerMiddleware } from "./socket-error-handler-middleware";
+import { socketErrorHandlerMiddleware } from "./socket-error-handler-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("socketErrorHandlerMiddleware", () => {

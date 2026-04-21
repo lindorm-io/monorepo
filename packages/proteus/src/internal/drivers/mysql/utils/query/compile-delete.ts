@@ -1,14 +1,14 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import type { CompiledSql } from "./compiled-sql";
-import { compileWhere } from "./compile-where";
-import { buildDiscriminatorPredicate, resolveTableName } from "./resolve-table-name";
-import { buildJoinedChildContext } from "./joined-child-context";
-import { buildDiscriminatorPredicateUnqualified } from "./compile-helpers";
-import { mysqlDialect } from "../mysql-dialect";
-import { compileJoinedChildDelete as sharedCompileJoinedChildDelete } from "../../../../utils/sql/compile-joined-child-delete";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import type { CompiledSql } from "./compiled-sql.js";
+import { compileWhere } from "./compile-where.js";
+import { buildDiscriminatorPredicate, resolveTableName } from "./resolve-table-name.js";
+import { buildJoinedChildContext } from "./joined-child-context.js";
+import { buildDiscriminatorPredicateUnqualified } from "./compile-helpers.js";
+import { mysqlDialect } from "../mysql-dialect.js";
+import { compileJoinedChildDelete as sharedCompileJoinedChildDelete } from "../../../../utils/sql/compile-joined-child-delete.js";
 
 /**
  * Compiles a hard `DELETE FROM` statement. Does not apply system filters -- the caller

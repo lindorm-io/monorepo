@@ -1,8 +1,8 @@
 import { isString } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
-import { KryptosError } from "../../../errors";
-import { KryptosBuffer, OkpString } from "../../../types";
-import { isOkpCurve } from "./is-okp-curve";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosBuffer, OkpString } from "../../../types/index.js";
+import { isOkpCurve } from "./is-okp-curve.js";
 
 type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use">;
 

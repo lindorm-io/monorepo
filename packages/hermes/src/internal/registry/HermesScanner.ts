@@ -5,13 +5,13 @@ import type {
   MetaUpcaster,
   MetaValidation,
   StagedMetadata,
-} from "../metadata";
-import { extractNameData, getHermesMetadata } from "../metadata";
+} from "../metadata/index.js";
+import { extractNameData, getHermesMetadata } from "../metadata/index.js";
 import { isString } from "@lindorm/is";
-import { IScanData, Scanner } from "@lindorm/scanner";
+import { type IScanData, Scanner } from "@lindorm/scanner";
 import type { Constructor } from "@lindorm/types";
 import type { z } from "zod";
-import { HermesViewEntity } from "../../entities/HermesViewEntity";
+import { HermesViewEntity } from "../../entities/HermesViewEntity.js";
 import type {
   HandlerConditions,
   HandlerRegistration,
@@ -22,7 +22,7 @@ import type {
   RegisteredUpcaster,
   RegisteredView,
   ScannedModules,
-} from "./types";
+} from "./types.js";
 
 const DEFAULT_NAMESPACE = "hermes";
 

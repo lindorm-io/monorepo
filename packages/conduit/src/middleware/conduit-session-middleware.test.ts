@@ -1,4 +1,4 @@
-import { conduitSessionMiddleware } from "./conduit-session-middleware";
+import { conduitSessionMiddleware } from "./conduit-session-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitSessionMiddleware", () => {

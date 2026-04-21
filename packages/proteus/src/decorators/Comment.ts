@@ -1,4 +1,4 @@
-import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Attach a DDL comment to a column (e.g. PostgreSQL `COMMENT ON COLUMN`).

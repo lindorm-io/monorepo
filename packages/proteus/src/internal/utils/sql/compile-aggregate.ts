@@ -1,10 +1,10 @@
-import { ProteusError } from "../../../errors";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { PredicateEntry, QueryState, RawWhereEntry } from "../../types/query";
-import { resolveColumnName } from "./resolve-column-name";
-import type { SqlDialect } from "./sql-dialect";
-import type { AliasMap, InheritanceAliasMap } from "./types";
+import { ProteusError } from "../../../errors/index.js";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { PredicateEntry, QueryState, RawWhereEntry } from "../../types/query.js";
+import { resolveColumnName } from "./resolve-column-name.js";
+import type { SqlDialect } from "./sql-dialect.js";
+import type { AliasMap, InheritanceAliasMap } from "./types.js";
 
 export type AggregateType = "SUM" | "AVG" | "MIN" | "MAX";
 

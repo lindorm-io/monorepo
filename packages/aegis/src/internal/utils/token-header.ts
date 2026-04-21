@@ -1,13 +1,13 @@
 import { isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
 import { removeUndefined } from "@lindorm/utils";
-import {
+import type {
   CertificateHeaderFields,
   DecodedTokenHeader,
   ParsedTokenHeader,
   RawTokenHeaderClaims,
   TokenHeaderOptions,
-} from "../../types";
-import { getBaseFormat } from "./compute-typ-header";
+} from "../../types/index.js";
+import { getBaseFormat } from "./compute-typ-header.js";
 
 export const mapTokenHeader = (
   options: TokenHeaderOptions,

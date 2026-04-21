@@ -1,4 +1,4 @@
-import { stageDiscriminator } from "../internal/entity/metadata/stage-metadata";
+import { stageDiscriminator } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Point to which property serves as the discriminator column for table inheritance.

@@ -1,4 +1,4 @@
-import { B64 } from "./B64";
+import { B64 } from "./B64.js";
 import { describe, expect, test } from "vitest";
 
 describe("B64", () => {

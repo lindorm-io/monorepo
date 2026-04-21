@@ -1,5 +1,5 @@
-import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
-import { previewOperations } from "./preview-operations";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan.js";
+import { previewOperations } from "./preview-operations.js";
 import { describe, expect, it } from "vitest";
 
 const makeOp = (overrides: Partial<SyncOperation> = {}): SyncOperation => ({

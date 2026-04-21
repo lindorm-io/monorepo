@@ -1,4 +1,4 @@
-import type { IrisEnvelope } from "./iris-envelope";
+import type { IrisEnvelope } from "./iris-envelope.js";
 
 export type ConsumeStrategies = {
   onExpired: () => Promise<void>;

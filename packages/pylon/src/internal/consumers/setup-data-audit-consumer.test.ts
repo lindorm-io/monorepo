@@ -1,4 +1,4 @@
-import { setupDataAuditConsumer, DATA_AUDIT_QUEUE } from "./setup-data-audit-consumer";
+import { setupDataAuditConsumer, DATA_AUDIT_QUEUE } from "./setup-data-audit-consumer.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("setupDataAuditConsumer", () => {

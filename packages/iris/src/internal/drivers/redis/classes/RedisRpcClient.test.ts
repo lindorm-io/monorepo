@@ -1,9 +1,9 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types";
-import { RedisRpcClient } from "./RedisRpcClient";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types.js";
+import { RedisRpcClient } from "./RedisRpcClient.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
@@ -11,17 +11,17 @@ let mockCreateConsumerLoopResult: Partial<RedisConsumerLoop>;
 const mockCreateConsumerLoop = vi
   .fn()
   .mockImplementation(async () => mockCreateConsumerLoopResult);
-vi.mock("../utils/create-consumer-loop", async () => ({
+vi.mock("../utils/create-consumer-loop.js", async () => ({
   createConsumerLoop: (...args: Array<unknown>) => mockCreateConsumerLoop(...args),
 }));
 
-vi.mock("../utils/serialize-stream-fields", () => ({
+vi.mock("../utils/serialize-stream-fields.js", () => ({
   serializeStreamFields: vi
     .fn()
     .mockReturnValue(["payload", "dGVzdA==", "topic", "test"]),
 }));
 
-vi.mock("../utils/parse-stream-entry", () => ({
+vi.mock("../utils/parse-stream-entry.js", () => ({
   parseStreamEntry: vi.fn(),
 }));
 

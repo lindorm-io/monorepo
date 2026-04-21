@@ -1,6 +1,6 @@
 import { isObjectLike } from "@lindorm/is";
-import type { MetaRelation } from "../types/metadata";
-import { isLazyRelation } from "./lazy-relation";
+import type { MetaRelation } from "../types/metadata.js";
+import { isLazyRelation } from "./lazy-relation.js";
 
 /**
  * Resolves a FK column value from an entity using a two-step fallback:

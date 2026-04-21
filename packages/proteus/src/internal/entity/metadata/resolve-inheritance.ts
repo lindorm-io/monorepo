@@ -1,11 +1,11 @@
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces/Entity";
+import type { IEntity } from "../../../interfaces/Entity.js";
 import type {
   DiscriminatorValue,
   MetaInheritance,
   InheritanceStrategy,
-} from "../types/inheritance";
-import { collectOwn } from "./collect";
+} from "../types/inheritance.js";
+import { collectOwn } from "./collect.js";
 import {
   validateDiscriminatorRequiresInheritance,
   validateDiscriminatorValueNotOnRoot,
@@ -14,7 +14,7 @@ import {
   validateJoinedDepth,
   validateSubtypeHasDiscriminatorValue,
   validateUniqueDiscriminatorValues,
-} from "./validate-inheritance";
+} from "./validate-inheritance.js";
 
 /**
  * Check whether `target`'s prototype chain includes `root`.

@@ -1,5 +1,5 @@
-import { UNIT_ANY_CASE } from "../types";
-import { isReadableTime } from "./is-readable-time";
+import { UNIT_ANY_CASE } from "../types/index.js";
+import { isReadableTime } from "./is-readable-time.js";
 import { describe, expect, test } from "vitest";
 
 describe("isReadableTime", () => {

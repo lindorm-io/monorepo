@@ -1,5 +1,5 @@
 import type { IProteusRepository } from "@lindorm/proteus";
-import type { EncryptionRecord } from "../entities";
+import type { EncryptionRecord } from "../entities/index.js";
 
 export const findEncryptionKey = async (
   repo: IProteusRepository<EncryptionRecord>,

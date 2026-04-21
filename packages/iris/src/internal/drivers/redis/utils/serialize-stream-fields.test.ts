@@ -1,5 +1,5 @@
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import { serializeStreamFields } from "./serialize-stream-fields";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import { serializeStreamFields } from "./serialize-stream-fields.js";
 import { describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({

@@ -1,6 +1,6 @@
 import { ClientError, ServerError } from "@lindorm/errors";
-import { RedirectError } from "../../errors";
-import { httpErrorHandlerMiddleware } from "./http-error-handler-middleware";
+import { RedirectError } from "../../errors/index.js";
+import { httpErrorHandlerMiddleware } from "./http-error-handler-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpErrorHandlerMiddleware", () => {

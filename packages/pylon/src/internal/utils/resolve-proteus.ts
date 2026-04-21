@@ -1,6 +1,6 @@
 import { ServerError } from "@lindorm/errors";
-import { IProteusSession, IProteusSource } from "@lindorm/proteus";
-import { PylonCommonContext } from "../../types";
+import type { IProteusSession, IProteusSource } from "@lindorm/proteus";
+import type { PylonCommonContext } from "../../types/index.js";
 
 export const resolveProteus = (
   ctx: PylonCommonContext,

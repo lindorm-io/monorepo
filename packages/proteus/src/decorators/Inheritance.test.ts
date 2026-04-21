@@ -1,4 +1,4 @@
-import { Inheritance } from "./Inheritance";
+import { Inheritance } from "./Inheritance.js";
 import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────

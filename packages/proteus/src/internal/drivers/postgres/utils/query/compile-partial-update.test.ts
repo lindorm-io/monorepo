@@ -1,6 +1,6 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { compilePartialUpdate } from "./compile-partial-update";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { compilePartialUpdate } from "./compile-partial-update.js";
 import { describe, expect, test } from "vitest";
 
 const metadata = {

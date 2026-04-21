@@ -1,14 +1,14 @@
 import {
-  EcEncAlgorithm,
-  IKryptos,
+  type EcEncAlgorithm,
+  type IKryptos,
   KryptosKit,
-  OkpEncAlgorithm,
-  OkpEncCurve,
+  type OkpEncAlgorithm,
+  type OkpEncCurve,
 } from "@lindorm/kryptos";
 import { createPrivateKey, createPublicKey, diffieHellman } from "crypto";
-import { AesError } from "../../../errors/AesError";
-import { PublicEncryptionJwk } from "../../../types/types";
-import { DecryptCekOptions } from "../../types/content-encryption-key";
+import { AesError } from "../../../errors/AesError.js";
+import type { PublicEncryptionJwk } from "../../../types/types.js";
+import type { DecryptCekOptions } from "../../types/content-encryption-key.js";
 
 type GenerateResult = {
   publicEncryptionJwk: PublicEncryptionJwk;

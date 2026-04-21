@@ -1,1 +1,1 @@
-export { hashIdentifier } from "../../../utils/sql/hash-identifier";
+export { hashIdentifier } from "../../../utils/sql/hash-identifier.js";

@@ -1,12 +1,12 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { JoinKey } from "./JoinKey";
-import { ManyToOne } from "./ManyToOne";
-import { Nullable } from "./Nullable";
-import { OneToMany } from "./OneToMany";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { RelationId } from "./RelationId";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { JoinKey } from "./JoinKey.js";
+import { ManyToOne } from "./ManyToOne.js";
+import { Nullable } from "./Nullable.js";
+import { OneToMany } from "./OneToMany.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { RelationId } from "./RelationId.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "RelationIdCompany" })

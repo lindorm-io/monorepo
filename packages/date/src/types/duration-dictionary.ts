@@ -1,3 +1,3 @@
-import { DurationString } from "./duration-string";
+import type { DurationString } from "./duration-string.js";
 
 export type DurationDict = Record<DurationString, number>;

@@ -4,8 +4,8 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { join } from "path";
 import request from "supertest";
-import { PylonHttp } from "./PylonHttp";
-import { PylonRouter } from "./PylonRouter";
+import { PylonHttp } from "./PylonHttp.js";
+import { PylonRouter } from "./PylonRouter.js";
 import { describe, expect, test, vi } from "vitest";
 
 const createPylonHttp = async (

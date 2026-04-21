@@ -3,8 +3,8 @@ import type {
   LoadedMigration,
   MigrationInterface,
   MigrationRecord,
-} from "../../types/migration";
-import { resolvePending } from "./resolve-pending";
+} from "../../types/migration.js";
+import { resolvePending } from "./resolve-pending.js";
 
 const makeMigration = (
   overrides: Partial<MigrationInterface> = {},

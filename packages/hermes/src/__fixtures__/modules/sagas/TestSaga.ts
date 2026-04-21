@@ -7,23 +7,23 @@ import {
   SagaEventHandler,
   SagaIdHandler,
   SagaTimeoutHandler,
-} from "../../../decorators";
-import { DomainError } from "../../../errors";
+} from "../../../decorators/index.js";
+import { DomainError } from "../../../errors/index.js";
 import type {
   SagaErrorCtx,
   SagaEventCtx,
   SagaIdCtx,
   SagaTimeoutCtx,
-} from "../../../types";
-import { TestAggregate } from "../aggregates/TestAggregate";
-import { TestCommandCreate } from "../commands/TestCommandCreate";
-import { TestCommandMergeState } from "../commands/TestCommandMergeState";
-import { TestEventCreate } from "../events/TestEventCreate";
-import { TestEventDestroy } from "../events/TestEventDestroy";
-import { TestEventDispatch } from "../events/TestEventDispatch";
-import { TestEventMergeState } from "../events/TestEventMergeState";
-import { TestEventThrows } from "../events/TestEventThrows";
-import { TestTimeoutReminder } from "../timeouts/TestTimeoutReminder";
+} from "../../../types/index.js";
+import { TestAggregate } from "../aggregates/TestAggregate.js";
+import { TestCommandCreate } from "../commands/TestCommandCreate.js";
+import { TestCommandMergeState } from "../commands/TestCommandMergeState.js";
+import { TestEventCreate } from "../events/TestEventCreate.js";
+import { TestEventDestroy } from "../events/TestEventDestroy.js";
+import { TestEventDispatch } from "../events/TestEventDispatch.js";
+import { TestEventMergeState } from "../events/TestEventMergeState.js";
+import { TestEventThrows } from "../events/TestEventThrows.js";
+import { TestTimeoutReminder } from "../timeouts/TestTimeoutReminder.js";
 
 export type TestSagaState = Dict;
 

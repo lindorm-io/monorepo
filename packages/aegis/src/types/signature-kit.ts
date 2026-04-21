@@ -1,5 +1,5 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { DsaEncoding } from "@lindorm/types";
+import type { IKryptos } from "@lindorm/kryptos";
+import type { DsaEncoding } from "@lindorm/types";
 
 export type SignatureOptions = {
   dsa?: DsaEncoding;

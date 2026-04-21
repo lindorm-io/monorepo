@@ -1,5 +1,5 @@
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { withSavepoint } from "./with-savepoint";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { withSavepoint } from "./with-savepoint.js";
 import { describe, expect, it, vi } from "vitest";
 
 const makeHandle = (): PostgresTransactionHandle => {

@@ -1,1 +1,1 @@
-export * from "./ec-kit";
+export * from "./ec-kit.js";

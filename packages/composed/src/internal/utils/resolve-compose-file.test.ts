@@ -1,6 +1,6 @@
 import { existsSync } from "fs";
 import { resolve } from "path";
-import { resolveComposeFile } from "./resolve-compose-file";
+import { resolveComposeFile } from "./resolve-compose-file.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 vi.mock("fs", () => ({

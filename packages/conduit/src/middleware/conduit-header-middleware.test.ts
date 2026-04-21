@@ -1,4 +1,4 @@
-import { conduitHeaderMiddleware } from "./conduit-header-middleware";
+import { conduitHeaderMiddleware } from "./conduit-header-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitHeaderMiddleware", () => {

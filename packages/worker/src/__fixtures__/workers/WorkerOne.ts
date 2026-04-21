@@ -1,6 +1,6 @@
-import { ReadableTime } from "@lindorm/date";
-import { RetryOptions } from "@lindorm/retry";
-import { LindormWorkerCallback } from "../../types";
+import type { ReadableTime } from "@lindorm/date";
+import type { RetryOptions } from "@lindorm/retry";
+import type { LindormWorkerCallback } from "../../types/index.js";
 
 export const CALLBACK: LindormWorkerCallback = async (ctx) => {
   ctx.logger.debug("Hello world");

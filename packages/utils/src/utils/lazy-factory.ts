@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 
 export const lazyFactory = <T>(on: Dict, key: string, factory: () => T): void => {
   let cached: T | undefined;

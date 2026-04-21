@@ -3,11 +3,11 @@ import type {
   EntityMetadata,
   MetaField,
   MetaGenerated,
-} from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import { mapFieldType } from "../map-field-type";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveFkColumnType } from "../resolve-fk-column-type";
+} from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import { mapFieldType } from "../map-field-type.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveFkColumnType } from "../resolve-fk-column-type.js";
 
 const buildFieldColumn = (
   field: MetaField,

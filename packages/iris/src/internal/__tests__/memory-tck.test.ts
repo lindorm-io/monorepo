@@ -4,12 +4,12 @@
 // No external services required.
 
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../interfaces";
-import { IrisSource } from "../../classes/IrisSource";
-import type { MemoryDriver } from "../drivers/memory/classes/MemoryDriver";
-import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
-import { runTck } from "../__fixtures__/tck/run-tck";
-import { createMockAesModule } from "../__fixtures__/tck/mock-aes";
+import type { IMessage } from "../../interfaces/index.js";
+import { IrisSource } from "../../classes/IrisSource.js";
+import type { MemoryDriver } from "../drivers/memory/classes/MemoryDriver.js";
+import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import { runTck } from "../__fixtures__/tck/run-tck.js";
+import { createMockAesModule } from "../__fixtures__/tck/mock-aes.js";
 import { describe, vi } from "vitest";
 
 vi.mock("@lindorm/aes", () => createMockAesModule());

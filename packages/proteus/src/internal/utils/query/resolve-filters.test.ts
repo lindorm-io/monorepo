@@ -1,6 +1,6 @@
-import type { MetaFilter } from "../../entity/types/metadata";
-import type { FilterRegistry } from "./filter-registry";
-import { resolveFilters } from "./resolve-filters";
+import type { MetaFilter } from "../../entity/types/metadata.js";
+import type { FilterRegistry } from "./filter-registry.js";
+import { resolveFilters } from "./resolve-filters.js";
 import { describe, expect, test } from "vitest";
 
 const activeFilter: MetaFilter = {

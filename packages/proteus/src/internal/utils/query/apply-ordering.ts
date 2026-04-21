@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
+import type { IEntity } from "../../../interfaces/index.js";
 
 /**
  * Sort rows by one or more field keys with ASC/DESC direction.

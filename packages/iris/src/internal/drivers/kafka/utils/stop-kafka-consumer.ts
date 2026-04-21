@@ -2,8 +2,8 @@ import type {
   KafkaConsumer,
   KafkaSharedState,
   ReleasePooledConsumerOptions,
-} from "../types/kafka-types";
-import { createPooledDispatcher } from "./create-kafka-consumer";
+} from "../types/kafka-types.js";
+import { createPooledDispatcher } from "./create-kafka-consumer.js";
 
 const STOP_TIMEOUT_MS = 2_000;
 

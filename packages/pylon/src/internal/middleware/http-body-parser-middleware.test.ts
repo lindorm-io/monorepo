@@ -1,18 +1,18 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
-import { PylonError } from "../../errors";
-import { getBodyType as _getBodyType } from "../utils/body/get-body-type";
-import { parseBody as _parseBody } from "../utils/body/parse-body";
-import { composeParseBodyConfig as _composeParseBodyConfig } from "../utils/compose-parse-body-config";
-import { createHttpBodyParserMiddleware } from "./http-body-parser-middleware";
+import { PylonError } from "../../errors/index.js";
+import { getBodyType as _getBodyType } from "../utils/body/get-body-type.js";
+import { parseBody as _parseBody } from "../utils/body/parse-body.js";
+import { composeParseBodyConfig as _composeParseBodyConfig } from "../utils/compose-parse-body-config.js";
+import { createHttpBodyParserMiddleware } from "./http-body-parser-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-vi.mock("../utils/body/get-body-type");
-vi.mock("../utils/body/parse-body");
-vi.mock("../utils/compose-parse-body-config");
+vi.mock("../utils/body/get-body-type.js");
+vi.mock("../utils/body/parse-body.js");
+vi.mock("../utils/compose-parse-body-config.js");
 
 const composeParseBodyConfig = _composeParseBodyConfig as Mock;
 const getBodyType = _getBodyType as Mock;

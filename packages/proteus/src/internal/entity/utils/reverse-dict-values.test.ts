@@ -1,4 +1,4 @@
-import { reverseDictValues } from "./reverse-dict-values";
+import { reverseDictValues } from "./reverse-dict-values.js";
 import { describe, expect, test } from "vitest";
 
 describe("reverseDictValues", () => {

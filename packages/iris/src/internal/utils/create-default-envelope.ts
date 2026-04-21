@@ -1,5 +1,5 @@
-import type { IrisEnvelope } from "../types/iris-envelope";
-import type { OutboundPayload } from "../message/utils/prepare-outbound";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
 
 export const createDefaultEnvelope = (
   outbound: OutboundPayload,

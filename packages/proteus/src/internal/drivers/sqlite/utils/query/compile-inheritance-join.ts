@@ -1,11 +1,11 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import {
   type InheritanceAliasMap,
   buildInheritanceAliases as sharedBuildAliases,
   compileInheritanceFrom as sharedCompileFrom,
   compileInheritanceJoin as sharedCompileJoin,
-} from "../../../../utils/sql/compile-inheritance-join";
-import { sqliteDialect } from "../sqlite-dialect";
+} from "../../../../utils/sql/compile-inheritance-join.js";
+import { sqliteDialect } from "../sqlite-dialect.js";
 
 export type { InheritanceAliasMap };
 

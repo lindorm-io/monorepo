@@ -1,3 +1,3 @@
-export * from "./get-key";
-export * from "./map-algorithm";
-export * from "./rsa-signature";
+export * from "./get-key.js";
+export * from "./map-algorithm.js";
+export * from "./rsa-signature.js";

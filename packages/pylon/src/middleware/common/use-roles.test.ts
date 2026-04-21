@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { useRoles } from "./use-roles";
+import { useRoles } from "./use-roles.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("useRoles", () => {

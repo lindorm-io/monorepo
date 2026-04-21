@@ -1,5 +1,5 @@
-import type { MetaHook } from "../types/metadata";
-import { runHooksSync } from "./run-hooks-sync";
+import type { MetaHook } from "../types/metadata.js";
+import { runHooksSync } from "./run-hooks-sync.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("runHooksSync", () => {

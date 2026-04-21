@@ -5,15 +5,15 @@ import type {
   IProteusQueryBuilder,
   IProteusRepository,
   ITransactionContext,
-} from "../../../../interfaces";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import { PostgresTransactionError } from "../errors/PostgresTransactionError";
-import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle";
-import { commitTransaction } from "../utils/transaction/commit-transaction";
-import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
-import { withSavepoint } from "../utils/transaction/with-savepoint";
-import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
+} from "../../../../interfaces/index.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import { PostgresTransactionError } from "../errors/PostgresTransactionError.js";
+import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle.js";
+import { commitTransaction } from "../utils/transaction/commit-transaction.js";
+import { rollbackTransaction } from "../utils/transaction/rollback-transaction.js";
+import { withSavepoint } from "../utils/transaction/with-savepoint.js";
+import { PostgresQueryBuilder } from "./PostgresQueryBuilder.js";
 
 export class TransactionContext implements ITransactionContext {
   private readonly handle: PostgresTransactionHandle;

@@ -1,6 +1,6 @@
-import { IKryptos, KryptosAlgorithm } from "@lindorm/kryptos";
-import { AesError } from "../../../errors";
-import { calculateKeyWrapEncryption } from "./calculate-key-wrap-encryption";
+import type { IKryptos, KryptosAlgorithm } from "@lindorm/kryptos";
+import { AesError } from "../../../errors/index.js";
+import { calculateKeyWrapEncryption } from "./calculate-key-wrap-encryption.js";
 import { describe, expect, test } from "vitest";
 
 describe("calculateKeyWrapEncryption", () => {

@@ -1,6 +1,6 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { compileDeleteWithLimit } from "./compile-delete-with-limit";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { compileDeleteWithLimit } from "./compile-delete-with-limit.js";
 import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------

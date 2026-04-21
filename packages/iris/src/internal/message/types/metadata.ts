@@ -1,6 +1,6 @@
 import type { Constructor } from "@lindorm/types";
 import type { z } from "zod";
-import type { IMessage } from "../../../interfaces";
+import type { IMessage } from "../../../interfaces/index.js";
 import type { AmphoraPredicate } from "@lindorm/amphora";
 import type {
   MetaFieldDecorator,
@@ -9,7 +9,7 @@ import type {
   MetaGeneratedStrategy,
   MetaHookDecorator,
   MetaTransform,
-} from "./types";
+} from "./types.js";
 
 export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
   key: string;

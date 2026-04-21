@@ -1,5 +1,5 @@
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import type { MetaField, MetaFieldDecorator, MetaFieldType } from "../types/metadata";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import type { MetaField, MetaFieldDecorator, MetaFieldType } from "../types/metadata.js";
 
 const UNIQUE_FIELDS: Array<MetaFieldDecorator> = [
   "CreateDate",

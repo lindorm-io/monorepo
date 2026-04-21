@@ -4,12 +4,15 @@ import type { ServerHttpMiddleware } from "../../types/context";
 import {
   deleteWebhookHandler,
   deleteWebhookSchema,
-} from "../../handlers/delete-webhook-handler";
-import { getWebhookHandler, getWebhookSchema } from "../../handlers/get-webhook-handler";
+} from "../../handlers/delete-webhook-handler.js";
+import {
+  getWebhookHandler,
+  getWebhookSchema,
+} from "../../handlers/get-webhook-handler.js";
 import {
   updateWebhookHandler,
   updateWebhookSchema,
-} from "../../handlers/update-webhook-handler";
+} from "../../handlers/update-webhook-handler.js";
 
 export const GET: Array<ServerHttpMiddleware> = [
   useSchema(getWebhookSchema),

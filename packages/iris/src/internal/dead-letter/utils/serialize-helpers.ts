@@ -1,4 +1,4 @@
-import type { DeadLetterEntry } from "../../../types/dead-letter";
+import type { DeadLetterEntry } from "../../../types/dead-letter.js";
 
 export const serializeDeadLetterEntry = (entry: DeadLetterEntry): string => {
   return JSON.stringify({

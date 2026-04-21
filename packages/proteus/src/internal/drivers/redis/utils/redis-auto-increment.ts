@@ -1,7 +1,7 @@
 import type { Redis } from "ioredis";
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { buildIncrementKey } from "./build-increment-key";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { buildIncrementKey } from "./build-increment-key.js";
 
 /**
  * Apply auto-increment values using Redis INCR for each `@Generated("increment")`

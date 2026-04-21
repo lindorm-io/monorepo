@@ -4,7 +4,7 @@ export type {
   MigrationApplyResult,
   MigrationStatus,
   MigrationInterface,
-} from "../../../types/migration";
+} from "../../../types/migration.js";
 
 export type MongoMigrationTableOptions = {
   table?: string;

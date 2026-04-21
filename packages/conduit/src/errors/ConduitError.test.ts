@@ -1,4 +1,4 @@
-import { ConduitError } from "./ConduitError";
+import { ConduitError } from "./ConduitError.js";
 import { describe, expect, test } from "vitest";
 
 describe("ConduitError", () => {

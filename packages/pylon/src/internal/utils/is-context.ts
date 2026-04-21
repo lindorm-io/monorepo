@@ -2,7 +2,7 @@ import type {
   PylonHttpContext,
   PylonSocketContext,
   PylonSocketHandshakeContext,
-} from "../../types";
+} from "../../types/index.js";
 
 export const isSocketHandshakeContext = (ctx: any): ctx is PylonSocketHandshakeContext =>
   "io" in ctx &&

@@ -1,8 +1,8 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { getEntityName } from "../../../../entity/utils/get-entity-name";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import type { FieldAliasOverrides } from "./compile-where";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import type { FieldAliasOverrides } from "./compile-where.js";
 
 /**
  * Context for building SQL statements that involve joined inheritance child tables.

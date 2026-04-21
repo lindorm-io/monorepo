@@ -1,4 +1,4 @@
-import { httpParamsParserMiddleware } from "./http-params-parser-middleware";
+import { httpParamsParserMiddleware } from "./http-params-parser-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpParamsParserMiddleware", () => {

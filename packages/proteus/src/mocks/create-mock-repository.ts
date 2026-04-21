@@ -1,4 +1,4 @@
-import type { IEntity, IProteusRepository } from "../interfaces";
+import type { IEntity, IProteusRepository } from "../interfaces/index.js";
 
 type EntityFactory<E extends IEntity = IEntity> = (options?: any) => E;
 

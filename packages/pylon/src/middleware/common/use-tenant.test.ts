@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { useTenant } from "./use-tenant";
+import { useTenant } from "./use-tenant.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("useTenant", () => {

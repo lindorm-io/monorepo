@@ -1,4 +1,4 @@
-import type { AggregateFunction } from "../../types/aggregate";
+import type { AggregateFunction } from "../../types/aggregate.js";
 
 /**
  * Extract numeric values from a field across an array of row-like objects.

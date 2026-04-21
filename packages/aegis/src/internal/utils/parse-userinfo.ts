@@ -1,9 +1,9 @@
 import { isObject, isString } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
-import { AegisError } from "../../errors";
-import { AegisProfile, AegisUserinfo } from "../../types";
-import { extractAegisProfile } from "./extract-aegis-profile";
-import { extractDomainClaims } from "./extract-claims";
+import type { Dict } from "@lindorm/types";
+import { AegisError } from "../../errors/index.js";
+import type { AegisProfile, AegisUserinfo } from "../../types/index.js";
+import { extractAegisProfile } from "./extract-aegis-profile.js";
+import { extractDomainClaims } from "./extract-claims.js";
 
 // Locally-defined input shape — permissive structural type so a consumer's
 // `OpenIdClaims` response (or any other claim dict) passes through without

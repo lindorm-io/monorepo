@@ -1,4 +1,4 @@
-import { PylonSocketMiddleware } from "../../types";
+import type { PylonSocketMiddleware } from "../../types/index.js";
 
 export const socketLoggerMiddleware: PylonSocketMiddleware = async (ctx, next) => {
   const start = Date.now();

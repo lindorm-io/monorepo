@@ -1,8 +1,8 @@
 import { isArray } from "@lindorm/is";
-import { HttpMethod } from "@lindorm/types";
-import { CorsError } from "../../errors";
-import { CorsOptions, PylonHttpMiddleware } from "../../types";
-import { validateCorsOptions } from "../utils/cors/validate-cors-options";
+import type { HttpMethod } from "@lindorm/types";
+import { CorsError } from "../../errors/index.js";
+import type { CorsOptions, PylonHttpMiddleware } from "../../types/index.js";
+import { validateCorsOptions } from "../utils/cors/validate-cors-options.js";
 import {
   handleAccessControlCredentials,
   handleAccessControlExposeHeaders,
@@ -13,7 +13,7 @@ import {
   handleAccessControlPrivateNetwork,
   handleCrossOriginEmbedderPolicy,
   handleCrossOriginOpenerPolicy,
-} from "../utils/cors-handlers";
+} from "../utils/cors-handlers.js";
 
 export const createHttpCorsMiddleware = (
   options: CorsOptions = {},

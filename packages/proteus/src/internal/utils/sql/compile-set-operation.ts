@@ -1,5 +1,5 @@
-import type { SetOperationEntry } from "../../types/query";
-import type { SqlDialect } from "./sql-dialect";
+import type { SetOperationEntry } from "../../types/query.js";
+import type { SqlDialect } from "./sql-dialect.js";
 
 export const compileSetOperations = (
   entries: Array<SetOperationEntry>,

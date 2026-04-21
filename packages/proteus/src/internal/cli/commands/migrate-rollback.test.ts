@@ -1,14 +1,14 @@
 import { resolve } from "path";
-import { migrateRollback } from "./migrate-rollback";
-import { withSource } from "../with-source";
-import { withMigrationManager } from "../with-migration-manager";
-import { formatRollbackResult } from "../output/format-migration-result";
+import { migrateRollback } from "./migrate-rollback.js";
+import { withSource } from "../with-source.js";
+import { withMigrationManager } from "../with-migration-manager.js";
+import { formatRollbackResult } from "../output/format-migration-result.js";
 import { Logger } from "@lindorm/logger";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("../with-source");
-vi.mock("../with-migration-manager");
-vi.mock("../output/format-migration-result");
+vi.mock("../with-source.js");
+vi.mock("../with-migration-manager.js");
+vi.mock("../output/format-migration-result.js");
 
 vi.mock("@lindorm/logger", async () => ({
   Logger: {

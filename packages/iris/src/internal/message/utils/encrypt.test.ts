@@ -1,6 +1,6 @@
-import { IrisNotSupportedError } from "../../../errors/IrisNotSupportedError";
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
-import { decryptPayload, encryptPayload } from "./encrypt";
+import { IrisNotSupportedError } from "../../../errors/IrisNotSupportedError.js";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
+import { decryptPayload, encryptPayload } from "./encrypt.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mockEncrypt = vi.fn();

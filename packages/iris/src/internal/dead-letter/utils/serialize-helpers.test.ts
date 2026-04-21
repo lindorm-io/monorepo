@@ -1,9 +1,9 @@
-import type { IrisEnvelope } from "../../types/iris-envelope";
-import type { DeadLetterEntry } from "../../../types/dead-letter";
+import type { IrisEnvelope } from "../../types/iris-envelope.js";
+import type { DeadLetterEntry } from "../../../types/dead-letter.js";
 import {
   deserializeDeadLetterEntry,
   serializeDeadLetterEntry,
-} from "./serialize-helpers";
+} from "./serialize-helpers.js";
 import { describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({

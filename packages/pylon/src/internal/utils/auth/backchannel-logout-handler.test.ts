@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { backchannelLogoutHandler } from "./backchannel-logout-handler";
+import { backchannelLogoutHandler } from "./backchannel-logout-handler.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("backchannelLogoutHandler", () => {

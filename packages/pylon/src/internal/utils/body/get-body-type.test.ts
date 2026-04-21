@@ -1,4 +1,4 @@
-import { getBodyType } from "./get-body-type";
+import { getBodyType } from "./get-body-type.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("isBodyMimeType", () => {

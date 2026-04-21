@@ -1,9 +1,9 @@
 import { Command } from "commander";
-import { registerInitCommand } from "./register-init";
-import { init } from "./init";
+import { registerInitCommand } from "./register-init.js";
+import { init } from "./init.js";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./init", async () => ({
+vi.mock("./init.js", async () => ({
   init: vi.fn(),
 }));
 

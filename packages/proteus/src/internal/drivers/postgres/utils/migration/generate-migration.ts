@@ -1,15 +1,15 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import type {
   SerializedMigration,
   SerializeMigrationOptions,
-} from "./serialize-migration";
-import { introspectSchema } from "../sync/introspect-schema";
-import { projectDesiredSchema } from "../sync/project-desired-schema";
-import { diffSchema } from "../sync/diff-schema";
-import { serializeMigration } from "./serialize-migration";
-import { writeMigrationFile } from "./write-migration-file";
+} from "./serialize-migration.js";
+import { introspectSchema } from "../sync/introspect-schema.js";
+import { projectDesiredSchema } from "../sync/project-desired-schema.js";
+import { diffSchema } from "../sync/diff-schema.js";
+import { serializeMigration } from "./serialize-migration.js";
+import { writeMigrationFile } from "./write-migration-file.js";
 
 export type GenerateMigrationOptions = {
   name?: string;

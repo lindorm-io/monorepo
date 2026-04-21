@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata.js";
 
 export type EncryptedOptions = {
   id?: string;

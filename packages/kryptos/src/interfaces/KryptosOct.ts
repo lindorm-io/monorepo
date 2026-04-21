@@ -1,5 +1,5 @@
-import { OctAlgorithm, OctBuffer, OctJwk, OctString } from "../types";
-import { IKryptos } from "./Kryptos";
+import type { OctAlgorithm, OctBuffer, OctJwk, OctString } from "../types/index.js";
+import type { IKryptos } from "./Kryptos.js";
 
 export interface IKryptosOct extends IKryptos {
   algorithm: OctAlgorithm;

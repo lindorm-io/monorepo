@@ -1,4 +1,4 @@
-import { resolveStreamName } from "./resolve-stream-name";
+import { resolveStreamName } from "./resolve-stream-name.js";
 import { describe, expect, it } from "vitest";
 
 describe("resolveStreamName", () => {

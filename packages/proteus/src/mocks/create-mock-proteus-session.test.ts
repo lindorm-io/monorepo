@@ -1,4 +1,4 @@
-import { createMockProteusSession } from "./vitest";
+import { createMockProteusSession } from "./vitest.js";
 import { describe, expect, it, vi } from "vitest";
 
 class TestEntity {

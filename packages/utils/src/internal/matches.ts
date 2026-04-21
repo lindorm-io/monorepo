@@ -1,5 +1,5 @@
 import { isArray, isObject } from "@lindorm/is";
-import { DeepPartial } from "@lindorm/types";
+import type { DeepPartial } from "@lindorm/types";
 
 export const matches = <T>(object: T, predicate: DeepPartial<T>): boolean =>
   Object.entries(predicate).every(([key, predicateValue]) => {

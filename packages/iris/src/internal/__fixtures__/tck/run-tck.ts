@@ -4,27 +4,27 @@
 // Each driver harness calls runTck() with its factory.
 
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../interfaces";
-import type { TckCapabilities, TckDriverFactory, TckDriverHandle } from "./types";
-import type { TckMessages } from "./create-tck-messages";
-import { createTckMessages } from "./create-tck-messages";
+import type { IMessage } from "../../../interfaces/index.js";
+import type { TckCapabilities, TckDriverFactory, TckDriverHandle } from "./types.js";
+import type { TckMessages } from "./create-tck-messages.js";
+import { createTckMessages } from "./create-tck-messages.js";
 
-import { publishSubscribeSuite } from "./publish-subscribe.tck";
-import { fanOutSuite } from "./fan-out.tck";
-import { workerQueueSuite } from "./worker-queue.tck";
-import { retryDeadLetterSuite } from "./retry-dead-letter.tck";
-import { rpcSuite } from "./rpc.tck";
-import { streamSuite } from "./stream.tck";
-import { hooksSuite } from "./hooks.tck";
-import { topicResolutionSuite } from "./topic-resolution.tck";
-import { delaySuite } from "./delay.tck";
-import { broadcastSuite } from "./broadcast.tck";
-import { compressionSuite } from "./compression.tck";
-import { encryptionSuite } from "./encryption.tck";
-import { expirySuite } from "./expiry.tck";
-import { headersSuite } from "./headers.tck";
-import { decoratorCoverageSuite } from "./decorator-coverage.tck";
-import { errorResilienceSuite } from "./error-resilience.tck";
+import { publishSubscribeSuite } from "./publish-subscribe.tck.js";
+import { fanOutSuite } from "./fan-out.tck.js";
+import { workerQueueSuite } from "./worker-queue.tck.js";
+import { retryDeadLetterSuite } from "./retry-dead-letter.tck.js";
+import { rpcSuite } from "./rpc.tck.js";
+import { streamSuite } from "./stream.tck.js";
+import { hooksSuite } from "./hooks.tck.js";
+import { topicResolutionSuite } from "./topic-resolution.tck.js";
+import { delaySuite } from "./delay.tck.js";
+import { broadcastSuite } from "./broadcast.tck.js";
+import { compressionSuite } from "./compression.tck.js";
+import { encryptionSuite } from "./encryption.tck.js";
+import { expirySuite } from "./expiry.tck.js";
+import { headersSuite } from "./headers.tck.js";
+import { decoratorCoverageSuite } from "./decorator-coverage.tck.js";
+import { errorResilienceSuite } from "./error-resilience.tck.js";
 import { afterAll, beforeAll, describe } from "vitest";
 
 const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {

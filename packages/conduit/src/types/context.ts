@@ -1,8 +1,8 @@
-import { RetryConfig } from "@lindorm/retry";
-import { Dict, Environment } from "@lindorm/types";
+import type { RetryConfig } from "@lindorm/retry";
+import type { Dict, Environment } from "@lindorm/types";
 import { Readable } from "stream";
-import { ConfigContext } from "./overrides";
-import { OnRetryCallback, RetryCallback } from "./retry";
+import type { ConfigContext } from "./overrides.js";
+import type { OnRetryCallback, RetryCallback } from "./retry.js";
 
 export type AppContext = {
   alias: string | null;

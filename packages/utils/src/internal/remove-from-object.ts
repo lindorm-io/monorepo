@@ -1,6 +1,6 @@
 import { isArray, isObject } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
-import { removeFromArray } from "./remove-from-array";
+import type { Dict } from "@lindorm/types";
+import { removeFromArray } from "./remove-from-array.js";
 
 type Predicate = (value: any) => boolean;
 

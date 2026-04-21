@@ -1,2 +1,2 @@
-export * from "./ScanData";
-export * from "./Scanner";
+export * from "./ScanData.js";
+export * from "./Scanner.js";

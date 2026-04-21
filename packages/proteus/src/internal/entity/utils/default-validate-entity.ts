@@ -1,8 +1,8 @@
 import type { Constructor } from "@lindorm/types";
 import { z } from "zod";
-import { IEntity } from "../../../interfaces";
-import type { MetaField } from "../types/metadata";
-import { getEntityMetadata } from "../metadata/get-entity-metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { MetaField } from "../types/metadata.js";
+import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 const fieldWithMinMax = [
   "array",

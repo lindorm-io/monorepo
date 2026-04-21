@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import { Server, Socket } from "socket.io";
 
 // socket.io's DefaultEventsMap lives on a private subpath that bundler

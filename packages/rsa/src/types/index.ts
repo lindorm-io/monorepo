@@ -1,1 +1,1 @@
-export * from "./rsa-kit";
+export * from "./rsa-kit.js";

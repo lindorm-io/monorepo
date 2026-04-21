@@ -1,4 +1,4 @@
-import { loadSource } from "./load-source";
+import { loadSource } from "./load-source.js";
 import { existsSync } from "fs";
 import { Scanner } from "@lindorm/scanner";
 import {

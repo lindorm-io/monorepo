@@ -1,5 +1,5 @@
-import { RetryConfig } from "@lindorm/retry";
-import { ConduitResponse } from "../../types";
+import type { RetryConfig } from "@lindorm/retry";
+import type { ConduitResponse } from "../../types/index.js";
 
 export const CONDUIT_RESPONSE: ConduitResponse = {
   data: {},

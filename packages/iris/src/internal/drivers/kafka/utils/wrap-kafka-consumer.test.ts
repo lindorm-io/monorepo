@@ -1,9 +1,12 @@
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { KafkaEachMessagePayload, KafkaSharedState } from "../types/kafka-types";
-import { wrapKafkaConsumer, type KafkaConsumerCallbackHost } from "./wrap-kafka-consumer";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { KafkaEachMessagePayload, KafkaSharedState } from "../types/kafka-types.js";
+import {
+  wrapKafkaConsumer,
+  type KafkaConsumerCallbackHost,
+} from "./wrap-kafka-consumer.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({

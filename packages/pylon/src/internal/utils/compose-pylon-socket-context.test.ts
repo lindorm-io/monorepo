@@ -1,4 +1,4 @@
-import { composePylonSocketContextBase } from "./compose-pylon-socket-context";
+import { composePylonSocketContextBase } from "./compose-pylon-socket-context.js";
 import { describe, expect, test, vi } from "vitest";
 
 // randomUUID is called internally; mock it for deterministic snapshots

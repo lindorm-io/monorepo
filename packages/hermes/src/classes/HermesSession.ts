@@ -3,14 +3,14 @@ import type { ILogger } from "@lindorm/logger";
 import type { ClassLike, Constructor, Dict } from "@lindorm/types";
 import { LindormError } from "@lindorm/errors";
 import { randomUUID } from "@lindorm/random";
-import { HandlerNotRegisteredError } from "../errors";
-import type { IHermesSession } from "../interfaces/IHermesSession";
-import type { AggregateIdentifier } from "../types/aggregate-identifier";
-import type { HermesStatus } from "../types/hermes-status";
-import { ViewDomain } from "../internal/domains";
-import { HermesCommandMessage } from "../internal/messages";
-import type { HermesRegistry } from "../internal/registry";
-import { extractDto } from "../internal/utils";
+import { HandlerNotRegisteredError } from "../errors/index.js";
+import type { IHermesSession } from "../interfaces/IHermesSession.js";
+import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
+import type { HermesStatus } from "../types/hermes-status.js";
+import { ViewDomain } from "../internal/domains/index.js";
+import { HermesCommandMessage } from "../internal/messages/index.js";
+import type { HermesRegistry } from "../internal/registry/index.js";
+import { extractDto } from "../internal/utils/index.js";
 
 type StatusRef = { current: HermesStatus };
 

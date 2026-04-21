@@ -1,6 +1,6 @@
 import { getUnixTime } from "date-fns";
-import { Expiry } from "../types";
-import { expiresAt } from "./expires-at";
+import type { Expiry } from "../types/index.js";
+import { expiresAt } from "./expires-at.js";
 
 /**
  * Seconds from `from` until the given `Expiry`. Calendar-correct: resolves

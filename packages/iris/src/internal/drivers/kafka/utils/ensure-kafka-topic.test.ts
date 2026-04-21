@@ -1,5 +1,5 @@
-import type { KafkaClient, KafkaSharedState } from "../types/kafka-types";
-import { ensureKafkaTopic, ensureKafkaTopicFromState } from "./ensure-kafka-topic";
+import type { KafkaClient, KafkaSharedState } from "../types/kafka-types.js";
+import { ensureKafkaTopic, ensureKafkaTopicFromState } from "./ensure-kafka-topic.js";
 import { describe, expect, it, vi } from "vitest";
 
 const createMockLogger = () => ({

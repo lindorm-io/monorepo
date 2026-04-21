@@ -1,6 +1,6 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 
 const LOGICAL_OPERATORS = ["$and", "$or", "$not"] as const;
 

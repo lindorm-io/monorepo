@@ -1,7 +1,7 @@
 import { createPrivateKey, createPublicKey } from "crypto";
-import { KryptosError } from "../../../errors";
-import { EcJwk, KryptosBuffer, KryptosExportMode } from "../../../types";
-import { isEcCurve } from "./is-ec-curve";
+import { KryptosError } from "../../../errors/index.js";
+import type { EcJwk, KryptosBuffer, KryptosExportMode } from "../../../types/index.js";
+import { isEcCurve } from "./is-ec-curve.js";
 
 type Options = Omit<KryptosBuffer, "id" | "algorithm" | "type" | "use"> & {
   mode: KryptosExportMode;

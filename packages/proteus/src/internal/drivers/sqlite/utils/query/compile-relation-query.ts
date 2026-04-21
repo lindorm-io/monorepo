@@ -1,12 +1,12 @@
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { IncludeSpec } from "../../../../types/query";
-import { generateAutoFilters } from "../../../../entity/metadata/auto-filters";
-import { mergeSystemFilterOverrides } from "../../../../utils/query/merge-system-filter-overrides";
-import { resolveFilters } from "../../../../utils/query/resolve-filters";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
-import { compilePredicate } from "./compile-where";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec } from "../../../../types/query.js";
+import { generateAutoFilters } from "../../../../entity/metadata/auto-filters.js";
+import { mergeSystemFilterOverrides } from "../../../../utils/query/merge-system-filter-overrides.js";
+import { resolveFilters } from "../../../../utils/query/resolve-filters.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
+import { compilePredicate } from "./compile-where.js";
 
 export type CompiledRelationQuery = {
   text: string;

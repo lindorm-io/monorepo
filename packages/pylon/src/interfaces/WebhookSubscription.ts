@@ -1,9 +1,9 @@
-import {
+import type {
   ClientCredentialsAuthLocation,
   ClientCredentialsContentType,
 } from "@lindorm/conduit";
-import { Dict } from "@lindorm/types";
-import { WebhookAuth, WebhookMethod } from "../enums";
+import type { Dict } from "@lindorm/types";
+import { WebhookAuth, WebhookMethod } from "../enums/index.js";
 
 export interface IWebhookSubscription {
   id: string;

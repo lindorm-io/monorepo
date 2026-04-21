@@ -1,9 +1,9 @@
 import { z } from "zod";
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { Schema } from "./Schema";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { Schema } from "./Schema.js";
 import { describe, expect, test } from "vitest";
 
 const nameSchema = z.object({

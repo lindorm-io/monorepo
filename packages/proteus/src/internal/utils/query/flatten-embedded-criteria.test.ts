@@ -1,6 +1,6 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { makeField } from "../../__fixtures__/make-field";
-import { flattenEmbeddedCriteria } from "./flatten-embedded-criteria";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { makeField } from "../../__fixtures__/make-field.js";
+import { flattenEmbeddedCriteria } from "./flatten-embedded-criteria.js";
 import { describe, expect, test } from "vitest";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────

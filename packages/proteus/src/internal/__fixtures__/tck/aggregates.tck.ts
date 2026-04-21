@@ -2,8 +2,8 @@ import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Aggregates Suite
 // Tests sum, average, minimum, maximum.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const aggregatesSuite = (
   getHandle: () => TckDriverHandle,

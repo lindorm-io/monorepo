@@ -1,5 +1,5 @@
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import type { MetaField, MetaUnique } from "../types/metadata";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import type { MetaField, MetaUnique } from "../types/metadata.js";
 
 export const validateUniques = (
   targetName: string,

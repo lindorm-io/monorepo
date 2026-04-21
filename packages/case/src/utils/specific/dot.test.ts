@@ -1,6 +1,6 @@
-import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects";
-import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings";
-import { dotArray, dotCase, dotKeys } from "./dot";
+import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects.js";
+import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings.js";
+import { dotArray, dotCase, dotKeys } from "./dot.js";
 import { describe, expect, test } from "vitest";
 
 describe("dotCase", () => {

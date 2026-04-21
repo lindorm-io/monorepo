@@ -1,9 +1,9 @@
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import {
   InputData,
   jsonInputForTargetLanguage,
   quicktype,
-  SerializedRenderResult,
+  type SerializedRenderResult,
 } from "quicktype-core";
 
 type Options = {

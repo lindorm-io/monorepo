@@ -1,5 +1,5 @@
-import { MySqlTransactionError } from "../../errors/MySqlTransactionError";
-import type { MysqlTransactionHandle } from "../../types/mysql-transaction-handle";
+import { MySqlTransactionError } from "../../errors/MySqlTransactionError.js";
+import type { MysqlTransactionHandle } from "../../types/mysql-transaction-handle.js";
 
 export const assertActiveTransaction = (handle: MysqlTransactionHandle): void => {
   if (handle.state !== "active") {

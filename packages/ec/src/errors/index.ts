@@ -1,1 +1,1 @@
-export * from "./EcError";
+export * from "./EcError.js";

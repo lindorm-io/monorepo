@@ -1,5 +1,9 @@
 import { isArray, isObject, isString } from "@lindorm/is";
-import { PylonHttpContext, PylonHttpOptions, PylonHttpRouters } from "../../types";
+import type {
+  PylonHttpContext,
+  PylonHttpOptions,
+  PylonHttpRouters,
+} from "../../types/index.js";
 
 export const normaliseRoutes = <C extends PylonHttpContext>(
   input: PylonHttpOptions<C>["routes"],

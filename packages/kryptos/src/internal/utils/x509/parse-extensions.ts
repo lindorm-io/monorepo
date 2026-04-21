@@ -1,9 +1,9 @@
-import { KryptosError } from "../../../errors";
-import {
+import { KryptosError } from "../../../errors/index.js";
+import type {
   ParsedX509Extensions,
   ParsedX509KeyUsageFlag,
   ParsedX509SubjectAltName,
-} from "../../../types";
+} from "../../../types/index.js";
 import {
   ASN1_TAG_BIT_STRING,
   ASN1_TAG_BOOLEAN,
@@ -15,15 +15,15 @@ import {
   decodeOid,
   readSequenceChildren,
   readTlv,
-} from "../asn1";
+} from "../asn1/index.js";
 import {
   X509_OID_EXT_AUTHORITY_KEY_IDENTIFIER,
   X509_OID_EXT_BASIC_CONSTRAINTS,
   X509_OID_EXT_KEY_USAGE,
   X509_OID_EXT_SUBJECT_ALT_NAME,
   X509_OID_EXT_SUBJECT_KEY_IDENTIFIER,
-} from "./oids";
-import { SAN_TYPE_BY_TAG } from "./san-tags";
+} from "./oids.js";
+import { SAN_TYPE_BY_TAG } from "./san-tags.js";
 
 const KEY_USAGE_BITS: ReadonlyArray<ParsedX509KeyUsageFlag> = [
   "digitalSignature",

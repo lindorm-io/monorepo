@@ -1,9 +1,9 @@
-import { ILogger } from "@lindorm/logger";
-import { Constructor, Dict } from "@lindorm/types";
-import { IEntity } from "./Entity";
-import { IProteusQueryBuilder } from "./ProteusQueryBuilder";
-import { IProteusRepository } from "./ProteusRepository";
-import { TransactionCallback, TransactionOptions } from "../types";
+import type { ILogger } from "@lindorm/logger";
+import type { Constructor, Dict } from "@lindorm/types";
+import type { IEntity } from "./Entity.js";
+import type { IProteusQueryBuilder } from "./ProteusQueryBuilder.js";
+import type { IProteusRepository } from "./ProteusRepository.js";
+import type { TransactionCallback, TransactionOptions } from "../types/index.js";
 
 export type FilterRegistryEntry = {
   params: Dict<unknown>;

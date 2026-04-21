@@ -1,7 +1,7 @@
-import { ProteusError } from "../../../../../errors";
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { MetaIndex } from "../../../../entity/types/metadata";
-import { generateIndexDDL } from "./generate-index-ddl";
+import { ProteusError } from "../../../../../errors/index.js";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { MetaIndex } from "../../../../entity/types/metadata.js";
+import { generateIndexDDL } from "./generate-index-ddl.js";
 import { describe, expect, test } from "vitest";
 
 const TABLE = "products";

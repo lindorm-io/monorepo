@@ -1,4 +1,4 @@
-import { coerceReadValue, coerceWriteValue } from "./coerce-value";
+import { coerceReadValue, coerceWriteValue } from "./coerce-value.js";
 import { describe, expect, test } from "vitest";
 
 describe("coerceReadValue", () => {

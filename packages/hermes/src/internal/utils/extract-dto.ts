@@ -1,5 +1,5 @@
 import type { ClassLike, Dict } from "@lindorm/types";
-import { extractNameData, getHermesMetadata } from "../metadata";
+import { extractNameData, getHermesMetadata } from "../metadata/index.js";
 
 export type DtoData = {
   name: string;

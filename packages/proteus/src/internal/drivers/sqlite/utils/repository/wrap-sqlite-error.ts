@@ -1,9 +1,9 @@
-import { ProteusError } from "../../../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { CheckConstraintError } from "../../../../errors/CheckConstraintError";
-import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError";
-import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError";
-import { NotNullViolationError } from "../../../../errors/NotNullViolationError";
+import { ProteusError } from "../../../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
+import { CheckConstraintError } from "../../../../errors/CheckConstraintError.js";
+import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError.js";
+import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError.js";
+import { NotNullViolationError } from "../../../../errors/NotNullViolationError.js";
 
 export const wrapSqliteError = (
   error: unknown,

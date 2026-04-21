@@ -1,4 +1,4 @@
-import type { IrisEnvelope } from "./envelope";
+import type { IrisEnvelope } from "./envelope.js";
 
 export type DelayedEntry = {
   id: string;

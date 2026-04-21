@@ -1,12 +1,12 @@
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   KeyUnwrapOptions,
   KeyUnwrapResult,
   KeyWrapOptions,
   KeyWrapResult,
-} from "../../types/key-wrap";
-import { ecbKeyUnwrap, ecbKeyWrap } from "./ecb-key-wrap";
-import { gcmKeyUnwrap, gcmKeyWrap } from "./gcm-key-wrap";
+} from "../../types/key-wrap.js";
+import { ecbKeyUnwrap, ecbKeyWrap } from "./ecb-key-wrap.js";
+import { gcmKeyUnwrap, gcmKeyWrap } from "./gcm-key-wrap.js";
 
 export const keyWrap = (options: KeyWrapOptions): KeyWrapResult => {
   switch (options.kryptos.algorithm) {

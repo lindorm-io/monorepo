@@ -1,4 +1,4 @@
-import type { IMessage } from "./Message";
+import type { IMessage } from "./Message.js";
 
 export interface IIrisRpcClient<
   Req extends IMessage = IMessage,

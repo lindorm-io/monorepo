@@ -1,1 +1,1 @@
-export * from "./KryptosError";
+export * from "./KryptosError.js";

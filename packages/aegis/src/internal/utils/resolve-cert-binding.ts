@@ -1,6 +1,6 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { AegisError } from "../../errors";
-import { BindCertificateMode, CertificateHeaderFields } from "../../types";
+import type { IKryptos } from "@lindorm/kryptos";
+import { AegisError } from "../../errors/index.js";
+import type { BindCertificateMode, CertificateHeaderFields } from "../../types/index.js";
 
 export const resolveCertBinding = (
   kryptos: IKryptos,

@@ -1,4 +1,4 @@
-import { KryptosJwk } from "@lindorm/kryptos";
+import type { KryptosJwk } from "@lindorm/kryptos";
 
 // Public, camelCase representation of the RFC 7800 `cnf` claim.
 // Used by SignJwtContent and ParsedJwtPayload. The wire counterpart

@@ -1,6 +1,6 @@
 import type { RawAxiosRequestConfig } from "axios";
 import axios from "axios";
-import { ConduitResponse } from "../../types";
+import type { ConduitResponse } from "../../types/index.js";
 
 export const useAxios = async (
   config: RawAxiosRequestConfig,

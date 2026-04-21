@@ -3,9 +3,9 @@ import { expiresAt, getUnixTime, isAfter, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { removeEmpty, removeUndefined } from "@lindorm/utils";
 import { randomUUID } from "crypto";
-import { KryptosError } from "../errors";
-import { IKryptos } from "../interfaces";
-import {
+import { KryptosError } from "../errors/index.js";
+import type { IKryptos } from "../interfaces/index.js";
+import type {
   KryptosAlgorithm,
   KryptosBuffer,
   KryptosCurve,
@@ -25,22 +25,22 @@ import {
   LindormJwk,
   ParsedX509Certificate,
   RsaModulus,
-} from "../types";
-import { ExportCache } from "../internal/types/export-cache";
-import { computeThumbprint } from "../internal/utils/compute-thumbprint";
-import { createDerFromDer } from "../internal/utils/from/der-from-der";
-import { exportToB64 } from "../internal/utils/export/export-b64";
-import { exportToDer } from "../internal/utils/export/export-der";
-import { exportToJwk } from "../internal/utils/export/export-jwk";
-import { exportToPem } from "../internal/utils/export/export-pem";
-import { isOctDer } from "../internal/utils/oct/is";
-import { modulusSize } from "../internal/utils/rsa/modulus-size";
-import { extractLeafSpki } from "../internal/utils/x509/extract-leaf-spki";
-import { parseX509Certificate } from "../internal/utils/x509/parse-certificate";
-import { parseX509 } from "../internal/utils/x509/parse-x509";
-import { verifyX509Chain } from "../internal/utils/x509/verify-chain";
-import { x509PublicKeyMatches } from "../internal/utils/x509/x509-public-key-matches";
-import { x5tS256 as x5tS256Thumbprint } from "../internal/utils/x509/x509-thumbprints";
+} from "../types/index.js";
+import type { ExportCache } from "../internal/types/export-cache.js";
+import { computeThumbprint } from "../internal/utils/compute-thumbprint.js";
+import { createDerFromDer } from "../internal/utils/from/der-from-der.js";
+import { exportToB64 } from "../internal/utils/export/export-b64.js";
+import { exportToDer } from "../internal/utils/export/export-der.js";
+import { exportToJwk } from "../internal/utils/export/export-jwk.js";
+import { exportToPem } from "../internal/utils/export/export-pem.js";
+import { isOctDer } from "../internal/utils/oct/is.js";
+import { modulusSize } from "../internal/utils/rsa/modulus-size.js";
+import { extractLeafSpki } from "../internal/utils/x509/extract-leaf-spki.js";
+import { parseX509Certificate } from "../internal/utils/x509/parse-certificate.js";
+import { parseX509 } from "../internal/utils/x509/parse-x509.js";
+import { verifyX509Chain } from "../internal/utils/x509/verify-chain.js";
+import { x509PublicKeyMatches } from "../internal/utils/x509/x509-public-key-matches.js";
+import { x5tS256 as x5tS256Thumbprint } from "../internal/utils/x509/x509-thumbprints.js";
 
 export class Kryptos implements IKryptos {
   private readonly _id: string;

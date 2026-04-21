@@ -6,17 +6,17 @@ import {
   type ICircuitBreaker,
 } from "@lindorm/breaker";
 import { ms } from "@lindorm/date";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import type { Constructor, Dict } from "@lindorm/types";
-import { NotSupportedError, ProteusError } from "../errors";
-import {
+import { NotSupportedError, ProteusError } from "../errors/index.js";
+import type {
   IEntity,
   IProteusQueryBuilder,
   IProteusRepository,
   IProteusSource,
-} from "../interfaces";
-import { ProteusSession } from "./ProteusSession";
-import type { ICacheAdapter } from "../interfaces/CacheAdapter";
+} from "../interfaces/index.js";
+import { ProteusSession } from "./ProteusSession.js";
+import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 import type {
   EntityEmitFn,
   EntityScannerInput,
@@ -26,24 +26,24 @@ import type {
   ProteusSourceOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../types";
-import { classifyMongoError } from "../internal/drivers/mongo/utils/classify-breaker-error";
-import { classifyMysqlError } from "../internal/drivers/mysql/utils/classify-breaker-error";
-import { classifyPostgresError } from "../internal/drivers/postgres/utils/classify-breaker-error";
-import { classifyRedisError } from "../internal/drivers/redis/utils/classify-breaker-error";
-import { CachingRepository } from "../internal/classes/CachingRepository";
-import { EntityScanner } from "../internal/entity/classes/EntityScanner";
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { resolveInheritanceHierarchies } from "../internal/entity/metadata/resolve-inheritance";
-import { clearPrimaryCache } from "../internal/entity/metadata/build-primary";
-import { clearMetadataCache } from "../internal/entity/metadata/registry";
-import { validateEncryptedFields } from "../internal/entity/utils/validate-encrypted-fields";
-import { applyNamingStrategy } from "../internal/utils/naming/apply-naming-strategy";
-import type { MetaInheritance } from "../internal/entity/types/inheritance";
+} from "../types/index.js";
+import { classifyMongoError } from "../internal/drivers/mongo/utils/classify-breaker-error.js";
+import { classifyMysqlError } from "../internal/drivers/mysql/utils/classify-breaker-error.js";
+import { classifyPostgresError } from "../internal/drivers/postgres/utils/classify-breaker-error.js";
+import { classifyRedisError } from "../internal/drivers/redis/utils/classify-breaker-error.js";
+import { CachingRepository } from "../internal/classes/CachingRepository.js";
+import { EntityScanner } from "../internal/entity/classes/EntityScanner.js";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { resolveInheritanceHierarchies } from "../internal/entity/metadata/resolve-inheritance.js";
+import { clearPrimaryCache } from "../internal/entity/metadata/build-primary.js";
+import { clearMetadataCache } from "../internal/entity/metadata/registry.js";
+import { validateEncryptedFields } from "../internal/entity/utils/validate-encrypted-fields.js";
+import { applyNamingStrategy } from "../internal/utils/naming/apply-naming-strategy.js";
+import type { MetaInheritance } from "../internal/entity/types/inheritance.js";
 import type {
   IProteusDriver,
   MetadataResolver,
-} from "../internal/interfaces/ProteusDriver";
+} from "../internal/interfaces/ProteusDriver.js";
 import {
   type FilterRegistry,
   createFilterRegistry,
@@ -51,8 +51,8 @@ import {
   setFilterParams as setFilterParamsUtil,
   enableFilter as enableFilterUtil,
   disableFilter as disableFilterUtil,
-} from "../internal/utils/query/filter-registry";
-import type { EntityMetadata } from "../internal/entity/types/metadata";
+} from "../internal/utils/query/filter-registry.js";
+import type { EntityMetadata } from "../internal/entity/types/metadata.js";
 
 /**
  * Options for creating a session from a ProteusSource.
@@ -287,7 +287,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     switch (opts.driver) {
       case "postgres": {
         const { PostgresDriver } =
-          await import("../internal/drivers/postgres/classes/PostgresDriver");
+          await import("../internal/drivers/postgres/classes/PostgresDriver.js");
         this._driver = new PostgresDriver(
           opts,
           this.logger,
@@ -302,7 +302,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "memory": {
         const { MemoryDriver } =
-          await import("../internal/drivers/memory/classes/MemoryDriver");
+          await import("../internal/drivers/memory/classes/MemoryDriver.js");
         this._driver = new MemoryDriver(
           opts,
           this.logger,
@@ -316,7 +316,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "redis": {
         const { RedisDriver } =
-          await import("../internal/drivers/redis/classes/RedisDriver");
+          await import("../internal/drivers/redis/classes/RedisDriver.js");
         this._driver = new RedisDriver(
           opts,
           this.logger,
@@ -331,7 +331,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "sqlite": {
         const { SqliteDriver } =
-          await import("../internal/drivers/sqlite/classes/SqliteDriver");
+          await import("../internal/drivers/sqlite/classes/SqliteDriver.js");
         this._driver = new SqliteDriver(
           opts,
           this.logger,
@@ -345,7 +345,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "mysql": {
         const { MySqlDriver } =
-          await import("../internal/drivers/mysql/classes/MySqlDriver");
+          await import("../internal/drivers/mysql/classes/MySqlDriver.js");
         this._driver = new MySqlDriver(
           opts,
           this.logger,
@@ -360,7 +360,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "mongo": {
         const { MongoDriver } =
-          await import("../internal/drivers/mongo/classes/MongoDriver");
+          await import("../internal/drivers/mongo/classes/MongoDriver.js");
         this._driver = new MongoDriver(
           opts,
           this.logger,

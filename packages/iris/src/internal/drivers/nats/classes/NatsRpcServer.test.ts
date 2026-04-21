@@ -1,17 +1,17 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { NatsSharedState, NatsSubscription } from "../types/nats-types";
-import { NatsRpcServer } from "./NatsRpcServer";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { NatsSharedState, NatsSubscription } from "../types/nats-types.js";
+import { NatsRpcServer } from "./NatsRpcServer.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
-vi.mock("../utils/serialize-nats-message", async () => ({
+vi.mock("../utils/serialize-nats-message.js", async () => ({
   serializeNatsMessage: vi.fn().mockReturnValue({ data: new Uint8Array([1, 2, 3]) }),
 }));
 
-vi.mock("../utils/parse-nats-message", () => ({
+vi.mock("../utils/parse-nats-message.js", () => ({
   parseNatsMessage: vi.fn().mockReturnValue({
     payload: Buffer.from("{}"),
     headers: {},

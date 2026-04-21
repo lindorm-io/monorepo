@@ -1,23 +1,23 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type {
   QueryState,
   RawWhereEntry,
   SubqueryPredicateSpec,
-} from "../../../../types/query";
-import { generateAutoFilters } from "../../../../entity/metadata/auto-filters";
-import { mergeSystemFilterOverrides } from "../../../../utils/query/merge-system-filter-overrides";
-import type { ResolvedFilter } from "../../../../utils/query/resolve-filters";
-import { resolveFilters } from "../../../../utils/query/resolve-filters";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnName } from "../resolve-column-name";
+} from "../../../../types/query.js";
+import { generateAutoFilters } from "../../../../entity/metadata/auto-filters.js";
+import { mergeSystemFilterOverrides } from "../../../../utils/query/merge-system-filter-overrides.js";
+import type { ResolvedFilter } from "../../../../utils/query/resolve-filters.js";
+import { resolveFilters } from "../../../../utils/query/resolve-filters.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnName } from "../resolve-column-name.js";
 import {
   compilePredicate,
   compileWhere,
   type FieldAliasOverrides,
-} from "./compile-where";
-import type { InheritanceAliasMap } from "./compile-inheritance-join";
-import { reindexParams } from "./reindex-params";
+} from "./compile-where.js";
+import type { InheritanceAliasMap } from "./compile-inheritance-join.js";
+import { reindexParams } from "./reindex-params.js";
 
 /**
  * Build a FieldAliasOverrides map from inheritance aliases.

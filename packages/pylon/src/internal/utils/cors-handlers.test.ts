@@ -1,4 +1,4 @@
-import { CorsError } from "../../errors";
+import { CorsError } from "../../errors/index.js";
 import {
   handleAccessControlCredentials,
   handleAccessControlExposeHeaders,
@@ -9,7 +9,7 @@ import {
   handleAccessControlPrivateNetwork,
   handleCrossOriginEmbedderPolicy,
   handleCrossOriginOpenerPolicy,
-} from "./cors-handlers";
+} from "./cors-handlers.js";
 import { describe, expect, test, vi } from "vitest";
 
 const createCtx = (headers: Record<string, string> = {}): any => {

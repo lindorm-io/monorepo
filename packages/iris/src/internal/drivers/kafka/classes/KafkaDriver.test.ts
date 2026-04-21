@@ -1,17 +1,17 @@
 import { Kafka as _Kafka } from "kafkajs";
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import type { IrisConnectionState } from "../../../../types";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { KafkaSharedState } from "../types/kafka-types";
-import { KafkaDriver } from "./KafkaDriver";
-import { KafkaPublisher } from "./KafkaPublisher";
-import { KafkaMessageBus } from "./KafkaMessageBus";
-import { KafkaWorkerQueue } from "./KafkaWorkerQueue";
-import { KafkaStreamProcessor } from "./KafkaStreamProcessor";
-import { KafkaRpcClient } from "./KafkaRpcClient";
-import { KafkaRpcServer } from "./KafkaRpcServer";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import type { IrisConnectionState } from "../../../../types/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import { KafkaDriver } from "./KafkaDriver.js";
+import { KafkaPublisher } from "./KafkaPublisher.js";
+import { KafkaMessageBus } from "./KafkaMessageBus.js";
+import { KafkaWorkerQueue } from "./KafkaWorkerQueue.js";
+import { KafkaStreamProcessor } from "./KafkaStreamProcessor.js";
+import { KafkaRpcClient } from "./KafkaRpcClient.js";
+import { KafkaRpcServer } from "./KafkaRpcServer.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock kafkajs ---

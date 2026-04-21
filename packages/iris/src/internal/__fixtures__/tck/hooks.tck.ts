@@ -7,9 +7,9 @@
 // Other drivers may differ (async dispatch), so we only assert presence and relative ordering
 // of publish-side hooks (beforePublish < afterPublish) and consume-side hooks (beforeConsume < afterConsume).
 
-import type { TckDriverHandle } from "./types";
-import type { TckMessages } from "./create-tck-messages";
-import { waitFor } from "./wait";
+import type { TckDriverHandle } from "./types.js";
+import type { TckMessages } from "./create-tck-messages.js";
+import { waitFor } from "./wait.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 export const hooksSuite = (

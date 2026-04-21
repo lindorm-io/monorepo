@@ -1,7 +1,7 @@
 import { calculateRetry } from "@lindorm/retry";
-import { ConduitError } from "../../errors";
-import { ConduitContext, ConduitResponse } from "../../types";
-import { sleep } from "./sleep";
+import { ConduitError } from "../../errors/index.js";
+import type { ConduitContext, ConduitResponse } from "../../types/index.js";
+import { sleep } from "./sleep.js";
 
 export type CommonRequestFunction<T = any> = () => Promise<ConduitResponse<T>>;
 

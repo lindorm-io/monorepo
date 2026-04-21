@@ -1,4 +1,4 @@
-import { classifyTypeCast } from "../../../../drivers/postgres/utils/sync/classify-type-cast";
+import { classifyTypeCast } from "../../../../drivers/postgres/utils/sync/classify-type-cast.js";
 import { describe, expect, it } from "vitest";
 
 describe("classifyTypeCast", () => {

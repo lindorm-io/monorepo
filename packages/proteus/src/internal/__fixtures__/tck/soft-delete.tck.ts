@@ -2,8 +2,8 @@ import { test, it, expect, beforeEach } from "vitest";
 // TCK: Soft Delete Suite
 // Tests soft-delete lifecycle: softDestroy, find excludes, restore re-includes.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const softDeleteSuite = (
   getHandle: () => TckDriverHandle,

@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../interfaces";
+import type { IEntity } from "../interfaces/index.js";
 
 /**
  * Result of offset/page-based pagination.

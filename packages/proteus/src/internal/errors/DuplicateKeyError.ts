@@ -1,1 +1,1 @@
-export { DuplicateKeyError } from "../../errors/DuplicateKeyError";
+export { DuplicateKeyError } from "../../errors/DuplicateKeyError.js";

@@ -3,8 +3,8 @@ import {
   TEST_X509_LEAF_B64_DER,
   TEST_X509_LEAF_PEM,
   TEST_X509_ROOT_PEM,
-} from "../../../__fixtures__/x509";
-import { parseX509 } from "./parse-x509";
+} from "../../../__fixtures__/x509.js";
+import { parseX509 } from "./parse-x509.js";
 import { describe, expect, test } from "vitest";
 
 describe("parseX509", () => {

@@ -1,4 +1,4 @@
-import { AkpJwk, AkpString } from "../types";
+import type { AkpJwk, AkpString } from "../types/index.js";
 
 // Fixture keys generated once per ML-DSA variant (44/65/87) and committed as
 // hardcoded strings so snapshots remain stable across test runs.

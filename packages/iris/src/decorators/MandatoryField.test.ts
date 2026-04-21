@@ -1,4 +1,4 @@
-import { MandatoryField } from "./MandatoryField";
+import { MandatoryField } from "./MandatoryField.js";
 import { describe, expect, it } from "vitest";
 
 describe("MandatoryField", () => {

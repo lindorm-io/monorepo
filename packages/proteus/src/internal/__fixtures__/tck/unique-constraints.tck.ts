@@ -3,9 +3,9 @@ import { describe, test, expect, beforeEach } from "vitest";
 // Tests single-field unique, composite unique, partial key overlap, update violation,
 // and delete + re-insert scenarios.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 
 export const uniqueConstraintsSuite = (
   getHandle: () => TckDriverHandle,

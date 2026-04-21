@@ -1,1 +1,1 @@
-export * from "./OctError";
+export * from "./OctError.js";

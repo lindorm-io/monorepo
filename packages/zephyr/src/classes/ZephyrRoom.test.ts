@@ -1,4 +1,4 @@
-import { ZephyrRoom } from "./ZephyrRoom";
+import { ZephyrRoom } from "./ZephyrRoom.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("ZephyrRoom", () => {

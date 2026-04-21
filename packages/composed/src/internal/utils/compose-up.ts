@@ -1,5 +1,5 @@
 import { spawn } from "child_process";
-import type { ComposedOptions } from "../../types";
+import type { ComposedOptions } from "../../types/index.js";
 
 type ComposeUpOptions = Pick<
   ComposedOptions,

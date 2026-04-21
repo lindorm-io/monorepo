@@ -1,9 +1,9 @@
 import { ClientError } from "@lindorm/errors";
-import { createLoginCallbackHandler } from "./login-callback-handler";
-import { parseTokenData as _parseTokenData } from "./parse-token-data";
+import { createLoginCallbackHandler } from "./login-callback-handler.js";
+import { parseTokenData as _parseTokenData } from "./parse-token-data.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("./parse-token-data");
+vi.mock("./parse-token-data.js");
 
 const parseTokenData = _parseTokenData as Mock;
 

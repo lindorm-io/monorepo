@@ -1,6 +1,6 @@
 import type { ReadableTime } from "@lindorm/date";
 import type { Dict } from "@lindorm/types";
-import { IEntity } from "../interfaces";
+import type { IEntity } from "../interfaces/index.js";
 
 /**
  * Controls per-query caching behavior.

@@ -1,5 +1,5 @@
-import { AdjustedAccessLevel, LevelOfAssurance } from "../../level-of-assurance";
-import { AuthFactor, SessionHint, SubjectHint } from "../lindorm-claims";
+import type { AdjustedAccessLevel, LevelOfAssurance } from "../../level-of-assurance.js";
+import type { AuthFactor, SessionHint, SubjectHint } from "../lindorm-claims.js";
 
 // Wire form of LindormClaims — proprietary lindorm-only claims that do
 // not have a corresponding standard. `roles` lives on OAuthClaimsWire

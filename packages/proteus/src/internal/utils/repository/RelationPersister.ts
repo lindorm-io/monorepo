@@ -1,14 +1,14 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { JoinTableOps } from "../../types/join-table-ops";
-import type { RepositoryFactory } from "../../types/repository-factory";
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
-import { isLazyRelation } from "../../entity/utils/lazy-relation";
-import { isLazyCollection } from "../../entity/utils/lazy-collection";
-import { buildRelationFilter } from "./build-relation-filter";
-import { isOwningRelation, findMirror, shouldSkipParent } from "./relation-filters";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { JoinTableOps } from "../../types/join-table-ops.js";
+import type { RepositoryFactory } from "../../types/repository-factory.js";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import { isLazyRelation } from "../../entity/utils/lazy-relation.js";
+import { isLazyCollection } from "../../entity/utils/lazy-collection.js";
+import { buildRelationFilter } from "./build-relation-filter.js";
+import { isOwningRelation, findMirror, shouldSkipParent } from "./relation-filters.js";
 
 export class RelationPersister {
   private readonly metadata: EntityMetadata;

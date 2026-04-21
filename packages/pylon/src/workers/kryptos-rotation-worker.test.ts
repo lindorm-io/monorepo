@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { LindormWorker } from "@lindorm/worker";
-import { Kryptos } from "../entities/Kryptos";
-import { createKryptosRotationWorker } from "./kryptos-rotation-worker";
+import { Kryptos } from "../entities/Kryptos.js";
+import { createKryptosRotationWorker } from "./kryptos-rotation-worker.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const {

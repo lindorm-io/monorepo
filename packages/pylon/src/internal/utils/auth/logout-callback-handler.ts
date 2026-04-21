@@ -1,10 +1,10 @@
 import { ClientError } from "@lindorm/errors";
-import {
+import type {
   PylonAuthRouterConfig,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonLogoutCookie,
-} from "../../../types";
+} from "../../../types/index.js";
 
 export const createLogoutCallbackHandler = <C extends PylonHttpContext>(
   routerConfig: PylonAuthRouterConfig,

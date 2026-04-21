@@ -1,6 +1,6 @@
-import { KryptosError } from "../../../errors";
-import { EcCurve, KryptosAlgorithm, KryptosCurve } from "../../../types";
-import { isEcCurve } from "./is-ec-curve";
+import { KryptosError } from "../../../errors/index.js";
+import type { EcCurve, KryptosAlgorithm, KryptosCurve } from "../../../types/index.js";
+import { isEcCurve } from "./is-ec-curve.js";
 
 type Options = {
   algorithm: KryptosAlgorithm;

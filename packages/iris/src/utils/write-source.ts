@@ -3,9 +3,9 @@ import { join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
 import {
   generateSource,
-  GenerateSourceOptions,
+  type GenerateSourceOptions,
   IRIS_ALL_DRIVERS,
-} from "./generate-source";
+} from "./generate-source.js";
 
 export type WriteSourceOptions = GenerateSourceOptions & {
   directory: string;

@@ -1,4 +1,4 @@
-import type { Answers, IrisDriver, ProteusDriver } from "./types";
+import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
 
 const proteusField = (driver: ProteusDriver): string | null => {
   if (driver === "none" || driver === "memory") return null;

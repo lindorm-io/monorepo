@@ -1,4 +1,4 @@
-import { ILindormWorker } from "../interfaces";
+import type { ILindormWorker } from "../interfaces/index.js";
 
 export type LindormWorkerScannerInput = Array<ILindormWorker | string>;
 

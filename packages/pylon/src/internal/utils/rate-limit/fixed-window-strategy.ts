@@ -1,5 +1,5 @@
-import { IProteusRepository } from "@lindorm/proteus";
-import { RateLimitFixed } from "../../../entities";
+import type { IProteusRepository } from "@lindorm/proteus";
+import { RateLimitFixed } from "../../../entities/index.js";
 
 export type RateLimitResult = {
   allowed: boolean;

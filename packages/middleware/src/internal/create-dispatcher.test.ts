@@ -1,5 +1,5 @@
-import { Middleware, Next } from "../types";
-import { createDispatcher } from "./create-dispatcher";
+import type { Middleware, Next } from "../types/index.js";
+import { createDispatcher } from "./create-dispatcher.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createDispatcher", () => {

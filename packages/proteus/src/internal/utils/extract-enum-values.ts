@@ -1,5 +1,5 @@
 import { isNumber, isObjectLike } from "@lindorm/is";
-import { ProteusError } from "../../errors";
+import { ProteusError } from "../../errors/index.js";
 
 export const extractEnumValues = (
   enumDef: Record<string, string | number>,

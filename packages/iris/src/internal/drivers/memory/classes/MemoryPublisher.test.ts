@@ -1,13 +1,13 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import { Broadcast } from "../../../../decorators/Broadcast";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { Topic } from "../../../../decorators/Topic";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { MemorySharedState } from "../types/memory-store";
-import { createStore } from "../utils/create-store";
-import { MemoryPublisher } from "./MemoryPublisher";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import { Broadcast } from "../../../../decorators/Broadcast.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { Topic } from "../../../../decorators/Topic.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { MemorySharedState } from "../types/memory-store.js";
+import { createStore } from "../utils/create-store.js";
+import { MemoryPublisher } from "./MemoryPublisher.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---

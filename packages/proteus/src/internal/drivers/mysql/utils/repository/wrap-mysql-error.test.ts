@@ -1,11 +1,11 @@
-import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { CheckConstraintError } from "../../../../errors/CheckConstraintError";
-import { DeadlockError } from "../../../../errors/DeadlockError";
-import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError";
-import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError";
-import { NotNullViolationError } from "../../../../errors/NotNullViolationError";
-import { SerializationError } from "../../../../errors/SerializationError";
-import { wrapMysqlError } from "./wrap-mysql-error";
+import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
+import { CheckConstraintError } from "../../../../errors/CheckConstraintError.js";
+import { DeadlockError } from "../../../../errors/DeadlockError.js";
+import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError.js";
+import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError.js";
+import { NotNullViolationError } from "../../../../errors/NotNullViolationError.js";
+import { SerializationError } from "../../../../errors/SerializationError.js";
+import { wrapMysqlError } from "./wrap-mysql-error.js";
 import { describe, expect, it } from "vitest";
 
 const createMysqlError = (errno: number, code: string, message?: string): Error => {

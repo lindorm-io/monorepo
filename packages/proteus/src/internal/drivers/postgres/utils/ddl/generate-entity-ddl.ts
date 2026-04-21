@@ -1,14 +1,14 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { NamespaceOptions } from "../../../../types/types";
-import { getEntityName } from "../../../../entity/utils/get-entity-name";
-import { generateAppendOnlyDDL } from "./generate-append-only-ddl";
-import { generateEnumTypeDDL } from "./generate-enum-type-ddl";
-import { generateFkDDL } from "./generate-fk-ddl";
-import { generateIndexDDL } from "./generate-index-ddl";
-import { generateJoinTableDDL } from "./generate-join-table-ddl";
-import { quoteIdentifier } from "../quote-identifier";
-import { generateCommentDDL } from "./generate-comment-ddl";
-import { generateTableDDL } from "./generate-table-ddl";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../../../types/types.js";
+import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { generateAppendOnlyDDL } from "./generate-append-only-ddl.js";
+import { generateEnumTypeDDL } from "./generate-enum-type-ddl.js";
+import { generateFkDDL } from "./generate-fk-ddl.js";
+import { generateIndexDDL } from "./generate-index-ddl.js";
+import { generateJoinTableDDL } from "./generate-join-table-ddl.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { generateCommentDDL } from "./generate-comment-ddl.js";
+import { generateTableDDL } from "./generate-table-ddl.js";
 
 export type DdlOutput = {
   extensions: Array<string>;

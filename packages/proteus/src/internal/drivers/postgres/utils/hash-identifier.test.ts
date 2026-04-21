@@ -1,4 +1,4 @@
-import { hashIdentifier } from "../../../drivers/postgres/utils/hash-identifier";
+import { hashIdentifier } from "../../../drivers/postgres/utils/hash-identifier.js";
 import { describe, expect, test } from "vitest";
 
 describe("hashIdentifier", () => {

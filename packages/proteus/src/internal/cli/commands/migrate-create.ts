@@ -1,10 +1,14 @@
 import { resolve } from "path";
 import { randomUUID } from "crypto";
 import { Logger } from "@lindorm/logger";
-import { writeMigrationFile } from "../../utils/migration/write-migration-file";
-import { formatTimestamp, sanitizeName, kebabToPascal } from "../utils/migration-naming";
-import type { GlobalOptions } from "../with-source";
-import { withSourceConfig } from "../with-source";
+import { writeMigrationFile } from "../../utils/migration/write-migration-file.js";
+import {
+  formatTimestamp,
+  sanitizeName,
+  kebabToPascal,
+} from "../utils/migration-naming.js";
+import type { GlobalOptions } from "../with-source.js";
+import { withSourceConfig } from "../with-source.js";
 
 type CreateOptions = GlobalOptions & {
   name: string;

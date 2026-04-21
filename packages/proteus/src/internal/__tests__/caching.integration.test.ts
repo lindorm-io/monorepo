@@ -14,8 +14,8 @@ import {
 // against the Memory driver. No Docker needed.
 
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ProteusSource } from "../../classes/ProteusSource";
-import { MemoryCacheAdapter } from "../../classes/MemoryCacheAdapter";
+import { ProteusSource } from "../../classes/ProteusSource.js";
+import { MemoryCacheAdapter } from "../../classes/MemoryCacheAdapter.js";
 import {
   AfterLoad,
   Cache,
@@ -26,7 +26,7 @@ import {
   PrimaryKeyField,
   UpdateDateField,
   VersionField,
-} from "../../decorators";
+} from "../../decorators/index.js";
 
 // ─── Test Entities ──────────────────────────────────────────────────────────
 

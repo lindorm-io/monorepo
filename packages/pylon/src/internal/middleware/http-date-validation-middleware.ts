@@ -3,11 +3,11 @@ import {
   isAfter,
   isBefore,
   ms,
-  ReadableTime,
+  type ReadableTime,
   subMilliseconds,
 } from "@lindorm/date";
 import { ClientError } from "@lindorm/errors";
-import { PylonHttpMiddleware } from "../../types";
+import type { PylonHttpMiddleware } from "../../types/index.js";
 
 type Options = {
   minRequestAge?: ReadableTime;

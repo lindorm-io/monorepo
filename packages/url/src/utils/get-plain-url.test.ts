@@ -1,4 +1,4 @@
-import { getPlainUrl } from "./get-plain-url";
+import { getPlainUrl } from "./get-plain-url.js";
 import { describe, expect, test } from "vitest";
 
 describe("getPlainUrl", () => {

@@ -1,9 +1,9 @@
 import type { IAmphora } from "@lindorm/amphora";
-import type { MessageMetadata } from "../types/metadata";
-import type { OutboundPayload } from "../types/outbound-payload";
-import { compress } from "./compress";
-import { encryptPayload } from "./encrypt";
-import { serializeMessage } from "./serialize-message";
+import type { MessageMetadata } from "../types/metadata.js";
+import type { OutboundPayload } from "../types/outbound-payload.js";
+import { compress } from "./compress.js";
+import { encryptPayload } from "./encrypt.js";
+import { serializeMessage } from "./serialize-message.js";
 
 export type { OutboundPayload };
 

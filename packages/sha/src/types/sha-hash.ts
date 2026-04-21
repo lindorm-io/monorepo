@@ -1,5 +1,5 @@
-import { ShaAlgorithm } from "@lindorm/types";
-import { BinaryToTextEncoding } from "crypto";
+import type { ShaAlgorithm } from "@lindorm/types";
+import type { BinaryToTextEncoding } from "crypto";
 
 export type CreateShaHashOptions = {
   algorithm?: ShaAlgorithm;

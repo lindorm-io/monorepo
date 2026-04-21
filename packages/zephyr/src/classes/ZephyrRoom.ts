@@ -1,5 +1,5 @@
-import type { IZephyr } from "../interfaces/Zephyr";
-import type { IZephyrRoom } from "../interfaces/ZephyrRoom";
+import type { IZephyr } from "../interfaces/Zephyr.js";
+import type { IZephyrRoom } from "../interfaces/ZephyrRoom.js";
 
 export class ZephyrRoom implements IZephyrRoom {
   public readonly name: string;

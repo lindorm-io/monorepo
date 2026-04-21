@@ -2,8 +2,8 @@ import { existsSync, mkdirSync } from "fs";
 import { isObjectLike } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
 import { Scanner } from "@lindorm/scanner";
-import { ProteusError } from "../../../errors";
-import type { MigrationInterfaceShape, LoadedMigrationShape } from "./resolve-pending";
+import { ProteusError } from "../../../errors/index.js";
+import type { MigrationInterfaceShape, LoadedMigrationShape } from "./resolve-pending.js";
 
 const scanner = new Scanner({
   deniedFilenames: [/^index$/],

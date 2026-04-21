@@ -1,11 +1,11 @@
-import { AbstractEntity } from "../../../decorators/AbstractEntity";
-import { Discriminator } from "../../../decorators/Discriminator";
-import { DiscriminatorValue } from "../../../decorators/DiscriminatorValue";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { Inheritance } from "../../../decorators/Inheritance";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { resolveInheritanceHierarchies } from "./resolve-inheritance";
+import { AbstractEntity } from "../../../decorators/AbstractEntity.js";
+import { Discriminator } from "../../../decorators/Discriminator.js";
+import { DiscriminatorValue } from "../../../decorators/DiscriminatorValue.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { Inheritance } from "../../../decorators/Inheritance.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { resolveInheritanceHierarchies } from "./resolve-inheritance.js";
 import { beforeAll, describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────

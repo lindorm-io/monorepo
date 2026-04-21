@@ -1,6 +1,6 @@
-import type { IEntity } from "../../interfaces";
-import type { IProteusCursor } from "../../interfaces/ProteusCursor";
-import { ProteusError } from "../../errors";
+import type { IEntity } from "../../interfaces/index.js";
+import type { IProteusCursor } from "../../interfaces/ProteusCursor.js";
+import { ProteusError } from "../../errors/index.js";
 
 export class ArrayCursor<E extends IEntity> implements IProteusCursor<E> {
   private readonly items: Array<E>;

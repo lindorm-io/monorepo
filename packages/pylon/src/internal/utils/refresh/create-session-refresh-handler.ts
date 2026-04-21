@@ -1,7 +1,7 @@
-import { AegisError, IAegis, isParsedJwt } from "@lindorm/aegis";
-import { IPylonSession } from "../../../interfaces";
-import { PylonSocket } from "../../../types";
-import { assertSessionStillValid } from "./assert-session-still-valid";
+import { AegisError, type IAegis, isParsedJwt } from "@lindorm/aegis";
+import type { IPylonSession } from "../../../interfaces/index.js";
+import type { PylonSocket } from "../../../types/index.js";
+import { assertSessionStillValid } from "./assert-session-still-valid.js";
 
 export type SessionLookup = (sessionId: string) => Promise<IPylonSession | null>;
 

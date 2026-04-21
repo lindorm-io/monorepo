@@ -1,5 +1,5 @@
 import type { Channel, ChannelModel, ConfirmChannel, Options } from "amqplib";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 
 export type AmqpPublishConfig = {
   properties: Options.Publish;

@@ -1,9 +1,9 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import type { IncludeOptions, SqlFragment, WindowSpec } from "../internal/types/query";
-import type { IDeleteQueryBuilder } from "./DeleteQueryBuilder";
-import type { IEntity } from "./Entity";
-import type { IInsertQueryBuilder } from "./InsertQueryBuilder";
-import type { IUpdateQueryBuilder } from "./UpdateQueryBuilder";
+import type { IncludeOptions, SqlFragment, WindowSpec } from "../internal/types/query.js";
+import type { IDeleteQueryBuilder } from "./DeleteQueryBuilder.js";
+import type { IEntity } from "./Entity.js";
+import type { IInsertQueryBuilder } from "./InsertQueryBuilder.js";
+import type { IUpdateQueryBuilder } from "./UpdateQueryBuilder.js";
 
 /**
  * Fluent query builder for constructing complex read and write queries.

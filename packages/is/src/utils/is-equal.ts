@@ -1,10 +1,10 @@
-import { isArray } from "./is-array";
-import { isBuffer } from "./is-buffer";
-import { isDate } from "./is-date";
-import { isError } from "./is-error";
-import { isNaN } from "./is-nan";
-import { isObject } from "./is-object";
-import { isUrl } from "./is-url";
+import { isArray } from "./is-array.js";
+import { isBuffer } from "./is-buffer.js";
+import { isDate } from "./is-date.js";
+import { isError } from "./is-error.js";
+import { isNaN } from "./is-nan.js";
+import { isObject } from "./is-object.js";
+import { isUrl } from "./is-url.js";
 
 export const isEqual = (expect: any, actual: any, visited = new WeakMap()): boolean => {
   if (isNaN(expect) && isNaN(actual)) {

@@ -1,6 +1,6 @@
-import { ILogger } from "@lindorm/logger";
-import { Constructor } from "@lindorm/types";
-import { IEntity } from "../../../interfaces";
+import type { ILogger } from "@lindorm/logger";
+import type { Constructor } from "@lindorm/types";
+import type { IEntity } from "../../../interfaces/index.js";
 
 export type GetIncrementFn = (key: string) => Promise<number>;
 

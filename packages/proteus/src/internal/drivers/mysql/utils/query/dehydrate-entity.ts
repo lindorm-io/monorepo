@@ -1,11 +1,11 @@
 import type { IAmphora } from "@lindorm/amphora";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity";
-import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value";
-import { resolveJoinKeyValue } from "../../../../entity/utils/resolve-join-key-value";
-import { getSkipKeys } from "../../../../utils/sql/get-skip-keys";
-import { coerceWriteValue } from "./coerce-value";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity.js";
+import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
+import { resolveJoinKeyValue } from "../../../../entity/utils/resolve-join-key-value.js";
+import { getSkipKeys } from "../../../../utils/sql/get-skip-keys.js";
+import { coerceWriteValue } from "./coerce-value.js";
 
 export type DehydratedColumn = {
   column: string;

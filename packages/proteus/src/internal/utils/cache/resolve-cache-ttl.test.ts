@@ -1,5 +1,5 @@
-import type { MetaCache } from "../../entity/types/metadata";
-import { resolveCacheTtl } from "./resolve-cache-ttl";
+import type { MetaCache } from "../../entity/types/metadata.js";
+import { resolveCacheTtl } from "./resolve-cache-ttl.js";
 import { describe, expect, test } from "vitest";
 
 describe("resolveCacheTtl", () => {

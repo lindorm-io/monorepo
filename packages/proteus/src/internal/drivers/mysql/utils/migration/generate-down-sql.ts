@@ -2,9 +2,9 @@ import type {
   MysqlDbSnapshot,
   MysqlSnapshotColumn,
   MysqlSnapshotTable,
-} from "../../types/db-snapshot";
-import type { MysqlSyncOperation } from "../../types/sync-plan";
-import { quoteIdentifier } from "../quote-identifier";
+} from "../../types/db-snapshot.js";
+import type { MysqlSyncOperation } from "../../types/sync-plan.js";
+import { quoteIdentifier } from "../quote-identifier.js";
 
 const findTable = (
   snapshot: MysqlDbSnapshot,

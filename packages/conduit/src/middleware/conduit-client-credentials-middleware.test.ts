@@ -1,11 +1,11 @@
 import MockDate from "mockdate";
 import nock from "nock";
-import { OPEN_ID_CONFIGURATION_RESPONSE } from "../__fixtures__/auth0";
+import { OPEN_ID_CONFIGURATION_RESPONSE } from "../__fixtures__/auth0.js";
 import {
-  ConduitClientCredentialsCache,
-  ConduitClientCredentialsMiddlewareFactory,
+  type ConduitClientCredentialsCache,
+  type ConduitClientCredentialsMiddlewareFactory,
   conduitClientCredentialsMiddlewareFactory,
-} from "./conduit-client-credentials-middleware";
+} from "./conduit-client-credentials-middleware.js";
 import { beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T00:00:00.000Z");

@@ -1,4 +1,4 @@
-import { parseAuthConfig } from "./parse-auth-config";
+import { parseAuthConfig } from "./parse-auth-config.js";
 import { describe, expect, test } from "vitest";
 
 describe("parseAuthConfig", () => {

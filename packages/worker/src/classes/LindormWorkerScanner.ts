@@ -1,15 +1,15 @@
 import { isReadableTime } from "@lindorm/date";
 import { isArray, isFunction, isNumber, isObject, isString } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
-import { IScanData, Scanner } from "@lindorm/scanner";
-import { LindormWorkerScannerError } from "../errors";
-import { ILindormWorker } from "../interfaces";
-import {
+import type { ILogger } from "@lindorm/logger";
+import { type IScanData, Scanner } from "@lindorm/scanner";
+import { LindormWorkerScannerError } from "../errors/index.js";
+import type { ILindormWorker } from "../interfaces/index.js";
+import type {
   LindormWorkerOptions,
   LindormWorkerScannerInput,
   LindormWorkerScannerOutput,
-} from "../types";
-import { LindormWorker } from "./LindormWorker";
+} from "../types/index.js";
+import { LindormWorker } from "./LindormWorker.js";
 
 export class LindormWorkerScanner {
   public static async scan(

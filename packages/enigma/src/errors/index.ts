@@ -1,2 +1,2 @@
-export * from "./ArgonError";
-export * from "./EnigmaError";
+export * from "./ArgonError.js";
+export * from "./EnigmaError.js";

@@ -1,8 +1,8 @@
 import { CircuitBreaker, CircuitOpenError, type ICircuitBreaker } from "@lindorm/breaker";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ConduitError } from "../errors";
-import { createConduitCircuitBreakerMiddleware } from "./conduit-circuit-breaker-middleware";
-import type { ConduitCircuitBreakerCache, ConduitMiddleware } from "../types";
+import { ConduitError } from "../errors/index.js";
+import { createConduitCircuitBreakerMiddleware } from "./conduit-circuit-breaker-middleware.js";
+import type { ConduitCircuitBreakerCache, ConduitMiddleware } from "../types/index.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("conduitCircuitBreakerMiddleware", () => {

@@ -1,4 +1,4 @@
-import { EventMatcher, EventSegment } from "./EventMatcher";
+import { EventMatcher, type EventSegment } from "./EventMatcher.js";
 import { describe, expect, it } from "vitest";
 
 const literal = (value: string): EventSegment => ({ type: "literal", value });

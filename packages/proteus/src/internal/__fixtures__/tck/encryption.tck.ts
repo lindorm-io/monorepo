@@ -2,8 +2,8 @@ import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Encryption Suite
 // Tests field-level encryption via @Encrypted decorator across all drivers.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const encryptionSuite = (
   getHandle: () => TckDriverHandle,

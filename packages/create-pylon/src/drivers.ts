@@ -7,7 +7,7 @@ import {
   writeSource as writeIrisSource,
 } from "@lindorm/iris";
 import { join } from "path";
-import type { IrisDriver, ProteusDriver } from "./types";
+import type { IrisDriver, ProteusDriver } from "./types.js";
 
 export const runProteusInit = async (
   projectDir: string,

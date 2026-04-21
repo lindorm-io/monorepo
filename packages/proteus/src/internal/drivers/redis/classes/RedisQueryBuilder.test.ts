@@ -1,8 +1,8 @@
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
 import {
   beforeEach,
   describe,
@@ -15,7 +15,7 @@ import {
 
 // ─── Module Mocks ─────────────────────────────────────────────────────────────
 
-vi.mock("../utils/build-entity-key", async () => ({
+vi.mock("../utils/build-entity-key.js", async () => ({
   buildEntityKey: vi.fn((_target, pkValues, namespace) => {
     const parts = namespace
       ? [namespace, "entity", "test_product"]
@@ -31,13 +31,13 @@ vi.mock("../utils/build-entity-key", async () => ({
   }),
 }));
 
-vi.mock("../utils/build-scan-pattern", () => ({
+vi.mock("../utils/build-scan-pattern.js", () => ({
   buildScanPattern: vi.fn((_target, namespace) =>
     namespace ? `${namespace}:entity:test_product:*` : "entity:test_product:*",
   ),
 }));
 
-vi.mock("../utils/serialize-hash", () => ({
+vi.mock("../utils/serialize-hash.js", () => ({
   serializeHash: vi.fn((row: Dict, _fields: unknown, _relations: unknown) => {
     const result: Record<string, string> = {};
     for (const [k, v] of Object.entries(row)) {
@@ -52,7 +52,7 @@ vi.mock("../utils/serialize-hash", () => ({
   }),
 }));
 
-vi.mock("../utils/deserialize-hash", () => ({
+vi.mock("../utils/deserialize-hash.js", () => ({
   deserializeHash: vi.fn(
     (hash: Record<string, string>, fields: Array<MetaField>, _relations: unknown) => {
       if (Object.keys(hash).length === 0) return null;
@@ -77,7 +77,7 @@ vi.mock("../utils/deserialize-hash", () => ({
   ),
 }));
 
-vi.mock("../utils/is-pk-exact", () => ({
+vi.mock("../utils/is-pk-exact.js", () => ({
   extractExactPk: vi.fn(
     (criteria: Record<string, unknown>, primaryKeys: Array<string>) => {
       const values: Array<unknown> = [];
@@ -92,15 +92,15 @@ vi.mock("../utils/is-pk-exact", () => ({
   ),
 }));
 
-vi.mock("../utils/scan-entity-keys", () => ({
+vi.mock("../utils/scan-entity-keys.js", () => ({
   scanEntityKeys: vi.fn(),
 }));
 
-vi.mock("../utils/redis-auto-increment", () => ({
+vi.mock("../utils/redis-auto-increment.js", () => ({
   applyRedisAutoIncrement: vi.fn(),
 }));
 
-vi.mock("../../../entity/utils/default-hydrate-entity", () => ({
+vi.mock("../../../entity/utils/default-hydrate-entity.js", () => ({
   defaultHydrateEntity: vi.fn((data: Dict, metadata: EntityMetadata) => {
     const entity = new metadata.target();
     for (const field of metadata.fields) {
@@ -112,25 +112,25 @@ vi.mock("../../../entity/utils/default-hydrate-entity", () => ({
   }),
 }));
 
-vi.mock("../../../utils/query/resolve-filters", () => ({
+vi.mock("../../../utils/query/resolve-filters.js", () => ({
   resolveFilters: vi.fn(() => []),
 }));
 
-vi.mock("../../../utils/query/merge-system-filter-overrides", () => ({
+vi.mock("../../../utils/query/merge-system-filter-overrides.js", () => ({
   mergeSystemFilterOverrides: vi.fn(
     (overrides: unknown, _withDeleted: boolean, _withoutScope: boolean) => overrides,
   ),
 }));
 
-vi.mock("../../../entity/metadata/auto-filters", () => ({
+vi.mock("../../../entity/metadata/auto-filters.js", () => ({
   generateAutoFilters: vi.fn(() => []),
 }));
 
 // ─── Import mocked modules ───────────────────────────────────────────────────
 
-import { scanEntityKeys } from "../utils/scan-entity-keys";
-import { resolveFilters } from "../../../utils/query/resolve-filters";
-import { RedisQueryBuilder } from "./RedisQueryBuilder";
+import { scanEntityKeys } from "../utils/scan-entity-keys.js";
+import { resolveFilters } from "../../../utils/query/resolve-filters.js";
+import { RedisQueryBuilder } from "./RedisQueryBuilder.js";
 
 const mockedScanEntityKeys = scanEntityKeys as MockedFunction<typeof scanEntityKeys>;
 const mockedResolveFilters = resolveFilters as MockedFunction<typeof resolveFilters>;

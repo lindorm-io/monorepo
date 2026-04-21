@@ -1,5 +1,5 @@
-import type { UniqueDecoratorOptions } from "../internal/entity/types/decorators";
-import { stageUnique } from "../internal/entity/metadata/stage-metadata";
+import type { UniqueDecoratorOptions } from "../internal/entity/types/decorators.js";
+import { stageUnique } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Declare a unique constraint on one or more fields.

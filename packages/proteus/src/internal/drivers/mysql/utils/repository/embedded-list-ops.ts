@@ -1,8 +1,8 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { MetaEmbeddedList } from "../../../../entity/types/metadata";
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { deserialise } from "../../../../entity/utils/deserialise";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { MetaEmbeddedList } from "../../../../entity/types/metadata.js";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { deserialise } from "../../../../entity/utils/deserialise.js";
 
 /**
  * Insert collection table rows for an entity's @EmbeddedList fields.

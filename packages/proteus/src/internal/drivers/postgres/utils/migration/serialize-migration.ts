@@ -2,12 +2,12 @@ import {
   formatTimestamp,
   kebabToPascal,
   sanitizeName,
-} from "../../../../cli/utils/migration-naming";
+} from "../../../../cli/utils/migration-naming.js";
 import { ShaKit } from "@lindorm/sha";
 import { randomUUID } from "crypto";
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { SyncOperation, SyncPlan } from "../../types/sync-plan";
-import { generateDownSql } from "./generate-down-sql";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { SyncOperation, SyncPlan } from "../../types/sync-plan.js";
+import { generateDownSql } from "./generate-down-sql.js";
 
 export type SerializedMigration = {
   filename: string;

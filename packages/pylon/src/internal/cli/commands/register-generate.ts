@@ -1,9 +1,9 @@
 import type { Command } from "commander";
-import { generateRoute } from "./generate-route";
-import { generateListener } from "./generate-listener";
-import { generateMiddleware } from "./generate-middleware";
-import { generateHandler } from "./generate-handler";
-import { generateWorker } from "./generate-worker";
+import { generateRoute } from "./generate-route.js";
+import { generateListener } from "./generate-listener.js";
+import { generateMiddleware } from "./generate-middleware.js";
+import { generateHandler } from "./generate-handler.js";
+import { generateWorker } from "./generate-worker.js";
 
 export const registerGenerateCommands = (program: Command): void => {
   const generate = program

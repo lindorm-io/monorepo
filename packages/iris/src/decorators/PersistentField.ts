@@ -1,4 +1,4 @@
-import { stageField } from "../internal/message/metadata/stage-metadata";
+import { stageField } from "../internal/message/metadata/stage-metadata.js";
 
 export const PersistentField =
   () =>

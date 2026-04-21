@@ -1,17 +1,17 @@
-import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock dependencies before importing the module under test
-vi.mock("../../../entity/utils/default-hydrate-entity", () => ({
+vi.mock("../../../entity/utils/default-hydrate-entity.js", () => ({
   defaultHydrateEntity: vi.fn((row: any, _meta: any, _opts: any) => row),
 }));
 
-vi.mock("../../../entity/utils/resolve-polymorphic-metadata", () => ({
+vi.mock("../../../entity/utils/resolve-polymorphic-metadata.js", () => ({
   resolvePolymorphicMetadata: vi.fn((_row: any, meta: any) => meta),
 }));
 
-import { hydrateEntity, hydrateEntities } from "./hydrate";
-import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
+import { hydrateEntity, hydrateEntities } from "./hydrate.js";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

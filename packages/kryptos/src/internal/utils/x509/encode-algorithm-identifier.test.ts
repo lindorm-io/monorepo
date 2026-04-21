@@ -1,7 +1,7 @@
 import {
   encodeX509AlgorithmIdentifier,
   resolveSignatureDescriptor,
-} from "./encode-algorithm-identifier";
+} from "./encode-algorithm-identifier.js";
 import { describe, expect, test } from "vitest";
 
 describe("resolveSignatureDescriptor", () => {

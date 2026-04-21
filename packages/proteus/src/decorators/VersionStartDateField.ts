@@ -1,5 +1,8 @@
-import type { NamedDecoratorOptions } from "../internal/entity/types/decorators";
-import { stageField, stageGenerated } from "../internal/entity/metadata/stage-metadata";
+import type { NamedDecoratorOptions } from "../internal/entity/types/decorators.js";
+import {
+  stageField,
+  stageGenerated,
+} from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Declare the start timestamp for temporal/versioned tables.

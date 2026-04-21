@@ -1,4 +1,4 @@
-import { buildMysqlLockName, hashNamespaceToInt32 } from "./advisory-lock-name";
+import { buildMysqlLockName, hashNamespaceToInt32 } from "./advisory-lock-name.js";
 import { describe, expect, it } from "vitest";
 
 describe("buildMysqlLockName", () => {

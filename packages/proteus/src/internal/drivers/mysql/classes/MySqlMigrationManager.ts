@@ -1,30 +1,30 @@
-import type { EntityMetadata } from "../../../entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type {
   GenerateBaselineResult,
   GenerateMigrationResult,
   IMigrationManager,
   MigrationStatusResult,
-} from "../../../interfaces/MigrationManager";
-import type { NamespaceOptions } from "../../../types/types";
-import { buildMysqlLockName } from "../../../utils/advisory-lock-name";
-import { computeHash } from "../../../utils/migration/compute-hash";
-import { loadMigrations } from "../../../utils/migration/load-migrations";
-import { resolvePending } from "../../../utils/migration/resolve-pending";
-import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver";
+} from "../../../interfaces/MigrationManager.js";
+import type { NamespaceOptions } from "../../../types/types.js";
+import { buildMysqlLockName } from "../../../utils/advisory-lock-name.js";
+import { computeHash } from "../../../utils/migration/compute-hash.js";
+import { loadMigrations } from "../../../utils/migration/load-migrations.js";
+import { resolvePending } from "../../../utils/migration/resolve-pending.js";
+import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver.js";
 import type { ILogger } from "@lindorm/logger";
-import { MySqlMigrationError } from "../errors/MySqlMigrationError";
+import { MySqlMigrationError } from "../errors/MySqlMigrationError.js";
 import type {
   MigrationApplyResult,
   MigrationRecord,
   MysqlMigrationTableOptions,
-} from "../types/migration";
-import type { MysqlQueryClient } from "../types/mysql-query-client";
+} from "../types/migration.js";
+import type { MysqlQueryClient } from "../types/mysql-query-client.js";
 import {
   executeMigrationDown,
   executeMigrationUp,
-} from "../utils/migration/execute-migration";
-import { generateMysqlBaselineMigration } from "../utils/migration/generate-baseline-migration";
-import { generateMysqlMigration } from "../utils/migration/generate-migration";
+} from "../utils/migration/execute-migration.js";
+import { generateMysqlBaselineMigration } from "../utils/migration/generate-baseline-migration.js";
+import { generateMysqlMigration } from "../utils/migration/generate-migration.js";
 import {
   ensureMigrationTable,
   getAllMigrationRecords,
@@ -33,7 +33,7 @@ import {
   insertMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "../utils/migration/migration-table";
+} from "../utils/migration/migration-table.js";
 
 export type MySqlMigrationManagerOptions = {
   client: MysqlQueryClient;

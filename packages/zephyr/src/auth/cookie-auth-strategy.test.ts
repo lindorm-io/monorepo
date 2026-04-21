@@ -1,6 +1,6 @@
 import type { Socket } from "socket.io-client";
-import { ZephyrError } from "../errors/ZephyrError";
-import { createCookieAuthStrategy } from "./cookie-auth-strategy";
+import { ZephyrError } from "../errors/ZephyrError.js";
+import { createCookieAuthStrategy } from "./cookie-auth-strategy.js";
 import {
   afterEach,
   beforeEach,

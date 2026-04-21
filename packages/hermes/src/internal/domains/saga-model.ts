@@ -1,10 +1,10 @@
 import type { ILogger } from "@lindorm/logger";
 import type { ClassLike, Constructor, Dict } from "@lindorm/types";
-import type { AggregateIdentifier, SagaDispatchOptions } from "../../types";
-import type { HermesRegistry } from "../registry";
+import type { AggregateIdentifier, SagaDispatchOptions } from "../../types/index.js";
+import type { HermesRegistry } from "../registry/index.js";
 import merge from "deepmerge";
 import { z } from "zod";
-import { SagaDestroyedError } from "../../errors";
+import { SagaDestroyedError } from "../../errors/index.js";
 
 export type SagaPendingMessage = {
   kind: "command" | "timeout";

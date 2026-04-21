@@ -1,18 +1,18 @@
 import { Conduit, conduitChangeResponseDataMiddleware } from "@lindorm/conduit";
 import { isArray, isString, isUrlLike } from "@lindorm/is";
-import { IKryptos, KryptosKit, LindormJwk } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { OpenIdConfigurationResponse, OpenIdJwksResponse } from "@lindorm/types";
+import { type IKryptos, KryptosKit, type LindormJwk } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
+import type { OpenIdConfigurationResponse, OpenIdJwksResponse } from "@lindorm/types";
 import { Predicated } from "@lindorm/utils";
-import { AmphoraError } from "../errors";
-import { IAmphora } from "../interfaces";
-import {
+import { AmphoraError } from "../errors/index.js";
+import type { IAmphora } from "../interfaces/index.js";
+import type {
   AmphoraConfig,
   AmphoraExternalOption,
   AmphoraJwks,
   AmphoraOptions,
   AmphoraPredicate,
-} from "../types";
+} from "../types/index.js";
 
 const OIDCONF = "/.well-known/openid-configuration" as const;
 

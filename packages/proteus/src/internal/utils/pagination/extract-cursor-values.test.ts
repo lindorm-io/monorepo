@@ -1,4 +1,4 @@
-import { extractCursorValues } from "./extract-cursor-values";
+import { extractCursorValues } from "./extract-cursor-values.js";
 import { describe, expect, it } from "vitest";
 
 describe("extractCursorValues", () => {

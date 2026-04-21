@@ -1,11 +1,11 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Eager } from "./Eager";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { JoinKey } from "./JoinKey";
-import { Nullable } from "./Nullable";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { OneToOne } from "./OneToOne";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Eager } from "./Eager.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { JoinKey } from "./JoinKey.js";
+import { Nullable } from "./Nullable.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { OneToOne } from "./OneToOne.js";
 import { describe, expect, test } from "vitest";
 
 // OneToOne: User owns Profile (has FK), Profile references back to User

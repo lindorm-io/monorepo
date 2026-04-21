@@ -1,9 +1,9 @@
-import { KryptosError } from "../../../errors";
-import { KryptosBuffer } from "../../../types";
-import { createAkpDerFromDer } from "../akp/der-from-der";
-import { createEcDerFromDer } from "../ec/der-from-der";
-import { createOkpDerFromDer } from "../okp/der-from-der";
-import { createRsaDerFromDer } from "../rsa/der-from-der";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosBuffer } from "../../../types/index.js";
+import { createAkpDerFromDer } from "../akp/der-from-der.js";
+import { createEcDerFromDer } from "../ec/der-from-der.js";
+import { createOkpDerFromDer } from "../okp/der-from-der.js";
+import { createRsaDerFromDer } from "../rsa/der-from-der.js";
 
 export const createDerFromDer = (options: KryptosBuffer): KryptosBuffer => {
   switch (options.type) {

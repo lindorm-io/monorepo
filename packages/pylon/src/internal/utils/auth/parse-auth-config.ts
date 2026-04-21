@@ -1,11 +1,11 @@
-import { ReadableTime } from "@lindorm/date";
+import type { ReadableTime } from "@lindorm/date";
 import { merge } from "@lindorm/utils";
-import {
+import type {
   PylonAuthConfig,
   PylonAuthOptions,
   PylonAuthRefreshConfig,
   PylonAuthRouterConfig,
-} from "../../../types";
+} from "../../../types/index.js";
 
 const REFRESH_DEFAULTS: PylonAuthRefreshConfig = {
   maxAge: "1h",

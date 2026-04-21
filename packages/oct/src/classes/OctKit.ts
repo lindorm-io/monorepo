@@ -1,17 +1,17 @@
 import {
-  IKryptosOct,
+  type IKryptosOct,
   KryptosKit,
   OCT_SIG_ALGORITHMS,
-  OctSigAlgorithm,
+  type OctSigAlgorithm,
 } from "@lindorm/kryptos";
-import { IKeyKit, KeyData } from "@lindorm/types";
-import { OctError } from "../errors";
-import { OctKitOptions } from "../types";
+import type { IKeyKit, KeyData } from "@lindorm/types";
+import { OctError } from "../errors/index.js";
+import type { OctKitOptions } from "../types/index.js";
 import {
   assertOctSignature,
   createOctSignature,
   verifyOctSignature,
-} from "../internal/index";
+} from "../internal/index.js";
 
 export class OctKit implements IKeyKit {
   private readonly encoding: BufferEncoding;

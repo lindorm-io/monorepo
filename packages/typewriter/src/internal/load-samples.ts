@@ -1,8 +1,8 @@
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import { existsSync, readFileSync } from "fs";
 import { load } from "js-yaml";
 import { extname } from "path";
-import { getFiles } from "./get-files";
+import { getFiles } from "./get-files.js";
 
 type Options = {
   input: Array<string>;

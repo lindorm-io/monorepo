@@ -1,4 +1,4 @@
-import { renderSecurityTxt } from "./render-security-txt";
+import { renderSecurityTxt } from "./render-security-txt.js";
 import { describe, expect, test } from "vitest";
 
 describe("renderSecurityTxt", () => {

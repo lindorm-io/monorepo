@@ -1,12 +1,12 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { ProteusError } from "../../../errors/ProteusError";
-import type { CompiledSql } from "./compiled-sql";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { ProteusError } from "../../../errors/ProteusError.js";
+import type { CompiledSql } from "./compiled-sql.js";
 import {
   buildDiscriminatorPredicateQualified,
   buildDiscriminatorPredicateUnqualified,
-} from "./compile-helpers";
-import { resolveTableName } from "./resolve-table-name";
-import type { SqlDialect } from "./sql-dialect";
+} from "./compile-helpers.js";
+import { resolveTableName } from "./resolve-table-name.js";
+import type { SqlDialect } from "./sql-dialect.js";
 
 /**
  * Compiles a `DELETE FROM ... WHERE <expiryDate> <= <dateNow>` to purge expired rows.

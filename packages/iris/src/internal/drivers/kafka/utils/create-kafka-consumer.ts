@@ -8,8 +8,8 @@ import type {
   KafkaConsumerHandle,
   KafkaEachMessagePayload,
   KafkaPooledConsumer,
-} from "../types/kafka-types";
-import { ensureKafkaTopic } from "./ensure-kafka-topic";
+} from "../types/kafka-types.js";
+import { ensureKafkaTopic } from "./ensure-kafka-topic.js";
 
 export type { CreateKafkaConsumerOptions, GetOrCreatePooledConsumerOptions };
 

@@ -1,33 +1,33 @@
 // DTO class decorators
-export { Command } from "./Command";
-export { Event } from "./Event";
-export { Query } from "./Query";
-export { Timeout } from "./Timeout";
+export { Command } from "./Command.js";
+export { Event } from "./Event.js";
+export { Query } from "./Query.js";
+export { Timeout } from "./Timeout.js";
 
 // Domain class decorators
-export { Aggregate } from "./Aggregate";
-export { Saga } from "./Saga";
-export { View } from "./View";
+export { Aggregate } from "./Aggregate.js";
+export { Saga } from "./Saga.js";
+export { View } from "./View.js";
 
 // Composable class decorators
-export { Forgettable } from "./Forgettable";
-export { Namespace } from "./Namespace";
+export { Forgettable } from "./Forgettable.js";
+export { Namespace } from "./Namespace.js";
 
 // Handler method decorators
-export { AggregateCommandHandler } from "./AggregateCommandHandler";
-export { AggregateErrorHandler } from "./AggregateErrorHandler";
-export { AggregateEventHandler } from "./AggregateEventHandler";
-export { EventUpcaster } from "./EventUpcaster";
-export { SagaErrorHandler } from "./SagaErrorHandler";
-export { SagaEventHandler } from "./SagaEventHandler";
-export { SagaIdHandler } from "./SagaIdHandler";
-export { SagaTimeoutHandler } from "./SagaTimeoutHandler";
-export { ViewErrorHandler } from "./ViewErrorHandler";
-export { ViewEventHandler } from "./ViewEventHandler";
-export { ViewIdHandler } from "./ViewIdHandler";
-export { ViewQueryHandler } from "./ViewQueryHandler";
+export { AggregateCommandHandler } from "./AggregateCommandHandler.js";
+export { AggregateErrorHandler } from "./AggregateErrorHandler.js";
+export { AggregateEventHandler } from "./AggregateEventHandler.js";
+export { EventUpcaster } from "./EventUpcaster.js";
+export { SagaErrorHandler } from "./SagaErrorHandler.js";
+export { SagaEventHandler } from "./SagaEventHandler.js";
+export { SagaIdHandler } from "./SagaIdHandler.js";
+export { SagaTimeoutHandler } from "./SagaTimeoutHandler.js";
+export { ViewErrorHandler } from "./ViewErrorHandler.js";
+export { ViewEventHandler } from "./ViewEventHandler.js";
+export { ViewIdHandler } from "./ViewIdHandler.js";
+export { ViewQueryHandler } from "./ViewQueryHandler.js";
 
 // Composable method decorators
-export { RequireCreated } from "./RequireCreated";
-export { RequireNotCreated } from "./RequireNotCreated";
-export { Validate } from "./Validate";
+export { RequireCreated } from "./RequireCreated.js";
+export { RequireNotCreated } from "./RequireNotCreated.js";
+export { Validate } from "./Validate.js";

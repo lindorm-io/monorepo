@@ -1,8 +1,8 @@
-import type { RedisClient } from "../types/redis-types";
+import type { RedisClient } from "../types/redis-types.js";
 import {
   createConsumerLoop,
   type CreateConsumerLoopOptions,
-} from "./create-consumer-loop";
+} from "./create-consumer-loop.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({

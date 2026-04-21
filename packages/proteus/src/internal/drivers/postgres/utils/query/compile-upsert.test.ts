@@ -1,6 +1,6 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import { compileUpsert } from "./compile-upsert";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import { compileUpsert } from "./compile-upsert.js";
 import { describe, expect, test } from "vitest";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────

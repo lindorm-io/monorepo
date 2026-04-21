@@ -1,2 +1,2 @@
-export * from "./Kryptos";
-export * from "./KryptosKit";
+export * from "./Kryptos.js";
+export * from "./KryptosKit.js";
