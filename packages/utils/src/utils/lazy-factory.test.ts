@@ -1,8 +1,9 @@
 import { lazyFactory } from "./lazy-factory";
+import { describe, expect, test, vi } from "vitest";
 
 describe("lazyFactory", () => {
   test("should not call factory until property is accessed", () => {
-    const factory = jest.fn().mockReturnValue("value");
+    const factory = vi.fn().mockReturnValue("value");
     const obj: Record<string, unknown> = {};
 
     lazyFactory(obj, "key", factory);
@@ -11,7 +12,7 @@ describe("lazyFactory", () => {
   });
 
   test("should call factory on first access", () => {
-    const factory = jest.fn().mockReturnValue("value");
+    const factory = vi.fn().mockReturnValue("value");
     const obj: Record<string, unknown> = {};
 
     lazyFactory(obj, "key", factory);
@@ -21,7 +22,7 @@ describe("lazyFactory", () => {
   });
 
   test("should cache the result on subsequent accesses", () => {
-    const factory = jest.fn().mockReturnValue({ data: 42 });
+    const factory = vi.fn().mockReturnValue({ data: 42 });
     const obj: Record<string, unknown> = {};
 
     lazyFactory(obj, "key", factory);

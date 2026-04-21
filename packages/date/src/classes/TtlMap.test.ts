@@ -1,12 +1,13 @@
 import { TtlMap } from "./TtlMap";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("TtlMap", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe("set / get / has / delete", () => {
@@ -40,7 +41,7 @@ describe("TtlMap", () => {
       const map = new TtlMap<string, number>("5m");
       map.set("a", 1);
 
-      jest.advanceTimersByTime(4 * 60 * 1000);
+      vi.advanceTimersByTime(4 * 60 * 1000);
 
       expect(map.get("a")).toBe(1);
       expect(map.has("a")).toBe(true);
@@ -50,7 +51,7 @@ describe("TtlMap", () => {
       const map = new TtlMap<string, number>("5m");
       map.set("a", 1);
 
-      jest.advanceTimersByTime(5 * 60 * 1000);
+      vi.advanceTimersByTime(5 * 60 * 1000);
 
       expect(map.get("a")).toMatchSnapshot();
       expect(map.has("a")).toMatchSnapshot();
@@ -63,7 +64,7 @@ describe("TtlMap", () => {
       map.set("short", 1, "10s");
       map.set("long", 2, "1h");
 
-      jest.advanceTimersByTime(15 * 1000);
+      vi.advanceTimersByTime(15 * 1000);
 
       expect(map.get("short")).toBeUndefined();
       expect(map.get("long")).toBe(2);
@@ -89,7 +90,7 @@ describe("TtlMap", () => {
       map.set("b", 2, "1h");
       map.set("c", 3, "1h");
 
-      jest.advanceTimersByTime(15 * 1000);
+      vi.advanceTimersByTime(15 * 1000);
 
       expect(map.size).toMatchSnapshot();
     });
@@ -101,7 +102,7 @@ describe("TtlMap", () => {
       map.set("a", 1);
       map.set("b", 2, "1h");
 
-      jest.advanceTimersByTime(15 * 1000);
+      vi.advanceTimersByTime(15 * 1000);
 
       map.cleanup();
 
@@ -117,7 +118,7 @@ describe("TtlMap", () => {
       map.set("alive2", 2);
       map.set("dead", 3, "10s");
 
-      jest.advanceTimersByTime(15 * 1000);
+      vi.advanceTimersByTime(15 * 1000);
       return map;
     };
 

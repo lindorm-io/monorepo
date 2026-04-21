@@ -1,4 +1,5 @@
 import { randomBaseString } from "./random-base-string";
+import { describe, expect, test } from "vitest";
 
 describe("randomBaseString", () => {
   test("should return a random string", () => {

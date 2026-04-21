@@ -1,4 +1,5 @@
 import { sec } from "./sec";
+import { describe, expect, test } from "vitest";
 
 describe("sec", () => {
   test("should resolve seconds", () => {

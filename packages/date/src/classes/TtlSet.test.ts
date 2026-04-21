@@ -1,12 +1,13 @@
 import { TtlSet } from "./TtlSet";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 describe("TtlSet", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
+    vi.useFakeTimers();
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe("add / has / delete", () => {
@@ -33,7 +34,7 @@ describe("TtlSet", () => {
       const set = new TtlSet<string>("5m");
       set.add("a");
 
-      jest.advanceTimersByTime(4 * 60 * 1000);
+      vi.advanceTimersByTime(4 * 60 * 1000);
 
       expect(set.has("a")).toBe(true);
     });
@@ -42,7 +43,7 @@ describe("TtlSet", () => {
       const set = new TtlSet<string>("5m");
       set.add("a");
 
-      jest.advanceTimersByTime(5 * 60 * 1000);
+      vi.advanceTimersByTime(5 * 60 * 1000);
 
       expect(set.has("a")).toMatchSnapshot();
     });
@@ -54,7 +55,7 @@ describe("TtlSet", () => {
       set.add("short", "10s");
       set.add("long", "1h");
 
-      jest.advanceTimersByTime(15 * 1000);
+      vi.advanceTimersByTime(15 * 1000);
 
       expect(set.has("short")).toBe(false);
       expect(set.has("long")).toBe(true);
@@ -80,7 +81,7 @@ describe("TtlSet", () => {
       set.add("b", "1h");
       set.add("c", "1h");
 
-      jest.advanceTimersByTime(15 * 1000);
+      vi.advanceTimersByTime(15 * 1000);
 
       expect(set.size).toMatchSnapshot();
     });
@@ -92,7 +93,7 @@ describe("TtlSet", () => {
       set.add("a");
       set.add("b", "1h");
 
-      jest.advanceTimersByTime(15 * 1000);
+      vi.advanceTimersByTime(15 * 1000);
 
       set.cleanup();
 
@@ -108,7 +109,7 @@ describe("TtlSet", () => {
       set.add("alive2");
       set.add("dead", "10s");
 
-      jest.advanceTimersByTime(15 * 1000);
+      vi.advanceTimersByTime(15 * 1000);
       return set;
     };
 

@@ -1,5 +1,6 @@
 import { Primitive } from "../classes/Primitive";
 import { deserialise } from "./deserialise";
+import { describe, expect, test } from "vitest";
 
 describe("deserialise", () => {
   describe("bigint", () => {

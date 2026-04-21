@@ -1,4 +1,5 @@
 import { diffAny, diffArray, diffObject } from "./diff";
+import { describe, expect, test } from "vitest";
 
 describe("diff", () => {
   test("should return an empty array if all elements are in source", () => {

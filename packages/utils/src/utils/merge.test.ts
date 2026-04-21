@@ -1,5 +1,6 @@
 import { Dict } from "@lindorm/types";
 import { merge } from "./merge";
+import { describe, expect, test } from "vitest";
 
 describe("merge", () => {
   test("should merge objects", () => {

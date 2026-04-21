@@ -1,6 +1,7 @@
 import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects";
 import { ChangeCase } from "../../types";
 import { changeKeys } from "./change-keys";
+import { describe, expect, test } from "vitest";
 
 describe.each([
   "camel",

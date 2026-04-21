@@ -1,4 +1,5 @@
 import { duration } from "./duration";
+import { describe, expect, test } from "vitest";
 
 describe("duration", () => {
   test("should resolve milliseconds", () => {

@@ -1,5 +1,6 @@
 import { TEST_PEOPLE } from "../__fixtures__/test-people";
 import { filter } from "./filter";
+import { describe, expect, test } from "vitest";
 
 describe("filter", () => {
   test("should filter by city", () => {

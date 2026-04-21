@@ -1,4 +1,5 @@
 import { computeDelay } from "./compute-delay";
+import { describe, expect, test } from "vitest";
 
 describe("computeDelay", () => {
   describe("exponential (default)", () => {

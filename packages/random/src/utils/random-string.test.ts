@@ -1,4 +1,5 @@
 import { randomString } from "./random-string";
+import { describe, expect, test } from "vitest";
 
 describe("randomString", () => {
   test("should return a string of the correct length", () => {

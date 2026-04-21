@@ -1,5 +1,6 @@
 import { ShaError } from "../errors";
 import { assertShaHash, createShaHash, verifyShaHash } from "./sha-hash";
+import { describe, expect, test } from "vitest";
 
 describe("sha-hash", () => {
   describe("SHA256", () => {

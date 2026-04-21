@@ -1,4 +1,5 @@
 import { parseStringRecord } from "./parse-string-record";
+import { describe, expect, test } from "vitest";
 
 describe("parseStringRecord", () => {
   test("should parse strings inside record to correct types", () => {

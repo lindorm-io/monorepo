@@ -1,4 +1,5 @@
 import { B64 } from "./B64";
+import { describe, expect, test } from "vitest";
 
 describe("B64", () => {
   describe("encode", () => {
