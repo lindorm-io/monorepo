@@ -8,12 +8,3 @@ exports[`forwardSignals > should register handlers for exactly these signals 1`]
   "SIGQUIT",
 ]
 `;
-
-exports[`forwardSignals should register handlers for exactly these signals 1`] = `
-[
-  "SIGINT",
-  "SIGTERM",
-  "SIGHUP",
-  "SIGQUIT",
-]
-`;
