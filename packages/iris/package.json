@@ -29,8 +29,8 @@
       "default": "./dist/mocks/jest.js"
     },
     "./mocks/vitest": {
-      "types": "./dist/mocks/vitest.d.mts",
-      "default": "./dist/mocks/vitest.mjs"
+      "types": "./dist/mocks/vitest.d.ts",
+      "default": "./dist/mocks/vitest.js"
     }
   },
   "typesVersions": {
@@ -39,7 +39,7 @@
         "dist/mocks/jest.d.ts"
       ],
       "mocks/vitest": [
-        "dist/mocks/vitest.d.mts"
+        "dist/mocks/vitest.d.ts"
       ]
     }
   },
