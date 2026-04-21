@@ -1,4 +1,18 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`RabbitStreamPipeline > start > should register consumer in state.consumerRegistrations 1`] = `
+{
+  "consumerTag": "pl-ctag",
+  "exchange": "test-exchange",
+  "onMessage": [Function],
+  "queue": "amq.gen-pipeline",
+  "queueOptions": {
+    "autoDelete": true,
+    "exclusive": true,
+  },
+  "routingKey": "TckRabbitPlIn",
+}
+`;
 
 exports[`RabbitStreamPipeline start should register consumer in state.consumerRegistrations 1`] = `
 {

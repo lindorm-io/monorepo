@@ -1,17 +1,18 @@
 import type { RedisClient } from "../types/redis-types";
 import { xaddToStream } from "./xadd-to-stream";
+import { describe, expect, it, vi } from "vitest";
 
 const createMockConnection = (): RedisClient => ({
-  xadd: jest.fn().mockResolvedValue("1-1"),
-  xreadgroup: jest.fn(),
-  xack: jest.fn(),
-  xgroup: jest.fn(),
-  del: jest.fn(),
-  ping: jest.fn().mockResolvedValue("PONG"),
-  duplicate: jest.fn(),
-  disconnect: jest.fn(),
-  quit: jest.fn().mockResolvedValue("OK"),
-  on: jest.fn(),
+  xadd: vi.fn().mockResolvedValue("1-1"),
+  xreadgroup: vi.fn(),
+  xack: vi.fn(),
+  xgroup: vi.fn(),
+  del: vi.fn(),
+  ping: vi.fn().mockResolvedValue("PONG"),
+  duplicate: vi.fn(),
+  disconnect: vi.fn(),
+  quit: vi.fn().mockResolvedValue("OK"),
+  on: vi.fn(),
 });
 
 describe("xaddToStream", () => {

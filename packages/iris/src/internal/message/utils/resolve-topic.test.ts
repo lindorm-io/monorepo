@@ -1,5 +1,6 @@
 import type { MessageMetadata } from "../types/metadata";
 import { resolveTopic } from "./resolve-topic";
+import { describe, expect, it } from "vitest";
 
 describe("resolveTopic", () => {
   it("should return the topic from the callback when metadata.topic is set", () => {

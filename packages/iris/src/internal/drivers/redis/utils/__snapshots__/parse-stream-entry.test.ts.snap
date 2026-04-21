@@ -1,4 +1,61 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parseStreamEntry > should parse a fully populated entry 1`] = `
+{
+  "attempt": 3,
+  "broadcast": true,
+  "correlationId": "corr-456",
+  "expiry": 60000,
+  "headers": {
+    "x-trace-id": "abc",
+  },
+  "id": "1700000000000-5",
+  "identifierValue": null,
+  "maxRetries": 5,
+  "payload": Any<Buffer>,
+  "priority": 7,
+  "replyTo": "reply-q",
+  "retryDelay": 500,
+  "retryDelayMax": 10000,
+  "retryJitter": true,
+  "retryMultiplier": 3,
+  "retryStrategy": "exponential",
+  "timestamp": 1700000000000,
+  "topic": "orders.created",
+}
+`;
+
+exports[`parseStreamEntry > should parse a minimal entry 1`] = `
+{
+  "attempt": 0,
+  "broadcast": false,
+  "correlationId": null,
+  "expiry": null,
+  "headers": {
+    "x-trace-id": "abc",
+  },
+  "id": "1700000000000-0",
+  "identifierValue": null,
+  "maxRetries": 3,
+  "payload": Any<Buffer>,
+  "priority": 0,
+  "replyTo": null,
+  "retryDelay": 1000,
+  "retryDelayMax": 30000,
+  "retryJitter": false,
+  "retryMultiplier": 2,
+  "retryStrategy": "constant",
+  "timestamp": 1700000000000,
+  "topic": "orders.created",
+}
+`;
+
+exports[`parseStreamEntry > should parse headers from JSON 1`] = `
+{
+  "x-custom": "value",
+  "x-trace": "abc",
+}
+`;
 
 exports[`parseStreamEntry should parse a fully populated entry 1`] = `
 {

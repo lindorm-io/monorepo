@@ -1,4 +1,19 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`consumeMessageCore > happy path > should build ConsumeEnvelope with metadata fields 1`] = `
+{
+  "attempt": 2,
+  "correlationId": "corr-1",
+  "headers": {
+    "x-trace": "abc",
+  },
+  "messageName": "TestMessage",
+  "namespace": "my-ns",
+  "timestamp": 1700000000000,
+  "topic": "orders.created",
+  "version": 3,
+}
+`;
 
 exports[`consumeMessageCore happy path should build ConsumeEnvelope with metadata fields 1`] = `
 {

@@ -1,4 +1,22 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MandatoryField > should stage mandatory field metadata 1`] = `
+[
+  {
+    "decorator": "MandatoryField",
+    "default": false,
+    "enum": null,
+    "key": "mandatory",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "boolean",
+  },
+]
+`;
 
 exports[`MandatoryField should stage mandatory field metadata 1`] = `
 [

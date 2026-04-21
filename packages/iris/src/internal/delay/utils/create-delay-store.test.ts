@@ -2,15 +2,18 @@ import type { IDelayStore } from "../../../interfaces/IrisDelayStore";
 import { MemoryDelayStore } from "../MemoryDelayStore";
 import { RedisDelayStore } from "../RedisDelayStore";
 import { createDelayStore } from "./create-delay-store";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockPing = jest.fn().mockResolvedValue("PONG");
+const mockPing = vi.fn().mockResolvedValue("PONG");
 
-jest.mock("ioredis", () => ({
-  Redis: jest.fn().mockImplementation(() => ({
-    defineCommand: jest.fn(),
-    ping: mockPing,
-    quit: jest.fn(),
-  })),
+vi.mock("ioredis", async () => ({
+  Redis: vi.fn(function () {
+    return {
+      defineCommand: vi.fn(),
+      ping: mockPing,
+      quit: vi.fn(),
+    };
+  }),
 }));
 
 describe("createDelayStore", () => {
@@ -31,12 +34,12 @@ describe("createDelayStore", () => {
 
   it("should return the custom store as-is", async () => {
     const custom: IDelayStore = {
-      schedule: jest.fn(),
-      poll: jest.fn(),
-      cancel: jest.fn(),
-      size: jest.fn(),
-      clear: jest.fn(),
-      close: jest.fn(),
+      schedule: vi.fn(),
+      poll: vi.fn(),
+      cancel: vi.fn(),
+      size: vi.fn(),
+      clear: vi.fn(),
+      close: vi.fn(),
     };
 
     const store = await createDelayStore({ type: "custom", store: custom });

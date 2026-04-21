@@ -1,4 +1,5 @@
 import { MandatoryField } from "./MandatoryField";
+import { describe, expect, it } from "vitest";
 
 describe("MandatoryField", () => {
   it("should stage mandatory field metadata", () => {

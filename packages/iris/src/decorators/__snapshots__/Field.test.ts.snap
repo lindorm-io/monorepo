@@ -1,4 +1,53 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Field > should accumulate multiple fields 1`] = `
+[
+  {
+    "decorator": "Field",
+    "default": null,
+    "enum": null,
+    "key": "first",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "string",
+  },
+  {
+    "decorator": "Field",
+    "default": null,
+    "enum": null,
+    "key": "second",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "integer",
+  },
+]
+`;
+
+exports[`Field > should stage field with explicit type 1`] = `
+[
+  {
+    "decorator": "Field",
+    "default": null,
+    "enum": null,
+    "key": "name",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "transform": null,
+    "type": "string",
+  },
+]
+`;
 
 exports[`Field should accumulate multiple fields 1`] = `
 [

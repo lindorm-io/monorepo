@@ -7,6 +7,7 @@ import { IrisError } from "../../../errors/IrisError";
 import type { TckDriverHandle } from "./types";
 import type { TckMessages } from "./create-tck-messages";
 import { wait } from "./wait";
+import { beforeEach, describe, expect, test } from "vitest";
 
 export const rpcSuite = (
   getHandle: () => TckDriverHandle,

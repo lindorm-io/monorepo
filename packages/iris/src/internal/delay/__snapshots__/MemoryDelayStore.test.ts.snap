@@ -1,4 +1,21 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MemoryDelayStore > poll > should return empty array when no entries are ready 1`] = `[]`;
+
+exports[`MemoryDelayStore > poll > should return entries sorted by deliverAt 1`] = `
+[
+  "a",
+  "b",
+  "c",
+]
+`;
+
+exports[`MemoryDelayStore > poll > should return entries with deliverAt <= now 1`] = `
+[
+  "a",
+  "b",
+]
+`;
 
 exports[`MemoryDelayStore poll should return empty array when no entries are ready 1`] = `[]`;
 

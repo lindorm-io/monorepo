@@ -12,11 +12,12 @@ import {
   DriverPublisherBase,
   type DriverPublisherBaseOptions,
 } from "./DriverPublisherBase";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
-const beforePublishSpy = jest.fn();
-const afterPublishSpy = jest.fn();
+const beforePublishSpy = vi.fn();
+const afterPublishSpy = vi.fn();
 
 @AfterPublish((msg) => {
   afterPublishSpy(msg);
@@ -71,13 +72,13 @@ class TestPublisher<M extends IMessage> extends DriverPublisherBase<M> {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createPublisher = <M extends IMessage>(
@@ -151,7 +152,7 @@ describe("DriverPublisherBase", () => {
 
   describe("prepareForPublish", () => {
     it("should run beforePublish hooks and produce payload and headers", async () => {
-      const subscriberBefore = jest.fn();
+      const subscriberBefore = vi.fn();
       const subscriber: IMessageSubscriber = {
         beforePublish: subscriberBefore,
       };
@@ -181,7 +182,7 @@ describe("DriverPublisherBase", () => {
 
   describe("completePublish", () => {
     it("should fire afterPublish hooks and subscriber callbacks", async () => {
-      const subscriberAfter = jest.fn();
+      const subscriberAfter = vi.fn();
       const subscriber: IMessageSubscriber = {
         afterPublish: subscriberAfter,
       };
@@ -198,12 +199,12 @@ describe("DriverPublisherBase", () => {
     it("should call subscribers in order", async () => {
       const callOrder: Array<string> = [];
       const sub1: IMessageSubscriber = {
-        afterPublish: jest.fn(() => {
+        afterPublish: vi.fn(() => {
           callOrder.push("sub1-after");
         }),
       };
       const sub2: IMessageSubscriber = {
-        afterPublish: jest.fn(() => {
+        afterPublish: vi.fn(() => {
           callOrder.push("sub2-after");
         }),
       };

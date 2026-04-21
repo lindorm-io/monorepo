@@ -2,6 +2,7 @@ import { buildMessageMetadata } from "../internal/message/metadata/build-message
 import { Default } from "./Default";
 import { Field } from "./Field";
 import { Message } from "./Message";
+import { describe, expect, it } from "vitest";
 
 describe("Default", () => {
   it("should stage field modifier with literal default", () => {

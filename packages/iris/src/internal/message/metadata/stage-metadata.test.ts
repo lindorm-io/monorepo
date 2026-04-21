@@ -19,6 +19,7 @@ import {
   stageVersion,
   stageExpiry,
 } from "./stage-metadata";
+import { beforeEach, describe, expect, it } from "vitest";
 
 describe("stage-metadata", () => {
   describe("ensureOwnArray (via stageField)", () => {

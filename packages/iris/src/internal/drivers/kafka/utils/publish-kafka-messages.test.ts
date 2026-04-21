@@ -5,19 +5,20 @@ import type { DelayManager } from "../../../delay/DelayManager";
 import type { KafkaSharedState } from "../types/kafka-types";
 import { IrisPublishError } from "../../../../errors/IrisPublishError";
 import { publishKafkaMessages, type KafkaPublishDriver } from "./publish-kafka-messages";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
-jest.mock("./ensure-kafka-topic", () => ({
-  ensureKafkaTopicFromState: jest.fn().mockResolvedValue(undefined),
+vi.mock("./ensure-kafka-topic", async () => ({
+  ensureKafkaTopicFromState: vi.fn().mockResolvedValue(undefined),
 }));
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMetadata = (overrides: Partial<MessageMetadata> = {}): MessageMetadata =>
@@ -44,20 +45,20 @@ const createDriver = (
   return {
     metadata,
     calls,
-    prepareForPublish: jest.fn(async (message: IMessage): Promise<OutboundPayload> => {
+    prepareForPublish: vi.fn(async (message: IMessage): Promise<OutboundPayload> => {
       calls.prepared.push(message);
       return { payload: Buffer.from("test-payload"), headers: {} };
     }),
-    completePublish: jest.fn(async (message: IMessage): Promise<void> => {
+    completePublish: vi.fn(async (message: IMessage): Promise<void> => {
       calls.completed.push(message);
     }),
   };
 };
 
 const createMockProducer = () => ({
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  send: jest.fn().mockResolvedValue(undefined),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  send: vi.fn().mockResolvedValue(undefined),
 });
 
 const createState = (overrides?: Partial<KafkaSharedState>): KafkaSharedState => ({
@@ -84,15 +85,15 @@ const createMockDelayManager = (): DelayManager & { scheduledCalls: Array<any> }
   const scheduledCalls: Array<any> = [];
   return {
     scheduledCalls,
-    schedule: jest.fn(async (envelope: any, topic: string, delayMs: number) => {
+    schedule: vi.fn(async (envelope: any, topic: string, delayMs: number) => {
       scheduledCalls.push({ envelope, topic, delayMs });
       return "delay-id";
     }),
-    cancel: jest.fn(),
-    start: jest.fn(),
-    stop: jest.fn(),
-    size: jest.fn(),
-    close: jest.fn(),
+    cancel: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    size: vi.fn(),
+    close: vi.fn(),
   } as any;
 };
 
@@ -126,7 +127,7 @@ describe("publishKafkaMessages", () => {
     expect(driver.calls.completed).toHaveLength(1);
     expect(state.producer!.send).toHaveBeenCalledTimes(1);
 
-    const sendArgs = (state.producer!.send as jest.Mock).mock.calls[0][0];
+    const sendArgs = (state.producer!.send as Mock).mock.calls[0][0];
     expect(sendArgs.topic).toBe("iris.TestMessage");
     expect(sendArgs.messages).toHaveLength(1);
   });
@@ -199,7 +200,7 @@ describe("publishKafkaMessages", () => {
       logger as any,
     );
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
     expect(outbound.headers["x-iris-priority"]).toBe("5");
   });
@@ -217,7 +218,7 @@ describe("publishKafkaMessages", () => {
       logger as any,
     );
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
     expect(outbound.headers["x-iris-priority"]).toBeUndefined();
   });
@@ -236,7 +237,7 @@ describe("publishKafkaMessages", () => {
       logger as any,
     );
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
     expect(outbound.headers["x-iris-priority"]).toBe("7");
   });
@@ -275,7 +276,7 @@ describe("publishKafkaMessages", () => {
       logger as any,
     );
 
-    const sendArgs = (state.producer!.send as jest.Mock).mock.calls[0][0];
+    const sendArgs = (state.producer!.send as Mock).mock.calls[0][0];
     expect(sendArgs.topic).toBe("myapp.TestMessage");
   });
 
@@ -292,7 +293,7 @@ describe("publishKafkaMessages", () => {
       logger as any,
     );
 
-    const sendArgs = (state.producer!.send as jest.Mock).mock.calls[0][0];
+    const sendArgs = (state.producer!.send as Mock).mock.calls[0][0];
     expect(sendArgs.acks).toBe(1);
   });
 
@@ -309,7 +310,7 @@ describe("publishKafkaMessages", () => {
       logger as any,
     );
 
-    const sendArgs = (state.producer!.send as jest.Mock).mock.calls[0][0];
+    const sendArgs = (state.producer!.send as Mock).mock.calls[0][0];
     expect(sendArgs.acks).toBe(-1);
   });
 
@@ -326,7 +327,7 @@ describe("publishKafkaMessages", () => {
       logger as any,
     );
 
-    const sendArgs = (state.producer!.send as jest.Mock).mock.calls[0][0];
+    const sendArgs = (state.producer!.send as Mock).mock.calls[0][0];
     const kafkaMessage = sendArgs.messages[0];
     expect(kafkaMessage.headers).toBeDefined();
     expect(kafkaMessage.headers["x-iris-topic"]).toBeDefined();

@@ -2,6 +2,7 @@ import { JsonKit } from "@lindorm/json-kit";
 import type { MessageMetadata } from "../types/metadata";
 import { deserializeMessage } from "./deserialize-message";
 import { serializeMessage } from "./serialize-message";
+import { describe, expect, it } from "vitest";
 
 const baseMetadata: MessageMetadata = {
   target: class TestMsg {} as any,

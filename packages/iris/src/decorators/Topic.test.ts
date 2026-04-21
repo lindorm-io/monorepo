@@ -1,4 +1,5 @@
 import { Topic } from "./Topic";
+import { describe, expect, it } from "vitest";
 
 describe("Topic", () => {
   it("should stage topic metadata with callback", () => {

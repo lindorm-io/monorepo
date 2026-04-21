@@ -1,4 +1,5 @@
 import { resolveConsumerName } from "./resolve-consumer-name";
+import { describe, expect, it } from "vitest";
 
 describe("resolveConsumerName", () => {
   describe("subscribe", () => {

@@ -1,4 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Max > should stage field modifier with max value 1`] = `
+{
+  "decorator": "Max",
+  "key": "count",
+  "max": 100,
+}
+`;
 
 exports[`Max should stage field modifier with max value 1`] = `
 {

@@ -1,17 +1,18 @@
 import { createNatsConsumer } from "./create-nats-consumer";
+import { describe, expect, it, vi } from "vitest";
 
-jest.mock("@lindorm/random", () => ({
-  randomUUID: jest.fn().mockReturnValue("mock-uuid-1234"),
+vi.mock("@lindorm/random", async () => ({
+  randomUUID: vi.fn().mockReturnValue("mock-uuid-1234"),
 }));
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockMessages = () => {
@@ -32,7 +33,7 @@ const createMockMessages = () => {
           return { value: undefined, done: true };
         },
       }),
-      close: jest.fn(),
+      close: vi.fn(),
     },
     push: (msg: any) => msgs.push(msg),
     waitForIteration,
@@ -42,9 +43,9 @@ const createMockMessages = () => {
 describe("createNatsConsumer", () => {
   it("should create a durable consumer via jsm when not yet ensured", async () => {
     const { messages } = createMockMessages();
-    const mockConsumer = { consume: jest.fn().mockResolvedValue(messages) };
-    const js = { consumers: { get: jest.fn().mockResolvedValue(mockConsumer) } };
-    const jsm = { consumers: { add: jest.fn().mockResolvedValue({}) } };
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
+    const jsm = { consumers: { add: vi.fn().mockResolvedValue({}) } };
     const ensuredConsumers = new Set<string>();
 
     const loop = await createNatsConsumer({
@@ -54,7 +55,7 @@ describe("createNatsConsumer", () => {
       consumerName: "test-consumer",
       subject: "test.events",
       prefetch: 10,
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: createMockLogger() as any,
       ensuredConsumers,
     });
@@ -82,9 +83,9 @@ describe("createNatsConsumer", () => {
 
   it("should skip jsm.consumers.add when consumer is already ensured", async () => {
     const { messages } = createMockMessages();
-    const mockConsumer = { consume: jest.fn().mockResolvedValue(messages) };
-    const js = { consumers: { get: jest.fn().mockResolvedValue(mockConsumer) } };
-    const jsm = { consumers: { add: jest.fn() } };
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
+    const jsm = { consumers: { add: vi.fn() } };
     const ensuredConsumers = new Set<string>(["test-consumer"]);
 
     const loop = await createNatsConsumer({
@@ -94,7 +95,7 @@ describe("createNatsConsumer", () => {
       consumerName: "test-consumer",
       subject: "test.events",
       prefetch: 10,
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: createMockLogger() as any,
       ensuredConsumers,
     });
@@ -106,11 +107,11 @@ describe("createNatsConsumer", () => {
 
   it("should tolerate 'already in use' error from jsm.consumers.add", async () => {
     const { messages } = createMockMessages();
-    const mockConsumer = { consume: jest.fn().mockResolvedValue(messages) };
-    const js = { consumers: { get: jest.fn().mockResolvedValue(mockConsumer) } };
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
     const jsm = {
       consumers: {
-        add: jest.fn().mockRejectedValue(new Error("consumer already in use")),
+        add: vi.fn().mockRejectedValue(new Error("consumer already in use")),
       },
     };
     const ensuredConsumers = new Set<string>();
@@ -122,7 +123,7 @@ describe("createNatsConsumer", () => {
       consumerName: "test-consumer",
       subject: "test.events",
       prefetch: 10,
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: createMockLogger() as any,
       ensuredConsumers,
     });
@@ -133,9 +134,9 @@ describe("createNatsConsumer", () => {
   });
 
   it("should rethrow unexpected errors from jsm.consumers.add", async () => {
-    const js = { consumers: { get: jest.fn() } };
+    const js = { consumers: { get: vi.fn() } };
     const jsm = {
-      consumers: { add: jest.fn().mockRejectedValue(new Error("connection refused")) },
+      consumers: { add: vi.fn().mockRejectedValue(new Error("connection refused")) },
     };
 
     await expect(
@@ -146,7 +147,7 @@ describe("createNatsConsumer", () => {
         consumerName: "test-consumer",
         subject: "test.events",
         prefetch: 10,
-        onMessage: jest.fn(),
+        onMessage: vi.fn(),
         logger: createMockLogger() as any,
         ensuredConsumers: new Set(),
       }),
@@ -155,9 +156,9 @@ describe("createNatsConsumer", () => {
 
   it("should use deliverPolicy 'all' when specified", async () => {
     const { messages } = createMockMessages();
-    const mockConsumer = { consume: jest.fn().mockResolvedValue(messages) };
-    const js = { consumers: { get: jest.fn().mockResolvedValue(mockConsumer) } };
-    const jsm = { consumers: { add: jest.fn().mockResolvedValue({}) } };
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
+    const jsm = { consumers: { add: vi.fn().mockResolvedValue({}) } };
 
     const loop = await createNatsConsumer({
       js: js as any,
@@ -166,7 +167,7 @@ describe("createNatsConsumer", () => {
       consumerName: "test-consumer",
       subject: "test.events",
       prefetch: 5,
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: createMockLogger() as any,
       ensuredConsumers: new Set(),
       deliverPolicy: "all",
@@ -189,10 +190,10 @@ describe("createNatsConsumer", () => {
     const { messages, push } = createMockMessages();
     push(mockMsg);
 
-    const mockConsumer = { consume: jest.fn().mockResolvedValue(messages) };
-    const js = { consumers: { get: jest.fn().mockResolvedValue(mockConsumer) } };
-    const jsm = { consumers: { add: jest.fn().mockResolvedValue({}) } };
-    const onMessage = jest.fn().mockResolvedValue(undefined);
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
+    const jsm = { consumers: { add: vi.fn().mockResolvedValue({}) } };
+    const onMessage = vi.fn().mockResolvedValue(undefined);
 
     const loop = await createNatsConsumer({
       js: js as any,
@@ -218,11 +219,11 @@ describe("createNatsConsumer", () => {
     push(mockMsg1);
     push(mockMsg2);
 
-    const mockConsumer = { consume: jest.fn().mockResolvedValue(messages) };
-    const js = { consumers: { get: jest.fn().mockResolvedValue(mockConsumer) } };
-    const jsm = { consumers: { add: jest.fn().mockResolvedValue({}) } };
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
+    const jsm = { consumers: { add: vi.fn().mockResolvedValue({}) } };
     const logger = createMockLogger();
-    const onMessage = jest
+    const onMessage = vi
       .fn()
       .mockRejectedValueOnce(new Error("handler fail"))
       .mockResolvedValueOnce(undefined);
@@ -250,9 +251,9 @@ describe("createNatsConsumer", () => {
 
   it("should resolve ready promise", async () => {
     const { messages } = createMockMessages();
-    const mockConsumer = { consume: jest.fn().mockResolvedValue(messages) };
-    const js = { consumers: { get: jest.fn().mockResolvedValue(mockConsumer) } };
-    const jsm = { consumers: { add: jest.fn().mockResolvedValue({}) } };
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
+    const jsm = { consumers: { add: vi.fn().mockResolvedValue({}) } };
 
     const loop = await createNatsConsumer({
       js: js as any,
@@ -261,7 +262,7 @@ describe("createNatsConsumer", () => {
       consumerName: "test-consumer",
       subject: "test.events",
       prefetch: 10,
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: createMockLogger() as any,
       ensuredConsumers: new Set(),
     });
@@ -272,9 +273,9 @@ describe("createNatsConsumer", () => {
 
   it("should return a valid NatsConsumerLoop structure", async () => {
     const { messages } = createMockMessages();
-    const mockConsumer = { consume: jest.fn().mockResolvedValue(messages) };
-    const js = { consumers: { get: jest.fn().mockResolvedValue(mockConsumer) } };
-    const jsm = { consumers: { add: jest.fn().mockResolvedValue({}) } };
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
+    const jsm = { consumers: { add: vi.fn().mockResolvedValue({}) } };
 
     const loop = await createNatsConsumer({
       js: js as any,
@@ -283,7 +284,7 @@ describe("createNatsConsumer", () => {
       consumerName: "test-consumer",
       subject: "test.events",
       prefetch: 10,
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: createMockLogger() as any,
       ensuredConsumers: new Set(),
     });

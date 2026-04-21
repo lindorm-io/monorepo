@@ -1,16 +1,19 @@
 import { IrisNotSupportedError } from "../../../errors/IrisNotSupportedError";
 import { IrisSerializationError } from "../../../errors/IrisSerializationError";
 import { decryptPayload, encryptPayload } from "./encrypt";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mockEncrypt = jest.fn();
-const mockDecrypt = jest.fn();
-const mockParseAes = jest.fn();
+const mockEncrypt = vi.fn();
+const mockDecrypt = vi.fn();
+const mockParseAes = vi.fn();
 
-jest.mock("@lindorm/aes", () => ({
-  AesKit: jest.fn().mockImplementation(() => ({
-    encrypt: mockEncrypt,
-    decrypt: mockDecrypt,
-  })),
+vi.mock("@lindorm/aes", async () => ({
+  AesKit: vi.fn(function () {
+    return {
+      encrypt: mockEncrypt,
+      decrypt: mockDecrypt,
+    };
+  }),
   parseAes: (data: unknown) => mockParseAes(data),
 }));
 
@@ -18,11 +21,11 @@ const predicate = { algorithm: "aes-256-gcm", purpose: "encryption" } as any;
 
 describe("encryptPayload", () => {
   const mockAmphora = {
-    find: jest.fn(),
+    find: vi.fn(),
   } as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockAmphora.find.mockResolvedValue({ id: "key-1" });
     mockEncrypt.mockReturnValue("encrypted-token-string");
     mockDecrypt.mockReturnValue("original-data");
@@ -63,12 +66,12 @@ describe("encryptPayload", () => {
 
 describe("decryptPayload", () => {
   const mockAmphora = {
-    find: jest.fn(),
-    findById: jest.fn(),
+    find: vi.fn(),
+    findById: vi.fn(),
   } as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockAmphora.findById.mockResolvedValue({ id: "key-1" });
     mockParseAes.mockReturnValue({ keyId: "key-1" });
     mockDecrypt.mockReturnValue(Buffer.from("decrypted-data").toString("base64"));

@@ -1,4 +1,5 @@
 import { generateSource } from "./generate-source";
+import { describe, expect, it } from "vitest";
 
 describe("generateSource", () => {
   it("emits TODO comment for rabbit when loggerImport is omitted", () => {

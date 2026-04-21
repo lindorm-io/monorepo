@@ -4,28 +4,29 @@ import { Message } from "../../../../decorators/Message";
 import { clearRegistry } from "../../../message/metadata/registry";
 import type { NatsSharedState, NatsConsumerLoop } from "../types/nats-types";
 import { NatsMessageBus } from "./NatsMessageBus";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
-const mockPublishNatsMessages = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/publish-nats-messages", () => ({
+const mockPublishNatsMessages = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/publish-nats-messages", async () => ({
   publishNatsMessages: (...args: Array<unknown>) => mockPublishNatsMessages(...args),
 }));
 
-const mockWrapNatsConsumer = jest.fn().mockReturnValue(jest.fn());
-jest.mock("../utils/wrap-nats-consumer", () => ({
+const mockWrapNatsConsumer = vi.fn().mockReturnValue(vi.fn());
+vi.mock("../utils/wrap-nats-consumer", () => ({
   wrapNatsConsumer: (...args: Array<unknown>) => mockWrapNatsConsumer(...args),
 }));
 
 let mockCreateNatsConsumerResult: Partial<NatsConsumerLoop>;
-const mockCreateNatsConsumer = jest
+const mockCreateNatsConsumer = vi
   .fn()
   .mockImplementation(async () => mockCreateNatsConsumerResult);
-jest.mock("../utils/create-nats-consumer", () => ({
+vi.mock("../utils/create-nats-consumer", () => ({
   createNatsConsumer: (...args: Array<unknown>) => mockCreateNatsConsumer(...args),
 }));
 
-const mockStopNatsConsumer = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/stop-nats-consumer", () => ({
+const mockStopNatsConsumer = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/stop-nats-consumer", () => ({
   stopNatsConsumer: (...args: Array<unknown>) => mockStopNatsConsumer(...args),
 }));
 
@@ -39,35 +40,33 @@ class TckNatsBusBasic implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): NatsSharedState => ({
   nc: {} as any,
   js: {
-    publish: jest
-      .fn()
-      .mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
-    consumers: { get: jest.fn() },
+    publish: vi.fn().mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
+    consumers: { get: vi.fn() },
   } as any,
   jsm: {
-    streams: { info: jest.fn(), add: jest.fn(), purge: jest.fn() },
+    streams: { info: vi.fn(), add: vi.fn(), purge: vi.fn() },
     consumers: {
-      add: jest.fn().mockResolvedValue({}),
-      delete: jest.fn().mockResolvedValue(true),
+      add: vi.fn().mockResolvedValue({}),
+      delete: vi.fn().mockResolvedValue(true),
     },
   } as any,
-  headersInit: jest.fn().mockReturnValue({
-    get: jest.fn(),
-    set: jest.fn(),
-    has: jest.fn(),
-    values: jest.fn(),
+  headersInit: vi.fn().mockReturnValue({
+    get: vi.fn(),
+    set: vi.fn(),
+    has: vi.fn(),
+    values: vi.fn(),
   }) as any,
   prefix: "iris",
   streamName: "IRIS_IRIS",

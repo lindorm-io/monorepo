@@ -1,4 +1,20 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`resolveQueueName > delay > should build delay queue name from topic 1`] = `"iris.delay.orders.retry"`;
+
+exports[`resolveQueueName > delay > should sanitize topic in delay queue name 1`] = `"iris.delay.orders_retry_v2"`;
+
+exports[`resolveQueueName > rpc > should fall back to sanitized topic when no queue 1`] = `"iris.rpc.users.get"`;
+
+exports[`resolveQueueName > rpc > should use queue name when provided 1`] = `"iris.rpc.user-service"`;
+
+exports[`resolveQueueName > subscribe > should return named queue when queue is provided 1`] = `"iris.orders.created.order-service"`;
+
+exports[`resolveQueueName > subscribe > should sanitize topic in queue name 1`] = `"iris.orders_created_v2.svc"`;
+
+exports[`resolveQueueName > worker > should fall back to sanitized topic when no queue 1`] = `"iris.wq.jobs.process"`;
+
+exports[`resolveQueueName > worker > should use queue name when provided 1`] = `"iris.wq.worker-pool"`;
 
 exports[`resolveQueueName delay should build delay queue name from topic 1`] = `"iris.delay.orders.retry"`;
 

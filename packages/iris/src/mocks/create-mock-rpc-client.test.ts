@@ -1,4 +1,5 @@
-import { createMockRpcClient } from "./jest";
+import { createMockRpcClient } from "./vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 type TestReq = { id: string; query: string };
 type TestRes = { id: string; result: string };

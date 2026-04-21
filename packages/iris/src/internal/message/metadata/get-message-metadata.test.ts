@@ -3,6 +3,7 @@ import { IdentifierField } from "../../../decorators/IdentifierField";
 import { Message } from "../../../decorators/Message";
 import { clearMetadataCache } from "./registry";
 import { getMessageMetadata } from "./get-message-metadata";
+import { beforeEach, describe, expect, it } from "vitest";
 
 describe("getMessageMetadata", () => {
   beforeEach(() => {

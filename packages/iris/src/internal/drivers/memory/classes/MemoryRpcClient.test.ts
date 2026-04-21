@@ -5,6 +5,7 @@ import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError";
 import { IrisTransportError } from "../../../../errors/IrisTransportError";
 import { clearRegistry } from "../../../message/metadata/registry";
 import { MemoryDriver } from "./MemoryDriver";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -21,13 +22,13 @@ class TckRpcRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createRpcSetup = () => {
@@ -84,11 +85,11 @@ describe("MemoryRpcClient", () => {
 
   describe("timeout", () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("should throw IrisTimeoutError when handler does not respond", async () => {
@@ -112,7 +113,7 @@ describe("MemoryRpcClient", () => {
       await Promise.resolve();
       await Promise.resolve();
 
-      await jest.advanceTimersByTimeAsync(1000);
+      await vi.advanceTimersByTimeAsync(1000);
 
       expect(caughtError).toBeInstanceOf(IrisTimeoutError);
     });
@@ -136,7 +137,7 @@ describe("MemoryRpcClient", () => {
       await Promise.resolve();
       await Promise.resolve();
 
-      await jest.advanceTimersByTimeAsync(500);
+      await vi.advanceTimersByTimeAsync(500);
 
       expect(caughtError).toBeInstanceOf(IrisTimeoutError);
     });
@@ -173,11 +174,11 @@ describe("MemoryRpcClient", () => {
 
   describe("close", () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("should reject pending requests with IrisTransportError", async () => {
@@ -249,7 +250,7 @@ describe("MemoryRpcClient", () => {
 
   describe("base class integration", () => {
     it("should use base class pendingRequests map during inflight request", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       const { client, server } = createRpcSetup();
 
@@ -269,7 +270,7 @@ describe("MemoryRpcClient", () => {
 
       expect((client as any).pendingRequests.size).toBe(0);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("should clean up store.replyCallbacks after successful response", async () => {
@@ -292,7 +293,7 @@ describe("MemoryRpcClient", () => {
     });
 
     it("should clean up store.replyCallbacks after timeout", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       const { client, server, driver } = createRpcSetup();
       const store = (driver as any).store;
@@ -310,16 +311,16 @@ describe("MemoryRpcClient", () => {
       expect(store.replyCallbacks.size).toBe(1);
       expect(store.pendingRejects.size).toBe(1);
 
-      await jest.advanceTimersByTimeAsync(500);
+      await vi.advanceTimersByTimeAsync(500);
 
       expect(store.replyCallbacks.size).toBe(0);
       expect(store.pendingRejects.size).toBe(0);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("should clean up store.pendingRejects on close", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       const { client, server, driver } = createRpcSetup();
       const store = (driver as any).store;
@@ -340,7 +341,7 @@ describe("MemoryRpcClient", () => {
 
       expect(store.pendingRejects.size).toBe(0);
 
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
   });
 });

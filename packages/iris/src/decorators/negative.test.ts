@@ -14,6 +14,7 @@ import { Min } from "./Min";
 import { Namespace } from "./Namespace";
 import { OnCreate } from "./OnCreate";
 import { Transform } from "./Transform";
+import { describe, expect, it } from "vitest";
 
 describe("negative and edge-case decorator usage", () => {
   describe("duplicate @Message on same class", () => {

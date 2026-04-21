@@ -1,5 +1,6 @@
 import type { KafkaEachMessagePayload } from "../types/kafka-types";
 import { parseKafkaMessage } from "./parse-kafka-message";
+import { describe, expect, it, vi } from "vitest";
 
 const createHeaders = (
   overrides: Record<string, string> = {},
@@ -48,7 +49,7 @@ const createPayload = (overrides?: {
     offset: overrides?.offset ?? "0",
     timestamp: overrides?.timestamp ?? "1700000000000",
   },
-  heartbeat: jest.fn().mockResolvedValue(undefined),
+  heartbeat: vi.fn().mockResolvedValue(undefined),
 });
 
 describe("parseKafkaMessage", () => {
@@ -212,7 +213,7 @@ describe("parseKafkaMessage", () => {
         offset: "0",
         timestamp: "0",
       },
-      heartbeat: jest.fn().mockResolvedValue(undefined),
+      heartbeat: vi.fn().mockResolvedValue(undefined),
     };
     const result = parseKafkaMessage(payload);
     expect(result.topic).toBe("test-topic");

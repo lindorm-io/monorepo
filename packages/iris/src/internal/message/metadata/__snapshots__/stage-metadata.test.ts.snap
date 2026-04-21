@@ -1,4 +1,89 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`stage-metadata > array stage functions > should accumulate fields 1`] = `
+[
+  {
+    "decorator": "Field",
+    "key": "a",
+  },
+  {
+    "decorator": "Field",
+    "key": "b",
+  },
+]
+`;
+
+exports[`stage-metadata > array stage functions > should accumulate generated 1`] = `
+[
+  {
+    "key": "id",
+    "length": null,
+    "max": null,
+    "min": null,
+    "strategy": "uuid",
+  },
+  {
+    "key": "ts",
+    "length": null,
+    "max": null,
+    "min": null,
+    "strategy": "date",
+  },
+]
+`;
+
+exports[`stage-metadata > array stage functions > should accumulate headers 1`] = `
+[
+  {
+    "headerName": "x-user-id",
+    "key": "userId",
+  },
+  {
+    "headerName": "x-trace-id",
+    "key": "traceId",
+  },
+]
+`;
+
+exports[`stage-metadata > singleton stage functions > should set __abstract and stage message 1`] = `
+{
+  "decorator": "AbstractMessage",
+  "name": "BaseEvent",
+}
+`;
+
+exports[`stage-metadata > singleton stage functions > should set compressed 1`] = `
+{
+  "algorithm": "gzip",
+}
+`;
+
+exports[`stage-metadata > singleton stage functions > should set encrypted 1`] = `
+{
+  "predicate": {
+    "algorithm": "AES",
+    "purpose": "encryption",
+  },
+}
+`;
+
+exports[`stage-metadata > singleton stage functions > should set message 1`] = `
+{
+  "decorator": "Message",
+  "name": "UserCreated",
+}
+`;
+
+exports[`stage-metadata > singleton stage functions > should set retry 1`] = `
+{
+  "delay": 1000,
+  "delayMax": 30000,
+  "jitter": false,
+  "maxRetries": 5,
+  "multiplier": 2,
+  "strategy": "exponential",
+}
+`;
 
 exports[`stage-metadata array stage functions should accumulate fields 1`] = `
 [

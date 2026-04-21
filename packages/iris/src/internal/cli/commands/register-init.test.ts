@@ -1,18 +1,19 @@
 import { Command } from "commander";
 import { registerInitCommand } from "./register-init";
 import { init } from "./init";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("./init", () => ({
-  init: jest.fn(),
+vi.mock("./init", async () => ({
+  init: vi.fn(),
 }));
 
-const mockInit = init as jest.MockedFunction<typeof init>;
+const mockInit = init as MockedFunction<typeof init>;
 
 describe("registerInitCommand", () => {
   let program: Command;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     program = new Command();
     program.exitOverride();
     registerInitCommand(program);

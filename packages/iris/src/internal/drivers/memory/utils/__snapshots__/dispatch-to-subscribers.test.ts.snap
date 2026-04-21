@@ -1,4 +1,32 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`dispatchToSubscribers > should dispatch to all broadcast subscribers (queue = null) 1`] = `
+[
+  "a",
+  "b",
+]
+`;
+
+exports[`dispatchToSubscribers > should dispatch to broadcast and queue subscribers independently 1`] = `
+[
+  "broadcast",
+  "queue-a",
+]
+`;
+
+exports[`dispatchToSubscribers > should not dispatch to subscribers on a different topic 1`] = `
+[
+  "a",
+]
+`;
+
+exports[`dispatchToSubscribers > should round-robin within queue groups across dispatches 1`] = `
+[
+  "a",
+  "b",
+  "a",
+]
+`;
 
 exports[`dispatchToSubscribers should dispatch to all broadcast subscribers (queue = null) 1`] = `
 [

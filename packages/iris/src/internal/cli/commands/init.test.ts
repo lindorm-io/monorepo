@@ -1,32 +1,35 @@
 import { resolve, join } from "path";
 import { init } from "./init";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-jest.mock("fs/promises", () => ({
-  mkdir: jest.fn().mockResolvedValue(undefined),
-  writeFile: jest.fn().mockResolvedValue(undefined),
+vi.mock("fs/promises", async () => ({
+  mkdir: vi.fn().mockResolvedValue(undefined),
+  writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const { mkdir, writeFile } = jest.requireMock("fs/promises");
-const { Logger } = jest.requireMock("@lindorm/logger");
+const { mkdir, writeFile } =
+  await vi.importMock<typeof import("fs/promises")>("fs/promises");
+const { Logger } =
+  await vi.importMock<typeof import("@lindorm/logger")>("@lindorm/logger");
 
 const defaultDir = resolve(process.cwd(), "./src/iris");
 
 describe("init", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should create source.ts for rabbit driver", async () => {
@@ -148,15 +151,15 @@ describe("init", () => {
   });
 
   it("should prompt for driver when not provided", async () => {
-    const mockSelect = jest.fn().mockResolvedValue("redis");
-    jest.doMock("@inquirer/prompts", () => ({ select: mockSelect }));
+    const mockSelect = vi.fn().mockResolvedValue("redis");
+    vi.doMock("@inquirer/prompts", () => ({ select: mockSelect }));
 
-    jest.resetModules();
+    vi.resetModules();
     const { init: freshInit } = await import("./init");
 
-    jest.doMock("fs/promises", () => ({
-      mkdir: jest.fn().mockResolvedValue(undefined),
-      writeFile: jest.fn().mockResolvedValue(undefined),
+    vi.doMock("fs/promises", () => ({
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      writeFile: vi.fn().mockResolvedValue(undefined),
     }));
 
     await freshInit({});

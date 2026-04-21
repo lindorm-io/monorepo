@@ -1,6 +1,7 @@
 import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store";
 import { createStore } from "./create-store";
 import { dispatchToSubscribers } from "./dispatch-to-subscribers";
+import { beforeEach, describe, expect, it } from "vitest";
 
 const makeEnvelope = (topic: string): MemoryEnvelope => ({
   payload: Buffer.from("test"),

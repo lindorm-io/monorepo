@@ -25,6 +25,7 @@ import { expirySuite } from "./expiry.tck";
 import { headersSuite } from "./headers.tck";
 import { decoratorCoverageSuite } from "./decorator-coverage.tck";
 import { errorResilienceSuite } from "./error-resilience.tck";
+import { afterAll, beforeAll, describe } from "vitest";
 
 const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {
   if (flag) {

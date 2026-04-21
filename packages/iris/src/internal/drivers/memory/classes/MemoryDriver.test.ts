@@ -14,6 +14,7 @@ import { MemoryRpcClient } from "./MemoryRpcClient";
 import { MemoryRpcServer } from "./MemoryRpcServer";
 import { MemoryStreamProcessor } from "./MemoryStreamProcessor";
 import { MemoryWorkerQueue } from "./MemoryWorkerQueue";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -35,13 +36,13 @@ class TckDriverRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createDriver = (
@@ -162,7 +163,7 @@ describe("MemoryDriver", () => {
         store: new MemoryDelayStore(),
         logger: logger as any,
       });
-      const startSpy = jest.spyOn(delayManager, "start");
+      const startSpy = vi.spyOn(delayManager, "start");
 
       const driver = createDriver([], { delayManager });
       await driver.connect();
@@ -179,7 +180,7 @@ describe("MemoryDriver", () => {
         store: new MemoryDelayStore(),
         logger: logger as any,
       });
-      const stopSpy = jest.spyOn(delayManager, "stop");
+      const stopSpy = vi.spyOn(delayManager, "stop");
 
       const driver = createDriver([], { delayManager });
       await driver.connect();
@@ -223,7 +224,7 @@ describe("MemoryDriver", () => {
 
     it("should use the provided getSubscribers function", () => {
       const driver = createDriver();
-      const sub: IMessageSubscriber = { beforePublish: jest.fn() };
+      const sub: IMessageSubscriber = { beforePublish: vi.fn() };
       const cloned = driver.cloneWithGetters(() => [sub]);
 
       expect((cloned as any).getSubscribers()).toEqual([sub]);

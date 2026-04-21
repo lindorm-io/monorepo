@@ -1,4 +1,5 @@
 import { checkPipelineResults } from "./check-pipeline-results";
+import { describe, expect, it } from "vitest";
 
 describe("checkPipelineResults", () => {
   it("should not throw when all results are successful", () => {

@@ -4,23 +4,24 @@ import { Message } from "../../../../decorators/Message";
 import { clearRegistry } from "../../../message/metadata/registry";
 import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types";
 import { RedisMessageBus } from "./RedisMessageBus";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
-const mockPublishRedisMessages = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/publish-redis-messages", () => ({
+const mockPublishRedisMessages = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/publish-redis-messages", async () => ({
   publishRedisMessages: (...args: Array<unknown>) => mockPublishRedisMessages(...args),
 }));
 
-const mockWrapRedisConsumer = jest.fn().mockReturnValue(jest.fn());
-jest.mock("../utils/wrap-redis-consumer", () => ({
+const mockWrapRedisConsumer = vi.fn().mockReturnValue(vi.fn());
+vi.mock("../utils/wrap-redis-consumer", () => ({
   wrapRedisConsumer: (...args: Array<unknown>) => mockWrapRedisConsumer(...args),
 }));
 
 let mockCreateConsumerLoopResult: Partial<RedisConsumerLoop>;
-const mockCreateConsumerLoop = jest
+const mockCreateConsumerLoop = vi
   .fn()
   .mockImplementation(async () => mockCreateConsumerLoopResult);
-jest.mock("../utils/create-consumer-loop", () => ({
+vi.mock("../utils/create-consumer-loop", () => ({
   createConsumerLoop: (...args: Array<unknown>) => mockCreateConsumerLoop(...args),
 }));
 
@@ -34,25 +35,25 @@ class TckRedisBusBasic implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): RedisSharedState => ({
   publishConnection: {
-    xadd: jest.fn(),
-    duplicate: jest.fn(),
-    disconnect: jest.fn(),
-    xgroup: jest.fn().mockResolvedValue("OK"),
-    del: jest.fn().mockResolvedValue(1),
-    xreadgroup: jest.fn(),
-    xack: jest.fn(),
-    on: jest.fn(),
+    xadd: vi.fn(),
+    duplicate: vi.fn(),
+    disconnect: vi.fn(),
+    xgroup: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+    xreadgroup: vi.fn(),
+    xack: vi.fn(),
+    on: vi.fn(),
   } as any,
   connectionConfig: { url: "redis://localhost:6379" },
   prefix: "iris",
@@ -89,10 +90,10 @@ beforeEach(() => {
     consumerTag: "ctag-1",
     groupName: "test-group",
     streamKey: "iris:TckRedisBusBasic",
-    callback: jest.fn(),
+    callback: vi.fn(),
     abortController: new AbortController(),
     loopPromise: Promise.resolve(),
-    connection: { disconnect: jest.fn() } as any,
+    connection: { disconnect: vi.fn() } as any,
   };
 });
 
@@ -148,12 +149,12 @@ describe("RedisMessageBus", () => {
   describe("unsubscribe", () => {
     it("should abort the consumer loop", async () => {
       const abortController = new AbortController();
-      const disconnectFn = jest.fn().mockResolvedValue(undefined);
+      const disconnectFn = vi.fn().mockResolvedValue(undefined);
       mockCreateConsumerLoopResult = {
         consumerTag: "ctag-2",
         groupName: "test-group",
         streamKey: "iris:TckRedisBusBasic",
-        callback: jest.fn(),
+        callback: vi.fn(),
         abortController,
         loopPromise: Promise.resolve(),
         connection: { disconnect: disconnectFn } as any,
@@ -180,12 +181,12 @@ describe("RedisMessageBus", () => {
 
     it("should destroy ephemeral consumer group on unsubscribe when no queue provided", async () => {
       const abortController = new AbortController();
-      const disconnectFn = jest.fn().mockResolvedValue(undefined);
+      const disconnectFn = vi.fn().mockResolvedValue(undefined);
       mockCreateConsumerLoopResult = {
         consumerTag: "ctag-eph",
         groupName: "iris.sub.ephemeral.test-uuid",
         streamKey: "iris:TckRedisBusBasic",
-        callback: jest.fn(),
+        callback: vi.fn(),
         abortController,
         loopPromise: Promise.resolve(),
         connection: { disconnect: disconnectFn } as any,
@@ -211,9 +212,9 @@ describe("RedisMessageBus", () => {
   describe("unsubscribeAll", () => {
     it("should abort all owned consumer loops", async () => {
       const ac1 = new AbortController();
-      const dc1 = jest.fn().mockResolvedValue(undefined);
+      const dc1 = vi.fn().mockResolvedValue(undefined);
       const ac2 = new AbortController();
-      const dc2 = jest.fn().mockResolvedValue(undefined);
+      const dc2 = vi.fn().mockResolvedValue(undefined);
 
       const { bus, state } = createBus();
 
@@ -221,7 +222,7 @@ describe("RedisMessageBus", () => {
         consumerTag: "ctag-a",
         groupName: "g1",
         streamKey: "iris:TckRedisBusBasic",
-        callback: jest.fn(),
+        callback: vi.fn(),
         abortController: ac1,
         loopPromise: Promise.resolve(),
         connection: { disconnect: dc1 } as any,
@@ -237,7 +238,7 @@ describe("RedisMessageBus", () => {
         consumerTag: "ctag-b",
         groupName: "g2",
         streamKey: "iris:TckRedisBusBasic",
-        callback: jest.fn(),
+        callback: vi.fn(),
         abortController: ac2,
         loopPromise: Promise.resolve(),
         connection: { disconnect: dc2 } as any,

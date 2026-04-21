@@ -1,4 +1,30 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MessageScanner.scan > Scanner construction > Scanner is constructed with denied filenames and types 1`] = `
+[
+  /\\^index\\$/,
+]
+`;
+
+exports[`MessageScanner.scan > Scanner construction > Scanner is constructed with denied filenames and types 2`] = `
+[
+  /\\^fixture\\$/,
+  /\\^spec\\$/,
+  /\\^test\\$/,
+  /\\^integration\\$/,
+]
+`;
+
+exports[`MessageScanner.scan > constructor input (no strings) > returns constructor elements directly from input array 1`] = `
+[
+  [Function],
+  [Function],
+]
+`;
+
+exports[`MessageScanner.scan > constructor input (no strings) > returns empty array for empty input 1`] = `[]`;
+
+exports[`MessageScanner.scan > string path input - directory > returns empty array for empty directory 1`] = `[]`;
 
 exports[`MessageScanner.scan Scanner construction Scanner is constructed with denied filenames and types 1`] = `
 [

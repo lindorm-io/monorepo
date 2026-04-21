@@ -1,4 +1,5 @@
 import { resolveSubject } from "./resolve-subject";
+import { describe, expect, it } from "vitest";
 
 describe("resolveSubject", () => {
   it("should build subject from prefix and topic", () => {

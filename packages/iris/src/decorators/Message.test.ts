@@ -1,5 +1,6 @@
 import { findMessageByName } from "../internal/message/metadata/registry";
 import { Message } from "./Message";
+import { describe, expect, it } from "vitest";
 
 describe("Message", () => {
   it("should stage message metadata with class name", () => {

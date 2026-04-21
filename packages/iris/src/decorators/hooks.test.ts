@@ -6,6 +6,7 @@ import { AfterPublish } from "./AfterPublish";
 import { BeforeConsume } from "./BeforeConsume";
 import { AfterConsume } from "./AfterConsume";
 import { OnConsumeError } from "./OnConsumeError";
+import { describe, expect, it } from "vitest";
 
 const hookDecorators = [
   { name: "OnCreate", Decorator: OnCreate },

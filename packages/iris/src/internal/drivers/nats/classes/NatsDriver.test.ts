@@ -11,6 +11,7 @@ import { NatsWorkerQueue } from "./NatsWorkerQueue";
 import { NatsStreamProcessor } from "./NatsStreamProcessor";
 import { NatsRpcClient } from "./NatsRpcClient";
 import { NatsRpcServer } from "./NatsRpcServer";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock nats module ---
 
@@ -18,15 +19,15 @@ let statusIteratorDone = false;
 let statusIteratorValues: Array<{ type: string; data?: unknown }> = [];
 
 const mockNc = {
-  jetstream: jest.fn(),
-  jetstreamManager: jest.fn(),
-  publish: jest.fn().mockResolvedValue(undefined),
-  subscribe: jest.fn(),
-  request: jest.fn(),
-  flush: jest.fn().mockResolvedValue(undefined),
-  close: jest.fn().mockResolvedValue(undefined),
-  drain: jest.fn().mockResolvedValue(undefined),
-  status: jest.fn().mockReturnValue(
+  jetstream: vi.fn(),
+  jetstreamManager: vi.fn(),
+  publish: vi.fn().mockResolvedValue(undefined),
+  subscribe: vi.fn(),
+  request: vi.fn(),
+  flush: vi.fn().mockResolvedValue(undefined),
+  close: vi.fn().mockResolvedValue(undefined),
+  drain: vi.fn().mockResolvedValue(undefined),
+  status: vi.fn().mockReturnValue(
     (async function* () {
       while (!statusIteratorDone) {
         if (statusIteratorValues.length > 0) {
@@ -39,40 +40,40 @@ const mockNc = {
       }
     })(),
   ),
-  isClosed: jest.fn().mockReturnValue(false),
+  isClosed: vi.fn().mockReturnValue(false),
 };
 
 const mockJs = {
-  publish: jest.fn().mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
-  consumers: { get: jest.fn() },
+  publish: vi.fn().mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
+  consumers: { get: vi.fn() },
 };
 
 const mockJsm = {
   streams: {
-    info: jest.fn().mockResolvedValue({}),
-    add: jest.fn().mockResolvedValue({}),
-    purge: jest.fn().mockResolvedValue({}),
-    delete: jest.fn().mockResolvedValue({}),
+    info: vi.fn().mockResolvedValue({}),
+    add: vi.fn().mockResolvedValue({}),
+    purge: vi.fn().mockResolvedValue({}),
+    delete: vi.fn().mockResolvedValue({}),
   },
   consumers: {
-    add: jest.fn().mockResolvedValue({}),
-    delete: jest.fn().mockResolvedValue(true),
+    add: vi.fn().mockResolvedValue({}),
+    delete: vi.fn().mockResolvedValue(true),
   },
 };
 
-const mockHeaders = jest.fn().mockReturnValue({
-  get: jest.fn(),
-  set: jest.fn(),
-  has: jest.fn(),
-  values: jest.fn(),
+const mockHeaders = vi.fn().mockReturnValue({
+  get: vi.fn(),
+  set: vi.fn(),
+  has: vi.fn(),
+  values: vi.fn(),
 });
 
 mockNc.jetstream.mockReturnValue(mockJs);
 mockNc.jetstreamManager.mockResolvedValue(mockJsm);
 
-jest.mock("nats", () => ({
+vi.mock("nats", async () => ({
   __esModule: true,
-  connect: jest.fn().mockResolvedValue(mockNc),
+  connect: vi.fn().mockResolvedValue(mockNc),
   headers: mockHeaders,
 }));
 
@@ -96,13 +97,13 @@ class TckNatsDriverRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createDriver = (subscribers?: Array<IMessageSubscriber>) => {
@@ -119,7 +120,7 @@ const createDriver = (subscribers?: Array<IMessageSubscriber>) => {
 describe("NatsDriver", () => {
   beforeEach(() => {
     clearRegistry();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     statusIteratorDone = false;
     statusIteratorValues = [];
 
@@ -207,7 +208,7 @@ describe("NatsDriver", () => {
     });
 
     it("should set connection state to disconnected when connect fails", async () => {
-      const { connect } = jest.requireMock("nats") as any;
+      const { connect } = (await vi.importMock<typeof import("nats")>("nats")) as any;
       connect.mockRejectedValueOnce(new Error("connection refused"));
 
       const driver = createDriver();
@@ -242,7 +243,7 @@ describe("NatsDriver", () => {
       const driver = createDriver();
       await driver.connect();
 
-      const sub: IMessageSubscriber = { beforePublish: jest.fn() };
+      const sub: IMessageSubscriber = { beforePublish: vi.fn() };
       const cloned = driver.cloneWithGetters(() => [sub]) as NatsDriver;
       expect((cloned as any).getSubscribers()).toEqual([sub]);
     });

@@ -1,5 +1,6 @@
 import { IrisSerializationError } from "../../../errors/IrisSerializationError";
 import { deserialise } from "./deserialise";
+import { describe, expect, it } from "vitest";
 
 describe("deserialise", () => {
   describe("bigint", () => {

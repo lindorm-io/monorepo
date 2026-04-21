@@ -1,4 +1,5 @@
-import { createMockPublisher } from "./jest";
+import { createMockPublisher } from "./vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 type TestMessage = { id: string; body: string };
 

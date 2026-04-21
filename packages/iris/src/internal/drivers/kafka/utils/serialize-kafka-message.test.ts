@@ -1,5 +1,6 @@
 import type { IrisEnvelope } from "../../../types/iris-envelope";
 import { serializeKafkaMessage } from "./serialize-kafka-message";
+import { describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   payload: Buffer.from('{"hello":"world"}'),

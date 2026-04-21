@@ -1,4 +1,148 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildEnvelope > should build envelope with default values when no retry or priority 1`] = `
+{
+  "attempt": 0,
+  "broadcast": false,
+  "correlationId": null,
+  "expiry": null,
+  "headers": {
+    "x-iris-type": "TestMessage",
+  },
+  "identifierValue": null,
+  "maxRetries": 0,
+  "payload": Any<Buffer>,
+  "priority": 0,
+  "replyTo": null,
+  "retryDelay": 1000,
+  "retryDelayMax": 30000,
+  "retryJitter": false,
+  "retryMultiplier": 2,
+  "retryStrategy": "constant",
+  "timestamp": Any<Number>,
+  "topic": "test.topic",
+}
+`;
+
+exports[`buildEnvelope > should build envelope with metadata overrides 1`] = `
+{
+  "attempt": 0,
+  "broadcast": true,
+  "correlationId": null,
+  "expiry": 30000,
+  "headers": {
+    "x-iris-type": "TestMessage",
+  },
+  "identifierValue": null,
+  "maxRetries": 3,
+  "payload": Any<Buffer>,
+  "priority": 5,
+  "replyTo": null,
+  "retryDelay": 500,
+  "retryDelayMax": 10000,
+  "retryJitter": true,
+  "retryMultiplier": 3,
+  "retryStrategy": "exponential",
+  "timestamp": Any<Number>,
+  "topic": "high.priority",
+}
+`;
+
+exports[`buildEnvelope > should fall back to metadata values when overrides are omitted 1`] = `
+{
+  "attempt": 0,
+  "broadcast": false,
+  "correlationId": null,
+  "expiry": 15000,
+  "headers": {
+    "x-iris-type": "TestMessage",
+  },
+  "identifierValue": null,
+  "maxRetries": 0,
+  "payload": Any<Buffer>,
+  "priority": 3,
+  "replyTo": null,
+  "retryDelay": 1000,
+  "retryDelayMax": 30000,
+  "retryJitter": false,
+  "retryMultiplier": 2,
+  "retryStrategy": "constant",
+  "timestamp": Any<Number>,
+  "topic": "test.topic",
+}
+`;
+
+exports[`buildEnvelope > should fall back to metadata values when overrides object is empty 1`] = `
+{
+  "attempt": 0,
+  "broadcast": true,
+  "correlationId": null,
+  "expiry": 20000,
+  "headers": {
+    "x-iris-type": "TestMessage",
+  },
+  "identifierValue": null,
+  "maxRetries": 0,
+  "payload": Any<Buffer>,
+  "priority": 7,
+  "replyTo": null,
+  "retryDelay": 1000,
+  "retryDelayMax": 30000,
+  "retryJitter": false,
+  "retryMultiplier": 2,
+  "retryStrategy": "constant",
+  "timestamp": Any<Number>,
+  "topic": "test.topic",
+}
+`;
+
+exports[`buildEnvelope > should use override expiry over metadata expiry 1`] = `
+{
+  "attempt": 0,
+  "broadcast": false,
+  "correlationId": null,
+  "expiry": 60000,
+  "headers": {
+    "x-iris-type": "TestMessage",
+  },
+  "identifierValue": null,
+  "maxRetries": 0,
+  "payload": Any<Buffer>,
+  "priority": 5,
+  "replyTo": null,
+  "retryDelay": 1000,
+  "retryDelayMax": 30000,
+  "retryJitter": false,
+  "retryMultiplier": 2,
+  "retryStrategy": "constant",
+  "timestamp": Any<Number>,
+  "topic": "test.topic",
+}
+`;
+
+exports[`buildEnvelope > should use override priority over metadata priority 1`] = `
+{
+  "attempt": 0,
+  "broadcast": false,
+  "correlationId": null,
+  "expiry": 30000,
+  "headers": {
+    "x-iris-type": "TestMessage",
+  },
+  "identifierValue": null,
+  "maxRetries": 0,
+  "payload": Any<Buffer>,
+  "priority": 10,
+  "replyTo": null,
+  "retryDelay": 1000,
+  "retryDelayMax": 30000,
+  "retryJitter": false,
+  "retryMultiplier": 2,
+  "retryStrategy": "constant",
+  "timestamp": Any<Number>,
+  "topic": "test.topic",
+}
+`;
 
 exports[`buildEnvelope should build envelope with default values when no retry or priority 1`] = `
 {

@@ -1,5 +1,6 @@
 import type { MetaGenerated, MessageMetadata } from "../types/metadata";
 import { generateFields } from "./generate-fields";
+import { describe, expect, it } from "vitest";
 
 const mockMetadata = (generated: Array<MetaGenerated>): MessageMetadata =>
   ({ generated }) as unknown as MessageMetadata;

@@ -1,4 +1,5 @@
 import { TimestampField } from "./TimestampField";
+import { describe, expect, it } from "vitest";
 
 describe("TimestampField", () => {
   it("should stage timestamp field metadata", () => {

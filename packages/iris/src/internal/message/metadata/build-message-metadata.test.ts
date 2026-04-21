@@ -16,6 +16,7 @@ import { TimestampField } from "../../../decorators/TimestampField";
 import { Transform } from "../../../decorators/Transform";
 import { Version } from "../../../decorators/Version";
 import { buildMessageMetadata } from "./build-message-metadata";
+import { describe, expect, it } from "vitest";
 
 const stabilize = (metadata: any) => ({
   ...metadata,

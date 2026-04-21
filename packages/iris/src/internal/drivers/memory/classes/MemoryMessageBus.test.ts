@@ -15,17 +15,18 @@ import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
 import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore";
 import { createStore } from "../utils/create-store";
 import { MemoryMessageBus } from "./MemoryMessageBus";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock logger ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 // --- Message classes (module-level for metadata registration) ---
@@ -395,7 +396,7 @@ describe("MemoryMessageBus", () => {
   describe("expiry", () => {
     // TODO: add a proper expiry test that creates an already-expired envelope and verifies it is skipped by consumeMessageCore
     it("should publish message with delay and expiry options without crashing", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       try {
         const { bus } = createBus(TckBusExpiry);
@@ -417,14 +418,14 @@ describe("MemoryMessageBus", () => {
         // This test just verifies publish doesn't crash with delay + expiry
         expect(received).toBe(true);
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
   });
 
   describe("retry with fixed backoff", () => {
     it("should retry on callback error", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       try {
         const { bus } = createBus(TckBusRetryFixed);
@@ -445,15 +446,15 @@ describe("MemoryMessageBus", () => {
         expect(attempts).toBe(1);
 
         // Advance for retry 1 (100ms fixed)
-        await jest.advanceTimersByTimeAsync(100);
+        await vi.advanceTimersByTimeAsync(100);
         expect(attempts).toBe(2);
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
 
     it("should succeed if callback works on retry", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       try {
         const { bus, deadLetterManager } = createBus(TckBusRetryFixed);
@@ -474,22 +475,22 @@ describe("MemoryMessageBus", () => {
 
         expect(attempts).toBe(1);
 
-        await jest.advanceTimersByTimeAsync(100);
+        await vi.advanceTimersByTimeAsync(100);
         expect(attempts).toBe(2);
 
-        await jest.advanceTimersByTimeAsync(100);
+        await vi.advanceTimersByTimeAsync(100);
         expect(attempts).toBe(3);
 
         // No more retries needed — should not dead-letter
         const deadLetters = await deadLetterManager.list();
         expect(deadLetters).toHaveLength(0);
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
 
     it("should stop after maxRetries", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       try {
         const { bus } = createBus(TckBusRetryFixed);
@@ -510,25 +511,25 @@ describe("MemoryMessageBus", () => {
         expect(attempts).toBe(1);
 
         // Advance through all 3 retries
-        await jest.advanceTimersByTimeAsync(100);
+        await vi.advanceTimersByTimeAsync(100);
         expect(attempts).toBe(2);
-        await jest.advanceTimersByTimeAsync(100);
+        await vi.advanceTimersByTimeAsync(100);
         expect(attempts).toBe(3);
-        await jest.advanceTimersByTimeAsync(100);
+        await vi.advanceTimersByTimeAsync(100);
         expect(attempts).toBe(4); // original + 3 retries
 
         // No further retries after max
-        await jest.advanceTimersByTimeAsync(1000);
+        await vi.advanceTimersByTimeAsync(1000);
         expect(attempts).toBe(4);
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
   });
 
   describe("retry with exponential backoff", () => {
     it("should use increasing delays", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       try {
         const { bus } = createBus(TckBusRetryExp);
@@ -549,23 +550,23 @@ describe("MemoryMessageBus", () => {
         expect(attempts).toBe(1);
 
         // Retry 1: attempt=1, delay = 50 * 2^0 = 50ms
-        await jest.advanceTimersByTimeAsync(50);
+        await vi.advanceTimersByTimeAsync(50);
         expect(attempts).toBe(2);
 
         // Retry 2: attempt=2, delay = 50 * 2^1 = 100ms
-        await jest.advanceTimersByTimeAsync(99);
+        await vi.advanceTimersByTimeAsync(99);
         expect(attempts).toBe(2); // Not yet
-        await jest.advanceTimersByTimeAsync(1);
+        await vi.advanceTimersByTimeAsync(1);
         expect(attempts).toBe(3); // Now
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
   });
 
   describe("dead letter", () => {
     it("should dead-letter after max retries when enabled", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       try {
         const { bus, deadLetterManager } = createBus(TckBusRetryFixed);
@@ -582,7 +583,7 @@ describe("MemoryMessageBus", () => {
 
         // Advance through all retries
         for (let i = 0; i < 3; i++) {
-          await jest.advanceTimersByTimeAsync(100);
+          await vi.advanceTimersByTimeAsync(100);
         }
 
         const deadLetters = await deadLetterManager.list();
@@ -590,12 +591,12 @@ describe("MemoryMessageBus", () => {
         expect(deadLetters[0].error).toBe("permanent failure");
         expect(deadLetters[0].topic).toBe("TckBusRetryFixed");
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
 
     it("should not dead-letter when not enabled", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       try {
         const store = createStore();
@@ -623,18 +624,18 @@ describe("MemoryMessageBus", () => {
         await bus.publish(msg);
 
         // Advance through all retries (maxRetries: 2)
-        await jest.advanceTimersByTimeAsync(50);
-        await jest.advanceTimersByTimeAsync(50);
+        await vi.advanceTimersByTimeAsync(50);
+        await vi.advanceTimersByTimeAsync(50);
 
         const deadLetters = await deadLetterManager.list();
         expect(deadLetters).toHaveLength(0);
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
 
     it("should preserve error in dead letter entry", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       try {
         const { bus, deadLetterManager } = createBus(TckBusRetryFixed);
@@ -649,7 +650,7 @@ describe("MemoryMessageBus", () => {
         await bus.publish(bus.create({ data: "test" }));
 
         for (let i = 0; i < 3; i++) {
-          await jest.advanceTimersByTimeAsync(100);
+          await vi.advanceTimersByTimeAsync(100);
         }
 
         const deadLetters = await deadLetterManager.list();
@@ -657,7 +658,7 @@ describe("MemoryMessageBus", () => {
         expect(deadLetters[0].error).toBe("specific error message");
         expect(deadLetters[0].timestamp).toEqual(expect.any(Number));
       } finally {
-        jest.useRealTimers();
+        vi.useRealTimers();
       }
     });
   });

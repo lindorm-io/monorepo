@@ -1,4 +1,5 @@
 import { Min } from "./Min";
+import { describe, expect, it } from "vitest";
 
 describe("Min", () => {
   it("should stage field modifier with min value", () => {

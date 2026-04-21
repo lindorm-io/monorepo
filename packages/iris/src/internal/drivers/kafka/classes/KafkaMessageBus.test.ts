@@ -4,29 +4,30 @@ import { Message } from "../../../../decorators/Message";
 import { clearRegistry } from "../../../message/metadata/registry";
 import type { KafkaSharedState } from "../types/kafka-types";
 import { KafkaMessageBus } from "./KafkaMessageBus";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
-const mockPublishKafkaMessages = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/publish-kafka-messages", () => ({
+const mockPublishKafkaMessages = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/publish-kafka-messages", async () => ({
   publishKafkaMessages: (...args: Array<unknown>) => mockPublishKafkaMessages(...args),
 }));
 
-const mockWrapKafkaConsumer = jest.fn().mockReturnValue(jest.fn());
-jest.mock("../utils/wrap-kafka-consumer", () => ({
+const mockWrapKafkaConsumer = vi.fn().mockReturnValue(vi.fn());
+vi.mock("../utils/wrap-kafka-consumer", () => ({
   wrapKafkaConsumer: (...args: Array<unknown>) => mockWrapKafkaConsumer(...args),
 }));
 
 let mockGetOrCreateResult: { consumerTag: string };
-const mockGetOrCreatePooledConsumer = jest
+const mockGetOrCreatePooledConsumer = vi
   .fn()
   .mockImplementation(async () => mockGetOrCreateResult);
-jest.mock("../utils/create-kafka-consumer", () => ({
+vi.mock("../utils/create-kafka-consumer", () => ({
   getOrCreatePooledConsumer: (...args: Array<unknown>) =>
     mockGetOrCreatePooledConsumer(...args),
 }));
 
-const mockReleasePooledConsumer = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/stop-kafka-consumer", () => ({
+const mockReleasePooledConsumer = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/stop-kafka-consumer", () => ({
   releasePooledConsumer: (...args: Array<unknown>) => mockReleasePooledConsumer(...args),
 }));
 
@@ -40,23 +41,23 @@ class TckKafkaBusBasic implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): KafkaSharedState => ({
   kafka: {
-    producer: jest.fn(),
-    consumer: jest.fn(),
-    admin: jest.fn(),
+    producer: vi.fn(),
+    consumer: vi.fn(),
+    admin: vi.fn(),
   } as any,
   admin: null,
-  producer: { send: jest.fn(), connect: jest.fn(), disconnect: jest.fn() } as any,
+  producer: { send: vi.fn(), connect: vi.fn(), disconnect: vi.fn() } as any,
   connectionConfig: { brokers: ["localhost:9092"] },
   prefix: "iris",
   consumers: [],

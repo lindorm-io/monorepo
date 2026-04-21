@@ -5,6 +5,7 @@ import { clearRegistry } from "../../../message/metadata/registry";
 import type { NatsSharedState } from "../types/nats-types";
 import { NatsStreamProcessor } from "./NatsStreamProcessor";
 import { NatsStreamPipeline } from "./NatsStreamPipeline";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test messages ---
 
@@ -21,13 +22,13 @@ class TckNatsSpOut implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): NatsSharedState => ({

@@ -1,4 +1,26 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateMessageSource > interpolates shorter PascalCase names 1`] = `
+"import { Field, Message } from "@lindorm/iris";
+
+@Message()
+export class Payment {
+  @Field("string")
+  body!: string;
+}
+"
+`;
+
+exports[`generateMessageSource > produces a pascal-case message file 1`] = `
+"import { Field, Message } from "@lindorm/iris";
+
+@Message()
+export class OrderCreated {
+  @Field("string")
+  body!: string;
+}
+"
+`;
 
 exports[`generateMessageSource interpolates shorter PascalCase names 1`] = `
 "import { Field, Message } from "@lindorm/iris";

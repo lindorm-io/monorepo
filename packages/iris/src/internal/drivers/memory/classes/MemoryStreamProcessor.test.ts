@@ -5,6 +5,7 @@ import { clearRegistry } from "../../../message/metadata/registry";
 import { MemoryStreamProcessor } from "./MemoryStreamProcessor";
 import { MemoryStreamPipeline } from "./MemoryStreamPipeline";
 import { createStore } from "../utils/create-store";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -23,13 +24,13 @@ class TckStreamOut implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createProcessor = () => {

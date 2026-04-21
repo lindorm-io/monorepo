@@ -1,4 +1,16 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`resolveConsumerName > rpc > should fall back to topic when no queue 1`] = `"iris_rpc_users_get"`;
+
+exports[`resolveConsumerName > rpc > should use queue name when provided 1`] = `"iris_rpc_user-service"`;
+
+exports[`resolveConsumerName > subscribe > should return named consumer when queue is provided 1`] = `"iris_subscribe_orders_created_order-service"`;
+
+exports[`resolveConsumerName > subscribe > should return topic-based consumer when no queue 1`] = `"iris_subscribe_orders_created"`;
+
+exports[`resolveConsumerName > worker > should fall back to topic when no queue 1`] = `"iris_worker_jobs_process"`;
+
+exports[`resolveConsumerName > worker > should use queue name when provided 1`] = `"iris_worker_worker-pool"`;
 
 exports[`resolveConsumerName rpc should fall back to topic when no queue 1`] = `"iris_rpc_users_get"`;
 

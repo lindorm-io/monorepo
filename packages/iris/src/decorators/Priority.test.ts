@@ -1,4 +1,5 @@
 import { Priority } from "./Priority";
+import { describe, expect, it } from "vitest";
 
 describe("Priority", () => {
   it("should stage priority metadata", () => {

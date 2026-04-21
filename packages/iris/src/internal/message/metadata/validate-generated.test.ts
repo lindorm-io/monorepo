@@ -1,5 +1,6 @@
 import type { MetaField, MetaGenerated } from "../types/metadata";
 import { validateGenerated } from "./validate-generated";
+import { describe, expect, it } from "vitest";
 
 const makeField = (overrides: Partial<MetaField> & { key: string }): MetaField => ({
   decorator: "Field",

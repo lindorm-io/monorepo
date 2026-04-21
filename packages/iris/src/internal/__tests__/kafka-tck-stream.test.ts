@@ -12,26 +12,27 @@ import type { KafkaSharedState } from "../drivers/kafka/types/kafka-types";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
 import { runTck } from "../__fixtures__/tck/run-tck";
 import { createMockAesModule } from "../__fixtures__/tck/mock-aes";
+import { describe, vi } from "vitest";
 
-jest.mock("@lindorm/aes", () => createMockAesModule());
+vi.mock("@lindorm/aes", () => createMockAesModule());
 
-jest.setTimeout(60_000);
+vi.setConfig({ testTimeout: 60_000 });
 
 let source: IrisSource;
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const mockAmphora = {
-  find: jest.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
-  findById: jest.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
+  find: vi.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
+  findById: vi.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
 };
 
 const factory: TckDriverFactory = {

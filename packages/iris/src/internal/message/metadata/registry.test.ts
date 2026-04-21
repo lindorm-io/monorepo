@@ -7,6 +7,7 @@ import {
   registerMessage,
   setCachedMetadata,
 } from "./registry";
+import { afterEach, describe, expect, it } from "vitest";
 
 describe("registry", () => {
   afterEach(() => {

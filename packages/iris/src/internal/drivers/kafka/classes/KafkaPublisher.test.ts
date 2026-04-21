@@ -4,10 +4,11 @@ import { Message } from "../../../../decorators/Message";
 import { clearRegistry } from "../../../message/metadata/registry";
 import type { KafkaSharedState } from "../types/kafka-types";
 import { KafkaPublisher } from "./KafkaPublisher";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock publish-kafka-messages ---
-const mockPublishKafkaMessages = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/publish-kafka-messages", () => ({
+const mockPublishKafkaMessages = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/publish-kafka-messages", async () => ({
   publishKafkaMessages: (...args: Array<unknown>) => mockPublishKafkaMessages(...args),
 }));
 
@@ -21,19 +22,19 @@ class TckKafkaPubBasic implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): KafkaSharedState => ({
   kafka: null,
   admin: null,
-  producer: { send: jest.fn(), connect: jest.fn(), disconnect: jest.fn() } as any,
+  producer: { send: vi.fn(), connect: vi.fn(), disconnect: vi.fn() } as any,
   connectionConfig: { brokers: ["localhost:9092"] },
   prefix: "iris",
   consumers: [],

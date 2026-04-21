@@ -1,6 +1,7 @@
 import type { MessageMetadata } from "../message/types/metadata";
 import type { OutboundPayload } from "../message/utils/prepare-outbound";
 import { buildEnvelope } from "./build-envelope";
+import { describe, expect, it } from "vitest";
 
 describe("buildEnvelope", () => {
   const outbound: OutboundPayload = {

@@ -1,4 +1,5 @@
 import { resolveStreamName } from "./resolve-stream-name";
+import { describe, expect, it } from "vitest";
 
 describe("resolveStreamName", () => {
   it("should return uppercase stream name with IRIS prefix", () => {

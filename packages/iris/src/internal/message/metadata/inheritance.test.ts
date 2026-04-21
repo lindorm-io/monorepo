@@ -12,6 +12,7 @@ import { OnValidate } from "../../../decorators/OnValidate";
 import { TimestampField } from "../../../decorators/TimestampField";
 import { Transform } from "../../../decorators/Transform";
 import { collectAll, collectOwn, collectSingular } from "./collect";
+import { describe, expect, it } from "vitest";
 
 describe("inheritance with real decorators", () => {
   const parentOnCreate = (msg: any) => {

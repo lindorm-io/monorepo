@@ -1,4 +1,5 @@
 import { Generated } from "./Generated";
+import { describe, expect, it } from "vitest";
 
 describe("Generated", () => {
   it("should stage generated with uuid strategy", () => {

@@ -1,4 +1,5 @@
 import { Max } from "./Max";
+import { describe, expect, it } from "vitest";
 
 describe("Max", () => {
   it("should stage field modifier with max value", () => {

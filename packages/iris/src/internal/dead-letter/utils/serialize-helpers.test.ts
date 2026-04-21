@@ -4,6 +4,7 @@ import {
   deserializeDeadLetterEntry,
   serializeDeadLetterEntry,
 } from "./serialize-helpers";
+import { describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   topic: "test-topic",

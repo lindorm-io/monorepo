@@ -1,5 +1,6 @@
 import { IrisPublishError } from "../../../../errors/IrisPublishError";
 import { publishToExchange } from "./publish-to-exchange";
+import { describe, expect, it, vi } from "vitest";
 
 type PublishCallback = (err: Error | null, ok?: any) => void;
 
@@ -11,7 +12,7 @@ const createMockChannel = (overrides?: {
   const publishReturn = overrides?.publishReturn ?? true;
 
   return {
-    publish: jest.fn(
+    publish: vi.fn(
       (
         _exchange: string,
         _routingKey: string,

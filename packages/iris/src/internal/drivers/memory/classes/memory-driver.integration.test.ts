@@ -13,6 +13,7 @@ import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
 import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore";
 import { IrisSource } from "../../../../classes/IrisSource";
 import { MemoryDriver } from "./MemoryDriver";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -53,13 +54,13 @@ class TckIntHook implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 // --- Tests ---
@@ -68,7 +69,7 @@ describe("Memory Driver Integration", () => {
   beforeEach(() => {
     clearRegistry();
     intHookLog.length = 0;
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe("IrisSource wiring", () => {
@@ -191,7 +192,7 @@ describe("Memory Driver Integration", () => {
 
   describe("retry to dead letter", () => {
     it("should retry and then dead-letter after max retries", async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
 
       const logger = createMockLogger();
       const deadLetterManager = new DeadLetterManager({
@@ -223,11 +224,11 @@ describe("Memory Driver Integration", () => {
       expect(callCount).toBe(1);
 
       // Advance timer for retry 1 (attempt=1)
-      await jest.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
       expect(callCount).toBe(2);
 
       // Advance timer for retry 2 (attempt=2, which is maxRetries)
-      await jest.advanceTimersByTimeAsync(50);
+      await vi.advanceTimersByTimeAsync(50);
       expect(callCount).toBe(3);
 
       // Should be dead-lettered now (attempt 2 === maxRetries 2, no more retries)
