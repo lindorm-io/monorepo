@@ -76,7 +76,7 @@ export const executeQueryIncludes = async <E extends IEntity>(
 const executeOwningInclude = async <E extends IEntity>(
   entities: Array<E>,
   include: IncludeSpec,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   isCollection: boolean,
   ctx: RelationQueryContext,
@@ -84,8 +84,8 @@ const executeOwningInclude = async <E extends IEntity>(
 ): Promise<void> => {
   // joinKeys: { localFKField: foreignPKField }
   // Extract the FK values from root entities to query the foreign table
-  const localFkKeys = Object.keys(relation.joinKeys);
-  const foreignPkKeys = Object.values(relation.joinKeys);
+  const localFkKeys = Object.keys(relation.joinKeys!);
+  const foreignPkKeys = Object.values(relation.joinKeys!);
 
   const fkValues: Array<Array<unknown>> = [];
   const fkToEntities = new Map<string, Array<E>>();
@@ -145,15 +145,15 @@ const executeOwningInclude = async <E extends IEntity>(
 const executeInverseInclude = async <E extends IEntity>(
   entities: Array<E>,
   include: IncludeSpec,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   isCollection: boolean,
   ctx: RelationQueryContext,
   opts: ExecuteQueryIncludesOptions,
 ): Promise<void> => {
   // findKeys: { foreignFKField: localPKField }
-  const localPkKeys = Object.values(relation.findKeys);
-  const foreignFkKeys = Object.keys(relation.findKeys);
+  const localPkKeys = Object.values(relation.findKeys!);
+  const foreignFkKeys = Object.keys(relation.findKeys!);
 
   const pkValues: Array<Array<unknown>> = [];
   const pkToEntities = new Map<string, Array<E>>();
@@ -200,7 +200,7 @@ const executeInverseInclude = async <E extends IEntity>(
 const executeManyToManyInclude = async <E extends IEntity>(
   entities: Array<E>,
   include: IncludeSpec,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   ctx: RelationQueryContext,
   opts: ExecuteQueryIncludesOptions,
