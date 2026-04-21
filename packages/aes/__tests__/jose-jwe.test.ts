@@ -1,4 +1,4 @@
-import { createCipheriv, CipherGCM, randomBytes } from "crypto";
+import { createCipheriv, type CipherGCM, randomBytes } from "crypto";
 import { FlattenedEncrypt, flattenedDecrypt } from "jose";
 import { encryptAes, decryptAes } from "../src/internal/utils/encryption.js";
 import { createHmacAuthTag } from "../src/internal/utils/data/auth-tag-hmac.js";
