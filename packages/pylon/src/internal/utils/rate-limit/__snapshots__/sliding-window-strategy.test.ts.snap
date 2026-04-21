@@ -1,4 +1,28 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`slidingWindowStrategy > should allow when no timestamps exist 1`] = `
+{
+  "allowed": true,
+  "remaining": 9,
+  "resetAt": 2026-01-01T00:01:00.000Z,
+}
+`;
+
+exports[`slidingWindowStrategy > should allow when timestamps within window are under max 1`] = `
+{
+  "allowed": true,
+  "remaining": 6,
+  "resetAt": 2026-01-01T00:00:30.000Z,
+}
+`;
+
+exports[`slidingWindowStrategy > should deny when timestamps within window reach max 1`] = `
+{
+  "allowed": false,
+  "remaining": 0,
+  "resetAt": 2026-01-01T00:00:50.000Z,
+}
+`;
 
 exports[`slidingWindowStrategy should allow when no timestamps exist 1`] = `
 {

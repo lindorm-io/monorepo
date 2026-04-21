@@ -5,45 +5,42 @@ import { generateListener } from "./generate-listener";
 import { generateMiddleware } from "./generate-middleware";
 import { generateHandler } from "./generate-handler";
 import { generateWorker } from "./generate-worker";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("./generate-route", () => ({
-  generateRoute: jest.fn(),
+vi.mock("./generate-route", async () => ({
+  generateRoute: vi.fn(),
 }));
 
-jest.mock("./generate-listener", () => ({
-  generateListener: jest.fn(),
+vi.mock("./generate-listener", () => ({
+  generateListener: vi.fn(),
 }));
 
-jest.mock("./generate-middleware", () => ({
-  generateMiddleware: jest.fn(),
+vi.mock("./generate-middleware", () => ({
+  generateMiddleware: vi.fn(),
 }));
 
-jest.mock("./generate-handler", () => ({
-  generateHandler: jest.fn(),
+vi.mock("./generate-handler", () => ({
+  generateHandler: vi.fn(),
 }));
 
-jest.mock("./generate-worker", () => ({
-  generateWorker: jest.fn(),
+vi.mock("./generate-worker", () => ({
+  generateWorker: vi.fn(),
 }));
 
-const mockGenerateRoute = generateRoute as jest.MockedFunction<typeof generateRoute>;
-const mockGenerateListener = generateListener as jest.MockedFunction<
-  typeof generateListener
->;
-const mockGenerateMiddleware = generateMiddleware as jest.MockedFunction<
+const mockGenerateRoute = generateRoute as MockedFunction<typeof generateRoute>;
+const mockGenerateListener = generateListener as MockedFunction<typeof generateListener>;
+const mockGenerateMiddleware = generateMiddleware as MockedFunction<
   typeof generateMiddleware
 >;
-const mockGenerateHandler = generateHandler as jest.MockedFunction<
-  typeof generateHandler
->;
-const mockGenerateWorker = generateWorker as jest.MockedFunction<typeof generateWorker>;
+const mockGenerateHandler = generateHandler as MockedFunction<typeof generateHandler>;
+const mockGenerateWorker = generateWorker as MockedFunction<typeof generateWorker>;
 
 describe("registerGenerateCommands", () => {
   let program: Command;
   let generateCmd: Command;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     program = new Command();
     program.exitOverride();
     registerGenerateCommands(program);

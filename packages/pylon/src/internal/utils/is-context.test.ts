@@ -4,6 +4,7 @@ import {
   isSocketEventContext,
   isSocketHandshakeContext,
 } from "./is-context";
+import { describe, expect, test } from "vitest";
 
 describe("isSocketEventContext", () => {
   test("should return true for socket event context", () => {

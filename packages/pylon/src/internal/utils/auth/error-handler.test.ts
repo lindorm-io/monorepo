@@ -1,4 +1,5 @@
 import { errorHandler } from "./error-handler";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("errorHandler", () => {
   let ctx: any;
@@ -14,7 +15,7 @@ describe("errorHandler", () => {
   });
 
   test("should resolve with query params as body", async () => {
-    await expect(errorHandler(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(errorHandler(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual({
       error: "access_denied",
@@ -27,7 +28,7 @@ describe("errorHandler", () => {
   test("should resolve with empty body when query is empty", async () => {
     ctx.query = {};
 
-    await expect(errorHandler(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(errorHandler(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual({});
     expect(ctx.status).toBe(400);

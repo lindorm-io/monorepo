@@ -1,5 +1,6 @@
 import { AegisError } from "@lindorm/aegis";
 import { extractTokenFromSession } from "./extract-token-from-session";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const session = {
   id: "sess-1",
@@ -15,7 +16,7 @@ describe("extractTokenFromSession", () => {
 
   beforeEach(() => {
     aegis = {
-      verify: jest.fn().mockResolvedValue({
+      verify: vi.fn().mockResolvedValue({
         token: "session-jwt",
         header: { baseFormat: "JWT" },
       }),

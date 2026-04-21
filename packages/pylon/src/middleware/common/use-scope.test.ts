@@ -1,16 +1,17 @@
 import { ServerError } from "@lindorm/errors";
 import { useScope } from "./use-scope";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("useScope", () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
 
   beforeEach(() => {
-    next = jest.fn();
+    next = vi.fn();
 
     ctx = {
       proteus: {
-        setFilterParams: jest.fn(),
+        setFilterParams: vi.fn(),
       },
       state: {
         tenant: "tenant-abc",

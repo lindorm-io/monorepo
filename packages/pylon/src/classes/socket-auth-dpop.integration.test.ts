@@ -1,7 +1,7 @@
 import { Aegis, IAegis } from "@lindorm/aegis";
 import { Amphora, IAmphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ILogger } from "@lindorm/logger";
 import {
   createBearerAuthStrategy,
@@ -20,6 +20,7 @@ import {
 import { reconstructHandshakeHtu } from "../internal/utils/handshake/reconstruct-handshake-htu";
 import { createHandshakeTokenMiddleware } from "../middleware/common/create-handshake-token-middleware";
 import { Pylon } from "./Pylon";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 // Phase 9b — DPoP end-to-end integration tests. Phase 9c (session/cookie) runs
 // in parallel and owns socket-auth-session.integration.test.ts. Phase 9d covers
@@ -502,7 +503,7 @@ describe("socket auth (dpop-bearer) e2e", () => {
     const initial = await loginDpop("alice", 3600);
     let current = initial;
 
-    const getCredentials = jest.fn(async () => ({
+    const getCredentials = vi.fn(async () => ({
       bearer: current.bearer,
       expiresIn: current.expiresIn,
     }));
@@ -554,7 +555,7 @@ describe("socket auth (dpop-bearer) e2e", () => {
 
     let current = initial;
 
-    const getCredentials = jest.fn(async () => ({
+    const getCredentials = vi.fn(async () => ({
       bearer: current.bearer,
       expiresIn: current.expiresIn,
     }));
@@ -584,7 +585,7 @@ describe("socket auth (dpop-bearer) e2e", () => {
     const initial = await loginDpop("alice", 3600);
     let current = initial;
 
-    const getCredentials = jest.fn(async () => ({
+    const getCredentials = vi.fn(async () => ({
       bearer: current.bearer,
       expiresIn: current.expiresIn,
     }));
@@ -605,7 +606,7 @@ describe("socket auth (dpop-bearer) e2e", () => {
       current = await loginDpop("alice", 7200);
 
       const socket = (client as any).socket;
-      const emitSpy = jest.spyOn(socket, "emitWithAck");
+      const emitSpy = vi.spyOn(socket, "emitWithAck");
 
       await client.refresh();
 
@@ -627,7 +628,7 @@ describe("socket auth (dpop-bearer) e2e", () => {
     const initial = await loginDpop("alice", 3600);
     let current = initial;
 
-    const getCredentials = jest.fn(async () => ({
+    const getCredentials = vi.fn(async () => ({
       bearer: current.bearer,
       expiresIn: current.expiresIn,
     }));

@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { assertSubjectUnchanged } from "./assert-subject-unchanged";
+import { describe, expect, test } from "vitest";
 
 describe("assertSubjectUnchanged", () => {
   test("does not throw when subjects match", () => {

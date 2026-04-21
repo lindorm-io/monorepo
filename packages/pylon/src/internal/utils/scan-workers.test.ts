@@ -1,8 +1,9 @@
-import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ILindormWorker, LindormWorker } from "@lindorm/worker";
 import { join } from "path";
 import { scanWorkers } from "./scan-workers";
+import { describe, expect, test } from "vitest";
 
 describe("scanWorkers", () => {
   const logger = createMockLogger();

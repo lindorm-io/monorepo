@@ -1,4 +1,100 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`PylonScannerBase > parseSegment > should handle plain segment with hyphens 1`] = `
+{
+  "isCatchAll": false,
+  "isGroup": false,
+  "isOptionalCatchAll": false,
+  "isParam": false,
+  "paramName": null,
+  "path": "my-route",
+  "raw": "my-route",
+}
+`;
+
+exports[`PylonScannerBase > parseSegment > should parse a catch-all segment [...path] 1`] = `
+{
+  "isCatchAll": true,
+  "isGroup": false,
+  "isOptionalCatchAll": false,
+  "isParam": false,
+  "paramName": "path",
+  "path": "{*path}",
+  "raw": "[...path]",
+}
+`;
+
+exports[`PylonScannerBase > parseSegment > should parse a group segment (admin) 1`] = `
+{
+  "isCatchAll": false,
+  "isGroup": true,
+  "isOptionalCatchAll": false,
+  "isParam": false,
+  "paramName": null,
+  "path": "",
+  "raw": "(admin)",
+}
+`;
+
+exports[`PylonScannerBase > parseSegment > should parse a group segment (auth) 1`] = `
+{
+  "isCatchAll": false,
+  "isGroup": true,
+  "isOptionalCatchAll": false,
+  "isParam": false,
+  "paramName": null,
+  "path": "",
+  "raw": "(auth)",
+}
+`;
+
+exports[`PylonScannerBase > parseSegment > should parse a parameter segment [id] 1`] = `
+{
+  "isCatchAll": false,
+  "isGroup": false,
+  "isOptionalCatchAll": false,
+  "isParam": true,
+  "paramName": "id",
+  "path": ":id",
+  "raw": "[id]",
+}
+`;
+
+exports[`PylonScannerBase > parseSegment > should parse a parameter segment [userId] 1`] = `
+{
+  "isCatchAll": false,
+  "isGroup": false,
+  "isOptionalCatchAll": false,
+  "isParam": true,
+  "paramName": "userId",
+  "path": ":userId",
+  "raw": "[userId]",
+}
+`;
+
+exports[`PylonScannerBase > parseSegment > should parse a plain segment 1`] = `
+{
+  "isCatchAll": false,
+  "isGroup": false,
+  "isOptionalCatchAll": false,
+  "isParam": false,
+  "paramName": null,
+  "path": "users",
+  "raw": "users",
+}
+`;
+
+exports[`PylonScannerBase > parseSegment > should parse an optional catch-all segment [[...slug]] 1`] = `
+{
+  "isCatchAll": false,
+  "isGroup": false,
+  "isOptionalCatchAll": true,
+  "isParam": false,
+  "paramName": "slug",
+  "path": "{*slug}",
+  "raw": "[[...slug]]",
+}
+`;
 
 exports[`PylonScannerBase parseSegment should handle plain segment with hyphens 1`] = `
 {

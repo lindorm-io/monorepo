@@ -1,4 +1,5 @@
 import { normalizeHtu } from "./normalize-htu";
+import { describe, expect, test } from "vitest";
 
 describe("normalizeHtu", () => {
   test("should return a normalized origin + path", () => {

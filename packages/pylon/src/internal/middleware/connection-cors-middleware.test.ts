@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { createConnectionCorsMiddleware } from "./connection-cors-middleware";
+import { describe, expect, test, vi } from "vitest";
 
 const buildCtx = (origin: string | undefined): any => ({
   io: {
@@ -23,7 +24,7 @@ describe("createConnectionCorsMiddleware", () => {
       allowOrigins: ["https://app.example.com"],
     });
 
-    await expect(mw(buildCtx(undefined), jest.fn())).rejects.toThrow(ClientError);
+    await expect(mw(buildCtx(undefined), vi.fn())).rejects.toThrow(ClientError);
   });
 
   test("should reject handshakes with disallowed origin", async () => {
@@ -31,7 +32,7 @@ describe("createConnectionCorsMiddleware", () => {
       allowOrigins: ["https://app.example.com"],
     });
 
-    await expect(mw(buildCtx("https://evil.example.com"), jest.fn())).rejects.toThrow(
+    await expect(mw(buildCtx("https://evil.example.com"), vi.fn())).rejects.toThrow(
       ClientError,
     );
   });
@@ -40,7 +41,7 @@ describe("createConnectionCorsMiddleware", () => {
     const mw = createConnectionCorsMiddleware({
       allowOrigins: ["https://app.example.com"],
     });
-    const next = jest.fn().mockResolvedValue(undefined);
+    const next = vi.fn().mockResolvedValue(undefined);
 
     await expect(mw(buildCtx("https://app.example.com"), next)).resolves.toBeUndefined();
     expect(next).toHaveBeenCalled();
@@ -48,7 +49,7 @@ describe("createConnectionCorsMiddleware", () => {
 
   test("should accept when wildcard is configured", async () => {
     const mw = createConnectionCorsMiddleware({ allowOrigins: "*" });
-    const next = jest.fn().mockResolvedValue(undefined);
+    const next = vi.fn().mockResolvedValue(undefined);
 
     await expect(mw(buildCtx("https://any.example.com"), next)).resolves.toBeUndefined();
     expect(next).toHaveBeenCalled();

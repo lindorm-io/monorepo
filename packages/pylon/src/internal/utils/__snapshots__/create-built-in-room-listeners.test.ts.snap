@@ -1,4 +1,38 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createBuiltInRoomListeners > should have correct segments for join 1`] = `
+[
+  {
+    "type": "literal",
+    "value": "rooms",
+  },
+  {
+    "type": "param",
+    "value": "roomId",
+  },
+  {
+    "type": "literal",
+    "value": "join",
+  },
+]
+`;
+
+exports[`createBuiltInRoomListeners > should have correct segments for leave 1`] = `
+[
+  {
+    "type": "literal",
+    "value": "rooms",
+  },
+  {
+    "type": "param",
+    "value": "roomId",
+  },
+  {
+    "type": "literal",
+    "value": "leave",
+  },
+]
+`;
 
 exports[`createBuiltInRoomListeners should have correct segments for join 1`] = `
 [

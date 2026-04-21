@@ -1,4 +1,38 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createTokenMiddleware > HTTP context > should throw ClientError 401 when token is not a string and not optional 1`] = `"Token must be of type JWT"`;
+
+exports[`createTokenMiddleware > HTTP context > should throw ClientError 401 when verification fails 1`] = `"invalid signature"`;
+
+exports[`createTokenMiddleware > HTTP context > should verify token and write to ctx.state.tokens 1`] = `
+{
+  "decoded": {},
+  "header": {},
+  "payload": {
+    "subject": "verified_subject",
+  },
+}
+`;
+
+exports[`createTokenMiddleware > Socket context > should verify token and write to both ctx.state.tokens and ctx.socket.data.tokens 1`] = `
+{
+  "decoded": {},
+  "header": {},
+  "payload": {
+    "subject": "verified_subject",
+  },
+}
+`;
+
+exports[`createTokenMiddleware > Socket context > should verify token and write to both ctx.state.tokens and ctx.socket.data.tokens 2`] = `
+{
+  "decoded": {},
+  "header": {},
+  "payload": {
+    "subject": "verified_subject",
+  },
+}
+`;
 
 exports[`createTokenMiddleware HTTP context should throw ClientError 401 when token is not a string and not optional 1`] = `"Token must be of type JWT"`;
 

@@ -1,10 +1,11 @@
 import { ServerError } from "@lindorm/errors";
 import { resolveProteus } from "./resolve-proteus";
+import { describe, expect, test, vi } from "vitest";
 
 describe("resolveProteus", () => {
   test("should return session from override when override is provided", () => {
     const session = { fake: "session" };
-    const override: any = { session: jest.fn().mockReturnValue(session) };
+    const override: any = { session: vi.fn().mockReturnValue(session) };
     const ctx: any = { logger: { fake: "logger" } };
 
     const result = resolveProteus(ctx, override);
@@ -31,7 +32,7 @@ describe("resolveProteus", () => {
 
   test("should prefer override over ctx.proteus", () => {
     const session = { fake: "session" };
-    const override: any = { session: jest.fn().mockReturnValue(session) };
+    const override: any = { session: vi.fn().mockReturnValue(session) };
     const ctx: any = { logger: {}, proteus: { fake: "existing" } };
 
     const result = resolveProteus(ctx, override);

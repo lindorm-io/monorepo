@@ -1,28 +1,29 @@
 import { ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createPublisherMiddleware } from "./create-publisher-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../../internal/utils/resolve-iris");
+vi.mock("../../internal/utils/resolve-iris");
 import { resolveIris } from "../../internal/utils/resolve-iris";
 
 class OrderCreatedEvent {}
 class UserUpdatedEvent {}
 
-describe("createPublisherMiddleware", () => {
+describe("createPublisherMiddleware", async () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
   let mockPublisher: any;
   let mockSource: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    mockPublisher = { publish: jest.fn() };
-    mockSource = { publisher: jest.fn().mockReturnValue(mockPublisher) };
-    (resolveIris as jest.Mock).mockReturnValue(mockSource);
+    mockPublisher = { publish: vi.fn() };
+    mockSource = { publisher: vi.fn().mockReturnValue(mockPublisher) };
+    (resolveIris as Mock).mockReturnValue(mockSource);
 
     ctx = { logger: createMockLogger() };
-    next = jest.fn();
+    next = vi.fn();
   });
 
   test("should call next", async () => {
@@ -61,7 +62,7 @@ describe("createPublisherMiddleware", () => {
   });
 
   test("should pass the override source to resolveIris when provided", async () => {
-    const overrideSource: any = { publisher: jest.fn() };
+    const overrideSource: any = { publisher: vi.fn() };
 
     await createPublisherMiddleware([OrderCreatedEvent], overrideSource)(ctx, next);
 
@@ -69,7 +70,7 @@ describe("createPublisherMiddleware", () => {
   });
 
   test("should throw ServerError when resolveIris throws", async () => {
-    (resolveIris as jest.Mock).mockImplementation(() => {
+    (resolveIris as Mock).mockImplementation(() => {
       throw new ServerError("IrisSource is not configured");
     });
 

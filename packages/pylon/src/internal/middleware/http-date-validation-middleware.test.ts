@@ -1,6 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import MockDate from "mockdate";
 import { createHttpDateValidationMiddleware } from "./http-date-validation-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -26,7 +27,7 @@ describe("createHttpDateValidationMiddleware", () => {
 
   test("should resolve", async () => {
     await expect(
-      createHttpDateValidationMiddleware(options)(ctx, jest.fn()),
+      createHttpDateValidationMiddleware(options)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
   });
 
@@ -34,7 +35,7 @@ describe("createHttpDateValidationMiddleware", () => {
     ctx.state.metadata.date = new Date("2024-01-01T07:00:00.000Z");
 
     await expect(
-      createHttpDateValidationMiddleware(options)(ctx, jest.fn()),
+      createHttpDateValidationMiddleware(options)(ctx, vi.fn()),
     ).rejects.toThrow(ClientError);
   });
 
@@ -42,7 +43,7 @@ describe("createHttpDateValidationMiddleware", () => {
     ctx.state.metadata.date = new Date("2024-01-01T09:00:00.000Z");
 
     await expect(
-      createHttpDateValidationMiddleware(options)(ctx, jest.fn()),
+      createHttpDateValidationMiddleware(options)(ctx, vi.fn()),
     ).rejects.toThrow(ClientError);
   });
 });

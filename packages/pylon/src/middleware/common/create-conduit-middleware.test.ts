@@ -1,12 +1,13 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ServerError } from "@lindorm/errors";
 import { createConduitMiddleware } from "./create-conduit-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("@lindorm/conduit", () => ({
-  Conduit: jest.fn(),
-  conduitChangeResponseDataMiddleware: jest.fn().mockReturnValue("changeResponse"),
-  conduitCorrelationMiddleware: jest.fn().mockReturnValue("correlation"),
-  conduitSessionMiddleware: jest.fn().mockReturnValue("session"),
+vi.mock("@lindorm/conduit", async () => ({
+  Conduit: vi.fn(),
+  conduitChangeResponseDataMiddleware: vi.fn().mockReturnValue("changeResponse"),
+  conduitCorrelationMiddleware: vi.fn().mockReturnValue("correlation"),
+  conduitSessionMiddleware: vi.fn().mockReturnValue("session"),
 }));
 
 import {
@@ -17,11 +18,11 @@ import {
 } from "@lindorm/conduit";
 
 describe("createConduitMiddleware", () => {
-  let next: jest.Mock;
+  let next: Mock;
 
   beforeEach(() => {
-    next = jest.fn();
-    jest.clearAllMocks();
+    next = vi.fn();
+    vi.clearAllMocks();
   });
 
   describe("HTTP context (with sessionId)", () => {
@@ -61,7 +62,7 @@ describe("createConduitMiddleware", () => {
       await middleware(ctx, next);
 
       expect(conduitCorrelationMiddleware).toHaveBeenCalledWith("correlation-id");
-      expect((Conduit as jest.Mock).mock.calls[0][0].middleware).toContain("correlation");
+      expect((Conduit as Mock).mock.calls[0][0].middleware).toContain("correlation");
     });
 
     test("should include session middleware when sessionId exists", async () => {
@@ -73,7 +74,7 @@ describe("createConduitMiddleware", () => {
       await middleware(ctx, next);
 
       expect(conduitSessionMiddleware).toHaveBeenCalledWith("session-id");
-      expect((Conduit as jest.Mock).mock.calls[0][0].middleware).toContain("session");
+      expect((Conduit as Mock).mock.calls[0][0].middleware).toContain("session");
     });
 
     test("should always include changeResponseData middleware", async () => {
@@ -85,9 +86,7 @@ describe("createConduitMiddleware", () => {
       await middleware(ctx, next);
 
       expect(conduitChangeResponseDataMiddleware).toHaveBeenCalledWith("camel");
-      expect((Conduit as jest.Mock).mock.calls[0][0].middleware).toContain(
-        "changeResponse",
-      );
+      expect((Conduit as Mock).mock.calls[0][0].middleware).toContain("changeResponse");
     });
 
     test("should call next", async () => {
@@ -126,7 +125,7 @@ describe("createConduitMiddleware", () => {
       await middleware(ctx, next);
 
       expect(conduitSessionMiddleware).not.toHaveBeenCalled();
-      expect((Conduit as jest.Mock).mock.calls[0][0].middleware).not.toContain("session");
+      expect((Conduit as Mock).mock.calls[0][0].middleware).not.toContain("session");
     });
   });
 

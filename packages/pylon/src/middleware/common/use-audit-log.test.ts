@@ -1,47 +1,48 @@
 import { ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { AUDIT_SOURCE } from "../../internal/constants/symbols";
 import { useAuditLog } from "./use-audit-log";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../../internal/utils/is-context");
+vi.mock("../../internal/utils/is-context");
 
 import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
 
 describe("useAuditLog", () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
   let mockPublisher: any;
   let mockIris: any;
   let auditConfig: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockPublisher = {
-      create: jest.fn().mockReturnValue({ id: "msg-1" }),
-      publish: jest.fn().mockResolvedValue(undefined),
+      create: vi.fn().mockReturnValue({ id: "msg-1" }),
+      publish: vi.fn().mockResolvedValue(undefined),
     };
 
     mockIris = {
-      session: jest.fn().mockReturnValue({
-        publisher: jest.fn().mockReturnValue(mockPublisher),
+      session: vi.fn().mockReturnValue({
+        publisher: vi.fn().mockReturnValue(mockPublisher),
       }),
     };
 
     auditConfig = {
       iris: mockIris,
-      actor: jest.fn().mockReturnValue("user-123"),
+      actor: vi.fn().mockReturnValue("user-123"),
     };
 
-    (isHttpContext as unknown as jest.Mock).mockReturnValue(true);
-    (isSocketContext as unknown as jest.Mock).mockReturnValue(false);
+    (isHttpContext as unknown as Mock).mockReturnValue(true);
+    (isSocketContext as unknown as Mock).mockReturnValue(false);
 
     ctx = {
       logger: createMockLogger(),
       data: { foo: "bar" },
       request: { path: "/api/users", method: "POST", ip: "10.0.0.1" },
       status: 201,
-      get: jest.fn().mockReturnValue("Mozilla/5.0"),
+      get: vi.fn().mockReturnValue("Mozilla/5.0"),
       state: {
         app: { name: "test-app" },
         metadata: {
@@ -53,7 +54,7 @@ describe("useAuditLog", () => {
       [AUDIT_SOURCE]: auditConfig,
     };
 
-    next = jest.fn().mockResolvedValue(undefined);
+    next = vi.fn().mockResolvedValue(undefined);
   });
 
   test("should call next before publishing", async () => {
@@ -93,8 +94,8 @@ describe("useAuditLog", () => {
   });
 
   test("should publish audit message with correct fields for socket", async () => {
-    (isHttpContext as unknown as jest.Mock).mockReturnValue(false);
-    (isSocketContext as unknown as jest.Mock).mockReturnValue(true);
+    (isHttpContext as unknown as Mock).mockReturnValue(false);
+    (isSocketContext as unknown as Mock).mockReturnValue(true);
 
     ctx = {
       ...ctx,
@@ -120,8 +121,8 @@ describe("useAuditLog", () => {
   });
 
   test("should use per-route sanitise over global", async () => {
-    const globalSanitise = jest.fn().mockReturnValue({ redacted: true });
-    const routeSanitise = jest.fn().mockReturnValue({ route_redacted: true });
+    const globalSanitise = vi.fn().mockReturnValue({ redacted: true });
+    const routeSanitise = vi.fn().mockReturnValue({ route_redacted: true });
 
     auditConfig.sanitise = globalSanitise;
 
@@ -137,7 +138,7 @@ describe("useAuditLog", () => {
   });
 
   test("should use global sanitise when no per-route sanitise", async () => {
-    const globalSanitise = jest.fn().mockReturnValue({ global_redacted: true });
+    const globalSanitise = vi.fn().mockReturnValue({ global_redacted: true });
     auditConfig.sanitise = globalSanitise;
 
     await useAuditLog()(ctx, next);
@@ -151,7 +152,7 @@ describe("useAuditLog", () => {
   });
 
   test("should skip when skip returns true", async () => {
-    const skip = jest.fn().mockReturnValue(true);
+    const skip = vi.fn().mockReturnValue(true);
 
     await useAuditLog({ skip })(ctx, next);
 
@@ -161,7 +162,7 @@ describe("useAuditLog", () => {
   });
 
   test("should use global skip from config when no per-route skip", async () => {
-    auditConfig.skip = jest.fn().mockReturnValue(true);
+    auditConfig.skip = vi.fn().mockReturnValue(true);
 
     await useAuditLog()(ctx, next);
 
@@ -186,7 +187,7 @@ describe("useAuditLog", () => {
   });
 
   test("should call next even when audit creation fails", async () => {
-    auditConfig.actor = jest.fn().mockImplementation(() => {
+    auditConfig.actor = vi.fn().mockImplementation(() => {
       throw new Error("actor failed");
     });
 

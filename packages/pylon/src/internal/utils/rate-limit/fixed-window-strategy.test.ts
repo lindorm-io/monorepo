@@ -1,26 +1,27 @@
 import { fixedWindowStrategy } from "./fixed-window-strategy";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("fixedWindowStrategy", () => {
-  let mockFindOneOrSave: jest.Mock;
-  let mockUpdate: jest.Mock;
-  let mockIncrement: jest.Mock;
+  let mockFindOneOrSave: Mock;
+  let mockUpdate: Mock;
+  let mockIncrement: Mock;
   let repository: any;
 
   beforeEach(() => {
-    mockFindOneOrSave = jest.fn();
-    mockUpdate = jest.fn();
-    mockIncrement = jest.fn();
+    mockFindOneOrSave = vi.fn();
+    mockUpdate = vi.fn();
+    mockIncrement = vi.fn();
     repository = {
       findOneOrSave: mockFindOneOrSave,
       update: mockUpdate,
       increment: mockIncrement,
     };
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test("should create new counter and allow when no existing record", async () => {

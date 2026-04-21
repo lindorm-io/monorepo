@@ -1,6 +1,7 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { PylonSecurityTxt } from "../../types";
 import { createWellKnownRouter } from "./create-well-known-router";
+import { describe, expect, test, vi } from "vitest";
 
 describe("createWellKnownRouter", () => {
   const defaultOptions: any = {
@@ -29,8 +30,8 @@ describe("createWellKnownRouter", () => {
       const router = createWellKnownRouter(defaultOptions);
       const layer = router.stack.find((l) => l.path === "/change-password");
 
-      const ctx: any = { redirect: jest.fn() };
-      const next = jest.fn();
+      const ctx: any = { redirect: vi.fn() };
+      const next = vi.fn();
 
       for (const mw of layer!.stack) {
         await mw(ctx, next);
@@ -48,8 +49,8 @@ describe("createWellKnownRouter", () => {
       });
       const layer = router.stack.find((l) => l.path === "/change-password");
 
-      const ctx: any = { redirect: jest.fn() };
-      const next = jest.fn();
+      const ctx: any = { redirect: vi.fn() };
+      const next = vi.fn();
 
       await expect(async () => {
         for (const mw of layer!.stack) {
@@ -66,7 +67,7 @@ describe("createWellKnownRouter", () => {
 
       const jwks = { keys: [{ kid: "test-key" }] };
       const ctx: any = { amphora: { jwks }, body: null, status: 0 };
-      const next = jest.fn();
+      const next = vi.fn();
 
       for (const mw of layer!.stack) {
         await mw(ctx, next);
@@ -90,7 +91,7 @@ describe("createWellKnownRouter", () => {
           origin: "https://origin.lindorm.io",
         },
       };
-      const next = jest.fn();
+      const next = vi.fn();
 
       for (const mw of layer!.stack) {
         await mw(ctx, next);
@@ -103,7 +104,7 @@ describe("createWellKnownRouter", () => {
 
   describe("right-to-be-forgotten", () => {
     test("should invoke callback when authorization type is bearer", async () => {
-      const rightToBeForgotten = jest.fn();
+      const rightToBeForgotten = vi.fn();
       const options = {
         ...defaultOptions,
         callbacks: { rightToBeForgotten },
@@ -117,7 +118,7 @@ describe("createWellKnownRouter", () => {
         status: 0,
         state: { authorization: { type: "bearer" } },
       };
-      const next = jest.fn();
+      const next = vi.fn();
 
       for (const mw of layer!.stack) {
         await mw(ctx, next);
@@ -137,7 +138,7 @@ describe("createWellKnownRouter", () => {
         status: 0,
         state: { authorization: { type: "basic" } },
       };
-      const next = jest.fn();
+      const next = vi.fn();
 
       await expect(async () => {
         for (const mw of layer!.stack) {
@@ -155,7 +156,7 @@ describe("createWellKnownRouter", () => {
         status: 0,
         state: { authorization: { type: "bearer" } },
       };
-      const next = jest.fn();
+      const next = vi.fn();
 
       for (const mw of layer!.stack) {
         await mw(ctx, next);
@@ -202,7 +203,7 @@ describe("createWellKnownRouter", () => {
       const layer = router.stack.find((l) => l.path === "/security.txt");
 
       const ctx: any = { body: null, status: 0, type: "" };
-      const next = jest.fn();
+      const next = vi.fn();
 
       for (const mw of layer!.stack) {
         await mw(ctx, next);

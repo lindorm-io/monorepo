@@ -1,4 +1,160 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parseTokenData > should compute expiresAt from expiresIn when no token claims 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-01T09:00:00.000Z,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "idToken": "idToken",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "refreshToken": "refreshToken",
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData > should compute expiresAt from tokenExpiry fallback 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-01T10:00:00.000Z,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "idToken": "idToken",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "refreshToken": "refreshToken",
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData > should fall through when access token verifies as JWS (non-JWT) 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-01T09:00:00.000Z,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "idToken": "idToken",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "refreshToken": "refreshToken",
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData > should fall through when access token verify throws AegisError (opaque token) 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-01T09:00:00.000Z,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "idToken": "idToken",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "refreshToken": "refreshToken",
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData > should parse all tokens correctly 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-02T08:00:00.000Z,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "idToken": "idToken",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "refreshToken": "refreshToken",
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData > should preserve existing session fields on refresh 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-01T09:20:00.000Z,
+  "id": "35e8805b-2352-5c71-871a-19e8545540ce",
+  "idToken": "existingIdToken",
+  "issuedAt": 2024-01-01T07:54:00.000Z,
+  "refreshToken": "existingRefreshToken",
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "efd9178b-778b-53ce-b929-da87c320140e",
+}
+`;
+
+exports[`parseTokenData > should resolve scope from id_token when access token is opaque and envelope has no scope 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-01T09:00:00.000Z,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "idToken": "idToken",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "scope": [
+    "openid",
+    "profile",
+    "email",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData > should resolve subject and expiresAt from JWT access token 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-02T08:00:00.000Z,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData > should resolve subject from id_token when access token has no subject 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-02T08:00:00.000Z,
+  "id": "85924874-c05c-5574-ad85-0cf2cf39be95",
+  "idToken": "idToken",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "4e294800-be7e-5954-b143-0ebdcf393906",
+}
+`;
+
+exports[`parseTokenData > should resolve subject via resolveSubject callback when no id_token 1`] = `
+{
+  "accessToken": "accessToken",
+  "expiresAt": 2024-01-01T09:00:00.000Z,
+  "id": "c8ff3952-8ba4-51a3-a4d5-2f0726c49524",
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "refreshToken": "refreshToken",
+  "scope": [
+    "scope1",
+    "scope2",
+  ],
+  "subject": "userinfo-subject",
+}
+`;
 
 exports[`parseTokenData should compute expiresAt from expiresIn when no token claims 1`] = `
 {

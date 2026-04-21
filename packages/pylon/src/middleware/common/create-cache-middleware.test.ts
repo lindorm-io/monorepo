@@ -1,28 +1,29 @@
 import { ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { createCacheMiddleware } from "./create-cache-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../../internal/utils/resolve-proteus");
+vi.mock("../../internal/utils/resolve-proteus");
 import { resolveProteus } from "../../internal/utils/resolve-proteus";
 
 class Session {}
 class TokenEntity {}
 
-describe("createCacheMiddleware", () => {
+describe("createCacheMiddleware", async () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
   let mockRepository: any;
   let mockSource: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
-    mockRepository = { find: jest.fn() };
-    mockSource = { repository: jest.fn().mockReturnValue(mockRepository) };
-    (resolveProteus as jest.Mock).mockReturnValue(mockSource);
+    mockRepository = { find: vi.fn() };
+    mockSource = { repository: vi.fn().mockReturnValue(mockRepository) };
+    (resolveProteus as Mock).mockReturnValue(mockSource);
 
     ctx = { logger: createMockLogger() };
-    next = jest.fn();
+    next = vi.fn();
   });
 
   test("should call next", async () => {
@@ -61,7 +62,7 @@ describe("createCacheMiddleware", () => {
   });
 
   test("should pass the override source to resolveProteus when provided", async () => {
-    const overrideSource: any = { repository: jest.fn() };
+    const overrideSource: any = { repository: vi.fn() };
 
     await createCacheMiddleware([Session], overrideSource)(ctx, next);
 
@@ -69,7 +70,7 @@ describe("createCacheMiddleware", () => {
   });
 
   test("should throw ServerError when resolveProteus throws", async () => {
-    (resolveProteus as jest.Mock).mockImplementation(() => {
+    (resolveProteus as Mock).mockImplementation(() => {
       throw new ServerError("ProteusSource is not configured");
     });
 

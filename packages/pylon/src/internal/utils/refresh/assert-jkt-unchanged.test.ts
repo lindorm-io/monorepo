@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { assertJktUnchanged } from "./assert-jkt-unchanged";
+import { describe, expect, test } from "vitest";
 
 describe("assertJktUnchanged", () => {
   test("no-op when expected is undefined (bearer-mode)", () => {

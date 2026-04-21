@@ -1,13 +1,14 @@
 import { access } from "fs/promises";
 import { fileExists } from "./file-exists";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("fs/promises");
+vi.mock("fs/promises");
 
-const mockAccess = access as jest.MockedFunction<typeof access>;
+const mockAccess = access as MockedFunction<typeof access>;
 
-describe("fileExists", () => {
+describe("fileExists", async () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should return true when file exists", async () => {

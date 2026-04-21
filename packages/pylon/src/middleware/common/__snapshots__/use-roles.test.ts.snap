@@ -1,4 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`useRoles > should throw ClientError 401 when token is missing 1`] = `"Token not found"`;
+
+exports[`useRoles > should throw ClientError 401 when token is missing 2`] = `"Expected token [accessToken] on context"`;
+
+exports[`useRoles > should throw ClientError 403 when no role matches 1`] = `"Insufficient roles"`;
+
+exports[`useRoles > should throw ClientError 403 when no role matches 2`] = `"Requires at least one of: superadmin, moderator"`;
 
 exports[`useRoles should throw ClientError 401 when token is missing 1`] = `"Token not found"`;
 

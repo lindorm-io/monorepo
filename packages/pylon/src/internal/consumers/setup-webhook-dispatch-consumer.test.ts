@@ -2,31 +2,32 @@ import {
   setupWebhookDispatchConsumer,
   WEBHOOK_DISPATCH_QUEUE,
 } from "./setup-webhook-dispatch-consumer";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../utils/dispatch-webhook");
+vi.mock("../utils/dispatch-webhook");
 
 import { createDispatchWebhook } from "../utils/dispatch-webhook";
 
-describe("setupWebhookDispatchConsumer", () => {
-  const mockDispatchWebhook = jest.fn().mockResolvedValue(undefined);
-  (createDispatchWebhook as jest.Mock).mockReturnValue(mockDispatchWebhook);
+describe("setupWebhookDispatchConsumer", async () => {
+  const mockDispatchWebhook = vi.fn().mockResolvedValue(undefined);
+  (createDispatchWebhook as Mock).mockReturnValue(mockDispatchWebhook);
 
-  const mockConsume = jest.fn().mockResolvedValue(undefined);
-  const mockWorkerQueue = jest.fn().mockReturnValue({ consume: mockConsume });
+  const mockConsume = vi.fn().mockResolvedValue(undefined);
+  const mockWorkerQueue = vi.fn().mockReturnValue({ consume: mockConsume });
 
-  const mockFindOne = jest.fn();
-  const mockSave = jest.fn().mockResolvedValue(undefined);
-  const mockRepository = jest
+  const mockFindOne = vi.fn();
+  const mockSave = vi.fn().mockResolvedValue(undefined);
+  const mockRepository = vi
     .fn()
     .mockReturnValue({ findOne: mockFindOne, save: mockSave });
 
   const iris = { workerQueue: mockWorkerQueue } as any;
   const proteus = { repository: mockRepository } as any;
   const logger = {
-    debug: jest.fn(),
-    error: jest.fn(),
-    verbose: jest.fn(),
-    warn: jest.fn(),
+    debug: vi.fn(),
+    error: vi.fn(),
+    verbose: vi.fn(),
+    warn: vi.fn(),
   } as any;
 
   const baseSubscription = {
@@ -40,8 +41,8 @@ describe("setupWebhookDispatchConsumer", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (createDispatchWebhook as jest.Mock).mockReturnValue(mockDispatchWebhook);
+    vi.clearAllMocks();
+    (createDispatchWebhook as Mock).mockReturnValue(mockDispatchWebhook);
   });
 
   test("should set up worker queue consumer for WebhookDispatch", async () => {

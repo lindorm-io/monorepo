@@ -1,11 +1,12 @@
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   createMockProteusSource,
   createMockRepository,
-} from "@lindorm/proteus/mocks/jest";
+} from "@lindorm/proteus/mocks/vitest";
 import { Next } from "@lindorm/middleware";
 import { PylonSessionOptions } from "../../types";
 import { createConnectionSessionMiddleware } from "./connection-session-middleware";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const SESSION_ID = "cad4002a-bd04-52f1-9733-58866f421686";
 
@@ -37,12 +38,12 @@ const buildCtx = (cookieHeader: string | undefined, proteus?: any): any => {
     logger: createMockLogger(),
     proteus,
     amphora: {
-      canEncrypt: jest.fn().mockReturnValue(false),
-      canDecrypt: jest.fn().mockReturnValue(false),
+      canEncrypt: vi.fn().mockReturnValue(false),
+      canDecrypt: vi.fn().mockReturnValue(false),
     },
     aegis: {
-      aes: { encrypt: jest.fn(), decrypt: jest.fn() },
-      verify: jest.fn((token: string) =>
+      aes: { encrypt: vi.fn(), decrypt: vi.fn() },
+      verify: vi.fn((token: string) =>
         Promise.resolve({
           token,
           header: { baseFormat: "JWT" as const },
@@ -67,7 +68,7 @@ describe("createConnectionSessionMiddleware", () => {
     mockProteus = createMockProteusSource();
     mockProteus.repository.mockReturnValue(mockRepo);
 
-    (mockRepo.findOne as jest.Mock).mockResolvedValue(buildSession());
+    (mockRepo.findOne as Mock).mockResolvedValue(buildSession());
 
     options = {
       enabled: true,
@@ -79,7 +80,7 @@ describe("createConnectionSessionMiddleware", () => {
       name: "test_pylon_session",
     };
 
-    next = jest.fn().mockResolvedValue(undefined);
+    next = vi.fn().mockResolvedValue(undefined);
   });
 
   test("should proceed without session when cookie header is missing", async () => {
@@ -117,7 +118,7 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   test("should proceed without session when store returns null", async () => {
-    (mockRepo.findOne as jest.Mock).mockResolvedValue(null);
+    (mockRepo.findOne as Mock).mockResolvedValue(null);
 
     const ctx = buildCtx(`test_pylon_session=${SESSION_ID}`, mockProteus);
 
@@ -129,7 +130,7 @@ describe("createConnectionSessionMiddleware", () => {
   });
 
   test("should proceed without session when session has expired", async () => {
-    (mockRepo.findOne as jest.Mock).mockResolvedValue(
+    (mockRepo.findOne as Mock).mockResolvedValue(
       buildSession({ expiresAt: new Date("2000-01-01T00:00:00.000Z") }),
     );
 
@@ -147,7 +148,7 @@ describe("createConnectionSessionMiddleware", () => {
     const existing = {
       strategy: "bearer" as const,
       getExpiresAt: () => new Date("2099-01-01T00:00:00.000Z"),
-      refresh: jest.fn(),
+      refresh: vi.fn(),
       authExpiredEmittedAt: null,
     };
     ctx.io.socket.data.pylon.auth = existing;
@@ -176,7 +177,7 @@ describe("createConnectionSessionMiddleware", () => {
     await createConnectionSessionMiddleware(options)(ctx, next);
 
     // Now flip the mock to return a new session with a later expiry.
-    (mockRepo.findOne as jest.Mock).mockResolvedValue(
+    (mockRepo.findOne as Mock).mockResolvedValue(
       buildSession({
         accessToken: "new_access_token",
         expiresAt: new Date("2099-06-01T00:00:00.000Z"),
@@ -194,7 +195,7 @@ describe("createConnectionSessionMiddleware", () => {
 
     await createConnectionSessionMiddleware(options)(ctx, next);
 
-    (mockRepo.findOne as jest.Mock).mockResolvedValue(null);
+    (mockRepo.findOne as Mock).mockResolvedValue(null);
 
     await expect(ctx.io.socket.data.pylon.auth.refresh({})).rejects.toThrow();
   });
@@ -204,7 +205,7 @@ describe("createConnectionSessionMiddleware", () => {
 
     await createConnectionSessionMiddleware(options)(ctx, next);
 
-    (mockRepo.findOne as jest.Mock).mockResolvedValue(
+    (mockRepo.findOne as Mock).mockResolvedValue(
       buildSession({ expiresAt: new Date("2000-01-01T00:00:00.000Z") }),
     );
 

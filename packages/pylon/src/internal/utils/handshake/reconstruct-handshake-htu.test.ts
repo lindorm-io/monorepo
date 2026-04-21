@@ -1,4 +1,5 @@
 import { reconstructHandshakeHtu } from "./reconstruct-handshake-htu";
+import { describe, expect, test } from "vitest";
 
 describe("reconstructHandshakeHtu", () => {
   test("returns origin + path from secure handshake", () => {

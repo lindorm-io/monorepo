@@ -2,6 +2,7 @@ import { join } from "path";
 import { Readable } from "stream";
 import { getReadableContent } from "../../__fixtures__/utils";
 import { getFile } from "./get-file";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("getFile", () => {
   const file = { path: join(__dirname, "..", "..", "__fixtures__", "download.txt") };
@@ -10,7 +11,7 @@ describe("getFile", () => {
 
   beforeEach(() => {
     ctx = {
-      acceptsEncodings: jest.fn(),
+      acceptsEncodings: vi.fn(),
       config: {
         fileDownload: {
           brotli: true,

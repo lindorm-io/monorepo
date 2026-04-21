@@ -1,4 +1,5 @@
 import { httpParamsParserMiddleware } from "./http-params-parser-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpParamsParserMiddleware", () => {
   let ctx: any;
@@ -20,7 +21,7 @@ describe("httpParamsParserMiddleware", () => {
   });
 
   test("should resolve", async () => {
-    await expect(httpParamsParserMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpParamsParserMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.data).toEqual({
       existingValue: 1,
@@ -38,7 +39,7 @@ describe("httpParamsParserMiddleware", () => {
   test("should resolve with empty params", async () => {
     ctx.params = null;
 
-    await expect(httpParamsParserMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpParamsParserMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.data).toEqual({
       existingValue: 1,

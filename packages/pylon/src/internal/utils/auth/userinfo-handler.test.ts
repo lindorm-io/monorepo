@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { createUserinfoHandler } from "./userinfo-handler";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createUserinfoHandler", () => {
   let ctx: any;
@@ -7,7 +8,7 @@ describe("createUserinfoHandler", () => {
   beforeEach(() => {
     ctx = {
       auth: {
-        userinfo: jest.fn().mockResolvedValue({ userinfo: true }),
+        userinfo: vi.fn().mockResolvedValue({ userinfo: true }),
       },
       state: {
         session: {},
@@ -16,7 +17,7 @@ describe("createUserinfoHandler", () => {
   });
 
   test("should resolve", async () => {
-    await expect(createUserinfoHandler()(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(createUserinfoHandler()(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual({ userinfo: true });
     expect(ctx.status).toEqual(200);
@@ -25,6 +26,6 @@ describe("createUserinfoHandler", () => {
   test("should throw if session not found", async () => {
     ctx.state.session = undefined;
 
-    await expect(createUserinfoHandler()(ctx, jest.fn())).rejects.toThrow(ClientError);
+    await expect(createUserinfoHandler()(ctx, vi.fn())).rejects.toThrow(ClientError);
   });
 });

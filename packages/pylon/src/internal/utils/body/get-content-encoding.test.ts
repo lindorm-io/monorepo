@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { getContentEncoding } from "./get-content-encoding";
+import { describe, expect, test } from "vitest";
 
 describe("getContentEncoding", () => {
   test("should return null for undefined input", () => {

@@ -1,4 +1,5 @@
 import { PylonCookie } from "./PylonCookie";
+import { describe, expect, test } from "vitest";
 
 describe("PylonCookie", () => {
   const defaultOptions: any = {};

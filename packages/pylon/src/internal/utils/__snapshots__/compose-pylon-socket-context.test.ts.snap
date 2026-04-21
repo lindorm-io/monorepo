@@ -1,4 +1,144 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`composePylonSocketContextBase > should compose context with a single object arg (camelCased) 1`] = `
+{
+  "ack": null,
+  "args": {
+    "anotherKey": 42,
+    "someKey": "value",
+  },
+  "data": {
+    "anotherKey": 42,
+    "someKey": "value",
+  },
+  "envelope": false,
+  "event": "test:event",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
+  "io": {
+    "app": {
+      "fake": "io",
+    },
+    "socket": {
+      "fake": "socket",
+    },
+  },
+  "nack": null,
+  "params": {},
+}
+`;
+
+exports[`composePylonSocketContextBase > should handle empty args array 1`] = `
+{
+  "ack": null,
+  "args": [],
+  "data": [],
+  "envelope": false,
+  "event": "empty:event",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
+  "io": {
+    "app": {
+      "fake": "io",
+    },
+    "socket": {
+      "fake": "socket",
+    },
+  },
+  "nack": null,
+  "params": {},
+}
+`;
+
+exports[`composePylonSocketContextBase > should pass args through when multiple args are provided 1`] = `
+{
+  "ack": null,
+  "args": [
+    "arg1",
+    "arg2",
+    "arg3",
+  ],
+  "data": [
+    "arg1",
+    "arg2",
+    "arg3",
+  ],
+  "envelope": false,
+  "event": "multi:args",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
+  "io": {
+    "app": {
+      "fake": "io",
+    },
+    "socket": {
+      "fake": "socket",
+    },
+  },
+  "nack": null,
+  "params": {},
+}
+`;
+
+exports[`composePylonSocketContextBase > should pass args through when single arg is an array 1`] = `
+{
+  "ack": null,
+  "args": [
+    [
+      1,
+      2,
+      3,
+    ],
+  ],
+  "data": [
+    [
+      1,
+      2,
+      3,
+    ],
+  ],
+  "envelope": false,
+  "event": "array:event",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
+  "io": {
+    "app": {
+      "fake": "io",
+    },
+    "socket": {
+      "fake": "socket",
+    },
+  },
+  "nack": null,
+  "params": {},
+}
+`;
+
+exports[`composePylonSocketContextBase > should pass args through when single arg is not an object 1`] = `
+{
+  "ack": null,
+  "args": [
+    "string-arg",
+  ],
+  "data": [
+    "string-arg",
+  ],
+  "envelope": false,
+  "event": "string:event",
+  "eventId": "00000000-0000-0000-0000-000000000000",
+  "header": {},
+  "io": {
+    "app": {
+      "fake": "io",
+    },
+    "socket": {
+      "fake": "socket",
+    },
+  },
+  "nack": null,
+  "params": {},
+}
+`;
 
 exports[`composePylonSocketContextBase should compose context with a single object arg (camelCased) 1`] = `
 {

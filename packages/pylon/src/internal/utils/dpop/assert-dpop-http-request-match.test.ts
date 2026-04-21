@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { assertDpopHttpRequestMatch } from "./assert-dpop-http-request-match";
+import { describe, expect, test } from "vitest";
 
 describe("assertDpopHttpRequestMatch", () => {
   const ctx: any = {

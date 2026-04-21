@@ -1,4 +1,5 @@
 import { httpQueryParserMiddleware } from "./http-query-parser-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpQueryParserMiddleware", () => {
   let ctx: any;
@@ -20,7 +21,7 @@ describe("httpQueryParserMiddleware", () => {
   });
 
   test("should resolve", async () => {
-    await expect(httpQueryParserMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpQueryParserMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.data).toEqual({
       existingValue: 1,
@@ -38,7 +39,7 @@ describe("httpQueryParserMiddleware", () => {
   test("should resolve with empty query", async () => {
     ctx.query = null;
 
-    await expect(httpQueryParserMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpQueryParserMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.data).toEqual({
       existingValue: 1,

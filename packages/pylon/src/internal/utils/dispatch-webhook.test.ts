@@ -1,16 +1,17 @@
 import { AesKit } from "@lindorm/aes";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import axios from "axios";
 import nock from "nock";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 axios.defaults.proxy = false;
 import { WebhookAuth, WebhookMethod } from "../../enums";
 import { IWebhookSubscription } from "../../interfaces";
 import { createDispatchWebhook } from "./dispatch-webhook";
 
-jest.mock("../../middleware", () => ({
-  createConduitWebhookAuthMiddleware: jest
+vi.mock("../../middleware", async () => ({
+  createConduitWebhookAuthMiddleware: vi
     .fn()
     .mockResolvedValue(async (_: any, next: any) => {
       await next();

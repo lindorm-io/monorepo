@@ -10,12 +10,13 @@ import {
   handleCrossOriginEmbedderPolicy,
   handleCrossOriginOpenerPolicy,
 } from "./cors-handlers";
+import { describe, expect, test, vi } from "vitest";
 
 const createCtx = (headers: Record<string, string> = {}): any => {
   const responseHeaders: Record<string, string> = {};
   return {
-    get: jest.fn((key: string) => headers[key.toLowerCase()]),
-    set: jest.fn((key: string, value: string) => {
+    get: vi.fn((key: string) => headers[key.toLowerCase()]),
+    set: vi.fn((key: string, value: string) => {
       responseHeaders[key] = value;
     }),
     _responseHeaders: responseHeaders,

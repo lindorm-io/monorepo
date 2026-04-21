@@ -1,4 +1,5 @@
 import { parseAuthConfig } from "./parse-auth-config";
+import { describe, expect, test } from "vitest";
 
 describe("parseAuthConfig", () => {
   test("should return config with null router when no router options", () => {

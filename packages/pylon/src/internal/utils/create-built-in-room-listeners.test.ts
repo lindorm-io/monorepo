@@ -1,5 +1,6 @@
 import { PylonListener } from "../../classes";
 import { createBuiltInRoomListeners } from "./create-built-in-room-listeners";
+import { describe, expect, it, vi } from "vitest";
 
 describe("createBuiltInRoomListeners", () => {
   it("should return an array with one PylonListener", () => {
@@ -37,11 +38,11 @@ describe("createBuiltInRoomListeners", () => {
     const createCtx = (overrides: Record<string, any> = {}) => ({
       params: { roomId: "test-room" },
       rooms: {
-        join: jest.fn().mockResolvedValue(undefined),
-        leave: jest.fn().mockResolvedValue(undefined),
+        join: vi.fn().mockResolvedValue(undefined),
+        leave: vi.fn().mockResolvedValue(undefined),
       },
-      ack: jest.fn(),
-      nack: jest.fn(),
+      ack: vi.fn(),
+      nack: vi.fn(),
       ...overrides,
     });
 
@@ -50,7 +51,7 @@ describe("createBuiltInRoomListeners", () => {
       const handler = listener.listeners[0].listeners[0];
       const ctx = createCtx();
 
-      await handler(ctx as any, jest.fn());
+      await handler(ctx as any, vi.fn());
 
       expect(ctx.rooms.join).toHaveBeenCalledWith("test-room");
     });
@@ -60,7 +61,7 @@ describe("createBuiltInRoomListeners", () => {
       const handler = listener.listeners[0].listeners[0];
       const ctx = createCtx();
 
-      await handler(ctx as any, jest.fn());
+      await handler(ctx as any, vi.fn());
 
       expect(ctx.ack).toHaveBeenCalledWith({ room: "test-room" });
     });
@@ -70,12 +71,12 @@ describe("createBuiltInRoomListeners", () => {
       const handler = listener.listeners[0].listeners[0];
       const ctx = createCtx({
         rooms: {
-          join: jest.fn().mockRejectedValue(new Error("join failed")),
-          leave: jest.fn(),
+          join: vi.fn().mockRejectedValue(new Error("join failed")),
+          leave: vi.fn(),
         },
       });
 
-      await handler(ctx as any, jest.fn());
+      await handler(ctx as any, vi.fn());
 
       expect(ctx.nack).toHaveBeenCalledWith({
         code: "room_join_failed",
@@ -88,12 +89,12 @@ describe("createBuiltInRoomListeners", () => {
       const handler = listener.listeners[0].listeners[0];
       const ctx = createCtx({
         rooms: {
-          join: jest.fn().mockRejectedValue("string-error"),
-          leave: jest.fn(),
+          join: vi.fn().mockRejectedValue("string-error"),
+          leave: vi.fn(),
         },
       });
 
-      await handler(ctx as any, jest.fn());
+      await handler(ctx as any, vi.fn());
 
       expect(ctx.nack).toHaveBeenCalledWith("string-error");
     });
@@ -103,11 +104,11 @@ describe("createBuiltInRoomListeners", () => {
     const createCtx = (overrides: Record<string, any> = {}) => ({
       params: { roomId: "test-room" },
       rooms: {
-        join: jest.fn().mockResolvedValue(undefined),
-        leave: jest.fn().mockResolvedValue(undefined),
+        join: vi.fn().mockResolvedValue(undefined),
+        leave: vi.fn().mockResolvedValue(undefined),
       },
-      ack: jest.fn(),
-      nack: jest.fn(),
+      ack: vi.fn(),
+      nack: vi.fn(),
       ...overrides,
     });
 
@@ -116,7 +117,7 @@ describe("createBuiltInRoomListeners", () => {
       const handler = listener.listeners[1].listeners[0];
       const ctx = createCtx();
 
-      await handler(ctx as any, jest.fn());
+      await handler(ctx as any, vi.fn());
 
       expect(ctx.rooms.leave).toHaveBeenCalledWith("test-room");
     });
@@ -126,7 +127,7 @@ describe("createBuiltInRoomListeners", () => {
       const handler = listener.listeners[1].listeners[0];
       const ctx = createCtx();
 
-      await handler(ctx as any, jest.fn());
+      await handler(ctx as any, vi.fn());
 
       expect(ctx.ack).toHaveBeenCalledWith({ room: "test-room" });
     });
@@ -136,12 +137,12 @@ describe("createBuiltInRoomListeners", () => {
       const handler = listener.listeners[1].listeners[0];
       const ctx = createCtx({
         rooms: {
-          join: jest.fn(),
-          leave: jest.fn().mockRejectedValue(new Error("leave failed")),
+          join: vi.fn(),
+          leave: vi.fn().mockRejectedValue(new Error("leave failed")),
         },
       });
 
-      await handler(ctx as any, jest.fn());
+      await handler(ctx as any, vi.fn());
 
       expect(ctx.nack).toHaveBeenCalledWith({
         code: "room_leave_failed",
@@ -154,12 +155,12 @@ describe("createBuiltInRoomListeners", () => {
       const handler = listener.listeners[1].listeners[0];
       const ctx = createCtx({
         rooms: {
-          join: jest.fn(),
-          leave: jest.fn().mockRejectedValue({ custom: "error" }),
+          join: vi.fn(),
+          leave: vi.fn().mockRejectedValue({ custom: "error" }),
         },
       });
 
-      await handler(ctx as any, jest.fn());
+      await handler(ctx as any, vi.fn());
 
       expect(ctx.nack).toHaveBeenCalledWith({ custom: "error" });
     });

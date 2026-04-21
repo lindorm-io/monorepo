@@ -1,6 +1,7 @@
 import { ClientError, ServerError } from "@lindorm/errors";
 import { RedirectError } from "../../errors";
 import { httpErrorHandlerMiddleware } from "./http-error-handler-middleware";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpErrorHandlerMiddleware", () => {
   let ctx: any;
@@ -19,10 +20,10 @@ describe("httpErrorHandlerMiddleware", () => {
     };
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should do nothing when no errors are thrown", async () => {
-    await expect(httpErrorHandlerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpErrorHandlerMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.status).toEqual(204);
     expect(ctx.body).toBeUndefined();

@@ -2,13 +2,14 @@ import { AegisError } from "@lindorm/aegis";
 import MockDate from "mockdate";
 import { CannotEstablishSessionIdentity } from "../../../errors";
 import { parseTokenData } from "./parse-token-data";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest.fn().mockImplementation(() => "c8ff3952-8ba4-51a3-a4d5-2f0726c49524"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi.fn().mockImplementation(() => "c8ff3952-8ba4-51a3-a4d5-2f0726c49524"),
 }));
 
 const createJwtVerifyResult = (overrides: Record<string, any> = {}) => ({
@@ -37,7 +38,7 @@ describe("parseTokenData", () => {
 
   beforeEach(() => {
     aegis = {
-      verify: jest.fn().mockResolvedValue(createJwtVerifyResult()),
+      verify: vi.fn().mockResolvedValue(createJwtVerifyResult()),
     };
 
     data = {
@@ -53,7 +54,7 @@ describe("parseTokenData", () => {
     };
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should resolve subject and expiresAt from JWT access token", async () => {
     data.idToken = undefined;
@@ -97,7 +98,7 @@ describe("parseTokenData", () => {
 
     data.idToken = undefined;
 
-    const resolveSubject = jest.fn().mockResolvedValue("userinfo-subject");
+    const resolveSubject = vi.fn().mockResolvedValue("userinfo-subject");
 
     const result = await parseTokenData(aegis, data, { resolveSubject });
     expect(result).toMatchSnapshot();

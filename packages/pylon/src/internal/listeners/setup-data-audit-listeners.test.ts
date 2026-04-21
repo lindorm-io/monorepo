@@ -1,28 +1,29 @@
 import { setupDataAuditListeners } from "./setup-data-audit-listeners";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 class AuditedEntity {}
 class NonAuditedEntity {}
 
 describe("setupDataAuditListeners", () => {
-  const mockPublish = jest.fn().mockResolvedValue(undefined);
-  const mockCreate = jest.fn().mockImplementation((opts) => opts);
-  const mockWorkerQueue = jest.fn().mockReturnValue({
+  const mockPublish = vi.fn().mockResolvedValue(undefined);
+  const mockCreate = vi.fn().mockImplementation((opts) => opts);
+  const mockWorkerQueue = vi.fn().mockReturnValue({
     create: mockCreate,
     publish: mockPublish,
   });
 
   const listeners: Record<string, Function> = {};
-  const mockOn = jest.fn().mockImplementation((event: string, listener: Function) => {
+  const mockOn = vi.fn().mockImplementation((event: string, listener: Function) => {
     listeners[event] = listener;
   });
 
   const proteus = { on: mockOn } as any;
   const iris = { workerQueue: mockWorkerQueue } as any;
-  const actor = jest.fn().mockReturnValue("user@test.com");
+  const actor = vi.fn().mockReturnValue("user@test.com");
   const logger = {
-    debug: jest.fn(),
-    verbose: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    verbose: vi.fn(),
+    error: vi.fn(),
   } as any;
 
   const auditedMetadata = {
@@ -48,7 +49,7 @@ describe("setupDataAuditListeners", () => {
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     Object.keys(listeners).forEach((k) => delete listeners[k]);
 
     setupDataAuditListeners(proteus, iris, actor, [AuditedEntity as any], logger);
@@ -278,7 +279,7 @@ describe("setupDataAuditListeners", () => {
 
   test("should log error and not throw when create fails", () => {
     mockWorkerQueue.mockReturnValueOnce({
-      create: jest.fn().mockImplementation(() => {
+      create: vi.fn().mockImplementation(() => {
         throw new Error("create failed");
       }),
       publish: mockPublish,

@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { backchannelLogoutHandler } from "./backchannel-logout-handler";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("backchannelLogoutHandler", () => {
   let ctx: any;
@@ -8,7 +9,7 @@ describe("backchannelLogoutHandler", () => {
     ctx = {
       aegis: {
         jwt: {
-          verify: jest.fn().mockResolvedValue({
+          verify: vi.fn().mockResolvedValue({
             payload: {
               claims: {
                 events: {
@@ -24,7 +25,7 @@ describe("backchannelLogoutHandler", () => {
         logoutToken: "logoutToken",
       },
       session: {
-        logout: jest.fn(),
+        logout: vi.fn(),
       },
       state: {
         session: {
@@ -38,14 +39,14 @@ describe("backchannelLogoutHandler", () => {
   });
 
   test("should resolve", async () => {
-    await expect(backchannelLogoutHandler(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(backchannelLogoutHandler(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toBeUndefined();
     expect(ctx.status).toBe(204);
   });
 
   test("should throw on invalid backchannel logout token", async () => {
-    ctx.aegis.jwt.verify = jest.fn().mockResolvedValue({
+    ctx.aegis.jwt.verify = vi.fn().mockResolvedValue({
       payload: {
         claims: {
           events: {},
@@ -53,6 +54,6 @@ describe("backchannelLogoutHandler", () => {
       },
     });
 
-    await expect(backchannelLogoutHandler(ctx, jest.fn())).rejects.toThrow(ClientError);
+    await expect(backchannelLogoutHandler(ctx, vi.fn())).rejects.toThrow(ClientError);
   });
 });

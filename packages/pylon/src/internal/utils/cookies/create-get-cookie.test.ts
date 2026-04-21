@@ -1,15 +1,16 @@
-import { createMockAegis } from "@lindorm/aegis/mocks/jest";
-import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
+import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { B64 } from "@lindorm/b64";
 import { PylonCookieConfig } from "../../../types";
 import { createGetCookie } from "./create-get-cookie";
 import { verifyCookie as _verifyCookie } from "./verify-cookie";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("./verify-cookie");
+vi.mock("./verify-cookie");
 
-const verifyCookie = _verifyCookie as jest.Mock;
+const verifyCookie = _verifyCookie as Mock;
 
-describe("createGetCookie", () => {
+describe("createGetCookie", async () => {
   let ctx: any;
   let config: PylonCookieConfig;
 
@@ -19,7 +20,7 @@ describe("createGetCookie", () => {
     verifyCookie.mockResolvedValue(undefined);
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should return null for missing cookie", async () => {
     const getCookie = createGetCookie({ ctx, config, parsed: [] });

@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { createIntrospectHandler } from "./introspect-handler";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createIntrospectHandler", () => {
   let ctx: any;
@@ -7,7 +8,7 @@ describe("createIntrospectHandler", () => {
   beforeEach(() => {
     ctx = {
       auth: {
-        introspect: jest.fn().mockResolvedValue({ active: true }),
+        introspect: vi.fn().mockResolvedValue({ active: true }),
       },
       state: {
         session: {},
@@ -16,7 +17,7 @@ describe("createIntrospectHandler", () => {
   });
 
   test("should resolve", async () => {
-    await expect(createIntrospectHandler()(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(createIntrospectHandler()(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual({ active: true });
     expect(ctx.status).toEqual(200);
@@ -25,6 +26,6 @@ describe("createIntrospectHandler", () => {
   test("should throw if session not found", async () => {
     ctx.state.session = undefined;
 
-    await expect(createIntrospectHandler()(ctx, jest.fn())).rejects.toThrow(ClientError);
+    await expect(createIntrospectHandler()(ctx, vi.fn())).rejects.toThrow(ClientError);
   });
 });

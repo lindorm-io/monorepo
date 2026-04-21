@@ -1,9 +1,10 @@
-import { createMockHermes } from "@lindorm/hermes/mocks/jest";
-import { createMockIrisSource } from "@lindorm/iris/mocks/jest";
-import { createMockLogger } from "@lindorm/logger/mocks/jest";
-import { createMockProteusSource } from "@lindorm/proteus/mocks/jest";
+import { createMockHermes } from "@lindorm/hermes/mocks/vitest";
+import { createMockIrisSource } from "@lindorm/iris/mocks/vitest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { RATE_LIMIT_SOURCE } from "../constants/symbols";
 import { createDependenciesMiddleware } from "./common-dependencies-middleware";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createDependenciesMiddleware", () => {
   let ctx: any;
@@ -19,7 +20,7 @@ describe("createDependenciesMiddleware", () => {
 
     const middleware = createDependenciesMiddleware({ proteus: proteus as any });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(proteus.session).not.toHaveBeenCalled();
 
@@ -35,7 +36,7 @@ describe("createDependenciesMiddleware", () => {
 
     const middleware = createDependenciesMiddleware({ iris: iris as any });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(iris.session).not.toHaveBeenCalled();
 
@@ -51,7 +52,7 @@ describe("createDependenciesMiddleware", () => {
 
     const middleware = createDependenciesMiddleware({ hermes: hermes as any });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(hermes.session).not.toHaveBeenCalled();
 
@@ -65,7 +66,7 @@ describe("createDependenciesMiddleware", () => {
   test("should handle no sources configured", async () => {
     const middleware = createDependenciesMiddleware({});
 
-    await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(middleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.proteus).toBeUndefined();
     expect(ctx.iris).toBeUndefined();
@@ -79,7 +80,7 @@ describe("createDependenciesMiddleware", () => {
       rateLimitProteus: rateLimitProteus as any,
     });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(rateLimitProteus.session).not.toHaveBeenCalled();
     expect(ctx[RATE_LIMIT_SOURCE]).toBe(rateLimitProteus);
@@ -88,7 +89,7 @@ describe("createDependenciesMiddleware", () => {
   test("should not set rate limit symbol when rateLimitProteus not provided", async () => {
     const middleware = createDependenciesMiddleware({});
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(ctx[RATE_LIMIT_SOURCE]).toBeUndefined();
   });
@@ -100,22 +101,22 @@ describe("createDependenciesMiddleware", () => {
         event: "test:event",
         io: {
           app: {
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-            in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+            in: vi.fn().mockReturnValue({ fetchSockets: vi.fn() }),
           },
           socket: {
             id: "s1",
             data: {},
-            join: jest.fn(),
-            leave: jest.fn(),
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+            join: vi.fn(),
+            leave: vi.fn(),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
           },
         },
       };
 
       const middleware = createDependenciesMiddleware({ roomsEnabled: true });
 
-      await middleware(socketCtx, jest.fn());
+      await middleware(socketCtx, vi.fn());
 
       expect(socketCtx.rooms).toBeDefined();
       expect(typeof socketCtx.rooms.join).toBe("function");
@@ -129,15 +130,15 @@ describe("createDependenciesMiddleware", () => {
         request: {},
         io: {
           app: {
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-            in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+            in: vi.fn().mockReturnValue({ fetchSockets: vi.fn() }),
           },
         },
       };
 
       const middleware = createDependenciesMiddleware({ roomsEnabled: true });
 
-      await middleware(httpCtx, jest.fn());
+      await middleware(httpCtx, vi.fn());
 
       expect(httpCtx.rooms).toBeDefined();
     });
@@ -145,7 +146,7 @@ describe("createDependenciesMiddleware", () => {
     test("should not set rooms when no io present even when roomsEnabled", async () => {
       const middleware = createDependenciesMiddleware({ roomsEnabled: true });
 
-      await middleware(ctx, jest.fn());
+      await middleware(ctx, vi.fn());
 
       expect(ctx.rooms).toBeUndefined();
     });
@@ -162,7 +163,7 @@ describe("createDependenciesMiddleware", () => {
 
       const middleware = createDependenciesMiddleware({ roomsEnabled: false });
 
-      await middleware(socketCtx, jest.fn());
+      await middleware(socketCtx, vi.fn());
 
       expect(socketCtx.rooms).toBeUndefined();
     });
@@ -175,15 +176,15 @@ describe("createDependenciesMiddleware", () => {
         event: "test:event",
         io: {
           app: {
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-            in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+            in: vi.fn().mockReturnValue({ fetchSockets: vi.fn() }),
           },
           socket: {
             id: "s1",
             data: {},
-            join: jest.fn(),
-            leave: jest.fn(),
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+            join: vi.fn(),
+            leave: vi.fn(),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
           },
         },
       };
@@ -194,7 +195,7 @@ describe("createDependenciesMiddleware", () => {
         roomsProteus: roomsProteus as any,
       });
 
-      await middleware(socketCtx, jest.fn());
+      await middleware(socketCtx, vi.fn());
 
       const rooms = socketCtx.rooms;
 

@@ -1,4 +1,5 @@
 import { composeParseBodyConfig } from "./compose-parse-body-config";
+import { describe, expect, test } from "vitest";
 
 describe("composeConfig", () => {
   test("should resolve default config", () => {
