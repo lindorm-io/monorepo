@@ -13,7 +13,7 @@ import {
 } from "vitest";
 
 // Mock migration-table
-vi.mock("./migration-table", () => ({
+vi.mock("./migration-table", async () => ({
   ensureMigrationTable: vi.fn(),
   insertMigrationRecord: vi.fn(),
   deleteMigrationRecord: vi.fn(),
@@ -155,8 +155,8 @@ describe("executeMigrationUp", () => {
     };
 
     const migration = makeMigration({
-      up: vi.fn(async (runner) => {
-        await runner.transaction(async (ctx) => {
+      up: vi.fn(async (runner: any) => {
+        await runner.transaction(async (ctx: any) => {
           await ctx.query("INSERT INTO foo VALUES (1)");
         });
       }),

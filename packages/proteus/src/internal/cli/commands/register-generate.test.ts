@@ -3,7 +3,7 @@ import { registerGenerateCommands } from "./register-generate";
 import { generateEntity } from "./generate-entity";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./generate-entity", () => ({
+vi.mock("./generate-entity", async () => ({
   generateEntity: vi.fn(),
 }));
 

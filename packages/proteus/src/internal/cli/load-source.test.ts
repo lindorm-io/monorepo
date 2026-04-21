@@ -12,7 +12,7 @@ import {
   type MockedFunction,
 } from "vitest";
 
-vi.mock("fs", () => ({
+vi.mock("fs", async () => ({
   existsSync: vi.fn(),
   mkdirSync: vi.fn(),
   readdirSync: vi.fn(() => []),

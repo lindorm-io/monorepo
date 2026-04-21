@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Unversioned Entity Suite
 // Verifies that CRUD works correctly without @VersionField.
 

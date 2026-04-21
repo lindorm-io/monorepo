@@ -12,11 +12,10 @@ import type { IEntity } from "../../interfaces";
 import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError";
 import { CachingRepository } from "./CachingRepository";
 import { beforeEach, describe, expect, it, vi, type Mock, type Mocked } from "vitest";
-import { beforeEach, describe, expect, it, vi, type Mock, type Mocked } from "vitest";
 
 // ─── Module Mocks ─────────────────────────────────────────────────────────────
 
-vi.mock("../entity/utils/default-hydrate-entity", () => ({
+vi.mock("../entity/utils/default-hydrate-entity", async () => ({
   defaultHydrateEntity: vi.fn(),
 }));
 

@@ -1,3 +1,4 @@
+import { test, it, expect, beforeEach } from "vitest";
 // TCK: Relations OneToMany Suite
 // Tests OneToMany/ManyToOne: TckSimpleUser (1) -> TckSimplePost (N).
 

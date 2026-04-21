@@ -7,7 +7,7 @@ import { PostgresDriverError } from "../errors/PostgresDriverError";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock loadEmbeddedListRows so C2 tests can verify it is called without real DB queries
-vi.mock("../utils/repository/embedded-list-ops", () => ({
+vi.mock("../utils/repository/embedded-list-ops", async () => ({
   loadEmbeddedListRows: vi.fn().mockResolvedValue(undefined),
   loadEmbeddedListRowsBatch: vi.fn().mockResolvedValue(undefined),
 }));

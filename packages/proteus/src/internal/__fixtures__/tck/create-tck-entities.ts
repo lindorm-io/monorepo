@@ -2,6 +2,7 @@
 //
 // Each call produces fresh class declarations with fresh Symbol.metadata.
 
+import type { Mock } from "vitest";
 import {
   AfterDestroy,
   AfterInsert,

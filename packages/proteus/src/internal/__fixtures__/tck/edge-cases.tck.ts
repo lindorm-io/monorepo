@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Edge Cases Suite
 // Tests boundary conditions: empty results, null fields, large text, unicode.
 

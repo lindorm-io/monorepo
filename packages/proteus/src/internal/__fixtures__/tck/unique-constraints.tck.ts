@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Unique Constraints Suite
 // Tests single-field unique, composite unique, partial key overlap, update violation,
 // and delete + re-insert scenarios.

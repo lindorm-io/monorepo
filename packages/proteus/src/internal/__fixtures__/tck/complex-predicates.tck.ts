@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Complex Predicates Suite
 // Tests $all, $overlap, $contained, $length, $has, and embedded criteria.
 

@@ -21,7 +21,7 @@ import {
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../../../entity/classes/EntityManager", () => ({
+vi.mock("../../../entity/classes/EntityManager", async () => ({
   EntityManager: vi.fn(),
 }));
 
@@ -61,13 +61,13 @@ vi.mock("../utils/repository/wrap-pg-error", () => ({
 
 vi.mock("../../../errors/DuplicateKeyError", async () => {
   const { ProteusRepositoryError } = await vi.importActual<
-    typeof import("../../../errors/ProteusRepositoryError")
+    typeof import("../../../../errors/ProteusRepositoryError")
   >("../../../../errors/ProteusRepositoryError");
   class DuplicateKeyError extends ProteusRepositoryError {}
   return { DuplicateKeyError };
 });
 
-vi.mock("../utils/query/compile-upsert", () => ({
+vi.mock("../utils/query/compile-upsert", async () => ({
   compileUpsert: vi.fn(),
 }));
 
@@ -102,6 +102,7 @@ import {
   guardExpiryDateField,
   guardVersionFields,
   guardUpsertBlocked,
+  validateRelationNames as _validateRelationNames,
 } from "../../../utils/repository/repository-guards";
 import { wrapPgError } from "../utils/repository/wrap-pg-error";
 import { compileUpsert } from "../utils/query/compile-upsert";
@@ -110,6 +111,8 @@ import { compileAggregate } from "../utils/query/compile-aggregate";
 import { compileQuery } from "../utils/query/compile-query";
 import { hydrateReturning } from "../utils/query/hydrate-returning";
 import { PostgresCursor } from "./PostgresCursor";
+
+const validateRelationNames = _validateRelationNames as unknown as Mock;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -525,22 +528,16 @@ describe("PostgresRepository", () => {
     });
 
     test("calls validateRelationNames when relations option is provided", async () => {
-      const { validateRelationNames: mockValidate } = await vi.importMock<
-        typeof import("../../../utils/repository/repository-guards")
-      >("../../../utils/repository/repository-guards");
       const { repo, executor } = createRepository();
       executor.executeFind.mockResolvedValue([]);
 
       await repo.find({} as any, { relations: ["tags"] as any });
 
-      expect(mockValidate).toHaveBeenCalledWith(mockMetadata, ["tags"]);
+      expect(validateRelationNames).toHaveBeenCalledWith(mockMetadata, ["tags"]);
     });
 
     test("propagates validateRelationNames error", async () => {
-      const { validateRelationNames: mockValidate } = await vi.importMock<
-        typeof import("../../../utils/repository/repository-guards")
-      >("../../../utils/repository/repository-guards");
-      mockValidate.mockImplementation(() => {
+      validateRelationNames.mockImplementation(() => {
         throw new ProteusRepositoryError('Unknown relation "unknown"');
       });
       const { repo } = createRepository();

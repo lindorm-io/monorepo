@@ -14,7 +14,7 @@ const mockConnect = vi.fn().mockResolvedValue(undefined);
 const mockQuit = vi.fn().mockResolvedValue("OK");
 const mockPing = vi.fn().mockResolvedValue("PONG");
 
-vi.mock("ioredis", () => {
+vi.mock("ioredis", async () => {
   return {
     __esModule: true,
     default: vi.fn(function () {

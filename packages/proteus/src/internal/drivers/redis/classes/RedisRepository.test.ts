@@ -13,7 +13,7 @@ import {
 // We mock low-level utilities but keep EntityManager and getEntityMetadata real
 // since real @Entity decorators are used below.
 
-vi.mock("../utils/build-scan-pattern", () => ({
+vi.mock("../utils/build-scan-pattern", async () => ({
   buildScanPattern: vi.fn(() => "entity:test_entity:*"),
 }));
 

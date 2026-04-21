@@ -1,3 +1,4 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Upsert Suite
 // Tests upsert (INSERT ON CONFLICT DO UPDATE) behavior.
 

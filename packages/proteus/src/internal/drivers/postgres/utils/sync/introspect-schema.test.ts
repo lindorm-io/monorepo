@@ -2,7 +2,7 @@ import type { PostgresQueryClient } from "../../types/postgres-query-client";
 import { introspectSchema } from "./introspect-schema";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-vi.mock("./introspect-tables", () => ({
+vi.mock("./introspect-tables", async () => ({
   introspectTables: vi.fn(),
 }));
 vi.mock("./introspect-constraints", () => ({

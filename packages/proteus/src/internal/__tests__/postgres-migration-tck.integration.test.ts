@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe } from "vitest";
+import { afterAll, beforeAll, describe, vi } from "vitest";
 // Postgres Migration TCK Harness
 //
 // Runs the migration TCK suite against a real PostgreSQL instance.
@@ -29,7 +29,7 @@ import {
 
 mockScannerImport();
 
-jest.setTimeout(120_000);
+vi.setConfig({ testTimeout: 120_000 });
 
 const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
 

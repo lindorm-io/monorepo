@@ -1,3 +1,4 @@
+import { describe, test, it, expect, beforeEach, afterEach } from "vitest";
 // Migration TCK Suite
 //
 // Cross-driver integration tests for migration lifecycle behavior.

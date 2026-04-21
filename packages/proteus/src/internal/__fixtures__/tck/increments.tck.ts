@@ -1,3 +1,4 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Increments Suite
 // Tests increment and decrement operations.
 

@@ -1,3 +1,4 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Foreign Keys Suite
 // Tests DB-level FK constraint enforcement: insert validation,
 // ON DELETE CASCADE, ON DELETE RESTRICT, ON DELETE SET NULL.

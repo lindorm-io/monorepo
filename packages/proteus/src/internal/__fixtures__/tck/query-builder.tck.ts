@@ -1,3 +1,4 @@
+import { describe, test, it, expect, beforeEach } from "vitest";
 // TCK: QueryBuilder Suite
 // Tests basic QueryBuilder operations: where, orderBy, skip, take, getOne,
 // getMany, count, exists, withDeleted. Excludes advanced features (raw SQL,

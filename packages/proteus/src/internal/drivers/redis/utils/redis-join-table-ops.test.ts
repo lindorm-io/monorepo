@@ -12,7 +12,7 @@ import {
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../../../entity/utils/get-join-name", () => ({
+vi.mock("../../../entity/utils/get-join-name", async () => ({
   getJoinName: vi.fn(),
 }));
 

@@ -1,6 +1,10 @@
 import { createMockProteusSession } from "./vitest";
 import { describe, expect, it, vi } from "vitest";
 
+class TestEntity {
+  id!: string;
+}
+
 describe("createMockProteusSession", () => {
   it("should create a mock session with all methods as vi.fn()", () => {
     const session = createMockProteusSession();
@@ -17,7 +21,7 @@ describe("createMockProteusSession", () => {
 
   it("should return a mock repository from repository()", () => {
     const session = createMockProteusSession();
-    const repo = session.repository();
+    const repo = session.repository(TestEntity);
 
     expect(repo).toBeDefined();
     expect(vi.isMockFunction(repo.find)).toBe(true);
@@ -31,7 +35,7 @@ describe("createMockProteusSession", () => {
 
   it("should execute transaction callback", async () => {
     const session = createMockProteusSession();
-    const result = await session.transaction((ctx: unknown) => "done");
+    const result = await session.transaction(async () => "done");
 
     expect(result).toBe("done");
   });

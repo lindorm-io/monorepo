@@ -3,6 +3,7 @@
 // Wires up all TCK suites with capability gating.
 // Each driver harness calls runTck() with its factory and ProteusSource accessor.
 
+import { afterAll, beforeAll, describe, test, vi } from "vitest";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces";
 import type { TckCapabilities, TckDriverFactory, TckDriverHandle } from "./types";

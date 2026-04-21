@@ -1,3 +1,4 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Relations OneToOne Suite
 // Tests OneToOne relation: owning side (TckOwner) and inverse side (TckDetail).
 

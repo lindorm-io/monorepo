@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 // Table Inheritance PostgreSQL Integration Tests
 //
 // Exercises both inheritance strategies against a real PostgreSQL instance:
@@ -21,7 +21,7 @@ import {
   PrimaryKeyField,
 } from "../../decorators";
 
-jest.setTimeout(60_000);
+vi.setConfig({ testTimeout: 60_000 });
 
 // ─── Connection ──────────────────────────────────────────────────────────────
 

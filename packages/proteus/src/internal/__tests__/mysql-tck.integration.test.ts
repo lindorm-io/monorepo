@@ -12,9 +12,9 @@ import { ProteusSource } from "../../classes/ProteusSource";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora";
 import { runTck } from "../__fixtures__/tck/run-tck";
-import { describe } from "vitest";
+import { describe, vi } from "vitest";
 
-jest.setTimeout(120_000);
+vi.setConfig({ testTimeout: 120_000 });
 
 const MYSQL_HOST = process.env["MYSQL_HOST"] ?? "127.0.0.1";
 const MYSQL_PORT = Number(process.env["MYSQL_PORT"] ?? 3306);

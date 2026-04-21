@@ -18,7 +18,7 @@ import {
 } from "vitest";
 
 // Mock the sync pipeline modules
-vi.mock("../sync/introspect-schema", () => ({
+vi.mock("../sync/introspect-schema", async () => ({
   introspectSchema: vi.fn(),
 }));
 vi.mock("../sync/project-desired-schema", () => ({

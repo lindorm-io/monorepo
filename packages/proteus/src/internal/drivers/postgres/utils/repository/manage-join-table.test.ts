@@ -4,7 +4,7 @@ import { deleteJoinTableRows, syncJoinTableRows } from "./manage-join-table";
 import { describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock the external utilities before importing the module under test
-vi.mock("../../../../entity/utils/get-join-name", () => ({
+vi.mock("../../../../entity/utils/get-join-name", async () => ({
   getJoinName: vi.fn(() => ({
     namespace: "public",
     name: "test_join_table",

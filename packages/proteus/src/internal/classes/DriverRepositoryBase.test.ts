@@ -20,7 +20,7 @@ import {
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("../entity/classes/EntityManager", () => ({
+vi.mock("../entity/classes/EntityManager", async () => ({
   EntityManager: vi.fn(),
 }));
 
@@ -269,7 +269,7 @@ const abstractMethods = {
   versions: vi.fn(),
   cursor: vi.fn(),
   clear: vi.fn(),
-  buildLazyLoader: vi.fn<LazyRelationLoader, []>(),
+  buildLazyLoader: vi.fn<() => LazyRelationLoader>(),
   executeAggregate: vi.fn(),
   isDuplicateKeyError: vi.fn(),
 };
@@ -1554,7 +1554,7 @@ describe("DriverRepositoryBase", () => {
     });
 
     test("skips lazy relations (isLazyRelation returns true)", () => {
-      (isLazyRelation as Mock).mockReturnValue(true);
+      (isLazyRelation as unknown as Mock).mockReturnValue(true);
 
       const { repo } = createRepo({ metadata: mockMetadataWithRelations });
       const lazyProxy = { __lazy: true };
@@ -1567,7 +1567,7 @@ describe("DriverRepositoryBase", () => {
     });
 
     test("skips lazy collections (isLazyCollection returns true)", () => {
-      (isLazyCollection as Mock).mockReturnValue(true);
+      (isLazyCollection as unknown as Mock).mockReturnValue(true);
 
       const { repo } = createRepo({ metadata: mockMetadataWithRelations });
       const lazyProxy = { __lazyCollection: true };

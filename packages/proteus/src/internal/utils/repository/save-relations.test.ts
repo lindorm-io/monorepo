@@ -19,7 +19,7 @@ import { RelationPersister } from "./RelationPersister";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
-vi.mock("../../entity/metadata/get-entity-metadata", () => ({
+vi.mock("../../entity/metadata/get-entity-metadata", async () => ({
   getEntityMetadata: vi.fn(),
 }));
 

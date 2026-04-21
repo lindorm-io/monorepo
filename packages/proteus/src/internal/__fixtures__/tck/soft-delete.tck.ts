@@ -1,3 +1,4 @@
+import { test, it, expect, beforeEach } from "vitest";
 // TCK: Soft Delete Suite
 // Tests soft-delete lifecycle: softDestroy, find excludes, restore re-includes.
 

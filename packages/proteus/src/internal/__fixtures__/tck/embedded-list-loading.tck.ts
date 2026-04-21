@@ -1,3 +1,4 @@
+import { test, it, expect, beforeEach } from "vitest";
 // TCK: Embedded List Loading Suite
 //
 // Tests the lazy/eager loading dispatch for @EmbeddedList fields:

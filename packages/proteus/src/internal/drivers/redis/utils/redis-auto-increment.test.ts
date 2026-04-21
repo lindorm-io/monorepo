@@ -4,7 +4,7 @@ import { describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-vi.mock("./build-increment-key", () => ({
+vi.mock("./build-increment-key", async () => ({
   buildIncrementKey: vi.fn((_target, fieldName, namespace) =>
     namespace ? `${namespace}:seq:test:${fieldName}` : `seq:test:${fieldName}`,
   ),

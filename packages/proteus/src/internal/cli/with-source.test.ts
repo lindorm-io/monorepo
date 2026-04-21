@@ -14,7 +14,7 @@ import {
 
 vi.mock("./load-source");
 
-vi.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", async () => ({
   Logger: {
     std: {
       log: vi.fn(),

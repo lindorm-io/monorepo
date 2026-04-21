@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe } from "vitest";
+import { afterAll, beforeAll, describe, vi } from "vitest";
 // SQLite Migration TCK Harness
 //
 // Runs the migration TCK suite against the SQLite driver.
@@ -34,7 +34,7 @@ import {
 
 mockScannerImport();
 
-jest.setTimeout(120_000);
+vi.setConfig({ testTimeout: 120_000 });
 
 let db: SqliteQueryClient;
 let dbPath: string;

@@ -31,7 +31,7 @@ vi.mock("./filter-operations");
 vi.mock("./suggest-name");
 vi.mock("./preview-operations");
 
-vi.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", async () => ({
   Logger: {
     std: {
       log: vi.fn(),

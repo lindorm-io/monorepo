@@ -1,3 +1,4 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Cursor Suite
 // Tests cursor-based iteration.
 

@@ -18,7 +18,7 @@ import type {
 import { MigrationManager } from "./MigrationManager";
 
 // Mock all migration utilities
-vi.mock("../utils/advisory-lock", () => ({
+vi.mock("../utils/advisory-lock", async () => ({
   withAdvisoryLock: vi.fn(
     async (_client: unknown, _k1: unknown, _k2: unknown, fn: () => Promise<unknown>) =>
       fn(),

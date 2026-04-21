@@ -8,7 +8,7 @@ import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vites
 
 vi.mock("../with-source");
 vi.mock("../../utils/migration/write-migration-file");
-vi.mock("../utils/migration-naming", () => ({
+vi.mock("../utils/migration-naming", async () => ({
   formatTimestamp: vi.fn(),
   sanitizeName: vi.fn(),
   kebabToPascal: vi.fn(),
