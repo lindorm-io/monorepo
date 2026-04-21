@@ -1,8 +1,8 @@
 import { randomUUID } from "crypto";
 import {
-  IKryptos,
-  KryptosAlgorithm,
-  KryptosEncryption,
+  type IKryptos,
+  type KryptosAlgorithm,
+  type KryptosEncryption,
   KryptosKit,
 } from "@lindorm/kryptos";
 
