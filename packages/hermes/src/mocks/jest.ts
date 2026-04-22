@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import type { IHermes } from "../interfaces/IHermes.js";
 import type { IHermesSession } from "../interfaces/IHermesSession.js";
 import { _createMockHermes } from "./create-mock-hermes.js";

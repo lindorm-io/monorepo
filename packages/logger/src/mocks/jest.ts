@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import type { Function } from "@lindorm/types";
 import type { ILogger } from "../interfaces/index.js";
 import { _createMockLogger } from "./create-mock-logger.js";

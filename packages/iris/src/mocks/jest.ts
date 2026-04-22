@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import type { IIrisMessageBus } from "../interfaces/IrisMessageBus.js";
 import type { IIrisPublisher } from "../interfaces/IrisPublisher.js";
 import type { IIrisRpcClient } from "../interfaces/IrisRpcClient.js";

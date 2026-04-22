@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import type { IKryptos } from "../interfaces/index.js";
 import { _createMockKryptos } from "./create-mock-kryptos.js";
 

@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import type { IAmphora } from "../interfaces/index.js";
 import { _createMockAmphora } from "./create-mock-amphora.js";
 

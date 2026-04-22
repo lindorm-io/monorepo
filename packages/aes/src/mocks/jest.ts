@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import { createMockKryptos } from "@lindorm/kryptos/mocks/jest";
 import type { IAesKit } from "../interfaces/index.js";
 import { _createMockAesKit } from "./create-mock-aes-kit.js";

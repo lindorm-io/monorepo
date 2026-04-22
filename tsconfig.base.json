@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
-    "esModuleInterop": true,
-    "ignoreDeprecations": "6.0",
+    "lib": ["ESNext", "DOM"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "noEmit": true,
@@ -9,8 +8,8 @@
     "preserveConstEnums": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "ESNext",
-    "types": ["node", "jest"],
+    "target": "ES2022",
+    "types": ["node"],
     "verbatimModuleSyntax": true
   }
 }
