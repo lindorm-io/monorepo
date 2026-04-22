@@ -323,6 +323,93 @@ describe("ER_QUERY_INTERRUPTED (errno 1317)", () => {
   });
 });
 
+describe("tx-scoped client (createMysqlClient) with signal", () => {
+  test("post-success signal.aborted check rewraps user query as AbortError", async () => {
+    const { driver } = makeDriver();
+    const controller = new AbortController();
+
+    // Simulate mysql quirk: KILL QUERY of SELECT SLEEP returns a "successful"
+    // row. We abort mid-query so the success resolves after the abort fires.
+    mockConn.query.mockImplementationOnce(async () => {
+      controller.abort({ kind: "client-disconnect" });
+      return [[{ "SLEEP(5)": 1 }], {}];
+    });
+
+    const client = (driver as any).createMysqlClient(mockConn, controller.signal);
+
+    await expect(client.query("SELECT SLEEP(5)")).rejects.toBeInstanceOf(AbortError);
+  });
+
+  test("post-success check exempts ROLLBACK so the pool is not poisoned", async () => {
+    const { driver } = makeDriver();
+    const controller = new AbortController();
+    controller.abort({ kind: "client-disconnect" });
+
+    mockConn.query.mockResolvedValueOnce([[], {}]);
+
+    const client = (driver as any).createMysqlClient(mockConn, controller.signal);
+
+    // ROLLBACK must succeed even though signal is aborted — otherwise the
+    // caller's cleanup path would leave the connection in aborted-tx state.
+    await expect(client.query("ROLLBACK")).resolves.toBeDefined();
+  });
+
+  test("post-success check exempts COMMIT", async () => {
+    const { driver } = makeDriver();
+    const controller = new AbortController();
+    controller.abort({ kind: "client-disconnect" });
+
+    mockConn.query.mockResolvedValueOnce([[], {}]);
+
+    const client = (driver as any).createMysqlClient(mockConn, controller.signal);
+
+    await expect(client.query("COMMIT")).resolves.toBeDefined();
+  });
+
+  test("post-success check exempts START TRANSACTION and SAVEPOINT variants", async () => {
+    const { driver } = makeDriver();
+    const controller = new AbortController();
+    controller.abort({ kind: "client-disconnect" });
+
+    mockConn.query.mockResolvedValue([[], {}]);
+
+    const client = (driver as any).createMysqlClient(mockConn, controller.signal);
+
+    await expect(client.query("START TRANSACTION")).resolves.toBeDefined();
+    await expect(client.query("SAVEPOINT `sp_1`")).resolves.toBeDefined();
+    await expect(client.query("RELEASE SAVEPOINT `sp_1`")).resolves.toBeDefined();
+    await expect(client.query("ROLLBACK TO SAVEPOINT `sp_1`")).resolves.toBeDefined();
+    await expect(
+      client.query("SET TRANSACTION ISOLATION LEVEL READ COMMITTED"),
+    ).resolves.toBeDefined();
+  });
+
+  test("rewraps ER_QUERY_INTERRUPTED on user query inside tx as AbortError", async () => {
+    const { driver } = makeDriver();
+    const controller = new AbortController();
+
+    const mysqlErr: any = Object.assign(new Error("Query execution was interrupted"), {
+      errno: 1317,
+      code: "ER_QUERY_INTERRUPTED",
+    });
+    mockConn.query.mockRejectedValueOnce(mysqlErr);
+
+    const client = (driver as any).createMysqlClient(mockConn, controller.signal);
+
+    await expect(client.query("SELECT SLEEP(5)")).rejects.toBeInstanceOf(AbortError);
+  });
+
+  test("non-signal tx path does not re-check signal.aborted", async () => {
+    const { driver } = makeDriver();
+
+    mockConn.query.mockResolvedValueOnce([[{ n: 1 }], {}]);
+    const client = (driver as any).createMysqlClient(mockConn);
+
+    const result = await client.query("SELECT 1 AS n");
+    expect(result.rows[0]).toEqual({ n: 1 });
+  });
+});
+
 describe("KILL QUERY dispatch", () => {
   test("aborting during a query issues KILL QUERY on a throwaway connection", async () => {
     const { driver } = makeDriver();
