@@ -656,7 +656,7 @@ export class PostgresDriver implements IProteusDriver {
    * so it has a known `processID`, registers an abort listener that issues
    * `pg_cancel_backend`, runs the query, and releases the client. Adds one
    * pool checkout per query relative to the non-signal path — only used
-   * when a session (or per-query) signal is present.
+   * when a session signal is present.
    */
   private createPgClientFromPoolWithSignal(
     pool: Pool,
