@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import type { IZephyr } from "../interfaces/Zephyr.js";
 import type { IZephyrRoom } from "../interfaces/ZephyrRoom.js";
 import { _createMockZephyr } from "./create-mock-zephyr.js";

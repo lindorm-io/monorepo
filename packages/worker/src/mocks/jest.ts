@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import type { ILindormWorker } from "../interfaces/LindormWorker.js";
 import { _createMockWorker } from "./create-mock-worker.js";
 

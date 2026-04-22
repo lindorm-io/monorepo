@@ -1,3 +1,4 @@
+/// <reference types="jest" />
 import type { IEntity, IProteusRepository } from "../interfaces/index.js";
 import type { IProteusSession } from "../interfaces/ProteusSession.js";
 import type { IProteusSource } from "../interfaces/ProteusSource.js";
