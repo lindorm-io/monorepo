@@ -9,7 +9,7 @@ import type { SyncHookCallback } from "../types/index.js";
  * **Must be synchronous** — the create pipeline does not await.
  */
 export const OnCreate =
-  <T extends Constructor, C = unknown>(callback: SyncHookCallback<T, C>) =>
+  <T extends Constructor>(callback: SyncHookCallback<T>) =>
   (_target: T, context: ClassDecoratorContext<T>): void => {
     stageHook(context.metadata, { decorator: "OnCreate", callback: callback as any });
   };

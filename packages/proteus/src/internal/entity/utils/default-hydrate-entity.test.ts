@@ -104,7 +104,14 @@ describe("defaultHydrateEntity", () => {
       snapshot: false,
     });
 
-    expect(hookCb).toHaveBeenCalledWith(undefined, result);
+    expect(hookCb).toHaveBeenCalledWith(
+      result,
+      expect.objectContaining({
+        correlationId: "unknown",
+        actor: null,
+        timestamp: expect.any(Date),
+      }),
+    );
   });
 
   test("should skip hooks when option is false", () => {
@@ -119,17 +126,21 @@ describe("defaultHydrateEntity", () => {
     expect(hookCb).not.toHaveBeenCalled();
   });
 
-  test("should pass context to hooks", () => {
+  test("should pass entity and context to hooks in that order", () => {
     const hookCb = vi.fn();
     const metaWithHooks = {
       ...metadata,
       hooks: [{ decorator: "OnHydrate", callback: hookCb }],
     } as unknown as EntityMetadata;
-    const ctx = { user: "admin" };
+    const ctx = {
+      correlationId: "c-1",
+      actor: "admin",
+      timestamp: new Date("2024-01-01T00:00:00Z"),
+    };
 
     defaultHydrateEntity({ id: "abc" }, metaWithHooks, { snapshot: false, context: ctx });
 
-    expect(hookCb).toHaveBeenCalledWith(ctx, expect.any(TestEntity));
+    expect(hookCb).toHaveBeenCalledWith(expect.any(TestEntity), ctx);
   });
 
   test("should extract FK columns from owning relations", () => {
