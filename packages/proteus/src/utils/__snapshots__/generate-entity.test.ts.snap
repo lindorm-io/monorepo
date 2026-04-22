@@ -35,39 +35,3 @@ export class User {
 }
 "
 `;
-
-exports[`generateEntitySource interpolates longer PascalCase names 1`] = `
-"import { Entity, Field, PrimaryKey } from "@lindorm/proteus";
-
-@Entity()
-export class UserProfile {
-  @PrimaryKey()
-  @Field("uuid")
-  id!: string;
-
-  @Field("date")
-  createdAt!: Date;
-
-  @Field("date")
-  updatedAt!: Date;
-}
-"
-`;
-
-exports[`generateEntitySource produces a pascal-case entity file 1`] = `
-"import { Entity, Field, PrimaryKey } from "@lindorm/proteus";
-
-@Entity()
-export class User {
-  @PrimaryKey()
-  @Field("uuid")
-  id!: string;
-
-  @Field("date")
-  createdAt!: Date;
-
-  @Field("date")
-  updatedAt!: Date;
-}
-"
-`;

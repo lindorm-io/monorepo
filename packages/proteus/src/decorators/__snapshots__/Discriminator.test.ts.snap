@@ -17,21 +17,3 @@ exports[`Discriminator > should stage __discriminator with fieldName 'vehicleTyp
   "fieldName": "vehicleType",
 }
 `;
-
-exports[`Discriminator should stage __discriminator with fieldName 'kind' 1`] = `
-{
-  "fieldName": "kind",
-}
-`;
-
-exports[`Discriminator should stage __discriminator with fieldName 'type' 1`] = `
-{
-  "fieldName": "type",
-}
-`;
-
-exports[`Discriminator should stage __discriminator with fieldName 'vehicleType' 1`] = `
-{
-  "fieldName": "vehicleType",
-}
-`;
