@@ -9,7 +9,9 @@ import {
   writeFileSync,
 } from "fs";
 import { dirname, join, resolve } from "path";
+import { buildAttachSourcesFile } from "./build-attach-sources-file.js";
 import { buildConfigFile } from "./build-config-file.js";
+import { buildContextFile } from "./build-context-file.js";
 import { buildDockerCompose } from "./build-docker-compose.js";
 import { buildIrisSamples } from "./build-iris-samples.js";
 import { buildPylonFile } from "./build-pylon-file.js";
@@ -179,6 +181,21 @@ export const writeConfigFile = (answers: Answers): void => {
   writeFileSync(target, buildConfigFile(answers), "utf-8");
 };
 
+export const writeContextFile = (answers: Answers): void => {
+  const target = join(answers.projectDir, "src/types/context.ts");
+  ensureDir(target);
+  writeFileSync(target, buildContextFile(answers), "utf-8");
+};
+
+export const writeAttachSourcesFile = (answers: Answers): void => {
+  const content = buildAttachSourcesFile(answers);
+  if (!content) return;
+
+  const target = join(answers.projectDir, "src/middleware/attach-sources.ts");
+  ensureDir(target);
+  writeFileSync(target, content, "utf-8");
+};
+
 export const writePylonFile = (answers: Answers): void => {
   const target = join(answers.projectDir, "src/pylon/pylon.ts");
   ensureDir(target);
@@ -235,9 +252,11 @@ export const scaffold = async (
   writePackageJson(answers);
   writeEnvFile(answers, kek);
   writeConfigFile(answers);
+  writeContextFile(answers);
   writePylonFile(answers);
   writeDockerCompose(answers);
   writeWorkerFiles(answers);
   writeIrisSamples(answers);
+  writeAttachSourcesFile(answers);
   await runProteusInit(answers.projectDir, answers);
 };

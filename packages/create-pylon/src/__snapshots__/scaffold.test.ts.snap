@@ -427,34 +427,6 @@ export const GET: Array<ServerHttpMiddleware> = [
   useHandler(listWebhooksHandler),
 ];
 ",
-  "src/types/context.ts": "import type {
-  PylonHandler,
-  PylonHttpContext,
-  PylonHttpMiddleware,
-  PylonSocketContext,
-  PylonSocketMiddleware,
-} from "@lindorm/pylon";
-import type { z, ZodType } from "zod";
-
-export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
-
-export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
-
-export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
-  PylonHttpMiddleware<C>;
-
-export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
-  PylonSocketMiddleware<C>;
-
-// TODO: extend Data / State / Payload here to match your application's shape.
-export type ServerHandler<
-  Schema extends ZodType = ZodType<any>,
-  Body = any,
-> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
-
-export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
-  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
-",
   "src/workers/alive.ts": "import type { LindormWorkerCallback } from "@lindorm/worker";
 
 export const CALLBACK: LindormWorkerCallback = async (ctx) => {
@@ -584,34 +556,6 @@ export const GET: Array<ServerHttpMiddleware> = [
   useHandler(exampleHandler),
 ];
 ",
-  "src/types/context.ts": "import type {
-  PylonHandler,
-  PylonHttpContext,
-  PylonHttpMiddleware,
-  PylonSocketContext,
-  PylonSocketMiddleware,
-} from "@lindorm/pylon";
-import type { z, ZodType } from "zod";
-
-export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
-
-export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
-
-export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
-  PylonHttpMiddleware<C>;
-
-export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
-  PylonSocketMiddleware<C>;
-
-// TODO: extend Data / State / Payload here to match your application's shape.
-export type ServerHandler<
-  Schema extends ZodType = ZodType<any>,
-  Body = any,
-> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
-
-export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
-  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
-",
   "tsconfig.build.json": "{
   "extends": "./tsconfig.json",
   "compilerOptions": {
@@ -699,34 +643,6 @@ import { config } from "./config.js";
 export const amphora = new Amphora({ logger });
 
 amphora.env(config.pylon.kek);
-",
-  "src/types/context.ts": "import type {
-  PylonHandler,
-  PylonHttpContext,
-  PylonHttpMiddleware,
-  PylonSocketContext,
-  PylonSocketMiddleware,
-} from "@lindorm/pylon";
-import type { z, ZodType } from "zod";
-
-export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
-
-export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
-
-export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
-  PylonHttpMiddleware<C>;
-
-export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
-  PylonSocketMiddleware<C>;
-
-// TODO: extend Data / State / Payload here to match your application's shape.
-export type ServerHandler<
-  Schema extends ZodType = ZodType<any>,
-  Body = any,
-> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
-
-export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
-  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
 ",
   "tsconfig.build.json": "{
   "extends": "./tsconfig.json",
@@ -817,6 +733,7 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/postgres/source.js";
 import { source as rateLimitSource } from "../proteus/redis/source.js";
+import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 import { source as irisSource } from "../iris/source.js";
 
 export const pylon = new Pylon({
@@ -824,9 +741,11 @@ export const pylon = new Pylon({
   amphora,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
+  httpMiddleware: [attachSourcesMiddleware],
   socket: {
     enabled: true,
     listeners: join(import.meta.dirname, "..", "listeners"),
+    middleware: [attachSourcesMiddleware],
   },
   rooms: { presence: true },
   proteus: proteusSource,
@@ -904,6 +823,7 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit +
   "src/listeners/_middleware.ts",
   "src/listeners/ping.ts",
   "src/logger/index.ts",
+  "src/middleware/attach-sources.ts",
   "src/middleware/http-example.ts",
   "src/middleware/socket-example.ts",
   "src/proteus/postgres/entities/.gitkeep",
@@ -995,6 +915,100 @@ export const pylon = new Pylon({
 "
 `;
 
+exports[`scaffold > scaffold orchestration > multi-driver ctx extension > emits ExtraSources type and attach-sources middleware when 2+ drivers > attach-sources.ts 1`] = `
+"import { lazyFactory } from "@lindorm/utils";
+import type { ServerHttpMiddleware } from "../types/context.js";
+import { source as redisSource } from "../proteus/redis/source.js";
+import { source as memorySource } from "../proteus/memory/source.js";
+
+/**
+ * Pylon middleware that mounts the non-primary Proteus sources on the
+ * request context as \`ctx.<driver>\`. Use via pylon options:
+ *
+ *     new Pylon({ httpMiddleware: [attachSourcesMiddleware] })
+ */
+export const attachSourcesMiddleware: ServerHttpMiddleware = async (ctx, next) => {
+  lazyFactory(ctx, "redis", () =>
+    redisSource.session({ logger: ctx.logger, context: ctx }),
+  );
+  lazyFactory(ctx, "memory", () =>
+    memorySource.session({ logger: ctx.logger, context: ctx }),
+  );
+  await next();
+};
+"
+`;
+
+exports[`scaffold > scaffold orchestration > multi-driver ctx extension > emits ExtraSources type and attach-sources middleware when 2+ drivers > context.ts 1`] = `
+"import type {
+  PylonHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "@lindorm/pylon";
+import type { IProteusSession } from "@lindorm/proteus";
+import type { z, ZodType } from "zod";
+
+type ExtraSources = {
+  redis?: IProteusSession;
+  memory?: IProteusSession;
+};
+
+export type ServerHttpContext<Data = any> = PylonHttpContext<Data> & ExtraSources;
+
+export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload> & ExtraSources;
+
+export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
+  PylonHttpMiddleware<C>;
+
+export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
+  PylonSocketMiddleware<C>;
+
+// TODO: extend Data / State / Payload here to match your application's shape.
+export type ServerHandler<
+  Schema extends ZodType = ZodType<any>,
+  Body = any,
+> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
+
+export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
+  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
+"
+`;
+
+exports[`scaffold > scaffold orchestration > multi-driver ctx extension > emits ExtraSources type and attach-sources middleware when 2+ drivers > pylon.ts 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger/index.js";
+import { amphora } from "./amphora.js";
+import { config } from "./config.js";
+import { source as proteusSource } from "../proteus/postgres/source.js";
+import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  port: config.server.port,
+  routes: join(import.meta.dirname, "..", "routes"),
+  httpMiddleware: [attachSourcesMiddleware],
+  socket: {
+    enabled: true,
+    listeners: join(import.meta.dirname, "..", "listeners"),
+    middleware: [attachSourcesMiddleware],
+  },
+  rooms: { presence: true },
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  setup: async () => {
+    await proteusSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
 exports[`scaffold > scaffold orchestration > rateLimit-only combo (with postgres + redis) > pylon.ts 1`] = `
 "import { Pylon } from "@lindorm/pylon";
 import { join } from "path";
@@ -1003,12 +1017,14 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/postgres/source.js";
 import { source as rateLimitSource } from "../proteus/redis/source.js";
+import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 
 export const pylon = new Pylon({
   logger,
   amphora,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
+  httpMiddleware: [attachSourcesMiddleware],
   proteus: proteusSource,
   kryptos: { enabled: true },
   rateLimit: {
@@ -1865,12 +1881,14 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/postgres/source.js";
 import { source as rateLimitSource } from "../proteus/redis/source.js";
+import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 
 export const pylon = new Pylon({
   logger,
   amphora,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
+  httpMiddleware: [attachSourcesMiddleware],
   proteus: proteusSource,
   kryptos: { enabled: true },
   rateLimit: {
@@ -1900,12 +1918,14 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/postgres/source.js";
 import { source as rateLimitSource } from "../proteus/redis/source.js";
+import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 
 export const pylon = new Pylon({
   logger,
   amphora,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
+  httpMiddleware: [attachSourcesMiddleware],
   proteus: proteusSource,
   kryptos: { enabled: true },
   session: {

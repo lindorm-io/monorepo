@@ -479,5 +479,53 @@ describe("scaffold", () => {
       ).toMatchSnapshot("config.ts");
       expect(readFileSync(join(projectDir, ".env"), "utf-8")).toMatchSnapshot(".env");
     });
+
+    describe("multi-driver ctx extension", () => {
+      test("emits ExtraSources type and attach-sources middleware when 2+ drivers", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          proteusDrivers: ["postgres", "redis", "memory"],
+          features: baseFeatures({ socket: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        expect(
+          readFileSync(join(projectDir, "src/types/context.ts"), "utf-8"),
+        ).toMatchSnapshot("context.ts");
+        expect(
+          readFileSync(join(projectDir, "src/middleware/attach-sources.ts"), "utf-8"),
+        ).toMatchSnapshot("attach-sources.ts");
+        expect(
+          readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
+        ).toMatchSnapshot("pylon.ts");
+      });
+
+      test("omits ExtraSources and attach-sources file when single driver", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          proteusDrivers: ["postgres"],
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        expect(
+          readFileSync(join(projectDir, "src/types/context.ts"), "utf-8"),
+        ).not.toContain("ExtraSources");
+        expect(existsSync(join(projectDir, "src/middleware/attach-sources.ts"))).toBe(
+          false,
+        );
+      });
+
+      test("omits ExtraSources and attach-sources file when no drivers", async () => {
+        const answers = baseAnswers({ projectDir });
+        await scaffold(answers, FIXED_KEK);
+
+        expect(
+          readFileSync(join(projectDir, "src/types/context.ts"), "utf-8"),
+        ).not.toContain("ExtraSources");
+        expect(existsSync(join(projectDir, "src/middleware/attach-sources.ts"))).toBe(
+          false,
+        );
+      });
+    });
   });
 });
