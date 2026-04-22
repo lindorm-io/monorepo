@@ -109,6 +109,25 @@ coverage/
 ",
   "config/default.yml": "server:
   port: 3000
+
+logger:
+  level: info
+",
+  "config/development.yml": "# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+logger:
+  level: debug
+",
+  "config/production.yml": "# Overrides applied when NODE_ENV=production.
+# Most prod-specific values belong in secrets / env vars, not here — reserve
+# this file for non-sensitive knobs (timeouts, pool sizes, feature flags).
+logger:
+  level: info
+",
+  "config/test.yml": "# Overrides applied when NODE_ENV=test.
+# Keeps test output quiet unless something actually goes wrong.
+logger:
+  level: error
 ",
   "src/features/example/example-handler.ts": "import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
@@ -327,6 +346,7 @@ export const ON: Array<ServerSocketMiddleware> = [useSchema(pingSchema), pingHan
 import { config } from "../pylon/config.js";
 
 export const logger = new Logger({
+  level: config.logger.level,
   readable: config.nodeEnv !== "production",
 });
 ",
@@ -503,6 +523,25 @@ coverage/
 ",
   "config/default.yml": "server:
   port: 3000
+
+logger:
+  level: info
+",
+  "config/development.yml": "# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+logger:
+  level: debug
+",
+  "config/production.yml": "# Overrides applied when NODE_ENV=production.
+# Most prod-specific values belong in secrets / env vars, not here — reserve
+# this file for non-sensitive knobs (timeouts, pool sizes, feature flags).
+logger:
+  level: info
+",
+  "config/test.yml": "# Overrides applied when NODE_ENV=test.
+# Keeps test output quiet unless something actually goes wrong.
+logger:
+  level: error
 ",
   "src/features/example/example-handler.ts": "import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
@@ -524,6 +563,7 @@ void pylon.start();
 import { config } from "../pylon/config.js";
 
 export const logger = new Logger({
+  level: config.logger.level,
   readable: config.nodeEnv !== "production",
 });
 ",
@@ -624,6 +664,25 @@ coverage/
 ",
   "config/default.yml": "server:
   port: 3000
+
+logger:
+  level: info
+",
+  "config/development.yml": "# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+logger:
+  level: debug
+",
+  "config/production.yml": "# Overrides applied when NODE_ENV=production.
+# Most prod-specific values belong in secrets / env vars, not here — reserve
+# this file for non-sensitive knobs (timeouts, pool sizes, feature flags).
+logger:
+  level: info
+",
+  "config/test.yml": "# Overrides applied when NODE_ENV=test.
+# Keeps test output quiet unless something actually goes wrong.
+logger:
+  level: error
 ",
   "src/index.ts": "import { pylon } from "./pylon/pylon.js";
 
@@ -633,6 +692,7 @@ void pylon.start();
 import { config } from "../pylon/config.js";
 
 export const logger = new Logger({
+  level: config.logger.level,
   readable: config.nodeEnv !== "production",
 });
 ",
@@ -715,6 +775,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   postgresUrl: z.string(),
   redisUrl: z.string(),
   rabbitUrl: z.string(),
@@ -808,6 +873,9 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit +
   ".env",
   ".gitignore",
   "config/default.yml",
+  "config/development.yml",
+  "config/production.yml",
+  "config/test.yml",
   "docker-compose.yml",
   "package.json",
   "src/features/example/example-handler.ts",
@@ -866,6 +934,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   authClientId: z.string(),
   authClientSecret: z.string(),
   authIssuer: z.string(),
@@ -1051,6 +1124,9 @@ exports[`scaffold > scaffold orchestration > runs all write functions in sequenc
   ".env",
   ".gitignore",
   "config/default.yml",
+  "config/development.yml",
+  "config/production.yml",
+  "config/test.yml",
   "docker-compose.yml",
   "package.json",
   "src/features/example/example-handler.ts",
@@ -1092,6 +1168,9 @@ exports[`scaffold > scaffold orchestration > session-only combo 1`] = `
   ".env",
   ".gitignore",
   "config/default.yml",
+  "config/development.yml",
+  "config/production.yml",
+  "config/test.yml",
   "package.json",
   "src/features/example/example-handler.ts",
   "src/index.ts",
@@ -1117,6 +1196,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   authClientId: z.string(),
   authClientSecret: z.string(),
   authIssuer: z.string(),
@@ -1132,6 +1216,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   kafkaBrokers: z.string().transform((s) => s.split(",")),
 });
 "
@@ -1145,6 +1234,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
 });
 "
 `;
@@ -1157,6 +1251,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   mongoUrl: z.string(),
   natsServers: z.string(),
 });
@@ -1171,6 +1270,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   natsServers: z.string(),
 });
 "
@@ -1184,6 +1288,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
 });
 "
 `;
@@ -1196,6 +1305,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   postgresUrl: z.string(),
   authClientId: z.string(),
   authClientSecret: z.string(),
@@ -1212,6 +1326,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   postgresUrl: z.string(),
   kafkaBrokers: z.string().transform((s) => s.split(",")),
 });
@@ -1226,6 +1345,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   postgresUrl: z.string(),
 });
 "
@@ -1239,6 +1363,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   rabbitUrl: z.string(),
 });
 "
@@ -1252,6 +1381,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   redisUrl: z.string(),
 });
 "
@@ -1265,6 +1399,11 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
+  logger: z.object({
+    level: z
+      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+      .default("info"),
+  }),
   sqlitePath: z.string(),
 });
 "
