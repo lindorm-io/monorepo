@@ -27,16 +27,6 @@
       "default": "./dist/mocks/vitest.js"
     }
   },
-  "typesVersions": {
-    "*": {
-      "mocks/jest": [
-        "dist/mocks/jest.d.ts"
-      ],
-      "mocks/vitest": [
-        "dist/mocks/vitest.d.ts"
-      ]
-    }
-  },
   "bin": {
     "proteus": "dist/cli.js"
   },
