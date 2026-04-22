@@ -31,19 +31,6 @@
       "default": "./dist/fixtures/index.js"
     }
   },
-  "typesVersions": {
-    "*": {
-      "mocks/jest": [
-        "dist/mocks/jest.d.ts"
-      ],
-      "mocks/vitest": [
-        "dist/mocks/vitest.d.ts"
-      ],
-      "fixtures": [
-        "dist/fixtures/index.d.ts"
-      ]
-    }
-  },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "example": "ts-node example",
