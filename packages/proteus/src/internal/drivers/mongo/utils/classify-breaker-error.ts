@@ -1,4 +1,5 @@
 import type { ErrorClassification } from "@lindorm/breaker";
+import { AbortError } from "@lindorm/errors";
 
 const TRANSIENT_SYSTEM_CODES = new Set([
   "ECONNREFUSED",
@@ -33,6 +34,10 @@ const PERMANENT_MONGO_CODES = new Set([
 ]);
 
 export const classifyMongoError = (error: Error): ErrorClassification => {
+  // Client-initiated cancellation is not a backend failure — never trip the
+  // breaker on aborts.
+  if (error instanceof AbortError) return "ignorable";
+
   const code: number | string | undefined = (error as any).code;
   const systemCode: string | undefined = (error as any).code;
 
