@@ -25,7 +25,7 @@ import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type { RedisTransactionHandle } from "../types/redis-types.js";
 import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
-import { toAbortError } from "../../../utils/abort.js";
+import { raceWithSignal, toAbortError } from "../../../utils/abort.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
 import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
 import { RedisExecutor } from "./RedisExecutor.js";
@@ -439,40 +439,17 @@ export class RedisDriver implements IProteusDriver {
   }
 
   /**
-   * Race a pending ioredis command against the session signal. When the
-   * signal fires before the command resolves, the race rejects with an
-   * AbortError carrying the signal reason. The ioredis command still
-   * completes in the background — callers accept that a write-path
-   * command lands on the server even when the caller has unwound, and
-   * that a read's result is discarded.
+   * Race a pending ioredis command against the session signal.
    *
-   * Exposed (private) for tests and for future executor wiring. Left off
-   * the default executor path for now: pre-flight covers the HTTP-abort
-   * use case and redis commands are sub-millisecond in practice.
+   * Delegates to the shared raceWithSignal helper; exposed here as a
+   * convenience so executor / repository code can call
+   * `driver.raceSignal(client.get(...))` without reaching into utils.
+   * Off the default executor path for now: pre-flight covers the
+   * HTTP-abort use case and redis commands are sub-millisecond in
+   * practice. See utils/abort.ts for the full semantics.
    */
-  private async raceWithSignal<T>(promise: Promise<T>): Promise<T> {
-    if (!this.signal) return promise;
-    const sig = this.signal;
-    if (sig.aborted) {
-      throw toAbortError(sig.reason, undefined, "Redis command cancelled");
-    }
-
-    // Build a companion promise that rejects with AbortError when the
-    // signal fires. Whichever settles first wins the race.
-    let disposeAbort!: () => void;
-    const abortRace = new Promise<never>((_, reject) => {
-      const onAbort = (): void => {
-        reject(toAbortError(sig.reason, undefined, "Redis command cancelled"));
-      };
-      sig.addEventListener("abort", onAbort, { once: true });
-      disposeAbort = () => sig.removeEventListener("abort", onAbort);
-    });
-
-    try {
-      return await Promise.race([promise, abortRace]);
-    } finally {
-      disposeAbort();
-    }
+  public raceSignal<T>(promise: Promise<T>): Promise<T> {
+    return raceWithSignal(promise, this.signal, "Redis command cancelled");
   }
 
   private requireClient(): Redis {
