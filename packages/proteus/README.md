@@ -313,7 +313,7 @@ All drivers accept these base options:
 | `naming`    | `"snake" \| "camel" \| "none"` | Column name strategy (default: `"none"`)           |
 | `cache`     | `{ adapter, ttl? }`            | Query caching configuration                        |
 | `amphora`   | `IAmphora`                     | Key store for `@Encrypted` fields                  |
-| `context`   | `unknown`                      | Passed to hooks and lifecycle callbacks            |
+| `meta`      | `ProteusHookMeta`              | Default request-scoped hook metadata               |
 | `logger`    | `ILogger`                      | **Required.** Logger instance                      |
 
 SQL drivers, MongoDB, and SQLite also accept schema management options:
@@ -1626,7 +1626,7 @@ players!: Player[];
 
 ### Lifecycle Hook Decorators
 
-Lifecycle hooks are **class decorators** that register callbacks at specific points in the entity lifecycle. All hooks receive `(entity, context)` as arguments, where `context` is a `ProteusHookMeta` carrying request-scoped metadata (`correlationId`, `actor`, `timestamp`).
+Lifecycle hooks are **class decorators** that register callbacks at specific points in the entity lifecycle. All hooks receive `(entity, meta)` as arguments, where `meta` is a `ProteusHookMeta` carrying request-scoped metadata (`correlationId`, `actor`, `timestamp`).
 
 **Async hooks** (`HookCallback<T>`) may return `void | Promise<void>`.
 **Sync hooks** (`SyncHookCallback<T>`) must return `void` — they cannot be async.

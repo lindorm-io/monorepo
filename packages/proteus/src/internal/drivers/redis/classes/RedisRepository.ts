@@ -60,7 +60,7 @@ export type RedisRepositoryOptions<E extends IEntity> = {
   client: Redis;
   namespace: string | null;
   logger: ILogger;
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   emitEntity?: EntityEmitFn;
@@ -82,7 +82,7 @@ export class RedisRepository<
       logger: options.logger,
       driver: "redis",
       driverLabel: "RedisRepository",
-      context: options.context,
+      meta: options.meta,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
       emitEntity: options.emitEntity,

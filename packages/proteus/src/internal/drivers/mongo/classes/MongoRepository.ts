@@ -59,7 +59,7 @@ export type MongoRepositoryOptions<E extends IEntity> = {
   db: Db;
   namespace: string | null;
   logger: ILogger;
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   emitEntity?: EntityEmitFn;
@@ -86,7 +86,7 @@ export class MongoRepository<
       logger: options.logger,
       driver: "mongo",
       driverLabel: "MongoRepository",
-      context: options.context,
+      meta: options.meta,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
       emitEntity: options.emitEntity,

@@ -44,7 +44,7 @@ export type ProteusSourceOptionsBase = {
   /** Enable query caching with the given adapter and default TTL. */
   cache?: ProteusCacheConfig;
   /** Default request-scoped hook metadata. Overridden per-request via session(). */
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   /** Naming strategy for column name transformation. Defaults to `"none"`. */
   naming?: NamingStrategy;
   /** Database namespace (schema in SQL, database in Mongo, key prefix in Redis). */

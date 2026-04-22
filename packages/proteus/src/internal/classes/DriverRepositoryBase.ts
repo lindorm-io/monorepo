@@ -63,7 +63,7 @@ export type DriverRepositoryBaseOptions<E extends IEntity> = {
   logger: ILogger;
   driver: string;
   driverLabel: string;
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   emitEntity?: EntityEmitFn;
@@ -85,7 +85,7 @@ export abstract class DriverRepositoryBase<
   protected readonly hasAsyncRelationIds: boolean;
   protected readonly hasRelationCounts: boolean;
   private readonly emitEntity: EntityEmitFn;
-  private readonly _context: ProteusHookMeta | undefined;
+  private readonly _meta: ProteusHookMeta | undefined;
 
   protected constructor(options: DriverRepositoryBaseOptions<E>) {
     this.executor = options.executor;
@@ -95,7 +95,7 @@ export abstract class DriverRepositoryBase<
     this.parent = options.parent;
     this.repositoryFactory = options.repositoryFactory;
     this.emitEntity = options.emitEntity ?? (async (): Promise<void> => {});
-    this._context = options.context;
+    this._meta = options.meta;
     this.metadata = getEntityMetadata(options.target);
     this.hasRelations = this.metadata.relations.length > 0;
     this.hasAsyncRelationIds = (this.metadata.relationIds ?? []).some((ri) => {
@@ -108,7 +108,7 @@ export abstract class DriverRepositoryBase<
       target: options.target,
       driver: options.driver,
       logger: options.logger,
-      context: options.context,
+      meta: options.meta,
     });
   }
 
@@ -765,13 +765,13 @@ export abstract class DriverRepositoryBase<
     entity: E;
     metadata: EntityMetadata;
     connection: unknown;
-    context: ProteusHookMeta | undefined;
+    meta: ProteusHookMeta | undefined;
   } {
     return {
       entity,
       metadata: this.metadata,
       connection: connection ?? null,
-      context: this._context,
+      meta: this._meta,
     };
   }
 

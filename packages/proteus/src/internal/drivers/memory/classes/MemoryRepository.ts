@@ -67,7 +67,7 @@ export type MemoryRepositoryOptions<E extends IEntity> = {
   store: MemoryStore;
   namespace: string | null;
   logger: ILogger;
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;
@@ -92,7 +92,7 @@ export class MemoryRepository<
       logger: options.logger,
       driver: "memory",
       driverLabel: "MemoryRepository",
-      context: options.context,
+      meta: options.meta,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
       emitEntity: options.emitEntity,

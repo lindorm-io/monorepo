@@ -7,12 +7,12 @@ export const runHooksSync = (
   decorator: MetaHookDecorator,
   hooks: Array<MetaHook>,
   entity: unknown,
-  context?: ProteusHookMeta,
+  meta?: ProteusHookMeta,
 ): void => {
-  const meta = context ?? createDefaultProteusHookMeta();
+  const resolved = meta ?? createDefaultProteusHookMeta();
   for (const hook of hooks) {
     if (hook.decorator !== decorator) continue;
-    const result = hook.callback(entity, meta);
+    const result = hook.callback(entity, resolved);
     if (result instanceof Promise) {
       throw new ProteusError(
         `@${decorator} hook returned a Promise — ${decorator} hooks must be synchronous. ` +

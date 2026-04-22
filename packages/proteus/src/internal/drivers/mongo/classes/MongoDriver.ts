@@ -338,7 +338,7 @@ export class MongoDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: ProteusHookMeta,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
     const metadata = this.resolveMetadata(target);
@@ -347,7 +347,7 @@ export class MongoDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createRepository(t, p, context);
+    ) => this.createRepository(t, p, meta);
 
     return new MongoRepository<E>({
       target,
@@ -366,7 +366,7 @@ export class MongoDriver implements IProteusDriver {
       db,
       namespace: this.namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       emitEntity: this.emitEntity,
@@ -378,7 +378,7 @@ export class MongoDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: ProteusHookMeta,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
     const txHandle = handle as MongoTransactionHandle;
@@ -388,7 +388,7 @@ export class MongoDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createTransactionalRepository(t, handle, p, context);
+    ) => this.createTransactionalRepository(t, handle, p, meta);
 
     return new MongoRepository<E>({
       target,
@@ -405,7 +405,7 @@ export class MongoDriver implements IProteusDriver {
       db,
       namespace: this.namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       emitEntity: this.emitEntity,

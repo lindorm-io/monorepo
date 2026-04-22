@@ -24,16 +24,16 @@ describe("runHooksAsync", () => {
     expect(hooks[2].callback).toHaveBeenCalledTimes(1);
   });
 
-  test("should pass entity and context to callbacks in that order", async () => {
+  test("should pass entity and meta to callbacks in that order", async () => {
     const entity = { id: "1" };
-    const ctx = {
+    const meta = {
       correlationId: "c-1",
       actor: "admin",
       timestamp: new Date("2024-01-01T00:00:00Z"),
     };
-    await runHooksAsync("BeforeInsert", hooks, entity, ctx);
+    await runHooksAsync("BeforeInsert", hooks, entity, meta);
 
-    expect(hooks[0].callback).toHaveBeenCalledWith(entity, ctx);
+    expect(hooks[0].callback).toHaveBeenCalledWith(entity, meta);
   });
 
   test("should execute hooks sequentially", async () => {

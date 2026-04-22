@@ -9,7 +9,7 @@ import type { ProteusHookMeta } from "./proteus-hook-meta.js";
  */
 export type SyncHookCallback<T extends Constructor> = (
   entity: InstanceType<T>,
-  context: ProteusHookMeta,
+  meta: ProteusHookMeta,
 ) => void;
 
 /**
@@ -19,5 +19,5 @@ export type SyncHookCallback<T extends Constructor> = (
  */
 export type HookCallback<T extends Constructor> = (
   entity: InstanceType<T>,
-  context: ProteusHookMeta,
+  meta: ProteusHookMeta,
 ) => void | Promise<void>;

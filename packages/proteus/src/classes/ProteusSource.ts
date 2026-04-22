@@ -63,7 +63,7 @@ export type SessionOptions = {
   /** Override the logger on the session. */
   logger?: ILogger;
   /** Override the request-scoped hook metadata on the session. */
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   /**
    * Optional AbortSignal scoped to the session. When aborted, in-flight queries
    * issued through this session are cancelled server-side (Postgres only).
@@ -84,7 +84,7 @@ export class ProteusSource implements IProteusSource {
   private readonly _options: ProteusSourceOptions;
   private readonly _amphora: IAmphora | undefined;
   private readonly logger: ILogger;
-  private readonly context: ProteusHookMeta;
+  private readonly meta: ProteusHookMeta;
   private readonly _entities: Array<Constructor<IEntity>>;
   private readonly _pendingEntityPaths: Array<EntityScannerInput[number]>;
   private readonly resolveMetadata: MetadataResolver;
@@ -104,7 +104,7 @@ export class ProteusSource implements IProteusSource {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["ProteusSource"]);
-    this.context = options.context ?? createDefaultProteusHookMeta();
+    this.meta = options.meta ?? createDefaultProteusHookMeta();
     // Pre-loaded classes go straight into _entities; string paths are deferred
     // to setup() since scanner.import() is async.
     this._entities = ((options.entities ?? []) as Array<unknown>).filter(
@@ -238,7 +238,7 @@ export class ProteusSource implements IProteusSource {
     return new ProteusSession({
       source: this,
       logger: options?.logger?.child(["ProteusSource"]) ?? this.logger,
-      context: options?.context ?? this.context,
+      meta: options?.meta ?? this.meta,
       registryRef,
       resolveMetadata: this.resolveMetadata,
       cacheAdapter: this.cacheAdapter,
@@ -490,7 +490,7 @@ export class ProteusSource implements IProteusSource {
 
   /** Obtain a repository for the given entity class. Wraps with caching if a cache adapter is configured. */
   public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
-    const inner = this.requireDriver().createRepository(target, undefined, this.context);
+    const inner = this.requireDriver().createRepository(target, undefined, this.meta);
     if (!this.cacheAdapter) return inner;
 
     const metadata = this.resolveMetadata(target);
