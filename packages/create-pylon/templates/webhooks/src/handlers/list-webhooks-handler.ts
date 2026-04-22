@@ -1,3 +1,4 @@
+import { WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
 import type { ServerHandler } from "../types/context.js";
 
@@ -9,7 +10,7 @@ export const listWebhooksSchema = z.object({
 export const listWebhooksHandler: ServerHandler<typeof listWebhooksSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.repositories!.webhookSubscription;
+  const repository = ctx.proteus!.repository(WebhookSubscription);
   const query: { ownerId: string; tenantId?: string | null } = {
     ownerId: ctx.data.ownerId,
   };
