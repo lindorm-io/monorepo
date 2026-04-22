@@ -7,6 +7,7 @@ export * from "./dead-letter.js";
 export * from "./delay.js";
 export * from "./envelope.js";
 export * from "./hook.js";
+export * from "./iris-hook-meta.js";
 export * from "./message-bus.js";
 export * from "./source-options.js";
 export type {
