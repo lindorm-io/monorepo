@@ -45,6 +45,7 @@ import { RelationPersister } from "../../../utils/repository/RelationPersister.j
 import { createMysqlJoinTableOps } from "../utils/repository/mysql-join-table-ops.js";
 import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations.js";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import { buildRelationFilter } from "../../../utils/repository/build-relation-filter.js";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
 import { getJoinName } from "../../../entity/utils/get-join-name.js";
@@ -79,7 +80,7 @@ export type MySqlRepositoryOptions<E extends IEntity> = {
   client: MysqlQueryClient;
   namespace: string | null;
   logger: ILogger;
-  context?: unknown;
+  context?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;

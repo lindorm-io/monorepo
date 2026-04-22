@@ -1,6 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import type {
   EntityEmitFn,
+  ProteusHookMeta,
   TransactionCallback,
   TransactionOptions,
 } from "../../types/index.js";
@@ -32,7 +33,7 @@ export interface IProteusDriver {
   createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): IProteusRepository<E>;
 
   createExecutor<E extends IEntity>(target: Constructor<E>): IRepositoryExecutor<E>;

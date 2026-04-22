@@ -29,6 +29,7 @@ import type {
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import type { MongoTransactionHandle } from "../types/mongo-types.js";
 import { detectReplicaSet } from "../utils/detect-replica-set.js";
 import { createMongoJoinTableOps } from "../utils/mongo-join-table-ops.js";
@@ -337,7 +338,7 @@ export class MongoDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
     const metadata = this.resolveMetadata(target);
@@ -377,7 +378,7 @@ export class MongoDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
     const txHandle = handle as MongoTransactionHandle;

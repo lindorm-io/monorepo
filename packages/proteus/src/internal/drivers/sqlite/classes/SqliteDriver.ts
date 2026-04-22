@@ -37,6 +37,7 @@ import { SqliteQueryBuilder } from "./SqliteQueryBuilder.js";
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import { SqliteRepository, type WithImplicitTransaction } from "./SqliteRepository.js";
 import { SqliteTransactionContext } from "./SqliteTransactionContext.js";
 
@@ -166,7 +167,7 @@ export class SqliteDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): SqliteRepository<E> {
     this.checkSignal();
     const client = this.getClient();
@@ -218,7 +219,7 @@ export class SqliteDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): SqliteRepository<E> {
     this.checkSignal();
     const sqliteHandle = handle as SqliteTransactionHandle;

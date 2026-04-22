@@ -19,6 +19,7 @@ import type {
   TransactionOptions,
 } from "../../../../types/index.js";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type {
@@ -168,7 +169,7 @@ export class MemoryDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
     const store = this.store;
@@ -218,7 +219,7 @@ export class MemoryDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
     const txHandle = handle as MemoryTransactionHandle;

@@ -22,11 +22,13 @@ import type {
   EntityScannerInput,
   NamingStrategy,
   ProteusBreakerOptions,
+  ProteusHookMeta,
   ProteusSourceEventMap,
   ProteusSourceOptions,
   TransactionCallback,
   TransactionOptions,
 } from "../types/index.js";
+import { createDefaultProteusHookMeta } from "../types/proteus-hook-meta.js";
 import { classifyMongoError } from "../internal/drivers/mongo/utils/classify-breaker-error.js";
 import { classifyMysqlError } from "../internal/drivers/mysql/utils/classify-breaker-error.js";
 import { classifyPostgresError } from "../internal/drivers/postgres/utils/classify-breaker-error.js";
@@ -57,11 +59,11 @@ import type { EntityMetadata } from "../internal/entity/types/metadata.js";
 /**
  * Options for creating a session from a ProteusSource.
  */
-export type SessionOptions<C = unknown> = {
+export type SessionOptions = {
   /** Override the logger on the session. */
   logger?: ILogger;
-  /** Override the context on the session. */
-  context?: C;
+  /** Override the request-scoped hook metadata on the session. */
+  context?: ProteusHookMeta;
   /**
    * Optional AbortSignal scoped to the session. When aborted, in-flight queries
    * issued through this session are cancelled server-side (Postgres only).
@@ -76,13 +78,13 @@ export type SessionOptions<C = unknown> = {
  * obtain repositories, query builders, and run transactions. The source
  * manages connection pooling, entity metadata resolution, and caching.
  */
-export class ProteusSource<C = unknown> implements IProteusSource<C> {
+export class ProteusSource implements IProteusSource {
   private _driver: IProteusDriver | undefined;
   private readonly _breaker: ICircuitBreaker | null;
   private readonly _options: ProteusSourceOptions;
   private readonly _amphora: IAmphora | undefined;
   private readonly logger: ILogger;
-  private readonly context: C;
+  private readonly context: ProteusHookMeta;
   private readonly _entities: Array<Constructor<IEntity>>;
   private readonly _pendingEntityPaths: Array<EntityScannerInput[number]>;
   private readonly resolveMetadata: MetadataResolver;
@@ -102,7 +104,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["ProteusSource"]);
-    this.context = options.context as C;
+    this.context = options.context ?? createDefaultProteusHookMeta();
     // Pre-loaded classes go straight into _entities; string paths are deferred
     // to setup() since scanner.import() is async.
     this._entities = ((options.entities ?? []) as Array<unknown>).filter(
@@ -176,25 +178,25 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   // ─── Typed EventEmitter (composition) ──────────────────────────────
 
   /** Subscribe to a source event. */
-  public on<K extends keyof ProteusSourceEventMap<C>>(
+  public on<K extends keyof ProteusSourceEventMap>(
     event: K,
-    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+    listener: (payload: ProteusSourceEventMap[K]) => void,
   ): void {
     this._emitter.on(event as string, listener);
   }
 
   /** Unsubscribe from a source event. */
-  public off<K extends keyof ProteusSourceEventMap<C>>(
+  public off<K extends keyof ProteusSourceEventMap>(
     event: K,
-    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+    listener: (payload: ProteusSourceEventMap[K]) => void,
   ): void {
     this._emitter.off(event as string, listener);
   }
 
   /** Subscribe to a source event, firing only once. */
-  public once<K extends keyof ProteusSourceEventMap<C>>(
+  public once<K extends keyof ProteusSourceEventMap>(
     event: K,
-    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+    listener: (payload: ProteusSourceEventMap[K]) => void,
   ): void {
     this._emitter.once(event as string, listener);
   }
@@ -215,7 +217,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   };
 
   /** Create a lightweight, request-scoped session sharing the same connection pool but with a new logger and/or context. */
-  public session(options?: SessionOptions<C>): ProteusSession<C> {
+  public session(options?: SessionOptions): ProteusSession {
     // Reference cell pattern: new ref cell for filter registry isolation.
     const registryRef = { current: cloneFilterRegistry(this._registryRef.current) };
 
@@ -233,7 +235,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
         )
       : undefined;
 
-    return new ProteusSession<C>({
+    return new ProteusSession({
       source: this,
       logger: options?.logger?.child(["ProteusSource"]) ?? this.logger,
       context: options?.context ?? this.context,
