@@ -643,6 +643,7 @@ export class MongoDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    _signal?: AbortSignal,
   ): MongoDriver {
     const cloned = Object.create(MongoDriver.prototype) as MongoDriver;
     (cloned as any).options = this.options;
@@ -658,6 +659,8 @@ export class MongoDriver implements IProteusDriver {
     (cloned as any).db = this.db;
     (cloned as any).isReplicaSet = this.isReplicaSet;
     (cloned as any).connectingPromise = null;
+    // Signal is accepted to match the interface. Mongo cancellation is
+    // deferred to a follow-up (see cancellation-signals plan §11).
     return cloned;
   }
 

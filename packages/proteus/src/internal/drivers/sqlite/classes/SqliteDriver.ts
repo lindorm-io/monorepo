@@ -311,6 +311,7 @@ export class SqliteDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    _signal?: AbortSignal,
   ): SqliteDriver {
     const cloned = Object.create(SqliteDriver.prototype) as SqliteDriver;
     (cloned as any).options = this.options;
@@ -321,6 +322,8 @@ export class SqliteDriver implements IProteusDriver {
     (cloned as any).emitEntity = emitEntity;
     (cloned as any).amphora = this.amphora;
     (cloned as any).db = this.db; // Share the same database connection
+    // Signal is accepted to match the interface but sqlite queries are
+    // synchronous-effectively and not cancellable at this layer.
     return cloned;
   }
 

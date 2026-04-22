@@ -17,4 +17,10 @@ export type CursorOptions<E extends IEntity> = {
   versionTimestamp?: Date | null;
   /** Return only these fields from each entity. */
   select?: Array<keyof E>;
+  /**
+   * Per-query AbortSignal. Combined with any session-scoped signal at
+   * execution time. When aborted, the cursor connection is cancelled
+   * server-side (Postgres only — non-pg drivers ignore this field in v1).
+   */
+  signal?: AbortSignal;
 };

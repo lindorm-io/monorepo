@@ -33,6 +33,7 @@ export type ProteusSessionOptions<C = unknown> = {
   cacheAdapter: ICacheAdapter | undefined;
   sourceTtlMs: number | undefined;
   parentEmitEntity: EntityEmitFn;
+  signal?: AbortSignal;
 };
 
 /**
@@ -55,6 +56,7 @@ export class ProteusSession<C = unknown> implements IProteusSession<C> {
   private readonly cacheAdapter: ICacheAdapter | undefined;
   private readonly sourceTtlMs: number | undefined;
   private readonly parentEmitEntity: EntityEmitFn;
+  private readonly _signal: AbortSignal | undefined;
 
   public constructor(options: ProteusSessionOptions<C>) {
     this.source = options.source;
@@ -66,6 +68,7 @@ export class ProteusSession<C = unknown> implements IProteusSession<C> {
     this.cacheAdapter = options.cacheAdapter;
     this.sourceTtlMs = options.sourceTtlMs;
     this.parentEmitEntity = options.parentEmitEntity;
+    this._signal = options.signal;
   }
 
   // ─── Getters (delegated to source for immutable properties) ─────────
@@ -80,6 +83,14 @@ export class ProteusSession<C = unknown> implements IProteusSession<C> {
 
   public get log(): ILogger {
     return this.logger;
+  }
+
+  /**
+   * The AbortSignal scoped to this session, or `undefined` when the session
+   * was created without one (workers, CLI, migrations, socket contexts).
+   */
+  public get signal(): AbortSignal | undefined {
+    return this._signal;
   }
 
   // ─── Data-access methods ────────────────────────────────────────────
