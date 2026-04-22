@@ -94,7 +94,12 @@ const buildWorkersPath = (answers: Answers): string | null => {
 };
 
 const buildOptions = (answers: Answers): string => {
-  const lines: Array<string> = [`  logger,`, `  amphora,`, `  port: config.server.port,`];
+  const lines: Array<string> = [
+    `  logger,`,
+    `  amphora,`,
+    `  environment: config.nodeEnv,`,
+    `  port: config.server.port,`,
+  ];
   const drivers = answers.proteusDrivers;
   const nested = drivers.length > 1;
   const primary = pickPrimary(drivers);
