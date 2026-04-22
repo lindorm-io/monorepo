@@ -38,7 +38,7 @@ export const generateKekEnvString = (): string =>
     })
     .toEnvString();
 
-const TEMPLATE_ROOT = resolve(__dirname, "..", "templates");
+const TEMPLATE_ROOT = resolve(import.meta.dirname, "..", "templates");
 
 const renameDotfiles = (dir: string): void => {
   if (!existsSync(dir)) return;
@@ -95,13 +95,14 @@ export const writePackageJson = (answers: Answers): void => {
     name: answers.projectName,
     version: "0.0.0",
     private: true,
+    type: "module",
     engines: { node: ">=24.13.0" },
     scripts: {
       dev: "tsx watch src/index.ts",
       build: "tsc -p tsconfig.build.json",
       start: "node dist/index.js",
       typecheck: "tsc --noEmit",
-      test: "jest",
+      test: "vitest run",
     },
     dependencies: {},
     devDependencies: {},

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ServerSocketHandler } from "../types/context";
+import type { ServerSocketHandler } from "../types/context.js";
 
 export const pingSchema = z.object({
   message: z.string().optional(),

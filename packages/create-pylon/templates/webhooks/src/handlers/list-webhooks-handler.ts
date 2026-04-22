@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ServerHandler } from "../types/context";
+import type { ServerHandler } from "../types/context.js";
 
 export const listWebhooksSchema = z.object({
   ownerId: z.string(),
