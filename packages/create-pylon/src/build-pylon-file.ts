@@ -2,6 +2,7 @@ import type { Answers, ProteusDriver } from "./types.js";
 import { PROTEUS_PRIMARY_PRIORITY } from "./types.js";
 
 const RATE_LIMIT_PRIORITY: ReadonlyArray<ProteusDriver> = ["redis", "memory"];
+const SESSION_PRIORITY: ReadonlyArray<ProteusDriver> = ["redis", "memory"];
 
 const pickPrimary = (drivers: ReadonlyArray<ProteusDriver>): ProteusDriver | null => {
   for (const d of PROTEUS_PRIMARY_PRIORITY) {
@@ -17,6 +18,17 @@ const pickRateLimitDriver = (
     if (drivers.includes(d)) return d;
   }
   return null;
+};
+
+// Session source preference: a fast key-value store (redis > memory) first,
+// then fall back to the primary if the user didn't pick one.
+const pickSessionDriver = (
+  drivers: ReadonlyArray<ProteusDriver>,
+): ProteusDriver | null => {
+  for (const d of SESSION_PRIORITY) {
+    if (drivers.includes(d)) return d;
+  }
+  return pickPrimary(drivers);
 };
 
 const sourceImportPath = (driver: ProteusDriver, nested: boolean): string =>
@@ -54,6 +66,14 @@ const buildImports = (answers: Answers): Array<string> => {
     );
   }
 
+  const sessionDriver = answers.features.session ? pickSessionDriver(drivers) : null;
+
+  if (sessionDriver && sessionDriver !== primary && sessionDriver !== rateLimitDriver) {
+    lines.push(
+      `import { source as sessionSource } from "${sourceImportPath(sessionDriver, nested)}";`,
+    );
+  }
+
   if (nested && primary) {
     lines.push(
       `import { attachSourcesMiddleware } from "../middleware/attach-sources.js";`,
@@ -83,6 +103,18 @@ const buildOptions = (answers: Answers): string => {
     : null;
   const rateLimitSourceRef =
     rateLimitDriver && rateLimitDriver !== primary ? "rateLimitSource" : "proteusSource";
+
+  const sessionDriver = answers.features.session ? pickSessionDriver(drivers) : null;
+  // Prefer reusing the rateLimit import alias when both features settle on
+  // the same driver (typical when Redis is in the selection) — avoids
+  // two imports of the same module under different aliases.
+  const sessionSourceRef = !sessionDriver
+    ? "proteusSource"
+    : sessionDriver === primary
+      ? "proteusSource"
+      : sessionDriver === rateLimitDriver
+        ? "rateLimitSource"
+        : "sessionSource";
 
   if (answers.features.http) {
     lines.push(`  routes: join(import.meta.dirname, "..", "routes"),`);
@@ -130,8 +162,8 @@ const buildOptions = (answers: Answers): string => {
   if (answers.features.session) {
     lines.push(`  session: {`);
     lines.push(`    enabled: true,`);
-    if (primary) {
-      lines.push(`    proteus: proteusSource,`);
+    if (sessionDriver) {
+      lines.push(`    proteus: ${sessionSourceRef},`);
     }
     lines.push(`    name: "sid",`);
     lines.push(`    encrypted: true,`);
@@ -179,6 +211,9 @@ const buildOptions = (answers: Answers): string => {
   }
   if (rateLimitDriver && rateLimitDriver !== primary) {
     lines.push(`    await rateLimitSource.connect();`);
+  }
+  if (sessionDriver && sessionDriver !== primary && sessionDriver !== rateLimitDriver) {
+    lines.push(`    await sessionSource.connect();`);
   }
   if (answers.irisDriver !== "none") {
     lines.push(`    await irisSource.connect();`);
