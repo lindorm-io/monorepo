@@ -53,8 +53,6 @@ export type PylonCommonContext = {
   entities: Dict<IEntity>;
   logger: ILogger;
 
-  repositories?: Dict;
-  caches?: Dict;
   publishers?: Dict;
   workerQueues?: Dict;
 
