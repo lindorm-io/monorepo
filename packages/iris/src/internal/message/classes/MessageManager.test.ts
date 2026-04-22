@@ -591,7 +591,11 @@ describe("MessageManager", () => {
     });
 
     it("should fire @OnCreate hook during create()", () => {
-      const ctx = { userId: "abc" };
+      const ctx = {
+        correlationId: "corr-abc",
+        actor: "abc",
+        timestamp: new Date("2020-01-01T00:00:00Z"),
+      };
       const manager = new MessageManager({
         target: HookedEvent,
         context: ctx,
@@ -607,7 +611,11 @@ describe("MessageManager", () => {
     });
 
     it("should fire @OnHydrate hook during hydrate()", () => {
-      const ctx = { userId: "abc" };
+      const ctx = {
+        correlationId: "corr-abc",
+        actor: "abc",
+        timestamp: new Date("2020-01-01T00:00:00Z"),
+      };
       const manager = new MessageManager({
         target: HookedEvent,
         context: ctx,
@@ -635,7 +643,11 @@ describe("MessageManager", () => {
     });
 
     it("should fire @OnValidate hook during validate()", () => {
-      const ctx = { userId: "abc" };
+      const ctx = {
+        correlationId: "corr-abc",
+        actor: "abc",
+        timestamp: new Date("2020-01-01T00:00:00Z"),
+      };
       const manager = new MessageManager({
         target: HookedEvent,
         context: ctx,
@@ -756,7 +768,14 @@ describe("MessageManager", () => {
       await manager.beforePublish(msg);
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(msg, undefined);
+      expect(spy).toHaveBeenCalledWith(
+        msg,
+        expect.objectContaining({
+          correlationId: "unknown",
+          actor: null,
+          timestamp: expect.any(Date),
+        }),
+      );
     });
 
     it("should fire afterConsume", async () => {

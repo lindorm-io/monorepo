@@ -1,4 +1,5 @@
 import { IrisError } from "../../../errors/IrisError.js";
+import { createDefaultIrisHookMeta } from "../../../types/iris-hook-meta.js";
 import { runHooksSync, runHooksAsync } from "./run-hooks.js";
 import type { MetaHook } from "../types/metadata.js";
 import { describe, expect, it, vi } from "vitest";
@@ -8,12 +9,18 @@ const makeHook = (
   callback: MetaHook["callback"],
 ): MetaHook => ({ decorator, callback });
 
+const defaultContext = createDefaultIrisHookMeta();
+
 describe("runHooksSync", () => {
   it("should call hooks matching the specified decorator type", () => {
     const cb = vi.fn();
     const hooks = [makeHook("OnCreate", cb)];
     const message = { id: "abc" };
-    const context = { user: "test" };
+    const context = {
+      correlationId: "corr-test",
+      actor: "test",
+      timestamp: new Date(),
+    };
 
     runHooksSync("OnCreate", hooks, message, context);
 
@@ -26,7 +33,7 @@ describe("runHooksSync", () => {
     const onHydrateCb = vi.fn();
     const hooks = [makeHook("OnCreate", onCreateCb), makeHook("OnHydrate", onHydrateCb)];
 
-    runHooksSync("OnCreate", hooks, {});
+    runHooksSync("OnCreate", hooks, {}, defaultContext);
 
     expect(onCreateCb).toHaveBeenCalledTimes(1);
     expect(onHydrateCb).not.toHaveBeenCalled();
@@ -46,7 +53,7 @@ describe("runHooksSync", () => {
       }),
     ];
 
-    runHooksSync("OnValidate", hooks, {});
+    runHooksSync("OnValidate", hooks, {}, defaultContext);
 
     expect(order).toMatchSnapshot();
   });
@@ -55,7 +62,11 @@ describe("runHooksSync", () => {
     const cb = vi.fn();
     const hooks = [makeHook("BeforePublish", cb)];
     const msg = { payload: "data" };
-    const ctx = { traceId: "123" };
+    const ctx = {
+      correlationId: "trace-123",
+      actor: "user-1",
+      timestamp: new Date("2020-01-01T00:00:00Z"),
+    };
 
     runHooksSync("BeforePublish", hooks, msg, ctx);
 
@@ -63,27 +74,27 @@ describe("runHooksSync", () => {
   });
 
   it("should not error when hooks array is empty", () => {
-    expect(() => runHooksSync("OnCreate", [], {})).not.toThrow();
+    expect(() => runHooksSync("OnCreate", [], {}, defaultContext)).not.toThrow();
   });
 
   it("should not error when no hooks match the decorator", () => {
     const cb = vi.fn();
     const hooks = [makeHook("OnHydrate", cb)];
 
-    expect(() => runHooksSync("OnCreate", hooks, {})).not.toThrow();
+    expect(() => runHooksSync("OnCreate", hooks, {}, defaultContext)).not.toThrow();
     expect(cb).not.toHaveBeenCalled();
   });
 
   it("should throw IrisError if a hook returns a Promise", () => {
     const hooks = [makeHook("OnCreate", () => Promise.resolve())];
 
-    expect(() => runHooksSync("OnCreate", hooks, {})).toThrow(IrisError);
+    expect(() => runHooksSync("OnCreate", hooks, {}, defaultContext)).toThrow(IrisError);
   });
 
   it("should include the decorator name in the async error message", () => {
     const hooks = [makeHook("BeforeConsume", async () => {})];
 
-    expect(() => runHooksSync("BeforeConsume", hooks, {})).toThrow(
+    expect(() => runHooksSync("BeforeConsume", hooks, {}, defaultContext)).toThrow(
       /BeforeConsume.*synchronous/,
     );
   });
@@ -94,7 +105,11 @@ describe("runHooksAsync", () => {
     const cb = vi.fn();
     const hooks = [makeHook("AfterPublish", cb)];
     const message = { id: "xyz" };
-    const context = { session: "s1" };
+    const context = {
+      correlationId: "corr-session",
+      actor: "s1",
+      timestamp: new Date(),
+    };
 
     await runHooksAsync("AfterPublish", hooks, message, context);
 
@@ -107,7 +122,7 @@ describe("runHooksAsync", () => {
     const otherCb = vi.fn();
     const hooks = [makeHook("AfterConsume", matchCb), makeHook("OnCreate", otherCb)];
 
-    await runHooksAsync("AfterConsume", hooks, {});
+    await runHooksAsync("AfterConsume", hooks, {}, defaultContext);
 
     expect(matchCb).toHaveBeenCalledTimes(1);
     expect(otherCb).not.toHaveBeenCalled();
@@ -125,7 +140,7 @@ describe("runHooksAsync", () => {
       }),
     ];
 
-    await runHooksAsync("OnConsumeError", hooks, {});
+    await runHooksAsync("OnConsumeError", hooks, {}, defaultContext);
 
     expect(order).toMatchSnapshot();
   });
@@ -134,7 +149,11 @@ describe("runHooksAsync", () => {
     const cb = vi.fn();
     const hooks = [makeHook("BeforeConsume", cb)];
     const msg = { type: "event" };
-    const ctx = { correlationId: "c1" };
+    const ctx = {
+      correlationId: "c1",
+      actor: "user-beta",
+      timestamp: new Date("2020-01-01T00:00:00Z"),
+    };
 
     await runHooksAsync("BeforeConsume", hooks, msg, ctx);
 
@@ -142,14 +161,16 @@ describe("runHooksAsync", () => {
   });
 
   it("should not error when hooks array is empty", async () => {
-    await expect(runHooksAsync("OnCreate", [], {})).resolves.toBeUndefined();
+    await expect(
+      runHooksAsync("OnCreate", [], {}, defaultContext),
+    ).resolves.toBeUndefined();
   });
 
   it("should not error when no hooks match the decorator", async () => {
     const cb = vi.fn();
     const hooks = [makeHook("OnHydrate", cb)];
 
-    await runHooksAsync("OnCreate", hooks, {});
+    await runHooksAsync("OnCreate", hooks, {}, defaultContext);
 
     expect(cb).not.toHaveBeenCalled();
   });
@@ -161,7 +182,9 @@ describe("runHooksAsync", () => {
       }),
     ];
 
-    await expect(runHooksAsync("OnCreate", hooks, {})).rejects.toThrow("hook failed");
+    await expect(runHooksAsync("OnCreate", hooks, {}, defaultContext)).rejects.toThrow(
+      "hook failed",
+    );
   });
 
   it("should run multiple hooks of the same type in array order", async () => {
@@ -178,7 +201,7 @@ describe("runHooksAsync", () => {
       }),
     ];
 
-    await runHooksAsync("AfterPublish", hooks, {});
+    await runHooksAsync("AfterPublish", hooks, {}, defaultContext);
 
     expect(order).toMatchSnapshot();
   });
