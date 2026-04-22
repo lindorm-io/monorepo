@@ -91,7 +91,11 @@ export const buildConfigFile = (answers: Answers): string => {
     );
   }
 
-  lines.push(`});`, ``);
+  // Close the schema object and pass `scope: import.meta.url` so
+  // `npm.package.{name, version}` is resolved from this project's
+  // own package.json, not from a cwd walk — works identically under
+  // `npm start`, bare `node dist/index.js`, and Docker CMDs.
+  lines.push(`}, { scope: import.meta.url });`, ``);
 
   return lines.join("\n");
 };

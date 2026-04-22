@@ -798,7 +798,7 @@ export const config = configuration({
     clientSecret: z.string(),
     issuer: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -963,7 +963,7 @@ export const config = configuration({
     clientSecret: z.string(),
     issuer: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1240,7 +1240,7 @@ export const config = configuration({
     clientSecret: z.string(),
     issuer: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1264,7 +1264,7 @@ export const config = configuration({
   kafka: z.object({
     brokers: z.string().transform((s) => s.split(",")),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1285,7 +1285,7 @@ export const config = configuration({
       .enum(["error", "warn", "info", "verbose", "debug", "silly"])
       .default("info"),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1312,7 +1312,7 @@ export const config = configuration({
   nats: z.object({
     servers: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1336,7 +1336,7 @@ export const config = configuration({
   nats: z.object({
     servers: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1357,7 +1357,7 @@ export const config = configuration({
       .enum(["error", "warn", "info", "verbose", "debug", "silly"])
       .default("info"),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1386,7 +1386,7 @@ export const config = configuration({
     clientSecret: z.string(),
     issuer: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1413,7 +1413,7 @@ export const config = configuration({
   kafka: z.object({
     brokers: z.string().transform((s) => s.split(",")),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1437,7 +1437,7 @@ export const config = configuration({
   postgres: z.object({
     url: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1461,7 +1461,7 @@ export const config = configuration({
   rabbit: z.object({
     url: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1485,7 +1485,7 @@ export const config = configuration({
   redis: z.object({
     url: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
@@ -1509,7 +1509,7 @@ export const config = configuration({
   sqlite: z.object({
     path: z.string(),
   }),
-});
+}, { scope: import.meta.url });
 "
 `;
 
