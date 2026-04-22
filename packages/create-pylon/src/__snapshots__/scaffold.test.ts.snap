@@ -816,6 +816,8 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -975,6 +977,8 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -1081,6 +1085,8 @@ import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -1116,6 +1122,8 @@ import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -1872,6 +1880,8 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -1914,6 +1924,8 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -1959,6 +1971,8 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -1997,6 +2011,8 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -2026,6 +2042,8 @@ import { source as proteusSource } from "../proteus/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -2052,6 +2070,8 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -2077,6 +2097,8 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -2104,6 +2126,8 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -2129,6 +2153,8 @@ import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -2167,6 +2193,8 @@ import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -2224,6 +2252,8 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -2256,6 +2286,8 @@ import { source as proteusSource } from "../proteus/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
@@ -2291,6 +2323,8 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
   environment: config.node.env,
   port: config.server.port,
   socket: {
