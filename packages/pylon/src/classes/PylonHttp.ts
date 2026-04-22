@@ -3,6 +3,7 @@ import { createCommonContextInitialisationMiddleware } from "../internal/middlew
 import { createQueueMiddleware } from "../internal/middleware/common-queue-middleware.js";
 import { createDependenciesMiddleware } from "../internal/middleware/common-dependencies-middleware.js";
 import { createWebhookMiddleware } from "../internal/middleware/common-webhook-middleware.js";
+import { createHttpAbortSignalMiddleware } from "../internal/middleware/http-abort-signal-middleware.js";
 import { createHttpBodyParserMiddleware } from "../internal/middleware/http-body-parser-middleware.js";
 import { createHttpContextInitialisationMiddleware } from "../internal/middleware/http-context-initialisation-middleware.js";
 import { createHttpCookiesMiddleware } from "../internal/middleware/http-cookies-middleware.js";
@@ -88,6 +89,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         version: this.options.version,
       }),
       createHttpContextInitialisationMiddleware(this.logger),
+      createHttpAbortSignalMiddleware(),
       createCommonContextInitialisationMiddleware(this.options.amphora),
       createHttpDateValidationMiddleware({
         minRequestAge: this.options.minRequestAge,

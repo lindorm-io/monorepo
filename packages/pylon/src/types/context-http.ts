@@ -39,6 +39,7 @@ type Context<Data, State> = {
   io: PylonIoContextHttp;
   request: Request;
   session: PylonSessionOnContext;
+  signal: AbortSignal;
   state: State;
   rooms?: PylonRoomContextHttp;
   socket?: PylonSocketEmitter;
