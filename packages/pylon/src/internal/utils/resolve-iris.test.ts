@@ -6,12 +6,22 @@ describe("resolveIris", () => {
   test("should return session from override when override is provided", () => {
     const session = { fake: "session" };
     const override: any = { session: vi.fn().mockReturnValue(session) };
-    const ctx: any = { logger: { fake: "logger" } };
+    const ctx: any = {
+      logger: { fake: "logger" },
+      state: { metadata: { correlationId: "corr-x" } },
+    };
 
     const result = resolveIris(ctx, override);
 
     expect(result).toBe(session);
-    expect(override.session).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
+    expect(override.session).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      context: {
+        correlationId: "corr-x",
+        actor: null,
+        timestamp: expect.any(Date),
+      },
+    });
   });
 
   test("should return ctx.iris when no override and ctx.iris exists", () => {

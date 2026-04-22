@@ -30,7 +30,11 @@ describe("createDependenciesMiddleware", () => {
     expect(proteus.session).toHaveBeenCalledTimes(1);
     expect(proteus.session).toHaveBeenCalledWith({
       logger: ctx.logger,
-      context: ctx,
+      context: {
+        correlationId: "unknown",
+        actor: null,
+        timestamp: expect.any(Date),
+      },
       signal: undefined,
     });
   });
@@ -54,7 +58,11 @@ describe("createDependenciesMiddleware", () => {
     expect(session).toBeDefined();
     expect(proteus.session).toHaveBeenCalledWith({
       logger: httpCtx.logger,
-      context: httpCtx,
+      context: {
+        correlationId: "unknown",
+        actor: null,
+        timestamp: expect.any(Date),
+      },
       signal: controller.signal,
     });
   });
@@ -76,7 +84,11 @@ describe("createDependenciesMiddleware", () => {
     expect(session).toBeDefined();
     expect(proteus.session).toHaveBeenCalledWith({
       logger: socketCtx.logger,
-      context: socketCtx,
+      context: {
+        correlationId: "unknown",
+        actor: null,
+        timestamp: expect.any(Date),
+      },
       signal: undefined,
     });
   });
@@ -94,7 +106,14 @@ describe("createDependenciesMiddleware", () => {
 
     expect(session).toBeDefined();
     expect(iris.session).toHaveBeenCalledTimes(1);
-    expect(iris.session).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
+    expect(iris.session).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      context: {
+        correlationId: "unknown",
+        actor: null,
+        timestamp: expect.any(Date),
+      },
+    });
   });
 
   test("should lazily create hermes session on first access", async () => {
@@ -111,6 +130,55 @@ describe("createDependenciesMiddleware", () => {
     expect(session).toBeDefined();
     expect(hermes.session).toHaveBeenCalledTimes(1);
     expect(hermes.session).toHaveBeenCalledWith({ logger: ctx.logger });
+  });
+
+  test("should resolve actor from auditConfig and forward it in hook meta", async () => {
+    const proteus = createMockProteusSource();
+    const iris = createMockIrisSource();
+    const actor = vi.fn().mockReturnValue("alice@test.com");
+
+    const ctxWithState: any = {
+      logger: createMockLogger(),
+      state: {
+        metadata: {
+          correlationId: "corr-abc",
+          date: new Date("2025-01-01T00:00:00Z"),
+        },
+      },
+    };
+
+    const middleware = createDependenciesMiddleware({
+      proteus: proteus as any,
+      iris: iris as any,
+      auditConfig: {
+        iris: iris as any,
+        actor,
+      },
+    });
+
+    await middleware(ctxWithState, vi.fn());
+
+    expect(actor).toHaveBeenCalledWith(ctxWithState);
+
+    // Trigger both sessions
+    ctxWithState.proteus;
+    ctxWithState.iris;
+
+    const expectedContext = {
+      correlationId: "corr-abc",
+      actor: "alice@test.com",
+      timestamp: new Date("2025-01-01T00:00:00Z"),
+    };
+
+    expect(proteus.session).toHaveBeenCalledWith({
+      logger: ctxWithState.logger,
+      context: expectedContext,
+      signal: undefined,
+    });
+    expect(iris.session).toHaveBeenCalledWith({
+      logger: ctxWithState.logger,
+      context: expectedContext,
+    });
   });
 
   test("should handle no sources configured", async () => {
