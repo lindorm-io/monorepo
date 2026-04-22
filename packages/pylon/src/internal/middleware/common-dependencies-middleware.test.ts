@@ -28,7 +28,57 @@ describe("createDependenciesMiddleware", () => {
 
     expect(session).toBeDefined();
     expect(proteus.session).toHaveBeenCalledTimes(1);
-    expect(proteus.session).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
+    expect(proteus.session).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      context: ctx,
+      signal: undefined,
+    });
+  });
+
+  test("should forward ctx.signal to proteus.session when context is HTTP", async () => {
+    const proteus = createMockProteusSource();
+    const controller = new AbortController();
+
+    const httpCtx: any = {
+      logger: createMockLogger(),
+      request: {},
+      signal: controller.signal,
+    };
+
+    const middleware = createDependenciesMiddleware({ proteus: proteus as any });
+
+    await middleware(httpCtx, vi.fn());
+
+    const session = httpCtx.proteus;
+
+    expect(session).toBeDefined();
+    expect(proteus.session).toHaveBeenCalledWith({
+      logger: httpCtx.logger,
+      context: httpCtx,
+      signal: controller.signal,
+    });
+  });
+
+  test("should pass signal: undefined to proteus.session for socket (non-HTTP) context", async () => {
+    const proteus = createMockProteusSource();
+
+    const socketCtx: any = {
+      logger: createMockLogger(),
+      event: "test:event",
+    };
+
+    const middleware = createDependenciesMiddleware({ proteus: proteus as any });
+
+    await middleware(socketCtx, vi.fn());
+
+    const session = socketCtx.proteus;
+
+    expect(session).toBeDefined();
+    expect(proteus.session).toHaveBeenCalledWith({
+      logger: socketCtx.logger,
+      context: socketCtx,
+      signal: undefined,
+    });
   });
 
   test("should lazily create iris session on first access", async () => {

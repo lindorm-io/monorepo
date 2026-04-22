@@ -58,7 +58,11 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
 
       if (options.proteus) {
         lazyFactory(ctx, "proteus", () =>
-          options.proteus!.session({ logger: ctx.logger, context: ctx }),
+          options.proteus!.session({
+            logger: ctx.logger,
+            context: ctx,
+            signal: isHttpContext(ctx) ? (ctx as PylonHttpContext).signal : undefined,
+          }),
         );
       }
 
