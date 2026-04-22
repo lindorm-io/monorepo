@@ -214,6 +214,9 @@ export class PostgresDriver implements IProteusDriver {
         throw toAbortError(sessionSignal.reason);
       }
       const poolClient = await pool.connect();
+      const disposeListener = sessionSignal
+        ? this.attachPoolClientAbortListener(poolClient, sessionSignal)
+        : null;
       const txClient = this.createPgClient(poolClient, sessionSignal);
       try {
         await txClient.query("BEGIN");
@@ -254,6 +257,7 @@ export class PostgresDriver implements IProteusDriver {
         }
         throw error;
       } finally {
+        disposeListener?.();
         poolClient.release();
       }
     };
@@ -266,22 +270,13 @@ export class PostgresDriver implements IProteusDriver {
         throw toAbortError(sessionSignal.reason);
       }
       const poolClient = await pool.connect();
-      // processID is set on PoolClient after handshake but is not declared
-      // on the @types/pg PoolClient interface. See pg/lib/client.js:341.
-      const pid = (poolClient as unknown as { processID: number | null }).processID;
-      let onAbort: (() => void) | null = null;
-      if (sessionSignal) {
-        onAbort = (): void => {
-          if (pid != null) void this.issueCancel(pid);
-        };
-        sessionSignal.addEventListener("abort", onAbort, { once: true });
-      }
+      const disposeListener = sessionSignal
+        ? this.attachPoolClientAbortListener(poolClient, sessionSignal)
+        : null;
       return {
         client: poolClient,
         release: () => {
-          if (sessionSignal && onAbort) {
-            sessionSignal.removeEventListener("abort", onAbort);
-          }
+          disposeListener?.();
           poolClient.release();
         },
       };
@@ -438,13 +433,17 @@ export class PostgresDriver implements IProteusDriver {
     options?: TransactionOptions,
   ): Promise<TransactionHandle> {
     const pool = this.getPool();
-    if (this.signal?.aborted) {
-      throw toAbortError(this.signal.reason);
+    const signal = this.signal;
+    if (signal?.aborted) {
+      throw toAbortError(signal.reason);
     }
     return beginTransaction(
       pool,
-      (pc) => this.createPgClient(pc, this.signal),
+      (pc) => this.createPgClient(pc, signal),
       options?.isolation,
+      signal
+        ? { onAcquired: (pc) => this.attachPoolClientAbortListener(pc, signal) }
+        : undefined,
     );
   }
 
@@ -482,6 +481,11 @@ export class PostgresDriver implements IProteusDriver {
         pool,
         (pc) => this.createPgClient(pc, effectiveSignal),
         options?.isolation,
+        effectiveSignal
+          ? {
+              onAcquired: (pc) => this.attachPoolClientAbortListener(pc, effectiveSignal),
+            }
+          : undefined,
       );
 
       const repoFactory: RepositoryFactory = <C extends IEntity>(
@@ -605,30 +609,42 @@ export class PostgresDriver implements IProteusDriver {
       return this.wrapWithQueryClient((sql, params) => poolClient.query(sql, params));
     }
 
+    // Signal-aware: rewrap server-side cancel rejections (57014) as
+    // AbortError, but never pre-emptively reject queries. The abort listener
+    // that actually issues pg_cancel_backend is owned by the caller
+    // (withImplicitTransaction / withTransaction / beginTransaction) so it
+    // is tied to the PoolClient's lifetime, not the query's. This lets
+    // ROLLBACK still run on the same client after a cancel.
     return this.wrapWithQueryClient(async (sql, params) => {
-      if (signal.aborted) {
-        throw toAbortError(signal.reason);
-      }
-
-      // processID is set on PoolClient after handshake but is not declared
-      // on the @types/pg PoolClient interface. See pg/lib/client.js:341.
-      const pid = (poolClient as unknown as { processID: number | null }).processID;
-      const onAbort = (): void => {
-        if (pid != null) void this.issueCancel(pid);
-      };
-      signal.addEventListener("abort", onAbort, { once: true });
-
       try {
         return await poolClient.query(sql, params);
       } catch (err) {
-        if (isPgQueryCancelledError(err) || signal.aborted) {
+        if (isPgQueryCancelledError(err)) {
           throw toAbortError(signal.reason, err);
         }
         throw err;
-      } finally {
-        signal.removeEventListener("abort", onAbort);
       }
     });
+  }
+
+  /**
+   * Attach an abort listener to a PoolClient so an abort on `signal` triggers
+   * `pg_cancel_backend(processID)` once. Returns a `dispose` function that
+   * removes the listener — call it when the PoolClient is released back to
+   * the pool.
+   */
+  private attachPoolClientAbortListener(
+    poolClient: PoolClient,
+    signal: AbortSignal,
+  ): () => void {
+    // processID is set on PoolClient after handshake but is not declared
+    // on the @types/pg PoolClient interface. See pg/lib/client.js:341.
+    const pid = (poolClient as unknown as { processID: number | null }).processID;
+    const onAbort = (): void => {
+      if (pid != null) void this.issueCancel(pid);
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    return () => signal.removeEventListener("abort", onAbort);
   }
 
   private createPgClientFromPool(pool: Pool): PostgresQueryClient {
