@@ -810,7 +810,7 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/postgres/source.js";
 import { source as rateLimitSource } from "../proteus/redis/source.js";
-import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
+import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
 import { source as irisSource } from "../iris/source.js";
 
 export const pylon = new Pylon({
@@ -821,11 +821,11 @@ export const pylon = new Pylon({
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [attachSourcesMiddleware],
+  httpMiddleware: [...attachSourcesMiddlewares],
   socket: {
     enabled: true,
     listeners: join(import.meta.dirname, "..", "listeners"),
-    middleware: [attachSourcesMiddleware],
+    middleware: [...attachSourcesMiddlewares],
   },
   rooms: { presence: true },
   proteus: proteusSource,
@@ -1013,26 +1013,24 @@ export const pylon = new Pylon({
 `;
 
 exports[`scaffold > scaffold orchestration > multi-driver ctx extension > emits ExtraSources type and attach-sources middleware when 2+ drivers > attach-sources.ts 1`] = `
-"import { lazyFactory } from "@lindorm/utils";
+"import { createAttachProteusSourceMiddleware } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../types/context.js";
 import { source as redisSource } from "../proteus/redis/source.js";
 import { source as memorySource } from "../proteus/memory/source.js";
 
 /**
- * Pylon middleware that mounts the non-primary Proteus sources on the
- * request context as \`ctx.<driver>\`. Use via pylon options:
+ * Pylon middleware instances that mount the non-primary Proteus sources on
+ * the request context as \`ctx.<driver>\`. Each entry is produced by the
+ * public \`createAttachProteusSourceMiddleware\` factory from \`@lindorm/pylon\`.
  *
- *     new Pylon({ httpMiddleware: [attachSourcesMiddleware] })
+ * Use via pylon options:
+ *
+ *     new Pylon({ httpMiddleware: [...attachSourcesMiddlewares] })
  */
-export const attachSourcesMiddleware: ServerHttpMiddleware = async (ctx, next) => {
-  lazyFactory(ctx, "redis", () =>
-    redisSource.session({ logger: ctx.logger, context: ctx }),
-  );
-  lazyFactory(ctx, "memory", () =>
-    memorySource.session({ logger: ctx.logger, context: ctx }),
-  );
-  await next();
-};
+export const attachSourcesMiddlewares: Array<ServerHttpMiddleware> = [
+  createAttachProteusSourceMiddleware({ key: "redis", source: redisSource }),
+  createAttachProteusSourceMiddleware({ key: "memory", source: memorySource }),
+];
 "
 `;
 
@@ -1080,7 +1078,7 @@ import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/postgres/source.js";
-import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
+import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
 
 export const pylon = new Pylon({
   logger,
@@ -1090,11 +1088,11 @@ export const pylon = new Pylon({
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [attachSourcesMiddleware],
+  httpMiddleware: [...attachSourcesMiddlewares],
   socket: {
     enabled: true,
     listeners: join(import.meta.dirname, "..", "listeners"),
-    middleware: [attachSourcesMiddleware],
+    middleware: [...attachSourcesMiddlewares],
   },
   rooms: { presence: true },
   proteus: proteusSource,
@@ -1117,7 +1115,7 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/postgres/source.js";
 import { source as rateLimitSource } from "../proteus/redis/source.js";
-import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
+import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
 
 export const pylon = new Pylon({
   logger,
@@ -1127,7 +1125,7 @@ export const pylon = new Pylon({
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [attachSourcesMiddleware],
+  httpMiddleware: [...attachSourcesMiddlewares],
   proteus: proteusSource,
   kryptos: { enabled: true },
   rateLimit: {
@@ -2148,7 +2146,7 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/postgres/source.js";
 import { source as rateLimitSource } from "../proteus/redis/source.js";
-import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
+import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2158,7 +2156,7 @@ export const pylon = new Pylon({
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [attachSourcesMiddleware],
+  httpMiddleware: [...attachSourcesMiddlewares],
   proteus: proteusSource,
   kryptos: { enabled: true },
   rateLimit: {
@@ -2188,7 +2186,7 @@ import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/postgres/source.js";
 import { source as rateLimitSource } from "../proteus/redis/source.js";
-import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
+import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2198,7 +2196,7 @@ export const pylon = new Pylon({
   environment: config.node.env,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [attachSourcesMiddleware],
+  httpMiddleware: [...attachSourcesMiddlewares],
   proteus: proteusSource,
   kryptos: { enabled: true },
   session: {

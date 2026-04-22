@@ -10,10 +10,10 @@ const pickPrimary = (drivers: ReadonlyArray<ProteusDriver>): ProteusDriver | nul
 
 /**
  * Returns the generated content for `src/middleware/attach-sources.ts` when
- * multiple Proteus drivers are scaffolded. The middleware lazily attaches
- * each non-primary source to `ctx.<driver>` via `@lindorm/utils#lazyFactory`,
- * matching the pattern pylon's internal dependencies middleware uses for the
- * primary `ctx.proteus` binding.
+ * multiple Proteus drivers are scaffolded. Each non-primary source is wired
+ * via the public `createAttachProteusSourceMiddleware` from `@lindorm/pylon`,
+ * which lazily attaches `ctx.<driver>` with per-request logger, hook metadata
+ * and signal (HTTP only).
  *
  * Returns `null` when only 0-1 drivers are selected (no middleware needed).
  */
@@ -26,7 +26,7 @@ export const buildAttachSourcesFile = (answers: Answers): string | null => {
   if (extras.length === 0) return null;
 
   const lines: Array<string> = [
-    `import { lazyFactory } from "@lindorm/utils";`,
+    `import { createAttachProteusSourceMiddleware } from "@lindorm/pylon";`,
     `import type { ServerHttpMiddleware } from "../types/context.js";`,
   ];
 
@@ -39,23 +39,24 @@ export const buildAttachSourcesFile = (answers: Answers): string | null => {
   lines.push(
     ``,
     `/**`,
-    ` * Pylon middleware that mounts the non-primary Proteus sources on the`,
-    ` * request context as \`ctx.<driver>\`. Use via pylon options:`,
+    ` * Pylon middleware instances that mount the non-primary Proteus sources on`,
+    ` * the request context as \`ctx.<driver>\`. Each entry is produced by the`,
+    ` * public \`createAttachProteusSourceMiddleware\` factory from \`@lindorm/pylon\`.`,
     ` *`,
-    ` *     new Pylon({ httpMiddleware: [attachSourcesMiddleware] })`,
+    ` * Use via pylon options:`,
+    ` *`,
+    ` *     new Pylon({ httpMiddleware: [...attachSourcesMiddlewares] })`,
     ` */`,
-    `export const attachSourcesMiddleware: ServerHttpMiddleware = async (ctx, next) => {`,
+    `export const attachSourcesMiddlewares: Array<ServerHttpMiddleware> = [`,
   );
 
   for (const driver of extras) {
     lines.push(
-      `  lazyFactory(ctx, "${driver}", () =>`,
-      `    ${driver}Source.session({ logger: ctx.logger, context: ctx }),`,
-      `  );`,
+      `  createAttachProteusSourceMiddleware({ key: "${driver}", source: ${driver}Source }),`,
     );
   }
 
-  lines.push(`  await next();`, `};`, ``);
+  lines.push(`];`, ``);
 
   return lines.join("\n");
 };
