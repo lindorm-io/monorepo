@@ -13,6 +13,9 @@
   },
   "type": "module",
   "typings": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "example": "tsx example/index.ts",
@@ -28,11 +31,11 @@
   },
   "dependencies": {
     "@lindorm/errors": "^0.1.18",
-    "@lindorm/is": "^0.1.16"
+    "@lindorm/is": "^0.1.16",
+    "tsx": "^4.21.0"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.5.4",
-    "tsx": "^4.21.0"
+    "@lindorm/logger": "^0.5.4"
   },
   "exports": {
     ".": {
