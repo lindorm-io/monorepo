@@ -18,8 +18,6 @@ describe("configuration", () => {
       FOUR_ARRAY: "[1,2,3]",
       SEVEN_BOOLEAN: "true",
       SEVEN_NOPE: "false",
-      npm_package_name: "@lindorm/config",
-      npm_package_version: "0.0.0",
     };
   });
 
@@ -28,32 +26,35 @@ describe("configuration", () => {
   });
 
   test("should parse, validate, and merge configuration", () => {
-    const config = configuration({
-      env: z.string(),
-      oneParent: z.object({
-        withNumber: z.number(),
-        withString: z.string(),
-        withNoReplacement: z.string(),
-      }),
-      twoParent: z.object({
-        withObject: z.object({
+    const config = configuration(
+      {
+        env: z.string(),
+        oneParent: z.object({
+          withNumber: z.number(),
           withString: z.string(),
           withNoReplacement: z.string(),
         }),
-      }),
-      twoArray: z.array(z.string()),
-      threeArray: z.array(z.string()),
-      fourArray: z.array(z.number()),
-      fiveArray: z.array(z.string()),
-      sixNumberString: z.number(),
-      seven: z.object({
-        boolean: z.boolean(),
-        nope: z.boolean(),
-      }),
-      withDotEnvReplacement: z.string().optional(),
-    });
+        twoParent: z.object({
+          withObject: z.object({
+            withString: z.string(),
+            withNoReplacement: z.string(),
+          }),
+        }),
+        twoArray: z.array(z.string()),
+        threeArray: z.array(z.string()),
+        fourArray: z.array(z.number()),
+        fiveArray: z.array(z.string()),
+        sixNumberString: z.number(),
+        seven: z.object({
+          boolean: z.boolean(),
+          nope: z.boolean(),
+        }),
+        withDotEnvReplacement: z.string().optional(),
+      },
+      { scope: import.meta.url },
+    );
 
-    expect(config).toEqual({
+    expect(config).toMatchObject({
       env: "test",
       oneParent: {
         withNumber: 456,
@@ -76,7 +77,13 @@ describe("configuration", () => {
         nope: false,
       },
       withDotEnvReplacement: "two",
-      npm: { package: { name: "@lindorm/config", version: "0.0.0" } },
     });
+
+    // npm info is now read from the nearest package.json on disk — here
+    // the test runs inside @lindorm/config itself, so we know the name
+    // without hard-coding the (mutable) version.
+    expect(config.npm.package.name).toBe("@lindorm/config");
+    expect(typeof config.npm.package.version).toBe("string");
+    expect(config.npm.package.version.length).toBeGreaterThan(0);
   });
 });
