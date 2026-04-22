@@ -4,13 +4,14 @@ import { Session } from "../../entities/index.js";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type { IPylonSessionStore } from "../../interfaces/PylonSessionStore.js";
 import type { PylonCommonContext, PylonSessionOptions } from "../../types/index.js";
+import { buildHookMeta } from "./build-hook-meta.js";
 
 const getSource = (
   ctx: PylonCommonContext,
   override?: IProteusSource,
 ): IProteusSession | null => {
   if (override) {
-    return override.session({ logger: ctx.logger, context: ctx });
+    return override.session({ logger: ctx.logger, context: buildHookMeta(ctx, null) });
   }
   return ctx.proteus ?? null;
 };

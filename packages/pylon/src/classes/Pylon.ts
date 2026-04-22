@@ -335,7 +335,6 @@ export class Pylon<
           setupDataAuditListeners(
             proteus,
             iris,
-            this.options.audit.actor,
             this.options.audit.entities,
             this.logger,
           );

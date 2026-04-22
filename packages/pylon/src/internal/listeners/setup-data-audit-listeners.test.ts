@@ -19,7 +19,6 @@ describe("setupDataAuditListeners", () => {
 
   const proteus = { on: mockOn } as any;
   const iris = { workerQueue: mockWorkerQueue } as any;
-  const actor = vi.fn().mockReturnValue("user@test.com");
   const logger = {
     debug: vi.fn(),
     verbose: vi.fn(),
@@ -41,18 +40,16 @@ describe("setupDataAuditListeners", () => {
   };
 
   const baseContext = {
-    state: {
-      metadata: {
-        correlationId: "corr-123",
-      },
-    },
+    correlationId: "corr-123",
+    actor: "user@test.com",
+    timestamp: new Date("2025-01-01T00:00:00Z"),
   };
 
   beforeEach(() => {
     vi.clearAllMocks();
     Object.keys(listeners).forEach((k) => delete listeners[k]);
 
-    setupDataAuditListeners(proteus, iris, actor, [AuditedEntity as any], logger);
+    setupDataAuditListeners(proteus, iris, [AuditedEntity as any], logger);
   });
 
   test("should register listeners for all four event types", () => {
@@ -73,7 +70,6 @@ describe("setupDataAuditListeners", () => {
       connection: {},
     });
 
-    expect(actor).toHaveBeenCalledWith(baseContext);
     expect(mockCreate).toHaveBeenCalledWith({
       correlationId: "corr-123",
       actor: "user@test.com",
@@ -177,7 +173,9 @@ describe("setupDataAuditListeners", () => {
       entity: { id: "ent-4" },
       metadata: auditedMetadata,
       context: {
-        state: { metadata: { correlationId: "custom-corr-456" } },
+        correlationId: "custom-corr-456",
+        actor: "other@test.com",
+        timestamp: new Date(),
       },
       connection: {},
     });
@@ -197,7 +195,6 @@ describe("setupDataAuditListeners", () => {
       connection: {},
     });
 
-    expect(actor).not.toHaveBeenCalled();
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         actor: "unknown",
@@ -287,7 +284,7 @@ describe("setupDataAuditListeners", () => {
 
     // Re-setup with the failing workerQueue
     Object.keys(listeners).forEach((k) => delete listeners[k]);
-    setupDataAuditListeners(proteus, iris, actor, [AuditedEntity as any], logger);
+    setupDataAuditListeners(proteus, iris, [AuditedEntity as any], logger);
 
     listeners["entity:after-insert"]({
       entity: { id: "ent-8" },

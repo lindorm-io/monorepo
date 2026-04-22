@@ -1,13 +1,14 @@
 import { ServerError } from "@lindorm/errors";
 import type { IIrisSession, IIrisSource } from "@lindorm/iris";
 import type { PylonCommonContext } from "../../types/index.js";
+import { buildHookMeta } from "./build-hook-meta.js";
 
 export const resolveIris = (
   ctx: PylonCommonContext,
   override?: IIrisSource,
 ): IIrisSession => {
   if (override) {
-    return override.session({ logger: ctx.logger, context: ctx });
+    return override.session({ logger: ctx.logger, context: buildHookMeta(ctx, null) });
   }
   if (ctx.iris) {
     return ctx.iris;

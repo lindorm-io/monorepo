@@ -16,6 +16,7 @@ import {
   createSocketClaimsClient,
 } from "../utils/auth/create-auth-client.js";
 import { createUnconfiguredAuthClient } from "../utils/auth/create-unconfigured-auth-client.js";
+import { buildHookMeta } from "../utils/build-hook-meta.js";
 import { isHttpContext } from "../utils/is-context.js";
 import {
   createHttpRoomContext,
@@ -52,6 +53,14 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
     const timer = ctx.logger.time();
 
     try {
+      // Resolve actor once per request from the audit config (when enabled).
+      // Downstream hooks receive this via ProteusHookMeta/IrisHookMeta instead
+      // of spelunking into Koa ctx per event.
+      const actor: string | null = options.auditConfig
+        ? (options.auditConfig.actor(ctx) ?? null)
+        : null;
+      const hookMeta = buildHookMeta(ctx, actor);
+
       if (options.hermes) {
         lazyFactory(ctx, "hermes", () => options.hermes!.session({ logger: ctx.logger }));
       }
@@ -60,7 +69,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         lazyFactory(ctx, "proteus", () =>
           options.proteus!.session({
             logger: ctx.logger,
-            context: ctx,
+            context: hookMeta,
             signal: isHttpContext(ctx) ? (ctx as PylonHttpContext).signal : undefined,
           }),
         );
@@ -68,7 +77,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
 
       if (options.iris) {
         lazyFactory(ctx, "iris", () =>
-          options.iris!.session({ logger: ctx.logger, context: ctx }),
+          options.iris!.session({ logger: ctx.logger, context: hookMeta }),
         );
       }
 
