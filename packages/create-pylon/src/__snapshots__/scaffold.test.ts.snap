@@ -110,9 +110,38 @@ coverage/
   "config/default.yml": "server:
   port: 3000
 ",
-  "src/handlers/create-webhook-handler.ts": "import { WebhookAuth, WebhookMethod, WebhookSubscription } from "@lindorm/pylon";
+  "src/features/example/example-handler.ts": "import { z } from "zod";
+import type { ServerHandler } from "../../types/context.js";
+
+export const exampleSchema = z.object({
+  name: z.string().optional(),
+});
+
+export const exampleHandler: ServerHandler<typeof exampleSchema> = async (ctx) => {
+  const name = ctx.data.name ?? "world";
+  return { body: { message: \`Hello, \${name}!\` } };
+};
+",
+  "src/features/ping/ping-handler.ts": "import { z } from "zod";
+import type { ServerSocketHandler } from "../../types/context.js";
+
+export const pingSchema = z.object({
+  message: z.string().optional(),
+});
+
+export const pingHandler: ServerSocketHandler<typeof pingSchema> = async (ctx) => {
+  ctx.logger.info("Received ping", { data: ctx.data });
+
+  ctx.ack?.({
+    pong: true,
+    message: ctx.data.message,
+    receivedAt: new Date().toISOString(),
+  });
+};
+",
+  "src/features/webhooks/create-webhook-handler.ts": "import { WebhookAuth, WebhookMethod, WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
-import type { ServerHandler } from "../types/context.js";
+import type { ServerHandler } from "../../types/context.js";
 
 export const createWebhookSchema = z.object({
   auth: z.nativeEnum(WebhookAuth),
@@ -150,10 +179,10 @@ export const createWebhookHandler: ServerHandler<typeof createWebhookSchema> = a
   return { body: subscription, status: 201 };
 };
 ",
-  "src/handlers/delete-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+  "src/features/webhooks/delete-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
 import { WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
-import type { ServerHandler } from "../types/context.js";
+import type { ServerHandler } from "../../types/context.js";
 
 export const deleteWebhookSchema = z.object({
   id: z.string(),
@@ -176,22 +205,10 @@ export const deleteWebhookHandler: ServerHandler<typeof deleteWebhookSchema> = a
   return { status: 204 };
 };
 ",
-  "src/handlers/example-handler.ts": "import { z } from "zod";
-import type { ServerHandler } from "../types/context.js";
-
-export const exampleSchema = z.object({
-  name: z.string().optional(),
-});
-
-export const exampleHandler: ServerHandler<typeof exampleSchema> = async (ctx) => {
-  const name = ctx.data.name ?? "world";
-  return { body: { message: \`Hello, \${name}!\` } };
-};
-",
-  "src/handlers/get-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+  "src/features/webhooks/get-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
 import { WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
-import type { ServerHandler } from "../types/context.js";
+import type { ServerHandler } from "../../types/context.js";
 
 export const getWebhookSchema = z.object({
   id: z.string(),
@@ -210,9 +227,9 @@ export const getWebhookHandler: ServerHandler<typeof getWebhookSchema> = async (
   return { body: subscription };
 };
 ",
-  "src/handlers/list-webhooks-handler.ts": "import { WebhookSubscription } from "@lindorm/pylon";
+  "src/features/webhooks/list-webhooks-handler.ts": "import { WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
-import type { ServerHandler } from "../types/context.js";
+import type { ServerHandler } from "../../types/context.js";
 
 export const listWebhooksSchema = z.object({
   ownerId: z.string(),
@@ -236,27 +253,10 @@ export const listWebhooksHandler: ServerHandler<typeof listWebhooksSchema> = asy
   return { body: subscriptions };
 };
 ",
-  "src/handlers/ping-handler.ts": "import { z } from "zod";
-import type { ServerSocketHandler } from "../types/context.js";
-
-export const pingSchema = z.object({
-  message: z.string().optional(),
-});
-
-export const pingHandler: ServerSocketHandler<typeof pingSchema> = async (ctx) => {
-  ctx.logger.info("Received ping", { data: ctx.data });
-
-  ctx.ack?.({
-    pong: true,
-    message: ctx.data.message,
-    receivedAt: new Date().toISOString(),
-  });
-};
-",
-  "src/handlers/update-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+  "src/features/webhooks/update-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
 import { WebhookMethod, WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
-import type { ServerHandler } from "../types/context.js";
+import type { ServerHandler } from "../../types/context.js";
 
 export const updateWebhookSchema = z.object({
   id: z.string(),
@@ -319,7 +319,7 @@ export const MIDDLEWARE = [socketExampleMiddleware];
 ",
   "src/listeners/ping.ts": "import { useSchema } from "@lindorm/pylon";
 import type { ServerSocketMiddleware } from "../types/context.js";
-import { pingHandler, pingSchema } from "../handlers/ping-handler.js";
+import { pingHandler, pingSchema } from "../features/ping/ping-handler.js";
 
 export const ON: Array<ServerSocketMiddleware> = [useSchema(pingSchema), pingHandler];
 ",
@@ -367,7 +367,7 @@ export const MIDDLEWARE = [httpExampleMiddleware];
 ",
   "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../../types/context.js";
-import { exampleHandler, exampleSchema } from "../../handlers/example-handler.js";
+import { exampleHandler, exampleSchema } from "../../features/example/example-handler.js";
 
 export const GET: Array<ServerHttpMiddleware> = [
   useSchema(exampleSchema),
@@ -380,15 +380,15 @@ import type { ServerHttpMiddleware } from "../../types/context.js";
 import {
   deleteWebhookHandler,
   deleteWebhookSchema,
-} from "../../handlers/delete-webhook-handler.js";
+} from "../../features/webhooks/delete-webhook-handler.js";
 import {
   getWebhookHandler,
   getWebhookSchema,
-} from "../../handlers/get-webhook-handler.js";
+} from "../../features/webhooks/get-webhook-handler.js";
 import {
   updateWebhookHandler,
   updateWebhookSchema,
-} from "../../handlers/update-webhook-handler.js";
+} from "../../features/webhooks/update-webhook-handler.js";
 
 export const GET: Array<ServerHttpMiddleware> = [
   useSchema(getWebhookSchema),
@@ -411,11 +411,11 @@ import type { ServerHttpMiddleware } from "../../types/context.js";
 import {
   createWebhookHandler,
   createWebhookSchema,
-} from "../../handlers/create-webhook-handler.js";
+} from "../../features/webhooks/create-webhook-handler.js";
 import {
   listWebhooksHandler,
   listWebhooksSchema,
-} from "../../handlers/list-webhooks-handler.js";
+} from "../../features/webhooks/list-webhooks-handler.js";
 
 export const POST: Array<ServerHttpMiddleware> = [
   useSchema(createWebhookSchema),
@@ -504,8 +504,8 @@ coverage/
   "config/default.yml": "server:
   port: 3000
 ",
-  "src/handlers/example-handler.ts": "import { z } from "zod";
-import type { ServerHandler } from "../types/context.js";
+  "src/features/example/example-handler.ts": "import { z } from "zod";
+import type { ServerHandler } from "../../types/context.js";
 
 export const exampleSchema = z.object({
   name: z.string().optional(),
@@ -549,7 +549,7 @@ export const MIDDLEWARE = [httpExampleMiddleware];
 ",
   "src/routes/v1/example.ts": "import { useHandler, useSchema } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../../types/context.js";
-import { exampleHandler, exampleSchema } from "../../handlers/example-handler.js";
+import { exampleHandler, exampleSchema } from "../../features/example/example-handler.js";
 
 export const GET: Array<ServerHttpMiddleware> = [
   useSchema(exampleSchema),
@@ -810,13 +810,13 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit +
   "config/default.yml",
   "docker-compose.yml",
   "package.json",
-  "src/handlers/create-webhook-handler.ts",
-  "src/handlers/delete-webhook-handler.ts",
-  "src/handlers/example-handler.ts",
-  "src/handlers/get-webhook-handler.ts",
-  "src/handlers/list-webhooks-handler.ts",
-  "src/handlers/ping-handler.ts",
-  "src/handlers/update-webhook-handler.ts",
+  "src/features/example/example-handler.ts",
+  "src/features/ping/ping-handler.ts",
+  "src/features/webhooks/create-webhook-handler.ts",
+  "src/features/webhooks/delete-webhook-handler.ts",
+  "src/features/webhooks/get-webhook-handler.ts",
+  "src/features/webhooks/list-webhooks-handler.ts",
+  "src/features/webhooks/update-webhook-handler.ts",
   "src/index.ts",
   "src/iris/publishers/sample-publisher.ts",
   "src/iris/subscribers/sample-subscriber.ts",
@@ -1053,13 +1053,13 @@ exports[`scaffold > scaffold orchestration > runs all write functions in sequenc
   "config/default.yml",
   "docker-compose.yml",
   "package.json",
-  "src/handlers/create-webhook-handler.ts",
-  "src/handlers/delete-webhook-handler.ts",
-  "src/handlers/example-handler.ts",
-  "src/handlers/get-webhook-handler.ts",
-  "src/handlers/list-webhooks-handler.ts",
-  "src/handlers/ping-handler.ts",
-  "src/handlers/update-webhook-handler.ts",
+  "src/features/example/example-handler.ts",
+  "src/features/ping/ping-handler.ts",
+  "src/features/webhooks/create-webhook-handler.ts",
+  "src/features/webhooks/delete-webhook-handler.ts",
+  "src/features/webhooks/get-webhook-handler.ts",
+  "src/features/webhooks/list-webhooks-handler.ts",
+  "src/features/webhooks/update-webhook-handler.ts",
   "src/index.ts",
   "src/iris/publishers/sample-publisher.ts",
   "src/iris/subscribers/sample-subscriber.ts",
@@ -1093,7 +1093,7 @@ exports[`scaffold > scaffold orchestration > session-only combo 1`] = `
   ".gitignore",
   "config/default.yml",
   "package.json",
-  "src/handlers/example-handler.ts",
+  "src/features/example/example-handler.ts",
   "src/index.ts",
   "src/logger/index.ts",
   "src/middleware/http-example.ts",
