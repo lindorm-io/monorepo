@@ -42,6 +42,11 @@ export const buildConfigFile = (answers: Answers): string => {
     `  nodeEnv: z.string().default("development"),`,
     `  pylon: z.object({ kek: z.string() }),`,
     `  server: z.object({ port: z.number() }),`,
+    `  logger: z.object({`,
+    `    level: z`,
+    `      .enum(["error", "warn", "info", "verbose", "debug", "silly"])`,
+    `      .default("info"),`,
+    `  }),`,
   ];
 
   const emitted = new Set<string>();
