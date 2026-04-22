@@ -1,7 +1,7 @@
 import { isHttpContext } from "../../internal/utils/is-context.js";
 import { ClientError, ServerError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
-import { get, set } from "object-path";
+import objectPath from "object-path";
 import { ZodObject, type ZodRawShape } from "zod";
 import type { PylonHttpContext, PylonMiddleware } from "../../types/index.js";
 
@@ -30,10 +30,12 @@ export const useSchema = <T extends ZodRawShape>(
 
     try {
       const input =
-        path === "headers" && isHttpContext(ctx) ? destructHeaders(ctx) : get(ctx, path);
+        path === "headers" && isHttpContext(ctx)
+          ? destructHeaders(ctx)
+          : objectPath.get(ctx, path);
       const output = schema.loose().parse(input);
 
-      set(ctx, path, output);
+      objectPath.set(ctx, path, output);
     } catch (error: any) {
       throw new ClientError(error.message, {
         error,
