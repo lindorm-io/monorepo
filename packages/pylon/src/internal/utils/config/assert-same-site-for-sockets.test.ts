@@ -31,7 +31,7 @@ describe("assertSameSiteForSockets", () => {
   test("should throw with descriptive error when SameSite is none", () => {
     try {
       assertSameSiteForSockets({ ...base, sameSite: "none" });
-      fail("expected to throw");
+      expect.fail("expected to throw");
     } catch (err: any) {
       expect(err).toMatchSnapshot({
         id: expect.any(String),

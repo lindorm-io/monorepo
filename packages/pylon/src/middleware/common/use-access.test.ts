@@ -186,7 +186,7 @@ describe("useAccess", () => {
           levelOfAssurance: 4,
           adjustedAccessLevel: 3,
         })(ctx, vi.fn());
-        fail("Expected error to be thrown");
+        expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err).toBeInstanceOf(ClientError);
         expect(err.status).toBe(403);

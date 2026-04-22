@@ -118,7 +118,7 @@ describe("useTenant", () => {
 
       try {
         await useTenant("params.tenantId")(ctx, next);
-        fail("expected error");
+        expect.fail("expected error");
       } catch (err: any) {
         expect(err.details).toContain("params.tenantId");
       }

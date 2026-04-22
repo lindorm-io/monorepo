@@ -18,7 +18,7 @@ describe("assertAllowedOrigin", () => {
   test("should throw Forbidden when origin is not allowed", () => {
     try {
       assertAllowedOrigin("https://evil.example.com", ["https://app.example.com"]);
-      fail("should have thrown");
+      expect.fail("should have thrown");
     } catch (err: any) {
       expect(err).toBeInstanceOf(ClientError);
       expect(err.status).toBe(ClientError.Status.Forbidden);
