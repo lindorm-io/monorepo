@@ -52,6 +52,10 @@ export class SqliteTransactionContext implements ITransactionContext {
     );
   }
 
+  public async client<T>(): Promise<T> {
+    return this.handle.client as unknown as T;
+  }
+
   public async transaction<T>(
     fn: (ctx: SqliteTransactionContext) => Promise<T>,
   ): Promise<T> {

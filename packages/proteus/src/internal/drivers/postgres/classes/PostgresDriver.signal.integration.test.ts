@@ -211,6 +211,52 @@ describe("PostgresDriver cancellation (integration)", () => {
     expect(attempts).toBe(1);
   });
 
+  // ─── tx.client<...>() escape hatch ──────────────────────────────────────────
+
+  test("tx.client<PostgresQueryClient>() runs a raw query inside an active tx", async () => {
+    const session = driver.cloneWithGetters(
+      () => new Map(),
+      async () => {},
+    );
+
+    const result = await session.withTransaction(async (ctx) => {
+      const client = await ctx.client<{
+        query: (sql: string) => Promise<{ rows: Array<{ n: number }> }>;
+      }>();
+      const { rows } = await client.query("SELECT 1 AS n");
+      return rows[0].n;
+    });
+
+    expect(result).toBe(1);
+  });
+
+  test("raw query via tx.client<...>() aborts via pg_cancel_backend when signal fires", async () => {
+    const controller = new AbortController();
+    const session = driver.cloneWithGetters(
+      () => new Map(),
+      async () => {},
+      controller.signal,
+    );
+
+    const start = Date.now();
+    const pending = session
+      .withTransaction(async (ctx) => {
+        const client = await ctx.client<{
+          query: (sql: string) => Promise<unknown>;
+        }>();
+        await client.query("SELECT pg_sleep(5)");
+        return "never";
+      })
+      .catch((err: unknown) => err);
+
+    setTimeout(() => controller.abort({ kind: "client-disconnect" }), 100);
+    const err = await pending;
+    const elapsed = Date.now() - start;
+
+    expect(err).toBeInstanceOf(AbortError);
+    expect(elapsed).toBeLessThan(1500);
+  });
+
   // ─── Circuit breaker + abort storm ──────────────────────────────────────────
 
   test("10 aborts in a row do NOT open the circuit breaker", async () => {

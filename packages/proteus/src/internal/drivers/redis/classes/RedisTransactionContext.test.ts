@@ -21,6 +21,7 @@ const makeDriver = () => ({
   createTransactionalQueryBuilder: vi
     .fn()
     .mockReturnValue({} as IProteusQueryBuilder<any>),
+  acquireClient: vi.fn().mockResolvedValue({} as any),
 });
 
 class StubEntity {}
@@ -106,6 +107,22 @@ describe("RedisTransactionContext.queryBuilder", () => {
     const result = ctx.queryBuilder(StubEntity as any);
 
     expect(result).toBe(mockQb);
+  });
+});
+
+// ─── client() ─────────────────────────────────────────────────────────────────
+
+describe("RedisTransactionContext.client", () => {
+  test("delegates to driver.acquireClient and returns the result", async () => {
+    const fakeClient = { ping: vi.fn() };
+    const driver = makeDriver();
+    driver.acquireClient.mockResolvedValue(fakeClient);
+    const ctx = new RedisTransactionContext(makeHandle(), driver as any);
+
+    const result = await ctx.client<typeof fakeClient>();
+
+    expect(driver.acquireClient).toHaveBeenCalledTimes(1);
+    expect(result).toBe(fakeClient);
   });
 });
 

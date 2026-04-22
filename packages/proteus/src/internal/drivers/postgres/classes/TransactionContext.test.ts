@@ -42,6 +42,29 @@ describe("TransactionContext", () => {
     });
   });
 
+  describe("client", () => {
+    it("should return the transaction-scoped PostgresQueryClient from the handle", async () => {
+      const handle = makeHandle();
+      const ctx = new TransactionContext(handle);
+
+      const client = await ctx.client<typeof handle.client>();
+
+      expect(client).toBe(handle.client);
+    });
+
+    it("should return a client whose query() routes through the transaction's client", async () => {
+      const handle = makeHandle();
+      const ctx = new TransactionContext(handle);
+
+      const client = await ctx.client<typeof handle.client>();
+      const result = await client.query("SELECT 1");
+
+      expect(result.rows).toEqual([{ id: 1 }]);
+      const queries = (handle as any).__queries as Array<string>;
+      expect(queries).toContain("SELECT 1");
+    });
+  });
+
   describe("commit", () => {
     it("should issue COMMIT and release", async () => {
       const handle = makeHandle();

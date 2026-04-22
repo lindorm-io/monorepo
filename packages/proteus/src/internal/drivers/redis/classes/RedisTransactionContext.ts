@@ -45,6 +45,13 @@ export class RedisTransactionContext implements ITransactionContext {
     return this.driver.createTransactionalQueryBuilder(target, this.handle);
   }
 
+  public async client<T>(): Promise<T> {
+    // Redis has no transactional isolation — the "tx-scoped" client is the
+    // same ioredis instance the driver uses for non-transactional operations.
+    // Callers can construct MULTI/EXEC pipelines from it when needed.
+    return this.driver.acquireClient() as Promise<T>;
+  }
+
   public async transaction<T>(
     fn: (ctx: RedisTransactionContext) => Promise<T>,
   ): Promise<T> {

@@ -52,6 +52,10 @@ export class TransactionContext implements ITransactionContext {
     );
   }
 
+  public async client<T>(): Promise<T> {
+    return this.handle.client as unknown as T;
+  }
+
   public async transaction<T>(fn: (ctx: TransactionContext) => Promise<T>): Promise<T> {
     return withSavepoint(this.handle, () => fn(this));
   }

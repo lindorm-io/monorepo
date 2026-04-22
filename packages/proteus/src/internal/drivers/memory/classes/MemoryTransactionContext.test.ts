@@ -139,6 +139,25 @@ describe("MemoryTransactionContext.queryBuilder", () => {
   });
 });
 
+// ─── client() ─────────────────────────────────────────────────────────────────
+
+describe("MemoryTransactionContext.client", () => {
+  test("returns the transaction-scoped MemoryStore", async () => {
+    const driver = (source as any)._driver;
+    const handle = await driver.beginTransaction();
+
+    const { MemoryTransactionContext } = await import("./MemoryTransactionContext.js");
+    const ctx = new MemoryTransactionContext(handle, driver);
+
+    const client = await ctx.client<typeof handle.store>();
+
+    expect(client).toBe(handle.store);
+    expect(client.tables).toBeInstanceOf(Map);
+
+    await driver.rollbackTransaction(handle);
+  });
+});
+
 // ─── transaction() (nested savepoints) ───────────────────────────────────────
 
 describe("MemoryTransactionContext.transaction (nested)", () => {

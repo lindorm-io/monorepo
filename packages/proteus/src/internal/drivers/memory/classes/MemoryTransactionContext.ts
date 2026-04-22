@@ -38,6 +38,13 @@ export class MemoryTransactionContext implements ITransactionContext {
     return this.driver.createTransactionalQueryBuilder(target, this.handle);
   }
 
+  public async client<T>(): Promise<T> {
+    // The memory driver's effective tx-scoped "client" is the transaction's
+    // in-memory store. Returning it lets tests / advanced callers peek or
+    // mutate raw table state within the active transaction.
+    return this.handle.store as unknown as T;
+  }
+
   public async transaction<T>(
     fn: (ctx: MemoryTransactionContext) => Promise<T>,
   ): Promise<T> {
