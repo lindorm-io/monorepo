@@ -7,7 +7,6 @@ import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import { OptimisticLockError } from "../../../errors/OptimisticLockError.js";
 import { PostgresExecutorError } from "../errors/PostgresExecutorError.js";
-import { toAbortError } from "../utils/abort.js";
 import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
 import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
@@ -131,9 +130,6 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     criteria: Predicate<E>,
     options?: DeleteOptions,
   ): Promise<void> {
-    if (options?.signal?.aborted) {
-      throw toAbortError(options.signal.reason);
-    }
     guardEmptyCriteria(criteria, "delete", PostgresExecutorError);
 
     // For joined inheritance children, explicitly delete child table rows first.
@@ -226,9 +222,6 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     options: FindOptions<E>,
     operationScope: QueryScope = "multiple",
   ): Promise<Array<E>> {
-    if (options.signal?.aborted) {
-      throw toAbortError(options.signal.reason);
-    }
     const state = findOptionsToQueryState(
       criteria,
       options,
@@ -267,9 +260,6 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     criteria: Predicate<E>,
     options: FindOptions<E>,
   ): Promise<number> {
-    if (options.signal?.aborted) {
-      throw toAbortError(options.signal.reason);
-    }
     const state = findOptionsToQueryState(
       criteria,
       options,
