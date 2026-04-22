@@ -97,7 +97,7 @@ const buildOptions = (answers: Answers): string => {
   const lines: Array<string> = [
     `  logger,`,
     `  amphora,`,
-    `  environment: config.nodeEnv,`,
+    `  environment: config.node.env,`,
     `  port: config.server.port,`,
   ];
   const drivers = answers.proteusDrivers;
@@ -181,9 +181,9 @@ const buildOptions = (answers: Answers): string => {
 
   if (answers.features.auth) {
     lines.push(`  auth: {`);
-    lines.push(`    clientId: config.authClientId,`);
-    lines.push(`    clientSecret: config.authClientSecret,`);
-    lines.push(`    issuer: config.authIssuer,`);
+    lines.push(`    clientId: config.auth.clientId,`);
+    lines.push(`    clientSecret: config.auth.clientSecret,`);
+    lines.push(`    issuer: config.auth.issuer,`);
     lines.push(`    router: {`);
     lines.push(`      pathPrefix: "/auth",`);
     lines.push(`      authorize: {`);
