@@ -42,7 +42,7 @@ const publishAuditMessage = (
   event: {
     entity: any;
     metadata: any;
-    context: any;
+    meta: any;
   },
   action: AuditAction,
   changes: Record<string, { from: unknown; to: unknown }> | null,
@@ -50,8 +50,8 @@ const publishAuditMessage = (
   try {
     const wq = iris.workerQueue(DataAuditChange);
 
-    const actorValue = event.context?.actor ?? "unknown";
-    const correlationId = event.context?.correlationId ?? "unknown";
+    const actorValue = event.meta?.actor ?? "unknown";
+    const correlationId = event.meta?.correlationId ?? "unknown";
     const entityId = extractEntityId(event.entity, event.metadata.primaryKeys);
 
     const message = wq.create({

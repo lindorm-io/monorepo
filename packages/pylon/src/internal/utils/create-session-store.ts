@@ -11,7 +11,7 @@ const getSource = (
   override?: IProteusSource,
 ): IProteusSession | null => {
   if (override) {
-    return override.session({ logger: ctx.logger, context: buildHookMeta(ctx, null) });
+    return override.session({ logger: ctx.logger, meta: buildHookMeta(ctx, null) });
   }
   return ctx.proteus ?? null;
 };

@@ -131,7 +131,7 @@ describe("createWebhookMiddleware", () => {
 
     expect(overrideIris.session).toHaveBeenCalledWith({
       logger: ctx.logger,
-      context: {
+      meta: {
         correlationId: "test-correlation-id",
         actor: null,
         timestamp: expect.any(Date),

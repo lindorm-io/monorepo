@@ -8,7 +8,7 @@ export const resolveIris = (
   override?: IIrisSource,
 ): IIrisSession => {
   if (override) {
-    return override.session({ logger: ctx.logger, context: buildHookMeta(ctx, null) });
+    return override.session({ logger: ctx.logger, meta: buildHookMeta(ctx, null) });
   }
   if (ctx.iris) {
     return ctx.iris;
