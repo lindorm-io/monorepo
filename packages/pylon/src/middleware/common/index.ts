@@ -1,4 +1,6 @@
 export * from "./create-access-token-middleware.js";
+export * from "./create-attach-iris-source-middleware.js";
+export * from "./create-attach-proteus-source-middleware.js";
 export * from "./create-handshake-token-middleware.js";
 export * from "./create-basic-auth-middleware.js";
 export * from "./create-conduit-middleware.js";
