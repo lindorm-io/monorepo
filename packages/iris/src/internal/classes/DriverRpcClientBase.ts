@@ -4,6 +4,7 @@ import { IrisSerializationError } from "../../errors/IrisSerializationError.js";
 import { IrisTimeoutError } from "../../errors/IrisTimeoutError.js";
 import { IrisTransportError } from "../../errors/IrisTransportError.js";
 import type { IIrisRpcClient, IMessage } from "../../interfaces/index.js";
+import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
 import type { MessageMetadata } from "../message/types/metadata.js";
 import type { IAmphora } from "@lindorm/amphora";
 import { MessageManager } from "../message/classes/MessageManager.js";
@@ -20,7 +21,7 @@ export type DriverRpcClientBaseOptions<Req extends IMessage, Res extends IMessag
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

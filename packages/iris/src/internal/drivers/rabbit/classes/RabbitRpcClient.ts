@@ -6,6 +6,7 @@ import { IrisSerializationError } from "../../../../errors/IrisSerializationErro
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
 import { prepareInbound } from "../../../message/utils/prepare-inbound.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
@@ -20,7 +21,7 @@ export type RabbitRpcClientOptions<Req extends IMessage, Res extends IMessage> =
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

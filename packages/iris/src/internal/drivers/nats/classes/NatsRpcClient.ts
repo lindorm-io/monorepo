@@ -4,6 +4,7 @@ import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError.js";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type { NatsSharedState } from "../types/nats-types.js";
 import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
@@ -16,7 +17,7 @@ export type NatsRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

@@ -5,6 +5,7 @@ import type { ConnectionOptions } from "node:tls";
 import type { IDeadLetterStore } from "../interfaces/IrisDeadLetterStore.js";
 import type { IDelayStore } from "../interfaces/IrisDelayStore.js";
 import type { IMessage } from "../interfaces/index.js";
+import type { IrisHookMeta } from "./iris-hook-meta.js";
 
 export type IrisDriverType = "memory" | "rabbit" | "kafka" | "nats" | "redis";
 
@@ -12,7 +13,7 @@ export type MessageScannerInput = Array<Constructor<IMessage> | string>;
 
 export type SessionOptions = {
   logger?: ILogger;
-  context?: unknown;
+  context?: IrisHookMeta;
 };
 
 export type IrisPersistenceDelayConfig =
@@ -33,7 +34,7 @@ export type IrisPersistenceOptions = {
 
 export type IrisSourceOptionsBase = {
   messages?: MessageScannerInput;
-  context?: unknown;
+  context?: IrisHookMeta;
   logger: ILogger;
   amphora?: IAmphora;
   persistence?: IrisPersistenceOptions;

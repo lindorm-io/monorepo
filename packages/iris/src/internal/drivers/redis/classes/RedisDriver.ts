@@ -15,6 +15,7 @@ import type {
 import type {
   IrisConnectionState,
   IrisEvents,
+  IrisHookMeta,
   RedisConnectionOptions,
 } from "../../../../types/index.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
@@ -39,7 +40,7 @@ const DEFAULT_PREFIX = "iris";
 
 export type RedisDriverOptions = {
   logger: ILogger;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   url?: string;
@@ -54,7 +55,7 @@ export type RedisDriverOptions = {
 
 export class RedisDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly context: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: RedisSharedState;

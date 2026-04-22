@@ -2,6 +2,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import { IrisDriverError } from "../../errors/IrisDriverError.js";
 import type { IIrisRpcServer, IMessage } from "../../interfaces/index.js";
+import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
 import type { MessageMetadata } from "../message/types/metadata.js";
 import type { IAmphora } from "@lindorm/amphora";
 import { MessageManager } from "../message/classes/MessageManager.js";
@@ -16,7 +17,7 @@ export type DriverRpcServerBaseOptions<Req extends IMessage, Res extends IMessag
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

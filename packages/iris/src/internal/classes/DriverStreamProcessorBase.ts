@@ -6,13 +6,14 @@ import type {
   IIrisStreamProcessor,
   IMessage,
 } from "../../interfaces/index.js";
+import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
 import type { PipelineStage } from "../types/pipeline-stage.js";
 
 export type DriverStreamProcessorBaseOptions<State> = {
   state: State;
   logger: ILogger;
   stages?: Array<PipelineStage>;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: unknown;
   inputClass?: Constructor<IMessage>;
   inputTopic?: string;
@@ -27,7 +28,7 @@ export abstract class DriverStreamProcessorBase<
   protected readonly state: State;
   protected readonly logger: ILogger;
   protected readonly stages: Array<PipelineStage>;
-  protected readonly context: unknown;
+  protected readonly context: IrisHookMeta | undefined;
   protected readonly amphora: unknown;
   protected readonly inputClass: Constructor<IMessage> | undefined;
   protected readonly inputTopic: string | undefined;
@@ -54,7 +55,7 @@ export abstract class DriverStreamProcessorBase<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: unknown;
+    context?: IrisHookMeta;
     amphora?: unknown;
   }): Pipeline;
 

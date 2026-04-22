@@ -1,6 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { NatsSharedState } from "../types/nats-types.js";
 import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
@@ -30,7 +31,7 @@ export class NatsStreamProcessor<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: unknown;
+    context?: IrisHookMeta;
     amphora?: unknown;
   }): NatsStreamPipeline {
     return new NatsStreamPipeline({

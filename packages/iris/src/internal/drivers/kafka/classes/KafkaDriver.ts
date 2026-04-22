@@ -13,6 +13,7 @@ import type {
 import type {
   IrisConnectionState,
   IrisEvents,
+  IrisHookMeta,
   KafkaConnectionOptions,
 } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
@@ -40,7 +41,7 @@ const DEFAULT_SESSION_TIMEOUT_MS = 30_000;
 
 export type KafkaDriverOptions = {
   logger: ILogger;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   brokers: Array<string>;
@@ -55,7 +56,7 @@ export type KafkaDriverOptions = {
 
 export class KafkaDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly context: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: KafkaSharedState;

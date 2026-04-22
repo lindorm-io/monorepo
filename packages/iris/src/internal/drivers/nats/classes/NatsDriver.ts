@@ -13,6 +13,7 @@ import type {
 import type {
   IrisConnectionState,
   IrisEvents,
+  IrisHookMeta,
   NatsConnectionOptions,
 } from "../../../../types/index.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
@@ -40,7 +41,7 @@ const resolveStreamName = (prefix: string): string => {
 
 export type NatsDriverOptions = {
   logger: ILogger;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   servers: string | Array<string>;
@@ -53,7 +54,7 @@ export type NatsDriverOptions = {
 
 export class NatsDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly context: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: NatsSharedState;

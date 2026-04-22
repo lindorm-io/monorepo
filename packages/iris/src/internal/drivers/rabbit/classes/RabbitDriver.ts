@@ -14,6 +14,7 @@ import type {
 import type {
   IrisConnectionState,
   IrisEvents,
+  IrisHookMeta,
   RabbitConnectionOptions,
 } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
@@ -33,7 +34,7 @@ const RECONNECT_MAX_DELAY = 30000;
 
 export type RabbitDriverOptions = {
   logger: ILogger;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   url: string;
@@ -44,7 +45,7 @@ export type RabbitDriverOptions = {
 
 export class RabbitDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly context: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly connectionConfig: { url: string } & RabbitConnectionOptions;
