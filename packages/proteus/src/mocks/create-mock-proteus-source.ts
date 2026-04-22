@@ -46,6 +46,7 @@ export const _createMockProteusSource = (mockFn: () => any): IProteusSource => {
 
     addEntities: mockFn(),
     getEntityMetadata: returns([]),
+    hasEntity: returns(true),
 
     setFilterParams: mockFn(),
     enableFilter: mockFn(),

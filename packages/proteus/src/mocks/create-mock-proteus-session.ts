@@ -36,6 +36,8 @@ export const _createMockProteusSession = (mockFn: () => any): IProteusSession =>
     disableFilter: mockFn(),
     getFilterRegistry: returns(new Map()),
 
+    hasEntity: returns(true),
+
     repository: impl(() => _createMockRepository(mockFn)),
     queryBuilder: mockFn(),
     client: mockFn(),

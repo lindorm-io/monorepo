@@ -17,6 +17,12 @@ class SessionEntity {
   tenantId!: string;
 }
 
+@Entity({ name: "NotRegisteredOnSession" })
+class NotRegisteredOnSession {
+  @PrimaryKeyField()
+  id!: string;
+}
+
 const createSource = () =>
   new ProteusSource({
     driver: "memory",
@@ -25,6 +31,20 @@ const createSource = () =>
   });
 
 describe("ProteusSession", () => {
+  describe("hasEntity", () => {
+    test("should return true for an entity registered on the source", () => {
+      const source = createSource();
+      const session = source.session();
+      expect(session.hasEntity(SessionEntity)).toBe(true);
+    });
+
+    test("should return false for an entity not registered on the source", () => {
+      const source = createSource();
+      const session = source.session();
+      expect(session.hasEntity(NotRegisteredOnSession)).toBe(false);
+    });
+  });
+
   describe("data access", () => {
     test("should create repositories against the shared driver", async () => {
       const source = createSource();

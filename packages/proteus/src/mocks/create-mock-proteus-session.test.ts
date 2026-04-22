@@ -47,4 +47,10 @@ describe("createMockProteusSession", () => {
     expect(registry).toBeInstanceOf(Map);
     expect(registry.size).toBe(0);
   });
+
+  it("should return true by default for hasEntity()", () => {
+    const session = createMockProteusSession();
+
+    expect(session.hasEntity(TestEntity)).toBe(true);
+  });
 });

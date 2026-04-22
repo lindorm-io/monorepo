@@ -84,6 +84,10 @@ export class ProteusSession<C = unknown> implements IProteusSession<C> {
 
   // ─── Data-access methods ────────────────────────────────────────────
 
+  public hasEntity<E extends IEntity>(target: Constructor<E>): boolean {
+    return this.source.hasEntity(target);
+  }
+
   public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
     const inner = this._driver.createRepository(target, undefined, this.context);
     if (!this.cacheAdapter) return inner;

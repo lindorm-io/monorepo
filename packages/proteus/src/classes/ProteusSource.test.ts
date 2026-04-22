@@ -17,6 +17,12 @@ class SessionTestEntity {
   tenantId!: string;
 }
 
+@Entity({ name: "UnregisteredEntity" })
+class UnregisteredEntity {
+  @PrimaryKeyField()
+  id!: string;
+}
+
 const createSource = () =>
   new ProteusSource({
     driver: "memory",
@@ -25,6 +31,37 @@ const createSource = () =>
   });
 
 describe("ProteusSource", () => {
+  describe("hasEntity", () => {
+    test("should return true for a registered entity", () => {
+      const source = createSource();
+      expect(source.hasEntity(SessionTestEntity)).toBe(true);
+    });
+
+    test("should return false for an unregistered entity", () => {
+      const source = createSource();
+      expect(source.hasEntity(UnregisteredEntity)).toBe(false);
+    });
+
+    test("should return true for an entity added via addEntities", async () => {
+      const source = new ProteusSource({
+        driver: "memory",
+        entities: [],
+        logger: createMockLogger(),
+      });
+      await source.addEntities([UnregisteredEntity]);
+      expect(source.hasEntity(UnregisteredEntity)).toBe(true);
+    });
+
+    test("should return false on a source with no entities registered", () => {
+      const source = new ProteusSource({
+        driver: "memory",
+        entities: [],
+        logger: createMockLogger(),
+      });
+      expect(source.hasEntity(SessionTestEntity)).toBe(false);
+    });
+  });
+
   describe("session", () => {
     test("should produce a ProteusSession instance", () => {
       const source = createSource();
