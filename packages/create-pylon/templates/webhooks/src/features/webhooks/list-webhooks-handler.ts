@@ -1,6 +1,6 @@
 import { WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
-import type { ServerHandler } from "../types/context.js";
+import type { ServerHandler } from "../../types/context.js";
 
 export const listWebhooksSchema = z.object({
   ownerId: z.string(),
