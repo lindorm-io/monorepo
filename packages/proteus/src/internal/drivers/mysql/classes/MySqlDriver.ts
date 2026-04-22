@@ -407,6 +407,7 @@ export class MySqlDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    _signal?: AbortSignal,
   ): MySqlDriver {
     const cloned = Object.create(MySqlDriver.prototype) as MySqlDriver;
     (cloned as any).options = this.options;
@@ -420,6 +421,8 @@ export class MySqlDriver implements IProteusDriver {
     (cloned as any).amphora = this.amphora;
     (cloned as any).breaker = this.breaker;
     (cloned as any).pool = this.pool; // Share the same connection pool
+    // Signal is accepted to match the interface. MySQL cancellation is
+    // deferred to a follow-up (see cancellation-signals plan §11).
     return cloned;
   }
 

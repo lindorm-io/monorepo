@@ -337,6 +337,7 @@ export class RedisDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    _signal?: AbortSignal,
   ): RedisDriver {
     const cloned = Object.create(RedisDriver.prototype) as RedisDriver;
     (cloned as any).logger = this.logger;
@@ -349,6 +350,8 @@ export class RedisDriver implements IProteusDriver {
     (cloned as any).breaker = this.breaker;
     (cloned as any).client = this.client; // Share the same ioredis client
     (cloned as any).connectingPromise = null;
+    // Signal is accepted to match the interface. Redis cancellation is
+    // deferred to a follow-up (see cancellation-signals plan §11).
     return cloned;
   }
 

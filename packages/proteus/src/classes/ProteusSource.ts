@@ -62,6 +62,11 @@ export type SessionOptions<C = unknown> = {
   logger?: ILogger;
   /** Override the context on the session. */
   context?: C;
+  /**
+   * Optional AbortSignal scoped to the session. When aborted, in-flight queries
+   * issued through this session are cancelled server-side (Postgres only).
+   */
+  signal?: AbortSignal;
 };
 
 /**
@@ -221,7 +226,11 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     };
 
     const clonedDriver = this._driver
-      ? this._driver.cloneWithGetters(() => registryRef.current, sessionEmitEntity)
+      ? this._driver.cloneWithGetters(
+          () => registryRef.current,
+          sessionEmitEntity,
+          options?.signal,
+        )
       : undefined;
 
     return new ProteusSession<C>({
@@ -234,6 +243,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       sourceTtlMs: this.sourceTtlMs,
       parentEmitEntity: parentEmit,
       driver: clonedDriver!,
+      signal: options?.signal,
     });
   }
 

@@ -389,6 +389,7 @@ export class MemoryDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    _signal?: AbortSignal,
   ): MemoryDriver {
     const cloned = Object.create(MemoryDriver.prototype) as MemoryDriver;
     (cloned as any).logger = this.logger;
@@ -398,6 +399,8 @@ export class MemoryDriver implements IProteusDriver {
     (cloned as any).emitEntity = emitEntity;
     (cloned as any).amphora = this.amphora;
     (cloned as any).store = this.store; // Share the same in-memory store
+    // Signal is accepted to match the interface but memory driver does not
+    // implement query cancellation (synchronous in-memory operations).
     return cloned;
   }
 

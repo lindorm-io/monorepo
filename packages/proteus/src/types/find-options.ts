@@ -61,6 +61,12 @@ export type FindOptionsBase<E extends IEntity = IEntity> = {
    * - `Dict<unknown>` -- enable the filter with these params (overrides source-registered params)
    */
   filters?: Record<string, boolean | Dict<unknown>>;
+  /**
+   * Per-query AbortSignal. Combined with any session-scoped signal at
+   * execution time. When aborted, in-flight queries are cancelled
+   * server-side (Postgres only — non-pg drivers ignore this field in v1).
+   */
+  signal?: AbortSignal;
 };
 
 /**

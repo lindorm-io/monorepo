@@ -61,9 +61,16 @@ export interface IProteusDriver {
    * Create a lightweight clone of this driver that shares the same
    * connection resources (pool, store) but uses different filter/emitEntity
    * functions. Used by ProteusSource.session() to achieve per-request isolation.
+   *
+   * The optional `signal` is the session-scoped AbortSignal. When provided,
+   * drivers with cancellation support (currently Postgres only) wire it into
+   * the query execution path so in-flight queries are cancelled server-side
+   * on abort. Drivers without cancellation support MUST accept and ignore the
+   * signal.
    */
   cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    signal?: AbortSignal,
   ): IProteusDriver;
 }

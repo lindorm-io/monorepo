@@ -58,6 +58,7 @@ export class PostgresDriver implements IProteusDriver {
   private readonly emitEntity: EntityEmitFn;
   private readonly amphora: IAmphora | undefined;
   private readonly breaker: ICircuitBreaker | null;
+  private readonly signal: AbortSignal | undefined;
   private pool: Pool | null = null;
   private connectingPromise: Promise<void> | null = null;
 
@@ -79,6 +80,7 @@ export class PostgresDriver implements IProteusDriver {
     this.emitEntity = emitEntity ?? (async (): Promise<void> => {});
     this.amphora = amphora;
     this.breaker = breaker ?? null;
+    this.signal = undefined;
   }
 
   public async connect(): Promise<void> {
@@ -380,6 +382,7 @@ export class PostgresDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    signal?: AbortSignal,
   ): PostgresDriver {
     const cloned = Object.create(PostgresDriver.prototype) as PostgresDriver;
     (cloned as any).options = this.options;
@@ -391,6 +394,8 @@ export class PostgresDriver implements IProteusDriver {
     (cloned as any).amphora = this.amphora;
     (cloned as any).breaker = this.breaker;
     (cloned as any).pool = this.pool; // Share the same connection pool
+    (cloned as any).signal = signal;
+    (cloned as any).connectingPromise = null;
     return cloned;
   }
 
