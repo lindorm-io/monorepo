@@ -28,32 +28,3 @@ exports[`compileProjection > should use metadata name for mapped fields 1`] = `
   "email_address": 1,
 }
 `;
-
-exports[`compileProjection should always include _id even when not selected 1`] = `
-{
-  "_id": 1,
-  "name": 1,
-}
-`;
-
-exports[`compileProjection should include selected fields with value 1 1`] = `
-{
-  "_id": 1,
-  "age": 1,
-  "name": 1,
-}
-`;
-
-exports[`compileProjection should map PK field to _id 1`] = `
-{
-  "_id": 1,
-  "name": 1,
-}
-`;
-
-exports[`compileProjection should use metadata name for mapped fields 1`] = `
-{
-  "_id": 1,
-  "email_address": 1,
-}
-`;

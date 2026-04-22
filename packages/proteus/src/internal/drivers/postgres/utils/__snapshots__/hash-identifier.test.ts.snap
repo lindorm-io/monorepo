@@ -7,11 +7,3 @@ exports[`hashIdentifier > snapshot for empty string input 1`] = `"47DEQpj8HBS"`;
 exports[`hashIdentifier > snapshot for known input (regression guard) 1`] = `"kW2hzehhZ7L"`;
 
 exports[`hashIdentifier > snapshot for long input 1`] = `"wqkI2Y9d-Ye"`;
-
-exports[`hashIdentifier handles unicode and special characters 1`] = `"DvU-xVfi_2-"`;
-
-exports[`hashIdentifier snapshot for empty string input 1`] = `"47DEQpj8HBS"`;
-
-exports[`hashIdentifier snapshot for known input (regression guard) 1`] = `"kW2hzehhZ7L"`;
-
-exports[`hashIdentifier snapshot for long input 1`] = `"wqkI2Y9d-Ye"`;

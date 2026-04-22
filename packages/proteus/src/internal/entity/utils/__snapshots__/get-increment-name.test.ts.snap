@@ -24,28 +24,3 @@ exports[`getIncrementName > should return scoped name without namespace 1`] = `
   "type": "increment",
 }
 `;
-
-exports[`getIncrementName should return scoped name with namespace from decorator 1`] = `
-{
-  "name": "GetIncrementWithNs",
-  "namespace": "myApp",
-  "parts": [
-    "myApp",
-    "increment",
-    "GetIncrementWithNs",
-  ],
-  "type": "increment",
-}
-`;
-
-exports[`getIncrementName should return scoped name without namespace 1`] = `
-{
-  "name": "GetIncrementSimple",
-  "namespace": null,
-  "parts": [
-    "increment",
-    "GetIncrementSimple",
-  ],
-  "type": "increment",
-}
-`;

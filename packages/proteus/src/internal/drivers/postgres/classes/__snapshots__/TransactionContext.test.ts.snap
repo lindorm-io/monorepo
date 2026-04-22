@@ -7,11 +7,3 @@ exports[`TransactionContext > transaction (savepoint nesting) > should allow out
   "COMMIT",
 ]
 `;
-
-exports[`TransactionContext transaction (savepoint nesting) should allow outer commit after nested savepoint failure 1`] = `
-[
-  "SAVEPOINT "sp_1"",
-  "ROLLBACK TO SAVEPOINT "sp_1"",
-  "COMMIT",
-]
-`;

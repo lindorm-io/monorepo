@@ -12,16 +12,3 @@ exports[`MemoryRepository.insert > inserts a new entity and returns hydrated res
   "version": 1,
 }
 `;
-
-exports[`MemoryRepository.insert inserts a new entity and returns hydrated result 1`] = `
-{
-  "category": null,
-  "categoryId": null,
-  "createdAt": Any<Date>,
-  "id": Any<String>,
-  "label": "New Item",
-  "quantity": 5,
-  "updatedAt": Any<Date>,
-  "version": 1,
-}
-`;

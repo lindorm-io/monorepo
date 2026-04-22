@@ -6,10 +6,3 @@ exports[`MemoryTransactionContext.transaction (nested) > nested success: inner c
   "Outer",
 ]
 `;
-
-exports[`MemoryTransactionContext.transaction (nested) nested success: inner changes survive 1`] = `
-[
-  "Inner",
-  "Outer",
-]
-`;

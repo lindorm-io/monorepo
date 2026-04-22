@@ -1,5 +1,3 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`MigrationManager > rollback > should throw PostgresMigrationError with checksum mismatch message when a resolved migration has checksum_mismatch status 1`] = `"Checksum mismatch detected — cannot safely rollback"`;
-
-exports[`MigrationManager rollback should throw PostgresMigrationError with checksum mismatch message when a resolved migration has checksum_mismatch status 1`] = `"Checksum mismatch detected — cannot safely rollback"`;

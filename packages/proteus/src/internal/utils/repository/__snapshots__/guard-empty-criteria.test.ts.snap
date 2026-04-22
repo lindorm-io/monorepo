@@ -1,5 +1,3 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`guardEmptyCriteria > empty criteria (throws) > error message snapshot 1`] = `"deleteAll requires non-empty criteria"`;
-
-exports[`guardEmptyCriteria empty criteria (throws) error message snapshot 1`] = `"deleteAll requires non-empty criteria"`;

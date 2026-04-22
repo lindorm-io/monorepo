@@ -25,29 +25,3 @@ exports[`EntityScanner.scan > constructor input (no strings) > returns construct
 exports[`EntityScanner.scan > constructor input (no strings) > returns empty array for empty input 1`] = `[]`;
 
 exports[`EntityScanner.scan > string path input — directory > returns empty array for empty directory 1`] = `[]`;
-
-exports[`EntityScanner.scan Scanner construction Scanner is constructed with denied filenames and types 1`] = `
-[
-  /\\^index\\$/,
-]
-`;
-
-exports[`EntityScanner.scan Scanner construction Scanner is constructed with denied filenames and types 2`] = `
-[
-  /\\^fixture\\$/,
-  /\\^spec\\$/,
-  /\\^test\\$/,
-  /\\^integration\\$/,
-]
-`;
-
-exports[`EntityScanner.scan constructor input (no strings) returns constructor elements directly from input array 1`] = `
-[
-  [Function],
-  [Function],
-]
-`;
-
-exports[`EntityScanner.scan constructor input (no strings) returns empty array for empty input 1`] = `[]`;
-
-exports[`EntityScanner.scan string path input — directory returns empty array for empty directory 1`] = `[]`;

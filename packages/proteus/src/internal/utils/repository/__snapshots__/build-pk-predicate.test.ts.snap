@@ -19,23 +19,3 @@ exports[`buildPrimaryKeyPredicate > single primary key > builds predicate from e
   "id": "abc-123",
 }
 `;
-
-exports[`buildPrimaryKeyPredicate composite primary key builds predicate from all PK fields 1`] = `
-{
-  "tenantId": "tenant-1",
-  "userId": "user-2",
-}
-`;
-
-exports[`buildPrimaryKeyPredicate composite primary key excludes non-PK fields from predicate 1`] = `
-{
-  "tenantId": "tenant-1",
-  "userId": "user-2",
-}
-`;
-
-exports[`buildPrimaryKeyPredicate single primary key builds predicate from entity PK field 1`] = `
-{
-  "id": "abc-123",
-}
-`;

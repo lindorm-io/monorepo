@@ -16,22 +16,6 @@ exports[`quoteIdentifier > wraps a plain name in double quotes 1`] = `""users""`
 
 exports[`quoteIdentifier > wraps a whitespace-only string in double quotes (not treated as empty) 1`] = `""   ""`;
 
-exports[`quoteIdentifier escapes embedded double quotes by doubling them 1`] = `""say ""hello""""`;
-
-exports[`quoteIdentifier handles a single double-quote character 1`] = `""""""`;
-
-exports[`quoteIdentifier handles multiple consecutive double quotes 1`] = `""a""""b""`;
-
-exports[`quoteIdentifier handles names with spaces 1`] = `""my table""`;
-
-exports[`quoteIdentifier handles names with special characters 1`] = `""my-schema.my_table""`;
-
-exports[`quoteIdentifier wraps a name containing uppercase in double quotes 1`] = `""MyTable""`;
-
-exports[`quoteIdentifier wraps a plain name in double quotes 1`] = `""users""`;
-
-exports[`quoteIdentifier wraps a whitespace-only string in double quotes (not treated as empty) 1`] = `""   ""`;
-
 exports[`quoteQualifiedName > combines namespace and name when namespace is provided 1`] = `""public"."users""`;
 
 exports[`quoteQualifiedName > handles namespace with special characters 1`] = `""my-schema"."orders""`;
@@ -41,13 +25,3 @@ exports[`quoteQualifiedName > quotes both namespace and name independently 1`] =
 exports[`quoteQualifiedName > returns only quoted name when namespace is empty string (falsy, treated as null) 1`] = `""users""`;
 
 exports[`quoteQualifiedName > returns only quoted name when namespace is null 1`] = `""users""`;
-
-exports[`quoteQualifiedName combines namespace and name when namespace is provided 1`] = `""public"."users""`;
-
-exports[`quoteQualifiedName handles namespace with special characters 1`] = `""my-schema"."orders""`;
-
-exports[`quoteQualifiedName quotes both namespace and name independently 1`] = `""sch""ema"."ta""ble""`;
-
-exports[`quoteQualifiedName returns only quoted name when namespace is empty string (falsy, treated as null) 1`] = `""users""`;
-
-exports[`quoteQualifiedName returns only quoted name when namespace is null 1`] = `""users""`;

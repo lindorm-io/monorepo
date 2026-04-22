@@ -19,23 +19,3 @@ exports[`compileCtes > single CTE — no params, materialized=null > should retu
 exports[`compileCtes > single CTE — with params > should append CTE params to globalParams and reindex placeholders from $1 1`] = `"WITH "filtered" AS (SELECT id FROM users WHERE status = $1)"`;
 
 exports[`compileCtes > zero-param CTE with pre-existing globalParams > result SQL contains no $N references when CTE has no params 1`] = `"WITH "no_param_cte" AS (SELECT id FROM snapshots)"`;
-
-exports[`compileCtes CTE with pre-existing globalParams — offset applied should handle multiple CTEs with pre-existing globalParams 1`] = `"WITH "cte_a" AS (SELECT $2), "cte_b" AS (SELECT $3)"`;
-
-exports[`compileCtes CTE with pre-existing globalParams — offset applied should offset CTE param placeholders by the number of pre-existing globalParams 1`] = `"WITH "offset_cte" AS (SELECT $3 AND $4)"`;
-
-exports[`compileCtes identifier quoting should escape double-quotes inside CTE names 1`] = `"WITH "tricky""name" AS (SELECT 1)"`;
-
-exports[`compileCtes multiple CTEs should join multiple CTEs in a single WITH clause 1`] = `"WITH "first_cte" AS (SELECT 1), "second_cte" AS (SELECT 2), "third_cte" AS (SELECT 3)"`;
-
-exports[`compileCtes multiple CTEs — params reindexed correctly should reindex second CTE params to continue after first CTE params ($1,$2 then $3,$4) 1`] = `"WITH "cte_a" AS (SELECT * FROM a WHERE x = $1 AND y = $2), "cte_b" AS (SELECT * FROM b WHERE p = $3 AND q = $4)"`;
-
-exports[`compileCtes single CTE — materialized=false should include NOT MATERIALIZED hint 1`] = `"WITH "inline_cte" AS NOT MATERIALIZED (SELECT 1)"`;
-
-exports[`compileCtes single CTE — materialized=true should include MATERIALIZED hint 1`] = `"WITH "mat_cte" AS MATERIALIZED (SELECT 1)"`;
-
-exports[`compileCtes single CTE — no params, materialized=null should return a WITH clause with no materialization hint 1`] = `"WITH "base_data" AS (SELECT id FROM users)"`;
-
-exports[`compileCtes single CTE — with params should append CTE params to globalParams and reindex placeholders from $1 1`] = `"WITH "filtered" AS (SELECT id FROM users WHERE status = $1)"`;
-
-exports[`compileCtes zero-param CTE with pre-existing globalParams result SQL contains no $N references when CTE has no params 1`] = `"WITH "no_param_cte" AS (SELECT id FROM snapshots)"`;

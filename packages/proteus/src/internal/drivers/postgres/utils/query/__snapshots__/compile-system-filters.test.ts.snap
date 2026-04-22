@@ -66,80 +66,8 @@ exports[`compileWhereWithFilters > withoutScope disables __scope filter (FIX-7) 
 
 exports[`compileWhereWithFilters > withoutScope disables __scope filter (FIX-7) > withoutScope: true does not suppress non-scope filters like __softDelete 1`] = `"WHERE "t0"."deleted_at" IS NULL"`;
 
-exports[`compileWhereWithFilters C3 fix — OR does not bypass system filters preserves soft-delete condition inside parens when raw WHERE uses OR conjunction 1`] = `"WHERE ("t0"."deleted_at" IS NULL) OR total > $1"`;
-
-exports[`compileWhereWithFilters basic WHERE combinations ANDs user WHERE clause with soft-delete system condition 1`] = `"WHERE "t0"."total" >= $1 AND "t0"."deleted_at" IS NULL"`;
-
-exports[`compileWhereWithFilters basic WHERE combinations ANDs user WHERE clause with version system condition 1`] = `"WHERE "t0"."value" > $1 AND "t0"."version_end_date" IS NULL"`;
-
-exports[`compileWhereWithFilters basic WHERE combinations returns WHERE with soft-delete IS NULL condition when entity has DeleteDate field 1`] = `"WHERE "t0"."deleted_at" IS NULL"`;
-
-exports[`compileWhereWithFilters basic WHERE combinations returns WHERE with versionEndDate IS NULL condition when entity has version fields 1`] = `"WHERE "t0"."version_end_date" IS NULL"`;
-
-exports[`compileWhereWithFilters basic WHERE combinations returns user WHERE clause when there are predicates but no system filters 1`] = `"WHERE "t0"."status" = $1"`;
-
-exports[`compileWhereWithFilters duplicate filter deduplication __softDelete filter is not double-applied when already in state.resolvedFilters 1`] = `"WHERE "t0"."deleted_at" IS NULL"`;
-
-exports[`compileWhereWithFilters duplicate filter deduplication __softDelete in resolvedFilters deduplicates even when withDeleted is false 1`] = `"WHERE "t0"."deleted_at" IS NULL"`;
-
-exports[`compileWhereWithFilters duplicate filter deduplication two distinct filters both appear when both are in resolvedFilters 1`] = `"WHERE "t0"."deleted_at" IS NULL AND "t0"."total" >= $1"`;
-
-exports[`compileWhereWithFilters duplicate filter deduplication user-defined filter in resolvedFilters is not re-applied from QB filterOverrides 1`] = `"WHERE "t0"."deleted_at" IS NULL AND "t0"."tenant_id" = $1"`;
-
-exports[`compileWhereWithFilters filterOverrides (QB .setFilter() wiring, FIX-5) filterOverrides false for softDelete + user predicate — only predicate remains 1`] = `"WHERE "t0"."total" >= $1"`;
-
-exports[`compileWhereWithFilters filterOverrides (QB .setFilter() wiring, FIX-5) filterOverrides with Dict enables a named filter with specific params 1`] = `"WHERE "t0"."deleted_at" IS NULL AND "t0"."tenant_id" = $1"`;
-
-exports[`compileWhereWithFilters filterOverrides (QB .setFilter() wiring, FIX-5) filterOverrides with true explicitly re-enables a filter 1`] = `"WHERE "t0"."deleted_at" IS NULL"`;
-
-exports[`compileWhereWithFilters filterOverrides (QB .setFilter() wiring, FIX-5) multiple filterOverrides accumulate — disable softDelete, enable tenant 1`] = `"WHERE "t0"."tenant_id" = $1"`;
-
-exports[`compileWhereWithFilters raw WHERE (S1) appends raw WHERE with AND conjunction to existing WHERE clause 1`] = `"WHERE "t0"."status" = $1 AND amount > $2"`;
-
-exports[`compileWhereWithFilters raw WHERE (S1) emits WHERE keyword when raw WHERE is the only clause (no predicates, no system filters) 1`] = `"WHERE status = $1"`;
-
-exports[`compileWhereWithFilters raw WHERE (S1) handles multiple raw WHERE entries with mixed AND/OR conjunctions 1`] = `"WHERE (status = $1 AND amount > $2) OR status = $3"`;
-
-exports[`compileWhereWithFilters raw WHERE (S1) reindexes raw WHERE $N placeholders relative to pre-existing params 1`] = `"WHERE "t0"."status" = $1 AND amount BETWEEN $2 AND $3"`;
-
-exports[`compileWhereWithFilters raw WHERE (S1) wraps existing WHERE clause in parens when raw WHERE uses OR conjunction 1`] = `"WHERE ("t0"."status" = $1) OR amount > $2"`;
-
-exports[`compileWhereWithFilters subquery predicates (S3) appends EXISTS subquery predicate to WHERE clause 1`] = `"WHERE EXISTS (SELECT 1 FROM payments WHERE payments.order_id = t0.id AND payments.amount > $1)"`;
-
-exports[`compileWhereWithFilters subquery predicates (S3) appends IN subquery predicate to WHERE clause 1`] = `"WHERE "t0"."id" IN (SELECT id FROM archived WHERE year = $1)"`;
-
-exports[`compileWhereWithFilters subquery predicates (S3) appends NOT EXISTS subquery predicate to WHERE clause 1`] = `"WHERE NOT EXISTS (SELECT 1 FROM refunds WHERE refunds.order_id = t0.id)"`;
-
-exports[`compileWhereWithFilters subquery predicates (S3) appends NOT IN subquery predicate to WHERE clause 1`] = `"WHERE "t0"."id" NOT IN (SELECT id FROM blacklist)"`;
-
-exports[`compileWhereWithFilters subquery predicates (S3) appends multiple subquery predicates in sequence 1`] = `"WHERE "t0"."status" = $1 AND "t0"."id" IN (SELECT id FROM high_value WHERE amount > $2) AND NOT EXISTS (SELECT 1 FROM flags WHERE flags.order_id = t0.id)"`;
-
-exports[`compileWhereWithFilters subquery predicates (S3) wraps existing WHERE clause in parens when subquery predicate uses OR conjunction 1`] = `"WHERE ("t0"."status" = $1) OR EXISTS (SELECT 1 FROM vip WHERE vip.order_id = t0.id)"`;
-
-exports[`compileWhereWithFilters user-defined @Filter predicates (S7) ANDs multiple resolved filters in sequence 1`] = `"WHERE "t0"."status" = $1 AND "t0"."amount" >= $2"`;
-
-exports[`compileWhereWithFilters user-defined @Filter predicates (S7) ANDs resolved filter with system soft-delete condition 1`] = `"WHERE "t0"."deleted_at" IS NULL AND "t0"."total" >= $1"`;
-
-exports[`compileWhereWithFilters user-defined @Filter predicates (S7) ANDs user predicate, system filter, and resolved filter together 1`] = `"WHERE "t0"."total" < $1 AND "t0"."deleted_at" IS NULL AND "t0"."total" > $2"`;
-
-exports[`compileWhereWithFilters user-defined @Filter predicates (S7) applies resolved filters before raw WHERE fragments 1`] = `"WHERE "t0"."status" = $1 AND amount > $2"`;
-
-exports[`compileWhereWithFilters user-defined @Filter predicates (S7) compiles resolved filter containing $or predicate 1`] = `"WHERE ("t0"."status" = $1 OR "t0"."status" = $2)"`;
-
-exports[`compileWhereWithFilters user-defined @Filter predicates (S7) emits WHERE clause from a single resolved filter predicate 1`] = `"WHERE "t0"."status" = $1"`;
-
-exports[`compileWhereWithFilters withoutScope disables __scope filter (FIX-7) withoutScope: false — scope filter with params IS applied 1`] = `"WHERE "t0"."scope" = $1"`;
-
-exports[`compileWhereWithFilters withoutScope disables __scope filter (FIX-7) withoutScope: true does not suppress non-scope filters like __softDelete 1`] = `"WHERE "t0"."deleted_at" IS NULL"`;
-
 exports[`getVersionCondition > reindexes versionTimestamp param when shared params array already has values 1`] = `""t0"."version_start_date" <= $2 AND ("t0"."version_end_date" IS NULL OR "t0"."version_end_date" > $2)"`;
 
 exports[`getVersionCondition > returns half-open interval condition when versionTimestamp is set 1`] = `""t0"."version_start_date" <= $1 AND ("t0"."version_end_date" IS NULL OR "t0"."version_end_date" > $1)"`;
 
 exports[`getVersionCondition > returns versionEndDate IS NULL when no versionTimestamp is set 1`] = `""t0"."version_end_date" IS NULL"`;
-
-exports[`getVersionCondition reindexes versionTimestamp param when shared params array already has values 1`] = `""t0"."version_start_date" <= $2 AND ("t0"."version_end_date" IS NULL OR "t0"."version_end_date" > $2)"`;
-
-exports[`getVersionCondition returns half-open interval condition when versionTimestamp is set 1`] = `""t0"."version_start_date" <= $1 AND ("t0"."version_end_date" IS NULL OR "t0"."version_end_date" > $1)"`;
-
-exports[`getVersionCondition returns versionEndDate IS NULL when no versionTimestamp is set 1`] = `""t0"."version_end_date" IS NULL"`;

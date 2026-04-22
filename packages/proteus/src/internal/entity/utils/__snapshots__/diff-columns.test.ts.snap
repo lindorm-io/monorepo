@@ -12,26 +12,7 @@ exports[`diffColumns > should return changed columns keyed by column name 1`] = 
 }
 `;
 
-exports[`diffColumns should handle Date comparison 1`] = `
-{
-  "event_date": 2024-06-01T00:00:00.000Z,
-}
-`;
-
-exports[`diffColumns should return changed columns keyed by column name 1`] = `
-{
-  "name": "Bob",
-}
-`;
-
 exports[`diffColumns — embedded fields > should detect change when all embedded fields change 1`] = `
-{
-  "address_city": "Shelbyville",
-  "address_street": "New St",
-}
-`;
-
-exports[`diffColumns — embedded fields should detect change when all embedded fields change 1`] = `
 {
   "address_city": "Shelbyville",
   "address_street": "New St",

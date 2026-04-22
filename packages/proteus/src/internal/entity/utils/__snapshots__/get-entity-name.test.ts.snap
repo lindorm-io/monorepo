@@ -24,28 +24,3 @@ exports[`getEntityName > should return scoped name without namespace 1`] = `
   "type": "entity",
 }
 `;
-
-exports[`getEntityName should return scoped name with namespace from decorator 1`] = `
-{
-  "name": "GetEntityNameWithNs",
-  "namespace": "myApp",
-  "parts": [
-    "myApp",
-    "entity",
-    "GetEntityNameWithNs",
-  ],
-  "type": "entity",
-}
-`;
-
-exports[`getEntityName should return scoped name without namespace 1`] = `
-{
-  "name": "GetEntityNameSimple",
-  "namespace": null,
-  "parts": [
-    "entity",
-    "GetEntityNameSimple",
-  ],
-  "type": "entity",
-}
-`;

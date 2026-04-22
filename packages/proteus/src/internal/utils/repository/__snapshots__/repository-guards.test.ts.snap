@@ -1,5 +1,3 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`guardAppendOnly > error message matches snapshot 1`] = `[ProteusRepositoryError: Cannot delete an append-only entity "TestEntity"]`;
-
-exports[`guardAppendOnly error message matches snapshot 1`] = `"Cannot delete an append-only entity "TestEntity""`;
