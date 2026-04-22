@@ -35,12 +35,16 @@ mockRedisInstance.once.mockImplementation((event: string, cb: Function) => {
   return mockRedisInstance;
 });
 
-vi.mock("ioredis", async () => ({
-  __esModule: true,
-  default: vi.fn(function () {
+vi.mock("ioredis", async () => {
+  const MockRedis = vi.fn(function () {
     return mockRedisInstance;
-  }),
-}));
+  });
+
+  return {
+    Redis: MockRedis,
+    default: MockRedis,
+  };
+});
 
 // --- Test message classes ---
 
