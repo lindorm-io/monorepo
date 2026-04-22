@@ -56,11 +56,11 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
 
     this.middleware = [
       createDependenciesMiddleware({
+        actor: options.actor ?? options.audit?.actor,
         auditConfig:
           options.audit?.enabled && (options.audit.iris ?? options.iris)
             ? {
                 iris: options.audit.iris ?? options.iris!,
-                actor: options.audit.actor,
                 sanitise: options.audit.sanitise,
                 skip: options.audit.skip,
               }

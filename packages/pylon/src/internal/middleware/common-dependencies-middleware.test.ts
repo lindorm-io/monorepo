@@ -132,7 +132,7 @@ describe("createDependenciesMiddleware", () => {
     expect(hermes.session).toHaveBeenCalledWith({ logger: ctx.logger });
   });
 
-  test("should resolve actor from auditConfig and forward it in hook meta", async () => {
+  test("should resolve actor from top-level resolver and forward it in hook meta", async () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
     const actor = vi.fn().mockReturnValue("alice@test.com");
@@ -140,6 +140,7 @@ describe("createDependenciesMiddleware", () => {
     const ctxWithState: any = {
       logger: createMockLogger(),
       state: {
+        actor: null,
         metadata: {
           correlationId: "corr-abc",
           date: new Date("2025-01-01T00:00:00Z"),
@@ -150,10 +151,7 @@ describe("createDependenciesMiddleware", () => {
     const middleware = createDependenciesMiddleware({
       proteus: proteus as any,
       iris: iris as any,
-      auditConfig: {
-        iris: iris as any,
-        actor,
-      },
+      actor,
     });
 
     await middleware(ctxWithState, vi.fn());
@@ -179,6 +177,34 @@ describe("createDependenciesMiddleware", () => {
       logger: ctxWithState.logger,
       meta: expectedMeta,
     });
+  });
+
+  test("should memoise actor on ctx.state.actor across session creation", async () => {
+    const proteus = createMockProteusSource();
+    const iris = createMockIrisSource();
+    const actor = vi.fn().mockReturnValue("alice@test.com");
+
+    const ctxWithState: any = {
+      logger: createMockLogger(),
+      state: {
+        actor: null,
+        metadata: { correlationId: "c", date: new Date("2025-01-01T00:00:00Z") },
+      },
+    };
+
+    const middleware = createDependenciesMiddleware({
+      proteus: proteus as any,
+      iris: iris as any,
+      actor,
+    });
+
+    await middleware(ctxWithState, vi.fn());
+
+    ctxWithState.proteus;
+    ctxWithState.iris;
+
+    expect(actor).toHaveBeenCalledTimes(1);
+    expect(ctxWithState.state.actor).toBe("alice@test.com");
   });
 
   test("should handle no sources configured", async () => {

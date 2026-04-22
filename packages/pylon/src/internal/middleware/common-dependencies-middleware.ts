@@ -29,15 +29,16 @@ import {
   createHttpSocketEmitter,
   createSocketEmitter,
 } from "../utils/create-socket-emitter.js";
+import { resolveActor, type ActorResolver } from "../utils/resolve-actor.js";
 
 type AuditConfig = {
   iris: IIrisSource;
-  actor: (ctx: any) => string;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
 };
 
 type Options = {
+  actor?: ActorResolver;
   authConfig?: PylonAuthConfig;
   auditConfig?: AuditConfig;
   hermes?: IHermes;
@@ -56,12 +57,14 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
     const timer = ctx.logger.time();
 
     try {
-      // Resolve actor once per request from the audit config (when enabled).
-      // Downstream hooks receive this via ProteusHookMeta/IrisHookMeta instead
-      // of spelunking into Koa ctx per event.
-      const actor: string | null = options.auditConfig
-        ? (options.auditConfig.actor(ctx) ?? null)
-        : null;
+      // Resolve actor once per request from the top-level resolver (or the
+      // default fallback). Downstream hooks receive this via
+      // ProteusHookMeta/IrisHookMeta instead of spelunking into Koa ctx per
+      // event. The result is memoised on ctx.state.actor.
+      const actor: string | null = resolveActor(
+        ctx as unknown as PylonContext,
+        options.actor,
+      );
 
       if (options.hermes) {
         lazyFactory(ctx, "hermes", () => options.hermes!.session({ logger: ctx.logger }));
