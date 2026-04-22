@@ -16,7 +16,7 @@ describe("resolveIris", () => {
     expect(result).toBe(session);
     expect(override.session).toHaveBeenCalledWith({
       logger: ctx.logger,
-      context: {
+      meta: {
         correlationId: "corr-x",
         actor: null,
         timestamp: expect.any(Date),

@@ -66,7 +66,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-1", name: "Alice", email: "alice@test.com", age: 30 },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -87,7 +87,7 @@ describe("setupDataAuditListeners", () => {
       entity: { id: "ent-1", name: "Bob", email: "alice@test.com", age: 31 },
       oldEntity: { id: "ent-1", name: "Alice", email: "alice@test.com", age: 30 },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -110,7 +110,7 @@ describe("setupDataAuditListeners", () => {
       entity: { id: "ent-1", name: "Bob", email: "bob@test.com", age: 31 },
       oldEntity: undefined,
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -126,7 +126,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-destroy"]({
       entity: { id: "ent-2" },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -143,7 +143,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-soft-destroy"]({
       entity: { id: "ent-3" },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -160,7 +160,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-99", value: "test" },
       metadata: nonAuditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -168,11 +168,11 @@ describe("setupDataAuditListeners", () => {
     expect(mockPublish).not.toHaveBeenCalled();
   });
 
-  test("should extract correlationId from context", () => {
+  test("should extract correlationId from meta", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-4" },
       metadata: auditedMetadata,
-      context: {
+      meta: {
         correlationId: "custom-corr-456",
         actor: "other@test.com",
         timestamp: new Date(),
@@ -187,11 +187,11 @@ describe("setupDataAuditListeners", () => {
     );
   });
 
-  test("should use unknown for actor and correlationId when context is undefined", () => {
+  test("should use unknown for actor and correlationId when meta is undefined", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-5" },
       metadata: auditedMetadata,
-      context: undefined,
+      meta: undefined,
       connection: {},
     });
 
@@ -212,7 +212,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { tenantId: "tenant-1", userId: "user-2" },
       metadata: compositeMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -228,7 +228,7 @@ describe("setupDataAuditListeners", () => {
       entity: { id: "ent-1", name: "Alice", email: "alice@test.com", age: 30 },
       oldEntity: { id: "ent-1", name: "Alice", email: "alice@test.com", age: 30 },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -249,7 +249,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-6" },
       metadata: nullNsMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -266,7 +266,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-7" },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -289,7 +289,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-8" },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 

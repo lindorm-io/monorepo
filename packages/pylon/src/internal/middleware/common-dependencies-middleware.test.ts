@@ -30,7 +30,7 @@ describe("createDependenciesMiddleware", () => {
     expect(proteus.session).toHaveBeenCalledTimes(1);
     expect(proteus.session).toHaveBeenCalledWith({
       logger: ctx.logger,
-      context: {
+      meta: {
         correlationId: "unknown",
         actor: null,
         timestamp: expect.any(Date),
@@ -58,7 +58,7 @@ describe("createDependenciesMiddleware", () => {
     expect(session).toBeDefined();
     expect(proteus.session).toHaveBeenCalledWith({
       logger: httpCtx.logger,
-      context: {
+      meta: {
         correlationId: "unknown",
         actor: null,
         timestamp: expect.any(Date),
@@ -84,7 +84,7 @@ describe("createDependenciesMiddleware", () => {
     expect(session).toBeDefined();
     expect(proteus.session).toHaveBeenCalledWith({
       logger: socketCtx.logger,
-      context: {
+      meta: {
         correlationId: "unknown",
         actor: null,
         timestamp: expect.any(Date),
@@ -108,7 +108,7 @@ describe("createDependenciesMiddleware", () => {
     expect(iris.session).toHaveBeenCalledTimes(1);
     expect(iris.session).toHaveBeenCalledWith({
       logger: ctx.logger,
-      context: {
+      meta: {
         correlationId: "unknown",
         actor: null,
         timestamp: expect.any(Date),
@@ -164,7 +164,7 @@ describe("createDependenciesMiddleware", () => {
     ctxWithState.proteus;
     ctxWithState.iris;
 
-    const expectedContext = {
+    const expectedMeta = {
       correlationId: "corr-abc",
       actor: "alice@test.com",
       timestamp: new Date("2025-01-01T00:00:00Z"),
@@ -172,12 +172,12 @@ describe("createDependenciesMiddleware", () => {
 
     expect(proteus.session).toHaveBeenCalledWith({
       logger: ctxWithState.logger,
-      context: expectedContext,
+      meta: expectedMeta,
       signal: undefined,
     });
     expect(iris.session).toHaveBeenCalledWith({
       logger: ctxWithState.logger,
-      context: expectedContext,
+      meta: expectedMeta,
     });
   });
 

@@ -69,7 +69,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         lazyFactory(ctx, "proteus", () =>
           options.proteus!.session({
             logger: ctx.logger,
-            context: hookMeta,
+            meta: hookMeta,
             signal: isHttpContext(ctx) ? (ctx as PylonHttpContext).signal : undefined,
           }),
         );
@@ -77,7 +77,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
 
       if (options.iris) {
         lazyFactory(ctx, "iris", () =>
-          options.iris!.session({ logger: ctx.logger, context: hookMeta }),
+          options.iris!.session({ logger: ctx.logger, meta: hookMeta }),
         );
       }
 
