@@ -15,7 +15,7 @@ import type { IrisDriverType, IrisHookMeta } from "../types/index.js";
 
 export type IrisSessionOptions = {
   logger: ILogger;
-  context: IrisHookMeta;
+  meta: IrisHookMeta;
   driver: IIrisDriver;
   driverType: IrisDriverType;
   messages: Array<Constructor<IMessage>>;
@@ -25,19 +25,19 @@ export class IrisSession implements IIrisSession {
   private readonly _driver: IIrisDriver;
   private readonly _driverType: IrisDriverType;
   private readonly _messages: Array<Constructor<IMessage>>;
-  private readonly _context: IrisHookMeta;
+  private readonly _meta: IrisHookMeta;
 
   public constructor(options: IrisSessionOptions) {
     this._driver = options.driver;
     this._driverType = options.driverType;
     this._messages = options.messages;
-    this._context = options.context;
+    this._meta = options.meta;
   }
 
-  // --- Context getter (IrisHookMeta threaded through session) ---
+  // --- Meta getter (IrisHookMeta threaded through session) ---
 
-  public get context(): IrisHookMeta {
-    return this._context;
+  public get meta(): IrisHookMeta {
+    return this._meta;
   }
 
   // --- Data-access getters ---

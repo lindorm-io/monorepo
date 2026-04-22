@@ -20,7 +20,7 @@ export type DriverStreamPipelineBaseOptions = {
   inputTopic?: string;
   outputClass: Constructor<IMessage>;
   outputTopic?: string;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: unknown;
 };
 
@@ -31,7 +31,7 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
   protected readonly inputTopic: string | undefined;
   protected readonly outputClass: Constructor<IMessage>;
   protected readonly outputTopic: string | undefined;
-  protected readonly context: IrisHookMeta | undefined;
+  protected readonly meta: IrisHookMeta | undefined;
   protected readonly amphora: IAmphora | undefined;
   protected readonly outputManager: MessageManager<IMessage>;
   protected running = false;
@@ -47,11 +47,11 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
     this.inputTopic = options.inputTopic;
     this.outputClass = options.outputClass;
     this.outputTopic = options.outputTopic;
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora as IAmphora | undefined;
     this.outputManager = new MessageManager({
       target: this.outputClass,
-      context: this.context,
+      meta: this.meta,
       logger: options.logger,
     });
   }

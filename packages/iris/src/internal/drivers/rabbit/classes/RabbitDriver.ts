@@ -34,7 +34,7 @@ const RECONNECT_MAX_DELAY = 30000;
 
 export type RabbitDriverOptions = {
   logger: ILogger;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   url: string;
@@ -45,7 +45,7 @@ export type RabbitDriverOptions = {
 
 export class RabbitDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: IrisHookMeta | undefined;
+  private readonly meta: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly connectionConfig: { url: string } & RabbitConnectionOptions;
@@ -61,7 +61,7 @@ export class RabbitDriver implements IIrisDriver {
 
   public constructor(options: RabbitDriverOptions, state?: RabbitSharedState) {
     this.logger = options.logger.child(["RabbitDriver"]);
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
     this.connectionConfig = { url: options.url, ...options.connection };
@@ -282,7 +282,7 @@ export class RabbitDriver implements IIrisDriver {
     return new RabbitPublisher<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -295,7 +295,7 @@ export class RabbitDriver implements IIrisDriver {
     return new RabbitMessageBus<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -308,7 +308,7 @@ export class RabbitDriver implements IIrisDriver {
     return new RabbitWorkerQueue<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -319,7 +319,7 @@ export class RabbitDriver implements IIrisDriver {
     return new RabbitStreamProcessor({
       state: this.state,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -333,7 +333,7 @@ export class RabbitDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -347,7 +347,7 @@ export class RabbitDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -366,7 +366,7 @@ export class RabbitDriver implements IIrisDriver {
     return new RabbitDriver(
       {
         logger: this.logger,
-        context: this.context,
+        meta: this.meta,
         amphora: this.amphora,
         getSubscribers,
         url: this.connectionConfig.url,

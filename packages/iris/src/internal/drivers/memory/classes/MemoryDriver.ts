@@ -33,7 +33,7 @@ import { MemoryWorkerQueue } from "./MemoryWorkerQueue.js";
 
 export type MemoryDriverOptions = {
   logger: ILogger;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   delayManager?: DelayManager;
@@ -42,7 +42,7 @@ export type MemoryDriverOptions = {
 
 export class MemoryDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: IrisHookMeta | undefined;
+  private readonly meta: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly store: MemorySharedState;
@@ -54,7 +54,7 @@ export class MemoryDriver implements IIrisDriver {
 
   public constructor(options: MemoryDriverOptions, store?: MemorySharedState) {
     this.logger = options.logger.child(["MemoryDriver"]);
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
     this.store = store ?? createStore();
@@ -191,7 +191,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryPublisher<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       store: this.store,
@@ -205,7 +205,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryMessageBus<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       store: this.store,
@@ -220,7 +220,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryWorkerQueue<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       store: this.store,
@@ -233,7 +233,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryStreamProcessor({
       state: this.store,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -247,7 +247,7 @@ export class MemoryDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -261,7 +261,7 @@ export class MemoryDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -280,7 +280,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryDriver(
       {
         logger: this.logger,
-        context: this.context,
+        meta: this.meta,
         amphora: this.amphora,
         getSubscribers,
         delayManager: this.delayManager,

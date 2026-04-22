@@ -305,21 +305,21 @@ describe("IrisSource", () => {
       expect(logger2.child).toHaveBeenCalled();
     });
 
-    it("should use a different context when provided", () => {
-      const contextA = {
+    it("should use a different meta when provided", () => {
+      const metaA = {
         correlationId: "corr-a",
         actor: "user-a",
         timestamp: new Date(),
       };
-      const contextB = {
+      const metaB = {
         correlationId: "corr-b",
         actor: "user-b",
         timestamp: new Date(),
       };
-      const source = new IrisSource(createMemoryOptions({ context: contextA }));
-      const session = source.session({ context: contextB });
+      const source = new IrisSource(createMemoryOptions({ meta: metaA }));
+      const session = source.session({ meta: metaB });
       expect(session.driver).toBe("memory");
-      expect(session.context).toEqual(contextB);
+      expect(session.meta).toEqual(metaB);
     });
 
     it("should clone a connected driver via cloneWithGetters", () => {

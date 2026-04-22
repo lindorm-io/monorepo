@@ -41,7 +41,7 @@ export class IrisSource implements IIrisSource {
   private _delayManager: DelayManager | undefined;
   private _deadLetterManager: DeadLetterManager | undefined;
   private readonly logger: ILogger;
-  private readonly context: IrisHookMeta;
+  private readonly meta: IrisHookMeta;
   private readonly _messages: Array<Constructor<IMessage>>;
   private readonly _pendingMessagePaths: Array<MessageScannerInput[number]>;
   private readonly _driverType: IrisDriverType;
@@ -55,7 +55,7 @@ export class IrisSource implements IIrisSource {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["IrisSource"]);
-    this.context = options.context ?? createDefaultIrisHookMeta();
+    this.meta = options.meta ?? createDefaultIrisHookMeta();
     // Pre-loaded classes go straight into _messages; string paths are deferred
     // to setup() since scanner.import() is async.
     this._messages = (options.messages ?? []).filter(
@@ -143,7 +143,7 @@ export class IrisSource implements IIrisSource {
 
     return new IrisSession({
       logger: options?.logger?.child(["IrisSource"]) ?? this.logger,
-      context: options?.context ?? this.context,
+      meta: options?.meta ?? this.meta,
       driver: clonedDriver!,
       driverType: this._driverType,
       messages: [...this._messages],
@@ -306,7 +306,7 @@ export class IrisSource implements IIrisSource {
           await import("../internal/drivers/memory/classes/MemoryDriver.js");
         const driver = new MemoryDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           delayManager: this._delayManager,
@@ -323,7 +323,7 @@ export class IrisSource implements IIrisSource {
         const rabbitOpts = this._options;
         const driver = new RabbitDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           url: rabbitOpts.url,
@@ -342,7 +342,7 @@ export class IrisSource implements IIrisSource {
         const kafkaOpts = this._options;
         const driver = new KafkaDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           brokers: kafkaOpts.brokers,
@@ -365,7 +365,7 @@ export class IrisSource implements IIrisSource {
         const natsOpts = this._options;
         const driver = new NatsDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           servers: natsOpts.servers,
@@ -386,7 +386,7 @@ export class IrisSource implements IIrisSource {
         const redisOpts = this._options;
         const driver = new RedisDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           url: redisOpts.url,

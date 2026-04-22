@@ -31,7 +31,7 @@ export class RedisStreamProcessor<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: IrisHookMeta;
+    meta?: IrisHookMeta;
     amphora?: unknown;
   }): RedisStreamPipeline {
     return new RedisStreamPipeline({
@@ -42,7 +42,7 @@ export class RedisStreamProcessor<
       inputTopic: options.inputTopic,
       outputClass: options.outputClass,
       outputTopic: options.outputTopic,
-      context: options.context,
+      meta: options.meta,
       amphora: options.amphora,
     });
   }

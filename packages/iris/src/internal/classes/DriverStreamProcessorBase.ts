@@ -13,7 +13,7 @@ export type DriverStreamProcessorBaseOptions<State> = {
   state: State;
   logger: ILogger;
   stages?: Array<PipelineStage>;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: unknown;
   inputClass?: Constructor<IMessage>;
   inputTopic?: string;
@@ -28,7 +28,7 @@ export abstract class DriverStreamProcessorBase<
   protected readonly state: State;
   protected readonly logger: ILogger;
   protected readonly stages: Array<PipelineStage>;
-  protected readonly context: IrisHookMeta | undefined;
+  protected readonly meta: IrisHookMeta | undefined;
   protected readonly amphora: unknown;
   protected readonly inputClass: Constructor<IMessage> | undefined;
   protected readonly inputTopic: string | undefined;
@@ -37,7 +37,7 @@ export abstract class DriverStreamProcessorBase<
     this.state = options.state;
     this.logger = options.logger;
     this.stages = options.stages ?? [];
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.inputClass = options.inputClass;
     this.inputTopic = options.inputTopic;
@@ -55,7 +55,7 @@ export abstract class DriverStreamProcessorBase<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: IrisHookMeta;
+    meta?: IrisHookMeta;
     amphora?: unknown;
   }): Pipeline;
 
@@ -67,7 +67,7 @@ export abstract class DriverStreamProcessorBase<
       state: this.state,
       logger: this.logger,
       stages: [...this.stages],
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       inputClass,
       inputTopic: options?.topic,
@@ -79,7 +79,7 @@ export abstract class DriverStreamProcessorBase<
       state: this.state,
       logger: this.logger,
       stages: [...this.stages, { type: "filter", predicate }],
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       inputClass: this.inputClass,
       inputTopic: this.inputTopic,
@@ -93,7 +93,7 @@ export abstract class DriverStreamProcessorBase<
       state: this.state,
       logger: this.logger,
       stages: [...this.stages, { type: "map", transform }],
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       inputClass: this.inputClass,
       inputTopic: this.inputTopic,
@@ -107,7 +107,7 @@ export abstract class DriverStreamProcessorBase<
       state: this.state,
       logger: this.logger,
       stages: [...this.stages, { type: "flatMap", transform }],
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       inputClass: this.inputClass,
       inputTopic: this.inputTopic,
@@ -127,7 +127,7 @@ export abstract class DriverStreamProcessorBase<
       state: this.state,
       logger: this.logger,
       stages: [...this.stages, { type: "batch", size, timeout: options?.timeout }],
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       inputClass: this.inputClass,
       inputTopic: this.inputTopic,
@@ -146,7 +146,7 @@ export abstract class DriverStreamProcessorBase<
       inputTopic: this.inputTopic,
       outputClass,
       outputTopic: options?.topic,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
