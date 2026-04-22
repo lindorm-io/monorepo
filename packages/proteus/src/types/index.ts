@@ -8,6 +8,7 @@ export * from "./inheritance.js";
 export * from "./lazy.js";
 export * from "./migration.js";
 export * from "./paginate-options.js";
+export * from "./proteus-hook-meta.js";
 export * from "./scanner.js";
 export * from "./source-options.js";
 export * from "./sql.js";
