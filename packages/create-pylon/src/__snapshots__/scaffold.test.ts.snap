@@ -111,7 +111,7 @@ coverage/
   "config/default.yml": "server:
   port: 3000
 ",
-  "src/handlers/create-webhook-handler.ts": "import { WebhookAuth, WebhookMethod } from "@lindorm/pylon";
+  "src/handlers/create-webhook-handler.ts": "import { WebhookAuth, WebhookMethod, WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
 import type { ServerHandler } from "../types/context.js";
 
@@ -145,13 +145,14 @@ export const createWebhookSchema = z.object({
 export const createWebhookHandler: ServerHandler<typeof createWebhookSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.repositories!.webhookSubscription;
+  const repository = ctx.proteus!.repository(WebhookSubscription);
   const subscription = await repository.save(ctx.data);
 
   return { body: subscription, status: 201 };
 };
 ",
   "src/handlers/delete-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+import { WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
 import type { ServerHandler } from "../types/context.js";
 
@@ -162,7 +163,7 @@ export const deleteWebhookSchema = z.object({
 export const deleteWebhookHandler: ServerHandler<typeof deleteWebhookSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.repositories!.webhookSubscription;
+  const repository = ctx.proteus!.repository(WebhookSubscription);
   const existing = await repository.findOne({ id: ctx.data.id });
 
   if (!existing) {
@@ -189,6 +190,7 @@ export const exampleHandler: ServerHandler<typeof exampleSchema> = async (ctx) =
 };
 ",
   "src/handlers/get-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
+import { WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
 import type { ServerHandler } from "../types/context.js";
 
@@ -197,7 +199,7 @@ export const getWebhookSchema = z.object({
 });
 
 export const getWebhookHandler: ServerHandler<typeof getWebhookSchema> = async (ctx) => {
-  const repository = ctx.repositories!.webhookSubscription;
+  const repository = ctx.proteus!.repository(WebhookSubscription);
   const subscription = await repository.findOne({ id: ctx.data.id });
 
   if (!subscription) {
@@ -209,7 +211,8 @@ export const getWebhookHandler: ServerHandler<typeof getWebhookSchema> = async (
   return { body: subscription };
 };
 ",
-  "src/handlers/list-webhooks-handler.ts": "import { z } from "zod";
+  "src/handlers/list-webhooks-handler.ts": "import { WebhookSubscription } from "@lindorm/pylon";
+import { z } from "zod";
 import type { ServerHandler } from "../types/context.js";
 
 export const listWebhooksSchema = z.object({
@@ -220,7 +223,7 @@ export const listWebhooksSchema = z.object({
 export const listWebhooksHandler: ServerHandler<typeof listWebhooksSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.repositories!.webhookSubscription;
+  const repository = ctx.proteus!.repository(WebhookSubscription);
   const query: { ownerId: string; tenantId?: string | null } = {
     ownerId: ctx.data.ownerId,
   };
@@ -252,7 +255,7 @@ export const pingHandler: ServerSocketHandler<typeof pingSchema> = async (ctx) =
 };
 ",
   "src/handlers/update-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
-import { WebhookMethod } from "@lindorm/pylon";
+import { WebhookMethod, WebhookSubscription } from "@lindorm/pylon";
 import { z } from "zod";
 import type { ServerHandler } from "../types/context.js";
 
@@ -286,7 +289,7 @@ export const updateWebhookSchema = z.object({
 export const updateWebhookHandler: ServerHandler<typeof updateWebhookSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.repositories!.webhookSubscription;
+  const repository = ctx.proteus!.repository(WebhookSubscription);
   const existing = await repository.findOne({ id: ctx.data.id });
 
   if (!existing) {
@@ -402,10 +405,6 @@ export const DELETE: Array<ServerHttpMiddleware> = [
   useSchema(deleteWebhookSchema),
   useHandler(deleteWebhookHandler),
 ];
-",
-  "src/routes/webhooks/_middleware.ts": "import { createRepositoryMiddleware, WebhookSubscription } from "@lindorm/pylon";
-
-export const MIDDLEWARE = [createRepositoryMiddleware([WebhookSubscription])];
 ",
   "src/routes/webhooks/index.ts": "// TODO: add auth middleware — these routes expose webhook subscription management.
 import { useHandler, useSchema } from "@lindorm/pylon";
@@ -910,7 +909,6 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + session
   "src/routes/_middleware.ts",
   "src/routes/v1/example.ts",
   "src/routes/webhooks/[id].ts",
-  "src/routes/webhooks/_middleware.ts",
   "src/routes/webhooks/index.ts",
   "src/types/context.ts",
   "src/workers/alive.ts",
@@ -1050,7 +1048,6 @@ exports[`scaffold > scaffold orchestration > runs all write functions in sequenc
   "src/routes/_middleware.ts",
   "src/routes/v1/example.ts",
   "src/routes/webhooks/[id].ts",
-  "src/routes/webhooks/_middleware.ts",
   "src/routes/webhooks/index.ts",
   "src/types/context.ts",
   "src/workers/alive.ts",
