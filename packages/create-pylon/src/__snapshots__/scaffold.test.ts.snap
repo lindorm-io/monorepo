@@ -772,7 +772,9 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit +
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -804,6 +806,7 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [attachSourcesMiddleware],
@@ -931,7 +934,9 @@ exports[`scaffold > scaffold orchestration > auth-only combo (auto-forces sessio
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -956,6 +961,7 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   session: {
@@ -1061,6 +1067,7 @@ import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [attachSourcesMiddleware],
@@ -1095,6 +1102,7 @@ import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [attachSourcesMiddleware],
@@ -1193,7 +1201,9 @@ exports[`scaffold > writeConfigFile > snapshot: auth only 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1213,7 +1223,9 @@ exports[`scaffold > writeConfigFile > snapshot: kafka only 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1231,7 +1243,9 @@ exports[`scaffold > writeConfigFile > snapshot: memory proteus only 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1248,7 +1262,9 @@ exports[`scaffold > writeConfigFile > snapshot: mongo + nats 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1267,7 +1283,9 @@ exports[`scaffold > writeConfigFile > snapshot: nats only 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1285,7 +1303,9 @@ exports[`scaffold > writeConfigFile > snapshot: no drivers 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1302,7 +1322,9 @@ exports[`scaffold > writeConfigFile > snapshot: postgres + auth 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1323,7 +1345,9 @@ exports[`scaffold > writeConfigFile > snapshot: postgres + kafka 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1342,7 +1366,9 @@ exports[`scaffold > writeConfigFile > snapshot: postgres only 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1360,7 +1386,9 @@ exports[`scaffold > writeConfigFile > snapshot: rabbit only 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1378,7 +1406,9 @@ exports[`scaffold > writeConfigFile > snapshot: redis only 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1396,7 +1426,9 @@ exports[`scaffold > writeConfigFile > snapshot: sqlite only 1`] = `
 import { z } from "zod";
 
 export const config = configuration({
-  nodeEnv: z.string().default("development"),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z.object({
@@ -1776,6 +1808,7 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   socket: {
@@ -1817,6 +1850,7 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   session: {
@@ -1861,6 +1895,7 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   proteus: proteusSource,
@@ -1898,6 +1933,7 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   proteus: proteusSource,
@@ -1926,6 +1962,7 @@ import { source as proteusSource } from "../proteus/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   proteus: proteusSource,
@@ -1951,6 +1988,7 @@ import { source as irisSource } from "../iris/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   iris: irisSource,
@@ -1975,6 +2013,7 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   socket: {
@@ -2001,6 +2040,7 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   setup: async () => {
@@ -2025,6 +2065,7 @@ import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [attachSourcesMiddleware],
@@ -2062,6 +2103,7 @@ import { attachSourcesMiddleware } from "../middleware/attach-sources.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [attachSourcesMiddleware],
@@ -2118,6 +2160,7 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   session: {
@@ -2149,6 +2192,7 @@ import { source as proteusSource } from "../proteus/source.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   proteus: proteusSource,
@@ -2183,6 +2227,7 @@ import { config } from "./config.js";
 export const pylon = new Pylon({
   logger,
   amphora,
+  environment: config.nodeEnv,
   port: config.server.port,
   socket: {
     enabled: true,
