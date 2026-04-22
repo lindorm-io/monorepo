@@ -1,6 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
 import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase.js";
 import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
@@ -10,7 +11,7 @@ export type MemoryRpcServerOptions<Req extends IMessage, Res extends IMessage> =
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

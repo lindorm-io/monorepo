@@ -19,10 +19,12 @@ import type {
   IrisConnectionState,
   IrisDriverType,
   IrisEvents,
+  IrisHookMeta,
   IrisSourceOptions,
   MessageScannerInput,
   SessionOptions,
 } from "../types/index.js";
+import { createDefaultIrisHookMeta } from "../types/iris-hook-meta.js";
 import type { DeadLetterManager } from "../internal/dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../internal/delay/DelayManager.js";
 import { MessageScanner } from "../internal/message/classes/MessageScanner.js";
@@ -39,7 +41,7 @@ export class IrisSource implements IIrisSource {
   private _delayManager: DelayManager | undefined;
   private _deadLetterManager: DeadLetterManager | undefined;
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly context: IrisHookMeta;
   private readonly _messages: Array<Constructor<IMessage>>;
   private readonly _pendingMessagePaths: Array<MessageScannerInput[number]>;
   private readonly _driverType: IrisDriverType;
@@ -53,7 +55,7 @@ export class IrisSource implements IIrisSource {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["IrisSource"]);
-    this.context = options.context;
+    this.context = options.context ?? createDefaultIrisHookMeta();
     // Pre-loaded classes go straight into _messages; string paths are deferred
     // to setup() since scanner.import() is async.
     this._messages = (options.messages ?? []).filter(

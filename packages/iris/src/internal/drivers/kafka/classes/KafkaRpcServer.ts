@@ -2,6 +2,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type { KafkaEachMessagePayload, KafkaSharedState } from "../types/kafka-types.js";
 import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase.js";
@@ -17,7 +18,7 @@ export type KafkaRpcServerOptions<Req extends IMessage, Res extends IMessage> = 
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

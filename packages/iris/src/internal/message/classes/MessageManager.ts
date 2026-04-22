@@ -4,6 +4,8 @@ import type { z } from "zod";
 import { IrisError } from "../../../errors/IrisError.js";
 import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
 import type { IMessage } from "../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../types/iris-hook-meta.js";
+import { createDefaultIrisHookMeta } from "../../../types/iris-hook-meta.js";
 import { getMessageMetadata } from "../metadata/get-message-metadata.js";
 import type { MessageMetadata } from "../types/metadata.js";
 import { buildSchema } from "../utils/build-schema.js";
@@ -16,7 +18,7 @@ const IDENTITY_DECORATORS = new Set(["IdentifierField", "TimestampField"]);
 
 export type MessageManagerOptions<M extends IMessage> = {
   target: Constructor<M>;
-  context?: unknown;
+  context?: IrisHookMeta;
   logger?: ILogger;
 };
 
@@ -24,7 +26,7 @@ export class MessageManager<M extends IMessage> {
   public readonly target: Constructor<M>;
   public readonly metadata: MessageMetadata;
 
-  private readonly context: unknown;
+  private readonly context: IrisHookMeta;
   private readonly logger: ILogger | undefined;
   private _schemaCache: z.ZodType | undefined;
 
@@ -36,7 +38,7 @@ export class MessageManager<M extends IMessage> {
     }
 
     this.target = options.target;
-    this.context = options.context;
+    this.context = options.context ?? createDefaultIrisHookMeta();
     this.logger = options.logger?.child(["MessageManager"]);
 
     try {

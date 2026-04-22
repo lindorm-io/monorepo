@@ -10,7 +10,11 @@ import type {
   IMessage,
   IMessageSubscriber,
 } from "../../../../interfaces/index.js";
-import type { IrisConnectionState, IrisEvents } from "../../../../types/index.js";
+import type {
+  IrisConnectionState,
+  IrisEvents,
+  IrisHookMeta,
+} from "../../../../types/index.js";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import type { DeadLetterEntry } from "../../../../types/dead-letter.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
@@ -29,7 +33,7 @@ import { MemoryWorkerQueue } from "./MemoryWorkerQueue.js";
 
 export type MemoryDriverOptions = {
   logger: ILogger;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   delayManager?: DelayManager;
@@ -38,7 +42,7 @@ export type MemoryDriverOptions = {
 
 export class MemoryDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly context: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly store: MemorySharedState;

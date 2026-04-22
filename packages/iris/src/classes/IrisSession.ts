@@ -11,11 +11,11 @@ import type {
   IIrisWorkerQueue,
   IMessage,
 } from "../interfaces/index.js";
-import type { IrisDriverType } from "../types/index.js";
+import type { IrisDriverType, IrisHookMeta } from "../types/index.js";
 
 export type IrisSessionOptions = {
   logger: ILogger;
-  context: unknown;
+  context: IrisHookMeta;
   driver: IIrisDriver;
   driverType: IrisDriverType;
   messages: Array<Constructor<IMessage>>;
@@ -25,11 +25,19 @@ export class IrisSession implements IIrisSession {
   private readonly _driver: IIrisDriver;
   private readonly _driverType: IrisDriverType;
   private readonly _messages: Array<Constructor<IMessage>>;
+  private readonly _context: IrisHookMeta;
 
   public constructor(options: IrisSessionOptions) {
     this._driver = options.driver;
     this._driverType = options.driverType;
     this._messages = options.messages;
+    this._context = options.context;
+  }
+
+  // --- Context getter (IrisHookMeta threaded through session) ---
+
+  public get context(): IrisHookMeta {
+    return this._context;
   }
 
   // --- Data-access getters ---

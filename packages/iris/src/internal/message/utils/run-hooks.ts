@@ -1,4 +1,5 @@
 import { IrisError } from "../../../errors/IrisError.js";
+import type { IrisHookMeta } from "../../../types/iris-hook-meta.js";
 import type { MetaHook } from "../types/metadata.js";
 import type { MetaHookDecorator } from "../types/types.js";
 
@@ -6,7 +7,7 @@ export const runHooksSync = (
   decorator: MetaHookDecorator,
   hooks: Array<MetaHook>,
   message: unknown,
-  context?: unknown,
+  context: IrisHookMeta,
   ...extra: Array<unknown>
 ): void => {
   for (const hook of hooks) {
@@ -24,7 +25,7 @@ export const runHooksAsync = async (
   decorator: MetaHookDecorator,
   hooks: Array<MetaHook>,
   message: unknown,
-  context?: unknown,
+  context: IrisHookMeta,
   ...extra: Array<unknown>
 ): Promise<void> => {
   for (const hook of hooks) {

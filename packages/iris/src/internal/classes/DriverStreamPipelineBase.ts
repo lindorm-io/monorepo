@@ -1,6 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IIrisStreamPipeline, IMessage } from "../../interfaces/index.js";
+import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
 import type { PipelineStage } from "../types/pipeline-stage.js";
 import type { IAmphora } from "@lindorm/amphora";
@@ -19,7 +20,7 @@ export type DriverStreamPipelineBaseOptions = {
   inputTopic?: string;
   outputClass: Constructor<IMessage>;
   outputTopic?: string;
-  context?: unknown;
+  context?: IrisHookMeta;
   amphora?: unknown;
 };
 
@@ -30,7 +31,7 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
   protected readonly inputTopic: string | undefined;
   protected readonly outputClass: Constructor<IMessage>;
   protected readonly outputTopic: string | undefined;
-  protected readonly context: unknown;
+  protected readonly context: IrisHookMeta | undefined;
   protected readonly amphora: IAmphora | undefined;
   protected readonly outputManager: MessageManager<IMessage>;
   protected running = false;
