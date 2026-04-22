@@ -1626,17 +1626,17 @@ players!: Player[];
 
 ### Lifecycle Hook Decorators
 
-Lifecycle hooks are **class decorators** that register callbacks at specific points in the entity lifecycle. All hooks receive `(context, entity)` as arguments, where `context` is the source's context value (typed as `C`, defaults to `unknown`).
+Lifecycle hooks are **class decorators** that register callbacks at specific points in the entity lifecycle. All hooks receive `(entity, context)` as arguments, where `context` is a `ProteusHookMeta` carrying request-scoped metadata (`correlationId`, `actor`, `timestamp`).
 
-**Async hooks** (`HookCallback<T, C>`) may return `void | Promise<void>`.
-**Sync hooks** (`SyncHookCallback<T, C>`) must return `void` — they cannot be async.
+**Async hooks** (`HookCallback<T>`) may return `void | Promise<void>`.
+**Sync hooks** (`SyncHookCallback<T>`) must return `void` — they cannot be async.
 
 #### `@OnCreate`
 
 Fires synchronously when `repository.create()` builds a new entity instance. **Must be synchronous.** Useful for setting computed defaults or derived fields.
 
 ```typescript
-@OnCreate((_ctx, user) => {
+@OnCreate((user, _ctx) => {
   user.slug = user.name.toLowerCase().replace(/\s+/g, "-");
 })
 @Entity()
@@ -1650,7 +1650,7 @@ class User {
 Fires synchronously during `repository.validate()`, after the built-in Zod schema check. Throw to reject the entity. **Must be synchronous.**
 
 ```typescript
-@OnValidate((_ctx, order) => {
+@OnValidate((order, _ctx) => {
   if (order.startDate >= order.endDate) {
     throw new Error("startDate must be before endDate");
   }
@@ -1666,7 +1666,7 @@ class Order {
 Fires synchronously when an entity is hydrated from database results, after all fields and FK columns are populated but before the entity is returned. **Must be synchronous.** For async post-load enrichment, use `@AfterLoad` instead.
 
 ```typescript
-@OnHydrate((_ctx, user) => {
+@OnHydrate((user, _ctx) => {
   user.fullName = `${user.firstName} ${user.lastName}`;
 })
 @Entity()
@@ -1680,10 +1680,10 @@ class User {
 Fire around INSERT operations. `@BeforeInsert` runs after validation but before the INSERT statement. `@AfterInsert` runs after the entity is persisted. Both may be async.
 
 ```typescript
-@BeforeInsert(async (_ctx, user) => {
+@BeforeInsert(async (user, _ctx) => {
   user.password = await argon2.hash(user.password);
 })
-@AfterInsert(async (_ctx, user) => {
+@AfterInsert(async (user, _ctx) => {
   await sendWelcomeEmail(user.email);
 })
 @Entity()
@@ -1697,7 +1697,7 @@ class User {
 Fire around UPDATE operations. `@BeforeUpdate` runs after validation and version check but before the UPDATE statement. Both may be async.
 
 ```typescript
-@BeforeUpdate(async (_ctx, user) => {
+@BeforeUpdate(async (user, _ctx) => {
   if (user.passwordChanged) {
     user.password = await argon2.hash(user.password);
   }
@@ -1713,7 +1713,7 @@ class User {
 Fire around both INSERT and UPDATE operations. `@BeforeSave` runs before `@BeforeInsert`/`@BeforeUpdate`. `@AfterSave` runs after `@AfterInsert`/`@AfterUpdate`. Both may be async.
 
 ```typescript
-@BeforeSave((_ctx, entity) => {
+@BeforeSave((entity, _ctx) => {
   entity.updatedBy = getCurrentUserId();
 })
 @Entity()
@@ -1727,7 +1727,7 @@ class Document {
 Fire around hard DELETE operations. `@BeforeDestroy` runs before cascade deletes and the DELETE statement. Both may be async.
 
 ```typescript
-@BeforeDestroy(async (_ctx, user) => {
+@BeforeDestroy(async (user, _ctx) => {
   await deleteUserFiles(user.id);
 })
 @Entity()
@@ -1741,7 +1741,7 @@ class User {
 Fire around soft-delete operations. `@BeforeSoftDestroy` runs before the delete date is set and before cascade soft-deletes. Both may be async.
 
 ```typescript
-@BeforeSoftDestroy(async (_ctx, post) => {
+@BeforeSoftDestroy(async (post, _ctx) => {
   await notifyAuthor(post.authorId, "post archived");
 })
 @Entity()
@@ -1755,7 +1755,7 @@ class Post {
 Fire around restore operations (un-soft-delete). `@BeforeRestore` runs before the delete date is cleared. Both may be async.
 
 ```typescript
-@AfterRestore(async (_ctx, post) => {
+@AfterRestore(async (post, _ctx) => {
   await reindexPost(post.id);
 })
 @Entity()
@@ -1769,7 +1769,7 @@ class Post {
 Fires after an entity is loaded from the database, after hydration and relation loading. May be async. Use for post-load enrichment.
 
 ```typescript
-@AfterLoad(async (_ctx, user) => {
+@AfterLoad(async (user, _ctx) => {
   user.avatarUrl = await resolveAvatarUrl(user.avatarKey);
 })
 @Entity()
@@ -2389,13 +2389,13 @@ const client = await source.client<PoolClient>();
 Hooks run automatically during entity operations:
 
 ```typescript
-const hashPassword = async (_ctx: unknown, user: User) => {
+const hashPassword = async (user: User) => {
   if (user.passwordChanged) {
     user.password = await argon2.hash(user.password);
   }
 };
 
-const setDefaults = (_ctx: unknown, user: User) => {
+const setDefaults = (user: User) => {
   user.status ??= "active";
 };
 
@@ -2403,7 +2403,7 @@ const setDefaults = (_ctx: unknown, user: User) => {
 @OnCreate(setDefaults)
 @BeforeInsert(hashPassword)
 @BeforeUpdate(hashPassword)
-@AfterLoad(async (_ctx, user) => {
+@AfterLoad(async (user) => {
   user.fullName = `${user.firstName} ${user.lastName}`;
 })
 class User {
