@@ -1,4 +1,5 @@
-import { AbortError } from "@lindorm/errors";
+import type { AbortError } from "@lindorm/errors";
+import { toAbortError as toSharedAbortError } from "../../../utils/abort.js";
 
 /**
  * Postgres-specific sqlstate for `canceling statement due to user request`.
@@ -13,10 +14,7 @@ export const PG_QUERY_CANCELLED_SQLSTATE = "57014";
  * `status === 499` via the `AbortError` base.
  */
 export const toAbortError = (reason: unknown, cause?: unknown): AbortError =>
-  new AbortError("Postgres query cancelled", {
-    reason,
-    error: cause instanceof Error ? cause : undefined,
-  });
+  toSharedAbortError(reason, cause, "Postgres query cancelled");
 
 /**
  * Duck-type check for pg driver errors that indicate a server-side cancel.
