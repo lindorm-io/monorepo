@@ -1,5 +1,6 @@
 import type { ICircuitBreaker } from "@lindorm/breaker";
 import { CircuitOpenError as BreakerCircuitOpenError } from "@lindorm/breaker";
+import { AbortError } from "@lindorm/errors";
 import type { DeepPartial, Predicate } from "@lindorm/types";
 import { CircuitOpenError } from "../../errors/CircuitOpenError.js";
 import type { IEntity } from "../../interfaces/Entity.js";
@@ -90,6 +91,15 @@ export class BreakerExecutor<E extends IEntity> implements IRepositoryExecutor<E
     } catch (error) {
       if (error instanceof BreakerCircuitOpenError) {
         throw new CircuitOpenError(error.message, { debug: (error as any).debug });
+      }
+      // AbortError is a client-initiated cancellation, not a backend failure.
+      // Pass it through without letting it influence the circuit breaker.
+      // Note: the breaker.execute(fn) call above already saw the error before
+      // re-throwing it; classifiers that return "ignorable" for AbortError
+      // (the recommended default) prevent it from tripping the breaker. We
+      // still rethrow the original AbortError here so callers can match on it.
+      if (error instanceof AbortError) {
+        throw error;
       }
       throw error;
     }

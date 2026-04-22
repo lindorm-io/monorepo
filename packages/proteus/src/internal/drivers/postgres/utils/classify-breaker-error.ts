@@ -1,4 +1,5 @@
 import type { ErrorClassification } from "@lindorm/breaker";
+import { AbortError } from "@lindorm/errors";
 
 /**
  * PostgreSQL error codes that indicate infrastructure failures.
@@ -33,6 +34,10 @@ const TRANSIENT_SYSTEM_CODES = new Set([
 ]);
 
 export const classifyPostgresError = (error: Error): ErrorClassification => {
+  // Client-initiated cancellation is not a backend failure — never trip
+  // the breaker on aborts.
+  if (error instanceof AbortError) return "ignorable";
+
   const code: string | undefined = (error as any).code;
 
   if (code) {

@@ -1,8 +1,9 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { ICircuitBreaker } from "@lindorm/breaker";
+import { AbortError } from "@lindorm/errors";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { Pool, type PoolClient } from "pg";
+import { Client, Pool, type PoolClient } from "pg";
 import type { IEntity, IProteusQueryBuilder } from "../../../../interfaces/index.js";
 import type {
   IProteusDriver,
@@ -21,6 +22,7 @@ import type {
 } from "../../../interfaces/ProteusDriver.js";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
 import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { isPgQueryCancelledError, toAbortError } from "../utils/abort.js";
 import { PostgresDriverError } from "../errors/PostgresDriverError.js";
 import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
@@ -191,7 +193,13 @@ export class PostgresDriver implements IProteusDriver {
     context?: unknown,
   ): PostgresRepository<E> {
     const pool = this.getPool();
-    const client = this.createPgClientFromPool(pool);
+    const sessionSignal = this.signal;
+    // Non-signal sessions hit the unchanged pool.query fast path (zero per-query
+    // checkout). Signal-carrying sessions route through the acquire-per-query
+    // cancel-aware path.
+    const client = sessionSignal
+      ? this.createPgClientFromPoolWithSignal(pool, sessionSignal)
+      : this.createPgClientFromPool(pool);
     const namespace = this.namespace;
     const metadata = this.resolveMetadata(target);
 
@@ -202,8 +210,11 @@ export class PostgresDriver implements IProteusDriver {
 
     // T2: Pool-backed — check out a dedicated PoolClient, build tx-scoped factory
     const withImplicitTransaction: WithImplicitTransaction<E> = async (fn) => {
+      if (sessionSignal?.aborted) {
+        throw toAbortError(sessionSignal.reason);
+      }
       const poolClient = await pool.connect();
-      const txClient = this.createPgClient(poolClient);
+      const txClient = this.createPgClient(poolClient, sessionSignal);
       try {
         await txClient.query("BEGIN");
         const txExecutor = this.wrapExecutor(
@@ -247,12 +258,32 @@ export class PostgresDriver implements IProteusDriver {
       }
     };
 
-    // C4: Cursor checks out a dedicated PoolClient for its lifetime
+    // C4: Cursor checks out a dedicated PoolClient for its lifetime.
+    // When the session carries a signal, register an abort listener for the
+    // cursor's span so an in-flight cursor read is cancelled server-side.
     const createCursorClient: CreateCursorClient = async () => {
+      if (sessionSignal?.aborted) {
+        throw toAbortError(sessionSignal.reason);
+      }
       const poolClient = await pool.connect();
+      // processID is set on PoolClient after handshake but is not declared
+      // on the @types/pg PoolClient interface. See pg/lib/client.js:341.
+      const pid = (poolClient as unknown as { processID: number | null }).processID;
+      let onAbort: (() => void) | null = null;
+      if (sessionSignal) {
+        onAbort = (): void => {
+          if (pid != null) void this.issueCancel(pid);
+        };
+        sessionSignal.addEventListener("abort", onAbort, { once: true });
+      }
       return {
         client: poolClient,
-        release: () => poolClient.release(),
+        release: () => {
+          if (sessionSignal && onAbort) {
+            sessionSignal.removeEventListener("abort", onAbort);
+          }
+          poolClient.release();
+        },
       };
     };
 
@@ -323,7 +354,9 @@ export class PostgresDriver implements IProteusDriver {
   ): IRepositoryExecutor<E> {
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
-    const client = this.createPgClientFromPool(pool);
+    const client = this.signal
+      ? this.createPgClientFromPoolWithSignal(pool, this.signal)
+      : this.createPgClientFromPool(pool);
     return this.wrapExecutor(
       new PostgresExecutor<E>(
         client,
@@ -357,7 +390,9 @@ export class PostgresDriver implements IProteusDriver {
   ): IProteusQueryBuilder<E> {
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
-    const client = this.createPgClientFromPool(pool);
+    const client = this.signal
+      ? this.createPgClientFromPoolWithSignal(pool, this.signal)
+      : this.createPgClientFromPool(pool);
     return new PostgresQueryBuilder<E>(metadata, client, this.namespace, this.logger);
   }
 
@@ -403,7 +438,14 @@ export class PostgresDriver implements IProteusDriver {
     options?: TransactionOptions,
   ): Promise<TransactionHandle> {
     const pool = this.getPool();
-    return beginTransaction(pool, (pc) => this.createPgClient(pc), options?.isolation);
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason);
+    }
+    return beginTransaction(
+      pool,
+      (pc) => this.createPgClient(pc, this.signal),
+      options?.isolation,
+    );
   }
 
   public async commitTransaction(handle: TransactionHandle): Promise<void> {
@@ -426,11 +468,19 @@ export class PostgresDriver implements IProteusDriver {
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
+    const effectiveSignal = this.signal;
+
     const attempt = async (): Promise<T> => {
+      // Short-circuit between attempts on abort. The retry loop short-circuits
+      // via isRetryable, but this also gates the first attempt.
+      if (effectiveSignal?.aborted) {
+        throw toAbortError(effectiveSignal.reason);
+      }
+
       const pool = this.getPool();
       const handle = await beginTransaction(
         pool,
-        (pc) => this.createPgClient(pc),
+        (pc) => this.createPgClient(pc, effectiveSignal),
         options?.isolation,
       );
 
@@ -483,7 +533,14 @@ export class PostgresDriver implements IProteusDriver {
             });
           }),
       };
-      return withRetry(attempt, isRetryableTransactionError, retryOptions);
+      // Abort is terminal: never retry an AbortError, and never retry after
+      // the signal has been aborted.
+      const isRetryable = (error: unknown): boolean => {
+        if (error instanceof AbortError) return false;
+        if (effectiveSignal?.aborted) return false;
+        return isRetryableTransactionError(error);
+      };
+      return withRetry(attempt, isRetryable, retryOptions);
     }
 
     return attempt();
@@ -540,12 +597,115 @@ export class PostgresDriver implements IProteusDriver {
     };
   }
 
-  private createPgClient(poolClient: PoolClient): PostgresQueryClient {
-    return this.wrapWithQueryClient((sql, params) => poolClient.query(sql, params));
+  private createPgClient(
+    poolClient: PoolClient,
+    signal?: AbortSignal,
+  ): PostgresQueryClient {
+    if (!signal) {
+      return this.wrapWithQueryClient((sql, params) => poolClient.query(sql, params));
+    }
+
+    return this.wrapWithQueryClient(async (sql, params) => {
+      if (signal.aborted) {
+        throw toAbortError(signal.reason);
+      }
+
+      // processID is set on PoolClient after handshake but is not declared
+      // on the @types/pg PoolClient interface. See pg/lib/client.js:341.
+      const pid = (poolClient as unknown as { processID: number | null }).processID;
+      const onAbort = (): void => {
+        if (pid != null) void this.issueCancel(pid);
+      };
+      signal.addEventListener("abort", onAbort, { once: true });
+
+      try {
+        return await poolClient.query(sql, params);
+      } catch (err) {
+        if (isPgQueryCancelledError(err) || signal.aborted) {
+          throw toAbortError(signal.reason, err);
+        }
+        throw err;
+      } finally {
+        signal.removeEventListener("abort", onAbort);
+      }
+    });
   }
 
   private createPgClientFromPool(pool: Pool): PostgresQueryClient {
     return this.wrapWithQueryClient((sql, params) => pool.query(sql, params));
+  }
+
+  /**
+   * Signal-aware executor path. Each query acquires a dedicated PoolClient
+   * so it has a known `processID`, registers an abort listener that issues
+   * `pg_cancel_backend`, runs the query, and releases the client. Adds one
+   * pool checkout per query relative to the non-signal path — only used
+   * when a session (or per-query) signal is present.
+   */
+  private createPgClientFromPoolWithSignal(
+    pool: Pool,
+    signal: AbortSignal,
+  ): PostgresQueryClient {
+    return this.wrapWithQueryClient(async (sql, params) => {
+      if (signal.aborted) {
+        throw toAbortError(signal.reason);
+      }
+
+      const pc = await pool.connect();
+      // processID is set on PoolClient after handshake but is not declared
+      // on the @types/pg PoolClient interface. See pg/lib/client.js:341.
+      const pid = (pc as unknown as { processID: number | null }).processID;
+      const onAbort = (): void => {
+        if (pid != null) void this.issueCancel(pid);
+      };
+      signal.addEventListener("abort", onAbort, { once: true });
+
+      try {
+        return await pc.query(sql, params);
+      } catch (err) {
+        if (isPgQueryCancelledError(err) || signal.aborted) {
+          throw toAbortError(signal.reason, err);
+        }
+        throw err;
+      } finally {
+        signal.removeEventListener("abort", onAbort);
+        pc.release();
+      }
+    });
+  }
+
+  /**
+   * Issue a `pg_cancel_backend` against the given processID on a throwaway
+   * pg.Client. Best-effort: failures are logged but not propagated, since
+   * the caller already has its own rejection path.
+   */
+  private async issueCancel(processID: number): Promise<void> {
+    const cancelClient = new Client({
+      connectionString: this.options.url,
+      host: this.options.host,
+      port: this.options.port,
+      user: this.options.user,
+      password: this.options.password,
+      database: this.options.database,
+      ssl: this.options.ssl || undefined,
+      application_name: this.options.applicationName,
+    });
+
+    try {
+      await cancelClient.connect();
+      await cancelClient.query("SELECT pg_cancel_backend($1)", [processID]);
+    } catch (err) {
+      this.logger.warn("Failed to issue pg_cancel_backend", {
+        error: err instanceof Error ? err.message : String(err),
+        processID,
+      });
+    } finally {
+      try {
+        await cancelClient.end();
+      } catch {
+        /* best effort */
+      }
+    }
   }
 
   private async synchronize(entities: Array<Constructor<IEntity>>): Promise<void> {
