@@ -26,6 +26,7 @@ export const createSocketContextInitialisationMiddleware = (
     const correlationId = extractCorrelationId(ctx);
 
     ctx.state = {
+      actor: null,
       app: ctx.io.socket.data.app,
       authorization: getSocketAuthorization(ctx.io.socket),
       metadata: {

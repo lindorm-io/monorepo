@@ -12,6 +12,7 @@ export const createConnectionContextInitialisationMiddleware = (
       (ctx.io.socket.handshake?.headers?.["x-correlation-id"] as string) ?? randomUUID();
 
     ctx.state = {
+      actor: null,
       app: ctx.io.socket.data.app,
       authorization: getSocketAuthorization(ctx.io.socket),
       metadata: {
