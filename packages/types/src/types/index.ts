@@ -1,6 +1,7 @@
 export * from "./jwks/index.js";
 export * from "./open-id/index.js";
 
+export * from "./abort.js";
 export * from "./aes-encryption.js";
 export * from "./aes-key-length.js";
 export * from "./crypto.js";
