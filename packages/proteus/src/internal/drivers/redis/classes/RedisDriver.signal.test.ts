@@ -130,11 +130,11 @@ describe("RedisDriver + AbortSignal", () => {
     });
   });
 
-  describe("raceWithSignal", () => {
+  describe("raceSignal", () => {
     test("passes through when no signal is set", async () => {
       const { driver } = makeDriver();
       const session = withSession(driver, undefined);
-      const result = await (session as any).raceWithSignal(Promise.resolve("ok"));
+      const result = await (session as any).raceSignal(Promise.resolve("ok"));
       expect(result).toBe("ok");
     });
 
@@ -145,7 +145,7 @@ describe("RedisDriver + AbortSignal", () => {
       const session = withSession(driver, controller.signal);
 
       await expect(
-        (session as any).raceWithSignal(new Promise(() => {})),
+        (session as any).raceSignal(new Promise(() => {})),
       ).rejects.toBeInstanceOf(AbortError);
     });
 
@@ -154,7 +154,7 @@ describe("RedisDriver + AbortSignal", () => {
       const controller = new AbortController();
       const session = withSession(driver, controller.signal);
 
-      const result = await (session as any).raceWithSignal(Promise.resolve(42));
+      const result = await (session as any).raceSignal(Promise.resolve(42));
       expect(result).toBe(42);
     });
 
@@ -168,7 +168,7 @@ describe("RedisDriver + AbortSignal", () => {
         resolveCmd = resolve;
       });
 
-      const pending = (session as any).raceWithSignal(cmd);
+      const pending = (session as any).raceSignal(cmd);
       controller.abort({ kind: "client-disconnect" });
       await expect(pending).rejects.toBeInstanceOf(AbortError);
       // The underlying command still completes in the background — the
@@ -183,7 +183,7 @@ describe("RedisDriver + AbortSignal", () => {
       const controller = new AbortController();
       const session = withSession(driver, controller.signal);
 
-      const pending = (session as any).raceWithSignal(new Promise(() => {}));
+      const pending = (session as any).raceSignal(new Promise(() => {}));
       controller.abort(reason);
       try {
         await pending;
@@ -200,7 +200,7 @@ describe("RedisDriver + AbortSignal", () => {
       const session = withSession(driver, controller.signal);
 
       const removeSpy = vi.spyOn(controller.signal, "removeEventListener");
-      await (session as any).raceWithSignal(Promise.resolve(1));
+      await (session as any).raceSignal(Promise.resolve(1));
       expect(removeSpy).toHaveBeenCalledWith("abort", expect.any(Function));
     });
 
@@ -211,7 +211,7 @@ describe("RedisDriver + AbortSignal", () => {
 
       const removeSpy = vi.spyOn(controller.signal, "removeEventListener");
       await expect(
-        (session as any).raceWithSignal(Promise.reject(new Error("boom"))),
+        (session as any).raceSignal(Promise.reject(new Error("boom"))),
       ).rejects.toThrow("boom");
       expect(removeSpy).toHaveBeenCalledWith("abort", expect.any(Function));
     });

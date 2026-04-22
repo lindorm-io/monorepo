@@ -11,7 +11,7 @@
 
 import { AbortError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import Redis from "ioredis";
+import { Redis } from "ioredis";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 import { RedisDriver } from "./RedisDriver.js";
 
@@ -84,7 +84,7 @@ describe("RedisDriver cancellation (integration)", () => {
     const client = (session as any).client as Redis;
     const start = Date.now();
     const pending = (session as any)
-      .raceWithSignal(client.blpop("proteus_sig_nonexistent", 5))
+      .raceSignal(client.blpop("proteus_sig_nonexistent", 5))
       .then(() => ({ ok: true as const }))
       .catch((err: unknown) => ({ ok: false as const, err }));
 
