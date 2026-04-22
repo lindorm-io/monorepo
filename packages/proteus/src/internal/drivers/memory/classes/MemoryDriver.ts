@@ -29,6 +29,7 @@ import type {
 import { getEntityName } from "../../../entity/utils/get-entity-name.js";
 import { getJoinName } from "../../../entity/utils/get-join-name.js";
 import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
+import { toAbortError } from "../../../utils/abort.js";
 import { MemoryDriverError } from "../errors/MemoryDriverError.js";
 import { MemoryExecutor } from "./MemoryExecutor.js";
 import { MemoryRepository, type WithImplicitTransaction } from "./MemoryRepository.js";
@@ -75,6 +76,7 @@ export class MemoryDriver implements IProteusDriver {
   private readonly emitEntity: EntityEmitFn;
   private readonly amphora: IAmphora | undefined;
   private store: MemoryStore;
+  private signal: AbortSignal | undefined;
 
   public constructor(
     _options: ProteusMemoryOptions,
@@ -168,6 +170,7 @@ export class MemoryDriver implements IProteusDriver {
     parent?: Constructor<IEntity>,
     context?: unknown,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const store = this.store;
     const namespace = this.namespace;
 
@@ -217,6 +220,7 @@ export class MemoryDriver implements IProteusDriver {
     parent?: Constructor<IEntity>,
     context?: unknown,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const txHandle = handle as MemoryTransactionHandle;
     const namespace = this.namespace;
 
@@ -253,6 +257,7 @@ export class MemoryDriver implements IProteusDriver {
   public createExecutor<E extends IEntity>(
     target: Constructor<E>,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     return this.createExecutorForStore(target, this.store);
   }
 
@@ -260,6 +265,7 @@ export class MemoryDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const txHandle = handle as MemoryTransactionHandle;
     return this.createExecutorForStore(target, txHandle.store);
   }
@@ -267,6 +273,7 @@ export class MemoryDriver implements IProteusDriver {
   public createQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const tableKey = this.getTableKey(target);
     const store = this.store;
@@ -291,6 +298,7 @@ export class MemoryDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const tableKey = this.getTableKey(target);
     const txHandle = handle as MemoryTransactionHandle;
@@ -318,6 +326,7 @@ export class MemoryDriver implements IProteusDriver {
   public async beginTransaction(
     _options?: TransactionOptions,
   ): Promise<TransactionHandle> {
+    this.checkSignal();
     const handle: MemoryTransactionHandle = {
       store: cloneStore(this.store),
       state: "active",
@@ -354,6 +363,8 @@ export class MemoryDriver implements IProteusDriver {
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
+    this.checkSignal();
+
     if (options?.retry) {
       this.logger.warn(
         "Transaction retry option is not supported by the Memory driver and will be ignored",
@@ -389,7 +400,7 @@ export class MemoryDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
-    _signal?: AbortSignal,
+    signal?: AbortSignal,
   ): MemoryDriver {
     const cloned = Object.create(MemoryDriver.prototype) as MemoryDriver;
     (cloned as any).logger = this.logger;
@@ -399,12 +410,20 @@ export class MemoryDriver implements IProteusDriver {
     (cloned as any).emitEntity = emitEntity;
     (cloned as any).amphora = this.amphora;
     (cloned as any).store = this.store; // Share the same in-memory store
-    // Signal is accepted to match the interface but memory driver does not
-    // implement query cancellation (synchronous in-memory operations).
+    // Memory driver operations are synchronous; we honour the signal only as
+    // a pre-flight check at the public entry points (query / transaction /
+    // repository creation). No mid-query cancellation is possible.
+    (cloned as any).signal = signal;
     return cloned;
   }
 
   // ─── Private ─────────────────────────────────────────────────────────
+
+  private checkSignal(): void {
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason, undefined, "Memory query cancelled");
+    }
+  }
 
   private createExecutorForStore<E extends IEntity>(
     target: Constructor<E>,
