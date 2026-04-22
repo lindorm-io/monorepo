@@ -21,6 +21,7 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
       const requestDate = ctx.get("date");
 
       ctx.state = {
+        actor: null,
         app: { domain, environment, name, version },
         authorization: getAuthorization(ctx),
         metadata: {

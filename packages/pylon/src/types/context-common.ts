@@ -33,6 +33,7 @@ export type PylonHttpMetadata = PylonMetadata & {
 };
 
 export type PylonState = {
+  actor: string | null;
   app: AppState;
   authorization: AuthorizationState;
   metadata: PylonMetadata;
