@@ -24,28 +24,3 @@ exports[`getJoinName > should return scoped name without namespace 1`] = `
   "type": "join",
 }
 `;
-
-exports[`getJoinName should return scoped name with namespace 1`] = `
-{
-  "name": "user_post",
-  "namespace": "myApp",
-  "parts": [
-    "myApp",
-    "join",
-    "user_post",
-  ],
-  "type": "join",
-}
-`;
-
-exports[`getJoinName should return scoped name without namespace 1`] = `
-{
-  "name": "user_post",
-  "namespace": null,
-  "parts": [
-    "join",
-    "user_post",
-  ],
-  "type": "join",
-}
-`;

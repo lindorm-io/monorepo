@@ -12,16 +12,3 @@ exports[`createMemoryJoinTableOps > sync > inserts join rows for new relationshi
   },
 ]
 `;
-
-exports[`createMemoryJoinTableOps sync inserts join rows for new relationships 1`] = `
-[
-  {
-    "post_id": "post-1",
-    "tag_id": "tag-1",
-  },
-  {
-    "post_id": "post-1",
-    "tag_id": "tag-2",
-  },
-]
-`;

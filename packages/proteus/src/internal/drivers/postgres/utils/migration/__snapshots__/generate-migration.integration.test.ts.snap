@@ -10,14 +10,3 @@ exports[`generate-migration (integration) > should generate migration from empty
   "score",
 ]
 `;
-
-exports[`generate-migration (integration) should generate migration from empty DB and capture all operations 1`] = `
-[
-  "id",
-  "version",
-  "createdAt",
-  "updatedAt",
-  "age",
-  "score",
-]
-`;

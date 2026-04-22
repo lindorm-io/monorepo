@@ -5,9 +5,3 @@ exports[`beginTransaction > should wrap pool.connect() failure in PostgresTransa
   "Error: connection pool exhausted",
 ]
 `;
-
-exports[`beginTransaction should wrap pool.connect() failure in PostgresTransactionError 1`] = `
-[
-  "Error: connection pool exhausted",
-]
-`;

@@ -14,18 +14,3 @@ exports[`extractCursorValues > should handle numeric and string values 1`] = `
   1,
 ]
 `;
-
-exports[`extractCursorValues should extract values aligned with keyset entries 1`] = `
-[
-  "2024-01-15T10:00:00.000Z",
-  "abc-123",
-]
-`;
-
-exports[`extractCursorValues should handle numeric and string values 1`] = `
-[
-  95.5,
-  "alice",
-  1,
-]
-`;

@@ -21,25 +21,3 @@ exports[`introspectIndexes > should map a simple btree index 1`] = `
   },
 ]
 `;
-
-exports[`introspectIndexes should map a simple btree index 1`] = `
-[
-  {
-    "index": {
-      "columns": [
-        {
-          "direction": "asc",
-          "name": "email",
-        },
-      ],
-      "include": [],
-      "method": "btree",
-      "name": "idx_abc123",
-      "unique": false,
-      "where": null,
-    },
-    "schema": "public",
-    "table": "users",
-  },
-]
-`;

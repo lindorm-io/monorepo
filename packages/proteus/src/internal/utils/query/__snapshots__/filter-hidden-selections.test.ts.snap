@@ -34,38 +34,3 @@ exports[`filterHiddenSelections > when some fields are hidden for the given cate
   "name",
 ]
 `;
-
-exports[`filterHiddenSelections when explicitSelect is provided returns explicitSelect unchanged regardless of hidden fields 1`] = `
-[
-  "id",
-  "secret",
-]
-`;
-
-exports[`filterHiddenSelections when some fields are hidden for the given category excludes field hidden for 'multiple' when category is multiple 1`] = `
-[
-  "id",
-  "name",
-]
-`;
-
-exports[`filterHiddenSelections when some fields are hidden for the given category excludes field when it is hidden for any of the provided categories 1`] = `
-[
-  "id",
-  "visible",
-]
-`;
-
-exports[`filterHiddenSelections when some fields are hidden for the given category result array preserves field order from metadata 1`] = `
-[
-  "c",
-  "a",
-]
-`;
-
-exports[`filterHiddenSelections when some fields are hidden for the given category returns field keys excluding hidden ones 1`] = `
-[
-  "id",
-  "name",
-]
-`;

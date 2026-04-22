@@ -21,25 +21,3 @@ exports[`detectOrphanedTables > should handle empty desired (all tables are orph
   },
 ]
 `;
-
-exports[`detectOrphanedTables should detect orphaned tables not in desired schema 1`] = `
-[
-  {
-    "name": "old_table",
-    "schema": "app",
-  },
-]
-`;
-
-exports[`detectOrphanedTables should handle empty desired (all tables are orphaned) 1`] = `
-[
-  {
-    "name": "users",
-    "schema": "app",
-  },
-  {
-    "name": "posts",
-    "schema": "app",
-  },
-]
-`;

@@ -17,23 +17,6 @@ exports[`buildKeysetOrder > should preserve user-provided order 1`] = `
 ]
 `;
 
-exports[`buildKeysetOrder should preserve user-provided order 1`] = `
-[
-  {
-    "column": "createdAt",
-    "direction": "ASC",
-  },
-  {
-    "column": "name",
-    "direction": "DESC",
-  },
-  {
-    "column": "id",
-    "direction": "ASC",
-  },
-]
-`;
-
 exports[`keysetOrderToRecord > should convert entries to record 1`] = `
 {
   "createdAt": "ASC",
@@ -42,21 +25,6 @@ exports[`keysetOrderToRecord > should convert entries to record 1`] = `
 `;
 
 exports[`keysetOrderToRecord > should flip directions when backward=true 1`] = `
-{
-  "createdAt": "DESC",
-  "id": "DESC",
-  "name": "ASC",
-}
-`;
-
-exports[`keysetOrderToRecord should convert entries to record 1`] = `
-{
-  "createdAt": "ASC",
-  "id": "ASC",
-}
-`;
-
-exports[`keysetOrderToRecord should flip directions when backward=true 1`] = `
 {
   "createdAt": "DESC",
   "id": "DESC",

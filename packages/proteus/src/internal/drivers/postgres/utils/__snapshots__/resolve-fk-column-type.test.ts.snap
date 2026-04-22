@@ -7,11 +7,3 @@ exports[`resolveFkColumnType > resolves UUID PK field type from a referenced ent
 exports[`resolveFkColumnType > resolves enum FK column type using the foreign entity table name, not the caller table name 1`] = `"UUID"`;
 
 exports[`resolveFkColumnType > uses namespace when resolving UUID FK (snapshot includes schema-qualified name) 1`] = `"UUID"`;
-
-exports[`resolveFkColumnType resolves INTEGER PK field type from a referenced entity 1`] = `"INTEGER"`;
-
-exports[`resolveFkColumnType resolves UUID PK field type from a referenced entity 1`] = `"UUID"`;
-
-exports[`resolveFkColumnType resolves enum FK column type using the foreign entity table name, not the caller table name 1`] = `"UUID"`;
-
-exports[`resolveFkColumnType uses namespace when resolving UUID FK (snapshot includes schema-qualified name) 1`] = `"UUID"`;

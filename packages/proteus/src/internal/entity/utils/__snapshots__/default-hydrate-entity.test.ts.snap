@@ -9,13 +9,3 @@ TestEntity {
   "score": 0n,
 }
 `;
-
-exports[`defaultHydrateEntity should assign field values from data dict 1`] = `
-TestEntity {
-  "age": 30,
-  "deletedAt": null,
-  "id": "abc",
-  "name": "Alice",
-  "score": 0n,
-}
-`;

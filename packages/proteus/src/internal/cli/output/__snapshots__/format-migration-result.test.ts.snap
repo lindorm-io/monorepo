@@ -15,21 +15,6 @@ exports[`formatApplyResult > should format single applied migration 1`] = `
 1 migration(s) applied, 0 skipped."
 `;
 
-exports[`formatApplyResult should format multiple applied with skipped 1`] = `
-"Applying migrations from ./migrations ...
-  Applied: 20260220090000-init (42ms)
-  Applied: 20260221100000-add-users (18ms)
-
-2 migration(s) applied, 1 skipped."
-`;
-
-exports[`formatApplyResult should format single applied migration 1`] = `
-"Applying migrations from ./migrations ...
-  Applied: 20260220090000-init (42ms)
-
-1 migration(s) applied, 0 skipped."
-`;
-
 exports[`formatRollbackResult > should format multiple rollbacks 1`] = `
 "Rolling back from ./migrations ...
   Rolled back: 20260222120000-add-orders (8ms)
@@ -39,21 +24,6 @@ exports[`formatRollbackResult > should format multiple rollbacks 1`] = `
 `;
 
 exports[`formatRollbackResult > should format single rollback 1`] = `
-"Rolling back from ./migrations ...
-  Rolled back: 20260221100000-add-users (12ms)
-
-1 migration(s) rolled back."
-`;
-
-exports[`formatRollbackResult should format multiple rollbacks 1`] = `
-"Rolling back from ./migrations ...
-  Rolled back: 20260222120000-add-orders (8ms)
-  Rolled back: 20260221100000-add-users (12ms)
-
-2 migration(s) rolled back."
-`;
-
-exports[`formatRollbackResult should format single rollback 1`] = `
 "Rolling back from ./migrations ...
   Rolled back: 20260221100000-add-users (12ms)
 

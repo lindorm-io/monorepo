@@ -15,30 +15,7 @@ exports[`extractFieldDictFromAliased > should map aliased column names to field 
 }
 `;
 
-exports[`extractFieldDictFromAliased should handle embedded fields with dotted keys 1`] = `
-{
-  "address.city": "London",
-  "id": "xyz",
-}
-`;
-
-exports[`extractFieldDictFromAliased should map aliased column names to field keys 1`] = `
-{
-  "email": "alice@test.com",
-  "id": "abc",
-  "name": "Alice",
-}
-`;
-
 exports[`extractFieldDictFromReturning > should map column names to field keys 1`] = `
-{
-  "email": "alice@test.com",
-  "id": "abc",
-  "name": "Alice",
-}
-`;
-
-exports[`extractFieldDictFromReturning should map column names to field keys 1`] = `
 {
   "email": "alice@test.com",
   "id": "abc",

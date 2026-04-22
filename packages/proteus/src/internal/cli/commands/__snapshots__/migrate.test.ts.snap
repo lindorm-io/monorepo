@@ -6,10 +6,3 @@ exports[`registerMigrateCommands > migrate generate > should pass --name option 
   "source": "./proteus.config.ts",
 }
 `;
-
-exports[`registerMigrateCommands migrate generate should pass --name option 1`] = `
-{
-  "name": "my-migration",
-  "source": "./proteus.config.ts",
-}
-`;

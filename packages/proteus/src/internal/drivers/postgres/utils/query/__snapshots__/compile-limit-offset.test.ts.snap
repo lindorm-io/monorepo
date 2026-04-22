@@ -11,15 +11,3 @@ exports[`compileLimitOffset > zero values — != null guard correctly handles 0 
 exports[`compileLimitOffset > zero values — != null guard correctly handles 0 > should compile LIMIT 0 and OFFSET 0 1`] = `"LIMIT $1 OFFSET $2"`;
 
 exports[`compileLimitOffset > zero values — != null guard correctly handles 0 > should compile OFFSET 0 1`] = `"OFFSET $1"`;
-
-exports[`compileLimitOffset should compile LIMIT and OFFSET 1`] = `"LIMIT $1 OFFSET $2"`;
-
-exports[`compileLimitOffset should compile LIMIT only 1`] = `"LIMIT $1"`;
-
-exports[`compileLimitOffset should compile OFFSET only 1`] = `"OFFSET $1"`;
-
-exports[`compileLimitOffset zero values — != null guard correctly handles 0 should compile LIMIT 0 1`] = `"LIMIT $1"`;
-
-exports[`compileLimitOffset zero values — != null guard correctly handles 0 should compile LIMIT 0 and OFFSET 0 1`] = `"LIMIT $1 OFFSET $2"`;
-
-exports[`compileLimitOffset zero values — != null guard correctly handles 0 should compile OFFSET 0 1`] = `"OFFSET $1"`;

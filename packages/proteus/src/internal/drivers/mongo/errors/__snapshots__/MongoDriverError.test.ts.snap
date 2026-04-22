@@ -1,5 +1,3 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`MongoDriverError > should have correct name 1`] = `"MongoDriverError"`;
-
-exports[`MongoDriverError should have correct name 1`] = `"MongoDriverError"`;

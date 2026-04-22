@@ -22,26 +22,3 @@ exports[`reverseDictValues > should swap keys and values 1`] = `
   "pk": "postId",
 }
 `;
-
-exports[`reverseDictValues should handle empty dict 1`] = `{}`;
-
-exports[`reverseDictValues should handle multiple entries 1`] = `
-{
-  "id": "tenantId",
-  "orgPk": "orgId",
-  "userPk": "userId",
-}
-`;
-
-exports[`reverseDictValues should handle single entry 1`] = `
-{
-  "id": "foreignId",
-}
-`;
-
-exports[`reverseDictValues should swap keys and values 1`] = `
-{
-  "id": "userId",
-  "pk": "postId",
-}
-`;

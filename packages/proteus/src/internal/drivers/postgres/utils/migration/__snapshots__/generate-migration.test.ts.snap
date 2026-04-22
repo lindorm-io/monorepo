@@ -22,26 +22,3 @@ export class AddEmail implements MigrationInterface {
 }
 "
 `;
-
-exports[`generateMigration should orchestrate the full pipeline and write a file 1`] = `
-"import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
-
-export class AddEmail implements MigrationInterface {
-  public readonly id = "00000000-0000-0000-0000-000000000001";
-  public readonly ts = "2026-02-20T09:00:00.000Z";
-
-  public async up(runner: MigrationQueryRunner): Promise<void> {
-    await runner.transaction(async (ctx) => {
-      // Add column "email" to "app"."users"
-      await ctx.query(\`ALTER TABLE "app"."users" ADD COLUMN "email" TEXT;\`);
-    });
-  }
-
-  public async down(runner: MigrationQueryRunner): Promise<void> {
-    await runner.transaction(async (ctx) => {
-      await ctx.query(\`ALTER TABLE "app"."users" DROP COLUMN "email";\`);
-    });
-  }
-}
-"
-`;

@@ -14,24 +14,6 @@ exports[`buildCacheKey > should produce consistent keys for Date values 1`] = `"
 
 exports[`buildCacheKey > should produce deterministic keys for identical inputs 1`] = `"app:cache:User:find:aa666889f424f4ff"`;
 
-exports[`buildCacheKey should handle undefined criteria and options 1`] = `"app:cache:User:find:976f0859a9a6fce7"`;
-
-exports[`buildCacheKey should produce a stable key for Map criteria (entries converted to sorted object) 1`] = `"app:cache:User:find:76daae21b24c1b60"`;
-
-exports[`buildCacheKey should produce a stable key for RegExp criteria (converted to string) 1`] = `"app:cache:User:find:6b88fab00bf0c48d"`;
-
-exports[`buildCacheKey should produce a stable key for Set criteria (converted to array) 1`] = `"app:cache:User:find:f921233c9373245e"`;
-
-exports[`buildCacheKey should produce a valid key when namespace is null 1`] = `"cache:User:find:976f0859a9a6fce7"`;
-
-exports[`buildCacheKey should produce consistent keys for Date values 1`] = `"app:cache:User:find:2742a585dd4132b0"`;
-
-exports[`buildCacheKey should produce deterministic keys for identical inputs 1`] = `"app:cache:User:find:aa666889f424f4ff"`;
-
 exports[`buildCachePrefix > should return correct prefix with namespace 1`] = `"app:cache:User:"`;
 
 exports[`buildCachePrefix > should return correct prefix with null namespace 1`] = `"cache:User:"`;
-
-exports[`buildCachePrefix should return correct prefix with namespace 1`] = `"app:cache:User:"`;
-
-exports[`buildCachePrefix should return correct prefix with null namespace 1`] = `"cache:User:"`;

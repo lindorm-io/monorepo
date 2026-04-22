@@ -7,13 +7,6 @@ exports[`compileDeleteExpired > should use NOW(3) for expiry comparison 1`] = `
 }
 `;
 
-exports[`compileDeleteExpired should use NOW(3) for expiry comparison 1`] = `
-{
-  "params": [],
-  "text": "DELETE FROM \`app\`.\`users\` WHERE \`expires_at\` <= NOW(3)",
-}
-`;
-
 exports[`compileRestore > should set delete date to NULL 1`] = `
 {
   "params": [
@@ -23,25 +16,7 @@ exports[`compileRestore > should set delete date to NULL 1`] = `
 }
 `;
 
-exports[`compileRestore should set delete date to NULL 1`] = `
-{
-  "params": [
-    "abc-123",
-  ],
-  "text": "UPDATE \`app\`.\`users\` AS \`t0\` SET \`deleted_at\` = NULL WHERE \`t0\`.\`id\` = ?",
-}
-`;
-
 exports[`compileSoftDelete > should use NOW(3) for delete date 1`] = `
-{
-  "params": [
-    "abc-123",
-  ],
-  "text": "UPDATE \`app\`.\`users\` AS \`t0\` SET \`deleted_at\` = NOW(3) WHERE \`t0\`.\`id\` = ?",
-}
-`;
-
-exports[`compileSoftDelete should use NOW(3) for delete date 1`] = `
 {
   "params": [
     "abc-123",
@@ -63,30 +38,7 @@ exports[`compileUpdate > should compile an UPDATE without RETURNING 1`] = `
 }
 `;
 
-exports[`compileUpdate should compile an UPDATE without RETURNING 1`] = `
-{
-  "params": [
-    "Bob",
-    2,
-    "2024-01-01 00:00:00.000",
-    "abc-123",
-    1,
-  ],
-  "text": "UPDATE \`app\`.\`users\` SET \`name\` = ?, \`version\` = ?, \`updated_at\` = ? WHERE \`id\` = ? AND \`version\` = ?",
-}
-`;
-
 exports[`compileUpdateMany > should compile an UPDATE ... SET ... WHERE for bulk updates 1`] = `
-{
-  "params": [
-    "Bob",
-    "Alice",
-  ],
-  "text": "UPDATE \`app\`.\`users\` AS \`t0\` SET \`name\` = ? WHERE \`t0\`.\`name\` = ?",
-}
-`;
-
-exports[`compileUpdateMany should compile an UPDATE ... SET ... WHERE for bulk updates 1`] = `
 {
   "params": [
     "Bob",

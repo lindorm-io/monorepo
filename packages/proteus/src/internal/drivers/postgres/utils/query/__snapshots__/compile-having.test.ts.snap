@@ -18,24 +18,6 @@ exports[`compileHaving > should reindex raw entry $N placeholders when shared pa
 
 exports[`compileHaving > should skip empty typed predicates and still include valid raw entry 1`] = `"HAVING COUNT(*) >= $1"`;
 
-exports[`compileHaving should compile a mix of typed predicates and raw HAVING entries 1`] = `"HAVING "t0"."status" = $1 AND COUNT(*) > $2"`;
-
-exports[`compileHaving should compile a single raw HAVING entry with its params starting at $1 1`] = `"HAVING COUNT(*) > $1"`;
-
-exports[`compileHaving should compile a single typed predicate (first clause has no conjunction prefix) 1`] = `"HAVING "t0"."status" = $1"`;
-
-exports[`compileHaving should compile multiple raw HAVING entries with mixed AND/OR conjunctions 1`] = `"HAVING COUNT(*) > $1 AND SUM(amount) < $2 OR MAX(amount) > $3"`;
-
-exports[`compileHaving should compile multiple typed predicates with AND and OR conjunctions 1`] = `"HAVING "t0"."status" = $1 AND "t0"."amount" >= $2 OR "t0"."status" = $3"`;
-
-exports[`compileHaving should emit OR keyword for typed predicates with or conjunction 1`] = `"HAVING "t0"."status" = $1 OR "t0"."status" = $2 OR "t0"."status" = $3"`;
-
-exports[`compileHaving should join multiple raw entries — second raw uses AND when raw has 'and' conjunction after first clause 1`] = `"HAVING COUNT(*) > $1 AND AVG(amount) > $2"`;
-
-exports[`compileHaving should reindex raw entry $N placeholders when shared params array already has values 1`] = `"HAVING COUNT(*) > $2 AND SUM(amount) < $3"`;
-
-exports[`compileHaving should skip empty typed predicates and still include valid raw entry 1`] = `"HAVING COUNT(*) >= $1"`;
-
 exports[`compileHaving — complex typed predicates > should compile $between with correct param indices when params array is pre-populated 1`] = `"HAVING "t0"."amount" BETWEEN $3 AND $4"`;
 
 exports[`compileHaving — complex typed predicates > should compile $or predicate combined with a plain field condition in HAVING 1`] = `"HAVING "t0"."amount" >= $1 AND ("t0"."status" = $2 OR "t0"."status" = $3)"`;
@@ -45,13 +27,3 @@ exports[`compileHaving — complex typed predicates > should compile a $between 
 exports[`compileHaving — complex typed predicates > should compile a nested $or predicate in HAVING 1`] = `"HAVING ("t0"."status" = $1 OR "t0"."status" = $2)"`;
 
 exports[`compileHaving — complex typed predicates > should compile combined $or and $between predicates in the same HAVING clause 1`] = `"HAVING "t0"."amount" BETWEEN $1 AND $2 AND ("t0"."status" = $3 OR "t0"."status" = $4)"`;
-
-exports[`compileHaving — complex typed predicates should compile $between with correct param indices when params array is pre-populated 1`] = `"HAVING "t0"."amount" BETWEEN $3 AND $4"`;
-
-exports[`compileHaving — complex typed predicates should compile $or predicate combined with a plain field condition in HAVING 1`] = `"HAVING "t0"."amount" >= $1 AND ("t0"."status" = $2 OR "t0"."status" = $3)"`;
-
-exports[`compileHaving — complex typed predicates should compile a $between operator in HAVING 1`] = `"HAVING "t0"."amount" BETWEEN $1 AND $2"`;
-
-exports[`compileHaving — complex typed predicates should compile a nested $or predicate in HAVING 1`] = `"HAVING ("t0"."status" = $1 OR "t0"."status" = $2)"`;
-
-exports[`compileHaving — complex typed predicates should compile combined $or and $between predicates in the same HAVING clause 1`] = `"HAVING "t0"."amount" BETWEEN $1 AND $2 AND ("t0"."status" = $3 OR "t0"."status" = $4)"`;

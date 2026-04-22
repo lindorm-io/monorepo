@@ -19,25 +19,6 @@ exports[`compileAggregate — WHERE predicate criteria > should compile SUM with
 }
 `;
 
-exports[`compileAggregate — WHERE predicate criteria should compile AVG with multiple predicates ANDed 1`] = `
-{
-  "params": [
-    1,
-    500,
-  ],
-  "text": "SELECT AVG("t0"."price") AS "result" FROM "app"."orders" AS "t0" WHERE "t0"."quantity" >= $1 AND "t0"."price" <= $2",
-}
-`;
-
-exports[`compileAggregate — WHERE predicate criteria should compile SUM with a simple equality predicate 1`] = `
-{
-  "params": [
-    100,
-  ],
-  "text": "SELECT SUM("t0"."amount") AS "result" FROM "app"."orders" AS "t0" WHERE "t0"."amount" >= $1",
-}
-`;
-
 exports[`compileAggregate — aggregate type variations > should aggregate over a non-primary integer field 1`] = `
 {
   "params": [],
@@ -67,41 +48,6 @@ exports[`compileAggregate — aggregate type variations > should compile MIN wit
 `;
 
 exports[`compileAggregate — aggregate type variations > should compile SUM with no criteria 1`] = `
-{
-  "params": [],
-  "text": "SELECT SUM("t0"."amount") AS "result" FROM "app"."orders" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — aggregate type variations should aggregate over a non-primary integer field 1`] = `
-{
-  "params": [],
-  "text": "SELECT SUM("t0"."quantity") AS "result" FROM "app"."orders" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — aggregate type variations should compile AVG with no criteria 1`] = `
-{
-  "params": [],
-  "text": "SELECT AVG("t0"."amount") AS "result" FROM "app"."orders" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — aggregate type variations should compile MAX with no criteria 1`] = `
-{
-  "params": [],
-  "text": "SELECT MAX("t0"."amount") AS "result" FROM "app"."orders" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — aggregate type variations should compile MIN with no criteria 1`] = `
-{
-  "params": [],
-  "text": "SELECT MIN("t0"."amount") AS "result" FROM "app"."orders" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — aggregate type variations should compile SUM with no criteria 1`] = `
 {
   "params": [],
   "text": "SELECT SUM("t0"."amount") AS "result" FROM "app"."orders" AS "t0"",
@@ -148,46 +94,6 @@ exports[`compileAggregate — combined soft-delete + version filtering > should 
 }
 `;
 
-exports[`compileAggregate — combined soft-delete + version filtering should AND both conditions on versioned + soft-deletable entity 1`] = `
-{
-  "params": [],
-  "text": "SELECT SUM("t0"."amount") AS "result" FROM "app"."ledger_entries" AS "t0" WHERE "t0"."version_end_date" IS NULL AND "t0"."deleted_at" IS NULL",
-}
-`;
-
-exports[`compileAggregate — combined soft-delete + version filtering should AND user WHERE with both system conditions 1`] = `
-{
-  "params": [
-    0,
-  ],
-  "text": "SELECT SUM("t0"."amount") AS "result" FROM "app"."ledger_entries" AS "t0" WHERE "t0"."amount" >= $1 AND "t0"."version_end_date" IS NULL AND "t0"."deleted_at" IS NULL",
-}
-`;
-
-exports[`compileAggregate — combined soft-delete + version filtering should emit only soft-delete condition when withAllVersions is true 1`] = `
-{
-  "params": [],
-  "text": "SELECT MAX("t0"."amount") AS "result" FROM "app"."ledger_entries" AS "t0" WHERE "t0"."deleted_at" IS NULL",
-}
-`;
-
-exports[`compileAggregate — combined soft-delete + version filtering should emit only version condition when withDeleted is true 1`] = `
-{
-  "params": [],
-  "text": "SELECT AVG("t0"."amount") AS "result" FROM "app"."ledger_entries" AS "t0" WHERE "t0"."version_end_date" IS NULL",
-}
-`;
-
-exports[`compileAggregate — combined soft-delete + version filtering should use correct param indices with predicate + point-in-time versioning 1`] = `
-{
-  "params": [
-    10,
-    2025-06-15T12:00:00.000Z,
-  ],
-  "text": "SELECT SUM("t0"."amount") AS "result" FROM "app"."ledger_entries" AS "t0" WHERE "t0"."amount" >= $1 AND "t0"."version_start_date" <= $2 AND ("t0"."version_end_date" IS NULL OR "t0"."version_end_date" > $2) AND "t0"."deleted_at" IS NULL",
-}
-`;
-
 exports[`compileAggregate — namespace/schema qualification > should not add schema qualifier when namespace is null on entity 1`] = `
 {
   "params": [],
@@ -223,41 +129,6 @@ exports[`compileAggregate — namespace/schema qualification > should use explic
 }
 `;
 
-exports[`compileAggregate — namespace/schema qualification should not add schema qualifier when namespace is null on entity 1`] = `
-{
-  "params": [],
-  "text": "SELECT SUM("t0"."score") AS "result" FROM "metrics" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — namespace/schema qualification should prefer entity namespace over explicit namespace argument 1`] = `
-{
-  "params": [],
-  "text": "SELECT MAX("t0"."amount") AS "result" FROM "app"."orders" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — namespace/schema qualification should produce no schema when namespace is explicitly null 1`] = `
-{
-  "params": [],
-  "text": "SELECT MIN("t0"."score") AS "result" FROM "metrics" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — namespace/schema qualification should qualify table with entity namespace when present 1`] = `
-{
-  "params": [],
-  "text": "SELECT SUM("t0"."amount") AS "result" FROM "app"."orders" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — namespace/schema qualification should use explicit namespace argument when entity namespace is null 1`] = `
-{
-  "params": [],
-  "text": "SELECT AVG("t0"."score") AS "result" FROM "reporting"."metrics" AS "t0"",
-}
-`;
-
 exports[`compileAggregate — soft-delete filtering > should add DeleteDate IS NULL filter by default on soft-deletable entity 1`] = `
 {
   "params": [],
@@ -281,29 +152,6 @@ exports[`compileAggregate — soft-delete filtering > should omit soft-delete fi
 }
 `;
 
-exports[`compileAggregate — soft-delete filtering should add DeleteDate IS NULL filter by default on soft-deletable entity 1`] = `
-{
-  "params": [],
-  "text": "SELECT SUM("t0"."total") AS "result" FROM "app"."invoices" AS "t0" WHERE "t0"."deleted_at" IS NULL",
-}
-`;
-
-exports[`compileAggregate — soft-delete filtering should combine user predicate with soft-delete filter 1`] = `
-{
-  "params": [
-    50,
-  ],
-  "text": "SELECT MAX("t0"."total") AS "result" FROM "app"."invoices" AS "t0" WHERE "t0"."total" >= $1 AND "t0"."deleted_at" IS NULL",
-}
-`;
-
-exports[`compileAggregate — soft-delete filtering should omit soft-delete filter when withDeleted is true 1`] = `
-{
-  "params": [],
-  "text": "SELECT SUM("t0"."total") AS "result" FROM "app"."invoices" AS "t0"",
-}
-`;
-
 exports[`compileAggregate — version filtering > should emit VersionEndDate IS NULL by default on versioned entity 1`] = `
 {
   "params": [],
@@ -321,29 +169,6 @@ exports[`compileAggregate — version filtering > should emit point-in-time vers
 `;
 
 exports[`compileAggregate — version filtering > should omit version filter when withAllVersions is true 1`] = `
-{
-  "params": [],
-  "text": "SELECT SUM("t0"."value") AS "result" FROM "app"."prices" AS "t0"",
-}
-`;
-
-exports[`compileAggregate — version filtering should emit VersionEndDate IS NULL by default on versioned entity 1`] = `
-{
-  "params": [],
-  "text": "SELECT SUM("t0"."value") AS "result" FROM "app"."prices" AS "t0" WHERE "t0"."version_end_date" IS NULL",
-}
-`;
-
-exports[`compileAggregate — version filtering should emit point-in-time version condition when versionTimestamp is set 1`] = `
-{
-  "params": [
-    2025-06-15T12:00:00.000Z,
-  ],
-  "text": "SELECT AVG("t0"."value") AS "result" FROM "app"."prices" AS "t0" WHERE "t0"."version_start_date" <= $1 AND ("t0"."version_end_date" IS NULL OR "t0"."version_end_date" > $1)",
-}
-`;
-
-exports[`compileAggregate — version filtering should omit version filter when withAllVersions is true 1`] = `
 {
   "params": [],
   "text": "SELECT SUM("t0"."value") AS "result" FROM "app"."prices" AS "t0"",

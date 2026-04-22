@@ -27,31 +27,3 @@ exports[`diffEnums > should create new enum type 1`] = `
   },
 ]
 `;
-
-exports[`diffEnums should add new enum values 1`] = `
-[
-  {
-    "autocommit": true,
-    "description": "Add value 'banned' to enum "public"."enum_status"",
-    "schema": "public",
-    "severity": "safe",
-    "sql": "ALTER TYPE "public"."enum_status" ADD VALUE IF NOT EXISTS 'banned';",
-    "table": null,
-    "type": "add_enum_value",
-  },
-]
-`;
-
-exports[`diffEnums should create new enum type 1`] = `
-[
-  {
-    "autocommit": false,
-    "description": "Create enum type "public"."enum_status"",
-    "schema": "public",
-    "severity": "safe",
-    "sql": "CREATE TYPE "public"."enum_status" AS ENUM ('active', 'inactive');",
-    "table": null,
-    "type": "create_enum",
-  },
-]
-`;

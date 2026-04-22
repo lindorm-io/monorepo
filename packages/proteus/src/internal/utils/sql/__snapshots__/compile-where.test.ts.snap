@@ -58,64 +58,6 @@ exports[`compileWhere [mysql] > should use column name mapping 1`] = `"WHERE \`t
 
 exports[`compileWhere [mysql] > tableAlias = null > omits table alias prefix when tableAlias is null 1`] = `"\`name\` = ?"`;
 
-exports[`compileWhere [mysql] should compile $all (array containment) 1`] = `"WHERE JSON_CONTAINS(\`t0\`.\`tags\`, ?)"`;
-
-exports[`compileWhere [mysql] should compile $and at root level 1`] = `"WHERE (\`t0\`.\`name\` = ? AND \`t0\`.\`age\` >= ?)"`;
-
-exports[`compileWhere [mysql] should compile $between 1`] = `"WHERE \`t0\`.\`age\` BETWEEN ? AND ?"`;
-
-exports[`compileWhere [mysql] should compile $contained (array contained-by) 1`] = `"WHERE JSON_CONTAINS(?, \`t0\`.\`tags\`)"`;
-
-exports[`compileWhere [mysql] should compile $eq: null to IS NULL 1`] = `"WHERE \`t0\`.\`name\` IS NULL"`;
-
-exports[`compileWhere [mysql] should compile $exists: false to IS NULL 1`] = `"WHERE \`t0\`.\`email_address\` IS NULL"`;
-
-exports[`compileWhere [mysql] should compile $exists: true to IS NOT NULL 1`] = `"WHERE \`t0\`.\`email_address\` IS NOT NULL"`;
-
-exports[`compileWhere [mysql] should compile $has (JSON containment) 1`] = `"WHERE JSON_CONTAINS(\`t0\`.\`data\`, CAST(? AS JSON))"`;
-
-exports[`compileWhere [mysql] should compile $ilike 1`] = `"WHERE LOWER(\`t0\`.\`name\`) LIKE LOWER(?)"`;
-
-exports[`compileWhere [mysql] should compile $in with values 1`] = `"WHERE \`t0\`.\`name\` IN (?, ?, ?)"`;
-
-exports[`compileWhere [mysql] should compile $length 1`] = `"WHERE (\`t0\`.\`tags\` IS NOT NULL AND COALESCE(JSON_LENGTH(\`t0\`.\`tags\`), 0) = ?)"`;
-
-exports[`compileWhere [mysql] should compile $like 1`] = `"WHERE \`t0\`.\`name\` LIKE ?"`;
-
-exports[`compileWhere [mysql] should compile $mod 1`] = `"WHERE (\`t0\`.\`age\` % ?) = ?"`;
-
-exports[`compileWhere [mysql] should compile $neq: null to IS NOT NULL 1`] = `"WHERE \`t0\`.\`name\` IS NOT NULL"`;
-
-exports[`compileWhere [mysql] should compile $nin 1`] = `"WHERE \`t0\`.\`name\` NOT IN (?)"`;
-
-exports[`compileWhere [mysql] should compile $not at root level 1`] = `"WHERE NOT (\`t0\`.\`name\` = ?)"`;
-
-exports[`compileWhere [mysql] should compile $or at root level 1`] = `"WHERE (\`t0\`.\`name\` = ? OR \`t0\`.\`name\` = ?)"`;
-
-exports[`compileWhere [mysql] should compile $overlap (array overlap) 1`] = `"WHERE JSON_OVERLAPS(\`t0\`.\`tags\`, ?)"`;
-
-exports[`compileWhere [mysql] should compile AND conjunction between two predicates 1`] = `"WHERE \`t0\`.\`name\` = ? AND \`t0\`.\`age\` >= ?"`;
-
-exports[`compileWhere [mysql] should compile OR conjunction between two predicates 1`] = `"WHERE \`t0\`.\`name\` = ? OR \`t0\`.\`name\` = ?"`;
-
-exports[`compileWhere [mysql] should compile comparison operators ($gt, $lte) 1`] = `"WHERE (\`t0\`.\`age\` > ? AND \`t0\`.\`age\` <= ?)"`;
-
-exports[`compileWhere [mysql] should compile complex nested predicates 1`] = `"WHERE ((\`t0\`.\`name\` = ? AND \`t0\`.\`age\` >= ?) OR (\`t0\`.\`name\` = ? AND \`t0\`.\`age\` < ?))"`;
-
-exports[`compileWhere [mysql] should compile direct null value to IS NULL 1`] = `"WHERE \`t0\`.\`email_address\` IS NULL"`;
-
-exports[`compileWhere [mysql] should compile empty $in to FALSE 1`] = `"WHERE FALSE"`;
-
-exports[`compileWhere [mysql] should compile simple equality 1`] = `"WHERE \`t0\`.\`name\` = ?"`;
-
-exports[`compileWhere [mysql] should handle multiple fields in one predicate 1`] = `"WHERE (\`t0\`.\`name\` = ? AND \`t0\`.\`age\` = ?)"`;
-
-exports[`compileWhere [mysql] should not emit conjunction when first entry compiles to empty 1`] = `"WHERE \`t0\`.\`name\` = ?"`;
-
-exports[`compileWhere [mysql] should use column name mapping 1`] = `"WHERE \`t0\`.\`email_address\` = ?"`;
-
-exports[`compileWhere [mysql] tableAlias = null omits table alias prefix when tableAlias is null 1`] = `"\`name\` = ?"`;
-
 exports[`compileWhere [postgres] > should compile $all (array containment) 1`] = `"WHERE "t0"."tags" @> $1::jsonb"`;
 
 exports[`compileWhere [postgres] > should compile $and at root level 1`] = `"WHERE ("t0"."name" = $1 AND "t0"."age" >= $2)"`;
@@ -173,64 +115,6 @@ exports[`compileWhere [postgres] > should not emit conjunction when first entry 
 exports[`compileWhere [postgres] > should use column name mapping 1`] = `"WHERE "t0"."email_address" = $1"`;
 
 exports[`compileWhere [postgres] > tableAlias = null > omits table alias prefix when tableAlias is null 1`] = `""name" = $1"`;
-
-exports[`compileWhere [postgres] should compile $all (array containment) 1`] = `"WHERE "t0"."tags" @> $1::jsonb"`;
-
-exports[`compileWhere [postgres] should compile $and at root level 1`] = `"WHERE ("t0"."name" = $1 AND "t0"."age" >= $2)"`;
-
-exports[`compileWhere [postgres] should compile $between 1`] = `"WHERE "t0"."age" BETWEEN $1 AND $2"`;
-
-exports[`compileWhere [postgres] should compile $contained (array contained-by) 1`] = `"WHERE "t0"."tags" <@ $1::jsonb"`;
-
-exports[`compileWhere [postgres] should compile $eq: null to IS NULL 1`] = `"WHERE "t0"."name" IS NULL"`;
-
-exports[`compileWhere [postgres] should compile $exists: false to IS NULL 1`] = `"WHERE "t0"."email_address" IS NULL"`;
-
-exports[`compileWhere [postgres] should compile $exists: true to IS NOT NULL 1`] = `"WHERE "t0"."email_address" IS NOT NULL"`;
-
-exports[`compileWhere [postgres] should compile $has (JSON containment) 1`] = `"WHERE "t0"."data" @> $1::jsonb"`;
-
-exports[`compileWhere [postgres] should compile $ilike 1`] = `"WHERE "t0"."name" ILIKE $1"`;
-
-exports[`compileWhere [postgres] should compile $in with values 1`] = `"WHERE "t0"."name" IN ($1, $2, $3)"`;
-
-exports[`compileWhere [postgres] should compile $length 1`] = `"WHERE ("t0"."tags" IS NOT NULL AND COALESCE(array_length("t0"."tags", 1), 0) = $1)"`;
-
-exports[`compileWhere [postgres] should compile $like 1`] = `"WHERE "t0"."name" LIKE $1"`;
-
-exports[`compileWhere [postgres] should compile $mod 1`] = `"WHERE ("t0"."age" % $1) = $2"`;
-
-exports[`compileWhere [postgres] should compile $neq: null to IS NOT NULL 1`] = `"WHERE "t0"."name" IS NOT NULL"`;
-
-exports[`compileWhere [postgres] should compile $nin 1`] = `"WHERE "t0"."name" NOT IN ($1)"`;
-
-exports[`compileWhere [postgres] should compile $not at root level 1`] = `"WHERE NOT ("t0"."name" = $1)"`;
-
-exports[`compileWhere [postgres] should compile $or at root level 1`] = `"WHERE ("t0"."name" = $1 OR "t0"."name" = $2)"`;
-
-exports[`compileWhere [postgres] should compile $overlap (array overlap) 1`] = `"WHERE "t0"."tags" && $1::jsonb"`;
-
-exports[`compileWhere [postgres] should compile AND conjunction between two predicates 1`] = `"WHERE "t0"."name" = $1 AND "t0"."age" >= $2"`;
-
-exports[`compileWhere [postgres] should compile OR conjunction between two predicates 1`] = `"WHERE "t0"."name" = $1 OR "t0"."name" = $2"`;
-
-exports[`compileWhere [postgres] should compile comparison operators ($gt, $lte) 1`] = `"WHERE ("t0"."age" > $1 AND "t0"."age" <= $2)"`;
-
-exports[`compileWhere [postgres] should compile complex nested predicates 1`] = `"WHERE (("t0"."name" = $1 AND "t0"."age" >= $2) OR ("t0"."name" = $3 AND "t0"."age" < $4))"`;
-
-exports[`compileWhere [postgres] should compile direct null value to IS NULL 1`] = `"WHERE "t0"."email_address" IS NULL"`;
-
-exports[`compileWhere [postgres] should compile empty $in to FALSE 1`] = `"WHERE FALSE"`;
-
-exports[`compileWhere [postgres] should compile simple equality 1`] = `"WHERE "t0"."name" = $1"`;
-
-exports[`compileWhere [postgres] should handle multiple fields in one predicate 1`] = `"WHERE ("t0"."name" = $1 AND "t0"."age" = $2)"`;
-
-exports[`compileWhere [postgres] should not emit conjunction when first entry compiles to empty 1`] = `"WHERE "t0"."name" = $1"`;
-
-exports[`compileWhere [postgres] should use column name mapping 1`] = `"WHERE "t0"."email_address" = $1"`;
-
-exports[`compileWhere [postgres] tableAlias = null omits table alias prefix when tableAlias is null 1`] = `""name" = $1"`;
 
 exports[`compileWhere [sqlite] > should compile $all (array containment) 1`] = `"WHERE (EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value = ?) AND EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value = ?))"`;
 
@@ -290,64 +174,6 @@ exports[`compileWhere [sqlite] > should use column name mapping 1`] = `"WHERE "t
 
 exports[`compileWhere [sqlite] > tableAlias = null > omits table alias prefix when tableAlias is null 1`] = `""name" = ?"`;
 
-exports[`compileWhere [sqlite] should compile $all (array containment) 1`] = `"WHERE (EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value = ?) AND EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value = ?))"`;
-
-exports[`compileWhere [sqlite] should compile $and at root level 1`] = `"WHERE ("t0"."name" = ? AND "t0"."age" >= ?)"`;
-
-exports[`compileWhere [sqlite] should compile $between 1`] = `"WHERE "t0"."age" BETWEEN ? AND ?"`;
-
-exports[`compileWhere [sqlite] should compile $contained (array contained-by) 1`] = `"WHERE NOT EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value NOT IN (?, ?, ?, ?))"`;
-
-exports[`compileWhere [sqlite] should compile $eq: null to IS NULL 1`] = `"WHERE "t0"."name" IS NULL"`;
-
-exports[`compileWhere [sqlite] should compile $exists: false to IS NULL 1`] = `"WHERE "t0"."email_address" IS NULL"`;
-
-exports[`compileWhere [sqlite] should compile $exists: true to IS NOT NULL 1`] = `"WHERE "t0"."email_address" IS NOT NULL"`;
-
-exports[`compileWhere [sqlite] should compile $has (JSON containment) 1`] = `"WHERE json_extract("t0"."data", '$."key"') = ?"`;
-
-exports[`compileWhere [sqlite] should compile $ilike 1`] = `"WHERE LOWER("t0"."name") LIKE LOWER(?)"`;
-
-exports[`compileWhere [sqlite] should compile $in with values 1`] = `"WHERE "t0"."name" IN (?, ?, ?)"`;
-
-exports[`compileWhere [sqlite] should compile $length 1`] = `"WHERE ("t0"."tags" IS NOT NULL AND COALESCE(json_array_length("t0"."tags"), 0) = ?)"`;
-
-exports[`compileWhere [sqlite] should compile $like 1`] = `"WHERE "t0"."name" LIKE ?"`;
-
-exports[`compileWhere [sqlite] should compile $mod 1`] = `"WHERE ("t0"."age" % ?) = ?"`;
-
-exports[`compileWhere [sqlite] should compile $neq: null to IS NOT NULL 1`] = `"WHERE "t0"."name" IS NOT NULL"`;
-
-exports[`compileWhere [sqlite] should compile $nin 1`] = `"WHERE "t0"."name" NOT IN (?)"`;
-
-exports[`compileWhere [sqlite] should compile $not at root level 1`] = `"WHERE NOT ("t0"."name" = ?)"`;
-
-exports[`compileWhere [sqlite] should compile $or at root level 1`] = `"WHERE ("t0"."name" = ? OR "t0"."name" = ?)"`;
-
-exports[`compileWhere [sqlite] should compile $overlap (array overlap) 1`] = `"WHERE EXISTS (SELECT 1 FROM json_each("t0"."tags") WHERE value IN (?, ?))"`;
-
-exports[`compileWhere [sqlite] should compile AND conjunction between two predicates 1`] = `"WHERE "t0"."name" = ? AND "t0"."age" >= ?"`;
-
-exports[`compileWhere [sqlite] should compile OR conjunction between two predicates 1`] = `"WHERE "t0"."name" = ? OR "t0"."name" = ?"`;
-
-exports[`compileWhere [sqlite] should compile comparison operators ($gt, $lte) 1`] = `"WHERE ("t0"."age" > ? AND "t0"."age" <= ?)"`;
-
-exports[`compileWhere [sqlite] should compile complex nested predicates 1`] = `"WHERE (("t0"."name" = ? AND "t0"."age" >= ?) OR ("t0"."name" = ? AND "t0"."age" < ?))"`;
-
-exports[`compileWhere [sqlite] should compile direct null value to IS NULL 1`] = `"WHERE "t0"."email_address" IS NULL"`;
-
-exports[`compileWhere [sqlite] should compile empty $in to FALSE 1`] = `"WHERE FALSE"`;
-
-exports[`compileWhere [sqlite] should compile simple equality 1`] = `"WHERE "t0"."name" = ?"`;
-
-exports[`compileWhere [sqlite] should handle multiple fields in one predicate 1`] = `"WHERE ("t0"."name" = ? AND "t0"."age" = ?)"`;
-
-exports[`compileWhere [sqlite] should not emit conjunction when first entry compiles to empty 1`] = `"WHERE "t0"."name" = ?"`;
-
-exports[`compileWhere [sqlite] should use column name mapping 1`] = `"WHERE "t0"."email_address" = ?"`;
-
-exports[`compileWhere [sqlite] tableAlias = null omits table alias prefix when tableAlias is null 1`] = `""name" = ?"`;
-
 exports[`compileWhere dialect-specific: $regex > mysql: case-sensitive regex uses REGEXP without (?i) 1`] = `"WHERE \`t0\`.\`name\` REGEXP ?"`;
 
 exports[`compileWhere dialect-specific: $regex > mysql: uses REGEXP with inline (?i) for case-insensitive 1`] = `"WHERE \`t0\`.\`name\` REGEXP ?"`;
@@ -355,11 +181,3 @@ exports[`compileWhere dialect-specific: $regex > mysql: uses REGEXP with inline 
 exports[`compileWhere dialect-specific: $regex > postgres: case-insensitive regex uses ~* operator 1`] = `"WHERE "t0"."name" ~* $1"`;
 
 exports[`compileWhere dialect-specific: $regex > postgres: case-sensitive regex uses ~ operator 1`] = `"WHERE "t0"."name" ~ $1"`;
-
-exports[`compileWhere dialect-specific: $regex mysql: case-sensitive regex uses REGEXP without (?i) 1`] = `"WHERE \`t0\`.\`name\` REGEXP ?"`;
-
-exports[`compileWhere dialect-specific: $regex mysql: uses REGEXP with inline (?i) for case-insensitive 1`] = `"WHERE \`t0\`.\`name\` REGEXP ?"`;
-
-exports[`compileWhere dialect-specific: $regex postgres: case-insensitive regex uses ~* operator 1`] = `"WHERE "t0"."name" ~* $1"`;
-
-exports[`compileWhere dialect-specific: $regex postgres: case-sensitive regex uses ~ operator 1`] = `"WHERE "t0"."name" ~ $1"`;

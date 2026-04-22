@@ -12,51 +12,7 @@ QbTestProduct {
 }
 `;
 
-exports[`MemoryQueryBuilder.getMany select projects only requested fields 1`] = `
-QbTestProduct {
-  "category": undefined,
-  "createdAt": undefined,
-  "id": undefined,
-  "name": "A",
-  "price": undefined,
-  "updatedAt": undefined,
-  "version": undefined,
-}
-`;
-
 exports[`MemoryQueryBuilder.toQuery / clone > toQuery returns state and driver identifier 1`] = `
-{
-  "driver": "memory",
-  "state": {
-    "cteFrom": null,
-    "ctes": [],
-    "distinct": false,
-    "filterOverrides": {},
-    "groupBy": null,
-    "having": [],
-    "includes": [],
-    "lock": null,
-    "orderBy": null,
-    "predicates": [],
-    "rawHaving": [],
-    "rawSelections": [],
-    "rawWhere": [],
-    "resolvedFilters": [],
-    "selections": null,
-    "setOperations": [],
-    "skip": null,
-    "subqueryPredicates": [],
-    "take": null,
-    "versionTimestamp": null,
-    "windows": [],
-    "withAllVersions": false,
-    "withDeleted": false,
-    "withoutScope": false,
-  },
-}
-`;
-
-exports[`MemoryQueryBuilder.toQuery / clone toQuery returns state and driver identifier 1`] = `
 {
   "driver": "memory",
   "state": {

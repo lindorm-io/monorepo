@@ -97,103 +97,6 @@ exports[`dehydrateEntity > should use metadata name for field mapping 1`] = `
 }
 `;
 
-exports[`dehydrateEntity should apply transform.to() when present 1`] = `
-{
-  "_id": "abc",
-  "code": "HELLO",
-}
-`;
-
-exports[`dehydrateEntity should build compound _id for composite PK 1`] = `
-{
-  "_id": {
-    "tenantId": "t1",
-    "userId": "u1",
-  },
-  "name": "John",
-}
-`;
-
-exports[`dehydrateEntity should convert undefined to explicit null for nullable fields 1`] = `
-{
-  "_id": "abc",
-  "nickname": null,
-}
-`;
-
-exports[`dehydrateEntity should dehydrate simple entity with string and number fields 1`] = `
-{
-  "_id": "abc-123",
-  "age": 30,
-  "name": "John",
-}
-`;
-
-exports[`dehydrateEntity should flatten embedded entity to dot-notation fields 1`] = `
-{
-  "_id": "abc",
-  "address.city": "Stockholm",
-  "address.zip": "11122",
-}
-`;
-
-exports[`dehydrateEntity should handle boolean fields 1`] = `
-{
-  "_id": "abc",
-  "active": true,
-}
-`;
-
-exports[`dehydrateEntity should handle null embedded parent 1`] = `
-{
-  "_id": "abc",
-  "address.city": null,
-}
-`;
-
-exports[`dehydrateEntity should include version field 1`] = `
-{
-  "_id": "abc",
-  "version": 3,
-}
-`;
-
-exports[`dehydrateEntity should keep Date fields as Date objects 1`] = `
-{
-  "_id": "abc",
-  "createdAt": 2024-01-01T00:00:00.000Z,
-}
-`;
-
-exports[`dehydrateEntity should map PK field to _id 1`] = `
-{
-  "_id": "abc-123",
-  "name": "John",
-}
-`;
-
-exports[`dehydrateEntity should skip computed fields 1`] = `
-{
-  "_id": "abc",
-  "name": "John",
-}
-`;
-
-exports[`dehydrateEntity should stamp discriminator value for inheritance children 1`] = `
-{
-  "_id": "abc",
-  "name": "John",
-  "type": "admin",
-}
-`;
-
-exports[`dehydrateEntity should use metadata name for field mapping 1`] = `
-{
-  "_id": "abc",
-  "email_addr": "test@example.com",
-}
-`;
-
 exports[`dehydrateToRow > should include discriminator value 1`] = `
 {
   "id": "abc",
@@ -203,22 +106,6 @@ exports[`dehydrateToRow > should include discriminator value 1`] = `
 `;
 
 exports[`dehydrateToRow > should produce a row dict keyed by entity field keys 1`] = `
-{
-  "emailAddress": "test@example.com",
-  "id": "abc",
-  "name": "John",
-}
-`;
-
-exports[`dehydrateToRow should include discriminator value 1`] = `
-{
-  "id": "abc",
-  "name": "Test",
-  "type": "child",
-}
-`;
-
-exports[`dehydrateToRow should produce a row dict keyed by entity field keys 1`] = `
 {
   "emailAddress": "test@example.com",
   "id": "abc",

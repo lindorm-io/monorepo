@@ -17,21 +17,3 @@ exports[`RedisDriver > rollbackTransaction > sets handle state to rolledBack 1`]
   "state": "rolledBack",
 }
 `;
-
-exports[`RedisDriver beginTransaction returns a handle with active state 1`] = `
-{
-  "state": "active",
-}
-`;
-
-exports[`RedisDriver commitTransaction sets handle state to committed 1`] = `
-{
-  "state": "committed",
-}
-`;
-
-exports[`RedisDriver rollbackTransaction sets handle state to rolledBack 1`] = `
-{
-  "state": "rolledBack",
-}
-`;
