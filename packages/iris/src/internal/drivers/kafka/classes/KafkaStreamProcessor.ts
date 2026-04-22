@@ -31,7 +31,7 @@ export class KafkaStreamProcessor<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: IrisHookMeta;
+    meta?: IrisHookMeta;
     amphora?: unknown;
   }): KafkaStreamPipeline {
     return new KafkaStreamPipeline({
@@ -42,7 +42,7 @@ export class KafkaStreamProcessor<
       inputTopic: options.inputTopic,
       outputClass: options.outputClass,
       outputTopic: options.outputTopic,
-      context: options.context,
+      meta: options.meta,
       amphora: options.amphora,
     });
   }

@@ -13,7 +13,7 @@ export type MemoryRpcClientOptions<Req extends IMessage, Res extends IMessage> =
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

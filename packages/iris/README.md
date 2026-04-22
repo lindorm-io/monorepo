@@ -895,7 +895,7 @@ This is a standalone decorator that uses a separate staging path. For inline tra
 
 ### Lifecycle Hook Decorators
 
-Lifecycle hooks are **class decorators** that register callbacks at specific points in the message lifecycle. All hooks receive `(message, context?)` as arguments, where `context` is the source's context value.
+Lifecycle hooks are **class decorators** that register callbacks at specific points in the message lifecycle. All hooks receive `(message, meta)` as arguments, where `meta` is an `IrisHookMeta` carrying request-scoped metadata (`correlationId`, `actor`, `timestamp`).
 
 Hooks may be async (`void | Promise<void>`) unless otherwise noted.
 
@@ -914,7 +914,7 @@ class OrderPlaced {
 }
 ```
 
-**Argument:** `(message: M, context?: C) => void | Promise<void>`.
+**Argument:** `(message: M, meta: IrisHookMeta) => void | Promise<void>`.
 
 #### `@OnHydrate`
 
@@ -932,7 +932,7 @@ class UserEvent {
 }
 ```
 
-**Argument:** `(message: M, context?: C) => void | Promise<void>`.
+**Argument:** `(message: M, meta: IrisHookMeta) => void | Promise<void>`.
 
 #### `@OnValidate`
 
@@ -951,7 +951,7 @@ class BookingRequest {
 }
 ```
 
-**Argument:** `(message: M, context?: C) => void | Promise<void>`.
+**Argument:** `(message: M, meta: IrisHookMeta) => void | Promise<void>`.
 
 #### `@BeforePublish` / `@AfterPublish`
 
@@ -970,7 +970,7 @@ class OrderPlaced {
 }
 ```
 
-**Argument:** `(message: M, context?: C) => void | Promise<void>`.
+**Argument:** `(message: M, meta: IrisHookMeta) => void | Promise<void>`.
 
 #### `@BeforeConsume` / `@AfterConsume`
 
@@ -989,11 +989,11 @@ class OrderPlaced {
 }
 ```
 
-**Argument:** `(message: M, context?: C) => void | Promise<void>`.
+**Argument:** `(message: M, meta: IrisHookMeta) => void | Promise<void>`.
 
 #### `@OnConsumeError`
 
-Fires when a consume callback throws an error. Receives the error as the **first** argument, followed by the message and context.
+Fires when a consume callback throws an error. Receives the error as the **first** argument, followed by the message and meta.
 
 ```typescript
 @OnConsumeError(async (error, msg) => {
@@ -1006,7 +1006,7 @@ class PaymentCharge {
 }
 ```
 
-**Argument:** `(error: Error, message: M, context?: C) => void | Promise<void>`.
+**Argument:** `(error: Error, message: M, meta: IrisHookMeta) => void | Promise<void>`.
 
 Note the different signature: `error` is the first parameter, unlike all other hooks where the message comes first.
 
@@ -1225,7 +1225,10 @@ await source.connect();
 await source.setup();
 
 // Clone shares the connection but has its own logger and subscriber registry
-const scoped = source.clone({ logger: requestLogger, context: { requestId: "abc" } });
+const scoped = source.session({
+  logger: requestLogger,
+  meta: { correlationId: "abc", actor: null, timestamp: new Date() },
+});
 
 const pub = scoped.publisher(OrderPlaced);
 await pub.publish(pub.create({ orderId: "abc-123", total: 59.99 }));

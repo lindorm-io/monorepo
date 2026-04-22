@@ -41,7 +41,7 @@ const resolveStreamName = (prefix: string): string => {
 
 export type NatsDriverOptions = {
   logger: ILogger;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   servers: string | Array<string>;
@@ -54,7 +54,7 @@ export type NatsDriverOptions = {
 
 export class NatsDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: IrisHookMeta | undefined;
+  private readonly meta: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: NatsSharedState;
@@ -71,7 +71,7 @@ export class NatsDriver implements IIrisDriver {
 
   public constructor(options: NatsDriverOptions, state?: NatsSharedState) {
     this.logger = options.logger.child(["NatsDriver"]);
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
     this.servers = options.servers;
@@ -280,7 +280,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsPublisher<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -294,7 +294,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsMessageBus<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -309,7 +309,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsWorkerQueue<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -322,7 +322,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsStreamProcessor({
       state: this.state,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -336,7 +336,7 @@ export class NatsDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -350,7 +350,7 @@ export class NatsDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -369,7 +369,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsDriver(
       {
         logger: this.logger,
-        context: this.context,
+        meta: this.meta,
         amphora: this.amphora,
         getSubscribers,
         servers: this.servers,

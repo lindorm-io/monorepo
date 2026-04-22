@@ -14,7 +14,7 @@ import type { IAmphora } from "@lindorm/amphora";
 export type DriverBaseOptions<M extends IMessage> = {
   target: Constructor<M>;
   logger: ILogger;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
 };
@@ -24,21 +24,21 @@ export abstract class DriverBase<M extends IMessage> {
   protected readonly metadata: MessageMetadata;
   protected readonly manager: MessageManager<M>;
   protected readonly logger: ILogger;
-  protected readonly context: IrisHookMeta;
+  protected readonly meta: IrisHookMeta;
   protected readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
 
   protected constructor(options: DriverBaseOptions<M>, loggerLabel: string) {
     this.target = options.target;
     this.metadata = getMessageMetadata(options.target);
-    const resolvedContext = options.context ?? createDefaultIrisHookMeta();
+    const resolvedMeta = options.meta ?? createDefaultIrisHookMeta();
     this.manager = new MessageManager<M>({
       target: options.target,
       logger: options.logger,
-      context: resolvedContext,
+      meta: resolvedMeta,
     });
     this.logger = options.logger.child([loggerLabel, this.metadata.message.name]);
-    this.context = resolvedContext;
+    this.meta = resolvedMeta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
   }

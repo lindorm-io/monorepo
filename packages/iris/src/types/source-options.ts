@@ -13,7 +13,7 @@ export type MessageScannerInput = Array<Constructor<IMessage> | string>;
 
 export type SessionOptions = {
   logger?: ILogger;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
 };
 
 export type IrisPersistenceDelayConfig =
@@ -34,7 +34,7 @@ export type IrisPersistenceOptions = {
 
 export type IrisSourceOptionsBase = {
   messages?: MessageScannerInput;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   logger: ILogger;
   amphora?: IAmphora;
   persistence?: IrisPersistenceOptions;

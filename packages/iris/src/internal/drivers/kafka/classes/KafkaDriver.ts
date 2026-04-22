@@ -41,7 +41,7 @@ const DEFAULT_SESSION_TIMEOUT_MS = 30_000;
 
 export type KafkaDriverOptions = {
   logger: ILogger;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   brokers: Array<string>;
@@ -56,7 +56,7 @@ export type KafkaDriverOptions = {
 
 export class KafkaDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: IrisHookMeta | undefined;
+  private readonly meta: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: KafkaSharedState;
@@ -70,7 +70,7 @@ export class KafkaDriver implements IIrisDriver {
 
   public constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
     this.logger = options.logger.child(["KafkaDriver"]);
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
     this.delayManager = options.delayManager;
@@ -382,7 +382,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaPublisher<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -396,7 +396,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaMessageBus<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -411,7 +411,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaWorkerQueue<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -424,7 +424,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaStreamProcessor({
       state: this.state,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -438,7 +438,7 @@ export class KafkaDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -452,7 +452,7 @@ export class KafkaDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -471,7 +471,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaDriver(
       {
         logger: this.logger,
-        context: this.context,
+        meta: this.meta,
         amphora: this.amphora,
         getSubscribers,
         brokers: this.state.connectionConfig.brokers,

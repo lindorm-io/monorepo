@@ -40,7 +40,7 @@ const DEFAULT_PREFIX = "iris";
 
 export type RedisDriverOptions = {
   logger: ILogger;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   url?: string;
@@ -55,7 +55,7 @@ export type RedisDriverOptions = {
 
 export class RedisDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: IrisHookMeta | undefined;
+  private readonly meta: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: RedisSharedState;
@@ -69,7 +69,7 @@ export class RedisDriver implements IIrisDriver {
 
   public constructor(options: RedisDriverOptions, state?: RedisSharedState) {
     this.logger = options.logger.child(["RedisDriver"]);
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
     this.delayManager = options.delayManager;
@@ -350,7 +350,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisPublisher<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -364,7 +364,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisMessageBus<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -379,7 +379,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisWorkerQueue<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -392,7 +392,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisStreamProcessor({
       state: this.state,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -406,7 +406,7 @@ export class RedisDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -420,7 +420,7 @@ export class RedisDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -439,7 +439,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisDriver(
       {
         logger: this.logger,
-        context: this.context,
+        meta: this.meta,
         amphora: this.amphora,
         getSubscribers,
         url: this.state.connectionConfig.url,

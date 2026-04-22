@@ -35,7 +35,7 @@ export type MetaHook = {
   decorator: MetaHookDecorator;
   callback: (
     message: any,
-    context: IrisHookMeta,
+    meta: IrisHookMeta,
     ...extra: Array<any>
   ) => void | Promise<void>;
 };

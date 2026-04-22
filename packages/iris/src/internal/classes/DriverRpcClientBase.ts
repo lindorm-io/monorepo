@@ -21,7 +21,7 @@ export type DriverRpcClientBaseOptions<Req extends IMessage, Res extends IMessag
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: IrisHookMeta;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
 };
 
@@ -53,12 +53,12 @@ export abstract class DriverRpcClientBase<
     this.responseMetadata = getMessageMetadata(options.responseTarget);
     this.requestManager = new MessageManager<Req>({
       target: options.requestTarget,
-      context: options.context,
+      meta: options.meta,
       logger: options.logger,
     });
     this.responseManager = new MessageManager<Res>({
       target: options.responseTarget,
-      context: options.context,
+      meta: options.meta,
       logger: options.logger,
     });
     this.amphora = options.amphora;

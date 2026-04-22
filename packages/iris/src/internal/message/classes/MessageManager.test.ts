@@ -591,34 +591,34 @@ describe("MessageManager", () => {
     });
 
     it("should fire @OnCreate hook during create()", () => {
-      const ctx = {
+      const meta = {
         correlationId: "corr-abc",
         actor: "abc",
         timestamp: new Date("2020-01-01T00:00:00Z"),
       };
       const manager = new MessageManager({
         target: HookedEvent,
-        context: ctx,
+        meta,
       });
       const msg = manager.create({ name: "test" });
 
       expect(onCreateSpy).toHaveBeenCalledTimes(1);
       expect(onCreateSpy).toHaveBeenCalledWith(
         expect.objectContaining({ name: "test" }),
-        ctx,
+        meta,
       );
       expect(onCreateSpy.mock.calls[0][0]).toBe(msg);
     });
 
     it("should fire @OnHydrate hook during hydrate()", () => {
-      const ctx = {
+      const meta = {
         correlationId: "corr-abc",
         actor: "abc",
         timestamp: new Date("2020-01-01T00:00:00Z"),
       };
       const manager = new MessageManager({
         target: HookedEvent,
-        context: ctx,
+        meta,
       });
       manager.hydrate({
         id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
@@ -628,7 +628,7 @@ describe("MessageManager", () => {
       expect(onHydrateSpy).toHaveBeenCalledTimes(1);
       expect(onHydrateSpy).toHaveBeenCalledWith(
         expect.objectContaining({ name: "restored" }),
-        ctx,
+        meta,
       );
     });
 
@@ -643,14 +643,14 @@ describe("MessageManager", () => {
     });
 
     it("should fire @OnValidate hook during validate()", () => {
-      const ctx = {
+      const meta = {
         correlationId: "corr-abc",
         actor: "abc",
         timestamp: new Date("2020-01-01T00:00:00Z"),
       };
       const manager = new MessageManager({
         target: HookedEvent,
-        context: ctx,
+        meta,
       });
       const msg = manager.create({ name: "test" });
       onCreateSpy.mockReset();
@@ -658,7 +658,7 @@ describe("MessageManager", () => {
       manager.validate(msg);
 
       expect(onValidateSpy).toHaveBeenCalledTimes(1);
-      expect(onValidateSpy).toHaveBeenCalledWith(msg, ctx);
+      expect(onValidateSpy).toHaveBeenCalledWith(msg, meta);
     });
 
     it("should fire @OnCreate hook during copy()", () => {

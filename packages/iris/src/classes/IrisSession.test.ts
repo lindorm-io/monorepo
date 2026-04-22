@@ -50,7 +50,7 @@ const createSessionOptions = (
   overrides: Partial<IrisSessionOptions> = {},
 ): IrisSessionOptions => ({
   logger: createMockLogger() as any,
-  context: createDefaultIrisHookMeta(),
+  meta: createDefaultIrisHookMeta(),
   driver: createMockDriver(),
   driverType: "memory",
   messages: [FakeMessage as any],
