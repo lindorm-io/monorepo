@@ -1,22 +1,35 @@
 import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
 
-const proteusField = (driver: ProteusDriver): string | null => {
-  if (driver === "none" || driver === "memory") return null;
-  return `  proteusUrl: z.string(),`;
+const proteusFields = (driver: ProteusDriver): Array<string> => {
+  switch (driver) {
+    case "postgres":
+      return [`  postgresUrl: z.string(),`];
+    case "mysql":
+      return [`  mysqlUrl: z.string(),`];
+    case "mongo":
+      return [`  mongoUrl: z.string(),`];
+    case "redis":
+      return [`  redisUrl: z.string(),`];
+    case "sqlite":
+      return [`  sqlitePath: z.string(),`];
+    case "memory":
+      return [];
+  }
 };
 
-const irisField = (driver: IrisDriver): string | null => {
+const irisFields = (driver: IrisDriver): Array<string> => {
   switch (driver) {
     case "kafka":
-      return `  irisBrokers: z.string().transform((s) => s.split(",")),`;
+      return [`  kafkaBrokers: z.string().transform((s) => s.split(",")),`];
     case "nats":
-      return `  irisServers: z.string(),`;
+      return [`  natsServers: z.string(),`];
     case "rabbit":
+      return [`  rabbitUrl: z.string(),`];
     case "redis":
-      return `  irisUrl: z.string(),`;
+      return [`  redisUrl: z.string(),`];
     case "none":
     default:
-      return null;
+      return [];
   }
 };
 
@@ -31,11 +44,21 @@ export const buildConfigFile = (answers: Answers): string => {
     `  server: z.object({ port: z.number() }),`,
   ];
 
-  const proteus = proteusField(answers.proteusDriver);
-  if (proteus) lines.push(proteus);
+  const emitted = new Set<string>();
 
-  const iris = irisField(answers.irisDriver);
-  if (iris) lines.push(iris);
+  const pushUnique = (entries: ReadonlyArray<string>): void => {
+    for (const entry of entries) {
+      if (emitted.has(entry)) continue;
+      emitted.add(entry);
+      lines.push(entry);
+    }
+  };
+
+  for (const driver of answers.proteusDrivers) {
+    pushUnique(proteusFields(driver));
+  }
+
+  pushUnique(irisFields(answers.irisDriver));
 
   if (answers.features.auth) {
     lines.push(`  authClientId: z.string(),`);

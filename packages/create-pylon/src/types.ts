@@ -1,5 +1,4 @@
 export type ProteusDriver =
-  | "none"
   | "memory"
   | "mongo"
   | "mysql"
@@ -25,13 +24,36 @@ export type Answers = {
   projectName: string;
   projectDir: string;
   features: Features;
-  proteusDriver: ProteusDriver;
+  proteusDrivers: Array<ProteusDriver>;
   irisDriver: IrisDriver;
   workers: Array<WorkerKey>;
 };
 
+/**
+ * Order in which a primary ProteusSource is picked for pylon wiring when
+ * multiple drivers are selected. First match wins.
+ */
+export const PROTEUS_PRIMARY_PRIORITY: ReadonlyArray<ProteusDriver> = [
+  "postgres",
+  "mysql",
+  "mongo",
+  "redis",
+  "sqlite",
+  "memory",
+];
+
+/**
+ * Drivers that represent a DB-style store and therefore benefit from a
+ * query cache adapter. Redis, sqlite and memory are themselves fast/local
+ * enough that fronting them with a cache is pointless.
+ */
+export const PROTEUS_DB_DRIVERS: ReadonlyArray<ProteusDriver> = [
+  "postgres",
+  "mysql",
+  "mongo",
+];
+
 export const PROTEUS_DRIVER_PACKAGES: Record<ProteusDriver, Array<string>> = {
-  none: [],
   memory: [],
   mongo: ["mongodb"],
   mysql: ["mysql2"],
@@ -41,7 +63,6 @@ export const PROTEUS_DRIVER_PACKAGES: Record<ProteusDriver, Array<string>> = {
 };
 
 export const PROTEUS_DRIVER_DEV_PACKAGES: Record<ProteusDriver, Array<string>> = {
-  none: [],
   memory: [],
   mongo: [],
   mysql: [],
@@ -69,21 +90,20 @@ export const IRIS_DRIVER_DEV_PACKAGES: Record<IrisDriver, Array<string>> = {
 export type EnvEntry = { key: string; value: string };
 
 export const PROTEUS_ENV_VARS: Record<ProteusDriver, Array<EnvEntry>> = {
-  none: [],
   memory: [],
-  mongo: [{ key: "PROTEUS_URL", value: "mongodb://localhost:27017/app" }],
-  mysql: [{ key: "PROTEUS_URL", value: "mysql://localhost:3306/app" }],
-  postgres: [{ key: "PROTEUS_URL", value: "postgresql://localhost:5432/app" }],
-  redis: [{ key: "PROTEUS_URL", value: "redis://localhost:6379" }],
-  sqlite: [{ key: "PROTEUS_URL", value: "file:./data/app.db" }],
+  mongo: [{ key: "MONGO_URL", value: "mongodb://localhost:27017/app" }],
+  mysql: [{ key: "MYSQL_URL", value: "mysql://localhost:3306/app" }],
+  postgres: [{ key: "POSTGRES_URL", value: "postgresql://localhost:5432/app" }],
+  redis: [{ key: "REDIS_URL", value: "redis://localhost:6379" }],
+  sqlite: [{ key: "SQLITE_PATH", value: "./data/app.db" }],
 };
 
 export const IRIS_ENV_VARS: Record<IrisDriver, Array<EnvEntry>> = {
   none: [],
-  kafka: [{ key: "IRIS_BROKERS", value: "localhost:9092" }],
-  nats: [{ key: "IRIS_SERVERS", value: "localhost:4222" }],
-  rabbit: [{ key: "IRIS_URL", value: "amqp://localhost:5672" }],
-  redis: [{ key: "IRIS_URL", value: "redis://localhost:6379" }],
+  kafka: [{ key: "KAFKA_BROKERS", value: "localhost:9092" }],
+  nats: [{ key: "NATS_SERVERS", value: "localhost:4222" }],
+  rabbit: [{ key: "RABBIT_URL", value: "amqp://localhost:5672" }],
+  redis: [{ key: "REDIS_URL", value: "redis://localhost:6379" }],
 };
 
 export const AUTH_ENV_VARS: ReadonlyArray<EnvEntry> = [
@@ -110,15 +130,13 @@ export const BASE_RUNTIME_DEPENDENCIES: ReadonlyArray<string> = [
 ];
 
 export const BASE_DEV_DEPENDENCIES: ReadonlyArray<string> = [
-  "@types/jest",
   "@types/node",
   "@types/supertest",
   "globals",
-  "jest",
   "mockdate",
   "nock",
   "supertest",
-  "ts-jest",
   "tsx",
   "typescript",
+  "vitest",
 ];

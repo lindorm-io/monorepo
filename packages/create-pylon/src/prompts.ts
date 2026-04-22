@@ -2,6 +2,7 @@ import { checkbox, confirm, input, select } from "@inquirer/prompts";
 import { existsSync, readdirSync, rmSync } from "fs";
 import { resolve } from "path";
 import type { Answers, Features, IrisDriver, ProteusDriver, WorkerKey } from "./types.js";
+import { PROTEUS_PRIMARY_PRIORITY } from "./types.js";
 
 type RunPromptsInput = {
   positionalName?: string;
@@ -33,19 +34,10 @@ const promptFeatures = async (): Promise<Pick<Features, "http" | "socket">> => {
   };
 };
 
-const promptProteusDriver = async (): Promise<ProteusDriver> =>
-  select<ProteusDriver>({
-    message: "Persistence driver (Proteus):",
-    default: "none",
-    choices: [
-      { name: "none", value: "none" },
-      { name: "memory", value: "memory" },
-      { name: "mongo", value: "mongo" },
-      { name: "mysql", value: "mysql" },
-      { name: "postgres", value: "postgres" },
-      { name: "redis", value: "redis" },
-      { name: "sqlite", value: "sqlite" },
-    ],
+const promptProteusDrivers = async (): Promise<Array<ProteusDriver>> =>
+  checkbox<ProteusDriver>({
+    message: "Persistence drivers (Proteus) — pick any, primary chosen by priority:",
+    choices: PROTEUS_PRIMARY_PRIORITY.map((value) => ({ name: value, value })),
   });
 
 const promptIrisDriver = async (): Promise<IrisDriver> =>
@@ -121,18 +113,22 @@ export const runPrompts = async ({
   await resolveExistingCollision(projectDir);
 
   const featureFlags = await promptFeatures();
-  const proteusDriver = await promptProteusDriver();
+  const proteusDrivers = await promptProteusDrivers();
   const irisDriver = await promptIrisDriver();
 
-  const bothSelected = proteusDriver !== "none" && irisDriver !== "none";
+  const hasProteus = proteusDrivers.length > 0;
+  const hasIris = irisDriver !== "none";
+  const bothSelected = hasProteus && hasIris;
   const webhooks = bothSelected ? await promptWebhooks() : false;
   const audit = bothSelected ? await promptAudit() : false;
 
   const auth = await promptAuth();
   const session = auth;
-  const rateLimit = proteusDriver !== "none" ? await promptRateLimit() : false;
+  const canRateLimit =
+    proteusDrivers.includes("redis") || proteusDrivers.includes("memory");
+  const rateLimit = canRateLimit ? await promptRateLimit() : false;
 
-  const workers = proteusDriver !== "none" ? await promptWorkers() : [];
+  const workers = hasProteus ? await promptWorkers() : [];
 
   return {
     projectName,
@@ -146,7 +142,7 @@ export const runPrompts = async ({
       auth,
       rateLimit,
     },
-    proteusDriver,
+    proteusDrivers,
     irisDriver,
     workers,
   };

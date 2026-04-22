@@ -14,6 +14,7 @@ import { buildDockerCompose } from "./build-docker-compose.js";
 import { buildIrisSamples } from "./build-iris-samples.js";
 import { buildPylonFile } from "./build-pylon-file.js";
 import { buildWorkerFile } from "./build-worker-file.js";
+import { runProteusInit } from "./drivers.js";
 import type { Answers } from "./types.js";
 import {
   AUTH_ENV_VARS,
@@ -77,15 +78,18 @@ export const copyTemplates = (answers: Answers): void => {
 export const buildDependencyList = (answers: Answers): Array<string> => {
   const deps: Array<string> = [];
 
-  if (answers.proteusDriver !== "none") {
-    deps.push("@lindorm/proteus", ...PROTEUS_DRIVER_PACKAGES[answers.proteusDriver]);
+  if (answers.proteusDrivers.length > 0) {
+    deps.push("@lindorm/proteus");
+    for (const driver of answers.proteusDrivers) {
+      deps.push(...PROTEUS_DRIVER_PACKAGES[driver]);
+    }
   }
 
   if (answers.irisDriver !== "none") {
     deps.push("@lindorm/iris", ...IRIS_DRIVER_PACKAGES[answers.irisDriver]);
   }
 
-  return deps;
+  return Array.from(new Set(deps));
 };
 
 export const buildDevDependencyList = (_answers: Answers): Array<string> => [];
@@ -108,9 +112,13 @@ export const writePackageJson = (answers: Answers): void => {
     devDependencies: {},
   };
 
-  const driverNeedsCompose =
-    ["postgres", "mysql", "mongo", "redis"].includes(answers.proteusDriver) ||
-    ["kafka", "nats", "rabbit", "redis"].includes(answers.irisDriver);
+  const proteusNeedsCompose = answers.proteusDrivers.some((d) =>
+    ["postgres", "mysql", "mongo", "redis"].includes(d),
+  );
+  const irisNeedsCompose = ["kafka", "nats", "rabbit", "redis"].includes(
+    answers.irisDriver,
+  );
+  const driverNeedsCompose = proteusNeedsCompose || irisNeedsCompose;
 
   if (driverNeedsCompose) {
     const scripts = pkg.scripts as Record<string, string>;
@@ -127,14 +135,21 @@ export const buildEnvLines = (
   kek: string = generateKekEnvString(),
 ): Array<string> => {
   const lines: Array<string> = ["NODE_ENV=development", `PYLON_KEK=${kek}`];
+  const seenEnvKeys = new Set<string>();
 
-  for (const entry of PROTEUS_ENV_VARS[answers.proteusDriver]) {
-    lines.push(`${entry.key}=${entry.value}`);
+  const pushEnvEntries = (entries: ReadonlyArray<{ key: string; value: string }>) => {
+    for (const entry of entries) {
+      if (seenEnvKeys.has(entry.key)) continue;
+      seenEnvKeys.add(entry.key);
+      lines.push(`${entry.key}=${entry.value}`);
+    }
+  };
+
+  for (const driver of answers.proteusDrivers) {
+    pushEnvEntries(PROTEUS_ENV_VARS[driver]);
   }
 
-  for (const entry of IRIS_ENV_VARS[answers.irisDriver]) {
-    lines.push(`${entry.key}=${entry.value}`);
-  }
+  pushEnvEntries(IRIS_ENV_VARS[answers.irisDriver]);
 
   if (answers.features.auth) {
     for (const entry of AUTH_ENV_VARS) {
@@ -171,8 +186,9 @@ export const writePylonFile = (answers: Answers): void => {
 };
 
 const needsDockerCompose = (answers: Answers): boolean =>
-  ["postgres", "mysql", "mongo", "redis"].includes(answers.proteusDriver) ||
-  ["kafka", "nats", "rabbit", "redis"].includes(answers.irisDriver);
+  answers.proteusDrivers.some((d) =>
+    ["postgres", "mysql", "mongo", "redis"].includes(d),
+  ) || ["kafka", "nats", "rabbit", "redis"].includes(answers.irisDriver);
 
 export const writeDockerCompose = (answers: Answers): void => {
   if (!needsDockerCompose(answers)) return;
@@ -223,4 +239,5 @@ export const scaffold = async (
   writeDockerCompose(answers);
   writeWorkerFiles(answers);
   writeIrisSamples(answers);
+  await runProteusInit(answers.projectDir, answers);
 };

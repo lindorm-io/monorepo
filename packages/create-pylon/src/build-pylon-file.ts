@@ -1,4 +1,26 @@
-import type { Answers } from "./types.js";
+import type { Answers, ProteusDriver } from "./types.js";
+import { PROTEUS_PRIMARY_PRIORITY } from "./types.js";
+
+const RATE_LIMIT_PRIORITY: ReadonlyArray<ProteusDriver> = ["redis", "memory"];
+
+const pickPrimary = (drivers: ReadonlyArray<ProteusDriver>): ProteusDriver | null => {
+  for (const d of PROTEUS_PRIMARY_PRIORITY) {
+    if (drivers.includes(d)) return d;
+  }
+  return null;
+};
+
+const pickRateLimitDriver = (
+  drivers: ReadonlyArray<ProteusDriver>,
+): ProteusDriver | null => {
+  for (const d of RATE_LIMIT_PRIORITY) {
+    if (drivers.includes(d)) return d;
+  }
+  return null;
+};
+
+const sourceImportPath = (driver: ProteusDriver, nested: boolean): string =>
+  nested ? `../proteus/${driver}/source.js` : `../proteus/source.js`;
 
 const buildImports = (answers: Answers): Array<string> => {
   const lines: Array<string> = [`import { Pylon } from "@lindorm/pylon";`];
@@ -13,8 +35,23 @@ const buildImports = (answers: Answers): Array<string> => {
     `import { config } from "./config.js";`,
   );
 
-  if (answers.proteusDriver !== "none") {
-    lines.push(`import { source as proteusSource } from "../proteus/source.js";`);
+  const drivers = answers.proteusDrivers;
+  const nested = drivers.length > 1;
+  const primary = pickPrimary(drivers);
+  const rateLimitDriver = answers.features.rateLimit
+    ? pickRateLimitDriver(drivers)
+    : null;
+
+  if (primary) {
+    lines.push(
+      `import { source as proteusSource } from "${sourceImportPath(primary, nested)}";`,
+    );
+  }
+
+  if (rateLimitDriver && rateLimitDriver !== primary) {
+    lines.push(
+      `import { source as rateLimitSource } from "${sourceImportPath(rateLimitDriver, nested)}";`,
+    );
   }
 
   if (answers.irisDriver !== "none") {
@@ -32,6 +69,13 @@ const buildWorkersPath = (answers: Answers): string | null => {
 
 const buildOptions = (answers: Answers): string => {
   const lines: Array<string> = [`  logger,`, `  amphora,`, `  port: config.server.port,`];
+  const drivers = answers.proteusDrivers;
+  const primary = pickPrimary(drivers);
+  const rateLimitDriver = answers.features.rateLimit
+    ? pickRateLimitDriver(drivers)
+    : null;
+  const rateLimitSourceRef =
+    rateLimitDriver && rateLimitDriver !== primary ? "rateLimitSource" : "proteusSource";
 
   if (answers.features.http) {
     lines.push(`  routes: join(import.meta.dirname, "..", "routes"),`);
@@ -45,7 +89,7 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`  rooms: { presence: true },`);
   }
 
-  if (answers.proteusDriver !== "none") {
+  if (primary) {
     lines.push(`  proteus: proteusSource,`);
     lines.push(`  kryptos: { enabled: true },`);
   }
@@ -72,7 +116,7 @@ const buildOptions = (answers: Answers): string => {
   if (answers.features.session) {
     lines.push(`  session: {`);
     lines.push(`    enabled: true,`);
-    if (answers.proteusDriver !== "none") {
+    if (primary) {
       lines.push(`    proteus: proteusSource,`);
     }
     lines.push(`    name: "sid",`);
@@ -99,12 +143,10 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`  },`);
   }
 
-  if (answers.features.rateLimit) {
+  if (answers.features.rateLimit && rateLimitDriver) {
     lines.push(`  rateLimit: {`);
     lines.push(`    enabled: true,`);
-    if (answers.proteusDriver !== "none") {
-      lines.push(`    proteus: proteusSource,`);
-    }
+    lines.push(`    proteus: ${rateLimitSourceRef},`);
     lines.push(`    strategy: "fixed",`);
     lines.push(`    window: "1m",`);
     lines.push(`    max: 60,`);
@@ -118,8 +160,11 @@ const buildOptions = (answers: Answers): string => {
   }
 
   lines.push(`  setup: async () => {`);
-  if (answers.proteusDriver !== "none") {
+  if (primary) {
     lines.push(`    await proteusSource.connect();`);
+  }
+  if (rateLimitDriver && rateLimitDriver !== primary) {
+    lines.push(`    await rateLimitSource.connect();`);
   }
   if (answers.irisDriver !== "none") {
     lines.push(`    await irisSource.connect();`);
