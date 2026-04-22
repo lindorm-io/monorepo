@@ -176,4 +176,21 @@ describe("MySqlDriver cancellation (integration)", () => {
     const result = await session.query<{ one: number }>("SELECT 1 AS one");
     expect(result.rows[0]).toEqual({ one: 1 });
   });
+
+  test("tx.client<MysqlQueryClient>() runs a raw query inside an active tx", async () => {
+    const session = driver.cloneWithGetters(
+      () => new Map(),
+      async () => {},
+    );
+
+    const result = await session.withTransaction(async (ctx) => {
+      const client = await ctx.client<{
+        query: (sql: string) => Promise<{ rows: Array<{ n: number }> }>;
+      }>();
+      const { rows } = await client.query("SELECT 1 AS n");
+      return rows[0].n;
+    });
+
+    expect(result).toBe(1);
+  });
 });

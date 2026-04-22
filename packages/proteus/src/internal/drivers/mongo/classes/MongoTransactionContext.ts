@@ -44,6 +44,12 @@ export class MongoTransactionContext implements ITransactionContext {
     return this.driver.createTransactionalQueryBuilder(target, this.handle);
   }
 
+  public async client<T>(): Promise<T> {
+    // The transaction-scoped client for MongoDB is the ClientSession — any
+    // driver calls made with `{ session }` participate in the open tx.
+    return this.handle.session as unknown as T;
+  }
+
   public async transaction<T>(
     fn: (ctx: MongoTransactionContext) => Promise<T>,
   ): Promise<T> {
