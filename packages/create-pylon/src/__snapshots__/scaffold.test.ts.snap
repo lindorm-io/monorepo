@@ -762,7 +762,7 @@ export const pylon = new Pylon({
   },
   session: {
     enabled: true,
-    proteus: proteusSource,
+    proteus: rateLimitSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -1930,7 +1930,7 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   session: {
     enabled: true,
-    proteus: proteusSource,
+    proteus: rateLimitSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,

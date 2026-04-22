@@ -526,6 +526,76 @@ describe("scaffold", () => {
           false,
         );
       });
+
+      test("session prefers redis over primary when both are selected", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          proteusDrivers: ["postgres", "redis"],
+          features: baseFeatures({ session: true, auth: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        const pylonFile = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        // session should bind to the redis source, not the postgres primary
+        expect(pylonFile).toMatch(
+          /session: \{[^}]*proteus: (sessionSource|rateLimitSource)/,
+        );
+        expect(pylonFile).toContain(
+          `import { source as sessionSource } from "../proteus/redis/source.js";`,
+        );
+      });
+
+      test("session reuses rateLimitSource when both land on the same driver", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          proteusDrivers: ["postgres", "redis"],
+          features: baseFeatures({ session: true, auth: true, rateLimit: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        const pylonFile = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        expect(pylonFile).toMatch(/session: \{[^}]*proteus: rateLimitSource/);
+        expect(pylonFile).not.toContain(`import { source as sessionSource }`);
+      });
+
+      test("session falls back to primary when no fast store is selected", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          proteusDrivers: ["postgres"],
+          features: baseFeatures({ session: true, auth: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        const pylonFile = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        expect(pylonFile).toMatch(/session: \{[^}]*proteus: proteusSource/);
+        expect(pylonFile).not.toContain(`import { source as sessionSource }`);
+      });
+
+      test("attaches every non-primary driver: postgres primary + mysql, mongo, redis, memory", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          proteusDrivers: ["postgres", "mysql", "mongo", "redis", "memory"],
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        const context = readFileSync(join(projectDir, "src/types/context.ts"), "utf-8");
+        const middleware = readFileSync(
+          join(projectDir, "src/middleware/attach-sources.ts"),
+          "utf-8",
+        );
+
+        expect(context).not.toContain("postgres?: IProteusSession");
+        expect(context).toContain("mysql?: IProteusSession");
+        expect(context).toContain("mongo?: IProteusSession");
+        expect(context).toContain("redis?: IProteusSession");
+        expect(context).toContain("memory?: IProteusSession");
+
+        expect(middleware).not.toContain("postgresSource");
+        expect(middleware).toContain("mysqlSource");
+        expect(middleware).toContain("mongoSource");
+        expect(middleware).toContain("redisSource");
+        expect(middleware).toContain("memorySource");
+      });
     });
   });
 });
