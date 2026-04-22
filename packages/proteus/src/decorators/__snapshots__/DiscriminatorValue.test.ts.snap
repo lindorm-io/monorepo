@@ -7,11 +7,3 @@ exports[`DiscriminatorValue > should stage __discriminatorValue with numeric val
 exports[`DiscriminatorValue > should stage __discriminatorValue with numeric value 42 1`] = `42`;
 
 exports[`DiscriminatorValue > should stage __discriminatorValue with string value 'car' 1`] = `"car"`;
-
-exports[`DiscriminatorValue should stage __discriminatorValue with another string value 'truck' 1`] = `"truck"`;
-
-exports[`DiscriminatorValue should stage __discriminatorValue with numeric value 1 1`] = `1`;
-
-exports[`DiscriminatorValue should stage __discriminatorValue with numeric value 42 1`] = `42`;
-
-exports[`DiscriminatorValue should stage __discriminatorValue with string value 'car' 1`] = `"car"`;

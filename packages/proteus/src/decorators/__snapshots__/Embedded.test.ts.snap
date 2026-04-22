@@ -12,16 +12,3 @@ exports[`Embedded — dehydration > should flatten embedded object into prefixed
   "work_zip": null,
 }
 `;
-
-exports[`Embedded — dehydration should flatten embedded object into prefixed columns 1`] = `
-{
-  "homeAddress_city": "Springfield",
-  "homeAddress_street": "123 Main St",
-  "homeAddress_zip": "62704",
-  "id": null,
-  "name": "Alice",
-  "work_city": "Shelbyville",
-  "work_street": "456 Work Ave",
-  "work_zip": null,
-}
-`;

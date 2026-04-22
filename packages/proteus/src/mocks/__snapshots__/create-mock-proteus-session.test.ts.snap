@@ -26,30 +26,3 @@ exports[`createMockProteusSession > should create a mock session with all method
   "transaction": [MockFunction],
 }
 `;
-
-exports[`createMockProteusSession should create a mock session with all methods as jest.fn() 1`] = `
-{
-  "client": [MockFunction],
-  "disableFilter": [MockFunction],
-  "driverType": "memory",
-  "enableFilter": [MockFunction],
-  "getEmitEntity": [MockFunction],
-  "getFilterRegistry": [MockFunction],
-  "hasEntity": [MockFunction],
-  "log": {
-    "child": [MockFunction],
-    "debug": [MockFunction],
-    "error": [MockFunction],
-    "info": [MockFunction],
-    "time": [MockFunction],
-    "verbose": [MockFunction],
-    "warn": [MockFunction],
-  },
-  "namespace": null,
-  "ping": [MockFunction],
-  "queryBuilder": [MockFunction],
-  "repository": [MockFunction],
-  "setFilterParams": [MockFunction],
-  "transaction": [MockFunction],
-}
-`;
