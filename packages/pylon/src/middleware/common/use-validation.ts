@@ -1,6 +1,6 @@
 import { JwtKit, type ValidateJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
-import { get } from "object-path";
+import objectPath from "object-path";
 import type { PylonMiddleware } from "../../types/index.js";
 
 export const useValidation = (
@@ -11,7 +11,7 @@ export const useValidation = (
     const timer = ctx.logger.time();
 
     try {
-      const token = get(ctx.state.tokens, tokenPath);
+      const token = objectPath.get(ctx.state.tokens, tokenPath);
 
       if (!token) {
         throw new ClientError("Token not found");

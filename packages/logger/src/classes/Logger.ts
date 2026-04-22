@@ -2,8 +2,8 @@ import { camelCase, camelKeys } from "@lindorm/case";
 import { isArray, isError, isObject } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import fastSafeStringify from "fast-safe-stringify";
-import { get, set } from "object-path";
-import { blue, green, red, yellow } from "picocolors";
+import objectPath from "object-path";
+import pc from "picocolors";
 import winston, { Logger as WinstonLogger } from "winston";
 import type { ILogger, ILoggerTimer } from "../interfaces/index.js";
 import type {
@@ -77,11 +77,11 @@ export class Logger implements ILogger {
 
   public static std: StdLogger = {
     log: (msg: string) => console.log(msg),
-    info: (msg: string) => console.info(green(msg)),
-    success: (msg: string) => console.log(green(msg)),
-    warn: (msg: string) => console.warn(yellow(msg)),
-    error: (msg: string) => console.error(red(msg)),
-    debug: (msg: string) => console.debug(blue(msg)),
+    info: (msg: string) => console.info(pc.green(msg)),
+    success: (msg: string) => console.log(pc.green(msg)),
+    warn: (msg: string) => console.warn(pc.yellow(msg)),
+    error: (msg: string) => console.error(pc.red(msg)),
+    debug: (msg: string) => console.debug(pc.blue(msg)),
   };
 
   // level
@@ -299,7 +299,7 @@ export class Logger implements ILogger {
     if (hasPathFilters) {
       for (const [path, callback] of this.filterRef.entries) {
         if (!callback) continue;
-        const item = get(content, path);
+        const item = objectPath.get(content, path);
         if (!item) continue;
         pathMatches.push([path, callback, item]);
       }
@@ -316,11 +316,11 @@ export class Logger implements ILogger {
       const data = JSON.parse(fastSafeStringify(content));
 
       for (const [path, callback, item] of pathMatches) {
-        set(data, path, callback(item));
+        objectPath.set(data, path, callback(item));
       }
 
       for (const [path, callback, item] of keyMatches) {
-        set(data, path, callback(item));
+        objectPath.set(data, path, callback(item));
       }
 
       return data;

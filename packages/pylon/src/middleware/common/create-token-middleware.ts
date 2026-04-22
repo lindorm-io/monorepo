@@ -2,7 +2,7 @@ import { isSocketContext } from "../../internal/utils/is-context.js";
 import type { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import { get } from "object-path";
+import objectPath from "object-path";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type Options = Omit<VerifyJwtOptions, "issuer"> & {
@@ -17,7 +17,7 @@ export const createTokenMiddleware =
       const timer = ctx.logger.time();
 
       try {
-        const token = get(ctx, path);
+        const token = objectPath.get(ctx, path);
 
         ctx.logger.debug("Token found on path", { token, path });
 
