@@ -18,6 +18,7 @@ import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { AggregateFunction } from "../../../types/aggregate.js";
 import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations.js";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import type { PaginateOptions } from "../../../../types/paginate-options.js";
 import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order.js";
 import type { JoinTableOps } from "../../../types/join-table-ops.js";
@@ -58,7 +59,7 @@ export type MongoRepositoryOptions<E extends IEntity> = {
   db: Db;
   namespace: string | null;
   logger: ILogger;
-  context?: unknown;
+  context?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   emitEntity?: EntityEmitFn;

@@ -47,6 +47,7 @@ import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-emb
 import type { MetaEmbeddedList } from "../../../entity/types/metadata.js";
 import type { ILogger } from "@lindorm/logger";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import type { PaginateOptions } from "../../../../types/paginate-options.js";
 import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order.js";
 import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory.js";
@@ -66,7 +67,7 @@ export type MemoryRepositoryOptions<E extends IEntity> = {
   store: MemoryStore;
   namespace: string | null;
   logger: ILogger;
-  context?: unknown;
+  context?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;

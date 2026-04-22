@@ -21,6 +21,7 @@ import type {
   MetadataResolver,
 } from "../../../interfaces/ProteusDriver.js";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
 import { isPgQueryCancelledError, toAbortError } from "../utils/abort.js";
 import { PostgresDriverError } from "../errors/PostgresDriverError.js";
@@ -190,7 +191,7 @@ export class PostgresDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): PostgresRepository<E> {
     const pool = this.getPool();
     const sessionSignal = this.signal;
@@ -303,7 +304,7 @@ export class PostgresDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): PostgresRepository<E> {
     const pgHandle = handle as PostgresTransactionHandle;
     const namespace = this.namespace;

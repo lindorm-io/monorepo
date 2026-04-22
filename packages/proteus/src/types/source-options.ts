@@ -5,6 +5,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { ConnectionOptions } from "node:tls";
 import type { IEntity } from "../interfaces/index.js";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
+import type { ProteusHookMeta } from "./proteus-hook-meta.js";
 import type { EntityScannerInput } from "./scanner.js";
 
 /**
@@ -42,8 +43,8 @@ export type ProteusSourceOptionsBase = {
   entities?: EntityScannerInput<IEntity>;
   /** Enable query caching with the given adapter and default TTL. */
   cache?: ProteusCacheConfig;
-  /** Arbitrary context passed to hooks and lifecycle callbacks. */
-  context?: unknown;
+  /** Default request-scoped hook metadata. Overridden per-request via session(). */
+  context?: ProteusHookMeta;
   /** Naming strategy for column name transformation. Defaults to `"none"`. */
   naming?: NamingStrategy;
   /** Database namespace (schema in SQL, database in Mongo, key prefix in Redis). */

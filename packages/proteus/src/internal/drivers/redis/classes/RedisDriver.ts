@@ -21,6 +21,7 @@ import type {
   TransactionOptions,
 } from "../../../../types/index.js";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type { RedisTransactionHandle } from "../types/redis-types.js";
@@ -157,7 +158,7 @@ export class RedisDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
     // NOTE (F-040): resolveMetadata applies naming strategy (DB column names).
@@ -201,7 +202,7 @@ export class RedisDriver implements IProteusDriver {
     target: Constructor<E>,
     _handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    context?: ProteusHookMeta,
   ): IProteusRepository<E> {
     // Redis has no transaction isolation -- delegate to non-transactional repository
     return this.createRepository(target, parent, context);

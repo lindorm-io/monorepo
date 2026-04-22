@@ -18,6 +18,7 @@ import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { AggregateFunction } from "../../../types/aggregate.js";
 import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations.js";
 import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
 import type { PaginateOptions } from "../../../../types/paginate-options.js";
 import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order.js";
 import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
@@ -59,7 +60,7 @@ export type RedisRepositoryOptions<E extends IEntity> = {
   client: Redis;
   namespace: string | null;
   logger: ILogger;
-  context?: unknown;
+  context?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   emitEntity?: EntityEmitFn;

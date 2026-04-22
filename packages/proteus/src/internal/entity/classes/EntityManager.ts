@@ -17,6 +17,7 @@ import type {
   MetaRelation,
 } from "../types/metadata.js";
 import type { EntityManagerOptions, GetIncrementFn } from "../types/entity-manager.js";
+import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
 import { defaultCloneEntity } from "../utils/default-clone-entity.js";
 import { defaultCreateEntity } from "../utils/default-create-entity.js";
 import { defaultCreateRaw } from "../utils/default-create-raw.js";
@@ -39,7 +40,7 @@ export class EntityManager<
   TExtra extends Dict = Dict,
   TDecorator extends MetaFieldDecorator = MetaFieldDecorator,
 > {
-  private readonly context: unknown;
+  private readonly context: ProteusHookMeta | undefined;
   private readonly getNextIncrement: GetIncrementFn | undefined;
   private readonly logger: ILogger | undefined;
   private readonly driver: string;

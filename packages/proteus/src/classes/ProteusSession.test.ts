@@ -220,7 +220,11 @@ describe("ProteusSession", () => {
       await source.connect();
       await source.setup();
 
-      const requestContext = { requestId: "req-456", actor: "user-1" };
+      const requestContext = {
+        correlationId: "req-456",
+        actor: "user-1",
+        timestamp: new Date(),
+      };
       const listener = vi.fn();
       source.on("entity:after-insert", listener);
 
@@ -257,7 +261,11 @@ describe("ProteusSession", () => {
         tenantId: "tenant-d",
       } as any);
 
-      const destroyContext = { requestId: "req-789", actor: "user-2" };
+      const destroyContext = {
+        correlationId: "req-789",
+        actor: "user-2",
+        timestamp: new Date(),
+      };
       const listener = vi.fn();
       source.on("entity:after-destroy", listener);
 
@@ -275,7 +283,7 @@ describe("ProteusSession", () => {
       await source.disconnect();
     });
 
-    test("should use source context when no session context provided", async () => {
+    test("should use the source-level default hook meta when no session context provided", async () => {
       const source = createSource();
       await source.connect();
       await source.setup();
@@ -291,10 +299,13 @@ describe("ProteusSession", () => {
       } as any);
 
       expect(listener).toHaveBeenCalledTimes(1);
-      // Source has no context set, so it should be undefined
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
-          context: undefined,
+          context: expect.objectContaining({
+            correlationId: "unknown",
+            actor: null,
+            timestamp: expect.any(Date),
+          }),
         }),
       );
 

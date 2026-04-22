@@ -10,6 +10,7 @@ import type {
 import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 import type {
   EntityEmitFn,
+  ProteusHookMeta,
   TransactionCallback,
   TransactionOptions,
 } from "../types/index.js";
@@ -23,10 +24,10 @@ import {
   disableFilter as disableFilterUtil,
 } from "../internal/utils/query/filter-registry.js";
 
-export type ProteusSessionOptions<C = unknown> = {
-  source: IProteusSource<C>;
+export type ProteusSessionOptions = {
+  source: IProteusSource;
   logger: ILogger;
-  context: C;
+  context: ProteusHookMeta;
   driver: IProteusDriver;
   registryRef: { current: FilterRegistry };
   resolveMetadata: MetadataResolver;
@@ -46,10 +47,10 @@ export type ProteusSessionOptions<C = unknown> = {
  * Sessions are ephemeral data-access handles — they expose no lifecycle,
  * event-subscription, or configuration methods.
  */
-export class ProteusSession<C = unknown> implements IProteusSession<C> {
-  private readonly source: IProteusSource<C>;
+export class ProteusSession implements IProteusSession {
+  private readonly source: IProteusSource;
   private readonly logger: ILogger;
-  private readonly context: C;
+  private readonly context: ProteusHookMeta;
   private readonly _driver: IProteusDriver;
   private _registryRef: { current: FilterRegistry };
   private readonly resolveMetadata: MetadataResolver;
@@ -58,7 +59,7 @@ export class ProteusSession<C = unknown> implements IProteusSession<C> {
   private readonly parentEmitEntity: EntityEmitFn;
   private readonly _signal: AbortSignal | undefined;
 
-  public constructor(options: ProteusSessionOptions<C>) {
+  public constructor(options: ProteusSessionOptions) {
     this.source = options.source;
     this._driver = options.driver;
     this.logger = options.logger;

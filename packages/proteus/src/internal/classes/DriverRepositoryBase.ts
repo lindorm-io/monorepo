@@ -32,6 +32,7 @@ import type { LazyRelationLoader } from "../entity/utils/install-lazy-relations.
 import type { LazyEmbeddedListLoader } from "../entity/utils/install-lazy-embedded-lists.js";
 import { installLazyEmbeddedLists } from "../entity/utils/install-lazy-embedded-lists.js";
 import type { EntityEmitFn } from "../../types/event-map.js";
+import type { ProteusHookMeta } from "../../types/proteus-hook-meta.js";
 import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
@@ -62,7 +63,7 @@ export type DriverRepositoryBaseOptions<E extends IEntity> = {
   logger: ILogger;
   driver: string;
   driverLabel: string;
-  context?: unknown;
+  context?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   emitEntity?: EntityEmitFn;
@@ -84,7 +85,7 @@ export abstract class DriverRepositoryBase<
   protected readonly hasAsyncRelationIds: boolean;
   protected readonly hasRelationCounts: boolean;
   private readonly emitEntity: EntityEmitFn;
-  private readonly _context: unknown;
+  private readonly _context: ProteusHookMeta | undefined;
 
   protected constructor(options: DriverRepositoryBaseOptions<E>) {
     this.executor = options.executor;
@@ -760,7 +761,12 @@ export abstract class DriverRepositoryBase<
   protected buildSubscriberEvent(
     entity: E,
     connection?: unknown,
-  ): { entity: E; metadata: EntityMetadata; connection: unknown; context: unknown } {
+  ): {
+    entity: E;
+    metadata: EntityMetadata;
+    connection: unknown;
+    context: ProteusHookMeta | undefined;
+  } {
     return {
       entity,
       metadata: this.metadata,

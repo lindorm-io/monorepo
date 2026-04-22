@@ -12,8 +12,7 @@ export type FilterRegistryEntry = {
 
 export type FilterRegistry = Map<string, FilterRegistryEntry>;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface IProteusRepositoryProvider<C = unknown> {
+export interface IProteusRepositoryProvider {
   readonly namespace: string | null;
   readonly driverType: string;
   readonly log: ILogger;
