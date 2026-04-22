@@ -12,6 +12,7 @@ exports[`createMockProteusSource > should create a mock source with all methods 
   "enableFilter": [MockFunction],
   "getEntityMetadata": [MockFunction],
   "getFilterRegistry": [MockFunction],
+  "hasEntity": [MockFunction],
   "log": {
     "child": [MockFunction],
     "debug": [MockFunction],
@@ -48,6 +49,7 @@ exports[`createMockProteusSource should create a mock source with all methods as
   "enableFilter": [MockFunction],
   "getEntityMetadata": [MockFunction],
   "getFilterRegistry": [MockFunction],
+  "hasEntity": [MockFunction],
   "log": {
     "child": [MockFunction],
     "debug": [MockFunction],
