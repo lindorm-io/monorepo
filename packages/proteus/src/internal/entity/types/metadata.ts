@@ -167,7 +167,7 @@ export type MetaHookDecorator =
 
 export type MetaHook = {
   decorator: MetaHookDecorator;
-  callback: (context: any, entity: any) => void | Promise<void>;
+  callback: (entity: any, context: any) => void | Promise<void>;
 };
 
 export type MetaIndexItem = {

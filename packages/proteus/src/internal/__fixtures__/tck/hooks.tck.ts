@@ -100,9 +100,9 @@ export const hooksSuite = (
       const repo = getHandle().repository(TckHooked);
       await repo.insert({ name: "HookArg" });
 
-      // Hooks now receive (context, entity) — entity is at index 1
+      // Hooks receive (entity, context) — entity is at index 0
       const hasEntityArg = hookCallback.mock.calls.some(
-        (call: any[]) => call[1] && call[1].name === "HookArg",
+        (call: any[]) => call[0] && call[0].name === "HookArg",
       );
       expect(hasEntityArg).toBe(true);
     });

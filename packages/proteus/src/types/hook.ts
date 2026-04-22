@@ -1,4 +1,5 @@
 import type { Constructor } from "@lindorm/types";
+import type { ProteusHookMeta } from "./proteus-hook-meta.js";
 
 /**
  * Synchronous hook callback for entity lifecycle events.
@@ -6,9 +7,9 @@ import type { Constructor } from "@lindorm/types";
  * Used by `@OnCreate`, `@OnValidate`, and `@OnHydrate`. These hooks run
  * synchronously during in-memory operations and must not return a Promise.
  */
-export type SyncHookCallback<T extends Constructor, C = unknown> = (
-  context: C,
+export type SyncHookCallback<T extends Constructor> = (
   entity: InstanceType<T>,
+  context: ProteusHookMeta,
 ) => void;
 
 /**
@@ -16,7 +17,7 @@ export type SyncHookCallback<T extends Constructor, C = unknown> = (
  *
  * Used by all Before/After lifecycle decorators (e.g. `@BeforeInsert`, `@AfterSave`).
  */
-export type HookCallback<T extends Constructor, C = unknown> = (
-  context: C,
+export type HookCallback<T extends Constructor> = (
   entity: InstanceType<T>,
+  context: ProteusHookMeta,
 ) => void | Promise<void>;

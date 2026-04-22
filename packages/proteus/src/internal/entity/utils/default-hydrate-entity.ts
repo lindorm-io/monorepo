@@ -1,6 +1,7 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
+import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
 import type { EntityMetadata } from "../types/metadata.js";
 import { decryptFieldValue } from "./decrypt-field-value.js";
 import { deserialise } from "./deserialise.js";
@@ -10,7 +11,7 @@ import { storeSnapshot } from "./snapshot-store.js";
 export type HydrateOptions = {
   snapshot?: boolean;
   hooks?: boolean;
-  context?: unknown;
+  context?: ProteusHookMeta;
   amphora?: IAmphora;
 };
 

@@ -9,7 +9,7 @@ import type { HookCallback } from "../types/index.js";
  * Use this for post-load enrichment such as fetching external data.
  */
 export const AfterLoad =
-  <T extends Constructor, C = unknown>(callback: HookCallback<T, C>) =>
+  <T extends Constructor>(callback: HookCallback<T>) =>
   (_target: T, context: ClassDecoratorContext<T>): void => {
     stageHook(context.metadata, { decorator: "AfterLoad", callback: callback as any });
   };
