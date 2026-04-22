@@ -48,7 +48,7 @@ describe("assertSessionCookieSafeForSockets", () => {
         session: { enabled: true } as any,
         cors: { allowOrigins: "*" },
       });
-      fail("expected to throw");
+      expect.fail("expected to throw");
     } catch (err: any) {
       expect(err).toMatchSnapshot({
         id: expect.any(String),

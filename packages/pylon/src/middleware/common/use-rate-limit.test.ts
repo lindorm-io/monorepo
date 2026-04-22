@@ -65,7 +65,7 @@ describe("useRateLimit", () => {
 
     try {
       await useRateLimit({ window: "1m", max: 10 })(ctx, next);
-      fail("Expected error to be thrown");
+      expect.fail("Expected error to be thrown");
     } catch (err: any) {
       expect(err).toBeInstanceOf(ClientError);
       expect(err.status).toBe(429);
@@ -216,7 +216,7 @@ describe("useRateLimit", () => {
 
     try {
       await useRateLimit({ window: "1m", max: 10 })(ctx, next);
-      fail("Expected error to be thrown");
+      expect.fail("Expected error to be thrown");
     } catch {
       // expected
     }
@@ -239,7 +239,7 @@ describe("useRateLimit", () => {
 
     try {
       await useRateLimit({ window: "1m", max: 10 })(ctx, next);
-      fail("Expected error to be thrown");
+      expect.fail("Expected error to be thrown");
     } catch {
       // expected
     }

@@ -32,7 +32,7 @@ describe("useScope", () => {
 
     try {
       await useScope({ params: () => ({}) })(ctx, next);
-      fail("expected error");
+      expect.fail("expected error");
     } catch (err: any) {
       expect(err).toBeInstanceOf(ServerError);
       expect(err.message).toMatchSnapshot();
