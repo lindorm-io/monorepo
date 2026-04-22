@@ -47,7 +47,11 @@ import { MySqlQueryBuilder } from "./MySqlQueryBuilder.js";
 import { AbortError } from "@lindorm/errors";
 import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
 import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
-import { isMysqlQueryInterruptedError, toAbortError } from "../utils/abort.js";
+import {
+  isMysqlQueryInterruptedError,
+  isTxBoundaryStatement,
+  toAbortError,
+} from "../utils/abort.js";
 
 export class MySqlDriver implements IProteusDriver {
   private readonly options: ProteusMysqlOptions;
@@ -666,9 +670,21 @@ export class MySqlDriver implements IProteusDriver {
     //
     // We do NOT pre-emptively reject queries here — ROLLBACK still needs to
     // run on the same connection after a cancel to leave the pool healthy.
+    //
+    // Post-success check: mysql quirk — a KILL QUERY of `SELECT SLEEP(n)`
+    // returns a "successful" row instead of rejecting with
+    // ER_QUERY_INTERRUPTED. If the signal aborted while the query was
+    // in-flight, treat a user-level success as cancelled. Tx-boundary
+    // statements (START TRANSACTION / COMMIT / ROLLBACK / SAVEPOINT / ...)
+    // are exempt so the caller's ROLLBACK path runs to completion and
+    // leaves the connection in a clean state.
     return this.wrapWithQueryClient(async (sql, params) => {
       try {
-        return (await connection.query(sql, params)) as [Array<any>, any];
+        const result = (await connection.query(sql, params)) as [Array<any>, any];
+        if (signal.aborted && !isTxBoundaryStatement(sql)) {
+          throw toAbortError(signal.reason);
+        }
+        return result;
       } catch (err) {
         if (isMysqlQueryInterruptedError(err)) {
           throw toAbortError(signal.reason, err);

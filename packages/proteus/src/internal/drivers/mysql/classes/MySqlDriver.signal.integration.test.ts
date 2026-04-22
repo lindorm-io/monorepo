@@ -193,4 +193,49 @@ describe("MySqlDriver cancellation (integration)", () => {
 
     expect(result).toBe(1);
   });
+
+  test("SELECT SLEEP inside withTransaction rejects as AbortError when aborted", async () => {
+    const controller = new AbortController();
+    const session = driver.cloneWithGetters(
+      () => new Map(),
+      async () => {},
+      controller.signal,
+    );
+
+    setTimeout(() => controller.abort({ kind: "client-disconnect" }), 100);
+
+    const start = Date.now();
+    const result = await session
+      .withTransaction(async (ctx) => {
+        const client = await ctx.client<{
+          query: (sql: string) => Promise<{ rows: Array<Record<string, unknown>> }>;
+        }>();
+        const { rows } = await client.query("SELECT SLEEP(5)");
+        return { ok: true as const, rows };
+      })
+      .catch((err: unknown) => ({ ok: false as const, err }));
+    const elapsed = Date.now() - start;
+
+    if (result.ok) {
+      throw new Error(
+        `expected abort to reject the query — it resolved after ${elapsed}ms: ${JSON.stringify(
+          result.rows,
+        )}`,
+      );
+    }
+    expect(result.err).toBeInstanceOf(AbortError);
+    // KILL QUERY plus post-success signal check finish well under the
+    // 5s SELECT SLEEP, but integration overhead (tx begin + tx rollback +
+    // kill dispatch) is higher than the pool path — allow 2500ms.
+    expect(elapsed).toBeLessThan(2500);
+
+    // Pool must stay healthy after the in-tx abort — ROLLBACK should have
+    // cleaned up the connection state, not poisoned it.
+    const healthCheck = driver.cloneWithGetters(
+      () => new Map(),
+      async () => {},
+    );
+    const ok = await healthCheck.query<{ one: number }>("SELECT 1 AS one");
+    expect(ok.rows[0]).toEqual({ one: 1 });
+  });
 });
