@@ -76,7 +76,7 @@ const buildImports = (answers: Answers): Array<string> => {
 
   if (nested && primary) {
     lines.push(
-      `import { attachSourcesMiddleware } from "../middleware/attach-sources.js";`,
+      `import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";`,
     );
   }
 
@@ -128,7 +128,7 @@ const buildOptions = (answers: Answers): string => {
   }
 
   if (nested && primary) {
-    lines.push(`  httpMiddleware: [attachSourcesMiddleware],`);
+    lines.push(`  httpMiddleware: [...attachSourcesMiddlewares],`);
   }
 
   if (answers.features.socket) {
@@ -136,7 +136,7 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`    enabled: true,`);
     lines.push(`    listeners: join(import.meta.dirname, "..", "listeners"),`);
     if (nested && primary) {
-      lines.push(`    middleware: [attachSourcesMiddleware],`);
+      lines.push(`    middleware: [...attachSourcesMiddlewares],`);
     }
     lines.push(`  },`);
     lines.push(`  rooms: { presence: true },`);
