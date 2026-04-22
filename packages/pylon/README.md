@@ -223,8 +223,6 @@ ctx.conduits; // HTTP clients (via @lindorm/conduit)
 ctx.entities; // Entity registry
 ctx.logger; // Per-request scoped logger
 
-ctx.repositories; // Proteus repositories (via middleware)
-ctx.caches; // Proteus caches (via middleware)
 ctx.publishers; // Iris publishers (via middleware)
 ctx.workerQueues; // Iris worker queues (via middleware)
 
@@ -851,32 +849,26 @@ Supported paths: `"data"` (default), `"body"`, `"headers"`, `"params"`, `"query"
 
 ### Data Sources
 
-Lazily initialise Proteus repositories, caches, Iris publishers, or worker queues on the context:
+Access Proteus repositories directly via `ctx.proteus`, and lazily initialise Iris publishers or worker queues on the context:
 
 ```typescript
-import {
-  createRepositoryMiddleware,
-  createCacheMiddleware,
-  createPublisherMiddleware,
-  createWorkerQueueMiddleware,
-} from "@lindorm/pylon";
+import { createPublisherMiddleware, createWorkerQueueMiddleware } from "@lindorm/pylon";
 
-router.use(createRepositoryMiddleware([User, Post]));
-router.use(createCacheMiddleware([Session]));
 router.use(createPublisherMiddleware([OrderPlaced]));
 router.use(createWorkerQueueMiddleware([ProcessOrder]));
 
 router.get(
   "/users",
   useHandler(async (ctx) => {
-    // Repositories named by camelCased entity name
-    const users = await ctx.repositories.user.find();
+    const users = await ctx.proteus.repository(User).find();
     return { body: users };
   }),
 );
 ```
 
-Each middleware accepts an optional second argument to override the global Proteus/Iris source.
+Apps that need multiple Proteus sources (e.g. postgres for durable state and redis for short-lived sessions) should attach the additional source under a distinct ctx key via app-level middleware, and call `.repository(Entity)` on it directly.
+
+Each Iris middleware accepts an optional second argument to override the global Iris source.
 
 ### Multi-Tenancy
 
