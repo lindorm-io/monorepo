@@ -65,8 +65,6 @@ export type PylonAuditOptions = {
   enabled: boolean;
   proteus?: IProteusSource;
   iris?: IIrisSource;
-  /** @deprecated use top-level `actor` on `PylonOptions` instead. */
-  actor?: (ctx: any) => string | null;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
   entities?: Array<Constructor<IEntity>>;

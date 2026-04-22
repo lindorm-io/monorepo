@@ -104,7 +104,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,
       createDependenciesMiddleware({
-        actor: this.options.actor ?? this.options.audit?.actor,
+        actor: this.options.actor,
         authConfig: this.authConfig,
         auditConfig:
           this.options.audit?.enabled && (this.options.audit.iris ?? this.options.iris)
