@@ -306,9 +306,20 @@ describe("IrisSource", () => {
     });
 
     it("should use a different context when provided", () => {
-      const source = new IrisSource(createMemoryOptions({ context: { tenant: "A" } }));
-      const session = source.session({ context: { tenant: "B" } });
+      const contextA = {
+        correlationId: "corr-a",
+        actor: "user-a",
+        timestamp: new Date(),
+      };
+      const contextB = {
+        correlationId: "corr-b",
+        actor: "user-b",
+        timestamp: new Date(),
+      };
+      const source = new IrisSource(createMemoryOptions({ context: contextA }));
+      const session = source.session({ context: contextB });
       expect(session.driver).toBe("memory");
+      expect(session.context).toEqual(contextB);
     });
 
     it("should clone a connected driver via cloneWithGetters", () => {

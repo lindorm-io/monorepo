@@ -1,4 +1,5 @@
 import type { IIrisDriver } from "../interfaces/IrisDriver.js";
+import { createDefaultIrisHookMeta } from "../types/iris-hook-meta.js";
 import { IrisSession, type IrisSessionOptions } from "./IrisSession.js";
 import { describe, expect, it, vi } from "vitest";
 
@@ -49,7 +50,7 @@ const createSessionOptions = (
   overrides: Partial<IrisSessionOptions> = {},
 ): IrisSessionOptions => ({
   logger: createMockLogger() as any,
-  context: { tenant: "test" },
+  context: createDefaultIrisHookMeta(),
   driver: createMockDriver(),
   driverType: "memory",
   messages: [FakeMessage as any],
