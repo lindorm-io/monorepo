@@ -18,6 +18,8 @@ export interface IProteusRepositoryProvider<C = unknown> {
   readonly driverType: string;
   readonly log: ILogger;
 
+  hasEntity<E extends IEntity>(target: Constructor<E>): boolean;
+
   repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E>;
   queryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E>;
   client<T>(): Promise<T>;

@@ -276,6 +276,11 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     return this._entities.map((target) => this.resolveMetadata(target));
   }
 
+  /** Check whether an entity class was registered with this source. */
+  public hasEntity<E extends IEntity>(target: Constructor<E>): boolean {
+    return this._entities.includes(target as Constructor<IEntity>);
+  }
+
   /** Open the database connection (or connection pool). */
   public async connect(): Promise<void> {
     if (this._driver) return; // idempotent

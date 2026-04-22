@@ -60,4 +60,10 @@ describe("createMockProteusSource", () => {
     expect(registry).toBeInstanceOf(Map);
     expect(registry.size).toBe(0);
   });
+
+  it("should return true by default for hasEntity()", () => {
+    const source = createMockProteusSource();
+
+    expect(source.hasEntity(TestEntity)).toBe(true);
+  });
 });
