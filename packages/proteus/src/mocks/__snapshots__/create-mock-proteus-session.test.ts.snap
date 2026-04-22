@@ -8,6 +8,7 @@ exports[`createMockProteusSession > should create a mock session with all method
   "enableFilter": [MockFunction],
   "getEmitEntity": [MockFunction],
   "getFilterRegistry": [MockFunction],
+  "hasEntity": [MockFunction],
   "log": {
     "child": [MockFunction],
     "debug": [MockFunction],
@@ -34,6 +35,7 @@ exports[`createMockProteusSession should create a mock session with all methods 
   "enableFilter": [MockFunction],
   "getEmitEntity": [MockFunction],
   "getFilterRegistry": [MockFunction],
+  "hasEntity": [MockFunction],
   "log": {
     "child": [MockFunction],
     "debug": [MockFunction],
