@@ -15,15 +15,17 @@ const mockQuit = vi.fn().mockResolvedValue("OK");
 const mockPing = vi.fn().mockResolvedValue("PONG");
 
 vi.mock("ioredis", async () => {
+  const MockRedis = vi.fn(function () {
+    return {
+      connect: mockConnect,
+      quit: mockQuit,
+      ping: mockPing,
+    };
+  });
+
   return {
-    __esModule: true,
-    default: vi.fn(function () {
-      return {
-        connect: mockConnect,
-        quit: mockQuit,
-        ping: mockPing,
-      };
-    }),
+    Redis: MockRedis,
+    default: MockRedis,
   };
 });
 
