@@ -54,6 +54,12 @@ const buildImports = (answers: Answers): Array<string> => {
     );
   }
 
+  if (nested && primary) {
+    lines.push(
+      `import { attachSourcesMiddleware } from "../middleware/attach-sources.js";`,
+    );
+  }
+
   if (answers.irisDriver !== "none") {
     lines.push(`import { source as irisSource } from "../iris/source.js";`);
   }
@@ -70,6 +76,7 @@ const buildWorkersPath = (answers: Answers): string | null => {
 const buildOptions = (answers: Answers): string => {
   const lines: Array<string> = [`  logger,`, `  amphora,`, `  port: config.server.port,`];
   const drivers = answers.proteusDrivers;
+  const nested = drivers.length > 1;
   const primary = pickPrimary(drivers);
   const rateLimitDriver = answers.features.rateLimit
     ? pickRateLimitDriver(drivers)
@@ -81,10 +88,17 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`  routes: join(import.meta.dirname, "..", "routes"),`);
   }
 
+  if (nested && primary) {
+    lines.push(`  httpMiddleware: [attachSourcesMiddleware],`);
+  }
+
   if (answers.features.socket) {
     lines.push(`  socket: {`);
     lines.push(`    enabled: true,`);
     lines.push(`    listeners: join(import.meta.dirname, "..", "listeners"),`);
+    if (nested && primary) {
+      lines.push(`    middleware: [attachSourcesMiddleware],`);
+    }
     lines.push(`  },`);
     lines.push(`  rooms: { presence: true },`);
   }
