@@ -6,6 +6,8 @@ import type { IScanData, IScanner } from "../interfaces/index.js";
 import type { StructureScannerOptions } from "../types/index.js";
 import { ScanData } from "./ScanData.js";
 
+const TS_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts"]);
+
 export class Scanner implements IScanner {
   private readonly deniedDirectories: Array<RegExp>;
   private readonly deniedExtensions: Array<RegExp>;
@@ -33,7 +35,23 @@ export class Scanner implements IScanner {
   public async import<T>(fileOrPath: IScanData | string): Promise<T> {
     const filePath = isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath;
     const { pathToFileURL } = await import("url");
-    const ns: any = await import(pathToFileURL(filePath).href);
+    const href = pathToFileURL(filePath).href;
+    const isTs = TS_EXTENSIONS.has(extname(filePath).toLowerCase());
+
+    // Try native dynamic import first. When the host runtime already handles
+    // TypeScript (tsx, vitest with a working transform, etc.) this keeps class
+    // identity intact — the host's module cache is reused. Only fall back to
+    // tsx's scoped loader when native fails on a .ts file with a signature
+    // that indicates "no one knows how to load this" (missing loader or a
+    // transformer that couldn't parse the syntax).
+    let ns: any;
+    try {
+      ns = await import(href);
+    } catch (error) {
+      if (!isTs || !Scanner.isTsLoadFailure(error)) throw error;
+      ns = await (await import("tsx/esm/api")).tsImport(href, import.meta.url);
+    }
+
     return Scanner.normalizeModule(ns) as T;
   }
 
@@ -69,6 +87,14 @@ export class Scanner implements IScanner {
     const { __esModule: _esm, ...userExports } = source;
     void _esm;
     return userExports;
+  }
+
+  private static isTsLoadFailure(error: unknown): boolean {
+    if (!error || typeof error !== "object") return false;
+    const code = (error as { code?: unknown }).code;
+    if (code === "ERR_UNKNOWN_FILE_EXTENSION") return true;
+    if (error instanceof SyntaxError) return true;
+    return false;
   }
 
   // public static

@@ -23,7 +23,7 @@ const scanner = new Scanner({
   deniedTypes: [/^fixture$/, /^test$/],
 });
 
-const tree = scanner.scan(__dirname);
+const tree = scanner.scan(import.meta.dirname);
 const flat = Scanner.flatten(tree);
 
 console.log(`\nscanned ${flat.length} file(s):`);

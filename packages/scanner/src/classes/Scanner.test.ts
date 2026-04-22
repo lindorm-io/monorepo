@@ -237,6 +237,12 @@ describe("Scanner", () => {
 
   describe("import", () => {
     const fixturePath = join(__dirname, "..", "__fixtures__", "import-fixture.ts");
+    const decoratorFixturePath = join(
+      __dirname,
+      "..",
+      "__fixtures__",
+      "decorator-fixture.ts",
+    );
 
     test("should import a file", async () => {
       const scanner = new Scanner();
@@ -257,6 +263,21 @@ describe("Scanner", () => {
       const scanner = new Scanner();
 
       await expect(scanner.import("/missing/module.ts")).rejects.toThrow();
+    });
+
+    // Exercises the tsx-fallback path: vitest's default oxc transformer does
+    // not lower TC39 stage-3 decorators, so native dynamic import throws a
+    // SyntaxError. Scanner catches it and re-imports via tsx/esm/api.
+    test("should fall back to tsx for files the host transformer rejects", async () => {
+      const scanner = new Scanner();
+      const result = await scanner.import<{
+        Decorated: new () => { alias: string };
+        created: { alias: string };
+      }>(decoratorFixturePath);
+
+      expect(result.created).toBeInstanceOf(result.Decorated);
+      expect(result.created.alias).toBe("decorated-fixture");
+      expect((result.Decorated as any)[Symbol.metadata]?.tag).toBe("decorated-fallback");
     });
   });
 
