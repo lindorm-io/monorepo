@@ -97,6 +97,8 @@ const buildOptions = (answers: Answers): string => {
   const lines: Array<string> = [
     `  logger,`,
     `  amphora,`,
+    `  name: config.npm.package.name,`,
+    `  version: config.npm.package.version,`,
     `  environment: config.node.env,`,
     `  port: config.server.port,`,
   ];
