@@ -17,6 +17,7 @@ import type {
   FilterRegistryGetter,
   MetadataResolver,
 } from "../../../interfaces/ProteusDriver.js";
+import { toAbortError } from "../../../utils/abort.js";
 import { SqliteDriverError } from "../errors/SqliteDriverError.js";
 import { SqliteMigrationError } from "../errors/SqliteMigrationError.js";
 import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
@@ -48,6 +49,7 @@ export class SqliteDriver implements IProteusDriver {
   private readonly emitEntity: EntityEmitFn;
   private readonly amphora: IAmphora | undefined;
   private db: SqliteQueryClient | null = null;
+  private signal: AbortSignal | undefined;
 
   public constructor(
     options: ProteusSqliteOptions,
@@ -147,6 +149,7 @@ export class SqliteDriver implements IProteusDriver {
     sql: string,
     values?: Array<unknown>,
   ): Promise<ProteusResult<R>> {
+    this.checkSignal();
     const client = this.getClient();
 
     // Detect if it's a SELECT-like statement
@@ -165,6 +168,7 @@ export class SqliteDriver implements IProteusDriver {
     parent?: Constructor<IEntity>,
     context?: unknown,
   ): SqliteRepository<E> {
+    this.checkSignal();
     const client = this.getClient();
     const namespace = this.namespace;
     const metadata = this.resolveMetadata(target);
@@ -216,6 +220,7 @@ export class SqliteDriver implements IProteusDriver {
     parent?: Constructor<IEntity>,
     context?: unknown,
   ): SqliteRepository<E> {
+    this.checkSignal();
     const sqliteHandle = handle as SqliteTransactionHandle;
     const namespace = this.namespace;
     const metadata = this.resolveMetadata(target);
@@ -256,6 +261,7 @@ export class SqliteDriver implements IProteusDriver {
   public createExecutor<E extends IEntity>(
     target: Constructor<E>,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const client = this.getClient();
     const metadata = this.resolveMetadata(target);
     return new SqliteExecutor<E>(
@@ -271,6 +277,7 @@ export class SqliteDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const sqliteHandle = handle as SqliteTransactionHandle;
     return new SqliteExecutor<E>(
@@ -285,6 +292,7 @@ export class SqliteDriver implements IProteusDriver {
   public createQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const client = this.getClient();
     const metadata = this.resolveMetadata(target);
     return new SqliteQueryBuilder<E>(metadata, client, this.namespace, this.logger);
@@ -294,6 +302,7 @@ export class SqliteDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const sqliteHandle = handle as SqliteTransactionHandle;
     return new SqliteQueryBuilder<E>(
@@ -311,7 +320,7 @@ export class SqliteDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
-    _signal?: AbortSignal,
+    signal?: AbortSignal,
   ): SqliteDriver {
     const cloned = Object.create(SqliteDriver.prototype) as SqliteDriver;
     (cloned as any).options = this.options;
@@ -322,14 +331,18 @@ export class SqliteDriver implements IProteusDriver {
     (cloned as any).emitEntity = emitEntity;
     (cloned as any).amphora = this.amphora;
     (cloned as any).db = this.db; // Share the same database connection
-    // Signal is accepted to match the interface but sqlite queries are
-    // synchronous-effectively and not cancellable at this layer.
+    // better-sqlite3 runs synchronously on the event-loop thread; mid-query
+    // cancellation isn't possible. We honour the signal only as a pre-flight
+    // check at the public entry points (query / transaction / repository
+    // creation). Non-signal sessions keep the existing fast path unchanged.
+    (cloned as any).signal = signal;
     return cloned;
   }
 
   public async beginTransaction(
     options?: TransactionOptions,
   ): Promise<TransactionHandle> {
+    this.checkSignal();
     if (options?.isolation) {
       this.logger.warn(
         "SQLite does not support configurable isolation levels; ignoring provided isolation",
@@ -353,6 +366,7 @@ export class SqliteDriver implements IProteusDriver {
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
+    this.checkSignal();
     // G4: SQLite does not support transaction retry — log warn if retry option is passed
     if (options?.retry) {
       this.logger.warn(
@@ -405,6 +419,12 @@ export class SqliteDriver implements IProteusDriver {
   }
 
   // Private
+
+  private checkSignal(): void {
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason, undefined, "SQLite query cancelled");
+    }
+  }
 
   private getClient(): SqliteQueryClient {
     if (!this.db) {
