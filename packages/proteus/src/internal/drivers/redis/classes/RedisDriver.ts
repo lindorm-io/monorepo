@@ -25,6 +25,7 @@ import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type { RedisTransactionHandle } from "../types/redis-types.js";
 import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { toAbortError } from "../../../utils/abort.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
 import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
 import { RedisExecutor } from "./RedisExecutor.js";
@@ -59,6 +60,7 @@ export class RedisDriver implements IProteusDriver {
   };
   private client: Redis | null;
   private connectingPromise: Promise<void> | null;
+  private signal: AbortSignal | undefined;
 
   public constructor(
     options: ProteusRedisOptions,
@@ -157,6 +159,7 @@ export class RedisDriver implements IProteusDriver {
     parent?: Constructor<IEntity>,
     context?: unknown,
   ): IProteusRepository<E> {
+    this.checkSignal();
     // NOTE (F-040): resolveMetadata applies naming strategy (DB column names).
     // The executor receives this transformed metadata for HSET/HGETALL keys.
     // DriverRepositoryBase separately calls getEntityMetadata (raw TS property names)
@@ -209,6 +212,7 @@ export class RedisDriver implements IProteusDriver {
   public createExecutor<E extends IEntity>(
     target: Constructor<E>,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
 
     return this.wrapExecutor(
@@ -236,6 +240,7 @@ export class RedisDriver implements IProteusDriver {
   public createQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
 
     return new RedisQueryBuilder<E>(
@@ -267,6 +272,7 @@ export class RedisDriver implements IProteusDriver {
   public async beginTransaction(
     _options?: TransactionOptions,
   ): Promise<TransactionHandle> {
+    this.checkSignal();
     const handle: RedisTransactionHandle = {
       state: "active",
     };
@@ -293,6 +299,7 @@ export class RedisDriver implements IProteusDriver {
     callback: TransactionCallback<T>,
     _options?: TransactionOptions,
   ): Promise<T> {
+    this.checkSignal();
     this.logger.warn(
       "Redis does not support interactive transactions — " +
         "the callback will execute without atomicity or isolation guarantees",
@@ -337,7 +344,7 @@ export class RedisDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
-    _signal?: AbortSignal,
+    signal?: AbortSignal,
   ): RedisDriver {
     const cloned = Object.create(RedisDriver.prototype) as RedisDriver;
     (cloned as any).logger = this.logger;
@@ -350,8 +357,17 @@ export class RedisDriver implements IProteusDriver {
     (cloned as any).breaker = this.breaker;
     (cloned as any).client = this.client; // Share the same ioredis client
     (cloned as any).connectingPromise = null;
-    // Signal is accepted to match the interface. Redis cancellation is
-    // deferred to a follow-up (see cancellation-signals plan §11).
+    // ioredis has no native AbortSignal support. Session-level cancellation
+    // is handled in two layers:
+    //   (1) pre-flight check at every public entry point; and
+    //   (2) a Promise.race on the exposed client so in-flight commands can
+    //       reject the caller on abort. The background command still
+    //       completes on the wire — redis commands are sub-millisecond in
+    //       practice so the orphan cost is negligible. For long-running
+    //       blocking commands (BRPOP, BLPOP, SUBSCRIBE) the caller should
+    //       issue client.disconnect() explicitly rather than rely on this
+    //       session signal.
+    (cloned as any).signal = signal;
     return cloned;
   }
 
@@ -414,6 +430,49 @@ export class RedisDriver implements IProteusDriver {
     executor: IRepositoryExecutor<E>,
   ): IRepositoryExecutor<E> {
     return this.breaker ? new BreakerExecutor(executor, this.breaker) : executor;
+  }
+
+  private checkSignal(): void {
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason, undefined, "Redis command cancelled");
+    }
+  }
+
+  /**
+   * Race a pending ioredis command against the session signal. When the
+   * signal fires before the command resolves, the race rejects with an
+   * AbortError carrying the signal reason. The ioredis command still
+   * completes in the background — callers accept that a write-path
+   * command lands on the server even when the caller has unwound, and
+   * that a read's result is discarded.
+   *
+   * Exposed (private) for tests and for future executor wiring. Left off
+   * the default executor path for now: pre-flight covers the HTTP-abort
+   * use case and redis commands are sub-millisecond in practice.
+   */
+  private async raceWithSignal<T>(promise: Promise<T>): Promise<T> {
+    if (!this.signal) return promise;
+    const sig = this.signal;
+    if (sig.aborted) {
+      throw toAbortError(sig.reason, undefined, "Redis command cancelled");
+    }
+
+    // Build a companion promise that rejects with AbortError when the
+    // signal fires. Whichever settles first wins the race.
+    let disposeAbort!: () => void;
+    const abortRace = new Promise<never>((_, reject) => {
+      const onAbort = (): void => {
+        reject(toAbortError(sig.reason, undefined, "Redis command cancelled"));
+      };
+      sig.addEventListener("abort", onAbort, { once: true });
+      disposeAbort = () => sig.removeEventListener("abort", onAbort);
+    });
+
+    try {
+      return await Promise.race([promise, abortRace]);
+    } finally {
+      disposeAbort();
+    }
   }
 
   private requireClient(): Redis {

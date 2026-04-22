@@ -1,4 +1,5 @@
 import type { ErrorClassification } from "@lindorm/breaker";
+import { AbortError } from "@lindorm/errors";
 
 const TRANSIENT_SYSTEM_CODES = new Set([
   "ECONNREFUSED",
@@ -23,6 +24,10 @@ const PERMANENT_REDIS_MESSAGES = [
 ];
 
 export const classifyRedisError = (error: Error): ErrorClassification => {
+  // Client-initiated cancellation is not a backend failure — never trip the
+  // breaker on aborts.
+  if (error instanceof AbortError) return "ignorable";
+
   const code: string | undefined = (error as any).code;
 
   if (code && TRANSIENT_SYSTEM_CODES.has(code)) return "transient";
