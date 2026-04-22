@@ -31,7 +31,6 @@ describe("useAuditLog", () => {
 
     auditConfig = {
       iris: mockIris,
-      actor: vi.fn().mockReturnValue("user-123"),
     };
 
     (isHttpContext as unknown as Mock).mockReturnValue(true);
@@ -44,12 +43,15 @@ describe("useAuditLog", () => {
       status: 201,
       get: vi.fn().mockReturnValue("Mozilla/5.0"),
       state: {
+        actor: "user-123",
         app: { name: "test-app" },
+        authorization: { type: "none", value: null },
         metadata: {
           id: "req-1",
           correlationId: "cor-1",
           sessionId: "sess-1",
         },
+        tokens: {},
       },
       [AUDIT_SOURCE]: auditConfig,
     };
@@ -187,14 +189,14 @@ describe("useAuditLog", () => {
   });
 
   test("should call next even when audit creation fails", async () => {
-    auditConfig.actor = vi.fn().mockImplementation(() => {
-      throw new Error("actor failed");
+    mockPublisher.create.mockImplementation(() => {
+      throw new Error("create failed");
     });
 
     await useAuditLog()(ctx, next);
 
     expect(next).toHaveBeenCalledTimes(1);
-    expect(mockPublisher.create).not.toHaveBeenCalled();
+    expect(mockPublisher.publish).not.toHaveBeenCalled();
   });
 
   test("should pass null requestBody when ctx.data is falsy", async () => {
@@ -206,6 +208,30 @@ describe("useAuditLog", () => {
       expect.objectContaining({
         requestBody: null,
       }),
+    );
+  });
+
+  test("should fall back to 'unknown' actor when resolver returns null", async () => {
+    ctx.state.actor = null;
+    ctx.state.tokens = {};
+    ctx.state.authorization = { type: "none", value: null };
+
+    await useAuditLog()(ctx, next);
+
+    expect(mockPublisher.create).toHaveBeenCalledWith(
+      expect.objectContaining({ actor: "unknown" }),
+    );
+  });
+
+  test("should resolve actor from accessToken when ctx.state.actor is null", async () => {
+    ctx.state.actor = null;
+    ctx.state.tokens = { accessToken: { claims: { sub: "bob" } } };
+    ctx.state.authorization = { type: "none", value: null };
+
+    await useAuditLog()(ctx, next);
+
+    expect(mockPublisher.create).toHaveBeenCalledWith(
+      expect.objectContaining({ actor: "bob" }),
     );
   });
 
