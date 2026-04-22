@@ -38,15 +38,15 @@ const urlField = (driver: string, configImport: string | null | undefined): stri
 
   switch (driver) {
     case "postgres":
-      return `  url: config.postgresUrl,`;
+      return `  url: config.postgres.url,`;
     case "mysql":
-      return `  url: config.mysqlUrl,`;
+      return `  url: config.mysql.url,`;
     case "mongo":
-      return `  url: config.mongoUrl,`;
+      return `  url: config.mongo.url,`;
     case "redis":
-      return `  url: config.redisUrl,`;
+      return `  url: config.redis.url,`;
     case "sqlite":
-      return `  filename: config.sqlitePath,`;
+      return `  filename: config.sqlite.path,`;
     default:
       return "";
   }
@@ -98,7 +98,7 @@ const cacheBlock = (
   }
 
   const adapterOptions = configImport
-    ? `{ url: config.redisUrl, keyPrefix: "${keyPrefix}" }`
+    ? `{ url: config.redis.url, keyPrefix: "${keyPrefix}" }`
     : `{ host: "localhost", port: 6379, keyPrefix: "${keyPrefix}" }`;
 
   return [

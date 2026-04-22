@@ -11,7 +11,7 @@ export const source = new ProteusSource({
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
   migrations: [join(import.meta.dirname, "migrations")],
-  url: config.postgresUrl,
+  url: config.postgres.url,
   cache: {
     adapter: new MemoryCacheAdapter(),
     ttl: "1m",
@@ -31,9 +31,9 @@ export const source = new ProteusSource({
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
   migrations: [join(import.meta.dirname, "migrations")],
-  url: config.postgresUrl,
+  url: config.postgres.url,
   cache: {
-    adapter: new RedisCacheAdapter({ url: config.redisUrl, keyPrefix: "postgres:cache:" }),
+    adapter: new RedisCacheAdapter({ url: config.redis.url, keyPrefix: "postgres:cache:" }),
     ttl: "1m",
   },
 });
@@ -197,9 +197,9 @@ export const source = new ProteusSource({
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
   migrations: [join(import.meta.dirname, "migrations")],
-  url: config.mysqlUrl,
+  url: config.mysql.url,
   cache: {
-    adapter: new RedisCacheAdapter({ url: config.redisUrl, keyPrefix: "custom:ns:" }),
+    adapter: new RedisCacheAdapter({ url: config.redis.url, keyPrefix: "custom:ns:" }),
     ttl: "1m",
   },
 });
@@ -216,7 +216,7 @@ export const source = new ProteusSource({
   driver: "redis",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
-  url: config.redisUrl,
+  url: config.redis.url,
 });
 "
 `;
@@ -232,7 +232,7 @@ export const source = new ProteusSource({
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
   migrations: [join(import.meta.dirname, "migrations")],
-  filename: config.sqlitePath,
+  filename: config.sqlite.path,
 });
 "
 `;
@@ -262,7 +262,7 @@ export const source = new ProteusSource({
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
   migrations: [join(import.meta.dirname, "migrations")],
-  filename: config.sqlitePath,
+  filename: config.sqlite.path,
 });
 "
 `;
@@ -278,7 +278,7 @@ export const source = new ProteusSource({
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
   migrations: [join(import.meta.dirname, "migrations")],
-  url: config.postgresUrl,
+  url: config.postgres.url,
 });
 "
 `;
@@ -293,9 +293,9 @@ export const source = new ProteusSource({
   driver: "mongo",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
-  url: config.mongoUrl,
+  url: config.mongo.url,
   cache: {
-    adapter: new RedisCacheAdapter({ url: config.redisUrl, keyPrefix: "mongo:cache:" }),
+    adapter: new RedisCacheAdapter({ url: config.redis.url, keyPrefix: "mongo:cache:" }),
     ttl: "1m",
   },
 });
