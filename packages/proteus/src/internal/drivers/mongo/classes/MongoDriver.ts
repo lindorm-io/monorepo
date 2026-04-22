@@ -39,7 +39,9 @@ import { validateConnectionMutualExclusivity } from "../../../utils/validate-con
 import { MongoDriverError } from "../errors/MongoDriverError.js";
 import { MongoMigrationError } from "../errors/MongoMigrationError.js";
 import { MongoExecutor } from "./MongoExecutor.js";
+import { AbortError } from "@lindorm/errors";
 import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { toAbortError } from "../../../utils/abort.js";
 import { MongoMigrationManager } from "./MongoMigrationManager.js";
 import { MongoQueryBuilder } from "./MongoQueryBuilder.js";
 import { MongoRepository } from "./MongoRepository.js";
@@ -77,6 +79,7 @@ export class MongoDriver implements IProteusDriver {
   private db: Db | null;
   private isReplicaSet: boolean;
   private connectingPromise: Promise<void> | null;
+  private signal: AbortSignal | undefined;
 
   public constructor(
     options: ProteusMongoOptions,
@@ -336,6 +339,7 @@ export class MongoDriver implements IProteusDriver {
     parent?: Constructor<IEntity>,
     context?: unknown,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const db = this.requireDb();
 
@@ -354,6 +358,7 @@ export class MongoDriver implements IProteusDriver {
           this.getFilterRegistry(),
           undefined,
           this.amphora,
+          this.signal,
         ),
       ),
       queryBuilderFactory: () => this.createQueryBuilder(target),
@@ -374,6 +379,7 @@ export class MongoDriver implements IProteusDriver {
     parent?: Constructor<IEntity>,
     context?: unknown,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const txHandle = handle as MongoTransactionHandle;
     const metadata = this.resolveMetadata(target);
     const db = this.requireDb();
@@ -392,6 +398,7 @@ export class MongoDriver implements IProteusDriver {
         this.getFilterRegistry(),
         txHandle.session,
         this.amphora,
+        this.signal,
       ),
       queryBuilderFactory: () => this.createTransactionalQueryBuilder(target, handle),
       db,
@@ -411,6 +418,7 @@ export class MongoDriver implements IProteusDriver {
   public createExecutor<E extends IEntity>(
     target: Constructor<E>,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
 
     return this.wrapExecutor(
@@ -421,6 +429,7 @@ export class MongoDriver implements IProteusDriver {
         this.getFilterRegistry(),
         undefined,
         this.amphora,
+        this.signal,
       ),
     );
   }
@@ -429,6 +438,7 @@ export class MongoDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const txHandle = handle as MongoTransactionHandle;
     const metadata = this.resolveMetadata(target);
 
@@ -439,6 +449,7 @@ export class MongoDriver implements IProteusDriver {
       this.getFilterRegistry(),
       txHandle.session,
       this.amphora,
+      this.signal,
     );
   }
 
@@ -447,6 +458,7 @@ export class MongoDriver implements IProteusDriver {
   public createQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const db = this.requireDb();
 
@@ -465,6 +477,7 @@ export class MongoDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const txHandle = handle as MongoTransactionHandle;
     const metadata = this.resolveMetadata(target);
     const db = this.requireDb();
@@ -491,6 +504,7 @@ export class MongoDriver implements IProteusDriver {
   public async beginTransaction(
     options?: TransactionOptions,
   ): Promise<TransactionHandle> {
+    this.checkSignal();
     if (!this.isReplicaSet) {
       throw new NotSupportedError(
         "MongoDB transactions require a replica set. Current connection is standalone.",
@@ -561,6 +575,7 @@ export class MongoDriver implements IProteusDriver {
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
+    this.checkSignal();
     if (!this.isReplicaSet) {
       this.logger.warn(
         "MongoDB transactions require a replica set — " +
@@ -585,7 +600,13 @@ export class MongoDriver implements IProteusDriver {
       }
     }
 
+    const sessionSignal = this.signal;
     const attempt = async (): Promise<T> => {
+      // Short-circuit on abort between attempts so retries stop once the
+      // session has been cancelled.
+      if (sessionSignal?.aborted) {
+        throw toAbortError(sessionSignal.reason, undefined, "MongoDB query cancelled");
+      }
       const handle = (await this.beginTransaction(options)) as MongoTransactionHandle;
 
       const repoFactory: RepositoryFactory = <C extends IEntity>(
@@ -632,7 +653,15 @@ export class MongoDriver implements IProteusDriver {
             });
           }),
       };
-      return withRetry(attempt, isRetryableMongoError, retryOptions);
+      // Abort is terminal: never retry after an AbortError or after the
+      // session signal has fired. Otherwise delegate to the mongo-specific
+      // retry classifier.
+      const isRetryable = (error: unknown): boolean => {
+        if (error instanceof AbortError) return false;
+        if (sessionSignal?.aborted) return false;
+        return isRetryableMongoError(error);
+      };
+      return withRetry(attempt, isRetryable, retryOptions);
     }
 
     return attempt();
@@ -643,7 +672,7 @@ export class MongoDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
-    _signal?: AbortSignal,
+    signal?: AbortSignal,
   ): MongoDriver {
     const cloned = Object.create(MongoDriver.prototype) as MongoDriver;
     (cloned as any).options = this.options;
@@ -659,12 +688,24 @@ export class MongoDriver implements IProteusDriver {
     (cloned as any).db = this.db;
     (cloned as any).isReplicaSet = this.isReplicaSet;
     (cloned as any).connectingPromise = null;
-    // Signal is accepted to match the interface. Mongo cancellation is
-    // deferred to a follow-up (see cancellation-signals plan §11).
+    // The signal is stored on the cloned driver and forwarded into the
+    // MongoExecutor on construction. The executor also runs a pre-flight
+    // check at every operation entry, and forwards `signal` into readable
+    // mongo operations (find / findOne / countDocuments / aggregate) where
+    // the mongodb v7 driver accepts it as `Abortable`. Writes fall back to
+    // pre-flight only since the mongo write-path types do not accept a
+    // signal option.
+    (cloned as any).signal = signal;
     return cloned;
   }
 
   // ─── Private ──────────────────────────────────────────────────────────
+
+  private checkSignal(): void {
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason, undefined, "MongoDB query cancelled");
+    }
+  }
 
   private wrapExecutor<E extends IEntity>(
     executor: IRepositoryExecutor<E>,
