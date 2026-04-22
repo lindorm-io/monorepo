@@ -1,6 +1,6 @@
 import { WebhookAuth, WebhookMethod } from "@lindorm/pylon";
 import { z } from "zod";
-import type { ServerHandler } from "../types/context";
+import type { ServerHandler } from "../types/context.js";
 
 export const createWebhookSchema = z.object({
   auth: z.nativeEnum(WebhookAuth),

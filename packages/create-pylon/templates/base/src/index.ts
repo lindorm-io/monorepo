@@ -1,3 +1,3 @@
-import { pylon } from "./pylon/pylon";
+import { pylon } from "./pylon/pylon.js";
 
 void pylon.start();

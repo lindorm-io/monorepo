@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { ServerHandler } from "../types/context";
+import type { ServerHandler } from "../types/context.js";
 
 export const exampleSchema = z.object({
   name: z.string().optional(),

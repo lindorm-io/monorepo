@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm/errors";
 import { z } from "zod";
-import type { ServerHandler } from "../types/context";
+import type { ServerHandler } from "../types/context.js";
 
 export const deleteWebhookSchema = z.object({
   id: z.string(),

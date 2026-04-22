@@ -8,17 +8,17 @@ const buildImports = (answers: Answers): Array<string> => {
   }
 
   lines.push(
-    `import { logger } from "../logger";`,
-    `import { amphora } from "./amphora";`,
-    `import { config } from "./config";`,
+    `import { logger } from "../logger/index.js";`,
+    `import { amphora } from "./amphora.js";`,
+    `import { config } from "./config.js";`,
   );
 
   if (answers.proteusDriver !== "none") {
-    lines.push(`import { source as proteusSource } from "../proteus/source";`);
+    lines.push(`import { source as proteusSource } from "../proteus/source.js";`);
   }
 
   if (answers.irisDriver !== "none") {
-    lines.push(`import { source as irisSource } from "../iris/source";`);
+    lines.push(`import { source as irisSource } from "../iris/source.js";`);
   }
 
   return lines;
@@ -27,20 +27,20 @@ const buildImports = (answers: Answers): Array<string> => {
 const buildWorkersPath = (answers: Answers): string | null => {
   if (answers.workers.length === 0) return null;
 
-  return `  workers: join(__dirname, "..", "workers"),`;
+  return `  workers: join(import.meta.dirname, "..", "workers"),`;
 };
 
 const buildOptions = (answers: Answers): string => {
   const lines: Array<string> = [`  logger,`, `  amphora,`, `  port: config.server.port,`];
 
   if (answers.features.http) {
-    lines.push(`  routes: join(__dirname, "..", "routes"),`);
+    lines.push(`  routes: join(import.meta.dirname, "..", "routes"),`);
   }
 
   if (answers.features.socket) {
     lines.push(`  socket: {`);
     lines.push(`    enabled: true,`);
-    lines.push(`    listeners: join(__dirname, "..", "listeners"),`);
+    lines.push(`    listeners: join(import.meta.dirname, "..", "listeners"),`);
     lines.push(`  },`);
     lines.push(`  rooms: { presence: true },`);
   }

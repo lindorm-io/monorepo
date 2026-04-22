@@ -1,4 +1,4 @@
-import type { ServerSocketMiddleware } from "../types/context";
+import type { ServerSocketMiddleware } from "../types/context.js";
 
 export const socketExampleMiddleware: ServerSocketMiddleware = async (ctx, next) => {
   ctx.logger.warn(
