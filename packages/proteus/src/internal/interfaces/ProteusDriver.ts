@@ -33,7 +33,7 @@ export interface IProteusDriver {
   createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: ProteusHookMeta,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E>;
 
   createExecutor<E extends IEntity>(target: Constructor<E>): IRepositoryExecutor<E>;

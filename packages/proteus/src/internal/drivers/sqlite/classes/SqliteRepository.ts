@@ -83,7 +83,7 @@ export type SqliteRepositoryOptions<E extends IEntity> = {
   client: SqliteQueryClient;
   namespace: string | null;
   logger: ILogger;
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;
@@ -116,7 +116,7 @@ export class SqliteRepository<
       logger: options.logger,
       driver: "sqlite",
       driverLabel: "SqliteRepository",
-      context: options.context,
+      meta: options.meta,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
       emitEntity: options.emitEntity,

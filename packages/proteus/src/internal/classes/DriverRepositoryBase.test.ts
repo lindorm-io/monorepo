@@ -1466,7 +1466,7 @@ describe("DriverRepositoryBase", () => {
   // ─── buildSubscriberEvent ─────────────────────────────────────────────
 
   describe("buildSubscriberEvent", () => {
-    test("returns event with entity, metadata, context, and null connection by default", () => {
+    test("returns event with entity, metadata, meta, and null connection by default", () => {
       const { repo } = createRepo();
 
       const event = repo.exposeBuildSubscriberEvent(entityA);
@@ -1474,7 +1474,7 @@ describe("DriverRepositoryBase", () => {
       expect(event.entity).toBe(entityA);
       expect(event.metadata).toBe(mockMetadata);
       expect(event.connection).toBeNull();
-      expect(event.context).toBeUndefined();
+      expect(event.meta).toBeUndefined();
     });
 
     test("includes provided connection in event", () => {

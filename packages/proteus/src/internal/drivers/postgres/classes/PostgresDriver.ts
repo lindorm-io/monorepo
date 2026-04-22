@@ -191,7 +191,7 @@ export class PostgresDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: ProteusHookMeta,
+    meta?: ProteusHookMeta,
   ): PostgresRepository<E> {
     const pool = this.getPool();
     const sessionSignal = this.signal;
@@ -207,7 +207,7 @@ export class PostgresDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createRepository(t, p, context);
+    ) => this.createRepository(t, p, meta);
 
     // T2: Pool-backed — check out a dedicated PoolClient, build tx-scoped factory
     const withImplicitTransaction: WithImplicitTransaction<E> = async (fn) => {
@@ -241,7 +241,7 @@ export class PostgresDriver implements IProteusDriver {
         const txFactory: RepositoryFactory = <C extends IEntity>(
           t: Constructor<C>,
           p?: Constructor<IEntity>,
-        ) => this.createTransactionalRepository(t, handle, p, context);
+        ) => this.createTransactionalRepository(t, handle, p, meta);
 
         const result = await fn({
           client: txClient,
@@ -290,7 +290,7 @@ export class PostgresDriver implements IProteusDriver {
       client,
       namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
@@ -304,7 +304,7 @@ export class PostgresDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: ProteusHookMeta,
+    meta?: ProteusHookMeta,
   ): PostgresRepository<E> {
     const pgHandle = handle as PostgresTransactionHandle;
     const namespace = this.namespace;
@@ -323,7 +323,7 @@ export class PostgresDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createTransactionalRepository(t, handle, p, context);
+    ) => this.createTransactionalRepository(t, handle, p, meta);
 
     // T3: Already in a transaction — passthrough with repositoryFactory
     const withImplicitTransaction: WithImplicitTransaction<E> = async (fn) =>
@@ -336,7 +336,7 @@ export class PostgresDriver implements IProteusDriver {
       client: txClient,
       namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,

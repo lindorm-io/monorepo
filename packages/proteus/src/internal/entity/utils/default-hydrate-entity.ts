@@ -11,7 +11,7 @@ import { storeSnapshot } from "./snapshot-store.js";
 export type HydrateOptions = {
   snapshot?: boolean;
   hooks?: boolean;
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   amphora?: IAmphora;
 };
 
@@ -32,7 +32,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
   metadata: EntityMetadata,
   options: HydrateOptions = {},
 ): E => {
-  const { snapshot = true, hooks = true, context, amphora } = options;
+  const { snapshot = true, hooks = true, meta, amphora } = options;
 
   const entity = new metadata.target() as any;
   const snapshotDict: Dict = {};
@@ -142,7 +142,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
   }
 
   if (hooks) {
-    runHooksSync("OnHydrate", metadata.hooks, entity, context);
+    runHooksSync("OnHydrate", metadata.hooks, entity, meta);
   }
 
   return entity as E;

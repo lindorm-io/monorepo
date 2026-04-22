@@ -167,7 +167,7 @@ export class SqliteDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: ProteusHookMeta,
+    meta?: ProteusHookMeta,
   ): SqliteRepository<E> {
     this.checkSignal();
     const client = this.getClient();
@@ -177,7 +177,7 @@ export class SqliteDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createRepository(t, p, context);
+    ) => this.createRepository(t, p, meta);
 
     // withImplicitTransaction runs multi-step operations (owning relations, insert, inverse)
     // on the single SQLite connection without an explicit transaction.
@@ -195,7 +195,7 @@ export class SqliteDriver implements IProteusDriver {
       const txFactory: RepositoryFactory = <C extends IEntity>(
         t: Constructor<C>,
         p?: Constructor<IEntity>,
-      ) => this.createRepository(t, p, context);
+      ) => this.createRepository(t, p, meta);
       return fn({ client, executor: txExecutor, repositoryFactory: txFactory });
     };
 
@@ -206,7 +206,7 @@ export class SqliteDriver implements IProteusDriver {
       client,
       namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
@@ -219,7 +219,7 @@ export class SqliteDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: ProteusHookMeta,
+    meta?: ProteusHookMeta,
   ): SqliteRepository<E> {
     this.checkSignal();
     const sqliteHandle = handle as SqliteTransactionHandle;
@@ -237,7 +237,7 @@ export class SqliteDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createTransactionalRepository(t, handle, p, context);
+    ) => this.createTransactionalRepository(t, handle, p, meta);
 
     // Already in a transaction — passthrough
     const withImplicitTransaction: WithImplicitTransaction<E> = async (fn) =>
@@ -250,7 +250,7 @@ export class SqliteDriver implements IProteusDriver {
       client: txClient,
       namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,

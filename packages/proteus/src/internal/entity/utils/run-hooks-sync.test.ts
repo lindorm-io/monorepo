@@ -26,19 +26,19 @@ describe("runHooksSync", () => {
     expect(hooks[3].callback).not.toHaveBeenCalled();
   });
 
-  test("should pass entity and context to callbacks in that order", () => {
+  test("should pass entity and meta to callbacks in that order", () => {
     const entity = { id: "1" };
-    const ctx = {
+    const meta = {
       correlationId: "c-1",
       actor: "admin",
       timestamp: new Date("2024-01-01T00:00:00Z"),
     };
-    runHooksSync("OnCreate", hooks, entity, ctx);
+    runHooksSync("OnCreate", hooks, entity, meta);
 
-    expect(hooks[0].callback).toHaveBeenCalledWith(entity, ctx);
+    expect(hooks[0].callback).toHaveBeenCalledWith(entity, meta);
   });
 
-  test("should pass a default hook meta when no context is provided", () => {
+  test("should pass a default hook meta when no meta is provided", () => {
     const entity = { id: "1" };
     runHooksSync("OnCreate", hooks, entity);
 

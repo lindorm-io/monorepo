@@ -40,7 +40,7 @@ export class EntityManager<
   TExtra extends Dict = Dict,
   TDecorator extends MetaFieldDecorator = MetaFieldDecorator,
 > {
-  private readonly context: ProteusHookMeta | undefined;
+  private readonly meta: ProteusHookMeta | undefined;
   private readonly getNextIncrement: GetIncrementFn | undefined;
   private readonly logger: ILogger | undefined;
   private readonly driver: string;
@@ -64,7 +64,7 @@ export class EntityManager<
     }
 
     this.target = options.target;
-    this.context = options.context;
+    this.meta = options.meta;
     this.driver = options.driver;
     this.getNextIncrement = options.getNextIncrement;
     this.logger = options.logger?.child(["EntityManager"]);
@@ -109,7 +109,7 @@ export class EntityManager<
 
   public create(options: O | E = {} as O): E {
     const entity = defaultCreateEntity(this.target, options);
-    runHooksSync("OnCreate", this.metadata.hooks, entity, this.context);
+    runHooksSync("OnCreate", this.metadata.hooks, entity, this.meta);
 
     this.logger?.silly("Created entity", { entity });
 
@@ -118,7 +118,7 @@ export class EntityManager<
 
   public copy(entity: E): E {
     const copy = defaultCreateEntity(this.target, entity);
-    runHooksSync("OnCreate", this.metadata.hooks, copy, this.context);
+    runHooksSync("OnCreate", this.metadata.hooks, copy, this.meta);
 
     this.logger?.silly("Copied entity", { entity });
 
@@ -135,7 +135,7 @@ export class EntityManager<
 
   public async clone(entity: E): Promise<E> {
     const clone = defaultCloneEntity(this.target, entity);
-    runHooksSync("OnCreate", this.metadata.hooks, clone, this.context);
+    runHooksSync("OnCreate", this.metadata.hooks, clone, this.meta);
 
     // Set UpdateDate on clone (same as insert — CreateDate is handled by @Generated("date"))
     const updateDate = this.metadata.fields.find((f) => f.decorator === "UpdateDate");
@@ -244,59 +244,59 @@ export class EntityManager<
   // hooks — before (async, pre-DB-write)
 
   public async beforeInsert(entity: E): Promise<void> {
-    await runHooksAsync("BeforeInsert", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("BeforeInsert", this.metadata.hooks, entity, this.meta);
   }
 
   public async beforeUpdate(entity: E): Promise<void> {
-    await runHooksAsync("BeforeUpdate", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("BeforeUpdate", this.metadata.hooks, entity, this.meta);
   }
 
   public async beforeSave(entity: E): Promise<void> {
-    await runHooksAsync("BeforeSave", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("BeforeSave", this.metadata.hooks, entity, this.meta);
   }
 
   public async beforeDestroy(entity: E): Promise<void> {
-    await runHooksAsync("BeforeDestroy", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("BeforeDestroy", this.metadata.hooks, entity, this.meta);
   }
 
   // hooks — after (async, post-DB-write)
 
   public async afterLoad(entity: E): Promise<void> {
-    await runHooksAsync("AfterLoad", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("AfterLoad", this.metadata.hooks, entity, this.meta);
   }
 
   public async afterInsert(entity: E): Promise<void> {
-    await runHooksAsync("AfterInsert", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("AfterInsert", this.metadata.hooks, entity, this.meta);
   }
 
   public async afterUpdate(entity: E): Promise<void> {
-    await runHooksAsync("AfterUpdate", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("AfterUpdate", this.metadata.hooks, entity, this.meta);
   }
 
   public async afterSave(entity: E): Promise<void> {
-    await runHooksAsync("AfterSave", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("AfterSave", this.metadata.hooks, entity, this.meta);
   }
 
   public async afterDestroy(entity: E): Promise<void> {
-    await runHooksAsync("AfterDestroy", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("AfterDestroy", this.metadata.hooks, entity, this.meta);
   }
 
   // hooks — soft delete/restore (async)
 
   public async beforeSoftDestroy(entity: E): Promise<void> {
-    await runHooksAsync("BeforeSoftDestroy", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("BeforeSoftDestroy", this.metadata.hooks, entity, this.meta);
   }
 
   public async afterSoftDestroy(entity: E): Promise<void> {
-    await runHooksAsync("AfterSoftDestroy", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("AfterSoftDestroy", this.metadata.hooks, entity, this.meta);
   }
 
   public async beforeRestore(entity: E): Promise<void> {
-    await runHooksAsync("BeforeRestore", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("BeforeRestore", this.metadata.hooks, entity, this.meta);
   }
 
   public async afterRestore(entity: E): Promise<void> {
-    await runHooksAsync("AfterRestore", this.metadata.hooks, entity, this.context);
+    await runHooksAsync("AfterRestore", this.metadata.hooks, entity, this.meta);
   }
 
   public relationFilter(relation: MetaRelation, entity: E): Dict {
@@ -309,7 +309,7 @@ export class EntityManager<
 
   public validate(entity: E): void {
     defaultValidateEntity(this.target, entity);
-    runHooksSync("OnValidate", this.metadata.hooks, entity, this.context);
+    runHooksSync("OnValidate", this.metadata.hooks, entity, this.meta);
 
     this.logger?.silly("Validated entity", { entity });
   }

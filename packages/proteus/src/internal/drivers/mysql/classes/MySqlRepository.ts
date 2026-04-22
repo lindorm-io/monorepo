@@ -80,7 +80,7 @@ export type MySqlRepositoryOptions<E extends IEntity> = {
   client: MysqlQueryClient;
   namespace: string | null;
   logger: ILogger;
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;
@@ -113,7 +113,7 @@ export class MySqlRepository<
       logger: options.logger,
       driver: "mysql",
       driverLabel: "MySqlRepository",
-      context: options.context,
+      meta: options.meta,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
       emitEntity: options.emitEntity,

@@ -14,7 +14,7 @@ export type EntityEventBase<E = any> = {
   /** Driver-specific connection handle. Consumers narrow with runtime detection. */
   connection: unknown;
   /** Request-scoped metadata (correlation id, actor, timestamp). */
-  context: ProteusHookMeta;
+  meta: ProteusHookMeta;
 };
 
 /**

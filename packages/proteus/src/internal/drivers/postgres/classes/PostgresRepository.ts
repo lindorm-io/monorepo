@@ -88,7 +88,7 @@ export type PostgresRepositoryOptions<E extends IEntity> = {
   client: PostgresQueryClient;
   namespace: string | null;
   logger: ILogger;
-  context?: ProteusHookMeta;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;
@@ -123,7 +123,7 @@ export class PostgresRepository<
       logger: options.logger,
       driver: "postgres",
       driverLabel: "PostgresRepository",
-      context: options.context,
+      meta: options.meta,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
       emitEntity: options.emitEntity,

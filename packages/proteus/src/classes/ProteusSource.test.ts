@@ -195,10 +195,10 @@ describe("ProteusSource", () => {
       expect(session).toBeInstanceOf(ProteusSession);
     });
 
-    test("should allow overriding context on session", () => {
+    test("should allow overriding meta on session", () => {
       const source = createSource();
       const session = source.session({
-        context: { correlationId: "abc-123", actor: "user-1", timestamp: new Date() },
+        meta: { correlationId: "abc-123", actor: "user-1", timestamp: new Date() },
       });
 
       expect(session).toBeInstanceOf(ProteusSession);

@@ -158,7 +158,7 @@ export class RedisDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: ProteusHookMeta,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
     this.checkSignal();
     // NOTE (F-040): resolveMetadata applies naming strategy (DB column names).
@@ -173,7 +173,7 @@ export class RedisDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createRepository(t, p, context);
+    ) => this.createRepository(t, p, meta);
 
     return new RedisRepository<E>({
       target,
@@ -191,7 +191,7 @@ export class RedisDriver implements IProteusDriver {
       client,
       namespace: this.namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       emitEntity: this.emitEntity,
@@ -202,10 +202,10 @@ export class RedisDriver implements IProteusDriver {
     target: Constructor<E>,
     _handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: ProteusHookMeta,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
     // Redis has no transaction isolation -- delegate to non-transactional repository
-    return this.createRepository(target, parent, context);
+    return this.createRepository(target, parent, meta);
   }
 
   // ─── Executor ─────────────────────────────────────────────────────────

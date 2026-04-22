@@ -6,11 +6,11 @@ export const runHooksAsync = async (
   decorator: MetaHookDecorator,
   hooks: Array<MetaHook>,
   entity: unknown,
-  context?: ProteusHookMeta,
+  meta?: ProteusHookMeta,
 ): Promise<void> => {
-  const meta = context ?? createDefaultProteusHookMeta();
+  const resolved = meta ?? createDefaultProteusHookMeta();
   for (const hook of hooks) {
     if (hook.decorator !== decorator) continue;
-    await hook.callback(entity, meta);
+    await hook.callback(entity, resolved);
   }
 };

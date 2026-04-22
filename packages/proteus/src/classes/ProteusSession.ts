@@ -27,7 +27,7 @@ import {
 export type ProteusSessionOptions = {
   source: IProteusSource;
   logger: ILogger;
-  context: ProteusHookMeta;
+  meta: ProteusHookMeta;
   driver: IProteusDriver;
   registryRef: { current: FilterRegistry };
   resolveMetadata: MetadataResolver;
@@ -50,7 +50,7 @@ export type ProteusSessionOptions = {
 export class ProteusSession implements IProteusSession {
   private readonly source: IProteusSource;
   private readonly logger: ILogger;
-  private readonly context: ProteusHookMeta;
+  private readonly meta: ProteusHookMeta;
   private readonly _driver: IProteusDriver;
   private _registryRef: { current: FilterRegistry };
   private readonly resolveMetadata: MetadataResolver;
@@ -63,7 +63,7 @@ export class ProteusSession implements IProteusSession {
     this.source = options.source;
     this._driver = options.driver;
     this.logger = options.logger;
-    this.context = options.context;
+    this.meta = options.meta;
     this._registryRef = options.registryRef;
     this.resolveMetadata = options.resolveMetadata;
     this.cacheAdapter = options.cacheAdapter;
@@ -101,7 +101,7 @@ export class ProteusSession implements IProteusSession {
   }
 
   public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
-    const inner = this._driver.createRepository(target, undefined, this.context);
+    const inner = this._driver.createRepository(target, undefined, this.meta);
     if (!this.cacheAdapter) return inner;
 
     const metadata = this.resolveMetadata(target);

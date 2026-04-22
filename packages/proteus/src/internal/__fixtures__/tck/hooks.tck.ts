@@ -96,11 +96,11 @@ export const hooksSuite = (
       expect(hookCallback.mock.calls.length).toBeGreaterThanOrEqual(2);
     });
 
-    test("hooks receive context and entity as arguments", async () => {
+    test("hooks receive entity and meta as arguments", async () => {
       const repo = getHandle().repository(TckHooked);
       await repo.insert({ name: "HookArg" });
 
-      // Hooks receive (entity, context) — entity is at index 0
+      // Hooks receive (entity, meta) — entity is at index 0
       const hasEntityArg = hookCallback.mock.calls.some(
         (call: any[]) => call[0] && call[0].name === "HookArg",
       );
