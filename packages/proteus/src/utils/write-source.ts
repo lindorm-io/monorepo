@@ -14,7 +14,8 @@ export type WriteSourceOptions = GenerateSourceOptions & {
 };
 
 export const writeSource = async (options: WriteSourceOptions): Promise<void> => {
-  const { driver, directory, dryRun, loggerImport } = options;
+  const { driver, directory, dryRun, loggerImport, configImport, cache, cacheKeyPrefix } =
+    options;
 
   if (!PROTEUS_ALL_DRIVERS.includes(driver)) {
     throw new Error(
@@ -28,7 +29,13 @@ export const writeSource = async (options: WriteSourceOptions): Promise<void> =>
   const files: Array<{ path: string; content: string }> = [
     {
       path: join(resolvedDirectory, "source.ts"),
-      content: generateSource({ driver, loggerImport }),
+      content: generateSource({
+        driver,
+        loggerImport,
+        configImport,
+        cache,
+        cacheKeyPrefix,
+      }),
     },
     { path: join(resolvedDirectory, "entities", ".gitkeep"), content: "" },
   ];
