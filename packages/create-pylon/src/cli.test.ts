@@ -61,7 +61,7 @@ const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
     auth: false,
     rateLimit: false,
   },
-  proteusDriver: "none",
+  proteusDrivers: [],
   irisDriver: "none",
   workers: [],
   ...overrides,
@@ -112,11 +112,14 @@ describe("cli run orchestration", () => {
   });
 
   test("runs proteus init + generate when driver selected", async () => {
-    mockedRunPrompts.mockResolvedValue(baseAnswers({ proteusDriver: "postgres" }));
+    mockedRunPrompts.mockResolvedValue(baseAnswers({ proteusDrivers: ["postgres"] }));
     await run();
 
-    expect(mockedProteusInit).toHaveBeenCalledWith("/tmp/demo", "postgres");
-    expect(mockedProteusSampleEntity).toHaveBeenCalledWith("/tmp/demo");
+    expect(mockedProteusInit).toHaveBeenCalledWith(
+      "/tmp/demo",
+      expect.objectContaining({ proteusDrivers: ["postgres"] }),
+    );
+    expect(mockedProteusSampleEntity).toHaveBeenCalledWith("/tmp/demo", undefined);
     expect(mockedIrisInit).not.toHaveBeenCalled();
   });
 
@@ -131,7 +134,7 @@ describe("cli run orchestration", () => {
 
   test("orchestration order: scaffold → install → drivers → git", async () => {
     mockedRunPrompts.mockResolvedValue(
-      baseAnswers({ proteusDriver: "postgres", irisDriver: "rabbit" }),
+      baseAnswers({ proteusDrivers: ["postgres"], irisDriver: "rabbit" }),
     );
 
     const calls: Array<string> = [];

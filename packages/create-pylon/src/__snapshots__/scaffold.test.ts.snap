@@ -24,7 +24,6 @@ exports[`scaffold > buildDependencyList > snapshot: redis-redis 1`] = `
   "@lindorm/proteus",
   "ioredis",
   "@lindorm/iris",
-  "ioredis",
 ]
 `;
 
@@ -41,8 +40,8 @@ exports[`scaffold > buildEnvLines > snapshot: mongo-nats 1`] = `
 [
   "NODE_ENV=development",
   "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
-  "PROTEUS_URL=mongodb://localhost:27017/app",
-  "IRIS_SERVERS=localhost:4222",
+  "MONGO_URL=mongodb://localhost:27017/app",
+  "NATS_SERVERS=localhost:4222",
 ]
 `;
 
@@ -50,8 +49,8 @@ exports[`scaffold > buildEnvLines > snapshot: mysql-rabbit 1`] = `
 [
   "NODE_ENV=development",
   "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
-  "PROTEUS_URL=mysql://localhost:3306/app",
-  "IRIS_URL=amqp://localhost:5672",
+  "MYSQL_URL=mysql://localhost:3306/app",
+  "RABBIT_URL=amqp://localhost:5672",
 ]
 `;
 
@@ -76,8 +75,8 @@ exports[`scaffold > buildEnvLines > snapshot: postgres-rabbit + auth 1`] = `
 [
   "NODE_ENV=development",
   "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
-  "PROTEUS_URL=postgresql://localhost:5432/app",
-  "IRIS_URL=amqp://localhost:5672",
+  "POSTGRES_URL=postgresql://localhost:5432/app",
+  "RABBIT_URL=amqp://localhost:5672",
   "AUTH_CLIENT_ID=",
   "AUTH_CLIENT_SECRET=",
   "AUTH_ISSUER=https://auth.example.com",
@@ -88,8 +87,8 @@ exports[`scaffold > buildEnvLines > snapshot: sqlite-redis 1`] = `
 [
   "NODE_ENV=development",
   "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
-  "PROTEUS_URL=file:./data/app.db",
-  "IRIS_URL=redis://localhost:6379",
+  "SQLITE_PATH=./data/app.db",
+  "REDIS_URL=redis://localhost:6379",
 ]
 `;
 
@@ -780,18 +779,19 @@ export default defineConfig({
 }
 `;
 
-exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + sessions + auth + rateLimit + workers > .env 1`] = `
+exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers > .env 1`] = `
 "NODE_ENV=development
 PYLON_KEK=kryptos:test-fixed-kek-placeholder
-PROTEUS_URL=postgresql://localhost:5432/app
-IRIS_URL=amqp://localhost:5672
+POSTGRES_URL=postgresql://localhost:5432/app
+REDIS_URL=redis://localhost:6379
+RABBIT_URL=amqp://localhost:5672
 AUTH_CLIENT_ID=
 AUTH_CLIENT_SECRET=
 AUTH_ISSUER=https://auth.example.com
 "
 `;
 
-exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + sessions + auth + rateLimit + workers > config.ts 1`] = `
+exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers > config.ts 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
@@ -799,8 +799,9 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  proteusUrl: z.string(),
-  irisUrl: z.string(),
+  postgresUrl: z.string(),
+  redisUrl: z.string(),
+  rabbitUrl: z.string(),
   authClientId: z.string(),
   authClientSecret: z.string(),
   authIssuer: z.string(),
@@ -808,13 +809,14 @@ export const config = configuration({
 "
 `;
 
-exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + sessions + auth + rateLimit + workers > pylon.ts 1`] = `
+exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers > pylon.ts 1`] = `
 "import { Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { source as proteusSource } from "../proteus/postgres/source.js";
+import { source as rateLimitSource } from "../proteus/redis/source.js";
 import { source as irisSource } from "../iris/source.js";
 
 export const pylon = new Pylon({
@@ -863,7 +865,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    proteus: proteusSource,
+    proteus: rateLimitSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -872,6 +874,7 @@ export const pylon = new Pylon({
   workers: join(import.meta.dirname, "..", "workers"),
   setup: async () => {
     await proteusSource.connect();
+    await rateLimitSource.connect();
     await irisSource.connect();
   },
   teardown: async () => {
@@ -881,7 +884,7 @@ export const pylon = new Pylon({
 "
 `;
 
-exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + sessions + auth + rateLimit + workers > tree 1`] = `
+exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers > tree 1`] = `
 [
   ".env",
   ".gitignore",
@@ -903,6 +906,11 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + rabbit + session
   "src/logger/index.ts",
   "src/middleware/http-example.ts",
   "src/middleware/socket-example.ts",
+  "src/proteus/postgres/entities/.gitkeep",
+  "src/proteus/postgres/migrations/.gitkeep",
+  "src/proteus/postgres/source.ts",
+  "src/proteus/redis/entities/.gitkeep",
+  "src/proteus/redis/source.ts",
   "src/pylon/amphora.ts",
   "src/pylon/config.ts",
   "src/pylon/pylon.ts",
@@ -987,13 +995,14 @@ export const pylon = new Pylon({
 "
 `;
 
-exports[`scaffold > scaffold orchestration > rateLimit-only combo (with postgres) > pylon.ts 1`] = `
+exports[`scaffold > scaffold orchestration > rateLimit-only combo (with postgres + redis) > pylon.ts 1`] = `
 "import { Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { source as proteusSource } from "../proteus/postgres/source.js";
+import { source as rateLimitSource } from "../proteus/redis/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -1004,7 +1013,7 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   rateLimit: {
     enabled: true,
-    proteus: proteusSource,
+    proteus: rateLimitSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -1012,6 +1021,7 @@ export const pylon = new Pylon({
   },
   setup: async () => {
     await proteusSource.connect();
+    await rateLimitSource.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -1042,6 +1052,9 @@ exports[`scaffold > scaffold orchestration > runs all write functions in sequenc
   "src/logger/index.ts",
   "src/middleware/http-example.ts",
   "src/middleware/socket-example.ts",
+  "src/proteus/entities/.gitkeep",
+  "src/proteus/migrations/.gitkeep",
+  "src/proteus/source.ts",
   "src/pylon/amphora.ts",
   "src/pylon/config.ts",
   "src/pylon/pylon.ts",
@@ -1103,7 +1116,7 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  irisBrokers: z.string().transform((s) => s.split(",")),
+  kafkaBrokers: z.string().transform((s) => s.split(",")),
 });
 "
 `;
@@ -1128,8 +1141,8 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  proteusUrl: z.string(),
-  irisServers: z.string(),
+  mongoUrl: z.string(),
+  natsServers: z.string(),
 });
 "
 `;
@@ -1142,7 +1155,7 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  irisServers: z.string(),
+  natsServers: z.string(),
 });
 "
 `;
@@ -1167,7 +1180,7 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  proteusUrl: z.string(),
+  postgresUrl: z.string(),
   authClientId: z.string(),
   authClientSecret: z.string(),
   authIssuer: z.string(),
@@ -1183,8 +1196,8 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  proteusUrl: z.string(),
-  irisBrokers: z.string().transform((s) => s.split(",")),
+  postgresUrl: z.string(),
+  kafkaBrokers: z.string().transform((s) => s.split(",")),
 });
 "
 `;
@@ -1197,7 +1210,7 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  proteusUrl: z.string(),
+  postgresUrl: z.string(),
 });
 "
 `;
@@ -1210,7 +1223,7 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  irisUrl: z.string(),
+  rabbitUrl: z.string(),
 });
 "
 `;
@@ -1223,7 +1236,7 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  irisUrl: z.string(),
+  redisUrl: z.string(),
 });
 "
 `;
@@ -1236,7 +1249,7 @@ export const config = configuration({
   nodeEnv: z.string().default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  proteusUrl: z.string(),
+  sqlitePath: z.string(),
 });
 "
 `;
@@ -1413,8 +1426,8 @@ PYLON_KEK=kryptos:test-fixed-kek-placeholder
 exports[`scaffold > writeEnvFile > postgres + kafka 1`] = `
 "NODE_ENV=development
 PYLON_KEK=kryptos:test-fixed-kek-placeholder
-PROTEUS_URL=postgresql://localhost:5432/app
-IRIS_BROKERS=localhost:9092
+POSTGRES_URL=postgresql://localhost:5432/app
+KAFKA_BROKERS=localhost:9092
 "
 `;
 
@@ -1850,7 +1863,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { source as proteusSource } from "../proteus/postgres/source.js";
+import { source as rateLimitSource } from "../proteus/redis/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -1861,7 +1875,7 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   rateLimit: {
     enabled: true,
-    proteus: proteusSource,
+    proteus: rateLimitSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -1869,6 +1883,7 @@ export const pylon = new Pylon({
   },
   setup: async () => {
     await proteusSource.connect();
+    await rateLimitSource.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -1877,13 +1892,14 @@ export const pylon = new Pylon({
 "
 `;
 
-exports[`scaffold > writePylonFile > snapshot: session + auth + rate limit + postgres 1`] = `
+exports[`scaffold > writePylonFile > snapshot: session + auth + rate limit + postgres + redis 1`] = `
 "import { Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { source as proteusSource } from "../proteus/postgres/source.js";
+import { source as rateLimitSource } from "../proteus/redis/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -1916,7 +1932,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    proteus: proteusSource,
+    proteus: rateLimitSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -1924,6 +1940,7 @@ export const pylon = new Pylon({
   },
   setup: async () => {
     await proteusSource.connect();
+    await rateLimitSource.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically

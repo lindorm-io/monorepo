@@ -2,13 +2,11 @@ import { join } from "path";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 vi.mock("@lindorm/proteus", async () => ({
-  __esModule: true,
   writeSource: vi.fn().mockResolvedValue(undefined),
   writeEntity: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@lindorm/iris", () => ({
-  __esModule: true,
   writeSource: vi.fn().mockResolvedValue(undefined),
   writeMessage: vi.fn().mockResolvedValue(undefined),
 }));
@@ -41,18 +39,78 @@ describe("drivers", () => {
     mockedIrisWriteMessage.mockClear();
   });
 
-  test("runProteusInit delegates to proteus writeSource with loggerImport", async () => {
-    await runProteusInit("/tmp/project", "postgres");
+  test("single-driver selection writes to flat src/proteus directory", async () => {
+    await runProteusInit("/tmp/project", { proteusDrivers: ["postgres"] });
 
+    expect(mockedProteusWriteSource).toHaveBeenCalledTimes(1);
     expect(mockedProteusWriteSource).toHaveBeenCalledWith({
       driver: "postgres",
       directory: join("/tmp/project", "src/proteus"),
-      loggerImport: "../logger",
+      loggerImport: "../logger/index.js",
+      configImport: "../pylon/config.js",
+      cache: null,
     });
   });
 
-  test("runProteusInit is a no-op for none", async () => {
-    await runProteusInit("/tmp/project", "none");
+  test("multi-driver selection writes to nested per-driver directories", async () => {
+    await runProteusInit("/tmp/project", {
+      proteusDrivers: ["postgres", "redis", "mongo"],
+    });
+
+    expect(mockedProteusWriteSource).toHaveBeenCalledTimes(3);
+    expect(mockedProteusWriteSource).toHaveBeenNthCalledWith(1, {
+      driver: "postgres",
+      directory: join("/tmp/project", "src/proteus/postgres"),
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      cache: "redis",
+    });
+    expect(mockedProteusWriteSource).toHaveBeenNthCalledWith(2, {
+      driver: "redis",
+      directory: join("/tmp/project", "src/proteus/redis"),
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      cache: null,
+    });
+    expect(mockedProteusWriteSource).toHaveBeenNthCalledWith(3, {
+      driver: "mongo",
+      directory: join("/tmp/project", "src/proteus/mongo"),
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      cache: "redis",
+    });
+  });
+
+  test("DB driver gets memory cache when memory is selected but redis is not", async () => {
+    await runProteusInit("/tmp/project", {
+      proteusDrivers: ["postgres", "memory"],
+    });
+
+    expect(mockedProteusWriteSource).toHaveBeenNthCalledWith(1, {
+      driver: "postgres",
+      directory: join("/tmp/project", "src/proteus/postgres"),
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      cache: "memory",
+    });
+  });
+
+  test("redis wins over memory for cache when both are selected", async () => {
+    await runProteusInit("/tmp/project", {
+      proteusDrivers: ["mongo", "redis", "memory"],
+    });
+
+    expect(mockedProteusWriteSource).toHaveBeenNthCalledWith(1, {
+      driver: "mongo",
+      directory: join("/tmp/project", "src/proteus/mongo"),
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      cache: "redis",
+    });
+  });
+
+  test("runProteusInit is a no-op for empty drivers", async () => {
+    await runProteusInit("/tmp/project", { proteusDrivers: [] });
     expect(mockedProteusWriteSource).not.toHaveBeenCalled();
   });
 
@@ -62,7 +120,7 @@ describe("drivers", () => {
     expect(mockedIrisWriteSource).toHaveBeenCalledWith({
       driver: "rabbit",
       directory: join("/tmp/project", "src/iris"),
-      loggerImport: "../logger",
+      loggerImport: "../logger/index.js",
     });
   });
 
@@ -71,12 +129,21 @@ describe("drivers", () => {
     expect(mockedIrisWriteSource).not.toHaveBeenCalled();
   });
 
-  test("runProteusGenerateSampleEntity writes SampleEntity", async () => {
+  test("runProteusGenerateSampleEntity writes SampleEntity in flat layout by default", async () => {
     await runProteusGenerateSampleEntity("/tmp/project");
 
     expect(mockedProteusWriteEntity).toHaveBeenCalledWith({
       name: "SampleEntity",
       directory: join("/tmp/project", "src/proteus/entities"),
+    });
+  });
+
+  test("runProteusGenerateSampleEntity targets driver subdirectory when given", async () => {
+    await runProteusGenerateSampleEntity("/tmp/project", "postgres");
+
+    expect(mockedProteusWriteEntity).toHaveBeenCalledWith({
+      name: "SampleEntity",
+      directory: join("/tmp/project", "src/proteus/postgres/entities"),
     });
   });
 
@@ -91,6 +158,8 @@ describe("drivers", () => {
 
   test("propagates errors from proteus writeSource", async () => {
     mockedProteusWriteSource.mockRejectedValueOnce(new Error("boom"));
-    await expect(runProteusInit("/tmp/project", "postgres")).rejects.toThrow("boom");
+    await expect(
+      runProteusInit("/tmp/project", { proteusDrivers: ["postgres"] }),
+    ).rejects.toThrow("boom");
   });
 });
