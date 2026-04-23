@@ -7,7 +7,7 @@ describe("resolveActor", () => {
   beforeEach(() => {
     ctx = {
       state: {
-        actor: null,
+        actor: "unknown",
         authorization: { type: "none", value: null },
         tokens: {},
       },
@@ -48,19 +48,19 @@ describe("resolveActor", () => {
 
       // Buffer.from will not throw on invalid base64; it decodes gibberish
       // that still splits on ":" safely. Guarantee is no throw and a sane
-      // fallback to null when no usable username is found.
+      // fallback to "unknown" when no usable username is found.
       const resolved = resolveActor(ctx);
-      expect(typeof resolved === "string" || resolved === null).toBe(true);
+      expect(typeof resolved).toBe("string");
     });
 
-    test("should return null when no auth info is present", () => {
-      expect(resolveActor(ctx)).toBeNull();
+    test("should return 'unknown' when no auth info is present", () => {
+      expect(resolveActor(ctx)).toBe("unknown");
     });
 
     test("should ignore non-string sub claims", () => {
       ctx.state.tokens.accessToken = { claims: { sub: 12345 } };
 
-      expect(resolveActor(ctx)).toBeNull();
+      expect(resolveActor(ctx)).toBe("unknown");
     });
   });
 
@@ -80,16 +80,16 @@ describe("resolveActor", () => {
       expect(ctx.state.actor).toBe("custom-actor");
     });
 
-    test("should accept configured resolver returning null", () => {
-      const resolver = vi.fn().mockReturnValue(null);
+    test("should accept configured resolver returning 'unknown'", () => {
+      const resolver = vi.fn().mockReturnValue("unknown");
 
-      expect(resolveActor(ctx, resolver)).toBeNull();
-      expect(ctx.state.actor).toBeNull();
+      expect(resolveActor(ctx, resolver)).toBe("unknown");
+      expect(ctx.state.actor).toBe("unknown");
     });
   });
 
   describe("memoisation", () => {
-    test("should return cached non-null actor without calling resolver", () => {
+    test("should return cached non-unknown actor without calling resolver", () => {
       ctx.state.actor = "cached-actor";
       const resolver = vi.fn().mockReturnValue("other-actor");
 
@@ -97,13 +97,23 @@ describe("resolveActor", () => {
       expect(resolver).not.toHaveBeenCalled();
     });
 
-    test("should re-run resolver when cached actor is null", () => {
+    test("should re-run resolver when cached actor is 'unknown'", () => {
       const resolver = vi.fn().mockReturnValue("new-actor");
 
       resolveActor(ctx, resolver);
+      // First call resolved to "new-actor" and cached it; second call short-circuits.
       resolveActor(ctx, resolver);
 
       expect(resolver).toHaveBeenCalledTimes(1);
+    });
+
+    test("should keep re-running resolver while cached actor remains 'unknown'", () => {
+      const resolver = vi.fn().mockReturnValue("unknown");
+
+      resolveActor(ctx, resolver);
+      resolveActor(ctx, resolver);
+
+      expect(resolver).toHaveBeenCalledTimes(2);
     });
 
     test("should not mutate ctx when ctx.state is missing", () => {

@@ -33,7 +33,7 @@ export type PylonHttpMetadata = PylonMetadata & {
 };
 
 export type PylonState = {
-  actor: string | null;
+  actor: string;
   app: AppState;
   authorization: AuthorizationState;
   metadata: PylonMetadata;
@@ -53,6 +53,7 @@ export type PylonCommonContext = {
   conduits: Conduits;
   entities: Dict<IEntity>;
   logger: ILogger;
+  state: PylonState;
 
   publishers?: Dict;
   workerQueues?: Dict;
@@ -76,7 +77,6 @@ export type PylonContext = PylonCommonContext & {
   io: PylonIoContextHttp;
   params: Dict<string>;
   socket?: PylonSocketEmitter;
-  state: PylonState;
 };
 
 export type PylonMiddleware<C extends PylonContext = PylonContext> = Middleware<C>;

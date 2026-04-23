@@ -211,8 +211,8 @@ describe("useAuditLog", () => {
     );
   });
 
-  test("should fall back to 'unknown' actor when resolver returns null", async () => {
-    ctx.state.actor = null;
+  test("should fall back to 'unknown' actor when resolver finds no actor", async () => {
+    ctx.state.actor = "unknown";
     ctx.state.tokens = {};
     ctx.state.authorization = { type: "none", value: null };
 
@@ -223,8 +223,8 @@ describe("useAuditLog", () => {
     );
   });
 
-  test("should resolve actor from accessToken when ctx.state.actor is null", async () => {
-    ctx.state.actor = null;
+  test("should resolve actor from accessToken when ctx.state.actor is 'unknown'", async () => {
+    ctx.state.actor = "unknown";
     ctx.state.tokens = { accessToken: { claims: { sub: "bob" } } };
     ctx.state.authorization = { type: "none", value: null };
 

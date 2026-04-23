@@ -1,6 +1,6 @@
-import type { PylonContext } from "../../types/index.js";
+import type { PylonCommonContext } from "../../types/index.js";
 
-export type ActorResolver = (ctx: PylonContext) => string | null;
+export type ActorResolver = (ctx: PylonCommonContext) => string;
 
 const defaultActorResolver: ActorResolver = (ctx) => {
   const tokens = ctx.state?.tokens as any;
@@ -22,29 +22,28 @@ const defaultActorResolver: ActorResolver = (ctx) => {
     }
   }
 
-  return null;
+  return "unknown";
 };
 
 /**
  * Resolves the actor for the current request, memoising on `ctx.state.actor`.
- * The first call runs the configured resolver (or the default) and stores the
- * result. Subsequent calls return the cached value.
- *
- * A non-null cached value short-circuits. A null cached value is treated as
- * "not yet resolved" — re-running the default resolver when the value is null
- * is cheap and idempotent (tokens may have been populated in the meantime).
+ * The initial state is `"unknown"` (set by the state-init middleware). A
+ * non-"unknown" cached value short-circuits; a cached `"unknown"` is treated
+ * as "not yet resolved" and re-runs the resolver — cheap and idempotent
+ * because tokens/basic-auth may only populate later in the request lifecycle.
  */
 export const resolveActor = (
-  ctx: PylonContext,
+  ctx: PylonCommonContext,
   configured?: ActorResolver,
-): string | null => {
-  if (ctx.state?.actor) return ctx.state.actor;
+): string => {
+  const state = ctx.state as PylonCommonContext["state"] | undefined;
+  if (state?.actor && state.actor !== "unknown") return state.actor;
 
   const resolver = configured ?? defaultActorResolver;
   const resolved = resolver(ctx);
 
-  if (ctx.state) {
-    ctx.state.actor = resolved;
+  if (state) {
+    state.actor = resolved;
   }
 
   return resolved;

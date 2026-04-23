@@ -42,7 +42,7 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
       const sanitise = options.sanitise ?? config.sanitise;
       const body = ctx.data ? (sanitise ? sanitise(ctx.data) : ctx.data) : null;
 
-      const actor = resolveActor(ctx) ?? "unknown";
+      const actor = resolveActor(ctx);
       const iris = config.iris.session({ logger: ctx.logger });
       const publisher = iris.publisher(RequestAudit);
 

@@ -5,13 +5,17 @@ import type { IPylonSession } from "../../interfaces/index.js";
 import type { IPylonSessionStore } from "../../interfaces/PylonSessionStore.js";
 import type { PylonCommonContext, PylonSessionOptions } from "../../types/index.js";
 import { buildHookMeta } from "./build-hook-meta.js";
+import { resolveActor } from "./resolve-actor.js";
 
 const getSource = (
   ctx: PylonCommonContext,
   override?: IProteusSource,
 ): IProteusSession | null => {
   if (override) {
-    return override.session({ logger: ctx.logger, meta: buildHookMeta(ctx, null) });
+    return override.session({
+      logger: ctx.logger,
+      meta: buildHookMeta(ctx, resolveActor(ctx)),
+    });
   }
   return ctx.proteus ?? null;
 };

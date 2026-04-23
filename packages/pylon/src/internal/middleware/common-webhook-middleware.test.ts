@@ -133,7 +133,7 @@ describe("createWebhookMiddleware", () => {
       logger: ctx.logger,
       meta: {
         correlationId: "test-correlation-id",
-        actor: null,
+        actor: "unknown",
         timestamp: expect.any(Date),
       },
     });

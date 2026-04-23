@@ -18,7 +18,7 @@ describe("resolveIris", () => {
       logger: ctx.logger,
       meta: {
         correlationId: "corr-x",
-        actor: null,
+        actor: "unknown",
         timestamp: expect.any(Date),
       },
     });

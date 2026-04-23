@@ -18,15 +18,15 @@ describe("buildHookMeta", () => {
   });
 
   test("should default correlationId to 'unknown' when metadata is missing", () => {
-    const meta = buildHookMeta({}, null);
+    const meta = buildHookMeta({}, "unknown");
 
     expect(meta.correlationId).toBe("unknown");
-    expect(meta.actor).toBeNull();
+    expect(meta.actor).toBe("unknown");
     expect(meta.timestamp).toBeInstanceOf(Date);
   });
 
   test("should default correlationId when state exists but metadata does not", () => {
-    const meta = buildHookMeta({ state: {} }, null);
+    const meta = buildHookMeta({ state: {} }, "unknown");
 
     expect(meta.correlationId).toBe("unknown");
   });
@@ -39,9 +39,12 @@ describe("buildHookMeta", () => {
     expect(meta.timestamp).toBeInstanceOf(Date);
   });
 
-  test("should pass through null actor", () => {
-    const meta = buildHookMeta({ state: { metadata: { correlationId: "c" } } }, null);
+  test("should pass through 'unknown' actor", () => {
+    const meta = buildHookMeta(
+      { state: { metadata: { correlationId: "c" } } },
+      "unknown",
+    );
 
-    expect(meta.actor).toBeNull();
+    expect(meta.actor).toBe("unknown");
   });
 });

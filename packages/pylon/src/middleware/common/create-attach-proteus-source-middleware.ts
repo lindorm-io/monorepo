@@ -9,7 +9,7 @@ export type AttachProteusSourceOptions = {
   key: string;
   /** The ProteusSource instance whose `session()` will be bound. */
   source: IProteusSource;
-  /** Optional actor resolver — returns a string or null for unauthenticated/system calls. */
+  /** Optional actor resolver — returns a string (use `"unknown"` for unauthenticated/system calls). */
   actor?: ActorResolver;
 };
 
