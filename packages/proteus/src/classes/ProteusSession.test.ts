@@ -303,7 +303,7 @@ describe("ProteusSession", () => {
         expect.objectContaining({
           meta: expect.objectContaining({
             correlationId: "unknown",
-            actor: null,
+            actor: "unknown",
             timestamp: expect.any(Date),
           }),
         }),
