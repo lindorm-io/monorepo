@@ -72,6 +72,13 @@ export type FindOptions<E extends IEntity = IEntity> = FindOptionsBase<E> & {
   limit?: number;
   /** Number of entities to skip (use with `limit` for manual pagination). */
   offset?: number;
+  /**
+   * When `false`, hydrated entities are not stored in the change-tracker snapshot.
+   * Subsequent `update(entity)` on these entities still works, but writes every column
+   * and bumps version unconditionally instead of issuing a minimal column-diff UPDATE.
+   * Use for read-only paths (serialise + discard).
+   */
+  snapshot?: boolean;
 };
 
 /**
@@ -83,4 +90,11 @@ export type FindPaginatedOptions<E extends IEntity = IEntity> = FindOptionsBase<
   page?: number;
   /** Number of entities per page when using `page`. */
   pageSize?: number;
+  /**
+   * When `false`, hydrated entities are not stored in the change-tracker snapshot.
+   * Subsequent `update(entity)` on these entities still works, but writes every column
+   * and bumps version unconditionally instead of issuing a minimal column-diff UPDATE.
+   * Use for read-only paths (serialise + discard).
+   */
+  snapshot?: boolean;
 };

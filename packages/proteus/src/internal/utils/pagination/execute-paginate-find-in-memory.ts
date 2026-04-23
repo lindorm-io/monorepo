@@ -53,6 +53,7 @@ export const executePaginateFindInMemory = async <E extends IEntity>(
         withDeleted: options.withDeleted,
         relations: options.relations,
         filters: options.filters,
+        snapshot: options.snapshot,
       } as FindOptions<E>,
       "multiple",
     );
@@ -66,6 +67,7 @@ export const executePaginateFindInMemory = async <E extends IEntity>(
       withDeleted: options.withDeleted,
       relations: options.relations,
       filters: options.filters,
+      snapshot: options.snapshot,
     } as FindOptions<E>,
     "multiple",
   );

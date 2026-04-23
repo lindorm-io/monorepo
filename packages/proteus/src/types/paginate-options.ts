@@ -58,6 +58,13 @@ export type PaginateOptions<E extends IEntity = IEntity> = {
    * - `Dict<unknown>` — enable the filter with these params (overrides source-registered params)
    */
   filters?: Record<string, boolean | Dict<unknown>>;
+  /**
+   * When `false`, hydrated entities are not stored in the change-tracker snapshot.
+   * Subsequent `update(entity)` on these entities still works, but writes every column
+   * and bumps version unconditionally instead of issuing a minimal column-diff UPDATE.
+   * Use for read-only paths (serialise + discard).
+   */
+  snapshot?: boolean;
 };
 
 /**

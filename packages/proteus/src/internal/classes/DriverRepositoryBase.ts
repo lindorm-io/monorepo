@@ -257,7 +257,7 @@ export abstract class DriverRepositoryBase<
   public async findOneOrSave(
     criteria: Predicate<E>,
     entity: O | E,
-    options?: FindOptions<E>,
+    options?: Omit<FindOptions<E>, "snapshot">,
   ): Promise<E> {
     const existing = await this.findOne(criteria, options);
     if (existing) return existing;
@@ -424,6 +424,7 @@ export abstract class DriverRepositoryBase<
         withoutScope: options.withoutScope,
         relations: options.relations,
         filters: options.filters,
+        snapshot: options.snapshot,
       },
       "multiple",
     );

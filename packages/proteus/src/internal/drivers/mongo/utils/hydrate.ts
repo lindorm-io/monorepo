@@ -73,11 +73,12 @@ export const hydrateEntity = <E extends IEntity>(
   doc: Document,
   metadata: EntityMetadata,
   amphora?: IAmphora,
+  snapshot?: boolean,
 ): E => {
   const row = documentToRow(doc, metadata);
   const effectiveMetadata = resolvePolymorphicMetadata(row, metadata);
   return defaultHydrateEntity<E>(row, effectiveMetadata, {
-    snapshot: true,
+    snapshot: snapshot ?? true,
     hooks: true,
     amphora,
   });
@@ -90,6 +91,7 @@ export const hydrateEntities = <E extends IEntity>(
   docs: Array<Document>,
   metadata: EntityMetadata,
   amphora?: IAmphora,
+  snapshot?: boolean,
 ): Array<E> => {
-  return docs.map((doc) => hydrateEntity<E>(doc, metadata, amphora));
+  return docs.map((doc) => hydrateEntity<E>(doc, metadata, amphora, snapshot));
 };

@@ -388,7 +388,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       const docs = await this.runReadable(() =>
         collection.aggregate(pipeline, readOpts(this.session, this.signal)).toArray(),
       );
-      return hydrateEntities<E>(docs, this.metadata, this.amphora);
+      return hydrateEntities<E>(docs, this.metadata, this.amphora, options.snapshot);
     }
 
     const sort = compileSort(effectiveOrder, this.metadata);
@@ -405,7 +405,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (options.limit) cursor = cursor.limit(options.limit);
 
     const docs = await this.runReadable(() => cursor.toArray());
-    return hydrateEntities<E>(docs, this.metadata, this.amphora);
+    return hydrateEntities<E>(docs, this.metadata, this.amphora, options.snapshot);
   }
 
   // ─── Count ────────────────────────────────────────────────────────────

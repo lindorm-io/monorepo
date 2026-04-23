@@ -401,7 +401,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     }
 
     // Hydrate
-    return rows.map((row) => this.hydrateFromRow(row));
+    return rows.map((row) => this.hydrateFromRow(row, options.snapshot));
   }
 
   // ─── Count ────────────────────────────────────────────────────────────
@@ -730,10 +730,10 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     return Array.from(nullSet);
   }
 
-  private hydrateFromRow(row: Dict): E {
+  private hydrateFromRow(row: Dict, snapshot?: boolean): E {
     const effectiveMetadata = resolvePolymorphicMetadata(row, this.metadata);
     return defaultHydrateEntity<E>(row, effectiveMetadata, {
-      snapshot: true,
+      snapshot: snapshot ?? true,
       hooks: true,
       amphora: this.amphora,
     });

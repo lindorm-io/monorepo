@@ -240,6 +240,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     const result = await this.client.query(text, params);
     const entities = hydrateRows<E>(result.rows, this.metadata, aliasMap, joinIncludes, {
       amphora: this.amphora,
+      snapshot: options.snapshot,
     });
 
     if (queryIncludes.length > 0) {
