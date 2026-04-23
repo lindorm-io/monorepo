@@ -46,7 +46,7 @@ describe("runHooksSync", () => {
       entity,
       expect.objectContaining({
         correlationId: "unknown",
-        actor: null,
+        actor: "unknown",
         timestamp: expect.any(Date),
       }),
     );

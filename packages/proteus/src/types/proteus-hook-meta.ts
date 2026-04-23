@@ -5,7 +5,7 @@
  */
 export type ProteusHookMeta = {
   correlationId: string;
-  actor: string | null;
+  actor: string;
   timestamp: Date;
 };
 
@@ -17,6 +17,6 @@ export type ProteusHookMeta = {
  */
 export const createDefaultProteusHookMeta = (): ProteusHookMeta => ({
   correlationId: "unknown",
-  actor: null,
+  actor: "unknown",
   timestamp: new Date(),
 });
