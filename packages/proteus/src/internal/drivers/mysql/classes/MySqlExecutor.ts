@@ -323,6 +323,7 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       const { rows } = await this.client.query(text, params);
       const entities = hydrateRows<E>(rows, this.metadata, aliasMap, joinIncludes, {
         amphora: this.amphora,
+        snapshot: options.snapshot,
       });
 
       if (queryIncludes.length > 0) {

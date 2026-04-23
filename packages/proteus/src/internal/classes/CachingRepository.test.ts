@@ -385,6 +385,36 @@ describe("CachingRepository", () => {
       expect(adapter.set).not.toHaveBeenCalled();
     });
 
+    it("should propagate snapshot:false to defaultHydrateEntity on cache hit", async () => {
+      const { repo, adapter } = createRepo();
+      const serialized = JSON.stringify([{ id: "id-1", name: "Entity A" }]);
+      adapter.get.mockResolvedValue(serialized);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
+
+      await repo.find({ name: "Entity A" }, { snapshot: false });
+
+      expect(defaultHydrateEntity).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ snapshot: false }),
+      );
+    });
+
+    it("should default snapshot to true on cache hit when option is not set", async () => {
+      const { repo, adapter } = createRepo();
+      const serialized = JSON.stringify([{ id: "id-1", name: "Entity A" }]);
+      adapter.get.mockResolvedValue(serialized);
+      (defaultHydrateEntity as Mock).mockReturnValue(entityA);
+
+      await repo.find({ name: "Entity A" });
+
+      expect(defaultHydrateEntity).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        expect.objectContaining({ snapshot: true }),
+      );
+    });
+
     it("should skip cache when cache:false is set in options", async () => {
       const { repo, inner, adapter } = createRepo();
       inner.find.mockResolvedValue([entityA]);

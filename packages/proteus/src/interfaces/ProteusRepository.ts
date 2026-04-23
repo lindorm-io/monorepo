@@ -51,7 +51,7 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
   findOneOrSave(
     criteria: Predicate<E>,
     entity: O | E,
-    options?: FindOptions<E>,
+    options?: Omit<FindOptions<E>, "snapshot">,
   ): Promise<E>;
 
   // Upsert

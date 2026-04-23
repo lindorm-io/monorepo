@@ -238,6 +238,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     const rows = this.client.all(text, params);
     const entities = hydrateRows<E>(rows, this.metadata, aliasMap, joinIncludes, {
       amphora: this.amphora,
+      snapshot: options.snapshot,
     });
 
     if (queryIncludes.length > 0) {

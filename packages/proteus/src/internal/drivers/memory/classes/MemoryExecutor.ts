@@ -84,10 +84,11 @@ const hydrateFromRow = <E extends IEntity>(
   row: Dict,
   metadata: EntityMetadata,
   amphora?: IAmphora,
+  snapshot?: boolean,
 ): E => {
   const effectiveMetadata = resolvePolymorphicMetadata(row, metadata);
   return defaultHydrateEntity<E>(row, effectiveMetadata, {
-    snapshot: true,
+    snapshot: snapshot ?? true,
     hooks: true,
     amphora,
   });
@@ -441,7 +442,12 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
 
     // Hydrate
     return rows.map((row) =>
-      hydrateFromRow<E>(structuredClone(row), this.metadata, this.amphora),
+      hydrateFromRow<E>(
+        structuredClone(row),
+        this.metadata,
+        this.amphora,
+        options.snapshot,
+      ),
     );
   }
 

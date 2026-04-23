@@ -256,7 +256,7 @@ export class CachingRepository<
   public async findOneOrSave(
     criteria: Predicate<E>,
     entity: O | E,
-    options?: FindOptions<E>,
+    options?: Omit<FindOptions<E>, "snapshot">,
   ): Promise<E> {
     const existing = await this.findOne(criteria, options);
     if (existing) return existing;
@@ -412,7 +412,11 @@ export class CachingRepository<
       const cached = await this.adapter.get(key);
       if (cached != null) {
         this.logger.debug("Cache hit", { key });
-        return this.deserializeEntities(JSON.parse(cached, jsonReviver), scopes);
+        return this.deserializeEntities(
+          JSON.parse(cached, jsonReviver),
+          scopes,
+          options?.snapshot,
+        );
       }
     } catch (err) {
       this.logger.warn("Cache get failed", { error: err, key });
@@ -464,7 +468,11 @@ export class CachingRepository<
           entities: Array<Record<string, unknown>>;
           count: number;
         };
-        const entities = await this.deserializeEntities(parsed.entities, scopes);
+        const entities = await this.deserializeEntities(
+          parsed.entities,
+          scopes,
+          options?.snapshot,
+        );
         return [entities, parsed.count];
       }
     } catch (err) {
@@ -570,13 +578,14 @@ export class CachingRepository<
   private async deserializeEntities(
     items: Array<Record<string, unknown>>,
     scopes: Array<QueryScope>,
+    snapshot?: boolean,
   ): Promise<Array<E>> {
     const entities: Array<E> = [];
     for (const data of items) {
       const effectiveMetadata = resolvePolymorphicMetadata(data, this.metadata);
 
       const entity = defaultHydrateEntity<E>(data as any, effectiveMetadata, {
-        snapshot: true,
+        snapshot: snapshot ?? true,
         hooks: true,
       });
       await runHooksAsync("AfterLoad", effectiveMetadata.hooks, entity, undefined);
