@@ -32,7 +32,7 @@ describe("createDependenciesMiddleware", () => {
       logger: ctx.logger,
       meta: {
         correlationId: "unknown",
-        actor: null,
+        actor: "unknown",
         timestamp: expect.any(Date),
       },
       signal: undefined,
@@ -60,7 +60,7 @@ describe("createDependenciesMiddleware", () => {
       logger: httpCtx.logger,
       meta: {
         correlationId: "unknown",
-        actor: null,
+        actor: "unknown",
         timestamp: expect.any(Date),
       },
       signal: controller.signal,
@@ -86,7 +86,7 @@ describe("createDependenciesMiddleware", () => {
       logger: socketCtx.logger,
       meta: {
         correlationId: "unknown",
-        actor: null,
+        actor: "unknown",
         timestamp: expect.any(Date),
       },
       signal: undefined,
@@ -110,7 +110,7 @@ describe("createDependenciesMiddleware", () => {
       logger: ctx.logger,
       meta: {
         correlationId: "unknown",
-        actor: null,
+        actor: "unknown",
         timestamp: expect.any(Date),
       },
     });
@@ -140,7 +140,7 @@ describe("createDependenciesMiddleware", () => {
     const ctxWithState: any = {
       logger: createMockLogger(),
       state: {
-        actor: null,
+        actor: "unknown",
         metadata: {
           correlationId: "corr-abc",
           date: new Date("2025-01-01T00:00:00Z"),
@@ -187,7 +187,7 @@ describe("createDependenciesMiddleware", () => {
     const ctxWithState: any = {
       logger: createMockLogger(),
       state: {
-        actor: null,
+        actor: "unknown",
         metadata: { correlationId: "c", date: new Date("2025-01-01T00:00:00Z") },
       },
     };

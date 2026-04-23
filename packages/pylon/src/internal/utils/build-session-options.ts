@@ -12,7 +12,7 @@ import { isHttpContext } from "./is-context.js";
  */
 export const buildProteusSessionOptions = (
   ctx: PylonCommonContext,
-  actor: string | null,
+  actor: string,
 ): ProteusSessionOptions => ({
   logger: ctx.logger,
   meta: buildHookMeta(ctx, actor),
@@ -25,7 +25,7 @@ export const buildProteusSessionOptions = (
  */
 export const buildIrisSessionOptions = (
   ctx: PylonCommonContext,
-  actor: string | null,
+  actor: string,
 ): IrisSessionOptions => ({
   logger: ctx.logger,
   meta: buildHookMeta(ctx, actor),

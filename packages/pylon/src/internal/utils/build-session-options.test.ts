@@ -38,12 +38,12 @@ describe("buildProteusSessionOptions", () => {
       event: "test:event",
     };
 
-    const opts = buildProteusSessionOptions(ctx, null);
+    const opts = buildProteusSessionOptions(ctx, "unknown");
 
     expect(opts.signal).toBeUndefined();
     expect(opts.meta).toEqual({
       correlationId: "unknown",
-      actor: null,
+      actor: "unknown",
       timestamp: expect.any(Date),
     });
   });

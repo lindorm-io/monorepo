@@ -41,7 +41,7 @@ describe("createAttachIrisSourceMiddleware", () => {
       logger: ctx.logger,
       meta: {
         correlationId: "unknown",
-        actor: null,
+        actor: "unknown",
         timestamp: expect.any(Date),
       },
     });
@@ -117,20 +117,22 @@ describe("createAttachIrisSourceMiddleware", () => {
     });
   });
 
-  test("should treat actor returning null as null in hook meta", async () => {
+  test("should forward 'unknown' actor from the configured resolver into hook meta", async () => {
     const source = createMockIrisSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachIrisSourceMiddleware({
       key: "iris",
       source: source as any,
-      actor: () => null,
+      actor: () => "unknown",
     })(ctx, next);
 
     ctx.iris;
 
     expect(source.session).toHaveBeenCalledWith(
-      expect.objectContaining({ meta: expect.objectContaining({ actor: null }) }),
+      expect.objectContaining({
+        meta: expect.objectContaining({ actor: "unknown" }),
+      }),
     );
   });
 });

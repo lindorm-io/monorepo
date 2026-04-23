@@ -61,10 +61,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
       // default fallback). Downstream hooks receive this via
       // ProteusHookMeta/IrisHookMeta instead of spelunking into Koa ctx per
       // event. The result is memoised on ctx.state.actor.
-      const actor: string | null = resolveActor(
-        ctx as unknown as PylonContext,
-        options.actor,
-      );
+      const actor: string = resolveActor(ctx, options.actor);
 
       if (options.hermes) {
         lazyFactory(ctx, "hermes", () => options.hermes!.session({ logger: ctx.logger }));

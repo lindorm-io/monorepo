@@ -9,7 +9,7 @@ export type AttachIrisSourceOptions = {
   key: string;
   /** The IrisSource instance whose `session()` will be bound. */
   source: IIrisSource;
-  /** Optional actor resolver — returns a string or null for unauthenticated/system calls. */
+  /** Optional actor resolver — returns a string (use `"unknown"` for unauthenticated/system calls). */
   actor?: ActorResolver;
 };
 

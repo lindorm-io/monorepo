@@ -14,7 +14,7 @@ import type { ProteusHookMeta } from "@lindorm/proteus";
  */
 export const buildHookMeta = (
   ctx: any,
-  actor: string | null,
+  actor: string,
 ): ProteusHookMeta & IrisHookMeta => ({
   correlationId: ctx?.state?.metadata?.correlationId ?? "unknown",
   actor,

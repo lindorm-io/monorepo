@@ -10,7 +10,7 @@ import type { Redis } from "ioredis";
 import type { ServerOptions as SocketOptions } from "socket.io";
 import { PylonListener, PylonRouter } from "../classes/index.js";
 import type { PylonAuthOptions } from "./auth.js";
-import type { PylonContext } from "./context-common.js";
+import type { PylonCommonContext } from "./context-common.js";
 import type {
   PylonConnectionMiddleware,
   PylonSocketHandshakeContext,
@@ -43,7 +43,7 @@ export type PylonHttpRouters<C extends PylonHttpContext> = {
 };
 
 type CommonOptions = {
-  actor?: (ctx: PylonContext) => string | null;
+  actor?: (ctx: PylonCommonContext) => string;
   amphora: IAmphora;
   audit?: PylonAuditOptions;
   domain?: string;

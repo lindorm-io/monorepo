@@ -41,7 +41,7 @@ describe("createAttachProteusSourceMiddleware", () => {
       logger: ctx.logger,
       meta: {
         correlationId: "unknown",
-        actor: null,
+        actor: "unknown",
         timestamp: expect.any(Date),
       },
       signal: undefined,
@@ -135,20 +135,22 @@ describe("createAttachProteusSourceMiddleware", () => {
     });
   });
 
-  test("should treat actor returning null/undefined as null in hook meta", async () => {
+  test("should forward 'unknown' actor from the configured resolver into hook meta", async () => {
     const source = createMockProteusSource();
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachProteusSourceMiddleware({
       key: "proteus",
       source: source as any,
-      actor: () => null,
+      actor: () => "unknown",
     })(ctx, next);
 
     ctx.proteus;
 
     expect(source.session).toHaveBeenCalledWith(
-      expect.objectContaining({ meta: expect.objectContaining({ actor: null }) }),
+      expect.objectContaining({
+        meta: expect.objectContaining({ actor: "unknown" }),
+      }),
     );
   });
 });
