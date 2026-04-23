@@ -1227,7 +1227,7 @@ await source.setup();
 // Clone shares the connection but has its own logger and subscriber registry
 const scoped = source.session({
   logger: requestLogger,
-  meta: { correlationId: "abc", actor: null, timestamp: new Date() },
+  meta: { correlationId: "abc", actor: "unknown", timestamp: new Date() },
 });
 
 const pub = scoped.publisher(OrderPlaced);

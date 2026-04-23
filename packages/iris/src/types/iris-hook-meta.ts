@@ -5,7 +5,7 @@
  */
 export type IrisHookMeta = {
   correlationId: string;
-  actor: string | null;
+  actor: string;
   timestamp: Date;
 };
 
@@ -17,6 +17,6 @@ export type IrisHookMeta = {
  */
 export const createDefaultIrisHookMeta = (): IrisHookMeta => ({
   correlationId: "unknown",
-  actor: null,
+  actor: "unknown",
   timestamp: new Date(),
 });
