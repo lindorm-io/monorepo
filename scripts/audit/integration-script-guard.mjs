@@ -54,7 +54,7 @@ if (violations.length > 0) {
     console.error(`  - ${v.pkg} (${v.count} files, e.g. ${v.sample.replace(ROOT + "/", "")})`);
   }
   console.error("\nAdd to each package.json:");
-  console.error('  "test:integration": "vitest run --include \'src/**/*.integration.test.ts\'"');
+  console.error('  "test:integration": "vitest run \'integration.test\'"');
   process.exit(1);
 }
 
