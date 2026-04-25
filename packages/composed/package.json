@@ -21,7 +21,7 @@
     "example": "ts-node example",
     "prettier": "prettier --write ./src/*",
     "test": "vitest run",
-    "test:ci": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
     "test:smoke": "composed --file docker-compose.yml vitest run --config vitest.config.smoke.mjs",
     "test:update": "vitest run -u",
     "test:watch": "vitest",
