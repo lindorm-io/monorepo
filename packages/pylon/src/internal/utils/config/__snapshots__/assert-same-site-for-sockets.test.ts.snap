@@ -15,19 +15,3 @@ exports[`assertSameSiteForSockets > should throw with descriptive error when Sam
   "title": null,
 }
 `;
-
-exports[`assertSameSiteForSockets should throw with descriptive error when SameSite is none 1`] = `
-{
-  "code": "invalid_same_site_for_session",
-  "data": {},
-  "debug": {},
-  "details": "options.session.sameSite is 'none'. Cross-Site WebSocket Hijacking (CSWSH) defense-in-depth requires SameSite=Lax or SameSite=Strict on the session cookie.",
-  "errors": [],
-  "id": Any<String>,
-  "name": "PylonError",
-  "status": -1,
-  "support": null,
-  "timestamp": Any<Date>,
-  "title": null,
-}
-`;

@@ -13,17 +13,3 @@ exports[`extractHandshakeAccessTokenInput > returns dpop input when bearer + dpo
   "token": "jwt",
 }
 `;
-
-exports[`extractHandshakeAccessTokenInput returns bearer input when only bearer is present 1`] = `
-{
-  "dpopProof": undefined,
-  "token": "jwt",
-}
-`;
-
-exports[`extractHandshakeAccessTokenInput returns dpop input when bearer + dpop header present 1`] = `
-{
-  "dpopProof": "proof",
-  "token": "jwt",
-}
-`;

@@ -18,22 +18,3 @@ exports[`createWellKnownRouter > should create a router with expected routes 1`]
   "/openid-configuration",
 ]
 `;
-
-exports[`createWellKnownRouter openid-configuration should return openid configuration with domain replaced 1`] = `
-{
-  "authorization_endpoint": "https://test.lindorm.io/auth",
-  "issuer": "https://test.lindorm.io",
-  "token_endpoint": "https://origin.lindorm.io/token",
-}
-`;
-
-exports[`createWellKnownRouter should create a router with expected routes 1`] = `
-[
-  "/change-password",
-  "/jwks.json",
-  "/oauth-protected-resource",
-  "/right-to-be-forgotten",
-  "/oauth-authorization-server",
-  "/openid-configuration",
-]
-`;

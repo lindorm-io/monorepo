@@ -31,35 +31,3 @@ exports[`fixedWindowStrategy > should reset window when window has expired 1`] =
   "resetAt": 2026-01-01T00:01:00.000Z,
 }
 `;
-
-exports[`fixedWindowStrategy should create new counter and allow when no existing record 1`] = `
-{
-  "allowed": true,
-  "remaining": 9,
-  "resetAt": 2026-01-01T00:01:00.000Z,
-}
-`;
-
-exports[`fixedWindowStrategy should deny when count reaches max 1`] = `
-{
-  "allowed": false,
-  "remaining": 0,
-  "resetAt": 2026-01-01T00:01:00.000Z,
-}
-`;
-
-exports[`fixedWindowStrategy should increment and allow when under max 1`] = `
-{
-  "allowed": true,
-  "remaining": 4,
-  "resetAt": 2026-01-01T00:01:00.000Z,
-}
-`;
-
-exports[`fixedWindowStrategy should reset window when window has expired 1`] = `
-{
-  "allowed": true,
-  "remaining": 9,
-  "resetAt": 2026-01-01T00:01:00.000Z,
-}
-`;

@@ -6,10 +6,3 @@ exports[`createPublisherMiddleware > should set ctx.publishers with correct came
   "userUpdatedEvent",
 ]
 `;
-
-exports[`createPublisherMiddleware should set ctx.publishers with correct camelCased keys 1`] = `
-[
-  "orderCreatedEvent",
-  "userUpdatedEvent",
-]
-`;
