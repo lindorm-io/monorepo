@@ -19,23 +19,3 @@ exports[`Query > should stage dto metadata with snake_case name derived from cla
   },
 }
 `;
-
-exports[`Query should stage dto metadata with custom name when provided as string 1`] = `
-{
-  "dto": {
-    "kind": "query",
-    "name": "custom_query_name",
-    "version": 1,
-  },
-}
-`;
-
-exports[`Query should stage dto metadata with snake_case name derived from class name 1`] = `
-{
-  "dto": {
-    "kind": "query",
-    "name": "test_view_query",
-    "version": 1,
-  },
-}
-`;

@@ -12,16 +12,3 @@ exports[`View > should stage view metadata with single aggregate, entity, and nu
   },
 }
 `;
-
-exports[`View should stage view metadata with single aggregate, entity, and null driverType 1`] = `
-{
-  "view": {
-    "aggregates": [
-      [Function],
-    ],
-    "driverType": null,
-    "entity": [Function],
-    "name": "fake_entity",
-  },
-}
-`;

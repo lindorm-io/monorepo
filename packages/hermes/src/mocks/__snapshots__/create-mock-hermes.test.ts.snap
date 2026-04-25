@@ -24,28 +24,3 @@ exports[`createMockHermes > should create a mock hermes with all methods as vi.f
   "teardown": [MockFunction],
 }
 `;
-
-exports[`createMockHermes should create a mock hermes with all methods as jest.fn() 1`] = `
-{
-  "admin": {
-    "inspect": {
-      "aggregate": [MockFunction],
-      "saga": [MockFunction],
-      "view": [MockFunction],
-    },
-    "purgeCausations": [MockFunction],
-    "replay": {
-      "aggregate": [MockFunction],
-      "view": [MockFunction],
-    },
-  },
-  "command": [MockFunction],
-  "off": [MockFunction],
-  "on": [MockFunction],
-  "query": [MockFunction],
-  "session": [MockFunction],
-  "setup": [MockFunction],
-  "status": "ready",
-  "teardown": [MockFunction],
-}
-`;
