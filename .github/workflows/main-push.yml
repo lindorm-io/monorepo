@@ -65,8 +65,34 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
 
-  test:
-    name: Test
+  test-unit:
+    name: Test (unit)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 25.x
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test (unit)
+        run: npm run test:unit
+
+  test-integration:
+    name: Test (integration)
     runs-on: ubuntu-latest
     timeout-minutes: 35
 
@@ -176,12 +202,12 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Test
-        run: npm run test:ci
+      - name: Test (integration)
+        run: npm run test:integration
 
   release:
     name: Release
-    needs: [lint, typecheck, test]
+    needs: [lint, typecheck, test-unit, test-integration]
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
