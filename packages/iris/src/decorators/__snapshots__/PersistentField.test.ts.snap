@@ -17,21 +17,3 @@ exports[`PersistentField > should stage persistent field metadata 1`] = `
   },
 ]
 `;
-
-exports[`PersistentField should stage persistent field metadata 1`] = `
-[
-  {
-    "decorator": "PersistentField",
-    "default": false,
-    "enum": null,
-    "key": "persistent",
-    "max": null,
-    "min": null,
-    "nullable": false,
-    "optional": false,
-    "schema": null,
-    "transform": null,
-    "type": "boolean",
-  },
-]
-`;

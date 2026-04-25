@@ -13,17 +13,3 @@ exports[`sanitizeRoutingKey > should replace spaces with underscores 1`] = `"my_
 exports[`sanitizeRoutingKey > should replace special characters 1`] = `"topic_with_special_chars_"`;
 
 exports[`sanitizeRoutingKey > should return an already clean key unchanged 1`] = `"orders.created"`;
-
-exports[`sanitizeRoutingKey should handle alphanumeric only 1`] = `"OrderCreated123"`;
-
-exports[`sanitizeRoutingKey should handle empty string 1`] = `""`;
-
-exports[`sanitizeRoutingKey should handle string with only invalid characters 1`] = `"______"`;
-
-exports[`sanitizeRoutingKey should preserve dots, hyphens, and underscores 1`] = `"my-topic_v2.events"`;
-
-exports[`sanitizeRoutingKey should replace spaces with underscores 1`] = `"my_topic_name"`;
-
-exports[`sanitizeRoutingKey should replace special characters 1`] = `"topic_with_special_chars_"`;
-
-exports[`sanitizeRoutingKey should return an already clean key unchanged 1`] = `"orders.created"`;

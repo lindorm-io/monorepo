@@ -11,15 +11,3 @@ exports[`resolveGroupName > subscribe > should return sub group when no queue is
 exports[`resolveGroupName > worker > should fall back to topic when no queue 1`] = `"iris.wq.jobs.process"`;
 
 exports[`resolveGroupName > worker > should use queue name when provided 1`] = `"iris.wq.worker-pool"`;
-
-exports[`resolveGroupName rpc should fall back to topic when no queue 1`] = `"iris.rpc.users.get"`;
-
-exports[`resolveGroupName rpc should use queue name when provided 1`] = `"iris.rpc.user-service"`;
-
-exports[`resolveGroupName subscribe should return named queue when queue is provided 1`] = `"iris.orders.created.order-service"`;
-
-exports[`resolveGroupName subscribe should return sub group when no queue is provided 1`] = `"iris.sub.orders.created"`;
-
-exports[`resolveGroupName worker should fall back to topic when no queue 1`] = `"iris.wq.jobs.process"`;
-
-exports[`resolveGroupName worker should use queue name when provided 1`] = `"iris.wq.worker-pool"`;

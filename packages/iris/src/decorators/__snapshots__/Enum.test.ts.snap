@@ -10,14 +10,3 @@ exports[`Enum > should stage field modifier with enum values 1`] = `
   "key": "status",
 }
 `;
-
-exports[`Enum should stage field modifier with enum values 1`] = `
-{
-  "decorator": "Enum",
-  "enum": {
-    "Active": "active",
-    "Inactive": "inactive",
-  },
-  "key": "status",
-}
-`;

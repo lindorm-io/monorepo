@@ -13,17 +13,3 @@ exports[`Message > should stage message metadata with custom name 1`] = `
   "name": "CustomName",
 }
 `;
-
-exports[`Message should stage message metadata with class name 1`] = `
-{
-  "decorator": "Message",
-  "name": "TestMsg",
-}
-`;
-
-exports[`Message should stage message metadata with custom name 1`] = `
-{
-  "decorator": "Message",
-  "name": "CustomName",
-}
-`;

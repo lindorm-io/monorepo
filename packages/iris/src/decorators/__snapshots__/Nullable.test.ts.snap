@@ -7,11 +7,3 @@ exports[`Nullable > should stage field modifier with nullable true 1`] = `
   "nullable": true,
 }
 `;
-
-exports[`Nullable should stage field modifier with nullable true 1`] = `
-{
-  "decorator": "Nullable",
-  "key": "label",
-  "nullable": true,
-}
-`;

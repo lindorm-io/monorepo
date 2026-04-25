@@ -20,24 +20,3 @@ exports[`DriverWorkerQueueBase > onConsumeError > should call subscribers in ord
   "sub2",
 ]
 `;
-
-exports[`DriverWorkerQueueBase afterConsumeSuccess should call subscribers in order 1`] = `
-[
-  "sub1",
-  "sub2",
-]
-`;
-
-exports[`DriverWorkerQueueBase completePublish should call subscribers in order 1`] = `
-[
-  "sub1-after",
-  "sub2-after",
-]
-`;
-
-exports[`DriverWorkerQueueBase onConsumeError should call subscribers in order 1`] = `
-[
-  "sub1",
-  "sub2",
-]
-`;

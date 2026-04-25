@@ -5,9 +5,3 @@ exports[`resolveSubject > should build subject from prefix and topic 1`] = `"iri
 exports[`resolveSubject > should handle custom prefix 1`] = `"myapp.users.updated"`;
 
 exports[`resolveSubject > should handle empty prefix 1`] = `".test-topic"`;
-
-exports[`resolveSubject should build subject from prefix and topic 1`] = `"iris.orders.created"`;
-
-exports[`resolveSubject should handle custom prefix 1`] = `"myapp.users.updated"`;
-
-exports[`resolveSubject should handle empty prefix 1`] = `".test-topic"`;

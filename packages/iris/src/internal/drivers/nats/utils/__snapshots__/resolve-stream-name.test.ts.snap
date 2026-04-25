@@ -5,9 +5,3 @@ exports[`resolveStreamName > should handle empty prefix 1`] = `"IRIS_"`;
 exports[`resolveStreamName > should return uppercase stream name with IRIS prefix 1`] = `"IRIS_IRIS"`;
 
 exports[`resolveStreamName > should sanitize special characters 1`] = `"IRIS_MY_APP_V2"`;
-
-exports[`resolveStreamName should handle empty prefix 1`] = `"IRIS_"`;
-
-exports[`resolveStreamName should return uppercase stream name with IRIS prefix 1`] = `"IRIS_IRIS"`;
-
-exports[`resolveStreamName should sanitize special characters 1`] = `"IRIS_MY_APP_V2"`;

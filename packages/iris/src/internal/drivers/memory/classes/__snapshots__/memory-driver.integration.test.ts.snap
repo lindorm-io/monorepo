@@ -14,18 +14,3 @@ exports[`Memory Driver Integration > full publish-subscribe cycle > should publi
   "body": "full-cycle",
 }
 `;
-
-exports[`Memory Driver Integration full publish-subscribe cycle should fire all hooks in correct order 1`] = `
-[
-  "beforePublish",
-  "beforeConsume",
-  "afterConsume",
-  "afterPublish",
-]
-`;
-
-exports[`Memory Driver Integration full publish-subscribe cycle should publish and receive through real serialization pipeline 1`] = `
-{
-  "body": "full-cycle",
-}
-`;

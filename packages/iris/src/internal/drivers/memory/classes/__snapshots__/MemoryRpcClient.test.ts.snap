@@ -1,5 +1,3 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`MemoryRpcClient > request/response > should deserialize response correctly 1`] = `"deserialized-value"`;
-
-exports[`MemoryRpcClient request/response should deserialize response correctly 1`] = `"deserialized-value"`;

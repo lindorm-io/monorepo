@@ -8,12 +8,3 @@ exports[`publishToExchange > should include exchange and routing key in error de
 `;
 
 exports[`publishToExchange > should reject with buffer full message when publish returns false 1`] = `"Channel write buffer full"`;
-
-exports[`publishToExchange should include exchange and routing key in error debug 1`] = `
-{
-  "exchange": "my-exchange",
-  "routingKey": "my-key",
-}
-`;
-
-exports[`publishToExchange should reject with buffer full message when publish returns false 1`] = `"Channel write buffer full"`;

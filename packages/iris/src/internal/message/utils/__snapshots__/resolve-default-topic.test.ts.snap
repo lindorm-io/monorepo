@@ -5,9 +5,3 @@ exports[`resolveDefaultTopic > should prefix the message name with namespace whe
 exports[`resolveDefaultTopic > should return the message name when namespace is null 1`] = `"OrderCreated"`;
 
 exports[`resolveDefaultTopic > should treat empty string namespace as no namespace 1`] = `"OrderCreated"`;
-
-exports[`resolveDefaultTopic should prefix the message name with namespace when set 1`] = `"orders.OrderCreated"`;
-
-exports[`resolveDefaultTopic should return the message name when namespace is null 1`] = `"OrderCreated"`;
-
-exports[`resolveDefaultTopic should treat empty string namespace as no namespace 1`] = `"OrderCreated"`;

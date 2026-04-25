@@ -7,11 +7,3 @@ exports[`Max > should stage field modifier with max value 1`] = `
   "max": 100,
 }
 `;
-
-exports[`Max should stage field modifier with max value 1`] = `
-{
-  "decorator": "Max",
-  "key": "count",
-  "max": 100,
-}
-`;

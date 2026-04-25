@@ -6,10 +6,3 @@ exports[`AbstractMessage > should stage a MetaMessage with decorator AbstractMes
   "name": "BaseMsg",
 }
 `;
-
-exports[`AbstractMessage should stage a MetaMessage with decorator AbstractMessage 1`] = `
-{
-  "decorator": "AbstractMessage",
-  "name": "BaseMsg",
-}
-`;

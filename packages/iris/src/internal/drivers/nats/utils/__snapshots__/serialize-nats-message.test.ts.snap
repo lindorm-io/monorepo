@@ -25,29 +25,3 @@ exports[`serializeNatsMessage > should include all envelope fields 1`] = `
   "topic": "test.topic",
 }
 `;
-
-exports[`serializeNatsMessage should encode payload as base64 1`] = `"{"body":"hello"}"`;
-
-exports[`serializeNatsMessage should include all envelope fields 1`] = `
-{
-  "attempt": 0,
-  "broadcast": true,
-  "correlationId": "corr-123",
-  "expiry": null,
-  "headers": {
-    "x-type": "TestMessage",
-  },
-  "identifierValue": "id-456",
-  "maxRetries": 3,
-  "payload": "eyJib2R5IjoiaGVsbG8ifQ==",
-  "priority": 0,
-  "replyTo": "reply.subject",
-  "retryDelay": 1000,
-  "retryDelayMax": 30000,
-  "retryJitter": false,
-  "retryMultiplier": 2,
-  "retryStrategy": "constant",
-  "timestamp": 1700000000000,
-  "topic": "test.topic",
-}
-`;

@@ -14,18 +14,3 @@ exports[`wrapConsumerCallback > happy path > should pass ConsumeEnvelope with me
   "version": 3,
 }
 `;
-
-exports[`wrapConsumerCallback happy path should pass ConsumeEnvelope with metadata fields to callback 1`] = `
-{
-  "attempt": 2,
-  "correlationId": "corr-456",
-  "headers": {
-    "x-trace": "abc123",
-  },
-  "messageName": "TestMessage",
-  "namespace": "my-namespace",
-  "timestamp": 1700000000000,
-  "topic": "orders.created",
-  "version": 3,
-}
-`;
