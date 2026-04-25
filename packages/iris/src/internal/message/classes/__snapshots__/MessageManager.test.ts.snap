@@ -8,12 +8,3 @@ exports[`MessageManager > create() > should return a typed instance with all fie
   "timestamp": "[Date]",
 }
 `;
-
-exports[`MessageManager create() should return a typed instance with all fields populated 1`] = `
-{
-  "count": 0,
-  "id": "[uuid]",
-  "name": "hello",
-  "timestamp": "[Date]",
-}
-`;

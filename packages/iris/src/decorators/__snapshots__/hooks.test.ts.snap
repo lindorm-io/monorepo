@@ -7,11 +7,3 @@ exports[`multiple hooks on one class > should accumulate hooks in order 1`] = `
   "OnCreate",
 ]
 `;
-
-exports[`multiple hooks on one class should accumulate hooks in order 1`] = `
-[
-  "AfterConsume",
-  "BeforePublish",
-  "OnCreate",
-]
-`;

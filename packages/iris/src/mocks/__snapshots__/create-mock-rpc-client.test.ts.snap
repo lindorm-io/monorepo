@@ -26,30 +26,3 @@ exports[`createMockRpcClient > with responseFactory > request > should record re
   },
 ]
 `;
-
-exports[`createMockRpcClient with async responseFactory should handle async factory 1`] = `
-{
-  "id": "1",
-  "result": "async-hello",
-}
-`;
-
-exports[`createMockRpcClient with responseFactory request should call responseFactory and return result 1`] = `
-{
-  "id": "1",
-  "result": "response-for-hello",
-}
-`;
-
-exports[`createMockRpcClient with responseFactory request should record requests 1`] = `
-[
-  {
-    "id": "1",
-    "query": "a",
-  },
-  {
-    "id": "2",
-    "query": "b",
-  },
-]
-`;

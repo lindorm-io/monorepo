@@ -7,11 +7,3 @@ exports[`resolveStreamKey > should handle custom prefix 1`] = `"myapp:users.upda
 exports[`resolveStreamKey > should handle empty prefix 1`] = `":test-topic"`;
 
 exports[`resolveStreamKey > should handle topic with special characters 1`] = `"iris:orders/created@v2"`;
-
-exports[`resolveStreamKey should build stream key from prefix and topic 1`] = `"iris:orders.created"`;
-
-exports[`resolveStreamKey should handle custom prefix 1`] = `"myapp:users.updated"`;
-
-exports[`resolveStreamKey should handle empty prefix 1`] = `":test-topic"`;
-
-exports[`resolveStreamKey should handle topic with special characters 1`] = `"iris:orders/created@v2"`;

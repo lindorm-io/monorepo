@@ -7,11 +7,3 @@ exports[`Optional > should stage field modifier with optional true 1`] = `
   "optional": true,
 }
 `;
-
-exports[`Optional should stage field modifier with optional true 1`] = `
-{
-  "decorator": "Optional",
-  "key": "nickname",
-  "optional": true,
-}
-`;

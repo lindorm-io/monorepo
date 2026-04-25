@@ -9,13 +9,3 @@ exports[`generateFields > multiple fields > should generate all fields in a sing
   "weight": Any<Number>,
 }
 `;
-
-exports[`generateFields multiple fields should generate all fields in a single pass 1`] = `
-{
-  "createdAt": Any<Date>,
-  "id": Any<String>,
-  "seq": Any<Number>,
-  "token": Any<String>,
-  "weight": Any<Number>,
-}
-`;

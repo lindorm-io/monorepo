@@ -7,11 +7,3 @@ exports[`Default > should stage field modifier with literal default 1`] = `
   "key": "status",
 }
 `;
-
-exports[`Default should stage field modifier with literal default 1`] = `
-{
-  "decorator": "Default",
-  "default": "active",
-  "key": "status",
-}
-`;

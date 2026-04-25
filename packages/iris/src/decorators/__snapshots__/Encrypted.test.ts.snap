@@ -14,18 +14,3 @@ exports[`Encrypted > should stage encrypted metadata with predicate 1`] = `
   },
 }
 `;
-
-exports[`Encrypted should stage encrypted metadata with defaults 1`] = `
-{
-  "predicate": {},
-}
-`;
-
-exports[`Encrypted should stage encrypted metadata with predicate 1`] = `
-{
-  "predicate": {
-    "algorithm": "AES-256",
-    "purpose": "pii",
-  },
-}
-`;

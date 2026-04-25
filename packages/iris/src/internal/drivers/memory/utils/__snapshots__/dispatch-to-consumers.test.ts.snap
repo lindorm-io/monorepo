@@ -20,24 +20,3 @@ exports[`dispatchToConsumers > should round-robin across multiple dispatches 1`]
   "c",
 ]
 `;
-
-exports[`dispatchToConsumers should dispatch to all consumers in broadcast mode 1`] = `
-[
-  "a",
-  "b",
-]
-`;
-
-exports[`dispatchToConsumers should only dispatch to consumers matching the topic 1`] = `
-[
-  "a",
-]
-`;
-
-exports[`dispatchToConsumers should round-robin across multiple dispatches 1`] = `
-[
-  "a",
-  "b",
-  "c",
-]
-`;

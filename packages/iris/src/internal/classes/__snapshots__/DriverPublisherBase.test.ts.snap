@@ -6,10 +6,3 @@ exports[`DriverPublisherBase > completePublish > should call subscribers in orde
   "sub2-after",
 ]
 `;
-
-exports[`DriverPublisherBase completePublish should call subscribers in order 1`] = `
-[
-  "sub1-after",
-  "sub2-after",
-]
-`;

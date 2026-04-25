@@ -11,15 +11,3 @@ exports[`MemoryWorkerQueue > retry > should succeed if callback works on retry 1
   "retry-success",
 ]
 `;
-
-exports[`MemoryWorkerQueue publish and consume should deliver published message to consumer 1`] = `
-[
-  "hello",
-]
-`;
-
-exports[`MemoryWorkerQueue retry should succeed if callback works on retry 1`] = `
-[
-  "retry-success",
-]
-`;

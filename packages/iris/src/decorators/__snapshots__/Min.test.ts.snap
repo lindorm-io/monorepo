@@ -7,11 +7,3 @@ exports[`Min > should stage field modifier with min value 1`] = `
   "min": 5,
 }
 `;
-
-exports[`Min should stage field modifier with min value 1`] = `
-{
-  "decorator": "Min",
-  "key": "count",
-  "min": 5,
-}
-`;
