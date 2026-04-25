@@ -23,7 +23,7 @@ import { Pylon } from "./Pylon.js";
 import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 // Phase 9b — DPoP end-to-end integration tests. Phase 9c (session/cookie) runs
-// in parallel and owns socket-auth-session.integration.test.ts. Phase 9d covers
+// in parallel and owns socket-auth-session.test.ts. Phase 9d covers
 // the fake-timer-dependent expiry scenarios and is intentionally deferred.
 
 // ---------------------------------------------------------------------------
