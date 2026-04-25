@@ -17,7 +17,7 @@
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "prettier": "prettier --write ./src/*",
     "test": "tsc",
-    "test:ci": "tsc",
+    "test:unit": "tsc",
     "test:watch": "tsc --watch",
     "typecheck": "tsc",
     "typecheck:watch": "tsc --watch",
