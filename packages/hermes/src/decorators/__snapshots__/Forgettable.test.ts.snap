@@ -5,9 +5,3 @@ exports[`Forgettable > should set forgettable flag on class metadata 1`] = `
   "forgettable": true,
 }
 `;
-
-exports[`Forgettable should set forgettable flag on class metadata 1`] = `
-{
-  "forgettable": true,
-}
-`;

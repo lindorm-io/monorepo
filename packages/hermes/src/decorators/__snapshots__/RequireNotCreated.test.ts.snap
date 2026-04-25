@@ -6,10 +6,3 @@ exports[`RequireNotCreated > should add requireNotCreated modifier for the decor
   "modifier": "requireNotCreated",
 }
 `;
-
-exports[`RequireNotCreated should add requireNotCreated modifier for the decorated method name 1`] = `
-{
-  "methodName": "handleCreate",
-  "modifier": "requireNotCreated",
-}
-`;

@@ -5,9 +5,3 @@ exports[`recoverError > should copy additional properties from error data 1`] = 
   "field": "name",
 }
 `;
-
-exports[`recoverError should copy additional properties from error data 1`] = `
-{
-  "field": "name",
-}
-`;

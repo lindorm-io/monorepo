@@ -10,14 +10,3 @@ exports[`Saga > should stage saga metadata with single aggregate constructor 1`]
   },
 }
 `;
-
-exports[`Saga should stage saga metadata with single aggregate constructor 1`] = `
-{
-  "saga": {
-    "aggregates": [
-      [Function],
-    ],
-    "name": "test_saga",
-  },
-}
-`;

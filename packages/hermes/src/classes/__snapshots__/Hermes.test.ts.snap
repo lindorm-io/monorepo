@@ -7,11 +7,3 @@ exports[`Hermes > command > should publish command and return AggregateIdentifie
   "namespace": Any<String>,
 }
 `;
-
-exports[`Hermes command should publish command and return AggregateIdentifier 1`] = `
-{
-  "id": Any<String>,
-  "name": Any<String>,
-  "namespace": Any<String>,
-}
-`;

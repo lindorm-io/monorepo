@@ -5,9 +5,3 @@ exports[`Namespace > should set namespace string on class metadata 1`] = `
   "namespace": "billing",
 }
 `;
-
-exports[`Namespace should set namespace string on class metadata 1`] = `
-{
-  "namespace": "billing",
-}
-`;

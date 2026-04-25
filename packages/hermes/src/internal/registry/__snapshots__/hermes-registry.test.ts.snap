@@ -35,39 +35,3 @@ exports[`HermesRegistry > getTimeout > should return RegisteredDto by target con
   "version": 1,
 }
 `;
-
-exports[`HermesRegistry getCommand should return RegisteredDto by target constructor 1`] = `
-{
-  "kind": "command",
-  "name": "test_command_create",
-  "target": [Function],
-  "version": 1,
-}
-`;
-
-exports[`HermesRegistry getEvent should return RegisteredDto by target constructor 1`] = `
-{
-  "kind": "event",
-  "name": "test_event_create",
-  "target": [Function],
-  "version": 1,
-}
-`;
-
-exports[`HermesRegistry getQuery should return RegisteredDto by target constructor 1`] = `
-{
-  "kind": "query",
-  "name": "test_view_query",
-  "target": [Function],
-  "version": 1,
-}
-`;
-
-exports[`HermesRegistry getTimeout should return RegisteredDto by target constructor 1`] = `
-{
-  "kind": "timeout",
-  "name": "test_timeout_reminder",
-  "target": [Function],
-  "version": 1,
-}
-`;
