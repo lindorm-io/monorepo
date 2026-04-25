@@ -11,15 +11,3 @@ exports[`verifyDpopProof > should return a parsed proof for a valid DPoP proof 1
   "tokenId": "proof-jti",
 }
 `;
-
-exports[`verifyDpopProof should return a parsed proof for a valid DPoP proof 1`] = `
-{
-  "accessTokenHash": "WXSA1LYsphIZPxnnP-TMOtF_C_nPwWp8v0tQZBMcSAU",
-  "httpMethod": "POST",
-  "httpUri": "https://api.example.com/resource",
-  "issuedAt": 2024-01-01T08:00:00.000Z,
-  "nonce": undefined,
-  "thumbprint": "LxMMTLzLftdEwQqk_iSStmYgEsJoz9_wwm3aogsV7MQ",
-  "tokenId": "proof-jti",
-}
-`;
