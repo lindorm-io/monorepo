@@ -21,25 +21,3 @@ exports[`createMockWorker > should create mock with expected shape 1`] = `
   "trigger": [MockFunction],
 }
 `;
-
-exports[`createMockWorker should create mock with expected shape 1`] = `
-{
-  "alias": "mock",
-  "destroy": [MockFunction],
-  "health": [MockFunction],
-  "latestError": null,
-  "latestStart": null,
-  "latestStop": null,
-  "latestSuccess": null,
-  "latestTry": null,
-  "off": [MockFunction],
-  "on": [MockFunction],
-  "once": [MockFunction],
-  "running": false,
-  "seq": 0,
-  "start": [MockFunction],
-  "started": false,
-  "stop": [MockFunction],
-  "trigger": [MockFunction],
-}
-`;
