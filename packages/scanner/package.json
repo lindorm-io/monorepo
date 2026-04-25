@@ -21,7 +21,7 @@
     "example": "tsx example/index.ts",
     "prettier": "prettier --write ./src/*",
     "test": "vitest run",
-    "test:ci": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
     "test:watch": "vitest",
     "typecheck": "tsc",
     "typecheck:watch": "tsc --watch",
