@@ -14,18 +14,3 @@ exports[`createSessionRefreshHandler > updates session, tokens, and auth state o
 `;
 
 exports[`createSessionRefreshHandler > updates session, tokens, and auth state on successful lookup 2`] = `2026-04-12T12:00:00.000Z`;
-
-exports[`createSessionRefreshHandler updates session, tokens, and auth state on successful lookup 1`] = `
-{
-  "header": {
-    "baseFormat": "JWT",
-  },
-  "payload": {
-    "expiresAt": 2026-04-12T12:00:00.000Z,
-    "subject": "alice",
-  },
-  "token": "new-session-jwt",
-}
-`;
-
-exports[`createSessionRefreshHandler updates session, tokens, and auth state on successful lookup 2`] = `2026-04-12T12:00:00.000Z`;

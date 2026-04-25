@@ -6,21 +6,7 @@ exports[`createHttpRoomContext > should return an http room context with expecte
 ]
 `;
 
-exports[`createHttpRoomContext should return an http room context with expected shape 1`] = `
-[
-  "members",
-]
-`;
-
 exports[`createRoomContext > should return a room context object with expected shape 1`] = `
-[
-  "join",
-  "leave",
-  "members",
-]
-`;
-
-exports[`createRoomContext should return a room context object with expected shape 1`] = `
 [
   "join",
   "leave",

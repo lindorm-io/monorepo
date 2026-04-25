@@ -6,10 +6,3 @@ exports[`createWorkerQueueMiddleware > should set ctx.workerQueues with correct 
   "userUpdatedEvent",
 ]
 `;
-
-exports[`createWorkerQueueMiddleware should set ctx.workerQueues with correct camelCased keys 1`] = `
-[
-  "orderCreatedEvent",
-  "userUpdatedEvent",
-]
-`;

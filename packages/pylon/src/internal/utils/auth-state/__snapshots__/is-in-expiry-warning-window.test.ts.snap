@@ -9,13 +9,3 @@ exports[`isInExpiryWarningWindow > returns false when well before warning window
 exports[`isInExpiryWarningWindow > returns true when exactly at the warning window edge 1`] = `true`;
 
 exports[`isInExpiryWarningWindow > returns true when inside the warning window 1`] = `true`;
-
-exports[`isInExpiryWarningWindow returns false when now equals exp (past-expiry) 1`] = `false`;
-
-exports[`isInExpiryWarningWindow returns false when past exp 1`] = `false`;
-
-exports[`isInExpiryWarningWindow returns false when well before warning window 1`] = `false`;
-
-exports[`isInExpiryWarningWindow returns true when exactly at the warning window edge 1`] = `true`;
-
-exports[`isInExpiryWarningWindow returns true when inside the warning window 1`] = `true`;

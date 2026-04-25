@@ -10,14 +10,3 @@ export const CALLBACK: LindormWorkerCallback = async (ctx) => {
 export const INTERVAL = "5m";
 "
 `;
-
-exports[`generateWorker should generate file content matching snapshot 1`] = `
-"import type { LindormWorkerCallback } from "@lindorm/worker";
-
-export const CALLBACK: LindormWorkerCallback = async (ctx) => {
-  ctx.logger.info("Worker executed");
-};
-
-export const INTERVAL = "5m";
-"
-`;

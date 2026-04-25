@@ -8,12 +8,3 @@ exports[`registerAuthRefreshListener > acks failure when auth.refresh throws 1`]
   "status": 401,
 }
 `;
-
-exports[`registerAuthRefreshListener acks failure when auth.refresh throws 1`] = `
-{
-  "code": "refresh_failed",
-  "message": "bad signature",
-  "name": "Error",
-  "status": 401,
-}
-`;

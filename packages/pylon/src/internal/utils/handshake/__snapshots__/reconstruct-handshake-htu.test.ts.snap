@@ -13,17 +13,3 @@ exports[`reconstructHandshakeHtu > uses x-forwarded-proto and x-forwarded-host w
   "path": "/socket.io/",
 }
 `;
-
-exports[`reconstructHandshakeHtu returns origin + path from secure handshake 1`] = `
-{
-  "origin": "https://api.example.com",
-  "path": "/socket.io/",
-}
-`;
-
-exports[`reconstructHandshakeHtu uses x-forwarded-proto and x-forwarded-host when present 1`] = `
-{
-  "origin": "https://api.example.com",
-  "path": "/socket.io/",
-}
-`;

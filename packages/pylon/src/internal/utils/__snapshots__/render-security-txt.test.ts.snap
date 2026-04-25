@@ -25,29 +25,3 @@ Contact: tel:+1-201-555-0123
 Expires: 2030-01-01T00:00:00.000Z
 "
 `;
-
-exports[`renderSecurityTxt should render a full-field configuration 1`] = `
-"Contact: mailto:security@example.com
-Expires: 2030-01-01T00:00:00.000Z
-Acknowledgments: https://example.com/hall-of-fame
-Canonical: https://example.com/.well-known/security.txt
-Encryption: https://example.com/pgp-key.txt
-Hiring: https://example.com/jobs
-Policy: https://example.com/security-policy
-Preferred-Languages: en, sv
-"
-`;
-
-exports[`renderSecurityTxt should render minimal configuration with only contact and expires 1`] = `
-"Contact: mailto:security@example.com
-Expires: 2030-01-01T00:00:00.000Z
-"
-`;
-
-exports[`renderSecurityTxt should render multiple Contact lines when contact is an array 1`] = `
-"Contact: mailto:security@example.com
-Contact: https://example.com/contact
-Contact: tel:+1-201-555-0123
-Expires: 2030-01-01T00:00:00.000Z
-"
-`;

@@ -31,35 +31,3 @@ exports[`buildPylonEnvelope > should build envelope with undefined payload 1`] =
   "payload": undefined,
 }
 `;
-
-exports[`buildPylonEnvelope should build envelope with null payload 1`] = `
-{
-  "__pylon": true,
-  "header": {
-    "correlationId": "corr-789",
-  },
-  "payload": null,
-}
-`;
-
-exports[`buildPylonEnvelope should build envelope with payload 1`] = `
-{
-  "__pylon": true,
-  "header": {
-    "correlationId": "corr-123",
-  },
-  "payload": {
-    "foo": "bar",
-  },
-}
-`;
-
-exports[`buildPylonEnvelope should build envelope with undefined payload 1`] = `
-{
-  "__pylon": true,
-  "header": {
-    "correlationId": "corr-456",
-  },
-  "payload": undefined,
-}
-`;

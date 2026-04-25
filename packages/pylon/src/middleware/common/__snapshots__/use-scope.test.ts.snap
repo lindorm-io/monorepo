@@ -1,5 +1,3 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
 exports[`useScope > should throw ServerError when proteus not on context 1`] = `"useScope requires ProteusSource on context"`;
-
-exports[`useScope should throw ServerError when proteus not on context 1`] = `"useScope requires ProteusSource on context"`;

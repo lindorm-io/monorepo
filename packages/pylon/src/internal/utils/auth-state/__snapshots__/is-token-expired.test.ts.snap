@@ -5,9 +5,3 @@ exports[`isTokenExpired > returns false when now is well before exp 1`] = `false
 exports[`isTokenExpired > returns true when now equals exp 1`] = `true`;
 
 exports[`isTokenExpired > returns true when now is past exp 1`] = `true`;
-
-exports[`isTokenExpired returns false when now is well before exp 1`] = `false`;
-
-exports[`isTokenExpired returns true when now equals exp 1`] = `true`;
-
-exports[`isTokenExpired returns true when now is past exp 1`] = `true`;

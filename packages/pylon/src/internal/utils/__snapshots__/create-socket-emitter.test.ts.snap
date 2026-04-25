@@ -6,20 +6,7 @@ exports[`createHttpSocketEmitter > should return an object with emit method 1`] 
 ]
 `;
 
-exports[`createHttpSocketEmitter should return an object with emit method 1`] = `
-[
-  "emit",
-]
-`;
-
 exports[`createSocketEmitter > should return an object with emit and broadcast methods 1`] = `
-[
-  "broadcast",
-  "emit",
-]
-`;
-
-exports[`createSocketEmitter should return an object with emit and broadcast methods 1`] = `
 [
   "broadcast",
   "emit",

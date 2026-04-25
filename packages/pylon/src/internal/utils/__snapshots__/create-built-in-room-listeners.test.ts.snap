@@ -33,37 +33,3 @@ exports[`createBuiltInRoomListeners > should have correct segments for leave 1`]
   },
 ]
 `;
-
-exports[`createBuiltInRoomListeners should have correct segments for join 1`] = `
-[
-  {
-    "type": "literal",
-    "value": "rooms",
-  },
-  {
-    "type": "param",
-    "value": "roomId",
-  },
-  {
-    "type": "literal",
-    "value": "join",
-  },
-]
-`;
-
-exports[`createBuiltInRoomListeners should have correct segments for leave 1`] = `
-[
-  {
-    "type": "literal",
-    "value": "rooms",
-  },
-  {
-    "type": "param",
-    "value": "roomId",
-  },
-  {
-    "type": "literal",
-    "value": "leave",
-  },
-]
-`;

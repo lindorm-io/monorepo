@@ -18,22 +18,3 @@ exports[`extractTokenFromSession > returns parsed token when session has accessT
   "token": "session-jwt",
 }
 `;
-
-exports[`extractTokenFromSession returns null when accessToken is missing 1`] = `null`;
-
-exports[`extractTokenFromSession returns null when aegis.verify throws AegisError 1`] = `null`;
-
-exports[`extractTokenFromSession returns null when session is null 1`] = `null`;
-
-exports[`extractTokenFromSession returns null when session is undefined 1`] = `null`;
-
-exports[`extractTokenFromSession returns null when verified token is not jwt kind 1`] = `null`;
-
-exports[`extractTokenFromSession returns parsed token when session has accessToken 1`] = `
-{
-  "header": {
-    "baseFormat": "JWT",
-  },
-  "token": "session-jwt",
-}
-`;
