@@ -1,6 +1,6 @@
-// Kafka Driver Conformance Test (TCK) Harness — Stream suites
+// Kafka Driver Conformance Test (TCK) Harness — Core suites
 //
-// Runs stream and worker-queue TCK suites against real Kafka (KRaft mode).
+// Runs core TCK suites against real Kafka (KRaft mode).
 // Requires Kafka running (via docker-compose).
 
 import { randomUUID } from "@lindorm/random";
@@ -60,7 +60,7 @@ const factory: TckDriverFactory = {
       logger: logger as any,
       messages,
       amphora: mockAmphora as any,
-      sessionTimeoutMs: 6000,
+      sessionTimeoutMs: 15000,
     });
 
     await source.connect();
@@ -132,6 +132,19 @@ const factory: TckDriverFactory = {
   },
 };
 
-describe("TCK: Kafka (stream)", () => {
-  runTck(factory, ["stream", "worker-queue", "rpc", "retry-dead-letter"]);
+describe("TCK: Kafka (core)", () => {
+  runTck(factory, [
+    "publish-subscribe",
+    "fan-out",
+    "topic-resolution",
+    "hooks",
+    "headers",
+    "decorator-coverage",
+    "error-resilience",
+    "delay",
+    "broadcast",
+    "encryption",
+    "compression",
+    "expiry",
+  ]);
 });
