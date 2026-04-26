@@ -14,15 +14,46 @@ const swcDecoratorPlugin = () =>
     },
   });
 
-export const createVitestConfig = ({ decorators = false, setupFiles = [] } = {}) =>
-  defineConfig({
+// Cadence-driven test selection. File suffix determines which bucket a test
+// belongs to: *.test.ts (unit), *.integration.test.ts (integration),
+// *.weekly.test.ts (weekly). Each cadence has its own vitest config that
+// imports the base with the matching mode.
+//
+// "default" mode runs everything that ships in the regular CI (unit +
+// integration). Weekly is opt-in via its own mode/script — it runs in a
+// separate scheduled CI workflow, not on every push.
+const INCLUDES_BY_MODE = {
+  default: ["src/**/*.test.ts"],
+  unit: ["src/**/*.test.ts"],
+  integration: ["src/**/*.integration.test.ts"],
+  weekly: ["src/**/*.weekly.test.ts"],
+};
+
+const EXCLUDES_BY_MODE = {
+  default: ["**/*.weekly.test.ts"],
+  unit: ["**/*.integration.test.ts", "**/*.weekly.test.ts"],
+  integration: [],
+  weekly: [],
+};
+
+export const createVitestConfig = ({
+  mode = "default",
+  decorators = false,
+  setupFiles = [],
+  serial = false,
+} = {}) => {
+  if (!(mode in INCLUDES_BY_MODE)) {
+    throw new Error(`createVitestConfig: unknown mode "${mode}"`);
+  }
+
+  const config = defineConfig({
     plugins: decorators ? [swcDecoratorPlugin()] : [],
     oxc: decorators ? false : undefined,
     test: {
       globals: false,
       environment: "node",
-      include: ["src/**/*.test.ts"],
-      exclude: ["**/dist/**", "**/node_modules/**"],
+      include: INCLUDES_BY_MODE[mode],
+      exclude: ["**/dist/**", "**/node_modules/**", ...EXCLUDES_BY_MODE[mode]],
       setupFiles,
       globalSetup: ["../../vitest.global-setup.mjs"],
       coverage: {
@@ -40,3 +71,12 @@ export const createVitestConfig = ({ decorators = false, setupFiles = [] } = {})
       },
     },
   });
+
+  if (serial) {
+    config.test.fileParallelism = false;
+    config.test.pool = "forks";
+    config.test.poolOptions = { forks: { singleFork: true } };
+  }
+
+  return config;
+};
