@@ -75,7 +75,7 @@ export const createVitestConfig = ({
   if (serial) {
     config.test.fileParallelism = false;
     config.test.pool = "forks";
-    config.test.poolOptions = { forks: { singleFork: true } };
+    config.test.maxWorkers = 1;
   }
 
   return config;
