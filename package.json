@@ -8,7 +8,7 @@
   "scripts": {
     "build": "lerna run build",
     "init": "ts-node ./.scripts/initialise-package.ts && npm i",
-    "lint": "eslint packages/*/src/ && node scripts/audit/integration-script-guard.mjs",
+    "lint": "eslint packages/*/src/ && node scripts/audit/cadence-script-guard.mjs",
     "prepare": "husky",
     "prettier": "prettier --write packages/*/src/",
     "release": "lerna publish --yes",
@@ -17,6 +17,7 @@
     "test": "npm run test:unit && composed --file docker-compose.yml npm run test:integration",
     "test:unit": "lerna run test:unit",
     "test:integration": "lerna run test:integration",
+    "test:weekly": "lerna run test:weekly",
     "typecheck": "lerna run typecheck",
     "update": "ncu -i",
     "update:auto": "ncu -u && lerna run update:auto && npm install && npm audit fix"
