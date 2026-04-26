@@ -1,16 +1,13 @@
 import { createVitestConfig } from "../../vitest.config.base.mjs";
 
-const config = createVitestConfig({
+// Default config — unit + integration (matches `npm test` behavior at root).
+// Weekly is opt-in via vitest.weekly.mjs / `npm run test:weekly`.
+//
+// `serial: true` — integration files share single docker containers across
+// the suite, so parallel file runs would saturate connections and race on
+// shared broker state. Unit-only runs use vitest.unit.mjs (parallel).
+export default createVitestConfig({
   decorators: true,
   setupFiles: ["./vitest.setup.ts"],
+  serial: true,
 });
-
-// Force serial test execution. Running kafka TCK suites in parallel causes
-// KafkaJS consumer group rebalance races against worker shutdown. Other iris
-// drivers (memory, rabbit, redis, nats) funnel through Docker containers
-// anyway, so parallelism gains are marginal.
-config.test.fileParallelism = false;
-config.test.pool = "forks";
-config.test.poolOptions = { forks: { singleFork: true } };
-
-export default config;
