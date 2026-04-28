@@ -1,12 +1,25 @@
 # @lindorm/ec
 
-ECDSA digital signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://github.com/lindorm-io/monorepo/tree/main/packages/kryptos). Provides an `EcKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+ECDSA signing kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://www.npmjs.com/package/@lindorm/kryptos). Provides an `EcKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+
+This package is **ESM-only**.
 
 ## Installation
 
 ```bash
 npm install @lindorm/ec
 ```
+
+`EcKit` accepts an `IKryptos` instance constructed by the consumer, so [`@lindorm/kryptos`](https://www.npmjs.com/package/@lindorm/kryptos) must also be installed in your project.
+
+## Features
+
+- Sign, verify, and assert ECDSA signatures over `Buffer` or `string` input
+- Supports `ES256`, `ES384`, and `ES512` (P-256 / P-384 / P-521 curves)
+- DSA encoding selectable between `der` and `ieee-p1363`
+- Optional raw `r||s` signature output for JWT/JWS interop
+- Configurable string output encoding via Node's `BufferEncoding`
+- Rejects non-EC keys and EC encryption algorithms at construction time
 
 ## Quick Start
 
@@ -17,16 +30,12 @@ import { KryptosKit } from "@lindorm/kryptos";
 const kryptos = KryptosKit.generate.sig.ec({ algorithm: "ES512" });
 const kit = new EcKit({ kryptos });
 
-// Sign
 const signature = kit.sign("hello world");
 
-// Verify
 kit.verify("hello world", signature); // true
 
-// Assert (throws EcError if invalid)
-kit.assert("hello world", signature);
+kit.assert("hello world", signature); // throws EcError if invalid
 
-// Format Buffer to string
 kit.format(signature); // base64 string
 ```
 
@@ -36,12 +45,12 @@ kit.format(signature); // base64 string
 new EcKit({
   kryptos, // IKryptos — must be an EC key with a signing algorithm
   dsa: "der", // DsaEncoding — "der" | "ieee-p1363" (default: "der")
-  encoding: "base64", // BufferEncoding — output encoding (default: "base64")
-  raw: false, // boolean — use raw r||s concatenation (default: false)
+  encoding: "base64", // BufferEncoding — string encoding for verify/format (default: "base64")
+  raw: false, // boolean — emit/accept raw r||s signatures (default: false)
 });
 ```
 
-The constructor validates that the key is an EC type with a supported signing algorithm (ES256, ES384, ES512). Encryption keys (ECDH-ES etc.) are rejected with an `EcError`.
+The constructor validates that the key is an EC key with one of the supported signing algorithms (`ES256`, `ES384`, `ES512`). EC encryption keys (e.g. `ECDH-ES`) and non-EC keys are rejected with an `EcError`.
 
 ## API
 
@@ -56,6 +65,11 @@ class EcKit implements IKeyKit {
 
 `KeyData` is `Buffer | string`.
 
+- `sign(data)` — produces a DER-encoded signature, or raw `r||s` if `raw: true` was passed to the constructor.
+- `verify(data, signature)` — returns `true` if the signature is valid. String signatures are decoded using the configured `encoding`.
+- `assert(data, signature)` — same as `verify`, but throws `EcError` instead of returning `false`.
+- `format(buffer)` — encodes a signature `Buffer` to a string using the configured `encoding`.
+
 ## Supported Algorithms
 
 | Algorithm | Curve | Hash    |
@@ -66,14 +80,14 @@ class EcKit implements IKeyKit {
 
 ## DSA Encoding
 
-- **DER** (default) -- standard ASN.1 format
-- **IEEE-P1363** -- fixed-length format used in some protocols
+- `der` (default) — standard ASN.1 DER encoding produced by Node's `crypto`.
+- `ieee-p1363` — fixed-length encoding produced by Node's `crypto` when `dsaEncoding` is set.
 
-The `raw` option controls whether signatures use raw r||s concatenation, which is useful for JWT/JWS compatibility.
+The separate `raw` option produces or accepts a manually built `r||s` concatenation (each component padded to the curve's byte size). This is useful for JWT/JWS compatibility where the wire format is raw `r||s`.
 
 ## Error Handling
 
-All errors are `EcError` instances:
+All errors thrown by this package are instances of `EcError`:
 
 ```typescript
 import { EcError } from "@lindorm/ec";
