@@ -1,21 +1,20 @@
-const toBase64Url = (base64: string): string =>
-  base64.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+import type { Base64Encoding } from "../types/index.js";
 
-export const encodeBase64 = (
-  input: Buffer | string,
-  encoding: BufferEncoding = "utf8",
-): string =>
-  Buffer.isBuffer(input)
-    ? input.toString("base64")
-    : Buffer.from(input, encoding).toString("base64");
+const URL_ENCODINGS: ReadonlySet<Base64Encoding> = new Set([
+  "base64url",
+  "b64url",
+  "b64u",
+]);
 
-export const encodeBase64Url = (
-  input: Buffer | string,
-  encoding: BufferEncoding = "utf8",
+export const encodeBytes = (
+  input: Uint8Array | string,
+  encoding: Base64Encoding,
 ): string => {
-  const buffer = Buffer.isBuffer(input) ? input : Buffer.from(input, encoding);
+  const bytes = typeof input === "string" ? new TextEncoder().encode(input) : input;
+  const url = URL_ENCODINGS.has(encoding);
 
-  return Buffer.isEncoding("base64url")
-    ? buffer.toString("base64url")
-    : toBase64Url(buffer.toString("base64"));
+  return bytes.toBase64({
+    alphabet: url ? "base64url" : "base64",
+    omitPadding: url,
+  });
 };

@@ -1,26 +1,28 @@
 import type { Base64Encoding } from "../types/index.js";
-import { decode, encodeBase64, encodeBase64Url } from "../internal/index.js";
+import { decode, encodeBytes } from "../internal/index.js";
 
 export class B64 {
   public static encode(
-    input: Buffer | string,
+    input: Uint8Array | string,
     encoding: Base64Encoding = "base64",
   ): string {
-    return encoding === "base64" || encoding === "b64"
-      ? encodeBase64(input)
-      : encodeBase64Url(input);
+    return encodeBytes(input, encoding);
   }
 
   public static decode(input: string, encoding?: Base64Encoding): string {
-    return decode(input, encoding).toString();
+    return new TextDecoder().decode(decode(input, encoding));
   }
 
   public static toBuffer(input: string, encoding?: Base64Encoding): Buffer {
+    return Buffer.from(decode(input, encoding));
+  }
+
+  public static toBytes(input: string, encoding?: Base64Encoding): Uint8Array {
     return decode(input, encoding);
   }
 
   public static toString(input: string, encoding?: Base64Encoding): string {
-    return decode(input, encoding).toString();
+    return new TextDecoder().decode(decode(input, encoding));
   }
 
   public static isBase64(input: string): boolean {
