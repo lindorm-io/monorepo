@@ -1,6 +1,8 @@
 # @lindorm/proteus
 
-A multi-driver ORM for TypeScript built on TC39 decorators. Define your entities once and run them against PostgreSQL, MySQL, SQLite, MongoDB, Redis, or an in-memory store with zero code changes.
+A multi-driver ORM for TypeScript built on TC39 (Stage 3) decorators. Define your entities once and run them against PostgreSQL, MySQL, SQLite, MongoDB, Redis, or an in-memory store with zero code changes.
+
+This package is **ESM-only**. All examples use `import` syntax — `require` is not supported.
 
 ## Installation
 
@@ -8,9 +10,9 @@ A multi-driver ORM for TypeScript built on TC39 decorators. Define your entities
 npm install @lindorm/proteus
 ```
 
-Peer dependencies vary by driver:
+Peer dependencies are driver-specific. Install only the ones you need:
 
-| Driver     | Peer Dependency          |
+| Driver     | Peer dependency          |
 | ---------- | ------------------------ |
 | PostgreSQL | `pg` >= 8.18             |
 | MySQL      | `mysql2` >= 3.19         |
@@ -18,6 +20,13 @@ Peer dependencies vary by driver:
 | MongoDB    | `mongodb` >= 6.17        |
 | Redis      | `ioredis` >= 5.10        |
 | In-Memory  | none                     |
+
+Two further peer dependencies are optional and only needed for specific features:
+
+| Peer               | Required for                                     |
+| ------------------ | ------------------------------------------------ |
+| `@lindorm/amphora` | `@Encrypted` field-level encryption              |
+| `@lindorm/logger`  | `ILogger` instance — required on `ProteusSource` |
 
 ## Quick Start
 
@@ -34,7 +43,6 @@ import {
   ProteusSource,
 } from "@lindorm/proteus";
 
-// 1. Define an entity
 @Entity()
 class User {
   @PrimaryKeyField()
@@ -61,7 +69,6 @@ class User {
   age!: number;
 }
 
-// 2. Create a source and connect
 const source = new ProteusSource({
   driver: "postgres",
   host: "localhost",
@@ -71,13 +78,12 @@ const source = new ProteusSource({
   password: "secret",
   entities: [User],
   synchronize: true,
-  logger, // ILogger instance
+  logger,
 });
 
 await source.connect();
 await source.setup();
 
-// 3. Use the repository
 const repo = source.repository(User);
 
 const user = await repo.insert({ name: "Alice", email: "alice@example.com", age: 30 });
@@ -86,9 +92,18 @@ user.age = 31;
 await repo.update(user);
 await repo.destroy(user);
 
-// 4. Disconnect
 await source.disconnect();
 ```
+
+## Subpath exports
+
+| Export                          | Purpose                                            |
+| ------------------------------- | -------------------------------------------------- |
+| `@lindorm/proteus`              | Main runtime API: ProteusSource, decorators, types |
+| `@lindorm/proteus/mocks/jest`   | Jest mock factories for tests                      |
+| `@lindorm/proteus/mocks/vitest` | Vitest mock factories for tests                    |
+
+The package also ships a `proteus` binary for migration management and database diagnostics — see the [CLI](#cli) section.
 
 ## Table of Contents
 
@@ -96,98 +111,25 @@ await source.disconnect();
 - [Entities](#entities)
 - [Field Types](#field-types)
 - [Decorators](#decorators)
-  - [Entity & Class-Level Decorators](#entity--class-level-decorators)
-    - [`@Entity`](#entity)
-    - [`@AbstractEntity`](#abstractentity)
-    - [`@Embeddable`](#embeddable)
-    - [`@Namespace`](#namespace)
-    - [`@Schema`](#schema-1)
-    - [`@Inheritance`](#inheritance-1)
-    - [`@Discriminator`](#discriminator)
-    - [`@DiscriminatorValue`](#discriminatorvalue)
-    - [`@DefaultOrder`](#defaultorder)
-    - [`@Cache`](#cache)
-    - [`@Filter`](#filter)
-    - [`@Check`](#check) (class-level)
-    - [`@Index`](#index) (class-level)
-    - [`@Unique`](#unique) (class-level)
-    - [`@PrimaryKey`](#primarykey) (class-level)
-  - [Field Decorators](#field-decorators)
-    - [`@Field`](#field)
-    - [`@PrimaryKeyField`](#primarykeyfield)
-    - [`@PrimaryKey`](#primarykey-1) (field-level)
-    - [`@ScopeField`](#scopefield)
-    - [`@CreateDateField`](#createdatefield)
-    - [`@UpdateDateField`](#updatedatefield)
-    - [`@DeleteDateField`](#deletedatefield)
-    - [`@VersionField`](#versionfield)
-    - [`@VersionKeyField`](#versionkeyfield)
-    - [`@VersionKey`](#versionkey)
-    - [`@VersionStartDateField`](#versionstartdatefield)
-    - [`@VersionEndDateField`](#versionenddatefield)
-    - [`@ExpiryDateField`](#expirydatefield)
-  - [Field Modifiers](#field-modifiers)
-    - [`@Nullable`](#nullable)
-    - [`@Default`](#default)
-    - [`@Generated`](#generated)
-    - [`@ReadOnly`](#readonly)
-    - [`@Enum`](#enum)
-    - [`@Precision`](#precision)
-    - [`@Min` / `@Max`](#min--max)
-    - [`@Comment`](#comment)
-    - [`@Computed`](#computed)
-    - [`@Transform`](#transform)
-    - [`@Encrypted`](#encrypted)
-    - [`@Hide`](#hide)
-    - [`@Unique`](#unique-1) (field-level)
-    - [`@Index`](#index-1) (field-level)
-    - [`@Check`](#check-1) (class-level applied to field)
-  - [Relation Decorators](#relation-decorators)
-    - [`@OneToOne`](#onetoone)
-    - [`@OneToMany`](#onetomany)
-    - [`@ManyToOne`](#manytoone)
-    - [`@ManyToMany`](#manytomany)
-    - [`@Embedded`](#embedded)
-    - [`@EmbeddedList`](#embeddedlist)
-    - [`@JoinKey`](#joinkey)
-    - [`@JoinTable`](#jointable)
-    - [`@RelationId`](#relationid)
-    - [`@RelationCount`](#relationcount)
-  - [Relation Modifiers](#relation-modifiers)
-    - [`@Cascade`](#cascade)
-    - [`@Eager`](#eager)
-    - [`@Lazy`](#lazy)
-    - [`@OnOrphan`](#onorphan)
-    - [`@Deferrable`](#deferrable)
-    - [`@OrderBy`](#orderby)
-  - [Lifecycle Hook Decorators](#lifecycle-hook-decorators)
-    - [`@OnCreate`](#oncreate)
-    - [`@OnValidate`](#onvalidate)
-    - [`@OnHydrate`](#onhydrate)
-    - [`@BeforeInsert` / `@AfterInsert`](#beforeinsert--afterinsert)
-    - [`@BeforeUpdate` / `@AfterUpdate`](#beforeupdate--afterupdate)
-    - [`@BeforeSave` / `@AfterSave`](#beforesave--aftersave)
-    - [`@BeforeDestroy` / `@AfterDestroy`](#beforedestroy--afterdestroy)
-    - [`@BeforeSoftDestroy` / `@AfterSoftDestroy`](#beforesoftdestroy--aftersoftdestroy)
-    - [`@BeforeRestore` / `@AfterRestore`](#beforerestore--afterrestore)
-    - [`@AfterLoad`](#afterload)
 - [Repository API](#repository-api)
 - [Query Builder](#query-builder)
 - [Predicates](#predicates)
 - [Relations](#relations)
 - [Transactions](#transactions)
 - [Lifecycle Hooks](#lifecycle-hooks)
+- [Lifecycle Events](#lifecycle-events)
 - [Soft Deletes & Expiry](#soft-deletes--expiry)
 - [Temporal Versioning](#temporal-versioning)
 - [Filters](#filters)
 - [Caching](#caching)
 - [Field-Level Encryption](#field-level-encryption)
 - [Naming Strategies](#naming-strategies)
-- [Entity Subscribers](#entity-subscribers)
 - [Per-Request Isolation](#per-request-isolation)
 - [Schema Synchronization & Migrations](#schema-synchronization--migrations)
 - [CLI](#cli)
 - [Errors](#errors)
+- [Test Mocks](#test-mocks)
+- [License](#license)
 
 ## Drivers
 
@@ -233,7 +175,7 @@ new ProteusSource({
 });
 ```
 
-Full ACID transactions with savepoints. Connection pooling via `mysql2`. MySQL 8.0.19+ required.
+Full ACID transactions with savepoints. Connection pooling via `mysql2`.
 
 ### SQLite
 
@@ -249,7 +191,7 @@ new ProteusSource({
 });
 ```
 
-WAL mode and foreign keys enabled by default. SAVEPOINT-based nested transactions. Powered by `better-sqlite3`.
+SAVEPOINT-based nested transactions. Powered by `better-sqlite3`.
 
 ### MongoDB
 
@@ -288,7 +230,7 @@ new ProteusSource({
 });
 ```
 
-Key-value storage using `ioredis`. No transaction support — operations execute without atomicity. Best suited for caching entities or session-like data.
+Key-value storage using `ioredis`. No multi-statement transactions — operations execute without atomicity. Best suited for caching entities or session-like data.
 
 ### In-Memory
 
@@ -306,15 +248,16 @@ Full transaction support with snapshot isolation. Zero config. Ideal for unit te
 
 All drivers accept these base options:
 
-| Option      | Type                           | Description                                        |
-| ----------- | ------------------------------ | -------------------------------------------------- |
-| `entities`  | `Array<Constructor \| string>` | Entity classes or glob patterns                    |
-| `namespace` | `string`                       | Schema (SQL), database (Mongo), key prefix (Redis) |
-| `naming`    | `"snake" \| "camel" \| "none"` | Column name strategy (default: `"none"`)           |
-| `cache`     | `{ adapter, ttl? }`            | Query caching configuration                        |
-| `amphora`   | `IAmphora`                     | Key store for `@Encrypted` fields                  |
-| `meta`      | `ProteusHookMeta`              | Default request-scoped hook metadata               |
-| `logger`    | `ILogger`                      | **Required.** Logger instance                      |
+| Option      | Type                           | Description                                           |
+| ----------- | ------------------------------ | ----------------------------------------------------- |
+| `entities`  | `Array<Constructor \| string>` | Entity classes or glob patterns                       |
+| `namespace` | `string`                       | Schema (SQL), database (Mongo), key prefix (Redis)    |
+| `naming`    | `"snake" \| "camel" \| "none"` | Column name strategy (default: `"none"`)              |
+| `cache`     | `{ adapter, ttl? }`            | Query caching configuration                           |
+| `amphora`   | `IAmphora`                     | Key store for `@Encrypted` fields                     |
+| `meta`      | `ProteusHookMeta`              | Default request-scoped hook metadata                  |
+| `breaker`   | `boolean \| BreakerOptions`    | Circuit breaker for network drivers (default enabled) |
+| `logger`    | `ILogger`                      | **Required.** Logger instance                         |
 
 SQL drivers, MongoDB, and SQLite also accept schema management options:
 
@@ -324,6 +267,8 @@ SQL drivers, MongoDB, and SQLite also accept schema management options:
 | `migrations`      | `Array<string>`        | Glob patterns for migration files   |
 | `migrationsTable` | `string`               | Custom migrations ledger table name |
 | `runMigrations`   | `boolean`              | Run pending migrations on setup     |
+
+The circuit breaker is automatically disabled for the `memory` and `sqlite` drivers (no network I/O).
 
 ## Entities
 
@@ -506,15 +451,15 @@ The `@Field(type)` decorator accepts these type strings:
 | Category       | Types                                                                 |
 | -------------- | --------------------------------------------------------------------- |
 | Boolean        | `boolean`                                                             |
-| Integer        | `integer`, `smallint`, `bigint`                                       |
-| Floating Point | `float`, `real`, `decimal`                                            |
-| String         | `string`, `text`, `varchar`, `uuid`, `enum`                           |
+| Integer        | `bigint`, `integer`, `smallint`                                       |
+| Floating Point | `decimal`, `float`, `real`                                            |
+| String         | `enum`, `string`, `text`, `uuid`, `varchar`                           |
 | Logical        | `email`, `url`                                                        |
-| Date/Time      | `timestamp`, `date`, `time`, `interval`                               |
+| Date/Time      | `date`, `interval`, `time`, `timestamp`                               |
 | Binary         | `binary`                                                              |
-| Structured     | `json`, `object`, `array`                                             |
-| Network        | `inet`, `cidr`, `macaddr`                                             |
-| Geometric      | `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`, `vector` |
+| Structured     | `array`, `json`, `object`                                             |
+| Network        | `cidr`, `inet`, `macaddr`                                             |
+| Geometric      | `box`, `circle`, `line`, `lseg`, `path`, `point`, `polygon`, `vector` |
 | XML            | `xml`                                                                 |
 
 ### Examples
@@ -548,15 +493,13 @@ embedding!: number[];
 
 ## Decorators
 
-All decorators use the TC39 (stage 3) decorator specification. Class decorators receive `ClassDecoratorContext`, field/property decorators receive `ClassFieldDecoratorContext`. Metadata flows through the `Symbol.metadata` prototype chain, so abstract base class decorators are inherited by concrete subclasses.
+All decorators use the TC39 (Stage 3) decorator specification. Class decorators receive `ClassDecoratorContext`, field decorators receive `ClassFieldDecoratorContext`. Metadata flows through the `Symbol.metadata` prototype chain, so abstract base class decorators are inherited by concrete subclasses. The runtime polyfills `Symbol.metadata` automatically when not present.
 
 ### Entity & Class-Level Decorators
 
-These decorators are applied to classes and configure entity-wide behavior.
-
 #### `@Entity`
 
-Marks a class as a persistent entity mapped to a database table or collection.
+Marks a class as a persistent entity.
 
 ```typescript
 @Entity()
@@ -600,17 +543,6 @@ class User extends BaseEntity {
 
 Marks a class as an embeddable value type with no primary key, table, or independent identity. Fields are flattened into the parent entity's table via `@Embedded()`.
 
-```typescript
-@Embeddable()
-class Address {
-  @Field("string")
-  street!: string;
-
-  @Field("string")
-  city!: string;
-}
-```
-
 #### `@Namespace`
 
 Places the entity in a specific namespace — mapped to schema (SQL), database (MongoDB), or key prefix (Redis).
@@ -630,12 +562,7 @@ Attaches a Zod schema for runtime validation. Evaluated automatically before eve
 ```typescript
 import { z } from "zod";
 
-@Schema(
-  z.object({
-    name: z.string().min(1),
-    email: z.string().email(),
-  }),
-)
+@Schema(z.object({ name: z.string().min(1), email: z.string().email() }))
 @Entity()
 class User {
   /* ... */
@@ -666,35 +593,17 @@ class Vehicle {
 
 #### `@Discriminator`
 
-Specifies which property serves as the discriminator column for table inheritance. Applied on the inheritance root class.
-
-```typescript
-@Entity()
-@Inheritance("single-table")
-@Discriminator("type") // "type" property distinguishes subtypes
-class Vehicle {
-  @Field("string")
-  type!: string;
-}
-```
+Specifies which property serves as the discriminator column for table inheritance. Applied on the inheritance root class. The field name is compile-time checked against the decorated class.
 
 #### `@DiscriminatorValue`
 
-Specifies the discriminator column value for a concrete subclass in a table inheritance hierarchy.
+Specifies the discriminator value for a concrete subclass.
 
 ```typescript
 @Entity()
 @DiscriminatorValue("car")
 class Car extends Vehicle {
-  @Field("integer")
-  doors!: number;
-}
-
-@Entity()
-@DiscriminatorValue("truck")
-class Truck extends Vehicle {
-  @Field("float")
-  payloadTons!: number;
+  /* ... */
 }
 ```
 
@@ -702,18 +611,12 @@ class Truck extends Vehicle {
 
 #### `@DefaultOrder`
 
-Sets the default sort order for queries against this entity. Applied when `FindOptions.order` is not provided. Explicit `order` in FindOptions or `.orderBy()` on QueryBuilder takes precedence.
+Sets the default sort order for queries against this entity. Applied when `FindOptions.order` is not provided. Explicit `order` in `FindOptions` or `.orderBy()` on the query builder takes precedence.
 
 ```typescript
 @DefaultOrder({ createdAt: "DESC" })
 @Entity()
 class Post {
-  /* ... */
-}
-
-@DefaultOrder({ lastName: "ASC", firstName: "ASC" })
-@Entity()
-class User {
   /* ... */
 }
 ```
@@ -722,7 +625,7 @@ class User {
 
 #### `@Cache`
 
-Enables query-level caching for the entity. Requires a cache adapter configured on ProteusSource. Per-query caching can be overridden via `FindOptions.cache`.
+Enables query-level caching for the entity. Requires a cache adapter configured on `ProteusSource`. Per-query caching can be overridden via `FindOptions.cache`.
 
 ```typescript
 @Cache() // use source-level default TTL
@@ -744,25 +647,7 @@ class Session {
 
 Marks an entity as append-only. Insert and read operations are allowed; update, delete, and truncate are blocked at both the application layer (repository guards) and the database layer (SQL triggers).
 
-```typescript
-@AppendOnly()
-@Entity()
-class AuditLog {
-  @PrimaryKeyField()
-  id!: string;
-
-  @CreateDateField()
-  createdAt!: Date;
-
-  @Field("string")
-  action!: string;
-
-  @Field("json")
-  payload!: Record<string, unknown>;
-}
-```
-
-**Allowed:** `insert`, `insertBulk`, `clone`, `find*`, `count`, `exists`, `aggregate`, `cursor`, `paginate`.
+**Allowed:** `insert`, `clone`, `find*`, `count`, `exists`, `aggregate`, `cursor`, `paginate`.
 
 **Blocked:** `update`, `destroy`, `softDestroy`, `updateMany`, `softDelete`, `delete`, `upsert`, `clear`, `restore`.
 
@@ -770,7 +655,7 @@ For SQL drivers (PostgreSQL, MySQL, SQLite), `setup()` generates `BEFORE UPDATE`
 
 #### `@Filter`
 
-Declares a parameterized WHERE-clause filter on the entity. Filters are named, reusable predicates that can be enabled/disabled per-source or per-query. Use `"$paramName"` string placeholders for runtime-supplied values.
+Declares a parameterized WHERE-clause filter on the entity. Filters are named, reusable predicates that can be enabled/disabled per-source or per-query. Use `"$paramName"` placeholders for runtime-supplied values.
 
 ```typescript
 @Entity()
@@ -780,12 +665,9 @@ class Resource {
   /* ... */
 }
 
-// Set parameters at runtime
 source.setFilterParams("tenant", { tenantId: "tenant-abc" });
 source.enableFilter("active");
 ```
-
-**Options:**
 
 | Field       | Type              | Description                                   |
 | ----------- | ----------------- | --------------------------------------------- |
@@ -795,7 +677,7 @@ source.enableFilter("active");
 
 #### `@Check` (class-level)
 
-Declares a CHECK constraint on the entity's table using a raw SQL boolean expression.
+Declares a CHECK constraint using a raw SQL boolean expression.
 
 ```typescript
 @Check("price >= 0")
@@ -806,36 +688,31 @@ class Product {
 }
 ```
 
-**Arguments:** `(expression: string, options?: { name?: string })`. Constraint name is auto-generated if omitted.
+**Arguments:** `(expression: string, options?: { name?: string })`.
 
 #### `@Index` (class-level)
 
 Declares a composite database index across multiple fields.
 
 ```typescript
-// Simple composite index
 @Index<typeof User>(["lastName", "firstName"])
 @Entity()
 class User {
   /* ... */
 }
 
-// Per-field direction
 @Index<typeof User>({ lastName: "asc", firstName: "asc", createdAt: "desc" })
 @Entity()
 class User {
   /* ... */
 }
 
-// Partial index with custom method
 @Index<typeof User>(["email"], { unique: true, where: "deleted_at IS NULL" })
 @Entity()
 class User {
   /* ... */
 }
 ```
-
-**Options:**
 
 | Field        | Type      | Description                           |
 | ------------ | --------- | ------------------------------------- |
@@ -852,15 +729,12 @@ class User {
 Declares a composite unique constraint across multiple fields.
 
 ```typescript
-@Unique<typeof User>(["email", "tenantId"])
 @Unique<typeof User>(["email", "tenantId"], { name: "uq_tenant_email" })
 @Entity()
 class User {
   /* ... */
 }
 ```
-
-**Arguments:** `(keys: Array<keyof T>, options?: { name?: string })`.
 
 #### `@PrimaryKey` (class-level)
 
@@ -870,23 +744,15 @@ Defines a composite primary key across multiple fields.
 @PrimaryKey<typeof OrderItem>(["orderId", "productId"])
 @Entity()
 class OrderItem {
-  @Field("uuid")
-  orderId!: string;
-
-  @Field("uuid")
-  productId!: string;
+  /* ... */
 }
 ```
 
----
-
 ### Field Decorators
-
-These decorators are applied to class properties and declare persistent columns.
 
 #### `@Field`
 
-The foundational field decorator. Declares a persistent column with an explicit type.
+Declares a persistent column with an explicit type.
 
 ```typescript
 @Field("string")
@@ -899,20 +765,20 @@ name!: string;
 tags!: string[];
 ```
 
-**Arguments:** `(type: MetaFieldType, options?: { name?: string, arrayType?: string })`. Column name defaults to the property name.
+**Arguments:** `(type: MetaFieldType, options?: { name?: string, arrayType?: MetaFieldType })`.
 
 #### `@PrimaryKeyField`
 
-Shorthand that combines `@Field`, `@PrimaryKey`, and `@Generated` in one decorator.
+Shorthand combining `@Field`, `@PrimaryKey`, and `@Generated`.
 
 ```typescript
-@PrimaryKeyField()          // UUID primary key (default)
+@PrimaryKeyField()                      // UUID primary key (default)
 id!: string;
 
-@PrimaryKeyField("integer") // auto-increment integer PK
+@PrimaryKeyField("integer")             // auto-increment integer PK
 id!: number;
 
-@PrimaryKeyField("string")  // random string PK
+@PrimaryKeyField("string")              // random string PK
 id!: string;
 
 @PrimaryKeyField("uuid", { name: "pk" }) // custom column name
@@ -923,7 +789,7 @@ id!: string;
 
 #### `@PrimaryKey` (field-level)
 
-Marks a single field as part of the primary key. Use this instead of `@PrimaryKeyField` when you need to control the field type, generation strategy, or other modifiers separately.
+Marks a single field as part of the primary key. Use this instead of `@PrimaryKeyField` when you need to control field type, generation strategy, or other modifiers separately.
 
 ```typescript
 @PrimaryKey()
@@ -934,7 +800,7 @@ id!: number;
 
 #### `@ScopeField`
 
-Declares a scope field for multi-tenancy or logical partitioning. Scope fields are automatically non-nullable, read-only strings with a minimum length of 1.
+Declares a scope field for multi-tenancy or logical partitioning. Scope fields are read-only, non-nullable strings with a minimum length of 1.
 
 ```typescript
 @ScopeField()
@@ -950,56 +816,39 @@ tenantId!: string;
 Scope fields serve two purposes:
 
 1. **Driver-level key composition** — in Redis and key-value drivers, scope fields determine the key prefix structure. The `order` option controls ordering (lowest first, alphabetical fallback).
-2. **Automatic query filtering** — scope fields are auto-registered as a `__scope` system filter. Queries are scoped by default. Bypass with `{ withoutScope: true }` in FindOptions.
-
-**Options:** `{ name?: string, order?: number }`.
+2. **Automatic query filtering** — scope fields are auto-registered as a `__scope` system filter. Queries are scoped by default. Bypass with `{ withoutScope: true }` in `FindOptions`.
 
 #### `@CreateDateField`
 
-Declares a timestamp field automatically set to the current time on insert. Read-only and immutable after creation.
+Timestamp field set automatically to the current time on insert. Read-only and immutable after creation.
 
 ```typescript
 @CreateDateField()
-createdAt!: Date;
-
-@CreateDateField({ name: "created_at" })
 createdAt!: Date;
 ```
 
 #### `@UpdateDateField`
 
-Declares a timestamp field automatically set to the current time on every update.
-
-```typescript
-@UpdateDateField()
-updatedAt!: Date;
-```
+Timestamp field set automatically on every update. Read-only.
 
 #### `@DeleteDateField`
 
-Declares a nullable timestamp field for soft-delete tracking. When non-null, the entity is considered soft-deleted and excluded from queries by default.
+Nullable timestamp field for soft-delete tracking. When non-null, the entity is considered soft-deleted and excluded from queries by default.
 
 ```typescript
 @DeleteDateField()
 deletedAt!: Date | null;
 ```
 
-Use `{ withDeleted: true }` in FindOptions to include soft-deleted rows. See [Soft Deletes & Expiry](#soft-deletes--expiry).
+Use `{ withDeleted: true }` in `FindOptions` to include soft-deleted rows.
 
 #### `@VersionField`
 
-Declares an integer field for optimistic locking. Automatically incremented on every update. The ORM checks the version matches before applying updates and throws `OptimisticLockError` on conflict.
-
-```typescript
-@VersionField()
-version!: number;
-```
-
-Read-only and non-nullable.
+Integer field for optimistic locking. Automatically incremented on every update. The ORM checks the version matches before applying updates and throws `OptimisticLockError` on conflict. Read-only and non-nullable.
 
 #### `@VersionKeyField`
 
-Shorthand combining `@Field`, `@PrimaryKey`, `@VersionKey`, and `@Generated` for temporal/versioned tables. Part of the composite primary key alongside the regular primary key.
+Shorthand combining `@Field`, `@PrimaryKey`, `@VersionKey`, and `@Generated` for temporal tables. Part of the composite primary key alongside the regular primary key.
 
 ```typescript
 @VersionKeyField()          // UUID version key (default)
@@ -1009,20 +858,16 @@ versionId!: string;
 versionId!: number;
 ```
 
-**Arguments:** `(type?: "uuid" | "integer" | "string", options?: { name?: string })`.
-
 #### `@VersionKey`
 
-Marks a field as a version key for temporal tables. Can be used at field level or class level for composite version keys.
+Marks a field as a version key. Can be used at field level or class level for composite version keys.
 
 ```typescript
-// Field-level
 @VersionKey()
 @Field("uuid")
 @Generated("uuid")
 versionId!: string;
 
-// Class-level composite
 @VersionKey<typeof Product>(["versionId", "locale"])
 @Entity()
 class Product { /* ... */ }
@@ -1030,46 +875,23 @@ class Product { /* ... */ }
 
 #### `@VersionStartDateField`
 
-Declares the start timestamp for temporal/versioned tables. Set on insert and when a new version is created.
-
-```typescript
-@VersionStartDateField()
-validFrom!: Date;
-```
-
-Read-only, non-nullable, auto-generated.
+Start timestamp for temporal tables. Set on insert and when a new version is created. Read-only, non-nullable, auto-generated.
 
 #### `@VersionEndDateField`
 
-Declares the end timestamp for temporal/versioned tables. Nullable — `null` means the version is the current active version.
-
-```typescript
-@VersionEndDateField()
-validTo!: Date | null;
-```
-
-Set automatically when a new version supersedes an existing one.
+End timestamp for temporal tables. Nullable — `null` means the version is the current active version. Set automatically when a new version supersedes an existing one.
 
 #### `@ExpiryDateField`
 
-Declares a nullable timestamp field for TTL-based expiry. Use `repository.deleteExpired()` to purge expired entities and `repository.ttl()` to check remaining time.
-
-```typescript
-@ExpiryDateField()
-expiresAt!: Date | null;
-```
-
-MongoDB automatically creates TTL indexes for `@ExpiryDateField`. See [Soft Deletes & Expiry](#soft-deletes--expiry).
-
----
+Nullable timestamp field for TTL-based expiry. Use `repository.deleteExpired()` to purge expired entities and `repository.ttl()` to check remaining time. MongoDB automatically creates TTL indexes for `@ExpiryDateField`.
 
 ### Field Modifiers
 
-These decorators modify the behavior of a field declared with `@Field` or one of the shorthand field decorators. Stack them on the same property.
+Stack these on the same property as `@Field` (or one of the shorthand field decorators).
 
 #### `@Nullable`
 
-Marks a field as nullable, allowing `null` values. Affects both DDL generation and Zod validation. Without this, fields are non-nullable by default.
+Marks a field as nullable. Affects both DDL generation and Zod validation.
 
 ```typescript
 @Nullable()
@@ -1079,37 +901,21 @@ email!: string | null;
 
 #### `@Default`
 
-Sets a default value for a field, applied when creating new entities. Accepts a literal value or a function returning the default at creation time.
+Sets a default value for a field, applied when creating new entities. Accepts a literal or a function returning the default at creation time.
 
 ```typescript
 @Default(0)
 @Field("integer")
 loginCount!: number;
 
-@Default(true)
-@Field("boolean")
-active!: boolean;
-
 @Default(() => new Date())
 @Field("timestamp")
 startedAt!: Date;
 ```
 
-**Argument:** `value | () => value`.
-
 #### `@Generated`
 
 Marks a field as auto-generated by the ORM or database.
-
-```typescript
-@Generated("uuid")                   // UUID v4 on insert
-@Generated("increment")              // database auto-increment
-@Generated("string")                 // random string (default length)
-@Generated("string", { length: 12 }) // random string with custom length
-@Generated("date")                   // current timestamp on insert
-```
-
-**Strategies:**
 
 | Strategy      | Description                              |
 | ------------- | ---------------------------------------- |
@@ -1118,28 +924,24 @@ Marks a field as auto-generated by the ORM or database.
 | `"string"`    | Random string with configurable `length` |
 | `"date"`      | Current timestamp                        |
 
+```typescript
+@Generated("uuid")
+@Generated("string", { length: 12 })
+@Generated("date")
+```
+
 **Options:** `{ length?: number, max?: number, min?: number }`.
 
 #### `@ReadOnly`
 
-Marks a field as read-only. Excluded from UPDATE statements after initial insert. The value is still set during entity creation.
-
-```typescript
-@ReadOnly()
-@Field("string")
-createdBy!: string;
-```
+Excludes the field from UPDATE statements after initial insert. Value is still set during entity creation.
 
 #### `@Enum`
 
 Restricts a field to a fixed set of allowed values. Pass a TypeScript enum or a plain `Record<string, string | number>`. Enforced during Zod validation and mapped to a CHECK constraint or native ENUM type depending on driver.
 
 ```typescript
-enum Status {
-  Active = "active",
-  Inactive = "inactive",
-  Banned = "banned",
-}
+enum Status { Active = "active", Inactive = "inactive", Banned = "banned" }
 
 @Enum(Status)
 @Field("enum")
@@ -1151,10 +953,6 @@ status!: Status;
 Sets precision and scale for numeric fields (decimal, float, real).
 
 ```typescript
-@Precision(10)     // 10 significant digits, 0 decimal places
-@Field("decimal")
-total!: number;
-
 @Precision(10, 2)  // 10 significant digits, 2 decimal places → NUMERIC(10, 2)
 @Field("decimal")
 price!: number;
@@ -1162,53 +960,34 @@ price!: number;
 
 **Arguments:** `(precision: number, scale?: number)`. Scale defaults to `0`.
 
-> **Note:** There is no separate `@Scale` decorator — scale is the second argument to `@Precision`.
-
 #### `@Min` / `@Max`
 
-Set minimum/maximum bounds for numeric fields or minimum/maximum length for string fields. Enforced during Zod validation and reflected in DDL constraints where supported.
+Set minimum/maximum bounds for numeric fields, or minimum/maximum length for string fields. Enforced during Zod validation.
 
 ```typescript
 @Min(0)
 @Max(150)
 @Field("integer")
 age!: number;
-
-@Min(1)
-@Max(255)
-@Field("string")
-username!: string;
 ```
 
 #### `@Comment`
 
 Attaches a DDL comment to a column (e.g. PostgreSQL `COMMENT ON COLUMN`).
 
-```typescript
-@Comment("ISO 4217 currency code")
-@Field("string")
-currency!: string;
-```
-
 #### `@Computed`
 
-Marks a field as a computed/generated column with a SQL expression. Computed fields are excluded from INSERT/UPDATE statements and Zod validation. The database evaluates the expression.
+Marks a field as a computed/generated column with a SQL expression. Computed fields are excluded from INSERT/UPDATE statements and Zod validation.
 
 ```typescript
 @Computed("first_name || ' ' || last_name")
 @Field("string")
 fullName!: string;
-
-@Computed("EXTRACT(YEAR FROM created_at)")
-@Field("integer")
-createdYear!: number;
 ```
-
-**Argument:** SQL expression string. Read-only by definition.
 
 #### `@Transform`
 
-Applies a bidirectional transform to a field value. `to` runs during dehydration (entity -> database), `from` runs during hydration (database -> entity).
+Applies a bidirectional transform. `to` runs during dehydration (entity → database), `from` during hydration (database → entity).
 
 ```typescript
 @Transform({
@@ -1217,20 +996,11 @@ Applies a bidirectional transform to a field value. `to` runs during dehydration
 })
 @Field("string")
 tags!: string[];
-
-@Transform<Date, number>({
-  to: (date) => date.getTime(),
-  from: (ms) => new Date(ms),
-})
-@Field("bigint")
-timestamp!: Date;
 ```
-
-**Options:** `{ to: (value: TFrom) => TTo, from: (raw: TTo) => TFrom }`.
 
 #### `@Encrypted`
 
-Marks a field for application-level encryption at rest. Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store configured on ProteusSource.
+Marks a field for application-level encryption at rest. Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store configured on `ProteusSource`.
 
 ```typescript
 @Encrypted()
@@ -1242,81 +1012,45 @@ ssn!: string;
 medicalRecord!: Record<string, unknown>;
 ```
 
-**Options:** `{ id?, algorithm?, encryption?, purpose?, type?, ownerId? }` — metadata for encryption strategy and scope.
+**Options:** `{ id?, algorithm?, encryption?, purpose?, type?, ownerId? }`.
 
 #### `@Hide`
 
 Excludes a field from query results for a given scope. The field still exists in the database and entity; it is just excluded from SELECT projections.
 
 ```typescript
-@Hide()           // hidden from both findOne and find results
-@Field("string")
-password!: string;
-
+@Hide()           // hidden from both findOne and find
 @Hide("single")   // hidden only from findOne
-@Field("json")
-metadata!: Record<string, unknown>;
-
 @Hide("multiple") // hidden only from find (list queries)
-@Field("text")
-body!: string;
 ```
-
-**Argument:** `"single" | "multiple"` or omit for both.
 
 #### `@Unique` (field-level)
 
-Declares a unique constraint on a single field.
+Single-field unique constraint.
 
 ```typescript
-@Unique()
-@Field("string")
-email!: string;
-
-@Unique({ name: "uq_email" }) // custom constraint name
+@Unique({ name: "uq_email" })
 @Field("string")
 email!: string;
 ```
 
 #### `@Index` (field-level)
 
-Declares a database index on a single field.
+Single-field index.
 
 ```typescript
-@Index()                          // ascending index (default)
-@Field("string")
-email!: string;
-
-@Index("desc")                    // descending index
-@Field("timestamp")
-createdAt!: Date;
-
-@Index({ unique: true })          // unique index
-@Field("string")
-slug!: string;
-
-@Index({ where: "active = true" }) // partial index
-@Field("string")
-email!: string;
-
-@Index({ using: "gin" })          // custom index method
-@Field("json")
-metadata!: Record<string, unknown>;
+@Index()                            // ascending (default)
+@Index("desc")                      // descending
+@Index({ unique: true })            // unique
+@Index({ where: "active = true" })  // partial
+@Index({ using: "gin" })            // custom method
 ```
-
-#### `@Check` (class-level applied to field)
-
-`@Check` is always a class-level decorator, but it can reference specific fields in its expression. See [`@Check`](#check) above.
-
----
 
 ### Relation Decorators
 
-Relation decorators define relationships between entities. Each relation has an **owning side** (stores the FK or join table reference) and an **inverse side**.
+Each relation has an **owning side** (stores the FK or join table reference) and an **inverse side**.
 
 #### `@OneToOne`
-
-Declares a one-to-one relation between two entities. Use `@JoinKey()` on the owning side to mark FK ownership.
 
 ```typescript
 @Entity()
@@ -1328,95 +1062,71 @@ class User {
 
 @Entity()
 class Profile {
-  @OneToOne(() => User, "profile") // inverse side — no @JoinKey
+  @OneToOne(() => User, "profile") // inverse side
   user!: User | null;
 }
 ```
 
-**Arguments:** `(entityFn: () => Constructor, entityKey: keyof F, options?: { strategy?: string })`.
-
-- `entityFn` — thunk returning the related entity constructor (avoids circular imports)
-- `entityKey` — property name on the related entity that holds the back-reference
+**Arguments:** `(entityFn: () => Constructor<F>, entityKey: keyof F, options?: { strategy?: RelationStrategy })`.
 
 #### `@OneToMany`
 
-Declares a one-to-many relation (inverse side). This entity has no FK column; the related entity's `@ManyToOne` side owns the join key.
+Inverse side. The related entity's `@ManyToOne` side owns the join key.
 
 ```typescript
-@Entity()
-class Author {
-  @OneToMany(() => Article, "author")
-  articles!: Article[];
-}
+@OneToMany(() => Article, "author")
+articles!: Article[];
 ```
 
 #### `@ManyToOne`
 
-Declares a many-to-one relation (owning side). This entity's table gets the FK column(s).
+Owning side. This entity's table gets the FK column(s).
 
 ```typescript
-@Entity()
-class Article {
-  @ManyToOne(() => Author, "articles")
-  author!: Author | null;
-}
+@ManyToOne(() => Author, "articles")
+author!: Author | null;
 ```
 
 #### `@ManyToMany`
 
-Declares a many-to-many relation using a join table. Use `@JoinTable()` on the owning side.
+Many-to-many via a join table. Use `@JoinTable()` on the owning side.
 
 ```typescript
-@Entity()
-class Course {
-  @JoinTable() // owning side
-  @ManyToMany(() => Student, "courses")
-  students!: Student[];
-}
-
-@Entity()
-class Student {
-  @ManyToMany(() => Course, "students") // inverse side
-  courses!: Course[];
-}
+@JoinTable() // owning side
+@ManyToMany(() => Student, "courses")
+students!: Student[];
 ```
 
 #### `@Embedded`
 
-Declares a field that embeds an `@Embeddable()` class as flat columns in the parent table. Column names are prefixed by default with `${fieldName}_`.
+Embeds an `@Embeddable()` class as flat columns in the parent table.
 
 ```typescript
-@Embedded(() => Address)                     // prefix: "homeAddress_"
+@Embedded(() => Address)                      // prefix: "homeAddress_"
 homeAddress!: Address | null;
 
 @Embedded(() => Address, { prefix: "work_" }) // custom prefix
 workAddress!: Address | null;
 ```
 
-**Arguments:** `(embeddableFn: () => Constructor, options?: { prefix?: string })`.
-
 #### `@EmbeddedList`
 
-Declares a field storing an array of primitives or embeddables in a separate owned collection table. The collection table has no PK and no independent lifecycle — deleting the parent cascades to collection rows.
+Stores an array of primitives or embeddables in a separate owned collection table. The collection has no PK and no independent lifecycle — deleting the parent cascades to collection rows.
 
 ```typescript
-@EmbeddedList(() => Address)                           // array of embeddables
+@EmbeddedList(() => Address)                          // array of embeddables
 addresses!: Address[];
 
-@EmbeddedList("string")                                // array of primitives
+@EmbeddedList("string")                               // array of primitives
 tags!: string[];
 
-@EmbeddedList("string", { tableName: "user_tags" })    // custom table name
+@EmbeddedList("string", { tableName: "user_tags" })   // custom table name
 tags!: string[];
 ```
 
-**Arguments:** `(typeOrFn: MetaFieldType | (() => Constructor), options?: { tableName?: string })`.
-
 ##### Loading: lazy by default on `find()`, eager by default on `findOne()`
 
-`@EmbeddedList` fields obey the same `@Eager` / `@Lazy` decorators as relations, with the JPA `@ElementCollection` default: **`{ single: "eager", multiple: "lazy" }`**. JPA settled on lazy-on-list because element collections are a separate batched query against a separate table — eager-by-default on every `find()` is a footgun that surfaces only under load.
-
-What this means in practice:
+`@EmbeddedList` fields obey the same `@Eager` / `@Lazy` decorators as relations, with the JPA `@ElementCollection` default: **`{ single: "eager", multiple: "lazy" }`**.
 
 - `repo.findOne(...)` returns plain arrays for every embedded list field.
 - `repo.find(...)` returns a `LazyCollection<T>` thenable on each embedded list field. `await row.tags` resolves to the actual array and replaces the property by identity, so subsequent reads are plain arrays.
@@ -1424,62 +1134,50 @@ What this means in practice:
 Override per scope when the default does not fit:
 
 ```typescript
-@Eager()                  // both findOne and find load eagerly
+@Eager()           // both findOne and find load eagerly
 @EmbeddedList("string")
 operations!: string[];
 
-@Eager("multiple")        // force eager on list queries
-@EmbeddedList("string")
-certificateChain!: string[];
-
-@Lazy("single")           // force lazy thenable on findOne
+@Lazy("single")    // force lazy thenable on findOne
 @EmbeddedList("string")
 auditLog!: string[];
 ```
 
-The cursor APIs (`cursor()`, `stream()`) follow the `"multiple"` scope, so a `@Lazy("multiple")` (or default) embedded list yields thenables on every cursor batch.
+Cursor APIs (`cursor()`, `stream()`) follow the `"multiple"` scope.
 
 #### `@JoinKey`
 
-Marks a relation field as the owning side (has FK column) and optionally provides explicit join key mapping.
+Marks a relation field as the owning side and optionally provides explicit join key mapping.
 
 ```typescript
-@JoinKey()                              // auto-detect FK columns
+@JoinKey()                             // auto-detect FK columns
 @OneToOne(() => Profile, "user")
 profile!: Profile | null;
 
-@JoinKey({ authorId: "id" })            // explicit: localCol → foreignCol
+@JoinKey({ authorId: "id" })           // explicit: localCol → foreignCol
 @ManyToOne(() => Author, "articles")
 author!: Author | null;
 ```
-
-**Argument:** `Dict<string>?` — `{ localColumn: "foreignColumn" }`. If omitted, columns are auto-calculated from property names and relation metadata.
 
 #### `@JoinTable`
 
 Configures the join table for a `@ManyToMany` relation. Place on the owning side only.
 
 ```typescript
-@JoinTable()                                // auto-generated table name
-@ManyToMany(() => Tag, "posts")
-tags!: Tag[];
-
-@JoinTable({ name: "post_tags" })           // custom join table name
+@JoinTable({ name: "post_tags" })
 @ManyToMany(() => Tag, "posts")
 tags!: Tag[];
 ```
-
-**Options:** `{ name?: string }`. Only one side of a ManyToMany should have `@JoinTable`.
 
 #### `@RelationId`
 
 Exposes a relation's FK value as a read-only property on the entity.
 
 ```typescript
-@RelationId("author")           // auto-detect FK column
+@RelationId("author")                          // auto-detect FK column
 authorId!: string;
 
-@RelationId("author", { column: "author_id" }) // explicit column
+@RelationId("author", { column: "author_id" })
 authorId!: string;
 ```
 
@@ -1487,48 +1185,30 @@ For `*ToOne` owning relations, the FK column is auto-detected. For composite FK 
 
 #### `@RelationCount`
 
-Populates a field with the count of a related collection, loaded via a batched `COUNT(*) ... GROUP BY` query. Avoids loading the full relation just to get the count. Supports OneToMany and ManyToMany relations, including composite keys.
+Populates a field with the count of a related collection, loaded via a batched `COUNT(*) ... GROUP BY` query.
 
 ```typescript
-@Entity()
-class Blog {
-  @PrimaryKeyField()
-  id!: string;
+@OneToMany(() => Comment, "blog")
+comments!: Comment[];
 
-  @OneToMany(() => Comment, "blog")
-  comments!: Comment[];
-
-  @RelationCount<Blog>("comments")
-  @Field("integer")
-  commentCount!: number;
-}
+@RelationCount<Blog>("comments")
+@Field("integer")
+commentCount!: number;
 ```
 
-**Arguments:** `(relationKey: keyof E & string)` — the property name of the relation to count. The field must also have `@Field("integer")`.
-
-Supported on PostgreSQL, MySQL, and SQLite. MongoDB, Redis, and Memory drivers load relation counts via their own relation-loading pipelines.
-
----
+The field must also have `@Field("integer")`.
 
 ### Relation Modifiers
 
-These decorators modify the behavior of a relation declared with `@OneToOne`, `@OneToMany`, `@ManyToOne`, or `@ManyToMany`. Stack them on the same property.
-
 #### `@Cascade`
 
-Configures cascade behavior for a relation. Controls what happens to related entities when the parent is inserted, updated, destroyed, or soft-destroyed.
+Configures cascade behavior on inserts, updates, and deletes.
 
 ```typescript
 @Cascade({ onInsert: "cascade", onUpdate: "cascade", onDestroy: "cascade" })
 @OneToMany(() => Article, "author")
 articles!: Article[];
-
-@Cascade({ onDestroy: "soft", onSoftDestroy: "cascade" })
-@OneToMany(() => Comment, "post")
-comments!: Comment[];
 ```
-
-**Options:**
 
 | Field           | Values                  | Description                                   |
 | --------------- | ----------------------- | --------------------------------------------- |
@@ -1539,104 +1219,67 @@ comments!: Comment[];
 
 #### `@Eager`
 
-Automatically loads a relation alongside every query result (eager loading).
+Automatically loads a relation alongside every query result.
 
 ```typescript
-@Eager()           // eager-load for both findOne and find
-@OneToMany(() => Article, "author")
-articles!: Article[];
-
-@Eager("single")   // only eager-load for findOne
-@OneToOne(() => Profile, "user")
-profile!: Profile | null;
-
-@Eager("multiple") // only eager-load for find (list queries)
-@OneToMany(() => Tag, "post")
-tags!: Tag[];
+@Eager()           // both findOne and find
+@Eager("single")   // only findOne
+@Eager("multiple") // only find
 ```
-
-**Argument:** `"single" | "multiple"` or omit for both. Also applies to `@EmbeddedList` fields — see [`@EmbeddedList` loading](#loading-lazy-by-default-on-find-eager-by-default-on-findone).
 
 #### `@Lazy`
 
-Loads a relation lazily — the property returns a `PromiseLike<T>` that resolves on first access.
+Loads a relation lazily — the property returns a `PromiseLike<T>` that resolves on first access. Use `LazyType<T>` as the property type.
 
 ```typescript
 @Lazy()
 @OneToOne(() => Profile, "user")
 profile!: LazyType<Profile | null>;
-
-@Lazy("single")   // only lazy-load for findOne
-@Lazy("multiple") // only lazy-load for find
 ```
-
-Use `LazyType<T>` as the property type for lazy-loaded relations.
-
-**Argument:** `"single" | "multiple"` or omit for both. Also applies to `@EmbeddedList` fields — see [`@EmbeddedList` loading](#loading-lazy-by-default-on-find-eager-by-default-on-findone).
 
 #### `@OnOrphan`
 
-Configures what happens to related entities that are removed from a collection (e.g. when reassigning a `@OneToMany` array).
+Configures what happens to related entities removed from a collection.
 
 ```typescript
 @OnOrphan("destroy")       // permanently delete orphaned entities
-@OneToMany(() => Comment, "post")
-comments!: Comment[];
-
 @OnOrphan("soft-destroy")  // soft-delete orphaned entities
 @OnOrphan("nullify")       // set the FK to null
 @OnOrphan("ignore")        // do nothing (default)
 ```
 
-**Argument:** `"destroy" | "soft-destroy" | "nullify" | "ignore"`.
-
 #### `@Deferrable`
 
-Marks a relation's FK constraint as `DEFERRABLE`, allowing constraint checks to be deferred until transaction end. Useful for circular dependencies.
+Marks a relation's FK constraint as `DEFERRABLE`, allowing constraint checks to be deferred until transaction end.
 
 ```typescript
-@Deferrable()                      // DEFERRABLE INITIALLY IMMEDIATE
-@ManyToOne(() => Category, "children")
-parent!: Category | null;
-
-@Deferrable({ initially: true })   // DEFERRABLE INITIALLY DEFERRED
-@ManyToOne(() => Node, "children")
-parent!: Node | null;
+@Deferrable()                    // DEFERRABLE INITIALLY IMMEDIATE
+@Deferrable({ initially: true }) // DEFERRABLE INITIALLY DEFERRED
 ```
-
-**Options:** `{ initially?: boolean }`. When `true`, the constraint is `INITIALLY DEFERRED`.
 
 #### `@OrderBy`
 
-Specifies default ordering for a relation's loaded results. Applied as an `ORDER BY` clause in SQL relation queries and as in-memory sorting during hydration. Supported across all six drivers.
+Default ordering for a relation's loaded results. Applied as `ORDER BY` in SQL queries and as in-memory sorting during hydration.
 
 ```typescript
 @OrderBy({ createdAt: "DESC" })
 @OneToMany(() => Comment, "post")
 comments!: Comment[];
-
-@OrderBy({ lastName: "ASC", firstName: "ASC" })
-@OneToMany(() => Player, "team")
-players!: Player[];
 ```
-
-**Argument:** `Record<string, "ASC" | "DESC">`.
-
----
 
 ### Lifecycle Hook Decorators
 
-Lifecycle hooks are **class decorators** that register callbacks at specific points in the entity lifecycle. All hooks receive `(entity, meta)` as arguments, where `meta` is a `ProteusHookMeta` carrying request-scoped metadata (`correlationId`, `actor`, `timestamp`).
+Lifecycle hooks are class decorators that register callbacks at specific points in the entity lifecycle. All hooks receive `(entity, meta)` where `meta` is a `ProteusHookMeta` carrying request-scoped metadata (`correlationId`, `actor`, `timestamp`).
 
 **Async hooks** (`HookCallback<T>`) may return `void | Promise<void>`.
 **Sync hooks** (`SyncHookCallback<T>`) must return `void` — they cannot be async.
 
 #### `@OnCreate`
 
-Fires synchronously when `repository.create()` builds a new entity instance. **Must be synchronous.** Useful for setting computed defaults or derived fields.
+Fires synchronously when `repository.create()` builds a new entity instance. **Must be synchronous.**
 
 ```typescript
-@OnCreate((user, _ctx) => {
+@OnCreate((user) => {
   user.slug = user.name.toLowerCase().replace(/\s+/g, "-");
 })
 @Entity()
@@ -1647,149 +1290,52 @@ class User {
 
 #### `@OnValidate`
 
-Fires synchronously during `repository.validate()`, after the built-in Zod schema check. Throw to reject the entity. **Must be synchronous.**
-
-```typescript
-@OnValidate((order, _ctx) => {
-  if (order.startDate >= order.endDate) {
-    throw new Error("startDate must be before endDate");
-  }
-})
-@Entity()
-class Order {
-  /* ... */
-}
-```
+Fires synchronously during `repository.validate()`, after the built-in Zod schema check. Throw to reject. **Must be synchronous.**
 
 #### `@OnHydrate`
 
-Fires synchronously when an entity is hydrated from database results, after all fields and FK columns are populated but before the entity is returned. **Must be synchronous.** For async post-load enrichment, use `@AfterLoad` instead.
-
-```typescript
-@OnHydrate((user, _ctx) => {
-  user.fullName = `${user.firstName} ${user.lastName}`;
-})
-@Entity()
-class User {
-  /* ... */
-}
-```
+Fires synchronously when an entity is hydrated from database results, after all fields and FK columns are populated but before the entity is returned. **Must be synchronous.** For async post-load enrichment, use `@AfterLoad`.
 
 #### `@BeforeInsert` / `@AfterInsert`
 
-Fire around INSERT operations. `@BeforeInsert` runs after validation but before the INSERT statement. `@AfterInsert` runs after the entity is persisted. Both may be async.
-
-```typescript
-@BeforeInsert(async (user, _ctx) => {
-  user.password = await argon2.hash(user.password);
-})
-@AfterInsert(async (user, _ctx) => {
-  await sendWelcomeEmail(user.email);
-})
-@Entity()
-class User {
-  /* ... */
-}
-```
+Fire around INSERT operations. `@BeforeInsert` runs after validation but before the INSERT. Both may be async.
 
 #### `@BeforeUpdate` / `@AfterUpdate`
 
-Fire around UPDATE operations. `@BeforeUpdate` runs after validation and version check but before the UPDATE statement. Both may be async.
-
-```typescript
-@BeforeUpdate(async (user, _ctx) => {
-  if (user.passwordChanged) {
-    user.password = await argon2.hash(user.password);
-  }
-})
-@Entity()
-class User {
-  /* ... */
-}
-```
+Fire around UPDATE operations. `@BeforeUpdate` runs after validation and version check. Both may be async.
 
 #### `@BeforeSave` / `@AfterSave`
 
-Fire around both INSERT and UPDATE operations. `@BeforeSave` runs before `@BeforeInsert`/`@BeforeUpdate`. `@AfterSave` runs after `@AfterInsert`/`@AfterUpdate`. Both may be async.
-
-```typescript
-@BeforeSave((entity, _ctx) => {
-  entity.updatedBy = getCurrentUserId();
-})
-@Entity()
-class Document {
-  /* ... */
-}
-```
+Fire around both INSERT and UPDATE. `@BeforeSave` runs before `@BeforeInsert`/`@BeforeUpdate`. Both may be async.
 
 #### `@BeforeDestroy` / `@AfterDestroy`
 
-Fire around hard DELETE operations. `@BeforeDestroy` runs before cascade deletes and the DELETE statement. Both may be async.
-
-```typescript
-@BeforeDestroy(async (user, _ctx) => {
-  await deleteUserFiles(user.id);
-})
-@Entity()
-class User {
-  /* ... */
-}
-```
+Fire around hard DELETE. `@BeforeDestroy` runs before cascade deletes and the DELETE statement. Both may be async.
 
 #### `@BeforeSoftDestroy` / `@AfterSoftDestroy`
 
-Fire around soft-delete operations. `@BeforeSoftDestroy` runs before the delete date is set and before cascade soft-deletes. Both may be async.
-
-```typescript
-@BeforeSoftDestroy(async (post, _ctx) => {
-  await notifyAuthor(post.authorId, "post archived");
-})
-@Entity()
-class Post {
-  /* ... */
-}
-```
+Fire around soft-delete. `@BeforeSoftDestroy` runs before the delete date is set. Both may be async.
 
 #### `@BeforeRestore` / `@AfterRestore`
 
-Fire around restore operations (un-soft-delete). `@BeforeRestore` runs before the delete date is cleared. Both may be async.
-
-```typescript
-@AfterRestore(async (post, _ctx) => {
-  await reindexPost(post.id);
-})
-@Entity()
-class Post {
-  /* ... */
-}
-```
+Fire around restore (un-soft-delete). Both may be async.
 
 #### `@AfterLoad`
 
-Fires after an entity is loaded from the database, after hydration and relation loading. May be async. Use for post-load enrichment.
-
-```typescript
-@AfterLoad(async (user, _ctx) => {
-  user.avatarUrl = await resolveAvatarUrl(user.avatarKey);
-})
-@Entity()
-class User {
-  /* ... */
-}
-```
+Fires after an entity is loaded from the database, after hydration and relation loading. May be async.
 
 ### Hook Execution Order
 
-| Phase        | Hooks (in order)                                                              |
-| ------------ | ----------------------------------------------------------------------------- |
-| Construction | `@OnCreate` (sync)                                                            |
-| Validation   | `@OnValidate` (sync)                                                          |
-| Insert       | `@BeforeSave` -> `@BeforeInsert` -> persist -> `@AfterInsert` -> `@AfterSave` |
-| Update       | `@BeforeSave` -> `@BeforeUpdate` -> persist -> `@AfterUpdate` -> `@AfterSave` |
-| Destroy      | `@BeforeDestroy` -> delete -> `@AfterDestroy`                                 |
-| Soft Delete  | `@BeforeSoftDestroy` -> mark -> `@AfterSoftDestroy`                           |
-| Restore      | `@BeforeRestore` -> unmark -> `@AfterRestore`                                 |
-| Hydration    | `@OnHydrate` (sync) -> `@AfterLoad`                                           |
+| Phase        | Hooks (in order)                                                          |
+| ------------ | ------------------------------------------------------------------------- |
+| Construction | `@OnCreate` (sync)                                                        |
+| Validation   | `@OnValidate` (sync)                                                      |
+| Insert       | `@BeforeSave` → `@BeforeInsert` → persist → `@AfterInsert` → `@AfterSave` |
+| Update       | `@BeforeSave` → `@BeforeUpdate` → persist → `@AfterUpdate` → `@AfterSave` |
+| Destroy      | `@BeforeDestroy` → delete → `@AfterDestroy`                               |
+| Soft Delete  | `@BeforeSoftDestroy` → mark → `@AfterSoftDestroy`                         |
+| Restore      | `@BeforeRestore` → unmark → `@AfterRestore`                               |
+| Hydration    | `@OnHydrate` (sync) → `@AfterLoad`                                        |
 
 ## Repository API
 
@@ -1802,33 +1348,22 @@ const repo = source.repository(User);
 ### Create & Insert
 
 ```typescript
-// In-memory instance (not persisted)
-const user = repo.create({ name: "Alice", age: 30 });
-
-// Insert one
-const saved = await repo.insert({ name: "Alice", age: 30 });
-
-// Insert many
+const user = repo.create({ name: "Alice", age: 30 }); // in-memory only
+const saved = await repo.insert({ name: "Alice", age: 30 }); // single insert
 const users = await repo.insert([
   { name: "Bob", age: 25 },
   { name: "Charlie", age: 35 },
 ]);
-
-// Save — inserts if new, updates if exists
-const result = await repo.save({ name: "Alice", age: 30 });
+const result = await repo.save({ name: "Alice", age: 30 }); // upsert by PK
 ```
 
 ### Read
 
 ```typescript
-// Find one
 const user = await repo.findOne({ name: "Alice" }); // User | null
-const user = await repo.findOneOrFail({ name: "Alice" }); // User (throws if not found)
-
-// Find many
+const user = await repo.findOneOrFail({ name: "Alice" }); // throws if missing
 const users = await repo.find({ age: { $gte: 18 } });
 
-// Find with options
 const users = await repo.find(
   { age: { $gte: 18 } },
   {
@@ -1841,14 +1376,10 @@ const users = await repo.find(
   },
 );
 
-// Count and existence
 const total = await repo.count({ age: { $gte: 18 } });
 const exists = await repo.exists({ email: "alice@example.com" });
+const [users, totalCount] = await repo.findAndCount({ age: { $gte: 18 } }, { limit: 10 });
 
-// Find with count
-const [users, total] = await repo.findAndCount({ age: { $gte: 18 } }, { limit: 10 });
-
-// Find or create
 const user = await repo.findOneOrSave(
   { email: "alice@example.com" },
   { name: "Alice", email: "alice@example.com" },
@@ -1860,14 +1391,10 @@ const user = await repo.findOneOrSave(
 ```typescript
 user.name = "Alice Smith";
 const updated = await repo.update(user);
-
-// Batch update
 const updated = await repo.update([user1, user2]);
 
-// Update many by criteria
 await repo.updateMany({ age: { $lt: 18 } }, { status: "minor" });
 
-// Increment / decrement
 await repo.increment({ id: user.id }, "loginCount", 1);
 await repo.decrement({ id: user.id }, "credits", 5);
 ```
@@ -1875,12 +1402,9 @@ await repo.decrement({ id: user.id }, "credits", 5);
 ### Delete
 
 ```typescript
-// Destroy loaded entities
-await repo.destroy(user);
-await repo.destroy([user1, user2]);
-
-// Delete by criteria
-await repo.delete({ status: "expired" });
+await repo.destroy(user); // single
+await repo.destroy([user1, user2]); // batch
+await repo.delete({ status: "expired" }); // criteria-based
 ```
 
 ### Upsert
@@ -1891,43 +1415,32 @@ const user = await repo.upsert(
   { conflictOn: ["email"] },
 );
 
-// Batch upsert
 const users = await repo.upsert([user1, user2, user3], { conflictOn: ["email"] });
 ```
 
 ### Clone
 
 ```typescript
-// Deep copy with a new primary key
-const copy = await repo.clone(user);
+const copy = await repo.clone(user); // deep copy with new primary key
 ```
 
 ### Aggregates
 
 ```typescript
 const total = await repo.sum("age");
-const avg = await repo.average("score");
+const avg = await repo.average("score", { status: "active" });
 const min = await repo.minimum("age");
 const max = await repo.maximum("age");
-
-// With criteria
-const avgActive = await repo.average("score", { status: "active" });
 ```
 
 ### Pagination
 
 ```typescript
-// Offset-based
-const result = await repo.findPaginated(
-  { status: "active" },
-  {
-    page: 2,
-    pageSize: 20,
-  },
-);
+// Offset/page-based
+const result = await repo.findPaginated({ status: "active" }, { page: 2, pageSize: 20 });
 // → { data, total, page, pageSize, totalPages, hasMore }
 
-// Cursor-based (Relay-style)
+// Cursor-based (Relay-style keyset)
 const result = await repo.paginate(undefined, {
   first: 20,
   after: "cursor-string",
@@ -1935,6 +1448,8 @@ const result = await repo.paginate(undefined, {
 });
 // → { data, startCursor, endCursor, hasNextPage, hasPreviousPage }
 ```
+
+`findPaginated` defaults to page 1 / pageSize 10 if not specified.
 
 ### Streaming
 
@@ -1960,7 +1475,7 @@ try {
 ### Truncate
 
 ```typescript
-await repo.clear(); // delete all rows
+await repo.clear();
 await repo.clear({ cascade: true, restartIdentity: true });
 ```
 
@@ -1990,7 +1505,7 @@ const users = await qb
 | `getManyAndCount()` | `[T[], number]`  |
 | `count()`           | `number`         |
 | `exists()`          | `boolean`        |
-| `getRawRows()`      | `any[]`          |
+| `getRawRows()`      | `Array<Dict>`    |
 | `sum(field)`        | `number \| null` |
 | `average(field)`    | `number \| null` |
 | `minimum(field)`    | `number \| null` |
@@ -2042,9 +1557,9 @@ Supported functions: `ROW_NUMBER`, `RANK`, `DENSE_RANK`, `NTILE`, `LAG`, `LEAD`,
 ### Soft-Delete & Versioning
 
 ```typescript
-qb.withDeleted().getMany(); // include soft-deleted rows
-qb.withoutScope().getMany(); // bypass scope filtering
-qb.versionAt(new Date("2024-06-01")).getMany(); // point-in-time query
+qb.withDeleted().getMany(); // include soft-deleted
+qb.withoutScope().getMany(); // bypass scope filter
+qb.versionAt(new Date("2024-06-01")).getMany(); // point-in-time
 qb.withAllVersions().getMany(); // all temporal versions
 ```
 
@@ -2065,7 +1580,6 @@ The `sql` tagged template produces parameterized queries — values are never in
 Query builder write operations bypass ORM lifecycle hooks (no `@BeforeInsert`, no cascade, no version check).
 
 ```typescript
-// Bulk insert
 const result = await qb
   .insert()
   .values([
@@ -2074,23 +1588,25 @@ const result = await qb
   ])
   .returning("*")
   .execute();
-// → { rows: [...], rowCount: 2 }
 
-// Conditional update
 await qb
   .update()
   .set({ status: "inactive" })
   .where({ lastLogin: { $lt: cutoffDate } })
   .execute();
-
-// Conditional delete
 await qb.delete().where({ status: "deleted" }).execute();
-
-// Soft delete via query builder
 await qb
   .softDelete()
   .where({ expiresAt: { $lt: new Date() } })
   .execute();
+```
+
+### Per-Query Filter Overrides
+
+```typescript
+qb.setFilter("tenant", { tenantId: "tenant-xyz" }).getMany(); // enable + params
+qb.setFilter("tenant", true).getMany(); // enable with source params
+qb.setFilter("tenant", false).getMany(); // disable
 ```
 
 ### Cloning
@@ -2104,8 +1620,7 @@ const page2 = await baseQuery.clone().skip(10).take(10).getMany();
 ### Debug
 
 ```typescript
-const query = qb.where({ name: "Alice" }).toQuery();
-console.log(query); // driver-specific query representation
+const query = qb.where({ name: "Alice" }).toQuery(); // driver-specific representation
 ```
 
 ## Predicates
@@ -2140,13 +1655,13 @@ All `where` and `criteria` parameters accept a `Predicate<E>` — a type-safe qu
 { tags: { $all: ["typescript", "orm"] } }     // contains all
 { tags: { $overlap: ["node", "deno"] } }      // contains any
 { tags: { $contained: ["a", "b", "c"] } }     // subset of
-{ tags: { $length: 3 } }                      // exact length
+{ tags: { $length: 3 } }
 
 // JSON containment
 { metadata: { $has: { role: "admin" } } }
 
 // Modulo
-{ age: { $mod: [2, 0] } }  // even ages
+{ age: { $mod: [2, 0] } }
 
 // Logical combinators
 { $and: [{ age: { $gte: 18 } }, { status: "active" }] }
@@ -2168,7 +1683,7 @@ class User {
   name!: string;
 
   @Eager()
-  @JoinKey() // owning side — stores the FK
+  @JoinKey()
   @OneToOne(() => Profile, "user")
   profile!: Profile | null;
 
@@ -2185,7 +1700,7 @@ class Profile {
   @Field("string")
   bio!: string;
 
-  @OneToOne(() => User, "profile") // inverse side — no @JoinKey
+  @OneToOne(() => User, "profile")
   user!: User | null;
 }
 ```
@@ -2217,17 +1732,14 @@ class Article {
   @ManyToOne(() => Author, "articles")
   author!: Author | null;
 
-  authorId!: string | null; // FK populated automatically
+  authorId!: string | null;
 }
 ```
-
-Usage:
 
 ```typescript
 const authorRepo = source.repository(Author);
 const articleRepo = source.repository(Article);
 
-// Cascade insert via parent
 const author = await authorRepo.save({
   name: "Alice",
   articles: [
@@ -2236,7 +1748,6 @@ const author = await authorRepo.save({
   ],
 });
 
-// @Eager loads articles automatically
 const found = await authorRepo.findOne({ id: author.id });
 console.log(found!.articles.length); // 2
 ```
@@ -2252,7 +1763,7 @@ class Course {
   @Field("string")
   name!: string;
 
-  @JoinTable() // owning side — creates the join table
+  @JoinTable()
   @ManyToMany(() => Student, "courses")
   students!: Student[];
 }
@@ -2265,53 +1776,33 @@ class Student {
   @Field("string")
   name!: string;
 
-  @ManyToMany(() => Course, "students") // inverse side
+  @ManyToMany(() => Course, "students")
   courses!: Course[];
 }
 ```
 
-Usage:
-
 ```typescript
-const courseRepo = source.repository(Course);
-const studentRepo = source.repository(Student);
-
 const alice = await studentRepo.insert({ name: "Alice" });
 const bob = await studentRepo.insert({ name: "Bob" });
 
-const math = await courseRepo.save({
-  name: "Mathematics",
-  students: [alice, bob],
-});
+const math = await courseRepo.save({ name: "Mathematics", students: [alice, bob] });
 
-// Update the relation set
 math.students = [alice]; // removes Bob
 await courseRepo.save(math);
-```
-
-### Cascade Options
-
-```typescript
-@Cascade({ onInsert: "cascade", onUpdate: "cascade", onDestroy: "cascade" })
-@OneToMany(() => Article, "author")
-articles!: Article[];
 ```
 
 ### Eager vs Lazy Loading
 
 ```typescript
-// Always loaded with the parent entity
 @Eager()
 @OneToMany(() => Article, "author")
 articles!: Article[];
 
-// Loaded on first access
 @Lazy()
 @OneToOne(() => Profile, "user")
 profile!: LazyType<Profile | null>;
 
-// Use relations option for ad-hoc loading
-const user = await repo.findOne({ id }, { relations: ["posts"] });
+const user = await repo.findOne({ id }, { relations: ["posts"] }); // ad-hoc
 ```
 
 ## Transactions
@@ -2326,8 +1817,9 @@ const result = await source.transaction(async (ctx) => {
 
   return user;
 });
-// If any operation throws, the entire transaction rolls back.
 ```
+
+If the callback throws, the transaction rolls back.
 
 ### Isolation Levels
 
@@ -2368,7 +1860,6 @@ await source.transaction(
 await source.transaction(async (ctx) => {
   await ctx.repository(User).insert({ name: "Alice" });
 
-  // Creates a savepoint — rolls back independently
   await ctx.transaction(async (inner) => {
     await inner.repository(Post).insert({ title: "Hello" });
   });
@@ -2383,6 +1874,8 @@ import type { PoolClient } from "pg";
 const client = await source.client<PoolClient>();
 // Use the underlying driver client directly
 ```
+
+The same `client<T>()` method exists on `ITransactionContext` for transaction-scoped raw access.
 
 ## Lifecycle Hooks
 
@@ -2411,15 +1904,63 @@ class User {
 }
 ```
 
-### Execution Order
+See [Hook Execution Order](#hook-execution-order) for the full sequence.
 
-See [Hook Execution Order](#hook-execution-order) in the Decorators section for the complete execution order table.
+## Lifecycle Events
+
+`ProteusSource` is a typed event emitter. Subscribe to lifecycle and connection events to implement cross-cutting concerns like auditing, metrics, or alerting.
+
+```typescript
+source.on("entity:after-insert", async (event) => {
+  await auditLog.write("insert", event.entity, event.metadata, event.meta);
+});
+
+source.on("entity:after-update", async (event) => {
+  await auditLog.write("update", event.entity, event.metadata, event.meta);
+  // event.oldEntity contains the snapshot before the update (when available)
+});
+
+source.on("connection:state", ({ state }) => {
+  console.log(`Database is now ${state}`);
+});
+
+source.on("breaker:state", (event) => {
+  console.warn("Circuit breaker state changed", event);
+});
+```
+
+| Event                        | Payload                                       |
+| ---------------------------- | --------------------------------------------- |
+| `connection:state`           | `{ state: "connected" \| "disconnected" }`    |
+| `breaker:state`              | `StateChangeEvent`                            |
+| `entity:before-insert`       | `InsertEvent`                                 |
+| `entity:after-insert`        | `InsertEvent`                                 |
+| `entity:before-update`       | `UpdateEvent` (includes `oldEntity` snapshot) |
+| `entity:after-update`        | `UpdateEvent`                                 |
+| `entity:before-destroy`      | `DestroyEvent`                                |
+| `entity:after-destroy`       | `DestroyEvent`                                |
+| `entity:before-soft-destroy` | `SoftDestroyEvent`                            |
+| `entity:after-soft-destroy`  | `SoftDestroyEvent`                            |
+| `entity:before-restore`      | `RestoreEvent`                                |
+| `entity:after-restore`       | `RestoreEvent`                                |
+| `entity:after-load`          | `LoadEvent`                                   |
+
+All entity event payloads share the same base shape:
+
+```typescript
+type EntityEventBase<E> = {
+  entity: E;
+  metadata: EntityMetadata;
+  connection: unknown; // driver-specific connection handle
+  meta: ProteusHookMeta; // request-scoped metadata
+};
+```
+
+Listeners are awaited sequentially. Throwing from a listener propagates to the caller and triggers transaction rollback. Use `source.off(event, listener)` to unsubscribe and `source.once(event, listener)` for one-shot listeners.
 
 ## Soft Deletes & Expiry
 
 ### Soft Deletes
-
-Add `@DeleteDateField()` to enable soft deletes:
 
 ```typescript
 @Entity()
@@ -2436,17 +1977,11 @@ class Post {
 
 const repo = source.repository(Post);
 
-// Soft delete — sets deletedAt, keeps the row
-await repo.softDestroy(post);
-await repo.softDelete({ status: "spam" });
+await repo.softDestroy(post); // sets deletedAt, fires hooks/cascades
+await repo.softDelete({ status: "spam" }); // criteria-based, no per-entity hooks
 
-// Queries automatically exclude soft-deleted rows
 const active = await repo.find();
-
-// Include soft-deleted rows
 const all = await repo.find(undefined, { withDeleted: true });
-
-// Restore
 await repo.restore({ id: post.id });
 ```
 
@@ -2467,14 +2002,12 @@ class Session {
 
 const repo = source.repository(Session);
 const remaining = await repo.ttl({ id: session.id }); // ms until expiry
-await repo.deleteExpired(); // remove all expired rows
+await repo.deleteExpired();
 ```
 
 MongoDB automatically creates TTL indexes for `@ExpiryDateField`.
 
 ## Temporal Versioning
-
-Track the full history of entity changes with version keys:
 
 ```typescript
 @Entity()
@@ -2484,7 +2017,7 @@ class Product {
   @Generated("uuid")
   id!: string;
 
-  @VersionKeyField() // composite PK: (id, versionId)
+  @VersionKeyField()
   versionId!: string;
 
   @VersionStartDateField()
@@ -2508,12 +2041,10 @@ class Product {
 
 const repo = source.repository(Product);
 
-// Point-in-time query
 const snapshot = await repo.find(undefined, {
   versionTimestamp: new Date("2024-06-01"),
 });
 
-// All versions of a specific entity
 const history = await repo.versions({ id: product.id });
 ```
 
@@ -2523,15 +2054,8 @@ Reusable, parameterized WHERE clauses at the entity level:
 
 ```typescript
 @Entity()
-@Filter({
-  name: "tenant",
-  condition: { tenantId: "$tenantId" },
-  default: true, // enabled by default
-})
-@Filter({
-  name: "active",
-  condition: { status: "active" },
-})
+@Filter({ name: "tenant", condition: { tenantId: "$tenantId" }, default: true })
+@Filter({ name: "active", condition: { status: "active" } })
 class Resource {
   @PrimaryKeyField()
   id!: string;
@@ -2543,17 +2067,17 @@ class Resource {
   status!: string;
 }
 
-// Set filter parameters
 source.setFilterParams("tenant", { tenantId: "tenant-abc" });
-
-// Enable / disable
 source.enableFilter("active");
 source.disableFilter("tenant");
 
-// Override per-query
+// Per-query overrides
 const qb = source.queryBuilder(Resource);
 qb.setFilter("tenant", { tenantId: "tenant-xyz" }).getMany();
-qb.setFilter("active", false).getMany(); // disable for this query
+qb.setFilter("active", false).getMany();
+
+// Or via FindOptions.filters
+await repo.find(undefined, { filters: { tenant: { tenantId: "tenant-xyz" } } });
 ```
 
 ## Caching
@@ -2563,7 +2087,6 @@ Enable query-level caching with a pluggable adapter:
 ```typescript
 import { MemoryCacheAdapter, RedisCacheAdapter } from "@lindorm/proteus";
 
-// In-memory cache (single process)
 new ProteusSource({
   driver: "postgres",
   cache: {
@@ -2573,7 +2096,6 @@ new ProteusSource({
   // ...
 });
 
-// Redis cache (distributed)
 new ProteusSource({
   driver: "postgres",
   cache: {
@@ -2583,6 +2105,8 @@ new ProteusSource({
   // ...
 });
 ```
+
+The Redis adapter accepts either an existing `ioredis` client (which it does **not** own) or connection options (in which case the adapter owns the connection and `source.disconnect()` will close it).
 
 ### Per-Entity Default TTL
 
@@ -2598,12 +2122,12 @@ class Config {
 
 ```typescript
 const users = await repo.find({ status: "active" }, { cache: { ttl: "1m" } });
-const fresh = await repo.find({ status: "active" }, { cache: false }); // skip cache
+const fresh = await repo.find({ status: "active" }, { cache: false });
 ```
 
-## Field-Level Encryption
+`cache: true` enables caching using the entity-level `@Cache` TTL or the source default; if no TTL is configured anywhere, caching is silently disabled (no indefinite caching).
 
-Transparently encrypt sensitive fields at rest:
+## Field-Level Encryption
 
 ```typescript
 @Entity()
@@ -2622,22 +2146,20 @@ class Patient {
 
 new ProteusSource({
   driver: "postgres",
-  amphora, // IAmphora key store instance
+  amphora,
   entities: [Patient],
   logger,
 });
 ```
 
-Values are encrypted before writing and decrypted after reading.
+Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store (peer dependency `@lindorm/amphora`).
 
 ## Naming Strategies
-
-Control how TypeScript field names map to database column names:
 
 ```typescript
 new ProteusSource({
   driver: "postgres",
-  naming: "snake", // camelCase → snake_case
+  naming: "snake",
   // ...
 });
 ```
@@ -2650,54 +2172,31 @@ new ProteusSource({
 
 Applies to column names, join keys, and find keys.
 
-## Entity Subscribers
-
-Cross-entity lifecycle observers for auditing, logging, or side effects:
-
-```typescript
-import type { IEntitySubscriber, InsertEvent, UpdateEvent } from "@lindorm/proteus";
-
-const auditSubscriber: IEntitySubscriber = {
-  listenTo: () => [User, Post], // omit to listen to all entities
-
-  afterInsert: async (event: InsertEvent<any>) => {
-    await auditLog.write("insert", event.entity);
-  },
-  afterUpdate: async (event: UpdateEvent<any>) => {
-    await auditLog.write("update", event.entity);
-  },
-};
-
-source.addSubscriber(auditSubscriber);
-```
-
-Available events: `beforeInsert`, `afterInsert`, `beforeUpdate`, `afterUpdate`, `beforeDestroy`, `afterDestroy`, `beforeSoftDestroy`, `afterSoftDestroy`, `beforeRestore`, `afterRestore`, `afterLoad`.
-
 ## Per-Request Isolation
 
-Clone the source for request-scoped logging and filter state:
+`source.session()` creates a lightweight, request-scoped data-access handle that shares the parent's connection pool and entity metadata but carries its own logger, hook metadata, filter registry, and optional `AbortSignal`.
 
 ```typescript
 app.use(async (ctx, next) => {
-  ctx.db = source.clone({ logger: ctx.logger });
+  ctx.db = source.session({ logger: ctx.logger, signal: ctx.signal });
   ctx.db.setFilterParams("tenant", { tenantId: ctx.state.tenantId });
   ctx.db.enableFilter("tenant");
   await next();
 });
 
 router.get("/users", async (ctx) => {
-  // Isolated filter state + traced logging per request
   const { page = 1, pageSize = 20 } = ctx.query;
   ctx.body = await ctx.db.repository(User).findPaginated(undefined, {
     page: Number(page),
     pageSize: Number(pageSize),
     order: { createdAt: "DESC" },
   });
-  // → { data, total, page, pageSize, totalPages, hasMore }
 });
 ```
 
-Clones share the underlying connection pool — lightweight and safe to create per request.
+Sessions are ephemeral. They expose only data-access methods (`repository`, `queryBuilder`, `client`, `transaction`, `ping`) plus the filter API — no lifecycle, event-subscription, or schema-management methods. Filter mutations on a session do not leak into the parent source.
+
+The `signal` option is propagated to in-flight queries — when aborted, Postgres queries are cancelled server-side.
 
 ## Schema Synchronization & Migrations
 
@@ -2707,7 +2206,7 @@ Clones share the underlying connection pool — lightweight and safe to create p
 new ProteusSource({
   driver: "postgres",
   synchronize: true, // apply DDL changes on setup()
-  // synchronize: "dry-run", // log planned DDL without executing
+  // synchronize: "dry-run",    // log planned DDL without executing
   // ...
 });
 
@@ -2728,31 +2227,39 @@ new ProteusSource({
 
 ## CLI
 
-Proteus includes a CLI for migration management and database diagnostics.
+The package ships a `proteus` binary for migration management and database diagnostics. Available commands:
+
+### `proteus init`
+
+```bash
+proteus init -D postgres -d ./src/proteus
+proteus init --dry-run
+```
+
+Scaffold a new Proteus source directory.
+
+### `proteus generate entity`
+
+```bash
+proteus generate entity User -d ./src/proteus/entities
+proteus g e User --dry-run
+```
+
+Generate an entity file pre-populated with Proteus decorators.
 
 ### Migration Commands
 
 ```bash
-# Generate a migration from schema diff
 proteus migrate generate --name add-users-table
-proteus migrate generate --interactive  # interactive mode with entity select + preview
+proteus migrate generate --interactive
 
-# Create a blank migration stub
 proteus migrate create --name custom-data-migration
-
-# Generate a baseline migration (full schema snapshot)
 proteus migrate baseline --name initial
 
-# Apply all pending migrations
 proteus migrate run
-
-# Roll back the last N migrations
 proteus migrate rollback --count 2
-
-# View migration status
 proteus migrate status
 
-# Manually resolve migration state
 proteus migrate resolve --applied 20240101_add_users
 proteus migrate resolve --rolled-back 20240101_add_users
 ```
@@ -2760,37 +2267,42 @@ proteus migrate resolve --rolled-back 20240101_add_users
 ### Database Commands
 
 ```bash
-# Verify database connectivity
 proteus db ping
 ```
 
-### Global Options
+### Shared Options
 
-| Flag                  | Description                                                 |
-| --------------------- | ----------------------------------------------------------- |
-| `-s, --source <path>` | Path to source config file (default: `./proteus.config.ts`) |
-| `-e, --export <name>` | Named export from the config file                           |
-| `-v, --verbose`       | Debug-level logging                                         |
+| Flag                     | Description                                                 |
+| ------------------------ | ----------------------------------------------------------- |
+| `-s, --source <path>`    | Path to source config file (default: `./proteus.config.ts`) |
+| `-e, --export <name>`    | Named export from the config file                           |
+| `-v, --verbose`          | Debug-level logging                                         |
+| `-d, --directory <path>` | Output directory (where applicable)                         |
 
 ## Errors
 
-Proteus provides typed error classes for precise error handling:
+Proteus provides typed error classes for precise error handling. All Proteus errors extend `ProteusError`.
 
-| Error                      | When                              |
-| -------------------------- | --------------------------------- |
-| `DuplicateKeyError`        | Unique constraint violation       |
-| `OptimisticLockError`      | Version mismatch on update        |
-| `ForeignKeyViolationError` | FK constraint violation           |
-| `NotNullViolationError`    | NULL in a non-nullable column     |
-| `CheckConstraintError`     | Check constraint violation        |
-| `DeadlockError`            | Transaction deadlock detected     |
-| `SerializationError`       | Serializable isolation conflict   |
-| `TransactionError`         | Transaction lifecycle error       |
-| `MigrationError`           | Migration execution failure       |
-| `SyncError`                | Schema synchronization failure    |
-| `DriverError`              | Low-level driver error            |
-| `NotSupportedError`        | Operation not supported by driver |
-| `ProteusRepositoryError`   | General repository error          |
+| Error                      | When                                 |
+| -------------------------- | ------------------------------------ |
+| `DuplicateKeyError`        | Unique constraint violation          |
+| `OptimisticLockError`      | Version mismatch on update           |
+| `ForeignKeyViolationError` | FK constraint violation              |
+| `NotNullViolationError`    | NULL in a non-nullable column        |
+| `CheckConstraintError`     | Check constraint violation           |
+| `DeadlockError`            | Transaction deadlock detected        |
+| `SerializationError`       | Serializable isolation conflict      |
+| `TransactionError`         | Transaction lifecycle error          |
+| `MigrationError`           | Migration execution failure          |
+| `SyncError`                | Schema synchronization failure       |
+| `DriverError`              | Low-level driver error               |
+| `NotSupportedError`        | Operation not supported by driver    |
+| `CircuitOpenError`         | Circuit breaker is open              |
+| `ExecutorError`            | Statement execution failure          |
+| `ProteusRepositoryError`   | General repository error             |
+| `EntityManagerError`       | Entity registration / metadata error |
+| `EntityMetadataError`      | Entity metadata resolution error     |
+| `EntityScannerError`       | Glob-based entity scanner error      |
 
 ```typescript
 import { DuplicateKeyError, OptimisticLockError } from "@lindorm/proteus";
@@ -2807,6 +2319,34 @@ try {
   throw error;
 }
 ```
+
+## Test Mocks
+
+Mock factories are exported under per-runner subpaths so the package itself does not depend on `jest` or `vitest`.
+
+```typescript
+// Vitest
+import {
+  createMockProteusSource,
+  createMockProteusSession,
+  createMockRepository,
+} from "@lindorm/proteus/mocks/vitest";
+
+const source = createMockProteusSource();
+const session = createMockProteusSession();
+const repo = createMockRepository<User>();
+```
+
+```typescript
+// Jest
+import {
+  createMockProteusSource,
+  createMockProteusSession,
+  createMockRepository,
+} from "@lindorm/proteus/mocks/jest";
+```
+
+Each factory returns a `Mocked<...>` (vitest) or `jest.Mocked<...>` (jest) implementation of the corresponding interface — every method is a typed mock function that you can configure per test.
 
 ## License
 
