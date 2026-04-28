@@ -1,36 +1,32 @@
 # @lindorm/kryptos
 
-Swiss-army-knife for **JWK / PEM / DER / raw** key management with first-class
-TypeScript support. `@lindorm/kryptos` lets you _generate_, _import_, _convert_,
-_stamp X.509 certificates for_, and _store_ cryptographic keys (EC, OKP, RSA,
-oct) without remembering a single OpenSSL command.
-
-It includes:
-
-- A `Kryptos` model with rich JWK metadata and lifetime fields
-- `KryptosKit` — a static-only facade for generating, importing, cloning and
-  type-guarding keys
-- Built-in **X.509 certificate stamping** (self-signed, root CA, CA-signed
-  chains) and leaf chain verification against trust anchors
-- An interactive **CLI** (`kryptos generate`) for one-off `.env`-ready keys
-- Secure key disposal via the TC39 `Disposable` protocol
-- A mock factory and a full set of static mock keys for unit tests
-
----
+Generate, import, convert, certify, and dispose JOSE / X.509 cryptographic keys (EC, OKP, RSA, oct, AKP) from a single TypeScript model.
 
 ## Installation
 
 ```bash
 npm install @lindorm/kryptos
+```
 
-# optional — install the CLI globally
+The CLI ships in the same package via the `kryptos` bin — install globally if you want it on `PATH`:
+
+```bash
 npm install -g @lindorm/kryptos
 ```
 
-Requires Node `>= 24.13.0` (for `Symbol.dispose` / `using`, plus the native
-WebCrypto / `crypto` APIs we rely on).
+This package is **ESM-only**. It cannot be loaded with `require(...)`. Use `import` syntax in an ESM project (`"type": "module"` or `.mjs`).
 
----
+## Features
+
+- A `Kryptos` model carrying key material, RFC 7517 / RFC 7638 metadata, and lifetime fields (`notBefore` / `expiresAt` / `isActive`).
+- `KryptosKit` — a static facade for generating, importing, cloning, and type-narrowing keys.
+- Sync and async generators for every supported JOSE algorithm, plus an algorithm-only `auto` shortcut that picks a sensible curve / modulus.
+- Multi-format export (`jwk`, `pem`, `b64`, `der`) and import (`jwk`, `pem`, `b64`, `der`, `utf`, `db`, `auto`).
+- Compact `kryptos:<base64url-JWK>` env-string format with matching importer.
+- Built-in X.509 certificate stamping at generation time — self-signed, root-CA, or CA-signed — with chain verification against trust anchors.
+- Secure key disposal via the TC39 Explicit Resource Management protocol (`Symbol.dispose`, `using`).
+- Interactive CLI (`kryptos generate`) for one-off env-ready keys.
+- Subpath exports for Jest and Vitest mock factories and a set of pinned static key fixtures.
 
 ## Quick start
 
@@ -39,35 +35,31 @@ WebCrypto / `crypto` APIs we rely on).
 ```ts
 import { KryptosKit } from "@lindorm/kryptos";
 
-// Create a P-521 EC signing key (ES512)
 const key = KryptosKit.generate.sig.ec({ algorithm: "ES512" });
 
-key.id; // UUID v4
+key.id; // UUID
 key.algorithm; // "ES512"
 key.type; // "EC"
 key.curve; // "P-521"
 key.use; // "sig"
 key.operations; // ["sign", "verify"]
 
-// Export to different formats
-const jwk = key.export("jwk"); // RFC 7517 JSON Web Key (private included)
-const pem = key.export("pem"); // { privateKey, publicKey } PEM strings
-const b64 = key.export("b64"); // { privateKey, publicKey } base64 strings
-const der = key.export("der"); // { privateKey, publicKey } as Buffers
+const jwk = key.export("jwk");
+const pem = key.export("pem");
+const b64 = key.export("b64");
+const der = key.export("der");
 
-// Compact "kryptos:..." blob for environment variables
 const envBlob = KryptosKit.env.export(key);
 ```
 
-`KryptosKit.generate.auto` picks a sensible type, curve and modulus for any
-supported JOSE algorithm:
+`KryptosKit.generate.auto` picks a sensible type, curve, and (for asymmetric encryption) AES content encryption based on the JOSE algorithm alone:
 
 ```ts
 KryptosKit.generate.auto({ algorithm: "ES256" });
 KryptosKit.generate.auto({ algorithm: "EdDSA" });
 KryptosKit.generate.auto({ algorithm: "RSA-OAEP-256" });
+KryptosKit.generate.auto({ algorithm: "ML-DSA-65" });
 
-// Async variants exist for every generator (RSA keygen is CPU-heavy)
 await KryptosKit.generateAsync.auto({ algorithm: "RS256" });
 await KryptosKit.generateAsync.sig.ec({ algorithm: "ES256" });
 ```
@@ -84,24 +76,23 @@ KryptosKit.generate.auto({
   issuer: "https://auth.example.com",
   jwksUri: "https://auth.example.com/.well-known/jwks.json",
   ownerId: "tenant-42",
-  purpose: "token", // "cookie" | "session" | "token" | string
-  encryption: "A256GCM", // enc keys only — defaults to "A256GCM"
+  purpose: "token",
+  encryption: "A256GCM",
   hidden: false,
   isExternal: false,
 });
 ```
 
+When `expiresAt` is omitted it defaults to `notBefore` plus 25 years. When `use` is `"enc"` and `encryption` is omitted it defaults to `"A256GCM"`.
+
 ### Import a key
 
 ```ts
-// From a "kryptos:..." environment blob
-const key = KryptosKit.env.import(process.env.EC_KEY!);
+const fromEnv = KryptosKit.env.import(process.env.EC_KEY!);
 
-// From a JWK object (standard RFC 7517, or Lindorm-extended JWK with x5c)
-const key2 = KryptosKit.from.jwk({ alg: "ES256", kty: "EC" /* ... */ });
+const fromJwk = KryptosKit.from.jwk({ alg: "ES256", kty: "EC" /* ... */ });
 
-// From a PEM string
-const key3 = KryptosKit.from.pem({
+const fromPem = KryptosKit.from.pem({
   algorithm: "ES256",
   type: "EC",
   use: "sig",
@@ -109,17 +100,14 @@ const key3 = KryptosKit.from.pem({
   privateKey: "-----BEGIN PRIVATE KEY-----\n...",
 });
 
-// Auto-detect format
-const key4 = KryptosKit.from.auto(unknownInput);
+const auto = KryptosKit.from.auto(unknownInput);
 ```
 
 ### Persist and restore
 
 ```ts
-// Save to database
 await db.collection("keys").insertOne(key.toDB());
 
-// Restore from database
 const restored = KryptosKit.from.db(row);
 ```
 
@@ -127,20 +115,13 @@ const restored = KryptosKit.from.db(row);
 
 ```bash
 npx kryptos generate
-# Answer a few prompts (type, use, algorithm, encryption, purpose)
-# → prints a "kryptos:..." blob ready to paste into your .env file
 ```
 
----
+Answer the prompts (type, use, algorithm, encryption, purpose) and the CLI prints a `kryptos:...` blob ready to paste into a `.env` file. Re-import it at runtime with `KryptosKit.env.import(process.env.MY_KEY!)`.
 
 ## X.509 certificates
 
-Any asymmetric key (EC, OKP or RSA — **not** oct) can be stamped with an X.509
-certificate at generation time. Kryptos emits a chain that round-trips through
-Node's `crypto.X509Certificate` and `@peculiar/x509`, and provides its own
-RFC 5280-aware parser and verifier.
-
-Three modes are supported:
+Any asymmetric key (`EC`, `OKP`, `RSA`, `AKP`) can be stamped with an X.509 certificate at generation time. Symmetric `oct` keys cannot — attempting it throws `KryptosError("symmetric keys cannot have certificates")`. Three modes are supported.
 
 ### Self-signed leaf
 
@@ -155,18 +136,11 @@ const leaf = KryptosKit.generate.sig.ec({
 
 leaf.hasCertificate; // true
 leaf.certificateChain; // ["<base64-DER>"] — single-entry
-leaf.certificateThumbprint; // x5t#S256 (SHA-256, base64u)
+leaf.certificateThumbprint; // x5t#S256 (SHA-256 over the leaf DER)
 leaf.certificate; // ParsedX509Certificate (lazy, cached)
 ```
 
-A self-signed leaf has `cA=false`. Key usage is derived from `use`:
-
-- `sig` keys → `digitalSignature`
-- `enc` keys → `keyEncipherment`, `dataEncipherment`
-
-SANs default from the key's `issuer` (URL → URI SAN, bare hostname → DNS SAN,
-email → email SAN) or from `id` as a URN if no issuer is set. Override with
-`subject`, `organization`, or `subjectAlternativeNames`:
+A self-signed leaf has `cA=false`. Key usage is derived from `use`: `sig` keys get `digitalSignature`, `enc` keys get `keyEncipherment` and `dataEncipherment`. If `subjectAlternativeNames` is omitted, a single URI SAN is derived from the key's `issuer` when it is URL-shaped, or `urn:lindorm:kryptos:<id>` when no issuer is set. A non-URL issuer with no explicit SANs throws — supply `subjectAlternativeNames` (or a URL issuer) in that case. Override with `subject`, `organization`, or `subjectAlternativeNames`:
 
 ```ts
 certificate: {
@@ -191,18 +165,16 @@ const ca = KryptosKit.generate.sig.ec({
   expiresAt: new Date("2036-01-01"),
   certificate: {
     mode: "root-ca",
-    pathLengthConstraint: 1, // optional
+    pathLengthConstraint: 1,
   },
 });
 ```
 
-A root CA is self-signed with `cA=true`, `keyUsage = keyCertSign | cRLSign`,
-and no AuthorityKeyIdentifier (SKI only).
+A root CA is self-signed with `cA=true`, `keyUsage = keyCertSign | cRLSign`, no AuthorityKeyIdentifier (SKI only).
 
 ### CA-signed child
 
 ```ts
-// Pass the CA kryptos — it must carry its own private key and a cA=true cert
 const child = KryptosKit.generate.sig.ec({
   algorithm: "ES256",
   issuer: "https://child.example.com",
@@ -213,65 +185,36 @@ child.certificateChain.length; // 2 — [child-DER, ca-DER]
 child.verifyCertificate({ trustAnchors: [ca.certificateChain[0]] });
 ```
 
-Child algorithms may differ from the CA (e.g. RSA child under an EC root).
-The child's AKI is bound to the CA's SKI, issuer DN is copied byte-for-byte
-from the CA's subject, and the signing algorithm is resolved from the CA
-private key.
+The child algorithm may differ from the CA (e.g. RSA child under an EC root). The child's AKI is bound to the CA's SKI, the issuer DN is copied byte-for-byte from the CA's subject, and the signing algorithm is resolved from the CA's private key.
 
-**Validity inheritance:** if you omit `notBefore` / `expiresAt` on a CA-signed
-child, it inherits the CA's window automatically — so the natural idiom below
-just works without pinning dates:
-
-```ts
-const ca = KryptosKit.generate.sig.ec({
-  algorithm: "ES256",
-  issuer: "https://ca.example.com",
-  certificate: { mode: "root-ca" },
-});
-const child = KryptosKit.generate.sig.ec({
-  algorithm: "ES256",
-  issuer: "https://child.example.com",
-  certificate: { mode: "ca-signed", ca },
-});
-child.verifyCertificate({ trustAnchors: [ca.certificateChain[0]] });
-```
-
-Explicit `notBefore` / `expiresAt` on the child still win, but are rejected at
-stamp time if they fall outside the CA's window.
+If `notBefore` / `expiresAt` are omitted on a CA-signed child, the child inherits the CA's window — so the natural idiom of generating a CA and then a child without pinning dates "just works". Explicit dates still win, but are rejected at stamp time if they fall outside the CA's window.
 
 ### Verification
 
 ```ts
 child.verifyCertificate({ trustAnchors: [caLeafBase64Der] });
-// or:
 child.verifyCertificate({ trustAnchors: caLeafBase64Der });
 ```
 
-Throws `KryptosError` on any failure (signature mismatch, window violation,
-unknown issuer, missing `keyCertSign` on an intermediate, etc.).
+Throws `KryptosError` on any failure (signature mismatch, validity-window violation, unknown issuer, missing `keyCertSign` on an intermediate, etc.).
 
 ### JWK integration
 
-`toJWK()` automatically includes the chain in RFC 7517 fields when a
-certificate is present:
+`toJWK()` automatically includes the chain in RFC 7517 fields when a certificate is present:
 
 ```ts
 const jwk = key.toJWK("public");
 // {
-//   kid, alg, kty, use, key_ops,                 <- standard JWK
-//   enc, exp, iat, iss, jku, nbf, owner_id,      <- Lindorm extensions
+//   kid, alg, kty, use, key_ops,                <- standard JWK
+//   enc, exp, iat, iss, jku, nbf, owner_id,     <- Lindorm extensions
 //   purpose,
-//   x5c: ["<base64-DER>", ...],                  <- certificate chain
-//   "x5t#S256": "<base64u-SHA-256-of-leaf>",     <- RFC 7517 §4.8
+//   x5c: ["<base64-DER>", ...],                 <- certificate chain (leaf -> root)
+//   "x5t#S256": "<base64u-SHA-256-of-leaf>",    <- RFC 7517 §4.8
 //   ...key material
 // }
 ```
 
-`KryptosKit.from.jwk` refuses to import a JWK whose `x5t#S256` does not match
-the recomputed leaf hash — catching tampered or mis-paired chains at the
-boundary.
-
----
+`KryptosKit.from.jwk` rejects a JWK whose incoming `x5t#S256` does not match the recomputed leaf hash, catching tampered or mis-paired chains at the boundary.
 
 ## Supported algorithms
 
@@ -303,180 +246,195 @@ boundary.
 | Signature  | `HS256`, `HS384`, `HS512`                                                                                                                    |
 | Encryption | `A128KW`, `A192KW`, `A256KW`, `A128GCMKW`, `A192GCMKW`, `A256GCMKW`, `PBES2-HS256+A128KW`, `PBES2-HS384+A192KW`, `PBES2-HS512+A256KW`, `dir` |
 
-> oct keys cannot be stamped with certificates — attempting it throws
-> `"symmetric keys cannot have certificates"`.
+### AKP (Algorithm Key Pair — post-quantum)
 
----
+| Use       | Algorithms                            |
+| --------- | ------------------------------------- |
+| Signature | `ML-DSA-44`, `ML-DSA-65`, `ML-DSA-87` |
+
+AKP is signature-only — there is no `KryptosKit.generate.enc.akp`.
 
 ## API reference
 
-### Import / export
+### `Kryptos`
 
-**Export formats:**
+The model class. Construct directly only if you already have raw key material — most callers go through `KryptosKit`. Implements `IKryptos`, `Disposable`.
 
-| Format | Method              | Returns                                      |
-| ------ | ------------------- | -------------------------------------------- |
-| JWK    | `key.export("jwk")` | `KryptosJwk` — standard JWK object           |
-| PEM    | `key.export("pem")` | `{ privateKey?, publicKey? }` PEM strings    |
-| Base64 | `key.export("b64")` | `{ privateKey?, publicKey? }` base64 strings |
-| DER    | `key.export("der")` | `{ privateKey?, publicKey? }` Buffers        |
+| Member                                       | Description                                                                           |
+| -------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `id`                                         | UUID (or whatever string was passed in `options.id`).                                 |
+| `algorithm`                                  | JOSE algorithm name.                                                                  |
+| `type`                                       | `"EC" \| "OKP" \| "RSA" \| "oct" \| "AKP"`.                                           |
+| `use`                                        | `"sig" \| "enc"`.                                                                     |
+| `curve`                                      | EC / OKP curve, otherwise `null`.                                                     |
+| `modulus`                                    | RSA modulus size in bits, otherwise `null`.                                           |
+| `encryption`                                 | AES content encryption (`enc` keys), otherwise `null`.                                |
+| `operations`                                 | `key_ops` — derived from `algorithm` + `use` if not explicitly supplied.              |
+| `createdAt` / `notBefore` / `expiresAt`      | Lifetime dates. `expiresAt` defaults to `notBefore + 25y`.                            |
+| `expiresIn`                                  | Seconds until expiry, `0` once expired.                                               |
+| `isActive` / `isExpired`                     | Computed from `notBefore` / `expiresAt` against the current time.                     |
+| `issuer` / `jwksUri` / `ownerId` / `purpose` | Optional metadata, default `null`.                                                    |
+| `hidden` / `isExternal`                      | Boolean flags, default `false`.                                                       |
+| `hasPrivateKey` / `hasPublicKey`             | Whether the underlying buffers are present and non-empty.                             |
+| `thumbprint`                                 | RFC 7638 JWK thumbprint computed lazily.                                              |
+| `hasCertificate`                             | Whether an X.509 chain was attached.                                                  |
+| `certificate`                                | `ParsedX509Certificate` for the leaf (lazy, cached), or `null`.                       |
+| `certificateChain`                           | `Array<string>` of base64-DER certs in leaf-to-root order.                            |
+| `certificateThumbprint`                      | x5t#S256 of the leaf, or `null`.                                                      |
+| `verifyCertificate({ trustAnchors })`        | Walks the chain, verifies signatures and validity windows; throws on failure.         |
+| `export("b64" \| "der" \| "jwk" \| "pem")`   | Returns key material in the requested format.                                         |
+| `toDB()`                                     | Database row — attributes plus base64 `privateKey` / `publicKey`.                     |
+| `toEnvString()`                              | Compact `kryptos:<base64url-private-JWK>` blob.                                       |
+| `toJSON()`                                   | Attributes plus computed flags, no key material.                                      |
+| `toJWK(mode?)`                               | Lindorm-extended JWK; `mode` defaults to `"public"`, pass `"private"` to include `d`. |
+| `toString()`                                 | `Kryptos<{type}:{algorithm}:{id}>`.                                                   |
+| `dispose()` / `[Symbol.dispose]()`           | Zero-fills key buffers; further key access throws `KryptosError`.                     |
 
-**Import methods:**
+`Kryptos` instances are immutable — to change metadata, clone via `KryptosKit.clone(...)`.
+
+### `KryptosKit`
+
+A static-only facade. Every method below is `KryptosKit.<member>`.
+
+#### Generation
+
+| Member                   | Description                                                 |
+| ------------------------ | ----------------------------------------------------------- |
+| `generate.auto(opts)`    | Pick `type` / `curve` / `encryption` from `opts.algorithm`. |
+| `generate.sig.akp(opts)` | Generate an AKP signing key.                                |
+| `generate.sig.ec(opts)`  | Generate an EC signing key.                                 |
+| `generate.sig.oct(opts)` | Generate an oct (HMAC) signing key.                         |
+| `generate.sig.okp(opts)` | Generate an OKP signing key.                                |
+| `generate.sig.rsa(opts)` | Generate an RSA signing key.                                |
+| `generate.enc.ec(opts)`  | Generate an EC encryption key.                              |
+| `generate.enc.oct(opts)` | Generate an oct encryption key.                             |
+| `generate.enc.okp(opts)` | Generate an OKP encryption key.                             |
+| `generate.enc.rsa(opts)` | Generate an RSA encryption key.                             |
+| `generateAsync.*`        | Same shape as `generate.*`, returning `Promise<IKryptos>`.  |
+
+#### Import
+
+| Member             | Description                                                                     |
+| ------------------ | ------------------------------------------------------------------------------- |
+| `from.auto(input)` | Auto-detect b64 / der / jwk / pem.                                              |
+| `from.b64(opts)`   | Construct from base64-encoded DER.                                              |
+| `from.db(row)`     | Construct from a `toDB()` row.                                                  |
+| `from.der(opts)`   | Construct from DER `Buffer`s.                                                   |
+| `from.jwk(opts)`   | Construct from an RFC 7517 JWK (validates `x5t#S256` against `x5c` if present). |
+| `from.pem(opts)`   | Construct from PEM strings.                                                     |
+| `from.utf(opts)`   | Construct an oct key from a UTF-8 string.                                       |
+
+#### Env strings
+
+| Member                | Description                                                             |
+| --------------------- | ----------------------------------------------------------------------- |
+| `env.export(kryptos)` | Returns `kryptos:<base64url(private LindormJwk)>`.                      |
+| `env.import(string)`  | Parses a `kryptos:` blob back into an `IKryptos`. Throws on bad prefix. |
+
+#### Type guards
+
+| Member           | Narrows to                       |
+| ---------------- | -------------------------------- |
+| `isAkp(kryptos)` | `IKryptosAkp` (`type === "AKP"`) |
+| `isEc(kryptos)`  | `IKryptosEc` (`type === "EC"`)   |
+| `isOct(kryptos)` | `IKryptosOct` (`type === "oct"`) |
+| `isOkp(kryptos)` | `IKryptosOkp` (`type === "OKP"`) |
+| `isRsa(kryptos)` | `IKryptosRsa` (`type === "RSA"`) |
+
+#### Other
+
+| Member                           | Description                                                            |
+| -------------------------------- | ---------------------------------------------------------------------- |
+| `clone(kryptos, overrides?)`     | New `Kryptos` with the same key material, fresh UUID, merged metadata. |
+| `getTypeForAlgorithm(algorithm)` | Returns the `KryptosType` that auto-config would pick.                 |
+
+### Errors
+
+All errors thrown by the library are instances of `KryptosError`, which extends `LindormError` from `@lindorm/errors`.
 
 ```ts
-KryptosKit.from.jwk(jwkObject); // from RFC 7517 JWK (validates x5t#S256 if x5c is present)
-KryptosKit.from.pem(options); // from PEM string
-KryptosKit.from.b64(options); // from base64-encoded DER
-KryptosKit.from.der(options); // from DER Buffer
-KryptosKit.from.utf(options); // from UTF-8 string (oct keys)
-KryptosKit.from.db(dbRow); // from a toDB() row
-KryptosKit.from.auto(unknown); // auto-detect format
-```
-
-**Environment strings:**
-
-```ts
-const envBlob = KryptosKit.env.export(key); // "kryptos:<b64u(JWK)>"
-const parsed = KryptosKit.env.import(process.env.MY_KEY!);
-```
-
-The env blob is the private JWK (including `x5c` / `x5t#S256` if any),
-base64url-encoded and prefixed with `kryptos:`.
-
-### Metadata and lifecycle
-
-```ts
-key.id; // UUID v4
-key.algorithm; // "ES256", "RSA-OAEP", etc.
-key.type; // "EC" | "OKP" | "RSA" | "oct"
-key.use; // "sig" | "enc"
-key.curve; // "P-256", "Ed25519", etc. (null for RSA/oct)
-key.modulus; // 1024 | 2048 | 3072 | 4096 (null for non-RSA)
-key.encryption; // AES encryption algorithm (enc keys only)
-key.operations; // ["sign","verify"], ["wrapKey","unwrapKey"], etc.
-
-// Lifecycle
-key.createdAt; // Date
-key.notBefore; // Date — key is not valid before this
-key.expiresAt; // Date — defaults to notBefore + 25 years
-key.isActive; // true if now >= notBefore && not expired
-key.isExpired; // true if past expiresAt
-key.expiresIn; // seconds until expiry
-
-// Ownership / classification
-key.issuer; // string | null
-key.jwksUri; // string | null
-key.ownerId; // string | null
-key.purpose; // "cookie" | "session" | "token" | string | null
-key.hidden; // boolean
-key.isExternal; // boolean
-
-// Key / cert presence
-key.hasPrivateKey; // boolean
-key.hasPublicKey; // boolean
-key.hasCertificate; // boolean
-key.thumbprint; // RFC 7638 JWK thumbprint
-key.certificate; // ParsedX509Certificate | null (lazy-parsed leaf)
-key.certificateChain; // Array<base64-DER> (leaf → root order)
-key.certificateThumbprint; // x5t#S256 of the leaf
-```
-
-`Kryptos` instances are **immutable** — mutate-and-save flows go through
-`KryptosKit.clone(...)`.
-
-### Serialisation
-
-```ts
-key.toDB();        // KryptosDB — keys as base64, dates as Date objects
-key.toJSON();      // KryptosJSON — attributes + computed flags, no key material
-key.toJWK(mode?);  // LindormJwk — extended JWK (default: "public")
-key.toEnvString(); // "kryptos:<base64u(private JWK)>"
-key.toString();    // "Kryptos<EC:ES512:uuid>"
-```
-
-### Type guards
-
-```ts
-import { KryptosKit } from "@lindorm/kryptos";
-import type { IKryptosEc, IKryptosRsa } from "@lindorm/kryptos";
-
-if (KryptosKit.isEc(key)) {
-  key.curve; /* narrowed to EcCurve */
-}
-if (KryptosKit.isOkp(key)) {
-  /* ... */
-}
-if (KryptosKit.isRsa(key)) {
-  /* ... */
-}
-if (KryptosKit.isOct(key)) {
-  /* ... */
-}
+import { KryptosError } from "@lindorm/kryptos";
 ```
 
 ### Cloning
 
 ```ts
 const copy = KryptosKit.clone(key, { expiresAt: new Date("2028-06-01") });
-// New UUID, same key material, overridden metadata
 ```
+
+`clone` produces a new instance with a new UUID, the same exported DER key material, and any overrides merged on top of the source attributes.
 
 ### Secure disposal
 
-`Kryptos` implements the TC39 Explicit Resource Management protocol:
+`Kryptos` implements TC39 Explicit Resource Management:
 
 ```ts
-// Manual disposal — zeroes out private & public key buffers
 key.dispose();
 
-// Or use the `using` keyword
 {
   using key = KryptosKit.generate.auto({ algorithm: "ES256" });
   // ... use key ...
-} // automatically disposed here
+} // automatically disposed at scope exit
 ```
 
-After disposal, any method that accesses key material throws `KryptosError`.
+Disposal zero-fills the underlying private and public key buffers. Any subsequent method that needs key material throws `KryptosError("Key has been disposed")`.
 
----
+## CLI
+
+The package installs a `kryptos` bin (`@lindorm/kryptos` exposes it as `dist/cli.js`).
+
+```bash
+kryptos generate
+```
+
+Prompts for type, use, algorithm, encryption (for `enc` keys), and an optional purpose, then prints both the `kryptos:` env blob and a one-liner showing how to import it.
 
 ## Testing helpers
 
-A factory and a full set of static key fixtures are exposed under the
-`@lindorm/kryptos/mocks` subpath (also re-exported from the package root):
+Two ESM subpaths expose mock factories matched to your test runner:
+
+```ts
+// Vitest
+import { createMockKryptos } from "@lindorm/kryptos/mocks/vitest";
+
+// Jest
+import { createMockKryptos } from "@lindorm/kryptos/mocks/jest";
+
+const mock = createMockKryptos({ algorithm: "ES256" });
+// fully-typed `Mocked<IKryptos>` — every method is a mock fn,
+// every getter has a deterministic default. Override any field via the argument.
+```
+
+A separate subpath ships pinned static key fixtures — real `IKryptos` instances built from frozen test material. Use them anywhere you want deterministic keys without paying keygen cost:
 
 ```ts
 import {
-  createMockKryptos,
-  MOCK_KRYPTOS_EC_SIG_ES256,
-  MOCK_KRYPTOS_EC_SIG_ES384,
-  MOCK_KRYPTOS_EC_SIG_ES512,
-  MOCK_KRYPTOS_EC_ENC,
-  MOCK_KRYPTOS_OKP_SIG_ED25519,
-  MOCK_KRYPTOS_OKP_SIG_ED448,
-  MOCK_KRYPTOS_OKP_ENC_X25519,
-  MOCK_KRYPTOS_OKP_ENC_X448,
-  MOCK_KRYPTOS_RSA_SIG_RS256,
-  MOCK_KRYPTOS_RSA_SIG_RS384,
-  MOCK_KRYPTOS_RSA_SIG_RS512,
-  MOCK_KRYPTOS_RSA_SIG_PS256,
-  MOCK_KRYPTOS_RSA_SIG_PS384,
-  MOCK_KRYPTOS_RSA_SIG_PS512,
-  MOCK_KRYPTOS_RSA_ENC,
-  MOCK_KRYPTOS_OCT_SIG_HS256,
-  MOCK_KRYPTOS_OCT_SIG_HS384,
-  MOCK_KRYPTOS_OCT_SIG_HS512,
-  MOCK_KRYPTOS_OCT_ENC,
-} from "@lindorm/kryptos/mocks";
-
-// Fully-mocked IKryptos — every method is a jest.fn()
-const mock = createMockKryptos({ algorithm: "ES256" });
+  KRYPTOS_AKP_SIG_ML_DSA_44,
+  KRYPTOS_AKP_SIG_ML_DSA_65,
+  KRYPTOS_AKP_SIG_ML_DSA_87,
+  KRYPTOS_EC_SIG_ES256,
+  KRYPTOS_EC_SIG_ES384,
+  KRYPTOS_EC_SIG_ES512,
+  KRYPTOS_EC_ENC,
+  KRYPTOS_OCT_SIG_HS256,
+  KRYPTOS_OCT_SIG_HS384,
+  KRYPTOS_OCT_SIG_HS512,
+  KRYPTOS_OCT_ENC,
+  KRYPTOS_OKP_SIG_ED25519,
+  KRYPTOS_OKP_SIG_ED448,
+  KRYPTOS_OKP_ENC_X25519,
+  KRYPTOS_OKP_ENC_X448,
+  KRYPTOS_RSA_SIG_RS256,
+  KRYPTOS_RSA_SIG_RS384,
+  KRYPTOS_RSA_SIG_RS512,
+  KRYPTOS_RSA_SIG_PS256,
+  KRYPTOS_RSA_SIG_PS384,
+  KRYPTOS_RSA_SIG_PS512,
+  KRYPTOS_RSA_ENC,
+} from "@lindorm/kryptos/fixtures";
 ```
 
-Static mocks are real `IKryptos` instances built from pinned key material —
-use them anywhere you want deterministic keys without paying keygen cost.
-
----
+These subpaths are intended for test code and are not re-exported from the package root.
 
 ## License
 
