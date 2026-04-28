@@ -1,6 +1,6 @@
 # @lindorm/case
 
-Comprehensive string case conversion utilities for JavaScript/TypeScript applications.
+String case conversion utilities for strings, object keys, and string arrays.
 
 ## Installation
 
@@ -8,175 +8,137 @@ Comprehensive string case conversion utilities for JavaScript/TypeScript applica
 npm install @lindorm/case
 ```
 
+This package is **ESM-only**. Import it with `import` syntax from a project that supports ECMAScript modules.
+
 ## Features
 
-- Convert strings between 11 different case conventions
-- Transform object keys to any case convention
-- Handle arrays of strings or objects
-- Full TypeScript support with type safety
-- Zero external dependencies (except `@lindorm/is` for type checking)
+- Convert strings between 11 case conventions: camel, capital, constant, dot, header, kebab, lower, pascal, path, sentence, snake.
+- Convert the keys of an object (or an array of objects) recursively, preserving values.
+- Convert an array of strings element-by-element; non-string entries pass through untouched.
+- Generic `changeCase` and `changeKeys` dispatchers that pick a conversion at runtime via a string mode.
 
-## Supported Case Types
+## Supported case modes
 
-- **camelCase** - camelCaseExample
-- **Capital Case** - Capital Case Example
-- **CONSTANT_CASE** - CONSTANT_CASE_EXAMPLE
-- **dot.case** - dot.case.example
-- **Header-Case** - Header-Case-Example
-- **kebab-case** - kebab-case-example
-- **lower case** - lower case example
-- **PascalCase** - PascalCaseExample
-- **path/case** - path/case/example
-- **Sentence case** - Sentence case example
-- **snake_case** - snake_case_example
+| Mode       | Example output  |
+| ---------- | --------------- |
+| `camel`    | `camelCase`     |
+| `capital`  | `Capital Case`  |
+| `constant` | `CONSTANT_CASE` |
+| `dot`      | `dot.case`      |
+| `header`   | `Header-Case`   |
+| `kebab`    | `kebab-case`    |
+| `lower`    | `lower case`    |
+| `pascal`   | `PascalCase`    |
+| `path`     | `path/case`     |
+| `sentence` | `Sentence case` |
+| `snake`    | `snake_case`    |
+| `none`     | input unchanged |
+
+The `none` mode is only accepted by `changeCase` and `changeKeys`; it is not exposed as a dedicated function.
 
 ## Usage
 
-### Basic String Conversion
+### Convert a string
 
 ```typescript
-import { camelCase, snakeCase, pascalCase } from "@lindorm/case";
+import { camelCase, pascalCase, snakeCase } from "@lindorm/case";
 
-camelCase("Hello World");      // "helloWorld"
-snakeCase("Hello World");      // "hello_world"
-pascalCase("hello-world");     // "HelloWorld"
+const a = camelCase("Hello world"); // "helloWorld"
+const b = pascalCase("hello-world"); // "HelloWorld"
+const c = snakeCase("HelloWorld"); // "hello_world"
 ```
 
-### Converting Object Keys
+### Convert object keys
 
-```typescript
-import { camelKeys, snakeKeys } from "@lindorm/case";
-
-const input = {
-  "first-name": "John",
-  "last-name": "Doe",
-  "contact-info": {
-    "phone-number": "123-456-7890"
-  }
-};
-
-camelKeys(input);
-// {
-//   firstName: "John",
-//   lastName: "Doe",
-//   contactInfo: {
-//     phoneNumber: "123-456-7890"
-//   }
-// }
-
-snakeKeys(input);
-// {
-//   first_name: "John",
-//   last_name: "Doe",
-//   contact_info: {
-//     phone_number: "123-456-7890"
-//   }
-// }
-```
-
-### Converting Arrays
-
-```typescript
-import { camelArray, snakeArray } from "@lindorm/case";
-
-camelArray(["first-name", "last-name"]);     // ["firstName", "lastName"]
-snakeArray(["firstName", "lastName"]);       // ["first_name", "last_name"]
-```
-
-### Generic Conversion Functions
-
-Use the `changeCase` and `changeKeys` functions with the `ChangeCase` enum for dynamic case selection:
-
-```typescript
-import { changeCase, changeKeys, ChangeCase } from "@lindorm/case";
-
-const caseType = ChangeCase.Pascal;
-
-changeCase("hello-world", caseType);          // "HelloWorld"
-changeCase("hello-world", ChangeCase.Snake); // "hello_world"
-
-const obj = { "first-name": "John" };
-changeKeys(obj, ChangeCase.Camel);           // { firstName: "John" }
-```
-
-## API Reference
-
-### Individual Case Functions
-
-Each case type exports three functions:
-
-- `{case}Case(input: string): string` - Convert a string
-- `{case}Keys(input: object | object[]): object | object[]` - Convert object keys
-- `{case}Array(input: string[]): string[]` - Convert array of strings
-
-Available for: camel, capital, constant, dot, header, kebab, lower, pascal, path, sentence, snake
-
-### Generic Functions
-
-- `changeCase(input: string, changeCase: ChangeCase): string`
-- `changeKeys(input: object | object[], changeCase: ChangeCase): object | object[]`
-
-### Enums
-
-- `ChangeCase` - Enum containing all case types (Camel, Capital, Constant, Dot, Header, Kebab, Lower, Pascal, Path, Sentence, Snake, None)
-
-## Examples
-
-### API Response Transformation
+`xxxKeys` walks the input recursively. Object keys are transformed; nested objects and arrays of objects are walked; non-object/non-array values are kept as-is.
 
 ```typescript
 import { camelKeys } from "@lindorm/case";
 
-// Transform API response from snake_case to camelCase
-const apiResponse = {
+const input = {
   user_id: "123",
-  first_name: "John",
-  last_name: "Doe",
-  created_at: "2023-01-01"
+  first_name: "Alice",
+  contact_info: {
+    phone_number: "555-0100",
+  },
 };
 
-const transformed = camelKeys(apiResponse);
+const output = camelKeys(input);
 // {
 //   userId: "123",
-//   firstName: "John",
-//   lastName: "Doe",
-//   createdAt: "2023-01-01"
+//   firstName: "Alice",
+//   contactInfo: { phoneNumber: "555-0100" },
 // }
 ```
 
-### Database Field Mapping
+The same function accepts an array of objects:
 
 ```typescript
 import { snakeKeys } from "@lindorm/case";
 
-// Convert JavaScript object to database format
-const userModel = {
-  userId: "123",
-  firstName: "John",
-  lastName: "Doe",
-  createdAt: new Date()
-};
-
-const dbRecord = snakeKeys(userModel);
-// {
-//   user_id: "123",
-//   first_name: "John",
-//   last_name: "Doe",
-//   created_at: Date object
-// }
+const rows = snakeKeys([{ firstName: "Alice" }, { firstName: "Bob" }]);
+// [{ first_name: "Alice" }, { first_name: "Bob" }]
 ```
 
-## Error Handling
+### Convert an array of strings
 
-All functions validate input types and will throw an error if a non-string value is passed to string conversion functions:
+`xxxArray` transforms string entries; any non-string entry is appended to the result unchanged.
 
 ```typescript
-import { camelCase } from "@lindorm/case";
+import { kebabArray } from "@lindorm/case";
 
-camelCase(123);        // Throws Error
-camelCase(null);       // Throws Error
-camelCase(undefined);  // Throws Error
+const result = kebabArray(["firstName", "lastName"]);
+// ["first-name", "last-name"]
 ```
+
+### Pick a case at runtime
+
+```typescript
+import { changeCase, changeKeys, type ChangeCase } from "@lindorm/case";
+
+const mode: ChangeCase = "pascal";
+
+const str = changeCase("hello-world", mode); // "HelloWorld"
+const obj = changeKeys({ "first-name": "Alice" }, mode); // { FirstName: "Alice" }
+```
+
+`ChangeCase` is a string union (`"camel" | "capital" | "constant" | "dot" | "header" | "kebab" | "lower" | "pascal" | "path" | "sentence" | "snake" | "none"`), not an enum. Pass the literal string. If `mode` is omitted it defaults to `"none"`, which returns the input unchanged.
+
+## API
+
+### Per-case functions
+
+For each mode in `camel`, `capital`, `constant`, `dot`, `header`, `kebab`, `lower`, `pascal`, `path`, `sentence`, `snake`, the package exports three functions:
+
+| Function      | Signature                                 | Description                                                      |
+| ------------- | ----------------------------------------- | ---------------------------------------------------------------- |
+| `<mode>Case`  | `(input: string) => string`               | Convert a single string. Throws if `input` is not a string.      |
+| `<mode>Keys`  | `<T extends KeysInput>(input: T) => T`    | Recursively convert keys of an object or array of objects.       |
+| `<mode>Array` | `(input: Array<string>) => Array<string>` | Convert each string entry; non-string entries are kept in place. |
+
+So for example: `camelCase`, `camelKeys`, `camelArray`; `snakeCase`, `snakeKeys`, `snakeArray`; and so on for all 11 modes.
+
+### Generic dispatchers
+
+| Function     | Signature                                                 | Description                                                                                                         |
+| ------------ | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `changeCase` | `(input: string, mode?: ChangeCase) => string`            | Apply the named case to a string. Defaults to `"none"`. Throws on an unknown mode.                                  |
+| `changeKeys` | `<T extends KeysInput>(input: T, mode?: ChangeCase) => T` | Apply the named case to the keys of an object or array of objects. Defaults to `"none"`. Throws on an unknown mode. |
+
+### Types
+
+| Type           | Definition                                                                                                                               | Description                                           |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `ChangeCase`   | `"camel" \| "capital" \| "constant" \| "dot" \| "header" \| "kebab" \| "lower" \| "pascal" \| "path" \| "sentence" \| "snake" \| "none"` | Mode accepted by `changeCase` and `changeKeys`.       |
+| `CaseCallback` | `(input: string) => string`                                                                                                              | Signature shared by all per-mode `xxxCase` functions. |
+| `KeysInput`    | `Dict \| Array<Dict>` (where `Dict` is `Record<string, any>`)                                                                            | Input shape accepted by `xxxKeys` and `changeKeys`.   |
+
+## Error handling
+
+- `xxxCase(input)` throws if `input` is not a string (e.g. `null`, `undefined`, a number).
+- `xxxKeys(input)` and `changeKeys(input, mode)` throw if `input` is neither an object nor an array.
+- `xxxArray(input)` throws if `input` is not an array. Non-string entries inside the array are passed through, not converted.
+- `changeCase` and `changeKeys` throw `Error("Invalid transform case [ ... ]")` if `mode` is not one of the supported values.
 
 ## License
 
