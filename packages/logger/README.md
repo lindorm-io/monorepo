@@ -1,172 +1,207 @@
 # @lindorm/logger
 
-Rich, type-safe wrapper around [winston](https://github.com/winstonjs/winston) that brings
-
-- hierarchical **scopes** (`[ http | router | controller ]`)
-- request / transaction **correlation** metadata
-- pluggable **path and key filters** for sensitive data (passwords, tokens …)
-- colourised **readable mode** for local development
-
-The implementation is framework-agnostic – the only runtime dependency is Winston – and therefore
-fits nicely into any Node.js / TypeScript code-base.
-
----
+Type-safe Winston wrapper with hierarchical scopes, correlation metadata, and pluggable filters for sensitive data.
 
 ## Installation
 
 ```bash
 npm install @lindorm/logger
-# or
-yarn add @lindorm/logger
 ```
 
----
+This package is ESM-only — use `import`, not `require`.
+
+## Features
+
+- Typed log methods (`error`, `warn`, `info`, `verbose`, `debug`, `silly`) plus a low-level `log()` helper.
+- Hierarchical `child()` loggers that share a single Winston transport but layer their own scope and correlation metadata.
+- `filterPath` (exact dotted path) and `filterKey` (string or regex, any depth, including inside arrays) for redacting sensitive fields.
+- Two timer APIs: a `time()` handle and label-based `time(label)` / `timeEnd(label)`. Child loggers receive a snapshot of parent-started labelled timers.
+- Automatic Error extraction — passing an `Error` (or `{ cause }` chain) expands into `error`, `name`, `message`, `stack`, and recursive `cause` data.
+- Readable colourised output for development; structured JSON output by default.
+- Drop-in mock factories for Jest and Vitest.
+- Helpers for sanitising JWT/JWE tokens and `Authorization` headers.
 
 ## Quick start
 
 ```ts
-import { Logger, LogLevel } from "@lindorm/logger";
+import { Logger } from "@lindorm/logger";
 
-// Create a root logger. All child loggers share the same Winston transport.
 const logger = new Logger({
-  level: LogLevel.Info, // minimum log level
-  readable: process.env.NODE_ENV !== "production", // pretty print when not in prod
+  level: "info",
+  readable: process.env.NODE_ENV !== "production",
 });
 
 logger.info("Server started");
 
-// Correlate subsequent log lines with a request id
 logger.correlation({ requestId: "4711" });
 
-// Narrow the scope – perfect for per-module loggers
 const http = logger.child(["http"]);
-
 http.verbose("Incoming request", { method: "GET", url: "/" });
 
-// Mask sensitive data by exact path
-logger.filterPath("password"); // Replaces value with "[Filtered]"
+logger.filterPath("password");
 logger.filterPath("user.jwt", () => "<jwt>");
 
-// Mask sensitive keys at any depth (including inside arrays)
-logger.filterKey("password"); // matches "password" anywhere in the object tree
-logger.filterKey(/token/i); // regex: matches accessToken, refreshToken, etc.
-logger.filterKey(/secret|credential/i); // broad security net
+logger.filterKey("password");
+logger.filterKey(/token/i);
 
 http.debug("Login attempt", {
-  user: { password: "super-secret" }, // caught by filterKey("password")
-  accessToken: "eyJhbGciOi…", // caught by filterKey(/token/i)
+  user: { password: "super-secret" },
+  accessToken: "eyJhbGciOi…",
 });
 ```
 
-Readable output will look similar to:
-
-```text
-2024-01-01T12:00:00.000Z  DEBUG: Login attempt [ http ]
-{
-  "user": { "password": "[Filtered]" },
-  "accessToken": "[Filtered]"
-}
-```
-
----
-
-## Public API
+## Logger
 
 ### Constructor
 
 ```ts
-new Logger(options?: {
-  level?: LogLevel;   // default: LogLevel.Info
-  readable?: boolean; // default: false (JSON output)
-});
+new Logger(options?: LoggerOptions);
 ```
 
-### Logging
+`LoggerOptions`:
 
-- `error(error: Error)`
-- `error(message: string, context?, extra?)`
-- `warn / info / verbose / debug / silly(message, context?, extra?)`
-- `log({ message, level?, context?, extra? })` – low-level helper
+| Field         | Type             | Default  | Description                                                                                 |
+| ------------- | ---------------- | -------- | ------------------------------------------------------------------------------------------- |
+| `level`       | `LogLevel`       | `"info"` | Minimum log level. One of `"error" \| "warn" \| "info" \| "verbose" \| "debug" \| "silly"`. |
+| `readable`    | `boolean`        | `false`  | When `true`, prints colourised human-readable output instead of JSON.                       |
+| `correlation` | `LogCorrelation` | `{}`     | Initial correlation metadata. Keys are camel-cased on assignment.                           |
+| `scope`       | `LogScope`       | `[]`     | Initial scope segments.                                                                     |
+| `filters`     | `LogFilters`     | `{}`     | Pre-registered path filters keyed by exact dotted path.                                     |
 
-### Utilities
+### Logging methods
 
-- `child(scope?, correlation?)` – returns a new `Logger` that reuses the same Winston transport but
-  appends scope / correlation metadata.
-- `scope(string[])` – append scope segments to the current instance.
-- `correlation(record)` – merge correlation metadata.
-- `filterPath(path, callback?)` – register a path-based filter. Matches an exact object path
-  (e.g. `"headers.authorization"`). If no callback is supplied the value is replaced with `"[Filtered]"`.
-- `filterKey(key, callback?)` – register a key-based filter. Matches a key name at **any depth**,
-  including inside arrays. Accepts a string for exact match or a `RegExp` for pattern matching.
-- `isLevelEnabled(level)` – returns `true` if the given level would be logged.
-- `time()` – returns a `LoggerTimer` handle. Call `.info(message, context?)`, `.debug(…)`, etc.
-  on the handle to log with the elapsed duration (ms) included at the top level of the log entry.
-- `time(label)` – starts a named timer stored in an internal Map.
-- `timeEnd(label, context?, extra?)` – ends the named timer and logs at `"debug"` level.
-- `timeEnd(label, level, context?, extra?)` – ends the named timer and logs at the given level.
-- `level` – getter / setter for the current minimum log level. Setting it updates all transports.
+```ts
+logger.error(error: Error): void;
+logger.error(message: string, context?: LogContent, extra?: Array<LogContent>): void;
+
+logger.warn(message: string, context?: LogContent, extra?: Array<LogContent>): void;
+logger.info(message: string, context?: LogContent, extra?: Array<LogContent>): void;
+logger.verbose(message: string, context?: LogContent, extra?: Array<LogContent>): void;
+logger.debug(message: string, context?: LogContent, extra?: Array<LogContent>): void;
+logger.silly(message: string, context?: LogContent, extra?: Array<LogContent>): void;
+
+logger.log({ message, level?, context?, extra? }: Log): void;
+```
+
+`log()` defaults the level to `"info"` when omitted. `LogContent` accepts a plain object, an `Error`, `null`, or `undefined`.
+
+### Scope and correlation
+
+```ts
+logger.scope(["http", "controller"]);
+logger.correlation({ requestId: "4711", userId: 42 });
+
+const child = logger.child(["router"]);
+const childWithCorrelation = logger.child({ traceId: "abc" });
+```
+
+`scope()` and `correlation()` mutate the current logger; `child()` returns a new logger that shares the underlying Winston transport but layers additional scope/correlation on top. Scope segments are trimmed and camel-cased; correlation keys are camel-cased.
+
+### Filters
+
+```ts
+logger.filterPath("user.password");
+logger.filterPath("headers.authorization", (v) => `redacted(${v.length})`);
+
+logger.filterKey("password");
+logger.filterKey(/token/i, () => "[Token]");
+```
+
+`filterPath` matches a single exact dotted path (via `object-path`). `filterKey` matches a key name at any depth, including inside arrays — pass either a string (exact match) or a `RegExp` (pattern match). Both default to replacing the matched value with `"[Filtered]"` if no callback is supplied.
 
 ### Timers
 
-Two timer APIs are available:
-
-**Handle-based** – call `time()` with no arguments to get a `LoggerTimer` handle. Call any log
-method on the handle to emit a log entry that includes the elapsed duration.
+Handle-based timer — `time()` with no label:
 
 ```ts
 const timer = logger.time();
-
 await fetchRemoteData();
-
 timer.info("Remote data fetched", { url });
-// → 2024-01-01T12:00:00.000Z  INFO: Remote data fetched (42ms 318µs)
-
-timer.error(new Error("something broke"));
-// error(Error) overload works the same as on Logger
 ```
 
-**Label-based** – pass a label to `time(label)` to start a named timer. End it later with
-`timeEnd(label)`. The label is used as the log message.
+The returned `LoggerTimer` exposes `error`, `warn`, `info`, `verbose`, `debug`, and `silly` with the same signatures as the logger; each call emits one entry that includes the elapsed `duration`.
+
+Label-based timer — `time(label)` / `timeEnd(label)`:
 
 ```ts
 logger.time("db-query");
-
 await db.query("SELECT ...");
-
-// defaults to debug level
 logger.timeEnd("db-query");
 
-// explicit level + context
 logger.time("http-request");
 await fetch(url);
 logger.timeEnd("http-request", "info", { url, status: 200 });
 ```
 
-Child loggers inherit parent timers (via snapshot), so a timer started on a parent can be
-ended on a child — but timers started on a child do not leak back to the parent.
+`timeEnd(label)` defaults to `"debug"` level and uses the label as the message. Calling `timeEnd` on an unknown label emits a warning instead. `child()` snapshots the parent's labelled timers, so a label started on a parent can be ended on the child, but a label started on a child does not propagate back to the parent.
 
-### Helper functions
+### Other methods
 
 ```ts
-import { sanitiseAuthorization, sanitiseToken } from "@lindorm/logger";
-
-sanitiseAuthorization("Bearer eyJhbGciOiJ…");
-// → 'Bearer eyJhbGciOiJ…eyJ0'   (JWT header + payload only)
+logger.isLevelEnabled(level: LogLevel): boolean;
+logger.level;          // getter — current minimum level
+logger.level = "debug"; // setter — updates all transports
 ```
 
----
+### Static console helper
 
-## TypeScript
+`Logger.std` is a typed `StdLogger` that prints coloured output via the global `console`:
 
-`@lindorm/logger` is written in TypeScript and ships with declaration files. Important exports:
+```ts
+import { Logger } from "@lindorm/logger";
 
-- `ILogger` – public logger interface
-- `ILoggerTimer` – timer handle interface returned by `time()`
-- `Log`, `LogContent`, `LogScope`, `LogCorrelation`
-- `LogLevel` – enum of Winston log levels used throughout the package
+Logger.std.info("ready");
+Logger.std.success("done");
+Logger.std.error("fail");
+```
 
----
+## Utilities
+
+```ts
+import { inspectDictionary, sanitiseAuthorization, sanitiseToken } from "@lindorm/logger";
+
+inspectDictionary(obj, colors?, depth?); // util.inspect with sane defaults
+
+sanitiseAuthorization("Bearer eyJhbGciOiJ….a.b"); // → "Bearer eyJhbGciOiJ….a"
+sanitiseAuthorization("Basic dXNlcjpwYXNz");      // → "Basic [Filtered]"
+
+sanitiseToken("a.b.c");     // → "a.b"  (JWT: header + payload only)
+sanitiseToken("a.b.c.d.e"); // → "a"    (JWE: header only)
+```
+
+## Mocks
+
+Drop-in mock factories live behind dedicated subpaths to avoid loading the test runner at runtime.
+
+Vitest:
+
+```ts
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+
+const logger = createMockLogger();
+```
+
+Jest:
+
+```ts
+import { createMockLogger } from "@lindorm/logger/mocks/jest";
+
+const logger = createMockLogger();
+```
+
+Both factories return a fully-typed mocked `ILogger` with `child()` returning further mocks and `time()` returning a mocked `ILoggerTimer`. An optional `logFn` callback receives every log call for assertions.
+
+## Types
+
+`@lindorm/logger` ships with declaration files. Public type exports include:
+
+- `ILogger`, `ILoggerTimer` — interfaces
+- `Logger`, `LoggerTimer` — classes
+- `LoggerOptions`, `Log`, `LogContent`, `LogCorrelation`, `LogScope`, `LogFilters`, `LogLevel`
+- `FilterCallback`, `StdLogger`, `TimerLogFn`
+
+Note: `LogLevel` is a string union (`"error" | "warn" | ... | "silly"`), not an enum.
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE) file for details.
+AGPL-3.0-or-later
