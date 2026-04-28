@@ -41,6 +41,14 @@
     "form-data": "^4.0.5",
     "zod": "^4.3.6"
   },
+  "peerDependencies": {
+    "@lindorm/logger": "^0.5.4"
+  },
+  "peerDependenciesMeta": {
+    "@lindorm/logger": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@lindorm/logger": "^0.5.4"
   },
