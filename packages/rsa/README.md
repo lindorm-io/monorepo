@@ -1,12 +1,23 @@
 # @lindorm/rsa
 
-RSA signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://github.com/lindorm-io/monorepo/tree/main/packages/kryptos). Provides an `RsaKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+RSA signing kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://www.npmjs.com/package/@lindorm/kryptos). Provides an `RsaKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+
+This package is **ESM-only**.
 
 ## Installation
 
 ```bash
 npm install @lindorm/rsa
 ```
+
+`RsaKit` accepts an `IKryptos` instance constructed by the consumer, so [`@lindorm/kryptos`](https://www.npmjs.com/package/@lindorm/kryptos) must also be installed in your project.
+
+## Features
+
+- Sign, verify, and assert RSA signatures over `Buffer` or `string` input
+- Supports `RS256`, `RS384`, `RS512` (PKCS#1 v1.5) and `PS256`, `PS384`, `PS512` (PSS, salt length 32)
+- Configurable string output encoding via Node's `BufferEncoding`
+- Rejects non-RSA keys and RSA encryption algorithms (e.g. `RSA-OAEP`) at construction time
 
 ## Quick Start
 
@@ -17,16 +28,12 @@ import { KryptosKit } from "@lindorm/kryptos";
 const kryptos = KryptosKit.generate.sig.rsa({ algorithm: "PS256" });
 const kit = new RsaKit({ kryptos });
 
-// Sign
 const signature = kit.sign("hello world");
 
-// Verify
 kit.verify("hello world", signature); // true
 
-// Assert (throws RsaError if invalid)
-kit.assert("hello world", signature);
+kit.assert("hello world", signature); // throws RsaError if invalid
 
-// Format Buffer to string
 kit.format(signature); // base64 string
 ```
 
@@ -36,11 +43,11 @@ kit.format(signature); // base64 string
 new RsaKit({
   kryptos, // IKryptos — must be an RSA key with a signing algorithm
   dsa: "der", // DsaEncoding — "der" | "ieee-p1363" (default: "der")
-  encoding: "base64", // BufferEncoding — output encoding (default: "base64")
+  encoding: "base64", // BufferEncoding — string encoding for verify/format (default: "base64")
 });
 ```
 
-The constructor validates that the key is an RSA type with a supported signing algorithm (RS256, RS384, RS512, PS256, PS384, PS512). Encryption keys (RSA-OAEP etc.) are rejected with an `RsaError`.
+The constructor validates that the key is an RSA key with one of the supported signing algorithms (`RS256`, `RS384`, `RS512`, `PS256`, `PS384`, `PS512`). RSA encryption keys and non-RSA keys are rejected with an `RsaError`.
 
 ## API
 
@@ -55,6 +62,11 @@ class RsaKit implements IKeyKit {
 
 `KeyData` is `Buffer | string`.
 
+- `sign(data)` — produces a signature `Buffer` using the configured key and algorithm.
+- `verify(data, signature)` — returns `true` if the signature is valid. String signatures are decoded using the configured `encoding`.
+- `assert(data, signature)` — same as `verify`, but throws `RsaError` instead of returning `false`.
+- `format(buffer)` — encodes a signature `Buffer` to a string using the configured `encoding`.
+
 ## Supported Algorithms
 
 | Algorithm | Padding     | Hash    |
@@ -66,9 +78,11 @@ class RsaKit implements IKeyKit {
 | PS384     | PSS         | SHA-384 |
 | PS512     | PSS         | SHA-512 |
 
+PSS variants are signed and verified with a salt length of 32 bytes.
+
 ## Error Handling
 
-All errors are `RsaError` instances:
+All errors thrown by this package are instances of `RsaError`:
 
 ```typescript
 import { RsaError } from "@lindorm/rsa";
