@@ -217,3 +217,89 @@ export interface WithObject {
 
 "
 `;
+
+exports[`typewriter > should generate zod schemas that parse against the installed zod 1`] = `
+"import * as z from "zod";
+
+
+export const TechnologiesUsedSchema = z.enum([
+  "Java",
+  "JavaScript",
+  "Kubernetes",
+  "NumPy",
+  "Pandas",
+  "PyTorch",
+  "Python",
+  "Scikit-learn",
+  "SQL",
+  "TensorFlow",
+]);
+export type TechnologiesUsed = z.infer<typeof TechnologiesUsedSchema>;
+
+
+export const StatusSchema = z.enum([
+  "Completed",
+  "In Progress",
+  "Pending",
+]);
+export type Status = z.infer<typeof StatusSchema>;
+
+export const ContactSchema = z.object({
+  "email": z.string(),
+  "phone": z.string(),
+});
+export type Contact = z.infer<typeof ContactSchema>;
+
+export const DetailsSchema = z.object({
+  "completionDate": z.string().optional(),
+  "expectedCompletion": z.string().optional(),
+  "hoursSpent": z.number(),
+  "technologiesUsed": z.array(TechnologiesUsedSchema),
+});
+export type Details = z.infer<typeof DetailsSchema>;
+
+export const ManagerSchema = z.object({
+  "contact": ContactSchema,
+  "id": z.string(),
+  "name": z.string(),
+});
+export type Manager = z.infer<typeof ManagerSchema>;
+
+export const TaskSchema = z.object({
+  "details": DetailsSchema,
+  "status": StatusSchema,
+  "taskId": z.string(),
+  "title": z.string(),
+});
+export type Task = z.infer<typeof TaskSchema>;
+
+export const DepartmentSchema = z.object({
+  "id": z.string(),
+  "manager": ManagerSchema,
+  "name": z.string(),
+});
+export type Department = z.infer<typeof DepartmentSchema>;
+
+export const ProjectSchema = z.object({
+  "projectId": z.string(),
+  "projectName": z.string(),
+  "startDate": z.string(),
+  "tasks": z.array(TaskSchema),
+});
+export type Project = z.infer<typeof ProjectSchema>;
+
+export const EmployeeSchema = z.object({
+  "department": DepartmentSchema,
+  "id": z.string(),
+  "name": z.string(),
+  "position": z.string(),
+  "projects": z.array(ProjectSchema),
+});
+export type Employee = z.infer<typeof EmployeeSchema>;
+
+export const TestZodElementSchema = z.object({
+  "employee": EmployeeSchema,
+});
+export type TestZodElement = z.infer<typeof TestZodElementSchema>;
+"
+`;
