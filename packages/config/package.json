@@ -11,8 +11,17 @@
   "publishConfig": {
     "access": "public"
   },
+  "bin": {
+    "config": "dist/cli.js"
+  },
   "type": "module",
   "typings": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "example": "ts-node example",
@@ -26,13 +35,11 @@
     "update:auto": "ncu -u",
     "verify": "npm run typecheck && npm run build && npm test"
   },
-  "bin": {
-    "config": "dist/cli.js"
-  },
   "dependencies": {
     "@dotenvx/dotenvx": "^1.54.1",
     "@lindorm/case": "^0.1.16",
     "@lindorm/is": "^0.1.16",
+    "@lindorm/types": "^0.5.0",
     "@lindorm/utils": "^0.7.1",
     "commander": "^14.0.3",
     "config": "^4.4.1",
@@ -41,14 +48,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.5.0",
     "@types/config": "^3.3.5",
     "@types/js-yaml": "^4.0.9"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "default": "./dist/index.js"
-    }
   }
 }
