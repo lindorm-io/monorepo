@@ -1,6 +1,6 @@
 # @lindorm/aegis
 
-Token operations for JWT, JWE, JWS, CWT (CBOR Web Token), CWS (COSE Sign1), and CWE (COSE Encrypt).
+JOSE token operations for JWT, JWS, and JWE backed by an Amphora key store.
 
 ## Installation
 
@@ -8,256 +8,186 @@ Token operations for JWT, JWE, JWS, CWT (CBOR Web Token), CWS (COSE Sign1), and 
 npm install @lindorm/aegis
 ```
 
+This package is **ESM-only**. All examples use `import`; `require()` is not supported.
+
+The `Aegis` class requires `@lindorm/amphora` (key store) and `@lindorm/logger` (logger) instances at construction time:
+
+```bash
+npm install @lindorm/amphora @lindorm/logger
+```
+
 ## Overview
 
-Aegis provides two usage patterns:
+Aegis exposes two layers:
 
-- **Aegis class** — async wrapper that resolves keys from an `IAmphora` key store before delegating to Kit classes.
-- **Kit classes** (`JwtKit`, `CwtKit`, `CwsKit`, etc.) — synchronous, single-key operations. You supply an `IKryptos` key directly.
+- **`Aegis`** — async façade that resolves keys from an `IAmphora` key store and delegates to the kit classes. Use this when you want JWT/JWS/JWE operations driven by a managed key store with `kid`-based lookup.
+- **Kit classes** (`JwtKit`, `JwsKit`, `JweKit`, `SignatureKit`) — synchronous, single-key primitives. You supply an `IKryptos` key directly. Use these when you already have the key in hand and don't need the Amphora layer.
 
-The Aegis class methods are **async** because they perform key lookups. All Kit class methods are **synchronous**.
+The `Aegis` instance methods are async because they perform key lookups. All kit instance methods are synchronous.
 
-## Aegis Class
-
-Async wrapper that resolves keys from an `IAmphora` key store. All operations are async.
+## Aegis
 
 ```typescript
 import { Aegis } from "@lindorm/aegis";
 
 const aegis = new Aegis({
-  amphora,
-  logger,
-  issuer: "https://example.com",
-  clockTolerance: 30000, // ms, optional
+  amphora, // IAmphora — key store
+  logger, // ILogger
+  issuer: "https://example.com", // optional; falls back to amphora.domain
+  clockTolerance: 30, // optional, in seconds (default 0)
   encryption: "A256GCM", // optional, default "A256GCM"
-  encAlgorithm: "ECDH-ES", // optional, default encryption algorithm
-  sigAlgorithm: "ES256", // optional, default signing algorithm
+  encAlgorithm: "ECDH-ES", // optional — restricts encryption key selection
+  sigAlgorithm: "ES256", // optional — restricts signing key selection
+  certBindingMode: "strict", // optional, "strict" | "lax" (default "strict")
+  dpopMaxSkew: 60, // optional, in seconds (default 60)
 });
 ```
 
 ### Namespaced operations
 
 ```typescript
-// JWT
 const signed = await aegis.jwt.sign({
   expires: "1h",
-  subject: "u1",
+  subject: "user-123",
   tokenType: "access_token",
+  audience: ["https://api.example.com"],
+  scope: ["read", "write"],
+  claims: { role: "admin" },
 });
-const parsed = await aegis.jwt.verify(signed.token);
 
-// CWT
-const cwt = await aegis.cwt.sign({
-  expires: "1h",
-  subject: "u1",
-  tokenType: "access_token",
+const parsed = await aegis.jwt.verify(signed.token, {
+  audience: "https://api.example.com",
+  scope: ["read"],
 });
-const cwtParsed = await aegis.cwt.verify(cwt.token);
 
-// JWS / CWS — sign and verify arbitrary data
-const jws = await aegis.jws.sign("data");
-const cws = await aegis.cws.sign("data");
+const jws = await aegis.jws.sign("payload");
+const verifiedJws = await aegis.jws.verify(jws.token);
 
-// JWE / CWE — encrypt and decrypt
 const jwe = await aegis.jwe.encrypt("secret");
-const cwe = await aegis.cwe.encrypt("secret");
+const decrypted = await aegis.jwe.decrypt(jwe.token);
+```
 
-// AES — returns base64 encoded string by default
-const encoded = await aegis.aes.encrypt("data");
-const record = await aegis.aes.encrypt("data", "record");
-const serialised = await aegis.aes.encrypt("data", "serialised");
-const decrypted = await aegis.aes.decrypt(encoded);
+### AES helpers
+
+```typescript
+const encoded = await aegis.aes.encrypt("data"); // base64 string
+const record = await aegis.aes.encrypt("data", "record"); // AesEncryptionRecord
+const serialised = await aegis.aes.encrypt("data", "serialised"); // SerialisedAesEncryption
+const tokenised = await aegis.aes.encrypt("data", "tokenised"); // base64 string
+
+const plain = await aegis.aes.decrypt(encoded);
 ```
 
 ### Universal verification
 
-Automatically detects token type and verifies/decrypts accordingly.
+`aegis.verify` auto-detects JWT, JWS, and JWE compact serialisations. JWE inputs are decrypted first, then the inner payload is re-verified.
 
 ```typescript
 const result = await aegis.verify(anyToken, {
   audience: "https://api.example.com",
 });
-// Works with JWT, JWE, JWS, CWT, CWE, or CWS
-// JWE/CWE tokens are decrypted, then their inner payload is verified
 ```
 
-### Static methods
+### Static helpers
 
-No key or amphora required.
+These do not need a key or amphora.
 
 ```typescript
 Aegis.isJwt(token);
-Aegis.isCwt(token);
 Aegis.isJws(token);
-Aegis.isCws(token);
 Aegis.isJwe(token);
-Aegis.isCwe(token);
 
-Aegis.header(token); // TokenHeaderClaims (JOSE tokens only)
-Aegis.decode(token); // auto-detect and decode without verification
-Aegis.parse(token); // auto-detect, decode, and validate structure
+Aegis.header(token); // decode the JOSE protected header
+Aegis.decode(token); // auto-detect, decode without verifying
+Aegis.parse(token); // auto-detect (JWT or JWS), validate structure
+
+Aegis.parseUserinfo(claims); // → AegisUserinfo
+Aegis.parseIntrospection(claims); // → AegisIntrospection
+Aegis.validateClaims(claims, matchers); // throws on mismatch
 ```
 
-## Kit Classes
+## JwtKit
 
-### JwtKit
-
-Signs and verifies JSON Web Tokens.
+Synchronous JWT sign and verify against a single `IKryptos` key.
 
 ```typescript
 import { JwtKit } from "@lindorm/aegis";
 
-const kit = new JwtKit({ issuer: "https://example.com", logger, kryptos });
+const kit = new JwtKit({
+  issuer: "https://example.com",
+  kryptos,
+  logger,
+  clockTolerance: 30, // seconds, optional
+});
 
-// Sign — returns { token, expiresAt, expiresIn, expiresOn, objectId, tokenId }
 const signed = kit.sign({
   expires: "1h",
   subject: "user-123",
   tokenType: "access_token",
   audience: ["https://api.example.com"],
   claims: { role: "admin" },
-  scope: ["read", "write"],
 });
+// → { token, expiresAt, expiresIn, expiresOn, objectId, tokenId }
 
-// Verify — returns { decoded, header, payload, token }
 const parsed = kit.verify(signed.token, {
   audience: "https://api.example.com",
   scope: ["read"],
 });
 
-// Static methods (no key required)
-JwtKit.isJwt(token); // boolean
-JwtKit.decode(token); // { header, payload, signature }
-JwtKit.parse(token); // { decoded, header, payload, token }
-JwtKit.validate(payload, options); // throws on mismatch
+JwtKit.isJwt(token);
+JwtKit.decode(token);
+JwtKit.parse(token);
+JwtKit.validate(payload, matchers);
 ```
 
-### CwtKit
+## JwsKit
 
-Signs and verifies CBOR Web Tokens (RFC 8392). Uses COSE Sign1 structure with CBOR-encoded payloads and integer claim labels.
-
-```typescript
-import { CwtKit } from "@lindorm/aegis";
-
-const kit = new CwtKit({ issuer: "https://example.com", logger, kryptos });
-
-// Sign — returns { buffer, token, expiresAt, expiresIn, expiresOn, objectId, tokenId }
-const signed = kit.sign({
-  expires: "1h",
-  subject: "user-123",
-  tokenType: "access_token",
-  claims: { 900: "custom-value", 901: 42 }, // integer labels >= 900
-});
-
-// Verify — accepts Buffer or base64url string
-const parsed = kit.verify(signed.token, {
-  tokenType: "access_token",
-});
-
-// Static methods
-CwtKit.isCwt(token);
-CwtKit.decode(token);
-CwtKit.parse(token);
-CwtKit.validate(payload, options);
-```
-
-**COSE target modes:** Pass `{ target: "external" }` to sign options to emit string keys for proprietary labels instead of integer CBOR labels. Standard RFC claims (iss, sub, exp, etc.) always use integer labels regardless of target.
-
-**Custom claim labels:** Numeric keys >= 900 in the `claims` object are encoded as compact integer CBOR labels. Keys below 900 are rejected to prevent collision with IANA-assigned (1-255) and Lindorm-reserved (400-599) ranges.
-
-### CwsKit
-
-Signs and verifies arbitrary data using COSE Sign1 (RFC 9052).
-
-```typescript
-import { CwsKit } from "@lindorm/aegis";
-
-const kit = new CwsKit({ logger, kryptos });
-
-// Sign string or Buffer — returns { buffer, objectId, token }
-const signed = kit.sign("hello world", {
-  objectId: "msg-001",
-  target: "internal", // or "external"
-});
-
-// Verify — returns { decoded, header, payload, token }
-const parsed = kit.verify(signed.token);
-// parsed.payload === "hello world"
-
-// Static methods
-CwsKit.isCws(token);
-CwsKit.decode(token);
-CwsKit.parse(token);
-```
-
-### CweKit
-
-Encrypts and decrypts data using COSE Encrypt (RFC 9052).
-
-```typescript
-import { CweKit } from "@lindorm/aegis";
-
-const kit = new CweKit({ logger, kryptos, encryption: "A256GCM" });
-
-// Encrypt string or Buffer — returns { buffer, token }
-const encrypted = kit.encrypt("secret data", {
-  objectId: "msg-002",
-  target: "internal",
-});
-
-// Decrypt — returns { decoded, header, payload, token }
-const decrypted = kit.decrypt(encrypted.token);
-// decrypted.payload === "secret data"
-
-// Static methods
-CweKit.isCwe(token);
-CweKit.decode(token);
-```
-
-### JwsKit
-
-Signs and verifies arbitrary data using JSON Web Signatures.
+Synchronous JWS sign and verify over arbitrary `string` or `Buffer` data.
 
 ```typescript
 import { JwsKit } from "@lindorm/aegis";
 
-const kit = new JwsKit({ logger, kryptos });
+const kit = new JwsKit({ kryptos, logger });
 
-// Sign string or Buffer — returns { objectId, token }
-const signed = kit.sign("hello world", { objectId: "msg-003" });
+const signed = kit.sign("hello world", { objectId: "msg-001" });
+// → { token, objectId }
 
-// Verify — returns { decoded, header, payload, token }
-const parsed = kit.verify(signed.token);
+const parsed = kit.verify<string>(signed.token);
+// parsed.payload === "hello world"
 
-// Static methods
 JwsKit.isJws(token);
 JwsKit.decode(token);
 JwsKit.parse(token);
 ```
 
-### JweKit
+## JweKit
 
-Encrypts and decrypts data using JSON Web Encryption.
+Synchronous JWE encrypt and decrypt over `string` data.
 
 ```typescript
 import { JweKit } from "@lindorm/aegis";
 
-const kit = new JweKit({ logger, kryptos, encryption: "A256GCM" });
+const kit = new JweKit({
+  kryptos,
+  logger,
+  encryption: "A256GCM", // optional; falls back to kryptos.encryption
+});
 
-// Encrypt string — returns { token }
-const encrypted = kit.encrypt("secret data", { objectId: "msg-004" });
+const encrypted = kit.encrypt("secret data", { objectId: "msg-002" });
+// → { token }
 
-// Decrypt — returns { decoded, header, payload, token }
 const decrypted = kit.decrypt(encrypted.token);
+// → { decoded, header, payload, token }
 
-// Static methods
 JweKit.isJwe(token);
 JweKit.decode(token);
 ```
 
-### SignatureKit
+Compressed payloads (`zip` header) are explicitly rejected.
 
-Low-level signature operations over raw data.
+## SignatureKit
+
+Low-level signature primitives over raw bytes. Dispatches to the appropriate driver kit based on `kryptos.type` (AKP / EC / OKP / RSA / oct).
 
 ```typescript
 import { SignatureKit } from "@lindorm/aegis";
@@ -266,27 +196,27 @@ const kit = new SignatureKit({ kryptos });
 
 const signature = kit.sign(data); // Buffer
 const valid = kit.verify(data, signature); // boolean
-kit.assert(data, signature); // throws if invalid
-kit.format(signature); // string
+kit.assert(data, signature); // throws on mismatch
+const formatted = kit.format(signature); // string
 ```
 
-## Sign Content
+## Sign content shape
 
-The `SignJwtContent` / `SignCwtContent` types share the same shape:
+`SignJwtContent` accepts the standard, OIDC, OAuth, PoP, delegation, and Lindorm claim families plus:
 
 ```typescript
 {
-  // Required
-  expires: string | Date;   // "1h", "30m", Date, etc.
-  subject: string;
-  tokenType: string;
+  expires: string | Date;       // required, e.g. "1h", "30m", or a Date
+  subject: string;              // required
+  tokenType: string;            // required, e.g. "access_token"
 
-  // Optional
   audience?: string[];
-  claims?: Record<string, any>;  // custom claims (CWT supports integer keys >= 900)
+  claims?: Record<string, any>; // arbitrary custom claims
   scope?: string[];
   permissions?: string[];
   roles?: string[];
+  groups?: string[];
+  entitlements?: string[];
   clientId?: string;
   grantType?: string;
   tenantId?: string;
@@ -295,50 +225,82 @@ The `SignJwtContent` / `SignCwtContent` types share the same shape:
   notBefore?: Date;
   authTime?: Date;
   authContextClass?: string;
-  authFactor?: string;
+  authFactor?: string[];
   authMethods?: string[];
   authorizedParty?: string;
   adjustedAccessLevel?: number;
   levelOfAssurance?: number;
   sessionHint?: string;
   subjectHint?: string;
+  // …plus the rest of the StdClaims / OidcClaims / DelegationClaims surface
 }
 ```
 
-## Verify Options
+## Verify options
 
-All fields are optional and support `PredicateOperator` for flexible matching:
+`VerifyJwtOptions` extends the claim matcher set. Each field accepts either a literal value or a `PredicateOperator` for flexible matching:
 
 ```typescript
-kit.verify(token, {
-  audience: "https://api.example.com", // exact match
+await aegis.jwt.verify(token, {
+  audience: "https://api.example.com",
   scope: ["read", "write"], // array contains
-  tokenType: { $eq: "access_token" }, // predicate operator
-  subject: { $in: ["user-1", "user-2"] }, // set membership
-  levelOfAssurance: { $gte: 2 }, // numeric comparison
+  tokenType: "access_token",
+  subject: { $in: ["user-1", "user-2"] },
+  levelOfAssurance: { $gte: 2 },
+  authTime: { $gte: new Date("2024-01-01") },
 });
+```
+
+Additional verify options:
+
+- `actor` — controls token-delegation (`act`) chain enforcement
+- `dpopProof` — when present, the verifier requires a `cnf.jkt` binding and validates the supplied DPoP proof
+- `trustBoundThumbprint` — when `true`, allow a bound token without an inline DPoP proof (for cases where the binding is enforced out-of-band)
+
+## Type guards
+
+```typescript
+import { isParsedJwt, isParsedJws } from "@lindorm/aegis";
+
+const parsed = await aegis.verify(token);
+if (isParsedJwt(parsed)) {
+  /* parsed.payload typed as ParsedJwtPayload */
+}
+if (isParsedJws(parsed)) {
+  /* parsed.payload typed as Buffer | string */
+}
 ```
 
 ## Errors
 
 ```typescript
 import {
-  AegisError, // base error
+  AegisError, // base class
   JwtError,
   JwsError,
   JweError,
-  CwtError,
-  CoseSignError,
-  CoseEncryptError,
 } from "@lindorm/aegis";
 ```
 
+## Security notes
+
+- Signature/decryption keys are always sourced from the supplied `IAmphora`. The `jku`, `jwk`, `x5u`, `x5c`, `x5t`, and `x5t#S256` JOSE header parameters are never trusted as key sources during verification — only `kid` is used as a lookup key into Amphora.
+- JWE payload compression (`zip` header) is rejected outright.
+- Critical header parameters are enforced per RFC 7515 §4.1.11; unknown `crit` entries cause verification to fail.
+- DPoP-bound tokens (`cnf.jkt`) require either a matching DPoP proof or `trustBoundThumbprint: true` on verify.
+
 ## Testing
 
-```typescript
-import { createMockAegis } from "@lindorm/aegis";
+The package ships pre-built mock factories for both Jest and Vitest. Import from the runner-specific subpath:
 
-const aegis = createMockAegis(); // fully mocked IAegis with jest.fn() stubs
+```typescript
+// Jest
+import { createMockAegis } from "@lindorm/aegis/mocks/jest";
+
+// Vitest
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
+
+const aegis = createMockAegis(); // fully mocked IAegis
 ```
 
 ## License
