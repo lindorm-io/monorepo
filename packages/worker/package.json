@@ -47,6 +47,9 @@
     "@lindorm/scanner": "^0.4.4",
     "@lindorm/utils": "^0.7.1"
   },
+  "peerDependencies": {
+    "@lindorm/logger": "^0.5.4"
+  },
   "devDependencies": {
     "@lindorm/logger": "^0.5.4"
   }
