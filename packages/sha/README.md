@@ -1,20 +1,21 @@
 # @lindorm/sha
 
-Minimal **SHA-1/256/384/512 hashing kit** that wraps Node’s `crypto.createHash` in a convenient,
-type-safe API. The `ShaKit` class exposes _hash_, _verify_ and _assert_ helpers and defaults to
-`SHA256` with Base64 output.
-
----
+Thin SHA-1/256/384/512 hashing helper that wraps Node's `crypto.createHash` in a typed class.
 
 ## Installation
 
 ```bash
 npm install @lindorm/sha
-# or
-yarn add @lindorm/sha
 ```
 
----
+This package is **ESM-only**. Use `import` syntax; `require` is not supported.
+
+## Features
+
+- `ShaKit` class with configurable algorithm and encoding
+- Instance helpers to `hash`, `verify`, and `assert` digests against input data
+- Static one-shot helpers `S1`, `S256`, `S384`, `S512` that produce `base64url` digests and accept both `string` and `Buffer` input
+- `ShaError` thrown by `assert` on mismatch
 
 ## Usage
 
@@ -25,36 +26,88 @@ const sha = new ShaKit({ algorithm: "SHA512", encoding: "hex" });
 
 const digest = sha.hash("hello world");
 
-console.log(digest); // → '2ae...'
-
-sha.assert("hello world", digest); // throws ShaError on mismatch
+sha.verify("hello world", digest); // true
+sha.assert("hello world", digest); // void; throws ShaError on mismatch
 ```
 
----
-
-## API
+Defaults are `algorithm: "SHA256"` and `encoding: "base64"` when no options are passed:
 
 ```ts
-class ShaKit {
-  constructor(options?: { algorithm?: ShaAlgorithm; encoding?: BinaryToTextEncoding });
+import { ShaKit } from "@lindorm/sha";
 
-  hash(data: string): string;
-  verify(data: string, digest: string): boolean;
-  assert(data: string, digest: string): void; // throws on mismatch
+const sha = new ShaKit();
+const digest = sha.hash("hello world");
+```
+
+The static helpers always emit `base64url` and accept either a string or a `Buffer`:
+
+```ts
+import { ShaKit } from "@lindorm/sha";
+
+const a = ShaKit.S256("data");
+const b = ShaKit.S256(Buffer.from("data", "utf8"));
+// a === b
+```
+
+> `ShaKit.S1` exists for legacy interop only (e.g. the X.509 `x5t` thumbprint per RFC 7515 §4.1.7). SHA-1 is cryptographically broken; do not use it for authentication, integrity, or any security-sensitive purpose.
+
+Catching mismatches:
+
+```ts
+import { ShaKit, ShaError } from "@lindorm/sha";
+
+const sha = new ShaKit();
+const digest = sha.hash("expected");
+
+try {
+  sha.assert("actual", digest);
+} catch (err) {
+  if (err instanceof ShaError) {
+    // hash did not match
+  }
 }
 ```
 
-Supported algorithms (`ShaAlgorithm` from `@lindorm/types`): `SHA1`, `SHA256`, `SHA384`, `SHA512`.
+## API
 
----
+### `class ShaKit`
 
-## TypeScript
+```ts
+new ShaKit(options?: ShaKitOptions);
+```
 
-Written in TS and ships with full declarations. Zero runtime dependencies besides the Node `crypto`
-module.
+| Option      | Type                                         | Default    | Description                                |
+| ----------- | -------------------------------------------- | ---------- | ------------------------------------------ |
+| `algorithm` | `"SHA1" \| "SHA256" \| "SHA384" \| "SHA512"` | `"SHA256"` | Digest algorithm used by instance methods. |
+| `encoding`  | `BinaryToTextEncoding` (Node `crypto`)       | `"base64"` | Output encoding used by instance methods.  |
 
----
+#### Instance methods
+
+- `hash(data: string): string` — returns the digest of `data` using the configured algorithm and encoding.
+- `verify(data: string, hash: string): boolean` — returns `true` if hashing `data` produces `hash`.
+- `assert(data: string, hash: string): void` — throws `ShaError` with message `"Hash does not match"` if `verify` would return `false`.
+
+#### Static methods
+
+All static methods accept `string | Buffer` and return a `base64url` digest. The configured instance algorithm/encoding does not apply.
+
+- `ShaKit.S1(data: string | Buffer): string`
+- `ShaKit.S256(data: string | Buffer): string`
+- `ShaKit.S384(data: string | Buffer): string`
+- `ShaKit.S512(data: string | Buffer): string`
+
+### `class ShaError`
+
+Extends `LindormError` from `@lindorm/errors`. Thrown by `ShaKit.prototype.assert` when the supplied hash does not match the input.
+
+### Types
+
+- `ShaKitOptions` — `{ algorithm?: ShaAlgorithm; encoding?: BinaryToTextEncoding }`
+- `CreateShaHashOptions` — `{ algorithm?: ShaAlgorithm; data: string | Buffer; encoding?: BinaryToTextEncoding }`
+- `VerifyShaHashOptions` — `{ algorithm?: ShaAlgorithm; data: string | Buffer; encoding?: BinaryToTextEncoding; hash: string }`
+
+`ShaAlgorithm` is re-exported transitively from `@lindorm/types` and resolves to `"SHA1" | "SHA256" | "SHA384" | "SHA512"`. `BinaryToTextEncoding` is the type from Node's built-in `crypto` module.
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE).
+AGPL-3.0-or-later
