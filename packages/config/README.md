@@ -1,6 +1,6 @@
 # @lindorm/config
 
-Type-safe configuration management with environment variable overrides, YAML file support, and Zod schema validation.
+Type-safe runtime configuration loader that merges YAML files, `.env` files, process environment, and `NODE_CONFIG`, then validates the result with a Zod schema.
 
 ## Installation
 
@@ -8,55 +8,60 @@ Type-safe configuration management with environment variable overrides, YAML fil
 npm install @lindorm/config
 ```
 
+This package is ESM-only. Import it with `import`; `require()` is not supported.
+
 ## Features
 
-- **Type-Safe Configuration**: Full TypeScript support with Zod schema validation
-- **Multiple Configuration Sources**: YAML files, environment variables, and NODE_CONFIG
-- **Automatic Type Coercion**: Converts string values to correct types (numbers, booleans, arrays, objects)
-- **Environment Variable Overrides**: Override any config value with environment variables
-- **Case Conversion**: Automatic conversion between snake_case (files/env) and camelCase (code)
-- **Environment-Specific Config**: Load different configurations based on NODE_ENV
-- **CLI Tool**: Convert local config files to NODE_CONFIG environment variable
-- **NPM Package Info**: Automatically includes package name and version
+- Validates the merged configuration with a Zod schema you supply.
+- Loads YAML files from a `config/` directory via the [`config`](https://www.npmjs.com/package/config) (node-config) package, layered by `NODE_ENV`.
+- Loads `.env` and `.env.${NODE_ENV}` via [`@dotenvx/dotenvx`](https://www.npmjs.com/package/@dotenvx/dotenvx).
+- Overrides any nested config value from a single environment variable named in `CONSTANT_CASE`.
+- Accepts a full configuration object as JSON in the `NODE_CONFIG` environment variable.
+- Coerces string inputs to the schema's primitive types (numbers, booleans, dates, bigints) and parses JSON-encoded arrays and objects.
+- Resolves the running package's `name` and `version` and exposes them as `config.npm.package`.
+- Ships a `config` CLI for converting a local `.node_config` file into a `NODE_CONFIG` env string.
 
-## Quick Start
+## Quick start
 
 ```typescript
 import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
-// Define your configuration schema
-const config = configuration({
-  server: z.object({
-    port: z.number().default(3000),
-    host: z.string().default("localhost"),
-  }),
-  database: z.object({
-    url: z.string(),
-    poolSize: z.number().default(10),
-  }),
-  features: z.array(z.string()).default([]),
-  isProduction: z.boolean().default(false),
-});
+export const config = configuration(
+  {
+    server: z.object({
+      port: z.number().default(3000),
+      host: z.string().default("localhost"),
+    }),
+    database: z.object({
+      url: z.string(),
+      poolSize: z.number().default(10),
+    }),
+    features: z.array(z.string()).default([]),
+    isProduction: z.boolean().default(false),
+  },
+  { scope: import.meta.url },
+);
 
-// Use your typed configuration
 console.log(config.server.port); // number
 console.log(config.database.url); // string
-console.log(config.npm.package.name); // automatically added
+console.log(config.npm.package.name); // resolved from the nearest package.json
 ```
 
-## Configuration Sources
+## Configuration sources
 
-Configuration is loaded and merged from multiple sources in this order:
+`configuration(schema, options?)` runs once at call time and resolves values in this order — later sources override earlier ones for the same key:
 
-1. **YAML Configuration Files** (`config/` directory)
-2. **Environment Variables** (automatic override)
-3. **NODE_CONFIG** environment variable (JSON object)
-4. **NPM Package Information** (name and version)
+1. `.env` and `.env.${NODE_ENV}` files (loaded into `process.env` via `@dotenvx/dotenvx`).
+2. YAML files in `./config/` (loaded by the `config` npm package; see its docs for the full list of supported file types and search paths). Keys are normalised to `camelCase`.
+3. `process.env` entries that match a schema key in `CONSTANT_CASE` (nested keys joined with `_`).
+4. `NODE_CONFIG` — a JSON object passed in a single environment variable.
 
-### 1. YAML Configuration Files
+The merged object is then coerced and validated against the Zod schema.
 
-Create a `config/` directory in your project root with environment-specific YAML files:
+### YAML files
+
+Place files in a `config/` directory at the process working directory. Keys may be written in `snake_case` or `camelCase`; both are normalised to `camelCase`.
 
 ```yaml
 # config/default.yml
@@ -87,321 +92,111 @@ database:
 is_production: true
 ```
 
-Files are loaded based on NODE_ENV:
-- `default.yml` - Always loaded first
-- `{NODE_ENV}.yml` - Environment-specific overrides (e.g., `production.yml`)
+### Environment variables
 
-### 2. Environment Variables
+Each schema key maps to a single environment variable in `CONSTANT_CASE`. Nested keys are joined with `_`.
 
-Override any configuration value using environment variables. The package automatically converts between naming conventions:
+| Schema key              | Environment variable     |
+| ----------------------- | ------------------------ |
+| `server.port`           | `SERVER_PORT`            |
+| `database.poolSize`     | `DATABASE_POOL_SIZE`     |
+| `nested.some.deepValue` | `NESTED_SOME_DEEP_VALUE` |
+
+Values are passed through `safelyParse` from `@lindorm/utils`, so JSON-encoded arrays and objects are decoded automatically:
 
 ```bash
-# Override server.port
 SERVER_PORT=8080
-
-# Override database.url
 DATABASE_URL=postgresql://prod-server/myapp
-
-# Override nested values
 DATABASE_POOL_SIZE=50
-
-# Arrays (JSON format)
-FEATURES='["feature1", "feature2", "feature3"]'
-
-# Booleans
+FEATURES='["feature1","feature2","feature3"]'
 IS_PRODUCTION=true
 ```
 
-**Naming Convention**: 
-- Nested keys are flattened with underscores
-- camelCase becomes snake_case
-- All uppercase for environment variables
+### `.env` files
 
-Examples:
-- `server.port` → `SERVER_PORT`
-- `database.poolSize` → `DATABASE_POOL_SIZE`
-- `nested.some.deepValue` → `NESTED_SOME_DEEP_VALUE`
+`@dotenvx/dotenvx` is invoked at the start of `configuration()` and loads, in order:
 
-### 3. NODE_CONFIG
+- `.env.${NODE_ENV}` (only when `NODE_ENV` is set)
+- `.env`
 
-Pass configuration as a JSON string via NODE_CONFIG environment variable:
+The values become part of `process.env` and follow the same `CONSTANT_CASE` rules as above.
+
+### `NODE_CONFIG`
+
+`NODE_CONFIG` must be a JSON object — the string has to start with `{` and end with `}`, otherwise `configuration()` throws. Anything declared here overrides everything else.
 
 ```bash
 NODE_CONFIG='{"server":{"port":9000},"features":["feat1","feat2"]}'
 ```
 
-### 4. .env Files
+## Type coercion
 
-The package automatically loads `.env` files using `@dotenvx/dotenvx`:
+Before validation the schema is rewritten so primitive leaves use Zod's coercing variants. Arrays and objects are walked recursively, and `optional`, `nullable`, and `default` wrappers are preserved.
 
-```bash
-# .env
-DATABASE_URL=postgresql://localhost/myapp
-SERVER_PORT=3000
+| Zod type        | Coerced via                    |
+| --------------- | ------------------------------ |
+| `z.string()`    | `z.coerce.string()`            |
+| `z.number()`    | `z.coerce.number()`            |
+| `z.boolean()`   | `z.coerce.boolean()`           |
+| `z.date()`      | `z.coerce.date()`              |
+| `z.bigint()`    | `z.coerce.bigint()`            |
+| `z.array(...)`  | recurses into the element type |
+| `z.object(...)` | recurses into each property    |
 
-# .env.production
-DATABASE_URL=postgresql://prod-server/myapp
-SERVER_PORT=8080
-```
+Other Zod types (such as `z.enum`, `z.union`, `z.record`, `z.literal`) are passed through unchanged — values reaching them must already match the expected runtime type. JSON-encoded strings from environment variables are decoded before validation runs, so an array or object env var only needs the surrounding type to be `z.array(...)` or `z.object(...)`.
 
-Environment-specific `.env` files are loaded based on NODE_ENV:
-- `.env` - Always loaded
-- `.env.{NODE_ENV}` - Environment-specific overrides
+## NPM identity
 
-## Advanced Usage
+`config.npm.package.name` and `config.npm.package.version` are resolved in this order:
 
-### Complex Schema with Defaults
-
-```typescript
-import { configuration } from "@lindorm/config";
-import { z } from "zod";
-
-const config = configuration({
-  app: z.object({
-    name: z.string(),
-    version: z.string().optional(),
-    environment: z.enum(["development", "staging", "production"]),
-  }),
-  
-  server: z.object({
-    port: z.number().min(1).max(65535),
-    host: z.string().ip(), // IP address validation
-    cors: z.object({
-      enabled: z.boolean().default(true),
-      origins: z.array(z.string().url()).default([]),
-    }),
-  }),
-  
-  database: z.object({
-    primary: z.object({
-      host: z.string(),
-      port: z.number().default(5432),
-      name: z.string(),
-      user: z.string(),
-      password: z.string(),
-      ssl: z.boolean().default(false),
-    }),
-    replica: z.object({
-      host: z.string(),
-      port: z.number(),
-    }).optional(),
-  }),
-  
-  redis: z.object({
-    url: z.string().url(),
-    ttl: z.number().default(3600),
-  }),
-  
-  logging: z.object({
-    level: z.enum(["debug", "info", "warn", "error"]).default("info"),
-    format: z.enum(["json", "pretty"]).default("json"),
-  }),
-  
-  features: z.record(z.boolean()).default({}),
-});
-```
-
-### Using the Config Object
+1. If `options.scope` is provided, `loadNpmInfo` walks up from that path and reads the nearest `package.json`. Pass `import.meta.url` from your entry file — this is deterministic regardless of `cwd`, including under `node dist/index.js`, Docker `CMD`, systemd, and inside test runners.
+2. Otherwise it falls back to the `npm_package_name` / `npm_package_version` environment variables that `npm run` populates.
+3. If neither resolves, both fields are empty strings.
 
 ```typescript
-// Type-safe access to configuration
-if (config.server.cors.enabled) {
-  app.use(cors({ origins: config.server.cors.origins }));
-}
-
-// Database connection
-const dbConfig = {
-  host: config.database.primary.host,
-  port: config.database.primary.port,
-  database: config.database.primary.name,
-  user: config.database.primary.user,
-  password: config.database.primary.password,
-  ssl: config.database.primary.ssl,
-};
-
-// Feature flags
-if (config.features.newDashboard) {
-  app.use("/dashboard", newDashboardRouter);
-}
-
-// Logging configuration
-logger.setLevel(config.logging.level);
+const config = configuration(schema, { scope: import.meta.url });
 ```
 
-### Working with Arrays and Objects
+## CLI
 
-Environment variables support JSON format for complex types:
+The package installs a `config` binary with a single command:
 
-```bash
-# Array of strings
-CORS_ORIGINS='["https://app.example.com", "https://admin.example.com"]'
-
-# Object
-FEATURES='{"newDashboard": true, "betaApi": false}'
-
-# Array of objects
-SERVERS='[{"host": "server1.com", "port": 8080}, {"host": "server2.com", "port": 8081}]'
+```
+config node_config [-f, --file <file>]
 ```
 
-## CLI Tool
-
-The package includes a CLI tool for working with configuration:
-
-### Convert Config to NODE_CONFIG
+It reads `./.node_config` by default and prints a `NODE_CONFIG='...'` line you can paste into your environment. JSON, YAML, and YML files are supported; the extension determines the parser. When `--file` is omitted and `./.node_config` does not exist, the CLI also tries `.node_config.json`, `.node_config.yml`, and `.node_config.yaml` in that order.
 
 ```bash
-# Create a .node_config file (JSON, YAML, or YML)
-echo '{"server": {"port": 9000}}' > .node_config
-
-# Generate NODE_CONFIG environment variable
+echo '{"server":{"port":9000}}' > .node_config
 npx config node_config
-# Output: NODE_CONFIG={"server":{"port":9000}}
-
-# Use in scripts
-export $(npx config node_config)
+# Insert the following into your env:
+#
+# NODE_CONFIG='{"server":{"port":9000}}'
 ```
 
-This is useful for:
-- Docker containers
-- CI/CD pipelines
-- Deployment scripts
+## API
 
-## Best Practices
-
-### 1. Schema Definition
-
-Define your schema in a separate file for reusability:
+### `configuration(schema, options?)`
 
 ```typescript
-// config/schema.ts
-import { z } from "zod";
+const configuration: <T extends Record<string, z.ZodType>>(
+  schema: T,
+  options?: ConfigurationOptions,
+) => NpmInformation & z.infer<z.ZodObject<T>>;
+```
 
-export const configSchema = {
-  server: z.object({
-    port: z.number().default(3000),
-    host: z.string().default("localhost"),
-  }),
-  // ... rest of schema
+Loads, merges, coerces, and validates configuration. Throws if `NODE_CONFIG` is not a valid JSON object or if Zod validation fails. The returned object is the parsed schema plus an `npm.package` field.
+
+### `ConfigurationOptions`
+
+```typescript
+type ConfigurationOptions = {
+  scope?: string;
 };
-
-// config/index.ts
-import { configuration } from "@lindorm/config";
-import { configSchema } from "./schema";
-
-export const config = configuration(configSchema);
 ```
 
-### 2. Environment-Specific Defaults
-
-Use YAML files for environment-specific defaults:
-
-```yaml
-# config/default.yml
-logging:
-  level: debug
-  format: pretty
-
-# config/production.yml  
-logging:
-  level: info
-  format: json
-```
-
-### 3. Secret Management
-
-Never commit secrets to config files. Use environment variables:
-
-```yaml
-# config/default.yml
-database:
-  host: localhost
-  port: 5432
-  name: myapp
-  # DON'T put passwords here
-```
-
-```bash
-# .env (add to .gitignore)
-DATABASE_USER=myuser
-DATABASE_PASSWORD=secret123
-```
-
-### 4. Validation
-
-Use Zod's features for comprehensive validation:
-
-```typescript
-const config = configuration({
-  email: z.string().email(),
-  port: z.number().min(1).max(65535),
-  url: z.string().url(),
-  apiKey: z.string().min(32),
-  retryAttempts: z.number().int().positive().max(10),
-});
-```
-
-## Automatic Type Coercion
-
-The package automatically converts string values to the correct types:
-
-| Zod Type | Input | Output |
-|----------|-------|--------|
-| z.number() | "123" | 123 |
-| z.boolean() | "true" | true |
-| z.array() | '["a","b"]' | ["a", "b"] |
-| z.object() | '{"a":1}' | { a: 1 } |
-| z.bigint() | "9007199254740991" | 9007199254740991n |
-| z.date() | "2023-01-01" | Date object |
-
-## NPM Package Information
-
-The configuration automatically includes package information:
-
-```typescript
-const config = configuration({ /* your schema */ });
-
-console.log(config.npm.package.name);    // from package.json
-console.log(config.npm.package.version); // from package.json
-```
-
-## Error Handling
-
-Configuration errors are thrown during initialization:
-
-```typescript
-try {
-  const config = configuration({
-    required: z.string(), // No default
-  });
-} catch (error) {
-  console.error("Configuration error:", error);
-  // Error will include details about missing required fields
-}
-```
-
-## Testing
-
-For testing, you can override configuration using NODE_ENV and environment variables:
-
-```typescript
-// test/setup.ts
-process.env.NODE_ENV = "test";
-process.env.DATABASE_URL = "postgresql://localhost/test";
-process.env.REDIS_URL = "redis://localhost:6379/1";
-```
-
-Or create a `config/test.yml`:
-
-```yaml
-database:
-  url: postgresql://localhost/test
-  
-redis:
-  url: redis://localhost:6379/1
-  
-logging:
-  level: error  # Reduce noise in tests
-```
+`scope` is a path or `file://` URL — typically `import.meta.url` at the call site — used to locate the `package.json` that describes the running process. See [NPM identity](#npm-identity) for the resolution rules.
 
 ## License
 
