@@ -1,12 +1,24 @@
 # @lindorm/okp
 
-EdDSA signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://github.com/lindorm-io/monorepo/tree/main/packages/kryptos). Provides an `OkpKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+EdDSA signing kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://www.npmjs.com/package/@lindorm/kryptos). Provides an `OkpKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+
+This package is **ESM-only**.
 
 ## Installation
 
 ```bash
 npm install @lindorm/okp
 ```
+
+`OkpKit` accepts an `IKryptos` instance constructed by the consumer, so [`@lindorm/kryptos`](https://www.npmjs.com/package/@lindorm/kryptos) must also be installed in your project.
+
+## Features
+
+- Sign, verify, and assert EdDSA signatures over `Buffer` or `string` input
+- Supports the `EdDSA` algorithm on the `Ed25519` and `Ed448` curves
+- DSA encoding selectable between `der` and `ieee-p1363`
+- Configurable string output encoding via Node's `BufferEncoding`
+- Rejects non-OKP keys and OKP encryption curves (`X25519`, `X448`) at construction time
 
 ## Quick Start
 
@@ -17,16 +29,12 @@ import { KryptosKit } from "@lindorm/kryptos";
 const kryptos = KryptosKit.generate.sig.okp({ algorithm: "EdDSA", curve: "Ed25519" });
 const kit = new OkpKit({ kryptos });
 
-// Sign
 const signature = kit.sign("hello world");
 
-// Verify
 kit.verify("hello world", signature); // true
 
-// Assert (throws OkpError if invalid)
-kit.assert("hello world", signature);
+kit.assert("hello world", signature); // throws OkpError if invalid
 
-// Format Buffer to string
 kit.format(signature); // base64 string
 ```
 
@@ -34,13 +42,13 @@ kit.format(signature); // base64 string
 
 ```typescript
 new OkpKit({
-  kryptos, // IKryptos — must be an OKP key with a signing curve
+  kryptos, // IKryptos — must be an OKP key on a signing curve (Ed25519 or Ed448)
   dsa: "der", // DsaEncoding — "der" | "ieee-p1363" (default: "der")
-  encoding: "base64", // BufferEncoding — output encoding (default: "base64")
+  encoding: "base64", // BufferEncoding — string encoding for verify/format (default: "base64")
 });
 ```
 
-The constructor validates that the key is an OKP type with a supported signing curve (Ed25519, Ed448). Encryption curves (X25519, X448) are rejected with an `OkpError`.
+The constructor validates that the key is an OKP key on one of the supported signing curves (`Ed25519`, `Ed448`). OKP encryption curves (`X25519`, `X448`) and non-OKP keys are rejected with an `OkpError`.
 
 ## API
 
@@ -55,6 +63,11 @@ class OkpKit implements IKeyKit {
 
 `KeyData` is `Buffer | string`.
 
+- `sign(data)` — produces an EdDSA signature `Buffer`. String input is encoded as UTF-8 before signing.
+- `verify(data, signature)` — returns `true` if the signature is valid. String signatures are decoded using the configured `encoding`.
+- `assert(data, signature)` — same as `verify`, but throws `OkpError` instead of returning `false`.
+- `format(buffer)` — encodes a signature `Buffer` to a string using the configured `encoding`.
+
 ## Supported Curves
 
 | Curve   | Algorithm | Use     |
@@ -62,11 +75,11 @@ class OkpKit implements IKeyKit {
 | Ed25519 | EdDSA     | Signing |
 | Ed448   | EdDSA     | Signing |
 
-X25519 and X448 are encryption curves and are not supported by `OkpKit`. Use the [`@lindorm/aes`](https://github.com/lindorm-io/monorepo/tree/main/packages/aes) package for encryption with OKP keys.
+`X25519` and `X448` are OKP encryption curves and are not supported by `OkpKit`. For Diffie-Hellman key agreement and content encryption with those curves, see [`@lindorm/aes`](https://www.npmjs.com/package/@lindorm/aes).
 
 ## Error Handling
 
-All errors are `OkpError` instances:
+All errors thrown by this package are instances of `OkpError`:
 
 ```typescript
 import { OkpError } from "@lindorm/okp";
