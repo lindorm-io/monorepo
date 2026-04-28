@@ -1,76 +1,108 @@
 # @lindorm/pkce
 
-Tiny, dependency-free helper for **Proof Key for Code Exchange (PKCE)** as defined in
-[RFC 7636](https://datatracker.ietf.org/doc/html/rfc7636). It supports both the `plain` and `S256`
-methods and gives you predictable errors via `PkceError`.
+Tiny helper for generating and verifying [Proof Key for Code Exchange (PKCE)](https://datatracker.ietf.org/doc/html/rfc7636) challenge/verifier pairs.
 
----
+This package is **ESM-only**. Use `import`, not `require`.
 
 ## Installation
 
 ```bash
 npm install @lindorm/pkce
-# or
-yarn add @lindorm/pkce
 ```
 
----
-
-## Usage
-
-### Generate challenge + verifier
+## Quick Start
 
 ```ts
 import { PKCE } from "@lindorm/pkce";
-import { PkceMethod } from "@lindorm/enums";
 
-const { challenge, verifier } = PKCE.create(PkceMethod.S256); // default length: 43 chars
+const { challenge, verifier, method } = PKCE.create();
+
+const ok = PKCE.verify(challenge, verifier);
+
+PKCE.assert(challenge, verifier);
 ```
 
-### Verify server-side
+## Methods
+
+PKCE supports two challenge methods, identified by string literals:
+
+| Method  | Challenge derivation                             |
+| ------- | ------------------------------------------------ |
+| `S256`  | `base64url(sha256(verifier))` — recommended.     |
+| `plain` | The challenge equals the verifier — discouraged. |
+
+`PKCE.create`, `PKCE.verify`, and `PKCE.assert` all default to `"S256"` when `method` is omitted.
+
+## Usage
+
+### Create a verifier and challenge
 
 ```ts
-if (!PKCE.verify(challenge, verifier)) {
-  throw new Error("PKCE mismatch");
-}
+import { PKCE } from "@lindorm/pkce";
 
-// or
-
-PKCE.assert(challenge, verifier); // throws PkceError on mismatch
+const { challenge, verifier } = PKCE.create();
 ```
 
----
+`PKCE.create(method?, length?)` returns `{ challenge, verifier, method }`. The `verifier` is a random base64url-style string of `length` characters (default `43`); the `challenge` is derived from the verifier according to `method`.
 
-## API
+```ts
+const long = PKCE.create("S256", 128);
+const plain = PKCE.create("plain");
+```
+
+### Verify a challenge
+
+```ts
+import { PKCE } from "@lindorm/pkce";
+
+const matches = PKCE.verify(challenge, verifier);
+```
+
+`PKCE.verify(challenge, verifier, method?)` re-derives the challenge from `verifier` (or compares directly when `method` is `"plain"`) and returns `true` on match, `false` otherwise. The comparison is constant-time.
+
+### Assert a challenge
+
+```ts
+import { PKCE, PkceError } from "@lindorm/pkce";
+
+try {
+  PKCE.assert(challenge, verifier);
+} catch (error) {
+  if (error instanceof PkceError) {
+    // error.code === "invalid_pkce"
+  }
+  throw error;
+}
+```
+
+`PKCE.assert(challenge, verifier, method?)` throws a `PkceError` with `code: "invalid_pkce"` on mismatch, and returns `void` on success.
+
+## API Reference
 
 ```ts
 class PKCE {
-  static create(
-    method?: PkceMethod,
-    length?: number,
-  ): {
-    challenge: string;
-    verifier: string;
-    method: PkceMethod;
-  };
-
+  static create(method?: PkceMethod, length?: number): PkceResult;
   static verify(challenge: string, verifier: string, method?: PkceMethod): boolean;
-  static assert(challenge: string, verifier: string, method?: PkceMethod): void; // throws
+  static assert(challenge: string, verifier: string, method?: PkceMethod): void;
 }
+
+type PkceResult = {
+  challenge: string;
+  verifier: string;
+  method: PkceMethod;
+};
+
+class PkceError extends LindormError {}
 ```
 
-- **PkceMethod** is re-exported from `@lindorm/enums` and can be `Plain` or `S256`.
+| Export       | Kind  | Description                                                                                                                                   |
+| ------------ | ----- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PKCE`       | class | Static façade exposing `create`, `verify`, and `assert`.                                                                                      |
+| `PkceError`  | class | Thrown by `assert` on mismatch, and by `verify`/`assert` if an unsupported `method` is passed. Extends `LindormError` from `@lindorm/errors`. |
+| `PkceResult` | type  | Return shape of `PKCE.create`.                                                                                                                |
 
----
-
-## Security notes
-
-- Always prefer `S256` over `plain` unless interoperability forces otherwise.
-- The random verifier default length (43) equals 256 bits of entropy as recommended by the spec.
-- Constant-time comparison protects against timing attacks.
-
----
+The `PkceMethod` type used by these signatures is the string literal `"S256" | "plain"` from `@lindorm/types`; it is not re-exported by this package.
 
 ## License
 
-AGPL-3.0-or-later – see the root [`LICENSE`](https://github.com/lindorm-io/monorepo/blob/main/LICENSE).
+AGPL-3.0-or-later
