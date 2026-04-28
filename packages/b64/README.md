@@ -1,6 +1,6 @@
 # @lindorm/b64
 
-A lightweight TypeScript library for Base64 and Base64URL encoding and decoding operations with support for multiple encoding formats and validation utilities.
+Base64 and Base64URL encoding helpers for Node.js and browsers, exposed as a single static class.
 
 ## Installation
 
@@ -8,261 +8,97 @@ A lightweight TypeScript library for Base64 and Base64URL encoding and decoding 
 npm install @lindorm/b64
 ```
 
+This package is ESM-only and has no runtime dependencies. Encoding and decoding are implemented on top of the standard `Uint8Array.prototype.toBase64` / `Uint8Array.fromBase64` methods, so the runtime must support them (Node.js 22+ or a current evergreen browser). The `toBuffer` method additionally requires the Node.js `Buffer` global and is not available in browsers.
+
 ## Features
 
-- **Base64 Encoding/Decoding**: Standard Base64 operations with padding
-- **Base64URL Encoding/Decoding**: URL-safe Base64 without padding
-- **Multiple Format Support**: Short aliases (`b64`, `b64url`, `b64u`) for convenience
-- **Automatic Format Detection**: Smart decoding that handles both formats
-- **Buffer and String Support**: Works with both Buffer objects and strings
-- **Validation Methods**: Check if strings are valid Base64 or Base64URL
-- **Type Safety**: Full TypeScript support with comprehensive type definitions
-- **Zero Dependencies**: Lightweight implementation using Node.js built-ins
+- Encode `Uint8Array` (including Node `Buffer`) or `string` input to Base64 or Base64URL.
+- Decode either format to a `Uint8Array`, a UTF-8 `string`, or — in Node.js — a `Buffer`. Decoding auto-handles URL-safe input by normalizing `-`/`_` to `+`/`/` before decoding.
+- Short aliases for the encoding option: `"b64"` for `"base64"`; `"b64url"` and `"b64u"` for `"base64url"`.
+- Cheap regex-based character-set checks for both alphabets.
 
-## Basic Usage
-
-### Encoding
+## Usage
 
 ```typescript
-import { B64 } from '@lindorm/b64';
+import { B64 } from "@lindorm/b64";
 
-const input = 'Hello, World!';
+const input = "hello there - general kenobi";
 
-// Standard Base64 encoding (with padding)
-const base64 = B64.encode(input); // 'SGVsbG8sIFdvcmxkIQ=='
-const base64Alt = B64.encode(input, 'base64'); // 'SGVsbG8sIFdvcmxkIQ=='
-const base64Short = B64.encode(input, 'b64'); // 'SGVsbG8sIFdvcmxkIQ=='
+B64.encode(input); // "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ=="
+B64.encode(input, "base64"); // "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ=="
+B64.encode(input, "b64"); // "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ=="
+B64.encode(input, "base64url"); // "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ"
+B64.encode(input, "b64url"); // "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ"
+B64.encode(input, "b64u"); // "aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ"
 
-// Base64URL encoding (URL-safe, no padding)
-const base64url = B64.encode(input, 'base64url'); // 'SGVsbG8sIFdvcmxkIQ'
-const base64urlAlt = B64.encode(input, 'b64url'); // 'SGVsbG8sIFdvcmxkIQ'
-const base64urlShort = B64.encode(input, 'b64u'); // 'SGVsbG8sIFdvcmxkIQ'
+B64.toString("aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ==");
+// "hello there - general kenobi"
+
+B64.toString("aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ");
+// "hello there - general kenobi"
+
+B64.toBytes("aGVsbG8gdGhlcmUgLSBnZW5lcmFsIGtlbm9iaQ==");
+// Uint8Array<...> equal to new TextEncoder().encode("hello there - general kenobi")
 ```
 
-### Decoding
+`encode` accepts any `Uint8Array` directly, including a Node `Buffer`:
 
 ```typescript
-// Decode to string (default)
-const decoded1 = B64.decode('SGVsbG8sIFdvcmxkIQ=='); // 'Hello, World!'
-const decoded2 = B64.toString('SGVsbG8sIFdvcmxkIQ=='); // 'Hello, World!'
+import { B64 } from "@lindorm/b64";
 
-// Decode to Buffer
-const buffer = B64.toBuffer('SGVsbG8sIFdvcmxkIQ=='); // Buffer containing 'Hello, World!'
-
-// Works with both Base64 and Base64URL automatically
-const fromBase64 = B64.decode('SGVsbG8sIFdvcmxkIQ=='); // 'Hello, World!'
-const fromBase64URL = B64.decode('SGVsbG8sIFdvcmxkIQ'); // 'Hello, World!'
+const bytes = new TextEncoder().encode("hello there - general kenobi");
+const encoded = B64.encode(bytes, "base64url");
+const roundTripped = B64.toBytes(encoded);
 ```
 
-### Working with Buffers
+In Node.js, the same flow works with `Buffer`:
 
 ```typescript
-// Encode Buffer objects
-const buffer = Buffer.from('Binary data', 'utf8');
-const encoded = B64.encode(buffer); // Encodes the buffer content
-const encodedUrl = B64.encode(buffer, 'base64url'); // URL-safe encoding
+import { B64 } from "@lindorm/b64";
 
-// Decode back to Buffer
-const originalBuffer = B64.toBuffer(encoded);
-console.log(originalBuffer.equals(buffer)); // true
+const buffer = Buffer.from("hello there - general kenobi", "utf8");
+const encoded = B64.encode(buffer, "base64url");
+const roundTripped = B64.toBuffer(encoded); // Node-only
 ```
 
-## Validation
+### Decoding behavior
 
-### Format Validation
+`decode`, `toBytes`, `toBuffer`, and `toString` are format-agnostic by default: they normalize URL-safe characters before decoding, so either Base64 or Base64URL input works without specifying the encoding. The only special case is passing `"base64"` explicitly, which skips normalization and decodes against the standard alphabet directly. Pass `"base64"` only when you know the input is standard Base64 — input containing `-` or `_` will throw a `SyntaxError` in that mode.
+
+String input to `encode` is encoded as UTF-8. `decode` and `toString` decode the resulting bytes as UTF-8.
+
+### Character-set checks
+
+`isBase64` and `isBase64Url` are regex character-set checks, not strict format validators. They each test that the input only uses the characters of the corresponding alphabet, with up to two trailing `=`:
+
+- `isBase64`: `^[A-Za-z0-9+/]*={0,2}$`
+- `isBase64Url`: `^[A-Za-z0-9-_]*={0,2}$`
+
+A string consisting only of `A-Z`, `a-z`, and `0-9` (with no `+`, `/`, `-`, or `_`) satisfies both. Neither check enforces correct length or padding, so a passing result does not guarantee the input decodes cleanly.
+
+## API
+
+### `class B64`
+
+All members are static.
+
+| Member                                                                       | Description                                                                                                                              |
+| ---------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `B64.encode(input: Uint8Array \| string, encoding?: Base64Encoding): string` | Encodes `input` as Base64 (default) or Base64URL. String input is encoded as UTF-8. Accepts any `Uint8Array`, including a Node `Buffer`. |
+| `B64.decode(input: string, encoding?: Base64Encoding): string`               | Decodes `input` and returns its UTF-8 string form. Auto-handles URL-safe input unless `encoding` is `"base64"`.                          |
+| `B64.toBytes(input: string, encoding?: Base64Encoding): Uint8Array`          | Same as `decode` but returns a `Uint8Array`. Works in Node.js and browsers.                                                              |
+| `B64.toBuffer(input: string, encoding?: Base64Encoding): Buffer`             | Same as `toBytes` but returns a Node `Buffer`. Node.js only.                                                                             |
+| `B64.toString(input: string, encoding?: Base64Encoding): string`             | Alias of `decode`.                                                                                                                       |
+| `B64.isBase64(input: string): boolean`                                       | Returns `true` if `input` only contains characters from the Base64 alphabet (with up to two trailing `=`).                               |
+| `B64.isBase64Url(input: string): boolean`                                    | Returns `true` if `input` only contains characters from the Base64URL alphabet (with up to two trailing `=`).                            |
+
+### `type Base64Encoding`
 
 ```typescript
-// Check if string is valid Base64
-const isBase64 = B64.isBase64('SGVsbG8sIFdvcmxkIQ=='); // true
-const isNotBase64 = B64.isBase64('SGVsbG8sIFdvcmxkIQ'); // false (missing padding)
-
-// Check if string is valid Base64URL
-const isBase64URL = B64.isBase64Url('SGVsbG8sIFdvcmxkIQ'); // true
-const isNotBase64URL = B64.isBase64Url('SGVsbG8sIFdvcmxkIQ=='); // false (has padding)
-
-// Validation examples
-console.log(B64.isBase64('YWJjZGVmZw==')); // true - valid Base64
-console.log(B64.isBase64('YWJjZGVmZw')); // false - missing padding
-console.log(B64.isBase64Url('YWJjZGVmZw')); // true - valid Base64URL
-console.log(B64.isBase64Url('YWJjZGVmZw==')); // false - has padding
+type Base64Encoding = "base64" | "base64url" | "b64" | "b64url" | "b64u";
 ```
 
-### Practical Validation Usage
-
-```typescript
-function processEncodedData(data: string) {
-  if (B64.isBase64(data)) {
-    return B64.decode(data);
-  } else if (B64.isBase64Url(data)) {
-    return B64.decode(data); // Same decode method works for both
-  } else {
-    throw new Error('Invalid Base64 or Base64URL format');
-  }
-}
-
-// Usage
-const result1 = processEncodedData('SGVsbG8='); // Works with Base64
-const result2 = processEncodedData('SGVsbG8'); // Works with Base64URL
-```
-
-## Encoding Format Reference
-
-### Base64 vs Base64URL
-
-| Feature | Base64 | Base64URL |
-|---------|---------|-----------|
-| Characters | `A-Z`, `a-z`, `0-9`, `+`, `/` | `A-Z`, `a-z`, `0-9`, `-`, `_` |
-| Padding | Uses `=` for padding | No padding |
-| URL Safe | No (`+` and `/` are problematic) | Yes |
-| Use Cases | General encoding, emails | URLs, filenames, tokens |
-
-### Format Examples
-
-```typescript
-const input = 'Hello, World!';
-
-// All encoding formats for the same input:
-B64.encode(input, 'base64');    // 'SGVsbG8sIFdvcmxkIQ=='
-B64.encode(input, 'b64');       // 'SGVsbG8sIFdvcmxkIQ=='
-B64.encode(input, 'base64url'); // 'SGVsbG8sIFdvcmxkIQ'
-B64.encode(input, 'b64url');    // 'SGVsbG8sIFdvcmxkIQ'
-B64.encode(input, 'b64u');      // 'SGVsbG8sIFdvcmxkIQ'
-```
-
-## Advanced Usage
-
-### Character Set Differences
-
-```typescript
-// Text with characters that differ between formats
-const specialChars = 'Subject: ?=';
-
-const base64 = B64.encode(specialChars, 'base64');
-// 'U3ViamVjdDogPz0=' (uses + and / characters)
-
-const base64url = B64.encode(specialChars, 'base64url'); 
-// 'U3ViamVjdDogPz0' (uses - and _ characters, no padding)
-
-// Both decode to the same result
-console.log(B64.decode(base64));    // 'Subject: ?='
-console.log(B64.decode(base64url)); // 'Subject: ?='
-```
-
-### Binary Data Handling
-
-```typescript
-// Working with binary data
-const binaryData = new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f]);
-const buffer = Buffer.from(binaryData);
-
-const encoded = B64.encode(buffer);
-const decoded = B64.toBuffer(encoded);
-
-console.log(Array.from(decoded)); // [72, 101, 108, 108, 111]
-console.log(decoded.toString()); // 'Hello'
-```
-
-### JWT-style Tokens
-
-```typescript
-// Base64URL is commonly used in JWT tokens
-const header = { alg: 'HS256', typ: 'JWT' };
-const payload = { sub: '1234567890', name: 'John Doe' };
-
-const encodedHeader = B64.encode(JSON.stringify(header), 'base64url');
-const encodedPayload = B64.encode(JSON.stringify(payload), 'base64url');
-
-console.log(`${encodedHeader}.${encodedPayload}.signature`);
-// Creates JWT-style token format
-
-// Decode JWT parts
-const decodedHeader = JSON.parse(B64.decode(encodedHeader));
-const decodedPayload = JSON.parse(B64.decode(encodedPayload));
-```
-
-## Type Definitions
-
-```typescript
-// Supported encoding formats
-type Base64Encoding = 'base64' | 'base64url' | 'b64' | 'b64url' | 'b64u';
-
-// Main class interface
-class B64 {
-  // Encoding methods
-  static encode(input: Buffer | string, encoding?: Base64Encoding): string;
-  
-  // Decoding methods
-  static decode(input: string, encoding?: Base64Encoding): string;
-  static toBuffer(input: string, encoding?: Base64Encoding): Buffer;
-  static toString(input: string, encoding?: Base64Encoding): string;
-  
-  // Validation methods
-  static isBase64(input: string): boolean;
-  static isBase64Url(input: string): boolean;
-}
-```
-
-## Performance Considerations
-
-- **Encoding**: Direct Buffer operations for optimal performance
-- **Decoding**: Smart format detection without overhead
-- **Validation**: Regex-based validation for fast format checking
-- **Memory**: Efficient Buffer handling without unnecessary copies
-
-## Common Use Cases
-
-### URL-Safe Tokens
-
-```typescript
-// Generate URL-safe tokens
-const token = B64.encode(crypto.randomBytes(32), 'base64url');
-// Safe to use in URLs, filenames, etc.
-```
-
-### Data URIs
-
-```typescript
-// Create data URIs with Base64
-const imageData = fs.readFileSync('image.png');
-const base64Image = B64.encode(imageData);
-const dataUri = `data:image/png;base64,${base64Image}`;
-```
-
-### API Response Encoding
-
-```typescript
-// Encode binary data for JSON APIs
-const binaryData = Buffer.from('Binary content');
-const response = {
-  data: B64.encode(binaryData),
-  encoding: 'base64'
-};
-
-// Decode on client
-const originalData = B64.toBuffer(response.data);
-```
-
-## Error Handling
-
-The library uses Node.js built-in Buffer methods, which will throw standard errors for invalid input:
-
-```typescript
-try {
-  const result = B64.decode('invalid-base64!@#');
-} catch (error) {
-  console.log('Invalid Base64 input');
-}
-
-// Validate before decoding to avoid errors
-if (B64.isBase64(input) || B64.isBase64Url(input)) {
-  const result = B64.decode(input);
-}
-```
-
-## Dependencies
-
-This package has zero external dependencies and relies only on Node.js built-in modules:
-- `Buffer` - For encoding/decoding operations
+`"base64"` and `"b64"` select standard Base64 with `=` padding. `"base64url"`, `"b64url"`, and `"b64u"` select URL-safe Base64 without padding.
 
 ## License
 
