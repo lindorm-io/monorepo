@@ -52,33 +52,28 @@
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
     "@lindorm/aes": "^0.6.5",
-    "@lindorm/amphora": "^0.4.1",
     "@lindorm/errors": "^0.1.18",
     "@lindorm/is": "^0.1.16",
     "@lindorm/json-kit": "^0.5.8",
-    "@lindorm/logger": "^0.5.4",
     "@lindorm/random": "^0.2.4",
     "@lindorm/retry": "^0.2.2",
     "@lindorm/scanner": "^0.4.4",
+    "@lindorm/types": "^0.5.0",
     "commander": "^14.0.3",
     "zod": "^4.3.6"
   },
-  "devDependencies": {
-    "@lindorm/kryptos": "^0.7.0",
-    "@lindorm/types": "^0.5.0",
-    "@types/amqplib": "^0.10.8",
-    "amqplib": "^0.10.9",
-    "ioredis": "^5.10.0",
-    "kafkajs": "^2.2.4",
-    "nats": "^2.29.3"
-  },
   "peerDependencies": {
+    "@lindorm/amphora": "^0.4.1",
+    "@lindorm/logger": "^0.5.4",
     "amqplib": ">=0.10.0",
     "ioredis": ">=5.10.0",
     "kafkajs": ">=2.2.0",
     "nats": ">=2.29.0"
   },
   "peerDependenciesMeta": {
+    "@lindorm/amphora": {
+      "optional": true
+    },
     "amqplib": {
       "optional": true
     },
@@ -91,5 +86,15 @@
     "nats": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@lindorm/amphora": "^0.4.1",
+    "@lindorm/kryptos": "^0.7.0",
+    "@lindorm/logger": "^0.5.4",
+    "@types/amqplib": "^0.10.8",
+    "amqplib": "^0.10.9",
+    "ioredis": "^5.10.0",
+    "kafkajs": "^2.2.4",
+    "nats": "^2.29.3"
   }
 }
