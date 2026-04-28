@@ -56,6 +56,7 @@
     "@lindorm/pkce": "^0.1.14",
     "@lindorm/scanner": "^0.4.4",
     "@lindorm/sha": "^0.4.1",
+    "@lindorm/types": "^0.5.0",
     "@lindorm/url": "^0.1.17",
     "@lindorm/utils": "^0.7.1",
     "@lindorm/worker": "^0.4.0",
@@ -69,31 +70,12 @@
     "object-path": "^0.11.8",
     "socket.io": "^4.8.3"
   },
-  "devDependencies": {
-    "@lindorm/amphora": "^0.4.1",
-    "@lindorm/hermes": "^0.6.1",
-    "@lindorm/iris": "^0.3.0",
-    "@lindorm/logger": "^0.5.4",
-    "@lindorm/proteus": "^0.5.1",
-    "@lindorm/types": "^0.5.0",
-    "@lindorm/zephyr": "^0.1.1",
-    "@types/busboy": "^1.5.4",
-    "@types/co-body": "^6.1.3",
-    "@types/formidable": "^3.5.0",
-    "@types/ioredis": "^5.0.0",
-    "@types/keygrip": "^1.0.6",
-    "@types/koa": "^3.0.1",
-    "@types/koa-router": "^7.4.9",
-    "@types/object-path": "^0.11.4",
-    "socket.io-client": "^4.8.3",
-    "zod": "^4.3.6"
-  },
   "peerDependencies": {
-    "@lindorm/amphora": ">=0.4.0",
-    "@lindorm/hermes": ">=0.6.0",
-    "@lindorm/iris": ">=0.2.0",
-    "@lindorm/logger": ">=0.5.3",
-    "@lindorm/proteus": ">=0.5.0"
+    "@lindorm/amphora": "^0.4.1",
+    "@lindorm/hermes": "^0.6.0",
+    "@lindorm/iris": "^0.2.0",
+    "@lindorm/logger": "^0.5.4",
+    "@lindorm/proteus": "^0.5.0"
   },
   "peerDependenciesMeta": {
     "@lindorm/hermes": {
@@ -105,5 +87,23 @@
     "@lindorm/proteus": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@lindorm/amphora": "^0.4.1",
+    "@lindorm/hermes": "^0.6.1",
+    "@lindorm/iris": "^0.3.0",
+    "@lindorm/logger": "^0.5.4",
+    "@lindorm/proteus": "^0.5.1",
+    "@lindorm/zephyr": "^0.1.1",
+    "@types/busboy": "^1.5.4",
+    "@types/co-body": "^6.1.3",
+    "@types/formidable": "^3.5.0",
+    "@types/ioredis": "^5.0.0",
+    "@types/keygrip": "^1.0.6",
+    "@types/koa": "^3.0.1",
+    "@types/koa-router": "^7.4.9",
+    "@types/object-path": "^0.11.4",
+    "socket.io-client": "^4.8.3",
+    "zod": "^4.3.6"
   }
 }
