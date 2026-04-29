@@ -1,6 +1,5 @@
-import { ServerError } from "@lindorm/errors";
+import { BadGatewayError, ServerError } from "@lindorm/errors";
 import { z, ZodArray, ZodObject, type ZodRawShape } from "zod";
-import { ConduitError } from "../errors/index.js";
 import type { ConduitMiddleware } from "../types/index.js";
 
 export const conduitSchemaMiddleware = <T extends ZodRawShape>(
@@ -18,7 +17,7 @@ export const conduitSchemaMiddleware = <T extends ZodRawShape>(
         throw new ServerError("Invalid Zod schema provided");
       }
     } catch (err: any) {
-      throw new ConduitError(err.message, {
+      throw new BadGatewayError(err.message, {
         error: err,
         data: err.details,
       });

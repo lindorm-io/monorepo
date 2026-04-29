@@ -1,6 +1,6 @@
 import { CircuitBreaker, CircuitOpenError, type ICircuitBreaker } from "@lindorm/breaker";
+import { ClientError, ServerError, ServiceUnavailableError } from "@lindorm/errors";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { ConduitError } from "../errors/index.js";
 import { createConduitCircuitBreakerMiddleware } from "./conduit-circuit-breaker-middleware.js";
 import type { ConduitCircuitBreakerCache, ConduitMiddleware } from "../types/index.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
@@ -49,7 +49,7 @@ describe("conduitCircuitBreakerMiddleware", () => {
     expect(cache.get(origin)).toBe(breaker);
   });
 
-  test("CircuitOpenError becomes ConduitError", async () => {
+  test("CircuitOpenError becomes ServiceUnavailableError", async () => {
     const mockBreaker: ICircuitBreaker = {
       name: `conduit:${origin}`,
       state: "open",
@@ -64,26 +64,26 @@ describe("conduitCircuitBreakerMiddleware", () => {
     };
     cache.set(origin, mockBreaker);
 
-    await expect(middleware(ctx, next)).rejects.toThrow(ConduitError);
+    await expect(middleware(ctx, next)).rejects.toThrow(ServiceUnavailableError);
     await expect(middleware(ctx, next)).rejects.toThrow("Circuit breaker is open");
   });
 
-  test("non-ConduitError passes through unchanged", async () => {
-    const regularError = new Error("Not a ConduitError");
+  test("non-LindormError passes through unchanged", async () => {
+    const regularError = new Error("Not a LindormError");
     next.mockRejectedValue(regularError);
 
-    await expect(middleware(ctx, next)).rejects.toThrow("Not a ConduitError");
+    await expect(middleware(ctx, next)).rejects.toThrow("Not a LindormError");
     await expect(middleware(ctx, next)).rejects.toThrow(Error);
   });
 
-  test("ConduitError server errors count toward threshold", async () => {
+  test("ServerError instances count toward threshold", async () => {
     middleware = createConduitCircuitBreakerMiddleware(
       { threshold: 2, window: 60000 },
       createMockLogger(),
       cache,
     );
 
-    const serverError = new ConduitError("fail", { status: 500 });
+    const serverError = new ServerError("fail", { status: 500 });
     next.mockRejectedValue(serverError);
 
     // First failure
@@ -95,17 +95,17 @@ describe("conduitCircuitBreakerMiddleware", () => {
     expect(cache.get(origin)!.state).toBe("open");
   });
 
-  test("ConduitError client errors are ignorable", async () => {
+  test("ClientError instances are ignorable", async () => {
     middleware = createConduitCircuitBreakerMiddleware(
       { threshold: 2, window: 60000 },
       createMockLogger(),
       cache,
     );
 
-    const clientError = new ConduitError("not found", { status: 404 });
+    const clientError = new ClientError("not found", { status: 404 });
     next.mockRejectedValue(clientError);
 
-    // Many client errors should not trip breaker
+    // Many client-status errors should not trip breaker
     for (let i = 0; i < 5; i++) {
       await expect(middleware(ctx, next)).rejects.toThrow("not found");
     }
@@ -120,7 +120,7 @@ describe("conduitCircuitBreakerMiddleware", () => {
       cache,
     );
 
-    const serverError = new ConduitError("fail", { status: 500 });
+    const serverError = new ServerError("fail", { status: 500 });
 
     // Trip origin A
     const ctxA = {

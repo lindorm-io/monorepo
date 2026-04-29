@@ -1,5 +1,5 @@
+import { BadGatewayError } from "@lindorm/errors";
 import { z } from "zod";
-import { ConduitError } from "../errors/index.js";
 import { conduitSchemaMiddleware } from "./conduit-schema-middleware.js";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -92,6 +92,6 @@ describe("conduitSchemaMiddleware", () => {
           number: z.coerce.number(),
         }),
       )(ctx, vi.fn()),
-    ).rejects.toThrow(ConduitError);
+    ).rejects.toThrow(BadGatewayError);
   });
 });

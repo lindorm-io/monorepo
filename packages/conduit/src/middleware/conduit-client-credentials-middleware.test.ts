@@ -295,7 +295,7 @@ describe("conduit-client-credentials-middleware", () => {
   });
 
   describe("missing tokenEndpoint validation", () => {
-    test("should throw ConduitError when OIDC discovery does not return tokenEndpoint", async () => {
+    test("should throw BadGatewayError when OIDC discovery does not return tokenEndpoint", async () => {
       nock("https://lindorm.fi.auth0.com")
         .get("/.well-known/openid-configuration")
         .times(1)

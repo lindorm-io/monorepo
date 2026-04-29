@@ -1,6 +1,5 @@
-import { ServerError } from "@lindorm/errors";
+import { LindormError, NetworkError, ServerError } from "@lindorm/errors";
 import type { RetryConfig } from "@lindorm/retry";
-import { ConduitError } from "../../errors/index.js";
 import { defaultRetryCallback } from "./default-retry-callback.js";
 import { describe, expect, test } from "vitest";
 
@@ -13,7 +12,7 @@ describe("defaultRetryCallback", () => {
   };
 
   test("should return false when maxAttempts is not set", () => {
-    const err = new ConduitError("error", {
+    const err = new ServerError("error", {
       status: ServerError.Status.ServiceUnavailable,
     });
     const noMaxAttemptsConfig: RetryConfig = {
@@ -26,69 +25,59 @@ describe("defaultRetryCallback", () => {
   });
 
   test("should return false when attempt exceeds maxAttempts", () => {
-    const err = new ConduitError("error", {
+    const err = new ServerError("error", {
       status: ServerError.Status.ServiceUnavailable,
     });
     expect(defaultRetryCallback(err, 4, options)).toBe(false);
   });
 
   test("should return true for BadGateway (502)", () => {
-    const err = new ConduitError("error", { status: ServerError.Status.BadGateway });
+    const err = new ServerError("error", { status: ServerError.Status.BadGateway });
     expect(defaultRetryCallback(err, 1, options)).toBe(true);
   });
 
   test("should return true for ServiceUnavailable (503)", () => {
-    const err = new ConduitError("error", {
+    const err = new ServerError("error", {
       status: ServerError.Status.ServiceUnavailable,
     });
     expect(defaultRetryCallback(err, 1, options)).toBe(true);
   });
 
   test("should return true for GatewayTimeout (504)", () => {
-    const err = new ConduitError("error", { status: ServerError.Status.GatewayTimeout });
+    const err = new ServerError("error", { status: ServerError.Status.GatewayTimeout });
     expect(defaultRetryCallback(err, 1, options)).toBe(true);
   });
 
   test("should return false for other error statuses", () => {
-    const err = new ConduitError("error", { status: 500 });
+    const err = new ServerError("error", { status: 500 });
     expect(defaultRetryCallback(err, 1, options)).toBe(false);
   });
 
-  test("should check err.status directly, not err.response.status", () => {
-    // Circuit breaker errors have err.status but no err.response
-    const err = new ConduitError("Circuit breaker is open", { status: 503 });
+  test("should check err.status directly, not err.debug.transport.response.status", () => {
+    // Circuit breaker errors have err.status but no transport metadata
+    const err = new LindormError("Circuit breaker is open", { status: 503 });
 
-    // This is the critical test: verify the callback works with err.status
     expect(err.status).toBe(503);
-    expect((err as any).response).toBeUndefined();
+    expect(err.debug).toEqual({});
     expect(defaultRetryCallback(err, 1, options)).toBe(true);
   });
 
-  test("should return true for network errors (status <= 0, no response)", () => {
-    const err = new ConduitError("Network error", {
-      status: -1,
-      response: undefined,
-    });
+  test("should return true for NetworkError", () => {
+    const err = new NetworkError("Network error");
 
-    expect(err.isNetworkError).toBe(true);
+    expect(err).toBeInstanceOf(NetworkError);
     expect(defaultRetryCallback(err, 1, options)).toBe(true);
   });
 
-  test("should return true for network errors (status 0, no response)", () => {
-    const err = new ConduitError("Connection failed", {
-      status: 0,
-      response: undefined,
-    });
+  test("should return true for NetworkError with custom message", () => {
+    const err = new NetworkError("Connection failed");
 
-    expect(err.isNetworkError).toBe(true);
+    expect(err).toBeInstanceOf(NetworkError);
     expect(defaultRetryCallback(err, 1, options)).toBe(true);
   });
 
-  test("should retry network errors even when attempt count is high", () => {
-    const err = new ConduitError("Network error", {
-      status: -1,
-      response: undefined,
-    });
+  test("should retry NetworkError even when attempt count is high", () => {
+    const err = new NetworkError("Network error");
 
     expect(defaultRetryCallback(err, 2, options)).toBe(true);
   });

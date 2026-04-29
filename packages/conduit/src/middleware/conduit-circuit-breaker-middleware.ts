@@ -1,7 +1,7 @@
 import { defaultConduitClassifier } from "../internal/utils/default-conduit-classifier.js";
 import { CircuitBreaker, CircuitOpenError } from "@lindorm/breaker";
+import { ServiceUnavailableError } from "@lindorm/errors";
 import type { ILogger } from "@lindorm/logger";
-import { ConduitError } from "../errors/index.js";
 import type {
   ConduitCircuitBreakerCache,
   ConduitCircuitBreakerConfig,
@@ -46,7 +46,7 @@ export const createConduitCircuitBreakerMiddleware = (
       await breaker.execute(() => next());
     } catch (error) {
       if (error instanceof CircuitOpenError) {
-        throw new ConduitError("Circuit breaker is open", {
+        throw new ServiceUnavailableError("Circuit breaker is open", {
           debug: { origin: ctx.req.origin },
         });
       }
