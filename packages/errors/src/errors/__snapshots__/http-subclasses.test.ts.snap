@@ -1,0 +1,379 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`HTTP status subclasses > client (4xx) > BadRequestError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "BadRequestError",
+  "status": 400,
+  "title": "Bad Request",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > ClientClosedRequestError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "ClientClosedRequestError",
+  "status": 499,
+  "title": "Client Closed Request",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > ConflictError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "ConflictError",
+  "status": 409,
+  "title": "Conflict",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > ConnectionClosedWithoutResponseError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "ConnectionClosedWithoutResponseError",
+  "status": 444,
+  "title": "Connection Closed Without Response",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > ExpectationFailedError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "ExpectationFailedError",
+  "status": 417,
+  "title": "Expectation Failed",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > FailedDependencyError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "FailedDependencyError",
+  "status": 424,
+  "title": "Failed Dependency",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > ForbiddenError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "ForbiddenError",
+  "status": 403,
+  "title": "Forbidden",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > GoneError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "GoneError",
+  "status": 410,
+  "title": "Gone",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > ImATeapotError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "ImATeapotError",
+  "status": 418,
+  "title": "I'm a teapot",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > LengthRequiredError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "LengthRequiredError",
+  "status": 411,
+  "title": "Length Required",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > LockedError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "LockedError",
+  "status": 423,
+  "title": "Locked",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > MethodNotAllowedError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "MethodNotAllowedError",
+  "status": 405,
+  "title": "Method Not Allowed",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > MisdirectedRequestError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "MisdirectedRequestError",
+  "status": 421,
+  "title": "Misdirected Request",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > NotAcceptableError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "NotAcceptableError",
+  "status": 406,
+  "title": "Not Acceptable",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > NotFoundError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "NotFoundError",
+  "status": 404,
+  "title": "Not Found",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > PayloadTooLargeError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "PayloadTooLargeError",
+  "status": 413,
+  "title": "Payload Too Large",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > PaymentRequiredError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "PaymentRequiredError",
+  "status": 402,
+  "title": "Payment Required",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > PreconditionFailedError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "PreconditionFailedError",
+  "status": 412,
+  "title": "Precondition Failed",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > PreconditionRequiredError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "PreconditionRequiredError",
+  "status": 428,
+  "title": "Precondition Required",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > ProxyAuthenticationRequiredError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "ProxyAuthenticationRequiredError",
+  "status": 407,
+  "title": "Proxy Authentication Required",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > RequestHeaderFieldsTooLargeError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "RequestHeaderFieldsTooLargeError",
+  "status": 431,
+  "title": "Request Header Fields Too Large",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > RequestTimeoutError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "RequestTimeoutError",
+  "status": 408,
+  "title": "Request Timeout",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > RequestUriTooLongError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "RequestUriTooLongError",
+  "status": 414,
+  "title": "Request-URI Too Long",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > RequestedRangeNotSatisfiableError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "RequestedRangeNotSatisfiableError",
+  "status": 416,
+  "title": "Requested Range Not Satisfiable",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > TooManyRequestsError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "TooManyRequestsError",
+  "status": 429,
+  "title": "Too Many Requests",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > UnauthorizedError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "UnauthorizedError",
+  "status": 401,
+  "title": "Unauthorized",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > UnavailableForLegalReasonsError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "UnavailableForLegalReasonsError",
+  "status": 451,
+  "title": "Unavailable For Legal Reasons",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > UnprocessableEntityError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "UnprocessableEntityError",
+  "status": 422,
+  "title": "Unprocessable Entity",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > UnsupportedMediaTypeError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "UnsupportedMediaTypeError",
+  "status": 415,
+  "title": "Unsupported Media Type",
+}
+`;
+
+exports[`HTTP status subclasses > client (4xx) > UpgradeRequiredError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "UpgradeRequiredError",
+  "status": 426,
+  "title": "Upgrade Required",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > BadGatewayError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "BadGatewayError",
+  "status": 502,
+  "title": "Bad Gateway",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > GatewayTimeoutError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "GatewayTimeoutError",
+  "status": 504,
+  "title": "Gateway Timeout",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > HttpVersionNotSupportedError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "HttpVersionNotSupportedError",
+  "status": 505,
+  "title": "HTTP Version Not Supported",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > InsufficientStorageError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "InsufficientStorageError",
+  "status": 507,
+  "title": "Insufficient Storage",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > InternalServerError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "InternalServerError",
+  "status": 500,
+  "title": "Internal Server Error",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > LoopDetectedError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "LoopDetectedError",
+  "status": 508,
+  "title": "Loop Detected",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > NetworkAuthenticationRequiredError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "NetworkAuthenticationRequiredError",
+  "status": 511,
+  "title": "Network Authentication Required",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > NetworkConnectTimeoutError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "NetworkConnectTimeoutError",
+  "status": 599,
+  "title": "Network Connect Timeout Error",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > NotExtendedError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "NotExtendedError",
+  "status": 510,
+  "title": "Not Extended",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > NotImplementedError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "NotImplementedError",
+  "status": 501,
+  "title": "Not Implemented",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > ServiceUnavailableError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "ServiceUnavailableError",
+  "status": 503,
+  "title": "Service Unavailable",
+}
+`;
+
+exports[`HTTP status subclasses > server (5xx) > VariantAlsoNegotiatesError > constructs with declared status and matching title 1`] = `
+{
+  "message": "test message",
+  "name": "VariantAlsoNegotiatesError",
+  "status": 506,
+  "title": "Variant Also Negotiates",
+}
+`;
