@@ -334,7 +334,7 @@ const [a, b] = await Promise.all([
 
 ### Rate Limiting
 
-Token-bucket rate limiter. Throws a `ConduitError` with `status: 429` when the bucket is empty.
+Token-bucket rate limiter. Throws a `TooManyRequestsError` (from `@lindorm/errors`) when the bucket is empty.
 
 ```typescript
 import { createConduitRateLimitMiddleware } from "@lindorm/conduit";
@@ -371,16 +371,16 @@ const breaker = createConduitCircuitBreakerMiddleware(
 );
 ```
 
-| Option             | Type                                                          | Description                                                                                                                                                                   |
-| ------------------ | ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `threshold`        | `number`                                                      | Number of transient failures within `window` before the breaker opens.                                                                                                        |
-| `window`           | `number`                                                      | Sliding failure window in milliseconds.                                                                                                                                       |
-| `halfOpenDelay`    | `number`                                                      | Initial delay before the breaker probes (transitions to half-open).                                                                                                           |
-| `halfOpenBackoff`  | `number`                                                      | Multiplier applied to the half-open delay on repeated probe failures.                                                                                                         |
-| `halfOpenMaxDelay` | `number`                                                      | Upper bound on the half-open delay.                                                                                                                                           |
-| `classifier`       | `(error: Error) => "transient" \| "permanent" \| "ignorable"` | Custom error classifier. The default treats `ConduitError`s as: `permanent` for status `501/505/506/510/511`, `transient` for any other 5xx, `ignorable` for everything else. |
+| Option             | Type                                                          | Description                                                                                                                                                                                      |
+| ------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `threshold`        | `number`                                                      | Number of transient failures within `window` before the breaker opens.                                                                                                                           |
+| `window`           | `number`                                                      | Sliding failure window in milliseconds.                                                                                                                                                          |
+| `halfOpenDelay`    | `number`                                                      | Initial delay before the breaker probes (transitions to half-open).                                                                                                                              |
+| `halfOpenBackoff`  | `number`                                                      | Multiplier applied to the half-open delay on repeated probe failures.                                                                                                                            |
+| `halfOpenMaxDelay` | `number`                                                      | Upper bound on the half-open delay.                                                                                                                                                              |
+| `classifier`       | `(error: Error) => "transient" \| "permanent" \| "ignorable"` | Custom error classifier. The default treats `LindormError` instances as: `permanent` for status `501/505/506/510/511`, `transient` for any other `ServerError`, `ignorable` for everything else. |
 
-Defaults are inherited from `@lindorm/breaker`. The signature also accepts a third argument `cache: Map<string, ICircuitBreaker>` for sharing breaker state between middleware instances. When a `logger` is supplied, the middleware logs `open` / `half-open` / `closed` state changes. When the breaker is open, requests reject with a `ConduitError` whose message is `"Circuit breaker is open"`.
+Defaults are inherited from `@lindorm/breaker`. The signature also accepts a third argument `cache: Map<string, ICircuitBreaker>` for sharing breaker state between middleware instances. When a `logger` is supplied, the middleware logs `open` / `half-open` / `closed` state changes. When the breaker is open, requests reject with a `ServiceUnavailableError` (from `@lindorm/errors`) whose message is `"Circuit breaker is open"`.
 
 ### Schema Validation
 
@@ -402,10 +402,10 @@ const client = new Conduit({
 });
 
 const { data } = await client.get("/user/123");
-// throws ConduitError if data does not match userSchema
+// throws BadGatewayError if data does not match userSchema
 ```
 
-Accepts `ZodObject` (object schemas are parsed in loose mode, preserving extra keys) or `ZodArray`. Validation failures are wrapped in `ConduitError`.
+Accepts `ZodObject` (object schemas are parsed in loose mode, preserving extra keys) or `ZodArray`. Validation failures are wrapped in `BadGatewayError` (from `@lindorm/errors`) — the upstream returned data that did not match the contract.
 
 ### Headers
 
@@ -436,6 +436,8 @@ const session = conduitSessionMiddleware("session-id-456");
 By default Conduit retries up to 5 times with exponential backoff (250 ms base, 10 s cap) on network errors and HTTP `502`, `503`, `504`. Override per instance or per request:
 
 ```typescript
+import { ClientError } from "@lindorm/errors";
+
 const client = new Conduit({
   baseURL: "https://api.example.com",
   retryOptions: {
@@ -445,7 +447,7 @@ const client = new Conduit({
     timeoutMax: 15_000,
   },
   retryCallback: (error, attempt, config) => {
-    if (error.isClientError) return false;
+    if (error instanceof ClientError) return false;
     return attempt <= config.maxAttempts;
   },
 });
@@ -513,36 +515,90 @@ await client.post("/upload", {
 
 ## Error Handling
 
+Failed requests are reconstructed into the appropriate class from `@lindorm/errors` so callers can branch on `instanceof` rather than inspecting status codes:
+
 ```typescript
-import { ConduitError } from "@lindorm/conduit";
+import {
+  ClientError,
+  LindormError,
+  NetworkError,
+  NotFoundError,
+  ServerError,
+} from "@lindorm/errors";
 
 try {
-  await client.get("/not-found");
+  await client.get("/users/123");
 } catch (error) {
-  if (error instanceof ConduitError) {
-    error.status; // HTTP status code, or <= 0 for network errors
-    error.message; // human-readable message
-    error.isClientError; // 400 <= status < 500
-    error.isServerError; // 500 <= status < 600
-    error.isNetworkError; // status <= 0 with no response (DNS, ECONNREFUSED, etc.)
-    error.config; // sanitised Axios config snapshot
-    error.request; // request details
-    error.response; // response details: headers, data, status, statusText
+  if (error instanceof NetworkError) {
+    // DNS failure, connection refused, no response received
+  } else if (error instanceof NotFoundError) {
+    // 404 specifically — the registry resolved this from status or class name
+  } else if (error instanceof ClientError) {
+    // any other 4xx
+  } else if (error instanceof ServerError) {
+    // any 5xx
+  } else if (error instanceof LindormError) {
+    // anything else thrown through Conduit
   }
 }
 ```
 
-`ConduitError.fromAxiosError` and `ConduitError.fromFetchError` are also exposed for adapter-level integrations. When a response body looks like a Pylon (`@lindorm` server framework) error envelope, `id`, `code`, `data`, `message`, `support`, and `title` are lifted into the corresponding `LindormError` fields.
+### How errors are reconstructed
+
+When an Axios error reaches Conduit, `reconstructFromAxiosError` extracts the status, message, and any Pylon error envelope from the response body, then calls `errorRegistry.reconstruct(...)` from `@lindorm/errors`. The registry resolves the right class in this order:
+
+1. **By name** — if the response carries a Pylon envelope with `error.name`, the registry returns the registered class with that name (e.g. `NotFoundError`, or any custom subclass the consumer registered with `errorRegistry.register(...)`).
+2. **By status** — if no class is registered under the envelope's name, the registry falls back to the class registered for the exact status code (e.g. `404` → `NotFoundError`).
+3. **By status range** — if no exact-status match exists, falls back to `ClientError` for `4xx` or `ServerError` for `5xx`.
+4. **`LindormError`** — final fallback when nothing else matches.
+
+When the request fails before any response (network failure, timeout, DNS), `NetworkError` is thrown instead. Its `status` is `-1`.
+
+### Inspecting transport metadata
+
+`config`, `request`, and `response` snapshots from the underlying Axios error are stashed on the reconstructed error under `debug.transport`:
+
+```typescript
+type Transport = {
+  config?: { method?: string; url?: string; headers?: Dict; /* ... */ };
+  request?: { method?: string; path?: string; /* ... */ };
+  response?: { status?: number; statusText?: string; data?: unknown; headers?: Dict };
+};
+
+catch (error) {
+  if (error instanceof LindormError) {
+    const transport = error.debug?.transport as Transport | undefined;
+    transport?.response?.status;
+    transport?.response?.headers;
+  }
+}
+```
+
+Reach for `debug.transport` only when you need wire-level details — the high-level `error.status`, `error.message`, `error.code`, `error.data`, `error.support`, `error.title` already carry the application-meaningful fields lifted from the Pylon envelope.
+
+### Throwing custom error subclasses
+
+Servers throwing custom `LindormError` subclasses (e.g. `class UserSuspendedError extends ForbiddenError`) can have those classes round-trip through Conduit by registering them on both ends:
+
+```typescript
+import { errorRegistry, ForbiddenError } from "@lindorm/errors";
+
+export class UserSuspendedError extends ForbiddenError {
+  public constructor(message: string, options = {}) {
+    super(message, { code: "USER_SUSPENDED", ...options });
+  }
+}
+
+errorRegistry.register(UserSuspendedError);
+```
+
+When a Pylon server throws `UserSuspendedError` and Conduit deserializes the response, name-based resolution returns the same class, and `error instanceof UserSuspendedError` is `true` on the client.
 
 ## Public Exports
 
 ### Classes
 
 - `Conduit` — HTTP client.
-
-### Errors
-
-- `ConduitError` — extends `LindormError` from `@lindorm/errors`.
 
 ### Interfaces
 
