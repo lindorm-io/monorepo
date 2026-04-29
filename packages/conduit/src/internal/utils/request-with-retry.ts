@@ -1,6 +1,8 @@
+import { LindormError } from "@lindorm/errors";
 import { calculateRetry } from "@lindorm/retry";
-import { ConduitError } from "../../errors/index.js";
+import { AxiosError } from "axios";
 import type { ConduitContext, ConduitResponse } from "../../types/index.js";
+import { reconstructFromAxiosError } from "./reconstruct-from-axios-error.js";
 import { sleep } from "./sleep.js";
 
 export type CommonRequestFunction<T = any> = () => Promise<ConduitResponse<T>>;
@@ -16,11 +18,11 @@ export const requestWithRetry = async <T = any>(
       return await fn();
     } catch (raw: any) {
       const err =
-        raw instanceof ConduitError
+        raw instanceof LindormError
           ? raw
-          : raw.isAxiosError
-            ? ConduitError.fromAxiosError(raw)
-            : new ConduitError(raw.message || "Unknown error", { error: raw });
+          : raw instanceof AxiosError
+            ? reconstructFromAxiosError(raw)
+            : new LindormError(raw.message || "Unknown error", { error: raw });
 
       if (attempt >= 100) throw err;
 

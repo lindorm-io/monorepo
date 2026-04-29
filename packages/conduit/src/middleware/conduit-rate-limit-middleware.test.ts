@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { ConduitError } from "../errors/index.js";
 import type { ConduitMiddleware } from "../types/index.js";
 import { createConduitRateLimitMiddleware } from "./conduit-rate-limit-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
@@ -40,7 +39,7 @@ describe("conduitRateLimitMiddleware", () => {
     expect(next).toHaveBeenCalledTimes(3);
   });
 
-  test("throws ConduitError with status 429 when limit exceeded", async () => {
+  test("throws TooManyRequestsError with status 429 when limit exceeded", async () => {
     middleware = createConduitRateLimitMiddleware({ maxRequests: 2, windowMs: 10000 });
 
     await expect(middleware(ctx, next)).resolves.toBeUndefined();
