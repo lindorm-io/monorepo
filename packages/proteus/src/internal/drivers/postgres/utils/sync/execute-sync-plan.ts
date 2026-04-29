@@ -1,14 +1,14 @@
 import type { ILogger } from "@lindorm/logger";
-import { hashNamespaceToInt32 } from "../../../../utils/advisory-lock-name";
-import { PostgresSyncError } from "../../errors/PostgresSyncError";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import { hashNamespaceToInt32 } from "../../../../utils/advisory-lock-name.js";
+import { PostgresSyncError } from "../../errors/PostgresSyncError.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import type {
   SyncOperation,
   SyncPlan,
   SyncOptions,
   SyncResult,
-} from "../../types/sync-plan";
-import { withAdvisoryLock } from "../advisory-lock";
+} from "../../types/sync-plan.js";
+import { withAdvisoryLock } from "../advisory-lock.js";
 
 const SYNC_LOCK_KEY_1 = 0x50524f54; // "PROT"
 

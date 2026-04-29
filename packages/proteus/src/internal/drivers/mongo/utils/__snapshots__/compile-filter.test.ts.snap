@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileFilter $between should compile $between on decimal field with $expr 1`] = `
+exports[`compileFilter > $between > should compile $between on decimal field with $expr 1`] = `
 {
   "$and": [
     {
@@ -27,7 +27,7 @@ exports[`compileFilter $between should compile $between on decimal field with $e
 }
 `;
 
-exports[`compileFilter $between should compile $between to $gte + $lte 1`] = `
+exports[`compileFilter > $between > should compile $between to $gte + $lte 1`] = `
 {
   "age": {
     "$gte": 18,
@@ -36,7 +36,7 @@ exports[`compileFilter $between should compile $between to $gte + $lte 1`] = `
 }
 `;
 
-exports[`compileFilter $has with multiple keys should compile $has with multiple key-value pairs as $and 1`] = `
+exports[`compileFilter > $has with multiple keys > should compile $has with multiple key-value pairs as $and 1`] = `
 {
   "$and": [
     {
@@ -49,7 +49,7 @@ exports[`compileFilter $has with multiple keys should compile $has with multiple
 }
 `;
 
-exports[`compileFilter $isNull should compile $isNull false to $ne null 1`] = `
+exports[`compileFilter > $isNull > should compile $isNull false to $ne null 1`] = `
 {
   "name": {
     "$ne": null,
@@ -57,7 +57,7 @@ exports[`compileFilter $isNull should compile $isNull false to $ne null 1`] = `
 }
 `;
 
-exports[`compileFilter $isNull should compile $isNull true to $eq null 1`] = `
+exports[`compileFilter > $isNull > should compile $isNull true to $eq null 1`] = `
 {
   "name": {
     "$eq": null,
@@ -65,7 +65,7 @@ exports[`compileFilter $isNull should compile $isNull true to $eq null 1`] = `
 }
 `;
 
-exports[`compileFilter $like and $ilike should convert $ilike to case-insensitive $regex 1`] = `
+exports[`compileFilter > $like and $ilike > should convert $ilike to case-insensitive $regex 1`] = `
 {
   "name": {
     "$options": "i",
@@ -74,7 +74,7 @@ exports[`compileFilter $like and $ilike should convert $ilike to case-insensitiv
 }
 `;
 
-exports[`compileFilter $like and $ilike should convert $like with both wildcards to $regex 1`] = `
+exports[`compileFilter > $like and $ilike > should convert $like with both wildcards to $regex 1`] = `
 {
   "name": {
     "$regex": "^.*foo.*$",
@@ -82,7 +82,7 @@ exports[`compileFilter $like and $ilike should convert $like with both wildcards
 }
 `;
 
-exports[`compileFilter $like and $ilike should convert $like with leading wildcard to $regex 1`] = `
+exports[`compileFilter > $like and $ilike > should convert $like with leading wildcard to $regex 1`] = `
 {
   "name": {
     "$regex": "^.*foo$",
@@ -90,7 +90,7 @@ exports[`compileFilter $like and $ilike should convert $like with leading wildca
 }
 `;
 
-exports[`compileFilter $like and $ilike should convert $like with trailing wildcard to $regex 1`] = `
+exports[`compileFilter > $like and $ilike > should convert $like with trailing wildcard to $regex 1`] = `
 {
   "name": {
     "$regex": "^foo.*$",
@@ -98,7 +98,7 @@ exports[`compileFilter $like and $ilike should convert $like with trailing wildc
 }
 `;
 
-exports[`compileFilter $like and $ilike should convert $like with underscore wildcard 1`] = `
+exports[`compileFilter > $like and $ilike > should convert $like with underscore wildcard 1`] = `
 {
   "name": {
     "$regex": "^fo.$",
@@ -106,7 +106,7 @@ exports[`compileFilter $like and $ilike should convert $like with underscore wil
 }
 `;
 
-exports[`compileFilter $regex should compile $regex from RegExp instance 1`] = `
+exports[`compileFilter > $regex > should compile $regex from RegExp instance 1`] = `
 {
   "name": {
     "$options": "i",
@@ -115,7 +115,7 @@ exports[`compileFilter $regex should compile $regex from RegExp instance 1`] = `
 }
 `;
 
-exports[`compileFilter $regex should compile $regex from string 1`] = `
+exports[`compileFilter > $regex > should compile $regex from string 1`] = `
 {
   "name": {
     "$regex": "^foo",
@@ -123,13 +123,13 @@ exports[`compileFilter $regex should compile $regex from string 1`] = `
 }
 `;
 
-exports[`compileFilter PK field mapping should map PK field to _id 1`] = `
+exports[`compileFilter > PK field mapping > should map PK field to _id 1`] = `
 {
   "_id": "abc-123",
 }
 `;
 
-exports[`compileFilter PK field mapping should map PK with operator to _id 1`] = `
+exports[`compileFilter > PK field mapping > should map PK with operator to _id 1`] = `
 {
   "_id": {
     "$eq": "abc-123",
@@ -137,7 +137,7 @@ exports[`compileFilter PK field mapping should map PK with operator to _id 1`] =
 }
 `;
 
-exports[`compileFilter comparison operators should compile $eq 1`] = `
+exports[`compileFilter > comparison operators > should compile $eq 1`] = `
 {
   "name": {
     "$eq": "foo",
@@ -145,7 +145,7 @@ exports[`compileFilter comparison operators should compile $eq 1`] = `
 }
 `;
 
-exports[`compileFilter comparison operators should compile $gt 1`] = `
+exports[`compileFilter > comparison operators > should compile $gt 1`] = `
 {
   "age": {
     "$gt": 18,
@@ -153,7 +153,7 @@ exports[`compileFilter comparison operators should compile $gt 1`] = `
 }
 `;
 
-exports[`compileFilter comparison operators should compile $gte 1`] = `
+exports[`compileFilter > comparison operators > should compile $gte 1`] = `
 {
   "age": {
     "$gte": 18,
@@ -161,7 +161,7 @@ exports[`compileFilter comparison operators should compile $gte 1`] = `
 }
 `;
 
-exports[`compileFilter comparison operators should compile $in 1`] = `
+exports[`compileFilter > comparison operators > should compile $in 1`] = `
 {
   "name": {
     "$in": [
@@ -172,7 +172,7 @@ exports[`compileFilter comparison operators should compile $in 1`] = `
 }
 `;
 
-exports[`compileFilter comparison operators should compile $lt 1`] = `
+exports[`compileFilter > comparison operators > should compile $lt 1`] = `
 {
   "age": {
     "$lt": 65,
@@ -180,7 +180,7 @@ exports[`compileFilter comparison operators should compile $lt 1`] = `
 }
 `;
 
-exports[`compileFilter comparison operators should compile $lte 1`] = `
+exports[`compileFilter > comparison operators > should compile $lte 1`] = `
 {
   "age": {
     "$lte": 65,
@@ -188,7 +188,7 @@ exports[`compileFilter comparison operators should compile $lte 1`] = `
 }
 `;
 
-exports[`compileFilter comparison operators should compile $ne 1`] = `
+exports[`compileFilter > comparison operators > should compile $ne 1`] = `
 {
   "name": {
     "$ne": "foo",
@@ -196,7 +196,7 @@ exports[`compileFilter comparison operators should compile $ne 1`] = `
 }
 `;
 
-exports[`compileFilter comparison operators should compile $nin 1`] = `
+exports[`compileFilter > comparison operators > should compile $nin 1`] = `
 {
   "name": {
     "$nin": [
@@ -207,7 +207,7 @@ exports[`compileFilter comparison operators should compile $nin 1`] = `
 }
 `;
 
-exports[`compileFilter complex predicates should compile $all 1`] = `
+exports[`compileFilter > complex predicates > should compile $all 1`] = `
 {
   "tags": {
     "$all": [
@@ -218,7 +218,7 @@ exports[`compileFilter complex predicates should compile $all 1`] = `
 }
 `;
 
-exports[`compileFilter complex predicates should compile $contained 1`] = `
+exports[`compileFilter > complex predicates > should compile $contained 1`] = `
 {
   "$and": [
     {
@@ -243,19 +243,19 @@ exports[`compileFilter complex predicates should compile $contained 1`] = `
 }
 `;
 
-exports[`compileFilter complex predicates should compile $has with non-object value (array element check) 1`] = `
+exports[`compileFilter > complex predicates > should compile $has with non-object value (array element check) 1`] = `
 {
   "tags": "foo",
 }
 `;
 
-exports[`compileFilter complex predicates should compile $has with object value 1`] = `
+exports[`compileFilter > complex predicates > should compile $has with object value 1`] = `
 {
   "data.key": "value",
 }
 `;
 
-exports[`compileFilter complex predicates should compile $length 1`] = `
+exports[`compileFilter > complex predicates > should compile $length 1`] = `
 {
   "tags": {
     "$size": 3,
@@ -263,7 +263,7 @@ exports[`compileFilter complex predicates should compile $length 1`] = `
 }
 `;
 
-exports[`compileFilter complex predicates should compile $overlap 1`] = `
+exports[`compileFilter > complex predicates > should compile $overlap 1`] = `
 {
   "tags": {
     "$in": [
@@ -274,7 +274,7 @@ exports[`compileFilter complex predicates should compile $overlap 1`] = `
 }
 `;
 
-exports[`compileFilter decimal field comparisons should use $expr + $toDouble for $gt on decimal field 1`] = `
+exports[`compileFilter > decimal field comparisons > should use $expr + $toDouble for $gt on decimal field 1`] = `
 {
   "$expr": {
     "$gt": [
@@ -287,7 +287,7 @@ exports[`compileFilter decimal field comparisons should use $expr + $toDouble fo
 }
 `;
 
-exports[`compileFilter decimal field comparisons should use $expr + $toDouble for $lte on decimal field 1`] = `
+exports[`compileFilter > decimal field comparisons > should use $expr + $toDouble for $lte on decimal field 1`] = `
 {
   "$expr": {
     "$lte": [
@@ -300,21 +300,21 @@ exports[`compileFilter decimal field comparisons should use $expr + $toDouble fo
 }
 `;
 
-exports[`compileFilter empty and edge cases should handle undefined value as null 1`] = `
+exports[`compileFilter > empty and edge cases > should handle undefined value as null 1`] = `
 {
   "name": null,
 }
 `;
 
-exports[`compileFilter empty and edge cases should return empty filter for empty criteria 1`] = `{}`;
+exports[`compileFilter > empty and edge cases > should return empty filter for empty criteria 1`] = `{}`;
 
-exports[`compileFilter field name mapping should use metadata name for mapped fields 1`] = `
+exports[`compileFilter > field name mapping > should use metadata name for mapped fields 1`] = `
 {
   "email_address": "test@example.com",
 }
 `;
 
-exports[`compileFilter logical operators should compile $and 1`] = `
+exports[`compileFilter > logical operators > should compile $and 1`] = `
 {
   "$and": [
     {
@@ -329,7 +329,7 @@ exports[`compileFilter logical operators should compile $and 1`] = `
 }
 `;
 
-exports[`compileFilter logical operators should compile $or 1`] = `
+exports[`compileFilter > logical operators > should compile $or 1`] = `
 {
   "$or": [
     {
@@ -342,7 +342,7 @@ exports[`compileFilter logical operators should compile $or 1`] = `
 }
 `;
 
-exports[`compileFilter logical operators should compile nested $and and $or 1`] = `
+exports[`compileFilter > logical operators > should compile nested $and and $or 1`] = `
 {
   "$and": [
     {
@@ -364,26 +364,26 @@ exports[`compileFilter logical operators should compile nested $and and $or 1`] 
 }
 `;
 
-exports[`compileFilter simple equality should compile direct value equality 1`] = `
+exports[`compileFilter > simple equality > should compile direct value equality 1`] = `
 {
   "name": "foo",
 }
 `;
 
-exports[`compileFilter simple equality should compile multiple field equality 1`] = `
+exports[`compileFilter > simple equality > should compile multiple field equality 1`] = `
 {
   "age": 25,
   "name": "foo",
 }
 `;
 
-exports[`compileFilter simple equality should compile null value 1`] = `
+exports[`compileFilter > simple equality > should compile null value 1`] = `
 {
   "name": null,
 }
 `;
 
-exports[`compileFilter simple equality should compile numeric equality 1`] = `
+exports[`compileFilter > simple equality > should compile numeric equality 1`] = `
 {
   "age": 25,
 }

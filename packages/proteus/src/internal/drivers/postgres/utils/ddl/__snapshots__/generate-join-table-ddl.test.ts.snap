@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateJoinTableDDL generates join table DDL for TestCourse (owning side with hasJoinTable) 1`] = `
+exports[`generateJoinTableDDL > generates join table DDL for TestCourse (owning side with hasJoinTable) 1`] = `
 {
   "indexes": [
     "CREATE INDEX IF NOT EXISTS "idx_z58Ij1Xi9Mi" ON "test_course_x_test_student" ("testStudentId");",
@@ -15,7 +15,7 @@ exports[`generateJoinTableDDL generates join table DDL for TestCourse (owning si
 }
 `;
 
-exports[`generateJoinTableDDL generates join table DDL for TestStudent (both M2M sides produce a table) 1`] = `
+exports[`generateJoinTableDDL > generates join table DDL for TestStudent (both M2M sides produce a table) 1`] = `
 {
   "indexes": [
     "CREATE INDEX IF NOT EXISTS "idx_bFXUMk_r25z" ON "test_course_x_test_student" ("testCourseId");",
@@ -30,7 +30,7 @@ exports[`generateJoinTableDDL generates join table DDL for TestStudent (both M2M
 }
 `;
 
-exports[`generateJoinTableDDL generates join table with custom joinTable name 1`] = `
+exports[`generateJoinTableDDL > generates join table with custom joinTable name 1`] = `
 {
   "indexes": [
     "CREATE INDEX IF NOT EXISTS "idx_sjDVai2EErr" ON "post_tags" ("joinTagId");",
@@ -45,7 +45,7 @@ exports[`generateJoinTableDDL generates join table with custom joinTable name 1`
 }
 `;
 
-exports[`generateJoinTableDDL uses schema-qualified join table name when namespace is provided 1`] = `
+exports[`generateJoinTableDDL > uses schema-qualified join table name when namespace is provided 1`] = `
 {
   "indexes": [
     "CREATE INDEX IF NOT EXISTS "idx_z58Ij1Xi9Mi" ON "social"."test_course_x_test_student" ("testStudentId");",

@@ -1,22 +1,24 @@
 import {
   conduitBasicAuthMiddleware,
   conduitClientCredentialsMiddlewareFactory,
-  ConduitError,
   conduitHeadersMiddleware,
 } from "@lindorm/conduit";
-import { WebhookAuth, WebhookMethod } from "../../enums";
-import { IWebhookSubscription } from "../../interfaces";
-import { createConduitWebhookAuthMiddleware } from "./conduit-webhook-auth-middleware";
+import { InternalServerError } from "@lindorm/errors";
+import { WebhookAuth, WebhookMethod } from "../../enums/index.js";
+import type { IWebhookSubscription } from "../../interfaces/index.js";
+import { createConduitWebhookAuthMiddleware } from "./conduit-webhook-auth-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
-jest.mock("@lindorm/conduit", () => {
-  const actual = jest.requireActual("@lindorm/conduit");
+vi.mock("@lindorm/conduit", async () => {
+  const actual =
+    await vi.importActual<typeof import("@lindorm/conduit")>("@lindorm/conduit");
   return {
     ...actual,
-    conduitBasicAuthMiddleware: jest.fn().mockReturnValue(jest.fn()),
-    conduitClientCredentialsMiddlewareFactory: jest
+    conduitBasicAuthMiddleware: vi.fn().mockReturnValue(vi.fn()),
+    conduitClientCredentialsMiddlewareFactory: vi
       .fn()
-      .mockReturnValue(jest.fn().mockResolvedValue(jest.fn())),
-    conduitHeadersMiddleware: jest.fn().mockReturnValue(jest.fn()),
+      .mockReturnValue(vi.fn().mockResolvedValue(vi.fn())),
+    conduitHeadersMiddleware: vi.fn().mockReturnValue(vi.fn()),
   };
 });
 
@@ -24,7 +26,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
   let cache: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     cache = {};
   });
 
@@ -63,7 +65,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
     const subscription = createSubscription({ auth: WebhookAuth.None });
     const middleware = await createConduitWebhookAuthMiddleware(subscription, cache);
 
-    const next = jest.fn();
+    const next = vi.fn();
     await middleware({} as any, next);
 
     expect(next).toHaveBeenCalled();
@@ -82,14 +84,14 @@ describe("createConduitWebhookAuthMiddleware", () => {
     });
   });
 
-  test("should throw ConduitError for AuthHeaders with empty headers", async () => {
+  test("should throw InternalServerError for AuthHeaders with empty headers", async () => {
     const subscription = createSubscription({
       auth: WebhookAuth.AuthHeaders,
       authHeaders: {},
     });
 
     await expect(createConduitWebhookAuthMiddleware(subscription, cache)).rejects.toThrow(
-      ConduitError,
+      InternalServerError,
     );
   });
 
@@ -105,7 +107,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
     expect(conduitBasicAuthMiddleware).toHaveBeenCalledWith("test-user", "test-pass");
   });
 
-  test("should throw ConduitError for Basic with missing username", async () => {
+  test("should throw InternalServerError for Basic with missing username", async () => {
     const subscription = createSubscription({
       auth: WebhookAuth.Basic,
       username: null,
@@ -113,11 +115,11 @@ describe("createConduitWebhookAuthMiddleware", () => {
     });
 
     await expect(createConduitWebhookAuthMiddleware(subscription, cache)).rejects.toThrow(
-      ConduitError,
+      InternalServerError,
     );
   });
 
-  test("should throw ConduitError for Basic with missing password", async () => {
+  test("should throw InternalServerError for Basic with missing password", async () => {
     const subscription = createSubscription({
       auth: WebhookAuth.Basic,
       username: "test-user",
@@ -125,7 +127,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
     });
 
     await expect(createConduitWebhookAuthMiddleware(subscription, cache)).rejects.toThrow(
-      ConduitError,
+      InternalServerError,
     );
   });
 
@@ -151,7 +153,7 @@ describe("createConduitWebhookAuthMiddleware", () => {
     );
   });
 
-  test("should throw ConduitError for ClientCredentials with missing clientId", async () => {
+  test("should throw InternalServerError for ClientCredentials with missing clientId", async () => {
     const subscription = createSubscription({
       auth: WebhookAuth.ClientCredentials,
       clientId: null,
@@ -160,11 +162,11 @@ describe("createConduitWebhookAuthMiddleware", () => {
     });
 
     await expect(createConduitWebhookAuthMiddleware(subscription, cache)).rejects.toThrow(
-      ConduitError,
+      InternalServerError,
     );
   });
 
-  test("should throw ConduitError for ClientCredentials with missing clientSecret", async () => {
+  test("should throw InternalServerError for ClientCredentials with missing clientSecret", async () => {
     const subscription = createSubscription({
       auth: WebhookAuth.ClientCredentials,
       clientId: "client-id",
@@ -173,11 +175,11 @@ describe("createConduitWebhookAuthMiddleware", () => {
     });
 
     await expect(createConduitWebhookAuthMiddleware(subscription, cache)).rejects.toThrow(
-      ConduitError,
+      InternalServerError,
     );
   });
 
-  test("should throw ConduitError for ClientCredentials with missing issuer", async () => {
+  test("should throw InternalServerError for ClientCredentials with missing issuer", async () => {
     const subscription = createSubscription({
       auth: WebhookAuth.ClientCredentials,
       clientId: "client-id",
@@ -186,17 +188,17 @@ describe("createConduitWebhookAuthMiddleware", () => {
     });
 
     await expect(createConduitWebhookAuthMiddleware(subscription, cache)).rejects.toThrow(
-      ConduitError,
+      InternalServerError,
     );
   });
 
-  test("should throw ConduitError for unknown auth type", async () => {
+  test("should throw InternalServerError for unknown auth type", async () => {
     const subscription = createSubscription({
       auth: "unknown" as any,
     });
 
     await expect(createConduitWebhookAuthMiddleware(subscription, cache)).rejects.toThrow(
-      ConduitError,
+      InternalServerError,
     );
   });
 });

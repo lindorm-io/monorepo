@@ -3,7 +3,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import { randomBytes } from "crypto";
 import { hostname } from "os";
-import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
+import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -11,27 +11,28 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   IrisConnectionState,
   IrisEvents,
+  IrisHookMeta,
   RedisConnectionOptions,
-} from "../../../../types";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
+} from "../../../../types/index.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { RedisSharedState } from "../types/redis-types";
-import { createConsumerLoop } from "../utils/create-consumer-loop";
-import { resolveStreamKey } from "../utils/resolve-stream-key";
-import { serializeStreamFields } from "../utils/serialize-stream-fields";
-import { stopAllConsumerLoops } from "../utils/stop-consumer-loop";
-import { xaddToStream } from "../utils/xadd-to-stream";
-import { RedisMessageBus } from "./RedisMessageBus";
-import { RedisPublisher } from "./RedisPublisher";
-import { RedisRpcClient } from "./RedisRpcClient";
-import { RedisRpcServer } from "./RedisRpcServer";
-import { RedisStreamProcessor } from "./RedisStreamProcessor";
-import { RedisWorkerQueue } from "./RedisWorkerQueue";
+import type { RedisSharedState } from "../types/redis-types.js";
+import { createConsumerLoop } from "../utils/create-consumer-loop.js";
+import { resolveStreamKey } from "../utils/resolve-stream-key.js";
+import { serializeStreamFields } from "../utils/serialize-stream-fields.js";
+import { stopAllConsumerLoops } from "../utils/stop-consumer-loop.js";
+import { xaddToStream } from "../utils/xadd-to-stream.js";
+import { RedisMessageBus } from "./RedisMessageBus.js";
+import { RedisPublisher } from "./RedisPublisher.js";
+import { RedisRpcClient } from "./RedisRpcClient.js";
+import { RedisRpcServer } from "./RedisRpcServer.js";
+import { RedisStreamProcessor } from "./RedisStreamProcessor.js";
+import { RedisWorkerQueue } from "./RedisWorkerQueue.js";
 
 const DEFAULT_PREFETCH = 10;
 const DEFAULT_BLOCK_MS = 5000;
@@ -39,7 +40,7 @@ const DEFAULT_PREFIX = "iris";
 
 export type RedisDriverOptions = {
   logger: ILogger;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   url?: string;
@@ -54,7 +55,7 @@ export type RedisDriverOptions = {
 
 export class RedisDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly meta: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: RedisSharedState;
@@ -68,7 +69,7 @@ export class RedisDriver implements IIrisDriver {
 
   public constructor(options: RedisDriverOptions, state?: RedisSharedState) {
     this.logger = options.logger.child(["RedisDriver"]);
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
     this.delayManager = options.delayManager;
@@ -95,7 +96,8 @@ export class RedisDriver implements IIrisDriver {
     this.setConnectionState("connecting");
 
     try {
-      const { default: Redis } = await import("ioredis");
+      const ioredis = await import("ioredis");
+      const Redis = ioredis.Redis;
 
       const {
         url,
@@ -348,7 +350,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisPublisher<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -362,7 +364,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisMessageBus<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -377,7 +379,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisWorkerQueue<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -390,7 +392,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisStreamProcessor({
       state: this.state,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -404,7 +406,7 @@ export class RedisDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -418,7 +420,7 @@ export class RedisDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -437,7 +439,7 @@ export class RedisDriver implements IIrisDriver {
     return new RedisDriver(
       {
         logger: this.logger,
-        context: this.context,
+        meta: this.meta,
         amphora: this.amphora,
         getSubscribers,
         url: this.state.connectionConfig.url,

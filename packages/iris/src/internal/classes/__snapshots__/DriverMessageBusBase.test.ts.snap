@@ -1,20 +1,20 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`DriverMessageBusBase afterConsumeSuccess should call subscribers in order 1`] = `
+exports[`DriverMessageBusBase > afterConsumeSuccess > should call subscribers in order 1`] = `
 [
   "sub1",
   "sub2",
 ]
 `;
 
-exports[`DriverMessageBusBase completePublish should call subscribers in order 1`] = `
+exports[`DriverMessageBusBase > completePublish > should call subscribers in order 1`] = `
 [
   "sub1-after",
   "sub2-after",
 ]
 `;
 
-exports[`DriverMessageBusBase hook vs subscriber ordering (#11) should call decorator hooks before subscriber hooks in both prepare and complete 1`] = `
+exports[`DriverMessageBusBase > hook vs subscriber ordering (#11) > should call decorator hooks before subscriber hooks in both prepare and complete 1`] = `
 [
   "decorator-beforePublish",
   "subscriber-beforePublish",
@@ -23,14 +23,14 @@ exports[`DriverMessageBusBase hook vs subscriber ordering (#11) should call deco
 ]
 `;
 
-exports[`DriverMessageBusBase onConsumeError should call subscribers in order 1`] = `
+exports[`DriverMessageBusBase > onConsumeError > should call subscribers in order 1`] = `
 [
   "sub1",
   "sub2",
 ]
 `;
 
-exports[`DriverMessageBusBase prepareForPublish should call subscribers in order 1`] = `
+exports[`DriverMessageBusBase > prepareForPublish > should call subscribers in order 1`] = `
 [
   "sub1-before",
   "sub2-before",

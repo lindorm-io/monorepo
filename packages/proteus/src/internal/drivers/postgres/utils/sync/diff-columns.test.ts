@@ -1,7 +1,8 @@
-import { PostgresSyncError } from "../../errors/PostgresSyncError";
-import type { DbColumn } from "../../types/db-snapshot";
-import type { DesiredColumn } from "../../types/desired-schema";
-import { diffColumns } from "./diff-columns";
+import { PostgresSyncError } from "../../errors/PostgresSyncError.js";
+import type { DbColumn } from "../../types/db-snapshot.js";
+import type { DesiredColumn } from "../../types/desired-schema.js";
+import { diffColumns } from "./diff-columns.js";
+import { describe, expect, it } from "vitest";
 
 const makeDbCol = (overrides: Partial<DbColumn> = {}): DbColumn => ({
   name: "col",

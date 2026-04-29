@@ -1,61 +1,61 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`mapFieldTypeMysql binary type binary -> BLOB 1`] = `"BLOB"`;
+exports[`mapFieldTypeMysql > binary type > binary -> BLOB 1`] = `"BLOB"`;
 
-exports[`mapFieldTypeMysql boolean boolean -> TINYINT(1) 1`] = `"TINYINT(1)"`;
+exports[`mapFieldTypeMysql > boolean > boolean -> TINYINT(1) 1`] = `"TINYINT(1)"`;
 
-exports[`mapFieldTypeMysql date/time types date -> DATE 1`] = `"DATE"`;
+exports[`mapFieldTypeMysql > date/time types > date -> DATE 1`] = `"DATE"`;
 
-exports[`mapFieldTypeMysql date/time types interval -> VARCHAR(255) 1`] = `"VARCHAR(255)"`;
+exports[`mapFieldTypeMysql > date/time types > interval -> VARCHAR(255) 1`] = `"VARCHAR(255)"`;
 
-exports[`mapFieldTypeMysql date/time types time -> TIME(3) 1`] = `"TIME(3)"`;
+exports[`mapFieldTypeMysql > date/time types > time -> TIME(3) 1`] = `"TIME(3)"`;
 
-exports[`mapFieldTypeMysql date/time types timestamp -> DATETIME(3) 1`] = `"DATETIME(3)"`;
+exports[`mapFieldTypeMysql > date/time types > timestamp -> DATETIME(3) 1`] = `"DATETIME(3)"`;
 
-exports[`mapFieldTypeMysql floating point types decimal with precision and scale -> DECIMAL(p, s) 1`] = `"DECIMAL(10, 2)"`;
+exports[`mapFieldTypeMysql > floating point types > decimal with precision and scale -> DECIMAL(p, s) 1`] = `"DECIMAL(10, 2)"`;
 
-exports[`mapFieldTypeMysql floating point types decimal with precision only -> DECIMAL(p) 1`] = `"DECIMAL(10)"`;
+exports[`mapFieldTypeMysql > floating point types > decimal with precision only -> DECIMAL(p) 1`] = `"DECIMAL(10)"`;
 
-exports[`mapFieldTypeMysql floating point types decimal with scale but no precision -> DECIMAL (scale ignored) 1`] = `"DECIMAL"`;
+exports[`mapFieldTypeMysql > floating point types > decimal with scale but no precision -> DECIMAL (scale ignored) 1`] = `"DECIMAL"`;
 
-exports[`mapFieldTypeMysql floating point types decimal without precision -> DECIMAL 1`] = `"DECIMAL"`;
+exports[`mapFieldTypeMysql > floating point types > decimal without precision -> DECIMAL 1`] = `"DECIMAL"`;
 
-exports[`mapFieldTypeMysql floating point types float -> DOUBLE 1`] = `"DOUBLE"`;
+exports[`mapFieldTypeMysql > floating point types > float -> DOUBLE 1`] = `"DOUBLE"`;
 
-exports[`mapFieldTypeMysql floating point types real -> FLOAT 1`] = `"FLOAT"`;
+exports[`mapFieldTypeMysql > floating point types > real -> FLOAT 1`] = `"FLOAT"`;
 
-exports[`mapFieldTypeMysql integer types bigint -> BIGINT 1`] = `"BIGINT"`;
+exports[`mapFieldTypeMysql > integer types > bigint -> BIGINT 1`] = `"BIGINT"`;
 
-exports[`mapFieldTypeMysql integer types integer -> INT 1`] = `"INT"`;
+exports[`mapFieldTypeMysql > integer types > integer -> INT 1`] = `"INT"`;
 
-exports[`mapFieldTypeMysql integer types smallint -> SMALLINT 1`] = `"SMALLINT"`;
+exports[`mapFieldTypeMysql > integer types > smallint -> SMALLINT 1`] = `"SMALLINT"`;
 
-exports[`mapFieldTypeMysql logical types email -> VARCHAR(320) 1`] = `"VARCHAR(320)"`;
+exports[`mapFieldTypeMysql > logical types > email -> VARCHAR(320) 1`] = `"VARCHAR(320)"`;
 
-exports[`mapFieldTypeMysql logical types url -> TEXT 1`] = `"TEXT"`;
+exports[`mapFieldTypeMysql > logical types > url -> TEXT 1`] = `"TEXT"`;
 
-exports[`mapFieldTypeMysql network types cidr -> VARCHAR(45) 1`] = `"VARCHAR(45)"`;
+exports[`mapFieldTypeMysql > network types > cidr -> VARCHAR(45) 1`] = `"VARCHAR(45)"`;
 
-exports[`mapFieldTypeMysql network types inet -> VARCHAR(45) 1`] = `"VARCHAR(45)"`;
+exports[`mapFieldTypeMysql > network types > inet -> VARCHAR(45) 1`] = `"VARCHAR(45)"`;
 
-exports[`mapFieldTypeMysql network types macaddr -> CHAR(17) 1`] = `"CHAR(17)"`;
+exports[`mapFieldTypeMysql > network types > macaddr -> CHAR(17) 1`] = `"CHAR(17)"`;
 
-exports[`mapFieldTypeMysql string types enum -> VARCHAR(255) fallback 1`] = `"VARCHAR(255)"`;
+exports[`mapFieldTypeMysql > string types > enum -> VARCHAR(255) fallback 1`] = `"VARCHAR(255)"`;
 
-exports[`mapFieldTypeMysql string types string with max -> VARCHAR(n) 1`] = `"VARCHAR(100)"`;
+exports[`mapFieldTypeMysql > string types > string with max -> VARCHAR(n) 1`] = `"VARCHAR(100)"`;
 
-exports[`mapFieldTypeMysql string types string without max -> VARCHAR(255) 1`] = `"TEXT"`;
+exports[`mapFieldTypeMysql > string types > string without max -> VARCHAR(255) 1`] = `"TEXT"`;
 
-exports[`mapFieldTypeMysql string types text -> TEXT 1`] = `"TEXT"`;
+exports[`mapFieldTypeMysql > string types > text -> TEXT 1`] = `"TEXT"`;
 
-exports[`mapFieldTypeMysql string types uuid -> CHAR(36) 1`] = `"CHAR(36)"`;
+exports[`mapFieldTypeMysql > string types > uuid -> CHAR(36) 1`] = `"CHAR(36)"`;
 
-exports[`mapFieldTypeMysql string types varchar with max -> VARCHAR(n) 1`] = `"VARCHAR(50)"`;
+exports[`mapFieldTypeMysql > string types > varchar with max -> VARCHAR(n) 1`] = `"VARCHAR(50)"`;
 
-exports[`mapFieldTypeMysql string types varchar without max -> VARCHAR(255) 1`] = `"VARCHAR(255)"`;
+exports[`mapFieldTypeMysql > string types > varchar without max -> VARCHAR(255) 1`] = `"VARCHAR(255)"`;
 
-exports[`mapFieldTypeMysql structured types array -> JSON 1`] = `"JSON"`;
+exports[`mapFieldTypeMysql > structured types > array -> JSON 1`] = `"JSON"`;
 
-exports[`mapFieldTypeMysql structured types json -> JSON 1`] = `"JSON"`;
+exports[`mapFieldTypeMysql > structured types > json -> JSON 1`] = `"JSON"`;
 
-exports[`mapFieldTypeMysql structured types object -> JSON 1`] = `"JSON"`;
+exports[`mapFieldTypeMysql > structured types > object -> JSON 1`] = `"JSON"`;

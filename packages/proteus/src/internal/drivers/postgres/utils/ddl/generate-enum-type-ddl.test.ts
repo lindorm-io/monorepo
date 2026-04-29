@@ -1,6 +1,7 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import { ProteusError } from "../../../../../errors";
-import { generateEnumTypeDDL } from "./generate-enum-type-ddl";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import { ProteusError } from "../../../../../errors/index.js";
+import { generateEnumTypeDDL } from "./generate-enum-type-ddl.js";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Sample enums

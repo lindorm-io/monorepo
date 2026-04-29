@@ -2,7 +2,8 @@ import { KryptosKit } from "@lindorm/kryptos";
 import {
   getDiffieHellmanKeyWrapDecryptionKey,
   getDiffieHellmanKeyWrapEncryptionKey,
-} from "./diffie-hellman-key-wrap";
+} from "./diffie-hellman-key-wrap.js";
+import { describe, expect, test } from "vitest";
 
 describe("diffieHellman", () => {
   describe("ECB", () => {

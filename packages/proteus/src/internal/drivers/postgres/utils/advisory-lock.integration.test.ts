@@ -1,8 +1,9 @@
 import { randomBytes } from "crypto";
 import { Client } from "pg";
-import { createTestPgClient } from "../../../__fixtures__/create-test-pg-client";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { withAdvisoryLock } from "./advisory-lock";
+import { createTestPgClient } from "../../../__fixtures__/create-test-pg-client.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { withAdvisoryLock } from "./advisory-lock.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const KEY_1 = 0x54455354; // "TEST"
 const KEY_2 = 0x4c4f434b; // "LOCK"

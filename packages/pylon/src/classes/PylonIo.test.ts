@@ -1,13 +1,17 @@
-import { Amphora, IAmphora } from "@lindorm/amphora";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
-import { createMockProteusSource, createMockRepository } from "@lindorm/proteus/mocks";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import {
+  createMockProteusSource,
+  createMockRepository,
+} from "@lindorm/proteus/mocks/vitest";
 import { Server as HttpServer } from "http";
 import { join } from "path";
-import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner";
-import { PylonError } from "../errors/PylonError";
-import { PylonListener } from "./PylonListener";
-import { PylonIo } from "./PylonIo";
+import { PylonListenerScanner } from "../internal/classes/PylonListenerScanner.js";
+import { PylonError } from "../errors/PylonError.js";
+import { PylonListener } from "./PylonListener.js";
+import { PylonIo } from "./PylonIo.js";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("PylonIo (handshake chain)", () => {
   let http: HttpServer;
@@ -44,12 +48,12 @@ describe("PylonIo (handshake chain)", () => {
       },
     } as any);
 
-    const useSpies: Array<jest.Mock> = [];
+    const useSpies: Array<Mock> = [];
     const originalOf = io.server.of.bind(io.server);
-    (io.server as any).of = jest.fn((ns: string) => {
+    (io.server as any).of = vi.fn((ns: string) => {
       const namespace = originalOf(ns);
       if (!(namespace as any).__useSpy) {
-        const useSpy = jest.fn((fn: any) => {
+        const useSpy = vi.fn((fn: any) => {
           (namespace as any).__runner = fn;
           return namespace;
         });
@@ -57,20 +61,23 @@ describe("PylonIo (handshake chain)", () => {
         (namespace as any).__useSpy = useSpy;
         useSpies.push(useSpy);
       }
-      namespace.on = jest.fn() as any;
+      namespace.on = vi.fn() as any;
       return namespace;
     });
 
-    io.load();
+    // NOTE: load() is async; tests call `await io.load()` themselves. Keeping
+    // createPylonIo sync so tests that assert constructor-time throws can use
+    // plain `expect(() => createPylonIo(...)).toThrow(...)`.
 
     return io;
   };
 
-  const invokeRunner = (
+  const invokeRunner = async (
     io: PylonIo,
     ns: string,
     socketOverrides: any = {},
   ): Promise<Error | undefined> => {
+    await io.load();
     const runner = (io.server.of(ns) as any).__runner as (
       s: any,
       next: (err?: Error) => void,
@@ -188,7 +195,7 @@ describe("PylonIo (handshake chain)", () => {
 
     const buildProteus = () => {
       const mockRepo = createMockRepository();
-      (mockRepo.findOne as jest.Mock).mockResolvedValue({
+      (mockRepo.findOne as Mock).mockResolvedValue({
         id: "sid-1",
         accessToken: "access_token",
         expiresAt: new Date("2099-01-01T00:00:00.000Z"),
@@ -198,10 +205,10 @@ describe("PylonIo (handshake chain)", () => {
       });
 
       const mockSession = {
-        repository: jest.fn().mockReturnValue(mockRepo),
+        repository: vi.fn().mockReturnValue(mockRepo),
       };
       const mockProteus: any = createMockProteusSource();
-      mockProteus.session = jest.fn().mockReturnValue(mockSession);
+      mockProteus.session = vi.fn().mockReturnValue(mockSession);
       return { mockProteus, mockRepo };
     };
 
@@ -277,6 +284,8 @@ describe("PylonIo (handshake chain)", () => {
         session: { ...validSession, proteus: mockProteus },
       });
 
+      await io.load();
+
       const seen: any = {};
       const runner = (io.server.of("/") as any).__runner as (
         s: any,
@@ -337,11 +346,11 @@ describe("PylonIo socket.listeners option", () => {
     } as any);
   };
 
-  test("should scan when given a bare directory path string", () => {
-    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+  test("should scan when given a bare directory path string", async () => {
+    const scanSpy = vi.spyOn(PylonListenerScanner.prototype, "scan");
     const io = buildIo(listenersDir);
 
-    io.load();
+    await io.load();
 
     expect(scanSpy).toHaveBeenCalledTimes(1);
     expect(scanSpy).toHaveBeenCalledWith(listenersDir);
@@ -349,13 +358,13 @@ describe("PylonIo socket.listeners option", () => {
     scanSpy.mockRestore();
   });
 
-  test("should accept a bare PylonListener instance and register its namespace", () => {
-    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+  test("should accept a bare PylonListener instance and register its namespace", async () => {
+    const scanSpy = vi.spyOn(PylonListenerScanner.prototype, "scan");
     const listener = new PylonListener({ namespace: "/solo" });
     const io = buildIo(listener);
 
-    const ofSpy = jest.spyOn(io.server, "of");
-    io.load();
+    const ofSpy = vi.spyOn(io.server, "of");
+    await io.load();
 
     expect(scanSpy).not.toHaveBeenCalled();
     expect(ofSpy.mock.calls.map((c) => c[0])).toEqual(
@@ -366,15 +375,15 @@ describe("PylonIo socket.listeners option", () => {
     ofSpy.mockRestore();
   });
 
-  test("should accept an array of pre-built PylonListener instances", () => {
-    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+  test("should accept an array of pre-built PylonListener instances", async () => {
+    const scanSpy = vi.spyOn(PylonListenerScanner.prototype, "scan");
     const io = buildIo([
       new PylonListener({ namespace: "/alpha" }),
       new PylonListener({ namespace: "/beta" }),
     ]);
 
-    const ofSpy = jest.spyOn(io.server, "of");
-    io.load();
+    const ofSpy = vi.spyOn(io.server, "of");
+    await io.load();
 
     expect(scanSpy).not.toHaveBeenCalled();
     expect(ofSpy.mock.calls.map((c) => c[0])).toEqual(
@@ -385,11 +394,11 @@ describe("PylonIo socket.listeners option", () => {
     ofSpy.mockRestore();
   });
 
-  test("should accept an array of directory path strings and scan each", () => {
-    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+  test("should accept an array of directory path strings and scan each", async () => {
+    const scanSpy = vi.spyOn(PylonListenerScanner.prototype, "scan");
     const io = buildIo([listenersDir]);
 
-    io.load();
+    await io.load();
 
     expect(scanSpy).toHaveBeenCalledTimes(1);
     expect(scanSpy).toHaveBeenCalledWith(listenersDir);
@@ -397,12 +406,12 @@ describe("PylonIo socket.listeners option", () => {
     scanSpy.mockRestore();
   });
 
-  test("should accept a mixed array of scanner paths and pre-built listeners", () => {
-    const scanSpy = jest.spyOn(PylonListenerScanner.prototype, "scan");
+  test("should accept a mixed array of scanner paths and pre-built listeners", async () => {
+    const scanSpy = vi.spyOn(PylonListenerScanner.prototype, "scan");
     const io = buildIo([listenersDir, new PylonListener({ namespace: "/mixed" })]);
 
-    const ofSpy = jest.spyOn(io.server, "of");
-    io.load();
+    const ofSpy = vi.spyOn(io.server, "of");
+    await io.load();
 
     expect(scanSpy).toHaveBeenCalledTimes(1);
     expect(scanSpy).toHaveBeenCalledWith(listenersDir);

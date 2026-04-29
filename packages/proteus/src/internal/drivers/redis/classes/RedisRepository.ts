@@ -5,52 +5,53 @@ import type {
   IEntity,
   IProteusCursor,
   IProteusQueryBuilder,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   ClearOptions,
   CursorOptions,
   FindOptions,
   UpsertOptions,
-} from "../../../../types";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { MetaRelation, QueryScope } from "../../../entity/types/metadata";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { AggregateFunction } from "../../../types/aggregate";
-import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { PaginateOptions } from "../../../../types/paginate-options";
-import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase";
-import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate";
+} from "../../../../types/index.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
+import type { MetaRelation, QueryScope } from "../../../entity/types/metadata.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { AggregateFunction } from "../../../types/aggregate.js";
+import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
+import type { PaginateOptions } from "../../../../types/paginate-options.js";
+import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase.js";
+import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
   validateRelationNames,
-} from "../../../utils/repository/repository-guards";
-import { RelationPersister } from "../../../utils/repository/RelationPersister";
-import { buildRelationFilter } from "../../../utils/repository/build-relation-filter";
-import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
+} from "../../../utils/repository/repository-guards.js";
+import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
+import { buildRelationFilter } from "../../../utils/repository/build-relation-filter.js";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
 import {
   computeAggregateFromValues,
   extractNumericValues,
-} from "../../../utils/query/compute-in-memory-aggregate";
-import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory";
-import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store";
-import { diffColumns } from "../../../entity/utils/diff-columns";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
-import { RedisCursor } from "./RedisCursor";
+} from "../../../utils/query/compute-in-memory-aggregate.js";
+import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory.js";
+import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store.js";
+import { diffColumns } from "../../../entity/utils/diff-columns.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
+import { RedisCursor } from "./RedisCursor.js";
 import {
   createRedisJoinTableOps,
   buildForwardJoinScanPattern,
   buildReverseJoinScanPattern,
-} from "../utils/redis-join-table-ops";
-import { buildJoinSetKey, buildReverseJoinSetKey } from "../utils/build-join-set-key";
-import { buildScanPattern } from "../utils/build-scan-pattern";
-import { scanEntityKeys } from "../utils/scan-entity-keys";
-import { deserializeHash } from "../utils/deserialize-hash";
-import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root";
+} from "../utils/redis-join-table-ops.js";
+import { buildJoinSetKey, buildReverseJoinSetKey } from "../utils/build-join-set-key.js";
+import { buildScanPattern } from "../utils/build-scan-pattern.js";
+import { scanEntityKeys } from "../utils/scan-entity-keys.js";
+import { deserializeHash } from "../utils/deserialize-hash.js";
+import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
 
 export type RedisRepositoryOptions<E extends IEntity> = {
   target: Constructor<E>;
@@ -59,7 +60,7 @@ export type RedisRepositoryOptions<E extends IEntity> = {
   client: Redis;
   namespace: string | null;
   logger: ILogger;
-  context?: unknown;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   emitEntity?: EntityEmitFn;
@@ -81,7 +82,7 @@ export class RedisRepository<
       logger: options.logger,
       driver: "redis",
       driverLabel: "RedisRepository",
-      context: options.context,
+      meta: options.meta,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
       emitEntity: options.emitEntity,

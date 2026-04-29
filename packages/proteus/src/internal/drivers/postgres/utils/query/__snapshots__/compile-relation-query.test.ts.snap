@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileRelationQuery — ManyToMany applies orderBy with table alias f for ManyToMany 1`] = `
+exports[`compileRelationQuery — ManyToMany > applies orderBy with table alias f for ManyToMany 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -108,7 +108,7 @@ exports[`compileRelationQuery — ManyToMany applies orderBy with table alias f 
 }
 `;
 
-exports[`compileRelationQuery — ManyToMany compiles a basic ManyToMany query with INNER JOIN on join table 1`] = `
+exports[`compileRelationQuery — ManyToMany > compiles a basic ManyToMany query with INNER JOIN on join table 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -214,7 +214,7 @@ exports[`compileRelationQuery — ManyToMany compiles a basic ManyToMany query w
 }
 `;
 
-exports[`compileRelationQuery — ManyToMany includes join table root pk alias columns in SELECT 1`] = `
+exports[`compileRelationQuery — ManyToMany > includes join table root pk alias columns in SELECT 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -320,7 +320,7 @@ exports[`compileRelationQuery — ManyToMany includes join table root pk alias c
 }
 `;
 
-exports[`compileRelationQuery — ManyToMany uses findKeys when no inverse relation is found 1`] = `
+exports[`compileRelationQuery — ManyToMany > uses findKeys when no inverse relation is found 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -414,7 +414,7 @@ exports[`compileRelationQuery — ManyToMany uses findKeys when no inverse relat
 }
 `;
 
-exports[`compileRelationQuery — inverse (OneToMany) adds orderBy clause when relation has orderBy 1`] = `
+exports[`compileRelationQuery — inverse (OneToMany) > adds orderBy clause when relation has orderBy 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -532,7 +532,7 @@ exports[`compileRelationQuery — inverse (OneToMany) adds orderBy clause when r
 }
 `;
 
-exports[`compileRelationQuery — inverse (OneToMany) applies select filter when include.select is set 1`] = `
+exports[`compileRelationQuery — inverse (OneToMany) > applies select filter when include.select is set 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -651,7 +651,7 @@ exports[`compileRelationQuery — inverse (OneToMany) applies select filter when
 }
 `;
 
-exports[`compileRelationQuery — inverse (OneToMany) compiles a basic inverse query with single root PK value 1`] = `
+exports[`compileRelationQuery — inverse (OneToMany) > compiles a basic inverse query with single root PK value 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -767,9 +767,9 @@ exports[`compileRelationQuery — inverse (OneToMany) compiles a basic inverse q
 }
 `;
 
-exports[`compileRelationQuery — inverse (OneToMany) compiles inverse query with multiple root PK values 1`] = `"SELECT "id", "title", "author_id" FROM "app"."Post" WHERE "author_id" IN ($1, $2, $3)"`;
+exports[`compileRelationQuery — inverse (OneToMany) > compiles inverse query with multiple root PK values 1`] = `"SELECT "id", "title", "author_id" FROM "app"."Post" WHERE "author_id" IN ($1, $2, $3)"`;
 
-exports[`compileRelationQuery — inverse (OneToMany) does not add extra FK columns in SELECT when FK key is already in metadata fields 1`] = `
+exports[`compileRelationQuery — inverse (OneToMany) > does not add extra FK columns in SELECT when FK key is already in metadata fields 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -885,7 +885,7 @@ exports[`compileRelationQuery — inverse (OneToMany) does not add extra FK colu
 }
 `;
 
-exports[`compileRelationQuery — inverse (OneToMany) includes extra FK columns in SELECT when FK key is not in metadata fields 1`] = `
+exports[`compileRelationQuery — inverse (OneToMany) > includes extra FK columns in SELECT when FK key is not in metadata fields 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -977,7 +977,7 @@ exports[`compileRelationQuery — inverse (OneToMany) includes extra FK columns 
 }
 `;
 
-exports[`compileRelationQuery — inverse (OneToMany) includes withDeleted filter when withDeleted is true 1`] = `
+exports[`compileRelationQuery — inverse (OneToMany) > includes withDeleted filter when withDeleted is true 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -1117,7 +1117,7 @@ exports[`compileRelationQuery — inverse (OneToMany) includes withDeleted filte
 }
 `;
 
-exports[`compileRelationQuery — owning side (has joinKeys) compiles owning-side query using foreign PK IN clause 1`] = `
+exports[`compileRelationQuery — owning side (has joinKeys) > compiles owning-side query using foreign PK IN clause 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -1233,7 +1233,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) compiles owning-sid
 }
 `;
 
-exports[`compileRelationQuery — owning side (has joinKeys) falls back to ctx.namespace when foreignMeta has no namespace 1`] = `
+exports[`compileRelationQuery — owning side (has joinKeys) > falls back to ctx.namespace when foreignMeta has no namespace 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -1349,7 +1349,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) falls back to ctx.n
 }
 `;
 
-exports[`compileRelationQuery — owning side (has joinKeys) handles composite joinKeys with multiple pk values 1`] = `
+exports[`compileRelationQuery — owning side (has joinKeys) > handles composite joinKeys with multiple pk values 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -1445,7 +1445,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) handles composite j
 }
 `;
 
-exports[`compileRelationQuery — owning side (has joinKeys) uses namespace from foreignMeta.entity when available 1`] = `
+exports[`compileRelationQuery — owning side (has joinKeys) > uses namespace from foreignMeta.entity when available 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -1561,7 +1561,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) uses namespace from
 }
 `;
 
-exports[`compileRelationQuery — user-provided WHERE appends compiled user WHERE condition to the query 1`] = `
+exports[`compileRelationQuery — user-provided WHERE > appends compiled user WHERE condition to the query 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -1680,7 +1680,7 @@ exports[`compileRelationQuery — user-provided WHERE appends compiled user WHER
 }
 `;
 
-exports[`compileRelationQuery — version filtering adds point-in-time version condition when versionTimestamp is set 1`] = `
+exports[`compileRelationQuery — version filtering > adds point-in-time version condition when versionTimestamp is set 1`] = `
 {
   "foreignMetadata": {
     "entity": {
@@ -1845,7 +1845,7 @@ exports[`compileRelationQuery — version filtering adds point-in-time version c
 }
 `;
 
-exports[`compileRelationQuery — version filtering adds versionEndDate IS NULL when foreignMeta has version fields and no timestamp 1`] = `
+exports[`compileRelationQuery — version filtering > adds versionEndDate IS NULL when foreignMeta has version fields and no timestamp 1`] = `
 {
   "foreignMetadata": {
     "entity": {

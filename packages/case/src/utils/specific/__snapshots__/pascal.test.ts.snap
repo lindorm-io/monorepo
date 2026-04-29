@@ -1,14 +1,14 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pascalCase should convert CONSTANT_CASE 1`] = `"ConstantCase"`;
+exports[`pascalCase > should convert CONSTANT_CASE 1`] = `"ConstantCase"`;
 
-exports[`pascalCase should convert Capital Case 1`] = `"CapitalCase"`;
+exports[`pascalCase > should convert Capital Case 1`] = `"CapitalCase"`;
 
-exports[`pascalCase should convert PascalCase 1`] = `"PascalCase"`;
+exports[`pascalCase > should convert PascalCase 1`] = `"PascalCase"`;
 
-exports[`pascalCase should convert Sentence case 1`] = `"SentenceCase"`;
+exports[`pascalCase > should convert Sentence case 1`] = `"SentenceCase"`;
 
-exports[`pascalCase should convert array with objects 1`] = `
+exports[`pascalCase > should convert array with objects 1`] = `
 [
   {
     "CamelCase": true,
@@ -37,7 +37,7 @@ exports[`pascalCase should convert array with objects 1`] = `
 ]
 `;
 
-exports[`pascalCase should convert array with strings 1`] = `
+exports[`pascalCase > should convert array with strings 1`] = `
 [
   "CamelCase",
   "CapitalCase",
@@ -52,15 +52,15 @@ exports[`pascalCase should convert array with strings 1`] = `
 ]
 `;
 
-exports[`pascalCase should convert camelCase 1`] = `"CamelCase"`;
+exports[`pascalCase > should convert camelCase 1`] = `"CamelCase"`;
 
-exports[`pascalCase should convert dot.case 1`] = `"DotCase"`;
+exports[`pascalCase > should convert dot.case 1`] = `"DotCase"`;
 
-exports[`pascalCase should convert kebab-case 1`] = `"KebabCase"`;
+exports[`pascalCase > should convert kebab-case 1`] = `"KebabCase"`;
 
-exports[`pascalCase should convert lower case 1`] = `"LowerCase"`;
+exports[`pascalCase > should convert lower case 1`] = `"LowerCase"`;
 
-exports[`pascalCase should convert object keys 1`] = `
+exports[`pascalCase > should convert object keys 1`] = `
 {
   "CamelCase": true,
   "CapitalCase": true,
@@ -75,6 +75,6 @@ exports[`pascalCase should convert object keys 1`] = `
 }
 `;
 
-exports[`pascalCase should convert path/case 1`] = `"PathCase"`;
+exports[`pascalCase > should convert path/case 1`] = `"PathCase"`;
 
-exports[`pascalCase should convert snake_case 1`] = `"SnakeCase"`;
+exports[`pascalCase > should convert snake_case 1`] = `"SnakeCase"`;

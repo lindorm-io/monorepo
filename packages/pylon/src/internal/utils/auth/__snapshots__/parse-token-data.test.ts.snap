@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parseTokenData should compute expiresAt from expiresIn when no token claims 1`] = `
+exports[`parseTokenData > should compute expiresAt from expiresIn when no token claims 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-01T09:00:00.000Z,
@@ -16,7 +16,7 @@ exports[`parseTokenData should compute expiresAt from expiresIn when no token cl
 }
 `;
 
-exports[`parseTokenData should compute expiresAt from tokenExpiry fallback 1`] = `
+exports[`parseTokenData > should compute expiresAt from tokenExpiry fallback 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-01T10:00:00.000Z,
@@ -32,7 +32,7 @@ exports[`parseTokenData should compute expiresAt from tokenExpiry fallback 1`] =
 }
 `;
 
-exports[`parseTokenData should fall through when access token verifies as JWS (non-JWT) 1`] = `
+exports[`parseTokenData > should fall through when access token verifies as JWS (non-JWT) 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-01T09:00:00.000Z,
@@ -48,7 +48,7 @@ exports[`parseTokenData should fall through when access token verifies as JWS (n
 }
 `;
 
-exports[`parseTokenData should fall through when access token verify throws AegisError (opaque token) 1`] = `
+exports[`parseTokenData > should fall through when access token verify throws AegisError (opaque token) 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-01T09:00:00.000Z,
@@ -64,7 +64,7 @@ exports[`parseTokenData should fall through when access token verify throws Aegi
 }
 `;
 
-exports[`parseTokenData should parse all tokens correctly 1`] = `
+exports[`parseTokenData > should parse all tokens correctly 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-02T08:00:00.000Z,
@@ -80,7 +80,7 @@ exports[`parseTokenData should parse all tokens correctly 1`] = `
 }
 `;
 
-exports[`parseTokenData should preserve existing session fields on refresh 1`] = `
+exports[`parseTokenData > should preserve existing session fields on refresh 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-01T09:20:00.000Z,
@@ -96,7 +96,7 @@ exports[`parseTokenData should preserve existing session fields on refresh 1`] =
 }
 `;
 
-exports[`parseTokenData should resolve scope from id_token when access token is opaque and envelope has no scope 1`] = `
+exports[`parseTokenData > should resolve scope from id_token when access token is opaque and envelope has no scope 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-01T09:00:00.000Z,
@@ -112,7 +112,7 @@ exports[`parseTokenData should resolve scope from id_token when access token is 
 }
 `;
 
-exports[`parseTokenData should resolve subject and expiresAt from JWT access token 1`] = `
+exports[`parseTokenData > should resolve subject and expiresAt from JWT access token 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-02T08:00:00.000Z,
@@ -126,7 +126,7 @@ exports[`parseTokenData should resolve subject and expiresAt from JWT access tok
 }
 `;
 
-exports[`parseTokenData should resolve subject from id_token when access token has no subject 1`] = `
+exports[`parseTokenData > should resolve subject from id_token when access token has no subject 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-02T08:00:00.000Z,
@@ -141,7 +141,7 @@ exports[`parseTokenData should resolve subject from id_token when access token h
 }
 `;
 
-exports[`parseTokenData should resolve subject via resolveSubject callback when no id_token 1`] = `
+exports[`parseTokenData > should resolve subject via resolveSubject callback when no id_token 1`] = `
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-01T09:00:00.000Z,

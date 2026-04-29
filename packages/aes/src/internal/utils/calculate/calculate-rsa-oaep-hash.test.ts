@@ -1,6 +1,7 @@
-import { KryptosAlgorithm } from "@lindorm/kryptos";
-import { AesError } from "../../../errors";
-import { calculateRsaOaepHash } from "./calculate-rsa-oaep-hash";
+import type { KryptosAlgorithm } from "@lindorm/kryptos";
+import { AesError } from "../../../errors/index.js";
+import { calculateRsaOaepHash } from "./calculate-rsa-oaep-hash.js";
+import { describe, expect, test } from "vitest";
 
 describe("calculateRsaOaepHash", () => {
   test.each<[KryptosAlgorithm, string]>([

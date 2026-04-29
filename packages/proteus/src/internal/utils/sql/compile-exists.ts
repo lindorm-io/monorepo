@@ -1,10 +1,10 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { createEmptyState } from "../../../classes/QueryBuilder";
-import type { QueryState } from "../../types/query";
-import type { SqlDialect } from "./sql-dialect";
-import type { InheritanceAliasMap } from "./types";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { createEmptyState } from "../../../classes/QueryBuilder.js";
+import type { QueryState } from "../../types/query.js";
+import type { SqlDialect } from "./sql-dialect.js";
+import type { InheritanceAliasMap } from "./types.js";
 
 export type CompileExistsDeps = {
   resolveTableName: (

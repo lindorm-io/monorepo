@@ -1,5 +1,5 @@
 import { generateKeyPairSync } from "crypto";
-import { KryptosError } from "../../../errors";
+import { KryptosError } from "../../../errors/index.js";
 import {
   authorityKeyIdentifierExt,
   basicConstraintsExt,
@@ -8,7 +8,8 @@ import {
   subjectAlternativeNameExt,
   subjectKeyIdentifierExt,
   wrapExtension,
-} from "./encode-extensions";
+} from "./encode-extensions.js";
+import { describe, expect, test } from "vitest";
 
 describe("encode-extensions", () => {
   test("basicConstraintsExt ca=false", () => {

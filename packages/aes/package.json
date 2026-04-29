@@ -11,33 +11,29 @@
   "publishConfig": {
     "access": "public"
   },
-  "main": "dist/index.js",
+  "type": "module",
   "typings": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./mocks": {
-      "types": "./dist/mocks/index.d.ts",
-      "default": "./dist/mocks/index.js"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      "mocks": [
-        "dist/mocks/index.d.ts"
-      ]
+    "./mocks/jest": {
+      "types": "./dist/mocks/jest.d.ts",
+      "default": "./dist/mocks/jest.js"
+    },
+    "./mocks/vitest": {
+      "types": "./dist/mocks/vitest.d.ts",
+      "default": "./dist/mocks/vitest.js"
     }
   },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json",
     "example": "ts-node example",
     "prettier": "prettier --write ./src/*",
-    "test": "jest",
-    "test:ci": "jest",
-    "test:interop": "NODE_OPTIONS='--experimental-vm-modules' jest --config jest.config.interop.mjs --no-coverage",
-    "test:watch": "jest --watch --",
+    "test": "vitest run",
+    "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
+    "test:watch": "vitest",
     "typecheck": "tsc",
     "typecheck:watch": "tsc --watch",
     "update": "ncu -i",
@@ -49,10 +45,10 @@
     "@lindorm/errors": "^0.1.18",
     "@lindorm/is": "^0.1.16",
     "@lindorm/kryptos": "^0.7.0",
+    "@lindorm/types": "^0.5.0",
     "@lindorm/utils": "^0.7.1"
   },
   "devDependencies": {
-    "@lindorm/types": "^0.5.0",
     "@noble/ciphers": "^2.1.1",
     "jose": "^6.2.1"
   }

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`projectDesiredSchema should not produce duplicate enum entries when two fields share the same column name 1`] = `
+exports[`projectDesiredSchema > should not produce duplicate enum entries when two fields share the same column name 1`] = `
 [
   {
     "name": "enum_TestUser_status",
@@ -13,7 +13,7 @@ exports[`projectDesiredSchema should not produce duplicate enum entries when two
 ]
 `;
 
-exports[`projectDesiredSchema should project a simple entity 1`] = `
+exports[`projectDesiredSchema > should project a simple entity 1`] = `
 {
   "enums": [],
   "extensions": [],

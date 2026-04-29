@@ -1,11 +1,12 @@
 import { SignatureKit } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ShaError, ShaKit } from "@lindorm/sha";
 import MockDate from "mockdate";
-import { EcError } from "../../../../ec/dist";
-import { createHttpSignedRequestMiddleware } from "./http-signed-request-middleware";
+import { EcError } from "@lindorm/ec";
+import { createHttpSignedRequestMiddleware } from "./http-signed-request-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate.toISOString());
@@ -33,7 +34,7 @@ describe("httpSignedRequestMiddleware", () => {
       use: "sig",
     });
 
-    callback = jest.fn().mockResolvedValue(kryptos);
+    callback = vi.fn().mockResolvedValue(kryptos);
 
     const shaKit = new ShaKit({
       algorithm: "SHA384",
@@ -81,7 +82,7 @@ describe("httpSignedRequestMiddleware", () => {
     ctx = {
       logger: createMockLogger(),
       request: { body },
-      get: jest.fn().mockImplementation((key: string) => {
+      get: vi.fn().mockImplementation((key: string) => {
         switch (key) {
           case "date":
             return date;
@@ -104,7 +105,7 @@ describe("httpSignedRequestMiddleware", () => {
 
   test("should validate signed request", async () => {
     await expect(
-      createHttpSignedRequestMiddleware(callback)(ctx, jest.fn()),
+      createHttpSignedRequestMiddleware(callback)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(callback).toHaveBeenCalledTimes(1);
@@ -114,7 +115,7 @@ describe("httpSignedRequestMiddleware", () => {
     signature = undefined;
 
     await expect(
-      createHttpSignedRequestMiddleware(callback)(ctx, jest.fn()),
+      createHttpSignedRequestMiddleware(callback)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(callback).not.toHaveBeenCalled();
@@ -124,7 +125,7 @@ describe("httpSignedRequestMiddleware", () => {
     signature = undefined;
 
     await expect(
-      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, jest.fn()),
+      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, vi.fn()),
     ).rejects.toThrow(ClientError);
   });
 
@@ -132,7 +133,7 @@ describe("httpSignedRequestMiddleware", () => {
     date = undefined;
 
     await expect(
-      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, jest.fn()),
+      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, vi.fn()),
     ).rejects.toThrow(ClientError);
   });
 
@@ -140,7 +141,7 @@ describe("httpSignedRequestMiddleware", () => {
     digest = undefined;
 
     await expect(
-      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, jest.fn()),
+      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, vi.fn()),
     ).rejects.toThrow(ClientError);
   });
 
@@ -150,7 +151,7 @@ describe("httpSignedRequestMiddleware", () => {
     );
 
     await expect(
-      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, jest.fn()),
+      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, vi.fn()),
     ).rejects.toThrow(ShaError);
   });
 
@@ -164,7 +165,7 @@ describe("httpSignedRequestMiddleware", () => {
     ].join(";");
 
     await expect(
-      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, jest.fn()),
+      createHttpSignedRequestMiddleware(callback, { required: true })(ctx, vi.fn()),
     ).rejects.toThrow(EcError);
   });
 });

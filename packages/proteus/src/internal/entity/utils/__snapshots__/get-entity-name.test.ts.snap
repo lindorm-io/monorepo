@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`getEntityName should return scoped name with namespace from decorator 1`] = `
+exports[`getEntityName > should return scoped name with namespace from decorator 1`] = `
 {
   "name": "GetEntityNameWithNs",
   "namespace": "myApp",
@@ -13,7 +13,7 @@ exports[`getEntityName should return scoped name with namespace from decorator 1
 }
 `;
 
-exports[`getEntityName should return scoped name without namespace 1`] = `
+exports[`getEntityName > should return scoped name without namespace 1`] = `
 {
   "name": "GetEntityNameSimple",
   "namespace": null,

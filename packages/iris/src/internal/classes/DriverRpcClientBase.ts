@@ -1,18 +1,19 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { IrisSerializationError } from "../../errors/IrisSerializationError";
-import { IrisTimeoutError } from "../../errors/IrisTimeoutError";
-import { IrisTransportError } from "../../errors/IrisTransportError";
-import type { IIrisRpcClient, IMessage } from "../../interfaces";
-import type { MessageMetadata } from "../message/types/metadata";
+import { IrisSerializationError } from "../../errors/IrisSerializationError.js";
+import { IrisTimeoutError } from "../../errors/IrisTimeoutError.js";
+import { IrisTransportError } from "../../errors/IrisTransportError.js";
+import type { IIrisRpcClient, IMessage } from "../../interfaces/index.js";
+import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
 import type { IAmphora } from "@lindorm/amphora";
-import { MessageManager } from "../message/classes/MessageManager";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
-import { prepareOutbound } from "../message/utils/prepare-outbound";
-import { prepareInbound } from "../message/utils/prepare-inbound";
-import { resolveDefaultTopic } from "../message/utils/resolve-default-topic";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import { createDefaultEnvelope } from "../utils/create-default-envelope";
+import { MessageManager } from "../message/classes/MessageManager.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
+import { prepareOutbound } from "../message/utils/prepare-outbound.js";
+import { prepareInbound } from "../message/utils/prepare-inbound.js";
+import { resolveDefaultTopic } from "../message/utils/resolve-default-topic.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { createDefaultEnvelope } from "../utils/create-default-envelope.js";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -20,7 +21,7 @@ export type DriverRpcClientBaseOptions<Req extends IMessage, Res extends IMessag
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
 };
 
@@ -52,12 +53,12 @@ export abstract class DriverRpcClientBase<
     this.responseMetadata = getMessageMetadata(options.responseTarget);
     this.requestManager = new MessageManager<Req>({
       target: options.requestTarget,
-      context: options.context,
+      meta: options.meta,
       logger: options.logger,
     });
     this.responseManager = new MessageManager<Res>({
       target: options.responseTarget,
-      context: options.context,
+      meta: options.meta,
       logger: options.logger,
     });
     this.amphora = options.amphora;

@@ -1,4 +1,4 @@
-import type { RedisStreamEntry } from "../types/redis-types";
+import type { RedisStreamEntry } from "../types/redis-types.js";
 
 export const parseStreamEntry = (id: string, fields: Array<string>): RedisStreamEntry => {
   const map = new Map<string, string>();

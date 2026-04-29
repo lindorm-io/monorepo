@@ -1,35 +1,35 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`computeDelay constant should cap at delayMax 1`] = `50`;
+exports[`computeDelay > constant > should cap at delayMax 1`] = `50`;
 
-exports[`computeDelay constant should respect custom delay 1`] = `500`;
+exports[`computeDelay > constant > should respect custom delay 1`] = `500`;
 
-exports[`computeDelay constant should return same delay for any attempt 1`] = `100`;
+exports[`computeDelay > constant > should return same delay for any attempt 1`] = `100`;
 
-exports[`computeDelay constant should return same delay for any attempt 2`] = `100`;
+exports[`computeDelay > constant > should return same delay for any attempt 2`] = `100`;
 
-exports[`computeDelay constant should return same delay for any attempt 3`] = `100`;
+exports[`computeDelay > constant > should return same delay for any attempt 3`] = `100`;
 
-exports[`computeDelay exponential (default) should cap at delayMax 1`] = `5000`;
+exports[`computeDelay > exponential (default) > should cap at delayMax 1`] = `5000`;
 
-exports[`computeDelay exponential (default) should double for attempt 2 1`] = `200`;
+exports[`computeDelay > exponential (default) > should double for attempt 2 1`] = `200`;
 
-exports[`computeDelay exponential (default) should increase for attempt 4 1`] = `800`;
+exports[`computeDelay > exponential (default) > should increase for attempt 4 1`] = `800`;
 
-exports[`computeDelay exponential (default) should quadruple for attempt 3 1`] = `400`;
+exports[`computeDelay > exponential (default) > should quadruple for attempt 3 1`] = `400`;
 
-exports[`computeDelay exponential (default) should respect custom delay 1`] = `800`;
+exports[`computeDelay > exponential (default) > should respect custom delay 1`] = `800`;
 
-exports[`computeDelay exponential (default) should respect custom multiplier 1`] = `900`;
+exports[`computeDelay > exponential (default) > should respect custom multiplier 1`] = `900`;
 
-exports[`computeDelay exponential (default) should return base delay for attempt 1 1`] = `100`;
+exports[`computeDelay > exponential (default) > should return base delay for attempt 1 1`] = `100`;
 
-exports[`computeDelay linear should cap at delayMax 1`] = `5000`;
+exports[`computeDelay > linear > should cap at delayMax 1`] = `5000`;
 
-exports[`computeDelay linear should respect custom delay 1`] = `500`;
+exports[`computeDelay > linear > should respect custom delay 1`] = `500`;
 
-exports[`computeDelay linear should return delay * 1 for attempt 1 1`] = `100`;
+exports[`computeDelay > linear > should return delay * 1 for attempt 1 1`] = `100`;
 
-exports[`computeDelay linear should return delay * 2 for attempt 2 1`] = `200`;
+exports[`computeDelay > linear > should return delay * 2 for attempt 2 1`] = `200`;
 
-exports[`computeDelay linear should return delay * 3 for attempt 3 1`] = `300`;
+exports[`computeDelay > linear > should return delay * 3 for attempt 3 1`] = `300`;

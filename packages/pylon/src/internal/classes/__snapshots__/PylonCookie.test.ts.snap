@@ -1,13 +1,13 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PylonCookie toHeader should include all attributes when set 1`] = `"session=abc123; domain=example.com; path=/app; expires=Thu, 31 Dec 2026 00:00:00 GMT; priority=medium; samesite=none; secure; httponly; partitioned"`;
+exports[`PylonCookie > toHeader > should include all attributes when set 1`] = `"session=abc123; domain=example.com; path=/app; expires=Thu, 31 Dec 2026 00:00:00 GMT; priority=medium; samesite=none; secure; httponly; partitioned"`;
 
-exports[`PylonCookie toHeader should include domain when set 1`] = `"test=value; domain=example.com; path=/"`;
+exports[`PylonCookie > toHeader > should include domain when set 1`] = `"test=value; domain=example.com; path=/"`;
 
-exports[`PylonCookie toHeader should include path 1`] = `"test=value; path=/api"`;
+exports[`PylonCookie > toHeader > should include path 1`] = `"test=value; path=/api"`;
 
-exports[`PylonCookie toHeader should include priority when set 1`] = `"test=value; path=/; priority=high"`;
+exports[`PylonCookie > toHeader > should include priority when set 1`] = `"test=value; path=/; priority=high"`;
 
-exports[`PylonCookie toHeader should include sameSite when set 1`] = `"test=value; path=/; samesite=lax"`;
+exports[`PylonCookie > toHeader > should include sameSite when set 1`] = `"test=value; path=/; samesite=lax"`;
 
-exports[`PylonCookie toHeader should return basic header with only name and value 1`] = `"test=value; path=/"`;
+exports[`PylonCookie > toHeader > should return basic header with only name and value 1`] = `"test=value; path=/"`;

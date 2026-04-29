@@ -1,7 +1,8 @@
-import { KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
-import { decryptAes } from "./encryption";
-import { encryptAesContent } from "./encrypt-content";
-import { getEncryptionKey } from "./get-key/get-encryption-key";
+import { type KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
+import { decryptAes } from "./encryption.js";
+import { encryptAesContent } from "./encrypt-content.js";
+import { getEncryptionKey } from "./get-key/get-encryption-key.js";
+import { describe, expect, test } from "vitest";
 
 describe("encryptAesContent", () => {
   describe("encryptions", () => {

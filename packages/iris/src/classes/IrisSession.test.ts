@@ -1,35 +1,37 @@
-import type { IIrisDriver } from "../interfaces/IrisDriver";
-import { IrisSession, type IrisSessionOptions } from "./IrisSession";
+import type { IIrisDriver } from "../interfaces/IrisDriver.js";
+import { createDefaultIrisHookMeta } from "../types/iris-hook-meta.js";
+import { IrisSession, type IrisSessionOptions } from "./IrisSession.js";
+import { describe, expect, it, vi } from "vitest";
 
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockDriver = (): IIrisDriver => ({
-  connect: jest.fn(),
-  disconnect: jest.fn(),
-  drain: jest.fn().mockResolvedValue(undefined),
-  ping: jest.fn().mockResolvedValue(true),
-  setup: jest.fn().mockResolvedValue(undefined),
-  getConnectionState: jest.fn().mockReturnValue("connected"),
-  on: jest.fn(),
-  off: jest.fn(),
-  once: jest.fn(),
-  createMessageBus: jest.fn().mockReturnValue({ publish: jest.fn() }),
-  createPublisher: jest.fn().mockReturnValue({ publish: jest.fn() }),
-  createWorkerQueue: jest.fn().mockReturnValue({ subscribe: jest.fn() }),
-  createStreamProcessor: jest.fn().mockReturnValue({ pipe: jest.fn() }),
-  createRpcClient: jest.fn().mockReturnValue({ request: jest.fn() }),
-  createRpcServer: jest.fn().mockReturnValue({ serve: jest.fn() }),
-  cloneWithGetters: jest.fn(),
+  connect: vi.fn(),
+  disconnect: vi.fn(),
+  drain: vi.fn().mockResolvedValue(undefined),
+  ping: vi.fn().mockResolvedValue(true),
+  setup: vi.fn().mockResolvedValue(undefined),
+  getConnectionState: vi.fn().mockReturnValue("connected"),
+  on: vi.fn(),
+  off: vi.fn(),
+  once: vi.fn(),
+  createMessageBus: vi.fn().mockReturnValue({ publish: vi.fn() }),
+  createPublisher: vi.fn().mockReturnValue({ publish: vi.fn() }),
+  createWorkerQueue: vi.fn().mockReturnValue({ subscribe: vi.fn() }),
+  createStreamProcessor: vi.fn().mockReturnValue({ pipe: vi.fn() }),
+  createRpcClient: vi.fn().mockReturnValue({ request: vi.fn() }),
+  createRpcServer: vi.fn().mockReturnValue({ serve: vi.fn() }),
+  cloneWithGetters: vi.fn(),
 });
 
 class FakeMessage {
@@ -48,7 +50,7 @@ const createSessionOptions = (
   overrides: Partial<IrisSessionOptions> = {},
 ): IrisSessionOptions => ({
   logger: createMockLogger() as any,
-  context: { tenant: "test" },
+  meta: createDefaultIrisHookMeta(),
   driver: createMockDriver(),
   driverType: "memory",
   messages: [FakeMessage as any],

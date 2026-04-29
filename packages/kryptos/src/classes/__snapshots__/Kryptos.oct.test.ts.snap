@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kryptos (oct) export should export b64 1`] = `
+exports[`Kryptos (oct) > export > should export b64 1`] = `
 {
   "algorithm": "HS512",
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -11,7 +11,7 @@ exports[`Kryptos (oct) export should export b64 1`] = `
 }
 `;
 
-exports[`Kryptos (oct) export should export der 1`] = `
+exports[`Kryptos (oct) > export > should export der 1`] = `
 {
   "algorithm": "HS512",
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -285,7 +285,7 @@ exports[`Kryptos (oct) export should export der 1`] = `
 }
 `;
 
-exports[`Kryptos (oct) export should export jwk 1`] = `
+exports[`Kryptos (oct) > export > should export jwk 1`] = `
 {
   "alg": "HS512",
   "k": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
@@ -295,7 +295,7 @@ exports[`Kryptos (oct) export should export jwk 1`] = `
 }
 `;
 
-exports[`Kryptos (oct) export should export pem 1`] = `
+exports[`Kryptos (oct) > export > should export pem 1`] = `
 {
   "algorithm": "HS512",
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -312,7 +312,7 @@ uMSb8pScaIK6Vfef/1c7Vg==
 }
 `;
 
-exports[`Kryptos (oct) to should return db 1`] = `
+exports[`Kryptos (oct) > to > should return db 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
@@ -339,7 +339,7 @@ exports[`Kryptos (oct) to should return db 1`] = `
 }
 `;
 
-exports[`Kryptos (oct) to should return json 1`] = `
+exports[`Kryptos (oct) > to > should return json 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
@@ -373,7 +373,7 @@ exports[`Kryptos (oct) to should return json 1`] = `
 }
 `;
 
-exports[`Kryptos (oct) to should return jwk with private key 1`] = `
+exports[`Kryptos (oct) > to > should return jwk with private key 1`] = `
 {
   "alg": "HS512",
   "exp": 4070937600,
@@ -394,7 +394,7 @@ exports[`Kryptos (oct) to should return jwk with private key 1`] = `
 }
 `;
 
-exports[`Kryptos (oct) to should return jwk with public key 1`] = `
+exports[`Kryptos (oct) > to > should return jwk with public key 1`] = `
 {
   "alg": "HS512",
   "exp": 4070937600,
@@ -414,4 +414,4 @@ exports[`Kryptos (oct) to should return jwk with public key 1`] = `
 }
 `;
 
-exports[`Kryptos (oct) to should return kryptos string 1`] = `"Kryptos<oct:HS512:3b9a051f-e1ec-562b-bf92-7cf92ec465ba>"`;
+exports[`Kryptos (oct) > to > should return kryptos string 1`] = `"Kryptos<oct:HS512:3b9a051f-e1ec-562b-bf92-7cf92ec465ba>"`;

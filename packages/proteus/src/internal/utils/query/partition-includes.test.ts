@@ -1,5 +1,6 @@
-import type { IncludeSpec } from "../../types/query";
-import { partitionIncludes } from "./partition-includes";
+import type { IncludeSpec } from "../../types/query.js";
+import { partitionIncludes } from "./partition-includes.js";
+import { describe, expect, test } from "vitest";
 
 const makeInclude = (relation: string, strategy: "join" | "query"): IncludeSpec => ({
   relation,

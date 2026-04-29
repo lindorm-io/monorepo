@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`serializeMessage should apply @Transform.to before extracting @Header value 1`] = `
+exports[`serializeMessage > should apply @Transform.to before extracting @Header value 1`] = `
 {
   "body": "{"__meta__":{"data":"S"},"__record__":{"data":"payload"}}",
   "headers": {
@@ -9,14 +9,14 @@ exports[`serializeMessage should apply @Transform.to before extracting @Header v
 }
 `;
 
-exports[`serializeMessage should apply @Transform.to during serialization 1`] = `
+exports[`serializeMessage > should apply @Transform.to during serialization 1`] = `
 {
   "body": "{"__meta__":{"score":"N"},"__record__":{"score":"75"}}",
   "headers": {},
 }
 `;
 
-exports[`serializeMessage should extract @Header fields into headers dict and remove from body 1`] = `
+exports[`serializeMessage > should extract @Header fields into headers dict and remove from body 1`] = `
 {
   "body": "{"__meta__":{"data":"S"},"__record__":{"data":"payload"}}",
   "headers": {
@@ -25,21 +25,21 @@ exports[`serializeMessage should extract @Header fields into headers dict and re
 }
 `;
 
-exports[`serializeMessage should handle Date and complex types via JsonKit 1`] = `
+exports[`serializeMessage > should handle Date and complex types via JsonKit 1`] = `
 {
   "body": "{"__meta__":{"createdAt":"D","tags":["S","S"]},"__record__":{"createdAt":"2025-01-15T12:00:00.000Z","tags":["a","b"]}}",
   "headers": {},
 }
 `;
 
-exports[`serializeMessage should handle null and undefined field values 1`] = `
+exports[`serializeMessage > should handle null and undefined field values 1`] = `
 {
   "body": "{"__meta__":{"label":"L","missing":"U"},"__record__":{"label":0,"missing":0}}",
   "headers": {},
 }
 `;
 
-exports[`serializeMessage should serialize basic fields into body JSON 1`] = `
+exports[`serializeMessage > should serialize basic fields into body JSON 1`] = `
 {
   "body": "{"__meta__":{"name":"S","count":"N"},"__record__":{"name":"hello","count":"42"}}",
   "headers": {},

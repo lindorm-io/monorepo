@@ -1,10 +1,11 @@
+import { describe, test, it, expect, beforeEach } from "vitest";
 // TCK: CRUD Suite
 // Structural assertions (not snapshots) for cross-driver portability.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import { ProteusError } from "../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import { ProteusError } from "../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 
 export const crudSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   describe("CRUD", () => {

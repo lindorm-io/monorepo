@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`socket auth (bearer) e2e > refresh ack envelope shape 1`] = `
+{
+  "__pylon": true,
+  "data": {
+    "refreshed": true,
+  },
+  "ok": true,
+}
+`;

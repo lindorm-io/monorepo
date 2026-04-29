@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileExists namespace override uses explicit namespace when metadata.namespace is null 1`] = `
+exports[`compileExists > namespace override > uses explicit namespace when metadata.namespace is null 1`] = `
 {
   "params": [
     "abc-123",
@@ -9,7 +9,7 @@ exports[`compileExists namespace override uses explicit namespace when metadata.
 }
 `;
 
-exports[`compileExists should compile exists query 1`] = `
+exports[`compileExists > should compile exists query 1`] = `
 {
   "params": [
     "abc-123",
@@ -18,7 +18,7 @@ exports[`compileExists should compile exists query 1`] = `
 }
 `;
 
-exports[`compileExists should compile with multiple criteria 1`] = `
+exports[`compileExists > should compile with multiple criteria 1`] = `
 {
   "params": [
     "Alice",
@@ -28,7 +28,7 @@ exports[`compileExists should compile with multiple criteria 1`] = `
 }
 `;
 
-exports[`compileExists soft-delete entity includes deleted_at IS NULL system filter 1`] = `
+exports[`compileExists > soft-delete entity > includes deleted_at IS NULL system filter 1`] = `
 {
   "params": [
     "abc-123",
@@ -37,7 +37,7 @@ exports[`compileExists soft-delete entity includes deleted_at IS NULL system fil
 }
 `;
 
-exports[`compileExists versioned entity includes version_end_date IS NULL system filter 1`] = `
+exports[`compileExists > versioned entity > includes version_end_date IS NULL system filter 1`] = `
 {
   "params": [
     "abc-123",

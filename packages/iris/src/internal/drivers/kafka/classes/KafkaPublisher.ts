@@ -1,10 +1,10 @@
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { KafkaSharedState } from "../types/kafka-types";
-import { DriverPublisherBase } from "../../../classes/DriverPublisherBase";
-import { publishKafkaMessages } from "../utils/publish-kafka-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions } from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import { DriverPublisherBase } from "../../../classes/DriverPublisherBase.js";
+import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
 
 export type KafkaPublisherOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: KafkaSharedState;

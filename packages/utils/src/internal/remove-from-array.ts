@@ -1,5 +1,5 @@
 import { isArray, isObject } from "@lindorm/is";
-import { removeFromObject } from "./remove-from-object";
+import { removeFromObject } from "./remove-from-object.js";
 
 type Predicate = (value: any) => boolean;
 

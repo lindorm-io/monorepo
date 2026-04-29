@@ -1,6 +1,6 @@
 import { Conduit, conduitBearerAuthMiddleware } from "@lindorm/conduit";
 import { LogLevel, Logger } from "@lindorm/logger";
-import { EXAMPLE_PYLON } from "./_example";
+import { EXAMPLE_PYLON } from "./_example.js";
 
 const logger = new Logger({ level: LogLevel.Silly, readable: true });
 

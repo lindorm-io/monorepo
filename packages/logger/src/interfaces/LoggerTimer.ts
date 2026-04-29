@@ -1,4 +1,4 @@
-import { LogContent } from "../types";
+import type { LogContent } from "../types/index.js";
 
 export interface ILoggerTimer {
   error(error: Error): void;

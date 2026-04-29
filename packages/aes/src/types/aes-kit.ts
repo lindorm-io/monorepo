@@ -1,4 +1,4 @@
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 
 export type AesKitOptions = {
   encryption?: KryptosEncryption;

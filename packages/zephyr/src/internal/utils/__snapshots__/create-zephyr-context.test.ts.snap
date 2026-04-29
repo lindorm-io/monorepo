@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createZephyrContext should create incoming context with data 1`] = `
+exports[`createZephyrContext > should create incoming context with data 1`] = `
 {
   "app": {
     "alias": "test-app",
@@ -26,7 +26,7 @@ exports[`createZephyrContext should create incoming context with data 1`] = `
 }
 `;
 
-exports[`createZephyrContext should create outgoing context with data 1`] = `
+exports[`createZephyrContext > should create outgoing context with data 1`] = `
 {
   "app": {
     "alias": "test-app",
@@ -52,7 +52,7 @@ exports[`createZephyrContext should create outgoing context with data 1`] = `
 }
 `;
 
-exports[`createZephyrContext should create outgoing context with default empty data 1`] = `
+exports[`createZephyrContext > should create outgoing context with default empty data 1`] = `
 {
   "app": {
     "alias": "test-app",

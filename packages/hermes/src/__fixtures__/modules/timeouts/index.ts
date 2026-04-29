@@ -1,1 +1,1 @@
-export { TestTimeoutReminder } from "./TestTimeoutReminder";
+export { TestTimeoutReminder } from "./TestTimeoutReminder.js";

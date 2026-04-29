@@ -1,4 +1,4 @@
-import type { EntityMetadata, RelationStrategy } from "../../entity/types/metadata";
+import type { EntityMetadata, RelationStrategy } from "../../entity/types/metadata.js";
 
 export const resolveIncludeStrategy = (
   relationKey: string,

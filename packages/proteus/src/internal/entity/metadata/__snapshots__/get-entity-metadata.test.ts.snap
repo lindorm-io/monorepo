@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`getEntityMetadata should return full entity metadata snapshot 1`] = `
+exports[`getEntityMetadata > should return full entity metadata snapshot 1`] = `
 {
   "appendOnly": false,
   "cache": null,

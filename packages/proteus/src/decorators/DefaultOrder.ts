@@ -1,4 +1,4 @@
-import { stageDefaultOrder } from "../internal/entity/metadata/stage-metadata";
+import { stageDefaultOrder } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Set a default ordering for queries against this entity.

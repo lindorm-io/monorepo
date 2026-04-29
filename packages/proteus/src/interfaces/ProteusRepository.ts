@@ -9,10 +9,10 @@ import type {
   PaginateOptions,
   PaginateResult,
   UpsertOptions,
-} from "../types";
-import { IEntity } from "./Entity";
-import { IProteusCursor } from "./ProteusCursor";
-import { IProteusQueryBuilder } from "./ProteusQueryBuilder";
+} from "../types/index.js";
+import type { IEntity } from "./Entity.js";
+import type { IProteusCursor } from "./ProteusCursor.js";
+import type { IProteusQueryBuilder } from "./ProteusQueryBuilder.js";
 
 /**
  * Repository providing CRUD operations, queries, aggregates, and lifecycle management for an entity.
@@ -51,7 +51,7 @@ export interface IProteusRepository<E extends IEntity, O = DeepPartial<E>> {
   findOneOrSave(
     criteria: Predicate<E>,
     entity: O | E,
-    options?: FindOptions<E>,
+    options?: Omit<FindOptions<E>, "snapshot">,
   ): Promise<E>;
 
   // Upsert

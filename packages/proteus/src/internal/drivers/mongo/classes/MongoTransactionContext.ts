@@ -4,11 +4,11 @@ import type {
   IProteusQueryBuilder,
   IProteusRepository,
   ITransactionContext,
-} from "../../../../interfaces";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { MongoTransactionHandle } from "../types/mongo-types";
-import type { MongoDriver } from "./MongoDriver";
-import { MongoDriverError } from "../errors/MongoDriverError";
+} from "../../../../interfaces/index.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { MongoTransactionHandle } from "../types/mongo-types.js";
+import type { MongoDriver } from "./MongoDriver.js";
+import { MongoDriverError } from "../errors/MongoDriverError.js";
 
 /**
  * Transaction context for MongoDB.
@@ -42,6 +42,12 @@ export class MongoTransactionContext implements ITransactionContext {
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
     return this.driver.createTransactionalQueryBuilder(target, this.handle);
+  }
+
+  public async client<T>(): Promise<T> {
+    // The transaction-scoped client for MongoDB is the ClientSession — any
+    // driver calls made with `{ session }` participate in the open tx.
+    return this.handle.session as unknown as T;
   }
 
   public async transaction<T>(

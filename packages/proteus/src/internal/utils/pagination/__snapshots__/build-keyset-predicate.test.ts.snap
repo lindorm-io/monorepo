@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildKeysetPredicate should build backward predicate with flipped operators 1`] = `
+exports[`buildKeysetPredicate > should build backward predicate with flipped operators 1`] = `
 {
   "$or": [
     {
@@ -24,7 +24,7 @@ exports[`buildKeysetPredicate should build backward predicate with flipped opera
 }
 `;
 
-exports[`buildKeysetPredicate should build single column ASC backward predicate 1`] = `
+exports[`buildKeysetPredicate > should build single column ASC backward predicate 1`] = `
 {
   "id": {
     "$lt": 42,
@@ -32,7 +32,7 @@ exports[`buildKeysetPredicate should build single column ASC backward predicate 
 }
 `;
 
-exports[`buildKeysetPredicate should build single column ASC forward predicate 1`] = `
+exports[`buildKeysetPredicate > should build single column ASC forward predicate 1`] = `
 {
   "id": {
     "$gt": 42,
@@ -40,7 +40,7 @@ exports[`buildKeysetPredicate should build single column ASC forward predicate 1
 }
 `;
 
-exports[`buildKeysetPredicate should build single column DESC forward predicate 1`] = `
+exports[`buildKeysetPredicate > should build single column DESC forward predicate 1`] = `
 {
   "score": {
     "$lt": 100,
@@ -48,7 +48,7 @@ exports[`buildKeysetPredicate should build single column DESC forward predicate 
 }
 `;
 
-exports[`buildKeysetPredicate should build three column boolean expansion 1`] = `
+exports[`buildKeysetPredicate > should build three column boolean expansion 1`] = `
 {
   "$or": [
     {
@@ -87,7 +87,7 @@ exports[`buildKeysetPredicate should build three column boolean expansion 1`] = 
 }
 `;
 
-exports[`buildKeysetPredicate should build two column mixed-direction forward predicate 1`] = `
+exports[`buildKeysetPredicate > should build two column mixed-direction forward predicate 1`] = `
 {
   "$or": [
     {
@@ -111,7 +111,7 @@ exports[`buildKeysetPredicate should build two column mixed-direction forward pr
 }
 `;
 
-exports[`buildKeysetPredicate should handle null cursor values 1`] = `
+exports[`buildKeysetPredicate > should handle null cursor values 1`] = `
 {
   "$or": [
     {

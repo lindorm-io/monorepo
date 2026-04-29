@@ -1,5 +1,5 @@
 import type { Sort, Document } from "mongodb";
-import type { EntityMetadata } from "../../../entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 
 /**
  * Resolve the MongoDB field name for a sort key.

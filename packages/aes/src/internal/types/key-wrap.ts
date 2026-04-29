@@ -1,4 +1,4 @@
-import { IKryptos } from "@lindorm/kryptos";
+import type { IKryptos } from "@lindorm/kryptos";
 
 export type KeyWrapOptions = {
   contentEncryptionKey: Buffer;

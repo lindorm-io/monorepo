@@ -1,21 +1,31 @@
-import type { ComposedOptions } from "../../types";
-import { composeDown } from "./compose-down";
-import { composeUp } from "./compose-up";
-import { composed } from "./composed";
-import { resolveComposeFile } from "./resolve-compose-file";
-import { spawnCommand } from "./spawn-command";
+import type { ComposedOptions } from "../../types/index.js";
+import { composeDown } from "./compose-down.js";
+import { composeUp } from "./compose-up.js";
+import { composed } from "./composed.js";
+import { resolveComposeFile } from "./resolve-compose-file.js";
+import { spawnCommand } from "./spawn-command.js";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type MockedFunction,
+  type MockInstance,
+} from "vitest";
 
-jest.mock("./resolve-compose-file");
-jest.mock("./compose-up");
-jest.mock("./compose-down");
-jest.mock("./spawn-command");
+vi.mock("./resolve-compose-file.js");
+vi.mock("./compose-up.js");
+vi.mock("./compose-down.js");
+vi.mock("./spawn-command.js");
 
-const mockResolveComposeFile = resolveComposeFile as jest.MockedFunction<
+const mockResolveComposeFile = resolveComposeFile as MockedFunction<
   typeof resolveComposeFile
 >;
-const mockComposeUp = composeUp as jest.MockedFunction<typeof composeUp>;
-const mockComposeDown = composeDown as jest.MockedFunction<typeof composeDown>;
-const mockSpawnCommand = spawnCommand as jest.MockedFunction<typeof spawnCommand>;
+const mockComposeUp = composeUp as MockedFunction<typeof composeUp>;
+const mockComposeDown = composeDown as MockedFunction<typeof composeDown>;
+const mockSpawnCommand = spawnCommand as MockedFunction<typeof spawnCommand>;
 
 const defaultOptions: ComposedOptions = {
   file: "docker-compose.yml",
@@ -28,12 +38,23 @@ const defaultOptions: ComposedOptions = {
 };
 
 describe("composed", () => {
+  let stdoutSpy: MockInstance<typeof process.stdout.write>;
+  let stderrSpy: MockInstance<typeof process.stderr.write>;
+
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockResolveComposeFile.mockReturnValue("/resolved/docker-compose.yml");
     mockComposeUp.mockResolvedValue(undefined);
     mockComposeDown.mockResolvedValue(undefined);
     mockSpawnCommand.mockResolvedValue(0);
+
+    stdoutSpy = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
+    stderrSpy = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    stdoutSpy.mockRestore();
+    stderrSpy.mockRestore();
   });
 
   test("should resolve compose file path", async () => {
@@ -87,37 +108,28 @@ describe("composed", () => {
 
   test("should return 1 and teardown on composeUp failure", async () => {
     mockComposeUp.mockRejectedValue(new Error("up failed"));
-    const errorSpy = jest.spyOn(console, "error").mockImplementation();
 
     const result = await composed(defaultOptions);
 
     expect(result).toBe(1);
     expect(mockComposeDown).toHaveBeenCalled();
     expect(mockSpawnCommand).not.toHaveBeenCalled();
-
-    errorSpy.mockRestore();
   });
 
   test("should log error message on composeUp failure", async () => {
     mockComposeUp.mockRejectedValue(new Error("up failed"));
-    const errorSpy = jest.spyOn(console, "error").mockImplementation();
 
     await composed(defaultOptions);
 
-    expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining("up failed"));
-
-    errorSpy.mockRestore();
+    expect(stderrSpy).toHaveBeenCalledWith(expect.stringContaining("up failed"));
   });
 
   test("should not teardown on composeUp failure when teardown is false", async () => {
     mockComposeUp.mockRejectedValue(new Error("up failed"));
-    const errorSpy = jest.spyOn(console, "error").mockImplementation();
 
     await composed({ ...defaultOptions, teardown: false });
 
     expect(mockComposeDown).not.toHaveBeenCalled();
-
-    errorSpy.mockRestore();
   });
 
   test("should call composeDown even when spawnCommand rejects", async () => {
@@ -133,5 +145,33 @@ describe("composed", () => {
     await composed({ ...defaultOptions, verbose: true });
 
     expect(mockComposeDown).toHaveBeenCalledWith("/resolved/docker-compose.yml", true);
+  });
+
+  test("should print status lines in quiet mode", async () => {
+    await composed(defaultOptions);
+
+    const written = stdoutSpy.mock.calls.map((args) => String(args[0]));
+    expect(written).toContain("Starting services...\n");
+    expect(written.some((line) => /^Services ready \(\d+\.\d+s\)\n$/.test(line))).toBe(
+      true,
+    );
+    expect(written).toContain("Tearing down services...\n");
+    expect(written.some((line) => /^Teardown complete \(\d+\.\d+s\)\n$/.test(line))).toBe(
+      true,
+    );
+  });
+
+  test("should not print status lines in verbose mode", async () => {
+    await composed({ ...defaultOptions, verbose: true });
+
+    expect(stdoutSpy).not.toHaveBeenCalled();
+  });
+
+  test("should skip teardown status lines when teardown is false", async () => {
+    await composed({ ...defaultOptions, teardown: false });
+
+    const written = stdoutSpy.mock.calls.map((args) => String(args[0]));
+    expect(written.some((line) => line.startsWith("Tearing down"))).toBe(false);
+    expect(written.some((line) => line.startsWith("Teardown complete"))).toBe(false);
   });
 });

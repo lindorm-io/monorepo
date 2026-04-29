@@ -1,71 +1,74 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { DesiredSchema } from "../../types/desired-schema";
-import type { SyncPlan, SyncOperation } from "../../types/sync-plan";
-import type { SerializedMigration } from "./serialize-migration";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { DesiredSchema } from "../../types/desired-schema.js";
+import type { SyncPlan, SyncOperation } from "../../types/sync-plan.js";
+import type { SerializedMigration } from "./serialize-migration.js";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // --- Mock all external dependencies ---
 
-jest.mock("../sync/introspect-schema", () => ({
-  introspectSchema: jest.fn(),
+vi.mock("../sync/introspect-schema.js", async () => ({
+  introspectSchema: vi.fn(),
 }));
 
-jest.mock("../sync/project-desired-schema", () => ({
-  projectDesiredSchema: jest.fn(),
+vi.mock("../sync/project-desired-schema.js", () => ({
+  projectDesiredSchema: vi.fn(),
 }));
 
-jest.mock("../sync/diff-schema", () => ({
-  diffSchema: jest.fn(),
+vi.mock("../sync/diff-schema.js", () => ({
+  diffSchema: vi.fn(),
 }));
 
-jest.mock("./serialize-migration", () => ({
-  serializeMigration: jest.fn(),
+vi.mock("./serialize-migration.js", () => ({
+  serializeMigration: vi.fn(),
 }));
 
-jest.mock("./write-migration-file", () => ({
-  writeMigrationFile: jest.fn(),
+vi.mock("./write-migration-file.js", () => ({
+  writeMigrationFile: vi.fn(),
 }));
 
-jest.mock("./migration-table", () => ({
-  ensureMigrationTable: jest.fn(),
-  insertMigrationRecord: jest.fn(),
-  markMigrationFinished: jest.fn(),
+vi.mock("./migration-table.js", () => ({
+  ensureMigrationTable: vi.fn(),
+  insertMigrationRecord: vi.fn(),
+  markMigrationFinished: vi.fn(),
 }));
 
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest.fn(() => "00000000-0000-0000-0000-000000000001"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi.fn(() => "00000000-0000-0000-0000-000000000001"),
 }));
 
-import { introspectSchema } from "../sync/introspect-schema";
-import { projectDesiredSchema } from "../sync/project-desired-schema";
-import { diffSchema } from "../sync/diff-schema";
-import { serializeMigration } from "./serialize-migration";
-import { writeMigrationFile } from "./write-migration-file";
+import { introspectSchema } from "../sync/introspect-schema.js";
+import { projectDesiredSchema } from "../sync/project-desired-schema.js";
+import { diffSchema } from "../sync/diff-schema.js";
+import { serializeMigration } from "./serialize-migration.js";
+import { writeMigrationFile } from "./write-migration-file.js";
 import {
   ensureMigrationTable,
   insertMigrationRecord,
   markMigrationFinished,
-} from "./migration-table";
-import { generateBaselineMigration } from "./generate-baseline-migration";
+} from "./migration-table.js";
+import { generateBaselineMigration } from "./generate-baseline-migration.js";
 
-const mockIntrospect = introspectSchema as jest.MockedFunction<typeof introspectSchema>;
-const mockProject = projectDesiredSchema as jest.MockedFunction<
-  typeof projectDesiredSchema
->;
-const mockDiff = diffSchema as jest.MockedFunction<typeof diffSchema>;
-const mockSerialize = serializeMigration as jest.MockedFunction<
-  typeof serializeMigration
->;
-const mockWrite = writeMigrationFile as jest.MockedFunction<typeof writeMigrationFile>;
-const mockEnsureTable = ensureMigrationTable as jest.MockedFunction<
+const mockIntrospect = introspectSchema as MockedFunction<typeof introspectSchema>;
+const mockProject = projectDesiredSchema as MockedFunction<typeof projectDesiredSchema>;
+const mockDiff = diffSchema as MockedFunction<typeof diffSchema>;
+const mockSerialize = serializeMigration as MockedFunction<typeof serializeMigration>;
+const mockWrite = writeMigrationFile as MockedFunction<typeof writeMigrationFile>;
+const mockEnsureTable = ensureMigrationTable as MockedFunction<
   typeof ensureMigrationTable
 >;
-const mockInsert = insertMigrationRecord as jest.MockedFunction<
-  typeof insertMigrationRecord
->;
-const mockMarkFinished = markMigrationFinished as jest.MockedFunction<
+const mockInsert = insertMigrationRecord as MockedFunction<typeof insertMigrationRecord>;
+const mockMarkFinished = markMigrationFinished as MockedFunction<
   typeof markMigrationFinished
 >;
 
@@ -122,13 +125,13 @@ const fixedMigration: SerializedMigration = {
 };
 
 const mockClient: PostgresQueryClient = {
-  query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
 };
 
 const fixedTimestamp = new Date("2026-02-20T09:00:00.000Z");
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   mockProject.mockReturnValue(emptyDesired);
   mockDiff.mockReturnValue(makePlan([]));
   mockIntrospect.mockResolvedValue(emptySnapshot);

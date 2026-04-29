@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateTableDDL generates CREATE TABLE for a simple entity with UUID PK 1`] = `
+exports[`generateTableDDL > generates CREATE TABLE for a simple entity with UUID PK 1`] = `
 "CREATE TABLE IF NOT EXISTS "TestUser" (
   "id" UUID DEFAULT gen_random_uuid() NOT NULL,
   "version" INTEGER NOT NULL,
@@ -13,7 +13,7 @@ exports[`generateTableDDL generates CREATE TABLE for a simple entity with UUID P
 );"
 `;
 
-exports[`generateTableDDL generates CREATE TABLE for entity with UUID PK and ManyToOne FK column 1`] = `
+exports[`generateTableDDL > generates CREATE TABLE for entity with UUID PK and ManyToOne FK column 1`] = `
 "CREATE TABLE IF NOT EXISTS "TestArticle" (
   "id" UUID DEFAULT gen_random_uuid() NOT NULL,
   "version" INTEGER NOT NULL,
@@ -25,7 +25,7 @@ exports[`generateTableDDL generates CREATE TABLE for entity with UUID PK and Man
 );"
 `;
 
-exports[`generateTableDDL generates CREATE TABLE for owning side of OneToOne (includes FK column) 1`] = `
+exports[`generateTableDDL > generates CREATE TABLE for owning side of OneToOne (includes FK column) 1`] = `
 "CREATE TABLE IF NOT EXISTS "TestUserWithProfile" (
   "id" UUID DEFAULT gen_random_uuid() NOT NULL,
   "version" INTEGER NOT NULL,
@@ -37,7 +37,7 @@ exports[`generateTableDDL generates CREATE TABLE for owning side of OneToOne (in
 );"
 `;
 
-exports[`generateTableDDL generates CREATE TABLE with check constraints 1`] = `
+exports[`generateTableDDL > generates CREATE TABLE with check constraints 1`] = `
 "CREATE TABLE IF NOT EXISTS "TestChecked" (
   "id" UUID DEFAULT gen_random_uuid() NOT NULL,
   "version" INTEGER NOT NULL,
@@ -51,7 +51,7 @@ exports[`generateTableDDL generates CREATE TABLE with check constraints 1`] = `
 );"
 `;
 
-exports[`generateTableDDL generates CREATE TABLE with composite primary key (VersionKeyed) 1`] = `
+exports[`generateTableDDL > generates CREATE TABLE with composite primary key (VersionKeyed) 1`] = `
 "CREATE TABLE IF NOT EXISTS "TestVersionKeyed" (
   "id" UUID DEFAULT gen_random_uuid() NOT NULL,
   "versionId" UUID DEFAULT gen_random_uuid() NOT NULL,
@@ -62,7 +62,7 @@ exports[`generateTableDDL generates CREATE TABLE with composite primary key (Ver
 );"
 `;
 
-exports[`generateTableDDL generates CREATE TABLE with schema namespace 1`] = `
+exports[`generateTableDDL > generates CREATE TABLE with schema namespace 1`] = `
 "CREATE TABLE IF NOT EXISTS "public"."TestUser" (
   "id" UUID DEFAULT gen_random_uuid() NOT NULL,
   "version" INTEGER NOT NULL,
@@ -75,7 +75,7 @@ exports[`generateTableDDL generates CREATE TABLE with schema namespace 1`] = `
 );"
 `;
 
-exports[`generateTableDDL generates CREATE TABLE with scope field 1`] = `
+exports[`generateTableDDL > generates CREATE TABLE with scope field 1`] = `
 "CREATE TABLE IF NOT EXISTS "TestScopedEntity" (
   "id" UUID DEFAULT gen_random_uuid() NOT NULL,
   "scope" TEXT NOT NULL,
@@ -87,7 +87,7 @@ exports[`generateTableDDL generates CREATE TABLE with scope field 1`] = `
 );"
 `;
 
-exports[`generateTableDDL generates CREATE TABLE with soft-delete and expiry date fields 1`] = `
+exports[`generateTableDDL > generates CREATE TABLE with soft-delete and expiry date fields 1`] = `
 "CREATE TABLE IF NOT EXISTS "TestSoftDelete" (
   "id" UUID DEFAULT gen_random_uuid() NOT NULL,
   "version" INTEGER NOT NULL,
@@ -100,7 +100,7 @@ exports[`generateTableDDL generates CREATE TABLE with soft-delete and expiry dat
 );"
 `;
 
-exports[`generateTableDDL generates CREATE TABLE with unique constraints 1`] = `
+exports[`generateTableDDL > generates CREATE TABLE with unique constraints 1`] = `
 "CREATE TABLE IF NOT EXISTS "TestIndexed" (
   "id" UUID DEFAULT gen_random_uuid() NOT NULL,
   "version" INTEGER NOT NULL,

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`fixedWindowStrategy should create new counter and allow when no existing record 1`] = `
+exports[`fixedWindowStrategy > should create new counter and allow when no existing record 1`] = `
 {
   "allowed": true,
   "remaining": 9,
@@ -8,7 +8,7 @@ exports[`fixedWindowStrategy should create new counter and allow when no existin
 }
 `;
 
-exports[`fixedWindowStrategy should deny when count reaches max 1`] = `
+exports[`fixedWindowStrategy > should deny when count reaches max 1`] = `
 {
   "allowed": false,
   "remaining": 0,
@@ -16,7 +16,7 @@ exports[`fixedWindowStrategy should deny when count reaches max 1`] = `
 }
 `;
 
-exports[`fixedWindowStrategy should increment and allow when under max 1`] = `
+exports[`fixedWindowStrategy > should increment and allow when under max 1`] = `
 {
   "allowed": true,
   "remaining": 4,
@@ -24,7 +24,7 @@ exports[`fixedWindowStrategy should increment and allow when under max 1`] = `
 }
 `;
 
-exports[`fixedWindowStrategy should reset window when window has expired 1`] = `
+exports[`fixedWindowStrategy > should reset window when window has expired 1`] = `
 {
   "allowed": true,
   "remaining": 9,

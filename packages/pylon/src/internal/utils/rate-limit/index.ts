@@ -1,3 +1,3 @@
-export * from "./fixed-window-strategy";
-export * from "./sliding-window-strategy";
-export * from "./token-bucket-strategy";
+export * from "./fixed-window-strategy.js";
+export * from "./sliding-window-strategy.js";
+export * from "./token-bucket-strategy.js";

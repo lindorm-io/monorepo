@@ -1,18 +1,18 @@
 import { randomUUID } from "@lindorm/random";
-import type { KafkaSharedState } from "../types/kafka-types";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic";
-import { resolveTopicName } from "../utils/resolve-topic-name";
-import { serializeKafkaMessage } from "../utils/serialize-kafka-message";
-import { parseKafkaMessage } from "../utils/parse-kafka-message";
-import { createKafkaConsumer } from "../utils/create-kafka-consumer";
-import { stopKafkaConsumer } from "../utils/stop-kafka-consumer";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import { resolveTopicName } from "../utils/resolve-topic-name.js";
+import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
+import { parseKafkaMessage } from "../utils/parse-kafka-message.js";
+import { createKafkaConsumer } from "../utils/create-kafka-consumer.js";
+import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
-} from "../../../classes/DriverStreamPipelineBase";
+} from "../../../classes/DriverStreamPipelineBase.js";
 
 export type KafkaStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
   state: KafkaSharedState;

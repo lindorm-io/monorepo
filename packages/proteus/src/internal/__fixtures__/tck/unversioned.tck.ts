@@ -1,8 +1,9 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Unversioned Entity Suite
 // Verifies that CRUD works correctly without @VersionField.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const unversionedSuite = (
   getHandle: () => TckDriverHandle,

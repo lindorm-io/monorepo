@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kryptos (RSA) export should export b64 1`] = `
+exports[`Kryptos (RSA) > export > should export b64 1`] = `
 {
   "algorithm": "RS512",
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -11,7 +11,7 @@ exports[`Kryptos (RSA) export should export b64 1`] = `
 }
 `;
 
-exports[`Kryptos (RSA) export should export der 1`] = `
+exports[`Kryptos (RSA) > export > should export der 1`] = `
 {
   "algorithm": "RS512",
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -2905,7 +2905,7 @@ exports[`Kryptos (RSA) export should export der 1`] = `
 }
 `;
 
-exports[`Kryptos (RSA) export should export jwk 1`] = `
+exports[`Kryptos (RSA) > export > should export jwk 1`] = `
 {
   "alg": "RS512",
   "d": "K6LDXhWvK65vJTARb4jH5I520t8mvhG3PaNyYXTbFTkmH3aB6um-13Yzh2FB7GmHsEJe9ZDIIteVQbR9xIGTrOonoMg6G6mSew1JSmLtd-DTxKGiyccudDQzW_MqtkrAeBmkN22JKrESiNoJwpOkyLmjVc8slEzsXj7s2cIz6UVB_Nc54SU2EqN1BjQTOlGvE4LLycuzrcwh9BiZRTfg3QQVwCojkFmCSz7tzv-9qnwV3eATkOmY4Tf0CM1yBXxzPlbqWGJx87YWT0lgE_tFKg7D0BGRVAqWTMTHCjUjX3A1GFqp5uudk29zCoqInGeCmey50LWgr3XUif3aFhQvPII39ghVXQe15S9qpCuo2O7UFwCeDQGcGaOz7SB395U7w_IyOmtQDX_zBG9lsPmTSR1cPIbdEgfrnCybZZcjXrE3PTMMi3cKfPOuCitkwU91dodIfZLMkkweqKlmGOLYIc-JmZh_eRr7bTkalXiVxMTTIa6LiO_p20yWukCJxW-2RnkYN2ldBnDU0H2JhKQrsD8-YRc_zBnLJQ2TMrw62hNwtV2DDVoND3sJu0SCOMUdH0KmfIkpBPEZ43smCUL9e0fG_q004Bbdmt8q4vV8trdYF_nz---oyuase09cJ7Cf-qmqNWqsAbi6ZNR04tWCQar3Oew10ZzfZtnD3jN-dYE",
@@ -2922,7 +2922,7 @@ exports[`Kryptos (RSA) export should export jwk 1`] = `
 }
 `;
 
-exports[`Kryptos (RSA) export should export pem 1`] = `
+exports[`Kryptos (RSA) > export > should export pem 1`] = `
 {
   "algorithm": "RS512",
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -2997,7 +2997,7 @@ PQ3zW/FBSnIeBhJMObCQOmYEuZxrifMcCQTY7j5jsP962e7ZPn53STcCAwEAAQ==
 }
 `;
 
-exports[`Kryptos (RSA) to should return db 1`] = `
+exports[`Kryptos (RSA) > to > should return db 1`] = `
 {
   "algorithm": "RS512",
   "certificateChain": [],
@@ -3024,7 +3024,7 @@ exports[`Kryptos (RSA) to should return db 1`] = `
 }
 `;
 
-exports[`Kryptos (RSA) to should return json 1`] = `
+exports[`Kryptos (RSA) > to > should return json 1`] = `
 {
   "algorithm": "RS512",
   "certificateChain": [],
@@ -3058,7 +3058,7 @@ exports[`Kryptos (RSA) to should return json 1`] = `
 }
 `;
 
-exports[`Kryptos (RSA) to should return jwk with private key 1`] = `
+exports[`Kryptos (RSA) > to > should return jwk with private key 1`] = `
 {
   "alg": "RS512",
   "d": "K6LDXhWvK65vJTARb4jH5I520t8mvhG3PaNyYXTbFTkmH3aB6um-13Yzh2FB7GmHsEJe9ZDIIteVQbR9xIGTrOonoMg6G6mSew1JSmLtd-DTxKGiyccudDQzW_MqtkrAeBmkN22JKrESiNoJwpOkyLmjVc8slEzsXj7s2cIz6UVB_Nc54SU2EqN1BjQTOlGvE4LLycuzrcwh9BiZRTfg3QQVwCojkFmCSz7tzv-9qnwV3eATkOmY4Tf0CM1yBXxzPlbqWGJx87YWT0lgE_tFKg7D0BGRVAqWTMTHCjUjX3A1GFqp5uudk29zCoqInGeCmey50LWgr3XUif3aFhQvPII39ghVXQe15S9qpCuo2O7UFwCeDQGcGaOz7SB395U7w_IyOmtQDX_zBG9lsPmTSR1cPIbdEgfrnCybZZcjXrE3PTMMi3cKfPOuCitkwU91dodIfZLMkkweqKlmGOLYIc-JmZh_eRr7bTkalXiVxMTTIa6LiO_p20yWukCJxW-2RnkYN2ldBnDU0H2JhKQrsD8-YRc_zBnLJQ2TMrw62hNwtV2DDVoND3sJu0SCOMUdH0KmfIkpBPEZ43smCUL9e0fG_q004Bbdmt8q4vV8trdYF_nz---oyuase09cJ7Cf-qmqNWqsAbi6ZNR04tWCQar3Oew10ZzfZtnD3jN-dYE",
@@ -3086,7 +3086,7 @@ exports[`Kryptos (RSA) to should return jwk with private key 1`] = `
 }
 `;
 
-exports[`Kryptos (RSA) to should return jwk with public key 1`] = `
+exports[`Kryptos (RSA) > to > should return jwk with public key 1`] = `
 {
   "alg": "RS512",
   "e": "AQAB",
@@ -3108,4 +3108,4 @@ exports[`Kryptos (RSA) to should return jwk with public key 1`] = `
 }
 `;
 
-exports[`Kryptos (RSA) to should return kryptos string 1`] = `"Kryptos<RSA:RS512:3b9a051f-e1ec-562b-bf92-7cf92ec465ba>"`;
+exports[`Kryptos (RSA) > to > should return kryptos string 1`] = `"Kryptos<RSA:RS512:3b9a051f-e1ec-562b-bf92-7cf92ec465ba>"`;

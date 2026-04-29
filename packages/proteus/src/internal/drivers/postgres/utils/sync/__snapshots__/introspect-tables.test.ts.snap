@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`introspectTables should handle generated columns 1`] = `
+exports[`introspectTables > should handle generated columns 1`] = `
 [
   {
     "columnComments": {},
@@ -27,7 +27,7 @@ exports[`introspectTables should handle generated columns 1`] = `
 ]
 `;
 
-exports[`introspectTables should handle identity columns 1`] = `
+exports[`introspectTables > should handle identity columns 1`] = `
 [
   {
     "columnComments": {},
@@ -54,7 +54,7 @@ exports[`introspectTables should handle identity columns 1`] = `
 ]
 `;
 
-exports[`introspectTables should map column rows to DbTable structures 1`] = `
+exports[`introspectTables > should map column rows to DbTable structures 1`] = `
 [
   {
     "columnComments": {},

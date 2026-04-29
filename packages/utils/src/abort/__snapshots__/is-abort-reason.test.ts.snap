@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`isAbortReason > should return false for a number 1`] = `false`;
+
+exports[`isAbortReason > should return false for a string 1`] = `false`;
+
+exports[`isAbortReason > should return false for empty object 1`] = `false`;
+
+exports[`isAbortReason > should return false for null 1`] = `false`;
+
+exports[`isAbortReason > should return false for undefined 1`] = `false`;
+
+exports[`isAbortReason > should return false for unknown kind 1`] = `false`;
+
+exports[`isAbortReason > should return true for breaker-open 1`] = `true`;
+
+exports[`isAbortReason > should return true for client-disconnect 1`] = `true`;
+
+exports[`isAbortReason > should return true for manual 1`] = `true`;
+
+exports[`isAbortReason > should return true for parent-aborted 1`] = `true`;
+
+exports[`isAbortReason > should return true for rate-limit-exceeded 1`] = `true`;
+
+exports[`isAbortReason > should return true for request-timeout 1`] = `true`;
+
+exports[`isAbortReason > should return true for server-shutdown 1`] = `true`;

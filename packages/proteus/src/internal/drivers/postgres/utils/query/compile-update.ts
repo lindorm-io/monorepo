@@ -1,17 +1,17 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { DeepPartial, Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value";
-import { getEntityName } from "../../../../entity/utils/get-entity-name";
-import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
-import { coerceWriteValue } from "./coerce-value";
-import type { CompiledSql } from "./compiled-sql";
-import { compileWhere, type FieldAliasOverrides } from "./compile-where";
-import { dehydrateEntity } from "./dehydrate-entity";
-import { buildDiscriminatorPredicate, resolveTableName } from "./resolve-table-name";
-import { buildJoinedChildContext } from "./joined-child-context";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
+import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { coerceWriteValue } from "./coerce-value.js";
+import type { CompiledSql } from "./compiled-sql.js";
+import { compileWhere, type FieldAliasOverrides } from "./compile-where.js";
+import { dehydrateEntity } from "./dehydrate-entity.js";
+import { buildDiscriminatorPredicate, resolveTableName } from "./resolve-table-name.js";
+import { buildJoinedChildContext } from "./joined-child-context.js";
 
 export const compileUpdate = <E extends IEntity>(
   entity: E,

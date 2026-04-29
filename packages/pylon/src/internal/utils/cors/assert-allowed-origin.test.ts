@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
-import { assertAllowedOrigin } from "./assert-allowed-origin";
+import { assertAllowedOrigin } from "./assert-allowed-origin.js";
+import { describe, expect, test } from "vitest";
 
 describe("assertAllowedOrigin", () => {
   test("should throw Forbidden when origin is missing", () => {
@@ -17,7 +18,7 @@ describe("assertAllowedOrigin", () => {
   test("should throw Forbidden when origin is not allowed", () => {
     try {
       assertAllowedOrigin("https://evil.example.com", ["https://app.example.com"]);
-      fail("should have thrown");
+      expect.fail("should have thrown");
     } catch (err: any) {
       expect(err).toBeInstanceOf(ClientError);
       expect(err.status).toBe(ClientError.Status.Forbidden);

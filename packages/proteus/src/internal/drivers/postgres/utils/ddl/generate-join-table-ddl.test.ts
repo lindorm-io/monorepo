@@ -1,15 +1,16 @@
-import { ProteusError } from "../../../../../errors";
-import { TestCourse, TestStudent } from "../../../../__fixtures__/test-entities";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { generateJoinTableDDL } from "./generate-join-table-ddl";
-import { Entity } from "../../../../../decorators/Entity";
-import { Field } from "../../../../../decorators/Field";
-import { JoinTable } from "../../../../../decorators/JoinTable";
-import { ManyToMany } from "../../../../../decorators/ManyToMany";
-import { ManyToOne } from "../../../../../decorators/ManyToOne";
-import { OneToMany } from "../../../../../decorators/OneToMany";
-import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
+import { ProteusError } from "../../../../../errors/index.js";
+import { TestCourse, TestStudent } from "../../../../__fixtures__/test-entities.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { generateJoinTableDDL } from "./generate-join-table-ddl.js";
+import { Entity } from "../../../../../decorators/Entity.js";
+import { Field } from "../../../../../decorators/Field.js";
+import { JoinTable } from "../../../../../decorators/JoinTable.js";
+import { ManyToMany } from "../../../../../decorators/ManyToMany.js";
+import { ManyToOne } from "../../../../../decorators/ManyToOne.js";
+import { OneToMany } from "../../../../../decorators/OneToMany.js";
+import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Additional test entities at module scope

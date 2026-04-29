@@ -1,9 +1,9 @@
-import { ILogger } from "@lindorm/logger";
-import { Constructor, Dict } from "@lindorm/types";
-import { IEntity } from "./Entity";
-import { IProteusQueryBuilder } from "./ProteusQueryBuilder";
-import { IProteusRepository } from "./ProteusRepository";
-import { TransactionCallback, TransactionOptions } from "../types";
+import type { ILogger } from "@lindorm/logger";
+import type { Constructor, Dict } from "@lindorm/types";
+import type { IEntity } from "./Entity.js";
+import type { IProteusQueryBuilder } from "./ProteusQueryBuilder.js";
+import type { IProteusRepository } from "./ProteusRepository.js";
+import type { TransactionCallback, TransactionOptions } from "../types/index.js";
 
 export type FilterRegistryEntry = {
   params: Dict<unknown>;
@@ -12,11 +12,12 @@ export type FilterRegistryEntry = {
 
 export type FilterRegistry = Map<string, FilterRegistryEntry>;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export interface IProteusRepositoryProvider<C = unknown> {
+export interface IProteusRepositoryProvider {
   readonly namespace: string | null;
   readonly driverType: string;
   readonly log: ILogger;
+
+  hasEntity<E extends IEntity>(target: Constructor<E>): boolean;
 
   repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E>;
   queryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E>;

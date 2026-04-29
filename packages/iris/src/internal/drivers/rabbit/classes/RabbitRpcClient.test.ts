@@ -1,14 +1,15 @@
 import { EventEmitter } from "events";
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { RabbitRpcClient } from "./RabbitRpcClient";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { RabbitRpcClient } from "./RabbitRpcClient.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
-jest.mock("../utils/build-amqp-headers", () => ({
-  buildAmqpHeaders: jest.fn().mockReturnValue({
+vi.mock("../utils/build-amqp-headers.js", async () => ({
+  buildAmqpHeaders: vi.fn().mockReturnValue({
     properties: {
       headers: {},
       contentType: "application/octet-stream",
@@ -17,8 +18,8 @@ jest.mock("../utils/build-amqp-headers", () => ({
   }),
 }));
 
-jest.mock("../utils/parse-amqp-headers", () => ({
-  parseAmqpHeaders: jest.fn().mockReturnValue({
+vi.mock("../utils/parse-amqp-headers.js", () => ({
+  parseAmqpHeaders: vi.fn().mockReturnValue({
     payload: Buffer.from("{}"),
     headers: {},
     envelope: { topic: "TckRabbitRpcRes" },
@@ -40,36 +41,36 @@ class TckRabbitRpcRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 type MockConfirmChannel = EventEmitter & {
-  publish: jest.Mock;
-  consume: jest.Mock;
-  cancel: jest.Mock;
-  on: jest.Mock;
-  removeListener: jest.Mock;
+  publish: Mock;
+  consume: Mock;
+  cancel: Mock;
+  on: Mock;
+  removeListener: Mock;
 };
 
 const createMockPublishChannel = (): MockConfirmChannel => {
   const channel = new EventEmitter() as MockConfirmChannel;
-  channel.publish = jest.fn((_ex, _rk, _buf, _opts, cb) => {
+  channel.publish = vi.fn((_ex, _rk, _buf, _opts, cb) => {
     process.nextTick(() => cb?.(null));
     return true;
   });
-  channel.consume = jest.fn().mockResolvedValue({ consumerTag: "reply-ctag" });
-  channel.cancel = jest.fn().mockResolvedValue(undefined);
+  channel.consume = vi.fn().mockResolvedValue({ consumerTag: "reply-ctag" });
+  channel.cancel = vi.fn().mockResolvedValue(undefined);
   // Override EventEmitter methods with spies while keeping functionality
   const origOn = channel.on.bind(channel);
-  channel.on = jest.fn((...args: any[]) => origOn(...args));
+  channel.on = vi.fn((...args: any[]) => origOn(...args));
   const origRemove = channel.removeListener.bind(channel);
-  channel.removeListener = jest.fn((...args: any[]) => origRemove(...args));
+  channel.removeListener = vi.fn((...args: any[]) => origRemove(...args));
   return channel;
 };
 

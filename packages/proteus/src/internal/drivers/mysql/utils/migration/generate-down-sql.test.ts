@@ -1,6 +1,7 @@
-import type { MysqlDbSnapshot, MysqlSnapshotTable } from "../../types/db-snapshot";
-import type { MysqlSyncOperation } from "../../types/sync-plan";
-import { generateMysqlDownSql } from "./generate-down-sql";
+import type { MysqlDbSnapshot, MysqlSnapshotTable } from "../../types/db-snapshot.js";
+import type { MysqlSyncOperation } from "../../types/sync-plan.js";
+import { generateMysqlDownSql } from "./generate-down-sql.js";
+import { describe, expect, it } from "vitest";
 
 const emptySnapshot: MysqlDbSnapshot = { tables: new Map() };
 

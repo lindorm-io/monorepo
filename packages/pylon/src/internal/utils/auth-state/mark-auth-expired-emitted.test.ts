@@ -1,5 +1,6 @@
-import { PylonSocketAuth } from "../../../types";
-import { markAuthExpiredEmitted } from "./mark-auth-expired-emitted";
+import type { PylonSocketAuth } from "../../../types/index.js";
+import { markAuthExpiredEmitted } from "./mark-auth-expired-emitted.js";
+import { describe, expect, test } from "vitest";
 
 describe("markAuthExpiredEmitted", () => {
   test("mutates authExpiredEmittedAt to the given date", () => {

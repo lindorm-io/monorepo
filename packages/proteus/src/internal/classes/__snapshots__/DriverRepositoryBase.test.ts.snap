@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`DriverRepositoryBase findPaginated returns correct result for empty dataset 1`] = `
+exports[`DriverRepositoryBase > findPaginated > returns correct result for empty dataset 1`] = `
 {
   "data": [],
   "hasMore": false,
@@ -11,7 +11,7 @@ exports[`DriverRepositoryBase findPaginated returns correct result for empty dat
 }
 `;
 
-exports[`DriverRepositoryBase findPaginated returns correct result with default page and pageSize 1`] = `
+exports[`DriverRepositoryBase > findPaginated > returns correct result with default page and pageSize 1`] = `
 {
   "data": [
     TestEntity {
@@ -44,7 +44,7 @@ exports[`DriverRepositoryBase findPaginated returns correct result with default 
 }
 `;
 
-exports[`DriverRepositoryBase findPaginated uses custom page and pageSize 1`] = `
+exports[`DriverRepositoryBase > findPaginated > uses custom page and pageSize 1`] = `
 {
   "data": [
     TestEntity {

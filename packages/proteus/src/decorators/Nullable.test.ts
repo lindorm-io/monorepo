@@ -1,8 +1,9 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { Nullable } from "./Nullable";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { Nullable } from "./Nullable.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "NullableDecorated" })
 class NullableDecorated {

@@ -1,4 +1,5 @@
-import { fileType } from "./file-type";
+import { fileType } from "./file-type.js";
+import { describe, expect, test } from "vitest";
 
 describe("fileType", () => {
   test("should return extension for a simple file path", async () => {

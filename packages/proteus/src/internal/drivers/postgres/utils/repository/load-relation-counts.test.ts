@@ -1,14 +1,26 @@
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { loadRelationCounts, LoadRelationCountsContext } from "./load-relation-counts";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import {
+  loadRelationCounts,
+  type LoadRelationCountsContext,
+} from "./load-relation-counts.js";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
-jest.mock("../../../../entity/metadata/get-entity-metadata", () => ({
-  getEntityMetadata: jest.fn(),
+vi.mock("../../../../entity/metadata/get-entity-metadata.js", async () => ({
+  getEntityMetadata: vi.fn(),
 }));
 
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
 
-const mockGetEntityMetadata = getEntityMetadata as jest.MockedFunction<
+const mockGetEntityMetadata = getEntityMetadata as MockedFunction<
   typeof getEntityMetadata
 >;
 
@@ -118,7 +130,7 @@ const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation => ({
 });
 
 const makeClient = (rows: Array<Record<string, unknown>> = []): PostgresQueryClient => ({
-  query: jest.fn().mockResolvedValue({ rows, rowCount: rows.length }),
+  query: vi.fn().mockResolvedValue({ rows, rowCount: rows.length }),
 });
 
 // --- early exit cases ---
@@ -186,7 +198,7 @@ describe("loadRelationCounts — OneToMany", () => {
     });
 
     expect(client.query).toHaveBeenCalledTimes(1);
-    const [sql, params] = (client.query as jest.Mock).mock.calls[0];
+    const [sql, params] = (client.query as Mock).mock.calls[0];
     expect(sql).toContain("COUNT(*)");
     expect(sql).toContain("GROUP BY");
     expect(sql).toMatchSnapshot();
@@ -259,7 +271,7 @@ describe("loadRelationCounts — OneToMany", () => {
       client,
     });
 
-    const [sql] = (client.query as jest.Mock).mock.calls[0];
+    const [sql] = (client.query as Mock).mock.calls[0];
     expect(sql).toContain('"foreign_ns"');
   });
 
@@ -282,7 +294,7 @@ describe("loadRelationCounts — OneToMany", () => {
       client,
     });
 
-    const [sql] = (client.query as jest.Mock).mock.calls[0];
+    const [sql] = (client.query as Mock).mock.calls[0];
     expect(sql).toContain('"ctx_ns"');
   });
 
@@ -322,7 +334,7 @@ describe("loadRelationCounts — OneToMany", () => {
 
     expect(entities[0].commentCount).toBe(3);
     expect(entities[1].commentCount).toBe(5);
-    const [sql, params] = (client.query as jest.Mock).mock.calls[0];
+    const [sql, params] = (client.query as Mock).mock.calls[0];
     expect(sql).toMatchSnapshot();
     expect(params).toMatchSnapshot();
   });
@@ -355,7 +367,7 @@ describe("loadRelationCounts — ManyToMany", () => {
       client,
     });
 
-    const [sql, params] = (client.query as jest.Mock).mock.calls[0];
+    const [sql, params] = (client.query as Mock).mock.calls[0];
     expect(sql).toContain("COUNT(*)");
     expect(sql).toContain("articles_x_tags");
     expect(sql).toMatchSnapshot();
@@ -445,7 +457,7 @@ describe("loadRelationCounts — ManyToMany", () => {
 
     expect(entities[0].tagCount).toBe(6);
     expect(entities[1].tagCount).toBe(9);
-    const [sql, params] = (client.query as jest.Mock).mock.calls[0];
+    const [sql, params] = (client.query as Mock).mock.calls[0];
     expect(sql).toMatchSnapshot();
     expect(params).toMatchSnapshot();
   });

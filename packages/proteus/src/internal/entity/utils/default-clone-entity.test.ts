@@ -1,20 +1,21 @@
-import { defaultCloneEntity } from "./default-clone-entity";
-import { CreateDateField } from "../../../decorators/CreateDateField";
-import { Default } from "../../../decorators/Default";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { Generated } from "../../../decorators/Generated";
-import { JoinTable } from "../../../decorators/JoinTable";
-import { ManyToMany } from "../../../decorators/ManyToMany";
-import { ManyToOne } from "../../../decorators/ManyToOne";
-import { OnCreate } from "../../../decorators/OnCreate";
-import { OneToMany } from "../../../decorators/OneToMany";
-import { PrimaryKey } from "../../../decorators/PrimaryKey";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { UpdateDateField } from "../../../decorators/UpdateDateField";
-import { VersionField } from "../../../decorators/VersionField";
+import { defaultCloneEntity } from "./default-clone-entity.js";
+import { CreateDateField } from "../../../decorators/CreateDateField.js";
+import { Default } from "../../../decorators/Default.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { JoinTable } from "../../../decorators/JoinTable.js";
+import { ManyToMany } from "../../../decorators/ManyToMany.js";
+import { ManyToOne } from "../../../decorators/ManyToOne.js";
+import { OnCreate } from "../../../decorators/OnCreate.js";
+import { OneToMany } from "../../../decorators/OneToMany.js";
+import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { UpdateDateField } from "../../../decorators/UpdateDateField.js";
+import { VersionField } from "../../../decorators/VersionField.js";
+import { describe, expect, test, vi } from "vitest";
 
-const cloneOnCreateCb = jest.fn();
+const cloneOnCreateCb = vi.fn();
 
 @Entity({ name: "CloneEntityChild" })
 class CloneEntityChild {

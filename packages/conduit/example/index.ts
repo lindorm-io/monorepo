@@ -1,6 +1,6 @@
 import { ChangeCase } from "@lindorm/case";
 import { Logger, LogLevel } from "@lindorm/logger";
-import { Conduit, conduitChangeResponseDataMiddleware } from "../src";
+import { Conduit, conduitChangeResponseDataMiddleware } from "../src/index.js";
 
 const main = async (): Promise<void> => {
   const logger = new Logger({

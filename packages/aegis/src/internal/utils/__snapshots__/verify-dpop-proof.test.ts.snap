@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`verifyDpopProof should return a parsed proof for a valid DPoP proof 1`] = `
+exports[`verifyDpopProof > should return a parsed proof for a valid DPoP proof 1`] = `
 {
   "accessTokenHash": "WXSA1LYsphIZPxnnP-TMOtF_C_nPwWp8v0tQZBMcSAU",
   "httpMethod": "POST",

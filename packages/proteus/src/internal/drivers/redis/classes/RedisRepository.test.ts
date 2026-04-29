@@ -1,112 +1,121 @@
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 // ─── Module Mocks ─────────────────────────────────────────────────────────────
 //
 // These must appear before any imports so Jest hoists them correctly.
 // We mock low-level utilities but keep EntityManager and getEntityMetadata real
 // since real @Entity decorators are used below.
 
-jest.mock("../utils/build-scan-pattern", () => ({
-  buildScanPattern: jest.fn(() => "entity:test_entity:*"),
+vi.mock("../utils/build-scan-pattern.js", async () => ({
+  buildScanPattern: vi.fn(() => "entity:test_entity:*"),
 }));
 
-jest.mock("../utils/scan-entity-keys", () => ({
-  scanEntityKeys: jest.fn(),
+vi.mock("../utils/scan-entity-keys.js", () => ({
+  scanEntityKeys: vi.fn(),
 }));
 
-jest.mock("../utils/redis-join-table-ops", () => ({
-  createRedisJoinTableOps: jest.fn(() => ({ sync: jest.fn(), delete: jest.fn() })),
-  buildForwardJoinScanPattern: jest.fn((joinTable: string) => `join:${joinTable}:*`),
-  buildReverseJoinScanPattern: jest.fn((joinTable: string) => `join:${joinTable}:rev:*`),
+vi.mock("../utils/redis-join-table-ops.js", () => ({
+  createRedisJoinTableOps: vi.fn(() => ({ sync: vi.fn(), delete: vi.fn() })),
+  buildForwardJoinScanPattern: vi.fn((joinTable: string) => `join:${joinTable}:*`),
+  buildReverseJoinScanPattern: vi.fn((joinTable: string) => `join:${joinTable}:rev:*`),
 }));
 
-jest.mock("../utils/build-join-set-key", () => ({
-  buildJoinSetKey: jest.fn(
+vi.mock("../utils/build-join-set-key.js", () => ({
+  buildJoinSetKey: vi.fn(
     (joinTable: string, col: string, value: unknown) =>
       `join:${joinTable}:${col}:${String(value)}`,
   ),
-  buildReverseJoinSetKey: jest.fn(
+  buildReverseJoinSetKey: vi.fn(
     (joinTable: string, col: string, value: unknown) =>
       `join:${joinTable}:rev:${col}:${String(value)}`,
   ),
 }));
 
-jest.mock("../../../utils/repository/build-pk-predicate", () => ({
-  buildPrimaryKeyPredicate: jest.fn((entity: any) => ({ id: entity.id })),
+vi.mock("../../../utils/repository/build-pk-predicate.js", () => ({
+  buildPrimaryKeyPredicate: vi.fn((entity: any) => ({ id: entity.id })),
 }));
 
-jest.mock("../../../utils/repository/repository-guards", () => ({
-  guardAppendOnly: jest.fn(),
-  validateRelationNames: jest.fn(),
-  guardDeleteDateField: jest.fn(),
-  guardExpiryDateField: jest.fn(),
-  guardUpsertBlocked: jest.fn(),
+vi.mock("../../../utils/repository/repository-guards.js", () => ({
+  guardAppendOnly: vi.fn(),
+  validateRelationNames: vi.fn(),
+  guardDeleteDateField: vi.fn(),
+  guardExpiryDateField: vi.fn(),
+  guardUpsertBlocked: vi.fn(),
 }));
 
-jest.mock("../../../utils/repository/RelationPersister", () => ({
-  RelationPersister: jest.fn().mockImplementation(() => ({
-    saveOwning: jest.fn().mockResolvedValue(undefined),
-    saveInverse: jest.fn().mockResolvedValue(undefined),
-    destroy: jest.fn().mockResolvedValue(undefined),
+vi.mock("../../../utils/repository/RelationPersister.js", () => ({
+  RelationPersister: vi.fn().mockImplementation(() => ({
+    saveOwning: vi.fn().mockResolvedValue(undefined),
+    saveInverse: vi.fn().mockResolvedValue(undefined),
+    destroy: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 
-jest.mock("../../../utils/repository/build-relation-filter", () => ({
-  buildRelationFilter: jest.fn(() => ({})),
+vi.mock("../../../utils/repository/build-relation-filter.js", () => ({
+  buildRelationFilter: vi.fn(() => ({})),
 }));
 
-jest.mock("../../../utils/query/filter-hidden-selections", () => ({
-  filterHiddenSelections: jest.fn(() => null),
+vi.mock("../../../utils/query/filter-hidden-selections.js", () => ({
+  filterHiddenSelections: vi.fn(() => null),
 }));
 
-jest.mock("../../../utils/pagination/build-keyset-filter-memory", () => ({
-  buildKeysetFilterMemory: jest.fn(() => () => true),
+vi.mock("../../../utils/pagination/build-keyset-filter-memory.js", () => ({
+  buildKeysetFilterMemory: vi.fn(() => () => true),
 }));
 
-jest.mock("../../../entity/utils/snapshot-store", () => ({
-  getSnapshot: jest.fn(() => null),
-  clearSnapshot: jest.fn(),
+vi.mock("../../../entity/utils/snapshot-store.js", () => ({
+  getSnapshot: vi.fn(() => null),
+  clearSnapshot: vi.fn(),
 }));
 
-jest.mock("../../../entity/utils/install-lazy-relations", () => ({
-  installLazyRelations: jest.fn(),
+vi.mock("../../../entity/utils/install-lazy-relations.js", () => ({
+  installLazyRelations: vi.fn(),
 }));
 
-jest.mock("../../../entity/utils/lazy-relation", () => ({
-  isLazyRelation: jest.fn(() => false),
+vi.mock("../../../entity/utils/lazy-relation.js", () => ({
+  isLazyRelation: vi.fn(() => false),
 }));
 
-jest.mock("../../../entity/utils/lazy-collection", () => ({
-  isLazyCollection: jest.fn(() => false),
+vi.mock("../../../entity/utils/lazy-collection.js", () => ({
+  isLazyCollection: vi.fn(() => false),
 }));
 
-jest.mock("../../../utils/pagination/validate-paginate-options", () => ({
-  validatePaginateOptions: jest.fn(),
+vi.mock("../../../utils/pagination/validate-paginate-options.js", () => ({
+  validatePaginateOptions: vi.fn(),
 }));
 
-jest.mock("../../../utils/pagination/build-keyset-order", () => ({
-  buildKeysetOrder: jest.fn(() => []),
-  keysetOrderToRecord: jest.fn(() => ({})),
+vi.mock("../../../utils/pagination/build-keyset-order.js", () => ({
+  buildKeysetOrder: vi.fn(() => []),
+  keysetOrderToRecord: vi.fn(() => ({})),
 }));
 
-jest.mock("../../../utils/pagination/build-keyset-predicate", () => ({
-  buildKeysetPredicate: jest.fn(() => ({})),
+vi.mock("../../../utils/pagination/build-keyset-predicate.js", () => ({
+  buildKeysetPredicate: vi.fn(() => ({})),
 }));
 
-jest.mock("../../../utils/pagination/encode-cursor", () => ({
-  encodeCursor: jest.fn(() => "cursor-token"),
+vi.mock("../../../utils/pagination/encode-cursor.js", () => ({
+  encodeCursor: vi.fn(() => "cursor-token"),
 }));
 
-jest.mock("../../../utils/pagination/decode-cursor", () => ({
-  decodeCursor: jest.fn(() => ({ values: [] })),
+vi.mock("../../../utils/pagination/decode-cursor.js", () => ({
+  decodeCursor: vi.fn(() => ({ values: [] })),
 }));
 
-jest.mock("../../../utils/pagination/extract-cursor-values", () => ({
-  extractCursorValues: jest.fn(() => []),
+vi.mock("../../../utils/pagination/extract-cursor-values.js", () => ({
+  extractCursorValues: vi.fn(() => []),
 }));
 
 // ─── Imports ──────────────────────────────────────────────────────────────────
 
 import { randomUUID } from "crypto";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   Entity,
   Field,
@@ -120,17 +129,17 @@ import {
   CreateDateField,
   UpdateDateField,
   DeleteDateField,
-} from "../../../../decorators";
-import type { IProteusRepository } from "../../../../interfaces";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { RedisCursor } from "./RedisCursor";
-import { RedisRepository } from "./RedisRepository";
-import { scanEntityKeys } from "../utils/scan-entity-keys";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
+} from "../../../../decorators/index.js";
+import type { IProteusRepository } from "../../../../interfaces/index.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { RedisCursor } from "./RedisCursor.js";
+import { RedisRepository } from "./RedisRepository.js";
+import { scanEntityKeys } from "../utils/scan-entity-keys.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
 
-const mockedScanEntityKeys = scanEntityKeys as jest.MockedFunction<typeof scanEntityKeys>;
+const mockedScanEntityKeys = scanEntityKeys as MockedFunction<typeof scanEntityKeys>;
 
 // ─── Test Entities ─────────────────────────────────────────────────────────────
 //
@@ -294,11 +303,11 @@ class RepoM2MTarget {
 
 const createMockPipeline = () => {
   const pipeline: any = {
-    del: jest.fn().mockReturnThis(),
-    hset: jest.fn().mockReturnThis(),
-    sadd: jest.fn().mockReturnThis(),
-    srem: jest.fn().mockReturnThis(),
-    exec: jest.fn().mockResolvedValue([[null, 1]]),
+    del: vi.fn().mockReturnThis(),
+    hset: vi.fn().mockReturnThis(),
+    sadd: vi.fn().mockReturnThis(),
+    srem: vi.fn().mockReturnThis(),
+    exec: vi.fn().mockResolvedValue([[null, 1]]),
   };
   return pipeline;
 };
@@ -306,39 +315,39 @@ const createMockPipeline = () => {
 const createMockRedisClient = () => {
   const mockPipeline = createMockPipeline();
   const client: any = {
-    pipeline: jest.fn(() => mockPipeline),
-    smembers: jest.fn().mockResolvedValue([]),
-    sadd: jest.fn().mockResolvedValue(1),
-    srem: jest.fn().mockResolvedValue(1),
-    del: jest.fn().mockResolvedValue(1),
+    pipeline: vi.fn(() => mockPipeline),
+    smembers: vi.fn().mockResolvedValue([]),
+    sadd: vi.fn().mockResolvedValue(1),
+    srem: vi.fn().mockResolvedValue(1),
+    del: vi.fn().mockResolvedValue(1),
   };
   return { client, mockPipeline };
 };
 
 const createMockExecutor = () => ({
-  executeFind: jest.fn().mockResolvedValue([]),
-  executeInsert: jest.fn().mockImplementation(async (e: any) => e),
-  executeInsertBulk: jest.fn().mockResolvedValue([]),
-  executeUpdate: jest.fn().mockImplementation(async (e: any) => e),
-  executeUpdateMany: jest.fn().mockResolvedValue(0),
-  executeDelete: jest.fn().mockResolvedValue(undefined),
-  executeSoftDelete: jest.fn().mockResolvedValue(undefined),
-  executeRestore: jest.fn().mockResolvedValue(undefined),
-  executeDeleteExpired: jest.fn().mockResolvedValue(undefined),
-  executeCount: jest.fn().mockResolvedValue(0),
-  executeExists: jest.fn().mockResolvedValue(false),
-  executeIncrement: jest.fn().mockResolvedValue(undefined),
-  executeDecrement: jest.fn().mockResolvedValue(undefined),
-  executeTtl: jest.fn().mockResolvedValue(null),
+  executeFind: vi.fn().mockResolvedValue([]),
+  executeInsert: vi.fn().mockImplementation(async (e: any) => e),
+  executeInsertBulk: vi.fn().mockResolvedValue([]),
+  executeUpdate: vi.fn().mockImplementation(async (e: any) => e),
+  executeUpdateMany: vi.fn().mockResolvedValue(0),
+  executeDelete: vi.fn().mockResolvedValue(undefined),
+  executeSoftDelete: vi.fn().mockResolvedValue(undefined),
+  executeRestore: vi.fn().mockResolvedValue(undefined),
+  executeDeleteExpired: vi.fn().mockResolvedValue(undefined),
+  executeCount: vi.fn().mockResolvedValue(0),
+  executeExists: vi.fn().mockResolvedValue(false),
+  executeIncrement: vi.fn().mockResolvedValue(undefined),
+  executeDecrement: vi.fn().mockResolvedValue(undefined),
+  executeTtl: vi.fn().mockResolvedValue(null),
 });
 
 const createMockRepositoryFactory = () => {
   const innerRepo = {
-    find: jest.fn().mockResolvedValue([]),
-    findOne: jest.fn().mockResolvedValue(null),
-    count: jest.fn().mockResolvedValue(0),
+    find: vi.fn().mockResolvedValue([]),
+    findOne: vi.fn().mockResolvedValue(null),
+    count: vi.fn().mockResolvedValue(0),
   };
-  const factory = jest.fn().mockReturnValue(innerRepo);
+  const factory = vi.fn().mockReturnValue(innerRepo);
   return { factory, innerRepo };
 };
 
@@ -347,7 +356,7 @@ type RepositorySetup<E extends object> = {
   client: any;
   mockPipeline: any;
   executor: ReturnType<typeof createMockExecutor>;
-  repositoryFactory: jest.Mock;
+  repositoryFactory: Mock;
   innerRepo: ReturnType<typeof createMockRepositoryFactory>["innerRepo"];
 };
 
@@ -365,9 +374,7 @@ const createRepositoryFor = <E extends object>(
   const repository = new RedisRepository<any>({
     target,
     executor: executor as any,
-    queryBuilderFactory: jest
-      .fn()
-      .mockReturnValue({ where: jest.fn(), getMany: jest.fn() }),
+    queryBuilderFactory: vi.fn().mockReturnValue({ where: vi.fn(), getMany: vi.fn() }),
     client,
     namespace: options.namespace ?? null,
     logger: createMockLogger(),
@@ -389,7 +396,7 @@ const createRepositoryFor = <E extends object>(
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 // ─── Constructor ───────────────────────────────────────────────────────────────
@@ -522,8 +529,8 @@ describe("RedisRepository.upsertOne (lifecycle hooks)", () => {
     executor.executeExists.mockResolvedValue(false);
     executor.executeInsert.mockImplementation(async (e: any) => e);
 
-    const fireBeforeHookSpy = jest.spyOn(repository as any, "fireBeforeHook");
-    const fireAfterHookSpy = jest.spyOn(repository as any, "fireAfterHook");
+    const fireBeforeHookSpy = vi.spyOn(repository as any, "fireBeforeHook");
+    const fireAfterHookSpy = vi.spyOn(repository as any, "fireAfterHook");
 
     const entity = Object.assign(new RepoItem(), {
       id: randomUUID(),
@@ -542,8 +549,8 @@ describe("RedisRepository.upsertOne (lifecycle hooks)", () => {
     executor.executeFind.mockResolvedValue([]);
     executor.executeUpdate.mockImplementation(async (e: any) => e);
 
-    const fireBeforeHookSpy = jest.spyOn(repository as any, "fireBeforeHook");
-    const fireAfterHookSpy = jest.spyOn(repository as any, "fireAfterHook");
+    const fireBeforeHookSpy = vi.spyOn(repository as any, "fireBeforeHook");
+    const fireAfterHookSpy = vi.spyOn(repository as any, "fireAfterHook");
 
     const entity = Object.assign(new RepoItem(), {
       id: randomUUID(),
@@ -561,7 +568,7 @@ describe("RedisRepository.upsertOne (lifecycle hooks)", () => {
     executor.executeExists.mockResolvedValue(false);
     executor.executeInsert.mockImplementation(async (e: any) => e);
 
-    const fireBeforeHookSpy = jest.spyOn(repository as any, "fireBeforeHook");
+    const fireBeforeHookSpy = vi.spyOn(repository as any, "fireBeforeHook");
 
     const entity = Object.assign(new RepoItem(), {
       id: randomUUID(),

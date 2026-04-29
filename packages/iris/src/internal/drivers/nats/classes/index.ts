@@ -1,8 +1,8 @@
-export { NatsDriver } from "./NatsDriver";
-export { NatsMessageBus } from "./NatsMessageBus";
-export { NatsPublisher } from "./NatsPublisher";
-export { NatsRpcClient } from "./NatsRpcClient";
-export { NatsRpcServer } from "./NatsRpcServer";
-export { NatsStreamPipeline } from "./NatsStreamPipeline";
-export { NatsStreamProcessor } from "./NatsStreamProcessor";
-export { NatsWorkerQueue } from "./NatsWorkerQueue";
+export { NatsDriver } from "./NatsDriver.js";
+export { NatsMessageBus } from "./NatsMessageBus.js";
+export { NatsPublisher } from "./NatsPublisher.js";
+export { NatsRpcClient } from "./NatsRpcClient.js";
+export { NatsRpcServer } from "./NatsRpcServer.js";
+export { NatsStreamPipeline } from "./NatsStreamPipeline.js";
+export { NatsStreamProcessor } from "./NatsStreamProcessor.js";
+export { NatsWorkerQueue } from "./NatsWorkerQueue.js";

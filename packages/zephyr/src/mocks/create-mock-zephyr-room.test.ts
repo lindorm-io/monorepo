@@ -1,4 +1,5 @@
-import { createMockZephyrRoom } from "./create-mock-zephyr-room";
+import { createMockZephyrRoom } from "./vitest.js";
+import { describe, expect, test } from "vitest";
 
 describe("createMockZephyrRoom", () => {
   test("should create mock with default name", () => {

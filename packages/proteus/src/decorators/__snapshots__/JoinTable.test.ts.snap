@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`JoinTable should match snapshot for auto join table 1`] = `
+exports[`JoinTable > should match snapshot for auto join table 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -121,7 +121,7 @@ exports[`JoinTable should match snapshot for auto join table 1`] = `
 }
 `;
 
-exports[`JoinTable should match snapshot for custom join table name 1`] = `
+exports[`JoinTable > should match snapshot for custom join table name 1`] = `
 {
   "appendOnly": false,
   "cache": null,

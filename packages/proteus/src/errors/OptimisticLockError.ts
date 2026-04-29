@@ -1,4 +1,4 @@
-import { ProteusRepositoryError } from "./ProteusRepositoryError";
+import { ProteusRepositoryError } from "./ProteusRepositoryError.js";
 
 export class OptimisticLockError extends ProteusRepositoryError {
   public constructor(entityName: string, primaryKey: Record<string, unknown>) {

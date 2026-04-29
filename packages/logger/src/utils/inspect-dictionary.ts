@@ -1,4 +1,4 @@
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import fastSafeStringify from "fast-safe-stringify";
 import { inspect } from "util";
 

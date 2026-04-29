@@ -1,13 +1,14 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../../interfaces";
-import type { NatsSharedState } from "../types/nats-types";
-import type { PipelineStage } from "../../../types/pipeline-stage";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
+import type { NatsSharedState } from "../types/nats-types.js";
+import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
-} from "../../../classes/DriverStreamProcessorBase";
-import { NatsStreamPipeline } from "./NatsStreamPipeline";
+} from "../../../classes/DriverStreamProcessorBase.js";
+import { NatsStreamPipeline } from "./NatsStreamPipeline.js";
 
 export type NatsStreamProcessorOptions =
   DriverStreamProcessorBaseOptions<NatsSharedState>;
@@ -30,7 +31,7 @@ export class NatsStreamProcessor<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: unknown;
+    meta?: IrisHookMeta;
     amphora?: unknown;
   }): NatsStreamPipeline {
     return new NatsStreamPipeline({
@@ -41,7 +42,7 @@ export class NatsStreamProcessor<
       inputTopic: options.inputTopic,
       outputClass: options.outputClass,
       outputTopic: options.outputTopic,
-      context: options.context,
+      meta: options.meta,
       amphora: options.amphora,
     });
   }

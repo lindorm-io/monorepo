@@ -1,11 +1,11 @@
-import { ErrorClassification } from "@lindorm/breaker";
-import { ConduitError } from "../../errors";
+import type { ErrorClassification } from "@lindorm/breaker";
+import { LindormError, ServerError } from "@lindorm/errors";
 
 const UNRECOVERABLE_STATUS = new Set([501, 505, 506, 510, 511]);
 
 export const defaultConduitClassifier = (error: Error): ErrorClassification => {
-  if (!(error instanceof ConduitError)) return "ignorable";
+  if (!(error instanceof LindormError)) return "ignorable";
   if (UNRECOVERABLE_STATUS.has(error.status)) return "permanent";
-  if (error.isServerError) return "transient";
+  if (error instanceof ServerError) return "transient";
   return "ignorable"; // client errors don't trip the breaker
 };

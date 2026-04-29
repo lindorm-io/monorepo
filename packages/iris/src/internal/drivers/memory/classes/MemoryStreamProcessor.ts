@@ -1,13 +1,14 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../../interfaces";
-import type { MemorySharedState } from "../types/memory-store";
-import type { PipelineStage } from "../../../types/pipeline-stage";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
+import type { MemorySharedState } from "../types/memory-store.js";
+import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
-} from "../../../classes/DriverStreamProcessorBase";
-import { MemoryStreamPipeline } from "./MemoryStreamPipeline";
+} from "../../../classes/DriverStreamProcessorBase.js";
+import { MemoryStreamPipeline } from "./MemoryStreamPipeline.js";
 
 export type MemoryStreamProcessorOptions =
   DriverStreamProcessorBaseOptions<MemorySharedState>;
@@ -30,7 +31,7 @@ export class MemoryStreamProcessor<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: unknown;
+    meta?: IrisHookMeta;
     amphora?: unknown;
   }): MemoryStreamPipeline {
     return new MemoryStreamPipeline({
@@ -41,7 +42,7 @@ export class MemoryStreamProcessor<
       inputTopic: options.inputTopic,
       outputClass: options.outputClass,
       outputTopic: options.outputTopic,
-      context: options.context,
+      meta: options.meta,
       amphora: options.amphora,
     });
   }

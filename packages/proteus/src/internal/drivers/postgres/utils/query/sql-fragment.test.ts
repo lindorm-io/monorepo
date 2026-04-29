@@ -1,4 +1,5 @@
-import { isSqlFragment, sql } from "./sql-fragment";
+import { isSqlFragment, sql } from "./sql-fragment.js";
+import { describe, expect, test } from "vitest";
 
 describe("sql", () => {
   describe("no interpolations", () => {

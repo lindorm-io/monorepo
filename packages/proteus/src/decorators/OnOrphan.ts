@@ -1,5 +1,5 @@
-import type { RelationOrphan } from "../internal/entity/types/metadata";
-import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata";
+import type { RelationOrphan } from "../internal/entity/types/metadata.js";
+import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Configure what happens to related entities that are removed from a collection.

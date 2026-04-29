@@ -1,6 +1,7 @@
-import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects";
-import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings";
-import { sentenceArray, sentenceCase, sentenceKeys } from "./sentence";
+import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects.js";
+import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings.js";
+import { sentenceArray, sentenceCase, sentenceKeys } from "./sentence.js";
+import { describe, expect, test } from "vitest";
 
 describe("sentenceCase", () => {
   test.each(TEST_STRINGS)("should convert %s", (input) => {

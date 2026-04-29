@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`assertSessionCookieSafeForSockets should throw with actionable error message 1`] = `
+exports[`assertSessionCookieSafeForSockets > should throw with actionable error message 1`] = `
 {
   "code": "wildcard_cors_allowlist_for_session",
   "data": {},

@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`formatStatusTable should format empty list 1`] = `
+exports[`formatStatusTable > should format empty list 1`] = `
 "Migration Status (./migrations):
 
   No migrations found."
 `;
 
-exports[`formatStatusTable should format mixed statuses 1`] = `
+exports[`formatStatusTable > should format mixed statuses 1`] = `
 "Migration Status (./migrations):
 
   Name                       Status
@@ -18,7 +18,7 @@ exports[`formatStatusTable should format mixed statuses 1`] = `
 2 applied, 1 pending, 0 checksum mismatches."
 `;
 
-exports[`formatStatusTable should format single applied migration 1`] = `
+exports[`formatStatusTable > should format single applied migration 1`] = `
 "Migration Status (./migrations):
 
   Name                 Status
@@ -28,7 +28,7 @@ exports[`formatStatusTable should format single applied migration 1`] = `
 1 applied, 0 pending, 0 checksum mismatches."
 `;
 
-exports[`formatStatusTable should format with checksum mismatch 1`] = `
+exports[`formatStatusTable > should format with checksum mismatch 1`] = `
 "Migration Status (./migrations):
 
   Name                       Status

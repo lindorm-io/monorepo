@@ -1,10 +1,10 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import {
   type ResolvedTable,
   buildDiscriminatorPredicate as sharedBuildDiscPredicate,
   resolveTableName as sharedResolveTableName,
-} from "../../../../utils/sql/resolve-table-name";
-import { sqliteDialect } from "../sqlite-dialect";
+} from "../../../../utils/sql/resolve-table-name.js";
+import { sqliteDialect } from "../sqlite-dialect.js";
 
 export type { ResolvedTable };
 

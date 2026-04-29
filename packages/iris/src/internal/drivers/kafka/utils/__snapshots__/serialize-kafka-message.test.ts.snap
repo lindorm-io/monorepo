@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`serializeKafkaMessage should serialize a fully populated envelope 1`] = `
+exports[`serializeKafkaMessage > should serialize a fully populated envelope 1`] = `
 {
   "headers": {
     "x-iris-attempt": "3",
@@ -24,7 +24,7 @@ exports[`serializeKafkaMessage should serialize a fully populated envelope 1`] =
 }
 `;
 
-exports[`serializeKafkaMessage should serialize a minimal envelope 1`] = `
+exports[`serializeKafkaMessage > should serialize a minimal envelope 1`] = `
 {
   "headers": {
     "x-iris-attempt": "0",

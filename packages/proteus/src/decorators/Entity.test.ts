@@ -1,10 +1,11 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Comment } from "./Comment";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { Namespace } from "./Namespace";
-import { PrimaryKey } from "./PrimaryKey";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Comment } from "./Comment.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { Namespace } from "./Namespace.js";
+import { PrimaryKey } from "./PrimaryKey.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 @Entity()
 class EntityDefaultName {

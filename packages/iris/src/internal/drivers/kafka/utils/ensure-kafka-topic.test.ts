@@ -1,28 +1,29 @@
-import type { KafkaClient, KafkaSharedState } from "../types/kafka-types";
-import { ensureKafkaTopic, ensureKafkaTopicFromState } from "./ensure-kafka-topic";
+import type { KafkaClient, KafkaSharedState } from "../types/kafka-types.js";
+import { ensureKafkaTopic, ensureKafkaTopicFromState } from "./ensure-kafka-topic.js";
+import { describe, expect, it, vi } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockAdmin = () => ({
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  listTopics: jest.fn().mockResolvedValue([]),
-  createTopics: jest.fn().mockResolvedValue(true),
-  deleteTopics: jest.fn().mockResolvedValue(undefined),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  listTopics: vi.fn().mockResolvedValue([]),
+  createTopics: vi.fn().mockResolvedValue(true),
+  deleteTopics: vi.fn().mockResolvedValue(undefined),
 });
 
 const createMockKafka = (admin = createMockAdmin()): KafkaClient => ({
-  producer: jest.fn() as any,
-  consumer: jest.fn() as any,
-  admin: jest.fn().mockReturnValue(admin),
+  producer: vi.fn() as any,
+  consumer: vi.fn() as any,
+  admin: vi.fn().mockReturnValue(admin),
 });
 
 describe("ensureKafkaTopic", () => {

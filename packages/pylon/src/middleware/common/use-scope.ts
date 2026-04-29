@@ -1,6 +1,6 @@
 import { ServerError } from "@lindorm/errors";
-import { Dict } from "@lindorm/types";
-import { PylonContext, PylonMiddleware } from "../../types";
+import type { Dict } from "@lindorm/types";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type UseScopeOptions = {
   params: (ctx: PylonContext) => Dict<unknown>;

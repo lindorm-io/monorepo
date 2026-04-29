@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
+import type { IEntity } from "../../../interfaces/index.js";
 
 export type InheritanceStrategy = "single-table" | "joined";
 

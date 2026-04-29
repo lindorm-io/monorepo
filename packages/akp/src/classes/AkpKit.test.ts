@@ -1,16 +1,17 @@
 import {
-  MOCK_KRYPTOS_AKP_SIG_ML_DSA_65,
-  MOCK_KRYPTOS_OKP_SIG_ED25519,
-} from "@lindorm/kryptos";
-import { AkpError } from "../errors";
-import { AkpKit } from "./AkpKit";
+  KRYPTOS_AKP_SIG_ML_DSA_65,
+  KRYPTOS_OKP_SIG_ED25519,
+} from "@lindorm/kryptos/fixtures";
+import { AkpError } from "../errors/index.js";
+import { AkpKit } from "./AkpKit.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("AkpKit", () => {
   let kit: AkpKit;
   let signature: Buffer;
 
   beforeEach(() => {
-    kit = new AkpKit({ kryptos: MOCK_KRYPTOS_AKP_SIG_ML_DSA_65 });
+    kit = new AkpKit({ kryptos: KRYPTOS_AKP_SIG_ML_DSA_65 });
     signature = kit.sign("string");
   });
 
@@ -36,10 +37,10 @@ describe("AkpKit", () => {
   });
 
   test("should throw on non-AKP kryptos", () => {
-    expect(() => new AkpKit({ kryptos: MOCK_KRYPTOS_OKP_SIG_ED25519 as any })).toThrow(
+    expect(() => new AkpKit({ kryptos: KRYPTOS_OKP_SIG_ED25519 as any })).toThrow(
       AkpError,
     );
-    expect(() => new AkpKit({ kryptos: MOCK_KRYPTOS_OKP_SIG_ED25519 as any })).toThrow(
+    expect(() => new AkpKit({ kryptos: KRYPTOS_OKP_SIG_ED25519 as any })).toThrow(
       "Invalid Kryptos instance",
     );
   });

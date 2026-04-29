@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`partitionIncludes should put all join includes in joinIncludes 1`] = `
+exports[`partitionIncludes > should put all join includes in joinIncludes 1`] = `
 {
   "joinIncludes": [
     {
@@ -22,7 +22,7 @@ exports[`partitionIncludes should put all join includes in joinIncludes 1`] = `
 }
 `;
 
-exports[`partitionIncludes should put all query includes in queryIncludes 1`] = `
+exports[`partitionIncludes > should put all query includes in queryIncludes 1`] = `
 {
   "joinIncludes": [],
   "queryIncludes": [
@@ -44,14 +44,14 @@ exports[`partitionIncludes should put all query includes in queryIncludes 1`] = 
 }
 `;
 
-exports[`partitionIncludes should return empty arrays for empty includes 1`] = `
+exports[`partitionIncludes > should return empty arrays for empty includes 1`] = `
 {
   "joinIncludes": [],
   "queryIncludes": [],
 }
 `;
 
-exports[`partitionIncludes should split mixed includes correctly 1`] = `
+exports[`partitionIncludes > should split mixed includes correctly 1`] = `
 {
   "joinIncludes": [
     {

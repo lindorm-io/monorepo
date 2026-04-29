@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`VersionKey should register class-level version keys 1`] = `
+exports[`VersionKey > should register class-level version keys 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -103,7 +103,7 @@ exports[`VersionKey should register class-level version keys 1`] = `
 }
 `;
 
-exports[`VersionKey should register field-level version key 1`] = `
+exports[`VersionKey > should register field-level version key 1`] = `
 {
   "appendOnly": false,
   "cache": null,

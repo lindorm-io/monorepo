@@ -1,6 +1,6 @@
 import { isObject } from "@lindorm/is";
-import { Dict, Param } from "@lindorm/types";
-import { findAllMatches } from "./find-all-matches";
+import type { Dict, Param } from "@lindorm/types";
+import { findAllMatches } from "./find-all-matches.js";
 
 export const replaceParams = <Params extends Dict<Param> = Dict<Param>>(
   pathname: string,

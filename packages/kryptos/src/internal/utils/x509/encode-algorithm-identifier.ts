@@ -1,6 +1,6 @@
-import { KryptosError } from "../../../errors";
-import { KryptosAlgorithm, KryptosType } from "../../../types";
-import { encodeNull, encodeOid, encodeSequence } from "../asn1";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosAlgorithm, KryptosType } from "../../../types/index.js";
+import { encodeNull, encodeOid, encodeSequence } from "../asn1/index.js";
 import {
   X509_OID_ECDSA_WITH_SHA256,
   X509_OID_ECDSA_WITH_SHA384,
@@ -13,7 +13,7 @@ import {
   X509_OID_SHA256_WITH_RSA,
   X509_OID_SHA384_WITH_RSA,
   X509_OID_SHA512_WITH_RSA,
-} from "./oids";
+} from "./oids.js";
 
 export type X509SignatureContext = {
   algorithm: KryptosAlgorithm;

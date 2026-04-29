@@ -1,17 +1,17 @@
 import { randomUUID } from "@lindorm/random";
-import type { MemorySharedState } from "../types/memory-store";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata";
-import { prepareOutbound } from "../../../message/utils/prepare-outbound";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic";
-import { buildEnvelope } from "../../../utils/build-envelope";
-import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers";
-import { dispatchToConsumers } from "../utils/dispatch-to-consumers";
+import type { MemorySharedState } from "../types/memory-store.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import { prepareOutbound } from "../../../message/utils/prepare-outbound.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import { buildEnvelope } from "../../../utils/build-envelope.js";
+import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers.js";
+import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
-} from "../../../classes/DriverStreamPipelineBase";
+} from "../../../classes/DriverStreamPipelineBase.js";
 
 export type MemoryStreamPipelineOptions = DriverStreamPipelineBaseOptions & {
   store: MemorySharedState;

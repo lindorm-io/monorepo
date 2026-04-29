@@ -1,20 +1,29 @@
-import type { MetaRelation } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { createPostgresJoinTableOps } from "./postgres-join-table-ops";
+import type { MetaRelation } from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { createPostgresJoinTableOps } from "./postgres-join-table-ops.js";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // Mock the underlying implementations
-jest.mock("./manage-join-table", () => ({
-  syncJoinTableRows: jest.fn().mockResolvedValue(undefined),
-  deleteJoinTableRows: jest.fn().mockResolvedValue(undefined),
+vi.mock("./manage-join-table.js", async () => ({
+  syncJoinTableRows: vi.fn().mockResolvedValue(undefined),
+  deleteJoinTableRows: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { syncJoinTableRows, deleteJoinTableRows } from "./manage-join-table";
+import { syncJoinTableRows, deleteJoinTableRows } from "./manage-join-table.js";
 
-const mockSync = syncJoinTableRows as jest.MockedFunction<typeof syncJoinTableRows>;
-const mockDelete = deleteJoinTableRows as jest.MockedFunction<typeof deleteJoinTableRows>;
+const mockSync = syncJoinTableRows as MockedFunction<typeof syncJoinTableRows>;
+const mockDelete = deleteJoinTableRows as MockedFunction<typeof deleteJoinTableRows>;
 
 const makeClient = (): PostgresQueryClient => ({
-  query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
 });
 
 const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation => ({
@@ -42,7 +51,7 @@ const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation => ({
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe("createPostgresJoinTableOps", () => {

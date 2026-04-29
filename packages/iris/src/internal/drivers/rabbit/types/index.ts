@@ -1,1 +1,1 @@
-export * from "./rabbit-types";
+export * from "./rabbit-types.js";

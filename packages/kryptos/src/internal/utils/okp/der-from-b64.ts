@@ -1,7 +1,7 @@
-import { KryptosError } from "../../../errors";
-import { KryptosFromString, OkpBuffer } from "../../../types";
-import { createOkpDerFromDer } from "./der-from-der";
-import { isOkpCurve } from "./is-okp-curve";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosFromString, OkpBuffer } from "../../../types/index.js";
+import { createOkpDerFromDer } from "./der-from-der.js";
+import { isOkpCurve } from "./is-okp-curve.js";
 
 type Options = Omit<KryptosFromString, "id" | "algorithm" | "type" | "use">;
 

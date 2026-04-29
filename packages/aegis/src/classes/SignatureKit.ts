@@ -3,9 +3,9 @@ import { EcKit } from "@lindorm/ec";
 import { OctKit } from "@lindorm/oct";
 import { OkpKit } from "@lindorm/okp";
 import { RsaKit } from "@lindorm/rsa";
-import { IKeyKit, KeyData } from "@lindorm/types";
-import { AegisError } from "../errors";
-import { SignatureOptions } from "../types";
+import type { IKeyKit, KeyData } from "@lindorm/types";
+import { AegisError } from "../errors/index.js";
+import type { SignatureOptions } from "../types/index.js";
 
 export class SignatureKit implements IKeyKit {
   private readonly kit: IKeyKit;

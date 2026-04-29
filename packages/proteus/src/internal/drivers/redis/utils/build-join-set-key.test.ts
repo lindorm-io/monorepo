@@ -1,15 +1,16 @@
-import type { ScopedName } from "../../../types/types";
-import { buildJoinSetKey, buildReverseJoinSetKey } from "./build-join-set-key";
+import type { ScopedName } from "../../../types/types.js";
+import { buildJoinSetKey, buildReverseJoinSetKey } from "./build-join-set-key.js";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("../../../entity/utils/get-join-name", () => ({
-  getJoinName: jest.fn(),
+vi.mock("../../../entity/utils/get-join-name.js", () => ({
+  getJoinName: vi.fn(),
 }));
 
-import { getJoinName } from "../../../entity/utils/get-join-name";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
 
-const mockGetJoinName = getJoinName as jest.MockedFunction<typeof getJoinName>;
+const mockGetJoinName = getJoinName as MockedFunction<typeof getJoinName>;
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -25,7 +26,7 @@ const makeScopedName = (overrides: Partial<ScopedName> = {}): ScopedName => ({
 
 describe("buildJoinSetKey", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should build forward key without namespace", () => {
@@ -51,7 +52,7 @@ describe("buildJoinSetKey", () => {
 
 describe("buildReverseJoinSetKey", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should build reverse key without namespace", () => {

@@ -1,19 +1,19 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`dehydrateToRow should apply transform.to() when present 1`] = `
+exports[`dehydrateToRow > should apply transform.to() when present 1`] = `
 {
   "data": "encoded:raw",
 }
 `;
 
-exports[`dehydrateToRow should extract FK columns from owning relations 1`] = `
+exports[`dehydrateToRow > should extract FK columns from owning relations 1`] = `
 {
   "authorId": "author-1",
   "name": "Test",
 }
 `;
 
-exports[`dehydrateToRow should extract simple field values from entity 1`] = `
+exports[`dehydrateToRow > should extract simple field values from entity 1`] = `
 {
   "age": 30,
   "id": "abc",
@@ -21,52 +21,52 @@ exports[`dehydrateToRow should extract simple field values from entity 1`] = `
 }
 `;
 
-exports[`dehydrateToRow should handle embedded fields 1`] = `
+exports[`dehydrateToRow > should handle embedded fields 1`] = `
 {
   "address.city": "Springfield",
   "address.street": "Main St",
 }
 `;
 
-exports[`dehydrateToRow should handle null embedded parent 1`] = `
+exports[`dehydrateToRow > should handle null embedded parent 1`] = `
 {
   "address.street": null,
 }
 `;
 
-exports[`dehydrateToRow should set null for missing FK values 1`] = `
+exports[`dehydrateToRow > should set null for missing FK values 1`] = `
 {
   "authorId": null,
   "name": "Test",
 }
 `;
 
-exports[`dehydrateToRow should skip FK column already handled by fields 1`] = `
+exports[`dehydrateToRow > should skip FK column already handled by fields 1`] = `
 {
   "authorId": "author-1",
   "name": "Test",
 }
 `;
 
-exports[`dehydrateToRow should skip ManyToMany relations 1`] = `
+exports[`dehydrateToRow > should skip ManyToMany relations 1`] = `
 {
   "name": "Test",
 }
 `;
 
-exports[`dehydrateToRow should skip computed fields 1`] = `
+exports[`dehydrateToRow > should skip computed fields 1`] = `
 {
   "name": "Test",
 }
 `;
 
-exports[`dehydrateToRow should skip virtual relationCount properties 1`] = `
+exports[`dehydrateToRow > should skip virtual relationCount properties 1`] = `
 {
   "name": "Test",
 }
 `;
 
-exports[`dehydrateToRow should skip virtual relationId properties 1`] = `
+exports[`dehydrateToRow > should skip virtual relationId properties 1`] = `
 {
   "name": "Test",
 }

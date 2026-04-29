@@ -1,36 +1,47 @@
-import { dbPing } from "./db-ping";
-import { loadSource } from "../load-source";
+import { dbPing } from "./db-ping.js";
+import { loadSource } from "../load-source.js";
 import { Logger } from "@lindorm/logger";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockInstance,
+  type MockedFunction,
+} from "vitest";
 
-jest.mock("../load-source");
+vi.mock("../load-source.js");
 
-const mockLoadSource = loadSource as jest.MockedFunction<typeof loadSource>;
+const mockLoadSource = loadSource as MockedFunction<typeof loadSource>;
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", async () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
 const makeSource = () => ({
-  connect: jest.fn().mockResolvedValue(undefined),
-  ping: jest.fn().mockResolvedValue(true),
-  disconnect: jest.fn().mockResolvedValue(undefined),
+  connect: vi.fn().mockResolvedValue(undefined),
+  ping: vi.fn().mockResolvedValue(true),
+  disconnect: vi.fn().mockResolvedValue(undefined),
 });
 
 describe("dbPing", () => {
-  let mockExit: jest.SpyInstance;
+  let mockExit: MockInstance;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockExit = jest.spyOn(process, "exit").mockImplementation((() => {}) as any);
+    vi.clearAllMocks();
+    mockExit = vi.spyOn(process, "exit").mockImplementation((() => {}) as any);
 
     mockLoadSource.mockResolvedValue(makeSource() as any);
   });
@@ -111,7 +122,7 @@ describe("dbPing", () => {
   it("should include elapsed time in success message", async () => {
     await dbPing({ source: "/path/to/source.ts" });
 
-    const infoCall = (Logger.std.info as jest.Mock).mock.calls[0][0] as string;
+    const infoCall = (Logger.std.info as Mock).mock.calls[0][0] as string;
     expect(infoCall).toMatch(/\d+ms/);
   });
 });

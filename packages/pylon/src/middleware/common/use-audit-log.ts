@@ -1,13 +1,13 @@
 import { ServerError } from "@lindorm/errors";
-import { IIrisSource } from "@lindorm/iris";
-import { AUDIT_SOURCE } from "../../internal/constants/symbols";
-import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
-import { RequestAudit } from "../../messages";
-import { PylonContext, PylonMiddleware } from "../../types";
+import type { IIrisSource } from "@lindorm/iris";
+import { AUDIT_SOURCE } from "../../internal/constants/symbols.js";
+import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
+import { resolveActor } from "../../internal/utils/resolve-actor.js";
+import { RequestAudit } from "../../messages/index.js";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type AuditConfig = {
   iris: IIrisSource;
-  actor: (ctx: any) => string;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
 };
@@ -22,7 +22,7 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
     const config = (ctx as any)[AUDIT_SOURCE] as AuditConfig | undefined;
     if (!config) {
       throw new ServerError(
-        "Audit logging is not configured. Enable it in PylonOptions with audit: { enabled: true, actor: ... }",
+        "Audit logging is not configured. Enable it in PylonOptions with audit: { enabled: true } and provide a top-level actor resolver.",
       );
     }
 
@@ -42,7 +42,7 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
       const sanitise = options.sanitise ?? config.sanitise;
       const body = ctx.data ? (sanitise ? sanitise(ctx.data) : ctx.data) : null;
 
-      const actor = config.actor(ctx);
+      const actor = resolveActor(ctx);
       const iris = config.iris.session({ logger: ctx.logger });
       const publisher = iris.publisher(RequestAudit);
 

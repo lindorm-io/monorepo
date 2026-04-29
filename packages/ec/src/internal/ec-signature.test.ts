@@ -3,9 +3,14 @@ import {
   TEST_EC_KEY_ES256,
   TEST_EC_KEY_ES384,
   TEST_EC_KEY_ES512,
-} from "../__fixtures__/keys";
-import { EcError } from "../errors";
-import { assertEcSignature, createEcSignature, verifyEcSignature } from "./ec-signature";
+} from "../__fixtures__/keys.js";
+import { EcError } from "../errors/index.js";
+import {
+  assertEcSignature,
+  createEcSignature,
+  verifyEcSignature,
+} from "./ec-signature.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("ec-signature", () => {
   const dsaEncoding = "der";

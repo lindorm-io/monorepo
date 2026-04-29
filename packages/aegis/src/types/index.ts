@@ -1,11 +1,11 @@
-export * from "./claims";
-export * from "./jwe";
-export * from "./jws";
-export * from "./jwt";
+export * from "./claims/index.js";
+export * from "./jwe/index.js";
+export * from "./jws/index.js";
+export * from "./jwt/index.js";
 
-export * from "./aegis";
-export * from "./header";
-export * from "./kit";
-export * from "./level-of-assurance";
+export * from "./aegis.js";
+export * from "./header.js";
+export * from "./kit.js";
+export * from "./level-of-assurance.js";
 
-export * from "./signature-kit";
+export * from "./signature-kit.js";

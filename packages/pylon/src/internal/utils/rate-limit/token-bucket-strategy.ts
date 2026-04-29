@@ -1,6 +1,6 @@
-import { IProteusRepository } from "@lindorm/proteus";
-import { RateLimitBucket } from "../../../entities";
-import { RateLimitResult } from "./fixed-window-strategy";
+import type { IProteusRepository } from "@lindorm/proteus";
+import { RateLimitBucket } from "../../../entities/index.js";
+import type { RateLimitResult } from "./fixed-window-strategy.js";
 
 export const tokenBucketStrategy = async (
   repository: IProteusRepository<RateLimitBucket>,

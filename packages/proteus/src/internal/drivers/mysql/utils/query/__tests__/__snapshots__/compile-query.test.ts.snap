@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileCount should compile COUNT with WHERE 1`] = `
+exports[`compileCount > should compile COUNT with WHERE 1`] = `
 {
   "aliasMap": [
     {
@@ -132,7 +132,7 @@ exports[`compileCount should compile COUNT with WHERE 1`] = `
 }
 `;
 
-exports[`compileCount should compile COUNT(*) query 1`] = `
+exports[`compileCount > should compile COUNT(*) query 1`] = `
 {
   "aliasMap": [
     {
@@ -262,7 +262,7 @@ exports[`compileCount should compile COUNT(*) query 1`] = `
 }
 `;
 
-exports[`compileQuery should compile SELECT with CTE (WITH clause) 1`] = `
+exports[`compileQuery > should compile SELECT with CTE (WITH clause) 1`] = `
 {
   "aliasMap": [
     {
@@ -394,7 +394,7 @@ exports[`compileQuery should compile SELECT with CTE (WITH clause) 1`] = `
 }
 `;
 
-exports[`compileQuery should compile SELECT with GROUP BY 1`] = `
+exports[`compileQuery > should compile SELECT with GROUP BY 1`] = `
 {
   "aliasMap": [
     {
@@ -524,7 +524,7 @@ exports[`compileQuery should compile SELECT with GROUP BY 1`] = `
 }
 `;
 
-exports[`compileQuery should compile SELECT with GROUP BY and HAVING 1`] = `
+exports[`compileQuery > should compile SELECT with GROUP BY and HAVING 1`] = `
 {
   "aliasMap": [
     {
@@ -656,7 +656,7 @@ exports[`compileQuery should compile SELECT with GROUP BY and HAVING 1`] = `
 }
 `;
 
-exports[`compileQuery should compile SELECT with LIMIT and OFFSET 1`] = `
+exports[`compileQuery > should compile SELECT with LIMIT and OFFSET 1`] = `
 {
   "aliasMap": [
     {
@@ -789,7 +789,7 @@ exports[`compileQuery should compile SELECT with LIMIT and OFFSET 1`] = `
 }
 `;
 
-exports[`compileQuery should compile SELECT with ORDER BY (NULLS LAST emulation) 1`] = `
+exports[`compileQuery > should compile SELECT with ORDER BY (NULLS LAST emulation) 1`] = `
 {
   "aliasMap": [
     {
@@ -919,7 +919,7 @@ exports[`compileQuery should compile SELECT with ORDER BY (NULLS LAST emulation)
 }
 `;
 
-exports[`compileQuery should compile SELECT with WHERE 1`] = `
+exports[`compileQuery > should compile SELECT with WHERE 1`] = `
 {
   "aliasMap": [
     {
@@ -1051,7 +1051,7 @@ exports[`compileQuery should compile SELECT with WHERE 1`] = `
 }
 `;
 
-exports[`compileQuery should compile SELECT with multiple CTEs 1`] = `
+exports[`compileQuery > should compile SELECT with multiple CTEs 1`] = `
 {
   "aliasMap": [
     {
@@ -1184,7 +1184,7 @@ exports[`compileQuery should compile SELECT with multiple CTEs 1`] = `
 }
 `;
 
-exports[`compileQuery should compile a basic SELECT query 1`] = `
+exports[`compileQuery > should compile a basic SELECT query 1`] = `
 {
   "aliasMap": [
     {

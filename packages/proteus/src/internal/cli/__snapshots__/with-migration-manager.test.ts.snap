@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`withMigrationManager mysql driver should create a MySqlMigrationManager and call fn with context 1`] = `
+exports[`withMigrationManager > mysql driver > should create a MySqlMigrationManager and call fn with context 1`] = `
 [
   {
     "client": {
@@ -17,7 +17,7 @@ exports[`withMigrationManager mysql driver should create a MySqlMigrationManager
 ]
 `;
 
-exports[`withMigrationManager mysql driver should pass tableOptions when migrationsTable is set 1`] = `
+exports[`withMigrationManager > mysql driver > should pass tableOptions when migrationsTable is set 1`] = `
 [
   {
     "client": {
@@ -36,7 +36,7 @@ exports[`withMigrationManager mysql driver should pass tableOptions when migrati
 ]
 `;
 
-exports[`withMigrationManager postgres driver should create a MigrationManager and call fn with context 1`] = `
+exports[`withMigrationManager > postgres driver > should create a MigrationManager and call fn with context 1`] = `
 [
   {
     "client": {
@@ -53,7 +53,7 @@ exports[`withMigrationManager postgres driver should create a MigrationManager a
 ]
 `;
 
-exports[`withMigrationManager postgres driver should pass tableOptions when migrationsTable is set 1`] = `
+exports[`withMigrationManager > postgres driver > should pass tableOptions when migrationsTable is set 1`] = `
 [
   {
     "client": {
@@ -72,7 +72,7 @@ exports[`withMigrationManager postgres driver should pass tableOptions when migr
 ]
 `;
 
-exports[`withMigrationManager sqlite driver should create a SqliteMigrationManager and call fn with context 1`] = `
+exports[`withMigrationManager > sqlite driver > should create a SqliteMigrationManager and call fn with context 1`] = `
 [
   {
     "client": {
@@ -88,7 +88,7 @@ exports[`withMigrationManager sqlite driver should create a SqliteMigrationManag
 ]
 `;
 
-exports[`withMigrationManager sqlite driver should pass tableOptions when migrationsTable is set 1`] = `
+exports[`withMigrationManager > sqlite driver > should pass tableOptions when migrationsTable is set 1`] = `
 [
   {
     "client": {
@@ -106,15 +106,15 @@ exports[`withMigrationManager sqlite driver should pass tableOptions when migrat
 ]
 `;
 
-exports[`withMigrationManager unsupported drivers should throw ProteusError for memory driver 1`] = `[ProteusError: Migrations not supported for driver "memory"]`;
+exports[`withMigrationManager > unsupported drivers > should throw ProteusError for memory driver 1`] = `[ProteusError: Migrations not supported for driver "memory"]`;
 
-exports[`withMigrationManager unsupported drivers should throw ProteusError for mongodb driver 1`] = `[ProteusError: Migrations not supported for driver "mongodb"]`;
+exports[`withMigrationManager > unsupported drivers > should throw ProteusError for mongodb driver 1`] = `[ProteusError: Migrations not supported for driver "mongodb"]`;
 
-exports[`withMigrationManager unsupported drivers should throw ProteusError for redis driver 1`] = `[ProteusError: Migrations not supported for driver "redis"]`;
+exports[`withMigrationManager > unsupported drivers > should throw ProteusError for redis driver 1`] = `[ProteusError: Migrations not supported for driver "redis"]`;
 
-exports[`withMigrationManager unsupported drivers should throw ProteusError for unknown driver 1`] = `[ProteusError: Migrations not supported for driver "unknown"]`;
+exports[`withMigrationManager > unsupported drivers > should throw ProteusError for unknown driver 1`] = `[ProteusError: Migrations not supported for driver "unknown"]`;
 
-exports[`wrapMysqlConnection should handle result header with no affectedRows or insertId 1`] = `
+exports[`wrapMysqlConnection > should handle result header with no affectedRows or insertId 1`] = `
 {
   "insertId": 0,
   "rowCount": 0,
@@ -122,7 +122,7 @@ exports[`wrapMysqlConnection should handle result header with no affectedRows or
 }
 `;
 
-exports[`wrapMysqlConnection should wrap array results (SELECT queries) 1`] = `
+exports[`wrapMysqlConnection > should wrap array results (SELECT queries) 1`] = `
 {
   "insertId": 0,
   "rowCount": 2,
@@ -139,7 +139,7 @@ exports[`wrapMysqlConnection should wrap array results (SELECT queries) 1`] = `
 }
 `;
 
-exports[`wrapMysqlConnection should wrap non-array results (INSERT/UPDATE/DELETE queries) 1`] = `
+exports[`wrapMysqlConnection > should wrap non-array results (INSERT/UPDATE/DELETE queries) 1`] = `
 {
   "insertId": 42,
   "rowCount": 3,
@@ -147,14 +147,14 @@ exports[`wrapMysqlConnection should wrap non-array results (INSERT/UPDATE/DELETE
 }
 `;
 
-exports[`wrapPoolClient should handle null rowCount 1`] = `
+exports[`wrapPoolClient > should handle null rowCount 1`] = `
 {
   "rowCount": 0,
   "rows": [],
 }
 `;
 
-exports[`wrapPoolClient should pass through without params 1`] = `
+exports[`wrapPoolClient > should pass through without params 1`] = `
 {
   "rowCount": 1,
   "rows": [
@@ -165,7 +165,7 @@ exports[`wrapPoolClient should pass through without params 1`] = `
 }
 `;
 
-exports[`wrapPoolClient should wrap a PoolClient query returning rows 1`] = `
+exports[`wrapPoolClient > should wrap a PoolClient query returning rows 1`] = `
 {
   "rowCount": 1,
   "rows": [

@@ -1,13 +1,13 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`extractEnumValues — mixed (heterogeneous) enums should handle mixed string/number enum 1`] = `
+exports[`extractEnumValues — mixed (heterogeneous) enums > should handle mixed string/number enum 1`] = `
 [
   "yes",
   "No",
 ]
 `;
 
-exports[`extractEnumValues — numeric enums should handle explicit numeric values 1`] = `
+exports[`extractEnumValues — numeric enums > should handle explicit numeric values 1`] = `
 [
   "Low",
   "Medium",
@@ -15,7 +15,7 @@ exports[`extractEnumValues — numeric enums should handle explicit numeric valu
 ]
 `;
 
-exports[`extractEnumValues — numeric enums should use the key (not the numeric value) for numeric enum members 1`] = `
+exports[`extractEnumValues — numeric enums > should use the key (not the numeric value) for numeric enum members 1`] = `
 [
   "Low",
   "Medium",
@@ -23,7 +23,7 @@ exports[`extractEnumValues — numeric enums should use the key (not the numeric
 ]
 `;
 
-exports[`extractEnumValues — string enums should extract string values from a string enum 1`] = `
+exports[`extractEnumValues — string enums > should extract string values from a string enum 1`] = `
 [
   "admin",
   "user",
@@ -31,7 +31,7 @@ exports[`extractEnumValues — string enums should extract string values from a 
 ]
 `;
 
-exports[`extractEnumValues — string enums should use the string value (not the key) for string-valued members 1`] = `
+exports[`extractEnumValues — string enums > should use the string value (not the key) for string-valued members 1`] = `
 [
   "NORTH",
   "SOUTH",

@@ -1,13 +1,13 @@
 import { AegisError, isParsedJwt } from "@lindorm/aegis";
 import { ServerError } from "@lindorm/errors";
 import { removeUndefined } from "@lindorm/utils";
-import { IPylonSession } from "../../interfaces";
-import {
+import type { IPylonSession } from "../../interfaces/index.js";
+import type {
   PylonHttpMiddleware,
   PylonSessionConfig,
   PylonSessionOptions,
-} from "../../types";
-import { createSessionStore } from "../utils/create-session-store";
+} from "../../types/index.js";
+import { createSessionStore } from "../utils/create-session-store.js";
 
 export const createHttpSessionMiddleware = (
   options: PylonSessionOptions,

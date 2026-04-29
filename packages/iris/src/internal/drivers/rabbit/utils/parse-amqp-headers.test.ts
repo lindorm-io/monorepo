@@ -1,5 +1,6 @@
 import type { ConsumeMessage } from "amqplib";
-import { parseAmqpHeaders } from "./parse-amqp-headers";
+import { parseAmqpHeaders } from "./parse-amqp-headers.js";
+import { describe, expect, it } from "vitest";
 
 const createConsumeMessage = (overrides?: {
   content?: Buffer;

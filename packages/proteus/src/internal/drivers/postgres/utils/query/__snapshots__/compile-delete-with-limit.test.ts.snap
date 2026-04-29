@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileDeleteWithLimit basic delete with limit generates CTE + DELETE with correct structure 1`] = `
+exports[`compileDeleteWithLimit > basic delete with limit > generates CTE + DELETE with correct structure 1`] = `
 {
   "params": [
     "pending",
@@ -10,7 +10,7 @@ exports[`compileDeleteWithLimit basic delete with limit generates CTE + DELETE w
 }
 `;
 
-exports[`compileDeleteWithLimit composite primary key generates ROW() condition for composite PK 1`] = `
+exports[`compileDeleteWithLimit > composite primary key > generates ROW() condition for composite PK 1`] = `
 {
   "params": [
     5,
@@ -19,7 +19,7 @@ exports[`compileDeleteWithLimit composite primary key generates ROW() condition 
 }
 `;
 
-exports[`compileDeleteWithLimit custom column name on primary key uses resolved column name (ticket_id) not field key (ticketId) 1`] = `
+exports[`compileDeleteWithLimit > custom column name on primary key > uses resolved column name (ticket_id) not field key (ticketId) 1`] = `
 {
   "params": [
     5,
@@ -28,7 +28,7 @@ exports[`compileDeleteWithLimit custom column name on primary key uses resolved 
 }
 `;
 
-exports[`compileDeleteWithLimit namespace / schema qualification explicit namespace override used when metadata.namespace is null 1`] = `
+exports[`compileDeleteWithLimit > namespace / schema qualification > explicit namespace override used when metadata.namespace is null 1`] = `
 {
   "params": [
     10,
@@ -37,7 +37,7 @@ exports[`compileDeleteWithLimit namespace / schema qualification explicit namesp
 }
 `;
 
-exports[`compileDeleteWithLimit namespace / schema qualification unqualified table name when metadata.namespace is null and no override 1`] = `
+exports[`compileDeleteWithLimit > namespace / schema qualification > unqualified table name when metadata.namespace is null and no override 1`] = `
 {
   "params": [
     10,
@@ -46,7 +46,7 @@ exports[`compileDeleteWithLimit namespace / schema qualification unqualified tab
 }
 `;
 
-exports[`compileDeleteWithLimit null criteria value generates IS NULL condition for null field value 1`] = `
+exports[`compileDeleteWithLimit > null criteria value > generates IS NULL condition for null field value 1`] = `
 {
   "params": [
     10,
@@ -55,7 +55,7 @@ exports[`compileDeleteWithLimit null criteria value generates IS NULL condition 
 }
 `;
 
-exports[`compileDeleteWithLimit param index ordering criteria params come first; limit param is last 1`] = `
+exports[`compileDeleteWithLimit > param index ordering > criteria params come first; limit param is last 1`] = `
 {
   "params": [
     "active",
@@ -66,7 +66,7 @@ exports[`compileDeleteWithLimit param index ordering criteria params come first;
 }
 `;
 
-exports[`compileDeleteWithLimit soft-delete and versioned combined CTE SELECT includes both deleted_at IS NULL and version_end_date IS NULL filters 1`] = `
+exports[`compileDeleteWithLimit > soft-delete and versioned combined > CTE SELECT includes both deleted_at IS NULL and version_end_date IS NULL filters 1`] = `
 {
   "params": [
     10,
@@ -75,7 +75,7 @@ exports[`compileDeleteWithLimit soft-delete and versioned combined CTE SELECT in
 }
 `;
 
-exports[`compileDeleteWithLimit soft-delete entity CTE SELECT includes deleted_at IS NULL filter 1`] = `
+exports[`compileDeleteWithLimit > soft-delete entity > CTE SELECT includes deleted_at IS NULL filter 1`] = `
 {
   "params": [
     10,
@@ -84,7 +84,7 @@ exports[`compileDeleteWithLimit soft-delete entity CTE SELECT includes deleted_a
 }
 `;
 
-exports[`compileDeleteWithLimit versioned entity CTE SELECT includes version_end_date IS NULL filter 1`] = `
+exports[`compileDeleteWithLimit > versioned entity > CTE SELECT includes version_end_date IS NULL filter 1`] = `
 {
   "params": [
     10,

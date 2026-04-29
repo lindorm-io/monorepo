@@ -1,19 +1,28 @@
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // ─── Module Mocks ─────────────────────────────────────────────────────────────
 
-jest.mock("../utils/build-entity-key", () => ({
-  buildEntityKey: jest.fn((_target, pkValues, namespace) => {
+vi.mock("../utils/build-entity-key.js", async () => ({
+  buildEntityKey: vi.fn((_target, pkValues, namespace) => {
     const parts = namespace
       ? [namespace, "entity", "test_product"]
       : ["entity", "test_product"];
     return [...parts, ...pkValues].join(":");
   }),
-  buildEntityKeyFromRow: jest.fn((_target, row, metadata, namespace) => {
+  buildEntityKeyFromRow: vi.fn((_target, row, metadata, namespace) => {
     const parts = namespace
       ? [namespace, "entity", "test_product"]
       : ["entity", "test_product"];
@@ -22,14 +31,14 @@ jest.mock("../utils/build-entity-key", () => ({
   }),
 }));
 
-jest.mock("../utils/build-scan-pattern", () => ({
-  buildScanPattern: jest.fn((_target, namespace) =>
+vi.mock("../utils/build-scan-pattern.js", () => ({
+  buildScanPattern: vi.fn((_target, namespace) =>
     namespace ? `${namespace}:entity:test_product:*` : "entity:test_product:*",
   ),
 }));
 
-jest.mock("../utils/serialize-hash", () => ({
-  serializeHash: jest.fn((row: Dict, _fields: unknown, _relations: unknown) => {
+vi.mock("../utils/serialize-hash.js", () => ({
+  serializeHash: vi.fn((row: Dict, _fields: unknown, _relations: unknown) => {
     const result: Record<string, string> = {};
     for (const [k, v] of Object.entries(row)) {
       if (v == null) continue;
@@ -43,8 +52,8 @@ jest.mock("../utils/serialize-hash", () => ({
   }),
 }));
 
-jest.mock("../utils/deserialize-hash", () => ({
-  deserializeHash: jest.fn(
+vi.mock("../utils/deserialize-hash.js", () => ({
+  deserializeHash: vi.fn(
     (hash: Record<string, string>, fields: Array<MetaField>, _relations: unknown) => {
       if (Object.keys(hash).length === 0) return null;
       const result: Dict = {};
@@ -68,8 +77,8 @@ jest.mock("../utils/deserialize-hash", () => ({
   ),
 }));
 
-jest.mock("../utils/is-pk-exact", () => ({
-  extractExactPk: jest.fn(
+vi.mock("../utils/is-pk-exact.js", () => ({
+  extractExactPk: vi.fn(
     (criteria: Record<string, unknown>, primaryKeys: Array<string>) => {
       const values: Array<unknown> = [];
       for (const pk of primaryKeys) {
@@ -83,16 +92,16 @@ jest.mock("../utils/is-pk-exact", () => ({
   ),
 }));
 
-jest.mock("../utils/scan-entity-keys", () => ({
-  scanEntityKeys: jest.fn(),
+vi.mock("../utils/scan-entity-keys.js", () => ({
+  scanEntityKeys: vi.fn(),
 }));
 
-jest.mock("../utils/redis-auto-increment", () => ({
-  applyRedisAutoIncrement: jest.fn(),
+vi.mock("../utils/redis-auto-increment.js", () => ({
+  applyRedisAutoIncrement: vi.fn(),
 }));
 
-jest.mock("../../../entity/utils/default-hydrate-entity", () => ({
-  defaultHydrateEntity: jest.fn((data: Dict, metadata: EntityMetadata) => {
+vi.mock("../../../entity/utils/default-hydrate-entity.js", () => ({
+  defaultHydrateEntity: vi.fn((data: Dict, metadata: EntityMetadata) => {
     const entity = new metadata.target();
     for (const field of metadata.fields) {
       if (field.key in data) {
@@ -103,28 +112,28 @@ jest.mock("../../../entity/utils/default-hydrate-entity", () => ({
   }),
 }));
 
-jest.mock("../../../utils/query/resolve-filters", () => ({
-  resolveFilters: jest.fn(() => []),
+vi.mock("../../../utils/query/resolve-filters.js", () => ({
+  resolveFilters: vi.fn(() => []),
 }));
 
-jest.mock("../../../utils/query/merge-system-filter-overrides", () => ({
-  mergeSystemFilterOverrides: jest.fn(
+vi.mock("../../../utils/query/merge-system-filter-overrides.js", () => ({
+  mergeSystemFilterOverrides: vi.fn(
     (overrides: unknown, _withDeleted: boolean, _withoutScope: boolean) => overrides,
   ),
 }));
 
-jest.mock("../../../entity/metadata/auto-filters", () => ({
-  generateAutoFilters: jest.fn(() => []),
+vi.mock("../../../entity/metadata/auto-filters.js", () => ({
+  generateAutoFilters: vi.fn(() => []),
 }));
 
 // ─── Import mocked modules ───────────────────────────────────────────────────
 
-import { scanEntityKeys } from "../utils/scan-entity-keys";
-import { resolveFilters } from "../../../utils/query/resolve-filters";
-import { RedisQueryBuilder } from "./RedisQueryBuilder";
+import { scanEntityKeys } from "../utils/scan-entity-keys.js";
+import { resolveFilters } from "../../../utils/query/resolve-filters.js";
+import { RedisQueryBuilder } from "./RedisQueryBuilder.js";
 
-const mockedScanEntityKeys = scanEntityKeys as jest.MockedFunction<typeof scanEntityKeys>;
-const mockedResolveFilters = resolveFilters as jest.MockedFunction<typeof resolveFilters>;
+const mockedScanEntityKeys = scanEntityKeys as MockedFunction<typeof scanEntityKeys>;
+const mockedResolveFilters = resolveFilters as MockedFunction<typeof resolveFilters>;
 
 // ─── Test Entities ────────────────────────────────────────────────────────────
 
@@ -222,25 +231,25 @@ const softDeleteMetadata: EntityMetadata = {
 
 const createMockPipeline = (results: Array<[Error | null, any]> = []) => {
   const pipeline: any = {
-    hgetall: jest.fn().mockReturnThis(),
-    hset: jest.fn().mockReturnThis(),
-    hdel: jest.fn().mockReturnThis(),
-    del: jest.fn().mockReturnThis(),
-    exec: jest.fn(async () => results),
+    hgetall: vi.fn().mockReturnThis(),
+    hset: vi.fn().mockReturnThis(),
+    hdel: vi.fn().mockReturnThis(),
+    del: vi.fn().mockReturnThis(),
+    exec: vi.fn(async () => results),
   };
   return pipeline;
 };
 
 const createMockRedis = () => {
   const redis: any = {
-    scan: jest.fn(),
-    hgetall: jest.fn(),
-    hset: jest.fn(),
-    hdel: jest.fn(),
-    del: jest.fn(),
-    exists: jest.fn(),
-    incr: jest.fn(),
-    pipeline: jest.fn(),
+    scan: vi.fn(),
+    hgetall: vi.fn(),
+    hset: vi.fn(),
+    hdel: vi.fn(),
+    del: vi.fn(),
+    exists: vi.fn(),
+    incr: vi.fn(),
+    pipeline: vi.fn(),
   };
   return redis;
 };
@@ -282,7 +291,7 @@ describe("RedisQueryBuilder", () => {
   let redis: ReturnType<typeof createMockRedis>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     redis = createMockRedis();
   });
 

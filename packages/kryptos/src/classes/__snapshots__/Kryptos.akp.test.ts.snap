@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kryptos (AKP) export should export b64 1`] = `
+exports[`Kryptos (AKP) > export > should export b64 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -11,7 +11,7 @@ exports[`Kryptos (AKP) export should export b64 1`] = `
 }
 `;
 
-exports[`Kryptos (AKP) export should export der 1`] = `
+exports[`Kryptos (AKP) > export > should export der 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -6102,7 +6102,7 @@ exports[`Kryptos (AKP) export should export der 1`] = `
 }
 `;
 
-exports[`Kryptos (AKP) export should export jwk 1`] = `
+exports[`Kryptos (AKP) > export > should export jwk 1`] = `
 {
   "alg": "ML-DSA-65",
   "kid": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -6113,7 +6113,7 @@ exports[`Kryptos (AKP) export should export jwk 1`] = `
 }
 `;
 
-exports[`Kryptos (AKP) export should export pem 1`] = `
+exports[`Kryptos (AKP) > export > should export pem 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "id": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
@@ -6256,7 +6256,7 @@ Q9jSCkTE
 }
 `;
 
-exports[`Kryptos (AKP) to should return db 1`] = `
+exports[`Kryptos (AKP) > to > should return db 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -6283,7 +6283,7 @@ exports[`Kryptos (AKP) to should return db 1`] = `
 }
 `;
 
-exports[`Kryptos (AKP) to should return json 1`] = `
+exports[`Kryptos (AKP) > to > should return json 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -6317,7 +6317,7 @@ exports[`Kryptos (AKP) to should return json 1`] = `
 }
 `;
 
-exports[`Kryptos (AKP) to should return jwk with private key 1`] = `
+exports[`Kryptos (AKP) > to > should return jwk with private key 1`] = `
 {
   "alg": "ML-DSA-65",
   "exp": 4070937600,
@@ -6339,7 +6339,7 @@ exports[`Kryptos (AKP) to should return jwk with private key 1`] = `
 }
 `;
 
-exports[`Kryptos (AKP) to should return jwk with public key 1`] = `
+exports[`Kryptos (AKP) > to > should return jwk with public key 1`] = `
 {
   "alg": "ML-DSA-65",
   "exp": 4070937600,
@@ -6360,4 +6360,4 @@ exports[`Kryptos (AKP) to should return jwk with public key 1`] = `
 }
 `;
 
-exports[`Kryptos (AKP) to should return kryptos string 1`] = `"Kryptos<AKP:ML-DSA-65:3b9a051f-e1ec-562b-bf92-7cf92ec465ba>"`;
+exports[`Kryptos (AKP) > to > should return kryptos string 1`] = `"Kryptos<AKP:ML-DSA-65:3b9a051f-e1ec-562b-bf92-7cf92ec465ba>"`;

@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
-import { usePermissions } from "./use-permissions";
+import { usePermissions } from "./use-permissions.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("usePermissions", () => {
   let ctx: any;
@@ -21,7 +22,7 @@ describe("usePermissions", () => {
   });
 
   test("should call next when all permissions are present", async () => {
-    const next = jest.fn();
+    const next = vi.fn();
 
     await expect(usePermissions("users:read")(ctx, next)).resolves.toBeUndefined();
 
@@ -29,7 +30,7 @@ describe("usePermissions", () => {
   });
 
   test("should support multiple permissions (AND logic)", async () => {
-    const next = jest.fn();
+    const next = vi.fn();
 
     await expect(
       usePermissions("users:read", "users:write")(ctx, next),
@@ -40,11 +41,11 @@ describe("usePermissions", () => {
 
   test("should throw ClientError 403 when a permission is missing", async () => {
     await expect(
-      usePermissions("users:read", "users:delete")(ctx, jest.fn()),
+      usePermissions("users:read", "users:delete")(ctx, vi.fn()),
     ).rejects.toThrow(ClientError);
 
     try {
-      await usePermissions("users:read", "users:delete")(ctx, jest.fn());
+      await usePermissions("users:read", "users:delete")(ctx, vi.fn());
     } catch (err: any) {
       expect(err.status).toBe(403);
       expect(err.message).toMatchSnapshot();
@@ -55,12 +56,10 @@ describe("usePermissions", () => {
   test("should throw ClientError 401 when token is missing", async () => {
     ctx.state.tokens = {};
 
-    await expect(usePermissions("users:read")(ctx, jest.fn())).rejects.toThrow(
-      ClientError,
-    );
+    await expect(usePermissions("users:read")(ctx, vi.fn())).rejects.toThrow(ClientError);
 
     try {
-      await usePermissions("users:read")(ctx, jest.fn());
+      await usePermissions("users:read")(ctx, vi.fn());
     } catch (err: any) {
       expect(err.status).toBe(401);
       expect(err.message).toMatchSnapshot();
@@ -77,7 +76,7 @@ describe("usePermissions", () => {
       },
     };
 
-    const next = jest.fn();
+    const next = vi.fn();
 
     await expect(
       usePermissions("profile:read", { token: "idToken" })(ctx, next),

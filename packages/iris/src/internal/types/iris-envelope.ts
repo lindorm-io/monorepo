@@ -1,1 +1,1 @@
-export type { IrisEnvelope } from "../../types/envelope";
+export type { IrisEnvelope } from "../../types/envelope.js";

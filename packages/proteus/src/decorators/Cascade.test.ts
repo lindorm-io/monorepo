@@ -1,10 +1,11 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Cascade } from "./Cascade";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { ManyToOne } from "./ManyToOne";
-import { OneToMany } from "./OneToMany";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Cascade } from "./Cascade.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { ManyToOne } from "./ManyToOne.js";
+import { OneToMany } from "./OneToMany.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CascadeParent" })
 class CascadeParent {

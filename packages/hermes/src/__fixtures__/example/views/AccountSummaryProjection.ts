@@ -7,20 +7,25 @@ import {
   Namespace,
   RequireCreated,
   RequireNotCreated,
-} from "../../../decorators";
-import { DomainError } from "../../../errors";
-import type { ViewEventCtx, ViewIdCtx, ViewQueryCtx, ViewErrorCtx } from "../../../types";
+} from "../../../decorators/index.js";
+import { DomainError } from "../../../errors/index.js";
+import type {
+  ViewEventCtx,
+  ViewIdCtx,
+  ViewQueryCtx,
+  ViewErrorCtx,
+} from "../../../types/index.js";
 
-import { AccountAggregate } from "../aggregates/AccountAggregate";
+import { AccountAggregate } from "../aggregates/AccountAggregate.js";
 
-import { AccountOpened } from "../events/AccountOpened";
-import { FundsDeposited_V2 } from "../events/FundsDeposited_V2";
-import { FundsWithdrawn } from "../events/FundsWithdrawn";
-import { AccountClosed } from "../events/AccountClosed";
-import { AccountFlagged } from "../events/AccountFlagged";
+import { AccountOpened } from "../events/AccountOpened.js";
+import { FundsDeposited_V2 } from "../events/FundsDeposited_V2.js";
+import { FundsWithdrawn } from "../events/FundsWithdrawn.js";
+import { AccountClosed } from "../events/AccountClosed.js";
+import { AccountFlagged } from "../events/AccountFlagged.js";
 
-import { GetAccountSummary } from "../queries/GetAccountSummary";
-import { AccountSummaryView } from "./AccountSummaryView";
+import { GetAccountSummary } from "../queries/GetAccountSummary.js";
+import { AccountSummaryView } from "./AccountSummaryView.js";
 
 @View(AccountAggregate, AccountSummaryView)
 @Namespace("banking")

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`scanEntityKeys should deduplicate keys across iterations 1`] = `
+exports[`scanEntityKeys > should deduplicate keys across iterations 1`] = `
 [
   "key1",
   "key2",
@@ -8,14 +8,14 @@ exports[`scanEntityKeys should deduplicate keys across iterations 1`] = `
 ]
 `;
 
-exports[`scanEntityKeys should handle empty intermediate iterations 1`] = `
+exports[`scanEntityKeys > should handle empty intermediate iterations 1`] = `
 [
   "key1",
   "key2",
 ]
 `;
 
-exports[`scanEntityKeys should loop through multiple scan iterations 1`] = `
+exports[`scanEntityKeys > should loop through multiple scan iterations 1`] = `
 [
   "key1",
   "key2",
@@ -24,9 +24,9 @@ exports[`scanEntityKeys should loop through multiple scan iterations 1`] = `
 ]
 `;
 
-exports[`scanEntityKeys should return empty array when no keys match 1`] = `[]`;
+exports[`scanEntityKeys > should return empty array when no keys match 1`] = `[]`;
 
-exports[`scanEntityKeys should return keys from single scan iteration 1`] = `
+exports[`scanEntityKeys > should return keys from single scan iteration 1`] = `
 [
   "key1",
   "key2",

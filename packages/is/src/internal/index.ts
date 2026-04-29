@@ -1,1 +1,1 @@
-export * from "./parse-token-header";
+export * from "./parse-token-header.js";

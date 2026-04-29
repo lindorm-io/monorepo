@@ -1,16 +1,27 @@
 import { ServerError } from "@lindorm/errors";
-import { resolveIris } from "./resolve-iris";
+import { resolveIris } from "./resolve-iris.js";
+import { describe, expect, test, vi } from "vitest";
 
 describe("resolveIris", () => {
   test("should return session from override when override is provided", () => {
     const session = { fake: "session" };
-    const override: any = { session: jest.fn().mockReturnValue(session) };
-    const ctx: any = { logger: { fake: "logger" } };
+    const override: any = { session: vi.fn().mockReturnValue(session) };
+    const ctx: any = {
+      logger: { fake: "logger" },
+      state: { metadata: { correlationId: "corr-x" } },
+    };
 
     const result = resolveIris(ctx, override);
 
     expect(result).toBe(session);
-    expect(override.session).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
+    expect(override.session).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      meta: {
+        correlationId: "corr-x",
+        actor: "unknown",
+        timestamp: expect.any(Date),
+      },
+    });
   });
 
   test("should return ctx.iris when no override and ctx.iris exists", () => {
@@ -31,7 +42,7 @@ describe("resolveIris", () => {
 
   test("should prefer override over ctx.iris", () => {
     const session = { fake: "session" };
-    const override: any = { session: jest.fn().mockReturnValue(session) };
+    const override: any = { session: vi.fn().mockReturnValue(session) };
     const ctx: any = { logger: {}, iris: { fake: "existing" } };
 
     const result = resolveIris(ctx, override);

@@ -1,16 +1,16 @@
-import { KryptosError } from "../../../errors";
-import { KryptosExportMode, KryptosJwk } from "../../../types";
-import { ExportOptions } from "../../types/export-options";
-import { exportAkpToJwk } from "../akp/export-jwk";
-import { isAkpDer } from "../akp/is";
-import { exportEcToJwk } from "../ec/export-jwk";
-import { isEcDer } from "../ec/is";
-import { exportOctToJwk } from "../oct/export-jwk";
-import { isOctDer } from "../oct/is";
-import { exportOkpToJwk } from "../okp/export-jwk";
-import { isOkpDer } from "../okp/is";
-import { exportRsaToJwk } from "../rsa/export-jwk";
-import { isRsaDer } from "../rsa/is";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosExportMode, KryptosJwk } from "../../../types/index.js";
+import type { ExportOptions } from "../../types/export-options.js";
+import { exportAkpToJwk } from "../akp/export-jwk.js";
+import { isAkpDer } from "../akp/is.js";
+import { exportEcToJwk } from "../ec/export-jwk.js";
+import { isEcDer } from "../ec/is.js";
+import { exportOctToJwk } from "../oct/export-jwk.js";
+import { isOctDer } from "../oct/is.js";
+import { exportOkpToJwk } from "../okp/export-jwk.js";
+import { isOkpDer } from "../okp/is.js";
+import { exportRsaToJwk } from "../rsa/export-jwk.js";
+import { isRsaDer } from "../rsa/is.js";
 
 type Options = ExportOptions & {
   mode: KryptosExportMode;

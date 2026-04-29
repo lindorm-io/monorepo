@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`hydrateReturning should map column names to property keys 1`] = `
+exports[`hydrateReturning > should map column names to property keys 1`] = `
 UserEntity {
   "age": 30,
   "balance": "99.99",

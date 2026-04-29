@@ -1,19 +1,19 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`calculateJoinKeys should apply snake_case to relation key prefix 1`] = `
+exports[`calculateJoinKeys > should apply snake_case to relation key prefix 1`] = `
 {
   "primaryAuthorId": "id",
 }
 `;
 
-exports[`calculateJoinKeys should calculate join keys from composite primary keys 1`] = `
+exports[`calculateJoinKeys > should calculate join keys from composite primary keys 1`] = `
 {
   "ownerTenantId": "tenantId",
   "ownerUserId": "userId",
 }
 `;
 
-exports[`calculateJoinKeys should calculate join keys from single primary key 1`] = `
+exports[`calculateJoinKeys > should calculate join keys from single primary key 1`] = `
 {
   "authorId": "id",
 }

@@ -1,12 +1,13 @@
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { rollbackTransaction } from "./rollback-transaction";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { rollbackTransaction } from "./rollback-transaction.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const makeHandle = (
   state: PostgresTransactionHandle["state"] = "active",
 ): PostgresTransactionHandle => ({
-  client: { query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }) },
-  release: jest.fn(),
+  client: { query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }) },
+  release: vi.fn(),
   state,
   savepointCounter: 0,
 });
@@ -30,7 +31,7 @@ describe("rollbackTransaction", () => {
 
   it("should release even when ROLLBACK query fails", async () => {
     const handle = makeHandle();
-    (handle.client.query as jest.Mock).mockRejectedValueOnce(new Error("network error"));
+    (handle.client.query as Mock).mockRejectedValueOnce(new Error("network error"));
 
     await expect(rollbackTransaction(handle)).rejects.toThrow(PostgresTransactionError);
     expect(handle.release).toHaveBeenCalled();
@@ -39,9 +40,7 @@ describe("rollbackTransaction", () => {
   // P3: when ROLLBACK throws, state must be "rolledback" — not left as "active"
   it("should set handle state to rolledback when ROLLBACK query throws", async () => {
     const handle = makeHandle();
-    (handle.client.query as jest.Mock).mockRejectedValueOnce(
-      new Error("connection lost"),
-    );
+    (handle.client.query as Mock).mockRejectedValueOnce(new Error("connection lost"));
 
     await expect(rollbackTransaction(handle)).rejects.toThrow();
 

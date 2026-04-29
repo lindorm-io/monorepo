@@ -1,6 +1,7 @@
-import { TEST_STRINGS } from "../../__fixtures__/strings";
-import { ChangeCase } from "../../types";
-import { changeCase } from "./change-case";
+import { TEST_STRINGS } from "../../__fixtures__/strings.js";
+import type { ChangeCase } from "../../types/index.js";
+import { changeCase } from "./change-case.js";
+import { describe, expect, test } from "vitest";
 
 describe.each([
   "camel",

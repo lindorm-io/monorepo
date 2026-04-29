@@ -1,9 +1,10 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { Generated } from "./Generated";
-import { PrimaryKey } from "./PrimaryKey";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
+import { PrimaryKey } from "./PrimaryKey.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GeneratedUuid" })
 class GeneratedUuid {

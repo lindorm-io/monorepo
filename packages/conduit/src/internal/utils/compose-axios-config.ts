@@ -1,8 +1,8 @@
 import { createUrl } from "@lindorm/url";
 import type { RawAxiosRequestConfig } from "axios";
-import { REPLACE_URL } from "../constants/defaults";
-import type { ConduitContext } from "../../types";
-import { composeAxiosData } from "./compose-axios-data";
+import { REPLACE_URL } from "../constants/defaults.js";
+import type { ConduitContext } from "../../types/index.js";
+import { composeAxiosData } from "./compose-axios-data.js";
 
 export const composeAxiosConfig = async (
   ctx: ConduitContext,

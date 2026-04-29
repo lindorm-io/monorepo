@@ -1,7 +1,8 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
 // Unit tests for MemoryExecutor — focused on null sort ordering (FIX-3)
 // and filter registry wiring.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   CreateDateField,
   DeleteDateField,
@@ -13,9 +14,9 @@ import {
   ScopeField,
   UpdateDateField,
   VersionField,
-} from "../../../../decorators";
-import { ProteusSource } from "../../../../classes/ProteusSource";
-import type { IProteusRepository } from "../../../../interfaces";
+} from "../../../../decorators/index.js";
+import { ProteusSource } from "../../../../classes/ProteusSource.js";
+import type { IProteusRepository } from "../../../../interfaces/index.js";
 
 // ─── Entities ─────────────────────────────────────────────────────────────────
 

@@ -1,7 +1,11 @@
-import { createMockHermes } from "./create-mock-hermes";
+import { HermesViewEntity } from "../entities/HermesViewEntity.js";
+import { createMockHermes } from "./vitest.js";
+import { describe, expect, it, vi } from "vitest";
+
+class TestView extends HermesViewEntity {}
 
 describe("createMockHermes", () => {
-  it("should create a mock hermes with all methods as jest.fn()", () => {
+  it("should create a mock hermes with all methods as vi.fn()", () => {
     const mock = createMockHermes();
 
     expect(mock).toMatchSnapshot();
@@ -20,7 +24,7 @@ describe("createMockHermes", () => {
     expect(session).toBeDefined();
     expect(session).not.toBe(mock);
     expect(session.status).toBe("ready");
-    expect(jest.isMockFunction(session.command)).toBe(true);
+    expect(vi.isMockFunction(session.command)).toBe(true);
   });
 
   it("should resolve an aggregate identifier from command()", async () => {
@@ -46,7 +50,7 @@ describe("createMockHermes", () => {
 
   it("should return a replay handle from admin.replay.view()", () => {
     const mock = createMockHermes();
-    const handle = mock.admin.replay.view(class {});
+    const handle = mock.admin.replay.view(TestView);
 
     expect(handle).toBeDefined();
     expect(handle.on).toBeDefined();
@@ -56,7 +60,7 @@ describe("createMockHermes", () => {
 
   it("should return a replay handle from admin.replay.aggregate()", () => {
     const mock = createMockHermes();
-    const handle = mock.admin.replay.aggregate(class {});
+    const handle = mock.admin.replay.aggregate(TestView);
 
     expect(handle).toBeDefined();
     expect(handle.on).toBeDefined();

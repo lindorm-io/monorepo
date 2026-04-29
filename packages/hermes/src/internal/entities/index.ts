@@ -1,5 +1,5 @@
-export { CausationRecord } from "./CausationRecord";
-export { ChecksumRecord } from "./ChecksumRecord";
-export { EncryptionRecord } from "./EncryptionRecord";
-export { EventRecord } from "./EventRecord";
-export { SagaRecord } from "./SagaRecord";
+export { CausationRecord } from "./CausationRecord.js";
+export { ChecksumRecord } from "./ChecksumRecord.js";
+export { EncryptionRecord } from "./EncryptionRecord.js";
+export { EventRecord } from "./EventRecord.js";
+export { SagaRecord } from "./SagaRecord.js";

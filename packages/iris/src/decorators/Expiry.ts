@@ -1,5 +1,5 @@
-import { IrisMetadataError } from "../errors/IrisMetadataError";
-import { stageExpiry } from "../internal/message/metadata/stage-metadata";
+import { IrisMetadataError } from "../errors/IrisMetadataError.js";
+import { stageExpiry } from "../internal/message/metadata/stage-metadata.js";
 
 export const Expiry =
   (ms: number) =>

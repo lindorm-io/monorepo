@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`loadMemoryEmbeddedListRows embeddable elements hydrates embeddable elements using elementConstructor 1`] = `
+exports[`loadMemoryEmbeddedListRows > embeddable elements > hydrates embeddable elements using elementConstructor 1`] = `
 [
   Address {
     "city": "Berlin",
@@ -9,7 +9,7 @@ exports[`loadMemoryEmbeddedListRows embeddable elements hydrates embeddable elem
 ]
 `;
 
-exports[`loadMemoryEmbeddedListRows primitive elements loads from namespaced table when namespace provided 1`] = `
+exports[`loadMemoryEmbeddedListRows > primitive elements > loads from namespaced table when namespace provided 1`] = `
 [
   "alpha",
   "beta",
@@ -17,7 +17,7 @@ exports[`loadMemoryEmbeddedListRows primitive elements loads from namespaced tab
 ]
 `;
 
-exports[`loadMemoryEmbeddedListRows primitive elements loads primitive rows back onto entity 1`] = `
+exports[`loadMemoryEmbeddedListRows > primitive elements > loads primitive rows back onto entity 1`] = `
 [
   "alpha",
   "beta",
@@ -25,7 +25,7 @@ exports[`loadMemoryEmbeddedListRows primitive elements loads primitive rows back
 ]
 `;
 
-exports[`saveMemoryEmbeddedListRows embeddable elements handles null item values gracefully 1`] = `
+exports[`saveMemoryEmbeddedListRows > embeddable elements > handles null item values gracefully 1`] = `
 [
   {
     "entity_id": "e1",
@@ -34,7 +34,7 @@ exports[`saveMemoryEmbeddedListRows embeddable elements handles null item values
 ]
 `;
 
-exports[`saveMemoryEmbeddedListRows embeddable elements persists embeddable fields with optional transform 1`] = `
+exports[`saveMemoryEmbeddedListRows > embeddable elements > persists embeddable fields with optional transform 1`] = `
 [
   {
     "city": "Berlin",
@@ -49,7 +49,7 @@ exports[`saveMemoryEmbeddedListRows embeddable elements persists embeddable fiel
 ]
 `;
 
-exports[`saveMemoryEmbeddedListRows primitive elements persists rows for each element with parentFkColumn 1`] = `
+exports[`saveMemoryEmbeddedListRows > primitive elements > persists rows for each element with parentFkColumn 1`] = `
 [
   {
     "entity_id": "entity-1",
@@ -66,7 +66,7 @@ exports[`saveMemoryEmbeddedListRows primitive elements persists rows for each el
 ]
 `;
 
-exports[`saveMemoryEmbeddedListRows primitive elements replaces existing rows on re-save 1`] = `
+exports[`saveMemoryEmbeddedListRows > primitive elements > replaces existing rows on re-save 1`] = `
 [
   {
     "entity_id": "entity-1",

@@ -1,33 +1,33 @@
-import type { EntityMetadata } from "../../../entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type {
   IMigrationManager,
   MigrationStatusResult,
-} from "../../../interfaces/MigrationManager";
-import type { MigrationRecord } from "../../../types/migration";
-import type { NamespaceOptions } from "../../../types/types";
-import { hashNamespaceToInt32 } from "../../../utils/advisory-lock-name";
-import { computeHash } from "../../../utils/migration/compute-hash";
-import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver";
+} from "../../../interfaces/MigrationManager.js";
+import type { MigrationRecord } from "../../../types/migration.js";
+import type { NamespaceOptions } from "../../../types/types.js";
+import { hashNamespaceToInt32 } from "../../../utils/advisory-lock-name.js";
+import { computeHash } from "../../../utils/migration/compute-hash.js";
+import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver.js";
 import type { ILogger } from "@lindorm/logger";
-import { PostgresMigrationError } from "../errors/PostgresMigrationError";
-import type { MigrationApplyResult, MigrationTableOptions } from "../types/migration";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { withAdvisoryLock } from "../utils/advisory-lock";
+import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
+import type { MigrationApplyResult, MigrationTableOptions } from "../types/migration.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { withAdvisoryLock } from "../utils/advisory-lock.js";
 import {
   executeMigrationDown,
   executeMigrationUp,
-} from "../utils/migration/execute-migration";
+} from "../utils/migration/execute-migration.js";
 import {
   generateBaselineMigration,
   type GenerateBaselineMigrationOptions,
   type GenerateBaselineMigrationResult,
-} from "../utils/migration/generate-baseline-migration";
+} from "../utils/migration/generate-baseline-migration.js";
 import {
   generateMigration,
   type GenerateMigrationOptions,
   type GenerateMigrationResult,
-} from "../utils/migration/generate-migration";
-import { loadMigrations } from "../utils/migration/load-migrations";
+} from "../utils/migration/generate-migration.js";
+import { loadMigrations } from "../utils/migration/load-migrations.js";
 import {
   ensureMigrationTable,
   getAllMigrationRecords,
@@ -36,8 +36,8 @@ import {
   insertMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "../utils/migration/migration-table";
-import { resolvePending } from "../utils/migration/resolve-pending";
+} from "../utils/migration/migration-table.js";
+import { resolvePending } from "../utils/migration/resolve-pending.js";
 
 // Advisory lock key pair for migration operations (distinct from sync key)
 const MIGRATION_LOCK_KEY1 = 0x50524f54; // "PROT" in hex

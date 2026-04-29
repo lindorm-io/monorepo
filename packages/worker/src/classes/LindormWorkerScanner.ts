@@ -1,21 +1,21 @@
 import { isReadableTime } from "@lindorm/date";
 import { isArray, isFunction, isNumber, isObject, isString } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
-import { IScanData, Scanner } from "@lindorm/scanner";
-import { LindormWorkerScannerError } from "../errors";
-import { ILindormWorker } from "../interfaces";
-import {
+import type { ILogger } from "@lindorm/logger";
+import { type IScanData, Scanner } from "@lindorm/scanner";
+import { LindormWorkerScannerError } from "../errors/index.js";
+import type { ILindormWorker } from "../interfaces/index.js";
+import type {
   LindormWorkerOptions,
   LindormWorkerScannerInput,
   LindormWorkerScannerOutput,
-} from "../types";
-import { LindormWorker } from "./LindormWorker";
+} from "../types/index.js";
+import { LindormWorker } from "./LindormWorker.js";
 
 export class LindormWorkerScanner {
-  public static scan(
+  public static async scan(
     input: LindormWorkerScannerInput,
     logger: ILogger,
-  ): LindormWorkerScannerOutput {
+  ): Promise<LindormWorkerScannerOutput> {
     const instances = input.filter(
       (a): a is ILindormWorker => a instanceof LindormWorker,
     );
@@ -29,10 +29,10 @@ export class LindormWorkerScanner {
       const item = LindormWorkerScanner.scanner.scan(path);
 
       if (item.isDirectory) {
-        result.push(...LindormWorkerScanner.scanDirectory(item, logger));
+        result.push(...(await LindormWorkerScanner.scanDirectory(item, logger)));
       }
       if (item.isFile) {
-        result.push(LindormWorkerScanner.scanFile(item, logger));
+        result.push(await LindormWorkerScanner.scanFile(item, logger));
       }
     }
 
@@ -41,23 +41,29 @@ export class LindormWorkerScanner {
 
   // private
 
-  private static scanDirectory(data: IScanData, logger: ILogger): Array<ILindormWorker> {
+  private static async scanDirectory(
+    data: IScanData,
+    logger: ILogger,
+  ): Promise<Array<ILindormWorker>> {
     const result: Array<ILindormWorker> = [];
 
     for (const child of data.children) {
       if (child.isDirectory) {
-        result.push(...LindormWorkerScanner.scanDirectory(child, logger));
+        result.push(...(await LindormWorkerScanner.scanDirectory(child, logger)));
       }
       if (child.isFile) {
-        result.push(LindormWorkerScanner.scanFile(child, logger));
+        result.push(await LindormWorkerScanner.scanFile(child, logger));
       }
     }
 
     return result;
   }
 
-  private static scanFile(data: IScanData, logger: ILogger): ILindormWorker {
-    const module: any = LindormWorkerScanner.scanner.require(data.fullPath);
+  private static async scanFile(
+    data: IScanData,
+    logger: ILogger,
+  ): Promise<ILindormWorker> {
+    const module: any = await LindormWorkerScanner.scanner.import(data.fullPath);
 
     for (const value of Object.values(module)) {
       if (value instanceof LindormWorker) {

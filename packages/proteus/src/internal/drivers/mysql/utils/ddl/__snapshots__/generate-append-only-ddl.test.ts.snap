@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateAppendOnlyDDL (MySQL) escapes backticks in table name 1`] = `
+exports[`generateAppendOnlyDDL (MySQL) > escapes backticks in table name 1`] = `
 [
   "DROP TRIGGER IF EXISTS \`proteus_ao_my\`\`table_no_update\`;",
   "CREATE TRIGGER \`proteus_ao_my\`\`table_no_update\`
@@ -17,7 +17,7 @@ exports[`generateAppendOnlyDDL (MySQL) escapes backticks in table name 1`] = `
 ]
 `;
 
-exports[`generateAppendOnlyDDL (MySQL) generates triggers for a simple table 1`] = `
+exports[`generateAppendOnlyDDL (MySQL) > generates triggers for a simple table 1`] = `
 [
   "DROP TRIGGER IF EXISTS \`proteus_ao_audit_log_no_update\`;",
   "CREATE TRIGGER \`proteus_ao_audit_log_no_update\`

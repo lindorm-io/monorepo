@@ -1,7 +1,8 @@
-import { MOCK_KRYPTOS_RSA_ENC, MOCK_KRYPTOS_RSA_SIG_RS256 } from "@lindorm/kryptos";
+import { KRYPTOS_RSA_ENC, KRYPTOS_RSA_SIG_RS256 } from "@lindorm/kryptos/fixtures";
 import { randomBytes } from "crypto";
-import { RsaError } from "../errors";
-import { RsaKit } from "./RsaKit";
+import { RsaError } from "../errors/index.js";
+import { RsaKit } from "./RsaKit.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("RsaKit", () => {
   let kit: RsaKit;
@@ -9,7 +10,7 @@ describe("RsaKit", () => {
   let signature: Buffer;
 
   beforeEach(() => {
-    kit = new RsaKit({ kryptos: MOCK_KRYPTOS_RSA_SIG_RS256 });
+    kit = new RsaKit({ kryptos: KRYPTOS_RSA_SIG_RS256 });
     data = randomBytes(32);
     signature = kit.sign(data);
   });
@@ -31,8 +32,8 @@ describe("RsaKit", () => {
   });
 
   test("should throw on encryption algorithm", () => {
-    expect(() => new RsaKit({ kryptos: MOCK_KRYPTOS_RSA_ENC as any })).toThrow(RsaError);
-    expect(() => new RsaKit({ kryptos: MOCK_KRYPTOS_RSA_ENC as any })).toThrow(
+    expect(() => new RsaKit({ kryptos: KRYPTOS_RSA_ENC as any })).toThrow(RsaError);
+    expect(() => new RsaKit({ kryptos: KRYPTOS_RSA_ENC as any })).toThrow(
       "RsaKit only supports signing algorithms",
     );
   });

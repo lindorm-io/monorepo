@@ -1,4 +1,4 @@
-import type { IEntity } from "../interfaces/Entity";
+import type { IEntity } from "../interfaces/Entity.js";
 
 /**
  * Configure upsert (INSERT ... ON CONFLICT) behavior.

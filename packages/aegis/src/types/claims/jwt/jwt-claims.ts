@@ -1,9 +1,9 @@
-import { DelegationClaimsWire } from "./delegation-claims-wire";
-import { LindormClaimsWire } from "./lindorm-claims-wire";
-import { OAuthClaimsWire } from "./oauth-claims-wire";
-import { OidcClaimsWire } from "./oidc-claims-wire";
-import { PopClaimsWire } from "./pop-claims-wire";
-import { StdClaimsWire } from "./std-claims-wire";
+import type { DelegationClaimsWire } from "./delegation-claims-wire.js";
+import type { LindormClaimsWire } from "./lindorm-claims-wire.js";
+import type { OAuthClaimsWire } from "./oauth-claims-wire.js";
+import type { OidcClaimsWire } from "./oidc-claims-wire.js";
+import type { PopClaimsWire } from "./pop-claims-wire.js";
+import type { StdClaimsWire } from "./std-claims-wire.js";
 
 // Wire-form composition matching the domain-form ParsedJwtPayload
 // composition. Each claim group is keyed by its semantic ownership

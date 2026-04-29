@@ -1,13 +1,14 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../../interfaces";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import type { PipelineStage } from "../../../types/pipeline-stage";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
-} from "../../../classes/DriverStreamProcessorBase";
-import { RabbitStreamPipeline } from "./RabbitStreamPipeline";
+} from "../../../classes/DriverStreamProcessorBase.js";
+import { RabbitStreamPipeline } from "./RabbitStreamPipeline.js";
 
 export type RabbitStreamProcessorOptions =
   DriverStreamProcessorBaseOptions<RabbitSharedState>;
@@ -30,7 +31,7 @@ export class RabbitStreamProcessor<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: unknown;
+    meta?: IrisHookMeta;
     amphora?: unknown;
   }): RabbitStreamPipeline {
     return new RabbitStreamPipeline({
@@ -41,7 +42,7 @@ export class RabbitStreamProcessor<
       inputTopic: options.inputTopic,
       outputClass: options.outputClass,
       outputTopic: options.outputTopic,
-      context: options.context,
+      meta: options.meta,
       amphora: options.amphora,
     });
   }

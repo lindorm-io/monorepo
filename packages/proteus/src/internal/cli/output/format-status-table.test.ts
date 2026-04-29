@@ -1,4 +1,5 @@
-import { formatStatusTable } from "./format-status-table";
+import { formatStatusTable } from "./format-status-table.js";
+import { describe, expect, it } from "vitest";
 
 describe("formatStatusTable", () => {
   it("should format empty list", () => {

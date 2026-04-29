@@ -2,10 +2,11 @@
 // Tests retry with backoff and dead-letter queuing.
 // Uses REAL timers with small delays (50ms) for cross-driver portability.
 
-import type { ConsumeEnvelope } from "../../../types/consume-envelope";
-import type { TckCapabilities, TckDriverHandle } from "./types";
-import type { TckMessages } from "./create-tck-messages";
-import { waitFor } from "./wait";
+import type { ConsumeEnvelope } from "../../../types/consume-envelope.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
+import type { TckMessages } from "./create-tck-messages.js";
+import { waitFor } from "./wait.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 export const retryDeadLetterSuite = (
   getHandle: () => TckDriverHandle,

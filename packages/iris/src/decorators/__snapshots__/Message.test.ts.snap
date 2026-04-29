@@ -1,13 +1,13 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Message should stage message metadata with class name 1`] = `
+exports[`Message > should stage message metadata with class name 1`] = `
 {
   "decorator": "Message",
   "name": "TestMsg",
 }
 `;
 
-exports[`Message should stage message metadata with custom name 1`] = `
+exports[`Message > should stage message metadata with custom name 1`] = `
 {
   "decorator": "Message",
   "name": "CustomName",

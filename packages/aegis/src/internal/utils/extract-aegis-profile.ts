@@ -1,7 +1,7 @@
 import { camelKeys } from "@lindorm/case";
-import { Dict } from "@lindorm/types";
-import { AegisProfile } from "../../types";
-import { AEGIS_PROFILE_WIRE_KEYS } from "../constants/aegis-profile-keys";
+import type { Dict } from "@lindorm/types";
+import type { AegisProfile } from "../../types/index.js";
+import { AEGIS_PROFILE_WIRE_KEYS } from "../constants/aegis-profile-keys.js";
 
 // AegisProfile field names in camelCase form. Built once from the
 // snake_case wire-key set so that we can extract profile fields from

@@ -1,1 +1,1 @@
-export { warnCartesianIncludes } from "../../../../utils/query/warn-cartesian-includes";
+export { warnCartesianIncludes } from "../../../../utils/query/warn-cartesian-includes.js";

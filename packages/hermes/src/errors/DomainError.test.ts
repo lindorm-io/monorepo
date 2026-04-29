@@ -1,20 +1,21 @@
-import { DomainError } from "./DomainError";
-import { AggregateAlreadyCreatedError } from "./AggregateAlreadyCreatedError";
-import { AggregateNotCreatedError } from "./AggregateNotCreatedError";
-import { AggregateDestroyedError } from "./AggregateDestroyedError";
-import { AggregateNotDestroyedError } from "./AggregateNotDestroyedError";
-import { ConcurrencyError } from "./ConcurrencyError";
-import { CommandSchemaValidationError } from "./CommandSchemaValidationError";
-import { ChecksumError } from "./ChecksumError";
-import { CausationMissingEventsError } from "./CausationMissingEventsError";
-import { HandlerNotRegisteredError } from "./HandlerNotRegisteredError";
-import { SagaAlreadyCreatedError } from "./SagaAlreadyCreatedError";
-import { SagaNotCreatedError } from "./SagaNotCreatedError";
-import { SagaDestroyedError } from "./SagaDestroyedError";
-import { ViewAlreadyCreatedError } from "./ViewAlreadyCreatedError";
-import { ViewNotCreatedError } from "./ViewNotCreatedError";
-import { ViewDestroyedError } from "./ViewDestroyedError";
-import { ViewNotUpdatedError } from "./ViewNotUpdatedError";
+import { DomainError } from "./DomainError.js";
+import { AggregateAlreadyCreatedError } from "./AggregateAlreadyCreatedError.js";
+import { AggregateNotCreatedError } from "./AggregateNotCreatedError.js";
+import { AggregateDestroyedError } from "./AggregateDestroyedError.js";
+import { AggregateNotDestroyedError } from "./AggregateNotDestroyedError.js";
+import { ConcurrencyError } from "./ConcurrencyError.js";
+import { CommandSchemaValidationError } from "./CommandSchemaValidationError.js";
+import { ChecksumError } from "./ChecksumError.js";
+import { CausationMissingEventsError } from "./CausationMissingEventsError.js";
+import { HandlerNotRegisteredError } from "./HandlerNotRegisteredError.js";
+import { SagaAlreadyCreatedError } from "./SagaAlreadyCreatedError.js";
+import { SagaNotCreatedError } from "./SagaNotCreatedError.js";
+import { SagaDestroyedError } from "./SagaDestroyedError.js";
+import { ViewAlreadyCreatedError } from "./ViewAlreadyCreatedError.js";
+import { ViewNotCreatedError } from "./ViewNotCreatedError.js";
+import { ViewDestroyedError } from "./ViewDestroyedError.js";
+import { ViewNotUpdatedError } from "./ViewNotUpdatedError.js";
+import { describe, expect, it } from "vitest";
 
 describe("DomainError", () => {
   it("should default permanent to false", () => {

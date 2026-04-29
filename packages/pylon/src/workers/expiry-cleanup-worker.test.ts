@@ -1,10 +1,11 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { LindormWorker } from "@lindorm/worker";
-import { createExpiryCleanupWorker } from "./expiry-cleanup-worker";
+import { createExpiryCleanupWorker } from "./expiry-cleanup-worker.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createExpiryCleanupWorker", () => {
-  const mockDeleteExpired = jest.fn().mockResolvedValue(undefined);
-  const mockRepository = jest.fn().mockReturnValue({ deleteExpired: mockDeleteExpired });
+  const mockDeleteExpired = vi.fn().mockResolvedValue(undefined);
+  const mockRepository = vi.fn().mockReturnValue({ deleteExpired: mockDeleteExpired });
   const proteus: any = { repository: mockRepository };
   const logger = createMockLogger();
 
@@ -12,7 +13,7 @@ describe("createExpiryCleanupWorker", () => {
   class EntityB {}
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should return a LindormWorker instance with correct alias", () => {
@@ -74,11 +75,11 @@ describe("createExpiryCleanupWorker", () => {
     });
 
     test("should continue processing remaining targets when one fails", async () => {
-      const failingDelete = jest.fn().mockRejectedValue(new Error("DB error"));
-      const succeedingDelete = jest.fn().mockResolvedValue(undefined);
+      const failingDelete = vi.fn().mockRejectedValue(new Error("DB error"));
+      const succeedingDelete = vi.fn().mockResolvedValue(undefined);
 
       const failProteus: any = {
-        repository: jest
+        repository: vi
           .fn()
           .mockImplementation((target: any) =>
             target === EntityA

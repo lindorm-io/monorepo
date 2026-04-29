@@ -3,11 +3,11 @@ import type {
   EntityMetadata,
   MetaField,
   MetaGenerated,
-} from "../../../../entity/types/metadata";
-import { extractEnumValues } from "../../../../utils/extract-enum-values";
-import { mapFieldTypeMysql } from "../map-field-type-mysql";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveFkColumnType } from "../resolve-fk-column-type";
+} from "../../../../entity/types/metadata.js";
+import { extractEnumValues } from "../../../../utils/extract-enum-values.js";
+import { mapFieldTypeMysql } from "../map-field-type-mysql.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveFkColumnType } from "../resolve-fk-column-type.js";
 
 const buildEnumType = (field: MetaField): string | null => {
   if (field.type !== "enum" || !field.enum) return null;

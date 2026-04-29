@@ -1,32 +1,36 @@
 import { resolve, join } from "path";
-import { generateHandler } from "./generate-handler";
+import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
+import { Logger as _Logger } from "@lindorm/logger";
+import { generateHandler } from "./generate-handler.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-jest.mock("fs/promises", () => ({
-  mkdir: jest.fn().mockResolvedValue(undefined),
-  writeFile: jest.fn().mockResolvedValue(undefined),
+vi.mock("fs/promises", async () => ({
+  mkdir: vi.fn().mockResolvedValue(undefined),
+  writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const { mkdir, writeFile } = jest.requireMock("fs/promises");
-const { Logger } = jest.requireMock("@lindorm/logger");
+const mkdir = _mkdir as unknown as Mock;
+const writeFile = _writeFile as unknown as Mock;
+const Logger = _Logger as unknown as { std: Record<string, Mock> };
 
 const defaultDir = resolve(process.cwd(), "./src/handlers");
 
 describe("generateHandler", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should create handler file with camelCase name", async () => {
@@ -120,15 +124,15 @@ describe("generateHandler", () => {
   });
 
   it("should prompt for name when not provided", async () => {
-    const mockInput = jest.fn().mockResolvedValue("getUser");
-    jest.doMock("@inquirer/prompts", () => ({ input: mockInput }));
+    const mockInput = vi.fn().mockResolvedValue("getUser");
+    vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
-    jest.resetModules();
-    const { generateHandler: freshGenerate } = await import("./generate-handler");
+    vi.resetModules();
+    const { generateHandler: freshGenerate } = await import("./generate-handler.js");
 
-    jest.doMock("fs/promises", () => ({
-      mkdir: jest.fn().mockResolvedValue(undefined),
-      writeFile: jest.fn().mockResolvedValue(undefined),
+    vi.doMock("fs/promises", () => ({
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      writeFile: vi.fn().mockResolvedValue(undefined),
     }));
 
     await freshGenerate(undefined, {});

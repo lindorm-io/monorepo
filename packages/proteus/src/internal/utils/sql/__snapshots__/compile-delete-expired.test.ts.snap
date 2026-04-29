@@ -1,48 +1,48 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileDeleteExpired [mysql] should compile delete expired statement 1`] = `
+exports[`compileDeleteExpired [mysql] > should compile delete expired statement 1`] = `
 {
   "params": [],
   "text": "DELETE FROM \`app\`.\`sessions\` WHERE \`expires_at\` <= NOW(3)",
 }
 `;
 
-exports[`compileDeleteExpired [postgres] should compile delete expired statement 1`] = `
+exports[`compileDeleteExpired [postgres] > should compile delete expired statement 1`] = `
 {
   "params": [],
   "text": "DELETE FROM "app"."sessions" AS "t0" WHERE "t0"."expires_at" <= NOW()",
 }
 `;
 
-exports[`compileDeleteExpired [sqlite] should compile delete expired statement 1`] = `
+exports[`compileDeleteExpired [sqlite] > should compile delete expired statement 1`] = `
 {
   "params": [],
   "text": "DELETE FROM "sessions" WHERE "expires_at" <= strftime('%Y-%m-%dT%H:%M:%fZ','now')",
 }
 `;
 
-exports[`compileDeleteExpired dialect-specific: alias behavior mysql: no alias (supportsDeleteAlias = false) 1`] = `
+exports[`compileDeleteExpired dialect-specific: alias behavior > mysql: no alias (supportsDeleteAlias = false) 1`] = `
 {
   "params": [],
   "text": "DELETE FROM \`app\`.\`sessions\` WHERE \`expires_at\` <= NOW(3)",
 }
 `;
 
-exports[`compileDeleteExpired dialect-specific: alias behavior postgres: uses AS t0 alias (supportsDeleteAlias = true) 1`] = `
+exports[`compileDeleteExpired dialect-specific: alias behavior > postgres: uses AS t0 alias (supportsDeleteAlias = true) 1`] = `
 {
   "params": [],
   "text": "DELETE FROM "app"."sessions" AS "t0" WHERE "t0"."expires_at" <= NOW()",
 }
 `;
 
-exports[`compileDeleteExpired dialect-specific: alias behavior sqlite: no alias (supportsDeleteAlias = false) 1`] = `
+exports[`compileDeleteExpired dialect-specific: alias behavior > sqlite: no alias (supportsDeleteAlias = false) 1`] = `
 {
   "params": [],
   "text": "DELETE FROM "sessions" WHERE "expires_at" <= strftime('%Y-%m-%dT%H:%M:%fZ','now')",
 }
 `;
 
-exports[`compileDeleteExpired dialect-specific: namespace postgres: unqualified when namespace is null 1`] = `
+exports[`compileDeleteExpired dialect-specific: namespace > postgres: unqualified when namespace is null 1`] = `
 {
   "params": [],
   "text": "DELETE FROM "sessions" AS "t0" WHERE "t0"."expires_at" <= NOW()",

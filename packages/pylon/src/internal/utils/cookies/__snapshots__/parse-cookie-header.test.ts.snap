@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parseCookieHeader should initialize both as null for plain cookies 1`] = `
+exports[`parseCookieHeader > should initialize both as null for plain cookies 1`] = `
 [
   {
     "kid": null,
@@ -11,7 +11,7 @@ exports[`parseCookieHeader should initialize both as null for plain cookies 1`] 
 ]
 `;
 
-exports[`parseCookieHeader should initialize kid as null when only sig is present 1`] = `
+exports[`parseCookieHeader > should initialize kid as null when only sig is present 1`] = `
 [
   {
     "kid": null,
@@ -22,7 +22,7 @@ exports[`parseCookieHeader should initialize kid as null when only sig is presen
 ]
 `;
 
-exports[`parseCookieHeader should initialize signature as null when only kid is present 1`] = `
+exports[`parseCookieHeader > should initialize signature as null when only kid is present 1`] = `
 [
   {
     "kid": "kidval",
@@ -33,7 +33,7 @@ exports[`parseCookieHeader should initialize signature as null when only kid is 
 ]
 `;
 
-exports[`parseCookieHeader should parse cookies with sig and kid siblings 1`] = `
+exports[`parseCookieHeader > should parse cookies with sig and kid siblings 1`] = `
 [
   {
     "kid": "5382ca15-b849-55ae-904a-9196797ccc1b",

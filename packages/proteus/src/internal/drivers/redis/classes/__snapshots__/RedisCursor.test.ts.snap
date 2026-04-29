@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RedisCursor async iterator iterates over all items in order 1`] = `
+exports[`RedisCursor > async iterator > iterates over all items in order 1`] = `
 [
   {
     "id": 1,
@@ -21,7 +21,7 @@ exports[`RedisCursor async iterator iterates over all items in order 1`] = `
 ]
 `;
 
-exports[`RedisCursor next() returns items in order 1`] = `
+exports[`RedisCursor > next() > returns items in order 1`] = `
 [
   {
     "id": 1,
@@ -38,7 +38,7 @@ exports[`RedisCursor next() returns items in order 1`] = `
 ]
 `;
 
-exports[`RedisCursor nextBatch() advances position across calls 1`] = `
+exports[`RedisCursor > nextBatch() > advances position across calls 1`] = `
 {
   "first": [
     {
@@ -73,7 +73,7 @@ exports[`RedisCursor nextBatch() advances position across calls 1`] = `
 }
 `;
 
-exports[`RedisCursor nextBatch() returns a batch of the given size 1`] = `
+exports[`RedisCursor > nextBatch() > returns a batch of the given size 1`] = `
 [
   {
     "id": 1,
@@ -90,7 +90,7 @@ exports[`RedisCursor nextBatch() returns a batch of the given size 1`] = `
 ]
 `;
 
-exports[`RedisCursor nextBatch() returns remaining items when fewer than batch size remain 1`] = `
+exports[`RedisCursor > nextBatch() > returns remaining items when fewer than batch size remain 1`] = `
 [
   {
     "id": 1,

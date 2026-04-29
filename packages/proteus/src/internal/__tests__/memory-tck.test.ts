@@ -3,15 +3,16 @@
 // Runs the full TCK suite against the in-memory driver.
 // No external services required.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../interfaces";
-import { ProteusSource } from "../../classes/ProteusSource";
-import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
-import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora";
-import { runTck } from "../__fixtures__/tck/run-tck";
+import type { IEntity } from "../../interfaces/index.js";
+import { ProteusSource } from "../../classes/ProteusSource.js";
+import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { runTck } from "../__fixtures__/tck/run-tck.js";
+import { describe, vi } from "vitest";
 
-jest.setTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000 });
 
 let source: ProteusSource;
 const amphora = createTckAmphora();

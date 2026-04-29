@@ -1,4 +1,4 @@
-import { DomainError } from "./DomainError";
+import { DomainError } from "./DomainError.js";
 
 export class SagaNotCreatedError extends DomainError {
   public constructor(permanent = false) {

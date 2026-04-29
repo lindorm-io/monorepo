@@ -1,25 +1,36 @@
 import { mkdirSync, rmSync, writeFileSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { runPrompts } from "./prompts";
+import { runPrompts } from "./prompts.js";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("@inquirer/prompts", () => ({
-  input: jest.fn(),
-  checkbox: jest.fn(),
-  select: jest.fn(),
-  confirm: jest.fn(),
+vi.mock("@inquirer/prompts", async () => ({
+  input: vi.fn(),
+  checkbox: vi.fn(),
+  select: vi.fn(),
+  confirm: vi.fn(),
 }));
 
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
 
-const mockedInput = input as unknown as jest.Mock;
-const mockedCheckbox = checkbox as unknown as jest.Mock;
-const mockedSelect = select as unknown as jest.Mock;
-const mockedConfirm = confirm as unknown as jest.Mock;
+const mockedInput = input as unknown as Mock;
+const mockedCheckbox = checkbox as unknown as Mock;
+const mockedSelect = select as unknown as Mock;
+const mockedConfirm = confirm as unknown as Mock;
 
-const queueSequence = (mock: jest.Mock, values: Array<unknown>): void => {
+const queueSequence = (mock: Mock, values: Array<unknown>): void => {
   for (const value of values) mock.mockResolvedValueOnce(value);
 };
+
+// Prompt order:
+//   1. checkbox — features (http/socket)
+//   2. checkbox — proteus drivers
+//   3. select   — iris driver
+//   4. confirm  — webhooks (if both proteus+iris)
+//   5. confirm  — audit    (if both proteus+iris)
+//   6. confirm  — auth
+//   7. confirm  — rate limit (if redis or memory in proteus)
+//   8. checkbox — workers (if proteus)
 
 describe("runPrompts", () => {
   let sandboxDir: string;
@@ -38,9 +49,9 @@ describe("runPrompts", () => {
   });
 
   test("returns answers with positional name and defaults", async () => {
-    queueSequence(mockedCheckbox, [["http"]]);
-    queueSequence(mockedSelect, ["none", "none"]);
-    queueSequence(mockedConfirm, [false, false]);
+    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedSelect, ["none"]);
+    queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({ positionalName: "my-app", cwd: sandboxDir });
 
@@ -54,9 +65,9 @@ describe("runPrompts", () => {
 
   test("prompts for name when positional missing", async () => {
     mockedInput.mockResolvedValueOnce("prompted-name");
-    queueSequence(mockedCheckbox, [["http", "socket"]]);
-    queueSequence(mockedSelect, ["none", "none"]);
-    queueSequence(mockedConfirm, [false, false]);
+    queueSequence(mockedCheckbox, [["http", "socket"], []]);
+    queueSequence(mockedSelect, ["none"]);
+    queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({ cwd: sandboxDir });
 
@@ -66,8 +77,8 @@ describe("runPrompts", () => {
   });
 
   test("prompts webhooks and audit only when both drivers selected", async () => {
-    queueSequence(mockedCheckbox, [["http"], ["expiry-cleanup"]]);
-    queueSequence(mockedSelect, ["postgres", "rabbit"]);
+    queueSequence(mockedCheckbox, [["http"], ["postgres", "redis"], ["expiry-cleanup"]]);
+    queueSequence(mockedSelect, ["rabbit"]);
     // webhooks, audit, auth, rateLimit
     queueSequence(mockedConfirm, [true, true, false, false]);
 
@@ -76,27 +87,27 @@ describe("runPrompts", () => {
     expect(mockedConfirm).toHaveBeenCalledTimes(4);
     expect(answers.features.webhooks).toBe(true);
     expect(answers.features.audit).toBe(true);
-    expect(answers.proteusDriver).toBe("postgres");
+    expect(answers.proteusDrivers).toEqual(["postgres", "redis"]);
     expect(answers.irisDriver).toBe("rabbit");
     expect(answers.workers).toMatchSnapshot();
   });
 
   test("skips webhooks and audit prompts when iris is none", async () => {
-    queueSequence(mockedCheckbox, [["http"], ["expiry-cleanup"]]);
-    queueSequence(mockedSelect, ["postgres", "none"]);
-    // auth, rateLimit (no webhooks/audit)
-    queueSequence(mockedConfirm, [false, false]);
+    queueSequence(mockedCheckbox, [["http"], ["postgres"], ["expiry-cleanup"]]);
+    queueSequence(mockedSelect, ["none"]);
+    // auth only (no webhooks/audit, no rateLimit — postgres alone doesn't qualify)
+    queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({ positionalName: "partial-app", cwd: sandboxDir });
 
-    expect(mockedConfirm).toHaveBeenCalledTimes(2);
+    expect(mockedConfirm).toHaveBeenCalledTimes(1);
     expect(answers.features.webhooks).toBe(false);
     expect(answers.features.audit).toBe(false);
   });
 
-  test("skips workers prompt entirely when proteusDriver is none", async () => {
-    queueSequence(mockedCheckbox, [["http"]]);
-    queueSequence(mockedSelect, ["none", "none"]);
+  test("skips workers prompt entirely when proteus drivers is empty", async () => {
+    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedSelect, ["none"]);
     queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({
@@ -104,13 +115,13 @@ describe("runPrompts", () => {
       cwd: sandboxDir,
     });
 
-    expect(mockedCheckbox).toHaveBeenCalledTimes(1);
+    expect(mockedCheckbox).toHaveBeenCalledTimes(2);
     expect(answers.workers).toEqual([]);
   });
 
   test("auth prompt implies session — picking auth sets both", async () => {
     queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["none", "none"]);
+    queueSequence(mockedSelect, ["none"]);
     // auth=true (rateLimit skipped — no proteus)
     queueSequence(mockedConfirm, [true]);
 
@@ -123,7 +134,7 @@ describe("runPrompts", () => {
 
   test("declining auth leaves both session and auth off", async () => {
     queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["none", "none"]);
+    queueSequence(mockedSelect, ["none"]);
     // auth=false (rateLimit skipped — no proteus)
     queueSequence(mockedConfirm, [false]);
 
@@ -134,9 +145,9 @@ describe("runPrompts", () => {
     expect(answers.features.session).toBe(false);
   });
 
-  test("rate limit prompt only shown when proteus selected", async () => {
-    queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["postgres", "none"]);
+  test("rate limit prompt shown when redis is selected", async () => {
+    queueSequence(mockedCheckbox, [["http"], ["redis"], []]);
+    queueSequence(mockedSelect, ["none"]);
     // auth, rateLimit
     queueSequence(mockedConfirm, [false, true]);
 
@@ -146,9 +157,33 @@ describe("runPrompts", () => {
     expect(answers.features.rateLimit).toBe(true);
   });
 
-  test("rate limit prompt skipped when proteus is none", async () => {
+  test("rate limit prompt shown when memory is selected", async () => {
+    queueSequence(mockedCheckbox, [["http"], ["memory"], []]);
+    queueSequence(mockedSelect, ["none"]);
+    // auth, rateLimit
+    queueSequence(mockedConfirm, [false, true]);
+
+    const answers = await runPrompts({ positionalName: "rl-mem-app", cwd: sandboxDir });
+
+    expect(mockedConfirm).toHaveBeenCalledTimes(2);
+    expect(answers.features.rateLimit).toBe(true);
+  });
+
+  test("rate limit prompt skipped when postgres is the only proteus driver", async () => {
+    queueSequence(mockedCheckbox, [["http"], ["postgres"], []]);
+    queueSequence(mockedSelect, ["none"]);
+    // auth only — postgres alone doesn't qualify for rate limiting
+    queueSequence(mockedConfirm, [false]);
+
+    const answers = await runPrompts({ positionalName: "no-rl-pg-app", cwd: sandboxDir });
+
+    expect(mockedConfirm).toHaveBeenCalledTimes(1);
+    expect(answers.features.rateLimit).toBe(false);
+  });
+
+  test("rate limit prompt skipped when no proteus driver is selected", async () => {
     queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["none", "none"]);
+    queueSequence(mockedSelect, ["none"]);
     // auth only
     queueSequence(mockedConfirm, [false]);
 

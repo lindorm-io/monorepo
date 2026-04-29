@@ -1,6 +1,7 @@
-import { ReadableTime } from "../types";
-import { duration } from "./duration";
-import { ms } from "./ms";
+import type { ReadableTime } from "../types/index.js";
+import { duration } from "./duration.js";
+import { ms } from "./ms.js";
+import { describe, expect, test } from "vitest";
 
 const inputs: Array<ReadableTime> = [
   "1ms",

@@ -4,9 +4,10 @@ import {
   encodeSequence,
   encodeSet,
   readSequenceChildren,
-} from "./containers";
-import { encodeInteger, encodeUtf8String } from "./primitives";
-import { readTlv } from "./walker";
+} from "./containers.js";
+import { encodeInteger, encodeUtf8String } from "./primitives.js";
+import { readTlv } from "./walker.js";
+import { describe, expect, test } from "vitest";
 
 describe("encodeSequence", () => {
   test("wraps children with SEQUENCE tag", () => {

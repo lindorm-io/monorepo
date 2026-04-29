@@ -1,45 +1,46 @@
 import { resolve } from "path";
-import { migrateCreate } from "./migrate-create";
-import { withSourceConfig } from "../with-source";
-import { writeMigrationFile } from "../../utils/migration/write-migration-file";
-import { formatTimestamp, sanitizeName, kebabToPascal } from "../utils/migration-naming";
+import { migrateCreate } from "./migrate-create.js";
+import { withSourceConfig } from "../with-source.js";
+import { writeMigrationFile } from "../../utils/migration/write-migration-file.js";
+import {
+  formatTimestamp,
+  sanitizeName,
+  kebabToPascal,
+} from "../utils/migration-naming.js";
 import { Logger } from "@lindorm/logger";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("../with-source");
-jest.mock("../../utils/migration/write-migration-file");
-jest.mock("../utils/migration-naming", () => ({
-  formatTimestamp: jest.fn(),
-  sanitizeName: jest.fn(),
-  kebabToPascal: jest.fn(),
+vi.mock("../with-source.js");
+vi.mock("../../utils/migration/write-migration-file.js");
+vi.mock("../utils/migration-naming.js", async () => ({
+  formatTimestamp: vi.fn(),
+  sanitizeName: vi.fn(),
+  kebabToPascal: vi.fn(),
 }));
-jest.mock("crypto", () => ({
-  randomUUID: jest.fn(() => "test-uuid-1234"),
+vi.mock("crypto", () => ({
+  randomUUID: vi.fn(() => "test-uuid-1234"),
 }));
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const mockWithSourceConfig = withSourceConfig as jest.MockedFunction<
-  typeof withSourceConfig
->;
-const mockWriteMigrationFile = writeMigrationFile as jest.MockedFunction<
+const mockWithSourceConfig = withSourceConfig as MockedFunction<typeof withSourceConfig>;
+const mockWriteMigrationFile = writeMigrationFile as MockedFunction<
   typeof writeMigrationFile
 >;
-const mockFormatTimestamp = formatTimestamp as jest.MockedFunction<
-  typeof formatTimestamp
->;
-const mockSanitizeName = sanitizeName as jest.MockedFunction<typeof sanitizeName>;
-const mockKebabToPascal = kebabToPascal as jest.MockedFunction<typeof kebabToPascal>;
+const mockFormatTimestamp = formatTimestamp as MockedFunction<typeof formatTimestamp>;
+const mockSanitizeName = sanitizeName as MockedFunction<typeof sanitizeName>;
+const mockKebabToPascal = kebabToPascal as MockedFunction<typeof kebabToPascal>;
 
 const defaultDir = resolve(process.cwd(), "./migrations");
 
@@ -47,13 +48,13 @@ const makeSource = (overrides: Record<string, unknown> = {}) => ({
   namespace: "myapp",
   driverType: "postgres",
   migrationsTable: undefined,
-  getEntityMetadata: jest.fn().mockReturnValue([]),
+  getEntityMetadata: vi.fn().mockReturnValue([]),
   ...overrides,
 });
 
 describe("migrateCreate", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockWithSourceConfig.mockImplementation(async (_opts, fn) => {
       await fn({ source: makeSource() } as any);

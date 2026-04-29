@@ -1,4 +1,5 @@
-import { createMockZephyr } from "./create-mock-zephyr";
+import { createMockZephyr } from "./vitest.js";
+import { describe, expect, test } from "vitest";
 
 describe("createMockZephyr", () => {
   test("should create mock with all interface methods", () => {

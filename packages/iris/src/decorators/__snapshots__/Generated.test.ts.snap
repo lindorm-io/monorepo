@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Generated should stage generated with date strategy 1`] = `
+exports[`Generated > should stage generated with date strategy 1`] = `
 [
   {
     "key": "createdAt",
@@ -12,7 +12,7 @@ exports[`Generated should stage generated with date strategy 1`] = `
 ]
 `;
 
-exports[`Generated should stage generated with integer strategy and range 1`] = `
+exports[`Generated > should stage generated with integer strategy and range 1`] = `
 [
   {
     "key": "sequence",
@@ -24,7 +24,7 @@ exports[`Generated should stage generated with integer strategy and range 1`] = 
 ]
 `;
 
-exports[`Generated should stage generated with string strategy and length 1`] = `
+exports[`Generated > should stage generated with string strategy and length 1`] = `
 [
   {
     "key": "code",
@@ -36,7 +36,7 @@ exports[`Generated should stage generated with string strategy and length 1`] = 
 ]
 `;
 
-exports[`Generated should stage generated with uuid strategy 1`] = `
+exports[`Generated > should stage generated with uuid strategy 1`] = `
 [
   {
     "key": "id",

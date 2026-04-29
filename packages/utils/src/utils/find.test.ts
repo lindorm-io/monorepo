@@ -1,5 +1,6 @@
-import { TEST_PEOPLE } from "../__fixtures__/test-people";
-import { find } from "./find";
+import { TEST_PEOPLE } from "../__fixtures__/test-people.js";
+import { find } from "./find.js";
+import { describe, expect, test } from "vitest";
 
 describe("find", () => {
   test("should find by name", () => {

@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 // Table Inheritance PostgreSQL Integration Tests
 //
 // Exercises both inheritance strategies against a real PostgreSQL instance:
@@ -7,9 +8,9 @@
 // Uses a randomised schema for isolation; teardown drops the schema.
 
 import { randomBytes } from "crypto";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { Client } from "pg";
-import { ProteusSource } from "../../classes/ProteusSource";
+import { ProteusSource } from "../../classes/ProteusSource.js";
 import {
   Discriminator,
   DiscriminatorValue,
@@ -18,9 +19,9 @@ import {
   Inheritance,
   Nullable,
   PrimaryKeyField,
-} from "../../decorators";
+} from "../../decorators/index.js";
 
-jest.setTimeout(60_000);
+vi.setConfig({ testTimeout: 60_000 });
 
 // ─── Connection ──────────────────────────────────────────────────────────────
 

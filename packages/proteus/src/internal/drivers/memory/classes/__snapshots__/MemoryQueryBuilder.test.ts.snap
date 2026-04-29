@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MemoryQueryBuilder.getMany select projects only requested fields 1`] = `
+exports[`MemoryQueryBuilder.getMany > select projects only requested fields 1`] = `
 QbTestProduct {
   "category": undefined,
   "createdAt": undefined,
@@ -12,7 +12,7 @@ QbTestProduct {
 }
 `;
 
-exports[`MemoryQueryBuilder.toQuery / clone toQuery returns state and driver identifier 1`] = `
+exports[`MemoryQueryBuilder.toQuery / clone > toQuery returns state and driver identifier 1`] = `
 {
   "driver": "memory",
   "state": {

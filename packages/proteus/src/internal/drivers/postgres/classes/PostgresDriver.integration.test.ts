@@ -1,5 +1,6 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
 import { randomBytes } from "node:crypto";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { Client } from "pg";
 import {
   TestUser,
@@ -14,13 +15,13 @@ import {
   TestStudent,
   TestCourse,
   TestVersionKeyed,
-} from "../../../__fixtures__/test-entities";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { projectDesiredSchema } from "../utils/sync/project-desired-schema";
-import { introspectSchema } from "../utils/sync/introspect-schema";
-import { diffSchema } from "../utils/sync/diff-schema";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { PostgresDriver } from "./PostgresDriver";
+} from "../../../__fixtures__/test-entities.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { projectDesiredSchema } from "../utils/sync/project-desired-schema.js";
+import { introspectSchema } from "../utils/sync/introspect-schema.js";
+import { diffSchema } from "../utils/sync/diff-schema.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { PostgresDriver } from "./PostgresDriver.js";
 
 const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
 const schema = `test_drv_${randomBytes(6).toString("hex")}`;

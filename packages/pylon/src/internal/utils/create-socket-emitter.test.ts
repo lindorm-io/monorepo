@@ -1,10 +1,11 @@
-import { createHttpSocketEmitter, createSocketEmitter } from "./create-socket-emitter";
+import { createHttpSocketEmitter, createSocketEmitter } from "./create-socket-emitter.js";
+import { describe, expect, test, vi } from "vitest";
 
 describe("createHttpSocketEmitter", () => {
   const createMockIo = () => {
-    const emitFn = jest.fn();
+    const emitFn = vi.fn();
     return {
-      io: { to: jest.fn().mockReturnValue({ emit: emitFn }) } as any,
+      io: { to: vi.fn().mockReturnValue({ emit: emitFn }) } as any,
       emitFn,
     };
   };
@@ -47,17 +48,17 @@ describe("createHttpSocketEmitter", () => {
 
 describe("createSocketEmitter", () => {
   const createMockIo = () => {
-    const emitFn = jest.fn();
+    const emitFn = vi.fn();
     return {
-      io: { to: jest.fn().mockReturnValue({ emit: emitFn }) } as any,
+      io: { to: vi.fn().mockReturnValue({ emit: emitFn }) } as any,
       emitFn,
     };
   };
 
   const createMockSocket = () => {
-    const emitFn = jest.fn();
+    const emitFn = vi.fn();
     return {
-      socket: { to: jest.fn().mockReturnValue({ emit: emitFn }) } as any,
+      socket: { to: vi.fn().mockReturnValue({ emit: emitFn }) } as any,
       emitFn,
     };
   };

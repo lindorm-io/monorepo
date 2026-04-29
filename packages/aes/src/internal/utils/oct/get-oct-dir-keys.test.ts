@@ -1,5 +1,6 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { getOctDirDecryptionKey, getOctDirEncryptionKey } from "./get-oct-dir-keys";
+import { getOctDirDecryptionKey, getOctDirEncryptionKey } from "./get-oct-dir-keys.js";
+import { describe, expect, test } from "vitest";
 
 describe("get-oct-std-keys", () => {
   describe("cbc", () => {

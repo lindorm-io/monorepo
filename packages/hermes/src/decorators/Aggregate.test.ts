@@ -1,4 +1,5 @@
-import { Aggregate } from "./Aggregate";
+import { Aggregate } from "./Aggregate.js";
+import { describe, expect, test } from "vitest";
 
 const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>
   ({ metadata }) as ClassDecoratorContext;

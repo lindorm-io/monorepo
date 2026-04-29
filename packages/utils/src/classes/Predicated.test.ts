@@ -1,5 +1,6 @@
-import { TEST_PEOPLE } from "../__fixtures__/test-people";
-import { Predicated } from "./Predicated";
+import { TEST_PEOPLE } from "../__fixtures__/test-people.js";
+import { Predicated } from "./Predicated.js";
+import { describe, expect, test } from "vitest";
 
 describe("Predicated", () => {
   describe("filter", () => {

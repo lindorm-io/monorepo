@@ -1,5 +1,5 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`encodeX509Validity encodes a GeneralizedTime range for post-2049 dates 1`] = `"3020170d3234303130313030303030305a180f32303530303130313030303030305a"`;
+exports[`encodeX509Validity > encodes a GeneralizedTime range for post-2049 dates 1`] = `"3020170d3234303130313030303030305a180f32303530303130313030303030305a"`;
 
-exports[`encodeX509Validity encodes a UTCTime range 1`] = `"301e170d3234303130313030303030305a170d3235303130313030303030305a"`;
+exports[`encodeX509Validity > encodes a UTCTime range 1`] = `"301e170d3234303130313030303030305a170d3235303130313030303030305a"`;

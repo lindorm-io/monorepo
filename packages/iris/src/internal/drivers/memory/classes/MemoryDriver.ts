@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
+import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -9,27 +9,31 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../../../../interfaces";
-import type { IrisConnectionState, IrisEvents } from "../../../../types";
-import { IrisTransportError } from "../../../../errors/IrisTransportError";
-import type { DeadLetterEntry } from "../../../../types/dead-letter";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
+} from "../../../../interfaces/index.js";
+import type {
+  IrisConnectionState,
+  IrisEvents,
+  IrisHookMeta,
+} from "../../../../types/index.js";
+import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
+import type { DeadLetterEntry } from "../../../../types/dead-letter.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { MemorySharedState } from "../types/memory-store";
-import { createStore } from "../utils/create-store";
-import { dispatchToConsumers } from "../utils/dispatch-to-consumers";
-import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers";
-import { MemoryMessageBus } from "./MemoryMessageBus";
-import { MemoryPublisher } from "./MemoryPublisher";
-import { MemoryRpcClient } from "./MemoryRpcClient";
-import { MemoryRpcServer } from "./MemoryRpcServer";
-import { MemoryStreamProcessor } from "./MemoryStreamProcessor";
-import { MemoryWorkerQueue } from "./MemoryWorkerQueue";
+import type { MemorySharedState } from "../types/memory-store.js";
+import { createStore } from "../utils/create-store.js";
+import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
+import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers.js";
+import { MemoryMessageBus } from "./MemoryMessageBus.js";
+import { MemoryPublisher } from "./MemoryPublisher.js";
+import { MemoryRpcClient } from "./MemoryRpcClient.js";
+import { MemoryRpcServer } from "./MemoryRpcServer.js";
+import { MemoryStreamProcessor } from "./MemoryStreamProcessor.js";
+import { MemoryWorkerQueue } from "./MemoryWorkerQueue.js";
 
 export type MemoryDriverOptions = {
   logger: ILogger;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   delayManager?: DelayManager;
@@ -38,7 +42,7 @@ export type MemoryDriverOptions = {
 
 export class MemoryDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly meta: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly store: MemorySharedState;
@@ -50,7 +54,7 @@ export class MemoryDriver implements IIrisDriver {
 
   public constructor(options: MemoryDriverOptions, store?: MemorySharedState) {
     this.logger = options.logger.child(["MemoryDriver"]);
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
     this.store = store ?? createStore();
@@ -187,7 +191,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryPublisher<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       store: this.store,
@@ -201,7 +205,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryMessageBus<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       store: this.store,
@@ -216,7 +220,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryWorkerQueue<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       store: this.store,
@@ -229,7 +233,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryStreamProcessor({
       state: this.store,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -243,7 +247,7 @@ export class MemoryDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -257,7 +261,7 @@ export class MemoryDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -276,7 +280,7 @@ export class MemoryDriver implements IIrisDriver {
     return new MemoryDriver(
       {
         logger: this.logger,
-        context: this.context,
+        meta: this.meta,
         amphora: this.amphora,
         getSubscribers,
         delayManager: this.delayManager,

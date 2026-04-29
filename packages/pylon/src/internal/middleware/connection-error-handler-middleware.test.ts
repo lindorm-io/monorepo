@@ -1,5 +1,6 @@
 import { ClientError, ServerError } from "@lindorm/errors";
-import { connectionErrorHandlerMiddleware } from "./connection-error-handler-middleware";
+import { connectionErrorHandlerMiddleware } from "./connection-error-handler-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("connectionErrorHandlerMiddleware", () => {
   let ctx: any;
@@ -7,16 +8,14 @@ describe("connectionErrorHandlerMiddleware", () => {
   beforeEach(() => {
     ctx = {
       logger: {
-        error: jest.fn(),
-        warn: jest.fn(),
+        error: vi.fn(),
+        warn: vi.fn(),
       },
     };
   });
 
   test("should pass through on success", async () => {
-    await expect(
-      connectionErrorHandlerMiddleware(ctx, jest.fn()),
-    ).resolves.toBeUndefined();
+    await expect(connectionErrorHandlerMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
     expect(ctx.logger.error).not.toHaveBeenCalled();
     expect(ctx.logger.warn).not.toHaveBeenCalled();
   });
@@ -25,7 +24,7 @@ describe("connectionErrorHandlerMiddleware", () => {
     const err = new ClientError("forbidden", {
       status: ClientError.Status.Forbidden,
     });
-    const next = jest.fn().mockRejectedValue(err);
+    const next = vi.fn().mockRejectedValue(err);
 
     await expect(connectionErrorHandlerMiddleware(ctx, next)).rejects.toBe(err);
     expect(ctx.logger.warn).toHaveBeenCalledWith("Connection client error", err);
@@ -33,7 +32,7 @@ describe("connectionErrorHandlerMiddleware", () => {
 
   test("should log and rethrow server errors", async () => {
     const err = new ServerError("boom");
-    const next = jest.fn().mockRejectedValue(err);
+    const next = vi.fn().mockRejectedValue(err);
 
     await expect(connectionErrorHandlerMiddleware(ctx, next)).rejects.toBe(err);
     expect(ctx.logger.error).toHaveBeenCalledWith("Connection server error", err);
@@ -42,7 +41,7 @@ describe("connectionErrorHandlerMiddleware", () => {
   test("should tolerate missing logger", async () => {
     delete ctx.logger;
     const err = new ClientError("nope");
-    const next = jest.fn().mockRejectedValue(err);
+    const next = vi.fn().mockRejectedValue(err);
 
     await expect(connectionErrorHandlerMiddleware(ctx, next)).rejects.toBe(err);
   });

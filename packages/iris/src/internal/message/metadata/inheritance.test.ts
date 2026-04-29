@@ -1,17 +1,18 @@
-import { AbstractMessage } from "../../../decorators/AbstractMessage";
-import { AfterConsume } from "../../../decorators/AfterConsume";
-import { BeforePublish } from "../../../decorators/BeforePublish";
-import { Field } from "../../../decorators/Field";
-import { Generated } from "../../../decorators/Generated";
-import { Header } from "../../../decorators/Header";
-import { IdentifierField } from "../../../decorators/IdentifierField";
-import { Message } from "../../../decorators/Message";
-import { Namespace } from "../../../decorators/Namespace";
-import { OnCreate } from "../../../decorators/OnCreate";
-import { OnValidate } from "../../../decorators/OnValidate";
-import { TimestampField } from "../../../decorators/TimestampField";
-import { Transform } from "../../../decorators/Transform";
-import { collectAll, collectOwn, collectSingular } from "./collect";
+import { AbstractMessage } from "../../../decorators/AbstractMessage.js";
+import { AfterConsume } from "../../../decorators/AfterConsume.js";
+import { BeforePublish } from "../../../decorators/BeforePublish.js";
+import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { Header } from "../../../decorators/Header.js";
+import { IdentifierField } from "../../../decorators/IdentifierField.js";
+import { Message } from "../../../decorators/Message.js";
+import { Namespace } from "../../../decorators/Namespace.js";
+import { OnCreate } from "../../../decorators/OnCreate.js";
+import { OnValidate } from "../../../decorators/OnValidate.js";
+import { TimestampField } from "../../../decorators/TimestampField.js";
+import { Transform } from "../../../decorators/Transform.js";
+import { collectAll, collectOwn, collectSingular } from "./collect.js";
+import { describe, expect, it } from "vitest";
 
 describe("inheritance with real decorators", () => {
   const parentOnCreate = (msg: any) => {

@@ -1,10 +1,10 @@
-import { Dict } from "@lindorm/types";
-import { isBuffer } from "./is-buffer";
-import { isClass } from "./is-class";
-import { isDate } from "./is-date";
-import { isError } from "./is-error";
-import { isObjectLike } from "./is-object-like";
-import { isPromise } from "./is-promise";
+import type { Dict } from "@lindorm/types";
+import { isBuffer } from "./is-buffer.js";
+import { isClass } from "./is-class.js";
+import { isDate } from "./is-date.js";
+import { isError } from "./is-error.js";
+import { isObjectLike } from "./is-object-like.js";
+import { isPromise } from "./is-promise.js";
 
 export const isObject = <T extends Dict = Dict>(input: any): input is T =>
   Boolean(input) &&

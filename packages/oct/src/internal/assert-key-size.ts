@@ -1,5 +1,5 @@
-import { ShaAlgorithm } from "@lindorm/types";
-import { OctError } from "../errors";
+import type { ShaAlgorithm } from "@lindorm/types";
+import { OctError } from "../errors/index.js";
 
 export const assertKeySize = (algorithm: ShaAlgorithm, privateKey: Buffer): void => {
   switch (algorithm) {

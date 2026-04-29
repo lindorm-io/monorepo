@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PrimaryKey should register class-level composite primary key 1`] = `
+exports[`PrimaryKey > should register class-level composite primary key 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -108,7 +108,7 @@ exports[`PrimaryKey should register class-level composite primary key 1`] = `
 }
 `;
 
-exports[`PrimaryKey should register field-level primary key 1`] = `
+exports[`PrimaryKey > should register field-level primary key 1`] = `
 {
   "appendOnly": false,
   "cache": null,

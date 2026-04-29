@@ -1,34 +1,29 @@
 import { Command } from "commander";
-import { registerMigrateCommands } from "./migrate";
-import { migrateGenerate } from "./migrate-generate";
-import { migrateRun } from "./migrate-run";
-import { migrateRollback } from "./migrate-rollback";
-import { migrateStatus } from "./migrate-status";
-import { migrateBaseline } from "./migrate-baseline";
-import { migrateCreate } from "./migrate-create";
-import { migrateResolve } from "./migrate-resolve";
+import { registerMigrateCommands } from "./migrate.js";
+import { migrateGenerate } from "./migrate-generate.js";
+import { migrateRun } from "./migrate-run.js";
+import { migrateRollback } from "./migrate-rollback.js";
+import { migrateStatus } from "./migrate-status.js";
+import { migrateBaseline } from "./migrate-baseline.js";
+import { migrateCreate } from "./migrate-create.js";
+import { migrateResolve } from "./migrate-resolve.js";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("./migrate-generate", () => ({ migrateGenerate: jest.fn() }));
-jest.mock("./migrate-run", () => ({ migrateRun: jest.fn() }));
-jest.mock("./migrate-rollback", () => ({ migrateRollback: jest.fn() }));
-jest.mock("./migrate-status", () => ({ migrateStatus: jest.fn() }));
-jest.mock("./migrate-baseline", () => ({ migrateBaseline: jest.fn() }));
-jest.mock("./migrate-create", () => ({ migrateCreate: jest.fn() }));
-jest.mock("./migrate-resolve", () => ({ migrateResolve: jest.fn() }));
+vi.mock("./migrate-generate.js", async () => ({ migrateGenerate: vi.fn() }));
+vi.mock("./migrate-run.js", () => ({ migrateRun: vi.fn() }));
+vi.mock("./migrate-rollback.js", () => ({ migrateRollback: vi.fn() }));
+vi.mock("./migrate-status.js", () => ({ migrateStatus: vi.fn() }));
+vi.mock("./migrate-baseline.js", () => ({ migrateBaseline: vi.fn() }));
+vi.mock("./migrate-create.js", () => ({ migrateCreate: vi.fn() }));
+vi.mock("./migrate-resolve.js", () => ({ migrateResolve: vi.fn() }));
 
-const mockMigrateGenerate = migrateGenerate as jest.MockedFunction<
-  typeof migrateGenerate
->;
-const mockMigrateRun = migrateRun as jest.MockedFunction<typeof migrateRun>;
-const mockMigrateRollback = migrateRollback as jest.MockedFunction<
-  typeof migrateRollback
->;
-const mockMigrateStatus = migrateStatus as jest.MockedFunction<typeof migrateStatus>;
-const mockMigrateBaseline = migrateBaseline as jest.MockedFunction<
-  typeof migrateBaseline
->;
-const mockMigrateCreate = migrateCreate as jest.MockedFunction<typeof migrateCreate>;
-const mockMigrateResolve = migrateResolve as jest.MockedFunction<typeof migrateResolve>;
+const mockMigrateGenerate = migrateGenerate as MockedFunction<typeof migrateGenerate>;
+const mockMigrateRun = migrateRun as MockedFunction<typeof migrateRun>;
+const mockMigrateRollback = migrateRollback as MockedFunction<typeof migrateRollback>;
+const mockMigrateStatus = migrateStatus as MockedFunction<typeof migrateStatus>;
+const mockMigrateBaseline = migrateBaseline as MockedFunction<typeof migrateBaseline>;
+const mockMigrateCreate = migrateCreate as MockedFunction<typeof migrateCreate>;
+const mockMigrateResolve = migrateResolve as MockedFunction<typeof migrateResolve>;
 
 describe("registerMigrateCommands", () => {
   let program: Command;
@@ -36,7 +31,7 @@ describe("registerMigrateCommands", () => {
   const getMigrateCommand = () => program.commands.find((c) => c.name() === "migrate")!;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     program = new Command();
     program.exitOverride();
     registerMigrateCommands(program);

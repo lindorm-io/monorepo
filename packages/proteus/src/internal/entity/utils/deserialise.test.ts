@@ -1,4 +1,5 @@
-import { deserialise } from "./deserialise";
+import { deserialise } from "./deserialise.js";
+import { describe, expect, test } from "vitest";
 
 describe("deserialise", () => {
   describe("bigint", () => {

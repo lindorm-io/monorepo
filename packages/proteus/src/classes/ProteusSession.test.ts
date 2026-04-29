@@ -1,10 +1,11 @@
-import { createMockLogger } from "@lindorm/logger";
-import { ProteusSession } from "./ProteusSession";
-import { ProteusSource } from "./ProteusSource";
-import { Entity } from "../decorators/Entity";
-import { Field } from "../decorators/Field";
-import { PrimaryKeyField } from "../decorators/PrimaryKeyField";
-import { Filter } from "../decorators/Filter";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { ProteusSession } from "./ProteusSession.js";
+import { ProteusSource } from "./ProteusSource.js";
+import { Entity } from "../decorators/Entity.js";
+import { Field } from "../decorators/Field.js";
+import { PrimaryKeyField } from "../decorators/PrimaryKeyField.js";
+import { Filter } from "../decorators/Filter.js";
+import { describe, expect, test, vi } from "vitest";
 
 @Entity({ name: "SessionEntity" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
@@ -16,6 +17,12 @@ class SessionEntity {
   tenantId!: string;
 }
 
+@Entity({ name: "NotRegisteredOnSession" })
+class NotRegisteredOnSession {
+  @PrimaryKeyField()
+  id!: string;
+}
+
 const createSource = () =>
   new ProteusSource({
     driver: "memory",
@@ -24,6 +31,20 @@ const createSource = () =>
   });
 
 describe("ProteusSession", () => {
+  describe("hasEntity", () => {
+    test("should return true for an entity registered on the source", () => {
+      const source = createSource();
+      const session = source.session();
+      expect(session.hasEntity(SessionEntity)).toBe(true);
+    });
+
+    test("should return false for an entity not registered on the source", () => {
+      const source = createSource();
+      const session = source.session();
+      expect(session.hasEntity(NotRegisteredOnSession)).toBe(false);
+    });
+  });
+
   describe("data access", () => {
     test("should create repositories against the shared driver", async () => {
       const source = createSource();
@@ -154,7 +175,7 @@ describe("ProteusSession", () => {
       await source.connect();
       await source.setup();
 
-      const listener = jest.fn();
+      const listener = vi.fn();
       source.on("entity:after-insert", listener);
 
       const session = source.session();
@@ -179,7 +200,7 @@ describe("ProteusSession", () => {
       await source.connect();
       await source.setup();
 
-      const listener = jest.fn();
+      const listener = vi.fn();
       source.on("entity:before-insert", listener);
 
       const session = source.session();
@@ -194,16 +215,20 @@ describe("ProteusSession", () => {
       await source.disconnect();
     });
 
-    test("should include session context in event payload", async () => {
+    test("should include session meta in event payload", async () => {
       const source = createSource();
       await source.connect();
       await source.setup();
 
-      const requestContext = { requestId: "req-456", actor: "user-1" };
-      const listener = jest.fn();
+      const requestMeta = {
+        correlationId: "req-456",
+        actor: "user-1",
+        timestamp: new Date(),
+      };
+      const listener = vi.fn();
       source.on("entity:after-insert", listener);
 
-      const session = source.session({ context: requestContext });
+      const session = source.session({ meta: requestMeta });
       const repo = session.repository(SessionEntity);
       await repo.insert({
         id: "00000000-0000-4000-8000-000000000003",
@@ -213,7 +238,7 @@ describe("ProteusSession", () => {
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
-          context: requestContext,
+          meta: requestMeta,
           entity: expect.objectContaining({ tenantId: "tenant-c" }),
           metadata: expect.objectContaining({
             entity: expect.objectContaining({ name: "SessionEntity" }),
@@ -224,7 +249,7 @@ describe("ProteusSession", () => {
       await source.disconnect();
     });
 
-    test("should include session context in destroy events", async () => {
+    test("should include session meta in destroy events", async () => {
       const source = createSource();
       await source.connect();
       await source.setup();
@@ -236,30 +261,34 @@ describe("ProteusSession", () => {
         tenantId: "tenant-d",
       } as any);
 
-      const destroyContext = { requestId: "req-789", actor: "user-2" };
-      const listener = jest.fn();
+      const destroyMeta = {
+        correlationId: "req-789",
+        actor: "user-2",
+        timestamp: new Date(),
+      };
+      const listener = vi.fn();
       source.on("entity:after-destroy", listener);
 
-      const destroySession = source.session({ context: destroyContext });
+      const destroySession = source.session({ meta: destroyMeta });
       const destroyRepo = destroySession.repository(SessionEntity);
       await destroyRepo.destroy(entity);
 
       expect(listener).toHaveBeenCalledTimes(1);
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
-          context: destroyContext,
+          meta: destroyMeta,
         }),
       );
 
       await source.disconnect();
     });
 
-    test("should use source context when no session context provided", async () => {
+    test("should use the source-level default hook meta when no session meta provided", async () => {
       const source = createSource();
       await source.connect();
       await source.setup();
 
-      const listener = jest.fn();
+      const listener = vi.fn();
       source.on("entity:after-insert", listener);
 
       const session = source.session();
@@ -270,10 +299,13 @@ describe("ProteusSession", () => {
       } as any);
 
       expect(listener).toHaveBeenCalledTimes(1);
-      // Source has no context set, so it should be undefined
       expect(listener).toHaveBeenCalledWith(
         expect.objectContaining({
-          context: undefined,
+          meta: expect.objectContaining({
+            correlationId: "unknown",
+            actor: "unknown",
+            timestamp: expect.any(Date),
+          }),
         }),
       );
 

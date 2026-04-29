@@ -1,8 +1,9 @@
-import { createMockAmphora } from "@lindorm/amphora";
-import { ProteusError } from "../../../errors";
-import { makeField } from "../../__fixtures__/make-field";
-import type { EntityMetadata } from "../types/metadata";
-import { validateEncryptedFields } from "./validate-encrypted-fields";
+import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
+import { ProteusError } from "../../../errors/index.js";
+import { makeField } from "../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../types/metadata.js";
+import { validateEncryptedFields } from "./validate-encrypted-fields.js";
+import { describe, expect, test } from "vitest";
 
 const createMetadata = (fields: ReturnType<typeof makeField>[]): EntityMetadata =>
   ({

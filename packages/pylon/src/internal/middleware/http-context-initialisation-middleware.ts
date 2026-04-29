@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm/errors";
-import { ILogger } from "@lindorm/logger";
-import { PylonHttpMiddleware } from "../../types";
+import type { ILogger } from "@lindorm/logger";
+import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const createHttpContextInitialisationMiddleware = (
   logger: ILogger,

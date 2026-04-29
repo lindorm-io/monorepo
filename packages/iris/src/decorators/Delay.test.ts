@@ -1,4 +1,5 @@
-import { Delay } from "./Delay";
+import { Delay } from "./Delay.js";
+import { describe, expect, it } from "vitest";
 
 describe("Delay", () => {
   it("should stage delay metadata", () => {

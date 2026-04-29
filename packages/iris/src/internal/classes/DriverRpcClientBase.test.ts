@@ -1,18 +1,19 @@
 import type { Constructor } from "@lindorm/types";
-import { Default } from "../../decorators/Default";
-import { Field } from "../../decorators/Field";
-import { IdentifierField } from "../../decorators/IdentifierField";
-import { Message } from "../../decorators/Message";
-import { IrisTimeoutError } from "../../errors/IrisTimeoutError";
-import { IrisTransportError } from "../../errors/IrisTransportError";
-import type { IMessage } from "../../interfaces";
-import { clearRegistry } from "../message/metadata/registry";
-import { prepareOutbound } from "../message/utils/prepare-outbound";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
+import { Default } from "../../decorators/Default.js";
+import { Field } from "../../decorators/Field.js";
+import { IdentifierField } from "../../decorators/IdentifierField.js";
+import { Message } from "../../decorators/Message.js";
+import { IrisTimeoutError } from "../../errors/IrisTimeoutError.js";
+import { IrisTransportError } from "../../errors/IrisTransportError.js";
+import type { IMessage } from "../../interfaces/index.js";
+import { clearRegistry } from "../message/metadata/registry.js";
+import { prepareOutbound } from "../message/utils/prepare-outbound.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
 import {
   DriverRpcClientBase,
   type DriverRpcClientBaseOptions,
-} from "./DriverRpcClientBase";
+} from "./DriverRpcClientBase.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -44,8 +45,8 @@ class TestRpcClient<
   Req extends IMessage,
   Res extends IMessage,
 > extends DriverRpcClientBase<Req, Res> {
-  public doRequestSpy = jest.fn();
-  public doCloseSpy = jest.fn();
+  public doRequestSpy = vi.fn();
+  public doCloseSpy = vi.fn();
 
   public constructor(options: DriverRpcClientBaseOptions<Req, Res>) {
     super(options, "TestRpcClient");
@@ -105,13 +106,13 @@ class TestRpcClient<
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createClient = (): TestRpcClient<RpcClientTestRequest, RpcClientTestResponse> =>
@@ -130,7 +131,7 @@ describe("DriverRpcClientBase", () => {
 
   beforeEach(() => {
     clearRegistry();
-    jest.useFakeTimers();
+    vi.useFakeTimers();
     activeClient = null;
   });
 
@@ -140,7 +141,7 @@ describe("DriverRpcClientBase", () => {
     if (activeClient) {
       activeClient.cleanupAllPending();
     }
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   describe("prepareRequestEnvelope", () => {
@@ -252,7 +253,7 @@ describe("DriverRpcClientBase", () => {
 
     it("should call extraCleanup when cleanup is invoked", () => {
       const client = createClient();
-      const extraCleanup = jest.fn();
+      const extraCleanup = vi.fn();
 
       const { cleanup } = client.testRegisterPendingRequest(
         "corr-4",
@@ -275,7 +276,7 @@ describe("DriverRpcClientBase", () => {
         2000,
       );
 
-      jest.advanceTimersByTime(2000);
+      vi.advanceTimersByTime(2000);
 
       await expect(promise).rejects.toThrow(IrisTimeoutError);
       await expect(promise).rejects.toThrow(/timed out after 2000ms/);
@@ -291,7 +292,7 @@ describe("DriverRpcClientBase", () => {
         1000,
       );
 
-      jest.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(1000);
 
       await promise.catch(() => {});
 
@@ -300,7 +301,7 @@ describe("DriverRpcClientBase", () => {
 
     it("should call extraCleanup on timeout", async () => {
       const client = createClient();
-      const extraCleanup = jest.fn();
+      const extraCleanup = vi.fn();
 
       const { promise } = client.testRegisterPendingRequest(
         "corr-timeout-extra",
@@ -309,7 +310,7 @@ describe("DriverRpcClientBase", () => {
         extraCleanup,
       );
 
-      jest.advanceTimersByTime(1000);
+      vi.advanceTimersByTime(1000);
 
       await promise.catch(() => {});
 

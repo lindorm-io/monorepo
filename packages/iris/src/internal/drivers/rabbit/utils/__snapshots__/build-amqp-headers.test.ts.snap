@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildAmqpHeaders should apply options overrides 1`] = `
+exports[`buildAmqpHeaders > should apply options overrides 1`] = `
 {
   "properties": {
     "correlationId": undefined,
@@ -18,7 +18,7 @@ exports[`buildAmqpHeaders should apply options overrides 1`] = `
 }
 `;
 
-exports[`buildAmqpHeaders should build config with minimal envelope 1`] = `
+exports[`buildAmqpHeaders > should build config with minimal envelope 1`] = `
 {
   "properties": {
     "correlationId": undefined,
@@ -36,7 +36,7 @@ exports[`buildAmqpHeaders should build config with minimal envelope 1`] = `
 }
 `;
 
-exports[`buildAmqpHeaders should include all iris headers with fully populated envelope 1`] = `
+exports[`buildAmqpHeaders > should include all iris headers with fully populated envelope 1`] = `
 {
   "properties": {
     "correlationId": "corr-1",
@@ -59,7 +59,7 @@ exports[`buildAmqpHeaders should include all iris headers with fully populated e
 }
 `;
 
-exports[`buildAmqpHeaders should include broadcast header when true 1`] = `
+exports[`buildAmqpHeaders > should include broadcast header when true 1`] = `
 {
   "properties": {
     "correlationId": undefined,
@@ -78,7 +78,7 @@ exports[`buildAmqpHeaders should include broadcast header when true 1`] = `
 }
 `;
 
-exports[`buildAmqpHeaders should include correlation id when present 1`] = `
+exports[`buildAmqpHeaders > should include correlation id when present 1`] = `
 {
   "properties": {
     "correlationId": "corr-456",
@@ -97,7 +97,7 @@ exports[`buildAmqpHeaders should include correlation id when present 1`] = `
 }
 `;
 
-exports[`buildAmqpHeaders should include expiry when not null 1`] = `
+exports[`buildAmqpHeaders > should include expiry when not null 1`] = `
 {
   "properties": {
     "correlationId": undefined,
@@ -116,7 +116,7 @@ exports[`buildAmqpHeaders should include expiry when not null 1`] = `
 }
 `;
 
-exports[`buildAmqpHeaders should include reply-to when present 1`] = `
+exports[`buildAmqpHeaders > should include reply-to when present 1`] = `
 {
   "properties": {
     "correlationId": undefined,
@@ -135,7 +135,7 @@ exports[`buildAmqpHeaders should include reply-to when present 1`] = `
 }
 `;
 
-exports[`buildAmqpHeaders should include user headers 1`] = `
+exports[`buildAmqpHeaders > should include user headers 1`] = `
 {
   "properties": {
     "correlationId": undefined,
@@ -155,7 +155,7 @@ exports[`buildAmqpHeaders should include user headers 1`] = `
 }
 `;
 
-exports[`buildAmqpHeaders should not include max retries in headers (consumer-side policy only) 1`] = `
+exports[`buildAmqpHeaders > should not include max retries in headers (consumer-side policy only) 1`] = `
 {
   "properties": {
     "correlationId": undefined,
@@ -173,9 +173,9 @@ exports[`buildAmqpHeaders should not include max retries in headers (consumer-si
 }
 `;
 
-exports[`buildAmqpHeaders should sanitize routing key from topic 1`] = `"orders_created_v2"`;
+exports[`buildAmqpHeaders > should sanitize routing key from topic 1`] = `"orders_created_v2"`;
 
-exports[`buildAmqpHeaders should set priority on properties when non-zero 1`] = `
+exports[`buildAmqpHeaders > should set priority on properties when non-zero 1`] = `
 {
   "properties": {
     "correlationId": undefined,

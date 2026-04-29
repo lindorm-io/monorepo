@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileIncrement empty criteria produces UPDATE without WHERE clause when criteria is empty {} 1`] = `
+exports[`compileIncrement > empty criteria > produces UPDATE without WHERE clause when criteria is empty {} 1`] = `
 {
   "params": [
     5,
@@ -9,7 +9,7 @@ exports[`compileIncrement empty criteria produces UPDATE without WHERE clause wh
 }
 `;
 
-exports[`compileIncrement namespace override unqualified table name when both metadata.namespace is null and no override 1`] = `
+exports[`compileIncrement > namespace override > unqualified table name when both metadata.namespace is null and no override 1`] = `
 {
   "params": [
     1,
@@ -19,7 +19,7 @@ exports[`compileIncrement namespace override unqualified table name when both me
 }
 `;
 
-exports[`compileIncrement namespace override uses explicit namespace when metadata.namespace is null 1`] = `
+exports[`compileIncrement > namespace override > uses explicit namespace when metadata.namespace is null 1`] = `
 {
   "params": [
     1,
@@ -29,7 +29,7 @@ exports[`compileIncrement namespace override uses explicit namespace when metada
 }
 `;
 
-exports[`compileIncrement should compile decrement with negative value 1`] = `
+exports[`compileIncrement > should compile decrement with negative value 1`] = `
 {
   "params": [
     -3,
@@ -39,7 +39,7 @@ exports[`compileIncrement should compile decrement with negative value 1`] = `
 }
 `;
 
-exports[`compileIncrement should compile increment with positive value 1`] = `
+exports[`compileIncrement > should compile increment with positive value 1`] = `
 {
   "params": [
     5,
@@ -49,7 +49,7 @@ exports[`compileIncrement should compile increment with positive value 1`] = `
 }
 `;
 
-exports[`compileIncrement system filter applied includes soft-delete IS NULL condition when entity has DeleteDate field 1`] = `
+exports[`compileIncrement > system filter applied > includes soft-delete IS NULL condition when entity has DeleteDate field 1`] = `
 {
   "params": [
     1,
@@ -59,7 +59,7 @@ exports[`compileIncrement system filter applied includes soft-delete IS NULL con
 }
 `;
 
-exports[`compileIncrement zero value value: 0 compiles to + $1 with params[0] = 0 1`] = `
+exports[`compileIncrement > zero value > value: 0 compiles to + $1 with params[0] = 0 1`] = `
 {
   "params": [
     0,

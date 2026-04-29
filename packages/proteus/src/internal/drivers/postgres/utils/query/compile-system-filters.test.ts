@@ -1,12 +1,16 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaFilter } from "../../../../entity/types/metadata";
-import type { SubqueryPredicateSpec } from "../../../../types/query";
+import { describe, expect, test } from "vitest";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaFilter } from "../../../../entity/types/metadata.js";
+import type { SubqueryPredicateSpec } from "../../../../types/query.js";
 import {
   SCOPE_FILTER_NAME,
   SOFT_DELETE_FILTER_NAME,
-} from "../../../../entity/metadata/auto-filters";
-import { createEmptyState } from "../../../../../classes/QueryBuilder";
-import { compileWhereWithFilters, getVersionCondition } from "./compile-system-filters";
+} from "../../../../entity/metadata/auto-filters.js";
+import { createEmptyState } from "../../../../../classes/QueryBuilder.js";
+import {
+  compileWhereWithFilters,
+  getVersionCondition,
+} from "./compile-system-filters.js";
 
 // --- Metadata fixtures ---
 

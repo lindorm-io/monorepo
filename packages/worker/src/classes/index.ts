@@ -1,2 +1,2 @@
-export * from "./LindormWorker";
-export * from "./LindormWorkerScanner";
+export * from "./LindormWorker.js";
+export * from "./LindormWorkerScanner.js";

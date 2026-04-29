@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createHandshakeTokenMiddleware bearer path bearer refresh handler swaps token and clears authExpiredEmittedAt 1`] = `
+exports[`createHandshakeTokenMiddleware > bearer path > bearer refresh handler swaps token and clears authExpiredEmittedAt 1`] = `
 {
   "header": {},
   "payload": {
@@ -11,7 +11,7 @@ exports[`createHandshakeTokenMiddleware bearer path bearer refresh handler swaps
 }
 `;
 
-exports[`createHandshakeTokenMiddleware bearer path verifies bearer and registers bearer strategy auth 1`] = `
+exports[`createHandshakeTokenMiddleware > bearer path > verifies bearer and registers bearer strategy auth 1`] = `
 {
   "header": {
     "tokenType": "access_token",
@@ -24,7 +24,7 @@ exports[`createHandshakeTokenMiddleware bearer path verifies bearer and register
 }
 `;
 
-exports[`createHandshakeTokenMiddleware session fallback path registers session strategy when socket.data.session present 1`] = `
+exports[`createHandshakeTokenMiddleware > session fallback path > registers session strategy when socket.data.session present 1`] = `
 {
   "header": {
     "baseFormat": "JWT",

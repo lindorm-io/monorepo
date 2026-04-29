@@ -1,6 +1,6 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import type { MetaField, MetaFilter } from "../types/metadata";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import type { MetaField, MetaFilter } from "../types/metadata.js";
 
 /**
  * Extract all field-key references from a Predicate tree.

@@ -1,6 +1,6 @@
 import { isArray, isString } from "@lindorm/is";
-import { PylonListener } from "../../classes/PylonListener";
-import { PylonSocketContext, PylonSocketOptions } from "../../types";
+import { PylonListener } from "../../classes/PylonListener.js";
+import type { PylonSocketContext, PylonSocketOptions } from "../../types/index.js";
 
 export const normaliseListeners = <T extends PylonSocketContext>(
   input: PylonSocketOptions<T>["listeners"],

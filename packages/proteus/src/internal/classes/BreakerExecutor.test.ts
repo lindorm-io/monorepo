@@ -1,36 +1,34 @@
 import { CircuitOpenError as BreakerCircuitOpenError } from "@lindorm/breaker";
-import {
-  createMockCircuitBreaker,
-  type MockCircuitBreaker,
-} from "@lindorm/breaker/mocks";
-import { CircuitOpenError } from "../../errors/CircuitOpenError";
-import { BreakerExecutor } from "./BreakerExecutor";
-import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
-import type { IEntity } from "../../interfaces/Entity";
+import { createMockCircuitBreaker } from "@lindorm/breaker/mocks/vitest";
+import { beforeEach, describe, expect, it, vi, type Mocked } from "vitest";
+import { CircuitOpenError } from "../../errors/CircuitOpenError.js";
+import { BreakerExecutor } from "./BreakerExecutor.js";
+import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor.js";
+import type { IEntity } from "../../interfaces/Entity.js";
 
 interface StubEntity extends IEntity {
   name: string;
 }
 
-const createMockExecutor = (): jest.Mocked<IRepositoryExecutor<StubEntity>> => ({
-  executeInsert: jest.fn().mockResolvedValue({ id: "1", name: "inserted" }),
-  executeUpdate: jest.fn().mockResolvedValue({ id: "1", name: "updated" }),
-  executeDelete: jest.fn().mockResolvedValue(undefined),
-  executeSoftDelete: jest.fn().mockResolvedValue(undefined),
-  executeRestore: jest.fn().mockResolvedValue(undefined),
-  executeDeleteExpired: jest.fn().mockResolvedValue(undefined),
-  executeTtl: jest.fn().mockResolvedValue(3600),
-  executeFind: jest.fn().mockResolvedValue([{ id: "1", name: "found" }]),
-  executeCount: jest.fn().mockResolvedValue(5),
-  executeExists: jest.fn().mockResolvedValue(true),
-  executeIncrement: jest.fn().mockResolvedValue(undefined),
-  executeDecrement: jest.fn().mockResolvedValue(undefined),
-  executeInsertBulk: jest.fn().mockResolvedValue([{ id: "1", name: "bulk" }]),
-  executeUpdateMany: jest.fn().mockResolvedValue(3),
+const createMockExecutor = (): Mocked<IRepositoryExecutor<StubEntity>> => ({
+  executeInsert: vi.fn().mockResolvedValue({ id: "1", name: "inserted" }),
+  executeUpdate: vi.fn().mockResolvedValue({ id: "1", name: "updated" }),
+  executeDelete: vi.fn().mockResolvedValue(undefined),
+  executeSoftDelete: vi.fn().mockResolvedValue(undefined),
+  executeRestore: vi.fn().mockResolvedValue(undefined),
+  executeDeleteExpired: vi.fn().mockResolvedValue(undefined),
+  executeTtl: vi.fn().mockResolvedValue(3600),
+  executeFind: vi.fn().mockResolvedValue([{ id: "1", name: "found" }]),
+  executeCount: vi.fn().mockResolvedValue(5),
+  executeExists: vi.fn().mockResolvedValue(true),
+  executeIncrement: vi.fn().mockResolvedValue(undefined),
+  executeDecrement: vi.fn().mockResolvedValue(undefined),
+  executeInsertBulk: vi.fn().mockResolvedValue([{ id: "1", name: "bulk" }]),
+  executeUpdateMany: vi.fn().mockResolvedValue(3),
 });
 
 describe("BreakerExecutor", () => {
-  let inner: jest.Mocked<IRepositoryExecutor<StubEntity>>;
+  let inner: Mocked<IRepositoryExecutor<StubEntity>>;
   let breaker: ReturnType<typeof createMockCircuitBreaker>;
   let executor: BreakerExecutor<StubEntity>;
 

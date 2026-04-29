@@ -1,17 +1,18 @@
-import { PostgresTransactionError } from "../errors/PostgresTransactionError";
-import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle";
-import { TransactionContext } from "./TransactionContext";
+import { PostgresTransactionError } from "../errors/PostgresTransactionError.js";
+import type { PostgresTransactionHandle } from "../types/postgres-transaction-handle.js";
+import { TransactionContext } from "./TransactionContext.js";
+import { describe, expect, it, vi } from "vitest";
 
 const makeHandle = (): PostgresTransactionHandle => {
   const queries: Array<string> = [];
   return {
     client: {
-      query: jest.fn(async (sql: string, params?: Array<unknown>) => {
+      query: vi.fn(async (sql: string, params?: Array<unknown>) => {
         queries.push(sql);
         return { rows: [{ id: 1 }], rowCount: 1 };
       }),
     },
-    release: jest.fn(),
+    release: vi.fn(),
     state: "active" as const,
     savepointCounter: 0,
     __queries: queries,
@@ -30,7 +31,7 @@ describe("TransactionContext", () => {
     it("should return repository from factory when configured", () => {
       const handle = makeHandle();
       const mockRepo = {} as any;
-      const factory = jest.fn().mockReturnValue(mockRepo);
+      const factory = vi.fn().mockReturnValue(mockRepo);
       const ctx = new TransactionContext(handle, undefined, undefined, factory);
 
       class TestEntity {}
@@ -38,6 +39,29 @@ describe("TransactionContext", () => {
 
       expect(factory).toHaveBeenCalledWith(TestEntity);
       expect(result).toBe(mockRepo);
+    });
+  });
+
+  describe("client", () => {
+    it("should return the transaction-scoped PostgresQueryClient from the handle", async () => {
+      const handle = makeHandle();
+      const ctx = new TransactionContext(handle);
+
+      const client = await ctx.client<typeof handle.client>();
+
+      expect(client).toBe(handle.client);
+    });
+
+    it("should return a client whose query() routes through the transaction's client", async () => {
+      const handle = makeHandle();
+      const ctx = new TransactionContext(handle);
+
+      const client = await ctx.client<typeof handle.client>();
+      const result = await client.query("SELECT 1");
+
+      expect(result.rows).toEqual([{ id: 1 }]);
+      const queries = (handle as any).__queries as Array<string>;
+      expect(queries).toContain("SELECT 1");
     });
   });
 

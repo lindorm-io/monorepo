@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Header should accumulate multiple headers 1`] = `
+exports[`Header > should accumulate multiple headers 1`] = `
 [
   {
     "headerName": "x-user-id",
@@ -13,7 +13,7 @@ exports[`Header should accumulate multiple headers 1`] = `
 ]
 `;
 
-exports[`Header should stage header with explicit name 1`] = `
+exports[`Header > should stage header with explicit name 1`] = `
 [
   {
     "headerName": "x-user-id",

@@ -1,15 +1,15 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { AesError } from "../../../errors";
-import {
+import { AesError } from "../../../errors/index.js";
+import type {
   CreateCekOptions,
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "../../types/content-encryption-key";
-import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size";
-import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size";
-import { keyUnwrap, keyWrap } from "../key-wrap/key-wrap";
+} from "../../types/content-encryption-key.js";
+import { calculateContentEncryptionKeySize } from "../calculate/calculate-content-encryption-key-size.js";
+import { calculateKeyWrapSize } from "../calculate/calculate-key-wrap-size.js";
+import { keyUnwrap, keyWrap } from "../key-wrap/key-wrap.js";
 
 export const getOctKeyWrapEncryptionKey = ({
   encryption,

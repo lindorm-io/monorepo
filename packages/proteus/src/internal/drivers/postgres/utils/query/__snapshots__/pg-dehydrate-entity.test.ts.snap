@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`pgDehydrateEntity should return Array<DehydratedColumn> 1`] = `
+exports[`pgDehydrateEntity > should return Array<DehydratedColumn> 1`] = `
 [
   {
     "column": "id",
@@ -17,7 +17,7 @@ exports[`pgDehydrateEntity should return Array<DehydratedColumn> 1`] = `
 ]
 `;
 
-exports[`pgDehydrateEntity — CreateDate fields should include CreateDate fields in insert mode 1`] = `
+exports[`pgDehydrateEntity — CreateDate fields > should include CreateDate fields in insert mode 1`] = `
 [
   {
     "column": "id",
@@ -34,7 +34,7 @@ exports[`pgDehydrateEntity — CreateDate fields should include CreateDate field
 ]
 `;
 
-exports[`pgDehydrateEntity — CreateDate fields should skip CreateDate fields in update mode 1`] = `
+exports[`pgDehydrateEntity — CreateDate fields > should skip CreateDate fields in update mode 1`] = `
 [
   {
     "column": "name",
@@ -43,7 +43,7 @@ exports[`pgDehydrateEntity — CreateDate fields should skip CreateDate fields i
 ]
 `;
 
-exports[`pgDehydrateEntity — embedded fields should produce null for embedded fields when parent object is null 1`] = `
+exports[`pgDehydrateEntity — embedded fields > should produce null for embedded fields when parent object is null 1`] = `
 [
   {
     "column": "id",
@@ -60,7 +60,7 @@ exports[`pgDehydrateEntity — embedded fields should produce null for embedded 
 ]
 `;
 
-exports[`pgDehydrateEntity — embedded fields should produce null for embedded fields when parent object is undefined 1`] = `
+exports[`pgDehydrateEntity — embedded fields > should produce null for embedded fields when parent object is undefined 1`] = `
 [
   {
     "column": "id",
@@ -77,7 +77,7 @@ exports[`pgDehydrateEntity — embedded fields should produce null for embedded 
 ]
 `;
 
-exports[`pgDehydrateEntity — embedded fields should read embedded fields from nested object in insert mode 1`] = `
+exports[`pgDehydrateEntity — embedded fields > should read embedded fields from nested object in insert mode 1`] = `
 [
   {
     "column": "id",
@@ -94,7 +94,7 @@ exports[`pgDehydrateEntity — embedded fields should read embedded fields from 
 ]
 `;
 
-exports[`pgDehydrateEntity — readonly fields should exclude readonly fields in update mode 1`] = `
+exports[`pgDehydrateEntity — readonly fields > should exclude readonly fields in update mode 1`] = `
 [
   {
     "column": "name",
@@ -103,7 +103,7 @@ exports[`pgDehydrateEntity — readonly fields should exclude readonly fields in
 ]
 `;
 
-exports[`pgDehydrateEntity — readonly fields should include readonly fields in insert mode 1`] = `
+exports[`pgDehydrateEntity — readonly fields > should include readonly fields in insert mode 1`] = `
 [
   {
     "column": "id",
@@ -120,7 +120,7 @@ exports[`pgDehydrateEntity — readonly fields should include readonly fields in
 ]
 `;
 
-exports[`pgDehydrateEntity — transform functions should apply transform.to before writing the value 1`] = `
+exports[`pgDehydrateEntity — transform functions > should apply transform.to before writing the value 1`] = `
 [
   {
     "column": "id",
@@ -137,7 +137,7 @@ exports[`pgDehydrateEntity — transform functions should apply transform.to bef
 ]
 `;
 
-exports[`pgDehydrateEntity — transform functions should apply transform.to in update mode as well 1`] = `
+exports[`pgDehydrateEntity — transform functions > should apply transform.to in update mode as well 1`] = `
 [
   {
     "column": "code",
@@ -150,7 +150,7 @@ exports[`pgDehydrateEntity — transform functions should apply transform.to in 
 ]
 `;
 
-exports[`pgDehydrateEntity — transform functions should not apply transform when value is null 1`] = `
+exports[`pgDehydrateEntity — transform functions > should not apply transform when value is null 1`] = `
 [
   {
     "column": "id",

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`decodeCursor should accept valid cursor with null values 1`] = `
+exports[`decodeCursor > should accept valid cursor with null values 1`] = `
 {
   "columns": [
     "name",
@@ -17,7 +17,7 @@ exports[`decodeCursor should accept valid cursor with null values 1`] = `
 }
 `;
 
-exports[`decodeCursor should decode a valid cursor token 1`] = `
+exports[`decodeCursor > should decode a valid cursor token 1`] = `
 {
   "columns": [
     "createdAt",

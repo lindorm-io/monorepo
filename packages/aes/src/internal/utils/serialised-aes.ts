@@ -1,20 +1,20 @@
 import { B64 } from "@lindorm/b64";
-import { AES_FORMAT_VERSION } from "../constants/version";
-import {
+import { AES_FORMAT_VERSION } from "../constants/version.js";
+import type {
   ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
-} from "../../types/aes-decryption-data";
-import {
+} from "../../types/aes-decryption-data.js";
+import type {
   AesEncryptionRecord,
   SerialisedAesEncryption,
-} from "../../types/aes-encryption-data";
+} from "../../types/aes-encryption-data.js";
 import {
   buildAesHeader,
   computeAad,
   decodeAesHeader,
   encodeAesHeader,
   headerToDecryptionParams,
-} from "./aes-header";
+} from "./aes-header.js";
 
 /**
  * New serialised format (v1.0):

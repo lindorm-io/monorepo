@@ -1,4 +1,4 @@
-import { ConduitMiddleware } from "../types";
+import type { ConduitMiddleware } from "../types/index.js";
 
 export const conduitSessionMiddleware = (sessionId: string): ConduitMiddleware =>
   async function conduitSessionMiddleware(ctx, next) {

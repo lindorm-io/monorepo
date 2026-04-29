@@ -1,20 +1,21 @@
-import { CircuitBreaker } from "./CircuitBreaker";
-import { CircuitOpenError } from "../errors/CircuitOpenError";
+import { CircuitBreaker } from "./CircuitBreaker.js";
+import { CircuitOpenError } from "../errors/CircuitOpenError.js";
 import type {
   CircuitBreakerOptions,
   ErrorClassification,
   StateChangeEvent,
-} from "../types/circuit-breaker";
+} from "../types/circuit-breaker.js";
+import { afterEach, beforeEach, describe, expect, it, test, vi } from "vitest";
 
 describe("CircuitBreaker", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(1_000_000);
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000_000);
   });
 
   afterEach(() => {
-    jest.useRealTimers();
-    jest.restoreAllMocks();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   const makeBreaker = (overrides: Partial<CircuitBreakerOptions> = {}): CircuitBreaker =>
@@ -123,7 +124,7 @@ describe("CircuitBreaker", () => {
       await failN(breaker, 2);
 
       // Advance past the window so those failures decay
-      jest.advanceTimersByTime(5_001);
+      vi.advanceTimersByTime(5_001);
 
       // Record 2 more failures — total in window is now 2 (the old 2 decayed)
       await failN(breaker, 2);
@@ -164,7 +165,7 @@ describe("CircuitBreaker", () => {
       const breaker = makeBreaker();
       await failN(breaker, 3);
 
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
       const result = await breaker.execute(() => Promise.resolve("probed"));
 
@@ -176,7 +177,7 @@ describe("CircuitBreaker", () => {
       const breaker = makeBreaker();
       await failN(breaker, 3);
 
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
       await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
 
@@ -188,18 +189,18 @@ describe("CircuitBreaker", () => {
       await failN(breaker, 3);
 
       // First probe after 1_000ms (baseDelay * 2^0 = 1_000)
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
       await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
       expect(breaker.state).toBe("open");
 
       // Second probe needs 2_000ms (baseDelay * 2^1 = 2_000)
-      jest.advanceTimersByTime(1_999);
+      vi.advanceTimersByTime(1_999);
       const tooEarly = await breaker
         .execute(() => Promise.resolve("nope"))
         .catch((e) => e);
       expect(tooEarly).toBeInstanceOf(CircuitOpenError);
 
-      jest.advanceTimersByTime(1);
+      vi.advanceTimersByTime(1);
       const result = await breaker.execute(() => Promise.resolve("ok"));
       expect(result).toBe("ok");
       expect(breaker.state).toBe("closed");
@@ -216,12 +217,12 @@ describe("CircuitBreaker", () => {
 
       // Fail probes: attempt 0 (delay=1000), attempt 1 (delay=2000), attempt 2 (delay=4000)
       for (const delay of [1_000, 2_000, 4_000]) {
-        jest.advanceTimersByTime(delay);
+        vi.advanceTimersByTime(delay);
         await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
       }
 
       // Attempt 3 should also be capped at 4_000 (not 8_000)
-      jest.advanceTimersByTime(4_000);
+      vi.advanceTimersByTime(4_000);
       const result = await breaker.execute(() => Promise.resolve("capped"));
       expect(result).toBe("capped");
       expect(breaker.state).toBe("closed");
@@ -233,7 +234,7 @@ describe("CircuitBreaker", () => {
       const breaker = makeBreaker();
       await failN(breaker, 3);
 
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
       const calls: string[] = [];
 
@@ -270,7 +271,7 @@ describe("CircuitBreaker", () => {
       const breaker = makeBreaker();
       await failN(breaker, 3);
 
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
       let rejectProbe!: (e: Error) => void;
       const probeFn = () =>
@@ -278,7 +279,7 @@ describe("CircuitBreaker", () => {
           rejectProbe = rej;
         });
 
-      const waiterFn = jest.fn(() => Promise.resolve("nope"));
+      const waiterFn = vi.fn(() => Promise.resolve("nope"));
 
       const p1 = breaker.execute(probeFn);
       const p2 = breaker.execute(waiterFn);
@@ -297,10 +298,10 @@ describe("CircuitBreaker", () => {
       const breaker = makeBreaker();
       await failN(breaker, 3);
 
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
-      const fn1 = jest.fn(() => Promise.resolve("r1"));
-      const fn2 = jest.fn(() => Promise.resolve("r2"));
+      const fn1 = vi.fn(() => Promise.resolve("r1"));
+      const fn2 = vi.fn(() => Promise.resolve("r2"));
 
       const p1 = breaker.execute(fn1);
       const p2 = breaker.execute(fn2);
@@ -323,7 +324,7 @@ describe("CircuitBreaker", () => {
 
       await failN(breaker, 3);
 
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
       await breaker.execute(() => Promise.resolve("ok"));
 
       expect(events).toMatchSnapshot();
@@ -353,7 +354,7 @@ describe("CircuitBreaker", () => {
     test("should force transition from half-open to open", async () => {
       const breaker = makeBreaker();
       await failN(breaker, 3);
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
       // Start a probe to enter half-open
       let resolveProbe!: (v: string) => void;
@@ -390,14 +391,14 @@ describe("CircuitBreaker", () => {
       await failN(breaker, 3);
 
       // Fail a probe to increment halfOpenAttempts
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
       await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
 
       breaker.reset();
       breaker.open();
 
       // After open(), backoff starts fresh — baseDelay should suffice
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
       const result = await breaker.execute(() => Promise.resolve("fresh"));
       expect(result).toBe("fresh");
     });
@@ -422,7 +423,7 @@ describe("CircuitBreaker", () => {
       expect(error).toBeInstanceOf(CircuitOpenError);
 
       // After delay, probe should work
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
       const result = await breaker.execute(() => Promise.resolve("ok"));
       expect(result).toBe("ok");
     });
@@ -454,7 +455,7 @@ describe("CircuitBreaker", () => {
       const breaker = makeBreaker();
       const events = collectEvents(breaker);
       await failN(breaker, 3);
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
       // Start probe to enter half-open
       let resolveProbe!: (v: string) => void;
@@ -505,7 +506,7 @@ describe("CircuitBreaker", () => {
 
       // Fail probes to escalate backoff: attempt 0 (1s), 1 (2s), 2 (4s)
       for (const delay of [1_000, 2_000, 4_000]) {
-        jest.advanceTimersByTime(delay);
+        vi.advanceTimersByTime(delay);
         await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
       }
       // halfOpenAttempts is 3, next delay would be 8_000
@@ -515,7 +516,7 @@ describe("CircuitBreaker", () => {
       await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
       // halfOpenAttempts is now 1 (not 4), delay is 2_000 (not 8_000)
 
-      jest.advanceTimersByTime(2_000);
+      vi.advanceTimersByTime(2_000);
       const result = await breaker.execute(() => Promise.resolve("ok"));
       expect(result).toBe("ok");
     });
@@ -627,7 +628,7 @@ describe("CircuitBreaker", () => {
       const breaker = makeBreaker();
       await failN(breaker, 3);
 
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
       let resolveProbe!: (v: string) => void;
       const probeFn = () =>
@@ -635,7 +636,7 @@ describe("CircuitBreaker", () => {
           resolveProbe = r;
         });
 
-      const waiterFn = jest.fn(() => Promise.resolve("after-reset"));
+      const waiterFn = vi.fn(() => Promise.resolve("after-reset"));
 
       const p1 = breaker.execute(probeFn);
       const p2 = breaker.execute(waiterFn);
@@ -658,7 +659,7 @@ describe("CircuitBreaker", () => {
       await failN(breaker, 3);
 
       // First probe fails — halfOpenAttempts becomes 1
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
       await breaker.execute(() => Promise.reject(transientError)).catch(() => {});
 
       breaker.reset();
@@ -667,7 +668,7 @@ describe("CircuitBreaker", () => {
       await failN(breaker, 3);
 
       // Should only need baseDelay (1_000), not 2_000 (which would be attempt 1 backoff)
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
       const result = await breaker.execute(() => Promise.resolve("fresh"));
       expect(result).toBe("fresh");
     });
@@ -717,7 +718,7 @@ describe("CircuitBreaker", () => {
 
       await failN(breaker, 2);
 
-      jest.advanceTimersByTime(2_001);
+      vi.advanceTimersByTime(2_001);
 
       // Old failures decayed; need 3 fresh ones
       await failN(breaker, 2);
@@ -767,7 +768,7 @@ describe("CircuitBreaker", () => {
       expect(breaker.state).toBe("open");
 
       // open -> half-open -> closed
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
       await breaker.execute(() => Promise.resolve("ok"));
       expect(breaker.state).toBe("closed");
 
@@ -778,7 +779,7 @@ describe("CircuitBreaker", () => {
       const breaker = makeBreaker();
       await failN(breaker, 3);
 
-      jest.advanceTimersByTime(1_000);
+      vi.advanceTimersByTime(1_000);
 
       let resolveProbe!: () => void;
       const probeFn = () =>

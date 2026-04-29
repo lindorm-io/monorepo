@@ -1,6 +1,6 @@
-import { Optional } from "@lindorm/types";
-import { KryptosAttributes } from "../../types/attributes";
-import { KryptosCertificateOption } from "../../types/certificate";
+import type { Optional } from "@lindorm/types";
+import type { KryptosAttributes } from "../../types/attributes.js";
+import type { KryptosCertificateOption } from "../../types/certificate.js";
 
 type Attributes = Omit<
   KryptosAttributes,

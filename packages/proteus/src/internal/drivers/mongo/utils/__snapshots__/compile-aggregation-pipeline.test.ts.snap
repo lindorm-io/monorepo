@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileAggregationPipeline should add $match for having conditions 1`] = `
+exports[`compileAggregationPipeline > should add $match for having conditions 1`] = `
 [
   {
     "$group": {
@@ -29,7 +29,7 @@ exports[`compileAggregationPipeline should add $match for having conditions 1`] 
 ]
 `;
 
-exports[`compileAggregationPipeline should handle COUNT(*) as $sum: 1 1`] = `
+exports[`compileAggregationPipeline > should handle COUNT(*) as $sum: 1 1`] = `
 [
   {
     "$group": {
@@ -51,7 +51,7 @@ exports[`compileAggregationPipeline should handle COUNT(*) as $sum: 1 1`] = `
 ]
 `;
 
-exports[`compileAggregationPipeline should map PK fields to _id in group-by 1`] = `
+exports[`compileAggregationPipeline > should map PK fields to _id in group-by 1`] = `
 [
   {
     "$group": {
@@ -73,7 +73,7 @@ exports[`compileAggregationPipeline should map PK fields to _id in group-by 1`] 
 ]
 `;
 
-exports[`compileAggregationPipeline should omit $match stage for empty filter 1`] = `
+exports[`compileAggregationPipeline > should omit $match stage for empty filter 1`] = `
 [
   {
     "$group": {
@@ -95,7 +95,7 @@ exports[`compileAggregationPipeline should omit $match stage for empty filter 1`
 ]
 `;
 
-exports[`compileAggregationPipeline should produce $group stage with group-by fields 1`] = `
+exports[`compileAggregationPipeline > should produce $group stage with group-by fields 1`] = `
 [
   {
     "$group": {
@@ -119,7 +119,7 @@ exports[`compileAggregationPipeline should produce $group stage with group-by fi
 ]
 `;
 
-exports[`compileAggregationPipeline should produce $match stage from filter 1`] = `
+exports[`compileAggregationPipeline > should produce $match stage from filter 1`] = `
 [
   {
     "$match": {
@@ -146,7 +146,7 @@ exports[`compileAggregationPipeline should produce $match stage from filter 1`] 
 ]
 `;
 
-exports[`compileAggregationPipeline should produce $project stage exposing group-by fields from _id 1`] = `
+exports[`compileAggregationPipeline > should produce $project stage exposing group-by fields from _id 1`] = `
 {
   "$project": {
     "_id": 0,
@@ -156,7 +156,7 @@ exports[`compileAggregationPipeline should produce $project stage exposing group
 }
 `;
 
-exports[`compileAggregationPipeline should produce $sort, $skip, and $limit stages 1`] = `
+exports[`compileAggregationPipeline > should produce $sort, $skip, and $limit stages 1`] = `
 [
   {
     "$group": {
@@ -189,7 +189,7 @@ exports[`compileAggregationPipeline should produce $sort, $skip, and $limit stag
 ]
 `;
 
-exports[`compileAggregationPipeline should use null _id for no group-by fields 1`] = `
+exports[`compileAggregationPipeline > should use null _id for no group-by fields 1`] = `
 [
   {
     "$group": {
@@ -208,7 +208,7 @@ exports[`compileAggregationPipeline should use null _id for no group-by fields 1
 ]
 `;
 
-exports[`compilePredicatesToFilter should compile OR predicates 1`] = `
+exports[`compilePredicatesToFilter > should compile OR predicates 1`] = `
 {
   "$or": [
     {
@@ -221,7 +221,7 @@ exports[`compilePredicatesToFilter should compile OR predicates 1`] = `
 }
 `;
 
-exports[`compilePredicatesToFilter should compile mixed AND and OR predicates 1`] = `
+exports[`compilePredicatesToFilter > should compile mixed AND and OR predicates 1`] = `
 {
   "$or": [
     {
@@ -234,7 +234,7 @@ exports[`compilePredicatesToFilter should compile mixed AND and OR predicates 1`
 }
 `;
 
-exports[`compilePredicatesToFilter should compile multiple AND predicates 1`] = `
+exports[`compilePredicatesToFilter > should compile multiple AND predicates 1`] = `
 {
   "$and": [
     {
@@ -247,10 +247,10 @@ exports[`compilePredicatesToFilter should compile multiple AND predicates 1`] = 
 }
 `;
 
-exports[`compilePredicatesToFilter should compile single AND predicate 1`] = `
+exports[`compilePredicatesToFilter > should compile single AND predicate 1`] = `
 {
   "name": "foo",
 }
 `;
 
-exports[`compilePredicatesToFilter should return empty filter for no predicates 1`] = `{}`;
+exports[`compilePredicatesToFilter > should return empty filter for no predicates 1`] = `{}`;

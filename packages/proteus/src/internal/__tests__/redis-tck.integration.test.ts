@@ -5,19 +5,20 @@
 // interfering with other Redis test files running in parallel.
 
 import { randomBytes } from "node:crypto";
-import type Redis from "ioredis";
-import { createMockLogger } from "@lindorm/logger";
+import type { Redis } from "ioredis";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../interfaces";
-import { ProteusSource } from "../../classes/ProteusSource";
-import { getEntityMetadata } from "../entity/metadata/get-entity-metadata";
-import { resolveInheritanceHierarchies } from "../entity/metadata/resolve-inheritance";
-import { isRedisCompatibleEntity } from "../drivers/redis/utils/validate-redis-entity";
-import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
-import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora";
-import { runTck } from "../__fixtures__/tck/run-tck";
+import type { IEntity } from "../../interfaces/index.js";
+import { ProteusSource } from "../../classes/ProteusSource.js";
+import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
+import { resolveInheritanceHierarchies } from "../entity/metadata/resolve-inheritance.js";
+import { isRedisCompatibleEntity } from "../drivers/redis/utils/validate-redis-entity.js";
+import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { runTck } from "../__fixtures__/tck/run-tck.js";
+import { describe, vi } from "vitest";
 
-jest.setTimeout(60_000);
+vi.setConfig({ testTimeout: 60_000 });
 
 let source: ProteusSource;
 const namespace = `tck_${randomBytes(6).toString("hex")}`;

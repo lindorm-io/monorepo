@@ -1,4 +1,4 @@
-import type { MessageMetadata } from "../types/metadata";
+import type { MessageMetadata } from "../types/metadata.js";
 
 export const resolveDefaultTopic = (metadata: MessageMetadata): string => {
   const base = metadata.message.name;

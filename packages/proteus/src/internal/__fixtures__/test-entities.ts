@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 import { z } from "zod";
 import {
   AfterDestroy,
@@ -34,7 +35,7 @@ import {
   UpdateDateField,
   VersionField,
   VersionKeyField,
-} from "../../decorators";
+} from "../../decorators/index.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Simple entity with a UUID primary key
@@ -160,7 +161,7 @@ export class TestSoftDelete {
 // Entity with hooks and schema
 // ─────────────────────────────────────────────────────────────────────────────
 
-const testHookCallback = jest.fn();
+const testHookCallback = vi.fn();
 
 @Entity({ name: "TestWithHooks" })
 @OnCreate(testHookCallback)

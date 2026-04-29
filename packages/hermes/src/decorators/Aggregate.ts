@@ -1,5 +1,5 @@
 import { snakeCase } from "@lindorm/case";
-import { stageAggregate } from "../internal/metadata";
+import { stageAggregate } from "../internal/metadata/index.js";
 
 /**
  * Registers a class as an aggregate handler. A new instance is created for

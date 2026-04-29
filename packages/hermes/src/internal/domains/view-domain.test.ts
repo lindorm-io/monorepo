@@ -1,15 +1,15 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { IrisSource } from "@lindorm/iris";
 import type { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
 import {
   createTestProteusSource,
   createTestIrisSource,
-} from "../../__fixtures__/create-test-sources";
+} from "../../__fixtures__/create-test-sources.js";
 import {
   TestAggregate,
   TestForgettableAggregate,
-} from "../../__fixtures__/modules/aggregates";
+} from "../../__fixtures__/modules/aggregates/index.js";
 import {
   TestCommandCreate,
   TestCommandDestroy,
@@ -20,7 +20,7 @@ import {
   TestCommandSetState,
   TestCommandThrows,
   TestCommandTimeout,
-} from "../../__fixtures__/modules/commands";
+} from "../../__fixtures__/modules/commands/index.js";
 import {
   TestEventCreate,
   TestEventDestroy,
@@ -31,11 +31,11 @@ import {
   TestEventSetState,
   TestEventThrows,
   TestEventTimeout,
-} from "../../__fixtures__/modules/events";
-import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
-import { TestViewQuery } from "../../__fixtures__/modules/queries";
-import { TestSaga } from "../../__fixtures__/modules/sagas";
-import { TestView, TestViewEntity } from "../../__fixtures__/modules/views";
+} from "../../__fixtures__/modules/events/index.js";
+import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts/index.js";
+import { TestViewQuery } from "../../__fixtures__/modules/queries/index.js";
+import { TestSaga } from "../../__fixtures__/modules/sagas/index.js";
+import { TestView, TestViewEntity } from "../../__fixtures__/modules/views/index.js";
 import {
   ConcurrencyError,
   DomainError,
@@ -43,24 +43,36 @@ import {
   ViewAlreadyCreatedError,
   ViewDestroyedError,
   ViewNotCreatedError,
-} from "../../errors";
+} from "../../errors/index.js";
 import {
   EventRecord,
   EncryptionRecord,
   CausationRecord,
   ChecksumRecord,
   SagaRecord,
-} from "../entities";
+} from "../entities/index.js";
 import {
   HermesCommandMessage,
   HermesEventMessage,
   HermesErrorMessage,
   HermesTimeoutMessage,
-} from "../messages";
-import { HermesScanner } from "../registry/HermesScanner";
-import { HermesRegistry } from "../registry/hermes-registry";
-import type { RegisteredView, HandlerRegistration } from "../registry/types";
-import { ViewDomain } from "./view-domain";
+} from "../messages/index.js";
+import { HermesScanner } from "../registry/HermesScanner.js";
+import { HermesRegistry } from "../registry/hermes-registry.js";
+import type { RegisteredView, HandlerRegistration } from "../registry/types.js";
+import { ViewDomain } from "./view-domain.js";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
 describe("ViewDomain", () => {
   const logger = createMockLogger();
@@ -70,14 +82,14 @@ describe("ViewDomain", () => {
   let registry: HermesRegistry;
   let domain: ViewDomain;
   let testView: RegisteredView;
-  let commandPublishSpy: jest.SpyInstance;
-  let errorPublishSpy: jest.SpyInstance;
+  let commandPublishSpy: MockInstance;
+  let errorPublishSpy: MockInstance;
 
   beforeAll(async () => {
     proteus = createTestProteusSource();
     iris = createTestIrisSource();
 
-    const scanned = HermesScanner.scan([
+    const scanned = await HermesScanner.scan([
       TestCommandCreate,
       TestCommandDestroy,
       TestCommandDestroyNext,
@@ -139,8 +151,8 @@ describe("ViewDomain", () => {
     const commandQueue = iris.workerQueue(HermesCommandMessage);
     const errorQueue = iris.workerQueue(HermesErrorMessage);
 
-    commandPublishSpy = jest.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
-    errorPublishSpy = jest.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
+    commandPublishSpy = vi.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
+    errorPublishSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
 
     domain = new ViewDomain({
       registry,
@@ -218,7 +230,7 @@ describe("ViewDomain", () => {
   });
 
   it("should subscribe to event topics using aggregate namespace and name, not view namespace and name", async () => {
-    const subscribeSpy = jest
+    const subscribeSpy = vi
       .spyOn((domain as any).eventBus, "subscribe")
       .mockResolvedValue(undefined);
 
@@ -722,8 +734,8 @@ describe("ViewDomain", () => {
       const commandQueue = iris.workerQueue(HermesCommandMessage);
       const errorQueue = iris.workerQueue(HermesErrorMessage);
 
-      jest.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
-      jest.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
+      vi.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
+      vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
 
       const viewSources = new Map<string, typeof proteus>();
       viewSources.set("secondary", secondSource);
@@ -752,7 +764,7 @@ describe("ViewDomain", () => {
   // -- EventEmitter cleanup (H1) --
 
   it("should remove listener via off()", () => {
-    const listener = jest.fn();
+    const listener = vi.fn();
     domain.on("view", listener);
     domain.off("view", listener);
 
@@ -767,8 +779,8 @@ describe("ViewDomain", () => {
   });
 
   it("should remove all listeners via removeAllListeners()", () => {
-    const listener1 = jest.fn();
-    const listener2 = jest.fn();
+    const listener1 = vi.fn();
+    const listener2 = vi.fn();
     domain.on("view", listener1);
     domain.on("view.hermes", listener2);
 
@@ -996,7 +1008,7 @@ describe("ViewDomain", () => {
     await handleEvent(createEvent, testView, createHandler);
 
     // Mock proteus.transaction to throw during merge event save
-    jest.spyOn(proteus, "transaction").mockRejectedValueOnce(new Error("save failed"));
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(new Error("save failed"));
 
     const mergeHandler = findEventHandler(testView, "test_event_merge_state");
     const mergeEvent = createEventMsg(
@@ -1017,7 +1029,7 @@ describe("ViewDomain", () => {
     expect(entity!.create).toBe("original");
     expect(entity!.mergeState).toBe("");
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   // -- H: publishError is called for permanent DomainError --
@@ -1060,8 +1072,8 @@ describe("ViewDomain", () => {
       const commandQueue = iris.workerQueue(HermesCommandMessage);
       const errorQueue = iris.workerQueue(HermesErrorMessage);
 
-      const cmdSpy = jest.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
-      const errSpy = jest.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
+      const cmdSpy = vi.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
+      const errSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
 
       const viewSources = new Map<string, typeof proteus>();
       viewSources.set("secondary", secondSource);
@@ -1132,8 +1144,8 @@ describe("ViewDomain", () => {
       const commandQueue = iris.workerQueue(HermesCommandMessage);
       const errorQueue = iris.workerQueue(HermesErrorMessage);
 
-      const cmdSpy = jest.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
-      const errSpy = jest.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
+      const cmdSpy = vi.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
+      const errSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
 
       const viewSources = new Map<string, typeof proteus>();
       viewSources.set("secondary", secondSource);
@@ -1157,9 +1169,9 @@ describe("ViewDomain", () => {
       const createHandler = findEventHandler(testView, "test_event_create");
 
       // Make the transaction on the view source fail
-      jest
-        .spyOn(secondSource, "transaction")
-        .mockRejectedValueOnce(new Error("cross-source save failed"));
+      vi.spyOn(secondSource, "transaction").mockRejectedValueOnce(
+        new Error("cross-source save failed"),
+      );
 
       const event = createEventMsg(
         "test_event_create",
@@ -1184,7 +1196,7 @@ describe("ViewDomain", () => {
       expect(entity).toBeNull();
 
       (testView as any).driverType = origDriverType;
-      (secondSource.transaction as jest.Mock).mockRestore();
+      (secondSource.transaction as Mock).mockRestore();
       cmdSpy.mockRestore();
       errSpy.mockRestore();
     } finally {
@@ -1203,8 +1215,8 @@ describe("ViewDomain", () => {
       const commandQueue = iris.workerQueue(HermesCommandMessage);
       const errorQueue = iris.workerQueue(HermesErrorMessage);
 
-      const cmdSpy = jest.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
-      const errSpy = jest.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
+      const cmdSpy = vi.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
+      const errSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
 
       const viewSources = new Map<string, typeof proteus>();
       viewSources.set("secondary", secondSource);
@@ -1262,8 +1274,8 @@ describe("ViewDomain", () => {
     const localCmdQueue = iris.workerQueue(HermesCommandMessage);
     const localErrQueue = iris.workerQueue(HermesErrorMessage);
 
-    jest.spyOn(localCmdQueue, "publish").mockResolvedValue(undefined);
-    jest.spyOn(localErrQueue, "publish").mockResolvedValue(undefined);
+    vi.spyOn(localCmdQueue, "publish").mockResolvedValue(undefined);
+    vi.spyOn(localErrQueue, "publish").mockResolvedValue(undefined);
 
     const zeroDomain = new ViewDomain({
       registry,
@@ -1312,9 +1324,9 @@ describe("ViewDomain", () => {
     await handleEvent(createEvent, testView, createHandler);
 
     // Mock transaction to throw ConcurrencyError during update
-    jest
-      .spyOn(proteus, "transaction")
-      .mockRejectedValueOnce(new ConcurrencyError("view concurrency conflict"));
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(
+      new ConcurrencyError("view concurrency conflict"),
+    );
 
     const mergeHandler = findEventHandler(testView, "test_event_merge_state");
     const mergeEvent = createEventMsg(
@@ -1327,7 +1339,7 @@ describe("ViewDomain", () => {
       ConcurrencyError,
     );
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   // -- MEDIUM: ViewNotCreatedError publishes to error queue --
@@ -1658,11 +1670,9 @@ describe("ViewDomain", () => {
 
     // Import and throw OptimisticLockError from the transaction
     const { OptimisticLockError } = await import("@lindorm/proteus");
-    jest
-      .spyOn(proteus, "transaction")
-      .mockRejectedValueOnce(
-        new OptimisticLockError("TestViewEntity", { id: aggregateId }),
-      );
+    vi.spyOn(proteus, "transaction").mockRejectedValueOnce(
+      new OptimisticLockError("TestViewEntity", { id: aggregateId }),
+    );
 
     const mergeHandler = findEventHandler(testView, "test_event_merge_state");
     const mergeEvent = createEventMsg(
@@ -1675,7 +1685,7 @@ describe("ViewDomain", () => {
       ConcurrencyError,
     );
 
-    (proteus.transaction as jest.Mock).mockRestore();
+    (proteus.transaction as Mock).mockRestore();
   });
 
   it("should not invoke any error handler when no handler matches the error type", async () => {

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MemoryCursor async iterator iterates over all items in order 1`] = `
+exports[`MemoryCursor > async iterator > iterates over all items in order 1`] = `
 [
   {
     "id": 1,
@@ -21,7 +21,7 @@ exports[`MemoryCursor async iterator iterates over all items in order 1`] = `
 ]
 `;
 
-exports[`MemoryCursor next() returns items in order 1`] = `
+exports[`MemoryCursor > next() > returns items in order 1`] = `
 [
   {
     "id": 1,
@@ -38,7 +38,7 @@ exports[`MemoryCursor next() returns items in order 1`] = `
 ]
 `;
 
-exports[`MemoryCursor nextBatch() advances position across calls 1`] = `
+exports[`MemoryCursor > nextBatch() > advances position across calls 1`] = `
 {
   "first": [
     {
@@ -73,7 +73,7 @@ exports[`MemoryCursor nextBatch() advances position across calls 1`] = `
 }
 `;
 
-exports[`MemoryCursor nextBatch() returns a batch of the given size 1`] = `
+exports[`MemoryCursor > nextBatch() > returns a batch of the given size 1`] = `
 [
   {
     "id": 1,
@@ -90,7 +90,7 @@ exports[`MemoryCursor nextBatch() returns a batch of the given size 1`] = `
 ]
 `;
 
-exports[`MemoryCursor nextBatch() returns remaining items when fewer than batch size remain 1`] = `
+exports[`MemoryCursor > nextBatch() > returns remaining items when fewer than batch size remain 1`] = `
 [
   {
     "id": 1,

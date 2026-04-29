@@ -1,16 +1,17 @@
-import type { IMessage } from "../../../interfaces";
-import { Compressed } from "../../../decorators/Compressed";
-import { Field } from "../../../decorators/Field";
-import { Generated } from "../../../decorators/Generated";
-import { Header } from "../../../decorators/Header";
-import { Message } from "../../../decorators/Message";
-import { Nullable } from "../../../decorators/Nullable";
-import { Transform } from "../../../decorators/Transform";
-import { MessageManager } from "../classes/MessageManager";
-import { getMessageMetadata } from "../metadata/get-message-metadata";
-import { clearRegistry } from "../metadata/registry";
-import { prepareInbound } from "./prepare-inbound";
-import { prepareOutbound } from "./prepare-outbound";
+import type { IMessage } from "../../../interfaces/index.js";
+import { Compressed } from "../../../decorators/Compressed.js";
+import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { Header } from "../../../decorators/Header.js";
+import { Message } from "../../../decorators/Message.js";
+import { Nullable } from "../../../decorators/Nullable.js";
+import { Transform } from "../../../decorators/Transform.js";
+import { MessageManager } from "../classes/MessageManager.js";
+import { getMessageMetadata } from "../metadata/get-message-metadata.js";
+import { clearRegistry } from "../metadata/registry.js";
+import { prepareInbound } from "./prepare-inbound.js";
+import { prepareOutbound } from "./prepare-outbound.js";
+import { beforeEach, describe, expect, it } from "vitest";
 
 beforeEach(() => {
   clearRegistry();

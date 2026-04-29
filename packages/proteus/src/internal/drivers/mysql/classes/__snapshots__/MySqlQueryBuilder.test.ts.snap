@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MySqlQueryBuilder getMany should execute query and hydrate results 1`] = `
+exports[`MySqlQueryBuilder > getMany > should execute query and hydrate results 1`] = `
 [
   target {
     "age": 25,
@@ -17,7 +17,7 @@ exports[`MySqlQueryBuilder getMany should execute query and hydrate results 1`] 
 ]
 `;
 
-exports[`MySqlQueryBuilder getOne should return single entity 1`] = `
+exports[`MySqlQueryBuilder > getOne > should return single entity 1`] = `
 target {
   "age": 25,
   "email": null,
@@ -26,7 +26,7 @@ target {
 }
 `;
 
-exports[`MySqlQueryBuilder getRawRows should return raw query results without hydration 1`] = `
+exports[`MySqlQueryBuilder > getRawRows > should return raw query results without hydration 1`] = `
 [
   {
     "t0_age": 25,
@@ -37,7 +37,7 @@ exports[`MySqlQueryBuilder getRawRows should return raw query results without hy
 ]
 `;
 
-exports[`MySqlQueryBuilder set operations except should compile EXCEPT set operation 1`] = `
+exports[`MySqlQueryBuilder > set operations > except should compile EXCEPT set operation 1`] = `
 {
   "aliasMap": [
     {
@@ -185,7 +185,7 @@ exports[`MySqlQueryBuilder set operations except should compile EXCEPT set opera
 }
 `;
 
-exports[`MySqlQueryBuilder set operations intersect should compile INTERSECT set operation 1`] = `
+exports[`MySqlQueryBuilder > set operations > intersect should compile INTERSECT set operation 1`] = `
 {
   "aliasMap": [
     {
@@ -333,7 +333,7 @@ exports[`MySqlQueryBuilder set operations intersect should compile INTERSECT set
 }
 `;
 
-exports[`MySqlQueryBuilder set operations union should compile set operation 1`] = `
+exports[`MySqlQueryBuilder > set operations > union should compile set operation 1`] = `
 {
   "aliasMap": [
     {
@@ -481,7 +481,7 @@ exports[`MySqlQueryBuilder set operations union should compile set operation 1`]
 }
 `;
 
-exports[`MySqlQueryBuilder toSQL should return compiled query 1`] = `
+exports[`MySqlQueryBuilder > toSQL > should return compiled query 1`] = `
 {
   "aliasMap": [
     {
@@ -628,7 +628,7 @@ exports[`MySqlQueryBuilder toSQL should return compiled query 1`] = `
 }
 `;
 
-exports[`MySqlQueryBuilder whereInQuery / whereNotInQuery whereInQuery should compile IN (subquery) 1`] = `
+exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereInQuery should compile IN (subquery) 1`] = `
 {
   "aliasMap": [
     {
@@ -775,7 +775,7 @@ exports[`MySqlQueryBuilder whereInQuery / whereNotInQuery whereInQuery should co
 }
 `;
 
-exports[`MySqlQueryBuilder whereInQuery / whereNotInQuery whereNotInQuery should compile NOT IN (subquery) 1`] = `
+exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereNotInQuery should compile NOT IN (subquery) 1`] = `
 {
   "aliasMap": [
     {

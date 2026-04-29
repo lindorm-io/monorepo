@@ -1,7 +1,7 @@
 import { randomBytes } from "crypto";
 import { promisify } from "util";
-import { KryptosAlgorithm, KryptosEncryption } from "../../../types";
-import { getOctSize } from "./get-size";
+import type { KryptosAlgorithm, KryptosEncryption } from "../../../types/index.js";
+import { getOctSize } from "./get-size.js";
 
 const randomBytesAsync = promisify(randomBytes);
 

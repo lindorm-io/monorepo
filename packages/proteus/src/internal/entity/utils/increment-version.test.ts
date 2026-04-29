@@ -1,6 +1,7 @@
-import { makeField } from "../../__fixtures__/make-field";
-import { incrementVersion } from "./increment-version";
-import type { EntityMetadata, MetaField } from "../types/metadata";
+import { makeField } from "../../__fixtures__/make-field.js";
+import { incrementVersion } from "./increment-version.js";
+import type { EntityMetadata, MetaField } from "../types/metadata.js";
+import { describe, expect, test } from "vitest";
 
 const makeVersionField = (key = "version"): MetaField<"Version"> =>
   makeField(key, {

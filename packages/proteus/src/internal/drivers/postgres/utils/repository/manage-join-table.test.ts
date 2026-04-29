@@ -1,10 +1,11 @@
-import type { MetaRelation } from "../../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { deleteJoinTableRows, syncJoinTableRows } from "./manage-join-table";
+import type { MetaRelation } from "../../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { deleteJoinTableRows, syncJoinTableRows } from "./manage-join-table.js";
+import { describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock the external utilities before importing the module under test
-jest.mock("../../../../entity/utils/get-join-name", () => ({
-  getJoinName: jest.fn(() => ({
+vi.mock("../../../../entity/utils/get-join-name.js", async () => ({
+  getJoinName: vi.fn(() => ({
     namespace: "public",
     name: "test_join_table",
     type: "join",
@@ -12,9 +13,9 @@ jest.mock("../../../../entity/utils/get-join-name", () => ({
   })),
 }));
 
-jest.mock("../quote-identifier", () => ({
-  quoteIdentifier: jest.fn((name: string) => `"${name}"`),
-  quoteQualifiedName: jest.fn((namespace: string | null, name: string) =>
+vi.mock("../quote-identifier.js", () => ({
+  quoteIdentifier: vi.fn((name: string) => `"${name}"`),
+  quoteQualifiedName: vi.fn((namespace: string | null, name: string) =>
     namespace ? `"${namespace}"."${name}"` : `"${name}"`,
   ),
 }));
@@ -28,7 +29,7 @@ const createMockClient = (
 } => {
   const queries: Array<{ sql: string; params?: Array<unknown> }> = [];
   const client = {
-    query: jest.fn(async (sql: string, params?: Array<unknown>) => {
+    query: vi.fn(async (sql: string, params?: Array<unknown>) => {
       queries.push({ sql, params });
       const rows = sql.trimStart().startsWith("SELECT") ? initialRows : [];
       return {

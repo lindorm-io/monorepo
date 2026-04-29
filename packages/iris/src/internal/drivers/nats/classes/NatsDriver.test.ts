@@ -1,80 +1,88 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import type { IrisConnectionState } from "../../../../types";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { NatsSharedState } from "../types/nats-types";
-import { NatsDriver } from "./NatsDriver";
-import { NatsPublisher } from "./NatsPublisher";
-import { NatsMessageBus } from "./NatsMessageBus";
-import { NatsWorkerQueue } from "./NatsWorkerQueue";
-import { NatsStreamProcessor } from "./NatsStreamProcessor";
-import { NatsRpcClient } from "./NatsRpcClient";
-import { NatsRpcServer } from "./NatsRpcServer";
+import { connect as _connect } from "nats";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import type { IrisConnectionState } from "../../../../types/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { NatsDriver } from "./NatsDriver.js";
+import { NatsPublisher } from "./NatsPublisher.js";
+import { NatsMessageBus } from "./NatsMessageBus.js";
+import { NatsWorkerQueue } from "./NatsWorkerQueue.js";
+import { NatsStreamProcessor } from "./NatsStreamProcessor.js";
+import { NatsRpcClient } from "./NatsRpcClient.js";
+import { NatsRpcServer } from "./NatsRpcServer.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock nats module ---
 
 let statusIteratorDone = false;
 let statusIteratorValues: Array<{ type: string; data?: unknown }> = [];
 
-const mockNc = {
-  jetstream: jest.fn(),
-  jetstreamManager: jest.fn(),
-  publish: jest.fn().mockResolvedValue(undefined),
-  subscribe: jest.fn(),
-  request: jest.fn(),
-  flush: jest.fn().mockResolvedValue(undefined),
-  close: jest.fn().mockResolvedValue(undefined),
-  drain: jest.fn().mockResolvedValue(undefined),
-  status: jest.fn().mockReturnValue(
-    (async function* () {
-      while (!statusIteratorDone) {
-        if (statusIteratorValues.length > 0) {
-          yield statusIteratorValues.shift()!;
-        } else {
-          // Wait briefly then exit to avoid infinite loop in tests
-          await new Promise<void>((r) => setTimeout(r, 10));
-          return;
+// Hoisted so vi.mock() factory can reference these at module-eval time.
+const { mockNc, mockJs, mockJsm, mockHeaders } = vi.hoisted(() => {
+  const mockNc = {
+    jetstream: vi.fn(),
+    jetstreamManager: vi.fn(),
+    publish: vi.fn().mockResolvedValue(undefined),
+    subscribe: vi.fn(),
+    request: vi.fn(),
+    flush: vi.fn().mockResolvedValue(undefined),
+    close: vi.fn().mockResolvedValue(undefined),
+    drain: vi.fn().mockResolvedValue(undefined),
+    status: vi.fn().mockReturnValue(
+      (async function* () {
+        while (!statusIteratorDone) {
+          if (statusIteratorValues.length > 0) {
+            yield statusIteratorValues.shift()!;
+          } else {
+            await new Promise<void>((r) => setTimeout(r, 10));
+            return;
+          }
         }
-      }
-    })(),
-  ),
-  isClosed: jest.fn().mockReturnValue(false),
-};
+      })(),
+    ),
+    isClosed: vi.fn().mockReturnValue(false),
+  };
 
-const mockJs = {
-  publish: jest.fn().mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
-  consumers: { get: jest.fn() },
-};
+  const mockJs = {
+    publish: vi.fn().mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
+    consumers: { get: vi.fn() },
+  };
 
-const mockJsm = {
-  streams: {
-    info: jest.fn().mockResolvedValue({}),
-    add: jest.fn().mockResolvedValue({}),
-    purge: jest.fn().mockResolvedValue({}),
-    delete: jest.fn().mockResolvedValue({}),
-  },
-  consumers: {
-    add: jest.fn().mockResolvedValue({}),
-    delete: jest.fn().mockResolvedValue(true),
-  },
-};
+  const mockJsm = {
+    streams: {
+      info: vi.fn().mockResolvedValue({}),
+      add: vi.fn().mockResolvedValue({}),
+      purge: vi.fn().mockResolvedValue({}),
+      delete: vi.fn().mockResolvedValue({}),
+    },
+    consumers: {
+      add: vi.fn().mockResolvedValue({}),
+      delete: vi.fn().mockResolvedValue(true),
+    },
+  };
 
-const mockHeaders = jest.fn().mockReturnValue({
-  get: jest.fn(),
-  set: jest.fn(),
-  has: jest.fn(),
-  values: jest.fn(),
+  const mockHeaders = vi.fn().mockReturnValue({
+    get: vi.fn(),
+    set: vi.fn(),
+    has: vi.fn(),
+    values: vi.fn(),
+  });
+
+  mockNc.jetstream.mockReturnValue(mockJs);
+  mockNc.jetstreamManager.mockResolvedValue(mockJsm);
+
+  return { mockNc, mockJs, mockJsm, mockHeaders };
 });
 
-mockNc.jetstream.mockReturnValue(mockJs);
-mockNc.jetstreamManager.mockResolvedValue(mockJsm);
-
-jest.mock("nats", () => ({
+vi.mock("nats", async () => ({
   __esModule: true,
-  connect: jest.fn().mockResolvedValue(mockNc),
+  connect: vi.fn().mockResolvedValue(mockNc),
   headers: mockHeaders,
 }));
+
+const connect = _connect as unknown as Mock;
 
 // --- Test message classes ---
 
@@ -96,13 +104,13 @@ class TckNatsDriverRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createDriver = (subscribers?: Array<IMessageSubscriber>) => {
@@ -119,7 +127,7 @@ const createDriver = (subscribers?: Array<IMessageSubscriber>) => {
 describe("NatsDriver", () => {
   beforeEach(() => {
     clearRegistry();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     statusIteratorDone = false;
     statusIteratorValues = [];
 
@@ -207,7 +215,6 @@ describe("NatsDriver", () => {
     });
 
     it("should set connection state to disconnected when connect fails", async () => {
-      const { connect } = jest.requireMock("nats") as any;
       connect.mockRejectedValueOnce(new Error("connection refused"));
 
       const driver = createDriver();
@@ -242,7 +249,7 @@ describe("NatsDriver", () => {
       const driver = createDriver();
       await driver.connect();
 
-      const sub: IMessageSubscriber = { beforePublish: jest.fn() };
+      const sub: IMessageSubscriber = { beforePublish: vi.fn() };
       const cloned = driver.cloneWithGetters(() => [sub]) as NatsDriver;
       expect((cloned as any).getSubscribers()).toEqual([sub]);
     });

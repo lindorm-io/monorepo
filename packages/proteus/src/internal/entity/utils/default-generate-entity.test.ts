@@ -1,9 +1,10 @@
-import { defaultGenerateEntity } from "./default-generate-entity";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { Generated } from "../../../decorators/Generated";
-import { PrimaryKey } from "../../../decorators/PrimaryKey";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { defaultGenerateEntity } from "./default-generate-entity.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GenerateUuidEntity" })
 class GenerateUuidEntity {

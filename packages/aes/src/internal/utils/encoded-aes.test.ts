@@ -1,6 +1,7 @@
-import { KryptosEncAlgorithm, KryptosKit } from "@lindorm/kryptos";
-import { createEncodedAesString, parseEncodedAesString } from "./encoded-aes";
-import { encryptAes } from "./encryption";
+import { type KryptosEncAlgorithm, KryptosKit } from "@lindorm/kryptos";
+import { createEncodedAesString, parseEncodedAesString } from "./encoded-aes.js";
+import { encryptAes } from "./encryption.js";
+import { describe, expect, test } from "vitest";
 
 describe("encoded-aes", () => {
   test("should create and parse an encoded string with CEK (key-wrap mode)", () => {

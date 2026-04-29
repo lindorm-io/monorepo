@@ -1,16 +1,16 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions } from "../../../../types";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions } from "../../../../types/index.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import {
   preparePublishBatch,
   type PublishDriverLike,
-} from "../../../utils/prepare-publish-batch";
-import { buildAmqpHeaders } from "./build-amqp-headers";
-import { publishToExchange } from "./publish-to-exchange";
-import { resolveQueueName } from "./resolve-queue-name";
-import { sanitizeRoutingKey } from "./sanitize-routing-key";
+} from "../../../utils/prepare-publish-batch.js";
+import { buildAmqpHeaders } from "./build-amqp-headers.js";
+import { publishToExchange } from "./publish-to-exchange.js";
+import { resolveQueueName } from "./resolve-queue-name.js";
+import { sanitizeRoutingKey } from "./sanitize-routing-key.js";
 
 export type RabbitPublishDriver<M extends IMessage> = PublishDriverLike<M>;
 

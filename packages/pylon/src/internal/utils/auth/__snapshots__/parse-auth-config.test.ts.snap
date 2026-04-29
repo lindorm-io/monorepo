@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parseAuthConfig should merge defaults with custom router options 1`] = `
+exports[`parseAuthConfig > should merge defaults with custom router options 1`] = `
 {
   "clientId": "test-client-id",
   "clientSecret": "test-client-secret",
@@ -43,7 +43,7 @@ exports[`parseAuthConfig should merge defaults with custom router options 1`] = 
 }
 `;
 
-exports[`parseAuthConfig should merge defaults with router options 1`] = `
+exports[`parseAuthConfig > should merge defaults with router options 1`] = `
 {
   "clientId": "test-client-id",
   "clientSecret": "test-client-secret",
@@ -84,7 +84,7 @@ exports[`parseAuthConfig should merge defaults with router options 1`] = `
 }
 `;
 
-exports[`parseAuthConfig should merge refresh defaults when refresh is partially specified 1`] = `
+exports[`parseAuthConfig > should merge refresh defaults when refresh is partially specified 1`] = `
 {
   "clientId": "test-client-id",
   "clientSecret": "test-client-secret",
@@ -98,7 +98,7 @@ exports[`parseAuthConfig should merge refresh defaults when refresh is partially
 }
 `;
 
-exports[`parseAuthConfig should return config with null router when no router options 1`] = `
+exports[`parseAuthConfig > should return config with null router when no router options 1`] = `
 {
   "clientId": "test-client-id",
   "clientSecret": "test-client-secret",

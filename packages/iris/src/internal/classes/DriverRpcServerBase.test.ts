@@ -1,17 +1,18 @@
 import type { Constructor } from "@lindorm/types";
-import { Default } from "../../decorators/Default";
-import { Field } from "../../decorators/Field";
-import { IdentifierField } from "../../decorators/IdentifierField";
-import { Message } from "../../decorators/Message";
-import { IrisDriverError } from "../../errors/IrisDriverError";
-import type { IMessage } from "../../interfaces";
-import { clearRegistry } from "../message/metadata/registry";
-import { prepareOutbound } from "../message/utils/prepare-outbound";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
+import { Default } from "../../decorators/Default.js";
+import { Field } from "../../decorators/Field.js";
+import { IdentifierField } from "../../decorators/IdentifierField.js";
+import { Message } from "../../decorators/Message.js";
+import { IrisDriverError } from "../../errors/IrisDriverError.js";
+import type { IMessage } from "../../interfaces/index.js";
+import { clearRegistry } from "../message/metadata/registry.js";
+import { prepareOutbound } from "../message/utils/prepare-outbound.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
 import {
   DriverRpcServerBase,
   type DriverRpcServerBaseOptions,
-} from "./DriverRpcServerBase";
+} from "./DriverRpcServerBase.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -43,8 +44,8 @@ class TestRpcServer<
   Req extends IMessage,
   Res extends IMessage,
 > extends DriverRpcServerBase<Req, Res> {
-  public doServeSpy = jest.fn();
-  public doUnserveSpy = jest.fn();
+  public doServeSpy = vi.fn();
+  public doUnserveSpy = vi.fn();
 
   public constructor(options: DriverRpcServerBaseOptions<Req, Res>) {
     super(options, "TestRpcServer");
@@ -102,13 +103,13 @@ class TestRpcServer<
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createServer = (): TestRpcServer<RpcServerTestRequest, RpcServerTestResponse> =>
@@ -129,7 +130,7 @@ describe("DriverRpcServerBase", () => {
   describe("serve", () => {
     it("should call doServe with queue, topic, and handler", async () => {
       const server = createServer();
-      const handler = jest.fn();
+      const handler = vi.fn();
 
       await server.serve(handler);
 
@@ -144,7 +145,7 @@ describe("DriverRpcServerBase", () => {
     it("should track the queue in registeredQueues", async () => {
       const server = createServer();
 
-      await server.serve(jest.fn());
+      await server.serve(vi.fn());
 
       expect(server.getRegisteredQueues().has("RpcServerTestRequest")).toBe(true);
       expect(server.getRegisteredQueues().size).toBe(1);
@@ -152,7 +153,7 @@ describe("DriverRpcServerBase", () => {
 
     it("should use custom queue name when provided", async () => {
       const server = createServer();
-      const handler = jest.fn();
+      const handler = vi.fn();
 
       await server.serve(handler, { queue: "custom-queue" });
 
@@ -167,19 +168,17 @@ describe("DriverRpcServerBase", () => {
     it("should throw IrisDriverError when registering the same queue twice", async () => {
       const server = createServer();
 
-      await server.serve(jest.fn());
+      await server.serve(vi.fn());
 
-      await expect(server.serve(jest.fn())).rejects.toThrow(IrisDriverError);
-      await expect(server.serve(jest.fn())).rejects.toThrow(
-        /already registered for queue/,
-      );
+      await expect(server.serve(vi.fn())).rejects.toThrow(IrisDriverError);
+      await expect(server.serve(vi.fn())).rejects.toThrow(/already registered for queue/);
     });
 
     it("should allow different queues on the same server", async () => {
       const server = createServer();
 
-      await server.serve(jest.fn(), { queue: "queue-a" });
-      await server.serve(jest.fn(), { queue: "queue-b" });
+      await server.serve(vi.fn(), { queue: "queue-a" });
+      await server.serve(vi.fn(), { queue: "queue-b" });
 
       expect(server.getRegisteredQueues().size).toBe(2);
     });
@@ -207,7 +206,7 @@ describe("DriverRpcServerBase", () => {
 
       // Handler that creates a proper response
       const responseManager = (server as any).responseManager;
-      const handler = jest.fn(async (_request: RpcServerTestRequest) => {
+      const handler = vi.fn(async (_request: RpcServerTestRequest) => {
         return responseManager.create({ answer: "world", code: 200 });
       });
 
@@ -235,7 +234,7 @@ describe("DriverRpcServerBase", () => {
       const outbound = await prepareOutbound(req, requestMetadata);
 
       const responseManager = (server as any).responseManager;
-      const handler = jest.fn(async (request: RpcServerTestRequest) => {
+      const handler = vi.fn(async (request: RpcServerTestRequest) => {
         expect(request.query).toBe("specific-query");
         return responseManager.create({ answer: "reply" });
       });
@@ -260,7 +259,7 @@ describe("DriverRpcServerBase", () => {
       const req = requestManager.create({ query: "fail" });
       const outbound = await prepareOutbound(req, requestMetadata);
 
-      const handler = jest.fn(async () => {
+      const handler = vi.fn(async () => {
         throw new Error("Handler failed badly");
       });
 
@@ -277,7 +276,7 @@ describe("DriverRpcServerBase", () => {
     it("should throw on invalid request payload", async () => {
       const server = createServer();
 
-      const handler = jest.fn();
+      const handler = vi.fn();
 
       await expect(
         server.testProcessRequest(
@@ -339,7 +338,7 @@ describe("DriverRpcServerBase", () => {
   describe("unserve", () => {
     it("should call doUnserve and remove the queue from registeredQueues", async () => {
       const server = createServer();
-      await server.serve(jest.fn());
+      await server.serve(vi.fn());
 
       expect(server.getRegisteredQueues().size).toBe(1);
 
@@ -351,7 +350,7 @@ describe("DriverRpcServerBase", () => {
 
     it("should unserve a specific queue by name", async () => {
       const server = createServer();
-      await server.serve(jest.fn(), { queue: "custom-q" });
+      await server.serve(vi.fn(), { queue: "custom-q" });
 
       await server.unserve({ queue: "custom-q" });
 
@@ -363,9 +362,9 @@ describe("DriverRpcServerBase", () => {
   describe("unserveAll", () => {
     it("should unserve all registered queues", async () => {
       const server = createServer();
-      await server.serve(jest.fn(), { queue: "q1" });
-      await server.serve(jest.fn(), { queue: "q2" });
-      await server.serve(jest.fn(), { queue: "q3" });
+      await server.serve(vi.fn(), { queue: "q1" });
+      await server.serve(vi.fn(), { queue: "q2" });
+      await server.serve(vi.fn(), { queue: "q3" });
 
       expect(server.getRegisteredQueues().size).toBe(3);
 

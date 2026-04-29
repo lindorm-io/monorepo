@@ -1,13 +1,13 @@
 import type { ILogger } from "@lindorm/logger";
-import { SqliteSyncError } from "../../errors/SqliteSyncError";
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
+import { SqliteSyncError } from "../../errors/SqliteSyncError.js";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
 import type {
   SqliteSyncOperation,
   SqliteSyncOptions,
   SqliteSyncPlan,
   SqliteSyncResult,
-} from "../../types/sync-plan";
-import { quoteIdentifier } from "../quote-identifier";
+} from "../../types/sync-plan.js";
+import { quoteIdentifier } from "../quote-identifier.js";
 
 export class SyncPlanExecutor {
   private readonly logger: ILogger | undefined;

@@ -1,17 +1,18 @@
+import { describe, expect, it, vi } from "vitest";
 import type {
   LoadedMigration,
   MigrationInterface,
   MigrationRecord,
-} from "../../types/migration";
-import { resolvePending } from "./resolve-pending";
+} from "../../types/migration.js";
+import { resolvePending } from "./resolve-pending.js";
 
 const makeMigration = (
   overrides: Partial<MigrationInterface> = {},
 ): MigrationInterface => ({
   id: "aaa-111",
   ts: "2026-02-20T09:00:00.000Z",
-  up: jest.fn(),
-  down: jest.fn(),
+  up: vi.fn(),
+  down: vi.fn(),
   ...overrides,
 });
 

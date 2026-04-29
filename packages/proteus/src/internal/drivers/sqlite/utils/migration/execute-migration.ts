@@ -1,18 +1,18 @@
-import { SqliteMigrationError } from "../../errors/SqliteMigrationError";
-import type { SqliteQueryClient } from "../../types/sqlite-query-client";
+import { SqliteMigrationError } from "../../errors/SqliteMigrationError.js";
+import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
 import type {
   MigrationInterface,
   MigrationQueryContext,
   MigrationQueryRunner,
   SqliteMigrationTableOptions,
-} from "../../types/migration";
+} from "../../types/migration.js";
 import {
   deleteMigrationRecord,
   ensureMigrationTable,
   insertMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "./migration-table";
+} from "./migration-table.js";
 
 export type ExecuteMigrationResult = {
   name: string;

@@ -1,5 +1,6 @@
-import type { IrisEnvelope } from "../types/iris-envelope";
-import { isExpired } from "./is-expired";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { isExpired } from "./is-expired.js";
+import { describe, expect, it } from "vitest";
 
 const makeEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   payload: Buffer.from("test"),

@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import {
   TestArticle,
   TestChecked,
@@ -7,9 +8,9 @@ import {
   TestUser,
   TestUserWithProfile,
   TestVersionKeyed,
-} from "../../../../__fixtures__/test-entities";
-import { generateTableDDL } from "./generate-table-ddl";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
+} from "../../../../__fixtures__/test-entities.js";
+import { generateTableDDL } from "./generate-table-ddl.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
 
 const NS = null;
 const NS_SCOPED = "public";

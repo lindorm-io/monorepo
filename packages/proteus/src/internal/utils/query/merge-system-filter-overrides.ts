@@ -2,7 +2,7 @@ import type { Dict } from "@lindorm/types";
 import {
   SCOPE_FILTER_NAME,
   SOFT_DELETE_FILTER_NAME,
-} from "../../entity/metadata/auto-filters";
+} from "../../entity/metadata/auto-filters.js";
 
 /**
  * Merge system-level boolean flags (e.g. `withDeleted`, `withoutScope`) into the

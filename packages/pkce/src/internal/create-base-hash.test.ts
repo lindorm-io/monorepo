@@ -1,4 +1,5 @@
-import { createBaseHash } from "./create-base-hash";
+import { createBaseHash } from "./create-base-hash.js";
+import { describe, expect, test } from "vitest";
 
 describe("generateHash", () => {
   test("should resolve", () => {

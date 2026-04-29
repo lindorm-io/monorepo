@@ -1,11 +1,12 @@
-import { ILogger } from "@lindorm/logger";
-import { Constructor } from "@lindorm/types";
-import { IEntity } from "../../../interfaces";
+import type { ILogger } from "@lindorm/logger";
+import type { Constructor } from "@lindorm/types";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
 
 export type GetIncrementFn = (key: string) => Promise<number>;
 
 export type EntityManagerOptions<E extends IEntity> = {
-  context?: unknown;
+  meta?: ProteusHookMeta;
   getNextIncrement?: GetIncrementFn;
   logger?: ILogger;
   driver: string;

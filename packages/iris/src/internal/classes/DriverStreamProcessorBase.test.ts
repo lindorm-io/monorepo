@@ -1,15 +1,16 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisStreamPipeline, IMessage } from "../../interfaces";
-import type { PipelineStage } from "../types/pipeline-stage";
-import { Field } from "../../decorators/Field";
-import { Message } from "../../decorators/Message";
-import { clearRegistry } from "../message/metadata/registry";
-import { IrisNotSupportedError } from "../../errors/IrisNotSupportedError";
+import type { IIrisStreamPipeline, IMessage } from "../../interfaces/index.js";
+import type { PipelineStage } from "../types/pipeline-stage.js";
+import { Field } from "../../decorators/Field.js";
+import { Message } from "../../decorators/Message.js";
+import { clearRegistry } from "../message/metadata/registry.js";
+import { IrisNotSupportedError } from "../../errors/IrisNotSupportedError.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
-} from "./DriverStreamProcessorBase";
+} from "./DriverStreamProcessorBase.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Test messages ---
 
@@ -71,13 +72,13 @@ class TestStreamProcessor<
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createProcessor = () => {

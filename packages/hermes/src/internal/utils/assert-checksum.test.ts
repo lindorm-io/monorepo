@@ -1,6 +1,7 @@
-import { assertChecksum } from "./assert-checksum";
-import { createChecksum } from "./create-checksum";
-import type { EventRecord } from "../entities";
+import { assertChecksum } from "./assert-checksum.js";
+import { createChecksum } from "./create-checksum.js";
+import type { EventRecord } from "../entities/index.js";
+import { describe, expect, test } from "vitest";
 
 describe("assertChecksum", () => {
   const makeRecord = (overrides?: Partial<EventRecord>): EventRecord => {

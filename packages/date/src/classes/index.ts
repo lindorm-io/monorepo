@@ -1,2 +1,2 @@
-export * from "./TtlMap";
-export * from "./TtlSet";
+export * from "./TtlMap.js";
+export * from "./TtlSet.js";

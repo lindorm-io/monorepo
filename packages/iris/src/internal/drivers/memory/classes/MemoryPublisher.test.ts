@@ -1,13 +1,14 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import { Broadcast } from "../../../../decorators/Broadcast";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { Topic } from "../../../../decorators/Topic";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { MemorySharedState } from "../types/memory-store";
-import { createStore } from "../utils/create-store";
-import { MemoryPublisher } from "./MemoryPublisher";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import { Broadcast } from "../../../../decorators/Broadcast.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { Topic } from "../../../../decorators/Topic.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { MemorySharedState } from "../types/memory-store.js";
+import { createStore } from "../utils/create-store.js";
+import { MemoryPublisher } from "./MemoryPublisher.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -32,28 +33,28 @@ class TckPubBroadcastMsg implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockDelayManager = (): DelayManager & { scheduledCalls: Array<any> } => {
   const scheduledCalls: Array<any> = [];
   return {
     scheduledCalls,
-    schedule: jest.fn(async (envelope: any, topic: string, delayMs: number) => {
+    schedule: vi.fn(async (envelope: any, topic: string, delayMs: number) => {
       scheduledCalls.push({ envelope, topic, delayMs });
       return "delay-id";
     }),
-    cancel: jest.fn(),
-    start: jest.fn(),
-    stop: jest.fn(),
-    size: jest.fn(),
-    close: jest.fn(),
+    cancel: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    size: vi.fn(),
+    close: vi.fn(),
   } as any;
 };
 

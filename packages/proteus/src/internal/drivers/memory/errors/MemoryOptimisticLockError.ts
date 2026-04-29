@@ -1,1 +1,1 @@
-export { OptimisticLockError as MemoryOptimisticLockError } from "../../../errors/OptimisticLockError";
+export { OptimisticLockError as MemoryOptimisticLockError } from "../../../errors/OptimisticLockError.js";

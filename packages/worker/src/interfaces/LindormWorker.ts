@@ -1,8 +1,8 @@
-import {
+import type {
   LindormWorkerErrorListener,
   LindormWorkerHealth,
   LindormWorkerListener,
-} from "../types";
+} from "../types/index.js";
 
 export interface ILindormWorker {
   alias: string;

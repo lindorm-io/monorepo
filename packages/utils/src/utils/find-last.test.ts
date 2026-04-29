@@ -1,5 +1,6 @@
-import { TEST_PEOPLE } from "../__fixtures__/test-people";
-import { findLast } from "./find-last";
+import { TEST_PEOPLE } from "../__fixtures__/test-people.js";
+import { findLast } from "./find-last.js";
+import { describe, expect, test } from "vitest";
 
 describe("findLast", () => {
   test("should findLast by city", () => {

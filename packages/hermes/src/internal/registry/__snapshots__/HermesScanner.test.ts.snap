@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`HermesScanner scan should handle empty input 1`] = `
+exports[`HermesScanner > scan > should handle empty input 1`] = `
 {
   "aggregates": [],
   "commands": [],
@@ -12,31 +12,31 @@ exports[`HermesScanner scan should handle empty input 1`] = `
 }
 `;
 
-exports[`HermesScanner scan should resolve @RequireCreated condition on destroy command handler 1`] = `
+exports[`HermesScanner > scan > should resolve @RequireCreated condition on destroy command handler 1`] = `
 {
   "requireCreated": true,
 }
 `;
 
-exports[`HermesScanner scan should resolve @RequireCreated on saga merge state event handler 1`] = `
+exports[`HermesScanner > scan > should resolve @RequireCreated on saga merge state event handler 1`] = `
 {
   "requireCreated": true,
 }
 `;
 
-exports[`HermesScanner scan should resolve @RequireNotCreated condition on create command handler 1`] = `
+exports[`HermesScanner > scan > should resolve @RequireNotCreated condition on create command handler 1`] = `
 {
   "requireNotCreated": true,
 }
 `;
 
-exports[`HermesScanner scan should resolve @RequireNotCreated on saga create event handler 1`] = `
+exports[`HermesScanner > scan > should resolve @RequireNotCreated on saga create event handler 1`] = `
 {
   "requireNotCreated": true,
 }
 `;
 
-exports[`HermesScanner scan should return complete scanned modules structure 1`] = `
+exports[`HermesScanner > scan > should return complete scanned modules structure 1`] = `
 {
   "aggregates": [
     {

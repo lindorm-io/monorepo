@@ -1,5 +1,5 @@
-import { PylonError } from "../../../errors/PylonError";
-import { PylonSessionOptions } from "../../../types";
+import { PylonError } from "../../../errors/PylonError.js";
+import type { PylonSessionOptions } from "../../../types/index.js";
 
 const ALLOWED: ReadonlyArray<string> = ["lax", "strict"];
 

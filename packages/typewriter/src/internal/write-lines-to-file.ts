@@ -1,4 +1,4 @@
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import { createWriteStream, existsSync, mkdirSync } from "fs";
 import { join } from "path";
 

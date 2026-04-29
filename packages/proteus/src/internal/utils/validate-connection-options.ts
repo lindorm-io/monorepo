@@ -1,4 +1,4 @@
-import { ProteusError } from "../../errors";
+import { ProteusError } from "../../errors/index.js";
 
 /**
  * Validates that a driver config does not provide both `url` and individual

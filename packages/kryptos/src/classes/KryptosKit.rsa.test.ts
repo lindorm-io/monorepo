@@ -3,15 +3,16 @@ import {
   TEST_RSA_KEY_B64,
   TEST_RSA_KEY_JWK,
   TEST_RSA_KEY_PEM,
-} from "../__fixtures__/rsa-keys";
-import { KryptosKit } from "./KryptosKit";
+} from "../__fixtures__/rsa-keys.js";
+import { KryptosKit } from "./KryptosKit.js";
+import { describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate.toISOString());
 
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest.fn().mockReturnValue("6e6f84b0-e125-5e3f-90ae-c65269668d98"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi.fn().mockReturnValue("6e6f84b0-e125-5e3f-90ae-c65269668d98"),
 }));
 
 describe("KryptosKit (RSA)", () => {

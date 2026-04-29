@@ -1,29 +1,30 @@
-import { createMockLogger } from "@lindorm/logger";
-import { getBody as _getBody } from "../../internal/utils/get-body";
-import { getFile as _getFile } from "../../internal/utils/get-file";
-import { getStatus as _getStatus } from "../../internal/utils/get-status";
-import { useHandler } from "./use-handler";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { getBody as _getBody } from "../../internal/utils/get-body.js";
+import { getFile as _getFile } from "../../internal/utils/get-file.js";
+import { getStatus as _getStatus } from "../../internal/utils/get-status.js";
+import { useHandler } from "./use-handler.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../../internal/utils/get-body");
-jest.mock("../../internal/utils/get-file");
-jest.mock("../../internal/utils/get-status");
+vi.mock("../../internal/utils/get-body.js");
+vi.mock("../../internal/utils/get-file.js");
+vi.mock("../../internal/utils/get-status.js");
 
-const getBody = _getBody as jest.Mock;
-const getFile = _getFile as jest.Mock;
-const getStatus = _getStatus as jest.Mock;
+const getBody = _getBody as Mock;
+const getFile = _getFile as Mock;
+const getStatus = _getStatus as Mock;
 
-describe("useHandler", () => {
+describe("useHandler", async () => {
   let ctx: any;
   let handler: any;
 
   beforeEach(() => {
     ctx = {
       logger: createMockLogger(),
-      redirect: jest.fn(),
-      set: jest.fn(),
+      redirect: vi.fn(),
+      set: vi.fn(),
     };
 
-    handler = jest.fn();
+    handler = vi.fn();
 
     getBody.mockReturnValue("body");
     getFile.mockResolvedValue({
@@ -39,7 +40,7 @@ describe("useHandler", () => {
   });
 
   test("should resolve", async () => {
-    await expect(useHandler(handler)(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(useHandler(handler)(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(handler).toHaveBeenCalled();
     expect(ctx.body).toEqual("body");
@@ -49,7 +50,7 @@ describe("useHandler", () => {
   test("should resolve with location", async () => {
     handler.mockReturnValue({ location: "redirect" });
 
-    await expect(useHandler(handler)(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(useHandler(handler)(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.set).toHaveBeenCalledWith("location", "redirect");
   });
@@ -57,7 +58,7 @@ describe("useHandler", () => {
   test("should resolve with redirect", async () => {
     handler.mockReturnValue({ redirect: "redirect" });
 
-    await expect(useHandler(handler)(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(useHandler(handler)(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.redirect).toHaveBeenCalledWith("redirect");
   });
@@ -65,7 +66,7 @@ describe("useHandler", () => {
   test("should resolve with file", async () => {
     handler.mockReturnValue({ file: "file" });
 
-    await expect(useHandler(handler)(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(useHandler(handler)(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.set).toHaveBeenCalledWith("cache-control", "max-age=123,immutable");
     expect(ctx.set).toHaveBeenCalledWith(
@@ -93,7 +94,7 @@ describe("useHandler", () => {
       },
     });
 
-    await expect(useHandler(handler)(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(useHandler(handler)(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.set).toHaveBeenCalledWith("cache-control", "max-age=123,immutable");
     expect(ctx.set).toHaveBeenCalledWith(
@@ -111,6 +112,6 @@ describe("useHandler", () => {
   test("should reject with redirect and file", async () => {
     handler.mockReturnValue({ redirect: "redirect", file: "file" });
 
-    await expect(useHandler(handler)(ctx, jest.fn())).rejects.toThrow();
+    await expect(useHandler(handler)(ctx, vi.fn())).rejects.toThrow();
   });
 });

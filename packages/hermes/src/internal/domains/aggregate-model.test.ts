@@ -1,9 +1,9 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   TestAggregate,
   TestForgettableAggregate,
   TestUpcasterAggregate,
-} from "../../__fixtures__/modules/aggregates";
+} from "../../__fixtures__/modules/aggregates/index.js";
 import {
   TestCommandCreate,
   TestCommandDestroy,
@@ -14,7 +14,7 @@ import {
   TestCommandSetState,
   TestCommandThrows,
   TestCommandTimeout,
-} from "../../__fixtures__/modules/commands";
+} from "../../__fixtures__/modules/commands/index.js";
 import {
   TestEventCreate,
   TestEventDestroy,
@@ -28,20 +28,21 @@ import {
   TestEventUpcast_V1,
   TestEventUpcast_V2,
   TestEventUpcast_V3,
-} from "../../__fixtures__/modules/events";
-import { TestViewQuery } from "../../__fixtures__/modules/queries";
-import { TestSaga } from "../../__fixtures__/modules/sagas";
-import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
-import { TestView } from "../../__fixtures__/modules/views/TestView";
+} from "../../__fixtures__/modules/events/index.js";
+import { TestViewQuery } from "../../__fixtures__/modules/queries/index.js";
+import { TestSaga } from "../../__fixtures__/modules/sagas/index.js";
+import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts/index.js";
+import { TestView } from "../../__fixtures__/modules/views/TestView.js";
 import {
   AggregateDestroyedError,
   AggregateNotDestroyedError,
   HandlerNotRegisteredError,
   UpcasterChainError,
-} from "../../errors";
-import { HermesEventMessage } from "../messages";
-import { HermesRegistry, HermesScanner } from "../registry";
-import { AggregateModel } from "./aggregate-model";
+} from "../../errors/index.js";
+import { HermesEventMessage } from "../messages/index.js";
+import { HermesRegistry, HermesScanner } from "../registry/index.js";
+import { AggregateModel } from "./aggregate-model.js";
+import { beforeAll, describe, expect, test } from "vitest";
 
 const ALL_CONSTRUCTORS = [
   TestCommandCreate,
@@ -98,8 +99,8 @@ const createEventMessage = (
 describe("AggregateModel", () => {
   let registry: HermesRegistry;
 
-  beforeAll(() => {
-    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
+  beforeAll(async () => {
+    const scanned = await HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 
@@ -373,8 +374,8 @@ describe("AggregateModel", () => {
 describe("AggregateModel upcasting", () => {
   let registry: HermesRegistry;
 
-  beforeAll(() => {
-    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
+  beforeAll(async () => {
+    const scanned = await HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 
@@ -475,7 +476,7 @@ describe("AggregateModel upcasting", () => {
     // We'll manually construct a registry with incomplete upcasters
 
     // Build a custom scanned modules with a broken upcaster chain
-    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
+    const scanned = await HermesScanner.scan(ALL_CONSTRUCTORS);
 
     // Find the upcaster aggregate and remove the V1->V2 step
     const upcasterAgg = scanned.aggregates.find(

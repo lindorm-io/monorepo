@@ -1,6 +1,6 @@
-import { PkceMethod } from "@lindorm/types";
-import { PkceError } from "../errors";
-import { verifyPkce } from "./verify-pkce";
+import type { PkceMethod } from "@lindorm/types";
+import { PkceError } from "../errors/index.js";
+import { verifyPkce } from "./verify-pkce.js";
 
 export const assertPkce = (
   challenge: string,

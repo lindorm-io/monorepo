@@ -1,18 +1,19 @@
 import { randomUUID } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { IrisTransportError } from "../../../../errors/IrisTransportError";
-import type { IMessage } from "../../../../interfaces";
+import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase";
-import type { MemorySharedState } from "../types/memory-store";
+import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
+import type { MemorySharedState } from "../types/memory-store.js";
 
 export type MemoryRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
   store: MemorySharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

@@ -1,4 +1,4 @@
-import type { ICacheAdapter } from "../interfaces/CacheAdapter";
+import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 
 /**
  * Options for the in-memory cache adapter.

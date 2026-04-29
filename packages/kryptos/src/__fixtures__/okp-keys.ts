@@ -1,4 +1,4 @@
-import { OkpJwk, OkpString } from "../types";
+import type { OkpJwk, OkpString } from "../types/index.js";
 
 export const TEST_OKP_KEY_B64: OkpString = {
   id: "ff2a448e-8eb0-59a8-8fc6-0ce23ad07e8f",

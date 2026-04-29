@@ -1,41 +1,51 @@
-import { withSource, withSourceConfig } from "./with-source";
-import { loadSource } from "./load-source";
+import { withSource, withSourceConfig } from "./with-source.js";
+import { loadSource } from "./load-source.js";
 import { Logger } from "@lindorm/logger";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockInstance,
+  type MockedFunction,
+} from "vitest";
 
-jest.mock("./load-source");
+vi.mock("./load-source.js");
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", async () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const mockLoadSource = loadSource as jest.MockedFunction<typeof loadSource>;
+const mockLoadSource = loadSource as MockedFunction<typeof loadSource>;
 
 const makeSource = (driverType = "postgres") => ({
   driverType,
   namespace: "test",
   migrationsTable: undefined,
-  getEntityMetadata: jest.fn().mockReturnValue([]),
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  client: jest.fn(),
-  log: { child: jest.fn().mockReturnValue({ debug: jest.fn() }) },
+  getEntityMetadata: vi.fn().mockReturnValue([]),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  client: vi.fn(),
+  log: { child: vi.fn().mockReturnValue({ debug: vi.fn() }) },
 });
 
 describe("withSource", () => {
-  let mockExit: jest.SpyInstance;
+  let mockExit: MockInstance;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockExit = jest.spyOn(process, "exit").mockImplementation((() => {}) as any);
+    vi.clearAllMocks();
+    mockExit = vi.spyOn(process, "exit").mockImplementation((() => {}) as any);
 
     const source = makeSource();
     mockLoadSource.mockResolvedValue(source as any);
@@ -55,7 +65,7 @@ describe("withSource", () => {
   });
 
   it("should call fn with context containing source", async () => {
-    const fn = jest.fn().mockResolvedValue(undefined);
+    const fn = vi.fn().mockResolvedValue(undefined);
 
     await withSource({ source: "/path/to/source.ts" }, fn);
 
@@ -107,10 +117,10 @@ describe("withSource", () => {
   });
 
   it("should work with any driver type", async () => {
-    const fn = jest.fn().mockResolvedValue(undefined);
+    const fn = vi.fn().mockResolvedValue(undefined);
 
     for (const driverType of ["postgres", "mysql", "sqlite", "memory", "redis"]) {
-      jest.clearAllMocks();
+      vi.clearAllMocks();
       const source = makeSource(driverType);
       mockLoadSource.mockResolvedValue(source as any);
 
@@ -125,11 +135,11 @@ describe("withSource", () => {
 });
 
 describe("withSourceConfig", () => {
-  let mockExit: jest.SpyInstance;
+  let mockExit: MockInstance;
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    mockExit = jest.spyOn(process, "exit").mockImplementation((() => {}) as any);
+    vi.clearAllMocks();
+    mockExit = vi.spyOn(process, "exit").mockImplementation((() => {}) as any);
 
     const source = makeSource();
     mockLoadSource.mockResolvedValue(source as any);
@@ -140,7 +150,7 @@ describe("withSourceConfig", () => {
   });
 
   it("should call fn with source", async () => {
-    const fn = jest.fn().mockResolvedValue(undefined);
+    const fn = vi.fn().mockResolvedValue(undefined);
 
     await withSourceConfig({ source: "/path/to/source.ts" }, fn);
 

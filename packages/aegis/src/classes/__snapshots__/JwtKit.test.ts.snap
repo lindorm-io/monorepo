@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`JwtKit confirmation claim should round-trip a DPoP thumbprint through sign and verify: parsed — jkt only 1`] = `
+exports[`JwtKit > confirmation claim > should round-trip a DPoP thumbprint through sign and verify > parsed — jkt only 1`] = `
 {
   "thumbprint": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
 }
 `;
 
-exports[`JwtKit confirmation claim should round-trip a DPoP thumbprint through sign and verify: wire payload — jkt only 1`] = `
+exports[`JwtKit > confirmation claim > should round-trip a DPoP thumbprint through sign and verify > wire payload — jkt only 1`] = `
 {
   "cnf": {
     "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",
@@ -20,7 +20,7 @@ exports[`JwtKit confirmation claim should round-trip a DPoP thumbprint through s
 }
 `;
 
-exports[`JwtKit confirmation claim should round-trip all confirmation members: parsed — full cnf 1`] = `
+exports[`JwtKit > confirmation claim > should round-trip all confirmation members > parsed — full cnf 1`] = `
 {
   "jwkSetUri": "https://example.com/.well-known/jwks.json",
   "keyId": "test-key-id",
@@ -29,7 +29,7 @@ exports[`JwtKit confirmation claim should round-trip all confirmation members: p
 }
 `;
 
-exports[`JwtKit confirmation claim should round-trip all confirmation members: wire payload — full cnf 1`] = `
+exports[`JwtKit > confirmation claim > should round-trip all confirmation members > wire payload — full cnf 1`] = `
 {
   "cnf": {
     "jkt": "0ZcOCORZNYy-DWpqq30jZyJGHTN0d2HglBV3uiguA4I",

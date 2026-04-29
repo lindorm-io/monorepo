@@ -1,11 +1,12 @@
+import { describe, expect, test } from "vitest";
 import {
   findEntityByName,
   findEntityByTarget,
   getCachedMetadata,
   registerEntity,
   setCachedMetadata,
-} from "./registry";
-import type { EntityMetadata } from "../types/metadata";
+} from "./registry.js";
+import type { EntityMetadata } from "../types/metadata.js";
 
 const makeMinimalMetadata = (): EntityMetadata =>
   ({

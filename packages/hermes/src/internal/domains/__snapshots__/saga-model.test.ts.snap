@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`SagaModel should dispatch command and accumulate in messagesToDispatch 1`] = `
+exports[`SagaModel > should dispatch command and accumulate in messagesToDispatch 1`] = `
 {
   "data": {
     "aggregate": {
@@ -23,7 +23,7 @@ exports[`SagaModel should dispatch command and accumulate in messagesToDispatch 
 }
 `;
 
-exports[`SagaModel should mergeState() with deep merge 1`] = `
+exports[`SagaModel > should mergeState() with deep merge 1`] = `
 {
   "added": "new",
   "existing": "value",
@@ -34,7 +34,7 @@ exports[`SagaModel should mergeState() with deep merge 1`] = `
 }
 `;
 
-exports[`SagaModel should return toJSON() snapshot 1`] = `
+exports[`SagaModel > should return toJSON() snapshot 1`] = `
 {
   "destroyed": false,
   "id": "test-saga-id",

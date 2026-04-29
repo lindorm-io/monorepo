@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`diffEnums should add new enum values 1`] = `
+exports[`diffEnums > should add new enum values 1`] = `
 [
   {
     "autocommit": true,
@@ -14,7 +14,7 @@ exports[`diffEnums should add new enum values 1`] = `
 ]
 `;
 
-exports[`diffEnums should create new enum type 1`] = `
+exports[`diffEnums > should create new enum type 1`] = `
 [
   {
     "autocommit": false,

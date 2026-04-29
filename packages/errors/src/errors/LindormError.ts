@@ -8,7 +8,7 @@ import {
   isString,
 } from "@lindorm/is";
 import { randomUUID } from "@lindorm/random";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 
 export type LindormErrorAttributes = {
   id: string;

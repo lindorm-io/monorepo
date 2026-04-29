@@ -1,5 +1,5 @@
 import { isObjectLike } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 
 export function sortKeys<T extends Dict = Dict>(arg: T): T {
   const result: Dict = {};

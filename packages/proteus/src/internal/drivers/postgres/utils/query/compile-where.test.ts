@@ -1,7 +1,8 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { PredicateEntry } from "../../../../types/query";
-import { compileWhere } from "./compile-where";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../../../types/query.js";
+import { compilePredicate, compileWhere } from "./compile-where.js";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   fields: [
@@ -482,9 +483,8 @@ describe("compileWhere", () => {
   describe("tableAlias = null — column references without alias prefix", () => {
     test("omits table alias prefix when tableAlias is null (compilePredicate)", () => {
       // compilePredicate is exported and accepts null tableAlias
-      const { compilePredicate: compilePred } = require("./compile-where");
       const params: Array<unknown> = [];
-      const result = compilePred({ name: "Alice" }, metadata, null, params);
+      const result = compilePredicate({ name: "Alice" }, metadata, null, params);
       expect(result).toMatchSnapshot();
       // Should NOT contain any alias prefix like "t0"."name"; just "name" = $1
       expect(result).not.toContain('"t0".');
@@ -493,28 +493,25 @@ describe("compileWhere", () => {
     });
 
     test("omits alias prefix for column name mapping when tableAlias is null", () => {
-      const { compilePredicate: compilePred } = require("./compile-where");
       const params: Array<unknown> = [];
       // email maps to email_address — verify no alias prefix in result
-      const result = compilePred({ email: "x@x.com" }, metadata, null, params);
+      const result = compilePredicate({ email: "x@x.com" }, metadata, null, params);
       expect(result).toMatchSnapshot();
       expect(result).not.toContain('"t0".');
       expect(result).toContain('"email_address"');
     });
 
     test("omits alias prefix for operator clauses when tableAlias is null", () => {
-      const { compilePredicate: compilePred } = require("./compile-where");
       const params: Array<unknown> = [];
-      const result = compilePred({ age: { $gt: 18 } }, metadata, null, params);
+      const result = compilePredicate({ age: { $gt: 18 } }, metadata, null, params);
       expect(result).toMatchSnapshot();
       expect(result).not.toContain('"t0".');
       expect(result).toContain('"age" >');
     });
 
     test("omits alias prefix for IS NULL when tableAlias is null", () => {
-      const { compilePredicate: compilePred } = require("./compile-where");
       const params: Array<unknown> = [];
-      const result = compilePred({ name: null }, metadata, null, params);
+      const result = compilePredicate({ name: null }, metadata, null, params);
       expect(result).toMatchSnapshot();
       expect(result).not.toContain('"t0".');
       expect(result).toContain('"name" IS NULL');

@@ -1,13 +1,13 @@
 import type { ClientSession, Db, Document, Filter } from "mongodb";
 import type { DeepPartial, Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../interfaces";
-import type { IUpdateQueryBuilder } from "../../../../interfaces/UpdateQueryBuilder";
-import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { compilePredicatesToFilter } from "../utils/compile-aggregation-pipeline";
-import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
-import { resolveCollectionName } from "../utils/resolve-collection-name";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { IUpdateQueryBuilder } from "../../../../interfaces/UpdateQueryBuilder.js";
+import type { WriteResult } from "../../../../interfaces/InsertQueryBuilder.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { compilePredicatesToFilter } from "../utils/compile-aggregation-pipeline.js";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { resolveCollectionName } from "../utils/resolve-collection-name.js";
 
 /**
  * MongoDB UPDATE query builder.

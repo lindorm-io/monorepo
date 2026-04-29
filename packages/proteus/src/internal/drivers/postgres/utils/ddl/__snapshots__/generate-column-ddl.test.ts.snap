@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateColumnDDL FK relation adds an implicit FK column 1`] = `
+exports[`generateColumnDDL > FK relation adds an implicit FK column 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""title" TEXT NOT NULL",
@@ -8,21 +8,21 @@ exports[`generateColumnDDL FK relation adds an implicit FK column 1`] = `
 ]
 `;
 
-exports[`generateColumnDDL array/object default is skipped (no DEFAULT clause emitted) 1`] = `
+exports[`generateColumnDDL > array/object default is skipped (no DEFAULT clause emitted) 1`] = `
 [
   ""id" UUID NOT NULL",
   ""tags" JSONB NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL boolean field with boolean DEFAULT 1`] = `
+exports[`generateColumnDDL > boolean field with boolean DEFAULT 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""active" BOOLEAN DEFAULT false NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL computed field emits GENERATED ALWAYS AS (expr) STORED 1`] = `
+exports[`generateColumnDDL > computed field emits GENERATED ALWAYS AS (expr) STORED 1`] = `
 [
   ""id" UUID NOT NULL",
   ""firstName" TEXT NOT NULL",
@@ -31,84 +31,84 @@ exports[`generateColumnDDL computed field emits GENERATED ALWAYS AS (expr) STORE
 ]
 `;
 
-exports[`generateColumnDDL does not duplicate FK column when field is explicitly declared 1`] = `
+exports[`generateColumnDDL > does not duplicate FK column when field is explicitly declared 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""parentId" UUID",
 ]
 `;
 
-exports[`generateColumnDDL does not duplicate FK column when naming strategy renames field key to match joinCol (key !== name dedup) 1`] = `
+exports[`generateColumnDDL > does not duplicate FK column when naming strategy renames field key to match joinCol (key !== name dedup) 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""parent_id" UUID",
 ]
 `;
 
-exports[`generateColumnDDL function-based default is skipped (no DEFAULT clause emitted) 1`] = `
+exports[`generateColumnDDL > function-based default is skipped (no DEFAULT clause emitted) 1`] = `
 [
   ""id" UUID NOT NULL",
   ""generated" TEXT NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL generates basic NOT NULL field columns 1`] = `
+exports[`generateColumnDDL > generates basic NOT NULL field columns 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""name" TEXT NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL integer field with GENERATED ALWAYS AS IDENTITY 1`] = `
+exports[`generateColumnDDL > integer field with GENERATED ALWAYS AS IDENTITY 1`] = `
 [
   ""id" INTEGER GENERATED ALWAYS AS IDENTITY",
   ""label" TEXT NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL integer field with numeric DEFAULT 1`] = `
+exports[`generateColumnDDL > integer field with numeric DEFAULT 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""count" INTEGER DEFAULT 0 NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL nullable field omits NOT NULL 1`] = `
+exports[`generateColumnDDL > nullable field omits NOT NULL 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""description" TEXT",
 ]
 `;
 
-exports[`generateColumnDDL string field with COLLATE clause (inline metadata) 1`] = `
+exports[`generateColumnDDL > string field with COLLATE clause (inline metadata) 1`] = `
 [
   ""id" UUID NOT NULL",
   ""name" TEXT COLLATE "en_US.utf8" NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL string field with single-quoted default escapes embedded quotes 1`] = `
+exports[`generateColumnDDL > string field with single-quoted default escapes embedded quotes 1`] = `
 [
   ""id" UUID NOT NULL",
   ""label" TEXT DEFAULT 'it''s default' NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL string field with string DEFAULT 1`] = `
+exports[`generateColumnDDL > string field with string DEFAULT 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""status" TEXT DEFAULT 'unknown' NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL uses schema-qualified type name when namespace is provided 1`] = `
+exports[`generateColumnDDL > uses schema-qualified type name when namespace is provided 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""name" TEXT NOT NULL",
 ]
 `;
 
-exports[`generateColumnDDL uuid field with gen_random_uuid() DEFAULT 1`] = `
+exports[`generateColumnDDL > uuid field with gen_random_uuid() DEFAULT 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
   ""title" TEXT NOT NULL",

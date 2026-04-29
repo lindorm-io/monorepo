@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`runPrompts prompts for name when positional missing 1`] = `
+exports[`runPrompts > prompts for name when positional missing 1`] = `
 {
   "audit": false,
   "auth": false,
@@ -12,13 +12,13 @@ exports[`runPrompts prompts for name when positional missing 1`] = `
 }
 `;
 
-exports[`runPrompts prompts webhooks and audit only when both drivers selected 1`] = `
+exports[`runPrompts > prompts webhooks and audit only when both drivers selected 1`] = `
 [
   "expiry-cleanup",
 ]
 `;
 
-exports[`runPrompts returns answers with positional name and defaults 1`] = `
+exports[`runPrompts > returns answers with positional name and defaults 1`] = `
 {
   "features": {
     "audit": false,
@@ -32,7 +32,7 @@ exports[`runPrompts returns answers with positional name and defaults 1`] = `
   "irisDriver": "none",
   "projectDir": "<cwd>/my-app",
   "projectName": "my-app",
-  "proteusDriver": "none",
+  "proteusDrivers": [],
   "workers": [],
 }
 `;

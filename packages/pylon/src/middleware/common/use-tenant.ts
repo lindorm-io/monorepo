@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
-import { get } from "object-path";
-import { PylonContext, PylonMiddleware } from "../../types";
+import objectPath from "object-path";
+import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type UseTenantOptions = {
   required?: boolean;
@@ -17,7 +17,7 @@ export const useTenant = (
     let tenantId: string | undefined;
 
     if (path) {
-      const value = get(ctx, path);
+      const value = objectPath.get(ctx, path);
       tenantId = isString(value) && value.length ? value : undefined;
     } else {
       const introspection = await ctx.auth.introspect();

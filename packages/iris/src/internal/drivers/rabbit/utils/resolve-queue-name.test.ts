@@ -1,4 +1,5 @@
-import { resolveQueueName } from "./resolve-queue-name";
+import { resolveQueueName } from "./resolve-queue-name.js";
+import { describe, expect, it } from "vitest";
 
 describe("resolveQueueName", () => {
   describe("subscribe", () => {

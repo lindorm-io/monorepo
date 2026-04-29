@@ -1,17 +1,18 @@
 import { ClientError } from "@lindorm/errors";
 import _CoBody from "co-body";
-import { BodyType } from "../../../types";
-import { composeParseBodyConfig } from "../compose-parse-body-config";
-import { parseBody } from "./parse-body";
-import { parseWithFormidable as _parseWithFormidable } from "./parse-with-formidable";
+import type { BodyType } from "../../../types/index.js";
+import { composeParseBodyConfig } from "../compose-parse-body-config.js";
+import { parseBody } from "./parse-body.js";
+import { parseWithFormidable as _parseWithFormidable } from "./parse-with-formidable.js";
+import { beforeEach, describe, expect, test, vi, type Mock, type Mocked } from "vitest";
 
-jest.mock("co-body");
-jest.mock("./parse-with-formidable");
+vi.mock("co-body");
+vi.mock("./parse-with-formidable.js");
 
-const parseWithFormidable = _parseWithFormidable as jest.Mock;
-const CoBody = _CoBody as jest.Mocked<typeof _CoBody>;
+const parseWithFormidable = _parseWithFormidable as Mock;
+const CoBody = _CoBody as Mocked<typeof _CoBody>;
 
-describe("parseBody", () => {
+describe("parseBody", async () => {
   let ctx: any;
   let config: any;
   let bodyType: BodyType;
@@ -21,7 +22,7 @@ describe("parseBody", () => {
       request: {
         body: "multipart",
       },
-      get: jest.fn(),
+      get: vi.fn(),
     };
 
     config = composeParseBodyConfig();

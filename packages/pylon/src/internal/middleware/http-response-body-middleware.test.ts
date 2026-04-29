@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import Stream, { Readable } from "stream";
-import { httpResponseBodyMiddleware } from "./http-response-body-middleware";
+import { httpResponseBodyMiddleware } from "./http-response-body-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -28,7 +29,7 @@ describe("httpResponseBodyMiddleware", () => {
   });
 
   test("should transform response body when object", async () => {
-    await expect(httpResponseBodyMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual({
       array: ["array"],
@@ -44,7 +45,7 @@ describe("httpResponseBodyMiddleware", () => {
   test("should transform response body when array", async () => {
     ctx.body = [{ String: "string" }];
 
-    await expect(httpResponseBodyMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual([{ string: "string" }]);
   });
@@ -52,7 +53,7 @@ describe("httpResponseBodyMiddleware", () => {
   test("should not transform response body when stream", async () => {
     ctx.body = Readable.from("string");
 
-    await expect(httpResponseBodyMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual(expect.any(Stream));
   });
@@ -60,7 +61,7 @@ describe("httpResponseBodyMiddleware", () => {
   test("should not transform response body when undefined", async () => {
     ctx.body = undefined;
 
-    await expect(httpResponseBodyMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toBeUndefined();
   });
@@ -68,7 +69,7 @@ describe("httpResponseBodyMiddleware", () => {
   test("should not transform response body when string", async () => {
     ctx.body = "string";
 
-    await expect(httpResponseBodyMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpResponseBodyMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual("string");
   });

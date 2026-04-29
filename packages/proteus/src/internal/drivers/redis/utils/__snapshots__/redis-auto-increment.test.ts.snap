@@ -1,55 +1,55 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`applyRedisAutoIncrement empty generated array should be no-op when generated is empty 1`] = `
+exports[`applyRedisAutoIncrement > empty generated array > should be no-op when generated is empty 1`] = `
 {
   "id": "manual",
 }
 `;
 
-exports[`applyRedisAutoIncrement multiple generators should apply all increment generators independently 1`] = `
+exports[`applyRedisAutoIncrement > multiple generators > should apply all increment generators independently 1`] = `
 {
   "seq1": 1,
   "seq2": 1,
 }
 `;
 
-exports[`applyRedisAutoIncrement multiple generators should skip non-increment alongside increment 1`] = `
+exports[`applyRedisAutoIncrement > multiple generators > should skip non-increment alongside increment 1`] = `
 {
   "seq": 1,
 }
 `;
 
-exports[`applyRedisAutoIncrement namespace should pass namespace to buildIncrementKey 1`] = `
+exports[`applyRedisAutoIncrement > namespace > should pass namespace to buildIncrementKey 1`] = `
 {
   "id": 1,
 }
 `;
 
-exports[`applyRedisAutoIncrement strategy: identity should assign value for identity strategy 1`] = `
+exports[`applyRedisAutoIncrement > strategy: identity > should assign value for identity strategy 1`] = `
 {
   "seq": 1,
 }
 `;
 
-exports[`applyRedisAutoIncrement strategy: increment should assign next value when field is 0 1`] = `
+exports[`applyRedisAutoIncrement > strategy: increment > should assign next value when field is 0 1`] = `
 {
   "id": 1,
 }
 `;
 
-exports[`applyRedisAutoIncrement strategy: increment should assign next value when field is null 1`] = `
+exports[`applyRedisAutoIncrement > strategy: increment > should assign next value when field is null 1`] = `
 {
   "id": 1,
 }
 `;
 
-exports[`applyRedisAutoIncrement strategy: increment should assign next value when field is undefined 1`] = `
+exports[`applyRedisAutoIncrement > strategy: increment > should assign next value when field is undefined 1`] = `
 {
   "id": 1,
 }
 `;
 
-exports[`applyRedisAutoIncrement strategy: increment should increment counter on subsequent calls 1`] = `
+exports[`applyRedisAutoIncrement > strategy: increment > should increment counter on subsequent calls 1`] = `
 {
   "row1": {
     "id": 1,
@@ -63,4 +63,4 @@ exports[`applyRedisAutoIncrement strategy: increment should increment counter on
 }
 `;
 
-exports[`applyRedisAutoIncrement strategy: other should skip generators with non-increment strategies 1`] = `{}`;
+exports[`applyRedisAutoIncrement > strategy: other > should skip generators with non-increment strategies 1`] = `{}`;

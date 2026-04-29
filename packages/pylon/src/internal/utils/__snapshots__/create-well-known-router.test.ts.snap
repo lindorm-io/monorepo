@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createWellKnownRouter openid-configuration should return openid configuration with domain replaced 1`] = `
+exports[`createWellKnownRouter > openid-configuration > should return openid configuration with domain replaced 1`] = `
 {
   "authorization_endpoint": "https://test.lindorm.io/auth",
   "issuer": "https://test.lindorm.io",
@@ -8,7 +8,7 @@ exports[`createWellKnownRouter openid-configuration should return openid configu
 }
 `;
 
-exports[`createWellKnownRouter should create a router with expected routes 1`] = `
+exports[`createWellKnownRouter > should create a router with expected routes 1`] = `
 [
   "/change-password",
   "/jwks.json",

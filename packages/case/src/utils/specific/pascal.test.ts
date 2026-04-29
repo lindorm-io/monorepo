@@ -1,6 +1,7 @@
-import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects";
-import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings";
-import { pascalArray, pascalCase, pascalKeys } from "./pascal";
+import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects.js";
+import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings.js";
+import { pascalArray, pascalCase, pascalKeys } from "./pascal.js";
+import { describe, expect, test } from "vitest";
 
 describe("pascalCase", () => {
   test.each(TEST_STRINGS)("should convert %s", (input) => {

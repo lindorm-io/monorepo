@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
+import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -9,27 +9,28 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   IrisConnectionState,
   IrisEvents,
+  IrisHookMeta,
   NatsConnectionOptions,
-} from "../../../../types";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
+} from "../../../../types/index.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { NatsConnection, NatsSharedState } from "../types/nats-types";
-import { createNatsConsumer } from "../utils/create-nats-consumer";
-import { ensureNatsStream } from "../utils/ensure-nats-stream";
-import { resolveSubject } from "../utils/resolve-subject";
-import { serializeNatsMessage } from "../utils/serialize-nats-message";
-import { stopAllNatsConsumers } from "../utils/stop-nats-consumer";
-import { NatsMessageBus } from "./NatsMessageBus";
-import { NatsPublisher } from "./NatsPublisher";
-import { NatsRpcClient } from "./NatsRpcClient";
-import { NatsRpcServer } from "./NatsRpcServer";
-import { NatsStreamProcessor } from "./NatsStreamProcessor";
-import { NatsWorkerQueue } from "./NatsWorkerQueue";
+import type { NatsConnection, NatsSharedState } from "../types/nats-types.js";
+import { createNatsConsumer } from "../utils/create-nats-consumer.js";
+import { ensureNatsStream } from "../utils/ensure-nats-stream.js";
+import { resolveSubject } from "../utils/resolve-subject.js";
+import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
+import { stopAllNatsConsumers } from "../utils/stop-nats-consumer.js";
+import { NatsMessageBus } from "./NatsMessageBus.js";
+import { NatsPublisher } from "./NatsPublisher.js";
+import { NatsRpcClient } from "./NatsRpcClient.js";
+import { NatsRpcServer } from "./NatsRpcServer.js";
+import { NatsStreamProcessor } from "./NatsStreamProcessor.js";
+import { NatsWorkerQueue } from "./NatsWorkerQueue.js";
 
 const DEFAULT_PREFETCH = 10;
 const DEFAULT_PREFIX = "iris";
@@ -40,7 +41,7 @@ const resolveStreamName = (prefix: string): string => {
 
 export type NatsDriverOptions = {
   logger: ILogger;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   servers: string | Array<string>;
@@ -53,7 +54,7 @@ export type NatsDriverOptions = {
 
 export class NatsDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly meta: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: NatsSharedState;
@@ -70,7 +71,7 @@ export class NatsDriver implements IIrisDriver {
 
   public constructor(options: NatsDriverOptions, state?: NatsSharedState) {
     this.logger = options.logger.child(["NatsDriver"]);
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
     this.servers = options.servers;
@@ -279,7 +280,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsPublisher<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -293,7 +294,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsMessageBus<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -308,7 +309,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsWorkerQueue<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -321,7 +322,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsStreamProcessor({
       state: this.state,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -335,7 +336,7 @@ export class NatsDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -349,7 +350,7 @@ export class NatsDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -368,7 +369,7 @@ export class NatsDriver implements IIrisDriver {
     return new NatsDriver(
       {
         logger: this.logger,
-        context: this.context,
+        meta: this.meta,
         amphora: this.amphora,
         getSubscribers,
         servers: this.servers,

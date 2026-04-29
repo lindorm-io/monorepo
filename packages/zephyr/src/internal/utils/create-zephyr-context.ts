@@ -1,6 +1,6 @@
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import { randomUUID } from "@lindorm/random";
-import type { AppContext, ZephyrContext } from "../../types/context";
+import type { AppContext, ZephyrContext } from "../../types/context.js";
 
 type CreateContextArgs = {
   app: AppContext;

@@ -1,14 +1,14 @@
-import { AesEncryption } from "../aes-encryption";
-import { JwksEncryptionAlgorithm, JwksSigningAlgorithm } from "../jwks";
-import { OpenIdBackchannelTokenDeliveryMode } from "./open-id-backchannel-token-delivery-mode";
-import { OpenIdClaims } from "./open-id-claims";
-import { OpenIdDisplayMode } from "./open-id-display-mode";
-import { OpenIdGrantType } from "./open-id-grant-type";
-import { OpenIdResponseType } from "./open-id-response-type";
-import { OpenIdScope } from "./open-id-scope";
-import { OpenIdSubjectType } from "./open-id-subject-type";
-import { OpenIdTokenAuthMethod } from "./open-id-token-auth-method";
-import { OpenIdTokenHeaderType } from "./open-id-token-header-type";
+import type { AesEncryption } from "../aes-encryption.js";
+import type { JwksEncryptionAlgorithm, JwksSigningAlgorithm } from "../jwks/index.js";
+import type { OpenIdBackchannelTokenDeliveryMode } from "./open-id-backchannel-token-delivery-mode.js";
+import type { OpenIdClaims } from "./open-id-claims.js";
+import type { OpenIdDisplayMode } from "./open-id-display-mode.js";
+import type { OpenIdGrantType } from "./open-id-grant-type.js";
+import type { OpenIdResponseType } from "./open-id-response-type.js";
+import type { OpenIdScope } from "./open-id-scope.js";
+import type { OpenIdSubjectType } from "./open-id-subject-type.js";
+import type { OpenIdTokenAuthMethod } from "./open-id-token-auth-method.js";
+import type { OpenIdTokenHeaderType } from "./open-id-token-header-type.js";
 
 type LindormConfiguration = {
   rightToBeForgottenEndpoint: string;

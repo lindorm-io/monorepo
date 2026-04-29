@@ -1,4 +1,4 @@
-import { ProteusError } from "../../../errors";
+import { ProteusError } from "../../../errors/index.js";
 
 export const quoteIdentifier = (name: string): string => {
   if (!name) {

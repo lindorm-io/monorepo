@@ -1,4 +1,5 @@
-import { diffEnums } from "../../../../drivers/postgres/utils/sync/diff-enums";
+import { diffEnums } from "../../../../drivers/postgres/utils/sync/diff-enums.js";
+import { describe, expect, test } from "vitest";
 
 describe("diffEnums", () => {
   test("should create new enum type", () => {

@@ -1,5 +1,5 @@
-import { createMockLogger } from "@lindorm/logger";
-import { LindormWorker } from "../../classes/LindormWorker";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { LindormWorker } from "../../classes/LindormWorker.js";
 
 export const worker = new LindormWorker({
   alias: "NamedInstance",

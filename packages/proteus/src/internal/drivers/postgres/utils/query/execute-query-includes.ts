@@ -1,18 +1,18 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { IncludeSpec } from "../../../../types/query";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "../../../../entity/utils/resolve-polymorphic-metadata";
-import { resolveColumnNameSafe } from "../resolve-column-name";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec } from "../../../../types/query.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity.js";
+import { resolvePolymorphicMetadata } from "../../../../entity/utils/resolve-polymorphic-metadata.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
 import {
   compileRelationQuery,
   type RelationQueryContext,
-} from "./compile-relation-query";
-import { extractFieldDictFromReturning } from "./extract-field-dict";
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
+} from "./compile-relation-query.js";
+import { extractFieldDictFromReturning } from "./extract-field-dict.js";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
 
 export type ExecuteQueryIncludesOptions = {
   rootMetadata: EntityMetadata;
@@ -76,7 +76,7 @@ export const executeQueryIncludes = async <E extends IEntity>(
 const executeOwningInclude = async <E extends IEntity>(
   entities: Array<E>,
   include: IncludeSpec,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   isCollection: boolean,
   ctx: RelationQueryContext,
@@ -145,7 +145,7 @@ const executeOwningInclude = async <E extends IEntity>(
 const executeInverseInclude = async <E extends IEntity>(
   entities: Array<E>,
   include: IncludeSpec,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   isCollection: boolean,
   ctx: RelationQueryContext,
@@ -200,7 +200,7 @@ const executeInverseInclude = async <E extends IEntity>(
 const executeManyToManyInclude = async <E extends IEntity>(
   entities: Array<E>,
   include: IncludeSpec,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   ctx: RelationQueryContext,
   opts: ExecuteQueryIncludesOptions,

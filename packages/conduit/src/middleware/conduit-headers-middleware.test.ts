@@ -1,5 +1,6 @@
-import { Next } from "@lindorm/middleware";
-import { conduitHeadersMiddleware } from "./conduit-headers-middleware";
+import type { Next } from "@lindorm/middleware";
+import { conduitHeadersMiddleware } from "./conduit-headers-middleware.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("conduitHeaderMiddleware", () => {
   let ctx: any;

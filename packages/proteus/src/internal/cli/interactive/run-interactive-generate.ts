@@ -1,16 +1,16 @@
 import { Logger } from "@lindorm/logger";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { ProteusSource } from "../../../classes/ProteusSource";
-import type { PostgresQueryClient } from "../../drivers/postgres/types/postgres-query-client";
-import { projectDesiredSchema } from "../../drivers/postgres/utils/sync/project-desired-schema";
-import { introspectSchema } from "../../drivers/postgres/utils/sync/introspect-schema";
-import { diffSchema } from "../../drivers/postgres/utils/sync/diff-schema";
-import { serializeMigration } from "../../drivers/postgres/utils/migration/serialize-migration";
-import { writeMigrationFile } from "../../drivers/postgres/utils/migration/write-migration-file";
-import { groupOperationsByEntity } from "./group-operations";
-import { filterOperationsByEntities } from "./filter-operations";
-import { suggestMigrationName } from "./suggest-name";
-import { previewOperations } from "./preview-operations";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { ProteusSource } from "../../../classes/ProteusSource.js";
+import type { PostgresQueryClient } from "../../drivers/postgres/types/postgres-query-client.js";
+import { projectDesiredSchema } from "../../drivers/postgres/utils/sync/project-desired-schema.js";
+import { introspectSchema } from "../../drivers/postgres/utils/sync/introspect-schema.js";
+import { diffSchema } from "../../drivers/postgres/utils/sync/diff-schema.js";
+import { serializeMigration } from "../../drivers/postgres/utils/migration/serialize-migration.js";
+import { writeMigrationFile } from "../../drivers/postgres/utils/migration/write-migration-file.js";
+import { groupOperationsByEntity } from "./group-operations.js";
+import { filterOperationsByEntities } from "./filter-operations.js";
+import { suggestMigrationName } from "./suggest-name.js";
+import { previewOperations } from "./preview-operations.js";
 
 type InteractiveGenerateOptions = {
   client: PostgresQueryClient;

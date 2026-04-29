@@ -1,29 +1,30 @@
-import { EntityManager } from "./EntityManager";
-import { AfterDestroy } from "../../../decorators/AfterDestroy";
-import { AfterInsert } from "../../../decorators/AfterInsert";
-import { AfterLoad } from "../../../decorators/AfterLoad";
-import { AfterSave } from "../../../decorators/AfterSave";
-import { AfterUpdate } from "../../../decorators/AfterUpdate";
-import { BeforeDestroy } from "../../../decorators/BeforeDestroy";
-import { BeforeInsert } from "../../../decorators/BeforeInsert";
-import { BeforeSave } from "../../../decorators/BeforeSave";
-import { BeforeUpdate } from "../../../decorators/BeforeUpdate";
-import { CreateDateField } from "../../../decorators/CreateDateField";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { Generated } from "../../../decorators/Generated";
-import { ManyToOne } from "../../../decorators/ManyToOne";
-import { OnCreate } from "../../../decorators/OnCreate";
-import { OneToMany } from "../../../decorators/OneToMany";
-import { PrimaryKey } from "../../../decorators/PrimaryKey";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { UpdateDateField } from "../../../decorators/UpdateDateField";
-import { VersionEndDateField } from "../../../decorators/VersionEndDateField";
-import { VersionField } from "../../../decorators/VersionField";
-import { VersionKeyField } from "../../../decorators/VersionKeyField";
-import { VersionStartDateField } from "../../../decorators/VersionStartDateField";
+import { EntityManager } from "./EntityManager.js";
+import { AfterDestroy } from "../../../decorators/AfterDestroy.js";
+import { AfterInsert } from "../../../decorators/AfterInsert.js";
+import { AfterLoad } from "../../../decorators/AfterLoad.js";
+import { AfterSave } from "../../../decorators/AfterSave.js";
+import { AfterUpdate } from "../../../decorators/AfterUpdate.js";
+import { BeforeDestroy } from "../../../decorators/BeforeDestroy.js";
+import { BeforeInsert } from "../../../decorators/BeforeInsert.js";
+import { BeforeSave } from "../../../decorators/BeforeSave.js";
+import { BeforeUpdate } from "../../../decorators/BeforeUpdate.js";
+import { CreateDateField } from "../../../decorators/CreateDateField.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { ManyToOne } from "../../../decorators/ManyToOne.js";
+import { OnCreate } from "../../../decorators/OnCreate.js";
+import { OneToMany } from "../../../decorators/OneToMany.js";
+import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { UpdateDateField } from "../../../decorators/UpdateDateField.js";
+import { VersionEndDateField } from "../../../decorators/VersionEndDateField.js";
+import { VersionField } from "../../../decorators/VersionField.js";
+import { VersionKeyField } from "../../../decorators/VersionKeyField.js";
+import { VersionStartDateField } from "../../../decorators/VersionStartDateField.js";
+import { describe, expect, test, vi } from "vitest";
 
-const emHookCb = jest.fn();
+const emHookCb = vi.fn();
 
 @Entity({ name: "EMOrderItem" })
 class EMOrderItem {
@@ -166,7 +167,7 @@ describe("EntityManager", () => {
     });
 
     test("should not throw when increment entity has getNextIncrement", () => {
-      const getNextIncrement = jest.fn().mockResolvedValue(1);
+      const getNextIncrement = vi.fn().mockResolvedValue(1);
       expect(
         () =>
           new EntityManager({
@@ -242,7 +243,7 @@ describe("EntityManager", () => {
     });
 
     test("should call getNextIncrement for increment-strategy fields", async () => {
-      const getNextIncrement = jest.fn().mockResolvedValue(42);
+      const getNextIncrement = vi.fn().mockResolvedValue(42);
       const manager = new EntityManager({
         target: EMWithIncrement,
         driver: "postgres",
@@ -257,7 +258,7 @@ describe("EntityManager", () => {
     });
 
     test("should not call getNextIncrement when field already has a positive value", async () => {
-      const getNextIncrement = jest.fn().mockResolvedValue(99);
+      const getNextIncrement = vi.fn().mockResolvedValue(99);
       const manager = new EntityManager({
         target: EMWithIncrement,
         driver: "postgres",

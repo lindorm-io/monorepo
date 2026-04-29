@@ -1,33 +1,35 @@
 #!/usr/bin/env node
 
 if (typeof Symbol.metadata === "undefined") {
-  (Symbol as any).metadata = Symbol("Symbol.metadata");
+  (Symbol as any).metadata = Symbol.for("Symbol.metadata");
 }
 
 import { readFileSync } from "fs";
-import { resolve } from "path";
+import { dirname, resolve } from "path";
+import { fileURLToPath } from "url";
 import { Command } from "commander";
 import {
   runIrisGenerateSampleMessage,
   runIrisInit,
   runProteusGenerateSampleEntity,
   runProteusInit,
-} from "./drivers";
-import { initGit } from "./git";
-import { installDependencies, installDevDependencies } from "./install";
-import { runPrompts } from "./prompts";
-import { buildDependencyList, buildDevDependencyList, scaffold } from "./scaffold";
+} from "./drivers.js";
+import { initGit } from "./git.js";
+import { installDependencies, installDevDependencies } from "./install.js";
+import { runPrompts } from "./prompts.js";
+import { buildDependencyList, buildDevDependencyList, scaffold } from "./scaffold.js";
 import {
   BASE_DEV_DEPENDENCIES,
   BASE_RUNTIME_DEPENDENCIES,
   IRIS_DRIVER_DEV_PACKAGES,
   PROTEUS_DRIVER_DEV_PACKAGES,
-} from "./types";
-import type { Answers } from "./types";
+} from "./types.js";
+import type { Answers } from "./types.js";
 
-const pkg = JSON.parse(
-  readFileSync(resolve(__dirname, "..", "package.json"), "utf-8"),
-) as { version: string };
+const here = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(resolve(here, "..", "package.json"), "utf-8")) as {
+  version: string;
+};
 
 const printNextSteps = (answers: Answers): void => {
   process.stdout.write("\nDone. Next:\n");
@@ -57,9 +59,11 @@ const resolveDevDependencies = (answers: Answers): Array<string> => {
     ...BASE_DEV_DEPENDENCIES,
     ...buildDevDependencyList(answers),
   ];
-  deps.push(...PROTEUS_DRIVER_DEV_PACKAGES[answers.proteusDriver]);
+  for (const driver of answers.proteusDrivers) {
+    deps.push(...PROTEUS_DRIVER_DEV_PACKAGES[driver]);
+  }
   deps.push(...IRIS_DRIVER_DEV_PACKAGES[answers.irisDriver]);
-  return deps;
+  return Array.from(new Set(deps));
 };
 
 const resolveRuntimeDependencies = (answers: Answers): Array<string> => [
@@ -81,10 +85,12 @@ export const run = async (positionalName?: string): Promise<void> => {
   await installDependencies(answers.projectDir, resolveRuntimeDependencies(answers));
   await installDevDependencies(answers.projectDir, resolveDevDependencies(answers));
 
-  if (answers.proteusDriver !== "none") {
+  if (answers.proteusDrivers.length > 0) {
     process.stdout.write(`\nGenerating proteus scaffolding …\n`);
-    await runProteusInit(answers.projectDir, answers.proteusDriver);
-    await runProteusGenerateSampleEntity(answers.projectDir);
+    await runProteusInit(answers.projectDir, answers);
+    const firstDbDriver =
+      answers.proteusDrivers.length > 1 ? answers.proteusDrivers[0] : undefined;
+    await runProteusGenerateSampleEntity(answers.projectDir, firstDbDriver);
   }
 
   if (answers.irisDriver !== "none") {
@@ -117,8 +123,8 @@ program
     }
   });
 
-if (require.main === module) {
-  program.parseAsync(process.argv);
+if (import.meta.url === `file://${process.argv[1]}`) {
+  void program.parseAsync(process.argv);
 }
 
 export { program };

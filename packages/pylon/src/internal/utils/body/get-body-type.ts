@@ -1,4 +1,4 @@
-import { BodyType, PylonHttpContext } from "../../../types";
+import type { BodyType, PylonHttpContext } from "../../../types/index.js";
 
 const JSON_TYPES = [
   "application/csp-report",

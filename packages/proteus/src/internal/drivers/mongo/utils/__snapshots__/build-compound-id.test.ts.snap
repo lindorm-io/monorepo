@@ -1,24 +1,24 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildCompoundId should handle numeric PK values 1`] = `42`;
+exports[`buildCompoundId > should handle numeric PK values 1`] = `42`;
 
-exports[`buildCompoundId should handle undefined values in compound PK 1`] = `
+exports[`buildCompoundId > should handle undefined values in compound PK 1`] = `
 {
   "a": "val",
   "b": undefined,
 }
 `;
 
-exports[`buildCompoundId should return compound object with sorted keys for composite PK 1`] = `
+exports[`buildCompoundId > should return compound object with sorted keys for composite PK 1`] = `
 {
   "tenantId": "t1",
   "userId": "u1",
 }
 `;
 
-exports[`buildCompoundId should return value directly for single PK 1`] = `"abc-123"`;
+exports[`buildCompoundId > should return value directly for single PK 1`] = `"abc-123"`;
 
-exports[`buildCompoundId should sort keys alphabetically regardless of input order 1`] = `
+exports[`buildCompoundId > should sort keys alphabetically regardless of input order 1`] = `
 {
   "a": 1,
   "m": 2,
@@ -26,7 +26,7 @@ exports[`buildCompoundId should sort keys alphabetically regardless of input ord
 }
 `;
 
-exports[`buildIdFilter should wrap compound PK in _id filter 1`] = `
+exports[`buildIdFilter > should wrap compound PK in _id filter 1`] = `
 {
   "_id": {
     "tenantId": "t1",
@@ -35,7 +35,7 @@ exports[`buildIdFilter should wrap compound PK in _id filter 1`] = `
 }
 `;
 
-exports[`buildIdFilter should wrap single PK in _id filter 1`] = `
+exports[`buildIdFilter > should wrap single PK in _id filter 1`] = `
 {
   "_id": "abc",
 }

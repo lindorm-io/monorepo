@@ -1,6 +1,7 @@
+import { BadGatewayError } from "@lindorm/errors";
 import { z } from "zod";
-import { ConduitError } from "../errors";
-import { conduitSchemaMiddleware } from "./conduit-schema-middleware";
+import { conduitSchemaMiddleware } from "./conduit-schema-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitSchemaMiddleware", () => {
   let ctx: any;
@@ -17,7 +18,7 @@ describe("conduitSchemaMiddleware", () => {
   });
 
   test("should validate response data populated by next()", async () => {
-    const next = jest.fn(async () => {
+    const next = vi.fn(async () => {
       ctx.res.data = {
         key: "value",
         number: "123",
@@ -49,7 +50,7 @@ describe("conduitSchemaMiddleware", () => {
           key: z.string(),
           number: z.coerce.number(),
         }),
-      )(ctx, jest.fn()),
+      )(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.res.data).toEqual({
@@ -66,7 +67,7 @@ describe("conduitSchemaMiddleware", () => {
     await expect(
       conduitSchemaMiddleware(
         z.array(z.object({ key: z.string(), number: z.coerce.number() })),
-      )(ctx, jest.fn()),
+      )(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.res.data).toEqual([
@@ -90,7 +91,7 @@ describe("conduitSchemaMiddleware", () => {
           key: z.string(),
           number: z.coerce.number(),
         }),
-      )(ctx, jest.fn()),
-    ).rejects.toThrow(ConduitError);
+      )(ctx, vi.fn()),
+    ).rejects.toThrow(BadGatewayError);
   });
 });

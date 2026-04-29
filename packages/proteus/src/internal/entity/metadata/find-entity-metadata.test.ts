@@ -1,7 +1,8 @@
-import { findEntityMetadata } from "./find-entity-metadata";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { findEntityMetadata } from "./find-entity-metadata.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "FindMetadataTarget" })
 class FindMetadataTarget {

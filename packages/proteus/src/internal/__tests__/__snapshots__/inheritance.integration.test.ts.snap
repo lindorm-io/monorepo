@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`joined inheritance findOne via child repo finds a Cat with all fields from both root and child tables 1`] = `
+exports[`joined inheritance > findOne via child repo > finds a Cat with all fields from both root and child tables 1`] = `
 {
   "id": Any<String>,
   "isIndoor": false,
@@ -9,7 +9,7 @@ exports[`joined inheritance findOne via child repo finds a Cat with all fields f
 }
 `;
 
-exports[`joined inheritance findOne via child repo finds a Dog with all fields from both root and child tables 1`] = `
+exports[`joined inheritance > findOne via child repo > finds a Dog with all fields from both root and child tables 1`] = `
 {
   "breed": "Beagle",
   "id": Any<String>,
@@ -18,7 +18,7 @@ exports[`joined inheritance findOne via child repo finds a Dog with all fields f
 }
 `;
 
-exports[`joined inheritance insert populates both root and child tables inserting a Dog writes a row to both the Animal root table and the Dog child table 1`] = `
+exports[`joined inheritance > insert populates both root and child tables > inserting a Dog writes a row to both the Animal root table and the Dog child table 1`] = `
 {
   "breed": "Labrador",
   "id": Any<String>,
@@ -27,7 +27,7 @@ exports[`joined inheritance insert populates both root and child tables insertin
 }
 `;
 
-exports[`single-table inheritance findOne by subtype repo finds an inserted Car by ID through the Car repo 1`] = `
+exports[`single-table inheritance > findOne by subtype repo > finds an inserted Car by ID through the Car repo 1`] = `
 {
   "id": Any<String>,
   "make": "Honda",
@@ -36,7 +36,7 @@ exports[`single-table inheritance findOne by subtype repo finds an inserted Car 
 }
 `;
 
-exports[`single-table inheritance findOne by subtype repo finds an inserted Truck by ID through the Truck repo 1`] = `
+exports[`single-table inheritance > findOne by subtype repo > finds an inserted Truck by ID through the Truck repo 1`] = `
 {
   "id": Any<String>,
   "make": "Volvo",
@@ -45,7 +45,7 @@ exports[`single-table inheritance findOne by subtype repo finds an inserted Truc
 }
 `;
 
-exports[`single-table inheritance insert and retrieve by subtype repo inserts a Car and retrieves it via the Car repo 1`] = `
+exports[`single-table inheritance > insert and retrieve by subtype repo > inserts a Car and retrieves it via the Car repo 1`] = `
 {
   "id": Any<String>,
   "make": "Toyota",
@@ -54,7 +54,7 @@ exports[`single-table inheritance insert and retrieve by subtype repo inserts a 
 }
 `;
 
-exports[`single-table inheritance insert and retrieve by subtype repo inserts a Truck and retrieves it via the Truck repo 1`] = `
+exports[`single-table inheritance > insert and retrieve by subtype repo > inserts a Truck and retrieves it via the Truck repo 1`] = `
 {
   "id": Any<String>,
   "make": "Ford",
@@ -63,14 +63,14 @@ exports[`single-table inheritance insert and retrieve by subtype repo inserts a 
 }
 `;
 
-exports[`single-table inheritance polymorphic query via root repo finds both Cars and Trucks when querying via the Vehicle repo 1`] = `
+exports[`single-table inheritance > polymorphic query via root repo > finds both Cars and Trucks when querying via the Vehicle repo 1`] = `
 [
   "InhCar",
   "InhTruck",
 ]
 `;
 
-exports[`single-table inheritance update updating a Car preserves the discriminator and updates the correct fields 1`] = `
+exports[`single-table inheritance > update > updating a Car preserves the discriminator and updates the correct fields 1`] = `
 {
   "id": Any<String>,
   "make": "Alfa Romeo",

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Index should register class-level array index 1`] = `
+exports[`Index > should register class-level array index 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -138,7 +138,7 @@ exports[`Index should register class-level array index 1`] = `
 }
 `;
 
-exports[`Index should register field-level index with custom direction and name 1`] = `
+exports[`Index > should register field-level index with custom direction and name 1`] = `
 {
   "appendOnly": false,
   "cache": null,

@@ -1,4 +1,4 @@
-import { EcJwk, EcString } from "../types";
+import type { EcJwk, EcString } from "../types/index.js";
 
 export const TEST_EC_KEY_B64: EcString = {
   id: "217d138b-6ce6-5e5c-953a-35fb11865b9a",

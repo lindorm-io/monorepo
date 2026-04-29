@@ -1,4 +1,4 @@
-import { stageAbstractEntity } from "../internal/entity/metadata/stage-metadata";
+import { stageAbstractEntity } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Mark a class as an abstract entity (mapped superclass).

@@ -1,6 +1,6 @@
-import { ILogger } from "@lindorm/logger";
-import { IScanData, IScanner, Scanner } from "@lindorm/scanner";
-import { PylonError } from "../../errors";
+import type { ILogger } from "@lindorm/logger";
+import { type IScanData, type IScanner, Scanner } from "@lindorm/scanner";
+import { PylonError } from "../../errors/index.js";
 
 const MIDDLEWARE_FILE = "_middleware";
 const GROUP_PATTERN = /^\(.*\)$/;
@@ -36,7 +36,7 @@ export abstract class PylonScannerBase {
     });
   }
 
-  protected scanDirectory(directory: string): Array<ScannedFile> {
+  protected async scanDirectory(directory: string): Promise<Array<ScannedFile>> {
     if (!Scanner.hasFiles(directory)) {
       throw new PylonError(`Directory [ ${directory} ] is empty`);
     }
@@ -46,10 +46,12 @@ export abstract class PylonScannerBase {
 
     // Root is the scanned directory itself — skip its name, process children
     const middlewareFile = root.children.find((c) => this.isMiddlewareFile(c));
-    const rootMiddleware = middlewareFile ? this.loadMiddleware(middlewareFile) : [];
+    const rootMiddleware = middlewareFile
+      ? await this.loadMiddleware(middlewareFile)
+      : [];
 
     for (const child of root.children) {
-      this.walkTree(child, [], rootMiddleware, files);
+      await this.walkTree(child, [], rootMiddleware, files);
     }
 
     return files;
@@ -126,8 +128,8 @@ export abstract class PylonScannerBase {
     return scan.isFile && this.getBaseName(scan) === MIDDLEWARE_FILE;
   }
 
-  protected loadMiddleware(scan: IScanData): Array<unknown> {
-    const module = this.scanner.require<Record<string, unknown>>(scan.fullPath);
+  protected async loadMiddleware(scan: IScanData): Promise<Array<unknown>> {
+    const module = await this.scanner.import<Record<string, unknown>>(scan.fullPath);
 
     if (module.MIDDLEWARE) {
       return Array.isArray(module.MIDDLEWARE) ? module.MIDDLEWARE : [module.MIDDLEWARE];
@@ -136,12 +138,12 @@ export abstract class PylonScannerBase {
     return [];
   }
 
-  private walkTree(
+  private async walkTree(
     scan: IScanData,
     parentSegments: Array<ParsedSegment>,
     parentMiddleware: Array<unknown>,
     results: Array<ScannedFile>,
-  ): void {
+  ): Promise<void> {
     if (scan.isFile) {
       if (this.isMiddlewareFile(scan)) return;
 
@@ -149,7 +151,7 @@ export abstract class PylonScannerBase {
       const segment = this.parseSegment(name === "index" ? "" : name);
       const pathSegments = segment.path ? [...parentSegments, segment] : parentSegments;
 
-      const module = this.scanner.require<Record<string, unknown>>(scan.fullPath);
+      const module = await this.scanner.import<Record<string, unknown>>(scan.fullPath);
 
       results.push({
         scan,
@@ -167,11 +169,11 @@ export abstract class PylonScannerBase {
 
       const middlewareFile = scan.children.find((c) => this.isMiddlewareFile(c));
       const dirMiddleware = middlewareFile
-        ? [...parentMiddleware, ...this.loadMiddleware(middlewareFile)]
+        ? [...parentMiddleware, ...(await this.loadMiddleware(middlewareFile))]
         : parentMiddleware;
 
       for (const child of scan.children) {
-        this.walkTree(child, segments, dirMiddleware, results);
+        await this.walkTree(child, segments, dirMiddleware, results);
       }
     }
   }

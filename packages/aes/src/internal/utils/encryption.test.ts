@@ -1,6 +1,7 @@
-import { KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
-import { LATEST_AES_VERSION } from "../constants/version";
-import { decryptAes, encryptAes } from "./encryption";
+import { type KryptosEncryption, KryptosKit } from "@lindorm/kryptos";
+import { LATEST_AES_VERSION } from "../constants/version.js";
+import { decryptAes, encryptAes } from "./encryption.js";
+import { describe, expect, test } from "vitest";
 
 describe("aes-data", () => {
   test("should encrypt and decrypt", () => {

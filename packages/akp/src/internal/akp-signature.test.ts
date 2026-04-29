@@ -3,13 +3,14 @@ import {
   TEST_AKP_KEY_ML_DSA_44,
   TEST_AKP_KEY_ML_DSA_65,
   TEST_AKP_KEY_ML_DSA_87,
-} from "../__fixtures__/keys";
-import { AkpError } from "../errors";
+} from "../__fixtures__/keys.js";
+import { AkpError } from "../errors/index.js";
 import {
   assertAkpSignature,
   createAkpSignature,
   verifyAkpSignature,
-} from "./akp-signature";
+} from "./akp-signature.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("akp-signature", () => {
   const encoding = "base64";

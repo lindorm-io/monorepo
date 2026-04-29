@@ -1,5 +1,5 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import type { ResolvedFilter } from "./resolve-filters";
+import type { ResolvedFilter } from "./resolve-filters.js";
 import { Predicated } from "@lindorm/utils";
 
 /**

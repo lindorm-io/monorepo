@@ -1,2 +1,2 @@
-export * from "./get-key";
-export * from "./okp-signature";
+export * from "./get-key.js";
+export * from "./okp-signature.js";

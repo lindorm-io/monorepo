@@ -1,5 +1,6 @@
-import { PylonError } from "../../../errors/PylonError";
-import { assertSessionCookieSafeForSockets } from "./assert-session-cookie-safe-for-sockets";
+import { PylonError } from "../../../errors/PylonError.js";
+import { assertSessionCookieSafeForSockets } from "./assert-session-cookie-safe-for-sockets.js";
+import { describe, expect, test } from "vitest";
 
 describe("assertSessionCookieSafeForSockets", () => {
   test("should pass when session is not configured", () => {
@@ -47,7 +48,7 @@ describe("assertSessionCookieSafeForSockets", () => {
         session: { enabled: true } as any,
         cors: { allowOrigins: "*" },
       });
-      fail("expected to throw");
+      expect.fail("expected to throw");
     } catch (err: any) {
       expect(err).toMatchSnapshot({
         id: expect.any(String),

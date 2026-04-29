@@ -1,20 +1,20 @@
-import { buildDpopProof } from "../internal/build-dpop-proof";
+import { buildDpopProof } from "../internal/build-dpop-proof.js";
+import { BadGatewayError, InternalServerError } from "@lindorm/errors";
 import { isArray, isString } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
-import {
+import type { ILogger } from "@lindorm/logger";
+import type {
   Dict,
   DpopSigner,
   OpenIdConfigurationResponse,
   OpenIdTokenResponse,
 } from "@lindorm/types";
-import { Conduit } from "../classes";
-import { ConduitError } from "../errors";
-import { ConduitMiddleware, RequestOptions } from "../types";
-import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware";
-import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware";
-import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware";
-import { conduitChangeResponseDataMiddleware } from "./conduit-change-response-data-middleware";
-import { createConduitDpopAuthMiddleware } from "./conduit-dpop-auth-middleware";
+import { Conduit } from "../classes/index.js";
+import type { ConduitMiddleware, RequestOptions } from "../types/index.js";
+import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware.js";
+import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware.js";
+import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware.js";
+import { conduitChangeResponseDataMiddleware } from "./conduit-change-response-data-middleware.js";
+import { createConduitDpopAuthMiddleware } from "./conduit-dpop-auth-middleware.js";
 
 export type ClientCredentialsAuthLocation = "body" | "header";
 
@@ -146,7 +146,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
         tokenUri = tokenEndpoint;
 
         if (!tokenUri) {
-          throw new ConduitError("Token endpoint not found in OpenID configuration", {
+          throw new BadGatewayError("Token endpoint not found in OpenID configuration", {
             debug: { issuer },
           });
         }
@@ -172,7 +172,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
 
         requestOptions.form = form;
       } else {
-        throw new ConduitError("Unsupported content type", {
+        throw new InternalServerError("Unsupported content type", {
           debug: { contentType },
         });
       }
@@ -218,11 +218,11 @@ export const conduitClientCredentialsMiddlewareFactory = (
             : undefined;
 
       if (!data.accessToken) {
-        throw new ConduitError("Token not provided", { debug: data });
+        throw new BadGatewayError("Token not provided", { debug: data });
       }
 
       if (!ttl) {
-        throw new ConduitError("Token expiration not provided", { debug: data });
+        throw new BadGatewayError("Token expiration not provided", { debug: data });
       }
 
       replaceInCache(cache, {

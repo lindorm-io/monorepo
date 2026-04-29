@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateMigration should orchestrate the full pipeline and write a file 1`] = `
+exports[`generateMigration > should orchestrate the full pipeline and write a file 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 
 export class AddEmail implements MigrationInterface {

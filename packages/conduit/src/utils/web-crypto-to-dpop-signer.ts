@@ -1,4 +1,4 @@
-import { DpopSigner, Jwks, JwksAlgorithm } from "@lindorm/types";
+import type { DpopSigner, Jwks, JwksAlgorithm } from "@lindorm/types";
 
 // Produce a DpopSigner from a non-extractable Web Crypto key pair.
 // The private key stays in the browser's key store — only the public

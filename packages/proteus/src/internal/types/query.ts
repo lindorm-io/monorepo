@@ -1,8 +1,8 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import type { IEntity } from "../../interfaces";
-import type { LockMode } from "../../types/find-options";
-import type { RelationStrategy } from "../entity/types/metadata";
-import type { ResolvedFilter } from "../utils/query/resolve-filters";
+import type { IEntity } from "../../interfaces/index.js";
+import type { LockMode } from "../../types/find-options.js";
+import type { RelationStrategy } from "../entity/types/metadata.js";
+import type { ResolvedFilter } from "../utils/query/resolve-filters.js";
 
 export type PredicateEntry<E extends IEntity> = {
   predicate: Predicate<E>;

@@ -1,14 +1,24 @@
 import { EventEmitter } from "events";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
-jest.mock("cross-spawn", () => ({
+vi.mock("cross-spawn", async () => ({
   __esModule: true,
-  default: jest.fn(),
+  default: vi.fn(),
 }));
 
 import spawn from "cross-spawn";
-import { initGit, isInsideGitRepo } from "./git";
+import { initGit, isInsideGitRepo } from "./git.js";
 
-const mockedSpawn = spawn as unknown as jest.Mock;
+const mockedSpawn = spawn as unknown as Mock;
 
 const scheduleClose = (child: EventEmitter, code: number): void => {
   setImmediate(() => child.emit("close", code));
@@ -28,13 +38,13 @@ const queueChildren = (codes: Array<number>): Array<EventEmitter> => {
 };
 
 describe("initGit", () => {
-  let stderr: jest.SpyInstance;
-  let stdout: jest.SpyInstance;
+  let stderr: MockInstance;
+  let stdout: MockInstance;
 
   beforeEach(() => {
     mockedSpawn.mockReset();
-    stderr = jest.spyOn(process.stderr, "write").mockImplementation(() => true);
-    stdout = jest.spyOn(process.stdout, "write").mockImplementation(() => true);
+    stderr = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+    stdout = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
   });
 
   afterEach(() => {

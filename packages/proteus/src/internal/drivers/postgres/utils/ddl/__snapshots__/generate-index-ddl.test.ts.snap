@@ -1,102 +1,102 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateIndexDDL accepts a named index of exactly 63 characters 1`] = `
+exports[`generateIndexDDL > accepts a named index of exactly 63 characters 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj" ON "products" ("email" ASC);",
 ]
 `;
 
-exports[`generateIndexDDL explicit WHERE takes precedence over sparse flag 1`] = `
+exports[`generateIndexDDL > explicit WHERE takes precedence over sparse flag 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_o8ppodgftp1" ON "products" ("phone" ASC) WHERE phone IS NOT NULL AND verified = true;",
 ]
 `;
 
-exports[`generateIndexDDL generates a CONCURRENTLY index 1`] = `
+exports[`generateIndexDDL > generates a CONCURRENTLY index 1`] = `
 [
   "CREATE INDEX CONCURRENTLY IF NOT EXISTS "idx_FLeL6bYI3C1" ON "products" ("email" ASC);",
 ]
 `;
 
-exports[`generateIndexDDL generates a DESC index 1`] = `
+exports[`generateIndexDDL > generates a DESC index 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_P0hwzoBlw8Z" ON "products" ("createdAt" DESC);",
 ]
 `;
 
-exports[`generateIndexDDL generates a UNIQUE index 1`] = `
+exports[`generateIndexDDL > generates a UNIQUE index 1`] = `
 [
   "CREATE UNIQUE INDEX IF NOT EXISTS "idx_qoTt9mzRT_1" ON "products" ("slug" ASC);",
 ]
 `;
 
-exports[`generateIndexDDL generates a composite index 1`] = `
+exports[`generateIndexDDL > generates a composite index 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_cs8RgW3uIH1" ON "products" ("tenant_id" ASC, "email" ASC);",
 ]
 `;
 
-exports[`generateIndexDDL generates a named index 1`] = `
+exports[`generateIndexDDL > generates a named index 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_name" ON "products" ("name" ASC);",
 ]
 `;
 
-exports[`generateIndexDDL generates a simple ASC index with auto-name 1`] = `
+exports[`generateIndexDDL > generates a simple ASC index with auto-name 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_FLeL6bYI3C1" ON "products" ("email" ASC);",
 ]
 `;
 
-exports[`generateIndexDDL generates index with INCLUDE columns 1`] = `
+exports[`generateIndexDDL > generates index with INCLUDE columns 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_FLeL6bYI3C1" ON "products" ("email" ASC) INCLUDE ("name", "age");",
 ]
 `;
 
-exports[`generateIndexDDL generates index with NULLS FIRST 1`] = `
+exports[`generateIndexDDL > generates index with NULLS FIRST 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_y1vniHxeOj8" ON "products" ("deletedAt" ASC NULLS FIRST);",
 ]
 `;
 
-exports[`generateIndexDDL generates index with NULLS LAST 1`] = `
+exports[`generateIndexDDL > generates index with NULLS LAST 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_y1vniHxeOj8" ON "products" ("deletedAt" DESC NULLS LAST);",
 ]
 `;
 
-exports[`generateIndexDDL generates index with USING gin 1`] = `
+exports[`generateIndexDDL > generates index with USING gin 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_vf24-KY9qgv" ON "products" USING gin ("tags" ASC);",
 ]
 `;
 
-exports[`generateIndexDDL generates index with WITH storage parameters 1`] = `
+exports[`generateIndexDDL > generates index with WITH storage parameters 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_r1oMfXBoB7B" ON "products" ("name" ASC) WITH (fillfactor=70);",
 ]
 `;
 
-exports[`generateIndexDDL generates index with both INCLUDE and WITH in correct order 1`] = `
+exports[`generateIndexDDL > generates index with both INCLUDE and WITH in correct order 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_FLeL6bYI3C1" ON "products" ("email" ASC) INCLUDE ("name") WITH (fillfactor=70);",
 ]
 `;
 
-exports[`generateIndexDDL generates index with explicit WHERE clause 1`] = `
+exports[`generateIndexDDL > generates index with explicit WHERE clause 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_FLeL6bYI3C1" ON "products" ("email" ASC) WHERE deleted_at IS NULL;",
 ]
 `;
 
-exports[`generateIndexDDL generates sparse index with auto WHERE IS NOT NULL 1`] = `
+exports[`generateIndexDDL > generates sparse index with auto WHERE IS NOT NULL 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_o8ppodgftp1" ON "products" ("phone" ASC) WHERE "phone" IS NOT NULL;",
 ]
 `;
 
-exports[`generateIndexDDL uses schema-qualified table name when namespace is provided 1`] = `
+exports[`generateIndexDDL > uses schema-qualified table name when namespace is provided 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_FLeL6bYI3C1" ON "catalog"."products" ("email" ASC);",
 ]

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createAccessTokenMiddleware DPoP (HTTP) passes DPoP header to aegis and stores verified token 1`] = `
+exports[`createAccessTokenMiddleware > DPoP (HTTP) > passes DPoP header to aegis and stores verified token 1`] = `
 {
   "dpop": {
     "httpMethod": "POST",
@@ -21,7 +21,7 @@ exports[`createAccessTokenMiddleware DPoP (HTTP) passes DPoP header to aegis and
 }
 `;
 
-exports[`createAccessTokenMiddleware HTTP context falls back to session.accessToken when no header present 1`] = `
+exports[`createAccessTokenMiddleware > HTTP context > falls back to session.accessToken when no header present 1`] = `
 {
   "header": {
     "baseFormat": "JWT",
@@ -33,7 +33,7 @@ exports[`createAccessTokenMiddleware HTTP context falls back to session.accessTo
 }
 `;
 
-exports[`createAccessTokenMiddleware HTTP context verifies bearer header and stores on ctx.state.tokens.accessToken 1`] = `
+exports[`createAccessTokenMiddleware > HTTP context > verifies bearer header and stores on ctx.state.tokens.accessToken 1`] = `
 {
   "decoded": {},
   "header": {},

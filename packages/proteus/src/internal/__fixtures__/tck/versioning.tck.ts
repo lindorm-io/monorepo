@@ -1,8 +1,9 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Versioning Suite
 // Tests temporal versioning with composite PK (VersionKey).
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const versioningSuite = (
   getHandle: () => TckDriverHandle,

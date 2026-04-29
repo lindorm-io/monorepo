@@ -1,1 +1,1 @@
-export { SerializationError } from "../../errors/SerializationError";
+export { SerializationError } from "../../errors/SerializationError.js";

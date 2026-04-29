@@ -1,5 +1,5 @@
-import { PylonSocket, PylonSocketData } from "./pylon-socket";
-import { IoServer } from "./socket";
+import type { PylonSocket, PylonSocketData } from "./pylon-socket.js";
+import type { IoServer } from "./socket.js";
 
 export type PylonIoContextHttp = {
   app: IoServer;

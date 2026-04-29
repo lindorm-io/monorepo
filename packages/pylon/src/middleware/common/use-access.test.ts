@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
-import { useAccess } from "./use-access";
+import { useAccess } from "./use-access.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("useAccess", () => {
   let ctx: any;
@@ -7,7 +8,7 @@ describe("useAccess", () => {
   beforeEach(() => {
     ctx = {
       auth: {
-        introspect: jest.fn().mockResolvedValue({
+        introspect: vi.fn().mockResolvedValue({
           active: true,
           roles: ["user"],
           permissions: ["users:read"],
@@ -35,7 +36,7 @@ describe("useAccess", () => {
 
   describe("with ctx.auth (introspection)", () => {
     test("should call next when all checks pass", async () => {
-      const next = jest.fn();
+      const next = vi.fn();
 
       await expect(
         useAccess({
@@ -54,12 +55,12 @@ describe("useAccess", () => {
     test("should throw 401 when token is not active", async () => {
       ctx.auth.introspect.mockResolvedValue({ active: false });
 
-      await expect(useAccess({ roles: ["user"] })(ctx, jest.fn())).rejects.toThrow(
+      await expect(useAccess({ roles: ["user"] })(ctx, vi.fn())).rejects.toThrow(
         ClientError,
       );
 
       try {
-        await useAccess({ roles: ["user"] })(ctx, jest.fn());
+        await useAccess({ roles: ["user"] })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(401);
         expect(err.message).toMatchSnapshot();
@@ -68,11 +69,11 @@ describe("useAccess", () => {
 
     test("should throw 403 when roles check fails", async () => {
       await expect(
-        useAccess({ roles: ["admin", "superadmin"] })(ctx, jest.fn()),
+        useAccess({ roles: ["admin", "superadmin"] })(ctx, vi.fn()),
       ).rejects.toThrow(ClientError);
 
       try {
-        await useAccess({ roles: ["admin", "superadmin"] })(ctx, jest.fn());
+        await useAccess({ roles: ["admin", "superadmin"] })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(403);
         expect(err.message).toMatchSnapshot();
@@ -82,11 +83,11 @@ describe("useAccess", () => {
 
     test("should throw 403 when permissions check fails", async () => {
       await expect(
-        useAccess({ permissions: ["users:read", "users:delete"] })(ctx, jest.fn()),
+        useAccess({ permissions: ["users:read", "users:delete"] })(ctx, vi.fn()),
       ).rejects.toThrow(ClientError);
 
       try {
-        await useAccess({ permissions: ["users:read", "users:delete"] })(ctx, jest.fn());
+        await useAccess({ permissions: ["users:read", "users:delete"] })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(403);
         expect(err.message).toMatchSnapshot();
@@ -96,11 +97,11 @@ describe("useAccess", () => {
 
     test("should throw 403 when scopes check fails", async () => {
       await expect(
-        useAccess({ scope: ["admin:all", "system:write"] })(ctx, jest.fn()),
+        useAccess({ scope: ["admin:all", "system:write"] })(ctx, vi.fn()),
       ).rejects.toThrow(ClientError);
 
       try {
-        await useAccess({ scope: ["admin:all", "system:write"] })(ctx, jest.fn());
+        await useAccess({ scope: ["admin:all", "system:write"] })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(403);
         expect(err.message).toMatchSnapshot();
@@ -109,12 +110,12 @@ describe("useAccess", () => {
     });
 
     test("should throw 403 when levelOfAssurance is too low", async () => {
-      await expect(useAccess({ levelOfAssurance: 3 })(ctx, jest.fn())).rejects.toThrow(
+      await expect(useAccess({ levelOfAssurance: 3 })(ctx, vi.fn())).rejects.toThrow(
         ClientError,
       );
 
       try {
-        await useAccess({ levelOfAssurance: 3 })(ctx, jest.fn());
+        await useAccess({ levelOfAssurance: 3 })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(403);
         expect(err.details).toMatchSnapshot();
@@ -130,12 +131,12 @@ describe("useAccess", () => {
         adjustedAccessLevel: 1,
       });
 
-      await expect(useAccess({ levelOfAssurance: 1 })(ctx, jest.fn())).rejects.toThrow(
+      await expect(useAccess({ levelOfAssurance: 1 })(ctx, vi.fn())).rejects.toThrow(
         ClientError,
       );
 
       try {
-        await useAccess({ levelOfAssurance: 1 })(ctx, jest.fn());
+        await useAccess({ levelOfAssurance: 1 })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(403);
         expect(err.details).toMatchSnapshot();
@@ -143,12 +144,12 @@ describe("useAccess", () => {
     });
 
     test("should throw 403 when adjustedAccessLevel is too low", async () => {
-      await expect(useAccess({ adjustedAccessLevel: 5 })(ctx, jest.fn())).rejects.toThrow(
+      await expect(useAccess({ adjustedAccessLevel: 5 })(ctx, vi.fn())).rejects.toThrow(
         ClientError,
       );
 
       try {
-        await useAccess({ adjustedAccessLevel: 5 })(ctx, jest.fn());
+        await useAccess({ adjustedAccessLevel: 5 })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(403);
         expect(err.details).toMatchSnapshot();
@@ -164,12 +165,12 @@ describe("useAccess", () => {
         levelOfAssurance: 2,
       });
 
-      await expect(useAccess({ adjustedAccessLevel: 1 })(ctx, jest.fn())).rejects.toThrow(
+      await expect(useAccess({ adjustedAccessLevel: 1 })(ctx, vi.fn())).rejects.toThrow(
         ClientError,
       );
 
       try {
-        await useAccess({ adjustedAccessLevel: 1 })(ctx, jest.fn());
+        await useAccess({ adjustedAccessLevel: 1 })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(403);
         expect(err.details).toMatchSnapshot();
@@ -184,8 +185,8 @@ describe("useAccess", () => {
           scope: ["admin:all"],
           levelOfAssurance: 4,
           adjustedAccessLevel: 3,
-        })(ctx, jest.fn());
-        fail("Expected error to be thrown");
+        })(ctx, vi.fn());
+        expect.fail("Expected error to be thrown");
       } catch (err: any) {
         expect(err).toBeInstanceOf(ClientError);
         expect(err.status).toBe(403);
@@ -207,7 +208,7 @@ describe("useAccess", () => {
         },
       };
 
-      const next = jest.fn();
+      const next = vi.fn();
 
       await expect(
         useAccess({
@@ -223,11 +224,11 @@ describe("useAccess", () => {
 
     test("should throw 401 when custom token is missing", async () => {
       await expect(
-        useAccess({ roles: ["user"], token: "customToken" })(ctx, jest.fn()),
+        useAccess({ roles: ["user"], token: "customToken" })(ctx, vi.fn()),
       ).rejects.toThrow(ClientError);
 
       try {
-        await useAccess({ roles: ["user"], token: "customToken" })(ctx, jest.fn());
+        await useAccess({ roles: ["user"], token: "customToken" })(ctx, vi.fn());
       } catch (err: any) {
         expect(err.status).toBe(401);
       }

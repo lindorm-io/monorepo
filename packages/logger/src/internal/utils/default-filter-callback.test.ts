@@ -1,4 +1,5 @@
-import { defaultFilterCallback } from "./default-filter-callback";
+import { defaultFilterCallback } from "./default-filter-callback.js";
+import { describe, expect, test } from "vitest";
 
 describe("defaultFilterCallback", () => {
   test("should return [Filtered] for truthy values", () => {

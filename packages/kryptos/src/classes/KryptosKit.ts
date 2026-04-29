@@ -1,16 +1,16 @@
 import { B64 } from "@lindorm/b64";
 import { expiresAt } from "@lindorm/date";
 import { randomUUID } from "crypto";
-import { KryptosError } from "../errors";
-import {
+import { KryptosError } from "../errors/index.js";
+import type {
   IKryptos,
   IKryptosAkp,
   IKryptosEc,
   IKryptosOct,
   IKryptosOkp,
   IKryptosRsa,
-} from "../interfaces";
-import {
+} from "../interfaces/index.js";
+import type {
   KryptosAlgorithm,
   KryptosAuto,
   KryptosCurve,
@@ -32,18 +32,18 @@ import {
   KryptosGenerateRsaSig,
   KryptosLike,
   KryptosType,
-} from "../types";
-import { KryptosGenerate } from "../internal/types/generate";
+} from "../types/index.js";
+import type { KryptosGenerate } from "../internal/types/generate.js";
 import {
   autoGenerateConfig,
   generateKey,
   generateKeyAsync,
-} from "../internal/utils/generate";
-import { calculateKeyOps } from "../internal/utils/key-ops";
-import { fromOptions } from "../internal/utils/from-options";
-import { isB64, isDer, isJwk, isPem } from "../internal/utils/is";
-import { stampCertificate } from "../internal/utils/stamp-certificate";
-import { Kryptos } from "./Kryptos";
+} from "../internal/utils/generate.js";
+import { calculateKeyOps } from "../internal/utils/key-ops.js";
+import { fromOptions } from "../internal/utils/from-options.js";
+import { isB64, isDer, isJwk, isPem } from "../internal/utils/is.js";
+import { stampCertificate } from "../internal/utils/stamp-certificate.js";
+import { Kryptos } from "./Kryptos.js";
 
 type Env = {
   import(string: string): IKryptos;

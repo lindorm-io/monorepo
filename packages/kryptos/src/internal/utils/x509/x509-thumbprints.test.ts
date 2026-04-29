@@ -1,6 +1,7 @@
-import { TEST_X509_LEAF_PEM } from "../../../__fixtures__/x509";
-import { parseX509 } from "./parse-x509";
-import { x5tS256 } from "./x509-thumbprints";
+import { TEST_X509_LEAF_PEM } from "../../../__fixtures__/x509.js";
+import { parseX509 } from "./parse-x509.js";
+import { x5tS256 } from "./x509-thumbprints.js";
+import { describe, expect, test } from "vitest";
 
 describe("x509-thumbprints", () => {
   const [leaf] = parseX509(TEST_X509_LEAF_PEM);

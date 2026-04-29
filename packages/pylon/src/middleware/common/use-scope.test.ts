@@ -1,16 +1,17 @@
 import { ServerError } from "@lindorm/errors";
-import { useScope } from "./use-scope";
+import { useScope } from "./use-scope.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("useScope", () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
 
   beforeEach(() => {
-    next = jest.fn();
+    next = vi.fn();
 
     ctx = {
       proteus: {
-        setFilterParams: jest.fn(),
+        setFilterParams: vi.fn(),
       },
       state: {
         tenant: "tenant-abc",
@@ -31,7 +32,7 @@ describe("useScope", () => {
 
     try {
       await useScope({ params: () => ({}) })(ctx, next);
-      fail("expected error");
+      expect.fail("expected error");
     } catch (err: any) {
       expect(err).toBeInstanceOf(ServerError);
       expect(err.message).toMatchSnapshot();

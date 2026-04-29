@@ -1,8 +1,8 @@
 import { randomUUID } from "crypto";
 import {
-  Kryptos,
-  KryptosAlgorithm,
-  KryptosEncryption,
+  type IKryptos,
+  type KryptosAlgorithm,
+  type KryptosEncryption,
   KryptosKit,
 } from "@lindorm/kryptos";
 
@@ -49,7 +49,7 @@ export const createOctKryptos = (
   raw: Buffer,
   algorithm: KryptosAlgorithm,
   encryption?: KryptosEncryption,
-): Kryptos =>
+): IKryptos =>
   KryptosKit.from.der({
     id: randomUUID(),
     algorithm,

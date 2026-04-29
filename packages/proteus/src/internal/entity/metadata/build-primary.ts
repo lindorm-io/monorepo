@@ -1,8 +1,8 @@
 import type { Constructor, Dict } from "@lindorm/types";
 import { snakeCase } from "@lindorm/case";
 import { uniq } from "@lindorm/utils";
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import { IEntity } from "../../../interfaces";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import type { IEntity } from "../../../interfaces/index.js";
 import type {
   EmbeddedListLoadingScope,
   EntityMetadata,
@@ -11,28 +11,28 @@ import type {
   MetaExtra,
   MetaField,
   MetaFieldDecorator,
-} from "../types/metadata";
-import type { MetaInheritance } from "../types/inheritance";
+} from "../types/metadata.js";
+import type { MetaInheritance } from "../types/inheritance.js";
 import type {
   StagedEmbedded,
   StagedEmbeddedList,
   StagedFieldModifier,
   StagedRelationModifier,
-} from "../types/staged";
+} from "../types/staged.js";
 import {
   generateAutoFilters,
   generateDiscriminatorFilter,
   sortScopeFields,
-} from "./auto-filters";
-import { generateAutoIndexes } from "./auto-indexes";
-import { collectAll, collectOwn, collectSingular } from "./collect";
-import { inferGeneratedTypes } from "./infer-generated-type";
-import { validateEmbeddedListInitializers } from "./validate-embedded-list-initializers";
-import { validateFields } from "./validate-fields";
-import { validateIndexes } from "./validate-indexes";
-import { validatePrimaryKeys, validateVersionKeys } from "./validate-primary-keys";
-import { validateFilters } from "./validate-filters";
-import { validateUniques } from "./validate-uniques";
+} from "./auto-filters.js";
+import { generateAutoIndexes } from "./auto-indexes.js";
+import { collectAll, collectOwn, collectSingular } from "./collect.js";
+import { inferGeneratedTypes } from "./infer-generated-type.js";
+import { validateEmbeddedListInitializers } from "./validate-embedded-list-initializers.js";
+import { validateFields } from "./validate-fields.js";
+import { validateIndexes } from "./validate-indexes.js";
+import { validatePrimaryKeys, validateVersionKeys } from "./validate-primary-keys.js";
+import { validateFilters } from "./validate-filters.js";
+import { validateUniques } from "./validate-uniques.js";
 
 const primaryCache = new Map<Function, Omit<EntityMetadata, "relations">>();
 

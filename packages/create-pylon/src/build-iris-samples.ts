@@ -5,8 +5,8 @@ export type IrisSampleFiles = {
 
 const publisherContent = (): string =>
   [
-    `import { source as irisSource } from "../source";`,
-    `import { SampleMessage } from "../messages/SampleMessage";`,
+    `import { source as irisSource } from "../source.js";`,
+    `import { SampleMessage } from "../messages/SampleMessage.js";`,
     ``,
     `const publisher = irisSource.publisher(SampleMessage);`,
     ``,
@@ -20,9 +20,9 @@ const publisherContent = (): string =>
 
 const subscriberContent = (): string =>
   [
-    `import { logger } from "../../logger";`,
-    `import { source as irisSource } from "../source";`,
-    `import { SampleMessage } from "../messages/SampleMessage";`,
+    `import { logger } from "../../logger/index.js";`,
+    `import { source as irisSource } from "../source.js";`,
+    `import { SampleMessage } from "../messages/SampleMessage.js";`,
     ``,
     `const bus = irisSource.messageBus(SampleMessage);`,
     ``,

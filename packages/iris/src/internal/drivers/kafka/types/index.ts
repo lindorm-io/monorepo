@@ -1,1 +1,1 @@
-export * from "./kafka-types";
+export * from "./kafka-types.js";

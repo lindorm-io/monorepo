@@ -1,13 +1,16 @@
-import { createMockAmphora } from "@lindorm/amphora/mocks";
-import { createMockIrisSource } from "@lindorm/iris/mocks";
-import { createMockLogger } from "@lindorm/logger";
-import { createMockProteusSource } from "@lindorm/proteus/mocks";
+import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
+import { createMockIrisSource } from "@lindorm/iris/mocks/vitest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
 import { join } from "path";
 import request from "supertest";
-import { PylonHttp } from "./PylonHttp";
-import { PylonRouter } from "./PylonRouter";
+import { PylonHttp } from "./PylonHttp.js";
+import { PylonRouter } from "./PylonRouter.js";
+import { describe, expect, test, vi } from "vitest";
 
-const createPylonHttp = (overrides: Record<string, unknown> = {}): PylonHttp => {
+const createPylonHttp = async (
+  overrides: Record<string, unknown> = {},
+): Promise<PylonHttp> => {
   const pylonHttp = new PylonHttp({
     amphora: createMockAmphora() as any,
     logger: createMockLogger(),
@@ -15,14 +18,14 @@ const createPylonHttp = (overrides: Record<string, unknown> = {}): PylonHttp => 
   });
 
   pylonHttp.loadMiddleware();
-  pylonHttp.loadRouters();
+  await pylonHttp.loadRouters();
 
   return pylonHttp;
 };
 
 describe("PylonHttp health endpoint", () => {
   test("should respond 204 when no proteus, iris, or callback is configured", async () => {
-    const pylonHttp = createPylonHttp();
+    const pylonHttp = await createPylonHttp();
 
     await request(pylonHttp.callback).get("/health").expect(204);
   });
@@ -30,9 +33,9 @@ describe("PylonHttp health endpoint", () => {
   test("should prefer the user-provided callback over auto-built one", async () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
-    const health = jest.fn();
+    const health = vi.fn();
 
-    const pylonHttp = createPylonHttp({
+    const pylonHttp = await createPylonHttp({
       proteus,
       iris,
       callbacks: { health },
@@ -49,7 +52,7 @@ describe("PylonHttp health endpoint", () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
 
-    const pylonHttp = createPylonHttp({
+    const pylonHttp = await createPylonHttp({
       proteus,
       iris,
       callbacks: { health: null },
@@ -64,7 +67,7 @@ describe("PylonHttp health endpoint", () => {
   test("should auto-ping proteus when provided without a callback", async () => {
     const proteus = createMockProteusSource();
 
-    const pylonHttp = createPylonHttp({ proteus });
+    const pylonHttp = await createPylonHttp({ proteus });
 
     await request(pylonHttp.callback).get("/health").expect(204);
 
@@ -74,7 +77,7 @@ describe("PylonHttp health endpoint", () => {
   test("should auto-ping iris when provided without a callback", async () => {
     const iris = createMockIrisSource();
 
-    const pylonHttp = createPylonHttp({ iris });
+    const pylonHttp = await createPylonHttp({ iris });
 
     await request(pylonHttp.callback).get("/health").expect(204);
 
@@ -85,7 +88,7 @@ describe("PylonHttp health endpoint", () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
 
-    const pylonHttp = createPylonHttp({ proteus, iris });
+    const pylonHttp = await createPylonHttp({ proteus, iris });
 
     await request(pylonHttp.callback).get("/health").expect(204);
 
@@ -97,7 +100,7 @@ describe("PylonHttp health endpoint", () => {
     const proteus = createMockProteusSource();
     proteus.ping.mockResolvedValueOnce(false);
 
-    const pylonHttp = createPylonHttp({ proteus });
+    const pylonHttp = await createPylonHttp({ proteus });
 
     const response = await request(pylonHttp.callback).get("/health").expect(503);
 
@@ -111,7 +114,7 @@ describe("PylonHttp health endpoint", () => {
     const iris = createMockIrisSource();
     iris.ping.mockRejectedValueOnce(new Error("broker down"));
 
-    const pylonHttp = createPylonHttp({ iris });
+    const pylonHttp = await createPylonHttp({ iris });
 
     const response = await request(pylonHttp.callback).get("/health").expect(503);
 
@@ -127,7 +130,7 @@ describe("PylonHttp health endpoint", () => {
     proteus.ping.mockResolvedValueOnce(false);
     iris.ping.mockRejectedValueOnce(new Error("broker down"));
 
-    const pylonHttp = createPylonHttp({ proteus, iris });
+    const pylonHttp = await createPylonHttp({ proteus, iris });
 
     const response = await request(pylonHttp.callback).get("/health").expect(503);
 
@@ -151,14 +154,14 @@ describe("PylonHttp routes option", () => {
   };
 
   test("should accept a bare directory path string and scan it", async () => {
-    const pylonHttp = createPylonHttp({ routes: routesDir });
+    const pylonHttp = await createPylonHttp({ routes: routesDir });
 
     const response = await request(pylonHttp.callback).get("/custom").expect(200);
     expect(response.body.route).toBe("custom");
   });
 
   test("should accept a bare PylonHttpRouters entry and mount it", async () => {
-    const pylonHttp = createPylonHttp({
+    const pylonHttp = await createPylonHttp({
       routes: { path: "/solo", router: buildRouter("solo") },
     });
 
@@ -167,7 +170,7 @@ describe("PylonHttp routes option", () => {
   });
 
   test("should accept an array of pre-built PylonHttpRouters", async () => {
-    const pylonHttp = createPylonHttp({
+    const pylonHttp = await createPylonHttp({
       routes: [
         { path: "/alpha", router: buildRouter("alpha") },
         { path: "/beta", router: buildRouter("beta") },
@@ -182,14 +185,14 @@ describe("PylonHttp routes option", () => {
   });
 
   test("should accept an array of directory path strings and scan each", async () => {
-    const pylonHttp = createPylonHttp({ routes: [routesDir] });
+    const pylonHttp = await createPylonHttp({ routes: [routesDir] });
 
     const response = await request(pylonHttp.callback).get("/custom").expect(200);
     expect(response.body.route).toBe("custom");
   });
 
   test("should accept a mixed array of scanner paths and pre-built routers", async () => {
-    const pylonHttp = createPylonHttp({
+    const pylonHttp = await createPylonHttp({
       routes: [routesDir, { path: "/mixed", router: buildRouter("mixed") }],
     });
 

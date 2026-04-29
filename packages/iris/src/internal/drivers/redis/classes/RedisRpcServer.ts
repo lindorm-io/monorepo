@@ -1,23 +1,24 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import type { IMessage } from "../../../../interfaces";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types";
-import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase";
-import { resolveStreamKey } from "../utils/resolve-stream-key";
-import { resolveGroupName } from "../utils/resolve-group-name";
-import { serializeStreamFields } from "../utils/serialize-stream-fields";
-import { xaddToStream } from "../utils/xadd-to-stream";
-import { createConsumerLoop } from "../utils/create-consumer-loop";
-import { stopConsumerLoop } from "../utils/stop-consumer-loop";
+import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types.js";
+import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase.js";
+import { resolveStreamKey } from "../utils/resolve-stream-key.js";
+import { resolveGroupName } from "../utils/resolve-group-name.js";
+import { serializeStreamFields } from "../utils/serialize-stream-fields.js";
+import { xaddToStream } from "../utils/xadd-to-stream.js";
+import { createConsumerLoop } from "../utils/create-consumer-loop.js";
+import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
 
 export type RedisRpcServerOptions<Req extends IMessage, Res extends IMessage> = {
   state: RedisSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

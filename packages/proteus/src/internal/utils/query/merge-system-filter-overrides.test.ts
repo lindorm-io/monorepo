@@ -1,8 +1,9 @@
+import { describe, expect, test } from "vitest";
 import {
   SCOPE_FILTER_NAME,
   SOFT_DELETE_FILTER_NAME,
-} from "../../entity/metadata/auto-filters";
-import { mergeSystemFilterOverrides } from "./merge-system-filter-overrides";
+} from "../../entity/metadata/auto-filters.js";
+import { mergeSystemFilterOverrides } from "./merge-system-filter-overrides.js";
 
 describe("mergeSystemFilterOverrides", () => {
   test("should return undefined when withDeleted is false, withoutScope is false, and no request overrides", () => {

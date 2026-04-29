@@ -1,14 +1,14 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`lowerCase should convert CONSTANT_CASE 1`] = `"constant case"`;
+exports[`lowerCase > should convert CONSTANT_CASE 1`] = `"constant case"`;
 
-exports[`lowerCase should convert Capital Case 1`] = `"capital case"`;
+exports[`lowerCase > should convert Capital Case 1`] = `"capital case"`;
 
-exports[`lowerCase should convert PascalCase 1`] = `"pascal case"`;
+exports[`lowerCase > should convert PascalCase 1`] = `"pascal case"`;
 
-exports[`lowerCase should convert Sentence case 1`] = `"sentence case"`;
+exports[`lowerCase > should convert Sentence case 1`] = `"sentence case"`;
 
-exports[`lowerCase should convert array with objects 1`] = `
+exports[`lowerCase > should convert array with objects 1`] = `
 [
   {
     "camel case": true,
@@ -37,7 +37,7 @@ exports[`lowerCase should convert array with objects 1`] = `
 ]
 `;
 
-exports[`lowerCase should convert array with strings 1`] = `
+exports[`lowerCase > should convert array with strings 1`] = `
 [
   "camel case",
   "capital case",
@@ -52,15 +52,15 @@ exports[`lowerCase should convert array with strings 1`] = `
 ]
 `;
 
-exports[`lowerCase should convert camelCase 1`] = `"camel case"`;
+exports[`lowerCase > should convert camelCase 1`] = `"camel case"`;
 
-exports[`lowerCase should convert dot.case 1`] = `"dot case"`;
+exports[`lowerCase > should convert dot.case 1`] = `"dot case"`;
 
-exports[`lowerCase should convert kebab-case 1`] = `"kebab case"`;
+exports[`lowerCase > should convert kebab-case 1`] = `"kebab case"`;
 
-exports[`lowerCase should convert lower case 1`] = `"lower case"`;
+exports[`lowerCase > should convert lower case 1`] = `"lower case"`;
 
-exports[`lowerCase should convert object keys 1`] = `
+exports[`lowerCase > should convert object keys 1`] = `
 {
   "camel case": true,
   "capital case": true,
@@ -75,6 +75,6 @@ exports[`lowerCase should convert object keys 1`] = `
 }
 `;
 
-exports[`lowerCase should convert path/case 1`] = `"path case"`;
+exports[`lowerCase > should convert path/case 1`] = `"path case"`;
 
-exports[`lowerCase should convert snake_case 1`] = `"snake case"`;
+exports[`lowerCase > should convert snake_case 1`] = `"snake case"`;

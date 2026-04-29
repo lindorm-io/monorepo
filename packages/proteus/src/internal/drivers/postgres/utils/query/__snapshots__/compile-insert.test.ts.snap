@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileInsert should compile a basic insert 1`] = `
+exports[`compileInsert > should compile a basic insert 1`] = `
 {
   "params": [
     "abc-123",
@@ -11,7 +11,7 @@ exports[`compileInsert should compile a basic insert 1`] = `
 }
 `;
 
-exports[`compileInsertBulk should compile multi-row insert 1`] = `
+exports[`compileInsertBulk > should compile multi-row insert 1`] = `
 {
   "params": [
     "1",

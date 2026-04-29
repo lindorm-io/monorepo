@@ -1,13 +1,14 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../../interfaces";
-import type { RedisSharedState } from "../types/redis-types";
-import type { PipelineStage } from "../../../types/pipeline-stage";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
+import type { RedisSharedState } from "../types/redis-types.js";
+import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
-} from "../../../classes/DriverStreamProcessorBase";
-import { RedisStreamPipeline } from "./RedisStreamPipeline";
+} from "../../../classes/DriverStreamProcessorBase.js";
+import { RedisStreamPipeline } from "./RedisStreamPipeline.js";
 
 export type RedisStreamProcessorOptions =
   DriverStreamProcessorBaseOptions<RedisSharedState>;
@@ -30,7 +31,7 @@ export class RedisStreamProcessor<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: unknown;
+    meta?: IrisHookMeta;
     amphora?: unknown;
   }): RedisStreamPipeline {
     return new RedisStreamPipeline({
@@ -41,7 +42,7 @@ export class RedisStreamProcessor<
       inputTopic: options.inputTopic,
       outputClass: options.outputClass,
       outputTopic: options.outputTopic,
-      context: options.context,
+      meta: options.meta,
       amphora: options.amphora,
     });
   }

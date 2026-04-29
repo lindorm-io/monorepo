@@ -1,5 +1,5 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`useValidation should throw ClientError 403 when validation fails 1`] = `"audience mismatch"`;
+exports[`useValidation > should throw ClientError 403 when validation fails 1`] = `"audience mismatch"`;
 
-exports[`useValidation should throw ClientError when token not found at path 1`] = `"Token not found"`;
+exports[`useValidation > should throw ClientError when token not found at path 1`] = `"Token not found"`;

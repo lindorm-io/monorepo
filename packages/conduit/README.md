@@ -1,6 +1,8 @@
 # @lindorm/conduit
 
-Middleware-based HTTP client built on Axios with automatic retries, circuit breaking, rate limiting, request deduplication, response caching, OAuth2 client credentials, and Zod schema validation.
+Middleware-based HTTP client built on Axios with retries, circuit breaking, rate limiting, request deduplication, response caching, OAuth2 client credentials, DPoP, and Zod schema validation.
+
+This package is **ESM-only**. All examples use `import`; `require` is not supported.
 
 ## Installation
 
@@ -8,7 +10,7 @@ Middleware-based HTTP client built on Axios with automatic retries, circuit brea
 npm install @lindorm/conduit
 ```
 
-`axios` and `form-data` are bundled as direct dependencies.
+`@lindorm/logger` is an optional peer dependency — it only needs to be installed if you pass a logger to the `Conduit` constructor.
 
 ## Quick Start
 
@@ -17,89 +19,108 @@ import { Conduit } from "@lindorm/conduit";
 
 const client = new Conduit({ baseURL: "https://api.example.com" });
 
-// GET
-const { data } = await client.get<User[]>("/users");
+const { data } = await client.get<Array<User>>("/users");
 
-// POST with body
 const { data: created } = await client.post<User>("/users", {
   body: { name: "Jane", email: "jane@example.com" },
 });
 
-// Path parameters and query
 const { data: user } = await client.get<User>("/users/:id/posts", {
   params: { id: "123" },
   query: { limit: 10, offset: 0 },
 });
-// Resolves to: /users/123/posts?limit=10&offset=0
+// resolves to /users/123/posts?limit=10&offset=0
 ```
 
 ## Constructor Options
 
 ```typescript
+import { Conduit } from "@lindorm/conduit";
+
 const client = new Conduit({
-  adapter: "http", // Axios adapter: "http" (default) or "fetch"
-  alias: "MyAPI", // Human-readable name for logging
-  baseURL: "https://api.example.com", // Base URL for all requests
-  config: {}, // Native Axios config pass-through
-  environment: "production", // Added as X-Environment header
-  headers: { "X-Client": "v1" }, // Default headers for all requests
-  logger: myLogger, // ILogger instance (enables request/response logging)
-  middleware: [], // Middleware pipeline
-  retryCallback: myCallback, // Custom retry predicate
+  adapter: "http",
+  alias: "MyAPI",
+  baseURL: "https://api.example.com",
+  config: {},
+  environment: "production",
+  headers: { "X-Client": "v1" },
+  logger,
+  middleware: [],
+  retryCallback: (err, attempt, config) => attempt < config.maxAttempts,
   retryOptions: {
-    // Retry configuration
     maxAttempts: 5,
     strategy: "exponential",
     timeout: 250,
     timeoutMax: 10000,
   },
-  timeout: 30000, // Request timeout in ms (default: 30000)
-  withCredentials: false, // Include credentials
+  timeout: 30000,
+  withCredentials: false,
 });
 ```
 
-`adapter` selects the underlying Axios adapter. `"http"` (the default) uses Node's `http`/`https` modules and supports stream uploads. `"fetch"` uses Node's native `fetch`/undici. The option can also be passed per-request.
+| Option            | Type                             | Default         | Description                                                                                  |
+| ----------------- | -------------------------------- | --------------- | -------------------------------------------------------------------------------------------- |
+| `adapter`         | `"http" \| "fetch"`              | `"http"`        | Axios adapter. `"http"` uses Node `http`/`https`; `"fetch"` uses native fetch / undici.      |
+| `alias`           | `string`                         | `null`          | Human-readable name used in log entries.                                                     |
+| `baseURL`         | `URL \| string`                  | `undefined`     | Base URL prepended to every request path.                                                    |
+| `config`          | `RawAxiosRequestConfig` (subset) | `{}`            | Native Axios config pass-through (excluding fields Conduit owns: method, url, headers, etc). |
+| `environment`     | `Environment`                    | `null`          | Sent as the `X-Environment` request header.                                                  |
+| `headers`         | `Dict<string>`                   | `{}`            | Default headers merged into every request.                                                   |
+| `logger`          | `ILogger`                        | `undefined`     | When set, request and response logging middleware are added automatically.                   |
+| `middleware`      | `Array<ConduitMiddleware>`       | `[]`            | Instance-wide middleware pipeline.                                                           |
+| `retryCallback`   | `RetryCallback`                  | network + 5xx\* | Predicate deciding whether a failed request is retried.                                      |
+| `retryOptions`    | `RetryOptions`                   | see below       | Retry config from `@lindorm/retry`.                                                          |
+| `timeout`         | `number`                         | `30000`         | Per-request timeout in milliseconds.                                                         |
+| `withCredentials` | `boolean`                        | `undefined`     | Whether to send credentials with cross-origin requests.                                      |
+
+\* The default predicate retries on network errors and HTTP `502`, `503`, `504`.
 
 ## Request Options
 
-Every HTTP method (`get`, `post`, `put`, `patch`, `delete`, `head`, `options`) accepts a path and an optional options object:
+Every HTTP method (`get`, `post`, `put`, `patch`, `delete`, `head`, `options`) accepts a path/URL and an optional options object:
 
 ```typescript
 const { data, status, headers } = await client.get<ResponseType>("/path", {
-  adapter: "fetch", // Per-request Axios adapter override
-  body: { key: "value" }, // Request body (POST/PUT/PATCH)
-  config: {}, // Native Axios config overrides
-  expectedResponse: "json", // "json" | "text" | "blob" | "arraybuffer" | "stream" | "formdata" | "document"
-  filename: "upload.zip", // Filename for stream uploads
-  form: formData, // FormData for multipart uploads
-  headers: { "X-Custom": "value" }, // Per-request headers
-  middleware: [myMiddleware], // Per-request middleware
-  onDownloadProgress: (e) => {}, // Download progress callback
-  onRetry: (err, attempt, config) => {}, // Called before each retry attempt
-  onUploadProgress: (e) => {}, // Upload progress callback
-  params: { id: "123" }, // URL path parameters (:id substitution)
-  query: { search: "foo" }, // Query string parameters
-  retryCallback: myCallback, // Per-request retry predicate
-  retryOptions: { maxAttempts: 3 }, // Per-request retry config
-  signal: abortController.signal, // AbortSignal for cancellation
-  stream: readableStream, // Readable stream for uploads
-  timeout: 5000, // Per-request timeout
-  withCredentials: true, // Per-request credentials
+  adapter: "fetch",
+  body: { key: "value" },
+  config: {},
+  expectedResponse: "json",
+  filename: "upload.zip",
+  form: formData,
+  headers: { "X-Custom": "value" },
+  middleware: [myMiddleware],
+  onDownloadProgress: ({ loaded, total }) => {},
+  onRetry: (err, attempt, config) => {},
+  onUploadProgress: ({ loaded, total }) => {},
+  params: { id: "123" },
+  query: { search: "foo" },
+  retryCallback: (err, attempt, config) => false,
+  retryOptions: { maxAttempts: 3 },
+  signal: abortController.signal,
+  stream: readableStream,
+  timeout: 5000,
+  withCredentials: true,
 });
 ```
 
-You can also use the generic `request()` method:
+`expectedResponse` accepts `"arraybuffer" | "blob" | "document" | "formdata" | "json" | "stream" | "text"`.
+
+The generic `request()` method takes a single combined options object:
 
 ```typescript
-const result = await client.request<Data>(
-  {
-    method: "POST",
-    path: "/items",
-    // or: url: "https://other-api.com/items"
-  },
-  { body: { name: "item" } },
-);
+const result = await client.request<Data>({
+  method: "POST",
+  path: "/items",
+  body: { name: "item" },
+});
+
+const result2 = await client.request<Data>({
+  method: "GET",
+  url: "https://other-api.com/items",
+});
 ```
+
+`request` throws if neither `path` nor `url` is provided.
 
 ## Response Shape
 
@@ -114,27 +135,38 @@ type ConduitResponse<D> = {
 };
 ```
 
+## Default Headers
+
+Every request automatically sets:
+
+- `Date` — current timestamp (`toUTCString`)
+- `X-Correlation-Id` — random UUID per request (override with `conduitCorrelationMiddleware`)
+- `X-Request-Id` — random UUID per request
+- `X-Environment` — only when `environment` is configured on the constructor
+
 ## Middleware
 
-Conduit uses a Koa-style middleware pipeline. Each middleware receives `(ctx, next)` and can modify the request before `next()` and/or the response after `next()`.
+Conduit uses a Koa-style middleware pipeline. Each middleware receives `(ctx, next)` and may modify the request before `next()` and/or the response after `next()`.
 
-Instance middleware runs before per-request middleware. When a logger is provided, request/response logging middleware wraps the entire pipeline automatically.
+The execution order is: response logger (if `logger` is set) → default headers → instance middleware → per-request middleware → request logger (if `logger` is set) → terminal Axios handler.
 
-### Writing Custom Middleware
+### Writing custom middleware
 
 ```typescript
-import { ConduitMiddleware } from "@lindorm/conduit";
+import type { ConduitMiddleware } from "@lindorm/conduit";
 
 const timingMiddleware: ConduitMiddleware = async (ctx, next) => {
-  // Before request
   const start = Date.now();
   ctx.req.headers["X-Request-Start"] = String(start);
 
   await next();
 
-  // After response
   const elapsed = Date.now() - start;
-  console.log(`${ctx.req.config.method} ${ctx.req.url} took ${elapsed}ms`);
+  ctx.logger?.debug("Request finished", {
+    method: ctx.req.config.method,
+    url: ctx.req.url,
+    elapsed,
+  });
 };
 ```
 
@@ -146,36 +178,68 @@ import {
   conduitBearerAuthMiddleware,
 } from "@lindorm/conduit";
 
-// Basic auth - sets Authorization: Basic <base64(user:pass)>
-conduitBasicAuthMiddleware("username", "password");
+// Authorization: Basic <base64(user:pass)>
+const basic = conduitBasicAuthMiddleware("username", "password");
 
-// Bearer token - sets Authorization: Bearer <token>
-conduitBearerAuthMiddleware("my-access-token");
+// Authorization: Bearer <token>
+const bearer = conduitBearerAuthMiddleware("my-access-token");
 
-// Custom token type
-conduitBearerAuthMiddleware("my-token", "DPoP");
+// Authorization: <type> <token>
+const dpopBearer = conduitBearerAuthMiddleware("my-token", "DPoP");
 ```
+
+### DPoP (RFC 9449)
+
+`createConduitDpopAuthMiddleware` is a curried factory. The outer call binds a long-lived signer; the inner call binds a per-request access token. Each request signs a fresh DPoP proof JWT.
+
+```typescript
+import { createConduitDpopAuthMiddleware } from "@lindorm/conduit";
+
+const dpopAuth = createConduitDpopAuthMiddleware(signer);
+
+await client.get("/orders", {
+  middleware: [dpopAuth(accessToken)],
+});
+
+await client.get("/orders", {
+  middleware: [dpopAuth(accessToken, { nonce: serverIssuedNonce })],
+});
+```
+
+A DPoP signer needs an `algorithm` (a `JwksAlgorithm`), the public JWK, and a `sign(data: Uint8Array) => Promise<Uint8Array>` function. The `webCryptoToDpopSigner` helper builds one from a Web Crypto `CryptoKeyPair`:
+
+```typescript
+import { webCryptoToDpopSigner } from "@lindorm/conduit";
+
+const keyPair = await crypto.subtle.generateKey(
+  { name: "ECDSA", namedCurve: "P-256" },
+  false,
+  ["sign", "verify"],
+);
+
+const signer = await webCryptoToDpopSigner(keyPair);
+```
+
+Supported algorithms: `ES256` / `ES384` / `ES512` (ECDSA P-256/384/521), `RS256` / `RS384` / `RS512` (RSASSA-PKCS1-v1_5), and `PS256` / `PS384` / `PS512` (RSA-PSS).
 
 ### OAuth2 Client Credentials
 
-Factory pattern that handles OIDC discovery, token fetching, caching, and automatic refresh:
+`conduitClientCredentialsMiddlewareFactory` returns an async factory that performs OIDC discovery (unless `tokenUri` is supplied), fetches and caches access tokens, deduplicates concurrent token requests for the same `(audience, issuer)`, and emits a per-request middleware that attaches the token via Bearer auth (or DPoP, when `dpopSigner` is supplied).
 
 ```typescript
 import { conduitClientCredentialsMiddlewareFactory } from "@lindorm/conduit";
 
 const getAuthMiddleware = conduitClientCredentialsMiddlewareFactory({
+  authLocation: "body",
   clientId: "my-client-id",
   clientSecret: "my-client-secret",
+  clockTolerance: 10,
+  contentType: "application/json",
+  defaultExpiration: 3600,
   issuer: "https://auth.example.com",
-  // Optional:
-  authLocation: "body", // "body" (default) or "header" (Basic auth)
-  contentType: "application/json", // or "application/x-www-form-urlencoded"
-  clockTolerance: 10, // Seconds before expiry to refresh (default: 10)
-  defaultExpiration: 3600, // Fallback TTL in seconds
-  tokenUri: "https://auth.example.com/token", // Skip OIDC discovery
+  tokenUri: "https://auth.example.com/oauth/token",
 });
 
-// Per-request: fetches/caches tokens automatically
 const client = new Conduit({
   baseURL: "https://api.example.com",
   middleware: [
@@ -187,7 +251,24 @@ const client = new Conduit({
 });
 ```
 
-Tokens are cached and reused across calls. Concurrent token requests for the same audience/issuer are deduplicated.
+Factory configuration:
+
+| Option              | Type                                                        | Default                | Description                                                                                                       |
+| ------------------- | ----------------------------------------------------------- | ---------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `authLocation`      | `"body" \| "header"`                                        | `"body"`               | `"body"` puts `client_id`/`client_secret` in the body. `"header"` uses HTTP Basic.                                |
+| `clientId`          | `string`                                                    | required               | OAuth2 client identifier.                                                                                         |
+| `clientSecret`      | `string`                                                    | required               | OAuth2 client secret.                                                                                             |
+| `clockTolerance`    | `number`                                                    | `10`                   | Seconds subtracted from the token TTL when caching, to refresh before expiry.                                     |
+| `contentType`       | `"application/json" \| "application/x-www-form-urlencoded"` | `"application/json"`   | Token request body encoding.                                                                                      |
+| `defaultExpiration` | `number`                                                    | `undefined`            | Fallback TTL in seconds when the token response provides neither `exp` nor `expires_in`.                          |
+| `dpopSigner`        | `DpopSigner`                                                | `undefined`            | When set, the token request carries a DPoP proof and the issued token is bound via `Authorization: DPoP <token>`. |
+| `grantType`         | `"client_credentials"`                                      | `"client_credentials"` | Grant type sent to the token endpoint.                                                                            |
+| `issuer`            | `string`                                                    | required               | OIDC issuer URL. Used to discover the token endpoint when `tokenUri` is not given.                                |
+| `tokenUri`          | `string`                                                    | `undefined`            | Skip OIDC discovery and POST directly to this URL.                                                                |
+
+The factory takes an optional second argument `cache: Array<CacheItem>` — pass your own array to share a token cache between factories.
+
+The returned function signature is `(options?: { audience?: string; scope?: Array<string> }, logger?: ILogger) => Promise<ConduitMiddleware>`.
 
 ### Case Conversion
 
@@ -202,41 +283,39 @@ import {
 const client = new Conduit({
   baseURL: "https://api.example.com",
   middleware: [
-    conduitChangeRequestBodyMiddleware("snake"), // { userName } -> { user_name }
-    conduitChangeRequestQueryMiddleware("snake"), // ?userName -> ?user_name
-    conduitChangeRequestHeadersMiddleware("header"), // xCustom -> X-Custom
-    conduitChangeResponseDataMiddleware("camel"), // { user_name } -> { userName }
+    conduitChangeRequestBodyMiddleware("snake"),
+    conduitChangeRequestQueryMiddleware("snake"),
+    conduitChangeRequestHeadersMiddleware("header"),
+    conduitChangeResponseDataMiddleware("camel"),
   ],
 });
 ```
 
-Supported modes: `"camel"`, `"snake"`, `"pascal"`, `"header"`.
+Modes are any `ChangeCase` value from `@lindorm/case`: `"camel" | "capital" | "constant" | "dot" | "header" | "kebab" | "lower" | "pascal" | "path" | "sentence" | "snake" | "none"`. Defaults: body → `snake`, query → `snake`, headers → `header`, response data → `camel`.
 
 ### Response Caching
 
-In-memory cache for GET requests:
+In-memory cache for `GET` requests with `2xx` status. The cache key is method + URL + JSON-serialised query.
 
 ```typescript
 import { createConduitCacheMiddleware } from "@lindorm/conduit";
 
-const client = new Conduit({
-  baseURL: "https://api.example.com",
-  middleware: [
-    createConduitCacheMiddleware({
-      maxAge: 300000, // TTL in ms (default: 300000 = 5 minutes)
-      maxEntries: 1000, // Max cached responses (default: 1000, FIFO eviction)
-    }),
-  ],
+const cacheMiddleware = createConduitCacheMiddleware({
+  maxAge: 300_000,
+  maxEntries: 1000,
 });
 ```
 
-- Only caches GET requests with 2xx responses
-- Respects `Cache-Control: no-cache` and `no-store` response headers
-- Returns shallow copies to prevent cache mutation
+| Option       | Default  | Description                                       |
+| ------------ | -------- | ------------------------------------------------- |
+| `maxAge`     | `300000` | TTL in milliseconds.                              |
+| `maxEntries` | `1000`   | Cap on cached responses; oldest is evicted first. |
+
+Responses with `Cache-Control: no-cache` or `no-store` are not cached. Cached entries are returned as shallow copies.
 
 ### Request Deduplication
 
-Deduplicates concurrent identical GET/HEAD requests:
+Coalesces concurrent identical `GET` and `HEAD` requests into a single in-flight request:
 
 ```typescript
 import { createConduitDeduplicationMiddleware } from "@lindorm/conduit";
@@ -246,61 +325,66 @@ const client = new Conduit({
   middleware: [createConduitDeduplicationMiddleware()],
 });
 
-// These fire only ONE HTTP request; both resolve with the same response
 const [a, b] = await Promise.all([
   client.get("/expensive-data"),
   client.get("/expensive-data"),
 ]);
+// only one HTTP request fires; both promises resolve with the same response
 ```
 
 ### Rate Limiting
 
-Client-side token bucket rate limiter:
+Token-bucket rate limiter. Throws a `TooManyRequestsError` (from `@lindorm/errors`) when the bucket is empty.
 
 ```typescript
 import { createConduitRateLimitMiddleware } from "@lindorm/conduit";
 
-const client = new Conduit({
-  baseURL: "https://api.example.com",
-  middleware: [
-    createConduitRateLimitMiddleware({
-      maxRequests: 100, // Tokens per window (default: 100)
-      windowMs: 60000, // Window in ms (default: 60000)
-      perOrigin: true, // Separate buckets per origin (default: true)
-    }),
-  ],
+const rateLimit = createConduitRateLimitMiddleware({
+  maxRequests: 100,
+  windowMs: 60_000,
+  perOrigin: true,
 });
 ```
 
-Throws a `ConduitError` with status 429 when the limit is exceeded. Tokens refill continuously.
+| Option        | Default | Description                                                               |
+| ------------- | ------- | ------------------------------------------------------------------------- |
+| `maxRequests` | `100`   | Bucket capacity (and refill target across one window).                    |
+| `windowMs`    | `60000` | Refill window in milliseconds. Tokens refill continuously, not in bursts. |
+| `perOrigin`   | `true`  | Use a separate bucket per origin. When `false`, a single global bucket.   |
 
 ### Circuit Breaker
 
-Per-origin circuit breaker that prevents cascading failures:
+Per-origin circuit breaker built on `@lindorm/breaker`. The breaker name is `conduit:<origin>`.
 
 ```typescript
 import { createConduitCircuitBreakerMiddleware } from "@lindorm/conduit";
 
-const client = new Conduit({
-  baseURL: "https://api.example.com",
-  middleware: [
-    createConduitCircuitBreakerMiddleware({
-      expiration: 120, // Seconds before re-probing (default: 120)
-      serverErrorThreshold: 5, // 5xx errors before opening (default: 5)
-      clientErrorThreshold: 1000, // 4xx errors before opening (default: 1000)
-      verifier: customVerifier, // Custom state transition logic (optional)
-    }),
-  ],
-});
+const breaker = createConduitCircuitBreakerMiddleware(
+  {
+    threshold: 5,
+    window: 60_000,
+    halfOpenDelay: 30_000,
+    halfOpenBackoff: 2,
+    halfOpenMaxDelay: 600_000,
+  },
+  logger,
+);
 ```
 
-States: **closed** (normal) -> **open** (blocking requests) -> **half-open** (probing with one request) -> **closed** (recovered).
+| Option             | Type                                                          | Description                                                                                                                                                                                      |
+| ------------------ | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `threshold`        | `number`                                                      | Number of transient failures within `window` before the breaker opens.                                                                                                                           |
+| `window`           | `number`                                                      | Sliding failure window in milliseconds.                                                                                                                                                          |
+| `halfOpenDelay`    | `number`                                                      | Initial delay before the breaker probes (transitions to half-open).                                                                                                                              |
+| `halfOpenBackoff`  | `number`                                                      | Multiplier applied to the half-open delay on repeated probe failures.                                                                                                                            |
+| `halfOpenMaxDelay` | `number`                                                      | Upper bound on the half-open delay.                                                                                                                                                              |
+| `classifier`       | `(error: Error) => "transient" \| "permanent" \| "ignorable"` | Custom error classifier. The default treats `LindormError` instances as: `permanent` for status `501/505/506/510/511`, `transient` for any other `ServerError`, `ignorable` for everything else. |
 
-Unrecoverable status codes (501, 505, 506, 510, 511) immediately open the circuit.
+Defaults are inherited from `@lindorm/breaker`. The signature also accepts a third argument `cache: Map<string, ICircuitBreaker>` for sharing breaker state between middleware instances. When a `logger` is supplied, the middleware logs `open` / `half-open` / `closed` state changes. When the breaker is open, requests reject with a `ServiceUnavailableError` (from `@lindorm/errors`) whose message is `"Circuit breaker is open"`.
 
 ### Schema Validation
 
-Validate responses with Zod schemas:
+Validate response data against a Zod schema:
 
 ```typescript
 import { conduitSchemaMiddleware } from "@lindorm/conduit";
@@ -309,7 +393,7 @@ import { z } from "zod";
 const userSchema = z.object({
   id: z.string(),
   name: z.string(),
-  email: z.string().email(),
+  email: z.email(),
 });
 
 const client = new Conduit({
@@ -317,23 +401,23 @@ const client = new Conduit({
   middleware: [conduitSchemaMiddleware(userSchema)],
 });
 
-// Throws ConduitError if response doesn't match schema
 const { data } = await client.get("/user/123");
-// data is validated against userSchema
+// throws BadGatewayError if data does not match userSchema
 ```
 
-Works with both `ZodObject` (uses `.passthrough()` to preserve extra keys) and `ZodArray`.
+Accepts `ZodObject` (object schemas are parsed in loose mode, preserving extra keys) or `ZodArray`. Validation failures are wrapped in `BadGatewayError` (from `@lindorm/errors`) — the upstream returned data that did not match the contract.
 
 ### Headers
 
 ```typescript
 import { conduitHeaderMiddleware, conduitHeadersMiddleware } from "@lindorm/conduit";
 
-// Single header
-conduitHeaderMiddleware("X-API-Version", "v2");
+const versionHeader = conduitHeaderMiddleware("X-API-Version", "v2");
 
-// Multiple headers
-conduitHeadersMiddleware({ "X-API-Version": "v2", "X-Client-ID": "my-app" });
+const headers = conduitHeadersMiddleware({
+  "X-API-Version": "v2",
+  "X-Client-ID": "my-app",
+});
 ```
 
 ### Correlation and Session Tracking
@@ -341,52 +425,47 @@ conduitHeadersMiddleware({ "X-API-Version": "v2", "X-Client-ID": "my-app" });
 ```typescript
 import { conduitCorrelationMiddleware, conduitSessionMiddleware } from "@lindorm/conduit";
 
-// Sets ctx.req.metadata.correlationId (also sent as X-Correlation-Id header)
-conduitCorrelationMiddleware("correlation-id-123");
-
-// Sets ctx.req.metadata.sessionId
-conduitSessionMiddleware("session-id-456");
+const correlation = conduitCorrelationMiddleware("correlation-id-123");
+const session = conduitSessionMiddleware("session-id-456");
 ```
+
+`conduitCorrelationMiddleware` overrides `ctx.req.metadata.correlationId` (which then becomes the `X-Correlation-Id` request header). `conduitSessionMiddleware` sets `ctx.req.metadata.sessionId`, which the request logger picks up.
 
 ## Retry
 
-By default, requests retry up to 5 times with exponential backoff (250ms base, 10s max) on:
-
-- Network errors (connection failures, DNS errors)
-- Status 502 (Bad Gateway), 503 (Service Unavailable), 504 (Gateway Timeout)
+By default Conduit retries up to 5 times with exponential backoff (250 ms base, 10 s cap) on network errors and HTTP `502`, `503`, `504`. Override per instance or per request:
 
 ```typescript
-import { RetryStrategy } from "@lindorm/conduit";
+import { ClientError } from "@lindorm/errors";
 
 const client = new Conduit({
   baseURL: "https://api.example.com",
   retryOptions: {
     maxAttempts: 3,
-    strategy: "exponential", // or "linear"
+    strategy: "exponential",
     timeout: 500,
-    timeoutMax: 15000,
+    timeoutMax: 15_000,
   },
-  // Custom retry predicate
   retryCallback: (error, attempt, config) => {
-    if (error.isClientError) return false;
-    return attempt < config.maxAttempts;
+    if (error instanceof ClientError) return false;
+    return attempt <= config.maxAttempts;
   },
 });
 
-// Per-request retry notification
 await client.get("/flaky-endpoint", {
   onRetry: (error, attempt, config) => {
-    console.log(`Retry ${attempt}/${config.maxAttempts}: ${error.message}`);
+    console.error(`Retry ${attempt}/${config.maxAttempts}: ${error.message}`);
   },
 });
 ```
+
+`strategy` is `"exponential" | "linear"` (re-exported from `@lindorm/retry` as `RetryStrategy`). Aborted requests stop retrying.
 
 ## Abort / Cancellation
 
 ```typescript
 const controller = new AbortController();
 
-// Cancel after 5 seconds
 setTimeout(() => controller.abort(), 5000);
 
 const { data } = await client.get("/slow-endpoint", {
@@ -394,20 +473,16 @@ const { data } = await client.get("/slow-endpoint", {
 });
 ```
 
-Aborted requests stop retrying immediately.
-
 ## File Uploads
 
 ```typescript
-// FormData
 const form = new FormData();
 form.append("file", blob, "document.pdf");
 form.append("description", "Important document");
 
 await client.post("/upload", { form });
 
-// Stream upload
-import { createReadStream } from "fs";
+import { createReadStream } from "node:fs";
 
 await client.post("/upload", {
   stream: createReadStream("large-file.zip"),
@@ -415,22 +490,21 @@ await client.post("/upload", {
 });
 ```
 
+Stream uploads require the `"http"` adapter.
+
 ## Streaming and Progress
 
 ```typescript
-// Download streaming
 const { data: stream } = await client.get("/large-file", {
   expectedResponse: "stream",
 });
 
-// Download progress
 await client.get("/large-file", {
   onDownloadProgress: ({ loaded, total }) => {
     console.log(`Downloaded ${loaded}/${total ?? "unknown"} bytes`);
   },
 });
 
-// Upload progress
 await client.post("/upload", {
   form: formData,
   onUploadProgress: ({ loaded, total }) => {
@@ -439,73 +513,158 @@ await client.post("/upload", {
 });
 ```
 
-Conduit is built on Axios and supports all HTTP methods, path parameters, query parameters, FormData, stream uploads, abort signals, and the full middleware pipeline.
-
 ## Error Handling
 
+Failed requests are reconstructed into the appropriate class from `@lindorm/errors` so callers can branch on `instanceof` rather than inspecting status codes:
+
 ```typescript
-import { ConduitError } from "@lindorm/conduit";
+import {
+  ClientError,
+  LindormError,
+  NetworkError,
+  NotFoundError,
+  ServerError,
+} from "@lindorm/errors";
 
 try {
-  await client.get("/not-found");
+  await client.get("/users/123");
 } catch (error) {
-  if (error instanceof ConduitError) {
-    error.status; // HTTP status code
-    error.message; // Error message
-    error.isClientError; // true for 4xx
-    error.isServerError; // true for 5xx
-    error.isNetworkError; // true for connection failures (status <= 0, no response)
-    error.config; // Request configuration at time of error
-    error.request; // Request details
-    error.response; // Response details (headers, data, status)
+  if (error instanceof NetworkError) {
+    // DNS failure, connection refused, no response received
+  } else if (error instanceof NotFoundError) {
+    // 404 specifically — the registry resolved this from status or class name
+  } else if (error instanceof ClientError) {
+    // any other 4xx
+  } else if (error instanceof ServerError) {
+    // any 5xx
+  } else if (error instanceof LindormError) {
+    // anything else thrown through Conduit
   }
 }
 ```
 
-`ConduitError` automatically detects Pylon (Lindorm server framework) error responses and extracts structured error fields (`id`, `code`, `data`, `message`, `support`, `title`).
+### How errors are reconstructed
 
-## Automatic Headers
+When an Axios error reaches Conduit, `reconstructFromAxiosError` extracts the status, message, and any Pylon error envelope from the response body, then calls `errorRegistry.reconstruct(...)` from `@lindorm/errors`. The registry resolves the right class in this order:
 
-When a logger is provided, every request automatically includes:
+1. **By name** — if the response carries a Pylon envelope with `error.name`, the registry returns the registered class with that name (e.g. `NotFoundError`, or any custom subclass the consumer registered with `errorRegistry.register(...)`).
+2. **By status** — if no class is registered under the envelope's name, the registry falls back to the class registered for the exact status code (e.g. `404` → `NotFoundError`).
+3. **By status range** — if no exact-status match exists, falls back to `ClientError` for `4xx` or `ServerError` for `5xx`.
+4. **`LindormError`** — final fallback when nothing else matches.
 
-- `Date` -- current timestamp
-- `X-Correlation-Id` -- unique correlation ID (UUID)
-- `X-Request-Id` -- unique request ID (UUID)
-- `X-Environment` -- environment string (if configured)
+When the request fails before any response (network failure, timeout, DNS), `NetworkError` is thrown instead. Its `status` is `-1`.
+
+### Inspecting transport metadata
+
+`config`, `request`, and `response` snapshots from the underlying Axios error are stashed on the reconstructed error under `debug.transport`:
+
+```typescript
+type Transport = {
+  config?: { method?: string; url?: string; headers?: Dict; /* ... */ };
+  request?: { method?: string; path?: string; /* ... */ };
+  response?: { status?: number; statusText?: string; data?: unknown; headers?: Dict };
+};
+
+catch (error) {
+  if (error instanceof LindormError) {
+    const transport = error.debug?.transport as Transport | undefined;
+    transport?.response?.status;
+    transport?.response?.headers;
+  }
+}
+```
+
+Reach for `debug.transport` only when you need wire-level details — the high-level `error.status`, `error.message`, `error.code`, `error.data`, `error.support`, `error.title` already carry the application-meaningful fields lifted from the Pylon envelope.
+
+### Throwing custom error subclasses
+
+Servers throwing custom `LindormError` subclasses (e.g. `class UserSuspendedError extends ForbiddenError`) can have those classes round-trip through Conduit by registering them on both ends:
+
+```typescript
+import { errorRegistry, ForbiddenError } from "@lindorm/errors";
+
+export class UserSuspendedError extends ForbiddenError {
+  public constructor(message: string, options = {}) {
+    super(message, { code: "USER_SUSPENDED", ...options });
+  }
+}
+
+errorRegistry.register(UserSuspendedError);
+```
+
+When a Pylon server throws `UserSuspendedError` and Conduit deserializes the response, name-based resolution returns the same class, and `error instanceof UserSuspendedError` is `true` on the client.
+
+## Public Exports
+
+### Classes
+
+- `Conduit` — HTTP client.
+
+### Interfaces
+
+- `IConduit` — public surface implemented by `Conduit`.
+
+### Middleware
+
+- `conduitBasicAuthMiddleware(username, password)`
+- `conduitBearerAuthMiddleware(accessToken, tokenType?)`
+- `conduitChangeRequestBodyMiddleware(mode?)`
+- `conduitChangeRequestHeadersMiddleware(mode?)`
+- `conduitChangeRequestQueryMiddleware(mode?)`
+- `conduitChangeResponseDataMiddleware(mode?)`
+- `conduitClientCredentialsMiddlewareFactory(config, cache?)`
+- `conduitCorrelationMiddleware(correlationId)`
+- `conduitHeaderMiddleware(name, value)`
+- `conduitHeadersMiddleware(headers)`
+- `conduitSchemaMiddleware(schema)`
+- `conduitSessionMiddleware(sessionId)`
+- `createConduitCacheMiddleware(config?)`
+- `createConduitCircuitBreakerMiddleware(config?, logger?, cache?)`
+- `createConduitDeduplicationMiddleware()`
+- `createConduitDpopAuthMiddleware(signer)`
+- `createConduitRateLimitMiddleware(config?)`
+
+### Utilities
+
+- `webCryptoToDpopSigner(keyPair)` — turn a Web Crypto `CryptoKeyPair` into a `DpopSigner`.
+
+### Types
+
+`AppContext`, `ConduitAdapter`, `ConduitCircuitBreakerCache`, `ConduitCircuitBreakerConfig`, `ConduitClientCredentialsCache`, `ConduitClientCredentialsMiddlewareFactory`, `ConduitContext`, `ConduitDpopAuthOptions`, `ConduitMiddleware`, `ConduitOptions`, `ConduitResponse`, `ConfigContext`, `ConfigOptions`, `ExpectedResponse`, `MethodOptions`, `OnRetryCallback`, `RequestContext`, `RequestMetadata`, `RequestOptions`, `RetryCallback`, `RetryStrategy` (re-exported from `@lindorm/retry`).
 
 ## Full Example
 
 ```typescript
 import {
   Conduit,
+  conduitBearerAuthMiddleware,
+  conduitChangeRequestBodyMiddleware,
+  conduitChangeResponseDataMiddleware,
   createConduitCacheMiddleware,
   createConduitCircuitBreakerMiddleware,
   createConduitDeduplicationMiddleware,
   createConduitRateLimitMiddleware,
-  conduitChangeRequestBodyMiddleware,
-  conduitChangeResponseDataMiddleware,
-  conduitBearerAuthMiddleware,
 } from "@lindorm/conduit";
 
 const client = new Conduit({
   alias: "ExampleAPI",
   baseURL: "https://api.example.com",
-  logger,
-  timeout: 15000,
   headers: { "X-Client-Version": "1.0.0" },
+  logger,
   middleware: [
-    createConduitCircuitBreakerMiddleware(),
+    createConduitCircuitBreakerMiddleware({}, logger),
     createConduitRateLimitMiddleware({ maxRequests: 50 }),
     createConduitDeduplicationMiddleware(),
-    createConduitCacheMiddleware({ maxAge: 60000 }),
+    createConduitCacheMiddleware({ maxAge: 60_000 }),
     conduitBearerAuthMiddleware(process.env.API_TOKEN!),
     conduitChangeRequestBodyMiddleware("snake"),
     conduitChangeResponseDataMiddleware("camel"),
   ],
   retryOptions: { maxAttempts: 3, strategy: "exponential" },
+  timeout: 15_000,
 });
 
-const { data } = await client.get<User[]>("/v1/users", {
+const { data } = await client.get<Array<User>>("/v1/users", {
   query: { active: true },
 });
 ```

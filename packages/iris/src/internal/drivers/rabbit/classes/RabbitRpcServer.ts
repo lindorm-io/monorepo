@@ -1,22 +1,23 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { ConsumeMessage } from "amqplib";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import type { IMessage } from "../../../../interfaces";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase";
-import { buildAmqpHeaders } from "../utils/build-amqp-headers";
-import { parseAmqpHeaders } from "../utils/parse-amqp-headers";
-import { resolveQueueName } from "../utils/resolve-queue-name";
-import { sanitizeRoutingKey } from "../utils/sanitize-routing-key";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase.js";
+import { buildAmqpHeaders } from "../utils/build-amqp-headers.js";
+import { parseAmqpHeaders } from "../utils/parse-amqp-headers.js";
+import { resolveQueueName } from "../utils/resolve-queue-name.js";
+import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
 
 export type RabbitRpcServerOptions<Req extends IMessage, Res extends IMessage> = {
   state: RabbitSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

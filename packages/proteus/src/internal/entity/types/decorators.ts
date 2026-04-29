@@ -1,5 +1,5 @@
-import { IndexDirection } from "../../types/types";
-import { MetaFieldType, RelationStrategy } from "./metadata";
+import type { IndexDirection } from "../../types/types.js";
+import type { MetaFieldType, RelationStrategy } from "./metadata.js";
 
 export type NamedDecoratorOptions = {
   name?: string;

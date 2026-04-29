@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ScopeField should register scope field with correct metadata 1`] = `
+exports[`ScopeField > should register scope field with correct metadata 1`] = `
 {
   "appendOnly": false,
   "cache": null,

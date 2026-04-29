@@ -1,5 +1,5 @@
-import type { QueryScope } from "../internal/entity/types/metadata";
-import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata";
+import type { QueryScope } from "../internal/entity/types/metadata.js";
+import { stageRelationModifier } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Load a relation lazily — the property returns a `PromiseLike<T>` that resolves on first access.

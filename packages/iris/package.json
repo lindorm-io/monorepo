@@ -17,33 +17,32 @@
   "bin": {
     "iris": "dist/cli.js"
   },
-  "main": "dist/index.js",
+  "type": "module",
   "typings": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
-    "./mocks": {
-      "types": "./dist/mocks/index.d.ts",
-      "default": "./dist/mocks/index.js"
-    }
-  },
-  "typesVersions": {
-    "*": {
-      "mocks": [
-        "dist/mocks/index.d.ts"
-      ]
+    "./mocks/jest": {
+      "types": "./dist/mocks/jest.d.ts",
+      "default": "./dist/mocks/jest.js"
+    },
+    "./mocks/vitest": {
+      "types": "./dist/mocks/vitest.d.ts",
+      "default": "./dist/mocks/vitest.js"
     }
   },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
     "example": "ts-node example",
     "prettier": "prettier --write ./src/*",
-    "test": "composed --file docker-compose.yml jest --forceExit --workerIdleMemoryLimit=512MB",
-    "test:ci": "jest --forceExit --workerIdleMemoryLimit=512MB",
-    "test:update": "composed --file docker-compose.yml jest -u",
-    "test:watch": "composed --file docker-compose.yml jest --detectOpenHandles --watch",
+    "test": "composed --file docker-compose.yml vitest run",
+    "test:unit": "vitest run --config vitest.unit.mjs",
+    "test:integration": "vitest run --config vitest.integration.mjs",
+    "test:weekly": "vitest run --config vitest.weekly.mjs",
+    "test:update": "composed --file docker-compose.yml vitest run -u",
+    "test:watch": "composed --file docker-compose.yml vitest",
     "typecheck": "tsc",
     "typecheck:watch": "tsc -w",
     "update": "ncu -i",
@@ -53,33 +52,28 @@
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
     "@lindorm/aes": "^0.6.5",
-    "@lindorm/amphora": "^0.4.1",
     "@lindorm/errors": "^0.1.18",
     "@lindorm/is": "^0.1.16",
     "@lindorm/json-kit": "^0.5.8",
-    "@lindorm/logger": "^0.5.4",
     "@lindorm/random": "^0.2.4",
     "@lindorm/retry": "^0.2.2",
     "@lindorm/scanner": "^0.4.4",
+    "@lindorm/types": "^0.5.0",
     "commander": "^14.0.3",
     "zod": "^4.3.6"
   },
-  "devDependencies": {
-    "@lindorm/kryptos": "^0.7.0",
-    "@lindorm/types": "^0.5.0",
-    "@types/amqplib": "^0.10.8",
-    "amqplib": "^0.10.9",
-    "ioredis": "^5.10.0",
-    "kafkajs": "^2.2.4",
-    "nats": "^2.29.3"
-  },
   "peerDependencies": {
+    "@lindorm/amphora": "^0.4.1",
+    "@lindorm/logger": "^0.5.4",
     "amqplib": ">=0.10.0",
     "ioredis": ">=5.10.0",
     "kafkajs": ">=2.2.0",
     "nats": ">=2.29.0"
   },
   "peerDependenciesMeta": {
+    "@lindorm/amphora": {
+      "optional": true
+    },
     "amqplib": {
       "optional": true
     },
@@ -92,5 +86,15 @@
     "nats": {
       "optional": true
     }
+  },
+  "devDependencies": {
+    "@lindorm/amphora": "^0.4.1",
+    "@lindorm/kryptos": "^0.7.0",
+    "@lindorm/logger": "^0.5.4",
+    "@types/amqplib": "^0.10.8",
+    "amqplib": "^0.10.9",
+    "ioredis": "^5.10.0",
+    "kafkajs": "^2.2.4",
+    "nats": "^2.29.3"
   }
 }

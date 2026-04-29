@@ -1,8 +1,8 @@
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import type { DeepPartial, Environment } from "@lindorm/types";
 import type { ManagerOptions, SocketOptions } from "socket.io-client";
-import type { ZephyrAuthStrategy } from "../auth/zephyr-auth-strategy";
-import type { ZephyrMiddleware } from "./context";
+import type { ZephyrAuthStrategy } from "../auth/zephyr-auth-strategy.js";
+import type { ZephyrMiddleware } from "./context.js";
 
 export type AdvancedOptions = DeepPartial<
   Omit<ManagerOptions, "autoConnect" | "timeout"> & Omit<SocketOptions, "auth">

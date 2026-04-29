@@ -1,7 +1,7 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
-import type { SqlDialect } from "./sql-dialect";
-import type { InheritanceAliasMap } from "./types";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import type { SqlDialect } from "./sql-dialect.js";
+import type { InheritanceAliasMap } from "./types.js";
 
 export type { InheritanceAliasMap };
 

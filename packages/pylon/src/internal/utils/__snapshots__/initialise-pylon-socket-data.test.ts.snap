@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`initialisePylonSocketData should initialize with all options provided 1`] = `
+exports[`initialisePylonSocketData > should initialize with all options provided 1`] = `
 {
   "app": {
     "domain": "test.lindorm.io",
@@ -13,7 +13,7 @@ exports[`initialisePylonSocketData should initialize with all options provided 1
 }
 `;
 
-exports[`initialisePylonSocketData should use defaults for missing options 1`] = `
+exports[`initialisePylonSocketData > should use defaults for missing options 1`] = `
 {
   "app": {
     "domain": "unknown",
@@ -26,7 +26,7 @@ exports[`initialisePylonSocketData should use defaults for missing options 1`] =
 }
 `;
 
-exports[`initialisePylonSocketData should use defaults for undefined values 1`] = `
+exports[`initialisePylonSocketData > should use defaults for undefined values 1`] = `
 {
   "app": {
     "domain": "unknown",

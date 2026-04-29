@@ -1,28 +1,32 @@
 import { Aegis } from "@lindorm/aegis";
-import { createAuthClient } from "./create-auth-client";
-import { getOpenIdConfiguration as _getOpenIdConfiguration } from "./get-open-id-configuration";
-import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed";
-import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed";
+import { Conduit } from "@lindorm/conduit";
+import { createAuthClient } from "./create-auth-client.js";
+import { getOpenIdConfiguration as _getOpenIdConfiguration } from "./get-open-id-configuration.js";
+import { IntrospectionEndpointFailed } from "../../../errors/IntrospectionEndpointFailed.js";
+import { UserinfoEndpointFailed } from "../../../errors/UserinfoEndpointFailed.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("@lindorm/conduit", () => ({
-  ...jest.requireActual("@lindorm/conduit"),
-  Conduit: jest.fn().mockImplementation(() => ({
-    get: jest.fn(),
-    post: jest.fn(),
-  })),
+vi.mock("@lindorm/conduit", async () => ({
+  ...(await vi.importActual<typeof import("@lindorm/conduit")>("@lindorm/conduit")),
+  Conduit: vi.fn(function () {
+    return {
+      get: vi.fn(),
+      post: vi.fn(),
+    };
+  }),
 }));
 
-jest.mock("./get-open-id-configuration");
+vi.mock("./get-open-id-configuration.js");
 
-const getOpenIdConfiguration = _getOpenIdConfiguration as jest.Mock;
+const getOpenIdConfiguration = _getOpenIdConfiguration as Mock;
 
-const { Conduit } = jest.requireMock("@lindorm/conduit");
+const MockedConduit = Conduit as unknown as Mock;
 
 const createCtx = (overrides: any = {}) => {
   const { state: stateOverrides, ...restOverrides } = overrides;
   return {
     amphora: { config: [] },
-    logger: { child: jest.fn().mockReturnThis(), debug: jest.fn(), time: jest.fn() },
+    logger: { child: vi.fn().mockReturnThis(), debug: vi.fn(), time: vi.fn() },
     state: {
       app: { environment: "test" },
       metadata: { correlationId: "test-corr" },
@@ -46,7 +50,7 @@ const createConfig = (overrides: any = {}) => ({
 
 describe("createAuthClient", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     getOpenIdConfiguration.mockReturnValue({
       authorizationEndpoint: "https://auth.example.com/authorize",
@@ -117,10 +121,10 @@ describe("createAuthClient", () => {
         },
       });
 
-      const mockConduit = Conduit.mock.results[0]?.value ?? { post: jest.fn() };
+      const mockConduit = MockedConduit.mock.results[0]?.value ?? { post: vi.fn() };
       // Need to create client first to trigger Conduit construction
       const client = createAuthClient(ctx as any, createConfig());
-      const conduitInstance = Conduit.mock.results[0].value;
+      const conduitInstance = MockedConduit.mock.results[0].value;
 
       conduitInstance.post.mockResolvedValue({
         data: {
@@ -158,7 +162,7 @@ describe("createAuthClient", () => {
       });
 
       const client = createAuthClient(ctx as any, createConfig());
-      const conduitInstance = Conduit.mock.results[0].value;
+      const conduitInstance = MockedConduit.mock.results[0].value;
 
       conduitInstance.post.mockResolvedValue({
         data: {
@@ -243,7 +247,7 @@ describe("createAuthClient", () => {
       });
 
       const client = createAuthClient(ctx as any, createConfig());
-      const conduitInstance = Conduit.mock.results[0].value;
+      const conduitInstance = MockedConduit.mock.results[0].value;
 
       conduitInstance.post.mockRejectedValue(new Error("Network error"));
 
@@ -260,7 +264,7 @@ describe("createAuthClient", () => {
       });
 
       const client = createAuthClient(ctx as any, createConfig());
-      const conduitInstance = Conduit.mock.results[0].value;
+      const conduitInstance = MockedConduit.mock.results[0].value;
 
       conduitInstance.post.mockResolvedValue({
         data: {
@@ -324,7 +328,7 @@ describe("createAuthClient", () => {
       });
 
       const client = createAuthClient(ctx as any, createConfig());
-      const conduitInstance = Conduit.mock.results[0].value;
+      const conduitInstance = MockedConduit.mock.results[0].value;
 
       conduitInstance.get.mockResolvedValue({
         data: {
@@ -379,7 +383,7 @@ describe("createAuthClient", () => {
       const ctx = createCtx({
         state: { tokens: {} },
         aegis: {
-          verify: jest.fn().mockResolvedValue({
+          verify: vi.fn().mockResolvedValue({
             header: { baseFormat: "JWT" },
             payload: {
               subject: "explicit-user",
@@ -405,12 +409,12 @@ describe("createAuthClient", () => {
       const ctx = createCtx({
         state: { tokens: {} },
         aegis: {
-          verify: jest.fn().mockRejectedValue(new Error("opaque")),
+          verify: vi.fn().mockRejectedValue(new Error("opaque")),
         },
       });
 
       const client = createAuthClient(ctx as any, createConfig());
-      const conduitInstance = Conduit.mock.results[0].value;
+      const conduitInstance = MockedConduit.mock.results[0].value;
 
       conduitInstance.post.mockResolvedValue({
         data: {
@@ -446,7 +450,7 @@ describe("createAuthClient", () => {
       const ctx = createCtx({
         state: { tokens: {} },
         aegis: {
-          verify: jest.fn().mockResolvedValue({
+          verify: vi.fn().mockResolvedValue({
             header: { baseFormat: "JWT" },
             payload: { subject: "cached-user" },
           }),
@@ -466,7 +470,7 @@ describe("createAuthClient", () => {
       const ctx = createCtx({
         state: { tokens: {} },
         aegis: {
-          verify: jest
+          verify: vi
             .fn()
             .mockResolvedValueOnce({
               header: { baseFormat: "JWT" },
@@ -494,7 +498,7 @@ describe("createAuthClient", () => {
       const ctx = createCtx({
         state: { tokens: {} },
         aegis: {
-          verify: jest.fn().mockResolvedValue({
+          verify: vi.fn().mockResolvedValue({
             header: { baseFormat: "JWT" },
             payload: {
               subject: "explicit-user",
@@ -516,12 +520,12 @@ describe("createAuthClient", () => {
       const ctx = createCtx({
         state: { tokens: {} },
         aegis: {
-          verify: jest.fn().mockRejectedValue(new Error("opaque")),
+          verify: vi.fn().mockRejectedValue(new Error("opaque")),
         },
       });
 
       const client = createAuthClient(ctx as any, createConfig());
-      const conduitInstance = Conduit.mock.results[0].value;
+      const conduitInstance = MockedConduit.mock.results[0].value;
 
       conduitInstance.get.mockResolvedValue({
         data: { sub: "endpoint-user", name: "Endpoint" },

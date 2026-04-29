@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createHttpRoomContext should return an http room context with expected shape 1`] = `
+exports[`createHttpRoomContext > should return an http room context with expected shape 1`] = `
 [
   "members",
 ]
 `;
 
-exports[`createRoomContext should return a room context object with expected shape 1`] = `
+exports[`createRoomContext > should return a room context object with expected shape 1`] = `
 [
   "join",
   "leave",

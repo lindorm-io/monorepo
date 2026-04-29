@@ -1,8 +1,9 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { Transform } from "./Transform";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { Transform } from "./Transform.js";
+import { describe, expect, test } from "vitest";
 
 const toUpperCase = (value: unknown) => (value as string).toUpperCase();
 const toLowerCase = (raw: unknown) => (raw as string).toLowerCase();

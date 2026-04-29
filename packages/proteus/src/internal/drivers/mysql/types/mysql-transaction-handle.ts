@@ -1,4 +1,4 @@
-import type { MysqlQueryClient } from "./mysql-query-client";
+import type { MysqlQueryClient } from "./mysql-query-client.js";
 
 export type MysqlTransactionHandle = {
   readonly client: MysqlQueryClient;

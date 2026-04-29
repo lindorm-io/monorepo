@@ -3,7 +3,7 @@
 // Each call produces fresh class declarations with fresh Symbol.metadata.
 
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
+import type { IEntity } from "../../../interfaces/index.js";
 import {
   CreateDateField,
   Default,
@@ -17,7 +17,7 @@ import {
   Unique,
   UpdateDateField,
   VersionField,
-} from "../../../decorators";
+} from "../../../decorators/index.js";
 
 export type MigrationTckEntities = {
   TckMigSimple: Constructor<IEntity>;

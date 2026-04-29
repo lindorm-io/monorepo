@@ -1,25 +1,27 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import type { IrisConnectionState } from "../../../../types";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { KafkaSharedState } from "../types/kafka-types";
-import { KafkaDriver } from "./KafkaDriver";
-import { KafkaPublisher } from "./KafkaPublisher";
-import { KafkaMessageBus } from "./KafkaMessageBus";
-import { KafkaWorkerQueue } from "./KafkaWorkerQueue";
-import { KafkaStreamProcessor } from "./KafkaStreamProcessor";
-import { KafkaRpcClient } from "./KafkaRpcClient";
-import { KafkaRpcServer } from "./KafkaRpcServer";
+import { Kafka as _Kafka } from "kafkajs";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import type { IrisConnectionState } from "../../../../types/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import { KafkaDriver } from "./KafkaDriver.js";
+import { KafkaPublisher } from "./KafkaPublisher.js";
+import { KafkaMessageBus } from "./KafkaMessageBus.js";
+import { KafkaWorkerQueue } from "./KafkaWorkerQueue.js";
+import { KafkaStreamProcessor } from "./KafkaStreamProcessor.js";
+import { KafkaRpcClient } from "./KafkaRpcClient.js";
+import { KafkaRpcServer } from "./KafkaRpcServer.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock kafkajs ---
 const producerEventListeners: Map<string, Array<(payload: unknown) => void>> = new Map();
 
 const mockProducerInstance = {
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  send: jest.fn().mockResolvedValue(undefined),
-  on: jest
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  send: vi.fn().mockResolvedValue(undefined),
+  on: vi
     .fn()
     .mockImplementation((event: string, listener: (payload: unknown) => void) => {
       if (!producerEventListeners.has(event)) {
@@ -41,31 +43,35 @@ const mockProducerInstance = {
 };
 
 const mockAdminInstance = {
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  listTopics: jest.fn().mockResolvedValue([]),
-  createTopics: jest.fn().mockResolvedValue(true),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  listTopics: vi.fn().mockResolvedValue([]),
+  createTopics: vi.fn().mockResolvedValue(true),
 };
 
 const mockConsumerInstance = {
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  subscribe: jest.fn().mockResolvedValue(undefined),
-  run: jest.fn().mockResolvedValue(undefined),
-  pause: jest.fn(),
-  resume: jest.fn(),
-  stop: jest.fn().mockResolvedValue(undefined),
-  commitOffsets: jest.fn().mockResolvedValue(undefined),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  subscribe: vi.fn().mockResolvedValue(undefined),
+  run: vi.fn().mockResolvedValue(undefined),
+  pause: vi.fn(),
+  resume: vi.fn(),
+  stop: vi.fn().mockResolvedValue(undefined),
+  commitOffsets: vi.fn().mockResolvedValue(undefined),
 };
 
-jest.mock("kafkajs", () => ({
-  Kafka: jest.fn().mockImplementation(() => ({
-    producer: () => mockProducerInstance,
-    consumer: () => mockConsumerInstance,
-    admin: () => mockAdminInstance,
-  })),
+vi.mock("kafkajs", async () => ({
+  Kafka: vi.fn(function () {
+    return {
+      producer: () => mockProducerInstance,
+      consumer: () => mockConsumerInstance,
+      admin: () => mockAdminInstance,
+    };
+  }),
   logLevel: { NOTHING: 0, ERROR: 1, WARN: 2, INFO: 4, DEBUG: 5 },
 }));
+
+const Kafka = _Kafka as unknown as Mock;
 
 // --- Test message classes ---
 
@@ -87,13 +93,13 @@ class TckKafkaDriverRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createDriver = (subscribers?: Array<IMessageSubscriber>) => {
@@ -110,7 +116,7 @@ const createDriver = (subscribers?: Array<IMessageSubscriber>) => {
 describe("KafkaDriver", () => {
   beforeEach(() => {
     clearRegistry();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     producerEventListeners.clear();
   });
 
@@ -226,7 +232,7 @@ describe("KafkaDriver", () => {
       const driver = createDriver();
       await driver.connect();
 
-      const sub: IMessageSubscriber = { beforePublish: jest.fn() };
+      const sub: IMessageSubscriber = { beforePublish: vi.fn() };
       const cloned = driver.cloneWithGetters(() => [sub]) as KafkaDriver;
       expect((cloned as any).getSubscribers()).toEqual([sub]);
     });
@@ -278,8 +284,6 @@ describe("KafkaDriver", () => {
 
   describe("connection config passthrough", () => {
     it("should pass full connection config to Kafka constructor", async () => {
-      const { Kafka } = jest.requireMock("kafkajs");
-
       const driver = new KafkaDriver({
         logger: createMockLogger() as any,
         getSubscribers: () => [],
@@ -309,8 +313,6 @@ describe("KafkaDriver", () => {
     });
 
     it("should use prefix as default clientId when not provided", async () => {
-      const { Kafka } = jest.requireMock("kafkajs");
-
       const driver = new KafkaDriver({
         logger: createMockLogger() as any,
         getSubscribers: () => [],

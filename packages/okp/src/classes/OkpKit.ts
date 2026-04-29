@@ -1,12 +1,17 @@
-import { IKryptosOkp, KryptosKit, OKP_SIG_CURVES, OkpSigCurve } from "@lindorm/kryptos";
-import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
-import { OkpError } from "../errors";
-import { OkpKitOptions } from "../types";
+import {
+  type IKryptosOkp,
+  KryptosKit,
+  OKP_SIG_CURVES,
+  type OkpSigCurve,
+} from "@lindorm/kryptos";
+import type { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
+import { OkpError } from "../errors/index.js";
+import type { OkpKitOptions } from "../types/index.js";
 import {
   assertOkpSignature,
   createOkpSignature,
   verifyOkpSignature,
-} from "../internal/index";
+} from "../internal/index.js";
 
 export class OkpKit implements IKeyKit {
   private readonly dsa: DsaEncoding;

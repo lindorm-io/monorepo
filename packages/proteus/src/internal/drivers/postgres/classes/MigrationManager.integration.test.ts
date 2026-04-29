@@ -1,18 +1,19 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { randomBytes, randomUUID } from "crypto";
 import { mkdtemp, rm, writeFile } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 import { Client } from "pg";
-import { mockScannerImport } from "../../../../__fixtures__/mock-scanner-import";
-import { hashNamespaceToInt32 } from "../../../utils/advisory-lock-name";
-import { createTestPgClient } from "../../../__fixtures__/create-test-pg-client";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import type { MigrationTableOptions } from "../types/migration";
-import { withAdvisoryLock } from "../utils/advisory-lock";
-import { getAllMigrationRecords } from "../utils/migration/migration-table";
-import { MigrationManager } from "./MigrationManager";
+import { mockScannerImport } from "../../../../__fixtures__/mock-scanner-import.js";
+import { hashNamespaceToInt32 } from "../../../utils/advisory-lock-name.js";
+import { createTestPgClient } from "../../../__fixtures__/create-test-pg-client.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import type { MigrationTableOptions } from "../types/migration.js";
+import { withAdvisoryLock } from "../utils/advisory-lock.js";
+import { getAllMigrationRecords } from "../utils/migration/migration-table.js";
+import { MigrationManager } from "./MigrationManager.js";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 mockScannerImport();
 

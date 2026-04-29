@@ -1,5 +1,6 @@
 import nock from "nock";
-import { useAxios } from "./use-axios";
+import { useAxios } from "./use-axios.js";
+import { afterEach, describe, expect, test } from "vitest";
 
 describe("useAxios", () => {
   afterEach(() => {

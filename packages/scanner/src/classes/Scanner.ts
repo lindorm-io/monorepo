@@ -1,34 +1,24 @@
-import { isArray, isString } from "@lindorm/is";
+import { isArray, isObjectLike, isString } from "@lindorm/is";
 import { readdirSync, statSync } from "fs";
 import { basename, extname, join, relative, sep } from "path";
-import { ScannerError } from "../errors";
-import { IScanData, IScanner } from "../interfaces";
-import { StructureScannerOptions } from "../types";
-import { ScanData } from "./ScanData";
+import { ScannerError } from "../errors/index.js";
+import type { IScanData, IScanner } from "../interfaces/index.js";
+import type { StructureScannerOptions } from "../types/index.js";
+import { ScanData } from "./ScanData.js";
 
-type RequireFn = (id: string, parentPath: string) => unknown;
+const TS_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts"]);
 
 export class Scanner implements IScanner {
   private readonly deniedDirectories: Array<RegExp>;
   private readonly deniedExtensions: Array<RegExp>;
   private readonly deniedFilenames: Array<RegExp>;
   private readonly deniedTypes: Array<RegExp>;
-  private readonly requireFn: RequireFn;
 
   public constructor(options: StructureScannerOptions = {}) {
     this.deniedDirectories = options.deniedDirectories || [];
     this.deniedExtensions = options.deniedExtensions || [];
     this.deniedFilenames = options.deniedFilenames || [];
     this.deniedTypes = options.deniedTypes || [];
-
-    if (process.env.JEST_WORKER_ID) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      this.requireFn = (id: string): unknown => require(id);
-    } else {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const { require: tsxRequire } = require("tsx/cjs/api");
-      this.requireFn = tsxRequire;
-    }
   }
 
   // public
@@ -43,13 +33,68 @@ export class Scanner implements IScanner {
   }
 
   public async import<T>(fileOrPath: IScanData | string): Promise<T> {
-    // TODO: Use tsImport from "tsx/esm/api" when packages are upgraded to ESM
-    return this.require(fileOrPath);
+    const filePath = isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath;
+    const { pathToFileURL } = await import("url");
+    const href = pathToFileURL(filePath).href;
+    const isTs = TS_EXTENSIONS.has(extname(filePath).toLowerCase());
+
+    // Try native dynamic import first. When the host runtime already handles
+    // TypeScript (tsx, vitest with a working transform, etc.) this keeps class
+    // identity intact — the host's module cache is reused. Only fall back to
+    // tsx's scoped loader when native fails on a .ts file with a signature
+    // that indicates "no one knows how to load this" (missing loader or a
+    // transformer that couldn't parse the syntax).
+    let ns: any;
+    try {
+      ns = await import(href);
+    } catch (error) {
+      if (!isTs || !Scanner.isTsLoadFailure(error)) throw error;
+      ns = await (await import("tsx/esm/api")).tsImport(href, import.meta.url);
+    }
+
+    return Scanner.normalizeModule(ns) as T;
   }
 
-  public require<T>(fileOrPath: IScanData | string): T {
-    const filePath = isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath;
-    return this.requireFn(filePath, filePath) as T;
+  // Normalise the ESM namespace returned by dynamic import across runtimes so
+  // consumers always see the user's real exports without interop wrappers.
+  //
+  //   - Jest + ts-jest vm-modules:   { __esModule, default: { <named>, __esModule }, <named> }
+  //   - Native Node + tsx CJS hook:  { default: { <named> }, "module.exports": { <named> } }
+  //   - Native pure ESM source:      { <named> }  (or { default: X, <named> })
+  //
+  // In every case we expose { <named>, default: X | undefined } — the same
+  // shape the user authored, with no `__esModule` or `module.exports` noise.
+  private static normalizeModule(ns: any): Record<string, unknown> {
+    if (!isObjectLike(ns)) return ns;
+
+    let source: Record<string, unknown> = ns;
+
+    // Native Node CJS interop stashes the real exports object under
+    // "module.exports"; `default` mirrors the same object.
+    if (isObjectLike(ns["module.exports"])) {
+      source = ns["module.exports"];
+    } else if (
+      ns.__esModule === true &&
+      isObjectLike(ns.default) &&
+      (ns.default as Record<string, unknown>).__esModule === true
+    ) {
+      // Jest + ts-jest vm-modules wraps the CJS exports object as `default`
+      // AND copies it to the top level; the nested default carries
+      // `__esModule: true` we can use as a fingerprint.
+      source = ns.default;
+    }
+
+    const { __esModule: _esm, ...userExports } = source;
+    void _esm;
+    return userExports;
+  }
+
+  private static isTsLoadFailure(error: unknown): boolean {
+    if (!error || typeof error !== "object") return false;
+    const code = (error as { code?: unknown }).code;
+    if (code === "ERR_UNKNOWN_FILE_EXTENSION") return true;
+    if (error instanceof SyntaxError) return true;
+    return false;
   }
 
   // public static

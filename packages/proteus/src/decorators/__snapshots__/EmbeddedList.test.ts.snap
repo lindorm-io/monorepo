@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`EmbeddedList — full metadata snapshot should match snapshot for custom table name entity 1`] = `
+exports[`EmbeddedList — full metadata snapshot > should match snapshot for custom table name entity 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -81,7 +81,7 @@ exports[`EmbeddedList — full metadata snapshot should match snapshot for custo
 }
 `;
 
-exports[`EmbeddedList — full metadata snapshot should match snapshot for embeddable collection entity 1`] = `
+exports[`EmbeddedList — full metadata snapshot > should match snapshot for embeddable collection entity 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -259,7 +259,7 @@ exports[`EmbeddedList — full metadata snapshot should match snapshot for embed
 }
 `;
 
-exports[`EmbeddedList — full metadata snapshot should match snapshot for multiple lists entity 1`] = `
+exports[`EmbeddedList — full metadata snapshot > should match snapshot for multiple lists entity 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -439,7 +439,7 @@ exports[`EmbeddedList — full metadata snapshot should match snapshot for multi
 }
 `;
 
-exports[`EmbeddedList — full metadata snapshot should match snapshot for primitive collection entity 1`] = `
+exports[`EmbeddedList — full metadata snapshot > should match snapshot for primitive collection entity 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -544,7 +544,7 @@ exports[`EmbeddedList — full metadata snapshot should match snapshot for primi
 }
 `;
 
-exports[`EmbeddedList — metadata staging should stage embeddable embedded list in Symbol.metadata 1`] = `
+exports[`EmbeddedList — metadata staging > should stage embeddable embedded list in Symbol.metadata 1`] = `
 {
   "elementConstructor": [Function],
   "elementType": null,
@@ -553,7 +553,7 @@ exports[`EmbeddedList — metadata staging should stage embeddable embedded list
 }
 `;
 
-exports[`EmbeddedList — metadata staging should stage primitive embedded list in Symbol.metadata 1`] = `
+exports[`EmbeddedList — metadata staging > should stage primitive embedded list in Symbol.metadata 1`] = `
 {
   "elementConstructor": null,
   "elementType": "string",
@@ -562,7 +562,7 @@ exports[`EmbeddedList — metadata staging should stage primitive embedded list 
 }
 `;
 
-exports[`EmbeddedList — resolved metadata should resolve embeddable collection metadata 1`] = `
+exports[`EmbeddedList — resolved metadata > should resolve embeddable collection metadata 1`] = `
 {
   "elementConstructor": [Function],
   "elementFields": [
@@ -651,7 +651,7 @@ exports[`EmbeddedList — resolved metadata should resolve embeddable collection
 }
 `;
 
-exports[`EmbeddedList — resolved metadata should resolve primitive collection metadata 1`] = `
+exports[`EmbeddedList — resolved metadata > should resolve primitive collection metadata 1`] = `
 {
   "elementConstructor": null,
   "elementFields": null,

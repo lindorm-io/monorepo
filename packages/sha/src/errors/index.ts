@@ -1,1 +1,1 @@
-export * from "./ShaError";
+export * from "./ShaError.js";

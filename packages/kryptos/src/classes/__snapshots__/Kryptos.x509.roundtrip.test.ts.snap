@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Kryptos (X.509 round-trip) toDB → fromDb round-trip preserves certificateChain 1`] = `
+exports[`Kryptos (X.509 round-trip) > toDB → fromDb round-trip > preserves certificateChain 1`] = `
 {
   "algorithm": "ES256",
   "certificateChain": [
@@ -31,7 +31,7 @@ exports[`Kryptos (X.509 round-trip) toDB → fromDb round-trip preserves certifi
 }
 `;
 
-exports[`Kryptos (X.509 round-trip) toJSON → fromJwk round-trip preserves certificateChain via toJWK 1`] = `
+exports[`Kryptos (X.509 round-trip) > toJSON → fromJwk round-trip > preserves certificateChain via toJWK 1`] = `
 {
   "algorithm": "ES256",
   "certificateChain": [
@@ -69,7 +69,7 @@ exports[`Kryptos (X.509 round-trip) toJSON → fromJwk round-trip preserves cert
 }
 `;
 
-exports[`Kryptos (X.509 round-trip) toJWK → fromJwk round-trip preserves chain via JWK x5c/x5t#S256 1`] = `
+exports[`Kryptos (X.509 round-trip) > toJWK → fromJwk round-trip > preserves chain via JWK x5c/x5t#S256 1`] = `
 {
   "alg": "ES256",
   "crv": "P-256",

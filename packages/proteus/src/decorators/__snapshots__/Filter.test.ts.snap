@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Filter should register a default-on filter 1`] = `
+exports[`Filter > should register a default-on filter 1`] = `
 {
   "condition": {
     "status": "active",
@@ -10,7 +10,7 @@ exports[`Filter should register a default-on filter 1`] = `
 }
 `;
 
-exports[`Filter should register a parameterized filter with default off 1`] = `
+exports[`Filter > should register a parameterized filter with default off 1`] = `
 {
   "condition": {
     "tenantId": "$tenantId",
@@ -20,7 +20,7 @@ exports[`Filter should register a parameterized filter with default off 1`] = `
 }
 `;
 
-exports[`Filter should register filter with $or condition 1`] = `
+exports[`Filter > should register filter with $or condition 1`] = `
 {
   "condition": {
     "$or": [
@@ -37,7 +37,7 @@ exports[`Filter should register filter with $or condition 1`] = `
 }
 `;
 
-exports[`Filter should register filter with nested operator condition 1`] = `
+exports[`Filter > should register filter with nested operator condition 1`] = `
 {
   "condition": {
     "createdAt": {
@@ -49,7 +49,7 @@ exports[`Filter should register filter with nested operator condition 1`] = `
 }
 `;
 
-exports[`Filter should register multiple filters 1`] = `
+exports[`Filter > should register multiple filters 1`] = `
 [
   {
     "condition": {

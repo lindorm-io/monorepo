@@ -1,18 +1,18 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateCheckDDL accepts a named constraint of exactly 63 characters 1`] = `
+exports[`generateCheckDDL > accepts a named constraint of exactly 63 characters 1`] = `
 [
   "CONSTRAINT "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" CHECK (x > 0)",
 ]
 `;
 
-exports[`generateCheckDDL auto-generates hash-based constraint name when name is null 1`] = `
+exports[`generateCheckDDL > auto-generates hash-based constraint name when name is null 1`] = `
 [
   "CONSTRAINT "chk_hvQN5agtmhF" CHECK (score BETWEEN 0 AND 100)",
 ]
 `;
 
-exports[`generateCheckDDL generates multiple check constraints in order 1`] = `
+exports[`generateCheckDDL > generates multiple check constraints in order 1`] = `
 [
   "CONSTRAINT "chk_age" CHECK (age >= 0)",
   "CONSTRAINT "chk_KabvVwgFC22" CHECK (score <= 100)",
@@ -20,7 +20,7 @@ exports[`generateCheckDDL generates multiple check constraints in order 1`] = `
 ]
 `;
 
-exports[`generateCheckDDL generates named check constraint when name is provided 1`] = `
+exports[`generateCheckDDL > generates named check constraint when name is provided 1`] = `
 [
   "CONSTRAINT "age_positive" CHECK (age >= 0)",
 ]

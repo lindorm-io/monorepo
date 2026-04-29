@@ -1,1 +1,1 @@
-export * from "./IrisScannerError";
+export * from "./IrisScannerError.js";

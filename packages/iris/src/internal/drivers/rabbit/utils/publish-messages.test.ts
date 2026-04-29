@@ -1,18 +1,19 @@
-import type { IMessage } from "../../../../interfaces";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { OutboundPayload } from "../../../message/utils/prepare-outbound";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
-import { publishRabbitMessages, type RabbitPublishDriver } from "./publish-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { OutboundPayload } from "../../../message/utils/prepare-outbound.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
+import { publishRabbitMessages, type RabbitPublishDriver } from "./publish-messages.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMetadata = (overrides: Partial<MessageMetadata> = {}): MessageMetadata =>
@@ -39,18 +40,18 @@ const createDriver = (
   return {
     metadata,
     calls,
-    prepareForPublish: jest.fn(async (message: IMessage): Promise<OutboundPayload> => {
+    prepareForPublish: vi.fn(async (message: IMessage): Promise<OutboundPayload> => {
       calls.prepared.push(message);
       return { payload: Buffer.from("test-payload"), headers: {} };
     }),
-    completePublish: jest.fn(async (message: IMessage): Promise<void> => {
+    completePublish: vi.fn(async (message: IMessage): Promise<void> => {
       calls.completed.push(message);
     }),
   };
 };
 
 const createMockChannel = () => ({
-  publish: jest.fn(
+  publish: vi.fn(
     (
       _exchange: string,
       _routingKey: string,
@@ -62,7 +63,7 @@ const createMockChannel = () => ({
       return true;
     },
   ),
-  assertQueue: jest
+  assertQueue: vi
     .fn()
     .mockResolvedValue({ queue: "test-queue", messageCount: 0, consumerCount: 0 }),
 });
@@ -208,7 +209,7 @@ describe("publishRabbitMessages", () => {
       logger as any,
     );
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
     expect(outbound.headers["x-iris-priority"]).toBe("5");
   });
@@ -226,7 +227,7 @@ describe("publishRabbitMessages", () => {
       logger as any,
     );
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
     expect(outbound.headers["x-iris-priority"]).toBeUndefined();
   });
@@ -245,7 +246,7 @@ describe("publishRabbitMessages", () => {
       logger as any,
     );
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
     expect(outbound.headers["x-iris-priority"]).toBe("7");
   });

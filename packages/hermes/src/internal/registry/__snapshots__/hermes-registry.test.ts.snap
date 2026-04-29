@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`HermesRegistry getCommand should return RegisteredDto by target constructor 1`] = `
+exports[`HermesRegistry > getCommand > should return RegisteredDto by target constructor 1`] = `
 {
   "kind": "command",
   "name": "test_command_create",
@@ -9,7 +9,7 @@ exports[`HermesRegistry getCommand should return RegisteredDto by target constru
 }
 `;
 
-exports[`HermesRegistry getEvent should return RegisteredDto by target constructor 1`] = `
+exports[`HermesRegistry > getEvent > should return RegisteredDto by target constructor 1`] = `
 {
   "kind": "event",
   "name": "test_event_create",
@@ -18,7 +18,7 @@ exports[`HermesRegistry getEvent should return RegisteredDto by target construct
 }
 `;
 
-exports[`HermesRegistry getQuery should return RegisteredDto by target constructor 1`] = `
+exports[`HermesRegistry > getQuery > should return RegisteredDto by target constructor 1`] = `
 {
   "kind": "query",
   "name": "test_view_query",
@@ -27,7 +27,7 @@ exports[`HermesRegistry getQuery should return RegisteredDto by target construct
 }
 `;
 
-exports[`HermesRegistry getTimeout should return RegisteredDto by target constructor 1`] = `
+exports[`HermesRegistry > getTimeout > should return RegisteredDto by target constructor 1`] = `
 {
   "kind": "timeout",
   "name": "test_timeout_reminder",

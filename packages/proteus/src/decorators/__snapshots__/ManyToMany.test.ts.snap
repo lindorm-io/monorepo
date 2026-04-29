@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ManyToMany should register inverse side metadata 1`] = `
+exports[`ManyToMany > should register inverse side metadata 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -121,7 +121,7 @@ exports[`ManyToMany should register inverse side metadata 1`] = `
 }
 `;
 
-exports[`ManyToMany should register owning side metadata 1`] = `
+exports[`ManyToMany > should register owning side metadata 1`] = `
 {
   "appendOnly": false,
   "cache": null,

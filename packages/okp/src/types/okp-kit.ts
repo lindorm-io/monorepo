@@ -1,5 +1,5 @@
-import { IKryptos, IKryptosOkp } from "@lindorm/kryptos";
-import { DsaEncoding, KeyData } from "@lindorm/types";
+import type { IKryptos, IKryptosOkp } from "@lindorm/kryptos";
+import type { DsaEncoding, KeyData } from "@lindorm/types";
 
 export type CreateOkpSignatureOptions = {
   data: KeyData;

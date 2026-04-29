@@ -1,4 +1,8 @@
-import { KryptosAlgorithm, KryptosOperation, KryptosUse } from "../../types";
+import type {
+  KryptosAlgorithm,
+  KryptosOperation,
+  KryptosUse,
+} from "../../types/index.js";
 
 type Options = {
   algorithm: KryptosAlgorithm;

@@ -1,11 +1,11 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import nock from "nock";
 import {
   OPEN_ID_CONFIGURATION_RESPONSE,
   OPEN_ID_JWKS_RESPONSE,
-} from "../__fixtures__/auth0";
+} from "../__fixtures__/auth0.js";
 import {
   TEST_EC_KEY_SIG,
   TEST_OCT_KEY_ENC,
@@ -13,10 +13,11 @@ import {
   TEST_OKP_KEY_ENC,
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
-} from "../__fixtures__/keys";
-import { TEST_X509_KRYPTOS_SIG } from "../__fixtures__/x509";
-import { AmphoraError } from "../errors";
-import { Amphora } from "./Amphora";
+} from "../__fixtures__/keys.js";
+import { TEST_X509_KRYPTOS_SIG } from "../__fixtures__/x509.js";
+import { AmphoraError } from "../errors/index.js";
+import { Amphora } from "./Amphora.js";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);

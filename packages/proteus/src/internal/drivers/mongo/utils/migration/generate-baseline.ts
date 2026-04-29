@@ -1,19 +1,19 @@
 import type { Db } from "mongodb";
 import type { ILogger } from "@lindorm/logger";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { GenerateBaselineResult } from "../../../../interfaces/MigrationManager";
-import { computeHash } from "../../../../utils/migration/compute-hash";
-import { loadMigrations } from "../../../../utils/migration/load-migrations";
-import { writeMigrationFile } from "../../../../utils/migration/write-migration-file";
-import { diffIndexes } from "../sync/diff-indexes";
-import { introspectIndexes } from "../sync/introspect-indexes";
-import { projectDesiredIndexes } from "../sync/project-desired-indexes";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { GenerateBaselineResult } from "../../../../interfaces/MigrationManager.js";
+import { computeHash } from "../../../../utils/migration/compute-hash.js";
+import { loadMigrations } from "../../../../utils/migration/load-migrations.js";
+import { writeMigrationFile } from "../../../../utils/migration/write-migration-file.js";
+import { diffIndexes } from "../sync/diff-indexes.js";
+import { introspectIndexes } from "../sync/introspect-indexes.js";
+import { projectDesiredIndexes } from "../sync/project-desired-indexes.js";
 import {
   ensureMigrationCollection,
   insertMigrationRecord,
   markMigrationFinished,
-} from "./migration-tracking";
-import { serializeMongoMigration } from "./serialize-mongo-migration";
+} from "./migration-tracking.js";
+import { serializeMongoMigration } from "./serialize-mongo-migration.js";
 
 export type GenerateMongoBaselineOptions = {
   name?: string;

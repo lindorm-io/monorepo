@@ -1,4 +1,4 @@
-import { DomainError } from "./DomainError";
+import { DomainError } from "./DomainError.js";
 
 export class ViewNotCreatedError extends DomainError {
   public constructor(permanent = false) {

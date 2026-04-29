@@ -1,15 +1,15 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createMockMessageBus create should return empty object by default 1`] = `{}`;
+exports[`createMockMessageBus > create > should return empty object by default 1`] = `{}`;
 
-exports[`createMockMessageBus hydrate should return data as message 1`] = `
+exports[`createMockMessageBus > hydrate > should return data as message 1`] = `
 {
   "body": "hello",
   "id": "1",
 }
 `;
 
-exports[`createMockMessageBus publish should record a single message 1`] = `
+exports[`createMockMessageBus > publish > should record a single message 1`] = `
 [
   {
     "body": "hello",
@@ -18,7 +18,7 @@ exports[`createMockMessageBus publish should record a single message 1`] = `
 ]
 `;
 
-exports[`createMockMessageBus publish should record an array of messages 1`] = `
+exports[`createMockMessageBus > publish > should record an array of messages 1`] = `
 [
   {
     "body": "a",

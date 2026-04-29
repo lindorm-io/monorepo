@@ -5,35 +5,37 @@ import type {
   IEntity,
   IProteusQueryBuilder,
   IProteusRepository,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   FilterRegistryGetter,
   IProteusDriver,
   MetadataResolver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusMemoryOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
+} from "../../../../types/index.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type {
   MemoryStore,
   MemoryTable,
   MemoryTransactionHandle,
-} from "../types/memory-store";
-import { getEntityName } from "../../../entity/utils/get-entity-name";
-import { getJoinName } from "../../../entity/utils/get-join-name";
-import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root";
-import { MemoryDriverError } from "../errors/MemoryDriverError";
-import { MemoryExecutor } from "./MemoryExecutor";
-import { MemoryRepository, type WithImplicitTransaction } from "./MemoryRepository";
-import { MemoryQueryBuilder } from "./MemoryQueryBuilder";
-import { MemoryTransactionContext } from "./MemoryTransactionContext";
+} from "../types/memory-store.js";
+import { getEntityName } from "../../../entity/utils/get-entity-name.js";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
+import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
+import { toAbortError } from "../../../utils/abort.js";
+import { MemoryDriverError } from "../errors/MemoryDriverError.js";
+import { MemoryExecutor } from "./MemoryExecutor.js";
+import { MemoryRepository, type WithImplicitTransaction } from "./MemoryRepository.js";
+import { MemoryQueryBuilder } from "./MemoryQueryBuilder.js";
+import { MemoryTransactionContext } from "./MemoryTransactionContext.js";
 
 const createEmptyStore = (): MemoryStore => ({
   tables: new Map(),
@@ -75,6 +77,7 @@ export class MemoryDriver implements IProteusDriver {
   private readonly emitEntity: EntityEmitFn;
   private readonly amphora: IAmphora | undefined;
   private store: MemoryStore;
+  private signal: AbortSignal | undefined;
 
   public constructor(
     _options: ProteusMemoryOptions,
@@ -166,15 +169,16 @@ export class MemoryDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const store = this.store;
     const namespace = this.namespace;
 
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createRepository(t, p, context);
+    ) => this.createRepository(t, p, meta);
 
     const withImplicitTransaction: WithImplicitTransaction<E> = async (fn) => {
       const snapshot = cloneStore(store);
@@ -203,7 +207,7 @@ export class MemoryDriver implements IProteusDriver {
       store,
       namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
@@ -215,15 +219,16 @@ export class MemoryDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const txHandle = handle as MemoryTransactionHandle;
     const namespace = this.namespace;
 
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createTransactionalRepository(t, handle, p, context);
+    ) => this.createTransactionalRepository(t, handle, p, meta);
 
     // Already in transaction — no-op for implicit transactions
     const withImplicitTransaction: WithImplicitTransaction<E> = async (fn) => {
@@ -242,7 +247,7 @@ export class MemoryDriver implements IProteusDriver {
       store: txHandle.store,
       namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
@@ -253,6 +258,7 @@ export class MemoryDriver implements IProteusDriver {
   public createExecutor<E extends IEntity>(
     target: Constructor<E>,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     return this.createExecutorForStore(target, this.store);
   }
 
@@ -260,6 +266,7 @@ export class MemoryDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const txHandle = handle as MemoryTransactionHandle;
     return this.createExecutorForStore(target, txHandle.store);
   }
@@ -267,6 +274,7 @@ export class MemoryDriver implements IProteusDriver {
   public createQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const tableKey = this.getTableKey(target);
     const store = this.store;
@@ -291,6 +299,7 @@ export class MemoryDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const tableKey = this.getTableKey(target);
     const txHandle = handle as MemoryTransactionHandle;
@@ -318,6 +327,7 @@ export class MemoryDriver implements IProteusDriver {
   public async beginTransaction(
     _options?: TransactionOptions,
   ): Promise<TransactionHandle> {
+    this.checkSignal();
     const handle: MemoryTransactionHandle = {
       store: cloneStore(this.store),
       state: "active",
@@ -354,6 +364,8 @@ export class MemoryDriver implements IProteusDriver {
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
+    this.checkSignal();
+
     if (options?.retry) {
       this.logger.warn(
         "Transaction retry option is not supported by the Memory driver and will be ignored",
@@ -389,6 +401,7 @@ export class MemoryDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    signal?: AbortSignal,
   ): MemoryDriver {
     const cloned = Object.create(MemoryDriver.prototype) as MemoryDriver;
     (cloned as any).logger = this.logger;
@@ -398,10 +411,20 @@ export class MemoryDriver implements IProteusDriver {
     (cloned as any).emitEntity = emitEntity;
     (cloned as any).amphora = this.amphora;
     (cloned as any).store = this.store; // Share the same in-memory store
+    // Memory driver operations are synchronous; we honour the signal only as
+    // a pre-flight check at the public entry points (query / transaction /
+    // repository creation). No mid-query cancellation is possible.
+    (cloned as any).signal = signal;
     return cloned;
   }
 
   // ─── Private ─────────────────────────────────────────────────────────
+
+  private checkSignal(): void {
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason, undefined, "Memory query cancelled");
+    }
+  }
 
   private createExecutorForStore<E extends IEntity>(
     target: Constructor<E>,

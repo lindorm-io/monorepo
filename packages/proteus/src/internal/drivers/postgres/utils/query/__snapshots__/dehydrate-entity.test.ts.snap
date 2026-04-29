@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`dehydrateEntity should dehydrate entity for insert 1`] = `
+exports[`dehydrateEntity > should dehydrate entity for insert 1`] = `
 [
   {
     "column": "id",
@@ -29,7 +29,7 @@ exports[`dehydrateEntity should dehydrate entity for insert 1`] = `
 ]
 `;
 
-exports[`dehydrateEntity should dehydrate entity for update 1`] = `
+exports[`dehydrateEntity > should dehydrate entity for update 1`] = `
 [
   {
     "column": "name",
@@ -50,7 +50,7 @@ exports[`dehydrateEntity should dehydrate entity for update 1`] = `
 ]
 `;
 
-exports[`dehydrateEntity — embedded fields should mix embedded and non-embedded fields correctly 1`] = `
+exports[`dehydrateEntity — embedded fields > should mix embedded and non-embedded fields correctly 1`] = `
 [
   {
     "column": "id",

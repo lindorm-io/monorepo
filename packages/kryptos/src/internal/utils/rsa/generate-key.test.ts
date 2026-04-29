@@ -1,4 +1,5 @@
-import { generateRsaKey } from "./generate-key";
+import { generateRsaKey } from "./generate-key.js";
+import { describe, expect, test } from "vitest";
 
 describe("generateOctKey", () => {
   describe("enc", () => {

@@ -1,8 +1,8 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`KryptosKit (oct) env export 1`] = `"kryptos:eyJrIjoiZGlZbnljZVp4bW4xOHhHalZvYkJFd09TajJRT2F2SGZ2X3RXR051QnBqTkQ1NzJQYTNxRDhQRHFEU3J2b0x0TE9XeUhkUTVsc21zdUVJRGNQZ2JQS3A5MkhmTmthd2JLcENzVk5CcG9UbGJaLTVqZXdMTVJFb0dqZTlfcFF6R1NQTGdoLWNBa3d0Y3JMVUpOYndieU1HTWxYbUlKWGVHdWtXc0Q2QmZPQWltTnpQSXlMZjhRWU1KWUw5dHpmMTZYNG1RMVN2VTc2WThNcW9wNnd6OHlsQUVUN3hXVGl2SS1pT0s4WmsxTWlpb21Kd3c1dzQ3VXo3WDZIYV91ejdjdENFU3N5WU1lZjlabllsc3F3c0hQcm5QNzhpaHlpdjhjSDdvYnViS0o2SGttc0NuU1RCT2NoRFl4bm1RaVZaZmZ1TVNiOHBTY2FJSzZWZmVmXzFjN1ZnIiwia2lkIjoiZDhlODMwNzAtYjkwNi01NTQwLTk5MzMtMDFmZTg5MDM3MTY4IiwiYWxnIjoiSFM1MTIiLCJ1c2UiOiJzaWciLCJrdHkiOiJvY3QiLCJleHAiOjI0OTMxMDA4MDAsImlhdCI6MTcwNDA5NjAwMCwia2V5X29wcyI6WyJzaWduIiwidmVyaWZ5Il0sIm5iZiI6MTcwNDA5NjAwMH0"`;
+exports[`KryptosKit (oct) > env > export 1`] = `"kryptos:eyJrIjoiZGlZbnljZVp4bW4xOHhHalZvYkJFd09TajJRT2F2SGZ2X3RXR051QnBqTkQ1NzJQYTNxRDhQRHFEU3J2b0x0TE9XeUhkUTVsc21zdUVJRGNQZ2JQS3A5MkhmTmthd2JLcENzVk5CcG9UbGJaLTVqZXdMTVJFb0dqZTlfcFF6R1NQTGdoLWNBa3d0Y3JMVUpOYndieU1HTWxYbUlKWGVHdWtXc0Q2QmZPQWltTnpQSXlMZjhRWU1KWUw5dHpmMTZYNG1RMVN2VTc2WThNcW9wNnd6OHlsQUVUN3hXVGl2SS1pT0s4WmsxTWlpb21Kd3c1dzQ3VXo3WDZIYV91ejdjdENFU3N5WU1lZjlabllsc3F3c0hQcm5QNzhpaHlpdjhjSDdvYnViS0o2SGttc0NuU1RCT2NoRFl4bm1RaVZaZmZ1TVNiOHBTY2FJSzZWZmVmXzFjN1ZnIiwia2lkIjoiZDhlODMwNzAtYjkwNi01NTQwLTk5MzMtMDFmZTg5MDM3MTY4IiwiYWxnIjoiSFM1MTIiLCJ1c2UiOiJzaWciLCJrdHkiOiJvY3QiLCJleHAiOjI0OTMxMDA4MDAsImlhdCI6MTcwNDA5NjAwMCwia2V5X29wcyI6WyJzaWduIiwidmVyaWZ5Il0sIm5iZiI6MTcwNDA5NjAwMH0"`;
 
-exports[`KryptosKit (oct) from auto b64 1`] = `
+exports[`KryptosKit (oct) > from > auto > b64 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
@@ -36,7 +36,7 @@ exports[`KryptosKit (oct) from auto b64 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from auto b64 2`] = `
+exports[`KryptosKit (oct) > from > auto > b64 2`] = `
 {
   "alg": "HS512",
   "exp": 2493100800,
@@ -52,7 +52,7 @@ exports[`KryptosKit (oct) from auto b64 2`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from auto b64 3`] = `
+exports[`KryptosKit (oct) > from > auto > b64 3`] = `
 {
   "algorithm": "HS512",
   "id": "d8e83070-b906-5540-9933-01fe89037168",
@@ -63,7 +63,7 @@ exports[`KryptosKit (oct) from auto b64 3`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from auto jwk 1`] = `
+exports[`KryptosKit (oct) > from > auto > jwk 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
@@ -97,7 +97,7 @@ exports[`KryptosKit (oct) from auto jwk 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from auto jwk 2`] = `
+exports[`KryptosKit (oct) > from > auto > jwk 2`] = `
 {
   "alg": "HS512",
   "exp": 2493100800,
@@ -113,7 +113,7 @@ exports[`KryptosKit (oct) from auto jwk 2`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from auto jwk 3`] = `
+exports[`KryptosKit (oct) > from > auto > jwk 3`] = `
 {
   "alg": "HS512",
   "k": "tt8sKlXAatelhbSo_IZgvyFzIiKPOKhv-IZTqAEkCkJZPVrO5PK9hb1NH9m9bJXa1nGmqlEVCjzsA1lwYsA2clgUvjQ3QlL3x7yDxzZqReg2x_W4XezFU2fBsGdsD2u-CW5FJ3WJZPsSDG5zOsARCdjvIyDiNO1Ryb-MRb0LWxcvsDdzNPIJNTf5adhf4Qsf5ZIWhvnSF5y9fglB6QRcskgwdRfGoYjjkiw3-h5UDrUnjzCPLQ7GVhq2gg_OyZJsduwTVYGObpAG6EYplvQZjNAWyekHivXfpc556jNTWCzfmAyZvvucsGIM5wuupicfn7AbA1a50fuppCyMwbBKSg",
@@ -123,7 +123,7 @@ exports[`KryptosKit (oct) from auto jwk 3`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from auto pem 1`] = `
+exports[`KryptosKit (oct) > from > auto > pem 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
@@ -157,7 +157,7 @@ exports[`KryptosKit (oct) from auto pem 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from auto pem 2`] = `
+exports[`KryptosKit (oct) > from > auto > pem 2`] = `
 {
   "alg": "HS512",
   "exp": 2493100800,
@@ -173,7 +173,7 @@ exports[`KryptosKit (oct) from auto pem 2`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from auto pem 3`] = `
+exports[`KryptosKit (oct) > from > auto > pem 3`] = `
 {
   "algorithm": "HS512",
   "id": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
@@ -190,7 +190,7 @@ cvQHzpn+t5VXn6eD+7A74Q==
 }
 `;
 
-exports[`KryptosKit (oct) from b64 1`] = `
+exports[`KryptosKit (oct) > from > b64 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
@@ -224,7 +224,7 @@ exports[`KryptosKit (oct) from b64 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from b64 2`] = `
+exports[`KryptosKit (oct) > from > b64 2`] = `
 {
   "alg": "HS512",
   "exp": 2493100800,
@@ -240,7 +240,7 @@ exports[`KryptosKit (oct) from b64 2`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from b64 3`] = `
+exports[`KryptosKit (oct) > from > b64 3`] = `
 {
   "algorithm": "HS512",
   "id": "d8e83070-b906-5540-9933-01fe89037168",
@@ -251,7 +251,7 @@ exports[`KryptosKit (oct) from b64 3`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from jwk 1`] = `
+exports[`KryptosKit (oct) > from > jwk 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
@@ -285,7 +285,7 @@ exports[`KryptosKit (oct) from jwk 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from jwk 2`] = `
+exports[`KryptosKit (oct) > from > jwk 2`] = `
 {
   "alg": "HS512",
   "exp": 2493100800,
@@ -301,7 +301,7 @@ exports[`KryptosKit (oct) from jwk 2`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from jwk 3`] = `
+exports[`KryptosKit (oct) > from > jwk 3`] = `
 {
   "alg": "HS512",
   "k": "tt8sKlXAatelhbSo_IZgvyFzIiKPOKhv-IZTqAEkCkJZPVrO5PK9hb1NH9m9bJXa1nGmqlEVCjzsA1lwYsA2clgUvjQ3QlL3x7yDxzZqReg2x_W4XezFU2fBsGdsD2u-CW5FJ3WJZPsSDG5zOsARCdjvIyDiNO1Ryb-MRb0LWxcvsDdzNPIJNTf5adhf4Qsf5ZIWhvnSF5y9fglB6QRcskgwdRfGoYjjkiw3-h5UDrUnjzCPLQ7GVhq2gg_OyZJsduwTVYGObpAG6EYplvQZjNAWyekHivXfpc556jNTWCzfmAyZvvucsGIM5wuupicfn7AbA1a50fuppCyMwbBKSg",
@@ -311,7 +311,7 @@ exports[`KryptosKit (oct) from jwk 3`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from pem 1`] = `
+exports[`KryptosKit (oct) > from > pem 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
@@ -345,7 +345,7 @@ exports[`KryptosKit (oct) from pem 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from pem 2`] = `
+exports[`KryptosKit (oct) > from > pem 2`] = `
 {
   "alg": "HS512",
   "exp": 2493100800,
@@ -361,7 +361,7 @@ exports[`KryptosKit (oct) from pem 2`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from pem 3`] = `
+exports[`KryptosKit (oct) > from > pem 3`] = `
 {
   "algorithm": "HS512",
   "id": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
@@ -378,7 +378,7 @@ cvQHzpn+t5VXn6eD+7A74Q==
 }
 `;
 
-exports[`KryptosKit (oct) from utf 1`] = `
+exports[`KryptosKit (oct) > from > utf 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],
@@ -412,7 +412,7 @@ exports[`KryptosKit (oct) from utf 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from utf 2`] = `
+exports[`KryptosKit (oct) > from > utf 2`] = `
 {
   "alg": "HS512",
   "exp": 2493100800,
@@ -428,7 +428,7 @@ exports[`KryptosKit (oct) from utf 2`] = `
 }
 `;
 
-exports[`KryptosKit (oct) from utf 3`] = `
+exports[`KryptosKit (oct) > from > utf 3`] = `
 {
   "algorithm": "HS512",
   "id": "19a58ae7-b62c-51be-8bd5-cc417002cee4",
@@ -439,7 +439,7 @@ exports[`KryptosKit (oct) from utf 3`] = `
 }
 `;
 
-exports[`KryptosKit (oct) generate auto 1`] = `
+exports[`KryptosKit (oct) > generate > auto 1`] = `
 {
   "algorithm": "HS384",
   "certificateChain": [],
@@ -473,7 +473,7 @@ exports[`KryptosKit (oct) generate auto 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) generate enc 1`] = `
+exports[`KryptosKit (oct) > generate > enc 1`] = `
 {
   "algorithm": "dir",
   "certificateChain": [],
@@ -507,7 +507,7 @@ exports[`KryptosKit (oct) generate enc 1`] = `
 }
 `;
 
-exports[`KryptosKit (oct) generate sig 1`] = `
+exports[`KryptosKit (oct) > generate > sig 1`] = `
 {
   "algorithm": "HS512",
   "certificateChain": [],

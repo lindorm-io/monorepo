@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import { stageHandler } from "../internal/metadata";
+import { stageHandler } from "../internal/metadata/index.js";
 
 export const SagaEventHandler =
   (EventClass: Constructor) =>

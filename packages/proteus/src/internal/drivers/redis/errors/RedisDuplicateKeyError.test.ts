@@ -1,8 +1,9 @@
 import MockDate from "mockdate";
 import { LindormError } from "@lindorm/errors";
-import { ProteusError } from "../../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { RedisDuplicateKeyError } from "./RedisDuplicateKeyError";
+import { ProteusError } from "../../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { RedisDuplicateKeyError } from "./RedisDuplicateKeyError.js";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 const FIXED_DATE = new Date("2024-01-01T00:00:00.000Z");
 const FIXED_ID = "00000000-0000-0000-0000-000000000002";

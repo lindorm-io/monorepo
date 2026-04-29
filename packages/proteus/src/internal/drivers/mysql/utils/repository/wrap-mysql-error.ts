@@ -1,11 +1,11 @@
-import { ProteusError } from "../../../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { CheckConstraintError } from "../../../../errors/CheckConstraintError";
-import { DeadlockError } from "../../../../errors/DeadlockError";
-import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError";
-import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError";
-import { NotNullViolationError } from "../../../../errors/NotNullViolationError";
-import { SerializationError } from "../../../../errors/SerializationError";
+import { ProteusError } from "../../../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
+import { CheckConstraintError } from "../../../../errors/CheckConstraintError.js";
+import { DeadlockError } from "../../../../errors/DeadlockError.js";
+import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError.js";
+import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError.js";
+import { NotNullViolationError } from "../../../../errors/NotNullViolationError.js";
+import { SerializationError } from "../../../../errors/SerializationError.js";
 
 /**
  * Maps mysql2 error codes to Proteus error classes and throws.

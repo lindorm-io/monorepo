@@ -7,8 +7,8 @@ import type {
   IIrisStreamProcessor,
   IIrisWorkerQueue,
   IMessage,
-} from "../../../interfaces";
-import type { DeadLetterEntry } from "../../../types/dead-letter";
+} from "../../../interfaces/index.js";
+import type { DeadLetterEntry } from "../../../types/dead-letter.js";
 
 export type TckCapabilities = {
   // ─── Always-on (tested unconditionally) ──────────────────────────────────────

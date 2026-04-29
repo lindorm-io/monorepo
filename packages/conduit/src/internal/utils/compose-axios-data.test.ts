@@ -1,5 +1,6 @@
-import { ConduitContext } from "../../types";
-import { composeAxiosData } from "./compose-axios-data";
+import type { ConduitContext } from "../../types/index.js";
+import { composeAxiosData } from "./compose-axios-data.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("composeAxiosData", () => {
   let ctx: ConduitContext;

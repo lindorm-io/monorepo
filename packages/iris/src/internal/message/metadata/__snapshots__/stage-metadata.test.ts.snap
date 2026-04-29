@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`stage-metadata array stage functions should accumulate fields 1`] = `
+exports[`stage-metadata > array stage functions > should accumulate fields 1`] = `
 [
   {
     "decorator": "Field",
@@ -13,7 +13,7 @@ exports[`stage-metadata array stage functions should accumulate fields 1`] = `
 ]
 `;
 
-exports[`stage-metadata array stage functions should accumulate generated 1`] = `
+exports[`stage-metadata > array stage functions > should accumulate generated 1`] = `
 [
   {
     "key": "id",
@@ -32,7 +32,7 @@ exports[`stage-metadata array stage functions should accumulate generated 1`] = 
 ]
 `;
 
-exports[`stage-metadata array stage functions should accumulate headers 1`] = `
+exports[`stage-metadata > array stage functions > should accumulate headers 1`] = `
 [
   {
     "headerName": "x-user-id",
@@ -45,20 +45,20 @@ exports[`stage-metadata array stage functions should accumulate headers 1`] = `
 ]
 `;
 
-exports[`stage-metadata singleton stage functions should set __abstract and stage message 1`] = `
+exports[`stage-metadata > singleton stage functions > should set __abstract and stage message 1`] = `
 {
   "decorator": "AbstractMessage",
   "name": "BaseEvent",
 }
 `;
 
-exports[`stage-metadata singleton stage functions should set compressed 1`] = `
+exports[`stage-metadata > singleton stage functions > should set compressed 1`] = `
 {
   "algorithm": "gzip",
 }
 `;
 
-exports[`stage-metadata singleton stage functions should set encrypted 1`] = `
+exports[`stage-metadata > singleton stage functions > should set encrypted 1`] = `
 {
   "predicate": {
     "algorithm": "AES",
@@ -67,14 +67,14 @@ exports[`stage-metadata singleton stage functions should set encrypted 1`] = `
 }
 `;
 
-exports[`stage-metadata singleton stage functions should set message 1`] = `
+exports[`stage-metadata > singleton stage functions > should set message 1`] = `
 {
   "decorator": "Message",
   "name": "UserCreated",
 }
 `;
 
-exports[`stage-metadata singleton stage functions should set retry 1`] = `
+exports[`stage-metadata > singleton stage functions > should set retry 1`] = `
 {
   "delay": 1000,
   "delayMax": 30000,

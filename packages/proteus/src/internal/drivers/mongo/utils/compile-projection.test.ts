@@ -1,5 +1,6 @@
-import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
-import { compileProjection } from "./compile-projection";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
+import { compileProjection } from "./compile-projection.js";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

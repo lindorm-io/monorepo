@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileRestore [mysql] should compile restore with simple criteria 1`] = `
+exports[`compileRestore [mysql] > should compile restore with simple criteria 1`] = `
 {
   "params": [
     "abc-123",
@@ -9,7 +9,7 @@ exports[`compileRestore [mysql] should compile restore with simple criteria 1`] 
 }
 `;
 
-exports[`compileRestore [postgres] should compile restore with simple criteria 1`] = `
+exports[`compileRestore [postgres] > should compile restore with simple criteria 1`] = `
 {
   "params": [
     "abc-123",
@@ -18,7 +18,7 @@ exports[`compileRestore [postgres] should compile restore with simple criteria 1
 }
 `;
 
-exports[`compileRestore [sqlite] should compile restore with simple criteria 1`] = `
+exports[`compileRestore [sqlite] > should compile restore with simple criteria 1`] = `
 {
   "params": [
     "abc-123",
@@ -27,7 +27,7 @@ exports[`compileRestore [sqlite] should compile restore with simple criteria 1`]
 }
 `;
 
-exports[`compileSoftDelete [mysql] should compile soft delete with multiple criteria 1`] = `
+exports[`compileSoftDelete [mysql] > should compile soft delete with multiple criteria 1`] = `
 {
   "params": [
     "Alice",
@@ -37,7 +37,7 @@ exports[`compileSoftDelete [mysql] should compile soft delete with multiple crit
 }
 `;
 
-exports[`compileSoftDelete [mysql] should compile soft delete with simple criteria 1`] = `
+exports[`compileSoftDelete [mysql] > should compile soft delete with simple criteria 1`] = `
 {
   "params": [
     "abc-123",
@@ -46,7 +46,7 @@ exports[`compileSoftDelete [mysql] should compile soft delete with simple criter
 }
 `;
 
-exports[`compileSoftDelete [postgres] should compile soft delete with multiple criteria 1`] = `
+exports[`compileSoftDelete [postgres] > should compile soft delete with multiple criteria 1`] = `
 {
   "params": [
     "Alice",
@@ -56,7 +56,7 @@ exports[`compileSoftDelete [postgres] should compile soft delete with multiple c
 }
 `;
 
-exports[`compileSoftDelete [postgres] should compile soft delete with simple criteria 1`] = `
+exports[`compileSoftDelete [postgres] > should compile soft delete with simple criteria 1`] = `
 {
   "params": [
     "abc-123",
@@ -65,7 +65,7 @@ exports[`compileSoftDelete [postgres] should compile soft delete with simple cri
 }
 `;
 
-exports[`compileSoftDelete [sqlite] should compile soft delete with multiple criteria 1`] = `
+exports[`compileSoftDelete [sqlite] > should compile soft delete with multiple criteria 1`] = `
 {
   "params": [
     "Alice",
@@ -75,7 +75,7 @@ exports[`compileSoftDelete [sqlite] should compile soft delete with multiple cri
 }
 `;
 
-exports[`compileSoftDelete [sqlite] should compile soft delete with simple criteria 1`] = `
+exports[`compileSoftDelete [sqlite] > should compile soft delete with simple criteria 1`] = `
 {
   "params": [
     "abc-123",
@@ -84,7 +84,7 @@ exports[`compileSoftDelete [sqlite] should compile soft delete with simple crite
 }
 `;
 
-exports[`compileSoftDelete dialect-specific: alias behavior mysql: uses AS t0 alias (supportsUpdateAlias = true) 1`] = `
+exports[`compileSoftDelete dialect-specific: alias behavior > mysql: uses AS t0 alias (supportsUpdateAlias = true) 1`] = `
 {
   "params": [
     "abc",
@@ -93,7 +93,7 @@ exports[`compileSoftDelete dialect-specific: alias behavior mysql: uses AS t0 al
 }
 `;
 
-exports[`compileSoftDelete dialect-specific: alias behavior postgres: uses AS t0 alias (supportsUpdateAlias = true) 1`] = `
+exports[`compileSoftDelete dialect-specific: alias behavior > postgres: uses AS t0 alias (supportsUpdateAlias = true) 1`] = `
 {
   "params": [
     "abc",
@@ -102,7 +102,7 @@ exports[`compileSoftDelete dialect-specific: alias behavior postgres: uses AS t0
 }
 `;
 
-exports[`compileSoftDelete dialect-specific: alias behavior sqlite: no alias (supportsUpdateAlias = false) 1`] = `
+exports[`compileSoftDelete dialect-specific: alias behavior > sqlite: no alias (supportsUpdateAlias = false) 1`] = `
 {
   "params": [
     "abc",
@@ -111,7 +111,7 @@ exports[`compileSoftDelete dialect-specific: alias behavior sqlite: no alias (su
 }
 `;
 
-exports[`compileSoftDelete dialect-specific: namespace/schema postgres: no schema when namespace is null 1`] = `
+exports[`compileSoftDelete dialect-specific: namespace/schema > postgres: no schema when namespace is null 1`] = `
 {
   "params": [
     "abc",

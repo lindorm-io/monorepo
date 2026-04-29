@@ -1,30 +1,31 @@
-import { ProteusError } from "../../errors/ProteusError";
-import { ProteusSource } from "../../classes/ProteusSource";
-import { MigrationManager } from "../drivers/postgres/classes/MigrationManager";
-import { MySqlMigrationManager } from "../drivers/mysql/classes/MySqlMigrationManager";
-import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager";
-import { withMigrationManager, wrapPoolClient } from "./with-migration-manager";
+import { ProteusError } from "../../errors/ProteusError.js";
+import { ProteusSource } from "../../classes/ProteusSource.js";
+import { MigrationManager } from "../drivers/postgres/classes/MigrationManager.js";
+import { MySqlMigrationManager } from "../drivers/mysql/classes/MySqlMigrationManager.js";
+import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager.js";
+import { withMigrationManager, wrapPoolClient } from "./with-migration-manager.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-jest.mock("../../classes/ProteusSource");
-jest.mock("../drivers/postgres/classes/MigrationManager");
-jest.mock("../drivers/mysql/classes/MySqlMigrationManager");
-jest.mock("../drivers/sqlite/classes/SqliteMigrationManager");
+vi.mock("../../classes/ProteusSource.js");
+vi.mock("../drivers/postgres/classes/MigrationManager.js");
+vi.mock("../drivers/mysql/classes/MySqlMigrationManager.js");
+vi.mock("../drivers/sqlite/classes/SqliteMigrationManager.js");
 
 const createMockSource = (driverType: string, migrationsTable?: string) => {
   const source = {
     driverType,
     migrationsTable,
     log: {
-      child: jest.fn().mockReturnValue({ info: jest.fn(), debug: jest.fn() }),
+      child: vi.fn().mockReturnValue({ info: vi.fn(), debug: vi.fn() }),
     },
-    client: jest.fn(),
+    client: vi.fn(),
   } as unknown as ProteusSource;
   return source;
 };
 
 describe("withMigrationManager", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("unsupported drivers", () => {
@@ -63,45 +64,45 @@ describe("withMigrationManager", () => {
 
   describe("postgres driver", () => {
     it("should create a MigrationManager and call fn with context", async () => {
-      const mockRelease = jest.fn();
+      const mockRelease = vi.fn();
       const mockPoolClient = {
-        query: jest.fn(),
+        query: vi.fn(),
         release: mockRelease,
       };
       const source = createMockSource("postgres");
-      (source.client as jest.Mock).mockResolvedValue(mockPoolClient);
+      (source.client as Mock).mockResolvedValue(mockPoolClient);
 
-      const fn = jest.fn();
+      const fn = vi.fn();
       await withMigrationManager(source, "/migrations", fn);
 
       expect(MigrationManager).toHaveBeenCalledTimes(1);
-      expect((MigrationManager as jest.Mock).mock.calls[0]).toMatchSnapshot();
+      expect((MigrationManager as Mock).mock.calls[0]).toMatchSnapshot();
       expect(fn).toHaveBeenCalledTimes(1);
       expect(fn.mock.calls[0][0].source).toBe(source);
     });
 
     it("should pass tableOptions when migrationsTable is set", async () => {
-      const mockRelease = jest.fn();
+      const mockRelease = vi.fn();
       const mockPoolClient = {
-        query: jest.fn(),
+        query: vi.fn(),
         release: mockRelease,
       };
       const source = createMockSource("postgres", "custom_migrations");
-      (source.client as jest.Mock).mockResolvedValue(mockPoolClient);
+      (source.client as Mock).mockResolvedValue(mockPoolClient);
 
-      await withMigrationManager(source, "/migrations", jest.fn());
+      await withMigrationManager(source, "/migrations", vi.fn());
 
-      expect((MigrationManager as jest.Mock).mock.calls[0]).toMatchSnapshot();
+      expect((MigrationManager as Mock).mock.calls[0]).toMatchSnapshot();
     });
 
     it("should release the pool client after successful execution", async () => {
-      const mockRelease = jest.fn();
+      const mockRelease = vi.fn();
       const mockPoolClient = {
-        query: jest.fn(),
+        query: vi.fn(),
         release: mockRelease,
       };
       const source = createMockSource("postgres");
-      (source.client as jest.Mock).mockResolvedValue(mockPoolClient);
+      (source.client as Mock).mockResolvedValue(mockPoolClient);
 
       await withMigrationManager(source, "/migrations", async () => {});
 
@@ -109,13 +110,13 @@ describe("withMigrationManager", () => {
     });
 
     it("should release the pool client when fn throws", async () => {
-      const mockRelease = jest.fn();
+      const mockRelease = vi.fn();
       const mockPoolClient = {
-        query: jest.fn(),
+        query: vi.fn(),
         release: mockRelease,
       };
       const source = createMockSource("postgres");
-      (source.client as jest.Mock).mockResolvedValue(mockPoolClient);
+      (source.client as Mock).mockResolvedValue(mockPoolClient);
 
       const error = new Error("migration failed");
 
@@ -129,13 +130,13 @@ describe("withMigrationManager", () => {
     });
 
     it("should only release once even if release is somehow called twice", async () => {
-      const mockRelease = jest.fn();
+      const mockRelease = vi.fn();
       const mockPoolClient = {
-        query: jest.fn(),
+        query: vi.fn(),
         release: mockRelease,
       };
       const source = createMockSource("postgres");
-      (source.client as jest.Mock).mockResolvedValue(mockPoolClient);
+      (source.client as Mock).mockResolvedValue(mockPoolClient);
 
       await withMigrationManager(source, "/migrations", async () => {});
 
@@ -146,45 +147,45 @@ describe("withMigrationManager", () => {
 
   describe("mysql driver", () => {
     it("should create a MySqlMigrationManager and call fn with context", async () => {
-      const mockRelease = jest.fn();
+      const mockRelease = vi.fn();
       const mockConnection = {
-        query: jest.fn(),
+        query: vi.fn(),
         release: mockRelease,
       };
       const source = createMockSource("mysql");
-      (source.client as jest.Mock).mockResolvedValue(mockConnection);
+      (source.client as Mock).mockResolvedValue(mockConnection);
 
-      const fn = jest.fn();
+      const fn = vi.fn();
       await withMigrationManager(source, "/migrations", fn);
 
       expect(MySqlMigrationManager).toHaveBeenCalledTimes(1);
-      expect((MySqlMigrationManager as jest.Mock).mock.calls[0]).toMatchSnapshot();
+      expect((MySqlMigrationManager as Mock).mock.calls[0]).toMatchSnapshot();
       expect(fn).toHaveBeenCalledTimes(1);
       expect(fn.mock.calls[0][0].source).toBe(source);
     });
 
     it("should pass tableOptions when migrationsTable is set", async () => {
-      const mockRelease = jest.fn();
+      const mockRelease = vi.fn();
       const mockConnection = {
-        query: jest.fn(),
+        query: vi.fn(),
         release: mockRelease,
       };
       const source = createMockSource("mysql", "my_migrations");
-      (source.client as jest.Mock).mockResolvedValue(mockConnection);
+      (source.client as Mock).mockResolvedValue(mockConnection);
 
-      await withMigrationManager(source, "/migrations", jest.fn());
+      await withMigrationManager(source, "/migrations", vi.fn());
 
-      expect((MySqlMigrationManager as jest.Mock).mock.calls[0]).toMatchSnapshot();
+      expect((MySqlMigrationManager as Mock).mock.calls[0]).toMatchSnapshot();
     });
 
     it("should release the connection after successful execution", async () => {
-      const mockRelease = jest.fn();
+      const mockRelease = vi.fn();
       const mockConnection = {
-        query: jest.fn(),
+        query: vi.fn(),
         release: mockRelease,
       };
       const source = createMockSource("mysql");
-      (source.client as jest.Mock).mockResolvedValue(mockConnection);
+      (source.client as Mock).mockResolvedValue(mockConnection);
 
       await withMigrationManager(source, "/migrations", async () => {});
 
@@ -192,13 +193,13 @@ describe("withMigrationManager", () => {
     });
 
     it("should release the connection when fn throws", async () => {
-      const mockRelease = jest.fn();
+      const mockRelease = vi.fn();
       const mockConnection = {
-        query: jest.fn(),
+        query: vi.fn(),
         release: mockRelease,
       };
       const source = createMockSource("mysql");
-      (source.client as jest.Mock).mockResolvedValue(mockConnection);
+      (source.client as Mock).mockResolvedValue(mockConnection);
 
       const error = new Error("mysql migration failed");
 
@@ -214,33 +215,33 @@ describe("withMigrationManager", () => {
 
   describe("sqlite driver", () => {
     it("should create a SqliteMigrationManager and call fn with context", async () => {
-      const mockClient = { query: jest.fn() };
+      const mockClient = { query: vi.fn() };
       const source = createMockSource("sqlite");
-      (source.client as jest.Mock).mockResolvedValue(mockClient);
+      (source.client as Mock).mockResolvedValue(mockClient);
 
-      const fn = jest.fn();
+      const fn = vi.fn();
       await withMigrationManager(source, "/migrations", fn);
 
       expect(SqliteMigrationManager).toHaveBeenCalledTimes(1);
-      expect((SqliteMigrationManager as jest.Mock).mock.calls[0]).toMatchSnapshot();
+      expect((SqliteMigrationManager as Mock).mock.calls[0]).toMatchSnapshot();
       expect(fn).toHaveBeenCalledTimes(1);
       expect(fn.mock.calls[0][0].source).toBe(source);
     });
 
     it("should pass tableOptions when migrationsTable is set", async () => {
-      const mockClient = { query: jest.fn() };
+      const mockClient = { query: vi.fn() };
       const source = createMockSource("sqlite", "sqlite_migrations");
-      (source.client as jest.Mock).mockResolvedValue(mockClient);
+      (source.client as Mock).mockResolvedValue(mockClient);
 
-      await withMigrationManager(source, "/migrations", jest.fn());
+      await withMigrationManager(source, "/migrations", vi.fn());
 
-      expect((SqliteMigrationManager as jest.Mock).mock.calls[0]).toMatchSnapshot();
+      expect((SqliteMigrationManager as Mock).mock.calls[0]).toMatchSnapshot();
     });
 
     it("should not have a release step (sqlite has no pooled connections)", async () => {
-      const mockClient = { query: jest.fn() };
+      const mockClient = { query: vi.fn() };
       const source = createMockSource("sqlite");
-      (source.client as jest.Mock).mockResolvedValue(mockClient);
+      (source.client as Mock).mockResolvedValue(mockClient);
 
       // Should complete without error — no release needed
       await withMigrationManager(source, "/migrations", async () => {});
@@ -253,7 +254,7 @@ describe("withMigrationManager", () => {
 describe("wrapPoolClient", () => {
   it("should wrap a PoolClient query returning rows", async () => {
     const mockPoolClient = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [{ id: 1, name: "test" }],
         rowCount: 1,
       }),
@@ -271,7 +272,7 @@ describe("wrapPoolClient", () => {
 
   it("should handle null rowCount", async () => {
     const mockPoolClient = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [],
         rowCount: null,
       }),
@@ -285,7 +286,7 @@ describe("wrapPoolClient", () => {
 
   it("should pass through without params", async () => {
     const mockPoolClient = {
-      query: jest.fn().mockResolvedValue({
+      query: vi.fn().mockResolvedValue({
         rows: [{ count: 5 }],
         rowCount: 1,
       }),
@@ -313,14 +314,14 @@ describe("wrapMysqlConnection", () => {
       { id: 2, name: "row2" },
     ];
     const mockConnection = {
-      query: jest.fn().mockResolvedValue([rows, []]),
-      release: jest.fn(),
+      query: vi.fn().mockResolvedValue([rows, []]),
+      release: vi.fn(),
     };
     const source = createMockSource("mysql");
-    (source.client as jest.Mock).mockResolvedValue(mockConnection);
+    (source.client as Mock).mockResolvedValue(mockConnection);
 
     let capturedClient: any;
-    (MySqlMigrationManager as jest.Mock).mockImplementation((opts: any) => {
+    (MySqlMigrationManager as Mock).mockImplementation(function (opts: any) {
       capturedClient = opts.client;
       return {};
     });
@@ -334,14 +335,14 @@ describe("wrapMysqlConnection", () => {
   it("should wrap non-array results (INSERT/UPDATE/DELETE queries)", async () => {
     const resultHeader = { affectedRows: 3, insertId: 42n };
     const mockConnection = {
-      query: jest.fn().mockResolvedValue([resultHeader, undefined]),
-      release: jest.fn(),
+      query: vi.fn().mockResolvedValue([resultHeader, undefined]),
+      release: vi.fn(),
     };
     const source = createMockSource("mysql");
-    (source.client as jest.Mock).mockResolvedValue(mockConnection);
+    (source.client as Mock).mockResolvedValue(mockConnection);
 
     let capturedClient: any;
-    (MySqlMigrationManager as jest.Mock).mockImplementation((opts: any) => {
+    (MySqlMigrationManager as Mock).mockImplementation(function (opts: any) {
       capturedClient = opts.client;
       return {};
     });
@@ -355,14 +356,14 @@ describe("wrapMysqlConnection", () => {
   it("should handle result header with no affectedRows or insertId", async () => {
     const resultHeader = {};
     const mockConnection = {
-      query: jest.fn().mockResolvedValue([resultHeader, undefined]),
-      release: jest.fn(),
+      query: vi.fn().mockResolvedValue([resultHeader, undefined]),
+      release: vi.fn(),
     };
     const source = createMockSource("mysql");
-    (source.client as jest.Mock).mockResolvedValue(mockConnection);
+    (source.client as Mock).mockResolvedValue(mockConnection);
 
     let capturedClient: any;
-    (MySqlMigrationManager as jest.Mock).mockImplementation((opts: any) => {
+    (MySqlMigrationManager as Mock).mockImplementation(function (opts: any) {
       capturedClient = opts.client;
       return {};
     });

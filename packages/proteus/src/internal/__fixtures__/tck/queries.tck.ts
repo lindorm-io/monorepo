@@ -1,8 +1,10 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Queries Suite
 // Tests find options: ordering, pagination, limit, offset, select, distinct.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import { getSnapshot } from "../../entity/utils/snapshot-store.js";
 
 export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   describe("Queries", () => {
@@ -394,6 +396,69 @@ export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEnti
       expect(result.totalPages).toBe(2);
       expect(result.data).toHaveLength(3);
       expect(result.hasMore).toBe(true);
+    });
+
+    // ─── snapshot opt-out ────────────────────────────────────────────
+    //
+    // Validates that callers can disable change-tracker snapshot construction
+    // on read paths. When { snapshot: false } is passed, hydrated entities have
+    // no snapshot in the WeakMap, so update() falls back to writing every
+    // column instead of issuing a minimal column-diff UPDATE.
+
+    test("find stores snapshot by default", async () => {
+      const repo = getHandle().repository(TckSimpleUser);
+      const results = await repo.find({ name: "Alice" });
+
+      expect(results).toHaveLength(1);
+      expect(getSnapshot(results[0])).not.toBeNull();
+    });
+
+    test("find with { snapshot: false } skips snapshot", async () => {
+      const repo = getHandle().repository(TckSimpleUser);
+      const results = await repo.find({ name: "Alice" }, { snapshot: false });
+
+      expect(results).toHaveLength(1);
+      expect(getSnapshot(results[0])).toBeNull();
+    });
+
+    test("findOne with { snapshot: false } skips snapshot", async () => {
+      const repo = getHandle().repository(TckSimpleUser);
+      const entity = await repo.findOne({ name: "Alice" }, { snapshot: false });
+
+      expect(entity).not.toBeNull();
+      expect(getSnapshot(entity!)).toBeNull();
+    });
+
+    test("findPaginated with { snapshot: false } skips snapshot on every row", async () => {
+      const repo = getHandle().repository(TckSimpleUser);
+      const result = await repo.findPaginated(undefined, {
+        page: 1,
+        pageSize: 10,
+        order: { name: "ASC" },
+        snapshot: false,
+      });
+
+      expect(result.data.length).toBeGreaterThan(0);
+      for (const entity of result.data) {
+        expect(getSnapshot(entity)).toBeNull();
+      }
+    });
+
+    test("update on no-snapshot entity succeeds (writes every column)", async () => {
+      const repo = getHandle().repository(TckSimpleUser);
+      const [entity] = await repo.find({ name: "Alice" }, { snapshot: false });
+
+      expect(getSnapshot(entity)).toBeNull();
+
+      entity.age = 31;
+      const updated = await repo.update(entity);
+
+      expect(updated.age).toBe(31);
+
+      // Verify the change persisted by reloading
+      const reloaded = await repo.findOne({ name: "Alice" });
+      expect(reloaded).not.toBeNull();
+      expect(reloaded!.age).toBe(31);
     });
   });
 };

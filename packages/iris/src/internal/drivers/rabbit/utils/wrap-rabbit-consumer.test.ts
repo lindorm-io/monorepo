@@ -1,36 +1,37 @@
 import type { ConsumeMessage } from "amqplib";
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { RabbitSharedState } from "../types/rabbit-types";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
 import {
   wrapRabbitConsumer,
   type RabbitConsumerCallbackHost,
-} from "./wrap-rabbit-consumer";
+} from "./wrap-rabbit-consumer.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockHost = <M extends IMessage>(): RabbitConsumerCallbackHost<M> => ({
-  prepareForConsume: jest.fn().mockResolvedValue({ data: "hydrated" }),
-  afterConsumeSuccess: jest.fn().mockResolvedValue(undefined),
-  onConsumeError: jest.fn().mockResolvedValue(undefined),
+  prepareForConsume: vi.fn().mockResolvedValue({ data: "hydrated" }),
+  afterConsumeSuccess: vi.fn().mockResolvedValue(undefined),
+  onConsumeError: vi.fn().mockResolvedValue(undefined),
 });
 
 const createMockChannel = () => ({
-  ack: jest.fn(),
-  nack: jest.fn(),
+  ack: vi.fn(),
+  nack: vi.fn(),
 });
 
 const createMockPublishChannel = () => ({
-  publish: jest.fn(
+  publish: vi.fn(
     (
       _exchange: string,
       _routingKey: string,
@@ -42,7 +43,7 @@ const createMockPublishChannel = () => ({
       return true;
     },
   ),
-  assertQueue: jest
+  assertQueue: vi
     .fn()
     .mockResolvedValue({ queue: "test", messageCount: 0, consumerCount: 0 }),
 });
@@ -118,7 +119,7 @@ describe("wrapRabbitConsumer", () => {
   describe("null message guard", () => {
     it("should return early when msg is null", async () => {
       const host = createMockHost();
-      const callback = jest.fn();
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 
@@ -138,7 +139,7 @@ describe("wrapRabbitConsumer", () => {
 
     it("should return early when consume channel is null", async () => {
       const host = createMockHost();
-      const callback = jest.fn();
+      const callback = vi.fn();
       const state = createState({ consumeChannel: null });
       const logger = createMockLogger();
 
@@ -159,7 +160,7 @@ describe("wrapRabbitConsumer", () => {
   describe("happy path", () => {
     it("should call prepareForConsume, callback, ack, and afterConsumeSuccess", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
 
@@ -188,7 +189,7 @@ describe("wrapRabbitConsumer", () => {
 
     it("should pass ConsumeEnvelope with metadata fields to callback", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const metadata = createMetadata({ namespace: "my-ns", version: 3 });
       const logger = createMockLogger();
@@ -210,7 +211,7 @@ describe("wrapRabbitConsumer", () => {
   describe("expiry", () => {
     it("should ack and skip expired messages", async () => {
       const host = createMockHost();
-      const callback = jest.fn();
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 
@@ -241,8 +242,8 @@ describe("wrapRabbitConsumer", () => {
   describe("deserialization failure", () => {
     it("should ack and discard on deserialization error when deadLetter is false", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 
@@ -269,8 +270,8 @@ describe("wrapRabbitConsumer", () => {
 
     it("should nack to DLX on deserialization error when deadLetter is true", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 
@@ -291,8 +292,8 @@ describe("wrapRabbitConsumer", () => {
 
     it("should ack and discard non-Error deserialization failures when deadLetter is false", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue("string error");
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue("string error");
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 
@@ -314,7 +315,7 @@ describe("wrapRabbitConsumer", () => {
   describe("callback error - retry", () => {
     it("should retry via ack-last when attempts remain", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const logger = createMockLogger();
 
@@ -360,7 +361,7 @@ describe("wrapRabbitConsumer", () => {
 
     it("should not re-assert delay queue when already asserted", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       state.assertedDelayQueues.add("iris.delay.test-topic");
       const logger = createMockLogger();
@@ -387,7 +388,7 @@ describe("wrapRabbitConsumer", () => {
 
     it("should nack with requeue when retry publish fails", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const publishChannel = createMockPublishChannel();
       publishChannel.publish.mockImplementation(() => false);
       const state = createState({ publishChannel: publishChannel as any });
@@ -419,7 +420,7 @@ describe("wrapRabbitConsumer", () => {
 
     it("should increment attempt in retry message headers", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const logger = createMockLogger();
       const metadata = createMetadata({
@@ -440,7 +441,7 @@ describe("wrapRabbitConsumer", () => {
       });
       await wrapped(msg);
 
-      const publishCall = (state.publishChannel!.publish as jest.Mock).mock.calls[0];
+      const publishCall = (state.publishChannel!.publish as Mock).mock.calls[0];
       const publishOptions = publishCall[3];
       expect(publishOptions.headers["x-iris-attempt"]).toBe(2);
     });
@@ -449,7 +450,7 @@ describe("wrapRabbitConsumer", () => {
   describe("callback error - exhausted retries", () => {
     it("should publish to DLX with error headers and ack when dead letter is enabled and retries exhausted", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("permanent"));
+      const callback = vi.fn().mockRejectedValue(new Error("permanent"));
       const state = createState();
       const metadata = createMetadata({
         deadLetter: true,
@@ -490,7 +491,7 @@ describe("wrapRabbitConsumer", () => {
 
     it("should ack (discard) when dead letter is disabled and retries exhausted", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata({
         deadLetter: false,
@@ -518,7 +519,7 @@ describe("wrapRabbitConsumer", () => {
 
     it("should publish to DLX when no retries configured and dead letter enabled", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -545,7 +546,7 @@ describe("wrapRabbitConsumer", () => {
 
     it("should nack as fallback when DLX publish fails", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const publishChannel = createMockPublishChannel();
       // First call succeeds (or is not relevant), DLX publish fails
       publishChannel.publish.mockImplementation(
@@ -580,8 +581,8 @@ describe("wrapRabbitConsumer", () => {
   describe("afterConsumeSuccess hook", () => {
     it("should log and swallow afterConsumeSuccess errors", async () => {
       const host = createMockHost();
-      (host.afterConsumeSuccess as jest.Mock).mockRejectedValue(new Error("hook failed"));
-      const callback = jest.fn().mockResolvedValue(undefined);
+      (host.afterConsumeSuccess as Mock).mockRejectedValue(new Error("hook failed"));
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
 
@@ -608,7 +609,7 @@ describe("wrapRabbitConsumer", () => {
   describe("error wrapping", () => {
     it("should wrap non-Error callback throws into Error instances", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue("string error");
+      const callback = vi.fn().mockRejectedValue("string error");
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateEntityDDL check constraints check constraints appear inside the CREATE TABLE body for TestChecked 1`] = `
+exports[`generateEntityDDL > check constraints > check constraints appear inside the CREATE TABLE body for TestChecked 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -27,7 +27,7 @@ exports[`generateEntityDDL check constraints check constraints appear inside the
 }
 `;
 
-exports[`generateEntityDDL extensions auto-detection adds pgvector extension when entity has a vector field 1`] = `
+exports[`generateEntityDDL > extensions auto-detection > adds pgvector extension when entity has a vector field 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -48,7 +48,7 @@ exports[`generateEntityDDL extensions auto-detection adds pgvector extension whe
 }
 `;
 
-exports[`generateEntityDDL indexes emits indexes for TestIndexed 1`] = `
+exports[`generateEntityDDL > indexes > emits indexes for TestIndexed 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -76,7 +76,7 @@ exports[`generateEntityDDL indexes emits indexes for TestIndexed 1`] = `
 }
 `;
 
-exports[`generateEntityDDL many-to-many join tables emits join table DDL for TestCourse (owning side) 1`] = `
+exports[`generateEntityDDL > many-to-many join tables > emits join table DDL for TestCourse (owning side) 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -106,7 +106,7 @@ exports[`generateEntityDDL many-to-many join tables emits join table DDL for Tes
 }
 `;
 
-exports[`generateEntityDDL relation entities (full DDL) generates full DDL for TestArticle (ManyToOne, owning) 1`] = `
+exports[`generateEntityDDL > relation entities (full DDL) > generates full DDL for TestArticle (ManyToOne, owning) 1`] = `
 {
   "comments": [],
   "constraints": [
@@ -133,7 +133,7 @@ exports[`generateEntityDDL relation entities (full DDL) generates full DDL for T
 }
 `;
 
-exports[`generateEntityDDL relation entities (full DDL) generates full DDL for TestAuthor (OneToMany, inverse) 1`] = `
+exports[`generateEntityDDL > relation entities (full DDL) > generates full DDL for TestAuthor (OneToMany, inverse) 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -157,7 +157,7 @@ exports[`generateEntityDDL relation entities (full DDL) generates full DDL for T
 }
 `;
 
-exports[`generateEntityDDL relation entities (full DDL) generates full DDL for TestProfile (inverse OneToOne) 1`] = `
+exports[`generateEntityDDL > relation entities (full DDL) > generates full DDL for TestProfile (inverse OneToOne) 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -181,7 +181,7 @@ exports[`generateEntityDDL relation entities (full DDL) generates full DDL for T
 }
 `;
 
-exports[`generateEntityDDL relation entities (full DDL) generates full DDL for TestUserWithProfile (owning OneToOne) 1`] = `
+exports[`generateEntityDDL > relation entities (full DDL) > generates full DDL for TestUserWithProfile (owning OneToOne) 1`] = `
 {
   "comments": [],
   "constraints": [
@@ -208,7 +208,7 @@ exports[`generateEntityDDL relation entities (full DDL) generates full DDL for T
 }
 `;
 
-exports[`generateEntityDDL schema creation emits CREATE SCHEMA when entity has a namespace decorator 1`] = `
+exports[`generateEntityDDL > schema creation > emits CREATE SCHEMA when entity has a namespace decorator 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -229,7 +229,7 @@ exports[`generateEntityDDL schema creation emits CREATE SCHEMA when entity has a
 }
 `;
 
-exports[`generateEntityDDL schema creation emits CREATE SCHEMA when namespace is in options 1`] = `
+exports[`generateEntityDDL > schema creation > emits CREATE SCHEMA when namespace is in options 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -257,7 +257,7 @@ exports[`generateEntityDDL schema creation emits CREATE SCHEMA when namespace is
 }
 `;
 
-exports[`generateEntityDDL simple entities generates full DDL for TestScopedEntity (scope field) 1`] = `
+exports[`generateEntityDDL > simple entities > generates full DDL for TestScopedEntity (scope field) 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -283,7 +283,7 @@ exports[`generateEntityDDL simple entities generates full DDL for TestScopedEnti
 }
 `;
 
-exports[`generateEntityDDL simple entities generates full DDL for TestSoftDelete (delete/expiry date fields) 1`] = `
+exports[`generateEntityDDL > simple entities > generates full DDL for TestSoftDelete (delete/expiry date fields) 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -313,7 +313,7 @@ exports[`generateEntityDDL simple entities generates full DDL for TestSoftDelete
 }
 `;
 
-exports[`generateEntityDDL simple entities generates full DDL for TestUser 1`] = `
+exports[`generateEntityDDL > simple entities > generates full DDL for TestUser 1`] = `
 {
   "comments": [],
   "constraints": [],
@@ -339,7 +339,7 @@ exports[`generateEntityDDL simple entities generates full DDL for TestUser 1`] =
 }
 `;
 
-exports[`generateEntityDDL simple entities generates full DDL for TestVersionKeyed (composite PK) 1`] = `
+exports[`generateEntityDDL > simple entities > generates full DDL for TestVersionKeyed (composite PK) 1`] = `
 {
   "comments": [],
   "constraints": [],

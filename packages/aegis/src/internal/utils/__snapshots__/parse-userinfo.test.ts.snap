@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parseUserinfo ParsedJwtPayload input should extract profile from ParsedJwtPayload 1`] = `
+exports[`parseUserinfo > ParsedJwtPayload input > should extract profile from ParsedJwtPayload 1`] = `
 {
   "email": "jane@example.com",
   "emailVerified": true,
@@ -11,13 +11,13 @@ exports[`parseUserinfo ParsedJwtPayload input should extract profile from Parsed
 }
 `;
 
-exports[`parseUserinfo plain claims input should handle minimal claims with only sub 1`] = `
+exports[`parseUserinfo > plain claims input > should handle minimal claims with only sub 1`] = `
 {
   "subject": "user-minimal",
 }
 `;
 
-exports[`parseUserinfo plain claims input should include lindorm extension fields 1`] = `
+exports[`parseUserinfo > plain claims input > should include lindorm extension fields 1`] = `
 {
   "department": "Engineering",
   "displayName": "Johnny D",
@@ -29,7 +29,7 @@ exports[`parseUserinfo plain claims input should include lindorm extension field
 }
 `;
 
-exports[`parseUserinfo plain claims input should map standard OIDC claims to AegisUserinfo 1`] = `
+exports[`parseUserinfo > plain claims input > should map standard OIDC claims to AegisUserinfo 1`] = `
 {
   "birthdate": "1990-01-01",
   "email": "john@example.com",

@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import { generateEntity } from "./generate-entity";
+import { generateEntity } from "./generate-entity.js";
 
 export const registerGenerateCommands = (program: Command): void => {
   const generate = program

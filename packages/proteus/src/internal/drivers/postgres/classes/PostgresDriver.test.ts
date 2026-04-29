@@ -15,138 +15,152 @@
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("pg", () => {
+vi.mock("pg", async () => {
   const mockClient = {
-    query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
-    release: jest.fn(),
+    query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+    release: vi.fn(),
   };
   const mockPool = {
-    connect: jest.fn().mockResolvedValue(mockClient),
-    end: jest.fn().mockResolvedValue(undefined),
-    query: jest.fn().mockResolvedValue({ rows: [{ "?column?": 1 }], rowCount: 1 }),
-    on: jest.fn(),
+    connect: vi.fn().mockResolvedValue(mockClient),
+    end: vi.fn().mockResolvedValue(undefined),
+    query: vi.fn().mockResolvedValue({ rows: [{ "?column?": 1 }], rowCount: 1 }),
+    on: vi.fn(),
     __mockClient: mockClient,
   };
   return {
-    Pool: jest.fn().mockImplementation(() => mockPool),
+    Pool: vi.fn(function () {
+      return mockPool;
+    }),
     __mockPool: mockPool,
     __mockClient: mockClient,
   };
 });
 
-jest.mock("./PostgresExecutor", () => ({
-  PostgresExecutor: jest.fn().mockImplementation(() => ({
-    executeFind: jest.fn(),
-    executeCount: jest.fn(),
-    executeExists: jest.fn(),
-    executeInsert: jest.fn(),
-    executeUpdate: jest.fn(),
-    executeDelete: jest.fn(),
-    executeSoftDelete: jest.fn(),
-    executeRestore: jest.fn(),
-    executeDeleteExpired: jest.fn(),
-    executeTtl: jest.fn(),
-    executeIncrement: jest.fn(),
-    executeDecrement: jest.fn(),
-    executeInsertBulk: jest.fn(),
-    executeUpdateMany: jest.fn(),
-  })),
+vi.mock("./PostgresExecutor.js", async () => ({
+  PostgresExecutor: vi.fn(function () {
+    return {
+      executeFind: vi.fn(),
+      executeCount: vi.fn(),
+      executeExists: vi.fn(),
+      executeInsert: vi.fn(),
+      executeUpdate: vi.fn(),
+      executeDelete: vi.fn(),
+      executeSoftDelete: vi.fn(),
+      executeRestore: vi.fn(),
+      executeDeleteExpired: vi.fn(),
+      executeTtl: vi.fn(),
+      executeIncrement: vi.fn(),
+      executeDecrement: vi.fn(),
+      executeInsertBulk: vi.fn(),
+      executeUpdateMany: vi.fn(),
+    };
+  }),
 }));
 
-jest.mock("./PostgresQueryBuilder", () => ({
-  PostgresQueryBuilder: jest.fn().mockImplementation(() => ({
-    build: jest.fn(),
-  })),
+vi.mock("./PostgresQueryBuilder.js", () => ({
+  PostgresQueryBuilder: vi.fn(function () {
+    return { build: vi.fn() };
+  }),
 }));
 
-jest.mock("./PostgresRepository", () => ({
-  PostgresRepository: jest.fn().mockImplementation((opts: any) => ({
-    _opts: opts,
-    target: opts.target,
-  })),
+vi.mock("./PostgresRepository.js", () => ({
+  PostgresRepository: vi.fn(function (opts: any) {
+    return { _opts: opts, target: opts.target };
+  }),
 }));
 
-jest.mock("./MigrationManager", () => ({
-  MigrationManager: jest.fn().mockImplementation(() => ({
-    apply: jest.fn().mockResolvedValue({ applied: [] }),
-  })),
+vi.mock("./MigrationManager.js", () => ({
+  MigrationManager: vi.fn(function () {
+    return { apply: vi.fn().mockResolvedValue({ applied: [] }) };
+  }),
 }));
 
-jest.mock("../utils/sync/diff-schema", () => ({
-  diffSchema: jest.fn().mockReturnValue({ operations: [] }),
+vi.mock("../utils/sync/diff-schema.js", () => ({
+  diffSchema: vi.fn().mockReturnValue({ operations: [] }),
 }));
 
-const mockSyncExecute = jest.fn().mockResolvedValue({ statementsExecuted: 0 });
-jest.mock("../utils/sync/execute-sync-plan", () => ({
-  SyncPlanExecutor: jest.fn().mockImplementation(() => ({
-    execute: mockSyncExecute,
-  })),
+const mockSyncExecute = vi.fn().mockResolvedValue({ statementsExecuted: 0 });
+vi.mock("../utils/sync/execute-sync-plan.js", () => ({
+  SyncPlanExecutor: vi.fn(function () {
+    return { execute: mockSyncExecute };
+  }),
 }));
 
-jest.mock("../utils/sync/introspect-schema", () => ({
-  introspectSchema: jest.fn().mockResolvedValue({ tables: [] }),
+vi.mock("../utils/sync/introspect-schema.js", () => ({
+  introspectSchema: vi.fn().mockResolvedValue({ tables: [] }),
 }));
 
-jest.mock("../utils/sync/project-desired-schema", () => ({
-  projectDesiredSchema: jest.fn().mockReturnValue({ tables: [] }),
+vi.mock("../utils/sync/project-desired-schema.js", () => ({
+  projectDesiredSchema: vi.fn().mockReturnValue({ tables: [] }),
 }));
 
-jest.mock("../utils/transaction/begin-transaction", () => ({
-  beginTransaction: jest.fn().mockResolvedValue({
-    client: { query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }) },
-    release: jest.fn(),
+vi.mock("../utils/transaction/begin-transaction.js", () => ({
+  beginTransaction: vi.fn().mockResolvedValue({
+    client: { query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }) },
+    release: vi.fn(),
     state: "active",
     savepointCounter: 0,
   }),
 }));
 
-jest.mock("../utils/transaction/commit-transaction", () => ({
-  commitTransaction: jest.fn().mockResolvedValue(undefined),
+vi.mock("../utils/transaction/commit-transaction.js", () => ({
+  commitTransaction: vi.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("../utils/transaction/rollback-transaction", () => ({
-  rollbackTransaction: jest.fn().mockResolvedValue(undefined),
+vi.mock("../utils/transaction/rollback-transaction.js", () => ({
+  rollbackTransaction: vi.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("../utils/transaction/is-retryable-transaction-error", () => ({
-  isRetryableTransactionError: jest.fn().mockReturnValue(false),
+vi.mock("../utils/transaction/is-retryable-transaction-error.js", () => ({
+  isRetryableTransactionError: vi.fn().mockReturnValue(false),
 }));
 
-jest.mock("../utils/transaction/with-retry", () => ({
-  withRetry: jest.fn().mockImplementation(async (fn: any) => fn()),
+vi.mock("../utils/transaction/with-retry.js", () => ({
+  withRetry: vi.fn().mockImplementation(async (fn: any) => fn()),
 }));
 
-jest.mock("./TransactionContext", () => ({
-  TransactionContext: jest
-    .fn()
-    .mockImplementation((handle, namespace, logger, factory) => ({
+vi.mock("./TransactionContext.js", () => ({
+  TransactionContext: vi.fn(function (
+    handle: any,
+    namespace: any,
+    _logger: any,
+    factory: any,
+  ) {
+    return {
       handle,
       namespace,
       factory,
       _isMockContext: true,
-    })),
+    };
+  }),
 }));
 
 // ─── Imports ──────────────────────────────────────────────────────────────────
 
 import type { ILogger } from "@lindorm/logger";
+import * as pg from "pg";
 import { Pool } from "pg";
-import { PostgresDriver } from "./PostgresDriver";
-import { PostgresRepository } from "./PostgresRepository";
-import { PostgresExecutor } from "./PostgresExecutor";
-import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
-import { beginTransaction } from "../utils/transaction/begin-transaction";
-import { commitTransaction } from "../utils/transaction/commit-transaction";
-import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
-import { withRetry } from "../utils/transaction/with-retry";
-import { TransactionContext } from "./TransactionContext";
-import { PostgresDriverError } from "../errors/PostgresDriverError";
-import { PostgresMigrationError } from "../errors/PostgresMigrationError";
-import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
-import type { IEntity } from "../../../../interfaces";
+import * as projectDesiredSchemaMod from "../utils/sync/project-desired-schema.js";
+import * as introspectSchemaMod from "../utils/sync/introspect-schema.js";
+import * as diffSchemaMod from "../utils/sync/diff-schema.js";
+import * as migrationManagerMod from "./MigrationManager.js";
+import { PostgresDriver } from "./PostgresDriver.js";
+import { PostgresRepository } from "./PostgresRepository.js";
+import { PostgresExecutor } from "./PostgresExecutor.js";
+import { PostgresQueryBuilder } from "./PostgresQueryBuilder.js";
+import { beginTransaction } from "../utils/transaction/begin-transaction.js";
+import { commitTransaction } from "../utils/transaction/commit-transaction.js";
+import { rollbackTransaction } from "../utils/transaction/rollback-transaction.js";
+import { withRetry } from "../utils/transaction/with-retry.js";
+import { TransactionContext } from "./TransactionContext.js";
+import { PostgresDriverError } from "../errors/PostgresDriverError.js";
+import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
+import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan.js";
+import type { IEntity } from "../../../../interfaces/index.js";
 import type { Constructor } from "@lindorm/types";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { makeField } from "../../../__fixtures__/make-field";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -165,16 +179,16 @@ const mockMetadata = {
 
 const createMockLogger = (): ILogger =>
   ({
-    child: jest.fn().mockReturnThis(),
-    silly: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    child: vi.fn().mockReturnThis(),
+    silly: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   }) as unknown as ILogger;
 
-const getMockPool = () => (require("pg") as any).__mockPool;
-const getMockClient = () => (require("pg") as any).__mockClient;
+const getMockPool = () => (pg as any).__mockPool;
+const getMockClient = () => (pg as any).__mockClient;
 
 const makeOptions = (overrides: Partial<any> = {}): any => ({
   driver: "postgres",
@@ -184,7 +198,7 @@ const makeOptions = (overrides: Partial<any> = {}): any => ({
 
 const makeDriver = (overrides: Partial<any> = {}) => {
   const logger = createMockLogger();
-  const resolveMetadata = jest.fn().mockReturnValue(mockMetadata);
+  const resolveMetadata = vi.fn().mockReturnValue(mockMetadata);
   const options = makeOptions(overrides);
   const driver = new PostgresDriver(options, logger, null, resolveMetadata);
   return { driver, logger, resolveMetadata };
@@ -194,7 +208,7 @@ const makeDriver = (overrides: Partial<any> = {}) => {
 
 describe("PostgresDriver", () => {
   beforeEach(() => {
-    jest.resetAllMocks();
+    vi.resetAllMocks();
     // Restore default mocks after reset
     const mockPool = getMockPool();
     const mockClient = getMockClient();
@@ -204,42 +218,49 @@ describe("PostgresDriver", () => {
     mockPool.on.mockReturnValue(undefined);
     mockClient.query.mockResolvedValue({ rows: [], rowCount: 0 });
     mockClient.release.mockReturnValue(undefined);
-    (Pool as unknown as jest.Mock).mockImplementation(() => mockPool);
-    (beginTransaction as jest.Mock).mockResolvedValue({
+    (Pool as unknown as Mock).mockImplementation(function () {
+      return mockPool;
+    });
+    (beginTransaction as Mock).mockResolvedValue({
       client: mockClient,
-      release: jest.fn(),
+      release: vi.fn(),
       state: "active",
       savepointCounter: 0,
     });
-    (commitTransaction as jest.Mock).mockResolvedValue(undefined);
-    (rollbackTransaction as jest.Mock).mockResolvedValue(undefined);
-    (withRetry as jest.Mock).mockImplementation(async (fn: any) => fn());
+    (commitTransaction as Mock).mockResolvedValue(undefined);
+    (rollbackTransaction as Mock).mockResolvedValue(undefined);
+    (withRetry as Mock).mockImplementation(async (fn: any) => fn());
     // Restore TransactionContext mock
-    (TransactionContext as unknown as jest.Mock).mockImplementation(
-      (handle: any, namespace: any, logger: any, factory: any) => ({
+    (TransactionContext as unknown as Mock).mockImplementation(function (
+      handle: any,
+      namespace: any,
+      _logger: any,
+      factory: any,
+    ) {
+      return {
         handle,
         namespace,
         factory,
         _isMockContext: true,
-      }),
-    );
+      };
+    });
     // Restore sync utilities
-    const { projectDesiredSchema } = require("../utils/sync/project-desired-schema");
-    (projectDesiredSchema as jest.Mock).mockReturnValue({ tables: [] });
-    const { introspectSchema } = require("../utils/sync/introspect-schema");
-    (introspectSchema as jest.Mock).mockResolvedValue({ tables: [] });
-    const { diffSchema } = require("../utils/sync/diff-schema");
-    (diffSchema as jest.Mock).mockReturnValue({ operations: [] });
+    (projectDesiredSchemaMod.projectDesiredSchema as Mock).mockReturnValue({
+      tables: [],
+    });
+    (introspectSchemaMod.introspectSchema as Mock).mockResolvedValue({ tables: [] });
+    (diffSchemaMod.diffSchema as Mock).mockReturnValue({ operations: [] });
     mockSyncExecute.mockResolvedValue({ statementsExecuted: 0 });
     // Re-wire SyncPlanExecutor constructor after resetAllMocks
-    (SyncPlanExecutor as unknown as jest.Mock).mockImplementation(() => ({
-      execute: mockSyncExecute,
-    }));
+    (SyncPlanExecutor as unknown as Mock).mockImplementation(function () {
+      return { execute: mockSyncExecute };
+    });
     // Restore MigrationManager mock
-    const { MigrationManager } = require("./MigrationManager");
-    (MigrationManager as jest.Mock).mockImplementation(() => ({
-      apply: jest.fn().mockResolvedValue({ applied: [] }),
-    }));
+    (migrationManagerMod.MigrationManager as unknown as Mock).mockImplementation(
+      function () {
+        return { apply: vi.fn().mockResolvedValue({ applied: [] }) };
+      },
+    );
   });
 
   // ─── connect / disconnect ─────────────────────────────────────────────
@@ -432,8 +453,7 @@ describe("PostgresDriver", () => {
 
       driver.createRepository(TestEntity);
 
-      const constructorCall = (PostgresRepository as unknown as jest.Mock).mock
-        .calls[0][0];
+      const constructorCall = (PostgresRepository as unknown as Mock).mock.calls[0][0];
       expect(constructorCall.target).toBe(TestEntity);
     });
 
@@ -446,14 +466,13 @@ describe("PostgresDriver", () => {
       }
       driver.createRepository(TestEntity, ParentEntity);
 
-      const constructorCall = (PostgresRepository as unknown as jest.Mock).mock
-        .calls[0][0];
+      const constructorCall = (PostgresRepository as unknown as Mock).mock.calls[0][0];
       expect(constructorCall.parent).toBe(ParentEntity);
     });
 
     test("passes namespace to repository", () => {
       const logger = createMockLogger();
-      const resolveMetadata = jest.fn().mockReturnValue(mockMetadata);
+      const resolveMetadata = vi.fn().mockReturnValue(mockMetadata);
       const driver = new PostgresDriver(
         { driver: "postgres" } as any,
         logger,
@@ -464,8 +483,7 @@ describe("PostgresDriver", () => {
 
       driver.createRepository(TestEntity);
 
-      const constructorCall = (PostgresRepository as unknown as jest.Mock).mock
-        .calls[0][0];
+      const constructorCall = (PostgresRepository as unknown as Mock).mock.calls[0][0];
       expect(constructorCall.namespace).toBe("my_schema");
     });
   });
@@ -476,8 +494,8 @@ describe("PostgresDriver", () => {
     test("creates a PostgresRepository using the transaction handle's client", () => {
       const { driver, resolveMetadata } = makeDriver();
       const mockHandle = {
-        client: { query: jest.fn() },
-        release: jest.fn(),
+        client: { query: vi.fn() },
+        release: vi.fn(),
         state: "active",
         savepointCounter: 0,
       };
@@ -485,8 +503,7 @@ describe("PostgresDriver", () => {
       driver.createTransactionalRepository(TestEntity, mockHandle as any);
 
       expect(resolveMetadata).toHaveBeenCalledWith(TestEntity);
-      const constructorCall = (PostgresRepository as unknown as jest.Mock).mock
-        .calls[0][0];
+      const constructorCall = (PostgresRepository as unknown as Mock).mock.calls[0][0];
       expect(constructorCall.target).toBe(TestEntity);
     });
   });
@@ -511,8 +528,8 @@ describe("PostgresDriver", () => {
     test("creates a PostgresExecutor using the transaction handle's client", () => {
       const { driver } = makeDriver();
       const mockHandle = {
-        client: { query: jest.fn() },
-        release: jest.fn(),
+        client: { query: vi.fn() },
+        release: vi.fn(),
         state: "active",
         savepointCounter: 0,
       };
@@ -543,8 +560,8 @@ describe("PostgresDriver", () => {
     test("creates a PostgresQueryBuilder using the transaction handle's client", () => {
       const { driver } = makeDriver();
       const mockHandle = {
-        client: { query: jest.fn() },
-        release: jest.fn(),
+        client: { query: vi.fn() },
+        release: vi.fn(),
         state: "active",
         savepointCounter: 0,
       };
@@ -578,8 +595,8 @@ describe("PostgresDriver", () => {
       const { driver } = makeDriver();
       await driver.connect();
 
-      const newFilterRegistry = jest.fn().mockReturnValue(new Map());
-      const newSubscribers = jest.fn().mockReturnValue([]);
+      const newFilterRegistry = vi.fn().mockReturnValue(new Map());
+      const newSubscribers = vi.fn().mockReturnValue([]);
 
       const cloned = driver.cloneWithGetters(newFilterRegistry, newSubscribers);
 
@@ -593,8 +610,8 @@ describe("PostgresDriver", () => {
       const { driver } = makeDriver();
       await driver.connect();
 
-      const newFilterRegistry = jest.fn().mockReturnValue(new Map([["key", "value"]]));
-      const newEmitEntity = jest.fn().mockResolvedValue(undefined);
+      const newFilterRegistry = vi.fn().mockReturnValue(new Map([["key", "value"]]));
+      const newEmitEntity = vi.fn().mockResolvedValue(undefined);
 
       const cloned = driver.cloneWithGetters(newFilterRegistry, newEmitEntity);
 
@@ -621,7 +638,7 @@ describe("PostgresDriver", () => {
       const { driver } = makeDriver();
       const handle = {
         client: getMockClient(),
-        release: jest.fn(),
+        release: vi.fn(),
         state: "active",
         savepointCounter: 0,
       };
@@ -637,7 +654,7 @@ describe("PostgresDriver", () => {
       const { driver } = makeDriver();
       const handle = {
         client: getMockClient(),
-        release: jest.fn(),
+        release: vi.fn(),
         state: "active",
         savepointCounter: 0,
       };
@@ -655,7 +672,7 @@ describe("PostgresDriver", () => {
       const { driver } = makeDriver();
       (driver as any).pool = getMockPool();
 
-      const callback = jest.fn().mockResolvedValue("result");
+      const callback = vi.fn().mockResolvedValue("result");
 
       const result = await driver.withTransaction(callback);
 
@@ -670,13 +687,13 @@ describe("PostgresDriver", () => {
       (driver as any).pool = getMockPool();
       const mockHandle = {
         client: getMockClient(),
-        release: jest.fn(),
+        release: vi.fn(),
         state: "active",
         savepointCounter: 0,
       };
-      (beginTransaction as jest.Mock).mockResolvedValue(mockHandle);
+      (beginTransaction as Mock).mockResolvedValue(mockHandle);
 
-      await driver.withTransaction(jest.fn().mockResolvedValue(undefined));
+      await driver.withTransaction(vi.fn().mockResolvedValue(undefined));
 
       expect(commitTransaction).toHaveBeenCalledWith(mockHandle);
     });
@@ -686,15 +703,15 @@ describe("PostgresDriver", () => {
       (driver as any).pool = getMockPool();
       const mockHandle = {
         client: getMockClient(),
-        release: jest.fn(),
+        release: vi.fn(),
         state: "active",
         savepointCounter: 0,
       };
-      (beginTransaction as jest.Mock).mockResolvedValue(mockHandle);
+      (beginTransaction as Mock).mockResolvedValue(mockHandle);
 
       const error = new Error("callback failed");
       await expect(
-        driver.withTransaction(jest.fn().mockRejectedValue(error)),
+        driver.withTransaction(vi.fn().mockRejectedValue(error)),
       ).rejects.toThrow("callback failed");
 
       expect(rollbackTransaction).toHaveBeenCalledWith(mockHandle);
@@ -705,13 +722,13 @@ describe("PostgresDriver", () => {
       (driver as any).pool = getMockPool();
       const mockHandle = {
         client: getMockClient(),
-        release: jest.fn(),
+        release: vi.fn(),
         state: "committed", // Already committed
         savepointCounter: 0,
       };
-      (beginTransaction as jest.Mock).mockResolvedValue(mockHandle);
+      (beginTransaction as Mock).mockResolvedValue(mockHandle);
 
-      await driver.withTransaction(jest.fn().mockResolvedValue(undefined));
+      await driver.withTransaction(vi.fn().mockResolvedValue(undefined));
 
       expect(commitTransaction).not.toHaveBeenCalled();
     });
@@ -721,7 +738,7 @@ describe("PostgresDriver", () => {
       (driver as any).pool = getMockPool();
 
       const retryOptions = { maxAttempts: 3, delay: 0 };
-      await driver.withTransaction(jest.fn().mockResolvedValue("ok"), {
+      await driver.withTransaction(vi.fn().mockResolvedValue("ok"), {
         retry: retryOptions as any,
       });
 
@@ -750,12 +767,11 @@ describe("PostgresDriver", () => {
 
     test("does not run migrations or sync when neither option is set", async () => {
       const { driver } = makeDriver();
-      const { MigrationManager } = require("./MigrationManager");
       (driver as any).pool = getMockPool();
 
       await driver.setup([]);
 
-      expect(MigrationManager).not.toHaveBeenCalled();
+      expect(migrationManagerMod.MigrationManager).not.toHaveBeenCalled();
       expect(mockSyncExecute).not.toHaveBeenCalled();
     });
 
@@ -774,11 +790,10 @@ describe("PostgresDriver", () => {
         migrations: ["/path/to/migrations"],
       });
       (driver as any).pool = getMockPool();
-      const { MigrationManager } = require("./MigrationManager");
 
       await driver.setup([]);
 
-      expect(MigrationManager).toHaveBeenCalled();
+      expect(migrationManagerMod.MigrationManager).toHaveBeenCalled();
     });
   });
 });

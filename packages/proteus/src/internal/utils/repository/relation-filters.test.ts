@@ -1,13 +1,14 @@
-import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata";
+import { describe, expect, test } from "vitest";
+import type { EntityMetadata, MetaRelation } from "../../entity/types/metadata.js";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
+import type { IEntity } from "../../../interfaces/index.js";
 import {
   isOwningRelation,
   isInverseRelation,
   findMirror,
   isSelfReferencing,
   shouldSkipParent,
-} from "./relation-filters";
+} from "./relation-filters.js";
 
 const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation =>
   ({

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`OneToOne should register inverse side 1`] = `
+exports[`OneToOne > should register inverse side 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -119,7 +119,7 @@ exports[`OneToOne should register inverse side 1`] = `
 }
 `;
 
-exports[`OneToOne should register owning side with @JoinKey 1`] = `
+exports[`OneToOne > should register owning side with @JoinKey 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -240,7 +240,7 @@ exports[`OneToOne should register owning side with @JoinKey 1`] = `
 }
 `;
 
-exports[`OneToOne should register with explicit joinKeys 1`] = `
+exports[`OneToOne > should register with explicit joinKeys 1`] = `
 {
   "appendOnly": false,
   "cache": null,

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`getJoinName should return scoped name with namespace 1`] = `
+exports[`getJoinName > should return scoped name with namespace 1`] = `
 {
   "name": "user_post",
   "namespace": "myApp",
@@ -13,7 +13,7 @@ exports[`getJoinName should return scoped name with namespace 1`] = `
 }
 `;
 
-exports[`getJoinName should return scoped name without namespace 1`] = `
+exports[`getJoinName > should return scoped name without namespace 1`] = `
 {
   "name": "user_post",
   "namespace": null,

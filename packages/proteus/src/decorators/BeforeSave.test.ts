@@ -1,9 +1,10 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { BeforeSave } from "./BeforeSave";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { BeforeSave } from "./BeforeSave.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test, vi } from "vitest";
 
-const beforeSaveCallback = jest.fn();
+const beforeSaveCallback = vi.fn();
 
 @Entity({ name: "BeforeSaveDecorated" })
 @BeforeSave(beforeSaveCallback)

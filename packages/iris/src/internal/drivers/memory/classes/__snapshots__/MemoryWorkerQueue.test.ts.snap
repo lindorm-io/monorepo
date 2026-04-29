@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`MemoryWorkerQueue publish and consume should deliver published message to consumer 1`] = `
+exports[`MemoryWorkerQueue > publish and consume > should deliver published message to consumer 1`] = `
 [
   "hello",
 ]
 `;
 
-exports[`MemoryWorkerQueue retry should succeed if callback works on retry 1`] = `
+exports[`MemoryWorkerQueue > retry > should succeed if callback works on retry 1`] = `
 [
   "retry-success",
 ]

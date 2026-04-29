@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`TtlMap [Symbol.toStringTag] should return TtlMap 1`] = `"[object TtlMap]"`;
+exports[`TtlMap > [Symbol.toStringTag] > should return TtlMap 1`] = `"[object TtlMap]"`;
 
-exports[`TtlMap expiry with default TTL should return undefined after TTL elapses 1`] = `undefined`;
+exports[`TtlMap > expiry with default TTL > should return undefined after TTL elapses 1`] = `undefined`;
 
-exports[`TtlMap expiry with default TTL should return undefined after TTL elapses 2`] = `false`;
+exports[`TtlMap > expiry with default TTL > should return undefined after TTL elapses 2`] = `false`;
 
-exports[`TtlMap iteration [Symbol.iterator]() should skip expired entries 1`] = `
+exports[`TtlMap > iteration > [Symbol.iterator]() should skip expired entries 1`] = `
 [
   [
     "alive1",
@@ -19,7 +19,7 @@ exports[`TtlMap iteration [Symbol.iterator]() should skip expired entries 1`] = 
 ]
 `;
 
-exports[`TtlMap iteration entries() should skip expired entries 1`] = `
+exports[`TtlMap > iteration > entries() should skip expired entries 1`] = `
 [
   [
     "alive1",
@@ -32,7 +32,7 @@ exports[`TtlMap iteration entries() should skip expired entries 1`] = `
 ]
 `;
 
-exports[`TtlMap iteration forEach() should skip expired entries 1`] = `
+exports[`TtlMap > iteration > forEach() should skip expired entries 1`] = `
 [
   [
     "alive1",
@@ -45,22 +45,22 @@ exports[`TtlMap iteration forEach() should skip expired entries 1`] = `
 ]
 `;
 
-exports[`TtlMap iteration keys() should skip expired entries 1`] = `
+exports[`TtlMap > iteration > keys() should skip expired entries 1`] = `
 [
   "alive1",
   "alive2",
 ]
 `;
 
-exports[`TtlMap iteration values() should skip expired entries 1`] = `
+exports[`TtlMap > iteration > values() should skip expired entries 1`] = `
 [
   1,
   2,
 ]
 `;
 
-exports[`TtlMap set / get / has / delete should return undefined for missing keys 1`] = `undefined`;
+exports[`TtlMap > set / get / has / delete > should return undefined for missing keys 1`] = `undefined`;
 
-exports[`TtlMap set / get / has / delete should return undefined for missing keys 2`] = `false`;
+exports[`TtlMap > set / get / has / delete > should return undefined for missing keys 2`] = `false`;
 
-exports[`TtlMap size should return live count excluding expired entries 1`] = `2`;
+exports[`TtlMap > size > should return live count excluding expired entries 1`] = `2`;

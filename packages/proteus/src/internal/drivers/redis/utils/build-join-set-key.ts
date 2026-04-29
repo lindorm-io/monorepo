@@ -1,5 +1,5 @@
-import { getJoinName } from "../../../entity/utils/get-join-name";
-import { encodePkSegment } from "./encode-pk-segment";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
+import { encodePkSegment } from "./encode-pk-segment.js";
 
 /**
  * Build a forward M2M join SET key.

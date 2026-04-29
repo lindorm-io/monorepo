@@ -1,8 +1,11 @@
 import { isString } from "@lindorm/is";
 import { sign, verify } from "crypto";
-import { AkpError } from "../errors";
-import { CreateAkpSignatureOptions, VerifyAkpSignatureOptions } from "../types/akp-kit";
-import { getSignKey, getVerifyKey } from "./get-key";
+import { AkpError } from "../errors/index.js";
+import type {
+  CreateAkpSignatureOptions,
+  VerifyAkpSignatureOptions,
+} from "../types/akp-kit.js";
+import { getSignKey, getVerifyKey } from "./get-key.js";
 
 export const createAkpSignature = ({
   data,

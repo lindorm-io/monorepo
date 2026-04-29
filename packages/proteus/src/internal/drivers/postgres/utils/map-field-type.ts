@@ -1,7 +1,7 @@
-import { getEnumTypeName } from "../../../drivers/postgres/utils/get-enum-type-name";
-import { ProteusError } from "../../../../errors";
-import type { MetaField } from "../../../entity/types/metadata";
-import { quoteQualifiedName } from "./quote-identifier";
+import { getEnumTypeName } from "../../../drivers/postgres/utils/get-enum-type-name.js";
+import { ProteusError } from "../../../../errors/index.js";
+import type { MetaField } from "../../../entity/types/metadata.js";
+import { quoteQualifiedName } from "./quote-identifier.js";
 
 /**
  * Maps a metadata field to its PostgreSQL type string. Handles all supported types

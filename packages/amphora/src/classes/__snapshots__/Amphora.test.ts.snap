@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Amphora JWKS publication window should include not-yet-active (notBefore in future) keys in JWKS 1`] = `
+exports[`Amphora > JWKS publication window > should include not-yet-active (notBefore in future) keys in JWKS 1`] = `
 {
   "keys": [
     {
@@ -25,7 +25,7 @@ exports[`Amphora JWKS publication window should include not-yet-active (notBefor
 }
 `;
 
-exports[`Amphora add should update jwks when adding key 1`] = `
+exports[`Amphora > add > should update jwks when adding key 1`] = `
 {
   "keys": [
     {
@@ -84,7 +84,7 @@ exports[`Amphora add should update jwks when adding key 1`] = `
 }
 `;
 
-exports[`Amphora external config should add external config and find jwks 1`] = `
+exports[`Amphora > external config > should add external config and find jwks 1`] = `
 [
   {
     "issuer": "https://external.lindorm.io/",
@@ -259,7 +259,7 @@ exports[`Amphora external config should add external config and find jwks 1`] = 
 ]
 `;
 
-exports[`Amphora x509 certificate chain should emit x5c and x5t#S256 in JWKS for kryptos with chain 1`] = `
+exports[`Amphora > x509 certificate chain > should emit x5c and x5t#S256 in JWKS for kryptos with chain 1`] = `
 {
   "keys": [
     {

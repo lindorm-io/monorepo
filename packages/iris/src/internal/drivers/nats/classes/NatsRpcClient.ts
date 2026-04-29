@@ -1,22 +1,23 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError";
-import { IrisTransportError } from "../../../../errors/IrisTransportError";
-import type { IMessage } from "../../../../interfaces";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError.js";
+import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { NatsSharedState } from "../types/nats-types";
-import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase";
-import { serializeNatsMessage } from "../utils/serialize-nats-message";
-import { parseNatsMessage } from "../utils/parse-nats-message";
-import { prepareInbound } from "../../../message/utils/prepare-inbound";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
+import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
+import { parseNatsMessage } from "../utils/parse-nats-message.js";
+import { prepareInbound } from "../../../message/utils/prepare-inbound.js";
 
 export type NatsRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
   state: NatsSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

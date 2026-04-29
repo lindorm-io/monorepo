@@ -1,27 +1,28 @@
 import { resolve } from "path";
-import { migrateGenerate } from "./migrate-generate";
-import { withSource } from "../with-source";
-import { withMigrationManager } from "../with-migration-manager";
+import { migrateGenerate } from "./migrate-generate.js";
+import { withSource } from "../with-source.js";
+import { withMigrationManager } from "../with-migration-manager.js";
 import { Logger } from "@lindorm/logger";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("../with-source");
-jest.mock("../with-migration-manager");
+vi.mock("../with-source.js");
+vi.mock("../with-migration-manager.js");
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", async () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const mockWithSource = withSource as jest.MockedFunction<typeof withSource>;
-const mockWithMigrationManager = withMigrationManager as jest.MockedFunction<
+const mockWithSource = withSource as MockedFunction<typeof withSource>;
+const mockWithMigrationManager = withMigrationManager as MockedFunction<
   typeof withMigrationManager
 >;
 
@@ -31,21 +32,21 @@ const makeSource = (overrides: Record<string, unknown> = {}) => ({
   namespace: "myapp",
   driverType: "postgres",
   migrationsTable: undefined,
-  getEntityMetadata: jest.fn().mockReturnValue([]),
-  log: { child: jest.fn().mockReturnValue({ debug: jest.fn() }) },
-  client: jest.fn(),
+  getEntityMetadata: vi.fn().mockReturnValue([]),
+  log: { child: vi.fn().mockReturnValue({ debug: vi.fn() }) },
+  client: vi.fn(),
   ...overrides,
 });
 
 const makeManager = () => ({
-  apply: jest.fn(),
-  rollback: jest.fn(),
-  status: jest.fn(),
-  getRecords: jest.fn(),
-  resolveApplied: jest.fn(),
-  resolveRolledBack: jest.fn(),
-  generateBaseline: jest.fn(),
-  generateMigration: jest.fn().mockResolvedValue({
+  apply: vi.fn(),
+  rollback: vi.fn(),
+  status: vi.fn(),
+  getRecords: vi.fn(),
+  resolveApplied: vi.fn(),
+  resolveRolledBack: vi.fn(),
+  generateBaseline: vi.fn(),
+  generateMigration: vi.fn().mockResolvedValue({
     filepath: `${defaultDir}/20240101_generated.ts`,
     operationCount: 1,
     isEmpty: false,
@@ -57,7 +58,7 @@ describe("migrateGenerate", () => {
   let manager: ReturnType<typeof makeManager>;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     source = makeSource();
     manager = makeManager();
 

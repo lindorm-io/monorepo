@@ -1,28 +1,37 @@
-import type { MetaRelation } from "../../../entity/types/metadata";
-import type { ScopedName } from "../../../types/types";
+import type { MetaRelation } from "../../../entity/types/metadata.js";
+import type { ScopedName } from "../../../types/types.js";
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("../../../entity/utils/get-join-name", () => ({
-  getJoinName: jest.fn(),
+vi.mock("../../../entity/utils/get-join-name.js", async () => ({
+  getJoinName: vi.fn(),
 }));
 
-jest.mock("./scan-entity-keys", () => ({
-  scanEntityKeys: jest.fn(),
+vi.mock("./scan-entity-keys.js", () => ({
+  scanEntityKeys: vi.fn(),
 }));
 
-jest.mock("../../../entity/metadata/get-entity-metadata", () => ({
-  getEntityMetadata: jest.fn(),
+vi.mock("../../../entity/metadata/get-entity-metadata.js", () => ({
+  getEntityMetadata: vi.fn(),
 }));
 
-import { getJoinName } from "../../../entity/utils/get-join-name";
-import { scanEntityKeys } from "./scan-entity-keys";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { createRedisJoinTableOps } from "./redis-join-table-ops";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
+import { scanEntityKeys } from "./scan-entity-keys.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { createRedisJoinTableOps } from "./redis-join-table-ops.js";
 
-const mockGetJoinName = getJoinName as jest.MockedFunction<typeof getJoinName>;
-const mockScanEntityKeys = scanEntityKeys as jest.MockedFunction<typeof scanEntityKeys>;
-const mockGetEntityMetadata = getEntityMetadata as jest.MockedFunction<
+const mockGetJoinName = getJoinName as MockedFunction<typeof getJoinName>;
+const mockScanEntityKeys = scanEntityKeys as MockedFunction<typeof scanEntityKeys>;
+const mockGetEntityMetadata = getEntityMetadata as MockedFunction<
   typeof getEntityMetadata
 >;
 
@@ -45,7 +54,7 @@ const makeRelation = (overrides: Partial<MetaRelation> = {}): MetaRelation =>
     findKeys: { post_id: "id" },
     joinKeys: { post_id: "id" },
     foreignKey: "posts",
-    foreignConstructor: jest.fn(() => MockForeignEntity),
+    foreignConstructor: vi.fn(() => MockForeignEntity),
     ...overrides,
   }) as unknown as MetaRelation;
 
@@ -56,7 +65,7 @@ const makeMirror = (overrides: Partial<MetaRelation> = {}): MetaRelation =>
     findKeys: { tag_id: "id" },
     joinKeys: { tag_id: "id" },
     foreignKey: "tags",
-    foreignConstructor: jest.fn(() => MockForeignEntity),
+    foreignConstructor: vi.fn(() => MockForeignEntity),
     ...overrides,
   }) as unknown as MetaRelation;
 
@@ -80,26 +89,26 @@ const makeForeignMetadata = () => ({
 const createMockRedis = () => {
   const pipelineCommands: Array<{ cmd: string; args: any[] }> = [];
 
-  const pipelineObj: Record<string, jest.Mock> = {
-    sadd: jest.fn((...args: any[]) => {
+  const pipelineObj: Record<string, Mock> = {
+    sadd: vi.fn((...args: any[]) => {
       pipelineCommands.push({ cmd: "sadd", args });
       return pipelineObj;
     }),
-    srem: jest.fn((...args: any[]) => {
+    srem: vi.fn((...args: any[]) => {
       pipelineCommands.push({ cmd: "srem", args });
       return pipelineObj;
     }),
-    del: jest.fn((...args: any[]) => {
+    del: vi.fn((...args: any[]) => {
       pipelineCommands.push({ cmd: "del", args });
       return pipelineObj;
     }),
-    exec: jest.fn().mockResolvedValue([]),
+    exec: vi.fn().mockResolvedValue([]),
   };
 
   const client = {
-    smembers: jest.fn().mockResolvedValue([]),
-    pipeline: jest.fn(() => pipelineObj),
-    del: jest.fn().mockResolvedValue(1),
+    smembers: vi.fn().mockResolvedValue([]),
+    pipeline: vi.fn(() => pipelineObj),
+    del: vi.fn().mockResolvedValue(1),
   };
 
   return { client: client as any, pipelineObj, pipelineCommands };
@@ -109,7 +118,7 @@ const createMockRedis = () => {
 
 describe("createRedisJoinTableOps", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockGetJoinName.mockReturnValue(makeScopedName());
     mockScanEntityKeys.mockResolvedValue([]);
     mockGetEntityMetadata.mockReturnValue(makeForeignMetadata() as any);
@@ -333,7 +342,7 @@ describe("createRedisJoinTableOps", () => {
 
       const ops = createRedisJoinTableOps(client, null);
 
-      const { RedisDriverError } = await import("../errors/RedisDriverError");
+      const { RedisDriverError } = await import("../errors/RedisDriverError.js");
 
       await expect(
         ops.delete({ id: "post-1" } as any, makeRelation(), null),

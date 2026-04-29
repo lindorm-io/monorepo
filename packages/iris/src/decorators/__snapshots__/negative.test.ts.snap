@@ -1,20 +1,20 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`negative and edge-case decorator usage @AbstractMessage does not register in message registry should set __abstract flag and stage message metadata 1`] = `
+exports[`negative and edge-case decorator usage > @AbstractMessage does not register in message registry > should set __abstract flag and stage message metadata 1`] = `
 {
   "decorator": "AbstractMessage",
   "name": "PureAbstract",
 }
 `;
 
-exports[`negative and edge-case decorator usage duplicate @Message on same class should overwrite message metadata with the last decorator applied 1`] = `
+exports[`negative and edge-case decorator usage > duplicate @Message on same class > should overwrite message metadata with the last decorator applied 1`] = `
 {
   "decorator": "Message",
   "name": "FirstName",
 }
 `;
 
-exports[`negative and edge-case decorator usage multiple class decorators stacking should accumulate all class-level singleton metadata 1`] = `
+exports[`negative and edge-case decorator usage > multiple class decorators stacking > should accumulate all class-level singleton metadata 1`] = `
 {
   "algorithm": "brotli",
 }

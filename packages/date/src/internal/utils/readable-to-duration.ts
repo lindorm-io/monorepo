@@ -1,5 +1,5 @@
-import { DurationDict, ReadableTime } from "../../types";
-import { matchString } from "./match-string";
+import type { DurationDict, ReadableTime } from "../../types/index.js";
+import { matchString } from "./match-string.js";
 
 export const readableToDuration = (...values: Array<ReadableTime>): DurationDict => {
   const object: DurationDict = {

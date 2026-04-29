@@ -1,21 +1,21 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parseAmqpHeaders should handle Buffer header values 1`] = `
+exports[`parseAmqpHeaders > should handle Buffer header values 1`] = `
 {
   "x-trace-id": "trace-buf",
 }
 `;
 
-exports[`parseAmqpHeaders should handle missing headers object 1`] = `{}`;
+exports[`parseAmqpHeaders > should handle missing headers object 1`] = `{}`;
 
-exports[`parseAmqpHeaders should handle null/undefined header values 1`] = `
+exports[`parseAmqpHeaders > should handle null/undefined header values 1`] = `
 {
   "x-null": "",
   "x-undefined": "",
 }
 `;
 
-exports[`parseAmqpHeaders should parse a minimal message 1`] = `
+exports[`parseAmqpHeaders > should parse a minimal message 1`] = `
 {
   "envelope": {
     "attempt": 0,
@@ -51,7 +51,7 @@ exports[`parseAmqpHeaders should parse a minimal message 1`] = `
 }
 `;
 
-exports[`parseAmqpHeaders should parse all iris headers 1`] = `
+exports[`parseAmqpHeaders > should parse all iris headers 1`] = `
 {
   "attempt": 1,
   "broadcast": true,
@@ -64,14 +64,14 @@ exports[`parseAmqpHeaders should parse all iris headers 1`] = `
 }
 `;
 
-exports[`parseAmqpHeaders should separate user headers from iris headers 1`] = `
+exports[`parseAmqpHeaders > should separate user headers from iris headers 1`] = `
 {
   "x-custom": "value",
   "x-trace-id": "trace-123",
 }
 `;
 
-exports[`parseAmqpHeaders should separate user headers from iris headers 2`] = `
+exports[`parseAmqpHeaders > should separate user headers from iris headers 2`] = `
 {
   "attempt": 2,
   "broadcast": false,

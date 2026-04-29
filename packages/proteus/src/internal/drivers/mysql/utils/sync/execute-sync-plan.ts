@@ -1,13 +1,13 @@
 import type { ILogger } from "@lindorm/logger";
-import { buildMysqlLockName } from "../../../../utils/advisory-lock-name";
-import { MySqlSyncError } from "../../errors/MySqlSyncError";
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
+import { buildMysqlLockName } from "../../../../utils/advisory-lock-name.js";
+import { MySqlSyncError } from "../../errors/MySqlSyncError.js";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
 import type {
   MysqlSyncOperation,
   MysqlSyncOptions,
   MysqlSyncPlan,
   MysqlSyncResult,
-} from "../../types/sync-plan";
+} from "../../types/sync-plan.js";
 
 /**
  * Executes a MySQL sync plan against the database.

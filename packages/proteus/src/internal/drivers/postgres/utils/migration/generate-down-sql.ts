@@ -1,6 +1,11 @@
-import type { DbConstraint, DbIndex, DbSnapshot, DbTable } from "../../types/db-snapshot";
-import type { SyncOperation } from "../../types/sync-plan";
-import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier";
+import type {
+  DbConstraint,
+  DbIndex,
+  DbSnapshot,
+  DbTable,
+} from "../../types/db-snapshot.js";
+import type { SyncOperation } from "../../types/sync-plan.js";
+import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 
 // Extracts the first double-quoted identifier from a description string.
 // Contract: all diff-*.ts description templates place the target identifier

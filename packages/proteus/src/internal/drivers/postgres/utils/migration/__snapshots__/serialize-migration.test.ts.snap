@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`serializeMigration — autocommit operations should use runner.query for autocommit ops with description comments 1`] = `
+exports[`serializeMigration — autocommit operations > should use runner.query for autocommit ops with description comments 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 
 export class Generated20260220090000 implements MigrationInterface {
@@ -19,7 +19,7 @@ export class Generated20260220090000 implements MigrationInterface {
 "
 `;
 
-exports[`serializeMigration — empty plan should produce valid empty migration 1`] = `
+exports[`serializeMigration — empty plan > should produce valid empty migration 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 
 export class Generated20260220090000 implements MigrationInterface {
@@ -35,9 +35,9 @@ export class Generated20260220090000 implements MigrationInterface {
 "
 `;
 
-exports[`serializeMigration — empty plan should produce valid empty migration 2`] = `"MW3usoiSsc3r_lwSws1iC1uPKSicH_49T1_Bsuak6n0"`;
+exports[`serializeMigration — empty plan > should produce valid empty migration 2`] = `"MW3usoiSsc3r_lwSws1iC1uPKSicH_49T1_Bsuak6n0"`;
 
-exports[`serializeMigration — escaping should escape \${ sequences to prevent template literal interpolation 1`] = `
+exports[`serializeMigration — escaping > should escape \${ sequences to prevent template literal interpolation 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 
 export class Generated20260220090000 implements MigrationInterface {
@@ -60,7 +60,7 @@ export class Generated20260220090000 implements MigrationInterface {
 "
 `;
 
-exports[`serializeMigration — irreversible ops should emit warning comments for irreversible down operations 1`] = `
+exports[`serializeMigration — irreversible ops > should emit warning comments for irreversible down operations 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 
 export class Generated20260220090000 implements MigrationInterface {
@@ -87,7 +87,7 @@ export class Generated20260220090000 implements MigrationInterface {
 "
 `;
 
-exports[`serializeMigration — irreversible ops should note when all tx ops are irreversible 1`] = `
+exports[`serializeMigration — irreversible ops > should note when all tx ops are irreversible 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 
 export class Generated20260220090000 implements MigrationInterface {
@@ -112,7 +112,7 @@ export class Generated20260220090000 implements MigrationInterface {
 "
 `;
 
-exports[`serializeMigration — mixed operations should separate tx and autocommit in up, reverse in down 1`] = `
+exports[`serializeMigration — mixed operations > should separate tx and autocommit in up, reverse in down 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 
 export class AddRoleColumn implements MigrationInterface {
@@ -144,7 +144,7 @@ export class AddRoleColumn implements MigrationInterface {
 "
 `;
 
-exports[`serializeMigration — transactional operations should wrap tx ops in runner.transaction for up and down 1`] = `
+exports[`serializeMigration — transactional operations > should wrap tx ops in runner.transaction for up and down 1`] = `
 "import type { MigrationInterface, MigrationQueryRunner } from "@lindorm/proteus";
 
 export class Generated20260220090000 implements MigrationInterface {

@@ -1,10 +1,11 @@
-import { makeField } from "../../__fixtures__/make-field";
+import { describe, expect, test } from "vitest";
+import { makeField } from "../../__fixtures__/make-field.js";
 import type {
   EntityMetadata,
   MetaRelation,
   MetaRelationOptions,
-} from "../../entity/types/metadata";
-import { applyNamingStrategy } from "./apply-naming-strategy";
+} from "../../entity/types/metadata.js";
+import { applyNamingStrategy } from "./apply-naming-strategy.js";
 
 const defaultOptions: MetaRelationOptions = {
   deferrable: false,

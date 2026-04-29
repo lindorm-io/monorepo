@@ -1,35 +1,35 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileJoin version filtering on joined tables should add version_end_date IS NULL to ManyToMany target join on versioned entity 1`] = `"LEFT JOIN "app"."users_x_versioned_tags" AS "t1" ON "t0"."user_id" = "t1"."id" LEFT JOIN "app"."versioned_tags" AS "t2" ON "t1"."id" = "t2"."tag_id" AND "t2"."version_end_date" IS NULL"`;
+exports[`compileJoin > version filtering on joined tables > should add version_end_date IS NULL to ManyToMany target join on versioned entity 1`] = `"LEFT JOIN "app"."users_x_versioned_tags" AS "t1" ON "t0"."user_id" = "t1"."id" LEFT JOIN "app"."versioned_tags" AS "t2" ON "t1"."id" = "t2"."tag_id" AND "t2"."version_end_date" IS NULL"`;
 
-exports[`compileJoin version filtering on joined tables should add version_end_date IS NULL to inverse join (OneToMany) on versioned entity 1`] = `"LEFT JOIN "app"."versioned_posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."version_end_date" IS NULL"`;
+exports[`compileJoin > version filtering on joined tables > should add version_end_date IS NULL to inverse join (OneToMany) on versioned entity 1`] = `"LEFT JOIN "app"."versioned_posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."version_end_date" IS NULL"`;
 
-exports[`compileJoin version filtering on joined tables should add version_end_date IS NULL to owning join (ManyToOne) on versioned entity 1`] = `"LEFT JOIN "app"."versioned_profiles" AS "t1" ON "t0"."user_id" = "t1"."id" AND "t1"."version_end_date" IS NULL"`;
+exports[`compileJoin > version filtering on joined tables > should add version_end_date IS NULL to owning join (ManyToOne) on versioned entity 1`] = `"LEFT JOIN "app"."versioned_profiles" AS "t1" ON "t0"."user_id" = "t1"."id" AND "t1"."version_end_date" IS NULL"`;
 
-exports[`compileJoin version filtering on joined tables should combine version condition with where on versioned joined entity 1`] = `"LEFT JOIN "app"."versioned_posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."version_end_date" IS NULL AND "t1"."title" = $1"`;
+exports[`compileJoin > version filtering on joined tables > should combine version condition with where on versioned joined entity 1`] = `"LEFT JOIN "app"."versioned_posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."version_end_date" IS NULL AND "t1"."title" = $1"`;
 
-exports[`compileJoin version filtering on joined tables should emit point-in-time range condition on ManyToMany target join when versionTimestamp is set 1`] = `"LEFT JOIN "app"."users_x_versioned_tags" AS "t1" ON "t0"."user_id" = "t1"."id" LEFT JOIN "app"."versioned_tags" AS "t2" ON "t1"."id" = "t2"."tag_id" AND "t2"."version_start_date" <= $1 AND ("t2"."version_end_date" IS NULL OR "t2"."version_end_date" > $1)"`;
+exports[`compileJoin > version filtering on joined tables > should emit point-in-time range condition on ManyToMany target join when versionTimestamp is set 1`] = `"LEFT JOIN "app"."users_x_versioned_tags" AS "t1" ON "t0"."user_id" = "t1"."id" LEFT JOIN "app"."versioned_tags" AS "t2" ON "t1"."id" = "t2"."tag_id" AND "t2"."version_start_date" <= $1 AND ("t2"."version_end_date" IS NULL OR "t2"."version_end_date" > $1)"`;
 
-exports[`compileJoin version filtering on joined tables should emit point-in-time range condition on inverse join when versionTimestamp is set 1`] = `"LEFT JOIN "app"."versioned_posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."version_start_date" <= $1 AND ("t1"."version_end_date" IS NULL OR "t1"."version_end_date" > $1)"`;
+exports[`compileJoin > version filtering on joined tables > should emit point-in-time range condition on inverse join when versionTimestamp is set 1`] = `"LEFT JOIN "app"."versioned_posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."version_start_date" <= $1 AND ("t1"."version_end_date" IS NULL OR "t1"."version_end_date" > $1)"`;
 
-exports[`compileJoin version filtering on joined tables should emit point-in-time range condition on owning join when versionTimestamp is set 1`] = `"LEFT JOIN "app"."versioned_profiles" AS "t1" ON "t0"."user_id" = "t1"."id" AND "t1"."version_start_date" <= $1 AND ("t1"."version_end_date" IS NULL OR "t1"."version_end_date" > $1)"`;
+exports[`compileJoin > version filtering on joined tables > should emit point-in-time range condition on owning join when versionTimestamp is set 1`] = `"LEFT JOIN "app"."versioned_profiles" AS "t1" ON "t0"."user_id" = "t1"."id" AND "t1"."version_start_date" <= $1 AND ("t1"."version_end_date" IS NULL OR "t1"."version_end_date" > $1)"`;
 
-exports[`compileJoin version filtering on joined tables should have correct param indices when combining point-in-time join with pre-existing params 1`] = `"LEFT JOIN "app"."versioned_posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."version_start_date" <= $2 AND ("t1"."version_end_date" IS NULL OR "t1"."version_end_date" > $2) AND "t1"."title" = $3"`;
+exports[`compileJoin > version filtering on joined tables > should have correct param indices when combining point-in-time join with pre-existing params 1`] = `"LEFT JOIN "app"."versioned_posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."version_start_date" <= $2 AND ("t1"."version_end_date" IS NULL OR "t1"."version_end_date" > $2) AND "t1"."title" = $3"`;
 
-exports[`compileJoin with where should append where to ManyToMany target join (second ON), not join table 1`] = `"LEFT JOIN "app"."users_x_tags" AS "t1" ON "t0"."user_id" = "t1"."id" LEFT JOIN "app"."tags" AS "t2" ON "t1"."id" = "t2"."tag_id" AND "t2"."active" = $1"`;
+exports[`compileJoin > with where > should append where to ManyToMany target join (second ON), not join table 1`] = `"LEFT JOIN "app"."users_x_tags" AS "t1" ON "t0"."user_id" = "t1"."id" LEFT JOIN "app"."tags" AS "t2" ON "t1"."id" = "t2"."tag_id" AND "t2"."active" = $1"`;
 
-exports[`compileJoin with where should append where to inverse join ON clause 1`] = `"LEFT JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."status" = $1"`;
+exports[`compileJoin > with where > should append where to inverse join ON clause 1`] = `"LEFT JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."status" = $1"`;
 
-exports[`compileJoin with where should append where to owning join ON clause 1`] = `"LEFT JOIN "app"."profiles" AS "t1" ON "t0"."user_id" = "t1"."id" AND "t1"."verified" = $1"`;
+exports[`compileJoin > with where > should append where to owning join ON clause 1`] = `"LEFT JOIN "app"."profiles" AS "t1" ON "t0"."user_id" = "t1"."id" AND "t1"."verified" = $1"`;
 
-exports[`compileJoin with where should handle complex predicates in ON clause 1`] = `"LEFT JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND ("t1"."status" IN ($1, $2) AND "t1"."title" ILIKE $3)"`;
+exports[`compileJoin > with where > should handle complex predicates in ON clause 1`] = `"LEFT JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND ("t1"."status" IN ($1, $2) AND "t1"."title" ILIKE $3)"`;
 
-exports[`compileJoin with where should handle where with $and logical operator 1`] = `"LEFT JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND ("t1"."status" = $1 AND "t1"."title" LIKE $2)"`;
+exports[`compileJoin > with where > should handle where with $and logical operator 1`] = `"LEFT JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND ("t1"."status" = $1 AND "t1"."title" LIKE $2)"`;
 
-exports[`compileJoin with where should use INNER JOIN with where when required 1`] = `"INNER JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."status" = $1"`;
+exports[`compileJoin > with where > should use INNER JOIN with where when required 1`] = `"INNER JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id" AND "t1"."status" = $1"`;
 
-exports[`compileJoin without where should compile ManyToMany join 1`] = `"LEFT JOIN "app"."users_x_tags" AS "t1" ON "t0"."user_id" = "t1"."id" LEFT JOIN "app"."tags" AS "t2" ON "t1"."id" = "t2"."tag_id""`;
+exports[`compileJoin > without where > should compile ManyToMany join 1`] = `"LEFT JOIN "app"."users_x_tags" AS "t1" ON "t0"."user_id" = "t1"."id" LEFT JOIN "app"."tags" AS "t2" ON "t1"."id" = "t2"."tag_id""`;
 
-exports[`compileJoin without where should compile inverse join (OneToMany) 1`] = `"LEFT JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id""`;
+exports[`compileJoin > without where > should compile inverse join (OneToMany) 1`] = `"LEFT JOIN "app"."posts" AS "t1" ON "t0"."id" = "t1"."author_id""`;
 
-exports[`compileJoin without where should compile owning join (ManyToOne) 1`] = `"LEFT JOIN "app"."profiles" AS "t1" ON "t0"."user_id" = "t1"."id""`;
+exports[`compileJoin > without where > should compile owning join (ManyToOne) 1`] = `"LEFT JOIN "app"."profiles" AS "t1" ON "t0"."user_id" = "t1"."id""`;

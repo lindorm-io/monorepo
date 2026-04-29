@@ -8,7 +8,7 @@ import {
   isString,
   isUndefined,
 } from "@lindorm/is";
-import { stringifyObjectValues } from "./stringify-object-values";
+import { stringifyObjectValues } from "./stringify-object-values.js";
 
 export const stringifyArrayValues = (input: Array<any>): Array<any> => {
   const result: Array<any> = [];

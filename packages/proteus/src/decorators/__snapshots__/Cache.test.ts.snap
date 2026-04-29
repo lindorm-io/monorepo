@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Cache should stage cache with ttlMs 300000 for '5 Minutes' 1`] = `
+exports[`Cache > should stage cache with ttlMs 300000 for '5 Minutes' 1`] = `
 {
   "ttlMs": 300000,
 }
 `;
 
-exports[`Cache should stage cache with ttlMs null when no options 1`] = `
+exports[`Cache > should stage cache with ttlMs null when no options 1`] = `
 {
   "ttlMs": null,
 }

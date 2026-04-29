@@ -1,11 +1,11 @@
 import { ClientError } from "@lindorm/errors";
 import { isString, isUrlLike } from "@lindorm/is";
-import { OpenIdConfiguration } from "@lindorm/types";
+import type { OpenIdConfiguration } from "@lindorm/types";
 import { removeUndefined, sortKeys } from "@lindorm/utils";
-import { PylonRouter } from "../../classes";
-import { PylonHttpContext, PylonHttpOptions } from "../../types";
-import { assertSecurityTxtOptions } from "./assert-security-txt-options";
-import { renderSecurityTxt } from "./render-security-txt";
+import { PylonRouter } from "../../classes/index.js";
+import type { PylonHttpContext, PylonHttpOptions } from "../../types/index.js";
+import { assertSecurityTxtOptions } from "./assert-security-txt-options.js";
+import { renderSecurityTxt } from "./render-security-txt.js";
 
 export const createWellKnownRouter = <C extends PylonHttpContext>(
   options: PylonHttpOptions<C>,

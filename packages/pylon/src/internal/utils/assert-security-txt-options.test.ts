@@ -1,6 +1,7 @@
 import { expiresAt } from "@lindorm/date";
 import { ServerError } from "@lindorm/errors";
-import { assertSecurityTxtOptions } from "./assert-security-txt-options";
+import { assertSecurityTxtOptions } from "./assert-security-txt-options.js";
+import { describe, expect, test } from "vitest";
 
 describe("assertSecurityTxtOptions", () => {
   const futureExpires = (): Date => {

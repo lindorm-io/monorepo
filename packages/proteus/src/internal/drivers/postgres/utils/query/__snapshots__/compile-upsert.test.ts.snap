@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileUpsert UpdateDate field in SET clause should compile upsert with UpdateDate field 1`] = `
+exports[`compileUpsert > UpdateDate field in SET clause > should compile upsert with UpdateDate field 1`] = `
 {
   "params": [
     "order-uuid-1",
@@ -12,7 +12,7 @@ exports[`compileUpsert UpdateDate field in SET clause should compile upsert with
 }
 `;
 
-exports[`compileUpsert Version field in SET clause should compile upsert with version field 1`] = `
+exports[`compileUpsert > Version field in SET clause > should compile upsert with version field 1`] = `
 {
   "params": [
     "order-uuid-1",
@@ -24,7 +24,7 @@ exports[`compileUpsert Version field in SET clause should compile upsert with ve
 }
 `;
 
-exports[`compileUpsert all special fields combined should compile upsert with Version, CreateDate, and UpdateDate fields 1`] = `
+exports[`compileUpsert > all special fields combined > should compile upsert with Version, CreateDate, and UpdateDate fields 1`] = `
 {
   "params": [
     "order-uuid-2",
@@ -37,7 +37,7 @@ exports[`compileUpsert all special fields combined should compile upsert with Ve
 }
 `;
 
-exports[`compileUpsert basic upsert structure should compile a basic upsert with single PK 1`] = `
+exports[`compileUpsert > basic upsert structure > should compile a basic upsert with single PK 1`] = `
 {
   "params": [
     "order-uuid-1",
@@ -48,9 +48,9 @@ exports[`compileUpsert basic upsert structure should compile a basic upsert with
 }
 `;
 
-exports[`compileUpsert basic upsert structure should produce INSERT INTO ... VALUES ... ON CONFLICT ... DO UPDATE SET ... RETURNING * 1`] = `"INSERT INTO "shop"."orders" ("id", "status", "total") VALUES ($1, $2, $3) ON CONFLICT ("id") DO UPDATE SET "status" = EXCLUDED."status", "total" = EXCLUDED."total" RETURNING *"`;
+exports[`compileUpsert > basic upsert structure > should produce INSERT INTO ... VALUES ... ON CONFLICT ... DO UPDATE SET ... RETURNING * 1`] = `"INSERT INTO "shop"."orders" ("id", "status", "total") VALUES ($1, $2, $3) ON CONFLICT ("id") DO UPDATE SET "status" = EXCLUDED."status", "total" = EXCLUDED."total" RETURNING *"`;
 
-exports[`compileUpsert conflict target (ON CONFLICT columns) should use composite primary key in conflict target 1`] = `
+exports[`compileUpsert > conflict target (ON CONFLICT columns) > should use composite primary key in conflict target 1`] = `
 {
   "params": [
     "o1",
@@ -61,7 +61,7 @@ exports[`compileUpsert conflict target (ON CONFLICT columns) should use composit
 }
 `;
 
-exports[`compileUpsert conflictColumns option — custom conflict target conflictColumns with a single unique column produces correct SQL structure 1`] = `
+exports[`compileUpsert > conflictColumns option — custom conflict target > conflictColumns with a single unique column produces correct SQL structure 1`] = `
 {
   "params": [
     "prod-1",
@@ -73,7 +73,7 @@ exports[`compileUpsert conflictColumns option — custom conflict target conflic
 }
 `;
 
-exports[`compileUpsert conflictColumns option — custom conflict target should support multiple conflictColumns for a composite unique index 1`] = `
+exports[`compileUpsert > conflictColumns option — custom conflict target > should support multiple conflictColumns for a composite unique index 1`] = `
 {
   "params": [
     "order-uuid-1",
@@ -84,7 +84,7 @@ exports[`compileUpsert conflictColumns option — custom conflict target should 
 }
 `;
 
-exports[`compileUpsert conflictColumns option — custom conflict target should use provided conflictColumns instead of PK columns 1`] = `
+exports[`compileUpsert > conflictColumns option — custom conflict target > should use provided conflictColumns instead of PK columns 1`] = `
 {
   "params": [
     "order-uuid-1",
@@ -95,7 +95,7 @@ exports[`compileUpsert conflictColumns option — custom conflict target should 
 }
 `;
 
-exports[`compileUpsert relation FK columns should include owning-side FK columns from dehydrateEntity in INSERT and SET clause 1`] = `
+exports[`compileUpsert > relation FK columns > should include owning-side FK columns from dehydrateEntity in INSERT and SET clause 1`] = `
 {
   "params": [
     "order-uuid-1",

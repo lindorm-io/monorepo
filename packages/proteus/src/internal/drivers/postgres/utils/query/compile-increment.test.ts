@@ -1,7 +1,8 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaFilter } from "../../../../entity/types/metadata";
-import { SOFT_DELETE_FILTER_NAME } from "../../../../entity/metadata/auto-filters";
-import { compileIncrement } from "./compile-increment";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaFilter } from "../../../../entity/types/metadata.js";
+import { SOFT_DELETE_FILTER_NAME } from "../../../../entity/metadata/auto-filters.js";
+import { compileIncrement } from "./compile-increment.js";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   entity: {

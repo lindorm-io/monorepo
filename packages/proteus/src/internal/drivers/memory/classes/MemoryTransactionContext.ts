@@ -4,11 +4,11 @@ import type {
   IProteusQueryBuilder,
   IProteusRepository,
   ITransactionContext,
-} from "../../../../interfaces";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { MemoryTransactionHandle } from "../types/memory-store";
-import type { MemoryDriver } from "./MemoryDriver";
-import { MemoryDriverError } from "../errors/MemoryDriverError";
+} from "../../../../interfaces/index.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { MemoryTransactionHandle } from "../types/memory-store.js";
+import type { MemoryDriver } from "./MemoryDriver.js";
+import { MemoryDriverError } from "../errors/MemoryDriverError.js";
 
 export class MemoryTransactionContext implements ITransactionContext {
   private readonly handle: MemoryTransactionHandle;
@@ -36,6 +36,13 @@ export class MemoryTransactionContext implements ITransactionContext {
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
     return this.driver.createTransactionalQueryBuilder(target, this.handle);
+  }
+
+  public async client<T>(): Promise<T> {
+    // The memory driver's effective tx-scoped "client" is the transaction's
+    // in-memory store. Returning it lets tests / advanced callers peek or
+    // mutate raw table state within the active transaction.
+    return this.handle.store as unknown as T;
   }
 
   public async transaction<T>(

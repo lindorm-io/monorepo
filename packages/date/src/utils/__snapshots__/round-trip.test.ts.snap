@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`round-trip duration() snapshot of duration() from readable and from ms 1`] = `
+exports[`round-trip > duration() > snapshot of duration() from readable and from ms 1`] = `
 [
   {
     "fromMs": {
@@ -465,7 +465,7 @@ exports[`round-trip duration() snapshot of duration() from readable and from ms 
 ]
 `;
 
-exports[`round-trip ms <-> readable snapshot of ms() inverse outputs 1`] = `
+exports[`round-trip > ms <-> readable > snapshot of ms() inverse outputs 1`] = `
 [
   {
     "back": "1ms",

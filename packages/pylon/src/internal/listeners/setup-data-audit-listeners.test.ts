@@ -1,28 +1,28 @@
-import { setupDataAuditListeners } from "./setup-data-audit-listeners";
+import { setupDataAuditListeners } from "./setup-data-audit-listeners.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 class AuditedEntity {}
 class NonAuditedEntity {}
 
 describe("setupDataAuditListeners", () => {
-  const mockPublish = jest.fn().mockResolvedValue(undefined);
-  const mockCreate = jest.fn().mockImplementation((opts) => opts);
-  const mockWorkerQueue = jest.fn().mockReturnValue({
+  const mockPublish = vi.fn().mockResolvedValue(undefined);
+  const mockCreate = vi.fn().mockImplementation((opts) => opts);
+  const mockWorkerQueue = vi.fn().mockReturnValue({
     create: mockCreate,
     publish: mockPublish,
   });
 
   const listeners: Record<string, Function> = {};
-  const mockOn = jest.fn().mockImplementation((event: string, listener: Function) => {
+  const mockOn = vi.fn().mockImplementation((event: string, listener: Function) => {
     listeners[event] = listener;
   });
 
   const proteus = { on: mockOn } as any;
   const iris = { workerQueue: mockWorkerQueue } as any;
-  const actor = jest.fn().mockReturnValue("user@test.com");
   const logger = {
-    debug: jest.fn(),
-    verbose: jest.fn(),
-    error: jest.fn(),
+    debug: vi.fn(),
+    verbose: vi.fn(),
+    error: vi.fn(),
   } as any;
 
   const auditedMetadata = {
@@ -40,18 +40,16 @@ describe("setupDataAuditListeners", () => {
   };
 
   const baseContext = {
-    state: {
-      metadata: {
-        correlationId: "corr-123",
-      },
-    },
+    correlationId: "corr-123",
+    actor: "user@test.com",
+    timestamp: new Date("2025-01-01T00:00:00Z"),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     Object.keys(listeners).forEach((k) => delete listeners[k]);
 
-    setupDataAuditListeners(proteus, iris, actor, [AuditedEntity as any], logger);
+    setupDataAuditListeners(proteus, iris, [AuditedEntity as any], logger);
   });
 
   test("should register listeners for all four event types", () => {
@@ -68,11 +66,10 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-1", name: "Alice", email: "alice@test.com", age: 30 },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
-    expect(actor).toHaveBeenCalledWith(baseContext);
     expect(mockCreate).toHaveBeenCalledWith({
       correlationId: "corr-123",
       actor: "user@test.com",
@@ -90,7 +87,7 @@ describe("setupDataAuditListeners", () => {
       entity: { id: "ent-1", name: "Bob", email: "alice@test.com", age: 31 },
       oldEntity: { id: "ent-1", name: "Alice", email: "alice@test.com", age: 30 },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -113,7 +110,7 @@ describe("setupDataAuditListeners", () => {
       entity: { id: "ent-1", name: "Bob", email: "bob@test.com", age: 31 },
       oldEntity: undefined,
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -129,7 +126,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-destroy"]({
       entity: { id: "ent-2" },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -146,7 +143,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-soft-destroy"]({
       entity: { id: "ent-3" },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -163,7 +160,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-99", value: "test" },
       metadata: nonAuditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -171,12 +168,14 @@ describe("setupDataAuditListeners", () => {
     expect(mockPublish).not.toHaveBeenCalled();
   });
 
-  test("should extract correlationId from context", () => {
+  test("should extract correlationId from meta", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-4" },
       metadata: auditedMetadata,
-      context: {
-        state: { metadata: { correlationId: "custom-corr-456" } },
+      meta: {
+        correlationId: "custom-corr-456",
+        actor: "other@test.com",
+        timestamp: new Date(),
       },
       connection: {},
     });
@@ -188,15 +187,14 @@ describe("setupDataAuditListeners", () => {
     );
   });
 
-  test("should use unknown for actor and correlationId when context is undefined", () => {
+  test("should use unknown for actor and correlationId when meta is undefined", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-5" },
       metadata: auditedMetadata,
-      context: undefined,
+      meta: undefined,
       connection: {},
     });
 
-    expect(actor).not.toHaveBeenCalled();
     expect(mockCreate).toHaveBeenCalledWith(
       expect.objectContaining({
         actor: "unknown",
@@ -214,7 +212,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { tenantId: "tenant-1", userId: "user-2" },
       metadata: compositeMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -230,7 +228,7 @@ describe("setupDataAuditListeners", () => {
       entity: { id: "ent-1", name: "Alice", email: "alice@test.com", age: 30 },
       oldEntity: { id: "ent-1", name: "Alice", email: "alice@test.com", age: 30 },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -251,7 +249,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-6" },
       metadata: nullNsMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -268,7 +266,7 @@ describe("setupDataAuditListeners", () => {
     listeners["entity:after-insert"]({
       entity: { id: "ent-7" },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 
@@ -278,7 +276,7 @@ describe("setupDataAuditListeners", () => {
 
   test("should log error and not throw when create fails", () => {
     mockWorkerQueue.mockReturnValueOnce({
-      create: jest.fn().mockImplementation(() => {
+      create: vi.fn().mockImplementation(() => {
         throw new Error("create failed");
       }),
       publish: mockPublish,
@@ -286,12 +284,12 @@ describe("setupDataAuditListeners", () => {
 
     // Re-setup with the failing workerQueue
     Object.keys(listeners).forEach((k) => delete listeners[k]);
-    setupDataAuditListeners(proteus, iris, actor, [AuditedEntity as any], logger);
+    setupDataAuditListeners(proteus, iris, [AuditedEntity as any], logger);
 
     listeners["entity:after-insert"]({
       entity: { id: "ent-8" },
       metadata: auditedMetadata,
-      context: baseContext,
+      meta: baseContext,
       connection: {},
     });
 

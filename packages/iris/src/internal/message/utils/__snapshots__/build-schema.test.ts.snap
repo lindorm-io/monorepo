@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildSchema field type mapping should create a bigint validator 1`] = `
+exports[`buildSchema > field type mapping > should create a bigint validator 1`] = `
 {
   "data": {
     "big": 999n,
@@ -9,7 +9,7 @@ exports[`buildSchema field type mapping should create a bigint validator 1`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create a boolean validator 1`] = `
+exports[`buildSchema > field type mapping > should create a boolean validator 1`] = `
 {
   "data": {
     "flag": true,
@@ -18,7 +18,7 @@ exports[`buildSchema field type mapping should create a boolean validator 1`] = 
 }
 `;
 
-exports[`buildSchema field type mapping should create a boolean validator 2`] = `
+exports[`buildSchema > field type mapping > should create a boolean validator 2`] = `
 {
   "data": {
     "flag": false,
@@ -27,7 +27,7 @@ exports[`buildSchema field type mapping should create a boolean validator 2`] = 
 }
 `;
 
-exports[`buildSchema field type mapping should create a date validator 1`] = `
+exports[`buildSchema > field type mapping > should create a date validator 1`] = `
 {
   "data": {
     "at": 2024-01-01T00:00:00.000Z,
@@ -36,7 +36,7 @@ exports[`buildSchema field type mapping should create a date validator 1`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create a float validator 1`] = `
+exports[`buildSchema > field type mapping > should create a float validator 1`] = `
 {
   "data": {
     "price": 3.14,
@@ -45,7 +45,7 @@ exports[`buildSchema field type mapping should create a float validator 1`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create a float validator 2`] = `
+exports[`buildSchema > field type mapping > should create a float validator 2`] = `
 {
   "data": {
     "price": 42,
@@ -54,7 +54,7 @@ exports[`buildSchema field type mapping should create a float validator 2`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create a string validator 1`] = `
+exports[`buildSchema > field type mapping > should create a string validator 1`] = `
 {
   "data": {
     "name": "hello",
@@ -63,7 +63,7 @@ exports[`buildSchema field type mapping should create a string validator 1`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create a url validator 1`] = `
+exports[`buildSchema > field type mapping > should create a url validator 1`] = `
 {
   "data": {
     "link": "https://example.com",
@@ -72,7 +72,7 @@ exports[`buildSchema field type mapping should create a url validator 1`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create a uuid validator 1`] = `
+exports[`buildSchema > field type mapping > should create a uuid validator 1`] = `
 {
   "data": {
     "id": "550e8400-e29b-41d4-a716-446655440000",
@@ -81,7 +81,7 @@ exports[`buildSchema field type mapping should create a uuid validator 1`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create an array validator 1`] = `
+exports[`buildSchema > field type mapping > should create an array validator 1`] = `
 {
   "data": {
     "items": [
@@ -94,7 +94,7 @@ exports[`buildSchema field type mapping should create an array validator 1`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create an email validator 1`] = `
+exports[`buildSchema > field type mapping > should create an email validator 1`] = `
 {
   "data": {
     "email": "test@example.com",
@@ -103,7 +103,7 @@ exports[`buildSchema field type mapping should create an email validator 1`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create an enum validator 1`] = `
+exports[`buildSchema > field type mapping > should create an enum validator 1`] = `
 {
   "data": {
     "status": "active",
@@ -112,7 +112,7 @@ exports[`buildSchema field type mapping should create an enum validator 1`] = `
 }
 `;
 
-exports[`buildSchema field type mapping should create an integer validator 1`] = `
+exports[`buildSchema > field type mapping > should create an integer validator 1`] = `
 {
   "data": {
     "count": 42,
@@ -121,7 +121,7 @@ exports[`buildSchema field type mapping should create an integer validator 1`] =
 }
 `;
 
-exports[`buildSchema field type mapping should create an object validator 1`] = `
+exports[`buildSchema > field type mapping > should create an object validator 1`] = `
 {
   "data": {
     "data": {
@@ -132,7 +132,7 @@ exports[`buildSchema field type mapping should create an object validator 1`] = 
 }
 `;
 
-exports[`buildSchema multiple fields should validate an object with multiple fields of different types 1`] = `
+exports[`buildSchema > multiple fields > should validate an object with multiple fields of different types 1`] = `
 {
   "data": {
     "active": true,
@@ -143,7 +143,7 @@ exports[`buildSchema multiple fields should validate an object with multiple fie
 }
 `;
 
-exports[`buildSchema validation errors should produce meaningful error output on failure 1`] = `
+exports[`buildSchema > validation errors > should produce meaningful error output on failure 1`] = `
 [
   {
     "code": "invalid_format",

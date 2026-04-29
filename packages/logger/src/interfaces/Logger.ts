@@ -1,12 +1,12 @@
-import {
+import type {
   FilterCallback,
   Log,
   LogContent,
   LogCorrelation,
   LogLevel,
   LogScope,
-} from "../types";
-import { ILoggerTimer } from "./LoggerTimer";
+} from "../types/index.js";
+import type { ILoggerTimer } from "./LoggerTimer.js";
 
 export interface ILogger {
   __instanceof: "Logger";

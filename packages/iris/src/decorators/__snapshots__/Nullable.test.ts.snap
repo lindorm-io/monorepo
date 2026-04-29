@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Nullable should stage field modifier with nullable true 1`] = `
+exports[`Nullable > should stage field modifier with nullable true 1`] = `
 {
   "decorator": "Nullable",
   "key": "label",

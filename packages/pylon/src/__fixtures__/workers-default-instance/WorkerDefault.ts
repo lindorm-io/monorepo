@@ -1,4 +1,4 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { LindormWorker } from "@lindorm/worker";
 
 export default new LindormWorker({

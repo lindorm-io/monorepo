@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Forgettable should set forgettable flag on class metadata 1`] = `
+exports[`Forgettable > should set forgettable flag on class metadata 1`] = `
 {
   "forgettable": true,
 }

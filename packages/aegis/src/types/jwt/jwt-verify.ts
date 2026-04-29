@@ -1,5 +1,5 @@
-import { TokenType } from "../../constants/token-type";
-import { JwtClaimMatchers } from "./jwt-claim-matchers";
+import type { TokenType } from "../../constants/token-type.js";
+import type { JwtClaimMatchers } from "./jwt-claim-matchers.js";
 
 export type VerifyActorOptions = {
   required?: boolean;

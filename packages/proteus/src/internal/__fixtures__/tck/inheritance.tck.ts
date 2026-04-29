@@ -1,12 +1,13 @@
+import { describe, test, it, expect, beforeEach } from "vitest";
 // TCK: Inheritance Suite
 // Tests table inheritance strategies (single-table and joined) for cross-driver portability.
 // Structural assertions only (no snapshots).
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import type { ProteusSource } from "../../../classes/ProteusSource";
-import { ProteusError } from "../../../errors/ProteusError";
-import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import type { ProteusSource } from "../../../classes/ProteusSource.js";
+import { ProteusError } from "../../../errors/ProteusError.js";
+import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 
 // ─── Single-Table Inheritance Suite ─────────────────────────────────────────
 

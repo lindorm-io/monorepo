@@ -1,7 +1,8 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { VersionField } from "./VersionField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { VersionField } from "./VersionField.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VersionFieldDecorated" })
 class VersionFieldDecorated {

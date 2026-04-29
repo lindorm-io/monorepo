@@ -1,15 +1,15 @@
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { IrisSource } from "@lindorm/iris";
 import type { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
 import {
   createTestProteusSource,
   createTestIrisSource,
-} from "../../__fixtures__/create-test-sources";
+} from "../../__fixtures__/create-test-sources.js";
 import {
   TestAggregate,
   TestForgettableAggregate,
-} from "../../__fixtures__/modules/aggregates";
+} from "../../__fixtures__/modules/aggregates/index.js";
 import {
   TestCommandCreate,
   TestCommandDestroy,
@@ -20,7 +20,7 @@ import {
   TestCommandSetState,
   TestCommandThrows,
   TestCommandTimeout,
-} from "../../__fixtures__/modules/commands";
+} from "../../__fixtures__/modules/commands/index.js";
 import {
   TestEventCreate,
   TestEventDestroy,
@@ -31,27 +31,39 @@ import {
   TestEventSetState,
   TestEventThrows,
   TestEventTimeout,
-} from "../../__fixtures__/modules/events";
-import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
-import { TestViewQuery } from "../../__fixtures__/modules/queries";
-import { TestSaga } from "../../__fixtures__/modules/sagas";
-import { TestView, TestViewEntity } from "../../__fixtures__/modules/views";
+} from "../../__fixtures__/modules/events/index.js";
+import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts/index.js";
+import { TestViewQuery } from "../../__fixtures__/modules/queries/index.js";
+import { TestSaga } from "../../__fixtures__/modules/sagas/index.js";
+import { TestView, TestViewEntity } from "../../__fixtures__/modules/views/index.js";
 import {
   EventRecord,
   EncryptionRecord,
   CausationRecord,
   ChecksumRecord,
   SagaRecord,
-} from "../entities";
+} from "../entities/index.js";
 import {
   HermesCommandMessage,
   HermesEventMessage,
   HermesErrorMessage,
   HermesTimeoutMessage,
-} from "../messages";
-import { HermesScanner } from "../registry/HermesScanner";
-import { HermesRegistry } from "../registry/hermes-registry";
-import { ChecksumDomain } from "./checksum-domain";
+} from "../messages/index.js";
+import { HermesScanner } from "../registry/HermesScanner.js";
+import { HermesRegistry } from "../registry/hermes-registry.js";
+import { ChecksumDomain } from "./checksum-domain.js";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
 describe("ChecksumDomain", () => {
   const logger = createMockLogger();
@@ -65,7 +77,7 @@ describe("ChecksumDomain", () => {
     proteus = createTestProteusSource();
     iris = createTestIrisSource();
 
-    const scanned = HermesScanner.scan([
+    const scanned = await HermesScanner.scan([
       TestCommandCreate,
       TestCommandDestroy,
       TestCommandDestroyNext,
@@ -120,14 +132,12 @@ describe("ChecksumDomain", () => {
     await proteus.disconnect();
   });
 
-  let errorPublishSpy: jest.SpyInstance;
+  let errorPublishSpy: MockInstance;
 
   beforeEach(async () => {
     const eventBus = iris.messageBus(HermesEventMessage);
     const errorQueue = iris.workerQueue(HermesErrorMessage);
-    errorPublishSpy = jest
-      .spyOn(errorQueue, "publish")
-      .mockResolvedValue(undefined as any);
+    errorPublishSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined as any);
 
     domain = new ChecksumDomain({
       registry,
@@ -408,7 +418,7 @@ describe("ChecksumDomain", () => {
 
   it("should subscribe with aggregate-derived topic matching event publish format", async () => {
     const eventBus = iris.messageBus(HermesEventMessage);
-    const subscribeSpy = jest.spyOn(eventBus, "subscribe");
+    const subscribeSpy = vi.spyOn(eventBus, "subscribe");
 
     const errorQueue = iris.workerQueue(HermesErrorMessage);
     const localDomain = new ChecksumDomain({
@@ -496,19 +506,17 @@ describe("ChecksumDomain", () => {
 
     // Mock proteus.repository to return a repo whose insert fails
     const origRepository = proteus.repository.bind(proteus);
-    const repoSpy = jest
-      .spyOn(proteus, "repository")
-      .mockImplementation((entity: any) => {
-        const realRepo = origRepository(entity);
-        if (entity === ChecksumRecord) {
-          return {
-            ...realRepo,
-            findOne: realRepo.findOne.bind(realRepo),
-            insert: jest.fn().mockRejectedValue(new Error("insert failed")),
-          } as any;
-        }
-        return realRepo;
-      });
+    const repoSpy = vi.spyOn(proteus, "repository").mockImplementation((entity: any) => {
+      const realRepo = origRepository(entity);
+      if (entity === ChecksumRecord) {
+        return {
+          ...realRepo,
+          findOne: realRepo.findOne.bind(realRepo),
+          insert: vi.fn().mockRejectedValue(new Error("insert failed")),
+        } as any;
+      }
+      return realRepo;
+    });
 
     const errors: Array<unknown> = [];
     domain.on("checksum", (data) => errors.push(data));

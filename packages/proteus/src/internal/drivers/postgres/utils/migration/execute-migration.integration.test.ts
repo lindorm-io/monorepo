@@ -1,11 +1,12 @@
 import { ShaKit } from "@lindorm/sha";
 import { randomBytes, randomUUID } from "crypto";
 import { Client } from "pg";
-import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client";
-import type { MigrationInterface, MigrationTableOptions } from "../../types/migration";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { executeMigrationDown, executeMigrationUp } from "./execute-migration";
-import { getAllMigrationRecords } from "./migration-table";
+import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client.js";
+import type { MigrationInterface, MigrationTableOptions } from "../../types/migration.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { executeMigrationDown, executeMigrationUp } from "./execute-migration.js";
+import { getAllMigrationRecords } from "./migration-table.js";
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 
 let client: PostgresQueryClient;
 let raw: Client;

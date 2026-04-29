@@ -1,5 +1,5 @@
-import type { DbIndex } from "../../types/db-snapshot";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import type { DbIndex } from "../../types/db-snapshot.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 
 type IndexRow = {
   table_schema: string;

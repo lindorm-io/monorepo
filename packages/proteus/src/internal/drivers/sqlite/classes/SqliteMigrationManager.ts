@@ -1,29 +1,29 @@
-import type { EntityMetadata } from "../../../entity/types/metadata";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type {
   GenerateBaselineResult,
   GenerateMigrationResult,
   IMigrationManager,
   MigrationStatusResult,
-} from "../../../interfaces/MigrationManager";
-import type { NamespaceOptions } from "../../../types/types";
-import { computeHash } from "../../../utils/migration/compute-hash";
-import { loadMigrations } from "../../../utils/migration/load-migrations";
-import { resolvePending } from "../../../utils/migration/resolve-pending";
-import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver";
-import { writeMigrationFile } from "../../../utils/migration/write-migration-file";
+} from "../../../interfaces/MigrationManager.js";
+import type { NamespaceOptions } from "../../../types/types.js";
+import { computeHash } from "../../../utils/migration/compute-hash.js";
+import { loadMigrations } from "../../../utils/migration/load-migrations.js";
+import { resolvePending } from "../../../utils/migration/resolve-pending.js";
+import { validateMigrationDriver } from "../../../utils/migration/validate-migration-driver.js";
+import { writeMigrationFile } from "../../../utils/migration/write-migration-file.js";
 import type { ILogger } from "@lindorm/logger";
-import { SqliteMigrationError } from "../errors/SqliteMigrationError";
-import type { SqliteDbSnapshot } from "../types/db-snapshot";
+import { SqliteMigrationError } from "../errors/SqliteMigrationError.js";
+import type { SqliteDbSnapshot } from "../types/db-snapshot.js";
 import type {
   MigrationApplyResult,
   MigrationRecord,
   SqliteMigrationTableOptions,
-} from "../types/migration";
-import type { SqliteQueryClient } from "../types/sqlite-query-client";
+} from "../types/migration.js";
+import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
 import {
   executeMigrationDown,
   executeMigrationUp,
-} from "../utils/migration/execute-migration";
+} from "../utils/migration/execute-migration.js";
 import {
   ensureMigrationTable,
   getAllMigrationRecords,
@@ -32,11 +32,11 @@ import {
   insertMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "../utils/migration/migration-table";
-import { serializeSqliteMigration } from "../utils/migration/serialize-sqlite-migration";
-import { diffSchema } from "../utils/sync/diff-schema";
-import { introspectSchema } from "../utils/sync/introspect-schema";
-import { projectDesiredSchemaSqlite } from "../utils/sync/project-desired-schema-sqlite";
+} from "../utils/migration/migration-table.js";
+import { serializeSqliteMigration } from "../utils/migration/serialize-sqlite-migration.js";
+import { diffSchema } from "../utils/sync/diff-schema.js";
+import { introspectSchema } from "../utils/sync/introspect-schema.js";
+import { projectDesiredSchemaSqlite } from "../utils/sync/project-desired-schema-sqlite.js";
 
 const EMPTY_SNAPSHOT: SqliteDbSnapshot = { tables: new Map() };
 

@@ -6,7 +6,7 @@ import type {
   RestoreEvent,
   SoftDestroyEvent,
   UpdateEvent,
-} from "../interfaces/EntityEvent";
+} from "../interfaces/EntityEvent.js";
 
 // ─── Connection ──────────────────────────────────────────────────────────
 
@@ -14,20 +14,20 @@ export type ProteusConnectionState = "connected" | "disconnected";
 
 // ─── Event Map ───────────────────────────────────────────────────────────
 
-export type ProteusSourceEventMap<C = unknown> = {
+export type ProteusSourceEventMap = {
   "connection:state": { state: ProteusConnectionState };
   "breaker:state": StateChangeEvent;
-  "entity:before-insert": InsertEvent<any, C>;
-  "entity:after-insert": InsertEvent<any, C>;
-  "entity:before-update": UpdateEvent<any, C>;
-  "entity:after-update": UpdateEvent<any, C>;
-  "entity:before-destroy": DestroyEvent<any, C>;
-  "entity:after-destroy": DestroyEvent<any, C>;
-  "entity:before-soft-destroy": SoftDestroyEvent<any, C>;
-  "entity:after-soft-destroy": SoftDestroyEvent<any, C>;
-  "entity:before-restore": RestoreEvent<any, C>;
-  "entity:after-restore": RestoreEvent<any, C>;
-  "entity:after-load": LoadEvent<any, C>;
+  "entity:before-insert": InsertEvent;
+  "entity:after-insert": InsertEvent;
+  "entity:before-update": UpdateEvent;
+  "entity:after-update": UpdateEvent;
+  "entity:before-destroy": DestroyEvent;
+  "entity:after-destroy": DestroyEvent;
+  "entity:before-soft-destroy": SoftDestroyEvent;
+  "entity:after-soft-destroy": SoftDestroyEvent;
+  "entity:before-restore": RestoreEvent;
+  "entity:after-restore": RestoreEvent;
+  "entity:after-load": LoadEvent;
 };
 
 // ─── Emit function threaded to drivers/repos ─────────────────────────────

@@ -2,9 +2,10 @@ import {
   TEST_ARRAY_STRING,
   TEST_DICT,
   TEST_DICT_STRING,
-} from "../__fixtures__/test-data";
-import { JsonKit } from "./JsonKit";
-import { Primitive } from "./Primitive";
+} from "../__fixtures__/test-data.js";
+import { JsonKit } from "./JsonKit.js";
+import { Primitive } from "./Primitive.js";
+import { describe, expect, test } from "vitest";
 
 describe("JsonKit", () => {
   test("should create a primitive buffer from json data", () => {

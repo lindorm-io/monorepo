@@ -1,8 +1,9 @@
+import { describe, expect, test } from "vitest";
 import {
   quoteIdentifier,
   quoteQualifiedName,
-} from "../../../drivers/postgres/utils/quote-identifier";
-import { ProteusError } from "../../../../errors";
+} from "../../../drivers/postgres/utils/quote-identifier.js";
+import { ProteusError } from "../../../../errors/index.js";
 
 describe("quoteIdentifier", () => {
   test("wraps a plain name in double quotes", () => {

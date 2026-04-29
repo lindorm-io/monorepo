@@ -1,4 +1,5 @@
-import { randomNumber } from "./random-number";
+import { randomNumber } from "./random-number.js";
+import { describe, expect, test } from "vitest";
 
 describe("randomNumber", () => {
   test("should return a random number", () => {

@@ -1,4 +1,5 @@
-import { formatTimestamp, sanitizeName, kebabToPascal } from "./migration-naming";
+import { formatTimestamp, sanitizeName, kebabToPascal } from "./migration-naming.js";
+import { describe, expect, it } from "vitest";
 
 describe("migration-naming", () => {
   describe("formatTimestamp", () => {

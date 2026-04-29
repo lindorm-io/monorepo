@@ -1,16 +1,20 @@
-import type { NatsSharedState } from "../types/nats-types";
-import { publishNatsMessages } from "./publish-nats-messages";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { preparePublishBatch as _preparePublishBatch } from "../../../utils/prepare-publish-batch.js";
+import { publishNatsMessages } from "./publish-nats-messages.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
-jest.mock("./resolve-subject", () => ({
+const preparePublishBatch = _preparePublishBatch as unknown as Mock;
+
+vi.mock("./resolve-subject.js", async () => ({
   resolveSubject: (prefix: string, topic: string) => `${prefix}.${topic}`,
 }));
 
-jest.mock("./serialize-nats-message", () => ({
-  serializeNatsMessage: jest.fn().mockReturnValue({ data: new Uint8Array([1, 2, 3]) }),
+vi.mock("./serialize-nats-message.js", () => ({
+  serializeNatsMessage: vi.fn().mockReturnValue({ data: new Uint8Array([1, 2, 3]) }),
 }));
 
-jest.mock("../../../utils/prepare-publish-batch", () => ({
-  preparePublishBatch: jest.fn().mockResolvedValue([
+vi.mock("../../../utils/prepare-publish-batch.js", () => ({
+  preparePublishBatch: vi.fn().mockResolvedValue([
     {
       message: { body: "hello" },
       envelope: { topic: "test", broadcast: false },
@@ -24,12 +28,10 @@ jest.mock("../../../utils/prepare-publish-batch", () => ({
 const createMockState = (overrides?: Partial<NatsSharedState>): NatsSharedState => ({
   nc: {} as any,
   js: {
-    publish: jest
-      .fn()
-      .mockResolvedValue({ seq: 1, stream: "IRIS_TEST", duplicate: false }),
+    publish: vi.fn().mockResolvedValue({ seq: 1, stream: "IRIS_TEST", duplicate: false }),
   } as any,
   jsm: null,
-  headersInit: jest.fn() as any,
+  headersInit: vi.fn() as any,
   prefix: "iris",
   streamName: "IRIS_IRIS",
   consumerLoops: [],
@@ -41,18 +43,18 @@ const createMockState = (overrides?: Partial<NatsSharedState>): NatsSharedState 
 });
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockDriver = () => ({
-  prepareForPublish: jest.fn().mockResolvedValue({ envelope: {}, topic: "test" }),
-  completePublish: jest.fn().mockResolvedValue(undefined),
+  prepareForPublish: vi.fn().mockResolvedValue({ envelope: {}, topic: "test" }),
+  completePublish: vi.fn().mockResolvedValue(undefined),
   metadata: {} as any,
 });
 
@@ -110,7 +112,6 @@ describe("publishNatsMessages", () => {
   });
 
   it("should use broadcast subject for broadcast messages", async () => {
-    const { preparePublishBatch } = require("../../../utils/prepare-publish-batch");
     preparePublishBatch.mockResolvedValueOnce([
       {
         message: { body: "broadcast" },
@@ -140,7 +141,6 @@ describe("publishNatsMessages", () => {
   });
 
   it("should schedule via delayManager when message is delayed", async () => {
-    const { preparePublishBatch } = require("../../../utils/prepare-publish-batch");
     preparePublishBatch.mockResolvedValueOnce([
       {
         message: { body: "delayed" },
@@ -154,7 +154,7 @@ describe("publishNatsMessages", () => {
     const state = createMockState();
     const driver = createMockDriver();
     const logger = createMockLogger();
-    const delayManager = { schedule: jest.fn().mockResolvedValue("delay-id") } as any;
+    const delayManager = { schedule: vi.fn().mockResolvedValue("delay-id") } as any;
 
     await publishNatsMessages(
       { body: "delayed" } as any,
@@ -174,7 +174,6 @@ describe("publishNatsMessages", () => {
   });
 
   it("should publish directly when delayed but no delayManager", async () => {
-    const { preparePublishBatch } = require("../../../utils/prepare-publish-batch");
     preparePublishBatch.mockResolvedValueOnce([
       {
         message: { body: "delayed-no-manager" },
@@ -201,7 +200,6 @@ describe("publishNatsMessages", () => {
   });
 
   it("should publish multiple messages in order", async () => {
-    const { preparePublishBatch } = require("../../../utils/prepare-publish-batch");
     preparePublishBatch.mockResolvedValueOnce([
       {
         message: { body: "msg1" },

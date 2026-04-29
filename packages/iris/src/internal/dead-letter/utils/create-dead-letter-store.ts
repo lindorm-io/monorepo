@@ -1,7 +1,7 @@
-import type { IrisPersistenceDeadLetterConfig } from "../../../types/source-options";
-import type { IDeadLetterStore } from "../../../interfaces/IrisDeadLetterStore";
-import { MemoryDeadLetterStore } from "../MemoryDeadLetterStore";
-import { RedisDeadLetterStore } from "../RedisDeadLetterStore";
+import type { IrisPersistenceDeadLetterConfig } from "../../../types/source-options.js";
+import type { IDeadLetterStore } from "../../../interfaces/IrisDeadLetterStore.js";
+import { MemoryDeadLetterStore } from "../MemoryDeadLetterStore.js";
+import { RedisDeadLetterStore } from "../RedisDeadLetterStore.js";
 
 export const createDeadLetterStore = async (
   config?: IrisPersistenceDeadLetterConfig,

@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata } from "../../entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 
 /**
  * Extract a flat Dict keyed by field key from a raw RETURNING row.

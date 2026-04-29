@@ -1,6 +1,7 @@
-import type { MysqlDesiredSchema } from "../../types/desired-schema";
-import type { MysqlDbSnapshot } from "../../types/db-snapshot";
-import { diffSchema } from "./diff-schema";
+import type { MysqlDesiredSchema } from "../../types/desired-schema.js";
+import type { MysqlDbSnapshot } from "../../types/db-snapshot.js";
+import { diffSchema } from "./diff-schema.js";
+import { describe, expect, test } from "vitest";
 
 const emptySnapshot = (): MysqlDbSnapshot => ({ tables: new Map() });
 

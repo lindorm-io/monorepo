@@ -1,14 +1,14 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`dotCase should convert CONSTANT_CASE 1`] = `"constant.case"`;
+exports[`dotCase > should convert CONSTANT_CASE 1`] = `"constant.case"`;
 
-exports[`dotCase should convert Capital Case 1`] = `"capital.case"`;
+exports[`dotCase > should convert Capital Case 1`] = `"capital.case"`;
 
-exports[`dotCase should convert PascalCase 1`] = `"pascal.case"`;
+exports[`dotCase > should convert PascalCase 1`] = `"pascal.case"`;
 
-exports[`dotCase should convert Sentence case 1`] = `"sentence.case"`;
+exports[`dotCase > should convert Sentence case 1`] = `"sentence.case"`;
 
-exports[`dotCase should convert array with objects 1`] = `
+exports[`dotCase > should convert array with objects 1`] = `
 [
   {
     "camel.case": true,
@@ -37,7 +37,7 @@ exports[`dotCase should convert array with objects 1`] = `
 ]
 `;
 
-exports[`dotCase should convert array with strings 1`] = `
+exports[`dotCase > should convert array with strings 1`] = `
 [
   "camel.case",
   "capital.case",
@@ -52,15 +52,15 @@ exports[`dotCase should convert array with strings 1`] = `
 ]
 `;
 
-exports[`dotCase should convert camelCase 1`] = `"camel.case"`;
+exports[`dotCase > should convert camelCase 1`] = `"camel.case"`;
 
-exports[`dotCase should convert dot.case 1`] = `"dot.case"`;
+exports[`dotCase > should convert dot.case 1`] = `"dot.case"`;
 
-exports[`dotCase should convert kebab-case 1`] = `"kebab.case"`;
+exports[`dotCase > should convert kebab-case 1`] = `"kebab.case"`;
 
-exports[`dotCase should convert lower case 1`] = `"lower.case"`;
+exports[`dotCase > should convert lower case 1`] = `"lower.case"`;
 
-exports[`dotCase should convert object keys 1`] = `
+exports[`dotCase > should convert object keys 1`] = `
 {
   "camel.case": true,
   "capital.case": true,
@@ -75,6 +75,6 @@ exports[`dotCase should convert object keys 1`] = `
 }
 `;
 
-exports[`dotCase should convert path/case 1`] = `"path.case"`;
+exports[`dotCase > should convert path/case 1`] = `"path.case"`;
 
-exports[`dotCase should convert snake_case 1`] = `"snake.case"`;
+exports[`dotCase > should convert snake_case 1`] = `"snake.case"`;

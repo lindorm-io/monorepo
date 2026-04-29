@@ -1,7 +1,8 @@
-import { ProteusError } from "../../../../errors";
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { PostgresUpdateQueryBuilder } from "./PostgresUpdateQueryBuilder";
+import { ProteusError } from "../../../../errors/index.js";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { PostgresUpdateQueryBuilder } from "./PostgresUpdateQueryBuilder.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const metadata = {
   entity: { name: "users", namespace: null },
@@ -9,11 +10,11 @@ const metadata = {
   primaryKeys: ["id"],
 } as unknown as EntityMetadata;
 
-const mockClient = { query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }) };
+const mockClient = { query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }) };
 
 describe("PostgresUpdateQueryBuilder", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should throw when execute is called with set but no where", async () => {

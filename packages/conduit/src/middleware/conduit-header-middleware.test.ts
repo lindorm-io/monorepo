@@ -1,4 +1,5 @@
-import { conduitHeaderMiddleware } from "./conduit-header-middleware";
+import { conduitHeaderMiddleware } from "./conduit-header-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("conduitHeaderMiddleware", () => {
   let ctx: any;
@@ -13,7 +14,7 @@ describe("conduitHeaderMiddleware", () => {
 
   test("should add a header to the request", async () => {
     await expect(
-      conduitHeaderMiddleware("new", "header-content")(ctx, jest.fn()),
+      conduitHeaderMiddleware("new", "header-content")(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.req.headers).toEqual({

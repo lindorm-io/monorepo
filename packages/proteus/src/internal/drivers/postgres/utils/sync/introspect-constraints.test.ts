@@ -1,10 +1,11 @@
-import { introspectConstraints } from "../../../../drivers/postgres/utils/sync/introspect-constraints";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import { introspectConstraints } from "../../../../drivers/postgres/utils/sync/introspect-constraints.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { describe, expect, it, vi } from "vitest";
 
 const createMockClient = (
   rows: Array<Record<string, unknown>> = [],
 ): PostgresQueryClient => ({
-  query: jest.fn().mockResolvedValue({ rows, rowCount: rows.length }),
+  query: vi.fn().mockResolvedValue({ rows, rowCount: rows.length }),
 });
 
 describe("introspectConstraints", () => {

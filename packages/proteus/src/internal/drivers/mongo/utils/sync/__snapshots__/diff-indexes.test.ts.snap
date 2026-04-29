@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`diffIndexes should create new index when not in existing 1`] = `
+exports[`diffIndexes > should create new index when not in existing 1`] = `
 {
   "collectionsToCreate": [],
   "indexesToCreate": [
@@ -19,13 +19,13 @@ exports[`diffIndexes should create new index when not in existing 1`] = `
 }
 `;
 
-exports[`diffIndexes should detect new collections to create 1`] = `
+exports[`diffIndexes > should detect new collections to create 1`] = `
 [
   "orders",
 ]
 `;
 
-exports[`diffIndexes should drop and recreate when TTL changes 1`] = `
+exports[`diffIndexes > should drop and recreate when TTL changes 1`] = `
 {
   "collectionsToCreate": [],
   "indexesToCreate": [
@@ -49,7 +49,7 @@ exports[`diffIndexes should drop and recreate when TTL changes 1`] = `
 }
 `;
 
-exports[`diffIndexes should drop and recreate when keys differ 1`] = `
+exports[`diffIndexes > should drop and recreate when keys differ 1`] = `
 {
   "collectionsToCreate": [],
   "indexesToCreate": [
@@ -73,7 +73,7 @@ exports[`diffIndexes should drop and recreate when keys differ 1`] = `
 }
 `;
 
-exports[`diffIndexes should drop and recreate when sparse flag changes 1`] = `
+exports[`diffIndexes > should drop and recreate when sparse flag changes 1`] = `
 {
   "collectionsToCreate": [],
   "indexesToCreate": [
@@ -97,7 +97,7 @@ exports[`diffIndexes should drop and recreate when sparse flag changes 1`] = `
 }
 `;
 
-exports[`diffIndexes should drop and recreate when unique flag changes 1`] = `
+exports[`diffIndexes > should drop and recreate when unique flag changes 1`] = `
 {
   "collectionsToCreate": [],
   "indexesToCreate": [
@@ -121,7 +121,7 @@ exports[`diffIndexes should drop and recreate when unique flag changes 1`] = `
 }
 `;
 
-exports[`diffIndexes should drop existing index when not in desired 1`] = `
+exports[`diffIndexes > should drop existing index when not in desired 1`] = `
 {
   "collectionsToCreate": [],
   "indexesToCreate": [],
@@ -134,7 +134,7 @@ exports[`diffIndexes should drop existing index when not in desired 1`] = `
 }
 `;
 
-exports[`diffIndexes should handle multiple indexes across collections 1`] = `
+exports[`diffIndexes > should handle multiple indexes across collections 1`] = `
 {
   "collectionsToCreate": [
     "products",
@@ -170,7 +170,7 @@ exports[`diffIndexes should handle multiple indexes across collections 1`] = `
 }
 `;
 
-exports[`diffIndexes should keep index unchanged when it matches 1`] = `
+exports[`diffIndexes > should keep index unchanged when it matches 1`] = `
 {
   "collectionsToCreate": [],
   "indexesToCreate": [],
@@ -178,7 +178,7 @@ exports[`diffIndexes should keep index unchanged when it matches 1`] = `
 }
 `;
 
-exports[`diffIndexes should return empty plan when no indexes exist and none desired 1`] = `
+exports[`diffIndexes > should return empty plan when no indexes exist and none desired 1`] = `
 {
   "collectionsToCreate": [],
   "indexesToCreate": [],

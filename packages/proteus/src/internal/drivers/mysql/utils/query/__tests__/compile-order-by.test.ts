@@ -1,7 +1,8 @@
-import { makeField } from "../../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../../entity/types/metadata";
-import { ProteusError } from "../../../../../../errors";
-import { compileOrderBy } from "../compile-order-by";
+import { makeField } from "../../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../../entity/types/metadata.js";
+import { ProteusError } from "../../../../../../errors/index.js";
+import { compileOrderBy } from "../compile-order-by.js";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   fields: [

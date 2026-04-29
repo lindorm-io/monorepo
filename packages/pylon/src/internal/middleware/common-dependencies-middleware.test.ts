@@ -1,9 +1,10 @@
-import { createMockHermes } from "@lindorm/hermes/mocks";
-import { createMockIrisSource } from "@lindorm/iris/mocks";
-import { createMockLogger } from "@lindorm/logger";
-import { createMockProteusSource } from "@lindorm/proteus/mocks";
-import { RATE_LIMIT_SOURCE } from "../constants/symbols";
-import { createDependenciesMiddleware } from "./common-dependencies-middleware";
+import { createMockHermes } from "@lindorm/hermes/mocks/vitest";
+import { createMockIrisSource } from "@lindorm/iris/mocks/vitest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
+import { RATE_LIMIT_SOURCE } from "../constants/symbols.js";
+import { createDependenciesMiddleware } from "./common-dependencies-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createDependenciesMiddleware", () => {
   let ctx: any;
@@ -19,7 +20,7 @@ describe("createDependenciesMiddleware", () => {
 
     const middleware = createDependenciesMiddleware({ proteus: proteus as any });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(proteus.session).not.toHaveBeenCalled();
 
@@ -27,7 +28,69 @@ describe("createDependenciesMiddleware", () => {
 
     expect(session).toBeDefined();
     expect(proteus.session).toHaveBeenCalledTimes(1);
-    expect(proteus.session).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
+    expect(proteus.session).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      meta: {
+        correlationId: "unknown",
+        actor: "unknown",
+        timestamp: expect.any(Date),
+      },
+      signal: undefined,
+    });
+  });
+
+  test("should forward ctx.signal to proteus.session when context is HTTP", async () => {
+    const proteus = createMockProteusSource();
+    const controller = new AbortController();
+
+    const httpCtx: any = {
+      logger: createMockLogger(),
+      request: {},
+      signal: controller.signal,
+    };
+
+    const middleware = createDependenciesMiddleware({ proteus: proteus as any });
+
+    await middleware(httpCtx, vi.fn());
+
+    const session = httpCtx.proteus;
+
+    expect(session).toBeDefined();
+    expect(proteus.session).toHaveBeenCalledWith({
+      logger: httpCtx.logger,
+      meta: {
+        correlationId: "unknown",
+        actor: "unknown",
+        timestamp: expect.any(Date),
+      },
+      signal: controller.signal,
+    });
+  });
+
+  test("should pass signal: undefined to proteus.session for socket (non-HTTP) context", async () => {
+    const proteus = createMockProteusSource();
+
+    const socketCtx: any = {
+      logger: createMockLogger(),
+      event: "test:event",
+    };
+
+    const middleware = createDependenciesMiddleware({ proteus: proteus as any });
+
+    await middleware(socketCtx, vi.fn());
+
+    const session = socketCtx.proteus;
+
+    expect(session).toBeDefined();
+    expect(proteus.session).toHaveBeenCalledWith({
+      logger: socketCtx.logger,
+      meta: {
+        correlationId: "unknown",
+        actor: "unknown",
+        timestamp: expect.any(Date),
+      },
+      signal: undefined,
+    });
   });
 
   test("should lazily create iris session on first access", async () => {
@@ -35,7 +98,7 @@ describe("createDependenciesMiddleware", () => {
 
     const middleware = createDependenciesMiddleware({ iris: iris as any });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(iris.session).not.toHaveBeenCalled();
 
@@ -43,7 +106,14 @@ describe("createDependenciesMiddleware", () => {
 
     expect(session).toBeDefined();
     expect(iris.session).toHaveBeenCalledTimes(1);
-    expect(iris.session).toHaveBeenCalledWith({ logger: ctx.logger, context: ctx });
+    expect(iris.session).toHaveBeenCalledWith({
+      logger: ctx.logger,
+      meta: {
+        correlationId: "unknown",
+        actor: "unknown",
+        timestamp: expect.any(Date),
+      },
+    });
   });
 
   test("should lazily create hermes session on first access", async () => {
@@ -51,7 +121,7 @@ describe("createDependenciesMiddleware", () => {
 
     const middleware = createDependenciesMiddleware({ hermes: hermes as any });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(hermes.session).not.toHaveBeenCalled();
 
@@ -62,10 +132,85 @@ describe("createDependenciesMiddleware", () => {
     expect(hermes.session).toHaveBeenCalledWith({ logger: ctx.logger });
   });
 
+  test("should resolve actor from top-level resolver and forward it in hook meta", async () => {
+    const proteus = createMockProteusSource();
+    const iris = createMockIrisSource();
+    const actor = vi.fn().mockReturnValue("alice@test.com");
+
+    const ctxWithState: any = {
+      logger: createMockLogger(),
+      state: {
+        actor: "unknown",
+        metadata: {
+          correlationId: "corr-abc",
+          date: new Date("2025-01-01T00:00:00Z"),
+        },
+      },
+    };
+
+    const middleware = createDependenciesMiddleware({
+      proteus: proteus as any,
+      iris: iris as any,
+      actor,
+    });
+
+    await middleware(ctxWithState, vi.fn());
+
+    expect(actor).toHaveBeenCalledWith(ctxWithState);
+
+    // Trigger both sessions
+    ctxWithState.proteus;
+    ctxWithState.iris;
+
+    const expectedMeta = {
+      correlationId: "corr-abc",
+      actor: "alice@test.com",
+      timestamp: new Date("2025-01-01T00:00:00Z"),
+    };
+
+    expect(proteus.session).toHaveBeenCalledWith({
+      logger: ctxWithState.logger,
+      meta: expectedMeta,
+      signal: undefined,
+    });
+    expect(iris.session).toHaveBeenCalledWith({
+      logger: ctxWithState.logger,
+      meta: expectedMeta,
+    });
+  });
+
+  test("should memoise actor on ctx.state.actor across session creation", async () => {
+    const proteus = createMockProteusSource();
+    const iris = createMockIrisSource();
+    const actor = vi.fn().mockReturnValue("alice@test.com");
+
+    const ctxWithState: any = {
+      logger: createMockLogger(),
+      state: {
+        actor: "unknown",
+        metadata: { correlationId: "c", date: new Date("2025-01-01T00:00:00Z") },
+      },
+    };
+
+    const middleware = createDependenciesMiddleware({
+      proteus: proteus as any,
+      iris: iris as any,
+      actor,
+    });
+
+    await middleware(ctxWithState, vi.fn());
+
+    ctxWithState.proteus;
+    ctxWithState.iris;
+
+    expect(actor).toHaveBeenCalledTimes(1);
+    expect(ctxWithState.state.actor).toBe("alice@test.com");
+  });
+
   test("should handle no sources configured", async () => {
     const middleware = createDependenciesMiddleware({});
 
-    await expect(middleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(middleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.proteus).toBeUndefined();
     expect(ctx.iris).toBeUndefined();
@@ -79,7 +224,7 @@ describe("createDependenciesMiddleware", () => {
       rateLimitProteus: rateLimitProteus as any,
     });
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(rateLimitProteus.session).not.toHaveBeenCalled();
     expect(ctx[RATE_LIMIT_SOURCE]).toBe(rateLimitProteus);
@@ -88,7 +233,7 @@ describe("createDependenciesMiddleware", () => {
   test("should not set rate limit symbol when rateLimitProteus not provided", async () => {
     const middleware = createDependenciesMiddleware({});
 
-    await middleware(ctx, jest.fn());
+    await middleware(ctx, vi.fn());
 
     expect(ctx[RATE_LIMIT_SOURCE]).toBeUndefined();
   });
@@ -100,22 +245,22 @@ describe("createDependenciesMiddleware", () => {
         event: "test:event",
         io: {
           app: {
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-            in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+            in: vi.fn().mockReturnValue({ fetchSockets: vi.fn() }),
           },
           socket: {
             id: "s1",
             data: {},
-            join: jest.fn(),
-            leave: jest.fn(),
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+            join: vi.fn(),
+            leave: vi.fn(),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
           },
         },
       };
 
       const middleware = createDependenciesMiddleware({ roomsEnabled: true });
 
-      await middleware(socketCtx, jest.fn());
+      await middleware(socketCtx, vi.fn());
 
       expect(socketCtx.rooms).toBeDefined();
       expect(typeof socketCtx.rooms.join).toBe("function");
@@ -129,15 +274,15 @@ describe("createDependenciesMiddleware", () => {
         request: {},
         io: {
           app: {
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-            in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+            in: vi.fn().mockReturnValue({ fetchSockets: vi.fn() }),
           },
         },
       };
 
       const middleware = createDependenciesMiddleware({ roomsEnabled: true });
 
-      await middleware(httpCtx, jest.fn());
+      await middleware(httpCtx, vi.fn());
 
       expect(httpCtx.rooms).toBeDefined();
     });
@@ -145,7 +290,7 @@ describe("createDependenciesMiddleware", () => {
     test("should not set rooms when no io present even when roomsEnabled", async () => {
       const middleware = createDependenciesMiddleware({ roomsEnabled: true });
 
-      await middleware(ctx, jest.fn());
+      await middleware(ctx, vi.fn());
 
       expect(ctx.rooms).toBeUndefined();
     });
@@ -162,7 +307,7 @@ describe("createDependenciesMiddleware", () => {
 
       const middleware = createDependenciesMiddleware({ roomsEnabled: false });
 
-      await middleware(socketCtx, jest.fn());
+      await middleware(socketCtx, vi.fn());
 
       expect(socketCtx.rooms).toBeUndefined();
     });
@@ -175,15 +320,15 @@ describe("createDependenciesMiddleware", () => {
         event: "test:event",
         io: {
           app: {
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
-            in: jest.fn().mockReturnValue({ fetchSockets: jest.fn() }),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
+            in: vi.fn().mockReturnValue({ fetchSockets: vi.fn() }),
           },
           socket: {
             id: "s1",
             data: {},
-            join: jest.fn(),
-            leave: jest.fn(),
-            to: jest.fn().mockReturnValue({ emit: jest.fn() }),
+            join: vi.fn(),
+            leave: vi.fn(),
+            to: vi.fn().mockReturnValue({ emit: vi.fn() }),
           },
         },
       };
@@ -194,7 +339,7 @@ describe("createDependenciesMiddleware", () => {
         roomsProteus: roomsProteus as any,
       });
 
-      await middleware(socketCtx, jest.fn());
+      await middleware(socketCtx, vi.fn());
 
       const rooms = socketCtx.rooms;
 

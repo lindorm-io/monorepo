@@ -1,7 +1,7 @@
 import { isObject } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 import type ServerFormData from "form-data";
-import { ConduitContext } from "../../types";
+import type { ConduitContext } from "../../types/index.js";
 
 const newServerFormData = async (): Promise<ServerFormData> => {
   if (typeof window !== "undefined") {

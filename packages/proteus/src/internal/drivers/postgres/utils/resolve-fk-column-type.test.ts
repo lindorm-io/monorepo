@@ -1,11 +1,12 @@
-import { Entity } from "../../../../decorators/Entity";
-import { Enum } from "../../../../decorators/Enum";
-import { Field } from "../../../../decorators/Field";
-import { Generated } from "../../../../decorators/Generated";
-import { PrimaryKey } from "../../../../decorators/PrimaryKey";
-import { PrimaryKeyField } from "../../../../decorators/PrimaryKeyField";
-import { resolveFkColumnType } from "../../../drivers/postgres/utils/resolve-fk-column-type";
-import { ProteusError } from "../../../../errors";
+import { Entity } from "../../../../decorators/Entity.js";
+import { Enum } from "../../../../decorators/Enum.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Generated } from "../../../../decorators/Generated.js";
+import { PrimaryKey } from "../../../../decorators/PrimaryKey.js";
+import { PrimaryKeyField } from "../../../../decorators/PrimaryKeyField.js";
+import { resolveFkColumnType } from "../../../drivers/postgres/utils/resolve-fk-column-type.js";
+import { ProteusError } from "../../../../errors/index.js";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Test entities — must be at module scope for stage-3 decorator execution

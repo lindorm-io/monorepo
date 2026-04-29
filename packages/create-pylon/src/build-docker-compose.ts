@@ -1,4 +1,4 @@
-import type { Answers, IrisDriver, ProteusDriver } from "./types";
+import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
 
 type ServiceBlock = { name: string; lines: Array<string> };
 
@@ -118,7 +118,6 @@ const proteusBlocks = (driver: ProteusDriver): Array<ServiceBlock> => {
       return [mongoBlock()];
     case "redis":
       return [redisBlock()];
-    case "none":
     case "memory":
     case "sqlite":
     default:
@@ -154,10 +153,8 @@ const dedupeByName = (blocks: Array<ServiceBlock>): Array<ServiceBlock> => {
 };
 
 export const buildDockerCompose = (answers: Answers): string | null => {
-  const blocks = dedupeByName([
-    ...proteusBlocks(answers.proteusDriver),
-    ...irisBlocks(answers.irisDriver),
-  ]);
+  const proteus = answers.proteusDrivers.flatMap((d) => proteusBlocks(d));
+  const blocks = dedupeByName([...proteus, ...irisBlocks(answers.irisDriver)]);
 
   if (blocks.length === 0) return null;
 

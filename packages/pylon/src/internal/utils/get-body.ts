@@ -1,6 +1,6 @@
 import { isNumber } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
-import { PylonHandlerResult } from "../../types";
+import type { Dict } from "@lindorm/types";
+import type { PylonHandlerResult } from "../../types/index.js";
 
 type Body = Dict | undefined;
 

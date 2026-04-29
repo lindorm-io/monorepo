@@ -1,4 +1,5 @@
-import { buildCacheKey, buildCachePrefix } from "./build-cache-key";
+import { buildCacheKey, buildCachePrefix } from "./build-cache-key.js";
+import { describe, expect, test } from "vitest";
 
 describe("buildCacheKey", () => {
   const base = {

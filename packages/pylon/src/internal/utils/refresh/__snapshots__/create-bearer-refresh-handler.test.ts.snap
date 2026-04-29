@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createBearerRefreshHandler capturedJkt (DPoP binding) accepts refresh when new token has same cnf.jkt 1`] = `
+exports[`createBearerRefreshHandler > capturedJkt (DPoP binding) > accepts refresh when new token has same cnf.jkt 1`] = `
 {
   "header": {},
   "payload": {
@@ -14,7 +14,7 @@ exports[`createBearerRefreshHandler capturedJkt (DPoP binding) accepts refresh w
 }
 `;
 
-exports[`createBearerRefreshHandler swaps bearer, updates getExpiresAt from expiresIn, clears authExpiredEmittedAt on valid refresh 1`] = `
+exports[`createBearerRefreshHandler > swaps bearer, updates getExpiresAt from expiresIn, clears authExpiredEmittedAt on valid refresh 1`] = `
 {
   "header": {
     "tokenType": "access_token",

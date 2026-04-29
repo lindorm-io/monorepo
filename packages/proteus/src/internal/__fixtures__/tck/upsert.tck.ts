@@ -1,9 +1,10 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Upsert Suite
 // Tests upsert (INSERT ON CONFLICT DO UPDATE) behavior.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import type { UpsertOptions } from "../../../types";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import type { UpsertOptions } from "../../../types/index.js";
 
 export const upsertSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   const { TckSimpleUser, TckUniqueConstrained } = entities;

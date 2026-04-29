@@ -1,6 +1,6 @@
-import type { SetOperationEntry } from "../../../../types/query";
-import { compileSetOperations as shared } from "../../../../utils/sql/compile-set-operation";
-import { mysqlDialect } from "../mysql-dialect";
+import type { SetOperationEntry } from "../../../../types/query.js";
+import { compileSetOperations as shared } from "../../../../utils/sql/compile-set-operation.js";
+import { mysqlDialect } from "../mysql-dialect.js";
 
 export const compileSetOperations = (
   entries: Array<SetOperationEntry>,

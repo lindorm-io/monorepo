@@ -1,4 +1,4 @@
-import { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance";
+import type { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance.js";
 
 export type AuthFactor = "knowledge" | "possession" | "inherence" | (string & {});
 

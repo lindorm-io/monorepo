@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`DriverRpcServerBase buildErrorEnvelope should include the error message in the payload 1`] = `
+exports[`DriverRpcServerBase > buildErrorEnvelope > should include the error message in the payload 1`] = `
 {
   "error": "Payload error",
 }
 `;
 
-exports[`DriverRpcServerBase buildErrorEnvelope should produce a well-structured envelope 1`] = `
+exports[`DriverRpcServerBase > buildErrorEnvelope > should produce a well-structured envelope 1`] = `
 {
   "attempt": 0,
   "broadcast": false,

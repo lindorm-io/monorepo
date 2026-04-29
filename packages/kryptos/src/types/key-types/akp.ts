@@ -1,4 +1,4 @@
-import { KryptosUse } from "../types";
+import type { KryptosUse } from "../types.js";
 
 export const AKP_SIG_ALGORITHMS = ["ML-DSA-44", "ML-DSA-65", "ML-DSA-87"] as const;
 

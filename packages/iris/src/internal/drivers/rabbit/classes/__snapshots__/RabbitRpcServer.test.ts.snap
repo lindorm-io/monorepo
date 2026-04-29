@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RabbitRpcServer serve should register consumer in state.consumerRegistrations 1`] = `
+exports[`RabbitRpcServer > serve > should register consumer in state.consumerRegistrations 1`] = `
 {
   "consumerTag": "srv-ctag",
   "exchange": "test-exchange",

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`serializeMysqlMigration should escape backslashes in SQL 1`] = `
+exports[`serializeMysqlMigration > should escape backslashes in SQL 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class CheckPath implements MigrationInterface {
@@ -20,7 +20,7 @@ export class CheckPath implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should escape backticks in SQL within template literals 1`] = `
+exports[`serializeMysqlMigration > should escape backticks in SQL within template literals 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class CheckName implements MigrationInterface {
@@ -40,7 +40,7 @@ export class CheckName implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should escape dollar signs in SQL 1`] = `
+exports[`serializeMysqlMigration > should escape dollar signs in SQL 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class CheckPrice implements MigrationInterface {
@@ -60,7 +60,7 @@ export class CheckPrice implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should generate content with no custom name (generated class name) 1`] = `
+exports[`serializeMysqlMigration > should generate content with no custom name (generated class name) 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20260220090000 implements MigrationInterface {
@@ -80,7 +80,7 @@ export class Generated20260220090000 implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should generate full migration content for a single add_column 1`] = `
+exports[`serializeMysqlMigration > should generate full migration content for a single add_column 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class AddEmail implements MigrationInterface {
@@ -100,7 +100,7 @@ export class AddEmail implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should generate full migration content for drop_trigger operations 1`] = `
+exports[`serializeMysqlMigration > should generate full migration content for drop_trigger operations 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class DropTrigger implements MigrationInterface {
@@ -120,7 +120,7 @@ export class DropTrigger implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should generate full migration content for multiple operations 1`] = `
+exports[`serializeMysqlMigration > should generate full migration content for multiple operations 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class CreateOrders implements MigrationInterface {
@@ -149,7 +149,7 @@ export class CreateOrders implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should generate full migration content for trigger operations 1`] = `
+exports[`serializeMysqlMigration > should generate full migration content for trigger operations 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class AddAppendOnlyTriggers implements MigrationInterface {
@@ -172,7 +172,7 @@ export class AddAppendOnlyTriggers implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should handle empty plan with no operations 1`] = `
+exports[`serializeMysqlMigration > should handle empty plan with no operations 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Empty implements MigrationInterface {
@@ -189,7 +189,7 @@ export class Empty implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should include WARN comment for irreversible drop_column in down body 1`] = `
+exports[`serializeMysqlMigration > should include WARN comment for irreversible drop_column in down body 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class DropLegacy implements MigrationInterface {
@@ -209,7 +209,7 @@ export class DropLegacy implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should include WARN comment for irreversible drop_constraint in down body 1`] = `
+exports[`serializeMysqlMigration > should include WARN comment for irreversible drop_constraint in down body 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class DropCheck implements MigrationInterface {
@@ -229,11 +229,11 @@ export class DropCheck implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should produce correct filename with custom name 1`] = `"20260220090000-add-email.ts"`;
+exports[`serializeMysqlMigration > should produce correct filename with custom name 1`] = `"20260220090000-add-email.ts"`;
 
-exports[`serializeMysqlMigration should produce correct filename with generated name 1`] = `"20260220090000-generated.ts"`;
+exports[`serializeMysqlMigration > should produce correct filename with generated name 1`] = `"20260220090000-generated.ts"`;
 
-exports[`serializeMysqlMigration should reverse down entries for correct undo ordering 1`] = `
+exports[`serializeMysqlMigration > should reverse down entries for correct undo ordering 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Ordered implements MigrationInterface {
@@ -256,13 +256,13 @@ export class Ordered implements MigrationInterface {
 "
 `;
 
-exports[`serializeMysqlMigration should sanitize special characters in name for filename 1`] = `"20260220090000-my-cool-migration.ts"`;
+exports[`serializeMysqlMigration > should sanitize special characters in name for filename 1`] = `"20260220090000-my-cool-migration.ts"`;
 
-exports[`serializeMysqlMigration should set stable id and ts 1`] = `"00000000-0000-0000-0000-000000000001"`;
+exports[`serializeMysqlMigration > should set stable id and ts 1`] = `"00000000-0000-0000-0000-000000000001"`;
 
-exports[`serializeMysqlMigration should set stable id and ts 2`] = `"2026-02-20T09:00:00.000Z"`;
+exports[`serializeMysqlMigration > should set stable id and ts 2`] = `"2026-02-20T09:00:00.000Z"`;
 
-exports[`serializeMysqlMigration should use modify_column with snapshot-based down sql 1`] = `
+exports[`serializeMysqlMigration > should use modify_column with snapshot-based down sql 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class ModifyEmail implements MigrationInterface {

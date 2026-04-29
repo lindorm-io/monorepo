@@ -1,7 +1,8 @@
-import { ProteusError } from "../../../../errors";
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { PostgresDeleteQueryBuilder } from "./PostgresDeleteQueryBuilder";
+import { ProteusError } from "../../../../errors/index.js";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { PostgresDeleteQueryBuilder } from "./PostgresDeleteQueryBuilder.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const metadata = {
   entity: { name: "users", namespace: null },
@@ -23,11 +24,11 @@ const metadataWithoutDeleteDate = {
   primaryKeys: ["id"],
 } as unknown as EntityMetadata;
 
-const mockClient = { query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }) };
+const mockClient = { query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }) };
 
 describe("PostgresDeleteQueryBuilder", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should throw when execute is called without where", async () => {

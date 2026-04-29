@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createSessionRefreshHandler updates session, tokens, and auth state on successful lookup 1`] = `
+exports[`createSessionRefreshHandler > updates session, tokens, and auth state on successful lookup 1`] = `
 {
   "header": {
     "baseFormat": "JWT",
@@ -13,4 +13,4 @@ exports[`createSessionRefreshHandler updates session, tokens, and auth state on 
 }
 `;
 
-exports[`createSessionRefreshHandler updates session, tokens, and auth state on successful lookup 2`] = `2026-04-12T12:00:00.000Z`;
+exports[`createSessionRefreshHandler > updates session, tokens, and auth state on successful lookup 2`] = `2026-04-12T12:00:00.000Z`;

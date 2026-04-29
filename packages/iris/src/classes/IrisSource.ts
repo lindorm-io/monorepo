@@ -1,8 +1,9 @@
+import { isString } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { IrisNotSupportedError } from "../errors/IrisNotSupportedError";
-import { IrisSourceError } from "../errors/IrisSourceError";
-import type { IIrisDriver } from "../interfaces/IrisDriver";
+import { IrisNotSupportedError } from "../errors/IrisNotSupportedError.js";
+import { IrisSourceError } from "../errors/IrisSourceError.js";
+import type { IIrisDriver } from "../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -13,23 +14,25 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../interfaces";
+} from "../interfaces/index.js";
 import type {
   IrisConnectionState,
   IrisDriverType,
   IrisEvents,
+  IrisHookMeta,
   IrisSourceOptions,
   MessageScannerInput,
   SessionOptions,
-} from "../types";
-import type { DeadLetterManager } from "../internal/dead-letter/DeadLetterManager";
-import type { DelayManager } from "../internal/delay/DelayManager";
-import { MessageScanner } from "../internal/message/classes/MessageScanner";
-import { isAbstractMessage } from "../internal/message/metadata/abstract-message";
-import { clearMetadataCache } from "../internal/message/metadata/registry";
+} from "../types/index.js";
+import { createDefaultIrisHookMeta } from "../types/iris-hook-meta.js";
+import type { DeadLetterManager } from "../internal/dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../internal/delay/DelayManager.js";
+import { MessageScanner } from "../internal/message/classes/MessageScanner.js";
+import { isAbstractMessage } from "../internal/message/metadata/abstract-message.js";
+import { clearMetadataCache } from "../internal/message/metadata/registry.js";
 import type { IAmphora } from "@lindorm/amphora";
-import { validateEncryptedMessages } from "../internal/utils/validate-encrypted-messages";
-import { IrisSession } from "./IrisSession";
+import { validateEncryptedMessages } from "../internal/utils/validate-encrypted-messages.js";
+import { IrisSession } from "./IrisSession.js";
 
 export class IrisSource implements IIrisSource {
   private _driver: IIrisDriver | undefined;
@@ -38,8 +41,9 @@ export class IrisSource implements IIrisSource {
   private _delayManager: DelayManager | undefined;
   private _deadLetterManager: DeadLetterManager | undefined;
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly meta: IrisHookMeta;
   private readonly _messages: Array<Constructor<IMessage>>;
+  private readonly _pendingMessagePaths: Array<MessageScannerInput[number]>;
   private readonly _driverType: IrisDriverType;
   private _subscribersRef: { current: Array<IMessageSubscriber> };
   private _connectingPromise: Promise<void> | null = null;
@@ -51,8 +55,13 @@ export class IrisSource implements IIrisSource {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["IrisSource"]);
-    this.context = options.context;
-    this._messages = options.messages ? MessageScanner.scan(options.messages) : [];
+    this.meta = options.meta ?? createDefaultIrisHookMeta();
+    // Pre-loaded classes go straight into _messages; string paths are deferred
+    // to setup() since scanner.import() is async.
+    this._messages = (options.messages ?? []).filter(
+      (a): a is Constructor<IMessage> => !isString(a) && (a as any)?.prototype != null,
+    );
+    this._pendingMessagePaths = (options.messages ?? []).filter((a) => isString(a));
     this._driverType = options.driver;
     this._subscribersRef = { current: [] };
 
@@ -99,11 +108,11 @@ export class IrisSource implements IIrisSource {
     return this._messages;
   }
 
-  public addMessages(input: MessageScannerInput): void {
+  public async addMessages(input: MessageScannerInput): Promise<void> {
     if (this.isSetUp) {
       throw new IrisSourceError("Cannot add messages after setup() has been called");
     }
-    const scanned = MessageScanner.scan(input);
+    const scanned = await MessageScanner.scan(input);
     for (const msg of scanned) {
       if (!this._messages.includes(msg)) {
         this._messages.push(msg);
@@ -134,7 +143,7 @@ export class IrisSource implements IIrisSource {
 
     return new IrisSession({
       logger: options?.logger?.child(["IrisSource"]) ?? this.logger,
-      context: options?.context ?? this.context,
+      meta: options?.meta ?? this.meta,
       driver: clonedDriver!,
       driverType: this._driverType,
       messages: [...this._messages],
@@ -252,13 +261,13 @@ export class IrisSource implements IIrisSource {
 
   private async _createManagers(): Promise<void> {
     const { createDelayStore } =
-      await import("../internal/delay/utils/create-delay-store");
+      await import("../internal/delay/utils/create-delay-store.js");
     const { createDeadLetterStore } =
-      await import("../internal/dead-letter/utils/create-dead-letter-store");
+      await import("../internal/dead-letter/utils/create-dead-letter-store.js");
     const { DelayManager: DelayManagerClass } =
-      await import("../internal/delay/DelayManager");
+      await import("../internal/delay/DelayManager.js");
     const { DeadLetterManager: DeadLetterManagerClass } =
-      await import("../internal/dead-letter/DeadLetterManager");
+      await import("../internal/dead-letter/DeadLetterManager.js");
 
     const persistence = this._options.persistence;
 
@@ -294,10 +303,10 @@ export class IrisSource implements IIrisSource {
     switch (this._options.driver) {
       case "memory": {
         const { MemoryDriver } =
-          await import("../internal/drivers/memory/classes/MemoryDriver");
+          await import("../internal/drivers/memory/classes/MemoryDriver.js");
         const driver = new MemoryDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           delayManager: this._delayManager,
@@ -310,11 +319,11 @@ export class IrisSource implements IIrisSource {
 
       case "rabbit": {
         const { RabbitDriver } =
-          await import("../internal/drivers/rabbit/classes/RabbitDriver");
+          await import("../internal/drivers/rabbit/classes/RabbitDriver.js");
         const rabbitOpts = this._options;
         const driver = new RabbitDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           url: rabbitOpts.url,
@@ -329,11 +338,11 @@ export class IrisSource implements IIrisSource {
 
       case "kafka": {
         const { KafkaDriver } =
-          await import("../internal/drivers/kafka/classes/KafkaDriver");
+          await import("../internal/drivers/kafka/classes/KafkaDriver.js");
         const kafkaOpts = this._options;
         const driver = new KafkaDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           brokers: kafkaOpts.brokers,
@@ -352,11 +361,11 @@ export class IrisSource implements IIrisSource {
 
       case "nats": {
         const { NatsDriver } =
-          await import("../internal/drivers/nats/classes/NatsDriver");
+          await import("../internal/drivers/nats/classes/NatsDriver.js");
         const natsOpts = this._options;
         const driver = new NatsDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           servers: natsOpts.servers,
@@ -373,11 +382,11 @@ export class IrisSource implements IIrisSource {
 
       case "redis": {
         const { RedisDriver } =
-          await import("../internal/drivers/redis/classes/RedisDriver");
+          await import("../internal/drivers/redis/classes/RedisDriver.js");
         const redisOpts = this._options;
         const driver = new RedisDriver({
           logger: this.logger,
-          context: this.context,
+          meta: this.meta,
           amphora: this._amphora,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           url: redisOpts.url,
@@ -463,6 +472,16 @@ export class IrisSource implements IIrisSource {
 
   private async _doSetup(): Promise<void> {
     clearMetadataCache();
+
+    if (this._pendingMessagePaths.length) {
+      const scanned = await MessageScanner.scan(this._pendingMessagePaths);
+      for (const msg of scanned) {
+        if (!this._messages.includes(msg)) {
+          this._messages.push(msg);
+        }
+      }
+      this._pendingMessagePaths.length = 0;
+    }
 
     const concreteMessages = this._messages.filter(
       (target) => !isAbstractMessage(target),

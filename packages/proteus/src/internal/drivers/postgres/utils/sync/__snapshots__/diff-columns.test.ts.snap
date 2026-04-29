@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`diffColumns should add new column 1`] = `
+exports[`diffColumns > should add new column 1`] = `
 [
   {
     "autocommit": false,
@@ -14,7 +14,7 @@ exports[`diffColumns should add new column 1`] = `
 ]
 `;
 
-exports[`diffColumns should allow VECTOR NOT NULL column when explicit default is provided 1`] = `
+exports[`diffColumns > should allow VECTOR NOT NULL column when explicit default is provided 1`] = `
 [
   {
     "autocommit": false,
@@ -28,7 +28,7 @@ exports[`diffColumns should allow VECTOR NOT NULL column when explicit default i
 ]
 `;
 
-exports[`diffColumns should emit DROP DEFAULT after drop_readd for NOT NULL column with no explicit default 1`] = `
+exports[`diffColumns > should emit DROP DEFAULT after drop_readd for NOT NULL column with no explicit default 1`] = `
 [
   {
     "autocommit": false,
@@ -60,13 +60,13 @@ exports[`diffColumns should emit DROP DEFAULT after drop_readd for NOT NULL colu
 ]
 `;
 
-exports[`diffColumns should include COLLATE clause in SQL for collation-only change 1`] = `"ALTER TABLE "public"."test_table" ALTER COLUMN "title" TYPE TEXT COLLATE "en-US-x-icu";"`;
+exports[`diffColumns > should include COLLATE clause in SQL for collation-only change 1`] = `"ALTER TABLE "public"."test_table" ALTER COLUMN "title" TYPE TEXT COLLATE "en-US-x-icu";"`;
 
-exports[`diffColumns should include COLLATE clause in type change ALTER when desired has collation 1`] = `"ALTER TABLE "public"."test_table" ALTER COLUMN "title" TYPE VARCHAR(255) COLLATE "en-US-x-icu" USING "title"::varchar(255);"`;
+exports[`diffColumns > should include COLLATE clause in type change ALTER when desired has collation 1`] = `"ALTER TABLE "public"."test_table" ALTER COLUMN "title" TYPE VARCHAR(255) COLLATE "en-US-x-icu" USING "title"::varchar(255);"`;
 
-exports[`diffColumns should include COLLATE in drop_readd re-add SQL when desired has collation 1`] = `"ALTER TABLE "public"."test_table" ADD COLUMN "ref" UUID COLLATE "en-US-x-icu";"`;
+exports[`diffColumns > should include COLLATE in drop_readd re-add SQL when desired has collation 1`] = `"ALTER TABLE "public"."test_table" ADD COLUMN "ref" UUID COLLATE "en-US-x-icu";"`;
 
-exports[`diffColumns should include NOT NULL in re-add SQL for computed column with nullable:false 1`] = `
+exports[`diffColumns > should include NOT NULL in re-add SQL for computed column with nullable:false 1`] = `
 [
   {
     "autocommit": false,
@@ -89,7 +89,7 @@ exports[`diffColumns should include NOT NULL in re-add SQL for computed column w
 ]
 `;
 
-exports[`diffColumns should not corrupt column names containing 'col' substring in USING cast 1`] = `
+exports[`diffColumns > should not corrupt column names containing 'col' substring in USING cast 1`] = `
 [
   {
     "autocommit": false,
@@ -103,7 +103,7 @@ exports[`diffColumns should not corrupt column names containing 'col' substring 
 ]
 `;
 
-exports[`diffColumns should not emit alter_column_default for default change when column is replaced via drop_readd 1`] = `
+exports[`diffColumns > should not emit alter_column_default for default change when column is replaced via drop_readd 1`] = `
 [
   {
     "autocommit": false,
@@ -126,7 +126,7 @@ exports[`diffColumns should not emit alter_column_default for default change whe
 ]
 `;
 
-exports[`diffColumns should not emit backfill_column or alter_column_nullable when drop_readd also changes nullable 1`] = `
+exports[`diffColumns > should not emit backfill_column or alter_column_nullable when drop_readd also changes nullable 1`] = `
 [
   {
     "autocommit": false,
@@ -158,7 +158,7 @@ exports[`diffColumns should not emit backfill_column or alter_column_nullable wh
 ]
 `;
 
-exports[`diffColumns should not emit extra DROP DEFAULT after drop_readd when column has explicit default 1`] = `
+exports[`diffColumns > should not emit extra DROP DEFAULT after drop_readd when column has explicit default 1`] = `
 [
   {
     "autocommit": false,
@@ -181,7 +181,7 @@ exports[`diffColumns should not emit extra DROP DEFAULT after drop_readd when co
 ]
 `;
 
-exports[`diffColumns should omit NOT NULL from re-add SQL for computed column with nullable:true 1`] = `
+exports[`diffColumns > should omit NOT NULL from re-add SQL for computed column with nullable:true 1`] = `
 [
   {
     "autocommit": false,

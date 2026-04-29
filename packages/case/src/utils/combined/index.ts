@@ -1,2 +1,2 @@
-export * from "./change-case";
-export * from "./change-keys";
+export * from "./change-case.js";
+export * from "./change-keys.js";

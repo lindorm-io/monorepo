@@ -1,4 +1,4 @@
-import { ChangeCase } from "../../types";
+import type { ChangeCase } from "../../types/index.js";
 import {
   camelCase,
   capitalCase,
@@ -11,7 +11,7 @@ import {
   pathCase,
   sentenceCase,
   snakeCase,
-} from "../specific";
+} from "../specific/index.js";
 
 export const changeCase = (input: string, mode: ChangeCase = "none"): string => {
   switch (mode) {

@@ -1,7 +1,7 @@
-import { KryptosAlgorithm } from "./algorithm";
-import { KryptosCurve } from "./curve";
-import { KryptosEncryption } from "./encryption";
-import { KryptosType, KryptosUse } from "./types";
+import type { KryptosAlgorithm } from "./algorithm.js";
+import type { KryptosCurve } from "./curve.js";
+import type { KryptosEncryption } from "./encryption.js";
+import type { KryptosType, KryptosUse } from "./types.js";
 
 export type KryptosString = {
   id: string;

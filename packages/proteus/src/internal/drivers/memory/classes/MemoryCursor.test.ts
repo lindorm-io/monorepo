@@ -1,4 +1,5 @@
-import { MemoryCursor } from "./MemoryCursor";
+import { MemoryCursor } from "./MemoryCursor.js";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -1,16 +1,16 @@
-import { KryptosError } from "../../../errors";
-import { KryptosString } from "../../../types";
-import { ExportOptions } from "../../types/export-options";
-import { exportAkpToPem } from "../akp/export-pem";
-import { isAkpDer } from "../akp/is";
-import { exportEcToPem } from "../ec/export-pem";
-import { isEcDer } from "../ec/is";
-import { exportOctToPem } from "../oct/export-pem";
-import { isOctDer } from "../oct/is";
-import { exportOkpToPem } from "../okp/export-pem";
-import { isOkpDer } from "../okp/is";
-import { exportRsaToPem } from "../rsa/export-pem";
-import { isRsaDer } from "../rsa/is";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosString } from "../../../types/index.js";
+import type { ExportOptions } from "../../types/export-options.js";
+import { exportAkpToPem } from "../akp/export-pem.js";
+import { isAkpDer } from "../akp/is.js";
+import { exportEcToPem } from "../ec/export-pem.js";
+import { isEcDer } from "../ec/is.js";
+import { exportOctToPem } from "../oct/export-pem.js";
+import { isOctDer } from "../oct/is.js";
+import { exportOkpToPem } from "../okp/export-pem.js";
+import { isOkpDer } from "../okp/is.js";
+import { exportRsaToPem } from "../rsa/export-pem.js";
+import { isRsaDer } from "../rsa/is.js";
 
 export const exportToPem = (options: ExportOptions): KryptosString => {
   switch (options.type) {

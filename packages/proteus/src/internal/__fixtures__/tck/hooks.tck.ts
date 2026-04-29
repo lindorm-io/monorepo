@@ -1,15 +1,16 @@
 // TCK: Hooks Suite
-// Tests hook invocation (not ordering). Uses jest.fn() for verification.
+// Tests hook invocation (not ordering). Uses vi.fn() for verification.
 // Intent-based hooks: insert→BeforeInsert/AfterInsert, update→BeforeUpdate/AfterUpdate,
 // save→BeforeSave/AfterSave (not Insert/Update hooks).
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const hooksSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,
-  hookCallback: jest.Mock,
+  hookCallback: Mock,
 ) => {
   describe("Hooks", () => {
     const { TckHooked } = entities;
@@ -95,13 +96,13 @@ export const hooksSuite = (
       expect(hookCallback.mock.calls.length).toBeGreaterThanOrEqual(2);
     });
 
-    test("hooks receive context and entity as arguments", async () => {
+    test("hooks receive entity and meta as arguments", async () => {
       const repo = getHandle().repository(TckHooked);
       await repo.insert({ name: "HookArg" });
 
-      // Hooks now receive (context, entity) — entity is at index 1
+      // Hooks receive (entity, meta) — entity is at index 0
       const hasEntityArg = hookCallback.mock.calls.some(
-        (call: any[]) => call[1] && call[1].name === "HookArg",
+        (call: any[]) => call[0] && call[0].name === "HookArg",
       );
       expect(hasEntityArg).toBe(true);
     });

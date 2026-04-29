@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileDelete should compile hard delete with criteria 1`] = `
+exports[`compileDelete > should compile hard delete with criteria 1`] = `
 {
   "params": [
     "abc-123",
@@ -9,14 +9,14 @@ exports[`compileDelete should compile hard delete with criteria 1`] = `
 }
 `;
 
-exports[`compileDeleteExpired should compile delete expired with NOW() 1`] = `
+exports[`compileDeleteExpired > should compile delete expired with NOW() 1`] = `
 {
   "params": [],
   "text": "DELETE FROM "app"."users" AS "t0" WHERE "t0"."expires_at" <= NOW()",
 }
 `;
 
-exports[`compileRestore should compile restore setting DeleteDate to NULL 1`] = `
+exports[`compileRestore > should compile restore setting DeleteDate to NULL 1`] = `
 {
   "params": [
     "abc-123",
@@ -25,7 +25,7 @@ exports[`compileRestore should compile restore setting DeleteDate to NULL 1`] = 
 }
 `;
 
-exports[`compileSoftDelete should compile soft delete with NOW() 1`] = `
+exports[`compileSoftDelete > should compile soft delete with NOW() 1`] = `
 {
   "params": [
     "abc-123",

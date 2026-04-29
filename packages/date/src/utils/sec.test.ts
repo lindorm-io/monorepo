@@ -1,4 +1,5 @@
-import { sec } from "./sec";
+import { sec } from "./sec.js";
+import { describe, expect, test } from "vitest";
 
 describe("sec", () => {
   test("should resolve seconds", () => {

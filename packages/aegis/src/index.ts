@@ -1,8 +1,7 @@
-export * from "./classes";
-export * from "./errors";
-export * from "./guards";
-export * from "./interfaces";
-export * from "./mocks";
-export * from "./types";
+export * from "./classes/index.js";
+export * from "./errors/index.js";
+export * from "./guards/index.js";
+export * from "./interfaces/index.js";
+export * from "./types/index.js";
 
-export type { TokenType } from "./constants/token-type";
+export type { TokenType } from "./constants/token-type.js";

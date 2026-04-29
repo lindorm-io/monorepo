@@ -1,6 +1,7 @@
-import { KryptosEncAlgorithm, KryptosKit } from "@lindorm/kryptos";
-import { decryptAes } from "./encryption";
-import { prepareAesEncryption } from "./prepare-encryption";
+import { type KryptosEncAlgorithm, KryptosKit } from "@lindorm/kryptos";
+import { decryptAes } from "./encryption.js";
+import { prepareAesEncryption } from "./prepare-encryption.js";
+import { describe, expect, test } from "vitest";
 
 describe("prepareAesEncryption", () => {
   describe("dir algorithm", () => {

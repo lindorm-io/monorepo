@@ -1,8 +1,9 @@
+import { test, it, expect, beforeEach } from "vitest";
 // TCK: Relations ManyToMany Suite
 // Tests ManyToMany: TckLeft (has join table) <-> TckRight.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const relationsManyToManySuite = (
   getHandle: () => TckDriverHandle,

@@ -3,53 +3,54 @@ import type {
   IEntity,
   IProteusCursor,
   IProteusQueryBuilder,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   ClearOptions,
   CursorOptions,
   FindOptions,
   UpsertOptions,
-} from "../../../../types";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { MetaRelation, QueryScope } from "../../../entity/types/metadata";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { AggregateFunction } from "../../../types/aggregate";
-import type { MemoryStore } from "../types/memory-store";
-import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase";
-import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate";
+} from "../../../../types/index.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
+import type { MetaRelation, QueryScope } from "../../../entity/types/metadata.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { AggregateFunction } from "../../../types/aggregate.js";
+import type { MemoryStore } from "../types/memory-store.js";
+import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase.js";
+import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
   guardVersionFields,
   validateRelationNames,
-} from "../../../utils/repository/repository-guards";
-import { RelationPersister } from "../../../utils/repository/RelationPersister";
-import { createMemoryJoinTableOps } from "../utils/memory-join-table-ops";
-import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations";
-import { buildRelationFilter } from "../../../utils/repository/build-relation-filter";
-import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError";
-import { MemoryCursor } from "./MemoryCursor";
-import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store";
-import { diffColumns } from "../../../entity/utils/diff-columns";
-import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
+} from "../../../utils/repository/repository-guards.js";
+import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
+import { createMemoryJoinTableOps } from "../utils/memory-join-table-ops.js";
+import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations.js";
+import { buildRelationFilter } from "../../../utils/repository/build-relation-filter.js";
+import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
+import { MemoryCursor } from "./MemoryCursor.js";
+import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store.js";
+import { diffColumns } from "../../../entity/utils/diff-columns.js";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
 import {
   computeAggregateFromValues,
   extractNumericValues,
-} from "../../../utils/query/compute-in-memory-aggregate";
-import { getEntityName } from "../../../entity/utils/get-entity-name";
-import { getJoinName } from "../../../entity/utils/get-join-name";
+} from "../../../utils/query/compute-in-memory-aggregate.js";
+import { getEntityName } from "../../../entity/utils/get-entity-name.js";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
 import {
   saveMemoryEmbeddedListRows,
   loadMemoryEmbeddedListRows,
   deleteMemoryEmbeddedListRows,
-} from "../utils/memory-embedded-list-ops";
-import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-embedded-lists";
-import type { MetaEmbeddedList } from "../../../entity/types/metadata";
+} from "../utils/memory-embedded-list-ops.js";
+import { installLazyEmbeddedLists } from "../../../entity/utils/install-lazy-embedded-lists.js";
+import type { MetaEmbeddedList } from "../../../entity/types/metadata.js";
 import type { ILogger } from "@lindorm/logger";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { PaginateOptions } from "../../../../types/paginate-options";
-import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order";
-import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
+import type { PaginateOptions } from "../../../../types/paginate-options.js";
+import type { KeysetOrderEntry } from "../../../utils/pagination/build-keyset-order.js";
+import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory.js";
 
 export type WithImplicitTransaction<E extends IEntity> = <T>(
   fn: (ctx: {
@@ -66,7 +67,7 @@ export type MemoryRepositoryOptions<E extends IEntity> = {
   store: MemoryStore;
   namespace: string | null;
   logger: ILogger;
-  context?: unknown;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;
@@ -91,7 +92,7 @@ export class MemoryRepository<
       logger: options.logger,
       driver: "memory",
       driverLabel: "MemoryRepository",
-      context: options.context,
+      meta: options.meta,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
       emitEntity: options.emitEntity,

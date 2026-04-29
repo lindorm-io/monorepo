@@ -9,11 +9,13 @@ export default defineConfig(
   {
     ignores: [
       ".scripts/**",
+      "scripts/**",
       "**/dist/**",
       "**/node_modules/**",
       "**/__fixtures__/**",
       "**/__mocks__/**",
       "**/__snapshots__/**",
+      "packages/create-pylon/templates/**",
       "**/*.d.ts",
       "**/*.fixture.*",
       "**/*.integration.*",
@@ -61,7 +63,7 @@ export default defineConfig(
     },
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
-      "@typescript-eslint/explicit-function-return-type": "warn",
+      "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-member-accessibility": "error",
       "@typescript-eslint/no-base-to-string": "off",
       "@typescript-eslint/no-explicit-any": "off",

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`serializeSqliteMigration SQL escaping should escape backslashes in DDL 1`] = `
+exports[`serializeSqliteMigration > SQL escaping > should escape backslashes in DDL 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -20,7 +20,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration SQL escaping should escape backticks in DDL 1`] = `
+exports[`serializeSqliteMigration > SQL escaping > should escape backticks in DDL 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -40,7 +40,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration SQL escaping should escape dollar signs in DDL 1`] = `
+exports[`serializeSqliteMigration > SQL escaping > should escape dollar signs in DDL 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -60,7 +60,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration add_column operation should generate up body for add_column with irreversible down warning 1`] = `
+exports[`serializeSqliteMigration > add_column operation > should generate up body for add_column with irreversible down warning 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -80,7 +80,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration create_index operation should emit warning when index name cannot be extracted 1`] = `
+exports[`serializeSqliteMigration > create_index operation > should emit warning when index name cannot be extracted 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -100,7 +100,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration create_index operation should generate up and down bodies for create_index 1`] = `
+exports[`serializeSqliteMigration > create_index operation > should generate up and down bodies for create_index 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -120,7 +120,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration create_index operation should generate up and down bodies for unique index 1`] = `
+exports[`serializeSqliteMigration > create_index operation > should generate up and down bodies for unique index 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -140,7 +140,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration create_table operation should generate up and down bodies for create_table 1`] = `
+exports[`serializeSqliteMigration > create_table operation > should generate up and down bodies for create_table 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -160,7 +160,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration create_table operation should handle multiple create_table operations 1`] = `
+exports[`serializeSqliteMigration > create_table operation > should handle multiple create_table operations 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -184,7 +184,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration drop_index operation should generate up body for drop_index with irreversible down warning 1`] = `
+exports[`serializeSqliteMigration > drop_index operation > should generate up body for drop_index with irreversible down warning 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -204,7 +204,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration drop_table operation should generate up body for drop_table with irreversible down warning 1`] = `
+exports[`serializeSqliteMigration > drop_table operation > should generate up body for drop_table with irreversible down warning 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -224,7 +224,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration empty plan should generate valid migration with empty up and down bodies 1`] = `
+exports[`serializeSqliteMigration > empty plan > should generate valid migration with empty up and down bodies 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -241,17 +241,17 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration metadata should produce deterministic filename, id, ts, and checksum 1`] = `"20250615103045-generated.ts"`;
+exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, ts, and checksum 1`] = `"20250615103045-generated.ts"`;
 
-exports[`serializeSqliteMigration metadata should produce deterministic filename, id, ts, and checksum 2`] = `"00000000-0000-0000-0000-000000000000"`;
+exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, ts, and checksum 2`] = `"00000000-0000-0000-0000-000000000000"`;
 
-exports[`serializeSqliteMigration metadata should produce deterministic filename, id, ts, and checksum 3`] = `"2025-06-15T10:30:45.000Z"`;
+exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, ts, and checksum 3`] = `"2025-06-15T10:30:45.000Z"`;
 
-exports[`serializeSqliteMigration metadata should produce deterministic filename, id, ts, and checksum 4`] = `"mocked-checksum-sha256"`;
+exports[`serializeSqliteMigration > metadata > should produce deterministic filename, id, ts, and checksum 4`] = `"mocked-checksum-sha256"`;
 
-exports[`serializeSqliteMigration metadata should sanitize custom name 1`] = `"20250615103045-add-user-table.ts"`;
+exports[`serializeSqliteMigration > metadata > should sanitize custom name 1`] = `"20250615103045-add-user-table.ts"`;
 
-exports[`serializeSqliteMigration metadata should sanitize custom name 2`] = `
+exports[`serializeSqliteMigration > metadata > should sanitize custom name 2`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class AddUserTable implements MigrationInterface {
@@ -268,9 +268,9 @@ export class AddUserTable implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration metadata should use 'generated' slug when no name is provided 1`] = `"20250615103045-generated.ts"`;
+exports[`serializeSqliteMigration > metadata > should use 'generated' slug when no name is provided 1`] = `"20250615103045-generated.ts"`;
 
-exports[`serializeSqliteMigration metadata should use 'generated' slug when no name is provided 2`] = `
+exports[`serializeSqliteMigration > metadata > should use 'generated' slug when no name is provided 2`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -287,9 +287,9 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration metadata should use custom name for filename and class name 1`] = `"20250615103045-add-user-table.ts"`;
+exports[`serializeSqliteMigration > metadata > should use custom name for filename and class name 1`] = `"20250615103045-add-user-table.ts"`;
 
-exports[`serializeSqliteMigration metadata should use custom name for filename and class name 2`] = `
+exports[`serializeSqliteMigration > metadata > should use custom name for filename and class name 2`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class AddUserTable implements MigrationInterface {
@@ -306,7 +306,7 @@ export class AddUserTable implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration mixed operations should handle a plan with multiple operation types 1`] = `
+exports[`serializeSqliteMigration > mixed operations > should handle a plan with multiple operation types 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class BigMigration implements MigrationInterface {
@@ -351,7 +351,7 @@ export class BigMigration implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration mixed operations should reverse operations in down body 1`] = `
+exports[`serializeSqliteMigration > mixed operations > should reverse operations in down body 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -375,7 +375,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration recreate_table operation should fallback to _new_ prefix when temp table name cannot be extracted 1`] = `
+exports[`serializeSqliteMigration > recreate_table operation > should fallback to _new_ prefix when temp table name cannot be extracted 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -403,7 +403,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration recreate_table operation should generate full recreate_table migration with transaction 1`] = `
+exports[`serializeSqliteMigration > recreate_table operation > should generate full recreate_table migration with transaction 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -432,7 +432,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration recreate_table operation should handle recreate_table with multiple indexes 1`] = `
+exports[`serializeSqliteMigration > recreate_table operation > should handle recreate_table with multiple indexes 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -462,7 +462,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration recreate_table operation should handle recreate_table with no indexes 1`] = `
+exports[`serializeSqliteMigration > recreate_table operation > should handle recreate_table with no indexes 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {
@@ -490,7 +490,7 @@ export class Generated20250615103045 implements MigrationInterface {
 "
 `;
 
-exports[`serializeSqliteMigration whitespace normalization should collapse multiline DDL into single-line SQL in up body 1`] = `
+exports[`serializeSqliteMigration > whitespace normalization > should collapse multiline DDL into single-line SQL in up body 1`] = `
 "import type { MigrationInterface, SqlMigrationRunner } from "@lindorm/proteus";
 
 export class Generated20250615103045 implements MigrationInterface {

@@ -1,14 +1,14 @@
 import type { Db } from "mongodb";
-import type { MigrationInterfaceShape } from "../../../../utils/migration/resolve-pending";
-import { MongoMigrationError } from "../../errors/MongoMigrationError";
+import type { MigrationInterfaceShape } from "../../../../utils/migration/resolve-pending.js";
+import { MongoMigrationError } from "../../errors/MongoMigrationError.js";
 import {
   ensureMigrationCollection,
   insertMigrationRecord,
   markMigrationFailed,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "./migration-tracking";
-import { createMongoMigrationRunner } from "./mongo-migration-runner";
+} from "./migration-tracking.js";
+import { createMongoMigrationRunner } from "./mongo-migration-runner.js";
 
 export type ExecuteMigrationResult = {
   name: string;

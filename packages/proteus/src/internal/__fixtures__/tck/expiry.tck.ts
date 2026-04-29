@@ -1,8 +1,9 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Expiry Suite
 // Tests TTL / deleteExpired behavior.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const expirySuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   const { TckExpirable } = entities;

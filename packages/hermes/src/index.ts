@@ -1,22 +1,22 @@
 // Main class
-export { Hermes } from "./classes/Hermes";
-export { HermesSession } from "./classes/HermesSession";
-export type { HermesSessionOptions } from "./classes/HermesSession";
+export { Hermes } from "./classes/Hermes.js";
+export { HermesSession } from "./classes/HermesSession.js";
+export type { HermesSessionOptions } from "./classes/HermesSession.js";
 
 // Base entity
-export { HermesViewEntity } from "./entities/HermesViewEntity";
+export { HermesViewEntity } from "./entities/HermesViewEntity.js";
 
 // Interfaces
-export type { IHermes, IHermesProvider, IHermesSession } from "./interfaces";
+export type { IHermes, IHermesProvider, IHermesSession } from "./interfaces/index.js";
 
 // Decorators — DTO
-export { Command, Event, Query, Timeout } from "./decorators";
+export { Command, Event, Query, Timeout } from "./decorators/index.js";
 
 // Decorators — Domain
-export { Aggregate, Saga, View } from "./decorators";
+export { Aggregate, Saga, View } from "./decorators/index.js";
 
 // Decorators — Composable class
-export { Forgettable, Namespace } from "./decorators";
+export { Forgettable, Namespace } from "./decorators/index.js";
 
 // Decorators — Handler methods
 export {
@@ -32,10 +32,10 @@ export {
   ViewEventHandler,
   ViewIdHandler,
   ViewQueryHandler,
-} from "./decorators";
+} from "./decorators/index.js";
 
 // Decorators — Composable methods
-export { RequireCreated, RequireNotCreated, Validate } from "./decorators";
+export { RequireCreated, RequireNotCreated, Validate } from "./decorators/index.js";
 
 // Errors
 export {
@@ -57,9 +57,9 @@ export {
   ViewDestroyedError,
   ViewNotCreatedError,
   ViewNotUpdatedError,
-} from "./errors";
+} from "./errors/index.js";
 
-export type { DomainErrorOptions } from "./errors";
+export type { DomainErrorOptions } from "./errors/index.js";
 
 // Types
 export type {
@@ -86,4 +86,4 @@ export type {
   ViewEventCtx,
   ViewIdCtx,
   ViewQueryCtx,
-} from "./types";
+} from "./types/index.js";

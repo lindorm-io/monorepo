@@ -1,4 +1,5 @@
-import { duration } from "./duration";
+import { duration } from "./duration.js";
+import { describe, expect, test } from "vitest";
 
 describe("duration", () => {
   test("should resolve milliseconds", () => {

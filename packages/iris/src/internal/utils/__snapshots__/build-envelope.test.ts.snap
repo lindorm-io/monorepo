@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildEnvelope should build envelope with default values when no retry or priority 1`] = `
+exports[`buildEnvelope > should build envelope with default values when no retry or priority 1`] = `
 {
   "attempt": 0,
   "broadcast": false,
@@ -24,7 +24,7 @@ exports[`buildEnvelope should build envelope with default values when no retry o
 }
 `;
 
-exports[`buildEnvelope should build envelope with metadata overrides 1`] = `
+exports[`buildEnvelope > should build envelope with metadata overrides 1`] = `
 {
   "attempt": 0,
   "broadcast": true,
@@ -48,7 +48,7 @@ exports[`buildEnvelope should build envelope with metadata overrides 1`] = `
 }
 `;
 
-exports[`buildEnvelope should fall back to metadata values when overrides are omitted 1`] = `
+exports[`buildEnvelope > should fall back to metadata values when overrides are omitted 1`] = `
 {
   "attempt": 0,
   "broadcast": false,
@@ -72,7 +72,7 @@ exports[`buildEnvelope should fall back to metadata values when overrides are om
 }
 `;
 
-exports[`buildEnvelope should fall back to metadata values when overrides object is empty 1`] = `
+exports[`buildEnvelope > should fall back to metadata values when overrides object is empty 1`] = `
 {
   "attempt": 0,
   "broadcast": true,
@@ -96,7 +96,7 @@ exports[`buildEnvelope should fall back to metadata values when overrides object
 }
 `;
 
-exports[`buildEnvelope should use override expiry over metadata expiry 1`] = `
+exports[`buildEnvelope > should use override expiry over metadata expiry 1`] = `
 {
   "attempt": 0,
   "broadcast": false,
@@ -120,7 +120,7 @@ exports[`buildEnvelope should use override expiry over metadata expiry 1`] = `
 }
 `;
 
-exports[`buildEnvelope should use override priority over metadata priority 1`] = `
+exports[`buildEnvelope > should use override priority over metadata priority 1`] = `
 {
   "attempt": 0,
   "broadcast": false,

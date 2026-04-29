@@ -1,4 +1,5 @@
-import { Compressed } from "./Compressed";
+import { Compressed } from "./Compressed.js";
+import { describe, expect, it } from "vitest";
 
 describe("Compressed", () => {
   it("should stage compressed metadata with default gzip", () => {

@@ -1,7 +1,8 @@
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { MemoryTable } from "../types/memory-store";
-import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError";
-import { checkUniqueConstraints } from "./memory-unique-check";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { MemoryTable } from "../types/memory-store.js";
+import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
+import { checkUniqueConstraints } from "./memory-unique-check.js";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

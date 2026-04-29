@@ -1,4 +1,5 @@
-import { classifyMysqlError } from "./classify-breaker-error";
+import { classifyMysqlError } from "./classify-breaker-error.js";
+import { describe, expect, it } from "vitest";
 
 describe("classifyMysqlError", () => {
   describe("transient mysql errno", () => {

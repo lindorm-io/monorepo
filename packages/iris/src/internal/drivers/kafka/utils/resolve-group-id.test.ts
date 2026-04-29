@@ -1,4 +1,5 @@
-import { resolveGroupId } from "./resolve-group-id";
+import { resolveGroupId } from "./resolve-group-id.js";
+import { describe, expect, it } from "vitest";
 
 describe("resolveGroupId", () => {
   describe("subscribe", () => {

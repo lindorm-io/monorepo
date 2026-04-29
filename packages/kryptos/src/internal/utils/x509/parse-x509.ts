@@ -1,4 +1,4 @@
-import { KryptosError } from "../../../errors";
+import { KryptosError } from "../../../errors/index.js";
 
 const PEM_BLOCK_REGEX =
   /-----BEGIN CERTIFICATE-----([A-Za-z0-9+/=\s]+?)-----END CERTIFICATE-----/g;

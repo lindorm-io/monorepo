@@ -1,10 +1,11 @@
+import { test, it, expect, beforeEach } from "vitest";
 // TCK: Lazy Loading Suite
 // Tests lazy relation loading via custom thenables (LazyRelation / LazyCollection).
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import { isLazyRelation, LAZY_RELATION } from "../../entity/utils/lazy-relation";
-import { isLazyCollection, LAZY_COLLECTION } from "../../entity/utils/lazy-collection";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import { isLazyRelation, LAZY_RELATION } from "../../entity/utils/lazy-relation.js";
+import { isLazyCollection, LAZY_COLLECTION } from "../../entity/utils/lazy-collection.js";
 
 export const lazyLoadingSuite = (
   getHandle: () => TckDriverHandle,

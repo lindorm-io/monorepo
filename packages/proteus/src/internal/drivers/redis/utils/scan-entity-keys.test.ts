@@ -1,4 +1,5 @@
-import { scanEntityKeys } from "./scan-entity-keys";
+import { scanEntityKeys } from "./scan-entity-keys.js";
+import { describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Mock Redis Client ──────────────────────────────────────────────────────
 
@@ -7,7 +8,7 @@ type ScanResult = [cursor: string, keys: Array<string>];
 const createMockRedisClient = (scanResults: Array<ScanResult>) => {
   let callIndex = 0;
   return {
-    scan: jest.fn().mockImplementation(() => {
+    scan: vi.fn().mockImplementation(() => {
       const result = scanResults[callIndex];
       callIndex++;
       return Promise.resolve(result);

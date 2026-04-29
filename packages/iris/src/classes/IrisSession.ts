@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisDriver } from "../interfaces/IrisDriver";
+import type { IIrisDriver } from "../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -10,12 +10,12 @@ import type {
   IIrisStreamProcessor,
   IIrisWorkerQueue,
   IMessage,
-} from "../interfaces";
-import type { IrisDriverType } from "../types";
+} from "../interfaces/index.js";
+import type { IrisDriverType, IrisHookMeta } from "../types/index.js";
 
 export type IrisSessionOptions = {
   logger: ILogger;
-  context: unknown;
+  meta: IrisHookMeta;
   driver: IIrisDriver;
   driverType: IrisDriverType;
   messages: Array<Constructor<IMessage>>;
@@ -25,11 +25,19 @@ export class IrisSession implements IIrisSession {
   private readonly _driver: IIrisDriver;
   private readonly _driverType: IrisDriverType;
   private readonly _messages: Array<Constructor<IMessage>>;
+  private readonly _meta: IrisHookMeta;
 
   public constructor(options: IrisSessionOptions) {
     this._driver = options.driver;
     this._driverType = options.driverType;
     this._messages = options.messages;
+    this._meta = options.meta;
+  }
+
+  // --- Meta getter (IrisHookMeta threaded through session) ---
+
+  public get meta(): IrisHookMeta {
+    return this._meta;
   }
 
   // --- Data-access getters ---

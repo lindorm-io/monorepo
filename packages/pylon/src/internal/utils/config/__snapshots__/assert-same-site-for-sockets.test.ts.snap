@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`assertSameSiteForSockets should throw with descriptive error when SameSite is none 1`] = `
+exports[`assertSameSiteForSockets > should throw with descriptive error when SameSite is none 1`] = `
 {
   "code": "invalid_same_site_for_session",
   "data": {},

@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parseIntrospection should handle active false with minimal fields 1`] = `
+exports[`parseIntrospection > should handle active false with minimal fields 1`] = `
 {
   "active": false,
 }
 `;
 
-exports[`parseIntrospection should map Lindorm extension fields 1`] = `
+exports[`parseIntrospection > should map Lindorm extension fields 1`] = `
 {
   "active": true,
   "adjustedAccessLevel": 2,
@@ -53,7 +53,7 @@ exports[`parseIntrospection should map Lindorm extension fields 1`] = `
 }
 `;
 
-exports[`parseIntrospection should map full RFC 7662 response to AegisIntrospection 1`] = `
+exports[`parseIntrospection > should map full RFC 7662 response to AegisIntrospection 1`] = `
 {
   "active": true,
   "audience": [
@@ -77,7 +77,7 @@ exports[`parseIntrospection should map full RFC 7662 response to AegisIntrospect
 }
 `;
 
-exports[`parseIntrospection should split scope string into array 1`] = `
+exports[`parseIntrospection > should split scope string into array 1`] = `
 [
   "openid",
   "profile",
@@ -86,7 +86,7 @@ exports[`parseIntrospection should split scope string into array 1`] = `
 ]
 `;
 
-exports[`parseIntrospection should wrap single audience string in array 1`] = `
+exports[`parseIntrospection > should wrap single audience string in array 1`] = `
 [
   "https://single.example.com",
 ]

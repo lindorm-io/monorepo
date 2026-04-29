@@ -1,20 +1,20 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildPrimaryKeyPredicate composite primary key builds predicate from all PK fields 1`] = `
+exports[`buildPrimaryKeyPredicate > composite primary key > builds predicate from all PK fields 1`] = `
 {
   "tenantId": "tenant-1",
   "userId": "user-2",
 }
 `;
 
-exports[`buildPrimaryKeyPredicate composite primary key excludes non-PK fields from predicate 1`] = `
+exports[`buildPrimaryKeyPredicate > composite primary key > excludes non-PK fields from predicate 1`] = `
 {
   "tenantId": "tenant-1",
   "userId": "user-2",
 }
 `;
 
-exports[`buildPrimaryKeyPredicate single primary key builds predicate from entity PK field 1`] = `
+exports[`buildPrimaryKeyPredicate > single primary key > builds predicate from entity PK field 1`] = `
 {
   "id": "abc-123",
 }

@@ -7,8 +7,8 @@ import {
   gunzip,
   inflate,
 } from "node:zlib";
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
-import type { IrisCompressionAlgorithm } from "../../../types/compression";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
+import type { IrisCompressionAlgorithm } from "../../../types/compression.js";
 
 const gzipAsync = promisify(gzip);
 const gunzipAsync = promisify(gunzip);

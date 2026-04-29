@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`resolveInheritanceHierarchies single-table with two concrete subtypes MetaInheritance for root and children matches snapshot 1`] = `
+exports[`resolveInheritanceHierarchies > single-table with two concrete subtypes > MetaInheritance for root and children matches snapshot 1`] = `
 [
   {
     "childrenKeys": [

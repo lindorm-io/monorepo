@@ -1,7 +1,8 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { PredicateEntry, RawWhereEntry } from "../../../../types/query";
-import { compileHaving } from "./compile-having";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { PredicateEntry, RawWhereEntry } from "../../../../types/query.js";
+import { compileHaving } from "./compile-having.js";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   entity: {

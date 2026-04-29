@@ -1,8 +1,9 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Complex Predicates Suite
 // Tests $all, $overlap, $contained, $length, $has, and embedded criteria.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const complexPredicatesSuite = (
   getHandle: () => TckDriverHandle,

@@ -1,13 +1,14 @@
 import { Aegis } from "@lindorm/aegis";
 import { Conduit } from "@lindorm/conduit";
-import { createCommonContextInitialisationMiddleware } from "./common-context-initialisation-middleware";
+import { createCommonContextInitialisationMiddleware } from "./common-context-initialisation-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
-jest.mock("@lindorm/aegis");
-jest.mock("@lindorm/conduit");
+vi.mock("@lindorm/aegis");
+vi.mock("@lindorm/conduit");
 
-describe("createCommonContextInitialisationMiddleware", () => {
+describe("createCommonContextInitialisationMiddleware", async () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should return a middleware function", () => {
@@ -22,7 +23,7 @@ describe("createCommonContextInitialisationMiddleware", () => {
     const middleware = createCommonContextInitialisationMiddleware(amphora);
 
     const ctx: any = { logger: {} };
-    const next = jest.fn();
+    const next = vi.fn();
 
     await middleware(ctx, next);
 
@@ -33,9 +34,9 @@ describe("createCommonContextInitialisationMiddleware", () => {
     const amphora: any = { keys: [] };
     const middleware = createCommonContextInitialisationMiddleware(amphora);
 
-    const logger: any = { child: jest.fn() };
+    const logger: any = { child: vi.fn() };
     const ctx: any = { logger };
-    const next = jest.fn();
+    const next = vi.fn();
 
     await middleware(ctx, next);
 
@@ -51,7 +52,7 @@ describe("createCommonContextInitialisationMiddleware", () => {
     const middleware = createCommonContextInitialisationMiddleware(amphora);
 
     const ctx: any = { logger: {} };
-    const next = jest.fn();
+    const next = vi.fn();
 
     await middleware(ctx, next);
 
@@ -68,7 +69,7 @@ describe("createCommonContextInitialisationMiddleware", () => {
     const middleware = createCommonContextInitialisationMiddleware(amphora);
 
     const ctx: any = { logger: {} };
-    const next = jest.fn();
+    const next = vi.fn();
 
     await middleware(ctx, next);
 
@@ -80,7 +81,7 @@ describe("createCommonContextInitialisationMiddleware", () => {
     const middleware = createCommonContextInitialisationMiddleware(amphora);
 
     const ctx: any = { logger: {} };
-    const next = jest.fn();
+    const next = vi.fn();
 
     await middleware(ctx, next);
 

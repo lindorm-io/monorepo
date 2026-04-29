@@ -1,37 +1,47 @@
-import type { IEntity, IProteusRepository } from "../../../interfaces";
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type Mocked,
+  type MockedFunction,
+} from "vitest";
+import type { IEntity, IProteusRepository } from "../../../interfaces/index.js";
 import type {
   EntityMetadata,
   MetaRelation,
   MetaRelationOptions,
-} from "../../entity/types/metadata";
-import type { JoinTableOps } from "../../types/join-table-ops";
-import { RelationPersister } from "./RelationPersister";
+} from "../../entity/types/metadata.js";
+import type { JoinTableOps } from "../../types/join-table-ops.js";
+import { RelationPersister } from "./RelationPersister.js";
 
 // ─── Mocks ───────────────────────────────────────────────────────────────────
 
-jest.mock("../../entity/metadata/get-entity-metadata", () => ({
-  getEntityMetadata: jest.fn(),
+vi.mock("../../entity/metadata/get-entity-metadata.js", async () => ({
+  getEntityMetadata: vi.fn(),
 }));
 
-jest.mock("./build-relation-filter", () => ({
-  buildRelationFilter: jest.fn(),
+vi.mock("./build-relation-filter.js", () => ({
+  buildRelationFilter: vi.fn(),
 }));
 
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata";
-import { buildRelationFilter } from "./build-relation-filter";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import { buildRelationFilter } from "./build-relation-filter.js";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-const mockGetEntityMetadata = getEntityMetadata as jest.MockedFunction<
+const mockGetEntityMetadata = getEntityMetadata as MockedFunction<
   typeof getEntityMetadata
 >;
-const mockBuildRelationFilter = buildRelationFilter as jest.MockedFunction<
+const mockBuildRelationFilter = buildRelationFilter as MockedFunction<
   typeof buildRelationFilter
 >;
 
-const makeMockJoinTableOps = (): jest.Mocked<JoinTableOps> => ({
-  sync: jest.fn().mockResolvedValue(undefined),
-  delete: jest.fn().mockResolvedValue(undefined),
+const makeMockJoinTableOps = (): Mocked<JoinTableOps> => ({
+  sync: vi.fn().mockResolvedValue(undefined),
+  delete: vi.fn().mockResolvedValue(undefined),
 });
 
 const defaultOptions: MetaRelationOptions = {
@@ -101,30 +111,30 @@ const makeMetadata = (
     versionKeys: [],
   }) as EntityMetadata;
 
-const makeMockRepo = (): jest.Mocked<IProteusRepository<IEntity>> =>
+const makeMockRepo = (): Mocked<IProteusRepository<IEntity>> =>
   ({
-    save: jest.fn(),
-    insert: jest.fn(),
-    update: jest.fn(),
-    find: jest.fn(),
-    findOne: jest.fn(),
-    findOrCreate: jest.fn(),
-    count: jest.fn(),
-    exists: jest.fn(),
-    destroy: jest.fn(),
-    delete: jest.fn(),
-    restore: jest.fn(),
-    query: jest.fn(),
-    transaction: jest.fn(),
+    save: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    find: vi.fn(),
+    findOne: vi.fn(),
+    findOrCreate: vi.fn(),
+    count: vi.fn(),
+    exists: vi.fn(),
+    destroy: vi.fn(),
+    delete: vi.fn(),
+    restore: vi.fn(),
+    query: vi.fn(),
+    transaction: vi.fn(),
   }) as any;
 
 const makeLogger = () =>
   ({
-    debug: jest.fn(),
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    child: jest.fn(function (this: any) {
+    debug: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    child: vi.fn(function (this: any) {
       return this;
     }),
   }) as any;
@@ -135,8 +145,8 @@ type DestroyContext = {
   metadata: EntityMetadata;
   namespace: string | null;
   parent: any;
-  repositoryFactory: jest.Mock;
-  joinTableOps: jest.Mocked<JoinTableOps>;
+  repositoryFactory: Mock;
+  joinTableOps: Mocked<JoinTableOps>;
   logger: any;
   soft?: boolean;
 };
@@ -150,15 +160,15 @@ const destroyRelations = async (entity: any, ctx: DestroyContext) => {
 // ─── destroyRelations (RelationPersister.destroy) ────────────────────────────
 
 describe("RelationPersister.destroy", () => {
-  let mockRepo: jest.Mocked<IProteusRepository<IEntity>>;
-  let repositoryFactory: jest.Mock;
-  let mockJoinTableOps: jest.Mocked<JoinTableOps>;
+  let mockRepo: Mocked<IProteusRepository<IEntity>>;
+  let repositoryFactory: Mock;
+  let mockJoinTableOps: Mocked<JoinTableOps>;
   let logger: any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockRepo = makeMockRepo();
-    repositoryFactory = jest.fn().mockReturnValue(mockRepo);
+    repositoryFactory = vi.fn().mockReturnValue(mockRepo);
     mockJoinTableOps = makeMockJoinTableOps();
     logger = makeLogger();
     mockBuildRelationFilter.mockReturnValue({ parentId: "e1" });

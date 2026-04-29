@@ -1,2 +1,2 @@
-export * from "./MessageManager";
-export * from "./MessageScanner";
+export * from "./MessageManager.js";
+export * from "./MessageScanner.js";

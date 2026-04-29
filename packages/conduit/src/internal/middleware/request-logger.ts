@@ -1,4 +1,4 @@
-import { ConduitMiddleware } from "../../types";
+import type { ConduitMiddleware } from "../../types/index.js";
 
 export const requestLogger: ConduitMiddleware = async (ctx, next) => {
   ctx.logger?.verbose("Conduit request sent", {

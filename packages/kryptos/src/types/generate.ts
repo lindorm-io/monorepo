@@ -1,8 +1,8 @@
-import { Optional } from "@lindorm/types";
-import { KryptosAttributes } from "./attributes";
-import { KryptosCertificateOption } from "./certificate";
-import { KryptosEncryption } from "./encryption";
-import {
+import type { Optional } from "@lindorm/types";
+import type { KryptosAttributes } from "./attributes.js";
+import type { KryptosCertificateOption } from "./certificate.js";
+import type { KryptosEncryption } from "./encryption.js";
+import type {
   AkpSigAlgorithm,
   OctEncDirAlgorithm,
   OctEncStdAlgorithm,
@@ -13,9 +13,9 @@ import {
   OkpSigCurve,
   RsaEncAlgorithm,
   RsaSigAlgorithm,
-} from "./key-types";
-import { EcCurve, EcEncAlgorithm, EcSigAlgorithm } from "./key-types/ec";
-import { KryptosEncOperation, KryptosSigOperation } from "./operation";
+} from "./key-types/index.js";
+import type { EcCurve, EcEncAlgorithm, EcSigAlgorithm } from "./key-types/ec.js";
+import type { KryptosEncOperation, KryptosSigOperation } from "./operation.js";
 
 // default options
 

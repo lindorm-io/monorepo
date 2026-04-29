@@ -1,11 +1,11 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
 import type { Document } from "mongodb";
-import type { IEntity } from "../../../../interfaces";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata";
-import { cloneDocument } from "./clone-with-getters";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
+import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { cloneDocument } from "./clone-with-getters.js";
 
 /**
  * Build a reverse field name mapping from DB name -> entity key.
@@ -73,11 +73,12 @@ export const hydrateEntity = <E extends IEntity>(
   doc: Document,
   metadata: EntityMetadata,
   amphora?: IAmphora,
+  snapshot?: boolean,
 ): E => {
   const row = documentToRow(doc, metadata);
   const effectiveMetadata = resolvePolymorphicMetadata(row, metadata);
   return defaultHydrateEntity<E>(row, effectiveMetadata, {
-    snapshot: true,
+    snapshot: snapshot ?? true,
     hooks: true,
     amphora,
   });
@@ -90,6 +91,7 @@ export const hydrateEntities = <E extends IEntity>(
   docs: Array<Document>,
   metadata: EntityMetadata,
   amphora?: IAmphora,
+  snapshot?: boolean,
 ): Array<E> => {
-  return docs.map((doc) => hydrateEntity<E>(doc, metadata, amphora));
+  return docs.map((doc) => hydrateEntity<E>(doc, metadata, amphora, snapshot));
 };

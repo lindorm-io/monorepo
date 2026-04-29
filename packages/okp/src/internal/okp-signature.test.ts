@@ -1,11 +1,12 @@
 import { randomBytes } from "crypto";
-import { TEST_OKP_KEY_ED25519, TEST_OKP_KEY_ED448 } from "../__fixtures__/keys";
-import { OkpError } from "../errors";
+import { TEST_OKP_KEY_ED25519, TEST_OKP_KEY_ED448 } from "../__fixtures__/keys.js";
+import { OkpError } from "../errors/index.js";
 import {
   assertOkpSignature,
   createOkpSignature,
   verifyOkpSignature,
-} from "./okp-signature";
+} from "./okp-signature.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("okp-signature", () => {
   const dsaEncoding = "der";

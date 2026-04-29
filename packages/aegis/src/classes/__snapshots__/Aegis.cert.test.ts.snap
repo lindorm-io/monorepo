@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Aegis cert binding with cert-bound kryptos sign omitted on cert-bearing kryptos stamps thumbprint by default 1`] = `
+exports[`Aegis cert binding > with cert-bound kryptos > sign omitted on cert-bearing kryptos stamps thumbprint by default 1`] = `
 {
   "alg": "ES256",
   "kid": "e1a4f9c0-0000-0000-0000-aegis-cert-key0",
@@ -11,7 +11,7 @@ exports[`Aegis cert binding with cert-bound kryptos sign omitted on cert-bearing
 }
 `;
 
-exports[`Aegis cert binding with cert-bound kryptos sign with bindCertificate: 'chain' stamps x5c + x5t#S256, no x5t 1`] = `
+exports[`Aegis cert binding > with cert-bound kryptos > sign with bindCertificate: 'chain' stamps x5c + x5t#S256, no x5t 1`] = `
 {
   "alg": "ES256",
   "kid": "e1a4f9c0-0000-0000-0000-aegis-cert-key0",
@@ -26,7 +26,7 @@ exports[`Aegis cert binding with cert-bound kryptos sign with bindCertificate: '
 }
 `;
 
-exports[`Aegis cert binding with cert-bound kryptos sign with bindCertificate: 'thumbprint' stamps x5t#S256, no x5c, no x5t 1`] = `
+exports[`Aegis cert binding > with cert-bound kryptos > sign with bindCertificate: 'thumbprint' stamps x5t#S256, no x5c, no x5t 1`] = `
 {
   "alg": "ES256",
   "kid": "e1a4f9c0-0000-0000-0000-aegis-cert-key0",

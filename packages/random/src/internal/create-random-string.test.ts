@@ -1,4 +1,5 @@
-import { createRandomString } from "./create-random-string";
+import { createRandomString } from "./create-random-string.js";
+import { describe, expect, test } from "vitest";
 
 describe("_createRandomString", () => {
   test("should respect length argument", () => {

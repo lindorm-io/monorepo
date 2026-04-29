@@ -1,9 +1,9 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`resolveTopicName should build topic name from prefix and topic 1`] = `"iris.orders.created"`;
+exports[`resolveTopicName > should build topic name from prefix and topic 1`] = `"iris.orders.created"`;
 
-exports[`resolveTopicName should handle custom prefix 1`] = `"myapp.users.updated"`;
+exports[`resolveTopicName > should handle custom prefix 1`] = `"myapp.users.updated"`;
 
-exports[`resolveTopicName should handle empty prefix 1`] = `".test-topic"`;
+exports[`resolveTopicName > should handle empty prefix 1`] = `".test-topic"`;
 
-exports[`resolveTopicName should handle topic with special characters 1`] = `"iris.orders-created-v2"`;
+exports[`resolveTopicName > should handle topic with special characters 1`] = `"iris.orders-created-v2"`;

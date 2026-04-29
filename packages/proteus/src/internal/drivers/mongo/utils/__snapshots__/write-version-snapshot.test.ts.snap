@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`writeVersionSnapshot should add __version and __versionedAt to document 1`] = `
+exports[`writeVersionSnapshot > should add __version and __versionedAt to document 1`] = `
 {
   "__entityId": "abc",
   "__version": 3,
@@ -9,7 +9,7 @@ exports[`writeVersionSnapshot should add __version and __versionedAt to document
 }
 `;
 
-exports[`writeVersionSnapshot should preserve all non-_id fields in snapshot 1`] = `
+exports[`writeVersionSnapshot > should preserve all non-_id fields in snapshot 1`] = `
 {
   "__entityId": "abc",
   "__version": 5,
@@ -26,7 +26,7 @@ exports[`writeVersionSnapshot should preserve all non-_id fields in snapshot 1`]
 }
 `;
 
-exports[`writeVersionSnapshot should replace _id with __entityId 1`] = `
+exports[`writeVersionSnapshot > should replace _id with __entityId 1`] = `
 {
   "__entityId": "order-1",
   "__version": 1,

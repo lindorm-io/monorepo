@@ -1,4 +1,4 @@
-import { IKryptos, IKryptosOct } from "@lindorm/kryptos";
+import type { IKryptos, IKryptosOct } from "@lindorm/kryptos";
 
 export type CreateArgonHashOptions = {
   data: string;

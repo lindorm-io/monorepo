@@ -1,4 +1,4 @@
-import { ConfirmationClaimWire } from "./confirmation-claim-wire";
+import type { ConfirmationClaimWire } from "./confirmation-claim-wire.js";
 
 // Wire form of PopClaims — RFC 7800 (Proof-of-Possession Key Semantics
 // for JWTs). The `cnf` claim holds the proof key the token is bound to.

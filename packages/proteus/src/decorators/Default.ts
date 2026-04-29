@@ -1,5 +1,5 @@
-import type { MetaFieldDefault } from "../internal/entity/types/metadata";
-import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata";
+import type { MetaFieldDefault } from "../internal/entity/types/metadata.js";
+import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Set a default value for a field, applied when creating new entities.

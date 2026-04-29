@@ -1,5 +1,6 @@
-import { gcm, cbc, aeskw } from "@noble/ciphers/aes";
+import { gcm, cbc, aeskw } from "@noble/ciphers/aes.js";
 import { FlattenedEncrypt, flattenedDecrypt } from "jose";
+import { describe, expect, test } from "vitest";
 
 describe("ESM import smoke test", () => {
   test("should import @noble/ciphers", () => {

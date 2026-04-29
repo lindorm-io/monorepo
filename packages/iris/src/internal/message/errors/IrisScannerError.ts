@@ -1,1 +1,1 @@
-export { IrisScannerError } from "../../../errors/IrisScannerError";
+export { IrisScannerError } from "../../../errors/IrisScannerError.js";

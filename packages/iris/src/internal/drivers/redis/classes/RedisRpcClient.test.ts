@@ -1,27 +1,28 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types";
-import { RedisRpcClient } from "./RedisRpcClient";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types.js";
+import { RedisRpcClient } from "./RedisRpcClient.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
 let mockCreateConsumerLoopResult: Partial<RedisConsumerLoop>;
-const mockCreateConsumerLoop = jest
+const mockCreateConsumerLoop = vi
   .fn()
   .mockImplementation(async () => mockCreateConsumerLoopResult);
-jest.mock("../utils/create-consumer-loop", () => ({
+vi.mock("../utils/create-consumer-loop.js", async () => ({
   createConsumerLoop: (...args: Array<unknown>) => mockCreateConsumerLoop(...args),
 }));
 
-jest.mock("../utils/serialize-stream-fields", () => ({
-  serializeStreamFields: jest
+vi.mock("../utils/serialize-stream-fields.js", () => ({
+  serializeStreamFields: vi
     .fn()
     .mockReturnValue(["payload", "dGVzdA==", "topic", "test"]),
 }));
 
-jest.mock("../utils/parse-stream-entry", () => ({
-  parseStreamEntry: jest.fn(),
+vi.mock("../utils/parse-stream-entry.js", () => ({
+  parseStreamEntry: vi.fn(),
 }));
 
 // --- Test messages ---
@@ -39,30 +40,30 @@ class TckRedisRpcRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): RedisSharedState => ({
   publishConnection: {
-    xadd: jest.fn().mockResolvedValue("1-1"),
-    duplicate: jest.fn().mockReturnValue({
-      xreadgroup: jest.fn().mockResolvedValue(null),
-      xack: jest.fn().mockResolvedValue(1),
-      disconnect: jest.fn().mockResolvedValue(undefined),
-      on: jest.fn(),
+    xadd: vi.fn().mockResolvedValue("1-1"),
+    duplicate: vi.fn().mockReturnValue({
+      xreadgroup: vi.fn().mockResolvedValue(null),
+      xack: vi.fn().mockResolvedValue(1),
+      disconnect: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn(),
     }),
-    disconnect: jest.fn(),
-    xgroup: jest.fn().mockResolvedValue("OK"),
-    xreadgroup: jest.fn(),
-    xack: jest.fn(),
-    del: jest.fn().mockResolvedValue(1),
-    on: jest.fn(),
+    disconnect: vi.fn(),
+    xgroup: vi.fn().mockResolvedValue("OK"),
+    xreadgroup: vi.fn(),
+    xack: vi.fn(),
+    del: vi.fn().mockResolvedValue(1),
+    on: vi.fn(),
   } as any,
   connectionConfig: { url: "redis://localhost:6379" },
   prefix: "iris",
@@ -86,10 +87,10 @@ beforeEach(() => {
     consumerTag: "reply-ctag",
     groupName: "reply-group",
     streamKey: "iris:rpc:reply:test",
-    callback: jest.fn(),
+    callback: vi.fn(),
     abortController: new AbortController(),
     loopPromise: Promise.resolve(),
-    connection: { disconnect: jest.fn() } as any,
+    connection: { disconnect: vi.fn() } as any,
   };
 });
 
@@ -199,7 +200,7 @@ describe("RedisRpcClient", () => {
     const callOrder: Array<string> = [];
 
     // Track order: xadd is the publish call
-    (state.publishConnection!.xadd as jest.Mock).mockImplementation(async () => {
+    (state.publishConnection!.xadd as Mock).mockImplementation(async () => {
       callOrder.push("xadd");
       return "1-1";
     });

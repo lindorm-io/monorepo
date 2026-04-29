@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`resolveHandshakeTokenSource handles array-valued dpop header 1`] = `
+exports[`resolveHandshakeTokenSource > handles array-valued dpop header 1`] = `
 {
   "dpopProof": "proof-a",
   "kind": "dpop",
@@ -8,7 +8,7 @@ exports[`resolveHandshakeTokenSource handles array-valued dpop header 1`] = `
 }
 `;
 
-exports[`resolveHandshakeTokenSource prefers bearer over session when both present 1`] = `
+exports[`resolveHandshakeTokenSource > prefers bearer over session when both present 1`] = `
 {
   "dpopProof": undefined,
   "kind": "bearer",
@@ -16,7 +16,7 @@ exports[`resolveHandshakeTokenSource prefers bearer over session when both prese
 }
 `;
 
-exports[`resolveHandshakeTokenSource returns bearer when handshake.auth.bearer is present 1`] = `
+exports[`resolveHandshakeTokenSource > returns bearer when handshake.auth.bearer is present 1`] = `
 {
   "dpopProof": undefined,
   "kind": "bearer",
@@ -24,7 +24,7 @@ exports[`resolveHandshakeTokenSource returns bearer when handshake.auth.bearer i
 }
 `;
 
-exports[`resolveHandshakeTokenSource returns dpop when handshake.auth.bearer and dpop header both present 1`] = `
+exports[`resolveHandshakeTokenSource > returns dpop when handshake.auth.bearer and dpop header both present 1`] = `
 {
   "dpopProof": "proof",
   "kind": "dpop",
@@ -32,13 +32,13 @@ exports[`resolveHandshakeTokenSource returns dpop when handshake.auth.bearer and
 }
 `;
 
-exports[`resolveHandshakeTokenSource returns none when nothing available 1`] = `
+exports[`resolveHandshakeTokenSource > returns none when nothing available 1`] = `
 {
   "kind": "none",
 }
 `;
 
-exports[`resolveHandshakeTokenSource returns session when no handshake bearer and socket.data.session present 1`] = `
+exports[`resolveHandshakeTokenSource > returns session when no handshake bearer and socket.data.session present 1`] = `
 {
   "kind": "session",
   "session": {

@@ -1,13 +1,14 @@
 import MockDate from "mockdate";
-import { TEST_EC_KEY_B64 } from "../__fixtures__/ec-keys";
-import { KryptosKit } from "./KryptosKit";
+import { TEST_EC_KEY_B64 } from "../__fixtures__/ec-keys.js";
+import { KryptosKit } from "./KryptosKit.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate.toISOString());
 
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest.fn().mockReturnValue("6e6f84b0-e125-5e3f-90ae-c65269668d98"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi.fn().mockReturnValue("6e6f84b0-e125-5e3f-90ae-c65269668d98"),
 }));
 
 describe("Kryptos (EC)", () => {

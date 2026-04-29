@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PostgresCursor [Symbol.asyncIterator]() matches snapshot for single-batch iteration 1`] = `
+exports[`PostgresCursor > [Symbol.asyncIterator]() > matches snapshot for single-batch iteration 1`] = `
 [
   ItemEntity {
     "count": 10,
@@ -15,7 +15,7 @@ exports[`PostgresCursor [Symbol.asyncIterator]() matches snapshot for single-bat
 ]
 `;
 
-exports[`PostgresCursor [Symbol.asyncIterator]() yields all entities across multiple batches 1`] = `
+exports[`PostgresCursor > [Symbol.asyncIterator]() > yields all entities across multiple batches 1`] = `
 [
   ItemEntity {
     "count": 1,
@@ -35,7 +35,7 @@ exports[`PostgresCursor [Symbol.asyncIterator]() yields all entities across mult
 ]
 `;
 
-exports[`PostgresCursor next() returns hydrated entity from first row when rows present 1`] = `
+exports[`PostgresCursor > next() > returns hydrated entity from first row when rows present 1`] = `
 ItemEntity {
   "count": 42,
   "id": "uuid-abc",
@@ -43,7 +43,7 @@ ItemEntity {
 }
 `;
 
-exports[`PostgresCursor nextBatch() returns array of hydrated entities 1`] = `
+exports[`PostgresCursor > nextBatch() > returns array of hydrated entities 1`] = `
 [
   ItemEntity {
     "count": 1,
@@ -63,4 +63,4 @@ exports[`PostgresCursor nextBatch() returns array of hydrated entities 1`] = `
 ]
 `;
 
-exports[`PostgresCursor nextBatch() returns empty array when no rows are returned 1`] = `[]`;
+exports[`PostgresCursor > nextBatch() > returns empty array when no rows are returned 1`] = `[]`;

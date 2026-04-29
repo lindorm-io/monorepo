@@ -1,7 +1,7 @@
-import { Dict, Param, Query } from "@lindorm/types";
-import { CreateUrlOptions } from "../types/types";
-import { addQueryToURL } from "./add-query-to-url";
-import { replaceParams } from "./replace-params";
+import type { Dict, Param, Query } from "@lindorm/types";
+import type { CreateUrlOptions } from "../types/types.js";
+import { addQueryToURL } from "./add-query-to-url.js";
+import { replaceParams } from "./replace-params.js";
 
 export const addToUrl = <P extends Dict<Param> = Dict<Param>, Q = Dict<Query>>(
   url: URL,

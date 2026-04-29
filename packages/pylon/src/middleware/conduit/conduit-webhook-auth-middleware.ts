@@ -1,13 +1,13 @@
 import {
   conduitBasicAuthMiddleware,
-  ConduitClientCredentialsCache,
+  type ConduitClientCredentialsCache,
   conduitClientCredentialsMiddlewareFactory,
-  ConduitError,
   conduitHeadersMiddleware,
-  ConduitMiddleware,
+  type ConduitMiddleware,
 } from "@lindorm/conduit";
-import { WebhookAuth } from "../../enums";
-import { IWebhookSubscription } from "../../interfaces";
+import { InternalServerError } from "@lindorm/errors";
+import { WebhookAuth } from "../../enums/index.js";
+import type { IWebhookSubscription } from "../../interfaces/index.js";
 
 const emptyMiddleware: ConduitMiddleware = async (_, next) => {
   await next();
@@ -23,7 +23,7 @@ export const createConduitWebhookAuthMiddleware = async (
 
   if (subscription.auth === WebhookAuth.AuthHeaders) {
     if (Object.keys(subscription.authHeaders).length === 0) {
-      throw new ConduitError("Webhook subscription is missing auth headers");
+      throw new InternalServerError("Webhook subscription is missing auth headers");
     }
 
     return conduitHeadersMiddleware(subscription.authHeaders);
@@ -31,7 +31,9 @@ export const createConduitWebhookAuthMiddleware = async (
 
   if (subscription.auth === WebhookAuth.Basic) {
     if (!subscription.username || !subscription.password) {
-      throw new ConduitError("Webhook subscription is missing basic auth credentials");
+      throw new InternalServerError(
+        "Webhook subscription is missing basic auth credentials",
+      );
     }
 
     return conduitBasicAuthMiddleware(subscription.username, subscription.password);
@@ -39,7 +41,7 @@ export const createConduitWebhookAuthMiddleware = async (
 
   if (subscription.auth === WebhookAuth.ClientCredentials) {
     if (!subscription.clientId || !subscription.clientSecret || !subscription.issuer) {
-      throw new ConduitError("Webhook subscription is missing client credentials");
+      throw new InternalServerError("Webhook subscription is missing client credentials");
     }
 
     const factory = conduitClientCredentialsMiddlewareFactory(
@@ -60,5 +62,5 @@ export const createConduitWebhookAuthMiddleware = async (
     });
   }
 
-  throw new ConduitError("Webhook subscription is missing auth type");
+  throw new InternalServerError("Webhook subscription is missing auth type");
 };

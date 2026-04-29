@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Eager should match snapshot for eager on both scopes 1`] = `
+exports[`Eager > should match snapshot for eager on both scopes 1`] = `
 {
   "appendOnly": false,
   "cache": null,

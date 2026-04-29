@@ -1,8 +1,9 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { ReadOnly } from "./ReadOnly";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { ReadOnly } from "./ReadOnly.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ReadOnlyDecorated" })
 class ReadOnlyDecorated {

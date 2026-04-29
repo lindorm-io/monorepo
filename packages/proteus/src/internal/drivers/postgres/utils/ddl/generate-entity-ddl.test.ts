@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import {
   TestArticle,
   TestAuthor,
@@ -10,14 +11,14 @@ import {
   TestUser,
   TestUserWithProfile,
   TestVersionKeyed,
-} from "../../../../__fixtures__/test-entities";
-import { Entity } from "../../../../../decorators/Entity";
-import { Field } from "../../../../../decorators/Field";
-import { Max } from "../../../../../decorators/Max";
-import { Namespace } from "../../../../../decorators/Namespace";
-import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
-import { generateEntityDDL } from "./generate-entity-ddl";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
+} from "../../../../__fixtures__/test-entities.js";
+import { Entity } from "../../../../../decorators/Entity.js";
+import { Field } from "../../../../../decorators/Field.js";
+import { Max } from "../../../../../decorators/Max.js";
+import { Namespace } from "../../../../../decorators/Namespace.js";
+import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
+import { generateEntityDDL } from "./generate-entity-ddl.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
 
 // ---------------------------------------------------------------------------
 // Additional test entities at module scope

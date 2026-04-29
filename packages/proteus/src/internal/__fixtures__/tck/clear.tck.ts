@@ -1,8 +1,9 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Clear/Truncate Suite
 // Verifies that clear() truncates the table.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const clearSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
   describe("Clear", () => {

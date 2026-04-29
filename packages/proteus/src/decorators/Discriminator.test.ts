@@ -1,4 +1,5 @@
-import { Discriminator } from "./Discriminator";
+import { Discriminator } from "./Discriminator.js";
+import { describe, expect, test } from "vitest";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Test entities

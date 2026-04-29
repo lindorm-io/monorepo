@@ -1,8 +1,9 @@
-import { Field } from "../../../decorators/Field";
-import { IdentifierField } from "../../../decorators/IdentifierField";
-import { Message } from "../../../decorators/Message";
-import { clearMetadataCache } from "./registry";
-import { getMessageMetadata } from "./get-message-metadata";
+import { Field } from "../../../decorators/Field.js";
+import { IdentifierField } from "../../../decorators/IdentifierField.js";
+import { Message } from "../../../decorators/Message.js";
+import { clearMetadataCache } from "./registry.js";
+import { getMessageMetadata } from "./get-message-metadata.js";
+import { beforeEach, describe, expect, it } from "vitest";
 
 describe("getMessageMetadata", () => {
   beforeEach(() => {

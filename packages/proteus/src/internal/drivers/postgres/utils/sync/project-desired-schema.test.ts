@@ -1,12 +1,13 @@
+import { describe, expect, it } from "vitest";
 import {
   TestUser,
   TestChecked,
   TestIndexed,
-} from "../../../../__fixtures__/test-entities";
-import { makeField } from "../../../../__fixtures__/make-field";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import { projectDesiredSchema } from "./project-desired-schema";
+} from "../../../../__fixtures__/test-entities.js";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import { projectDesiredSchema } from "./project-desired-schema.js";
 
 describe("projectDesiredSchema", () => {
   it("should project a simple entity", () => {

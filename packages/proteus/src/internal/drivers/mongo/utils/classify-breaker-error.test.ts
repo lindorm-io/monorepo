@@ -1,4 +1,5 @@
-import { classifyMongoError } from "./classify-breaker-error";
+import { classifyMongoError } from "./classify-breaker-error.js";
+import { describe, expect, it, vi } from "vitest";
 
 describe("classifyMongoError", () => {
   describe("transient mongo codes", () => {
@@ -59,7 +60,7 @@ describe("classifyMongoError", () => {
   describe("transient error labels", () => {
     it("should classify TransientTransactionError as transient", () => {
       const error = Object.assign(new Error("transaction error"), {
-        hasErrorLabel: jest.fn().mockImplementation((label: string) => {
+        hasErrorLabel: vi.fn().mockImplementation((label: string) => {
           return label === "TransientTransactionError";
         }),
       });
@@ -68,7 +69,7 @@ describe("classifyMongoError", () => {
 
     it("should classify RetryableWriteError as transient", () => {
       const error = Object.assign(new Error("write error"), {
-        hasErrorLabel: jest.fn().mockImplementation((label: string) => {
+        hasErrorLabel: vi.fn().mockImplementation((label: string) => {
           return label === "RetryableWriteError";
         }),
       });
@@ -116,7 +117,7 @@ describe("classifyMongoError", () => {
 
     it("should check error labels before message patterns", () => {
       const error = Object.assign(new Error("Server selection timed out"), {
-        hasErrorLabel: jest.fn().mockImplementation((label: string) => {
+        hasErrorLabel: vi.fn().mockImplementation((label: string) => {
           return label === "TransientTransactionError";
         }),
       });

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`withAdvisoryLock — lock acquired should call pg_try_advisory_lock with the given keys 1`] = `
+exports[`withAdvisoryLock — lock acquired > should call pg_try_advisory_lock with the given keys 1`] = `
 {
   "params": [
     1347571540,
@@ -10,7 +10,7 @@ exports[`withAdvisoryLock — lock acquired should call pg_try_advisory_lock wit
 }
 `;
 
-exports[`withAdvisoryLock — lock acquired should release lock via pg_advisory_unlock after callback completes 1`] = `
+exports[`withAdvisoryLock — lock acquired > should release lock via pg_advisory_unlock after callback completes 1`] = `
 {
   "params": [
     1347571540,
@@ -20,7 +20,7 @@ exports[`withAdvisoryLock — lock acquired should release lock via pg_advisory_
 }
 `;
 
-exports[`withAdvisoryLock — lock acquired should work with async callback that returns a complex value 1`] = `
+exports[`withAdvisoryLock — lock acquired > should work with async callback that returns a complex value 1`] = `
 {
   "count": 42,
   "items": [

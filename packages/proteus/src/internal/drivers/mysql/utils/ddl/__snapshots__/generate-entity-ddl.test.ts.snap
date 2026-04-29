@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateEntityDDL (MySQL) check constraints check constraints appear inside CREATE TABLE body for TestChecked 1`] = `
+exports[`generateEntityDDL (MySQL) > check constraints > check constraints appear inside CREATE TABLE body for TestChecked 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_iT-FyLzW-Ty\` ON \`TestChecked\` (\`id\` ASC, \`version\` ASC);",
@@ -22,7 +22,7 @@ exports[`generateEntityDDL (MySQL) check constraints check constraints appear in
 }
 `;
 
-exports[`generateEntityDDL (MySQL) indexes emits indexes for TestIndexed 1`] = `
+exports[`generateEntityDDL (MySQL) > indexes > emits indexes for TestIndexed 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_name\` ON \`TestIndexed\` (\`name\`(191) ASC);",
@@ -45,7 +45,7 @@ exports[`generateEntityDDL (MySQL) indexes emits indexes for TestIndexed 1`] = `
 }
 `;
 
-exports[`generateEntityDDL (MySQL) many-to-many join tables emits join table DDL for TestCourse (owning side) 1`] = `
+exports[`generateEntityDDL (MySQL) > many-to-many join tables > emits join table DDL for TestCourse (owning side) 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_z58Ij1Xi9Mi\` ON \`test_course_x_test_student\` (\`testStudentId\`);",
@@ -72,7 +72,7 @@ exports[`generateEntityDDL (MySQL) many-to-many join tables emits join table DDL
 }
 `;
 
-exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full DDL for TestArticle (ManyToOne, owning) 1`] = `
+exports[`generateEntityDDL (MySQL) > relation entities (full DDL) > generates full DDL for TestArticle (ManyToOne, owning) 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_WtsgpsvT-zV\` ON \`TestArticle\` (\`id\` ASC, \`version\` ASC);",
@@ -93,7 +93,7 @@ exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full D
 }
 `;
 
-exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full DDL for TestAuthor (OneToMany, inverse) 1`] = `
+exports[`generateEntityDDL (MySQL) > relation entities (full DDL) > generates full DDL for TestAuthor (OneToMany, inverse) 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_aYybfGKVvb4\` ON \`TestAuthor\` (\`id\` ASC, \`version\` ASC);",
@@ -112,7 +112,7 @@ exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full D
 }
 `;
 
-exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full DDL for TestProfile (inverse OneToOne) 1`] = `
+exports[`generateEntityDDL (MySQL) > relation entities (full DDL) > generates full DDL for TestProfile (inverse OneToOne) 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_Jwbf8mzOsJ-\` ON \`TestProfile\` (\`id\` ASC, \`version\` ASC);",
@@ -131,7 +131,7 @@ exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full D
 }
 `;
 
-exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full DDL for TestUserWithProfile (owning OneToOne) 1`] = `
+exports[`generateEntityDDL (MySQL) > relation entities (full DDL) > generates full DDL for TestUserWithProfile (owning OneToOne) 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_F699ggiNlTN\` ON \`TestUserWithProfile\` (\`id\` ASC, \`version\` ASC);",
@@ -152,7 +152,7 @@ exports[`generateEntityDDL (MySQL) relation entities (full DDL) generates full D
 }
 `;
 
-exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestScopedEntity 1`] = `
+exports[`generateEntityDDL (MySQL) > simple entities > generates full DDL for TestScopedEntity 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_50yeYHPVnt0\` ON \`TestScopedEntity\` (\`id\` ASC, \`scope\`(191) ASC);",
@@ -173,7 +173,7 @@ exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestSc
 }
 `;
 
-exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestSoftDelete 1`] = `
+exports[`generateEntityDDL (MySQL) > simple entities > generates full DDL for TestSoftDelete 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_3xOgrWBqPK-\` ON \`TestSoftDelete\` (\`id\` ASC, \`deletedAt\` ASC);",
@@ -198,7 +198,7 @@ exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestSo
 }
 `;
 
-exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestUser 1`] = `
+exports[`generateEntityDDL (MySQL) > simple entities > generates full DDL for TestUser 1`] = `
 {
   "indexes": [
     "CREATE INDEX \`idx_bt1of5AP7El\` ON \`TestUser\` (\`id\` ASC, \`version\` ASC);",
@@ -219,7 +219,7 @@ exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestUs
 }
 `;
 
-exports[`generateEntityDDL (MySQL) simple entities generates full DDL for TestVersionKeyed (composite PK) 1`] = `
+exports[`generateEntityDDL (MySQL) > simple entities > generates full DDL for TestVersionKeyed (composite PK) 1`] = `
 {
   "indexes": [],
   "tables": [

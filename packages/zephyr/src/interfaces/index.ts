@@ -1,2 +1,2 @@
-export { AuthExpiredEvent, AuthExpiredHandler, IZephyr } from "./Zephyr";
-export { IZephyrRoom } from "./ZephyrRoom";
+export type { AuthExpiredEvent, AuthExpiredHandler, IZephyr } from "./Zephyr.js";
+export type { IZephyrRoom } from "./ZephyrRoom.js";

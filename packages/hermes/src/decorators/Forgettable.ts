@@ -1,4 +1,4 @@
-import { stageForgettable } from "../internal/metadata";
+import { stageForgettable } from "../internal/metadata/index.js";
 
 export const Forgettable =
   () =>

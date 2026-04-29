@@ -1,9 +1,9 @@
-import type { IDeadLetterStore } from "../../interfaces/IrisDeadLetterStore";
+import type { IDeadLetterStore } from "../../interfaces/IrisDeadLetterStore.js";
 import type {
   DeadLetterEntry,
   DeadLetterFilterOptions,
   DeadLetterListOptions,
-} from "../../types/dead-letter";
+} from "../../types/dead-letter.js";
 
 export class MemoryDeadLetterStore implements IDeadLetterStore {
   private readonly entries = new Map<string, DeadLetterEntry>();

@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Encrypted should stage encrypted metadata with defaults 1`] = `
+exports[`Encrypted > should stage encrypted metadata with defaults 1`] = `
 {
   "predicate": {},
 }
 `;
 
-exports[`Encrypted should stage encrypted metadata with predicate 1`] = `
+exports[`Encrypted > should stage encrypted metadata with predicate 1`] = `
 {
   "predicate": {
     "algorithm": "AES-256",

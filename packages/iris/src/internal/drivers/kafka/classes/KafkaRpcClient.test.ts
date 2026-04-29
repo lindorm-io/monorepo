@@ -1,38 +1,39 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { KafkaSharedState, KafkaConsumerHandle } from "../types/kafka-types";
-import { KafkaRpcClient } from "./KafkaRpcClient";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { KafkaSharedState, KafkaConsumerHandle } from "../types/kafka-types.js";
+import { KafkaRpcClient } from "./KafkaRpcClient.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
 let mockCreateKafkaConsumerResult: KafkaConsumerHandle;
-const mockCreateKafkaConsumer = jest
+const mockCreateKafkaConsumer = vi
   .fn()
   .mockImplementation(async () => mockCreateKafkaConsumerResult);
-jest.mock("../utils/create-kafka-consumer", () => ({
+vi.mock("../utils/create-kafka-consumer.js", async () => ({
   createKafkaConsumer: (...args: Array<unknown>) => mockCreateKafkaConsumer(...args),
 }));
 
-const mockStopKafkaConsumer = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/stop-kafka-consumer", () => ({
+const mockStopKafkaConsumer = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/stop-kafka-consumer.js", () => ({
   stopKafkaConsumer: (...args: Array<unknown>) => mockStopKafkaConsumer(...args),
 }));
 
-const mockEnsureKafkaTopicFromState = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/ensure-kafka-topic", () => ({
+const mockEnsureKafkaTopicFromState = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/ensure-kafka-topic.js", () => ({
   ensureKafkaTopicFromState: (...args: Array<unknown>) =>
     mockEnsureKafkaTopicFromState(...args),
 }));
 
-jest.mock("../utils/serialize-kafka-message", () => ({
-  serializeKafkaMessage: jest
+vi.mock("../utils/serialize-kafka-message.js", () => ({
+  serializeKafkaMessage: vi
     .fn()
     .mockReturnValue({ key: null, value: Buffer.from("test"), headers: {} }),
 }));
 
-jest.mock("../utils/parse-kafka-message", () => ({
-  parseKafkaMessage: jest.fn(),
+vi.mock("../utils/parse-kafka-message.js", () => ({
+  parseKafkaMessage: vi.fn(),
 }));
 
 // --- Test messages ---
@@ -50,25 +51,25 @@ class TckKafkaRpcRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockConsumer = () => ({
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  subscribe: jest.fn().mockResolvedValue(undefined),
-  run: jest.fn().mockResolvedValue(undefined),
-  pause: jest.fn(),
-  resume: jest.fn(),
-  stop: jest.fn().mockResolvedValue(undefined),
-  commitOffsets: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn().mockReturnValue(() => {}),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  subscribe: vi.fn().mockResolvedValue(undefined),
+  run: vi.fn().mockResolvedValue(undefined),
+  pause: vi.fn(),
+  resume: vi.fn(),
+  stop: vi.fn().mockResolvedValue(undefined),
+  commitOffsets: vi.fn().mockResolvedValue(undefined),
+  on: vi.fn().mockReturnValue(() => {}),
   events: {
     GROUP_JOIN: "consumer.group_join",
     HEARTBEAT: "consumer.heartbeat",
@@ -88,15 +89,15 @@ const createMockConsumer = () => ({
 
 const createMockState = (): KafkaSharedState => ({
   kafka: {
-    producer: jest.fn(),
-    consumer: jest.fn().mockReturnValue(createMockConsumer()),
-    admin: jest.fn(),
+    producer: vi.fn(),
+    consumer: vi.fn().mockReturnValue(createMockConsumer()),
+    admin: vi.fn(),
   } as any,
   admin: null,
   producer: {
-    send: jest.fn().mockResolvedValue(undefined),
-    connect: jest.fn(),
-    disconnect: jest.fn(),
+    send: vi.fn().mockResolvedValue(undefined),
+    connect: vi.fn(),
+    disconnect: vi.fn(),
   } as any,
   connectionConfig: { brokers: ["localhost:9092"] },
   prefix: "iris",
@@ -205,7 +206,7 @@ describe("KafkaRpcClient", () => {
     const callOrder: Array<string> = [];
 
     // Track order: producer.send is the publish call
-    (state.producer!.send as jest.Mock).mockImplementation(async () => {
+    (state.producer!.send as Mock).mockImplementation(async () => {
       callOrder.push("send");
       return undefined;
     });

@@ -1,9 +1,9 @@
-import { KryptosError } from "../../../errors";
-import { KryptosBuffer, KryptosString } from "../../../types";
-import { createAkpDerFromB64 } from "../akp/der-from-b64";
-import { createEcDerFromB64 } from "../ec/der-from-b64";
-import { createOkpDerFromB64 } from "../okp/der-from-b64";
-import { createRsaDerFromB64 } from "../rsa/der-from-b64";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosBuffer, KryptosString } from "../../../types/index.js";
+import { createAkpDerFromB64 } from "../akp/der-from-b64.js";
+import { createEcDerFromB64 } from "../ec/der-from-b64.js";
+import { createOkpDerFromB64 } from "../okp/der-from-b64.js";
+import { createRsaDerFromB64 } from "../rsa/der-from-b64.js";
 
 export const createDerFromB64 = (options: KryptosString): KryptosBuffer => {
   switch (options.type) {

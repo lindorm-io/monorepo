@@ -1,1 +1,1 @@
-export * from "./redis-types";
+export * from "./redis-types.js";

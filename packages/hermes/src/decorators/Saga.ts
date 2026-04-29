@@ -1,7 +1,7 @@
 import { snakeCase } from "@lindorm/case";
 import { isArray } from "@lindorm/is";
 import type { Constructor } from "@lindorm/types";
-import { stageSaga } from "../internal/metadata";
+import { stageSaga } from "../internal/metadata/index.js";
 
 type SagaOptions = {
   name?: string;

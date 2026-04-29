@@ -1,4 +1,5 @@
-import { createMockWorkerQueue } from "./create-mock-worker-queue";
+import { createMockWorkerQueue } from "./vitest.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type TestMessage = { id: string; body: string };
 
@@ -53,13 +54,13 @@ describe("createMockWorkerQueue", () => {
 
   describe("consume", () => {
     it("should accept a string queue name and callback", async () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       await mock.consume("my-queue", callback);
       expect(mock.consume).toHaveBeenCalledWith("my-queue", callback);
     });
 
     it("should accept ConsumeOptions object", async () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       await mock.consume({ queue: "my-queue", callback });
       expect(mock.consume).toHaveBeenCalledWith({
         queue: "my-queue",
@@ -68,7 +69,7 @@ describe("createMockWorkerQueue", () => {
     });
 
     it("should accept an array of ConsumeOptions", async () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       await mock.consume([
         { queue: "q1", callback },
         { queue: "q2", callback },

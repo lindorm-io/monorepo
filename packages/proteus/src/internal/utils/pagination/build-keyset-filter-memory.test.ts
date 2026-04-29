@@ -1,4 +1,5 @@
-import { buildKeysetFilterMemory } from "./build-keyset-filter-memory";
+import { buildKeysetFilterMemory } from "./build-keyset-filter-memory.js";
+import { describe, expect, it } from "vitest";
 
 describe("buildKeysetFilterMemory", () => {
   describe("single column ASC forward", () => {

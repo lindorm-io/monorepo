@@ -1,4 +1,4 @@
-import type { AesDecryptionRecord } from "../../types";
+import type { AesDecryptionRecord } from "../../types/index.js";
 
 export const createTestAesDecryptionRecord = (
   overrides: Partial<AesDecryptionRecord> = {},

@@ -30,38 +30,39 @@
  *   - queries/    -- @Query DTO
  */
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ProteusSource } from "@lindorm/proteus";
 import type { IrisSource } from "@lindorm/iris";
 import { randomUUID } from "crypto";
 
-import { Hermes } from "./classes/Hermes";
+import { Hermes } from "./classes/Hermes.js";
 import {
   createTestIrisSource,
   createTestProteusSource,
-} from "./__fixtures__/create-test-sources";
-import { EventRecord } from "./internal/entities";
+} from "./__fixtures__/create-test-sources.js";
+import { EventRecord } from "./internal/entities/index.js";
 
 // -- Example module imports (same as what a user would write) --
-import { OpenAccount } from "./__fixtures__/example/commands/OpenAccount";
-import { DepositFunds } from "./__fixtures__/example/commands/DepositFunds";
-import { WithdrawFunds } from "./__fixtures__/example/commands/WithdrawFunds";
-import { CloseAccount } from "./__fixtures__/example/commands/CloseAccount";
-import { FlagAccount } from "./__fixtures__/example/commands/FlagAccount";
+import { OpenAccount } from "./__fixtures__/example/commands/OpenAccount.js";
+import { DepositFunds } from "./__fixtures__/example/commands/DepositFunds.js";
+import { WithdrawFunds } from "./__fixtures__/example/commands/WithdrawFunds.js";
+import { CloseAccount } from "./__fixtures__/example/commands/CloseAccount.js";
+import { FlagAccount } from "./__fixtures__/example/commands/FlagAccount.js";
 
-import { AccountOpened } from "./__fixtures__/example/events/AccountOpened";
-import { FundsDeposited_V1 } from "./__fixtures__/example/events/FundsDeposited_V1";
-import { FundsDeposited_V2 } from "./__fixtures__/example/events/FundsDeposited_V2";
-import { FundsWithdrawn } from "./__fixtures__/example/events/FundsWithdrawn";
-import { AccountClosed } from "./__fixtures__/example/events/AccountClosed";
-import { AccountFlagged } from "./__fixtures__/example/events/AccountFlagged";
+import { AccountOpened } from "./__fixtures__/example/events/AccountOpened.js";
+import { FundsDeposited_V1 } from "./__fixtures__/example/events/FundsDeposited_V1.js";
+import { FundsDeposited_V2 } from "./__fixtures__/example/events/FundsDeposited_V2.js";
+import { FundsWithdrawn } from "./__fixtures__/example/events/FundsWithdrawn.js";
+import { AccountClosed } from "./__fixtures__/example/events/AccountClosed.js";
+import { AccountFlagged } from "./__fixtures__/example/events/AccountFlagged.js";
 
-import { InactivityTimeout } from "./__fixtures__/example/timeouts/InactivityTimeout";
-import { GetAccountSummary } from "./__fixtures__/example/queries/GetAccountSummary";
-import { AccountAggregate } from "./__fixtures__/example/aggregates/AccountAggregate";
-import { OverdraftProtectionSaga } from "./__fixtures__/example/sagas/OverdraftProtectionSaga";
-import { AccountSummaryView } from "./__fixtures__/example/views/AccountSummaryView";
-import { AccountSummaryProjection } from "./__fixtures__/example/views/AccountSummaryProjection";
+import { InactivityTimeout } from "./__fixtures__/example/timeouts/InactivityTimeout.js";
+import { GetAccountSummary } from "./__fixtures__/example/queries/GetAccountSummary.js";
+import { AccountAggregate } from "./__fixtures__/example/aggregates/AccountAggregate.js";
+import { OverdraftProtectionSaga } from "./__fixtures__/example/sagas/OverdraftProtectionSaga.js";
+import { AccountSummaryView } from "./__fixtures__/example/views/AccountSummaryView.js";
+import { AccountSummaryProjection } from "./__fixtures__/example/views/AccountSummaryProjection.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 // ============================================================================
 // All module constructors (what you'd pass to Hermes in production)

@@ -1,12 +1,13 @@
 import { randomBytes } from "crypto";
 import { Client } from "pg";
-import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client";
-import type { DesiredSchema } from "../../types/desired-schema";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { diffSchema } from "./diff-schema";
-import { SyncPlanExecutor } from "./execute-sync-plan";
-import { introspectSchema } from "./introspect-schema";
-import type { SyncPlan, SyncOptions } from "../../types/sync-plan";
+import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client.js";
+import type { DesiredSchema } from "../../types/desired-schema.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { diffSchema } from "./diff-schema.js";
+import { SyncPlanExecutor } from "./execute-sync-plan.js";
+import { introspectSchema } from "./introspect-schema.js";
+import type { SyncPlan, SyncOptions } from "../../types/sync-plan.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const executeSyncPlan = (
   client: PostgresQueryClient,

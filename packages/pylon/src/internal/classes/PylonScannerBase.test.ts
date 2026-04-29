@@ -1,5 +1,10 @@
-import { createMockLogger } from "@lindorm/logger";
-import { PylonScannerBase, ParsedSegment, ScannedFile } from "./PylonScannerBase";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import {
+  PylonScannerBase,
+  type ParsedSegment,
+  type ScannedFile,
+} from "./PylonScannerBase.js";
+import { beforeAll, describe, expect, test, vi } from "vitest";
 
 class TestScanner extends PylonScannerBase {
   public constructor() {
@@ -18,11 +23,11 @@ class TestScanner extends PylonScannerBase {
     return this.isMiddlewareFile(scan);
   }
 
-  public testLoadMiddleware(scan: any): Array<unknown> {
+  public testLoadMiddleware(scan: any): Promise<Array<unknown>> {
     return this.loadMiddleware(scan);
   }
 
-  public testScanDirectory(directory: string): Array<ScannedFile> {
+  public testScanDirectory(directory: string): Promise<Array<ScannedFile>> {
     return this.scanDirectory(directory);
   }
 }
@@ -201,53 +206,59 @@ describe("PylonScannerBase", () => {
   });
 
   describe("loadMiddleware", () => {
-    test("should return empty array when module has no MIDDLEWARE export", () => {
+    test("should return empty array when module has no MIDDLEWARE export", async () => {
       const mockScanner = new TestScanner();
       (mockScanner as any).scanner = {
-        require: jest.fn().mockReturnValue({ default: "something" }),
+        import: vi.fn().mockResolvedValue({ default: "something" }),
       };
 
-      const result = mockScanner.testLoadMiddleware({ fullPath: "/path/to/file.ts" });
+      const result = await mockScanner.testLoadMiddleware({
+        fullPath: "/path/to/file.ts",
+      });
 
       expect(result).toEqual([]);
     });
 
-    test("should return array when MIDDLEWARE is an array", () => {
-      const middlewareFns = [jest.fn(), jest.fn()];
+    test("should return array when MIDDLEWARE is an array", async () => {
+      const middlewareFns = [vi.fn(), vi.fn()];
       const mockScanner = new TestScanner();
       (mockScanner as any).scanner = {
-        require: jest.fn().mockReturnValue({ MIDDLEWARE: middlewareFns }),
+        import: vi.fn().mockResolvedValue({ MIDDLEWARE: middlewareFns }),
       };
 
-      const result = mockScanner.testLoadMiddleware({ fullPath: "/path/to/file.ts" });
+      const result = await mockScanner.testLoadMiddleware({
+        fullPath: "/path/to/file.ts",
+      });
 
       expect(result).toEqual(middlewareFns);
     });
 
-    test("should wrap non-array MIDDLEWARE in array", () => {
-      const middlewareFn = jest.fn();
+    test("should wrap non-array MIDDLEWARE in array", async () => {
+      const middlewareFn = vi.fn();
       const mockScanner = new TestScanner();
       (mockScanner as any).scanner = {
-        require: jest.fn().mockReturnValue({ MIDDLEWARE: middlewareFn }),
+        import: vi.fn().mockResolvedValue({ MIDDLEWARE: middlewareFn }),
       };
 
-      const result = mockScanner.testLoadMiddleware({ fullPath: "/path/to/file.ts" });
+      const result = await mockScanner.testLoadMiddleware({
+        fullPath: "/path/to/file.ts",
+      });
 
       expect(result).toEqual([middlewareFn]);
     });
   });
 
   describe("scanDirectory", () => {
-    test("should throw PylonError when directory is empty", () => {
+    test("should throw PylonError when directory is empty", async () => {
       const mockScanner = new TestScanner();
 
       // Scanner.hasFiles is a static method — mock it
       const originalHasFiles = (mockScanner as any).scanner.constructor.hasFiles;
-      jest
-        .spyOn((mockScanner as any).scanner.constructor, "hasFiles")
-        .mockReturnValue(false);
+      vi.spyOn((mockScanner as any).scanner.constructor, "hasFiles").mockReturnValue(
+        false,
+      );
 
-      expect(() => mockScanner.testScanDirectory("/empty/dir")).toThrow(
+      await expect(mockScanner.testScanDirectory("/empty/dir")).rejects.toThrow(
         "Directory [ /empty/dir ] is empty",
       );
 

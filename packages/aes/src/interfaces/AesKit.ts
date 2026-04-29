@@ -1,12 +1,12 @@
-import { IKryptos } from "@lindorm/kryptos";
-import {
+import type { IKryptos } from "@lindorm/kryptos";
+import type {
   AesContent,
   AesDecryptionRecord,
   AesEncryptionRecord,
   SerialisedAesDecryption,
   SerialisedAesEncryption,
-} from "../types";
-import { PreparedEncryption } from "../internal/types/prepared-encryption";
+} from "../types/index.js";
+import type { PreparedEncryption } from "../internal/types/prepared-encryption.js";
 
 export type AesOperationOptions = {
   aad?: Buffer;

@@ -1,40 +1,41 @@
-import { PylonRouterScanner } from "../internal/classes/PylonRouterScanner";
-import { createCommonContextInitialisationMiddleware } from "../internal/middleware/common-context-initialisation-middleware";
-import { createQueueMiddleware } from "../internal/middleware/common-queue-middleware";
-import { createDependenciesMiddleware } from "../internal/middleware/common-dependencies-middleware";
-import { createWebhookMiddleware } from "../internal/middleware/common-webhook-middleware";
-import { createHttpBodyParserMiddleware } from "../internal/middleware/http-body-parser-middleware";
-import { createHttpContextInitialisationMiddleware } from "../internal/middleware/http-context-initialisation-middleware";
-import { createHttpCookiesMiddleware } from "../internal/middleware/http-cookies-middleware";
-import { createHttpCorsMiddleware } from "../internal/middleware/http-cors-middleware";
-import { createHttpDateValidationMiddleware } from "../internal/middleware/http-date-validation-middleware";
-import { httpErrorHandlerMiddleware } from "../internal/middleware/http-error-handler-middleware";
-import { httpQueryParserMiddleware } from "../internal/middleware/http-query-parser-middleware";
-import { httpRequestLoggerMiddleware } from "../internal/middleware/http-request-logger-middleware";
-import { httpResponseBodyMiddleware } from "../internal/middleware/http-response-body-middleware";
-import { httpResponseLoggerMiddleware } from "../internal/middleware/http-response-logger-middleware";
-import { httpResponseTimeMiddleware } from "../internal/middleware/http-response-time-middleware";
-import { createHttpSessionMiddleware } from "../internal/middleware/http-session-middleware";
-import { createHttpStateMiddleware } from "../internal/middleware/http-state-middleware";
-import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config";
-import { buildDefaultHealthCallback } from "../internal/utils/build-default-health-callback";
-import { createAuthRouter } from "../internal/utils/create-auth-router";
-import { createHealthRouter } from "../internal/utils/create-health-router";
-import { createWellKnownRouter } from "../internal/utils/create-well-known-router";
-import { normaliseRoutes } from "../internal/utils/normalise-routes";
+import { PylonRouterScanner } from "../internal/classes/PylonRouterScanner.js";
+import { createCommonContextInitialisationMiddleware } from "../internal/middleware/common-context-initialisation-middleware.js";
+import { createQueueMiddleware } from "../internal/middleware/common-queue-middleware.js";
+import { createDependenciesMiddleware } from "../internal/middleware/common-dependencies-middleware.js";
+import { createWebhookMiddleware } from "../internal/middleware/common-webhook-middleware.js";
+import { createHttpAbortSignalMiddleware } from "../internal/middleware/http-abort-signal-middleware.js";
+import { createHttpBodyParserMiddleware } from "../internal/middleware/http-body-parser-middleware.js";
+import { createHttpContextInitialisationMiddleware } from "../internal/middleware/http-context-initialisation-middleware.js";
+import { createHttpCookiesMiddleware } from "../internal/middleware/http-cookies-middleware.js";
+import { createHttpCorsMiddleware } from "../internal/middleware/http-cors-middleware.js";
+import { createHttpDateValidationMiddleware } from "../internal/middleware/http-date-validation-middleware.js";
+import { httpErrorHandlerMiddleware } from "../internal/middleware/http-error-handler-middleware.js";
+import { httpQueryParserMiddleware } from "../internal/middleware/http-query-parser-middleware.js";
+import { httpRequestLoggerMiddleware } from "../internal/middleware/http-request-logger-middleware.js";
+import { httpResponseBodyMiddleware } from "../internal/middleware/http-response-body-middleware.js";
+import { httpResponseLoggerMiddleware } from "../internal/middleware/http-response-logger-middleware.js";
+import { httpResponseTimeMiddleware } from "../internal/middleware/http-response-time-middleware.js";
+import { createHttpSessionMiddleware } from "../internal/middleware/http-session-middleware.js";
+import { createHttpStateMiddleware } from "../internal/middleware/http-state-middleware.js";
+import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
+import { buildDefaultHealthCallback } from "../internal/utils/build-default-health-callback.js";
+import { createAuthRouter } from "../internal/utils/create-auth-router.js";
+import { createHealthRouter } from "../internal/utils/create-health-router.js";
+import { createWellKnownRouter } from "../internal/utils/create-well-known-router.js";
+import { normaliseRoutes } from "../internal/utils/normalise-routes.js";
 import { isString } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import Koa from "koa";
-import { useRateLimit } from "../middleware/common/use-rate-limit";
-import {
+import { useRateLimit } from "../middleware/common/use-rate-limit.js";
+import type {
   HttpCallback,
   PylonAuthConfig,
   PylonHttpCallback,
   PylonHttpContext,
   PylonHttpMiddleware,
   PylonHttpOptions,
-} from "../types";
-import { PylonRouter } from "./PylonRouter";
+} from "../types/index.js";
+import { PylonRouter } from "./PylonRouter.js";
 
 export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   private readonly authConfig: PylonAuthConfig | undefined;
@@ -88,6 +89,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         version: this.options.version,
       }),
       createHttpContextInitialisationMiddleware(this.logger),
+      createHttpAbortSignalMiddleware(),
       createCommonContextInitialisationMiddleware(this.options.amphora),
       createHttpDateValidationMiddleware({
         minRequestAge: this.options.minRequestAge,
@@ -102,12 +104,12 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpRequestLoggerMiddleware,
       httpResponseBodyMiddleware,
       createDependenciesMiddleware({
+        actor: this.options.actor,
         authConfig: this.authConfig,
         auditConfig:
           this.options.audit?.enabled && (this.options.audit.iris ?? this.options.iris)
             ? {
                 iris: this.options.audit.iris ?? this.options.iris!,
-                actor: this.options.audit.actor,
                 sanitise: this.options.audit.sanitise,
                 skip: this.options.audit.skip,
               }
@@ -139,7 +141,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.logger.debug("Middleware loaded");
   }
 
-  public loadRouters(): void {
+  public async loadRouters(): Promise<void> {
     this.logger.debug("Loading routers");
 
     this.router.use(...this.middleware);
@@ -161,7 +163,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
       for (const entry of routes) {
         if (isString(entry)) {
-          const router = scanner.scan(entry);
+          const router = await scanner.scan(entry);
           this.router.use(router.routes(), router.allowedMethods());
         } else {
           this.addRouter(entry.path, entry.router);

@@ -1,4 +1,5 @@
-import { sanitiseToken } from "./sanitise-token";
+import { sanitiseToken } from "./sanitise-token.js";
+import { beforeAll, describe, expect, test } from "vitest";
 
 describe("sanitiseToken", () => {
   let token: string;

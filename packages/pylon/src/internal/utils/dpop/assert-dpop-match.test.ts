@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
-import { assertDpopMatch } from "./assert-dpop-match";
+import { assertDpopMatch } from "./assert-dpop-match.js";
+import { describe, expect, test } from "vitest";
 
 describe("assertDpopMatch", () => {
   const target = {

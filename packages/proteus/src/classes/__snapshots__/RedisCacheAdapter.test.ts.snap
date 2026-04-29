@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RedisCacheAdapter delByPrefix calls client.eval with Lua script, numkeys=1, pattern with wildcard, and scanCount 1`] = `
+exports[`RedisCacheAdapter > delByPrefix > calls client.eval with Lua script, numkeys=1, pattern with wildcard, and scanCount 1`] = `
 [MockFunction] {
   "calls": [
     [
@@ -38,7 +38,7 @@ return total
 }
 `;
 
-exports[`RedisCacheAdapter set calls client.set with key, value, PX flag, and ttlMs 1`] = `
+exports[`RedisCacheAdapter > set > calls client.set with key, value, PX flag, and ttlMs 1`] = `
 [MockFunction] {
   "calls": [
     [

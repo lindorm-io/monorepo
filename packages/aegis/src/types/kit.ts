@@ -1,6 +1,6 @@
-import { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { CertBindingMode } from "./header";
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
+import type { CertBindingMode } from "./header.js";
 
 export type SignKitOptions = {
   certBindingMode?: CertBindingMode;

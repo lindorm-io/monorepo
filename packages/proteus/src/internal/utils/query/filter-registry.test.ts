@@ -1,10 +1,11 @@
+import { describe, expect, test } from "vitest";
 import {
   cloneFilterRegistry,
   createFilterRegistry,
   disableFilter,
   enableFilter,
   setFilterParams,
-} from "./filter-registry";
+} from "./filter-registry.js";
 
 describe("createFilterRegistry", () => {
   test("should create an empty registry", () => {

@@ -1,17 +1,18 @@
-import type { MetaHook } from "../types/metadata";
-import { runHooksSync } from "./run-hooks-sync";
+import type { MetaHook } from "../types/metadata.js";
+import { runHooksSync } from "./run-hooks-sync.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("runHooksSync", () => {
   const hooks: Array<MetaHook> = [
-    { decorator: "OnCreate", callback: jest.fn() },
-    { decorator: "OnValidate", callback: jest.fn() },
-    { decorator: "OnCreate", callback: jest.fn() },
-    { decorator: "OnHydrate", callback: jest.fn() },
+    { decorator: "OnCreate", callback: vi.fn() },
+    { decorator: "OnValidate", callback: vi.fn() },
+    { decorator: "OnCreate", callback: vi.fn() },
+    { decorator: "OnHydrate", callback: vi.fn() },
   ];
 
   beforeEach(() => {
     for (const h of hooks) {
-      (h.callback as jest.Mock).mockClear();
+      (h.callback as Mock).mockClear();
     }
   });
 
@@ -25,19 +26,30 @@ describe("runHooksSync", () => {
     expect(hooks[3].callback).not.toHaveBeenCalled();
   });
 
-  test("should pass context and entity to callbacks", () => {
+  test("should pass entity and meta to callbacks in that order", () => {
     const entity = { id: "1" };
-    const ctx = { user: "admin" };
-    runHooksSync("OnCreate", hooks, entity, ctx);
+    const meta = {
+      correlationId: "c-1",
+      actor: "admin",
+      timestamp: new Date("2024-01-01T00:00:00Z"),
+    };
+    runHooksSync("OnCreate", hooks, entity, meta);
 
-    expect(hooks[0].callback).toHaveBeenCalledWith(ctx, entity);
+    expect(hooks[0].callback).toHaveBeenCalledWith(entity, meta);
   });
 
-  test("should pass undefined context when not provided", () => {
+  test("should pass a default hook meta when no meta is provided", () => {
     const entity = { id: "1" };
     runHooksSync("OnCreate", hooks, entity);
 
-    expect(hooks[0].callback).toHaveBeenCalledWith(undefined, entity);
+    expect(hooks[0].callback).toHaveBeenCalledWith(
+      entity,
+      expect.objectContaining({
+        correlationId: "unknown",
+        actor: "unknown",
+        timestamp: expect.any(Date),
+      }),
+    );
   });
 
   test("should be a no-op when no hooks match", () => {

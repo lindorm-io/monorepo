@@ -1,5 +1,6 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { RequireCreated } from "./RequireCreated";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { RequireCreated } from "./RequireCreated.js";
+import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (
   metadata: DecoratorMetadataObject,

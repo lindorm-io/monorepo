@@ -1,5 +1,6 @@
 import { ServerError } from "@lindorm/errors";
-import { getOpenIdConfiguration } from "./get-open-id-configuration";
+import { getOpenIdConfiguration } from "./get-open-id-configuration.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("getOpenIdConfiguration", () => {
   let config: any;

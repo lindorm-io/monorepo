@@ -1,20 +1,21 @@
-import { setupDataAuditConsumer, DATA_AUDIT_QUEUE } from "./setup-data-audit-consumer";
+import { setupDataAuditConsumer, DATA_AUDIT_QUEUE } from "./setup-data-audit-consumer.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("setupDataAuditConsumer", () => {
-  const mockInsert = jest.fn().mockResolvedValue(undefined);
-  const mockRepository = jest.fn().mockReturnValue({ insert: mockInsert });
-  const mockConsume = jest.fn().mockResolvedValue(undefined);
-  const mockWorkerQueue = jest.fn().mockReturnValue({ consume: mockConsume });
+  const mockInsert = vi.fn().mockResolvedValue(undefined);
+  const mockRepository = vi.fn().mockReturnValue({ insert: mockInsert });
+  const mockConsume = vi.fn().mockResolvedValue(undefined);
+  const mockWorkerQueue = vi.fn().mockReturnValue({ consume: mockConsume });
 
   const iris = { workerQueue: mockWorkerQueue } as any;
   const proteus = { repository: mockRepository } as any;
   const logger = {
-    debug: jest.fn(),
-    verbose: jest.fn(),
+    debug: vi.fn(),
+    verbose: vi.fn(),
   } as any;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should set up worker queue consumer for DataAuditChange", async () => {

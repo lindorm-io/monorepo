@@ -1,11 +1,11 @@
 import { isNumber } from "@lindorm/is";
-import { ProteusError } from "../../../errors";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { IncludeSpec, RawSelectEntry, WindowSpec } from "../../types/query";
-import { resolveColumnName } from "./resolve-column-name";
-import type { SqlDialect } from "./sql-dialect";
-import type { AliasMap, BuiltAliasResult, InheritanceAliasMap } from "./types";
+import { ProteusError } from "../../../errors/index.js";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { IncludeSpec, RawSelectEntry, WindowSpec } from "../../types/query.js";
+import { resolveColumnName } from "./resolve-column-name.js";
+import type { SqlDialect } from "./sql-dialect.js";
+import type { AliasMap, BuiltAliasResult, InheritanceAliasMap } from "./types.js";
 
 export type CompileSelectDeps = {
   buildInheritanceAliases: (
@@ -20,9 +20,9 @@ export type CompileSelectDeps = {
   findRelationByKey: (
     metadata: EntityMetadata,
     relationKey: string,
-  ) => import("../../entity/types/metadata").MetaRelation;
+  ) => import("../../entity/types/metadata.js").MetaRelation;
   getRelationMetadata: (
-    relation: import("../../entity/types/metadata").MetaRelation,
+    relation: import("../../entity/types/metadata.js").MetaRelation,
   ) => EntityMetadata;
 };
 

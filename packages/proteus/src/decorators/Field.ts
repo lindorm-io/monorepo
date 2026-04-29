@@ -1,6 +1,6 @@
-import type { FieldDecoratorOptions } from "../internal/entity/types/decorators";
-import type { MetaFieldType } from "../internal/entity/types/metadata";
-import { stageField } from "../internal/entity/metadata/stage-metadata";
+import type { FieldDecoratorOptions } from "../internal/entity/types/decorators.js";
+import type { MetaFieldType } from "../internal/entity/types/metadata.js";
+import { stageField } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
  * Declare a persistent field on an entity.

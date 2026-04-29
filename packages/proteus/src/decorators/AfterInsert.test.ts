@@ -1,9 +1,10 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { AfterInsert } from "./AfterInsert";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { AfterInsert } from "./AfterInsert.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test, vi } from "vitest";
 
-const afterInsertCallback = jest.fn();
+const afterInsertCallback = vi.fn();
 
 @Entity({ name: "AfterInsertDecorated" })
 @AfterInsert(afterInsertCallback)
@@ -12,8 +13,8 @@ class AfterInsertDecorated {
   id!: string;
 }
 
-const multiHookCb1 = jest.fn();
-const multiHookCb2 = jest.fn();
+const multiHookCb1 = vi.fn();
+const multiHookCb2 = vi.fn();
 
 @Entity({ name: "AfterInsertMultiHook" })
 @AfterInsert(multiHookCb1)

@@ -1,18 +1,27 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata";
-import type { IncludeSpec, WindowSpec } from "../../../../types/query";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
+import type { IncludeSpec, WindowSpec } from "../../../../types/query.js";
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 
 // Mock get-relation-metadata so tests for buildAliasMap / compileSelect with includes
 // do not need a real decorator-decorated entity class registered in getEntityMetadata.
-jest.mock("./get-relation-metadata");
+vi.mock("./get-relation-metadata.js");
 
-import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata";
-import { buildAliasMap, compileFrom, compileSelect } from "./compile-select";
+import { findRelationByKey, getRelationMetadata } from "./get-relation-metadata.js";
+import { buildAliasMap, compileFrom, compileSelect } from "./compile-select.js";
 
-const mockFindRelationByKey = findRelationByKey as jest.MockedFunction<
+const mockFindRelationByKey = findRelationByKey as MockedFunction<
   typeof findRelationByKey
 >;
-const mockGetRelationMetadata = getRelationMetadata as jest.MockedFunction<
+const mockGetRelationMetadata = getRelationMetadata as MockedFunction<
   typeof getRelationMetadata
 >;
 
@@ -36,7 +45,7 @@ const metadata = {
 } as unknown as EntityMetadata;
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe("buildAliasMap", () => {

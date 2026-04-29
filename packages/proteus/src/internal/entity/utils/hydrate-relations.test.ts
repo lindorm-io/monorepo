@@ -1,6 +1,7 @@
-import type { EntityMetadata, MetaRelation } from "../types/metadata";
-import { hydrateRelations } from "./hydrate-relations";
-import { getSnapshot } from "./snapshot-store";
+import type { EntityMetadata, MetaRelation } from "../types/metadata.js";
+import { hydrateRelations } from "./hydrate-relations.js";
+import { getSnapshot } from "./snapshot-store.js";
+import { describe, expect, test } from "vitest";
 
 const makeRelation = (overrides: Partial<MetaRelation>): MetaRelation =>
   ({

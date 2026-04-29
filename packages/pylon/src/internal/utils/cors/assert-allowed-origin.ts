@@ -1,6 +1,6 @@
 import { ClientError } from "@lindorm/errors";
-import { CorsOptions } from "../../../types";
-import { matchOrigin } from "./match-origin";
+import type { CorsOptions } from "../../../types/index.js";
+import { matchOrigin } from "./match-origin.js";
 
 export const assertAllowedOrigin = (
   origin: string | undefined,

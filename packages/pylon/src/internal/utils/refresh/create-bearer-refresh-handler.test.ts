@@ -1,7 +1,8 @@
-import { createMockAegis } from "@lindorm/aegis";
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
-import { PylonSocketAuth } from "../../../types";
-import { createBearerRefreshHandler } from "./create-bearer-refresh-handler";
+import type { PylonSocketAuth } from "../../../types/index.js";
+import { createBearerRefreshHandler } from "./create-bearer-refresh-handler.js";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createBearerRefreshHandler", () => {
   let aegis: ReturnType<typeof createMockAegis>;
@@ -9,7 +10,7 @@ describe("createBearerRefreshHandler", () => {
   let socket: any;
 
   beforeEach(() => {
-    jest.useFakeTimers().setSystemTime(new Date("2026-04-11T12:00:00.000Z"));
+    vi.useFakeTimers().setSystemTime(new Date("2026-04-11T12:00:00.000Z"));
 
     aegis = createMockAegis();
 
@@ -29,11 +30,11 @@ describe("createBearerRefreshHandler", () => {
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test("swaps bearer, updates getExpiresAt from expiresIn, clears authExpiredEmittedAt on valid refresh", async () => {
-    (aegis.verify as jest.Mock).mockResolvedValue({
+    (aegis.verify as Mock).mockResolvedValue({
       payload: { subject: "alice", expiresAt: new Date("2026-04-11T13:30:00.000Z") },
       header: { tokenType: "access_token" },
       token: "new-jwt",
@@ -54,7 +55,7 @@ describe("createBearerRefreshHandler", () => {
   });
 
   test("envelope expiresIn wins over parsed token exp", async () => {
-    (aegis.verify as jest.Mock).mockResolvedValue({
+    (aegis.verify as Mock).mockResolvedValue({
       payload: { subject: "alice", expiresAt: new Date("2026-04-11T23:59:59.000Z") },
       header: { tokenType: "access_token" },
       token: "new-jwt",
@@ -73,7 +74,7 @@ describe("createBearerRefreshHandler", () => {
   });
 
   test("throws when subject changes", async () => {
-    (aegis.verify as jest.Mock).mockResolvedValue({
+    (aegis.verify as Mock).mockResolvedValue({
       payload: { subject: "bob", expiresAt: new Date() },
       header: {},
       token: "new-jwt",
@@ -93,7 +94,7 @@ describe("createBearerRefreshHandler", () => {
 
   describe("capturedJkt (DPoP binding)", () => {
     test("accepts refresh when new token has same cnf.jkt", async () => {
-      (aegis.verify as jest.Mock).mockResolvedValue({
+      (aegis.verify as Mock).mockResolvedValue({
         payload: {
           subject: "alice",
           expiresAt: new Date("2026-04-11T13:00:00.000Z"),
@@ -118,7 +119,7 @@ describe("createBearerRefreshHandler", () => {
     });
 
     test("rejects refresh when new token has a different cnf.jkt", async () => {
-      (aegis.verify as jest.Mock).mockResolvedValue({
+      (aegis.verify as Mock).mockResolvedValue({
         payload: {
           subject: "alice",
           expiresAt: new Date(),
@@ -142,7 +143,7 @@ describe("createBearerRefreshHandler", () => {
     });
 
     test("rejects refresh when new token is bearer-only (no cnf.jkt)", async () => {
-      (aegis.verify as jest.Mock).mockResolvedValue({
+      (aegis.verify as Mock).mockResolvedValue({
         payload: { subject: "alice", expiresAt: new Date() },
         header: {},
         token: "new-jwt",

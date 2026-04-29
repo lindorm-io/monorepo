@@ -1,8 +1,8 @@
-import { ParsedJws, ParsedJwt } from "@lindorm/aegis";
-import { Dict } from "@lindorm/types";
-import { IPylonSession } from "../interfaces";
-import { AppState } from "./context-common";
-import { IoSocket } from "./socket";
+import type { ParsedJws, ParsedJwt } from "@lindorm/aegis";
+import type { Dict } from "@lindorm/types";
+import type { IPylonSession } from "../interfaces/index.js";
+import type { AppState } from "./context-common.js";
+import type { IoSocket } from "./socket.js";
 
 export type PylonListenerMethod =
   | "on"

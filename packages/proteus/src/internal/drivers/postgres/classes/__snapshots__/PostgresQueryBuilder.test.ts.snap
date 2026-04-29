@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PostgresQueryBuilder getMany should execute query and hydrate results 1`] = `
+exports[`PostgresQueryBuilder > getMany > should execute query and hydrate results 1`] = `
 [
   target {
     "age": 25,
@@ -17,7 +17,7 @@ exports[`PostgresQueryBuilder getMany should execute query and hydrate results 1
 ]
 `;
 
-exports[`PostgresQueryBuilder getOne should return single entity 1`] = `
+exports[`PostgresQueryBuilder > getOne > should return single entity 1`] = `
 target {
   "age": 25,
   "email": "alice@test.com",
@@ -26,7 +26,7 @@ target {
 }
 `;
 
-exports[`PostgresQueryBuilder toSQL should return compiled query 1`] = `
+exports[`PostgresQueryBuilder > toSQL > should return compiled query 1`] = `
 {
   "aliasMap": [
     {

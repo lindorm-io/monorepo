@@ -1,6 +1,7 @@
-import { diffComments } from "../../../../drivers/postgres/utils/sync/diff-comments";
-import type { DbTable } from "../../types/db-snapshot";
-import type { DesiredTable } from "../../types/desired-schema";
+import { diffComments } from "../../../../drivers/postgres/utils/sync/diff-comments.js";
+import type { DbTable } from "../../types/db-snapshot.js";
+import type { DesiredTable } from "../../types/desired-schema.js";
+import { describe, expect, it } from "vitest";
 
 const makeDbTable = (overrides: Partial<DbTable> = {}): DbTable => ({
   schema: "public",

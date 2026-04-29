@@ -1,11 +1,12 @@
-import type { MysqlDbSnapshot } from "../../types/db-snapshot";
-import type { MysqlSyncPlan } from "../../types/sync-plan";
-import { serializeMysqlMigration } from "./serialize-mysql-migration";
+import type { MysqlDbSnapshot } from "../../types/db-snapshot.js";
+import type { MysqlSyncPlan } from "../../types/sync-plan.js";
+import { serializeMysqlMigration } from "./serialize-mysql-migration.js";
+import { describe, expect, it, vi } from "vitest";
 
 // Stable UUID for deterministic snapshots
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest.fn(() => "00000000-0000-0000-0000-000000000001"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi.fn(() => "00000000-0000-0000-0000-000000000001"),
 }));
 
 const fixedDate = new Date("2026-02-20T09:00:00.000Z");

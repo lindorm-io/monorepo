@@ -1,6 +1,6 @@
-import type { SqliteTransactionHandle } from "../../types/sqlite-transaction-handle";
-import { SqliteTransactionError } from "../../errors/SqliteTransactionError";
-import { assertActiveTransaction } from "./assert-active-transaction";
+import type { SqliteTransactionHandle } from "../../types/sqlite-transaction-handle.js";
+import { SqliteTransactionError } from "../../errors/SqliteTransactionError.js";
+import { assertActiveTransaction } from "./assert-active-transaction.js";
 
 export const rollbackTransaction = (handle: SqliteTransactionHandle): void => {
   assertActiveTransaction(handle);

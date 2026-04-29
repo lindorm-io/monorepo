@@ -1,95 +1,95 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`mapFieldType binary type binary → BYTEA 1`] = `"BYTEA"`;
+exports[`mapFieldType > binary type > binary → BYTEA 1`] = `"BYTEA"`;
 
-exports[`mapFieldType boolean boolean → BOOLEAN 1`] = `"BOOLEAN"`;
+exports[`mapFieldType > boolean > boolean → BOOLEAN 1`] = `"BOOLEAN"`;
 
-exports[`mapFieldType date/time types date → DATE 1`] = `"DATE"`;
+exports[`mapFieldType > date/time types > date → DATE 1`] = `"DATE"`;
 
-exports[`mapFieldType date/time types interval → INTERVAL 1`] = `"INTERVAL"`;
+exports[`mapFieldType > date/time types > interval → INTERVAL 1`] = `"INTERVAL"`;
 
-exports[`mapFieldType date/time types time → TIME 1`] = `"TIME"`;
+exports[`mapFieldType > date/time types > time → TIME 1`] = `"TIME"`;
 
-exports[`mapFieldType date/time types timestamp → TIMESTAMPTZ(3) 1`] = `"TIMESTAMPTZ(3)"`;
+exports[`mapFieldType > date/time types > timestamp → TIMESTAMPTZ(3) 1`] = `"TIMESTAMPTZ(3)"`;
 
-exports[`mapFieldType floating point types decimal with precision and scale → NUMERIC(p, s) 1`] = `"NUMERIC(10, 2)"`;
+exports[`mapFieldType > floating point types > decimal with precision and scale → NUMERIC(p, s) 1`] = `"NUMERIC(10, 2)"`;
 
-exports[`mapFieldType floating point types decimal with precision only → NUMERIC(p) 1`] = `"NUMERIC(10)"`;
+exports[`mapFieldType > floating point types > decimal with precision only → NUMERIC(p) 1`] = `"NUMERIC(10)"`;
 
-exports[`mapFieldType floating point types decimal with scale but no precision → NUMERIC (scale is ignored) 1`] = `"NUMERIC"`;
+exports[`mapFieldType > floating point types > decimal with scale but no precision → NUMERIC (scale is ignored) 1`] = `"NUMERIC"`;
 
-exports[`mapFieldType floating point types decimal without precision or scale → NUMERIC 1`] = `"NUMERIC"`;
+exports[`mapFieldType > floating point types > decimal without precision or scale → NUMERIC 1`] = `"NUMERIC"`;
 
-exports[`mapFieldType floating point types float → DOUBLE PRECISION 1`] = `"DOUBLE PRECISION"`;
+exports[`mapFieldType > floating point types > float → DOUBLE PRECISION 1`] = `"DOUBLE PRECISION"`;
 
-exports[`mapFieldType floating point types real → REAL 1`] = `"REAL"`;
+exports[`mapFieldType > floating point types > real → REAL 1`] = `"REAL"`;
 
-exports[`mapFieldType geometric types box → BOX 1`] = `"BOX"`;
+exports[`mapFieldType > geometric types > box → BOX 1`] = `"BOX"`;
 
-exports[`mapFieldType geometric types circle → CIRCLE 1`] = `"CIRCLE"`;
+exports[`mapFieldType > geometric types > circle → CIRCLE 1`] = `"CIRCLE"`;
 
-exports[`mapFieldType geometric types line → LINE 1`] = `"LINE"`;
+exports[`mapFieldType > geometric types > line → LINE 1`] = `"LINE"`;
 
-exports[`mapFieldType geometric types lseg → LSEG 1`] = `"LSEG"`;
+exports[`mapFieldType > geometric types > lseg → LSEG 1`] = `"LSEG"`;
 
-exports[`mapFieldType geometric types path → PATH 1`] = `"PATH"`;
+exports[`mapFieldType > geometric types > path → PATH 1`] = `"PATH"`;
 
-exports[`mapFieldType geometric types point → POINT 1`] = `"POINT"`;
+exports[`mapFieldType > geometric types > point → POINT 1`] = `"POINT"`;
 
-exports[`mapFieldType geometric types polygon → POLYGON 1`] = `"POLYGON"`;
+exports[`mapFieldType > geometric types > polygon → POLYGON 1`] = `"POLYGON"`;
 
-exports[`mapFieldType integer types bigint → BIGINT 1`] = `"BIGINT"`;
+exports[`mapFieldType > integer types > bigint → BIGINT 1`] = `"BIGINT"`;
 
-exports[`mapFieldType integer types integer → INTEGER 1`] = `"INTEGER"`;
+exports[`mapFieldType > integer types > integer → INTEGER 1`] = `"INTEGER"`;
 
-exports[`mapFieldType integer types smallint → SMALLINT 1`] = `"SMALLINT"`;
+exports[`mapFieldType > integer types > smallint → SMALLINT 1`] = `"SMALLINT"`;
 
-exports[`mapFieldType logical types (stored as TEXT) email → TEXT 1`] = `"TEXT"`;
+exports[`mapFieldType > logical types (stored as TEXT) > email → TEXT 1`] = `"TEXT"`;
 
-exports[`mapFieldType logical types (stored as TEXT) url → TEXT 1`] = `"TEXT"`;
+exports[`mapFieldType > logical types (stored as TEXT) > url → TEXT 1`] = `"TEXT"`;
 
-exports[`mapFieldType network types cidr → CIDR 1`] = `"CIDR"`;
+exports[`mapFieldType > network types > cidr → CIDR 1`] = `"CIDR"`;
 
-exports[`mapFieldType network types inet → INET 1`] = `"INET"`;
+exports[`mapFieldType > network types > inet → INET 1`] = `"INET"`;
 
-exports[`mapFieldType network types macaddr → MACADDR 1`] = `"MACADDR"`;
+exports[`mapFieldType > network types > macaddr → MACADDR 1`] = `"MACADDR"`;
 
-exports[`mapFieldType string types enum with namespace → schema-qualified enum type name 1`] = `""myschema"."enum_test_table_testField""`;
+exports[`mapFieldType > string types > enum with namespace → schema-qualified enum type name 1`] = `""myschema"."enum_test_table_testField""`;
 
-exports[`mapFieldType string types enum without namespace → unqualified enum type name 1`] = `""enum_test_table_testField""`;
+exports[`mapFieldType > string types > enum without namespace → unqualified enum type name 1`] = `""enum_test_table_testField""`;
 
-exports[`mapFieldType string types string with max → VARCHAR(n) 1`] = `"VARCHAR(255)"`;
+exports[`mapFieldType > string types > string with max → VARCHAR(n) 1`] = `"VARCHAR(255)"`;
 
-exports[`mapFieldType string types string with max=0 → TEXT (falsy-zero falls through to TEXT) 1`] = `"TEXT"`;
+exports[`mapFieldType > string types > string with max=0 → TEXT (falsy-zero falls through to TEXT) 1`] = `"TEXT"`;
 
-exports[`mapFieldType string types string without max → TEXT 1`] = `"TEXT"`;
+exports[`mapFieldType > string types > string without max → TEXT 1`] = `"TEXT"`;
 
-exports[`mapFieldType string types text → TEXT 1`] = `"TEXT"`;
+exports[`mapFieldType > string types > text → TEXT 1`] = `"TEXT"`;
 
-exports[`mapFieldType string types uuid → UUID 1`] = `"UUID"`;
+exports[`mapFieldType > string types > uuid → UUID 1`] = `"UUID"`;
 
-exports[`mapFieldType string types varchar with max → VARCHAR(n) 1`] = `"VARCHAR(100)"`;
+exports[`mapFieldType > string types > varchar with max → VARCHAR(n) 1`] = `"VARCHAR(100)"`;
 
-exports[`mapFieldType structured types array with enum arrayType with namespace → schema-qualified enum type name[] 1`] = `""myschema"."enum_test_table_testField"[]"`;
+exports[`mapFieldType > structured types > array with enum arrayType with namespace → schema-qualified enum type name[] 1`] = `""myschema"."enum_test_table_testField"[]"`;
 
-exports[`mapFieldType structured types array with enum arrayType → <enum_type_name>[] 1`] = `""enum_test_table_testField"[]"`;
+exports[`mapFieldType > structured types > array with enum arrayType → <enum_type_name>[] 1`] = `""enum_test_table_testField"[]"`;
 
-exports[`mapFieldType structured types array with integer arrayType → INTEGER[] 1`] = `"INTEGER[]"`;
+exports[`mapFieldType > structured types > array with integer arrayType → INTEGER[] 1`] = `"INTEGER[]"`;
 
-exports[`mapFieldType structured types array with text arrayType → TEXT[] 1`] = `"TEXT[]"`;
+exports[`mapFieldType > structured types > array with text arrayType → TEXT[] 1`] = `"TEXT[]"`;
 
-exports[`mapFieldType structured types array with uuid arrayType → UUID[] 1`] = `"UUID[]"`;
+exports[`mapFieldType > structured types > array with uuid arrayType → UUID[] 1`] = `"UUID[]"`;
 
-exports[`mapFieldType structured types array without arrayType → JSONB fallback 1`] = `"JSONB"`;
+exports[`mapFieldType > structured types > array without arrayType → JSONB fallback 1`] = `"JSONB"`;
 
-exports[`mapFieldType structured types json → JSONB 1`] = `"JSONB"`;
+exports[`mapFieldType > structured types > json → JSONB 1`] = `"JSONB"`;
 
-exports[`mapFieldType structured types object → JSONB 1`] = `"JSONB"`;
+exports[`mapFieldType > structured types > object → JSONB 1`] = `"JSONB"`;
 
-exports[`mapFieldType vector type vector with max → VECTOR(n) 1`] = `"VECTOR(1536)"`;
+exports[`mapFieldType > vector type > vector with max → VECTOR(n) 1`] = `"VECTOR(1536)"`;
 
-exports[`mapFieldType vector type vector with max=0 → VECTOR (falsy-zero falls through to bare VECTOR) 1`] = `"VECTOR"`;
+exports[`mapFieldType > vector type > vector with max=0 → VECTOR (falsy-zero falls through to bare VECTOR) 1`] = `"VECTOR"`;
 
-exports[`mapFieldType vector type vector without max → VECTOR 1`] = `"VECTOR"`;
+exports[`mapFieldType > vector type > vector without max → VECTOR 1`] = `"VECTOR"`;
 
-exports[`mapFieldType xml type xml → XML 1`] = `"XML"`;
+exports[`mapFieldType > xml type > xml → XML 1`] = `"XML"`;

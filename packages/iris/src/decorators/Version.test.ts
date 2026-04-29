@@ -1,4 +1,5 @@
-import { Version } from "./Version";
+import { Version } from "./Version.js";
+import { describe, expect, it } from "vitest";
 
 describe("Version", () => {
   it("should stage version metadata", () => {

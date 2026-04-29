@@ -1,46 +1,50 @@
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types";
-import { wrapRedisConsumer, type RedisConsumerCallbackHost } from "./wrap-redis-consumer";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types.js";
+import {
+  wrapRedisConsumer,
+  type RedisConsumerCallbackHost,
+} from "./wrap-redis-consumer.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockHost = <M extends IMessage>(): RedisConsumerCallbackHost<M> => ({
-  prepareForConsume: jest.fn().mockResolvedValue({ data: "hydrated" }),
-  afterConsumeSuccess: jest.fn().mockResolvedValue(undefined),
-  onConsumeError: jest.fn().mockResolvedValue(undefined),
+  prepareForConsume: vi.fn().mockResolvedValue({ data: "hydrated" }),
+  afterConsumeSuccess: vi.fn().mockResolvedValue(undefined),
+  onConsumeError: vi.fn().mockResolvedValue(undefined),
 });
 
 const createMockDeadLetterManager = (): DeadLetterManager =>
   ({
-    send: jest.fn().mockResolvedValue("dl-id"),
-    list: jest.fn().mockResolvedValue([]),
-    get: jest.fn().mockResolvedValue(null),
-    remove: jest.fn().mockResolvedValue(false),
-    purge: jest.fn().mockResolvedValue(0),
-    count: jest.fn().mockResolvedValue(0),
-    close: jest.fn().mockResolvedValue(undefined),
+    send: vi.fn().mockResolvedValue("dl-id"),
+    list: vi.fn().mockResolvedValue([]),
+    get: vi.fn().mockResolvedValue(null),
+    remove: vi.fn().mockResolvedValue(false),
+    purge: vi.fn().mockResolvedValue(0),
+    count: vi.fn().mockResolvedValue(0),
+    close: vi.fn().mockResolvedValue(undefined),
   }) as any;
 
 const createMockConnection = () => ({
-  xadd: jest.fn().mockResolvedValue("1-0"),
-  xreadgroup: jest.fn().mockResolvedValue(null),
-  xack: jest.fn().mockResolvedValue(1),
-  xgroup: jest.fn().mockResolvedValue("OK"),
-  del: jest.fn().mockResolvedValue(1),
-  duplicate: jest.fn(),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn(),
+  xadd: vi.fn().mockResolvedValue("1-0"),
+  xreadgroup: vi.fn().mockResolvedValue(null),
+  xack: vi.fn().mockResolvedValue(1),
+  xgroup: vi.fn().mockResolvedValue("OK"),
+  del: vi.fn().mockResolvedValue(1),
+  duplicate: vi.fn(),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  on: vi.fn(),
 });
 
 const createEntry = (overrides: Partial<RedisStreamEntry> = {}): RedisStreamEntry => ({
@@ -97,7 +101,7 @@ describe("wrapRedisConsumer", () => {
   describe("happy path", () => {
     it("should call prepareForConsume, callback, and afterConsumeSuccess", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -123,7 +127,7 @@ describe("wrapRedisConsumer", () => {
 
     it("should pass ConsumeEnvelope with metadata fields to callback", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const metadata = createMetadata({ namespace: "my-ns", version: 3 });
       const logger = createMockLogger();
@@ -145,7 +149,7 @@ describe("wrapRedisConsumer", () => {
 
     it("should decrement inFlightCount after processing", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
 
@@ -164,7 +168,7 @@ describe("wrapRedisConsumer", () => {
     it("should increment inFlightCount during processing", async () => {
       const host = createMockHost();
       let captured = -1;
-      const callback = jest.fn().mockImplementation(async () => {
+      const callback = vi.fn().mockImplementation(async () => {
         captured = state.inFlightCount;
       });
       const state = createState();
@@ -187,7 +191,7 @@ describe("wrapRedisConsumer", () => {
   describe("expiry", () => {
     it("should skip expired messages", async () => {
       const host = createMockHost();
-      const callback = jest.fn();
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 
@@ -215,7 +219,7 @@ describe("wrapRedisConsumer", () => {
 
     it("should not skip messages with null expiry", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
 
@@ -237,8 +241,8 @@ describe("wrapRedisConsumer", () => {
   describe("deserialization failure", () => {
     it("should log and send to dead letter on deserialization error", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -261,8 +265,8 @@ describe("wrapRedisConsumer", () => {
 
     it("should wrap non-Error deserialization failures", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue("string error");
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue("string error");
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 
@@ -286,8 +290,8 @@ describe("wrapRedisConsumer", () => {
 
     it("should not send to dead letter when no manager provided", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -306,7 +310,7 @@ describe("wrapRedisConsumer", () => {
   describe("callback error - retry", () => {
     it("should republish with incremented attempt when retries remain (no delayManager)", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -319,7 +323,7 @@ describe("wrapRedisConsumer", () => {
       expect(host.onConsumeError).toHaveBeenCalled();
       expect(state.publishConnection!.xadd).toHaveBeenCalledTimes(1);
 
-      const xaddArgs = (state.publishConnection!.xadd as jest.Mock).mock.calls[0];
+      const xaddArgs = (state.publishConnection!.xadd as Mock).mock.calls[0];
       // Should contain "attempt" followed by "1"
       const attemptIndex = xaddArgs.indexOf("attempt");
       expect(attemptIndex).toBeGreaterThan(-1);
@@ -328,11 +332,11 @@ describe("wrapRedisConsumer", () => {
 
     it("should schedule retry via delayManager when available", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
-      const delayManager = { schedule: jest.fn().mockResolvedValue("delay-id") } as any;
+      const delayManager = { schedule: vi.fn().mockResolvedValue("delay-id") } as any;
 
       const wrapped = wrapRedisConsumer(host, callback, state, metadata, logger as any, {
         delayManager,
@@ -354,7 +358,7 @@ describe("wrapRedisConsumer", () => {
 
     it("should not retry when attempt >= maxRetries", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -371,7 +375,7 @@ describe("wrapRedisConsumer", () => {
   describe("callback error - exhausted retries", () => {
     it("should send to dead letter when retries exhausted and dead letter enabled", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("permanent"));
+      const callback = vi.fn().mockRejectedValue(new Error("permanent"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -393,7 +397,7 @@ describe("wrapRedisConsumer", () => {
 
     it("should not send to dead letter when dead letter is disabled", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: false });
       const logger = createMockLogger();
@@ -411,7 +415,7 @@ describe("wrapRedisConsumer", () => {
 
     it("should send to dead letter when no retries configured and dead letter enabled", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -432,7 +436,7 @@ describe("wrapRedisConsumer", () => {
 
     it("should not crash when dead letter enabled but no manager provided", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -447,8 +451,8 @@ describe("wrapRedisConsumer", () => {
   describe("afterConsumeSuccess hook", () => {
     it("should log and swallow afterConsumeSuccess errors", async () => {
       const host = createMockHost();
-      (host.afterConsumeSuccess as jest.Mock).mockRejectedValue(new Error("hook failed"));
-      const callback = jest.fn().mockResolvedValue(undefined);
+      (host.afterConsumeSuccess as Mock).mockRejectedValue(new Error("hook failed"));
+      const callback = vi.fn().mockResolvedValue(undefined);
       const state = createState();
       const logger = createMockLogger();
 
@@ -474,7 +478,7 @@ describe("wrapRedisConsumer", () => {
   describe("error wrapping", () => {
     it("should wrap non-Error callback throws into Error instances", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue("string error");
+      const callback = vi.fn().mockRejectedValue("string error");
       const state = createState();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -496,7 +500,7 @@ describe("wrapRedisConsumer", () => {
   describe("inFlightCount management", () => {
     it("should decrement inFlightCount even on error", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
       const logger = createMockLogger();
 
@@ -514,8 +518,8 @@ describe("wrapRedisConsumer", () => {
 
     it("should decrement inFlightCount on deserialization failure", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(new Error("bad data"));
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
+      const callback = vi.fn();
       const state = createState();
       const logger = createMockLogger();
 

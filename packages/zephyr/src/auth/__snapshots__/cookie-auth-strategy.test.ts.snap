@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createCookieAuthStrategy prepareHandshake should preserve existing opts when enabling withCredentials 1`] = `
+exports[`createCookieAuthStrategy > prepareHandshake > should preserve existing opts when enabling withCredentials 1`] = `
 {
   "reconnection": true,
   "transports": [
@@ -10,7 +10,7 @@ exports[`createCookieAuthStrategy prepareHandshake should preserve existing opts
 }
 `;
 
-exports[`createCookieAuthStrategy prepareHandshake should set socket.io.opts.withCredentials to true 1`] = `
+exports[`createCookieAuthStrategy > prepareHandshake > should set socket.io.opts.withCredentials to true 1`] = `
 {
   "withCredentials": true,
 }

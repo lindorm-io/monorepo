@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RedisOptimisticLockError snapshot matches snapshot for composite primary key 1`] = `
+exports[`RedisOptimisticLockError snapshot > matches snapshot for composite primary key 1`] = `
 {
   "code": null,
   "debug": {
@@ -17,7 +17,7 @@ exports[`RedisOptimisticLockError snapshot matches snapshot for composite primar
 }
 `;
 
-exports[`RedisOptimisticLockError snapshot serialises to JSON with expected shape 1`] = `
+exports[`RedisOptimisticLockError snapshot > serialises to JSON with expected shape 1`] = `
 {
   "code": null,
   "debug": {

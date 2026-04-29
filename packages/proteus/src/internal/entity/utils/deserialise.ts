@@ -1,7 +1,7 @@
 import { isBoolean, isNumber, isString } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
-import { ProteusError } from "../../../errors";
-import type { MetaFieldType } from "../types/metadata";
+import { ProteusError } from "../../../errors/index.js";
+import type { MetaFieldType } from "../types/metadata.js";
 
 export const deserialise = (value: any, type: MetaFieldType | null): any => {
   switch (type) {

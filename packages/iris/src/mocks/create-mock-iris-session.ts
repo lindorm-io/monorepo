@@ -1,21 +1,37 @@
-import type { IIrisSession } from "../interfaces";
-import { createMockMessageBus } from "./create-mock-message-bus";
-import { createMockPublisher } from "./create-mock-publisher";
-import { createMockRpcClient } from "./create-mock-rpc-client";
-import { createMockWorkerQueue } from "./create-mock-worker-queue";
+import type { IIrisSession } from "../interfaces/index.js";
+import { _createMockMessageBus } from "./create-mock-message-bus.js";
+import { _createMockPublisher } from "./create-mock-publisher.js";
+import { _createMockRpcClient } from "./create-mock-rpc-client.js";
+import { _createMockWorkerQueue } from "./create-mock-worker-queue.js";
 
-export type MockIrisSession = jest.Mocked<IIrisSession>;
+export const _createMockIrisSession = (mockFn: () => any): IIrisSession => {
+  const impl = (fn: any) => {
+    const m = mockFn();
+    m.mockImplementation(fn);
+    return m;
+  };
+  const returns = (value: any) => {
+    const m = mockFn();
+    m.mockReturnValue(value);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-export const createMockIrisSession = (): MockIrisSession => ({
-  driver: "memory" as const,
+  return {
+    driver: "memory" as const,
 
-  hasMessage: jest.fn().mockReturnValue(true),
-  ping: jest.fn().mockResolvedValue(true),
+    hasMessage: returns(true),
+    ping: resolves(true),
 
-  messageBus: jest.fn().mockImplementation(() => createMockMessageBus()),
-  publisher: jest.fn().mockImplementation(() => createMockPublisher()),
-  workerQueue: jest.fn().mockImplementation(() => createMockWorkerQueue()),
-  stream: jest.fn(),
-  rpcClient: jest.fn().mockImplementation(() => createMockRpcClient()),
-  rpcServer: jest.fn(),
-});
+    messageBus: impl(() => _createMockMessageBus(mockFn)),
+    publisher: impl(() => _createMockPublisher(mockFn)),
+    workerQueue: impl(() => _createMockWorkerQueue(mockFn)),
+    stream: mockFn(),
+    rpcClient: impl(() => _createMockRpcClient(mockFn)),
+    rpcServer: mockFn(),
+  } as unknown as IIrisSession;
+};

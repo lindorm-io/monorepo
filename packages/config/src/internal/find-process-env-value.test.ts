@@ -1,4 +1,5 @@
-import { findProcessEnvValue } from "./find-process-env-value";
+import { findProcessEnvValue } from "./find-process-env-value.js";
+import { describe, expect, test } from "vitest";
 
 describe("findProcessEnvValue", () => {
   const processEnv = {

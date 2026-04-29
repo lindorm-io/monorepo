@@ -1,29 +1,38 @@
-import { IAmphora } from "../interfaces";
+import type { IAmphora } from "../interfaces/index.js";
 
-export type MockAmphora = jest.Mocked<IAmphora>;
+export const _createMockAmphora = (mockFn: () => any): IAmphora => {
+  const returns = (value: any) => {
+    const m = mockFn();
+    m.mockReturnValue(value);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-export const createMockAmphora = (): MockAmphora => ({
-  config: [],
-  domain: "mock_issuer",
-  jwks: {
-    keys: [],
-  },
-  vault: [],
+  return {
+    config: [],
+    domain: "mock_issuer",
+    jwks: { keys: [] },
+    vault: [],
 
-  add: jest.fn(),
-  env: jest.fn(),
-  filter: jest.fn().mockResolvedValue([]),
-  filterSync: jest.fn().mockReturnValue([]),
-  find: jest.fn().mockResolvedValue("mock_kryptos"),
-  findById: jest.fn().mockResolvedValue("mock_kryptos"),
-  findByIdSync: jest.fn().mockReturnValue("mock_kryptos"),
-  findSync: jest.fn().mockReturnValue("mock_kryptos"),
-  refresh: jest.fn().mockResolvedValue(undefined),
-  setup: jest.fn().mockResolvedValue(undefined),
+    add: mockFn(),
+    env: mockFn(),
+    filter: resolves([]),
+    filterSync: returns([]),
+    find: resolves("mock_kryptos"),
+    findById: resolves("mock_kryptos"),
+    findByIdSync: returns("mock_kryptos"),
+    findSync: returns("mock_kryptos"),
+    refresh: resolves(undefined),
+    setup: resolves(undefined),
 
-  canEncrypt: jest.fn().mockReturnValue(true),
-  canDecrypt: jest.fn().mockReturnValue(true),
+    canEncrypt: returns(true),
+    canDecrypt: returns(true),
 
-  canSign: jest.fn().mockReturnValue(true),
-  canVerify: jest.fn().mockReturnValue(true),
-});
+    canSign: returns(true),
+    canVerify: returns(true),
+  } as unknown as IAmphora;
+};

@@ -1,6 +1,6 @@
-import { PostgresSyncError } from "../../errors/PostgresSyncError";
-import type { DbConstraint } from "../../types/db-snapshot";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import { PostgresSyncError } from "../../errors/PostgresSyncError.js";
+import type { DbConstraint } from "../../types/db-snapshot.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 
 type ConstraintRow = {
   table_schema: string;

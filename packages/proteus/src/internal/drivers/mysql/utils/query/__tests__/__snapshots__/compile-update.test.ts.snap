@@ -1,13 +1,13 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileDeleteExpired should use NOW(3) for expiry comparison 1`] = `
+exports[`compileDeleteExpired > should use NOW(3) for expiry comparison 1`] = `
 {
   "params": [],
   "text": "DELETE FROM \`app\`.\`users\` WHERE \`expires_at\` <= NOW(3)",
 }
 `;
 
-exports[`compileRestore should set delete date to NULL 1`] = `
+exports[`compileRestore > should set delete date to NULL 1`] = `
 {
   "params": [
     "abc-123",
@@ -16,7 +16,7 @@ exports[`compileRestore should set delete date to NULL 1`] = `
 }
 `;
 
-exports[`compileSoftDelete should use NOW(3) for delete date 1`] = `
+exports[`compileSoftDelete > should use NOW(3) for delete date 1`] = `
 {
   "params": [
     "abc-123",
@@ -25,7 +25,7 @@ exports[`compileSoftDelete should use NOW(3) for delete date 1`] = `
 }
 `;
 
-exports[`compileUpdate should compile an UPDATE without RETURNING 1`] = `
+exports[`compileUpdate > should compile an UPDATE without RETURNING 1`] = `
 {
   "params": [
     "Bob",
@@ -38,7 +38,7 @@ exports[`compileUpdate should compile an UPDATE without RETURNING 1`] = `
 }
 `;
 
-exports[`compileUpdateMany should compile an UPDATE ... SET ... WHERE for bulk updates 1`] = `
+exports[`compileUpdateMany > should compile an UPDATE ... SET ... WHERE for bulk updates 1`] = `
 {
   "params": [
     "Bob",

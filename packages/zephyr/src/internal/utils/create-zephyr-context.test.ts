@@ -1,7 +1,8 @@
-import { createZephyrContext } from "./create-zephyr-context";
+import { createZephyrContext } from "./create-zephyr-context.js";
+import { describe, expect, it, vi } from "vitest";
 
-jest.mock("@lindorm/random", () => ({
-  randomUUID: jest.fn().mockReturnValue("mock-uuid"),
+vi.mock("@lindorm/random", () => ({
+  randomUUID: vi.fn().mockReturnValue("mock-uuid"),
 }));
 
 describe("createZephyrContext", () => {
@@ -42,7 +43,7 @@ describe("createZephyrContext", () => {
   });
 
   it("should include logger when provided", () => {
-    const mockLogger = { child: jest.fn() } as any;
+    const mockLogger = { child: vi.fn() } as any;
 
     const ctx = createZephyrContext({
       app,

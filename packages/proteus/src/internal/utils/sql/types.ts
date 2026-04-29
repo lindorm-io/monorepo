@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 
 export type AliasMap = {
   tableAlias: string;

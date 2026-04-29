@@ -1,8 +1,9 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Relations OneToOne Suite
 // Tests OneToOne relation: owning side (TckOwner) and inverse side (TckDetail).
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const relationsOneToOneSuite = (
   getHandle: () => TckDriverHandle,

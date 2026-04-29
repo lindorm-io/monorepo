@@ -1,4 +1,5 @@
 import type { ErrorClassification } from "@lindorm/breaker";
+import { AbortError } from "@lindorm/errors";
 
 /**
  * MySQL error numbers that indicate infrastructure failures.
@@ -34,6 +35,10 @@ const TRANSIENT_SYSTEM_CODES = new Set([
 ]);
 
 export const classifyMysqlError = (error: Error): ErrorClassification => {
+  // Client-initiated cancellation is not a backend failure — never trip the
+  // breaker on aborts.
+  if (error instanceof AbortError) return "ignorable";
+
   const errno: number | undefined = (error as any).errno;
   const code: string | undefined = (error as any).code;
 

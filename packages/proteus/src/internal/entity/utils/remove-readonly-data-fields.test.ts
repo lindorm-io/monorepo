@@ -1,12 +1,13 @@
-import { CreateDateField } from "../../../decorators/CreateDateField";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { Nullable } from "../../../decorators/Nullable";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { ReadOnly } from "../../../decorators/ReadOnly";
-import { UpdateDateField } from "../../../decorators/UpdateDateField";
-import { VersionField } from "../../../decorators/VersionField";
-import { removeReadonlyDataFields } from "./remove-readonly-data-fields";
+import { CreateDateField } from "../../../decorators/CreateDateField.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { Nullable } from "../../../decorators/Nullable.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { ReadOnly } from "../../../decorators/ReadOnly.js";
+import { UpdateDateField } from "../../../decorators/UpdateDateField.js";
+import { VersionField } from "../../../decorators/VersionField.js";
+import { removeReadonlyDataFields } from "./remove-readonly-data-fields.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "RemoveReadonlyEntity" })
 class RemoveReadonlyEntity {

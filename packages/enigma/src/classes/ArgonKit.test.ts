@@ -1,7 +1,8 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { TEST_OCT_KEY_SIG } from "../__fixtures__/keys";
-import { ArgonError } from "../errors";
-import { ArgonKit } from "./ArgonKit";
+import { TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
+import { ArgonError } from "../errors/index.js";
+import { ArgonKit } from "./ArgonKit.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 describe("ArgonKit", () => {
   let kit: ArgonKit;

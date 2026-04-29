@@ -1,7 +1,8 @@
 import type { Constructor } from "@lindorm/types";
 import type { z } from "zod";
-import type { IMessage } from "../../../interfaces";
+import type { IMessage } from "../../../interfaces/index.js";
 import type { AmphoraPredicate } from "@lindorm/amphora";
+import type { IrisHookMeta } from "../../../types/iris-hook-meta.js";
 import type {
   MetaFieldDecorator,
   MetaFieldDefault,
@@ -9,7 +10,7 @@ import type {
   MetaGeneratedStrategy,
   MetaHookDecorator,
   MetaTransform,
-} from "./types";
+} from "./types.js";
 
 export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
   key: string;
@@ -32,7 +33,11 @@ export type MetaMessage = {
 
 export type MetaHook = {
   decorator: MetaHookDecorator;
-  callback: (message: any, context?: any, ...extra: Array<any>) => void | Promise<void>;
+  callback: (
+    message: any,
+    meta: IrisHookMeta,
+    ...extra: Array<any>
+  ) => void | Promise<void>;
 };
 
 export type MetaGenerated = {

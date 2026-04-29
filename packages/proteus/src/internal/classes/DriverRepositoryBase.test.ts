@@ -1,3 +1,13 @@
+import {
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type Mocked,
+  type MockedClass,
+} from "vitest";
 /**
  * Unit tests for DriverRepositoryBase.
  *
@@ -10,101 +20,107 @@
 
 // ─── Module Mocks ────────────────────────────────────────────────────────────
 
-jest.mock("../entity/classes/EntityManager", () => ({
-  EntityManager: jest.fn(),
+vi.mock("../entity/classes/EntityManager.js", async () => ({
+  EntityManager: vi.fn(),
 }));
 
-jest.mock("../entity/metadata/get-entity-metadata", () => ({
-  getEntityMetadata: jest.fn(),
+vi.mock("../entity/metadata/get-entity-metadata.js", () => ({
+  getEntityMetadata: vi.fn(),
 }));
 
-jest.mock("../utils/repository/build-pk-predicate", () => ({
-  buildPrimaryKeyPredicate: jest.fn(),
+vi.mock("../utils/repository/build-pk-predicate.js", () => ({
+  buildPrimaryKeyPredicate: vi.fn(),
 }));
 
-jest.mock("../utils/repository/repository-guards", () => ({
-  guardAppendOnly: jest.fn(),
-  guardDeleteDateField: jest.fn(),
-  guardExpiryDateField: jest.fn(),
-  guardVersionFields: jest.fn(),
-  guardUpsertBlocked: jest.fn(),
-  validateRelationNames: jest.fn(),
+vi.mock("../utils/repository/repository-guards.js", () => ({
+  guardAppendOnly: vi.fn(),
+  guardDeleteDateField: vi.fn(),
+  guardExpiryDateField: vi.fn(),
+  guardVersionFields: vi.fn(),
+  guardUpsertBlocked: vi.fn(),
+  validateRelationNames: vi.fn(),
 }));
 
-jest.mock("../entity/utils/install-lazy-relations", () => ({
-  installLazyRelations: jest.fn(),
+vi.mock("../entity/utils/install-lazy-relations.js", () => ({
+  installLazyRelations: vi.fn(),
 }));
 
-jest.mock("../entity/utils/lazy-relation", () => ({
-  isLazyRelation: jest.fn().mockReturnValue(false),
+vi.mock("../entity/utils/lazy-relation.js", () => ({
+  isLazyRelation: vi.fn().mockReturnValue(false),
 }));
 
-jest.mock("../entity/utils/lazy-collection", () => ({
-  isLazyCollection: jest.fn().mockReturnValue(false),
+vi.mock("../entity/utils/lazy-collection.js", () => ({
+  isLazyCollection: vi.fn().mockReturnValue(false),
 }));
 
-jest.mock("../utils/query/filter-hidden-selections", () => ({
-  filterHiddenSelections: jest.fn().mockReturnValue(null),
+vi.mock("../utils/query/filter-hidden-selections.js", () => ({
+  filterHiddenSelections: vi.fn().mockReturnValue(null),
 }));
 
-jest.mock("../utils/pagination/validate-paginate-options", () => ({
-  validatePaginateOptions: jest.fn(),
+vi.mock("../utils/pagination/validate-paginate-options.js", () => ({
+  validatePaginateOptions: vi.fn(),
 }));
 
-jest.mock("../utils/pagination/build-keyset-order", () => ({
-  buildKeysetOrder: jest.fn().mockReturnValue([]),
-  keysetOrderToRecord: jest.fn().mockReturnValue({}),
+vi.mock("../utils/pagination/build-keyset-order.js", () => ({
+  buildKeysetOrder: vi.fn().mockReturnValue([]),
+  keysetOrderToRecord: vi.fn().mockReturnValue({}),
 }));
 
-jest.mock("../utils/pagination/build-keyset-predicate", () => ({
-  buildKeysetPredicate: jest.fn().mockReturnValue({}),
+vi.mock("../utils/pagination/build-keyset-predicate.js", () => ({
+  buildKeysetPredicate: vi.fn().mockReturnValue({}),
 }));
 
-jest.mock("../utils/pagination/encode-cursor", () => ({
-  encodeCursor: jest.fn().mockReturnValue("cursor-token"),
+vi.mock("../utils/pagination/encode-cursor.js", () => ({
+  encodeCursor: vi.fn().mockReturnValue("cursor-token"),
 }));
 
-jest.mock("../utils/pagination/decode-cursor", () => ({
-  decodeCursor: jest.fn().mockReturnValue({ values: ["val1"] }),
+vi.mock("../utils/pagination/decode-cursor.js", () => ({
+  decodeCursor: vi.fn().mockReturnValue({ values: ["val1"] }),
 }));
 
-jest.mock("../utils/pagination/extract-cursor-values", () => ({
-  extractCursorValues: jest.fn().mockReturnValue(["val1"]),
+vi.mock("../utils/pagination/extract-cursor-values.js", () => ({
+  extractCursorValues: vi.fn().mockReturnValue(["val1"]),
 }));
 
-// ─── Imports after jest.mock ──────────────────────────────────────────────────
+// ─── Imports after vi.mock ──────────────────────────────────────────────────
 
 import type { ILogger } from "@lindorm/logger";
 import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { Constructor } from "@lindorm/types";
-import { EntityManager } from "../entity/classes/EntityManager";
-import { getEntityMetadata } from "../entity/metadata/get-entity-metadata";
-import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate";
+import { EntityManager } from "../entity/classes/EntityManager.js";
+import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
+import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
   guardDeleteDateField,
   guardExpiryDateField,
   guardUpsertBlocked,
-} from "../utils/repository/repository-guards";
-import { filterHiddenSelections } from "../utils/query/filter-hidden-selections";
-import { makeField } from "../__fixtures__/make-field";
-import type { EntityMetadata } from "../entity/types/metadata";
-import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor";
-import type { IEntity, IProteusCursor, IProteusQueryBuilder } from "../../interfaces";
+} from "../utils/repository/repository-guards.js";
+import { filterHiddenSelections } from "../utils/query/filter-hidden-selections.js";
+import { makeField } from "../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../entity/types/metadata.js";
+import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor.js";
+import type {
+  IEntity,
+  IProteusCursor,
+  IProteusQueryBuilder,
+} from "../../interfaces/index.js";
 import type {
   ClearOptions,
   CursorOptions,
   FindOptions,
   UpsertOptions,
-} from "../../types";
-import type { QueryScope } from "../entity/types/metadata";
-import type { AggregateFunction } from "../types/aggregate";
-import type { LazyRelationLoader } from "../entity/utils/install-lazy-relations";
+} from "../../types/index.js";
+import type { QueryScope } from "../entity/types/metadata.js";
+import type { AggregateFunction } from "../types/aggregate.js";
+import type { LazyRelationLoader } from "../entity/utils/install-lazy-relations.js";
+import { isLazyRelation } from "../entity/utils/lazy-relation.js";
+import { isLazyCollection } from "../entity/utils/lazy-collection.js";
 import {
   DriverRepositoryBase,
   type DriverRepositoryBaseOptions,
-} from "./DriverRepositoryBase";
-import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError";
+} from "./DriverRepositoryBase.js";
+import { ProteusRepositoryError } from "../../errors/ProteusRepositoryError.js";
 
 // ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -194,72 +210,72 @@ const mockMetadataVersioned = {
 
 const createMockLogger = (): ILogger =>
   ({
-    child: jest.fn().mockReturnThis(),
-    silly: jest.fn(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    child: vi.fn().mockReturnThis(),
+    silly: vi.fn(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   }) as unknown as ILogger;
 
-const createMockExecutor = (): jest.Mocked<IRepositoryExecutor<TestEntity>> => ({
-  executeInsert: jest.fn(),
-  executeUpdate: jest.fn(),
-  executeDelete: jest.fn(),
-  executeSoftDelete: jest.fn(),
-  executeRestore: jest.fn(),
-  executeDeleteExpired: jest.fn(),
-  executeTtl: jest.fn(),
-  executeFind: jest.fn(),
-  executeCount: jest.fn(),
-  executeExists: jest.fn(),
-  executeIncrement: jest.fn(),
-  executeDecrement: jest.fn(),
-  executeInsertBulk: jest.fn(),
-  executeUpdateMany: jest.fn(),
+const createMockExecutor = (): Mocked<IRepositoryExecutor<TestEntity>> => ({
+  executeInsert: vi.fn(),
+  executeUpdate: vi.fn(),
+  executeDelete: vi.fn(),
+  executeSoftDelete: vi.fn(),
+  executeRestore: vi.fn(),
+  executeDeleteExpired: vi.fn(),
+  executeTtl: vi.fn(),
+  executeFind: vi.fn(),
+  executeCount: vi.fn(),
+  executeExists: vi.fn(),
+  executeIncrement: vi.fn(),
+  executeDecrement: vi.fn(),
+  executeInsertBulk: vi.fn(),
+  executeUpdateMany: vi.fn(),
 });
 
 const createMockEntityManager = (overrides: Record<string, any> = {}): any => ({
   target: TestEntity,
   updateStrategy: "update",
   metadata: mockMetadata,
-  create: jest.fn(),
-  copy: jest.fn(),
-  insert: jest.fn(),
-  update: jest.fn(),
-  clone: jest.fn(),
-  validate: jest.fn(),
-  beforeInsert: jest.fn().mockResolvedValue(undefined),
-  afterInsert: jest.fn().mockResolvedValue(undefined),
-  beforeSave: jest.fn().mockResolvedValue(undefined),
-  afterSave: jest.fn().mockResolvedValue(undefined),
-  beforeUpdate: jest.fn().mockResolvedValue(undefined),
-  afterUpdate: jest.fn().mockResolvedValue(undefined),
-  beforeDestroy: jest.fn().mockResolvedValue(undefined),
-  afterDestroy: jest.fn().mockResolvedValue(undefined),
-  afterLoad: jest.fn().mockResolvedValue(undefined),
-  getSaveStrategy: jest.fn().mockReturnValue("update"),
-  verifyReadonly: jest.fn(),
+  create: vi.fn(),
+  copy: vi.fn(),
+  insert: vi.fn(),
+  update: vi.fn(),
+  clone: vi.fn(),
+  validate: vi.fn(),
+  beforeInsert: vi.fn().mockResolvedValue(undefined),
+  afterInsert: vi.fn().mockResolvedValue(undefined),
+  beforeSave: vi.fn().mockResolvedValue(undefined),
+  afterSave: vi.fn().mockResolvedValue(undefined),
+  beforeUpdate: vi.fn().mockResolvedValue(undefined),
+  afterUpdate: vi.fn().mockResolvedValue(undefined),
+  beforeDestroy: vi.fn().mockResolvedValue(undefined),
+  afterDestroy: vi.fn().mockResolvedValue(undefined),
+  afterLoad: vi.fn().mockResolvedValue(undefined),
+  getSaveStrategy: vi.fn().mockReturnValue("update"),
+  verifyReadonly: vi.fn(),
   ...overrides,
 });
 
 // ─── Concrete subclass ────────────────────────────────────────────────────────
 
 const abstractMethods = {
-  insertOne: jest.fn(),
-  insertBulk: jest.fn(),
-  updateOne: jest.fn(),
-  cloneOne: jest.fn(),
-  destroyOne: jest.fn(),
-  softDestroyOne: jest.fn(),
-  upsertOne: jest.fn(),
-  find: jest.fn(),
-  versions: jest.fn(),
-  cursor: jest.fn(),
-  clear: jest.fn(),
-  buildLazyLoader: jest.fn<LazyRelationLoader, []>(),
-  executeAggregate: jest.fn(),
-  isDuplicateKeyError: jest.fn(),
+  insertOne: vi.fn(),
+  insertBulk: vi.fn(),
+  updateOne: vi.fn(),
+  cloneOne: vi.fn(),
+  destroyOne: vi.fn(),
+  softDestroyOne: vi.fn(),
+  upsertOne: vi.fn(),
+  find: vi.fn(),
+  versions: vi.fn(),
+  cursor: vi.fn(),
+  clear: vi.fn(),
+  buildLazyLoader: vi.fn<() => LazyRelationLoader>(),
+  executeAggregate: vi.fn(),
+  isDuplicateKeyError: vi.fn(),
 };
 
 class ConcreteRepository extends DriverRepositoryBase<TestEntity> {
@@ -296,15 +312,15 @@ class ConcreteRepository extends DriverRepositoryBase<TestEntity> {
     this.transferRelations(source, target);
 }
 
-const repositoryFactory = jest.fn();
-const queryBuilderFactory = jest.fn().mockReturnValue({ build: jest.fn() });
+const repositoryFactory = vi.fn();
+const queryBuilderFactory = vi.fn().mockReturnValue({ build: vi.fn() });
 
 const createRepo = (
   overrides: {
     metadata?: EntityMetadata;
     entityManagerOverrides?: Record<string, any>;
     executorOverrides?: Record<string, any>;
-    emitEntity?: jest.Mock;
+    emitEntity?: Mock;
   } = {},
 ) => {
   const meta = overrides.metadata ?? mockMetadata;
@@ -316,11 +332,13 @@ const createRepo = (
     Object.assign(executor, overrides.executorOverrides);
   }
 
-  (getEntityMetadata as jest.Mock).mockReturnValue(meta);
-  const MockEntityManager = EntityManager as jest.MockedClass<
+  (getEntityMetadata as Mock).mockReturnValue(meta);
+  const MockEntityManager = EntityManager as MockedClass<
     typeof EntityManager<TestEntity>
   >;
-  MockEntityManager.mockImplementation(() => mockEM);
+  MockEntityManager.mockImplementation(function () {
+    return mockEM;
+  });
 
   const options: DriverRepositoryBaseOptions<TestEntity> = {
     target: TestEntity,
@@ -352,18 +370,18 @@ const entityA = Object.assign(new TestEntity(), {
 
 describe("DriverRepositoryBase", () => {
   beforeEach(() => {
-    jest.resetAllMocks();
-    (getEntityMetadata as jest.Mock).mockReturnValue(mockMetadata);
-    (buildPrimaryKeyPredicate as jest.Mock).mockImplementation((entity: any) => ({
+    vi.resetAllMocks();
+    (getEntityMetadata as Mock).mockReturnValue(mockMetadata);
+    (buildPrimaryKeyPredicate as Mock).mockImplementation((entity: any) => ({
       id: entity.id,
     }));
-    (filterHiddenSelections as jest.Mock).mockReturnValue(null);
-    (guardAppendOnly as jest.Mock).mockReturnValue(undefined);
-    (guardDeleteDateField as jest.Mock).mockReturnValue(undefined);
-    (guardExpiryDateField as jest.Mock).mockReturnValue(undefined);
-    (guardUpsertBlocked as jest.Mock).mockReturnValue(undefined);
+    (filterHiddenSelections as Mock).mockReturnValue(null);
+    (guardAppendOnly as Mock).mockReturnValue(undefined);
+    (guardDeleteDateField as Mock).mockReturnValue(undefined);
+    (guardExpiryDateField as Mock).mockReturnValue(undefined);
+    (guardUpsertBlocked as Mock).mockReturnValue(undefined);
     for (const key of Object.keys(abstractMethods)) {
-      (abstractMethods as any)[key] = jest.fn();
+      (abstractMethods as any)[key] = vi.fn();
     }
   });
 
@@ -418,7 +436,7 @@ describe("DriverRepositoryBase", () => {
   describe("count", () => {
     test("delegates to executor.executeCount with criteria", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeCount as jest.Mock).mockResolvedValue(3);
+      (executor.executeCount as Mock).mockResolvedValue(3);
 
       const result = await repo.count({ name: "foo" } as any);
 
@@ -428,7 +446,7 @@ describe("DriverRepositoryBase", () => {
 
     test("passes empty predicate when called without criteria", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeCount as jest.Mock).mockResolvedValue(0);
+      (executor.executeCount as Mock).mockResolvedValue(0);
 
       await repo.count();
 
@@ -439,7 +457,7 @@ describe("DriverRepositoryBase", () => {
   describe("exists", () => {
     test("delegates to executor.executeExists when no options provided", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeExists as jest.Mock).mockResolvedValue(true);
+      (executor.executeExists as Mock).mockResolvedValue(true);
 
       const result = await repo.exists({ id: "1" } as any);
 
@@ -449,7 +467,7 @@ describe("DriverRepositoryBase", () => {
 
     test("uses executeCount when options are provided", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeCount as jest.Mock).mockResolvedValue(1);
+      (executor.executeCount as Mock).mockResolvedValue(1);
 
       const result = await repo.exists({ id: "1" } as any, { withDeleted: true } as any);
 
@@ -460,7 +478,7 @@ describe("DriverRepositoryBase", () => {
 
     test("returns false when executeExists returns false", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeExists as jest.Mock).mockResolvedValue(false);
+      (executor.executeExists as Mock).mockResolvedValue(false);
 
       const result = await repo.exists({ id: "999" } as any);
 
@@ -471,7 +489,7 @@ describe("DriverRepositoryBase", () => {
   describe("findOne", () => {
     test("calls find with limit: 1 and returns first result", async () => {
       const { repo } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([entityA]);
+      abstractMethods.find = vi.fn().mockResolvedValue([entityA]);
       (repo as any).find = abstractMethods.find;
 
       const result = await repo.findOne({ id: "entity-id-1" } as any);
@@ -486,7 +504,7 @@ describe("DriverRepositoryBase", () => {
 
     test("returns null when find returns empty array", async () => {
       const { repo } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([]);
+      abstractMethods.find = vi.fn().mockResolvedValue([]);
       (repo as any).find = abstractMethods.find;
 
       const result = await repo.findOne({ id: "missing" } as any);
@@ -496,8 +514,8 @@ describe("DriverRepositoryBase", () => {
 
     test("passes filterHiddenSelections result as select option", async () => {
       const { repo } = createRepo();
-      (filterHiddenSelections as jest.Mock).mockReturnValue(["id", "name"]);
-      abstractMethods.find = jest.fn().mockResolvedValue([entityA]);
+      (filterHiddenSelections as Mock).mockReturnValue(["id", "name"]);
+      abstractMethods.find = vi.fn().mockResolvedValue([entityA]);
       (repo as any).find = abstractMethods.find;
 
       await repo.findOne({ id: "1" } as any);
@@ -513,7 +531,7 @@ describe("DriverRepositoryBase", () => {
   describe("findOneOrFail", () => {
     test("returns entity when found", async () => {
       const { repo } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([entityA]);
+      abstractMethods.find = vi.fn().mockResolvedValue([entityA]);
       (repo as any).find = abstractMethods.find;
 
       const result = await repo.findOneOrFail({ id: "entity-id-1" } as any);
@@ -523,7 +541,7 @@ describe("DriverRepositoryBase", () => {
 
     test("throws ProteusRepositoryError when entity not found", async () => {
       const { repo } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([]);
+      abstractMethods.find = vi.fn().mockResolvedValue([]);
       (repo as any).find = abstractMethods.find;
 
       await expect(repo.findOneOrFail({ id: "missing" } as any)).rejects.toThrow(
@@ -533,7 +551,7 @@ describe("DriverRepositoryBase", () => {
 
     test("error message includes entity name", async () => {
       const { repo } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([]);
+      abstractMethods.find = vi.fn().mockResolvedValue([]);
       (repo as any).find = abstractMethods.find;
 
       await expect(repo.findOneOrFail({ id: "missing" } as any)).rejects.toThrow(
@@ -545,9 +563,9 @@ describe("DriverRepositoryBase", () => {
   describe("findAndCount", () => {
     test("runs find and count in parallel", async () => {
       const { repo, executor } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([entityA]);
+      abstractMethods.find = vi.fn().mockResolvedValue([entityA]);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(1);
+      (executor.executeCount as Mock).mockResolvedValue(1);
 
       const result = await repo.findAndCount({ name: "Entity A" } as any);
 
@@ -557,9 +575,9 @@ describe("DriverRepositoryBase", () => {
 
     test("strips limit and offset from count options", async () => {
       const { repo, executor } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([]);
+      abstractMethods.find = vi.fn().mockResolvedValue([]);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(0);
+      (executor.executeCount as Mock).mockResolvedValue(0);
 
       await repo.findAndCount(undefined, {
         limit: 10,
@@ -568,7 +586,7 @@ describe("DriverRepositoryBase", () => {
       } as any);
 
       // count call should not have limit/offset
-      const countArgs = (executor.executeCount as jest.Mock).mock.calls[0][1];
+      const countArgs = (executor.executeCount as Mock).mock.calls[0][1];
       expect(countArgs).not.toHaveProperty("limit");
       expect(countArgs).not.toHaveProperty("offset");
     });
@@ -577,9 +595,9 @@ describe("DriverRepositoryBase", () => {
   describe("findOneOrSave", () => {
     test("returns existing entity when found", async () => {
       const { repo } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([entityA]);
+      abstractMethods.find = vi.fn().mockResolvedValue([entityA]);
       (repo as any).find = abstractMethods.find;
-      abstractMethods.insertOne = jest.fn();
+      abstractMethods.insertOne = vi.fn();
       (repo as any).insertOne = abstractMethods.insertOne;
 
       const result = await repo.findOneOrSave({ id: "entity-id-1" } as any, entityA);
@@ -590,10 +608,10 @@ describe("DriverRepositoryBase", () => {
 
     test("saves and returns new entity when not found", async () => {
       const { repo, mockEM } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([]);
+      abstractMethods.find = vi.fn().mockResolvedValue([]);
       (repo as any).find = abstractMethods.find;
       const savedEntity = { ...entityA, id: "new-id" } as TestEntity;
-      abstractMethods.insertOne = jest.fn().mockResolvedValue(savedEntity);
+      abstractMethods.insertOne = vi.fn().mockResolvedValue(savedEntity);
       (repo as any).insertOne = abstractMethods.insertOne;
       mockEM.getSaveStrategy.mockReturnValue("insert");
       mockEM.create.mockReturnValue(entityA);
@@ -614,9 +632,9 @@ describe("DriverRepositoryBase", () => {
         { ...entityA, id: "id-2" },
         { ...entityA, id: "id-3" },
       ] as Array<TestEntity>;
-      abstractMethods.find = jest.fn().mockResolvedValue(entities);
+      abstractMethods.find = vi.fn().mockResolvedValue(entities);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(10);
+      (executor.executeCount as Mock).mockResolvedValue(10);
 
       const result = await repo.findPaginated();
 
@@ -626,9 +644,9 @@ describe("DriverRepositoryBase", () => {
     test("uses custom page and pageSize", async () => {
       const { repo, executor } = createRepo();
       const entities = [entityA, { ...entityA, id: "id-2" }] as Array<TestEntity>;
-      abstractMethods.find = jest.fn().mockResolvedValue(entities);
+      abstractMethods.find = vi.fn().mockResolvedValue(entities);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(12);
+      (executor.executeCount as Mock).mockResolvedValue(12);
 
       const result = await repo.findPaginated(undefined, { page: 2, pageSize: 5 });
 
@@ -637,11 +655,11 @@ describe("DriverRepositoryBase", () => {
 
     test("hasMore is true when more pages exist", async () => {
       const { repo, executor } = createRepo();
-      abstractMethods.find = jest
+      abstractMethods.find = vi
         .fn()
         .mockResolvedValue([entityA, { ...entityA, id: "id-2" }]);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(5);
+      (executor.executeCount as Mock).mockResolvedValue(5);
 
       const result = await repo.findPaginated(undefined, { page: 1, pageSize: 2 });
 
@@ -650,9 +668,9 @@ describe("DriverRepositoryBase", () => {
 
     test("hasMore is false on last page", async () => {
       const { repo, executor } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([entityA]);
+      abstractMethods.find = vi.fn().mockResolvedValue([entityA]);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(5);
+      (executor.executeCount as Mock).mockResolvedValue(5);
 
       const result = await repo.findPaginated(undefined, { page: 3, pageSize: 2 });
 
@@ -661,11 +679,11 @@ describe("DriverRepositoryBase", () => {
 
     test("hasMore is false on exact boundary", async () => {
       const { repo, executor } = createRepo();
-      abstractMethods.find = jest
+      abstractMethods.find = vi
         .fn()
         .mockResolvedValue([entityA, { ...entityA, id: "id-2" }]);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(4);
+      (executor.executeCount as Mock).mockResolvedValue(4);
 
       const result = await repo.findPaginated(undefined, { page: 2, pageSize: 2 });
 
@@ -674,7 +692,7 @@ describe("DriverRepositoryBase", () => {
 
     test("computes totalPages correctly with non-even division", async () => {
       const { repo, executor } = createRepo();
-      abstractMethods.find = jest
+      abstractMethods.find = vi
         .fn()
         .mockResolvedValue([
           entityA,
@@ -682,7 +700,7 @@ describe("DriverRepositoryBase", () => {
           { ...entityA, id: "id-3" },
         ]);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(7);
+      (executor.executeCount as Mock).mockResolvedValue(7);
 
       const result = await repo.findPaginated(undefined, { page: 1, pageSize: 3 });
 
@@ -691,9 +709,9 @@ describe("DriverRepositoryBase", () => {
 
     test("returns correct result for empty dataset", async () => {
       const { repo, executor } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([]);
+      abstractMethods.find = vi.fn().mockResolvedValue([]);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(0);
+      (executor.executeCount as Mock).mockResolvedValue(0);
 
       const result = await repo.findPaginated();
 
@@ -702,24 +720,24 @@ describe("DriverRepositoryBase", () => {
 
     test("passes criteria through to find and count", async () => {
       const { repo, executor } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([entityA]);
+      abstractMethods.find = vi.fn().mockResolvedValue([entityA]);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(1);
+      (executor.executeCount as Mock).mockResolvedValue(1);
 
       await repo.findPaginated({ name: "test" } as any);
 
       const findCriteria = abstractMethods.find.mock.calls[0][0];
       expect(findCriteria).toEqual({ name: "test" });
 
-      const countCriteria = (executor.executeCount as jest.Mock).mock.calls[0][0];
+      const countCriteria = (executor.executeCount as Mock).mock.calls[0][0];
       expect(countCriteria).toEqual({ name: "test" });
     });
 
     test("passes other options through to findAndCount", async () => {
       const { repo, executor } = createRepo();
-      abstractMethods.find = jest.fn().mockResolvedValue([entityA]);
+      abstractMethods.find = vi.fn().mockResolvedValue([entityA]);
       (repo as any).find = abstractMethods.find;
-      (executor.executeCount as jest.Mock).mockResolvedValue(1);
+      (executor.executeCount as Mock).mockResolvedValue(1);
 
       await repo.findPaginated(undefined, {
         page: 2,
@@ -736,7 +754,7 @@ describe("DriverRepositoryBase", () => {
       expect(findOptions).not.toHaveProperty("pageSize");
 
       // count should not have limit/offset
-      const countOptions = (executor.executeCount as jest.Mock).mock.calls[0][1];
+      const countOptions = (executor.executeCount as Mock).mock.calls[0][1];
       expect(countOptions).not.toHaveProperty("limit");
       expect(countOptions).not.toHaveProperty("offset");
     });
@@ -763,7 +781,7 @@ describe("DriverRepositoryBase", () => {
   describe("insert", () => {
     test("single entity routes to insertOne with 'insert' hookKind", async () => {
       const { repo } = createRepo();
-      abstractMethods.insertOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.insertOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).insertOne = abstractMethods.insertOne;
 
       await repo.insert(entityA);
@@ -774,7 +792,7 @@ describe("DriverRepositoryBase", () => {
     test("array routes to insertBulk", async () => {
       const { repo } = createRepo();
       const entityB = { ...entityA, id: "id-2" } as TestEntity;
-      abstractMethods.insertBulk = jest.fn().mockResolvedValue([entityA, entityB]);
+      abstractMethods.insertBulk = vi.fn().mockResolvedValue([entityA, entityB]);
       (repo as any).insertBulk = abstractMethods.insertBulk;
 
       await repo.insert([entityA, entityB]);
@@ -788,7 +806,7 @@ describe("DriverRepositoryBase", () => {
   describe("update", () => {
     test("single entity routes to updateOne with 'update' hookKind", async () => {
       const { repo } = createRepo();
-      abstractMethods.updateOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.updateOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).updateOne = abstractMethods.updateOne;
 
       await repo.update(entityA);
@@ -799,7 +817,7 @@ describe("DriverRepositoryBase", () => {
     test("array calls updateOne for each entity sequentially", async () => {
       const { repo } = createRepo();
       const entityB = { ...entityA, id: "id-2" } as TestEntity;
-      abstractMethods.updateOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.updateOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).updateOne = abstractMethods.updateOne;
 
       await repo.update([entityA, entityB]);
@@ -809,7 +827,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'update'", async () => {
       const { repo } = createRepo();
-      abstractMethods.updateOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.updateOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).updateOne = abstractMethods.updateOne;
 
       await repo.update(entityA);
@@ -844,7 +862,7 @@ describe("DriverRepositoryBase", () => {
     test("single entity routes to cloneOne", async () => {
       const { repo } = createRepo();
       const cloned = { ...entityA, id: "clone-id" } as TestEntity;
-      abstractMethods.cloneOne = jest.fn().mockResolvedValue(cloned);
+      abstractMethods.cloneOne = vi.fn().mockResolvedValue(cloned);
       (repo as any).cloneOne = abstractMethods.cloneOne;
 
       const result = await repo.clone(entityA);
@@ -855,7 +873,7 @@ describe("DriverRepositoryBase", () => {
 
     test("array calls cloneOne for each entity", async () => {
       const { repo } = createRepo();
-      abstractMethods.cloneOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.cloneOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).cloneOne = abstractMethods.cloneOne;
       const entityB = { ...entityA, id: "id-2" } as TestEntity;
 
@@ -870,7 +888,7 @@ describe("DriverRepositoryBase", () => {
   describe("destroy", () => {
     test("single entity routes to destroyOne", async () => {
       const { repo } = createRepo();
-      abstractMethods.destroyOne = jest.fn().mockResolvedValue(undefined);
+      abstractMethods.destroyOne = vi.fn().mockResolvedValue(undefined);
       (repo as any).destroyOne = abstractMethods.destroyOne;
 
       await repo.destroy(entityA);
@@ -880,7 +898,7 @@ describe("DriverRepositoryBase", () => {
 
     test("array calls destroyOne for each entity", async () => {
       const { repo } = createRepo();
-      abstractMethods.destroyOne = jest.fn().mockResolvedValue(undefined);
+      abstractMethods.destroyOne = vi.fn().mockResolvedValue(undefined);
       (repo as any).destroyOne = abstractMethods.destroyOne;
       const entityB = { ...entityA, id: "id-2" } as TestEntity;
 
@@ -891,7 +909,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'destroy'", async () => {
       const { repo } = createRepo();
-      abstractMethods.destroyOne = jest.fn().mockResolvedValue(undefined);
+      abstractMethods.destroyOne = vi.fn().mockResolvedValue(undefined);
       (repo as any).destroyOne = abstractMethods.destroyOne;
 
       await repo.destroy(entityA);
@@ -905,7 +923,7 @@ describe("DriverRepositoryBase", () => {
   describe("increment", () => {
     test("delegates to executor.executeIncrement", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeIncrement as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeIncrement as Mock).mockResolvedValue(undefined);
 
       await repo.increment({ id: "1" } as any, "version" as keyof TestEntity, 1);
 
@@ -914,7 +932,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'increment'", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeIncrement as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeIncrement as Mock).mockResolvedValue(undefined);
 
       await repo.increment({ id: "1" } as any, "version" as keyof TestEntity, 1);
 
@@ -925,7 +943,7 @@ describe("DriverRepositoryBase", () => {
   describe("decrement", () => {
     test("delegates to executor.executeDecrement", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeDecrement as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeDecrement as Mock).mockResolvedValue(undefined);
 
       await repo.decrement({ id: "1" } as any, "version" as keyof TestEntity, 2);
 
@@ -934,7 +952,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'decrement'", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeDecrement as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeDecrement as Mock).mockResolvedValue(undefined);
 
       await repo.decrement({ id: "1" } as any, "version" as keyof TestEntity, 2);
 
@@ -947,7 +965,7 @@ describe("DriverRepositoryBase", () => {
   describe("delete", () => {
     test("delegates to executor.executeDelete", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeDelete as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeDelete as Mock).mockResolvedValue(undefined);
 
       await repo.delete({ id: "1" } as any);
 
@@ -956,7 +974,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'delete'", async () => {
       const { repo, executor } = createRepo();
-      (executor.executeDelete as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeDelete as Mock).mockResolvedValue(undefined);
 
       await repo.delete({ id: "1" } as any);
 
@@ -968,7 +986,7 @@ describe("DriverRepositoryBase", () => {
     test("delegates to executor.executeUpdateMany when not versioned", async () => {
       const { repo, executor, mockEM } = createRepo();
       mockEM.updateStrategy = "update";
-      (executor.executeUpdateMany as jest.Mock).mockResolvedValue(1);
+      (executor.executeUpdateMany as Mock).mockResolvedValue(1);
 
       await repo.updateMany({ name: "foo" } as any, { name: "bar" });
 
@@ -990,7 +1008,7 @@ describe("DriverRepositoryBase", () => {
     test("calls guardAppendOnly with metadata and 'updateMany'", async () => {
       const { repo, executor, mockEM } = createRepo();
       mockEM.updateStrategy = "update";
-      (executor.executeUpdateMany as jest.Mock).mockResolvedValue(1);
+      (executor.executeUpdateMany as Mock).mockResolvedValue(1);
 
       await repo.updateMany({ name: "foo" } as any, { name: "bar" });
 
@@ -1003,7 +1021,7 @@ describe("DriverRepositoryBase", () => {
   describe("softDestroy", () => {
     test("calls guardDeleteDateField before performing soft destroy", async () => {
       const { repo } = createRepo({ metadata: mockMetadataWithDeleteDate });
-      abstractMethods.softDestroyOne = jest.fn().mockResolvedValue(undefined);
+      abstractMethods.softDestroyOne = vi.fn().mockResolvedValue(undefined);
       (repo as any).softDestroyOne = abstractMethods.softDestroyOne;
 
       await repo.softDestroy(entityA);
@@ -1014,7 +1032,7 @@ describe("DriverRepositoryBase", () => {
 
     test("array calls softDestroyOne for each entity", async () => {
       const { repo } = createRepo({ metadata: mockMetadataWithDeleteDate });
-      abstractMethods.softDestroyOne = jest.fn().mockResolvedValue(undefined);
+      abstractMethods.softDestroyOne = vi.fn().mockResolvedValue(undefined);
       (repo as any).softDestroyOne = abstractMethods.softDestroyOne;
       const entityB = { ...entityA, id: "id-2" } as TestEntity;
 
@@ -1025,7 +1043,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'softDestroy'", async () => {
       const { repo } = createRepo({ metadata: mockMetadataWithDeleteDate });
-      abstractMethods.softDestroyOne = jest.fn().mockResolvedValue(undefined);
+      abstractMethods.softDestroyOne = vi.fn().mockResolvedValue(undefined);
       (repo as any).softDestroyOne = abstractMethods.softDestroyOne;
 
       await repo.softDestroy(entityA);
@@ -1040,7 +1058,7 @@ describe("DriverRepositoryBase", () => {
   describe("softDelete", () => {
     test("calls guardDeleteDateField and executor.executeSoftDelete", async () => {
       const { repo, executor } = createRepo({ metadata: mockMetadataWithDeleteDate });
-      (executor.executeSoftDelete as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeSoftDelete as Mock).mockResolvedValue(undefined);
 
       await repo.softDelete({ id: "1" } as any);
 
@@ -1050,7 +1068,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'softDelete'", async () => {
       const { repo, executor } = createRepo({ metadata: mockMetadataWithDeleteDate });
-      (executor.executeSoftDelete as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeSoftDelete as Mock).mockResolvedValue(undefined);
 
       await repo.softDelete({ id: "1" } as any);
 
@@ -1064,7 +1082,7 @@ describe("DriverRepositoryBase", () => {
   describe("restore", () => {
     test("calls guardDeleteDateField and executor.executeRestore", async () => {
       const { repo, executor } = createRepo({ metadata: mockMetadataWithDeleteDate });
-      (executor.executeRestore as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeRestore as Mock).mockResolvedValue(undefined);
 
       await repo.restore({ id: "1" } as any);
 
@@ -1074,7 +1092,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'restore'", async () => {
       const { repo, executor } = createRepo({ metadata: mockMetadataWithDeleteDate });
-      (executor.executeRestore as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeRestore as Mock).mockResolvedValue(undefined);
 
       await repo.restore({ id: "1" } as any);
 
@@ -1087,7 +1105,7 @@ describe("DriverRepositoryBase", () => {
   describe("ttl", () => {
     test("returns TTL value from executor", async () => {
       const { repo, executor } = createRepo({ metadata: mockMetadataWithExpiryDate });
-      (executor.executeTtl as jest.Mock).mockResolvedValue(120);
+      (executor.executeTtl as Mock).mockResolvedValue(120);
 
       const result = await repo.ttl({ id: "1" } as any);
 
@@ -1097,7 +1115,7 @@ describe("DriverRepositoryBase", () => {
 
     test("throws ProteusRepositoryError when executor returns null", async () => {
       const { repo, executor } = createRepo({ metadata: mockMetadataWithExpiryDate });
-      (executor.executeTtl as jest.Mock).mockResolvedValue(null);
+      (executor.executeTtl as Mock).mockResolvedValue(null);
 
       await expect(repo.ttl({ id: "1" } as any)).rejects.toThrow(ProteusRepositoryError);
     });
@@ -1106,7 +1124,7 @@ describe("DriverRepositoryBase", () => {
   describe("deleteExpired", () => {
     test("calls guardExpiryDateField and executor.executeDeleteExpired", async () => {
       const { repo, executor } = createRepo({ metadata: mockMetadataWithExpiryDate });
-      (executor.executeDeleteExpired as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeDeleteExpired as Mock).mockResolvedValue(undefined);
 
       await repo.deleteExpired();
 
@@ -1116,7 +1134,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'deleteExpired'", async () => {
       const { repo, executor } = createRepo({ metadata: mockMetadataWithExpiryDate });
-      (executor.executeDeleteExpired as jest.Mock).mockResolvedValue(undefined);
+      (executor.executeDeleteExpired as Mock).mockResolvedValue(undefined);
 
       await repo.deleteExpired();
 
@@ -1132,7 +1150,7 @@ describe("DriverRepositoryBase", () => {
   describe("upsert", () => {
     test("calls guardUpsertBlocked and delegates to upsertOne for single entity", async () => {
       const { repo } = createRepo();
-      abstractMethods.upsertOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.upsertOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).upsertOne = abstractMethods.upsertOne;
 
       const result = await repo.upsert(entityA);
@@ -1144,7 +1162,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls upsertOne for each entity in an array", async () => {
       const { repo } = createRepo();
-      abstractMethods.upsertOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.upsertOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).upsertOne = abstractMethods.upsertOne;
       const entityB = { ...entityA, id: "id-2" } as TestEntity;
 
@@ -1155,7 +1173,7 @@ describe("DriverRepositoryBase", () => {
 
     test("calls guardAppendOnly with metadata and 'upsert'", async () => {
       const { repo } = createRepo();
-      abstractMethods.upsertOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.upsertOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).upsertOne = abstractMethods.upsertOne;
 
       await repo.upsert(entityA);
@@ -1169,7 +1187,7 @@ describe("DriverRepositoryBase", () => {
   describe("sum / average / minimum / maximum", () => {
     test("sum delegates to executeAggregate with 'sum'", async () => {
       const { repo } = createRepo();
-      abstractMethods.executeAggregate = jest.fn().mockResolvedValue(42);
+      abstractMethods.executeAggregate = vi.fn().mockResolvedValue(42);
       (repo as any).executeAggregate = abstractMethods.executeAggregate;
 
       const result = await repo.sum("version" as any, { id: "1" } as any);
@@ -1182,7 +1200,7 @@ describe("DriverRepositoryBase", () => {
 
     test("average delegates to executeAggregate with 'avg'", async () => {
       const { repo } = createRepo();
-      abstractMethods.executeAggregate = jest.fn().mockResolvedValue(5.5);
+      abstractMethods.executeAggregate = vi.fn().mockResolvedValue(5.5);
       (repo as any).executeAggregate = abstractMethods.executeAggregate;
 
       await repo.average("version" as any);
@@ -1196,7 +1214,7 @@ describe("DriverRepositoryBase", () => {
 
     test("minimum delegates to executeAggregate with 'min'", async () => {
       const { repo } = createRepo();
-      abstractMethods.executeAggregate = jest.fn().mockResolvedValue(1);
+      abstractMethods.executeAggregate = vi.fn().mockResolvedValue(1);
       (repo as any).executeAggregate = abstractMethods.executeAggregate;
 
       await repo.minimum("version" as any);
@@ -1210,7 +1228,7 @@ describe("DriverRepositoryBase", () => {
 
     test("maximum delegates to executeAggregate with 'max'", async () => {
       const { repo } = createRepo();
-      abstractMethods.executeAggregate = jest.fn().mockResolvedValue(100);
+      abstractMethods.executeAggregate = vi.fn().mockResolvedValue(100);
       (repo as any).executeAggregate = abstractMethods.executeAggregate;
 
       await repo.maximum("version" as any);
@@ -1227,15 +1245,17 @@ describe("DriverRepositoryBase", () => {
 
   describe("queryBuilder", () => {
     test("returns result of queryBuilderFactory", () => {
-      const mockQB = { build: jest.fn() };
-      const factory = jest.fn().mockReturnValue(mockQB);
+      const mockQB = { build: vi.fn() };
+      const factory = vi.fn().mockReturnValue(mockQB);
       const logger = createMockLogger();
       const executor = createMockExecutor();
       const mockEM = createMockEntityManager();
-      (getEntityMetadata as jest.Mock).mockReturnValue(mockMetadata);
-      (
-        EntityManager as jest.MockedClass<typeof EntityManager<TestEntity>>
-      ).mockImplementation(() => mockEM);
+      (getEntityMetadata as Mock).mockReturnValue(mockMetadata);
+      (EntityManager as MockedClass<typeof EntityManager<TestEntity>>).mockImplementation(
+        function () {
+          return mockEM;
+        },
+      );
 
       const repo = new ConcreteRepository({
         target: TestEntity,
@@ -1271,7 +1291,7 @@ describe("DriverRepositoryBase", () => {
       const { repo, mockEM } = createRepo();
       mockEM.getSaveStrategy.mockReturnValue("insert");
       mockEM.create.mockReturnValue(entityA);
-      abstractMethods.insertOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.insertOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).insertOne = abstractMethods.insertOne;
 
       // Pass a plain object so it goes through em.create
@@ -1285,7 +1305,7 @@ describe("DriverRepositoryBase", () => {
       const { repo, mockEM } = createRepo();
       mockEM.getSaveStrategy.mockReturnValue("update");
       mockEM.create.mockReturnValue(entityA);
-      abstractMethods.updateOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.updateOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).updateOne = abstractMethods.updateOne;
 
       await repo.exposeSaveOne({ name: "existing" });
@@ -1297,13 +1317,13 @@ describe("DriverRepositoryBase", () => {
       const { repo, executor, mockEM } = createRepo();
       mockEM.getSaveStrategy.mockReturnValue("unknown");
       mockEM.create.mockReturnValue(entityA);
-      (buildPrimaryKeyPredicate as jest.Mock).mockReturnValue({ id: "entity-id-1" });
+      (buildPrimaryKeyPredicate as Mock).mockReturnValue({ id: "entity-id-1" });
       // saveOne calls this.exists(pk, { withDeleted: true }) — options has 1 key so
       // exists() routes through executeCount, not executeExists
-      (executor.executeCount as jest.Mock).mockResolvedValue(1); // count > 0 => exists
+      (executor.executeCount as Mock).mockResolvedValue(1); // count > 0 => exists
 
       // Spy on the instance's updateOne method directly
-      const updateOneSpy = jest.fn().mockResolvedValue(entityA);
+      const updateOneSpy = vi.fn().mockResolvedValue(entityA);
       (repo as any).updateOne = updateOneSpy;
 
       await repo.exposeSaveOne({ name: "ambiguous" });
@@ -1315,10 +1335,10 @@ describe("DriverRepositoryBase", () => {
       const { repo, executor, mockEM } = createRepo();
       mockEM.getSaveStrategy.mockReturnValue("unknown");
       mockEM.create.mockReturnValue(entityA);
-      (buildPrimaryKeyPredicate as jest.Mock).mockReturnValue({ id: "entity-id-new" });
-      (executor.executeExists as jest.Mock).mockResolvedValue(false);
-      abstractMethods.insertOne = jest.fn().mockResolvedValue(entityA);
-      abstractMethods.isDuplicateKeyError = jest.fn().mockReturnValue(false);
+      (buildPrimaryKeyPredicate as Mock).mockReturnValue({ id: "entity-id-new" });
+      (executor.executeExists as Mock).mockResolvedValue(false);
+      abstractMethods.insertOne = vi.fn().mockResolvedValue(entityA);
+      abstractMethods.isDuplicateKeyError = vi.fn().mockReturnValue(false);
       (repo as any).insertOne = abstractMethods.insertOne;
       (repo as any).isDuplicateKeyError = abstractMethods.isDuplicateKeyError;
 
@@ -1331,13 +1351,13 @@ describe("DriverRepositoryBase", () => {
       const { repo, executor, mockEM } = createRepo();
       mockEM.getSaveStrategy.mockReturnValue("unknown");
       mockEM.create.mockReturnValue(entityA);
-      (buildPrimaryKeyPredicate as jest.Mock).mockReturnValue({ id: "entity-id-race" });
-      (executor.executeExists as jest.Mock).mockResolvedValue(false);
+      (buildPrimaryKeyPredicate as Mock).mockReturnValue({ id: "entity-id-race" });
+      (executor.executeExists as Mock).mockResolvedValue(false);
 
       const dupError = new Error("duplicate key");
-      abstractMethods.insertOne = jest.fn().mockRejectedValue(dupError);
-      abstractMethods.isDuplicateKeyError = jest.fn().mockReturnValue(true);
-      abstractMethods.updateOne = jest.fn().mockResolvedValue(entityA);
+      abstractMethods.insertOne = vi.fn().mockRejectedValue(dupError);
+      abstractMethods.isDuplicateKeyError = vi.fn().mockReturnValue(true);
+      abstractMethods.updateOne = vi.fn().mockResolvedValue(entityA);
       (repo as any).insertOne = abstractMethods.insertOne;
       (repo as any).isDuplicateKeyError = abstractMethods.isDuplicateKeyError;
       (repo as any).updateOne = abstractMethods.updateOne;
@@ -1352,12 +1372,12 @@ describe("DriverRepositoryBase", () => {
       const { repo, executor, mockEM } = createRepo();
       mockEM.getSaveStrategy.mockReturnValue("unknown");
       mockEM.create.mockReturnValue(entityA);
-      (buildPrimaryKeyPredicate as jest.Mock).mockReturnValue({ id: "id-err" });
-      (executor.executeExists as jest.Mock).mockResolvedValue(false);
+      (buildPrimaryKeyPredicate as Mock).mockReturnValue({ id: "id-err" });
+      (executor.executeExists as Mock).mockResolvedValue(false);
 
       const dbError = new Error("connection lost");
-      abstractMethods.insertOne = jest.fn().mockRejectedValue(dbError);
-      abstractMethods.isDuplicateKeyError = jest.fn().mockReturnValue(false);
+      abstractMethods.insertOne = vi.fn().mockRejectedValue(dbError);
+      abstractMethods.isDuplicateKeyError = vi.fn().mockReturnValue(false);
       (repo as any).insertOne = abstractMethods.insertOne;
       (repo as any).isDuplicateKeyError = abstractMethods.isDuplicateKeyError;
 
@@ -1425,7 +1445,7 @@ describe("DriverRepositoryBase", () => {
 
   describe("fireSubscriber", () => {
     test("does not call emitEntity when event name is unknown", async () => {
-      const emitEntity = jest.fn();
+      const emitEntity = vi.fn();
       const { repo } = createRepo({ emitEntity });
 
       await repo.exposeFireSubscriber("unknownEvent", { entity: entityA });
@@ -1434,7 +1454,7 @@ describe("DriverRepositoryBase", () => {
     });
 
     test("calls emitEntity with mapped event name", async () => {
-      const emitEntity = jest.fn().mockResolvedValue(undefined);
+      const emitEntity = vi.fn().mockResolvedValue(undefined);
       const { repo } = createRepo({ emitEntity });
 
       await repo.exposeFireSubscriber("afterInsert", { entity: entityA });
@@ -1446,7 +1466,7 @@ describe("DriverRepositoryBase", () => {
   // ─── buildSubscriberEvent ─────────────────────────────────────────────
 
   describe("buildSubscriberEvent", () => {
-    test("returns event with entity, metadata, context, and null connection by default", () => {
+    test("returns event with entity, metadata, meta, and null connection by default", () => {
       const { repo } = createRepo();
 
       const event = repo.exposeBuildSubscriberEvent(entityA);
@@ -1454,7 +1474,7 @@ describe("DriverRepositoryBase", () => {
       expect(event.entity).toBe(entityA);
       expect(event.metadata).toBe(mockMetadata);
       expect(event.connection).toBeNull();
-      expect(event.context).toBeUndefined();
+      expect(event.meta).toBeUndefined();
     });
 
     test("includes provided connection in event", () => {
@@ -1538,8 +1558,7 @@ describe("DriverRepositoryBase", () => {
     });
 
     test("skips lazy relations (isLazyRelation returns true)", () => {
-      const { isLazyRelation } = require("../entity/utils/lazy-relation");
-      (isLazyRelation as jest.Mock).mockReturnValue(true);
+      (isLazyRelation as unknown as Mock).mockReturnValue(true);
 
       const { repo } = createRepo({ metadata: mockMetadataWithRelations });
       const lazyProxy = { __lazy: true };
@@ -1552,8 +1571,7 @@ describe("DriverRepositoryBase", () => {
     });
 
     test("skips lazy collections (isLazyCollection returns true)", () => {
-      const { isLazyCollection } = require("../entity/utils/lazy-collection");
-      (isLazyCollection as jest.Mock).mockReturnValue(true);
+      (isLazyCollection as unknown as Mock).mockReturnValue(true);
 
       const { repo } = createRepo({ metadata: mockMetadataWithRelations });
       const lazyProxy = { __lazyCollection: true };

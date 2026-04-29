@@ -1,4 +1,4 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
 
 export const getUpsertSetSkipColumns = (metadata: EntityMetadata): Set<string> => {
   const skip = new Set<string>();

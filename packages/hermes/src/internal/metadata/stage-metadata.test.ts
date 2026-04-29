@@ -8,7 +8,7 @@ import {
   stageHandler,
   stageMethodModifier,
   stageValidation,
-} from "./stage-metadata";
+} from "./stage-metadata.js";
 import type {
   MetaAggregate,
   MetaDto,
@@ -18,8 +18,9 @@ import type {
   MetaSaga,
   MetaValidation,
   MetaView,
-} from "./types";
+} from "./types.js";
 import { z } from "zod";
+import { describe, expect, it } from "vitest";
 
 const createMetadata = (): DecoratorMetadataObject =>
   Object.create(null) as DecoratorMetadataObject;

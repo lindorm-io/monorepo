@@ -1,5 +1,5 @@
-import { AegisIntrospection, AegisUserinfo } from "@lindorm/aegis";
-import {
+import type { AegisIntrospection, AegisUserinfo } from "@lindorm/aegis";
+import type {
   OpenIdAuthorizeRequestQuery,
   OpenIdLogoutRequest,
   OpenIdResponseType,

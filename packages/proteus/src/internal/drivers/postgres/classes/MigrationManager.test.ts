@@ -1,98 +1,105 @@
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedFunction,
+} from "vitest";
 import type { ILogger } from "@lindorm/logger";
-import { PostgresMigrationError } from "../errors/PostgresMigrationError";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
+import { PostgresMigrationError } from "../errors/PostgresMigrationError.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
 import type {
   LoadedMigration,
   MigrationInterface,
   MigrationRecord,
-} from "../types/migration";
-import { MigrationManager } from "./MigrationManager";
+} from "../types/migration.js";
+import { MigrationManager } from "./MigrationManager.js";
 
 // Mock all migration utilities
-jest.mock("../utils/advisory-lock", () => ({
-  withAdvisoryLock: jest.fn(
+vi.mock("../utils/advisory-lock.js", async () => ({
+  withAdvisoryLock: vi.fn(
     async (_client: unknown, _k1: unknown, _k2: unknown, fn: () => Promise<unknown>) =>
       fn(),
   ),
 }));
-jest.mock("../utils/migration/load-migrations", () => ({
-  loadMigrations: jest.fn(),
+vi.mock("../utils/migration/load-migrations.js", () => ({
+  loadMigrations: vi.fn(),
 }));
-jest.mock("../utils/migration/migration-table", () => ({
-  ensureMigrationTable: jest.fn(),
-  getAppliedMigrations: jest.fn(),
-  getPartiallyAppliedMigrations: jest.fn(),
-  getAllMigrationRecords: jest.fn(),
-  insertMigrationRecord: jest.fn(),
-  markMigrationFinished: jest.fn(),
-  markMigrationRolledBack: jest.fn(),
+vi.mock("../utils/migration/migration-table.js", () => ({
+  ensureMigrationTable: vi.fn(),
+  getAppliedMigrations: vi.fn(),
+  getPartiallyAppliedMigrations: vi.fn(),
+  getAllMigrationRecords: vi.fn(),
+  insertMigrationRecord: vi.fn(),
+  markMigrationFinished: vi.fn(),
+  markMigrationRolledBack: vi.fn(),
 }));
-jest.mock("../utils/migration/resolve-pending", () => ({
-  resolvePending: jest.fn(),
+vi.mock("../utils/migration/resolve-pending.js", () => ({
+  resolvePending: vi.fn(),
 }));
-jest.mock("../utils/migration/execute-migration", () => ({
-  executeMigrationUp: jest.fn(),
-  executeMigrationDown: jest.fn(),
+vi.mock("../utils/migration/execute-migration.js", () => ({
+  executeMigrationUp: vi.fn(),
+  executeMigrationDown: vi.fn(),
 }));
-jest.mock("@lindorm/sha", () => ({
-  ShaKit: { S256: jest.fn(() => "hash-xxx") },
+vi.mock("@lindorm/sha", () => ({
+  ShaKit: { S256: vi.fn(() => "hash-xxx") },
 }));
 
-import { withAdvisoryLock } from "../utils/advisory-lock";
-import { loadMigrations } from "../utils/migration/load-migrations";
+import { withAdvisoryLock } from "../utils/advisory-lock.js";
+import { loadMigrations } from "../utils/migration/load-migrations.js";
 import {
   ensureMigrationTable,
   getAppliedMigrations,
   getPartiallyAppliedMigrations,
   getAllMigrationRecords,
-} from "../utils/migration/migration-table";
-import { resolvePending } from "../utils/migration/resolve-pending";
+} from "../utils/migration/migration-table.js";
+import { resolvePending } from "../utils/migration/resolve-pending.js";
 import {
   executeMigrationUp,
   executeMigrationDown,
-} from "../utils/migration/execute-migration";
+} from "../utils/migration/execute-migration.js";
 
-const mockAdvisoryLock = withAdvisoryLock as jest.MockedFunction<typeof withAdvisoryLock>;
-const mockLoadMigrations = loadMigrations as jest.MockedFunction<typeof loadMigrations>;
-const mockEnsureTable = ensureMigrationTable as jest.MockedFunction<
+const mockAdvisoryLock = withAdvisoryLock as MockedFunction<typeof withAdvisoryLock>;
+const mockLoadMigrations = loadMigrations as MockedFunction<typeof loadMigrations>;
+const mockEnsureTable = ensureMigrationTable as MockedFunction<
   typeof ensureMigrationTable
 >;
-const mockGetApplied = getAppliedMigrations as jest.MockedFunction<
+const mockGetApplied = getAppliedMigrations as MockedFunction<
   typeof getAppliedMigrations
 >;
-const mockGetPartiallyApplied = getPartiallyAppliedMigrations as jest.MockedFunction<
+const mockGetPartiallyApplied = getPartiallyAppliedMigrations as MockedFunction<
   typeof getPartiallyAppliedMigrations
 >;
-const mockGetAllRecords = getAllMigrationRecords as jest.MockedFunction<
+const mockGetAllRecords = getAllMigrationRecords as MockedFunction<
   typeof getAllMigrationRecords
 >;
-const mockResolvePending = resolvePending as jest.MockedFunction<typeof resolvePending>;
-const mockExecuteUp = executeMigrationUp as jest.MockedFunction<
-  typeof executeMigrationUp
->;
-const mockExecuteDown = executeMigrationDown as jest.MockedFunction<
+const mockResolvePending = resolvePending as MockedFunction<typeof resolvePending>;
+const mockExecuteUp = executeMigrationUp as MockedFunction<typeof executeMigrationUp>;
+const mockExecuteDown = executeMigrationDown as MockedFunction<
   typeof executeMigrationDown
 >;
 
 const mockClient: PostgresQueryClient = {
-  query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
+  query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }),
 };
 
 const mockLogger: ILogger = {
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
-  child: jest.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
+  child: vi.fn().mockReturnThis(),
 } as unknown as ILogger;
 
 const makeMigration = (id: string): MigrationInterface => ({
   id,
   ts: "2026-02-20T09:00:00.000Z",
-  up: jest.fn(),
-  down: jest.fn(),
+  up: vi.fn(),
+  down: vi.fn(),
 });
 
 const makeLoaded = (name: string, id: string): LoadedMigration => ({
@@ -101,7 +108,7 @@ const makeLoaded = (name: string, id: string): LoadedMigration => ({
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   mockAdvisoryLock.mockImplementation(async (_client, _k1, _k2, fn) => fn());
   mockLoadMigrations.mockResolvedValue([]);
   mockGetApplied.mockResolvedValue([]);

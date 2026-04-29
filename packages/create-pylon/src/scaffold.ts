@@ -9,19 +9,22 @@ import {
   writeFileSync,
 } from "fs";
 import { dirname, join, resolve } from "path";
-import { buildConfigFile } from "./build-config-file";
-import { buildDockerCompose } from "./build-docker-compose";
-import { buildIrisSamples } from "./build-iris-samples";
-import { buildPylonFile } from "./build-pylon-file";
-import { buildWorkerFile } from "./build-worker-file";
-import type { Answers } from "./types";
+import { buildAttachSourcesFile } from "./build-attach-sources-file.js";
+import { buildConfigFile } from "./build-config-file.js";
+import { buildContextFile } from "./build-context-file.js";
+import { buildDockerCompose } from "./build-docker-compose.js";
+import { buildIrisSamples } from "./build-iris-samples.js";
+import { buildPylonFile } from "./build-pylon-file.js";
+import { buildWorkerFile } from "./build-worker-file.js";
+import { runProteusInit } from "./drivers.js";
+import type { Answers } from "./types.js";
 import {
   AUTH_ENV_VARS,
   IRIS_DRIVER_PACKAGES,
   IRIS_ENV_VARS,
   PROTEUS_DRIVER_PACKAGES,
   PROTEUS_ENV_VARS,
-} from "./types";
+} from "./types.js";
 
 // Far-future expiry — the KEK protects every @Encrypted field in the DB;
 // rotating it is a re-encryption migration, not a routine rotation, so a
@@ -38,7 +41,7 @@ export const generateKekEnvString = (): string =>
     })
     .toEnvString();
 
-const TEMPLATE_ROOT = resolve(__dirname, "..", "templates");
+const TEMPLATE_ROOT = resolve(import.meta.dirname, "..", "templates");
 
 const renameDotfiles = (dir: string): void => {
   if (!existsSync(dir)) return;
@@ -77,15 +80,18 @@ export const copyTemplates = (answers: Answers): void => {
 export const buildDependencyList = (answers: Answers): Array<string> => {
   const deps: Array<string> = [];
 
-  if (answers.proteusDriver !== "none") {
-    deps.push("@lindorm/proteus", ...PROTEUS_DRIVER_PACKAGES[answers.proteusDriver]);
+  if (answers.proteusDrivers.length > 0) {
+    deps.push("@lindorm/proteus");
+    for (const driver of answers.proteusDrivers) {
+      deps.push(...PROTEUS_DRIVER_PACKAGES[driver]);
+    }
   }
 
   if (answers.irisDriver !== "none") {
     deps.push("@lindorm/iris", ...IRIS_DRIVER_PACKAGES[answers.irisDriver]);
   }
 
-  return deps;
+  return Array.from(new Set(deps));
 };
 
 export const buildDevDependencyList = (_answers: Answers): Array<string> => [];
@@ -95,21 +101,26 @@ export const writePackageJson = (answers: Answers): void => {
     name: answers.projectName,
     version: "0.0.0",
     private: true,
+    type: "module",
     engines: { node: ">=24.13.0" },
     scripts: {
       dev: "tsx watch src/index.ts",
       build: "tsc -p tsconfig.build.json",
       start: "node dist/index.js",
       typecheck: "tsc --noEmit",
-      test: "jest",
+      test: "vitest run",
     },
     dependencies: {},
     devDependencies: {},
   };
 
-  const driverNeedsCompose =
-    ["postgres", "mysql", "mongo", "redis"].includes(answers.proteusDriver) ||
-    ["kafka", "nats", "rabbit", "redis"].includes(answers.irisDriver);
+  const proteusNeedsCompose = answers.proteusDrivers.some((d) =>
+    ["postgres", "mysql", "mongo", "redis"].includes(d),
+  );
+  const irisNeedsCompose = ["kafka", "nats", "rabbit", "redis"].includes(
+    answers.irisDriver,
+  );
+  const driverNeedsCompose = proteusNeedsCompose || irisNeedsCompose;
 
   if (driverNeedsCompose) {
     const scripts = pkg.scripts as Record<string, string>;
@@ -126,14 +137,21 @@ export const buildEnvLines = (
   kek: string = generateKekEnvString(),
 ): Array<string> => {
   const lines: Array<string> = ["NODE_ENV=development", `PYLON_KEK=${kek}`];
+  const seenEnvKeys = new Set<string>();
 
-  for (const entry of PROTEUS_ENV_VARS[answers.proteusDriver]) {
-    lines.push(`${entry.key}=${entry.value}`);
+  const pushEnvEntries = (entries: ReadonlyArray<{ key: string; value: string }>) => {
+    for (const entry of entries) {
+      if (seenEnvKeys.has(entry.key)) continue;
+      seenEnvKeys.add(entry.key);
+      lines.push(`${entry.key}=${entry.value}`);
+    }
+  };
+
+  for (const driver of answers.proteusDrivers) {
+    pushEnvEntries(PROTEUS_ENV_VARS[driver]);
   }
 
-  for (const entry of IRIS_ENV_VARS[answers.irisDriver]) {
-    lines.push(`${entry.key}=${entry.value}`);
-  }
+  pushEnvEntries(IRIS_ENV_VARS[answers.irisDriver]);
 
   if (answers.features.auth) {
     for (const entry of AUTH_ENV_VARS) {
@@ -163,6 +181,21 @@ export const writeConfigFile = (answers: Answers): void => {
   writeFileSync(target, buildConfigFile(answers), "utf-8");
 };
 
+export const writeContextFile = (answers: Answers): void => {
+  const target = join(answers.projectDir, "src/types/context.ts");
+  ensureDir(target);
+  writeFileSync(target, buildContextFile(answers), "utf-8");
+};
+
+export const writeAttachSourcesFile = (answers: Answers): void => {
+  const content = buildAttachSourcesFile(answers);
+  if (!content) return;
+
+  const target = join(answers.projectDir, "src/middleware/attach-sources.ts");
+  ensureDir(target);
+  writeFileSync(target, content, "utf-8");
+};
+
 export const writePylonFile = (answers: Answers): void => {
   const target = join(answers.projectDir, "src/pylon/pylon.ts");
   ensureDir(target);
@@ -170,8 +203,9 @@ export const writePylonFile = (answers: Answers): void => {
 };
 
 const needsDockerCompose = (answers: Answers): boolean =>
-  ["postgres", "mysql", "mongo", "redis"].includes(answers.proteusDriver) ||
-  ["kafka", "nats", "rabbit", "redis"].includes(answers.irisDriver);
+  answers.proteusDrivers.some((d) =>
+    ["postgres", "mysql", "mongo", "redis"].includes(d),
+  ) || ["kafka", "nats", "rabbit", "redis"].includes(answers.irisDriver);
 
 export const writeDockerCompose = (answers: Answers): void => {
   if (!needsDockerCompose(answers)) return;
@@ -218,8 +252,11 @@ export const scaffold = async (
   writePackageJson(answers);
   writeEnvFile(answers, kek);
   writeConfigFile(answers);
+  writeContextFile(answers);
   writePylonFile(answers);
   writeDockerCompose(answers);
   writeWorkerFiles(answers);
   writeIrisSamples(answers);
+  writeAttachSourcesFile(answers);
+  await runProteusInit(answers.projectDir, answers);
 };

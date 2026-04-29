@@ -1,7 +1,7 @@
-import { Environment } from "@lindorm/types";
+import type { Environment } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import { PylonHttpMiddleware } from "../../types";
-import { getAuthorization } from "../utils/get-authorization";
+import type { PylonHttpMiddleware } from "../../types/index.js";
+import { getAuthorization } from "../utils/get-authorization.js";
 
 type Options = {
   environment?: Environment;
@@ -21,6 +21,7 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
       const requestDate = ctx.get("date");
 
       ctx.state = {
+        actor: "unknown",
         app: { domain, environment, name, version },
         authorization: getAuthorization(ctx),
         metadata: {

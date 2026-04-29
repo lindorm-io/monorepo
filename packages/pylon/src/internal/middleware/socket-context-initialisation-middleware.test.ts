@@ -1,5 +1,6 @@
-import { createMockLogger } from "@lindorm/logger";
-import { createSocketContextInitialisationMiddleware } from "./socket-context-initialisation-middleware";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createSocketContextInitialisationMiddleware } from "./socket-context-initialisation-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createSocketContextInitialisationMiddleware", () => {
   let ctx: any;
@@ -33,10 +34,11 @@ describe("createSocketContextInitialisationMiddleware", () => {
 
   test("should initialise context state", async () => {
     await expect(
-      createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn()),
+      createSocketContextInitialisationMiddleware(logger)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.state).toEqual({
+      actor: "unknown",
       app: {
         domain: "test.lindorm.io",
         environment: "test",
@@ -55,7 +57,7 @@ describe("createSocketContextInitialisationMiddleware", () => {
   });
 
   test("should create child logger with event metadata", async () => {
-    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
+    await createSocketContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(ctx.logger).toEqual(expect.any(Object));
     expect(logger.child).toHaveBeenCalledWith(["Event"], {
@@ -68,7 +70,7 @@ describe("createSocketContextInitialisationMiddleware", () => {
   test("should extract correlationId from ctx.data when present", async () => {
     ctx.data = { correlationId: "custom-correlation-id", text: "hello" };
 
-    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
+    await createSocketContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(ctx.state.metadata.correlationId).toBe("custom-correlation-id");
     expect(logger.child).toHaveBeenCalledWith(
@@ -82,7 +84,7 @@ describe("createSocketContextInitialisationMiddleware", () => {
   test("should generate random correlationId when not in payload", async () => {
     ctx.data = { text: "hello" };
 
-    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
+    await createSocketContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(ctx.state.metadata.correlationId).toEqual(expect.any(String));
     expect(ctx.state.metadata.correlationId).toHaveLength(36); // UUID format
@@ -92,7 +94,7 @@ describe("createSocketContextInitialisationMiddleware", () => {
     ctx.header = { correlationId: "envelope-trace-id" };
     ctx.data = { correlationId: "data-trace-id", text: "hello" };
 
-    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
+    await createSocketContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(ctx.state.metadata.correlationId).toBe("envelope-trace-id");
   });
@@ -100,7 +102,7 @@ describe("createSocketContextInitialisationMiddleware", () => {
   test("should extract bearer authorization from handshake", async () => {
     ctx.io.socket.handshake.headers.authorization = "Bearer test-token";
 
-    await createSocketContextInitialisationMiddleware(logger)(ctx, jest.fn());
+    await createSocketContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(ctx.state.authorization).toEqual({
       type: "bearer",

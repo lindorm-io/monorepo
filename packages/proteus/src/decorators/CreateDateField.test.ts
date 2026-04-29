@@ -1,7 +1,8 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { CreateDateField } from "./CreateDateField";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { CreateDateField } from "./CreateDateField.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CreateDateFieldDecorated" })
 class CreateDateFieldDecorated {

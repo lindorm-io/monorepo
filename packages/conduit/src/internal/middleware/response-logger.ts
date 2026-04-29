@@ -1,6 +1,12 @@
+import { LindormError } from "@lindorm/errors";
 import { isObject, isObjectLike, isString } from "@lindorm/is";
-import { ConduitError } from "../../errors";
-import { ConduitMiddleware } from "../../types";
+import type { ConduitMiddleware } from "../../types/index.js";
+
+type Transport = {
+  config?: any;
+  request?: any;
+  response?: any;
+};
 
 export const responseLogger: ConduitMiddleware = async (ctx, next) => {
   const start = Date.now();
@@ -37,7 +43,9 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
       time: Date.now() - start,
     });
   } catch (err: any) {
-    if (err instanceof ConduitError) {
+    if (err instanceof LindormError) {
+      const transport = (err.debug?.transport ?? {}) as Transport;
+
       ctx.logger?.warn("Conduit request failed", {
         app: ctx.app,
         request: {
@@ -53,12 +61,12 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
           url: ctx.req.url,
         },
         code: err.code,
-        config: err.config,
+        config: transport.config,
         response: {
-          data: err.response?.data,
-          headers: err.response?.headers,
-          status: err.response?.status || err.status,
-          statusText: err.response?.statusText,
+          data: transport.response?.data,
+          headers: transport.response?.headers,
+          status: transport.response?.status || err.status,
+          statusText: transport.response?.statusText,
         },
         time: Date.now() - start,
       });

@@ -1,9 +1,9 @@
 import type { ILogger } from "@lindorm/logger";
 import { randomUUID } from "@lindorm/random";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import type { IDelayStore } from "../../interfaces/IrisDelayStore";
-import type { DelayedEntry } from "../../types/delay";
-import type { DelayManagerOptions } from "./types";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import type { IDelayStore } from "../../interfaces/IrisDelayStore.js";
+import type { DelayedEntry } from "../../types/delay.js";
+import type { DelayManagerOptions } from "./types.js";
 
 export class DelayManager {
   private readonly store: IDelayStore;

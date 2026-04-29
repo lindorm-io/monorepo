@@ -1,4 +1,5 @@
-import { ZephyrRoom } from "./ZephyrRoom";
+import { ZephyrRoom } from "./ZephyrRoom.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("ZephyrRoom", () => {
   let mockZephyr: any;
@@ -6,10 +7,10 @@ describe("ZephyrRoom", () => {
 
   beforeEach(() => {
     mockZephyr = {
-      emit: jest.fn().mockResolvedValue(undefined),
-      request: jest.fn().mockResolvedValue(undefined),
-      on: jest.fn(),
-      off: jest.fn(),
+      emit: vi.fn().mockResolvedValue(undefined),
+      request: vi.fn().mockResolvedValue(undefined),
+      on: vi.fn(),
+      off: vi.fn(),
     };
 
     room = new ZephyrRoom(mockZephyr, "lobby");
@@ -40,7 +41,7 @@ describe("ZephyrRoom", () => {
   });
 
   test("should register on handler with room-scoped event", () => {
-    const handler = jest.fn();
+    const handler = vi.fn();
 
     room.on("message", handler);
 
@@ -48,7 +49,7 @@ describe("ZephyrRoom", () => {
   });
 
   test("should remove handler with room-scoped event", () => {
-    const handler = jest.fn();
+    const handler = vi.fn();
 
     room.off("message", handler);
 

@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { UpcasterChainError } from "../../errors";
+import { UpcasterChainError } from "../../errors/index.js";
 import type {
   HandlerRegistration,
   RegisteredAggregate,
@@ -9,7 +9,7 @@ import type {
   RegisteredUpcaster,
   RegisteredView,
   ScannedModules,
-} from "./types";
+} from "./types.js";
 
 export class HermesRegistry {
   private readonly aggregatesByName: Map<string, RegisteredAggregate>;

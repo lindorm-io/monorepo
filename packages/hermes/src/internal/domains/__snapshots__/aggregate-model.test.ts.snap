@@ -1,38 +1,38 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AggregateModel should accumulate state across multiple apply() calls 1`] = `
+exports[`AggregateModel > should accumulate state across multiple apply() calls 1`] = `
 {
   "create": "first",
   "mergeState": "second",
 }
 `;
 
-exports[`AggregateModel should apply event from causation and run event handler 1`] = `
+exports[`AggregateModel > should apply event from causation and run event handler 1`] = `
 {
   "create": "applied-create",
 }
 `;
 
-exports[`AggregateModel should handle destroy() in event handler 1`] = `
+exports[`AggregateModel > should handle destroy() in event handler 1`] = `
 {
   "destroy": "destroy-value",
 }
 `;
 
-exports[`AggregateModel should handle destroyNext() two-step pattern 1`] = `
+exports[`AggregateModel > should handle destroyNext() two-step pattern 1`] = `
 {
   "destroy": "destroy-value",
   "destroyNext": "destroy-next-value",
 }
 `;
 
-exports[`AggregateModel should load a single stored event and increment numberOfLoadedEvents 1`] = `
+exports[`AggregateModel > should load a single stored event and increment numberOfLoadedEvents 1`] = `
 {
   "create": "loaded-create",
 }
 `;
 
-exports[`AggregateModel should load multiple events and accumulate state correctly 1`] = `
+exports[`AggregateModel > should load multiple events and accumulate state correctly 1`] = `
 {
   "create": "create-value",
   "mergeState": "merge-value",
@@ -40,21 +40,21 @@ exports[`AggregateModel should load multiple events and accumulate state correct
 }
 `;
 
-exports[`AggregateModel should mix load and apply, accumulating events and loaded count independently 1`] = `
+exports[`AggregateModel > should mix load and apply, accumulating events and loaded count independently 1`] = `
 {
   "create": "loaded",
   "mergeState": "applied",
 }
 `;
 
-exports[`AggregateModel should provide structuredClone of state in event context (prevent mutation leaking) 1`] = `
+exports[`AggregateModel > should provide structuredClone of state in event context (prevent mutation leaking) 1`] = `
 {
   "create": "original",
   "mergeState": "merged",
 }
 `;
 
-exports[`AggregateModel should return toJSON() snapshot 1`] = `
+exports[`AggregateModel > should return toJSON() snapshot 1`] = `
 {
   "destroyed": false,
   "events": [],
@@ -66,7 +66,7 @@ exports[`AggregateModel should return toJSON() snapshot 1`] = `
 }
 `;
 
-exports[`AggregateModel upcasting should accumulate state correctly when mixing upcasted and current-version events 1`] = `
+exports[`AggregateModel upcasting > should accumulate state correctly when mixing upcasted and current-version events 1`] = `
 {
   "addedField": 100,
   "extraField": true,
@@ -74,7 +74,7 @@ exports[`AggregateModel upcasting should accumulate state correctly when mixing 
 }
 `;
 
-exports[`AggregateModel upcasting should pass through event at current handler version without upcasting 1`] = `
+exports[`AggregateModel upcasting > should pass through event at current handler version without upcasting 1`] = `
 {
   "addedField": 42,
   "extraField": true,
@@ -82,7 +82,7 @@ exports[`AggregateModel upcasting should pass through event at current handler v
 }
 `;
 
-exports[`AggregateModel upcasting should upcast V1 event to V3 via chained upcasters 1`] = `
+exports[`AggregateModel upcasting > should upcast V1 event to V3 via chained upcasters 1`] = `
 {
   "addedField": 0,
   "extraField": false,
@@ -90,7 +90,7 @@ exports[`AggregateModel upcasting should upcast V1 event to V3 via chained upcas
 }
 `;
 
-exports[`AggregateModel upcasting should upcast V2 event to V3 via single upcaster step 1`] = `
+exports[`AggregateModel upcasting > should upcast V2 event to V3 via single upcaster step 1`] = `
 {
   "addedField": 99,
   "extraField": false,

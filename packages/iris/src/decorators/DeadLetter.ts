@@ -1,4 +1,4 @@
-import { stageDeadLetter } from "../internal/message/metadata/stage-metadata";
+import { stageDeadLetter } from "../internal/message/metadata/stage-metadata.js";
 
 export const DeadLetter =
   () =>

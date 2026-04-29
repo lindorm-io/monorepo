@@ -1,7 +1,12 @@
-import { createMockProteusSession } from "./create-mock-proteus-session";
+import { createMockProteusSession } from "./vitest.js";
+import { describe, expect, it, vi } from "vitest";
+
+class TestEntity {
+  id!: string;
+}
 
 describe("createMockProteusSession", () => {
-  it("should create a mock session with all methods as jest.fn()", () => {
+  it("should create a mock session with all methods as vi.fn()", () => {
     const session = createMockProteusSession();
 
     expect(session).toMatchSnapshot();
@@ -16,10 +21,10 @@ describe("createMockProteusSession", () => {
 
   it("should return a mock repository from repository()", () => {
     const session = createMockProteusSession();
-    const repo = session.repository();
+    const repo = session.repository(TestEntity);
 
     expect(repo).toBeDefined();
-    expect(jest.isMockFunction(repo.find)).toBe(true);
+    expect(vi.isMockFunction(repo.find)).toBe(true);
   });
 
   it("should resolve true for ping()", async () => {
@@ -30,7 +35,7 @@ describe("createMockProteusSession", () => {
 
   it("should execute transaction callback", async () => {
     const session = createMockProteusSession();
-    const result = await session.transaction((ctx: unknown) => "done");
+    const result = await session.transaction(async () => "done");
 
     expect(result).toBe("done");
   });
@@ -41,5 +46,11 @@ describe("createMockProteusSession", () => {
 
     expect(registry).toBeInstanceOf(Map);
     expect(registry.size).toBe(0);
+  });
+
+  it("should return true by default for hasEntity()", () => {
+    const session = createMockProteusSession();
+
+    expect(session.hasEntity(TestEntity)).toBe(true);
   });
 });

@@ -1,6 +1,6 @@
 import { LindormError } from "@lindorm/errors";
 import { Predicated } from "@lindorm/utils";
-import { Dict, Predicate } from "@lindorm/types";
+import type { Dict, Predicate } from "@lindorm/types";
 
 export const validate = <C extends Dict = Dict>(
   dict: C,

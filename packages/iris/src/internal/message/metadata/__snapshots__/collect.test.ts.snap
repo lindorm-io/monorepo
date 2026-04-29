@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`collect collectAll should merge arrays from 3-level prototype chain 1`] = `
+exports[`collect > collectAll > should merge arrays from 3-level prototype chain 1`] = `
 [
   {
     "decorator": "Field",

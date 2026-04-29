@@ -1,10 +1,10 @@
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
-import { PylonListener } from "../../classes/PylonListener";
-import { PylonError } from "../../errors";
-import { PylonSocketContext, PylonSocketMiddleware } from "../../types";
-import { EventMatcher, EventSegment } from "./EventMatcher";
-import { PylonScannerBase, ScannedFile } from "./PylonScannerBase";
+import { PylonListener } from "../../classes/PylonListener.js";
+import { PylonError } from "../../errors/index.js";
+import type { PylonSocketContext, PylonSocketMiddleware } from "../../types/index.js";
+import { EventMatcher, type EventSegment } from "./EventMatcher.js";
+import { PylonScannerBase, type ScannedFile } from "./PylonScannerBase.js";
 
 const LISTENER_METHODS = ["ON", "ONCE"] as const;
 type ListenerMethod = (typeof LISTENER_METHODS)[number];
@@ -21,12 +21,12 @@ export class PylonListenerScanner<
     super(logger.child(["PylonListenerScanner"]));
   }
 
-  public scan(directory: string): ListenerScanResult<S> {
+  public async scan(directory: string): Promise<ListenerScanResult<S>> {
     const start = Date.now();
 
     this.logger.debug("Scanning listeners", { directory });
 
-    const files = this.scanDirectory(directory);
+    const files = await this.scanDirectory(directory);
     const listeners: Array<PylonListener<S>> = [];
 
     for (const file of files) {

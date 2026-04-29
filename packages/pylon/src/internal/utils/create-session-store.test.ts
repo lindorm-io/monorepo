@@ -1,8 +1,12 @@
-import { createMockAegis } from "@lindorm/aegis";
-import { createMockAmphora } from "@lindorm/amphora";
-import { createMockProteusSource, createMockRepository } from "@lindorm/proteus/mocks";
-import { IPylonSession } from "../../interfaces";
-import { createSessionStore } from "./create-session-store";
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
+import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
+import {
+  createMockProteusSource,
+  createMockRepository,
+} from "@lindorm/proteus/mocks/vitest";
+import type { IPylonSession } from "../../interfaces/index.js";
+import { createSessionStore } from "./create-session-store.js";
+import { beforeEach, describe, expect, test, type Mock } from "vitest";
 
 describe("createSessionStore", () => {
   let ctx: any;
@@ -32,9 +36,9 @@ describe("createSessionStore", () => {
       subject: "643881f8-f6b0-5a18-9396-6fbe29ebfec8",
     };
 
-    (mockRepo.upsert as jest.Mock).mockResolvedValue(session);
-    (mockRepo.findOne as jest.Mock).mockResolvedValue(session);
-    (mockRepo.delete as jest.Mock).mockResolvedValue(undefined);
+    (mockRepo.upsert as Mock).mockResolvedValue(session);
+    (mockRepo.findOne as Mock).mockResolvedValue(session);
+    (mockRepo.delete as Mock).mockResolvedValue(undefined);
   });
 
   test("should resolve undefined when not enabled", () => {

@@ -1,5 +1,5 @@
-import { KryptosError } from "../../../errors";
-import { KryptosFromBuffer, OctString } from "../../../types";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosFromBuffer, OctString } from "../../../types/index.js";
 
 type Options = Omit<KryptosFromBuffer, "id" | "algorithm" | "type" | "use">;
 

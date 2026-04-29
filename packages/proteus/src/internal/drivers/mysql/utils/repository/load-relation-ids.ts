@@ -1,12 +1,15 @@
 import { uniq } from "@lindorm/utils";
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata, MetaRelationId } from "../../../../entity/types/metadata";
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { getJoinName } from "../../../../entity/utils/get-join-name";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { buildSimpleIn } from "./build-simple-in";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type {
+  EntityMetadata,
+  MetaRelationId,
+} from "../../../../entity/types/metadata.js";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getJoinName } from "../../../../entity/utils/get-join-name.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { buildSimpleIn } from "./build-simple-in.js";
 
 export type LoadRelationIdsContext = {
   metadata: EntityMetadata;
@@ -54,7 +57,7 @@ export const loadRelationIds = async <E extends IEntity>(
 const loadOneToManyIds = async <E extends IEntity>(
   entities: Array<E>,
   ri: MetaRelationId,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   _schema: string | null,
   ctx: LoadRelationIdsContext,
@@ -119,7 +122,7 @@ const loadOneToManyIds = async <E extends IEntity>(
 const loadManyToManyIds = async <E extends IEntity>(
   entities: Array<E>,
   ri: MetaRelationId,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   _schema: string | null,
   ctx: LoadRelationIdsContext,
@@ -197,7 +200,7 @@ const loadManyToManyIds = async <E extends IEntity>(
 const loadInverseOneToOneId = async <E extends IEntity>(
   entities: Array<E>,
   ri: MetaRelationId,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   _schema: string | null,
   ctx: LoadRelationIdsContext,

@@ -1,9 +1,9 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../types/metadata";
-import { encryptFieldValue } from "./encrypt-field-value";
-import { resolveJoinKeyValue } from "./resolve-join-key-value";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../types/metadata.js";
+import { encryptFieldValue } from "./encrypt-field-value.js";
+import { resolveJoinKeyValue } from "./resolve-join-key-value.js";
 
 export type DehydrateMode = "insert" | "update";
 

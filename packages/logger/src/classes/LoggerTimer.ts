@@ -1,6 +1,6 @@
 import { isError } from "@lindorm/is";
-import { ILoggerTimer } from "../interfaces/LoggerTimer";
-import { LogContent, LogLevel } from "../types";
+import type { ILoggerTimer } from "../interfaces/LoggerTimer.js";
+import type { LogContent, LogLevel } from "../types/index.js";
 
 export type TimerLogFn = (
   level: LogLevel,

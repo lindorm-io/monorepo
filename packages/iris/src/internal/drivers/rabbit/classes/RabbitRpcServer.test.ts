@@ -1,13 +1,14 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { RabbitRpcServer } from "./RabbitRpcServer";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { RabbitRpcServer } from "./RabbitRpcServer.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
-jest.mock("../utils/build-amqp-headers", () => ({
-  buildAmqpHeaders: jest.fn().mockReturnValue({
+vi.mock("../utils/build-amqp-headers.js", async () => ({
+  buildAmqpHeaders: vi.fn().mockReturnValue({
     properties: {
       headers: {},
       contentType: "application/octet-stream",
@@ -16,8 +17,8 @@ jest.mock("../utils/build-amqp-headers", () => ({
   }),
 }));
 
-jest.mock("../utils/parse-amqp-headers", () => ({
-  parseAmqpHeaders: jest.fn().mockReturnValue({
+vi.mock("../utils/parse-amqp-headers.js", () => ({
+  parseAmqpHeaders: vi.fn().mockReturnValue({
     payload: Buffer.from("{}"),
     headers: {},
     envelope: { topic: "TckRabbitRpcSrvReq" },
@@ -39,30 +40,30 @@ class TckRabbitRpcSrvRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockChannel = () => ({
-  assertQueue: jest
+  assertQueue: vi
     .fn()
     .mockResolvedValue({ queue: "rpc-queue", messageCount: 0, consumerCount: 0 }),
-  bindQueue: jest.fn().mockResolvedValue(undefined),
-  consume: jest.fn().mockResolvedValue({ consumerTag: "srv-ctag" }),
-  cancel: jest.fn().mockResolvedValue(undefined),
-  ack: jest.fn(),
-  nack: jest.fn(),
-  publish: jest.fn(),
+  bindQueue: vi.fn().mockResolvedValue(undefined),
+  consume: vi.fn().mockResolvedValue({ consumerTag: "srv-ctag" }),
+  cancel: vi.fn().mockResolvedValue(undefined),
+  ack: vi.fn(),
+  nack: vi.fn(),
+  publish: vi.fn(),
 });
 
 const createMockState = (overrides?: Partial<RabbitSharedState>): RabbitSharedState => ({
   connection: {} as any,
-  publishChannel: { publish: jest.fn() } as any,
+  publishChannel: { publish: vi.fn() } as any,
   consumeChannel: createMockChannel() as any,
   exchange: "test-exchange",
   dlxExchange: "test-exchange.dlx",

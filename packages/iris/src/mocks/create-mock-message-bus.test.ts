@@ -1,4 +1,5 @@
-import { createMockMessageBus } from "./create-mock-message-bus";
+import { createMockMessageBus } from "./vitest.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 type TestMessage = { id: string; body: string };
 
@@ -53,7 +54,7 @@ describe("createMockMessageBus", () => {
 
   describe("subscribe", () => {
     it("should accept options and be callable", async () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       await mock.subscribe({ topic: "test-topic", callback });
       expect(mock.subscribe).toHaveBeenCalledWith({
         topic: "test-topic",
@@ -62,7 +63,7 @@ describe("createMockMessageBus", () => {
     });
 
     it("should accept an array of options", async () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       await mock.subscribe([
         { topic: "topic-a", callback },
         { topic: "topic-b", callback },

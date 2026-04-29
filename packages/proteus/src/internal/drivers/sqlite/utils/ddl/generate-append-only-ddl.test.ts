@@ -1,4 +1,5 @@
-import { generateAppendOnlyDDL } from "./generate-append-only-ddl";
+import { generateAppendOnlyDDL } from "./generate-append-only-ddl.js";
+import { describe, expect, test } from "vitest";
 
 describe("generateAppendOnlyDDL (SQLite)", () => {
   test("generates triggers for a simple table", () => {

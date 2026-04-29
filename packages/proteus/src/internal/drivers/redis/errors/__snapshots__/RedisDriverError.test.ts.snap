@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RedisDriverError snapshot accepts debug metadata 1`] = `
+exports[`RedisDriverError snapshot > accepts debug metadata 1`] = `
 {
   "code": null,
   "data": {},
@@ -19,7 +19,7 @@ exports[`RedisDriverError snapshot accepts debug metadata 1`] = `
 }
 `;
 
-exports[`RedisDriverError snapshot serialises to JSON with expected shape 1`] = `
+exports[`RedisDriverError snapshot > serialises to JSON with expected shape 1`] = `
 {
   "code": null,
   "data": {},

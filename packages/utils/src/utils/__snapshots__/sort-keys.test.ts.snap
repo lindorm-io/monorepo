@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`sortKeys should sort object keys alphabetically 1`] = `
+exports[`sortKeys > should sort object keys alphabetically 1`] = `
 {
   "a": 2,
   "b": 1,

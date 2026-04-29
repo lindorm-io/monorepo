@@ -1,14 +1,14 @@
-import type { IEntity } from "../../../../../interfaces";
+import type { IEntity } from "../../../../../interfaces/index.js";
 import type {
   EntityMetadata,
   MetaRelationCount,
-} from "../../../../entity/types/metadata";
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { getJoinName } from "../../../../entity/utils/get-join-name";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnNameSafe } from "../resolve-column-name";
-import { buildSimpleIn } from "./build-simple-in";
+} from "../../../../entity/types/metadata.js";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getJoinName } from "../../../../entity/utils/get-join-name.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnNameSafe } from "../resolve-column-name.js";
+import { buildSimpleIn } from "./build-simple-in.js";
 
 export type LoadRelationCountsContext = {
   metadata: EntityMetadata;
@@ -53,7 +53,7 @@ export const loadRelationCounts = async <E extends IEntity>(
 const loadOneToManyCount = async <E extends IEntity>(
   entities: Array<E>,
   rc: MetaRelationCount,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   foreignMeta: EntityMetadata,
   ctx: LoadRelationCountsContext,
 ): Promise<void> => {
@@ -112,7 +112,7 @@ const loadOneToManyCount = async <E extends IEntity>(
 const loadManyToManyCount = async <E extends IEntity>(
   entities: Array<E>,
   rc: MetaRelationCount,
-  relation: import("../../../../entity/types/metadata").MetaRelation,
+  relation: import("../../../../entity/types/metadata.js").MetaRelation,
   ctx: LoadRelationCountsContext,
 ): Promise<void> => {
   if (!relation.joinKeys) return;

@@ -1,7 +1,11 @@
-import type { IProteusQueryBuilder, IProteusRepository } from "../../../../interfaces";
-import type { RedisTransactionHandle } from "../types/redis-types";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { RedisTransactionContext } from "./RedisTransactionContext";
+import type {
+  IProteusQueryBuilder,
+  IProteusRepository,
+} from "../../../../interfaces/index.js";
+import type { RedisTransactionHandle } from "../types/redis-types.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { RedisTransactionContext } from "./RedisTransactionContext.js";
+import { describe, expect, test, vi } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -12,11 +16,12 @@ const makeHandle = (
 });
 
 const makeDriver = () => ({
-  commitTransaction: jest.fn().mockResolvedValue(undefined),
-  rollbackTransaction: jest.fn().mockResolvedValue(undefined),
-  createTransactionalQueryBuilder: jest
+  commitTransaction: vi.fn().mockResolvedValue(undefined),
+  rollbackTransaction: vi.fn().mockResolvedValue(undefined),
+  createTransactionalQueryBuilder: vi
     .fn()
     .mockReturnValue({} as IProteusQueryBuilder<any>),
+  acquireClient: vi.fn().mockResolvedValue({} as any),
 });
 
 class StubEntity {}
@@ -34,7 +39,7 @@ describe("RedisTransactionContext constructor", () => {
   test("constructs with a repository factory", () => {
     const handle = makeHandle();
     const driver = makeDriver();
-    const factory = jest.fn();
+    const factory = vi.fn();
 
     expect(
       () => new RedisTransactionContext(handle, driver as any, factory),
@@ -56,7 +61,7 @@ describe("RedisTransactionContext.repository", () => {
 
   test("delegates to the repository factory when configured", () => {
     const mockRepo = {} as IProteusRepository<any>;
-    const factory = jest.fn().mockReturnValue(mockRepo);
+    const factory = vi.fn().mockReturnValue(mockRepo);
     const ctx = new RedisTransactionContext(makeHandle(), makeDriver() as any, factory);
 
     const result = ctx.repository(StubEntity as any);
@@ -68,7 +73,7 @@ describe("RedisTransactionContext.repository", () => {
   test("passes the target constructor to the factory", () => {
     class AnotherEntity {}
 
-    const factory = jest.fn().mockReturnValue({});
+    const factory = vi.fn().mockReturnValue({});
     const ctx = new RedisTransactionContext(makeHandle(), makeDriver() as any, factory);
 
     ctx.repository(AnotherEntity as any);
@@ -94,7 +99,7 @@ describe("RedisTransactionContext.queryBuilder", () => {
   });
 
   test("returns the query builder from the driver", () => {
-    const mockQb = { getMany: jest.fn() } as unknown as IProteusQueryBuilder<any>;
+    const mockQb = { getMany: vi.fn() } as unknown as IProteusQueryBuilder<any>;
     const driver = makeDriver();
     driver.createTransactionalQueryBuilder.mockReturnValue(mockQb);
     const ctx = new RedisTransactionContext(makeHandle(), driver as any);
@@ -102,6 +107,22 @@ describe("RedisTransactionContext.queryBuilder", () => {
     const result = ctx.queryBuilder(StubEntity as any);
 
     expect(result).toBe(mockQb);
+  });
+});
+
+// ─── client() ─────────────────────────────────────────────────────────────────
+
+describe("RedisTransactionContext.client", () => {
+  test("delegates to driver.acquireClient and returns the result", async () => {
+    const fakeClient = { ping: vi.fn() };
+    const driver = makeDriver();
+    driver.acquireClient.mockResolvedValue(fakeClient);
+    const ctx = new RedisTransactionContext(makeHandle(), driver as any);
+
+    const result = await ctx.client<typeof fakeClient>();
+
+    expect(driver.acquireClient).toHaveBeenCalledTimes(1);
+    expect(result).toBe(fakeClient);
   });
 });
 

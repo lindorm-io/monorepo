@@ -1,23 +1,23 @@
-import type { ICircuitBreaker } from "../interfaces/CircuitBreaker";
+import type { ICircuitBreaker } from "../interfaces/CircuitBreaker.js";
 
-export type MockCircuitBreaker = ICircuitBreaker & {
-  execute: jest.Mock;
-  open: jest.Mock;
-  close: jest.Mock;
-  reset: jest.Mock;
-  on: jest.Mock;
+export const _createMockCircuitBreaker = (mockFn: () => any): ICircuitBreaker => {
+  const impl = (fn: any) => {
+    const m = mockFn();
+    m.mockImplementation(fn);
+    return m;
+  };
+
+  return {
+    name: "mock",
+    state: "closed",
+    isOpen: false,
+    isClosed: true,
+    isHalfOpen: false,
+
+    execute: impl(async (fn: () => Promise<unknown>) => fn()),
+    open: mockFn(),
+    close: mockFn(),
+    reset: mockFn(),
+    on: mockFn(),
+  } as unknown as ICircuitBreaker;
 };
-
-export const createMockCircuitBreaker = (): MockCircuitBreaker => ({
-  name: "mock",
-  state: "closed",
-  isOpen: false,
-  isClosed: true,
-  isHalfOpen: false,
-
-  execute: jest.fn().mockImplementation(async (fn: () => Promise<unknown>) => fn()),
-  open: jest.fn(),
-  close: jest.fn(),
-  reset: jest.fn(),
-  on: jest.fn(),
-});

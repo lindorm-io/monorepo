@@ -1,4 +1,4 @@
-import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store";
+import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
 
 export const dispatchToSubscribers = async (
   store: MemorySharedState,

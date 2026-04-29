@@ -1,0 +1,4 @@
+# Overrides applied when NODE_ENV=test.
+# Keeps test output quiet unless something actually goes wrong.
+logger:
+  level: error

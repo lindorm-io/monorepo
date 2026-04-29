@@ -1,68 +1,72 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor, DeepPartial, Dict, Predicate } from "@lindorm/types";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
 import type {
   IEntity,
   IProteusCursor,
   IProteusQueryBuilder,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   ClearOptions,
   CursorOptions,
   DeleteOptions,
   FindOptions,
   UpsertOptions,
-} from "../../../../types";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { MetaRelation, QueryScope } from "../../../entity/types/metadata";
-import type { QueryState } from "../../../types/query";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { AggregateFunction } from "../../../types/aggregate";
-import type { SqliteQueryClient } from "../types/sqlite-query-client";
-import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase";
-import { createEmptyState } from "../../../../classes/QueryBuilder";
-import { compileAggregate } from "../utils/query/compile-aggregate";
-import type { AggregateType } from "../utils/query/compile-aggregate";
-import { compileUpsert, type UpsertCompileOptions } from "../utils/query/compile-upsert";
-import { compileInsertBulk } from "../utils/query/compile-insert";
-import { compileQuery } from "../utils/query/compile-query";
+} from "../../../../types/index.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
+import type { MetaRelation, QueryScope } from "../../../entity/types/metadata.js";
+import type { QueryState } from "../../../types/query.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { AggregateFunction } from "../../../types/aggregate.js";
+import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
+import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase.js";
+import { createEmptyState } from "../../../../classes/QueryBuilder.js";
+import { compileAggregate } from "../utils/query/compile-aggregate.js";
+import type { AggregateType } from "../utils/query/compile-aggregate.js";
+import {
+  compileUpsert,
+  type UpsertCompileOptions,
+} from "../utils/query/compile-upsert.js";
+import { compileInsertBulk } from "../utils/query/compile-insert.js";
+import { compileQuery } from "../utils/query/compile-query.js";
 import {
   compileJoinedPartialUpdate,
   compilePartialUpdate,
-} from "../utils/query/compile-partial-update";
-import { hydrateReturning } from "../utils/query/hydrate-returning";
-import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate";
+} from "../utils/query/compile-partial-update.js";
+import { hydrateReturning } from "../utils/query/hydrate-returning.js";
+import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
 import {
   guardAppendOnly,
   guardDeleteDateField,
   guardVersionFields,
   validateRelationNames,
-} from "../../../utils/repository/repository-guards";
-import { wrapSqliteError } from "../utils/repository/wrap-sqlite-error";
-import { RelationPersister } from "../../../utils/repository/RelationPersister";
-import { createSqliteJoinTableOps } from "../utils/repository/sqlite-join-table-ops";
-import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import { buildRelationFilter } from "../../../utils/repository/build-relation-filter";
-import { quoteIdentifier } from "../utils/quote-identifier";
-import { getJoinName } from "../../../entity/utils/get-join-name";
-import { DuplicateKeyError } from "../../../errors/DuplicateKeyError";
-import { SqliteCursor } from "./SqliteCursor";
-import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store";
-import { diffColumns } from "../../../entity/utils/diff-columns";
-import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections";
-import { loadRelationIds } from "../utils/repository/load-relation-ids";
-import { loadRelationCounts } from "../utils/repository/load-relation-counts";
+} from "../../../utils/repository/repository-guards.js";
+import { wrapSqliteError } from "../utils/repository/wrap-sqlite-error.js";
+import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
+import { createSqliteJoinTableOps } from "../utils/repository/sqlite-join-table-ops.js";
+import type { LazyRelationLoader } from "../../../entity/utils/install-lazy-relations.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
+import { buildRelationFilter } from "../../../utils/repository/build-relation-filter.js";
+import { quoteIdentifier } from "../utils/quote-identifier.js";
+import { getJoinName } from "../../../entity/utils/get-join-name.js";
+import { DuplicateKeyError } from "../../../errors/DuplicateKeyError.js";
+import { SqliteCursor } from "./SqliteCursor.js";
+import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store.js";
+import { diffColumns } from "../../../entity/utils/diff-columns.js";
+import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
+import { loadRelationIds } from "../utils/repository/load-relation-ids.js";
+import { loadRelationCounts } from "../utils/repository/load-relation-counts.js";
 import {
   saveEmbeddedListRows,
   loadEmbeddedListRows,
   loadEmbeddedListRowsBatch,
-} from "../utils/repository/embedded-list-ops";
-import type { MetaEmbeddedList } from "../../../entity/types/metadata";
+} from "../utils/repository/embedded-list-ops.js";
+import type { MetaEmbeddedList } from "../../../entity/types/metadata.js";
 
-export type { RepositoryFactory } from "../../../types/repository-factory";
+export type { RepositoryFactory } from "../../../types/repository-factory.js";
 
 export type WithImplicitTransaction<E extends IEntity> = <T>(
   fn: (ctx: {
@@ -79,7 +83,7 @@ export type SqliteRepositoryOptions<E extends IEntity> = {
   client: SqliteQueryClient;
   namespace: string | null;
   logger: ILogger;
-  context?: unknown;
+  meta?: ProteusHookMeta;
   parent?: Constructor<IEntity>;
   repositoryFactory: RepositoryFactory;
   withImplicitTransaction: WithImplicitTransaction<E>;
@@ -112,7 +116,7 @@ export class SqliteRepository<
       logger: options.logger,
       driver: "sqlite",
       driverLabel: "SqliteRepository",
-      context: options.context,
+      meta: options.meta,
       parent: options.parent,
       repositoryFactory: options.repositoryFactory,
       emitEntity: options.emitEntity,

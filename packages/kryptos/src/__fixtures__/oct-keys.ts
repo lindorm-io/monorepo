@@ -1,4 +1,4 @@
-import { OctJwk, OctString } from "../types";
+import type { OctJwk, OctString } from "../types/index.js";
 
 export const TEST_OCT_KEY_B64: OctString = {
   id: "d8e83070-b906-5540-9933-01fe89037168",

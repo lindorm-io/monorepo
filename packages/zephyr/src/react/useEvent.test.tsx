@@ -1,9 +1,10 @@
 /** @jest-environment jsdom */
 import React from "react";
 import { renderHook } from "@testing-library/react";
-import { ZephyrProvider } from "./ZephyrProvider";
-import { useEvent } from "./useEvent";
-import { createMockClient } from "./__fixtures__/mock-client";
+import { ZephyrProvider } from "./ZephyrProvider.js";
+import { useEvent } from "./useEvent.js";
+import { createMockClient } from "./__fixtures__/mock-client.js";
+import { describe, expect, test, vi } from "vitest";
 
 const createWrapper = (client: any) => {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
@@ -15,7 +16,7 @@ const createWrapper = (client: any) => {
 describe("useEvent", () => {
   test("calls client.on with event name on mount", () => {
     const client = createMockClient();
-    const handler = jest.fn();
+    const handler = vi.fn();
 
     renderHook(() => useEvent("test:message", handler), {
       wrapper: createWrapper(client),
@@ -26,7 +27,7 @@ describe("useEvent", () => {
 
   test("calls client.off on unmount", () => {
     const client = createMockClient();
-    const handler = jest.fn();
+    const handler = vi.fn();
 
     const { unmount } = renderHook(() => useEvent("test:message", handler), {
       wrapper: createWrapper(client),
@@ -41,7 +42,7 @@ describe("useEvent", () => {
 
   test("forwards data to the handler ref", () => {
     const client = createMockClient();
-    const handler = jest.fn();
+    const handler = vi.fn();
 
     renderHook(() => useEvent("test:message", handler), {
       wrapper: createWrapper(client),

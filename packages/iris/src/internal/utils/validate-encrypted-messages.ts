@@ -1,8 +1,8 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Constructor } from "@lindorm/types";
-import { IrisSourceError } from "../../errors/IrisSourceError";
-import type { IMessage } from "../../interfaces/Message";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
+import { IrisSourceError } from "../../errors/IrisSourceError.js";
+import type { IMessage } from "../../interfaces/Message.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
 
 export const validateEncryptedMessages = (
   messages: Array<Constructor<IMessage>>,

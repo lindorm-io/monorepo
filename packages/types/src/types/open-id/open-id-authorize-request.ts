@@ -2,11 +2,11 @@
 // https://www.rfc-editor.org/rfc/rfc7636#section-4.1
 // https://www.rfc-editor.org/rfc/rfc8707
 
-import { OpenIdCodeChallengeMethod } from "./open-id-code-challenge-method";
-import { OpenIdDisplayMode } from "./open-id-display-mode";
-import { OpenIdPromptMode } from "./open-id-prompt-mode";
-import { OpenIdResponseMode } from "./open-id-response-mode";
-import { OpenIdResponseType } from "./open-id-response-type";
+import type { OpenIdCodeChallengeMethod } from "./open-id-code-challenge-method.js";
+import type { OpenIdDisplayMode } from "./open-id-display-mode.js";
+import type { OpenIdPromptMode } from "./open-id-prompt-mode.js";
+import type { OpenIdResponseMode } from "./open-id-response-mode.js";
+import type { OpenIdResponseType } from "./open-id-response-type.js";
 
 type ExtensionRequestQuery = {
   /**

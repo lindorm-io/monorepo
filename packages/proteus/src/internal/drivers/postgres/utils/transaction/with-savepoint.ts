@@ -1,7 +1,7 @@
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { createSavepoint } from "./create-savepoint";
-import { releaseSavepoint } from "./release-savepoint";
-import { rollbackToSavepoint } from "./rollback-to-savepoint";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { createSavepoint } from "./create-savepoint.js";
+import { releaseSavepoint } from "./release-savepoint.js";
+import { rollbackToSavepoint } from "./rollback-to-savepoint.js";
 
 /**
  * Executes `fn` within a PostgreSQL savepoint. On success the savepoint is released;

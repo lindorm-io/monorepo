@@ -1,12 +1,13 @@
-import { makeField } from "../../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../../entity/types/metadata";
+import { describe, expect, test } from "vitest";
+import { makeField } from "../../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../../entity/types/metadata.js";
 import {
   compileUpdate,
   compileUpdateMany,
   compileSoftDelete,
   compileRestore,
   compileDeleteExpired,
-} from "../compile-update";
+} from "../compile-update.js";
 
 const metadata = {
   entity: {

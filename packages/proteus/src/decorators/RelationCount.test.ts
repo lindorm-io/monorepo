@@ -1,10 +1,11 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { ManyToOne } from "./ManyToOne";
-import { OneToMany } from "./OneToMany";
-import { PrimaryKeyField } from "./PrimaryKeyField";
-import { RelationCount } from "./RelationCount";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { ManyToOne } from "./ManyToOne.js";
+import { OneToMany } from "./OneToMany.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { RelationCount } from "./RelationCount.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "RelationCountBlog" })
 class RelationCountBlog {

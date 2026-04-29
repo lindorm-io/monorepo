@@ -4,22 +4,23 @@ import type {
   KafkaEachMessagePayload,
   KafkaPooledConsumer,
   KafkaSharedState,
-} from "../types/kafka-types";
+} from "../types/kafka-types.js";
 import {
   awaitConsumerReady,
   createKafkaConsumer,
   getOrCreatePooledConsumer,
   createPooledDispatcher,
-} from "./create-kafka-consumer";
+} from "./create-kafka-consumer.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const KAFKA_CONSUMER_EVENTS = {
@@ -39,7 +40,7 @@ const KAFKA_CONSUMER_EVENTS = {
 };
 
 const createMockConsumer = (overrides?: Partial<KafkaConsumer>): KafkaConsumer => {
-  const on = jest.fn((event: string, listener: (payload: unknown) => void) => {
+  const on = vi.fn((event: string, listener: (payload: unknown) => void) => {
     if (event === KAFKA_CONSUMER_EVENTS.GROUP_JOIN) {
       process.nextTick(() => listener({ memberAssignment: {} }));
     }
@@ -47,14 +48,14 @@ const createMockConsumer = (overrides?: Partial<KafkaConsumer>): KafkaConsumer =
   });
 
   return {
-    connect: jest.fn().mockResolvedValue(undefined),
-    disconnect: jest.fn().mockResolvedValue(undefined),
-    subscribe: jest.fn().mockResolvedValue(undefined),
-    run: jest.fn().mockResolvedValue(undefined),
-    pause: jest.fn(),
-    resume: jest.fn(),
-    stop: jest.fn().mockResolvedValue(undefined),
-    commitOffsets: jest.fn().mockResolvedValue(undefined),
+    connect: vi.fn().mockResolvedValue(undefined),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+    subscribe: vi.fn().mockResolvedValue(undefined),
+    run: vi.fn().mockResolvedValue(undefined),
+    pause: vi.fn(),
+    resume: vi.fn(),
+    stop: vi.fn().mockResolvedValue(undefined),
+    commitOffsets: vi.fn().mockResolvedValue(undefined),
     on,
     events: KAFKA_CONSUMER_EVENTS,
     ...overrides,
@@ -62,9 +63,9 @@ const createMockConsumer = (overrides?: Partial<KafkaConsumer>): KafkaConsumer =
 };
 
 const createMockKafka = (consumer?: KafkaConsumer): KafkaClient => ({
-  producer: jest.fn() as any,
-  consumer: jest.fn().mockReturnValue(consumer ?? createMockConsumer()),
-  admin: jest.fn() as any,
+  producer: vi.fn() as any,
+  consumer: vi.fn().mockReturnValue(consumer ?? createMockConsumer()),
+  admin: vi.fn() as any,
 });
 
 const createMockState = (kafka?: KafkaClient): KafkaSharedState => ({
@@ -91,7 +92,7 @@ describe("createKafkaConsumer", () => {
     const mockConsumer = createMockConsumer();
     const kafka = createMockKafka(mockConsumer);
     const logger = createMockLogger();
-    const onMessage = jest.fn().mockResolvedValue(undefined);
+    const onMessage = vi.fn().mockResolvedValue(undefined);
 
     const handle = await createKafkaConsumer({
       kafka,
@@ -126,7 +127,7 @@ describe("createKafkaConsumer", () => {
       kafka,
       groupId: "test-group",
       topic: "test-topic",
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       sessionTimeoutMs: 45000,
       logger: logger as any,
     });
@@ -143,13 +144,13 @@ describe("createKafkaConsumer", () => {
       | undefined;
 
     const mockConsumer = createMockConsumer({
-      run: jest.fn().mockImplementation(async (opts: any) => {
+      run: vi.fn().mockImplementation(async (opts: any) => {
         capturedEachMessage = opts.eachMessage;
       }),
     });
     const kafka = createMockKafka(mockConsumer);
     const logger = createMockLogger();
-    const onMessage = jest.fn().mockResolvedValue(undefined);
+    const onMessage = vi.fn().mockResolvedValue(undefined);
 
     await createKafkaConsumer({
       kafka,
@@ -171,7 +172,7 @@ describe("createKafkaConsumer", () => {
         offset: "0",
         timestamp: "0",
       },
-      heartbeat: jest.fn().mockResolvedValue(undefined),
+      heartbeat: vi.fn().mockResolvedValue(undefined),
     };
 
     await capturedEachMessage!(payload);
@@ -184,13 +185,13 @@ describe("createKafkaConsumer", () => {
       | undefined;
 
     const mockConsumer = createMockConsumer({
-      run: jest.fn().mockImplementation(async (opts: any) => {
+      run: vi.fn().mockImplementation(async (opts: any) => {
         capturedEachMessage = opts.eachMessage;
       }),
     });
     const kafka = createMockKafka(mockConsumer);
     const logger = createMockLogger();
-    const onMessage = jest.fn().mockRejectedValue(new Error("handler error"));
+    const onMessage = vi.fn().mockRejectedValue(new Error("handler error"));
 
     await createKafkaConsumer({
       kafka,
@@ -210,7 +211,7 @@ describe("createKafkaConsumer", () => {
         offset: "5",
         timestamp: "0",
       },
-      heartbeat: jest.fn().mockResolvedValue(undefined),
+      heartbeat: vi.fn().mockResolvedValue(undefined),
     };
 
     await expect(capturedEachMessage!(payload)).resolves.toBeUndefined();
@@ -234,7 +235,7 @@ describe("createKafkaConsumer", () => {
       kafka,
       groupId: "test-group",
       topic: "test-topic",
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: logger as any,
     });
 
@@ -242,7 +243,7 @@ describe("createKafkaConsumer", () => {
       kafka,
       groupId: "test-group",
       topic: "test-topic",
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: logger as any,
     });
 
@@ -256,7 +257,7 @@ describe("getOrCreatePooledConsumer", () => {
     const kafka = createMockKafka(mockConsumer);
     const state = createMockState(kafka);
     const logger = createMockLogger();
-    const onMessage = jest.fn();
+    const onMessage = vi.fn();
 
     const result = await getOrCreatePooledConsumer({
       state,
@@ -291,7 +292,7 @@ describe("getOrCreatePooledConsumer", () => {
       state,
       groupId: "test-group",
       topic: "topic-a",
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: logger as any,
     });
 
@@ -299,7 +300,7 @@ describe("getOrCreatePooledConsumer", () => {
       state,
       groupId: "test-group",
       topic: "topic-b",
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: logger as any,
     });
 
@@ -318,8 +319,8 @@ describe("getOrCreatePooledConsumer", () => {
     const kafka = createMockKafka(mockConsumer);
     const state = createMockState(kafka);
     const logger = createMockLogger();
-    const cb1 = jest.fn();
-    const cb2 = jest.fn();
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
 
     await getOrCreatePooledConsumer({
       state,
@@ -355,7 +356,7 @@ describe("getOrCreatePooledConsumer", () => {
         state,
         groupId: "test-group",
         topic: "test-topic",
-        onMessage: jest.fn(),
+        onMessage: vi.fn(),
         logger: logger as any,
       }),
     ).rejects.toThrow("Cannot create pooled consumer: Kafka client is not connected");
@@ -371,7 +372,7 @@ describe("getOrCreatePooledConsumer", () => {
       state,
       groupId: "test-group",
       topic: "test-topic",
-      onMessage: jest.fn(),
+      onMessage: vi.fn(),
       logger: logger as any,
     });
 
@@ -393,7 +394,7 @@ describe("awaitConsumerReady", () => {
 
   it("should reject on timeout", async () => {
     const consumer = createMockConsumer({
-      on: jest.fn().mockReturnValue(() => {}),
+      on: vi.fn().mockReturnValue(() => {}),
     });
 
     await expect(awaitConsumerReady(consumer, 50)).rejects.toThrow(
@@ -402,9 +403,9 @@ describe("awaitConsumerReady", () => {
   });
 
   it("should clean up listener on timeout", async () => {
-    const removeListener = jest.fn();
+    const removeListener = vi.fn();
     const consumer = createMockConsumer({
-      on: jest.fn().mockReturnValue(removeListener),
+      on: vi.fn().mockReturnValue(removeListener),
     });
 
     await expect(awaitConsumerReady(consumer, 50)).rejects.toThrow();
@@ -413,7 +414,7 @@ describe("awaitConsumerReady", () => {
 });
 
 describe("createPooledDispatcher", () => {
-  const makePooled = (callbacks: Map<string, Array<jest.Mock>>): KafkaPooledConsumer => ({
+  const makePooled = (callbacks: Map<string, Array<Mock>>): KafkaPooledConsumer => ({
     consumer: createMockConsumer(),
     groupId: "test-group",
     topics: new Set(callbacks.keys()),
@@ -433,11 +434,11 @@ describe("createPooledDispatcher", () => {
       offset,
       timestamp: "0",
     },
-    heartbeat: jest.fn().mockResolvedValue(undefined),
+    heartbeat: vi.fn().mockResolvedValue(undefined),
   });
 
   it("should route messages to the correct callback", async () => {
-    const callback = jest.fn().mockResolvedValue(undefined);
+    const callback = vi.fn().mockResolvedValue(undefined);
     const logger = createMockLogger();
     const pooled = makePooled(new Map([["topic-a", [callback]]]));
 
@@ -463,7 +464,7 @@ describe("createPooledDispatcher", () => {
   });
 
   it("should log and swallow errors from callback", async () => {
-    const callback = jest.fn().mockRejectedValue(new Error("oops"));
+    const callback = vi.fn().mockRejectedValue(new Error("oops"));
     const logger = createMockLogger();
     const pooled = makePooled(new Map([["topic-a", [callback]]]));
 
@@ -482,9 +483,9 @@ describe("createPooledDispatcher", () => {
   });
 
   it("should round-robin across multiple callbacks for the same topic", async () => {
-    const cb1 = jest.fn().mockResolvedValue(undefined);
-    const cb2 = jest.fn().mockResolvedValue(undefined);
-    const cb3 = jest.fn().mockResolvedValue(undefined);
+    const cb1 = vi.fn().mockResolvedValue(undefined);
+    const cb2 = vi.fn().mockResolvedValue(undefined);
+    const cb3 = vi.fn().mockResolvedValue(undefined);
     const logger = createMockLogger();
     const pooled = makePooled(new Map([["topic-a", [cb1, cb2, cb3]]]));
 
@@ -503,9 +504,9 @@ describe("createPooledDispatcher", () => {
   });
 
   it("should maintain separate round-robin counters per topic", async () => {
-    const cbA1 = jest.fn().mockResolvedValue(undefined);
-    const cbA2 = jest.fn().mockResolvedValue(undefined);
-    const cbB1 = jest.fn().mockResolvedValue(undefined);
+    const cbA1 = vi.fn().mockResolvedValue(undefined);
+    const cbA2 = vi.fn().mockResolvedValue(undefined);
+    const cbB1 = vi.fn().mockResolvedValue(undefined);
     const logger = createMockLogger();
     const pooled = makePooled(
       new Map([
@@ -527,7 +528,7 @@ describe("createPooledDispatcher", () => {
   });
 
   it("should behave identically to single callback when only one is registered", async () => {
-    const cb = jest.fn().mockResolvedValue(undefined);
+    const cb = vi.fn().mockResolvedValue(undefined);
     const logger = createMockLogger();
     const pooled = makePooled(new Map([["topic-a", [cb]]]));
 

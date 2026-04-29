@@ -2,23 +2,24 @@ import type {
   KafkaSharedState,
   KafkaConsumerHandle,
   KafkaConsumer,
-} from "../types/kafka-types";
+} from "../types/kafka-types.js";
 import {
   stopKafkaConsumer,
   stopAllKafkaConsumers,
   releasePooledConsumer,
-} from "./stop-kafka-consumer";
+} from "./stop-kafka-consumer.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockConsumer = (): KafkaConsumer => ({
-  connect: jest.fn().mockResolvedValue(undefined),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  subscribe: jest.fn().mockResolvedValue(undefined),
-  run: jest.fn().mockResolvedValue(undefined),
-  pause: jest.fn(),
-  resume: jest.fn(),
-  stop: jest.fn().mockResolvedValue(undefined),
-  commitOffsets: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn().mockReturnValue(() => {}),
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  subscribe: vi.fn().mockResolvedValue(undefined),
+  run: vi.fn().mockResolvedValue(undefined),
+  pause: vi.fn(),
+  resume: vi.fn(),
+  stop: vi.fn().mockResolvedValue(undefined),
+  commitOffsets: vi.fn().mockResolvedValue(undefined),
+  on: vi.fn().mockReturnValue(() => {}),
   events: {
     GROUP_JOIN: "consumer.group_join",
     HEARTBEAT: "consumer.heartbeat",
@@ -67,13 +68,13 @@ const createMockState = (consumers?: Array<KafkaConsumerHandle>): KafkaSharedSta
 });
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 describe("stopKafkaConsumer", () => {
@@ -100,7 +101,7 @@ describe("stopKafkaConsumer", () => {
 
   it("should not throw if stop throws", async () => {
     const handle = createMockConsumerHandle("ctag-1");
-    (handle.consumer.stop as jest.Mock).mockRejectedValue(new Error("stop failed"));
+    (handle.consumer.stop as Mock).mockRejectedValue(new Error("stop failed"));
     const state = createMockState([handle]);
 
     await expect(stopKafkaConsumer(state, "ctag-1")).resolves.toBeUndefined();
@@ -109,7 +110,7 @@ describe("stopKafkaConsumer", () => {
 
   it("should not throw if disconnect throws", async () => {
     const handle = createMockConsumerHandle("ctag-1");
-    (handle.consumer.disconnect as jest.Mock).mockRejectedValue(
+    (handle.consumer.disconnect as Mock).mockRejectedValue(
       new Error("disconnect failed"),
     );
     const state = createMockState([handle]);
@@ -155,7 +156,7 @@ describe("stopAllKafkaConsumers", () => {
 
   it("should not throw if a consumer stop/disconnect fails", async () => {
     const handle1 = createMockConsumerHandle("ctag-1");
-    (handle1.consumer.stop as jest.Mock).mockRejectedValue(new Error("stop error"));
+    (handle1.consumer.stop as Mock).mockRejectedValue(new Error("stop error"));
     const handle2 = createMockConsumerHandle("ctag-2");
     const state = createMockState([handle1, handle2]);
 
@@ -194,7 +195,7 @@ describe("releasePooledConsumer", () => {
       consumer: mockConsumer,
       groupId: "group-a",
       topics: new Set(["topic-a"]),
-      callbacks: new Map([["topic-a", [jest.fn()]]]),
+      callbacks: new Map([["topic-a", [vi.fn()]]]),
       roundRobinCounters: new Map(),
       localAbort: new AbortController(),
       refCount: 1,
@@ -225,13 +226,13 @@ describe("releasePooledConsumer", () => {
     const state = createMockState([]);
     const logger = createMockLogger();
 
-    const callbackB = jest.fn();
+    const callbackB = vi.fn();
     state.consumerPool.set("group-a", {
       consumer: mockConsumer,
       groupId: "group-a",
       topics: new Set(["topic-a", "topic-b"]),
       callbacks: new Map([
-        ["topic-a", [jest.fn()]],
+        ["topic-a", [vi.fn()]],
         ["topic-b", [callbackB]],
       ]),
       roundRobinCounters: new Map(),
@@ -264,9 +265,9 @@ describe("releasePooledConsumer", () => {
     const state = createMockState([]);
     const logger = createMockLogger();
 
-    const cb1 = jest.fn();
-    const cb2 = jest.fn();
-    const cb3 = jest.fn();
+    const cb1 = vi.fn();
+    const cb2 = vi.fn();
+    const cb3 = vi.fn();
     state.consumerPool.set("group-a", {
       consumer: mockConsumer,
       groupId: "group-a",
@@ -300,8 +301,8 @@ describe("releasePooledConsumer", () => {
       groupId: "group-a",
       topics: new Set(["topic-a", "topic-b"]),
       callbacks: new Map([
-        ["topic-a", [jest.fn()]],
-        ["topic-b", [jest.fn()]],
+        ["topic-a", [vi.fn()]],
+        ["topic-b", [vi.fn()]],
       ]),
       roundRobinCounters: new Map(),
       localAbort: new AbortController(),
@@ -337,7 +338,7 @@ describe("releasePooledConsumer", () => {
 
   it("should not throw if consumer stop fails during release", async () => {
     const mockConsumer = createMockConsumer();
-    (mockConsumer.stop as jest.Mock).mockRejectedValue(new Error("stop error"));
+    (mockConsumer.stop as Mock).mockRejectedValue(new Error("stop error"));
     const state = createMockState([]);
     const logger = createMockLogger();
 
@@ -345,7 +346,7 @@ describe("releasePooledConsumer", () => {
       consumer: mockConsumer,
       groupId: "group-a",
       topics: new Set(["topic-a"]),
-      callbacks: new Map([["topic-a", [jest.fn()]]]),
+      callbacks: new Map([["topic-a", [vi.fn()]]]),
       roundRobinCounters: new Map(),
       localAbort: new AbortController(),
       refCount: 1,

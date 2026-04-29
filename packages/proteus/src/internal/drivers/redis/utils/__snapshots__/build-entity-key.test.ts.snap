@@ -1,15 +1,15 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildEntityKey should build key with composite PK 1`] = `"entity:test_entity:pk-1:pk-2"`;
+exports[`buildEntityKey > should build key with composite PK 1`] = `"entity:test_entity:pk-1:pk-2"`;
 
-exports[`buildEntityKey should build key with namespace 1`] = `"myapp:entity:test_entity:pk-1"`;
+exports[`buildEntityKey > should build key with namespace 1`] = `"myapp:entity:test_entity:pk-1"`;
 
-exports[`buildEntityKey should build key without namespace 1`] = `"entity:test_entity:pk-1"`;
+exports[`buildEntityKey > should build key without namespace 1`] = `"entity:test_entity:pk-1"`;
 
-exports[`buildEntityKey should encode PK values containing colons 1`] = `"entity:test_entity:val%3Awith%3Acolons"`;
+exports[`buildEntityKey > should encode PK values containing colons 1`] = `"entity:test_entity:val%3Awith%3Acolons"`;
 
-exports[`buildEntityKey should handle numeric PK values 1`] = `"entity:test_entity:42"`;
+exports[`buildEntityKey > should handle numeric PK values 1`] = `"entity:test_entity:42"`;
 
-exports[`buildEntityKeyFromRow should extract PK from row in metadata order 1`] = `"entity:test_entity:abc-123"`;
+exports[`buildEntityKeyFromRow > should extract PK from row in metadata order 1`] = `"entity:test_entity:abc-123"`;
 
-exports[`buildEntityKeyFromRow should handle composite PK from row 1`] = `"entity:test_entity:t1:u1"`;
+exports[`buildEntityKeyFromRow > should handle composite PK from row 1`] = `"entity:test_entity:t1:u1"`;

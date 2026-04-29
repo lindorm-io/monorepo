@@ -12,7 +12,8 @@ import {
   ASN1_TAG_SET,
   ASN1_TAG_UTC_TIME,
   ASN1_TAG_UTF8_STRING,
-} from "./tags";
+} from "./tags.js";
+import { describe, expect, test } from "vitest";
 
 describe("asn1 tags", () => {
   test("match DER constants", () => {

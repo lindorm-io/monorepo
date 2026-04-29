@@ -1,4 +1,5 @@
-import { createHealthRouter } from "./create-health-router";
+import { createHealthRouter } from "./create-health-router.js";
+import { describe, expect, test, vi } from "vitest";
 
 describe("createHealthRouter", () => {
   test("should create a router with a GET / route", () => {
@@ -12,13 +13,13 @@ describe("createHealthRouter", () => {
   });
 
   test("should invoke callback when provided and set status 204", async () => {
-    const callback = jest.fn();
+    const callback = vi.fn();
     const router = createHealthRouter(callback);
 
     const layer = router.stack.find((l) => l.methods.includes("GET") && l.path === "/");
 
     const ctx: any = { body: null, status: 0 };
-    const next = jest.fn();
+    const next = vi.fn();
 
     // koa-router stores middleware in layer.stack
     for (const middleware of layer!.stack) {
@@ -36,7 +37,7 @@ describe("createHealthRouter", () => {
     const layer = router.stack.find((l) => l.methods.includes("GET") && l.path === "/");
 
     const ctx: any = { body: null, status: 0 };
-    const next = jest.fn();
+    const next = vi.fn();
 
     for (const middleware of layer!.stack) {
       await middleware(ctx, next);

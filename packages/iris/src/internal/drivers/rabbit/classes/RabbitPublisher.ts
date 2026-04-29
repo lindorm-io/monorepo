@@ -1,9 +1,9 @@
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { DriverPublisherBase } from "../../../classes/DriverPublisherBase";
-import { publishRabbitMessages } from "../utils/publish-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions } from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { DriverPublisherBase } from "../../../classes/DriverPublisherBase.js";
+import { publishRabbitMessages } from "../utils/publish-messages.js";
 
 export type RabbitPublisherOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: RabbitSharedState;

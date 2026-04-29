@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`introspectEnums should handle multiple enums 1`] = `
+exports[`introspectEnums > should handle multiple enums 1`] = `
 [
   {
     "name": "enum_users_status",
@@ -22,7 +22,7 @@ exports[`introspectEnums should handle multiple enums 1`] = `
 ]
 `;
 
-exports[`introspectEnums should map enum type with ordered values 1`] = `
+exports[`introspectEnums > should map enum type with ordered values 1`] = `
 [
   {
     "name": "enum_users_status",

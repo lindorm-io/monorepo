@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`inheritance with real decorators collectAll for fields should snapshot all merged fields 1`] = `
+exports[`inheritance with real decorators > collectAll for fields > should snapshot all merged fields 1`] = `
 [
   {
     "decorator": "Field",
@@ -70,7 +70,7 @@ exports[`inheritance with real decorators collectAll for fields should snapshot 
 ]
 `;
 
-exports[`inheritance with real decorators collectAll for generated should snapshot merged generated metadata 1`] = `
+exports[`inheritance with real decorators > collectAll for generated > should snapshot merged generated metadata 1`] = `
 [
   {
     "key": "shortCode",
@@ -89,7 +89,7 @@ exports[`inheritance with real decorators collectAll for generated should snapsh
 ]
 `;
 
-exports[`inheritance with real decorators collectAll for headers should snapshot merged headers 1`] = `
+exports[`inheritance with real decorators > collectAll for headers > should snapshot merged headers 1`] = `
 [
   {
     "headerName": "x-user-id",
@@ -102,14 +102,14 @@ exports[`inheritance with real decorators collectAll for headers should snapshot
 ]
 `;
 
-exports[`inheritance with real decorators collectSingular for message should find child Message metadata 1`] = `
+exports[`inheritance with real decorators > collectSingular for message > should find child Message metadata 1`] = `
 {
   "decorator": "Message",
   "name": "UserCreatedEvent",
 }
 `;
 
-exports[`inheritance with real decorators three-level inheritance should snapshot the full field chain 1`] = `
+exports[`inheritance with real decorators > three-level inheritance > should snapshot the full field chain 1`] = `
 [
   {
     "decorator": "Field",

@@ -1,5 +1,5 @@
-import type { LockMode } from "../../../types/find-options";
-import type { MetaField } from "../../entity/types/metadata";
+import type { LockMode } from "../../../types/find-options.js";
+import type { MetaField } from "../../entity/types/metadata.js";
 
 export type SqlDialect = {
   // Quoting

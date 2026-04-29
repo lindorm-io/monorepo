@@ -1,13 +1,14 @@
-import { ensureNatsStream } from "./ensure-nats-stream";
+import { ensureNatsStream } from "./ensure-nats-stream.js";
+import { describe, expect, it, vi } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockJsm = (overrides?: {
@@ -17,15 +18,15 @@ const createMockJsm = (overrides?: {
 }) => ({
   streams: {
     info: overrides?.infoError
-      ? jest.fn().mockRejectedValue(overrides.infoError)
-      : jest
+      ? vi.fn().mockRejectedValue(overrides.infoError)
+      : vi
           .fn()
           .mockResolvedValue(overrides?.infoResult ?? { config: { name: "IRIS_TEST" } }),
-    add: jest.fn().mockResolvedValue(overrides?.addResult ?? {}),
-    purge: jest.fn(),
-    delete: jest.fn().mockResolvedValue(undefined),
+    add: vi.fn().mockResolvedValue(overrides?.addResult ?? {}),
+    purge: vi.fn(),
+    delete: vi.fn().mockResolvedValue(undefined),
   },
-  consumers: { add: jest.fn(), delete: jest.fn().mockResolvedValue(true) },
+  consumers: { add: vi.fn(), delete: vi.fn().mockResolvedValue(true) },
 });
 
 describe("ensureNatsStream", () => {

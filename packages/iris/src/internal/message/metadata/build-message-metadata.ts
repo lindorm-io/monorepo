@@ -1,11 +1,11 @@
 import type { Constructor } from "@lindorm/types";
-import { IrisMetadataError } from "../../../errors/IrisMetadataError";
-import type { IMessage } from "../../../interfaces";
-import type { MessageMetadata } from "../types/metadata";
-import { collectAll, collectOwn, collectSingular } from "./collect";
-import { validateFields } from "./validate-fields";
-import { validateGenerated } from "./validate-generated";
-import { validateHeaders } from "./validate-headers";
+import { IrisMetadataError } from "../../../errors/IrisMetadataError.js";
+import type { IMessage } from "../../../interfaces/index.js";
+import type { MessageMetadata } from "../types/metadata.js";
+import { collectAll, collectOwn, collectSingular } from "./collect.js";
+import { validateFields } from "./validate-fields.js";
+import { validateGenerated } from "./validate-generated.js";
+import { validateHeaders } from "./validate-headers.js";
 
 const hasConcreteAncestor = (target: Function): boolean => {
   let current = Object.getPrototypeOf(target);

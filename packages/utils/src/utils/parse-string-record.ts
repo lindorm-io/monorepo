@@ -1,5 +1,5 @@
 import { isArray, isBooleanString, isDateString, isNumberString } from "@lindorm/is";
-import { Dict } from "@lindorm/types";
+import type { Dict } from "@lindorm/types";
 
 const parseValue = (value: string | undefined): any => {
   if (!value) return value;

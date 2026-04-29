@@ -1,13 +1,14 @@
-import { loadSaga, saveSaga, clearMessages } from "./saga-store";
+import { loadSaga, saveSaga, clearMessages } from "./saga-store.js";
+import { describe, expect, it, vi } from "vitest";
 
 const createMockRepo = () => ({
-  find: jest.fn().mockResolvedValue([]),
-  findOne: jest.fn().mockResolvedValue(null),
-  insert: jest.fn().mockResolvedValue(undefined),
-  save: jest.fn().mockResolvedValue(undefined),
-  update: jest.fn().mockResolvedValue(undefined),
-  count: jest.fn().mockResolvedValue(0),
-  exists: jest.fn().mockResolvedValue(false),
+  find: vi.fn().mockResolvedValue([]),
+  findOne: vi.fn().mockResolvedValue(null),
+  insert: vi.fn().mockResolvedValue(undefined),
+  save: vi.fn().mockResolvedValue(undefined),
+  update: vi.fn().mockResolvedValue(undefined),
+  count: vi.fn().mockResolvedValue(0),
+  exists: vi.fn().mockResolvedValue(false),
 });
 
 const sagaIdentifier = {

@@ -1,34 +1,35 @@
-import { AesError } from "../../../errors/AesError";
-import {
+import { AesError } from "../../../errors/AesError.js";
+import type {
   CreateCekOptions,
   CreateCekResult,
   DecryptCekOptions,
   DecryptCekResult,
-} from "../../types/content-encryption-key";
+} from "../../types/content-encryption-key.js";
 import {
   getOctDirDecryptionKey as _getOctDirDecryptionKey,
   getOctDirEncryptionKey as _getOctDirEncryptionKey,
-} from "../oct/get-oct-dir-keys";
+} from "../oct/get-oct-dir-keys.js";
 import {
   getOctKeyWrapDecryptionKey as _getOctKeyWrapDecryptionKey,
   getOctKeyWrapEncryptionKey as _getOctKeyWrapEncryptionKey,
-} from "../oct/get-oct-key-key-wrap";
+} from "../oct/get-oct-key-key-wrap.js";
 import {
   getOctPbkdfKeyWrapDecryptionKey as _getOctPbkdfKeyWrapDecryptionKey,
   getOctPbkdfKeyWrapEncryptionKey as _getOctPbkdfKeyWrapEncryptionKey,
-} from "../oct/get-oct-pbkdf-key-wrap-keys";
-import { getOctDecryptionKey, getOctEncryptionKey } from "./get-oct-keys";
+} from "../oct/get-oct-pbkdf-key-wrap-keys.js";
+import { getOctDecryptionKey, getOctEncryptionKey } from "./get-oct-keys.js";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../oct/get-oct-dir-keys");
-jest.mock("../oct/get-oct-key-key-wrap");
-jest.mock("../oct/get-oct-pbkdf-key-wrap-keys");
+vi.mock("../oct/get-oct-dir-keys.js");
+vi.mock("../oct/get-oct-key-key-wrap.js");
+vi.mock("../oct/get-oct-pbkdf-key-wrap-keys.js");
 
-const getOctDirDecryptionKey = _getOctDirDecryptionKey as jest.Mock;
-const getOctDirEncryptionKey = _getOctDirEncryptionKey as jest.Mock;
-const getOctKeyWrapDecryptionKey = _getOctKeyWrapDecryptionKey as jest.Mock;
-const getOctKeyWrapEncryptionKey = _getOctKeyWrapEncryptionKey as jest.Mock;
-const getOctPbkdfKeyWrapDecryptionKey = _getOctPbkdfKeyWrapDecryptionKey as jest.Mock;
-const getOctPbkdfKeyWrapEncryptionKey = _getOctPbkdfKeyWrapEncryptionKey as jest.Mock;
+const getOctDirDecryptionKey = _getOctDirDecryptionKey as Mock;
+const getOctDirEncryptionKey = _getOctDirEncryptionKey as Mock;
+const getOctKeyWrapDecryptionKey = _getOctKeyWrapDecryptionKey as Mock;
+const getOctKeyWrapEncryptionKey = _getOctKeyWrapEncryptionKey as Mock;
+const getOctPbkdfKeyWrapDecryptionKey = _getOctPbkdfKeyWrapDecryptionKey as Mock;
+const getOctPbkdfKeyWrapEncryptionKey = _getOctPbkdfKeyWrapEncryptionKey as Mock;
 
 describe("get-oct-keys", () => {
   const mockEncryptionResult: CreateCekResult = {
@@ -41,7 +42,7 @@ describe("get-oct-keys", () => {
   };
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("getOctEncryptionKey", () => {

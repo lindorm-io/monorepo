@@ -20,9 +20,10 @@ import {
   encodeTime,
   encodeUtcTime,
   encodeUtf8String,
-} from "./primitives";
-import { ASN1_TAG_GENERALIZED_TIME, ASN1_TAG_UTC_TIME } from "./tags";
-import { readTlv } from "./walker";
+} from "./primitives.js";
+import { ASN1_TAG_GENERALIZED_TIME, ASN1_TAG_UTC_TIME } from "./tags.js";
+import { readTlv } from "./walker.js";
+import { describe, expect, test } from "vitest";
 
 const content = (buffer: Buffer): Buffer => {
   const tlv = readTlv(buffer, 0);

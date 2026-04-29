@@ -1,16 +1,21 @@
 import { AesKit } from "@lindorm/aes";
-import { IProteusSession, IProteusSource } from "@lindorm/proteus";
-import { Session } from "../../entities";
-import { IPylonSession } from "../../interfaces";
-import { IPylonSessionStore } from "../../interfaces/PylonSessionStore";
-import { PylonCommonContext, PylonSessionOptions } from "../../types";
+import type { IProteusSession, IProteusSource } from "@lindorm/proteus";
+import { Session } from "../../entities/index.js";
+import type { IPylonSession } from "../../interfaces/index.js";
+import type { IPylonSessionStore } from "../../interfaces/PylonSessionStore.js";
+import type { PylonCommonContext, PylonSessionOptions } from "../../types/index.js";
+import { buildHookMeta } from "./build-hook-meta.js";
+import { resolveActor } from "./resolve-actor.js";
 
 const getSource = (
   ctx: PylonCommonContext,
   override?: IProteusSource,
 ): IProteusSession | null => {
   if (override) {
-    return override.session({ logger: ctx.logger, context: ctx });
+    return override.session({
+      logger: ctx.logger,
+      meta: buildHookMeta(ctx, resolveActor(ctx)),
+    });
   }
   return ctx.proteus ?? null;
 };

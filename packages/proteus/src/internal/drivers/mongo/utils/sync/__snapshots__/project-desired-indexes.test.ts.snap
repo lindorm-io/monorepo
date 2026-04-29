@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`projectDesiredIndexes should map single PK field to _id in index keys 1`] = `
+exports[`projectDesiredIndexes > should map single PK field to _id in index keys 1`] = `
 {
   "_id": 1,
 }
 `;
 
-exports[`projectDesiredIndexes should prefix collection name with namespace 1`] = `
+exports[`projectDesiredIndexes > should prefix collection name with namespace 1`] = `
 [
   {
     "collection": "User",
@@ -21,7 +21,7 @@ exports[`projectDesiredIndexes should prefix collection name with namespace 1`] 
 ]
 `;
 
-exports[`projectDesiredIndexes should project @Index decorator index 1`] = `
+exports[`projectDesiredIndexes > should project @Index decorator index 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -36,7 +36,7 @@ exports[`projectDesiredIndexes should project @Index decorator index 1`] = `
 ]
 `;
 
-exports[`projectDesiredIndexes should project @Unique decorator as unique index 1`] = `
+exports[`projectDesiredIndexes > should project @Unique decorator as unique index 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -51,7 +51,7 @@ exports[`projectDesiredIndexes should project @Unique decorator as unique index 
 ]
 `;
 
-exports[`projectDesiredIndexes should project FK index from owning relation 1`] = `
+exports[`projectDesiredIndexes > should project FK index from owning relation 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -66,7 +66,7 @@ exports[`projectDesiredIndexes should project FK index from owning relation 1`] 
 ]
 `;
 
-exports[`projectDesiredIndexes should project TTL index from @ExpiryDate field 1`] = `
+exports[`projectDesiredIndexes > should project TTL index from @ExpiryDate field 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -81,7 +81,7 @@ exports[`projectDesiredIndexes should project TTL index from @ExpiryDate field 1
 ]
 `;
 
-exports[`projectDesiredIndexes should project compound @Unique 1`] = `
+exports[`projectDesiredIndexes > should project compound @Unique 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -97,7 +97,7 @@ exports[`projectDesiredIndexes should project compound @Unique 1`] = `
 ]
 `;
 
-exports[`projectDesiredIndexes should project compound index 1`] = `
+exports[`projectDesiredIndexes > should project compound index 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -113,7 +113,7 @@ exports[`projectDesiredIndexes should project compound index 1`] = `
 ]
 `;
 
-exports[`projectDesiredIndexes should project descending index 1`] = `
+exports[`projectDesiredIndexes > should project descending index 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -128,7 +128,7 @@ exports[`projectDesiredIndexes should project descending index 1`] = `
 ]
 `;
 
-exports[`projectDesiredIndexes should project discriminator index for single-table parent 1`] = `
+exports[`projectDesiredIndexes > should project discriminator index for single-table parent 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -143,7 +143,7 @@ exports[`projectDesiredIndexes should project discriminator index for single-tab
 ]
 `;
 
-exports[`projectDesiredIndexes should project named @Unique 1`] = `
+exports[`projectDesiredIndexes > should project named @Unique 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -158,7 +158,7 @@ exports[`projectDesiredIndexes should project named @Unique 1`] = `
 ]
 `;
 
-exports[`projectDesiredIndexes should project named index 1`] = `
+exports[`projectDesiredIndexes > should project named index 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -173,7 +173,7 @@ exports[`projectDesiredIndexes should project named index 1`] = `
 ]
 `;
 
-exports[`projectDesiredIndexes should project sparse index 1`] = `
+exports[`projectDesiredIndexes > should project sparse index 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -188,7 +188,7 @@ exports[`projectDesiredIndexes should project sparse index 1`] = `
 ]
 `;
 
-exports[`projectDesiredIndexes should project unique index 1`] = `
+exports[`projectDesiredIndexes > should project unique index 1`] = `
 [
   {
     "collection": "TestEntity",
@@ -203,9 +203,9 @@ exports[`projectDesiredIndexes should project unique index 1`] = `
 ]
 `;
 
-exports[`projectDesiredIndexes should return empty array for entity with no indexes 1`] = `[]`;
+exports[`projectDesiredIndexes > should return empty array for entity with no indexes 1`] = `[]`;
 
-exports[`projectDesiredIndexes should skip ManyToMany relations for FK indexes 1`] = `
+exports[`projectDesiredIndexes > should skip ManyToMany relations for FK indexes 1`] = `
 [
   {
     "collection": "user_tags",
@@ -220,7 +220,7 @@ exports[`projectDesiredIndexes should skip ManyToMany relations for FK indexes 1
 ]
 `;
 
-exports[`projectDesiredIndexes should skip inheritance children (no duplicate indexes) 1`] = `
+exports[`projectDesiredIndexes > should skip inheritance children (no duplicate indexes) 1`] = `
 [
   {
     "collection": "Parent",

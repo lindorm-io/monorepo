@@ -1,12 +1,24 @@
 # @lindorm/oct
 
-HMAC signature kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://github.com/lindorm-io/monorepo/tree/main/packages/kryptos). Provides an `OctKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+HMAC signing kit built on Node's `crypto` module and [`@lindorm/kryptos`](https://www.npmjs.com/package/@lindorm/kryptos). Provides an `OctKit` class that implements the `IKeyKit` contract used across the Lindorm cryptography packages.
+
+This package is **ESM-only**.
 
 ## Installation
 
 ```bash
 npm install @lindorm/oct
 ```
+
+`OctKit` accepts an `IKryptos` instance constructed by the consumer, so [`@lindorm/kryptos`](https://www.npmjs.com/package/@lindorm/kryptos) must also be installed in your project.
+
+## Features
+
+- Sign, verify, and assert HMAC signatures over `Buffer` or `string` input
+- Supports `HS256`, `HS384`, and `HS512`
+- Timing-safe signature comparison via `crypto.timingSafeEqual`
+- Configurable string output encoding via Node's `BufferEncoding`
+- Rejects non-oct keys and oct encryption algorithms at construction time
 
 ## Quick Start
 
@@ -17,16 +29,12 @@ import { KryptosKit } from "@lindorm/kryptos";
 const kryptos = KryptosKit.generate.sig.oct({ algorithm: "HS256" });
 const kit = new OctKit({ kryptos });
 
-// Sign
 const signature = kit.sign("hello world");
 
-// Verify (timing-safe comparison)
 kit.verify("hello world", signature); // true
 
-// Assert (throws OctError if invalid)
-kit.assert("hello world", signature);
+kit.assert("hello world", signature); // throws OctError if invalid
 
-// Format Buffer to string
 kit.format(signature); // base64 string
 ```
 
@@ -35,11 +43,11 @@ kit.format(signature); // base64 string
 ```typescript
 new OctKit({
   kryptos, // IKryptos — must be an oct key with a signing algorithm
-  encoding: "base64", // BufferEncoding — output encoding (default: "base64")
+  encoding: "base64", // BufferEncoding — string encoding for verify/format (default: "base64")
 });
 ```
 
-The constructor validates that the key is an oct type with a supported signing algorithm (HS256, HS384, HS512). Encryption keys (A128KW, dir, etc.) are rejected with an `OctError`.
+The constructor validates that the key is an oct key with one of the supported signing algorithms (`HS256`, `HS384`, `HS512`). Non-oct keys and oct encryption algorithms are rejected with an `OctError`.
 
 ## API
 
@@ -54,6 +62,11 @@ class OctKit implements IKeyKit {
 
 `KeyData` is `Buffer | string`.
 
+- `sign(data)` — produces an HMAC digest as a `Buffer`.
+- `verify(data, signature)` — returns `true` if the signature matches. String signatures are decoded using the configured `encoding`. Comparison is timing-safe.
+- `assert(data, signature)` — same as `verify`, but throws `OctError` instead of returning `false`.
+- `format(buffer)` — encodes a signature `Buffer` to a string using the configured `encoding`.
+
 ## Supported Algorithms
 
 | Algorithm | Hash    |
@@ -62,13 +75,9 @@ class OctKit implements IKeyKit {
 | HS384     | SHA-384 |
 | HS512     | SHA-512 |
 
-## Security
-
-Signature verification uses `crypto.timingSafeEqual` to prevent timing attacks.
-
 ## Error Handling
 
-All errors are `OctError` instances:
+All errors thrown by this package are instances of `OctError`:
 
 ```typescript
 import { OctError } from "@lindorm/oct";

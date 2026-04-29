@@ -1,5 +1,5 @@
 import { ShaKit } from "@lindorm/sha";
-import { JwtError } from "../../errors";
+import { JwtError } from "../../errors/index.js";
 
 type RawJwk = Record<string, unknown>;
 

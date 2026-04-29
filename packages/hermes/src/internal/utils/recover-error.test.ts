@@ -1,5 +1,5 @@
 import { snakeCase } from "@lindorm/case";
-import type { HermesErrorMessage } from "../messages";
+import type { HermesErrorMessage } from "../messages/index.js";
 import {
   AggregateAlreadyCreatedError,
   AggregateDestroyedError,
@@ -8,8 +8,9 @@ import {
   ChecksumError,
   CommandSchemaValidationError,
   DomainError,
-} from "../../errors";
-import { recoverError } from "./recover-error";
+} from "../../errors/index.js";
+import { recoverError } from "./recover-error.js";
+import { describe, expect, test } from "vitest";
 
 const createErrorMessage = (
   name: string,

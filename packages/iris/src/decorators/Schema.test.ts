@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { Schema } from "./Schema";
+import { Schema } from "./Schema.js";
+import { describe, expect, it } from "vitest";
 
 describe("Schema", () => {
   it("should stage field modifier with schema", () => {

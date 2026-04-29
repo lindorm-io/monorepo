@@ -1,5 +1,5 @@
 import {
-  CaseOptions,
+  type CaseOptions,
   camelCase,
   capitalCase,
   constantCase,
@@ -12,7 +12,8 @@ import {
   sentenceCase,
   snakeCase,
   split,
-} from "./index";
+} from "./index.js";
+import { describe, expect, test } from "vitest";
 
 type Result = {
   camelCase: string;

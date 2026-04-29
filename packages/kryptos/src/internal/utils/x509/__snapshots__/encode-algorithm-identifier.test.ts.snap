@@ -1,12 +1,12 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`encodeX509AlgorithmIdentifier ECDSA sha384 omits params 1`] = `"300a06082a8648ce3d040303"`;
+exports[`encodeX509AlgorithmIdentifier > ECDSA sha384 omits params 1`] = `"300a06082a8648ce3d040303"`;
 
-exports[`encodeX509AlgorithmIdentifier Ed25519 omits params 1`] = `"300506032b6570"`;
+exports[`encodeX509AlgorithmIdentifier > Ed25519 omits params 1`] = `"300506032b6570"`;
 
-exports[`encodeX509AlgorithmIdentifier RSA sha256 includes NULL params 1`] = `"300d06092a864886f70d01010b0500"`;
+exports[`encodeX509AlgorithmIdentifier > RSA sha256 includes NULL params 1`] = `"300d06092a864886f70d01010b0500"`;
 
-exports[`resolveSignatureDescriptor ES256 -> ecdsaWithSHA256 without params 1`] = `
+exports[`resolveSignatureDescriptor > ES256 -> ecdsaWithSHA256 without params 1`] = `
 {
   "hashName": "sha256",
   "includeNullParams": false,
@@ -15,7 +15,7 @@ exports[`resolveSignatureDescriptor ES256 -> ecdsaWithSHA256 without params 1`] 
 }
 `;
 
-exports[`resolveSignatureDescriptor EdDSA + Ed448 -> ed448 OID 1`] = `
+exports[`resolveSignatureDescriptor > EdDSA + Ed448 -> ed448 OID 1`] = `
 {
   "hashName": null,
   "includeNullParams": false,
@@ -24,7 +24,7 @@ exports[`resolveSignatureDescriptor EdDSA + Ed448 -> ed448 OID 1`] = `
 }
 `;
 
-exports[`resolveSignatureDescriptor EdDSA + Ed25519 -> ed25519 OID 1`] = `
+exports[`resolveSignatureDescriptor > EdDSA + Ed25519 -> ed25519 OID 1`] = `
 {
   "hashName": null,
   "includeNullParams": false,
@@ -33,7 +33,7 @@ exports[`resolveSignatureDescriptor EdDSA + Ed25519 -> ed25519 OID 1`] = `
 }
 `;
 
-exports[`resolveSignatureDescriptor RS256 -> sha256WithRSAEncryption with NULL params 1`] = `
+exports[`resolveSignatureDescriptor > RS256 -> sha256WithRSAEncryption with NULL params 1`] = `
 {
   "hashName": "sha256",
   "includeNullParams": true,

@@ -1,10 +1,11 @@
-import { writeVersionSnapshot } from "./write-version-snapshot";
+import { writeVersionSnapshot } from "./write-version-snapshot.js";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const createMockDb = () => {
-  const insertOne = jest.fn().mockResolvedValue({ acknowledged: true });
-  const collection = jest.fn().mockReturnValue({ insertOne });
+  const insertOne = vi.fn().mockResolvedValue({ acknowledged: true });
+  const collection = vi.fn().mockReturnValue({ insertOne });
   return { db: { collection } as any, collection, insertOne };
 };
 
@@ -12,12 +13,12 @@ const createMockDb = () => {
 
 describe("writeVersionSnapshot", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date("2024-06-15T12:00:00.000Z"));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2024-06-15T12:00:00.000Z"));
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test("should call insertOne on the shadow collection", async () => {

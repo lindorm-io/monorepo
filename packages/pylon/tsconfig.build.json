@@ -2,9 +2,7 @@
   "extends": "../../tsconfig.build.json",
   "compilerOptions": {
     "rootDir": "./src",
-    "outDir": "./dist",
-    "experimentalDecorators": false,
-    "emitDecoratorMetadata": false
+    "outDir": "./dist"
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "../../types/cjs-interop.d.ts"]
 }

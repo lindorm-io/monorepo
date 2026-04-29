@@ -1,38 +1,38 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileSort should compile multiple fields 1`] = `
+exports[`compileSort > should compile multiple fields 1`] = `
 {
   "age": -1,
   "name": 1,
 }
 `;
 
-exports[`compileSort should compile single field ascending 1`] = `
+exports[`compileSort > should compile single field ascending 1`] = `
 {
   "name": 1,
 }
 `;
 
-exports[`compileSort should compile single field descending 1`] = `
+exports[`compileSort > should compile single field descending 1`] = `
 {
   "name": -1,
 }
 `;
 
-exports[`compileSort should handle compound PK mapping 1`] = `
+exports[`compileSort > should handle compound PK mapping 1`] = `
 {
   "_id.tenantId": 1,
   "name": -1,
 }
 `;
 
-exports[`compileSort should map PK field to _id 1`] = `
+exports[`compileSort > should map PK field to _id 1`] = `
 {
   "_id": 1,
 }
 `;
 
-exports[`compileSort should use metadata name for mapped fields 1`] = `
+exports[`compileSort > should use metadata name for mapped fields 1`] = `
 {
   "email_address": 1,
 }

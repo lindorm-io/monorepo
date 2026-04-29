@@ -1,6 +1,6 @@
 import { ShaKit } from "@lindorm/sha";
-import { KryptosError } from "../../errors";
-import { KryptosJwk } from "../../types";
+import { KryptosError } from "../../errors/index.js";
+import type { KryptosJwk } from "../../types/index.js";
 
 const computeCanonical = (jwk: KryptosJwk): Partial<KryptosJwk> => {
   switch (jwk.kty) {

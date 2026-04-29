@@ -1,5 +1,5 @@
 import { Logger } from "@lindorm/logger";
-import { loadSource } from "../load-source";
+import { loadSource } from "../load-source.js";
 
 type PingOptions = {
   source: string;

@@ -2,7 +2,8 @@ import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
   getBaseFormat,
-} from "./compute-typ-header";
+} from "./compute-typ-header.js";
+import { describe, expect, test } from "vitest";
 
 describe("computeTypHeader", () => {
   describe("known token types", () => {

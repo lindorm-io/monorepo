@@ -1,7 +1,8 @@
-import type { IMessage } from "../../interfaces";
-import type { MessageMetadata } from "../message/types/metadata";
-import type { OutboundPayload } from "../message/utils/prepare-outbound";
-import { preparePublishBatch, type PublishDriverLike } from "./prepare-publish-batch";
+import type { IMessage } from "../../interfaces/index.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
+import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
+import { preparePublishBatch, type PublishDriverLike } from "./prepare-publish-batch.js";
+import { describe, expect, it, vi } from "vitest";
 
 const makeMetadata = (
   name: string,
@@ -29,11 +30,11 @@ const makeDriver = (
   return {
     metadata,
     calls,
-    prepareForPublish: jest.fn(async (message: IMessage): Promise<OutboundPayload> => {
+    prepareForPublish: vi.fn(async (message: IMessage): Promise<OutboundPayload> => {
       calls.prepared.push(message);
       return { payload: Buffer.from("test"), headers: {} };
     }),
-    completePublish: jest.fn(async (message: IMessage): Promise<void> => {
+    completePublish: vi.fn(async (message: IMessage): Promise<void> => {
       calls.completed.push(message);
     }),
   };

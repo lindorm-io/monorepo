@@ -1,8 +1,9 @@
-import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
+import { describe, expect, test } from "vitest";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
 import {
   compileAggregationPipeline,
   compilePredicatesToFilter,
-} from "./compile-aggregation-pipeline";
+} from "./compile-aggregation-pipeline.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

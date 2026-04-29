@@ -1,5 +1,5 @@
-import { IKryptos, IKryptosOct } from "@lindorm/kryptos";
-import { KeyData } from "@lindorm/types";
+import type { IKryptos, IKryptosOct } from "@lindorm/kryptos";
+import type { KeyData } from "@lindorm/types";
 
 export type CreateOctSignatureOptions = {
   data: KeyData;

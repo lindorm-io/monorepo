@@ -1,9 +1,10 @@
-import { Amphora, IAmphora } from "@lindorm/amphora";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 
 import { ServerError } from "@lindorm/errors";
 import { isArray, isObject } from "@lindorm/is";
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger, ILogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import type { ILogger } from "@lindorm/logger";
 import axios from "axios";
 import { randomBytes } from "crypto";
 import { readFileSync } from "fs";
@@ -12,19 +13,20 @@ import nock from "nock";
 import os from "os";
 import { join } from "path";
 import request from "supertest";
+import { afterEach, beforeAll, beforeEach, describe, expect, test, vi } from "vitest";
 
 axios.defaults.proxy = false;
 
 import {
   OPEN_ID_CONFIGURATION_RESPONSE,
   OPEN_ID_JWKS_RESPONSE,
-} from "../__fixtures__/auth0";
+} from "../__fixtures__/auth0.js";
 import {
   conduitSignedRequestMiddleware,
   createHttpSignedRequestMiddleware,
-} from "../middleware";
-import { Pylon } from "./Pylon";
-import { PylonRouter } from "./PylonRouter";
+} from "../middleware/index.js";
+import { Pylon } from "./Pylon.js";
+import { PylonRouter } from "./PylonRouter.js";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -133,7 +135,7 @@ describe("Pylon", () => {
   });
 
   beforeEach(async () => {
-    handlerSpy = jest.fn();
+    handlerSpy = vi.fn();
     files = [];
 
     router = new PylonRouter();
@@ -262,7 +264,7 @@ describe("Pylon", () => {
     await pylon.setup();
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should setup correctly", async () => {
     expect(amphora.config).toMatchSnapshot();
@@ -476,7 +478,7 @@ describe("Pylon", () => {
 
     const kryptos = amphora.findSync({ id: "257ba848-a577-5c3f-9bdc-ff3ef3f69fa0" });
 
-    await conduitSignedRequestMiddleware({ kryptos })(mockContext, jest.fn());
+    await conduitSignedRequestMiddleware({ kryptos })(mockContext, vi.fn());
 
     await request(pylon.callback)
       .post("/test/signed")

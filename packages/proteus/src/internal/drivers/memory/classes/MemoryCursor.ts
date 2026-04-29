@@ -1,1 +1,1 @@
-export { ArrayCursor as MemoryCursor } from "../../../classes/ArrayCursor";
+export { ArrayCursor as MemoryCursor } from "../../../classes/ArrayCursor.js";

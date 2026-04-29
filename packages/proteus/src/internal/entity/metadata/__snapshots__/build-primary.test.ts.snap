@@ -1,18 +1,18 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildPrimaryMetadata — @AppendOnly contradictory decorators error message for @AppendOnly + @DeleteDateField matches snapshot 1`] = `"@AppendOnly and @DeleteDateField are contradictory — append-only entities cannot be soft-deleted"`;
+exports[`buildPrimaryMetadata — @AppendOnly contradictory decorators > error message for @AppendOnly + @DeleteDateField matches snapshot 1`] = `[EntityMetadataError: @AppendOnly and @DeleteDateField are contradictory — append-only entities cannot be soft-deleted]`;
 
-exports[`buildPrimaryMetadata — @AppendOnly contradictory decorators error message for @AppendOnly + @ExpiryDateField matches snapshot 1`] = `"@AppendOnly and @ExpiryDateField are contradictory — append-only entities cannot expire"`;
+exports[`buildPrimaryMetadata — @AppendOnly contradictory decorators > error message for @AppendOnly + @ExpiryDateField matches snapshot 1`] = `[EntityMetadataError: @AppendOnly and @ExpiryDateField are contradictory — append-only entities cannot expire]`;
 
-exports[`buildPrimaryMetadata — @Cache decorator wires cache metadata with explicit TTL 1`] = `300000`;
+exports[`buildPrimaryMetadata — @Cache decorator > wires cache metadata with explicit TTL 1`] = `300000`;
 
-exports[`buildPrimaryMetadata — @DefaultOrder decorator wires defaultOrder from decorator 1`] = `
+exports[`buildPrimaryMetadata — @DefaultOrder decorator > wires defaultOrder from decorator 1`] = `
 {
   "createdAt": "DESC",
 }
 `;
 
-exports[`buildPrimaryMetadata — full metadata snapshot snapshot of complete metadata for a standard entity 1`] = `
+exports[`buildPrimaryMetadata — full metadata snapshot > snapshot of complete metadata for a standard entity 1`] = `
 {
   "cache": null,
   "defaultOrder": null,
@@ -102,7 +102,7 @@ exports[`buildPrimaryMetadata — full metadata snapshot snapshot of complete me
 }
 `;
 
-exports[`buildPrimaryMetadata — mergeFieldModifiers duplicate detection merges multiple @Hide scopes into hideOn array 1`] = `
+exports[`buildPrimaryMetadata — mergeFieldModifiers duplicate detection > merges multiple @Hide scopes into hideOn array 1`] = `
 [
   "multiple",
   "single",

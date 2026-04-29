@@ -1,15 +1,16 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import { DeadLetterManager } from "./DeadLetterManager";
-import { MemoryDeadLetterStore } from "./MemoryDeadLetterStore";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import { DeadLetterManager } from "./DeadLetterManager.js";
+import { MemoryDeadLetterStore } from "./MemoryDeadLetterStore.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const createLogger = (): ILogger =>
   ({
-    child: jest.fn().mockReturnThis(),
-    debug: jest.fn(),
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
+    child: vi.fn().mockReturnThis(),
+    debug: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
   }) as unknown as ILogger;
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({

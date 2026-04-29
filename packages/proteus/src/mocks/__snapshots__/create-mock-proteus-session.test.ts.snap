@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createMockProteusSession should create a mock session with all methods as jest.fn() 1`] = `
+exports[`createMockProteusSession > should create a mock session with all methods as vi.fn() 1`] = `
 {
   "client": [MockFunction],
   "disableFilter": [MockFunction],
@@ -8,6 +8,7 @@ exports[`createMockProteusSession should create a mock session with all methods 
   "enableFilter": [MockFunction],
   "getEmitEntity": [MockFunction],
   "getFilterRegistry": [MockFunction],
+  "hasEntity": [MockFunction],
   "log": {
     "child": [MockFunction],
     "debug": [MockFunction],

@@ -1,4 +1,5 @@
-import { storeSnapshot, getSnapshot, clearSnapshot } from "./snapshot-store";
+import { storeSnapshot, getSnapshot, clearSnapshot } from "./snapshot-store.js";
+import { describe, expect, test } from "vitest";
 
 describe("snapshot-store", () => {
   test("should store and retrieve a snapshot", () => {

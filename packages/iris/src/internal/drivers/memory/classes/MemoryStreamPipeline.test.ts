@@ -1,11 +1,12 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import { MemoryDriver } from "./MemoryDriver";
-import { MemoryStreamProcessor } from "./MemoryStreamProcessor";
-import type { MemoryEnvelope } from "../types/memory-store";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { MemoryDriver } from "./MemoryDriver.js";
+import { MemoryStreamProcessor } from "./MemoryStreamProcessor.js";
+import type { MemoryEnvelope } from "../types/memory-store.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -30,13 +31,13 @@ class TckPipeBatchOut implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createDriverAndStore = () => {

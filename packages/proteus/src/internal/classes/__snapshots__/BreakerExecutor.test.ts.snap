@@ -1,10 +1,10 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`BreakerExecutor delegation through breaker.execute should delegate executeCount 1`] = `5`;
+exports[`BreakerExecutor > delegation through breaker.execute > should delegate executeCount 1`] = `5`;
 
-exports[`BreakerExecutor delegation through breaker.execute should delegate executeExists 1`] = `true`;
+exports[`BreakerExecutor > delegation through breaker.execute > should delegate executeExists 1`] = `true`;
 
-exports[`BreakerExecutor delegation through breaker.execute should delegate executeFind 1`] = `
+exports[`BreakerExecutor > delegation through breaker.execute > should delegate executeFind 1`] = `
 [
   {
     "id": "1",
@@ -13,14 +13,14 @@ exports[`BreakerExecutor delegation through breaker.execute should delegate exec
 ]
 `;
 
-exports[`BreakerExecutor delegation through breaker.execute should delegate executeInsert 1`] = `
+exports[`BreakerExecutor > delegation through breaker.execute > should delegate executeInsert 1`] = `
 {
   "id": "1",
   "name": "inserted",
 }
 `;
 
-exports[`BreakerExecutor delegation through breaker.execute should delegate executeInsertBulk 1`] = `
+exports[`BreakerExecutor > delegation through breaker.execute > should delegate executeInsertBulk 1`] = `
 [
   {
     "id": "1",
@@ -29,15 +29,15 @@ exports[`BreakerExecutor delegation through breaker.execute should delegate exec
 ]
 `;
 
-exports[`BreakerExecutor delegation through breaker.execute should delegate executeTtl 1`] = `3600`;
+exports[`BreakerExecutor > delegation through breaker.execute > should delegate executeTtl 1`] = `3600`;
 
-exports[`BreakerExecutor delegation through breaker.execute should delegate executeUpdate 1`] = `
+exports[`BreakerExecutor > delegation through breaker.execute > should delegate executeUpdate 1`] = `
 {
   "id": "1",
   "name": "updated",
 }
 `;
 
-exports[`BreakerExecutor delegation through breaker.execute should delegate executeUpdateMany 1`] = `3`;
+exports[`BreakerExecutor > delegation through breaker.execute > should delegate executeUpdateMany 1`] = `3`;
 
-exports[`BreakerExecutor error handling should re-throw BreakerCircuitOpenError as proteus CircuitOpenError 1`] = `[CircuitOpenError: Circuit is open]`;
+exports[`BreakerExecutor > error handling > should re-throw BreakerCircuitOpenError as proteus CircuitOpenError 1`] = `[CircuitOpenError: Circuit is open]`;

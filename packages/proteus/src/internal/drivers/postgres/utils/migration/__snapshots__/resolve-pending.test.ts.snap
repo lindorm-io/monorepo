@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`resolvePending should handle mixed pending and applied migrations 1`] = `
+exports[`resolvePending > should handle mixed pending and applied migrations 1`] = `
 [
   {
     "id": "aaa-111",
@@ -17,7 +17,7 @@ exports[`resolvePending should handle mixed pending and applied migrations 1`] =
 ]
 `;
 
-exports[`resolvePending should mark all migrations as pending when none are applied 1`] = `
+exports[`resolvePending > should mark all migrations as pending when none are applied 1`] = `
 [
   {
     "appliedChecksum": null,
@@ -44,7 +44,7 @@ exports[`resolvePending should mark all migrations as pending when none are appl
 ]
 `;
 
-exports[`resolvePending should mark migration as applied when checksum matches 1`] = `
+exports[`resolvePending > should mark migration as applied when checksum matches 1`] = `
 [
   {
     "appliedChecksum": "correct-hash",
@@ -60,7 +60,7 @@ exports[`resolvePending should mark migration as applied when checksum matches 1
 ]
 `;
 
-exports[`resolvePending should mark migration as checksum_mismatch when checksum differs 1`] = `
+exports[`resolvePending > should mark migration as checksum_mismatch when checksum differs 1`] = `
 [
   {
     "appliedChecksum": "old-hash",
@@ -76,7 +76,7 @@ exports[`resolvePending should mark migration as checksum_mismatch when checksum
 ]
 `;
 
-exports[`resolvePending should return ghost records for applied migrations with no source file 1`] = `
+exports[`resolvePending > should return ghost records for applied migrations with no source file 1`] = `
 {
   "appliedAt": 2026-02-15T10:00:00.000Z,
   "checksum": "ghost-hash",

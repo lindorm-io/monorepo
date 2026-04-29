@@ -1,6 +1,7 @@
-import { UpcasterChainError } from "../../errors";
-import type { RegisteredAggregate, RegisteredUpcaster } from "../registry";
-import { applyUpcasters } from "./apply-upcasters";
+import { UpcasterChainError } from "../../errors/index.js";
+import type { RegisteredAggregate, RegisteredUpcaster } from "../registry/index.js";
+import { applyUpcasters } from "./apply-upcasters.js";
+import { describe, expect, test } from "vitest";
 
 describe("applyUpcasters", () => {
   test("should apply single upcaster step", () => {

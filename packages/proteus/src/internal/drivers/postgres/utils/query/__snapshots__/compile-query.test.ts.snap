@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`combined soft-delete + version filtering should AND both conditions on versioned + soft-deletable entity 1`] = `
+exports[`combined soft-delete + version filtering > should AND both conditions on versioned + soft-deletable entity 1`] = `
 {
   "aliasMap": [
     {
@@ -151,7 +151,7 @@ exports[`combined soft-delete + version filtering should AND both conditions on 
 }
 `;
 
-exports[`combined soft-delete + version filtering should AND user WHERE with both system conditions 1`] = `
+exports[`combined soft-delete + version filtering > should AND user WHERE with both system conditions 1`] = `
 {
   "aliasMap": [
     {
@@ -304,7 +304,7 @@ exports[`combined soft-delete + version filtering should AND user WHERE with bot
 }
 `;
 
-exports[`combined soft-delete + version filtering should emit only version condition when withDeleted is true 1`] = `
+exports[`combined soft-delete + version filtering > should emit only version condition when withDeleted is true 1`] = `
 {
   "aliasMap": [
     {
@@ -455,7 +455,7 @@ exports[`combined soft-delete + version filtering should emit only version condi
 }
 `;
 
-exports[`combined soft-delete + version filtering should emit point-in-time version + soft-delete with correct param indices 1`] = `
+exports[`combined soft-delete + version filtering > should emit point-in-time version + soft-delete with correct param indices 1`] = `
 {
   "aliasMap": [
     {
@@ -610,7 +610,7 @@ exports[`combined soft-delete + version filtering should emit point-in-time vers
 }
 `;
 
-exports[`compileCount should compile count query 1`] = `
+exports[`compileCount > should compile count query 1`] = `
 {
   "aliasMap": [
     {
@@ -737,7 +737,7 @@ exports[`compileCount should compile count query 1`] = `
 }
 `;
 
-exports[`compileCount should compile count with where clause 1`] = `
+exports[`compileCount > should compile count with where clause 1`] = `
 {
   "aliasMap": [
     {
@@ -866,7 +866,7 @@ exports[`compileCount should compile count with where clause 1`] = `
 }
 `;
 
-exports[`compileCount with version filtering should apply point-in-time version filtering to count query 1`] = `
+exports[`compileCount with version filtering > should apply point-in-time version filtering to count query 1`] = `
 {
   "aliasMap": [
     {
@@ -995,7 +995,7 @@ exports[`compileCount with version filtering should apply point-in-time version 
 }
 `;
 
-exports[`compileCount with version filtering should apply version filtering to count query 1`] = `
+exports[`compileCount with version filtering > should apply version filtering to count query 1`] = `
 {
   "aliasMap": [
     {
@@ -1122,7 +1122,7 @@ exports[`compileCount with version filtering should apply version filtering to c
 }
 `;
 
-exports[`compileCount — GROUP BY subquery wrap should wrap in subquery when GROUP BY is present 1`] = `
+exports[`compileCount — GROUP BY subquery wrap > should wrap in subquery when GROUP BY is present 1`] = `
 {
   "aliasMap": [
     {
@@ -1249,7 +1249,7 @@ exports[`compileCount — GROUP BY subquery wrap should wrap in subquery when GR
 }
 `;
 
-exports[`compileCount — set operations subquery wrap should wrap in subquery when set operations are present 1`] = `
+exports[`compileCount — set operations subquery wrap > should wrap in subquery when set operations are present 1`] = `
 {
   "aliasMap": [
     {
@@ -1376,7 +1376,7 @@ exports[`compileCount — set operations subquery wrap should wrap in subquery w
 }
 `;
 
-exports[`compileQuery should compile basic select all 1`] = `
+exports[`compileQuery > should compile basic select all 1`] = `
 {
   "aliasMap": [
     {
@@ -1503,7 +1503,7 @@ exports[`compileQuery should compile basic select all 1`] = `
 }
 `;
 
-exports[`compileQuery should compile full query with all clauses 1`] = `
+exports[`compileQuery > should compile full query with all clauses 1`] = `
 {
   "aliasMap": [
     {
@@ -1635,7 +1635,7 @@ exports[`compileQuery should compile full query with all clauses 1`] = `
 }
 `;
 
-exports[`compileQuery should compile with limit and offset 1`] = `
+exports[`compileQuery > should compile with limit and offset 1`] = `
 {
   "aliasMap": [
     {
@@ -1765,7 +1765,7 @@ exports[`compileQuery should compile with limit and offset 1`] = `
 }
 `;
 
-exports[`compileQuery should compile with order by 1`] = `
+exports[`compileQuery > should compile with order by 1`] = `
 {
   "aliasMap": [
     {
@@ -1892,7 +1892,7 @@ exports[`compileQuery should compile with order by 1`] = `
 }
 `;
 
-exports[`compileQuery should compile with selections 1`] = `
+exports[`compileQuery > should compile with selections 1`] = `
 {
   "aliasMap": [
     {
@@ -2019,7 +2019,7 @@ exports[`compileQuery should compile with selections 1`] = `
 }
 `;
 
-exports[`compileQuery should compile with where clause 1`] = `
+exports[`compileQuery > should compile with where clause 1`] = `
 {
   "aliasMap": [
     {
@@ -2148,7 +2148,7 @@ exports[`compileQuery should compile with where clause 1`] = `
 }
 `;
 
-exports[`compileQuery — CTE should compile CTE with MATERIALIZED hint 1`] = `
+exports[`compileQuery — CTE > should compile CTE with MATERIALIZED hint 1`] = `
 {
   "aliasMap": [
     {
@@ -2275,7 +2275,7 @@ exports[`compileQuery — CTE should compile CTE with MATERIALIZED hint 1`] = `
 }
 `;
 
-exports[`compileQuery — CTE should compile WITH clause before SELECT 1`] = `
+exports[`compileQuery — CTE > should compile WITH clause before SELECT 1`] = `
 {
   "aliasMap": [
     {
@@ -2404,7 +2404,7 @@ exports[`compileQuery — CTE should compile WITH clause before SELECT 1`] = `
 }
 `;
 
-exports[`compileQuery — CTE should compile cteFrom — SELECT FROM CTE 1`] = `
+exports[`compileQuery — CTE > should compile cteFrom — SELECT FROM CTE 1`] = `
 {
   "aliasMap": [
     {
@@ -2533,7 +2533,7 @@ exports[`compileQuery — CTE should compile cteFrom — SELECT FROM CTE 1`] = `
 }
 `;
 
-exports[`compileQuery — CTE should compile multiple CTEs with correct param ordering 1`] = `
+exports[`compileQuery — CTE > should compile multiple CTEs with correct param ordering 1`] = `
 {
   "aliasMap": [
     {
@@ -2664,7 +2664,7 @@ exports[`compileQuery — CTE should compile multiple CTEs with correct param or
 }
 `;
 
-exports[`compileQuery — GROUP BY + HAVING should compile GROUP BY + HAVING with raw expression 1`] = `
+exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY + HAVING with raw expression 1`] = `
 {
   "aliasMap": [
     {
@@ -2793,7 +2793,7 @@ exports[`compileQuery — GROUP BY + HAVING should compile GROUP BY + HAVING wit
 }
 `;
 
-exports[`compileQuery — GROUP BY + HAVING should compile GROUP BY 1`] = `
+exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY 1`] = `
 {
   "aliasMap": [
     {
@@ -2920,7 +2920,7 @@ exports[`compileQuery — GROUP BY + HAVING should compile GROUP BY 1`] = `
 }
 `;
 
-exports[`compileQuery — raw WHERE should include raw WHERE conditions alongside system filters 1`] = `
+exports[`compileQuery — raw WHERE > should include raw WHERE conditions alongside system filters 1`] = `
 {
   "aliasMap": [
     {
@@ -3050,7 +3050,7 @@ exports[`compileQuery — raw WHERE should include raw WHERE conditions alongsid
 }
 `;
 
-exports[`compileQuery — raw WHERE should wrap in parens when raw WHERE uses OR conjunction 1`] = `
+exports[`compileQuery — raw WHERE > should wrap in parens when raw WHERE uses OR conjunction 1`] = `
 {
   "aliasMap": [
     {
@@ -3180,7 +3180,7 @@ exports[`compileQuery — raw WHERE should wrap in parens when raw WHERE uses OR
 }
 `;
 
-exports[`compileQuery — set operations should compile UNION query 1`] = `
+exports[`compileQuery — set operations > should compile UNION query 1`] = `
 {
   "aliasMap": [
     {
@@ -3310,7 +3310,7 @@ exports[`compileQuery — set operations should compile UNION query 1`] = `
 }
 `;
 
-exports[`compileQuery — subquery predicates should compile EXISTS subquery predicate 1`] = `
+exports[`compileQuery — subquery predicates > should compile EXISTS subquery predicate 1`] = `
 {
   "aliasMap": [
     {
@@ -3439,7 +3439,7 @@ exports[`compileQuery — subquery predicates should compile EXISTS subquery pre
 }
 `;
 
-exports[`compileQuery — subquery predicates should compile IN subquery predicate 1`] = `
+exports[`compileQuery — subquery predicates > should compile IN subquery predicate 1`] = `
 {
   "aliasMap": [
     {
@@ -3568,7 +3568,7 @@ exports[`compileQuery — subquery predicates should compile IN subquery predica
 }
 `;
 
-exports[`compileQuery — subquery predicates should compile NOT EXISTS subquery predicate 1`] = `
+exports[`compileQuery — subquery predicates > should compile NOT EXISTS subquery predicate 1`] = `
 {
   "aliasMap": [
     {
@@ -3697,7 +3697,7 @@ exports[`compileQuery — subquery predicates should compile NOT EXISTS subquery
 }
 `;
 
-exports[`compileQuery — window functions should include window functions in SELECT 1`] = `
+exports[`compileQuery — window functions > should include window functions in SELECT 1`] = `
 {
   "aliasMap": [
     {
@@ -3824,7 +3824,7 @@ exports[`compileQuery — window functions should include window functions in SE
 }
 `;
 
-exports[`soft-delete filtering should emit DeleteDate IS NULL by default on soft-deletable entity 1`] = `
+exports[`soft-delete filtering > should emit DeleteDate IS NULL by default on soft-deletable entity 1`] = `
 {
   "aliasMap": [
     {
@@ -3927,7 +3927,7 @@ exports[`soft-delete filtering should emit DeleteDate IS NULL by default on soft
 }
 `;
 
-exports[`version filtering should emit VersionEndDate IS NULL by default on versioned entity 1`] = `
+exports[`version filtering > should emit VersionEndDate IS NULL by default on versioned entity 1`] = `
 {
   "aliasMap": [
     {
@@ -4054,7 +4054,7 @@ exports[`version filtering should emit VersionEndDate IS NULL by default on vers
 }
 `;
 
-exports[`version filtering should emit parameterized range condition with versionTimestamp 1`] = `
+exports[`version filtering > should emit parameterized range condition with versionTimestamp 1`] = `
 {
   "aliasMap": [
     {

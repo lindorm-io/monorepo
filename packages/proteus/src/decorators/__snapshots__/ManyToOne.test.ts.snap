@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`ManyToOne should register ManyToOne metadata on child entity 1`] = `
+exports[`ManyToOne > should register ManyToOne metadata on child entity 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -145,7 +145,7 @@ exports[`ManyToOne should register ManyToOne metadata on child entity 1`] = `
 }
 `;
 
-exports[`ManyToOne should register with explicit joinKeys 1`] = `
+exports[`ManyToOne > should register with explicit joinKeys 1`] = `
 {
   "appendOnly": false,
   "cache": null,

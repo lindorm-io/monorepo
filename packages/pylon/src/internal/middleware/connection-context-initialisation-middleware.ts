@@ -1,8 +1,8 @@
-import { ILogger } from "@lindorm/logger";
-import { Environment } from "@lindorm/types";
+import type { ILogger } from "@lindorm/logger";
+import type { Environment } from "@lindorm/types";
 import { randomUUID } from "crypto";
-import { PylonConnectionMiddleware } from "../../types";
-import { getSocketAuthorization } from "../utils/get-socket-authorization";
+import type { PylonConnectionMiddleware } from "../../types/index.js";
+import { getSocketAuthorization } from "../utils/get-socket-authorization.js";
 
 export const createConnectionContextInitialisationMiddleware = (
   logger: ILogger,
@@ -12,6 +12,7 @@ export const createConnectionContextInitialisationMiddleware = (
       (ctx.io.socket.handshake?.headers?.["x-correlation-id"] as string) ?? randomUUID();
 
     ctx.state = {
+      actor: "unknown",
       app: ctx.io.socket.data.app,
       authorization: getSocketAuthorization(ctx.io.socket),
       metadata: {

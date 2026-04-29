@@ -1,4 +1,4 @@
-export * from "./convert-case";
+export * from "./convert-case/index.js";
 
-export * from "./convert-array";
-export * from "./convert-object";
+export * from "./convert-array.js";
+export * from "./convert-object.js";

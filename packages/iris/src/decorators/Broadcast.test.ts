@@ -1,4 +1,5 @@
-import { Broadcast } from "./Broadcast";
+import { Broadcast } from "./Broadcast.js";
+import { describe, expect, it } from "vitest";
 
 describe("Broadcast", () => {
   it("should stage broadcast flag on metadata", () => {

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`encodeCursor should encode columns, directions, and values as base64url 1`] = `
+exports[`encodeCursor > should encode columns, directions, and values as base64url 1`] = `
 [
   [
     "createdAt",
@@ -17,7 +17,7 @@ exports[`encodeCursor should encode columns, directions, and values as base64url
 ]
 `;
 
-exports[`encodeCursor should handle null values 1`] = `
+exports[`encodeCursor > should handle null values 1`] = `
 [
   [
     "name",
@@ -34,7 +34,7 @@ exports[`encodeCursor should handle null values 1`] = `
 ]
 `;
 
-exports[`encodeCursor should handle numeric values 1`] = `
+exports[`encodeCursor > should handle numeric values 1`] = `
 [
   [
     "age",
@@ -51,7 +51,7 @@ exports[`encodeCursor should handle numeric values 1`] = `
 ]
 `;
 
-exports[`encodeCursor should handle single column 1`] = `
+exports[`encodeCursor > should handle single column 1`] = `
 [
   [
     "id",

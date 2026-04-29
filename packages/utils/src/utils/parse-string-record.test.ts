@@ -1,4 +1,5 @@
-import { parseStringRecord } from "./parse-string-record";
+import { parseStringRecord } from "./parse-string-record.js";
+import { describe, expect, test } from "vitest";
 
 describe("parseStringRecord", () => {
   test("should parse strings inside record to correct types", () => {

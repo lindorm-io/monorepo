@@ -1,4 +1,4 @@
-import { PylonListener, createSocketBearerTokenMiddleware } from "../../../src";
+import { PylonListener, createSocketBearerTokenMiddleware } from "../../../src/index.js";
 
 export const listener = new PylonListener();
 

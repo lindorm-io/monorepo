@@ -1,8 +1,9 @@
-import { composePylonSocketContextBase } from "./compose-pylon-socket-context";
+import { composePylonSocketContextBase } from "./compose-pylon-socket-context.js";
+import { describe, expect, test, vi } from "vitest";
 
 // randomUUID is called internally; mock it for deterministic snapshots
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
   randomUUID: () => "00000000-0000-0000-0000-000000000000",
 }));
 
@@ -94,7 +95,7 @@ describe("composePylonSocketContextBase", () => {
   });
 
   test("should extract ack callback from last arg when it is a function", () => {
-    const callback = jest.fn();
+    const callback = vi.fn();
     const result = composePylonSocketContextBase(io, socket, {
       args: [{ key: "value" }, callback],
       event: "with:ack",
@@ -106,7 +107,7 @@ describe("composePylonSocketContextBase", () => {
   });
 
   test("should call rawAck with envelope { ok: true, data } when ack is called", () => {
-    const callback = jest.fn();
+    const callback = vi.fn();
     const result = composePylonSocketContextBase(io, socket, {
       args: [{ key: "value" }, callback],
       event: "ack:test",
@@ -122,7 +123,7 @@ describe("composePylonSocketContextBase", () => {
   });
 
   test("should call rawAck with envelope { ok: false, error } when nack is called", () => {
-    const callback = jest.fn();
+    const callback = vi.fn();
     const result = composePylonSocketContextBase(io, socket, {
       args: [{ key: "value" }, callback],
       event: "nack:test",
@@ -138,7 +139,7 @@ describe("composePylonSocketContextBase", () => {
   });
 
   test("should not include ack callback in args", () => {
-    const callback = jest.fn();
+    const callback = vi.fn();
     const result = composePylonSocketContextBase(io, socket, {
       args: ["arg1", "arg2", callback],
       event: "strip:ack",
@@ -205,7 +206,7 @@ describe("composePylonSocketContextBase", () => {
     });
 
     test("should include __pylon flag in ack response", () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       const result = composePylonSocketContextBase(io, socket, {
         args: [{ __pylon: true, payload: { id: 1 } }, callback],
         event: "envelope:ack",
@@ -221,7 +222,7 @@ describe("composePylonSocketContextBase", () => {
     });
 
     test("should include __pylon flag in nack response", () => {
-      const callback = jest.fn();
+      const callback = vi.fn();
       const result = composePylonSocketContextBase(io, socket, {
         args: [{ __pylon: true, payload: { id: 1 } }, callback],
         event: "envelope:nack",

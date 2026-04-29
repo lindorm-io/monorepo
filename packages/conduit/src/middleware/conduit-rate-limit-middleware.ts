@@ -1,5 +1,5 @@
-import { ConduitError } from "../errors";
-import { ConduitMiddleware } from "../types";
+import { TooManyRequestsError } from "@lindorm/errors";
+import type { ConduitMiddleware } from "../types/index.js";
 
 type Config = {
   maxRequests?: number;
@@ -49,7 +49,7 @@ export const createConduitRateLimitMiddleware = (
     bucket.lastRefill = now;
 
     if (bucket.tokens < 1) {
-      throw new ConduitError("Rate limit exceeded", { status: 429 });
+      throw new TooManyRequestsError("Rate limit exceeded");
     }
 
     bucket.tokens -= 1;

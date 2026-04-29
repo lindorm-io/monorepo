@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`introspectComments should return column-level comments 1`] = `
+exports[`introspectComments > should return column-level comments 1`] = `
 [
   {
     "column": "email",
@@ -17,7 +17,7 @@ exports[`introspectComments should return column-level comments 1`] = `
 ]
 `;
 
-exports[`introspectComments should return table-level comment 1`] = `
+exports[`introspectComments > should return table-level comment 1`] = `
 [
   {
     "column": null,

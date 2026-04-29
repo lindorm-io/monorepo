@@ -2,49 +2,56 @@ import type { ICircuitBreaker } from "@lindorm/breaker";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { Pool, PoolConnection } from "mysql2/promise";
-import type { IEntity, IProteusQueryBuilder } from "../../../../interfaces";
+import type { IEntity, IProteusQueryBuilder } from "../../../../interfaces/index.js";
 import type {
   IProteusDriver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusMysqlOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { ProteusResult } from "../../../types/proteus-result";
+} from "../../../../types/index.js";
+import type { ProteusResult } from "../../../types/proteus-result.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type {
   FilterRegistryGetter,
   MetadataResolver,
-} from "../../../interfaces/ProteusDriver";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { IProteusRepository } from "../../../../interfaces/ProteusRepository";
-import { MySqlDriverError } from "../errors/MySqlDriverError";
-import { MySqlMigrationError } from "../errors/MySqlMigrationError";
-import type { MysqlQueryClient } from "../types/mysql-query-client";
-import type { MysqlTransactionHandle } from "../types/mysql-transaction-handle";
-import { beginTransaction } from "../utils/transaction/begin-transaction";
-import { commitTransaction } from "../utils/transaction/commit-transaction";
-import { rollbackTransaction } from "../utils/transaction/rollback-transaction";
-import { isRetryableTransactionError } from "../utils/transaction/is-retryable-transaction-error";
-import { MySqlTransactionContext } from "./MySqlTransactionContext";
-import { MySqlExecutor } from "./MySqlExecutor";
-import { MySqlRepository, type WithImplicitTransaction } from "./MySqlRepository";
-import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl";
-import { introspectSchema } from "../utils/sync/introspect-schema";
-import { projectDesiredSchemaMysql } from "../utils/sync/project-desired-schema-mysql";
-import { diffSchema } from "../utils/sync/diff-schema";
-import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan";
-import { quoteIdentifier } from "../utils/quote-identifier";
-import { buildMysqlLockName } from "../../../utils/advisory-lock-name";
-import { MySqlMigrationManager } from "./MySqlMigrationManager";
-import { MySqlQueryBuilder } from "./MySqlQueryBuilder";
-import { BreakerExecutor } from "../../../classes/BreakerExecutor";
-import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
+} from "../../../interfaces/ProteusDriver.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
+import type { IProteusRepository } from "../../../../interfaces/ProteusRepository.js";
+import { MySqlDriverError } from "../errors/MySqlDriverError.js";
+import { MySqlMigrationError } from "../errors/MySqlMigrationError.js";
+import type { MysqlQueryClient } from "../types/mysql-query-client.js";
+import type { MysqlTransactionHandle } from "../types/mysql-transaction-handle.js";
+import { beginTransaction } from "../utils/transaction/begin-transaction.js";
+import { commitTransaction } from "../utils/transaction/commit-transaction.js";
+import { rollbackTransaction } from "../utils/transaction/rollback-transaction.js";
+import { isRetryableTransactionError } from "../utils/transaction/is-retryable-transaction-error.js";
+import { MySqlTransactionContext } from "./MySqlTransactionContext.js";
+import { MySqlExecutor } from "./MySqlExecutor.js";
+import { MySqlRepository, type WithImplicitTransaction } from "./MySqlRepository.js";
+import { generateAppendOnlyDDL } from "../utils/ddl/generate-append-only-ddl.js";
+import { introspectSchema } from "../utils/sync/introspect-schema.js";
+import { projectDesiredSchemaMysql } from "../utils/sync/project-desired-schema-mysql.js";
+import { diffSchema } from "../utils/sync/diff-schema.js";
+import { SyncPlanExecutor } from "../utils/sync/execute-sync-plan.js";
+import { quoteIdentifier } from "../utils/quote-identifier.js";
+import { buildMysqlLockName } from "../../../utils/advisory-lock-name.js";
+import { MySqlMigrationManager } from "./MySqlMigrationManager.js";
+import { MySqlQueryBuilder } from "./MySqlQueryBuilder.js";
+import { AbortError } from "@lindorm/errors";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
+import {
+  isMysqlQueryInterruptedError,
+  isTxBoundaryStatement,
+  toAbortError,
+} from "../utils/abort.js";
 
 export class MySqlDriver implements IProteusDriver {
   private readonly options: ProteusMysqlOptions;
@@ -57,6 +64,7 @@ export class MySqlDriver implements IProteusDriver {
   private readonly breaker: ICircuitBreaker | null;
   private pool: Pool | null = null;
   private connectingPromise: Promise<void> | null = null;
+  private signal: AbortSignal | undefined;
 
   public constructor(
     options: ProteusMysqlOptions,
@@ -209,8 +217,11 @@ export class MySqlDriver implements IProteusDriver {
     sql: string,
     values?: Array<unknown>,
   ): Promise<ProteusResult<R>> {
+    this.checkSignal();
     const pool = this.getPool();
-    const client = this.createMysqlClientFromPool(pool);
+    const client = this.signal
+      ? this.createMysqlClientFromPoolWithSignal(pool, this.signal)
+      : this.createMysqlClientFromPool(pool);
 
     const result = await client.query<R>(sql, values);
     return {
@@ -222,22 +233,32 @@ export class MySqlDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const pool = this.getPool();
-    const client = this.createMysqlClientFromPool(pool);
+    const sessionSignal = this.signal;
+    const client = sessionSignal
+      ? this.createMysqlClientFromPoolWithSignal(pool, sessionSignal)
+      : this.createMysqlClientFromPool(pool);
     const namespace = this.namespace;
     const metadata = this.resolveMetadata(target);
 
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createRepository(t, p, context);
+    ) => this.createRepository(t, p, meta);
 
     // T2: Pool-backed — check out a dedicated PoolConnection, build tx-scoped factory
     const withImplicitTransaction: WithImplicitTransaction<E> = async (fn) => {
+      if (sessionSignal?.aborted) {
+        throw toAbortError(sessionSignal.reason);
+      }
       const connection = await pool.getConnection();
-      const txClient = this.createMysqlClient(connection);
+      const disposeListener = sessionSignal
+        ? this.attachConnectionAbortListener(connection, sessionSignal)
+        : null;
+      const txClient = this.createMysqlClient(connection, sessionSignal);
       try {
         await txClient.query("START TRANSACTION");
         const txExecutor = this.wrapExecutor(
@@ -261,7 +282,7 @@ export class MySqlDriver implements IProteusDriver {
         const txFactory: RepositoryFactory = <C extends IEntity>(
           t: Constructor<C>,
           p?: Constructor<IEntity>,
-        ) => this.createTransactionalRepository(t, handle, p, context);
+        ) => this.createTransactionalRepository(t, handle, p, meta);
 
         const result = await fn({
           client: txClient,
@@ -278,6 +299,7 @@ export class MySqlDriver implements IProteusDriver {
         }
         throw error;
       } finally {
+        disposeListener?.();
         connection.release();
       }
     };
@@ -289,7 +311,7 @@ export class MySqlDriver implements IProteusDriver {
       client,
       namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
@@ -302,8 +324,9 @@ export class MySqlDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const mysqlHandle = handle as MysqlTransactionHandle;
     const namespace = this.namespace;
     const metadata = this.resolveMetadata(target);
@@ -321,7 +344,7 @@ export class MySqlDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createTransactionalRepository(t, handle, p, context);
+    ) => this.createTransactionalRepository(t, handle, p, meta);
 
     // T3: Already in a transaction — passthrough with repositoryFactory
     const withImplicitTransaction: WithImplicitTransaction<E> = async (fn) =>
@@ -334,7 +357,7 @@ export class MySqlDriver implements IProteusDriver {
       client: txClient,
       namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       withImplicitTransaction,
@@ -346,9 +369,12 @@ export class MySqlDriver implements IProteusDriver {
   public createExecutor<E extends IEntity>(
     target: Constructor<E>,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
-    const client = this.createMysqlClientFromPool(pool);
+    const client = this.signal
+      ? this.createMysqlClientFromPoolWithSignal(pool, this.signal)
+      : this.createMysqlClientFromPool(pool);
     return this.wrapExecutor(
       new MySqlExecutor<E>(
         client,
@@ -364,6 +390,7 @@ export class MySqlDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const mysqlHandle = handle as MysqlTransactionHandle;
     return this.wrapExecutor(
@@ -380,9 +407,12 @@ export class MySqlDriver implements IProteusDriver {
   public createQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
-    const client = this.createMysqlClientFromPool(pool);
+    const client = this.signal
+      ? this.createMysqlClientFromPoolWithSignal(pool, this.signal)
+      : this.createMysqlClientFromPool(pool);
     return new MySqlQueryBuilder<E>(metadata, client, this.namespace, this.logger);
   }
 
@@ -390,6 +420,7 @@ export class MySqlDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const mysqlHandle = handle as MysqlTransactionHandle;
     return new MySqlQueryBuilder<E>(
@@ -407,6 +438,7 @@ export class MySqlDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    signal?: AbortSignal,
   ): MySqlDriver {
     const cloned = Object.create(MySqlDriver.prototype) as MySqlDriver;
     (cloned as any).options = this.options;
@@ -420,6 +452,14 @@ export class MySqlDriver implements IProteusDriver {
     (cloned as any).amphora = this.amphora;
     (cloned as any).breaker = this.breaker;
     (cloned as any).pool = this.pool; // Share the same connection pool
+    (cloned as any).connectingPromise = null;
+    // When a signal is attached, the executor / repository routes through a
+    // signal-aware query path: acquire a dedicated PoolConnection per query
+    // (so threadId is stable), attach an abort listener that fires
+    // KILL QUERY <threadId> via a throwaway mysql2.createConnection(), and
+    // release the PoolConnection in finally. Non-signal sessions keep the
+    // existing pool.query fast path.
+    (cloned as any).signal = signal;
     return cloned;
   }
 
@@ -427,10 +467,17 @@ export class MySqlDriver implements IProteusDriver {
     options?: TransactionOptions,
   ): Promise<TransactionHandle> {
     const pool = this.getPool();
+    const signal = this.signal;
+    if (signal?.aborted) {
+      throw toAbortError(signal.reason);
+    }
     return beginTransaction(
       pool,
-      (conn: PoolConnection) => this.createMysqlClient(conn),
+      (conn: PoolConnection) => this.createMysqlClient(conn, signal),
       options?.isolation,
+      signal
+        ? { onAcquired: (conn) => this.attachConnectionAbortListener(conn, signal) }
+        : undefined,
     );
   }
 
@@ -454,12 +501,26 @@ export class MySqlDriver implements IProteusDriver {
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
+    const effectiveSignal = this.signal;
+
     const attempt = async (): Promise<T> => {
+      // Short-circuit on abort between attempts so retries stop once the
+      // session has been cancelled.
+      if (effectiveSignal?.aborted) {
+        throw toAbortError(effectiveSignal.reason);
+      }
+
       const pool = this.getPool();
       const handle = await beginTransaction(
         pool,
-        (conn: PoolConnection) => this.createMysqlClient(conn),
+        (conn: PoolConnection) => this.createMysqlClient(conn, effectiveSignal),
         options?.isolation,
+        effectiveSignal
+          ? {
+              onAcquired: (conn) =>
+                this.attachConnectionAbortListener(conn, effectiveSignal),
+            }
+          : undefined,
       );
 
       try {
@@ -506,7 +567,7 @@ export class MySqlDriver implements IProteusDriver {
     };
 
     if (options?.retry) {
-      const { withRetry } = await import("../../../utils/transaction/with-retry");
+      const { withRetry } = await import("../../../utils/transaction/with-retry.js");
 
       const retryOptions = {
         ...options.retry,
@@ -519,7 +580,14 @@ export class MySqlDriver implements IProteusDriver {
             });
           }),
       };
-      return withRetry(attempt, isRetryableTransactionError, retryOptions);
+      // Abort is terminal: never retry an AbortError, and never retry after
+      // the signal has been aborted.
+      const isRetryable = (error: unknown): boolean => {
+        if (error instanceof AbortError) return false;
+        if (effectiveSignal?.aborted) return false;
+        return isRetryableTransactionError(error);
+      };
+      return withRetry(attempt, isRetryable, retryOptions);
     }
 
     return attempt();
@@ -584,16 +652,157 @@ export class MySqlDriver implements IProteusDriver {
     };
   }
 
-  private createMysqlClient(connection: PoolConnection): MysqlQueryClient {
-    return this.wrapWithQueryClient(
-      (sql, params) => connection.query(sql, params) as Promise<[Array<any>, any]>,
-    );
+  private createMysqlClient(
+    connection: PoolConnection,
+    signal?: AbortSignal,
+  ): MysqlQueryClient {
+    if (!signal) {
+      return this.wrapWithQueryClient(
+        (sql, params) => connection.query(sql, params) as Promise<[Array<any>, any]>,
+      );
+    }
+
+    // Signal-aware: rewrap ER_QUERY_INTERRUPTED (1317) as AbortError. The
+    // abort listener that fires KILL QUERY is owned by the caller
+    // (withImplicitTransaction / beginTransaction / withTransaction) so it
+    // is bound to the PoolConnection's lifetime rather than a single query.
+    // That keeps ROLLBACK runnable on the same connection after a kill.
+    //
+    // We do NOT pre-emptively reject queries here — ROLLBACK still needs to
+    // run on the same connection after a cancel to leave the pool healthy.
+    //
+    // Post-success check: mysql quirk — a KILL QUERY of `SELECT SLEEP(n)`
+    // returns a "successful" row instead of rejecting with
+    // ER_QUERY_INTERRUPTED. If the signal aborted while the query was
+    // in-flight, treat a user-level success as cancelled. Tx-boundary
+    // statements (START TRANSACTION / COMMIT / ROLLBACK / SAVEPOINT / ...)
+    // are exempt so the caller's ROLLBACK path runs to completion and
+    // leaves the connection in a clean state.
+    return this.wrapWithQueryClient(async (sql, params) => {
+      try {
+        const result = (await connection.query(sql, params)) as [Array<any>, any];
+        if (signal.aborted && !isTxBoundaryStatement(sql)) {
+          throw toAbortError(signal.reason);
+        }
+        return result;
+      } catch (err) {
+        if (isMysqlQueryInterruptedError(err)) {
+          throw toAbortError(signal.reason, err);
+        }
+        throw err;
+      }
+    });
   }
 
   private createMysqlClientFromPool(pool: Pool): MysqlQueryClient {
     return this.wrapWithQueryClient(
       (sql, params) => pool.query(sql, params) as Promise<[Array<any>, any]>,
     );
+  }
+
+  /**
+   * Signal-aware executor path. Each query acquires a dedicated PoolConnection
+   * so it has a known `threadId`, registers an abort listener that issues
+   * KILL QUERY on another session, runs the query, and releases the
+   * connection. Adds one pool checkout per query relative to the non-signal
+   * path — only used when a session signal is present.
+   */
+  private createMysqlClientFromPoolWithSignal(
+    pool: Pool,
+    signal: AbortSignal,
+  ): MysqlQueryClient {
+    return this.wrapWithQueryClient(async (sql, params) => {
+      if (signal.aborted) {
+        throw toAbortError(signal.reason);
+      }
+
+      const conn = await pool.getConnection();
+      const tid = (conn as unknown as { threadId: number | null }).threadId;
+      const onAbort = (): void => {
+        if (tid != null) void this.issueKillQuery(tid);
+      };
+      signal.addEventListener("abort", onAbort, { once: true });
+
+      try {
+        const result = (await conn.query(sql, params)) as [Array<any>, any];
+        // mysql behaves differently to pg here: a successful KILL QUERY of
+        // `SELECT SLEEP(n)` returns a row instead of rejecting with
+        // ER_QUERY_INTERRUPTED. If the signal aborted while this query was
+        // in-flight, treat the result as a cancelled outcome regardless of
+        // whether mysql returned rows — the caller already unwound.
+        if (signal.aborted) {
+          throw toAbortError(signal.reason);
+        }
+        return result;
+      } catch (err) {
+        if (isMysqlQueryInterruptedError(err) || signal.aborted) {
+          throw toAbortError(signal.reason, err);
+        }
+        throw err;
+      } finally {
+        signal.removeEventListener("abort", onAbort);
+        conn.release();
+      }
+    });
+  }
+
+  /**
+   * Attach an abort listener to a PoolConnection so an abort on `signal`
+   * fires `KILL QUERY <threadId>` once. Returns a `dispose` function that
+   * removes the listener — call it when the PoolConnection is released.
+   */
+  private attachConnectionAbortListener(
+    connection: PoolConnection,
+    signal: AbortSignal,
+  ): () => void {
+    const tid = (connection as unknown as { threadId: number | null }).threadId;
+    const onAbort = (): void => {
+      if (tid != null) void this.issueKillQuery(tid);
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    return () => signal.removeEventListener("abort", onAbort);
+  }
+
+  /**
+   * Issue `KILL QUERY <threadId>` against the given threadId on a throwaway
+   * mysql2 connection. Best-effort: failures are logged but not propagated
+   * since the caller already has its own rejection path.
+   */
+  private async issueKillQuery(threadId: number): Promise<void> {
+    const mysql = await import("mysql2/promise");
+    const conn = await mysql.createConnection({
+      ...(this.options.url
+        ? { uri: this.options.url }
+        : {
+            host: this.options.host ?? "localhost",
+            port: this.options.port ?? 3306,
+            user: this.options.user,
+            password: this.options.password,
+            database: this.options.database ?? this.options.namespace ?? undefined,
+          }),
+      ssl: this.options.ssl as any,
+    } as any);
+
+    try {
+      await conn.query("KILL QUERY ?", [threadId]);
+    } catch (err) {
+      this.logger.warn("Failed to issue KILL QUERY", {
+        error: err instanceof Error ? err.message : String(err),
+        threadId,
+      });
+    } finally {
+      try {
+        await conn.end();
+      } catch {
+        /* best effort */
+      }
+    }
+  }
+
+  private checkSignal(): void {
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason);
+    }
   }
 
   private async synchronize(entities: Array<Constructor<IEntity>>): Promise<void> {
@@ -674,7 +883,7 @@ export class MySqlDriver implements IProteusDriver {
 
   private async syncAppendOnlyTriggers(
     client: MysqlQueryClient,
-    metadatas: Array<import("../../../entity/types/metadata").EntityMetadata>,
+    metadatas: Array<import("../../../entity/types/metadata.js").EntityMetadata>,
   ): Promise<void> {
     for (const metadata of metadatas) {
       const tableName = metadata.entity.name;

@@ -1,5 +1,6 @@
-import type { MessageMetadata } from "../types/metadata";
-import { resolveExpiry } from "./resolve-expiry";
+import type { MessageMetadata } from "../types/metadata.js";
+import { resolveExpiry } from "./resolve-expiry.js";
+import { describe, expect, it } from "vitest";
 
 const makeMetadata = (overrides: Partial<MessageMetadata> = {}): MessageMetadata =>
   ({

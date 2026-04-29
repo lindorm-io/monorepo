@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Pylon should setup correctly 1`] = `
+exports[`Pylon > should setup correctly 1`] = `
 [
   {
     "authorizationEndpoint": "https://lindorm.eu.auth0.com/authorize",
@@ -89,7 +89,7 @@ exports[`Pylon should setup correctly 1`] = `
 ]
 `;
 
-exports[`Pylon should setup correctly 2`] = `
+exports[`Pylon > should setup correctly 2`] = `
 [
   {
     "algorithm": "ES256",

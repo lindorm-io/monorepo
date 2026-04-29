@@ -1,5 +1,5 @@
 import { isObjectLike } from "@lindorm/is";
-import type { IEntity } from "../../../interfaces";
+import type { IEntity } from "../../../interfaces/index.js";
 
 /**
  * Brand symbol — used by the save pipeline to identify unresolved lazy

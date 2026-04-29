@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Timeout should extract version from class name _V2 suffix 1`] = `
+exports[`Timeout > should extract version from class name _V2 suffix 1`] = `
 {
   "dto": {
     "kind": "timeout",
@@ -10,7 +10,7 @@ exports[`Timeout should extract version from class name _V2 suffix 1`] = `
 }
 `;
 
-exports[`Timeout should stage dto metadata with custom name and version when provided as options 1`] = `
+exports[`Timeout > should stage dto metadata with custom name and version when provided as options 1`] = `
 {
   "dto": {
     "kind": "timeout",
@@ -20,7 +20,7 @@ exports[`Timeout should stage dto metadata with custom name and version when pro
 }
 `;
 
-exports[`Timeout should stage dto metadata with custom name when provided as string 1`] = `
+exports[`Timeout > should stage dto metadata with custom name when provided as string 1`] = `
 {
   "dto": {
     "kind": "timeout",
@@ -30,7 +30,7 @@ exports[`Timeout should stage dto metadata with custom name when provided as str
 }
 `;
 
-exports[`Timeout should stage dto metadata with snake_case name derived from class name 1`] = `
+exports[`Timeout > should stage dto metadata with snake_case name derived from class name 1`] = `
 {
   "dto": {
     "kind": "timeout",

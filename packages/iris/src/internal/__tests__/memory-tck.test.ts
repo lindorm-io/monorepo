@@ -4,32 +4,33 @@
 // No external services required.
 
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../interfaces";
-import { IrisSource } from "../../classes/IrisSource";
-import type { MemoryDriver } from "../drivers/memory/classes/MemoryDriver";
-import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types";
-import { runTck } from "../__fixtures__/tck/run-tck";
-import { createMockAesModule } from "../__fixtures__/tck/mock-aes";
+import type { IMessage } from "../../interfaces/index.js";
+import { IrisSource } from "../../classes/IrisSource.js";
+import type { MemoryDriver } from "../drivers/memory/classes/MemoryDriver.js";
+import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import { runTck } from "../__fixtures__/tck/run-tck.js";
+import { createMockAesModule } from "../__fixtures__/tck/mock-aes.js";
+import { describe, vi } from "vitest";
 
-jest.mock("@lindorm/aes", () => createMockAesModule());
+vi.mock("@lindorm/aes", () => createMockAesModule());
 
-jest.setTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000 });
 
 let source: IrisSource;
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const mockAmphora = {
-  find: jest.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
-  findById: jest.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
+  find: vi.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
+  findById: vi.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
 };
 
 const factory: TckDriverFactory = {

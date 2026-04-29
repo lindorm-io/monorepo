@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`mapIsolationLevel should default to majority concern for undefined 1`] = `
+exports[`mapIsolationLevel > should default to majority concern for undefined 1`] = `
 {
   "readConcern": {
     "level": "majority",
@@ -11,7 +11,7 @@ exports[`mapIsolationLevel should default to majority concern for undefined 1`] 
 }
 `;
 
-exports[`mapIsolationLevel should default to majority concern when no isolation level specified 1`] = `
+exports[`mapIsolationLevel > should default to majority concern when no isolation level specified 1`] = `
 {
   "readConcern": {
     "level": "majority",
@@ -22,7 +22,7 @@ exports[`mapIsolationLevel should default to majority concern when no isolation 
 }
 `;
 
-exports[`mapIsolationLevel should return majority concern for READ COMMITTED 1`] = `
+exports[`mapIsolationLevel > should return majority concern for READ COMMITTED 1`] = `
 {
   "readConcern": {
     "level": "majority",
@@ -33,7 +33,7 @@ exports[`mapIsolationLevel should return majority concern for READ COMMITTED 1`]
 }
 `;
 
-exports[`mapIsolationLevel should return snapshot concern for REPEATABLE READ 1`] = `
+exports[`mapIsolationLevel > should return snapshot concern for REPEATABLE READ 1`] = `
 {
   "readConcern": {
     "level": "snapshot",
@@ -44,7 +44,7 @@ exports[`mapIsolationLevel should return snapshot concern for REPEATABLE READ 1`
 }
 `;
 
-exports[`mapIsolationLevel should return snapshot concern for SERIALIZABLE 1`] = `
+exports[`mapIsolationLevel > should return snapshot concern for SERIALIZABLE 1`] = `
 {
   "readConcern": {
     "level": "snapshot",

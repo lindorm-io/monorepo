@@ -1,11 +1,16 @@
 import type { Constructor } from "@lindorm/types";
-import type { EntityEmitFn, TransactionCallback, TransactionOptions } from "../../types";
-import type { EntityMetadata } from "../entity/types/metadata";
-import type { FilterRegistry } from "../utils/query/filter-registry";
-import { IEntity } from "../../interfaces/Entity";
-import { IProteusQueryBuilder } from "../../interfaces/ProteusQueryBuilder";
-import { IProteusRepository } from "../../interfaces/ProteusRepository";
-import { IRepositoryExecutor } from "./RepositoryExecutor";
+import type {
+  EntityEmitFn,
+  ProteusHookMeta,
+  TransactionCallback,
+  TransactionOptions,
+} from "../../types/index.js";
+import type { EntityMetadata } from "../entity/types/metadata.js";
+import type { FilterRegistry } from "../utils/query/filter-registry.js";
+import type { IEntity } from "../../interfaces/Entity.js";
+import type { IProteusQueryBuilder } from "../../interfaces/ProteusQueryBuilder.js";
+import type { IProteusRepository } from "../../interfaces/ProteusRepository.js";
+import type { IRepositoryExecutor } from "./RepositoryExecutor.js";
 
 export type MetadataResolver = (target: Constructor<IEntity>) => EntityMetadata;
 
@@ -28,7 +33,7 @@ export interface IProteusDriver {
   createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E>;
 
   createExecutor<E extends IEntity>(target: Constructor<E>): IRepositoryExecutor<E>;
@@ -57,9 +62,16 @@ export interface IProteusDriver {
    * Create a lightweight clone of this driver that shares the same
    * connection resources (pool, store) but uses different filter/emitEntity
    * functions. Used by ProteusSource.session() to achieve per-request isolation.
+   *
+   * The optional `signal` is the session-scoped AbortSignal. When provided,
+   * drivers with cancellation support (currently Postgres only) wire it into
+   * the query execution path so in-flight queries are cancelled server-side
+   * on abort. Drivers without cancellation support MUST accept and ignore the
+   * signal.
    */
   cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    signal?: AbortSignal,
   ): IProteusDriver;
 }

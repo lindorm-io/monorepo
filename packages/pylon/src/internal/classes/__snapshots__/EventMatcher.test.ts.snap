@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`EventMatcher catch-all matching should match a single remaining segment 1`] = `
+exports[`EventMatcher > catch-all matching > should match a single remaining segment 1`] = `
 {
   "data": [
     "handler1",
@@ -11,7 +11,7 @@ exports[`EventMatcher catch-all matching should match a single remaining segment
 }
 `;
 
-exports[`EventMatcher catch-all matching should match and capture all remaining segments 1`] = `
+exports[`EventMatcher > catch-all matching > should match and capture all remaining segments 1`] = `
 {
   "data": [
     "handler1",
@@ -22,7 +22,7 @@ exports[`EventMatcher catch-all matching should match and capture all remaining 
 }
 `;
 
-exports[`EventMatcher catch-all matching should match any event when pattern is only a catch-all 1`] = `
+exports[`EventMatcher > catch-all matching > should match any event when pattern is only a catch-all 1`] = `
 {
   "data": [
     "handler1",
@@ -33,7 +33,7 @@ exports[`EventMatcher catch-all matching should match any event when pattern is 
 }
 `;
 
-exports[`EventMatcher literal matching should match a static event 1`] = `
+exports[`EventMatcher > literal matching > should match a static event 1`] = `
 {
   "data": [
     "handler1",
@@ -42,7 +42,7 @@ exports[`EventMatcher literal matching should match a static event 1`] = `
 }
 `;
 
-exports[`EventMatcher multiple handlers should return all handlers for a catch-all pattern 1`] = `
+exports[`EventMatcher > multiple handlers > should return all handlers for a catch-all pattern 1`] = `
 {
   "data": [
     "handler1",
@@ -54,7 +54,7 @@ exports[`EventMatcher multiple handlers should return all handlers for a catch-a
 }
 `;
 
-exports[`EventMatcher multiple handlers should return all handlers registered at the same pattern 1`] = `
+exports[`EventMatcher > multiple handlers > should return all handlers registered at the same pattern 1`] = `
 {
   "data": [
     "handler1",
@@ -64,7 +64,7 @@ exports[`EventMatcher multiple handlers should return all handlers registered at
 }
 `;
 
-exports[`EventMatcher param matching should match a single param 1`] = `
+exports[`EventMatcher > param matching > should match a single param 1`] = `
 {
   "data": [
     "handler1",
@@ -75,7 +75,7 @@ exports[`EventMatcher param matching should match a single param 1`] = `
 }
 `;
 
-exports[`EventMatcher param matching should match multiple params 1`] = `
+exports[`EventMatcher > param matching > should match multiple params 1`] = `
 {
   "data": [
     "handler1",
@@ -87,7 +87,7 @@ exports[`EventMatcher param matching should match multiple params 1`] = `
 }
 `;
 
-exports[`EventMatcher parseSegments should convert catch-all segments 1`] = `
+exports[`EventMatcher > parseSegments > should convert catch-all segments 1`] = `
 [
   {
     "type": "literal",
@@ -100,7 +100,7 @@ exports[`EventMatcher parseSegments should convert catch-all segments 1`] = `
 ]
 `;
 
-exports[`EventMatcher parseSegments should convert optional catch-all segments 1`] = `
+exports[`EventMatcher > parseSegments > should convert optional catch-all segments 1`] = `
 [
   {
     "type": "literal",
@@ -113,7 +113,7 @@ exports[`EventMatcher parseSegments should convert optional catch-all segments 1
 ]
 `;
 
-exports[`EventMatcher parseSegments should convert scanner segments correctly 1`] = `
+exports[`EventMatcher > parseSegments > should convert scanner segments correctly 1`] = `
 [
   {
     "type": "literal",
@@ -130,7 +130,7 @@ exports[`EventMatcher parseSegments should convert scanner segments correctly 1`
 ]
 `;
 
-exports[`EventMatcher priority should fall back to catch-all when param path does not match 1`] = `
+exports[`EventMatcher > priority > should fall back to catch-all when param path does not match 1`] = `
 {
   "data": [
     "catchAllHandler",
@@ -141,7 +141,7 @@ exports[`EventMatcher priority should fall back to catch-all when param path doe
 }
 `;
 
-exports[`EventMatcher priority should prefer literal over param 1`] = `
+exports[`EventMatcher > priority > should prefer literal over param 1`] = `
 {
   "data": [
     "literalHandler",
@@ -150,7 +150,7 @@ exports[`EventMatcher priority should prefer literal over param 1`] = `
 }
 `;
 
-exports[`EventMatcher priority should prefer param over catch-all 1`] = `
+exports[`EventMatcher > priority > should prefer param over catch-all 1`] = `
 {
   "data": [
     "paramHandler",

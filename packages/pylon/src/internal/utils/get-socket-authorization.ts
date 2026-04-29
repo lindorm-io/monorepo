@@ -1,4 +1,8 @@
-import { AuthorizationState, AuthorizationType, PylonSocket } from "../../types";
+import type {
+  AuthorizationState,
+  AuthorizationType,
+  PylonSocket,
+} from "../../types/index.js";
 
 const DEFAULT: AuthorizationState = {
   type: "none",

@@ -1,8 +1,9 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { randomBytes, randomUUID } from "crypto";
 import { Client } from "pg";
-import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import type { MigrationTableOptions } from "../../types/migration";
+import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import type { MigrationTableOptions } from "../../types/migration.js";
 import {
   deleteMigrationRecord,
   ensureMigrationTable,
@@ -10,7 +11,7 @@ import {
   insertMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "./migration-table";
+} from "./migration-table.js";
 
 let client: PostgresQueryClient;
 let raw: Client;

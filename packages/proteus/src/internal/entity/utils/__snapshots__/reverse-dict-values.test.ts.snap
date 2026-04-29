@@ -1,8 +1,8 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`reverseDictValues should handle empty dict 1`] = `{}`;
+exports[`reverseDictValues > should handle empty dict 1`] = `{}`;
 
-exports[`reverseDictValues should handle multiple entries 1`] = `
+exports[`reverseDictValues > should handle multiple entries 1`] = `
 {
   "id": "tenantId",
   "orgPk": "orgId",
@@ -10,13 +10,13 @@ exports[`reverseDictValues should handle multiple entries 1`] = `
 }
 `;
 
-exports[`reverseDictValues should handle single entry 1`] = `
+exports[`reverseDictValues > should handle single entry 1`] = `
 {
   "id": "foreignId",
 }
 `;
 
-exports[`reverseDictValues should swap keys and values 1`] = `
+exports[`reverseDictValues > should swap keys and values 1`] = `
 {
   "id": "userId",
   "pk": "postId",

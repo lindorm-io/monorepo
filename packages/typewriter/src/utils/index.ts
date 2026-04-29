@@ -1,1 +1,1 @@
-export * from "./typewriter";
+export * from "./typewriter.js";

@@ -1,9 +1,9 @@
 import type { Socket } from "socket.io-client";
-import { ZephyrError } from "../errors/ZephyrError";
-import { resolveHandshakeHtu } from "../internal/utils/resolve-handshake-htu";
-import { signDpopProof } from "../internal/utils/sign-dpop-proof";
-import type { BearerCredentials } from "./bearer-auth-strategy";
-import type { ZephyrAuthStrategy } from "./zephyr-auth-strategy";
+import { ZephyrError } from "../errors/ZephyrError.js";
+import { resolveHandshakeHtu } from "../internal/utils/resolve-handshake-htu.js";
+import { signDpopProof } from "../internal/utils/sign-dpop-proof.js";
+import type { BearerCredentials } from "./bearer-auth-strategy.js";
+import type { ZephyrAuthStrategy } from "./zephyr-auth-strategy.js";
 
 const DEFAULT_REFRESH_ACK_TIMEOUT_MS = 5000;
 

@@ -1,4 +1,4 @@
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
 import type {
   MysqlDbSnapshot,
   MysqlSnapshotColumn,
@@ -7,7 +7,7 @@ import type {
   MysqlSnapshotIndex,
   MysqlSnapshotTable,
   MysqlSnapshotUnique,
-} from "../../types/db-snapshot";
+} from "../../types/db-snapshot.js";
 
 type ColumnRow = {
   COLUMN_NAME: string;

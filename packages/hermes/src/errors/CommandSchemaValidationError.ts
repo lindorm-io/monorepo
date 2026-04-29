@@ -1,4 +1,4 @@
-import { DomainError } from "./DomainError";
+import { DomainError } from "./DomainError.js";
 
 export class CommandSchemaValidationError extends DomainError {
   public constructor(error: Error) {

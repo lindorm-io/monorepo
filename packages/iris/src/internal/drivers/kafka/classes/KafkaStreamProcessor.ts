@@ -1,13 +1,14 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage } from "../../../../interfaces";
-import type { KafkaSharedState } from "../types/kafka-types";
-import type { PipelineStage } from "../../../types/pipeline-stage";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
   type DriverStreamProcessorBaseOptions,
-} from "../../../classes/DriverStreamProcessorBase";
-import { KafkaStreamPipeline } from "./KafkaStreamPipeline";
+} from "../../../classes/DriverStreamProcessorBase.js";
+import { KafkaStreamPipeline } from "./KafkaStreamPipeline.js";
 
 export type KafkaStreamProcessorOptions =
   DriverStreamProcessorBaseOptions<KafkaSharedState>;
@@ -30,7 +31,7 @@ export class KafkaStreamProcessor<
     inputTopic?: string;
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
-    context?: unknown;
+    meta?: IrisHookMeta;
     amphora?: unknown;
   }): KafkaStreamPipeline {
     return new KafkaStreamPipeline({
@@ -41,7 +42,7 @@ export class KafkaStreamProcessor<
       inputTopic: options.inputTopic,
       outputClass: options.outputClass,
       outputTopic: options.outputTopic,
-      context: options.context,
+      meta: options.meta,
       amphora: options.amphora,
     });
   }

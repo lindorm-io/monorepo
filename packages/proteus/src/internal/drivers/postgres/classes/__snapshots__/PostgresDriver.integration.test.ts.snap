@@ -1,19 +1,19 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`PostgresDriver (integration) should be idempotent — second sync produces no errors 1`] = `
+exports[`PostgresDriver (integration) > should be idempotent — second sync produces no errors 1`] = `
 [
   "TestChecked",
   "TestUser",
 ]
 `;
 
-exports[`PostgresDriver (integration) should create FK constraints between related entities 1`] = `
+exports[`PostgresDriver (integration) > should create FK constraints between related entities 1`] = `
 [
   "fk_pNTj5bHp-kM",
 ]
 `;
 
-exports[`PostgresDriver (integration) should create join table for ManyToMany relations 1`] = `
+exports[`PostgresDriver (integration) > should create join table for ManyToMany relations 1`] = `
 [
   "TestCourse",
   "TestStudent",
@@ -21,7 +21,7 @@ exports[`PostgresDriver (integration) should create join table for ManyToMany re
 ]
 `;
 
-exports[`PostgresDriver (integration) should create tables for all entities when synchronize is true 1`] = `
+exports[`PostgresDriver (integration) > should create tables for all entities when synchronize is true 1`] = `
 [
   "TestArticle",
   "TestAuthor",

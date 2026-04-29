@@ -6,11 +6,11 @@ import type { Dict } from "@lindorm/types";
 import { sortKeys } from "@lindorm/utils";
 import { randomUUID } from "@lindorm/random";
 import EventEmitter from "events";
-import { ChecksumError } from "../../errors";
-import { ChecksumRecord } from "../entities";
-import { HermesErrorMessage, HermesEventMessage } from "../messages";
-import type { HermesRegistry } from "../registry";
-import { findChecksum, insertChecksum } from "../stores";
+import { ChecksumError } from "../../errors/index.js";
+import { ChecksumRecord } from "../entities/index.js";
+import { HermesErrorMessage, HermesEventMessage } from "../messages/index.js";
+import type { HermesRegistry } from "../registry/index.js";
+import { findChecksum, insertChecksum } from "../stores/index.js";
 
 export type ChecksumDomainOptions = {
   registry: HermesRegistry;

@@ -1,4 +1,5 @@
-import { Persistent } from "./Persistent";
+import { Persistent } from "./Persistent.js";
+import { describe, expect, it } from "vitest";
 
 describe("Persistent", () => {
   it("should stage persistent flag on metadata", () => {

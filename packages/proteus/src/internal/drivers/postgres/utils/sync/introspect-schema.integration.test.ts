@@ -1,8 +1,9 @@
 import { randomBytes } from "crypto";
 import { Client } from "pg";
-import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import { introspectSchema } from "./introspect-schema";
+import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import { introspectSchema } from "./introspect-schema.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 let client: PostgresQueryClient;
 let raw: Client;

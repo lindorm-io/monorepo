@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateEntitySource interpolates longer PascalCase names 1`] = `
+exports[`generateEntitySource > interpolates longer PascalCase names 1`] = `
 "import { Entity, Field, PrimaryKey } from "@lindorm/proteus";
 
 @Entity()
@@ -18,7 +18,7 @@ export class UserProfile {
 "
 `;
 
-exports[`generateEntitySource produces a pascal-case entity file 1`] = `
+exports[`generateEntitySource > produces a pascal-case entity file 1`] = `
 "import { Entity, Field, PrimaryKey } from "@lindorm/proteus";
 
 @Entity()

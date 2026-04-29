@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { PylonHttpMiddleware } from "../../../types";
+import type { PylonHttpMiddleware } from "../../../types/index.js";
 
 export const backchannelLogoutHandler: PylonHttpMiddleware = async (ctx) => {
   const verified = await ctx.aegis.jwt.verify(ctx.data.logoutToken);

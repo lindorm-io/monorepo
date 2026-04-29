@@ -1,4 +1,4 @@
-import type { IEntity } from "./Entity";
+import type { IEntity } from "./Entity.js";
 
 /**
  * Server-side cursor for streaming large result sets without loading them all into memory.

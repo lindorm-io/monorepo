@@ -8,16 +8,17 @@
  * - C9: @EmbeddedList key colliding with a @Field key throws EntityMetadataError
  */
 
-import { getEntityMetadata } from "./get-entity-metadata";
-import { Eager } from "../../../decorators/Eager";
-import { Embeddable } from "../../../decorators/Embeddable";
-import { Embedded } from "../../../decorators/Embedded";
-import { EmbeddedList } from "../../../decorators/EmbeddedList";
-import { Entity } from "../../../decorators/Entity";
-import { Field } from "../../../decorators/Field";
-import { Lazy } from "../../../decorators/Lazy";
-import { PrimaryKey } from "../../../decorators/PrimaryKey";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
+import { getEntityMetadata } from "./get-entity-metadata.js";
+import { Eager } from "../../../decorators/Eager.js";
+import { Embeddable } from "../../../decorators/Embeddable.js";
+import { Embedded } from "../../../decorators/Embedded.js";
+import { EmbeddedList } from "../../../decorators/EmbeddedList.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Field } from "../../../decorators/Field.js";
+import { Lazy } from "../../../decorators/Lazy.js";
+import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 // ─── B7: Nested @Embeddable guard ────────────────────────────────────────────
 

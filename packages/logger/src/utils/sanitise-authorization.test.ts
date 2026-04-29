@@ -1,4 +1,5 @@
-import { sanitiseAuthorization } from "./sanitise-authorization";
+import { sanitiseAuthorization } from "./sanitise-authorization.js";
+import { beforeAll, describe, expect, test } from "vitest";
 
 describe("sanitiseAuthorization", () => {
   let authorization: string;

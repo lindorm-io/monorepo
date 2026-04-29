@@ -1,4 +1,5 @@
-import { getValidUrl } from "./get-valid-url";
+import { getValidUrl } from "./get-valid-url.js";
+import { describe, expect, test } from "vitest";
 
 describe("getValidUrl", () => {
   test("should resolve for URL", () => {

@@ -1,11 +1,12 @@
-import {
+import type {
   KryptosAlgorithm,
   KryptosCurve,
   KryptosEncryption,
   KryptosType,
   KryptosUse,
-} from "../types";
-import { KryptosKit } from "./KryptosKit";
+} from "../types/index.js";
+import { KryptosKit } from "./KryptosKit.js";
+import { describe, expect, test } from "vitest";
 
 type AutoTestCase = {
   algorithm: KryptosAlgorithm;

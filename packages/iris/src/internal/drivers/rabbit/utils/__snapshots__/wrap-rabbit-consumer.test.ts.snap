@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`wrapRabbitConsumer happy path should pass ConsumeEnvelope with metadata fields to callback 1`] = `
+exports[`wrapRabbitConsumer > happy path > should pass ConsumeEnvelope with metadata fields to callback 1`] = `
 {
   "attempt": 2,
   "correlationId": "corr-1",

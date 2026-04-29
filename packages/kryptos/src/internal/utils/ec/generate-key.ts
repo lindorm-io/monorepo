@@ -1,7 +1,7 @@
 import { generateKeyPair, generateKeyPairSync } from "crypto";
 import { promisify } from "util";
-import { EcCurve, KryptosAlgorithm, KryptosCurve } from "../../../types";
-import { getEcCurve } from "./get-curve";
+import type { EcCurve, KryptosAlgorithm, KryptosCurve } from "../../../types/index.js";
+import { getEcCurve } from "./get-curve.js";
 
 const generateKeyPairAsync = promisify(generateKeyPair);
 

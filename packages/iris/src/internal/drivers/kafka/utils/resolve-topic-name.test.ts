@@ -1,4 +1,5 @@
-import { resolveTopicName } from "./resolve-topic-name";
+import { resolveTopicName } from "./resolve-topic-name.js";
+import { describe, expect, it } from "vitest";
 
 describe("resolveTopicName", () => {
   it("should build topic name from prefix and topic", () => {

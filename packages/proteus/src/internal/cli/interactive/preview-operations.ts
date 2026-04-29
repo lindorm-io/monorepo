@@ -1,4 +1,7 @@
-import type { SyncOperation, SyncSeverity } from "../../drivers/postgres/types/sync-plan";
+import type {
+  SyncOperation,
+  SyncSeverity,
+} from "../../drivers/postgres/types/sync-plan.js";
 
 const severityLabel = (severity: SyncSeverity): string => {
   switch (severity) {

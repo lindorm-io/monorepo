@@ -1,6 +1,7 @@
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { DesiredSchema } from "../../types/desired-schema";
-import { detectOrphanedTables } from "./detect-orphaned-tables";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { DesiredSchema } from "../../types/desired-schema.js";
+import { detectOrphanedTables } from "./detect-orphaned-tables.js";
+import { describe, expect, it } from "vitest";
 
 const makeSnapshot = (tables: Array<{ schema: string; name: string }>): DbSnapshot => ({
   tables: tables.map((t) => ({

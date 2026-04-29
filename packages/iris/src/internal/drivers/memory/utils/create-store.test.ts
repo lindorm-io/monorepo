@@ -1,4 +1,5 @@
-import { createStore } from "./create-store";
+import { createStore } from "./create-store.js";
+import { describe, expect, it } from "vitest";
 
 describe("createStore", () => {
   it("should return a fresh store with empty collections", () => {

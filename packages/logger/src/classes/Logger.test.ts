@@ -1,25 +1,41 @@
 import MockDate from "mockdate";
-import { ILogger } from "../interfaces";
-import { Logger } from "./Logger";
+import type { ILogger } from "../interfaces/index.js";
+import { Logger } from "./Logger.js";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type MockInstance,
+} from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-const add = jest.fn();
-const log = jest.fn();
-const isLevelEnabled = jest.fn().mockReturnValue(true);
-const mockTransports: Array<{ level?: string }> = [];
+const { add, log, isLevelEnabled, mockTransports } = vi.hoisted(() => ({
+  add: vi.fn(),
+  log: vi.fn(),
+  isLevelEnabled: vi.fn().mockReturnValue(true),
+  mockTransports: [] as Array<{ level?: string }>,
+}));
 
-jest.mock("winston", () => ({
-  ...jest.requireActual("winston"),
-  createLogger: jest.fn(() => ({
+vi.mock("winston", async () => {
+  const actual = await vi.importActual<typeof import("winston")>("winston");
+  const createLogger = vi.fn(() => ({
     add,
     isLevelEnabled,
     log,
     level: "info",
     transports: mockTransports,
-  })),
-}));
+  }));
+  return {
+    ...actual,
+    createLogger,
+    default: { ...actual, createLogger },
+  };
+});
 
 describe("Logger", () => {
   let logger: ILogger;
@@ -28,7 +44,7 @@ describe("Logger", () => {
     logger = new Logger();
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should be an instance of ILogger", () => {
     expect(logger).toBeInstanceOf(Logger);
@@ -608,8 +624,7 @@ describe("Logger", () => {
 
   test("should log with duration via timer.debug()", () => {
     const now = performance.now();
-    jest
-      .spyOn(performance, "now")
+    vi.spyOn(performance, "now")
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 150.123);
 
@@ -625,13 +640,12 @@ describe("Logger", () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("should log with duration via timer.info()", () => {
     const now = performance.now();
-    jest
-      .spyOn(performance, "now")
+    vi.spyOn(performance, "now")
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 50.456);
 
@@ -647,13 +661,12 @@ describe("Logger", () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("should inherit parent logger scope and correlation", () => {
     const now = performance.now();
-    jest
-      .spyOn(performance, "now")
+    vi.spyOn(performance, "now")
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 10);
 
@@ -671,7 +684,7 @@ describe("Logger", () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("should respect level gating for timer", () => {
@@ -687,8 +700,7 @@ describe("Logger", () => {
 
   test("should log with default debug level via time(label)/timeEnd(label)", () => {
     const now = performance.now();
-    jest
-      .spyOn(performance, "now")
+    vi.spyOn(performance, "now")
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 100);
 
@@ -704,13 +716,12 @@ describe("Logger", () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("should log with explicit level via timeEnd", () => {
     const now = performance.now();
-    jest
-      .spyOn(performance, "now")
+    vi.spyOn(performance, "now")
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 200);
 
@@ -725,13 +736,12 @@ describe("Logger", () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("should log with context and extra via timeEnd (no level)", () => {
     const now = performance.now();
-    jest
-      .spyOn(performance, "now")
+    vi.spyOn(performance, "now")
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 50);
 
@@ -748,13 +758,12 @@ describe("Logger", () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("should log with explicit level, context, and extra via timeEnd", () => {
     const now = performance.now();
-    jest
-      .spyOn(performance, "now")
+    vi.spyOn(performance, "now")
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 75);
 
@@ -771,7 +780,7 @@ describe("Logger", () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("should warn when timeEnd called with unknown label", () => {
@@ -787,8 +796,7 @@ describe("Logger", () => {
 
   test("should allow child to inherit parent timers", () => {
     const now = performance.now();
-    jest
-      .spyOn(performance, "now")
+    vi.spyOn(performance, "now")
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 30);
 
@@ -805,12 +813,12 @@ describe("Logger", () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   test("should not leak child timers to parent", () => {
     const now = performance.now();
-    jest.spyOn(performance, "now").mockReturnValueOnce(now);
+    vi.spyOn(performance, "now").mockReturnValueOnce(now);
 
     const child = logger.child(["child"]);
     child.time("child-only");
@@ -824,7 +832,7 @@ describe("Logger", () => {
       }),
     );
 
-    jest.restoreAllMocks();
+    vi.restoreAllMocks();
   });
 
   // error cause chain
@@ -888,20 +896,21 @@ describe("Logger", () => {
 
   describe("Logger.std", () => {
     let consoleSpy: {
-      log: jest.SpyInstance;
-      info: jest.SpyInstance;
-      warn: jest.SpyInstance;
-      error: jest.SpyInstance;
-      debug: jest.SpyInstance;
+      log: MockInstance;
+      info: MockInstance;
+      warn: MockInstance;
+      error: MockInstance;
+      debug: MockInstance;
     };
 
     beforeEach(() => {
+      const noop = () => {};
       consoleSpy = {
-        log: jest.spyOn(console, "log").mockImplementation(),
-        info: jest.spyOn(console, "info").mockImplementation(),
-        warn: jest.spyOn(console, "warn").mockImplementation(),
-        error: jest.spyOn(console, "error").mockImplementation(),
-        debug: jest.spyOn(console, "debug").mockImplementation(),
+        log: vi.spyOn(console, "log").mockImplementation(noop),
+        info: vi.spyOn(console, "info").mockImplementation(noop),
+        warn: vi.spyOn(console, "warn").mockImplementation(noop),
+        error: vi.spyOn(console, "error").mockImplementation(noop),
+        debug: vi.spyOn(console, "debug").mockImplementation(noop),
       };
     });
 

@@ -1,10 +1,10 @@
 import type { Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { FindOptions } from "../../../types";
-import type { PaginateOptions } from "../../../types/paginate-options";
-import type { KeysetOrderEntry } from "./build-keyset-order";
-import type { QueryScope } from "../../entity/types/metadata";
-import { buildKeysetFilterMemory } from "./build-keyset-filter-memory";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { FindOptions } from "../../../types/index.js";
+import type { PaginateOptions } from "../../../types/paginate-options.js";
+import type { KeysetOrderEntry } from "./build-keyset-order.js";
+import type { QueryScope } from "../../entity/types/metadata.js";
+import { buildKeysetFilterMemory } from "./build-keyset-filter-memory.js";
 
 /**
  * Callback matching the `find` method signature on Memory/Redis repositories.
@@ -53,6 +53,7 @@ export const executePaginateFindInMemory = async <E extends IEntity>(
         withDeleted: options.withDeleted,
         relations: options.relations,
         filters: options.filters,
+        snapshot: options.snapshot,
       } as FindOptions<E>,
       "multiple",
     );
@@ -66,6 +67,7 @@ export const executePaginateFindInMemory = async <E extends IEntity>(
       withDeleted: options.withDeleted,
       relations: options.relations,
       filters: options.filters,
+      snapshot: options.snapshot,
     } as FindOptions<E>,
     "multiple",
   );

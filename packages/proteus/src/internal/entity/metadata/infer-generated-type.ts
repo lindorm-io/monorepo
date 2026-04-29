@@ -1,5 +1,5 @@
-import { EntityMetadataError } from "../errors/EntityMetadataError";
-import type { MetaField, MetaGenerated } from "../types/metadata";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import type { MetaField, MetaGenerated } from "../types/metadata.js";
 
 export const inferGeneratedTypes = (
   targetName: string,

@@ -1,7 +1,8 @@
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { PostgresExecutor } from "./PostgresExecutor";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { PostgresExecutor } from "./PostgresExecutor.js";
+import { describe, expect, test, vi, type Mock } from "vitest";
 
 class UserEntity {
   id: string = "";
@@ -56,7 +57,7 @@ const createMockClient = (
   const queries: Array<{ sql: string; params?: Array<unknown> }> = [];
   return {
     client: {
-      query: jest.fn(
+      query: vi.fn(
         async <R = Record<string, unknown>>(sql: string, params?: Array<unknown>) => {
           queries.push({ sql, params });
           return { rows: rows as Array<R>, rowCount: rowCount ?? rows.length };
@@ -251,7 +252,7 @@ describe("PostgresExecutor", () => {
         },
       ]);
       // Mock needs t0_fieldKey format for hydrateRows
-      (client.query as jest.Mock).mockResolvedValueOnce({
+      (client.query as Mock).mockResolvedValueOnce({
         rows: [{ t0_expiresAt: futureDate }],
         rowCount: 1,
       });
@@ -285,7 +286,7 @@ describe("PostgresExecutor", () => {
     test("should return 0 for expired entities", async () => {
       const pastDate = new Date(Date.now() - 3600_000);
       const { client } = createMockClient();
-      (client.query as jest.Mock).mockResolvedValueOnce({
+      (client.query as Mock).mockResolvedValueOnce({
         rows: [{ t0_expiresAt: pastDate }],
         rowCount: 1,
       });
@@ -299,7 +300,7 @@ describe("PostgresExecutor", () => {
   describe("executeFind", () => {
     test("should find and return hydrated entities", async () => {
       const { client } = createMockClient();
-      (client.query as jest.Mock).mockResolvedValueOnce({
+      (client.query as Mock).mockResolvedValueOnce({
         rows: [
           {
             t0_id: "1",

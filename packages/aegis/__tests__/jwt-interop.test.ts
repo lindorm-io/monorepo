@@ -1,12 +1,9 @@
 import { KryptosKit } from "@lindorm/kryptos";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { importJWK, jwtVerify, SignJWT } from "jose";
-import type { JwtPayload } from "jsonwebtoken";
-import { createRequire } from "module";
-import { JwtKit } from "../src/classes/JwtKit";
-
-const require = createRequire(import.meta.url);
-const jsonwebtoken = require("jsonwebtoken") as typeof import("jsonwebtoken");
+import jsonwebtoken, { type JwtPayload } from "jsonwebtoken";
+import { JwtKit } from "../src/classes/JwtKit.js";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Shared constants

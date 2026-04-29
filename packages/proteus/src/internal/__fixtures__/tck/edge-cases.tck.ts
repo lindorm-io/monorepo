@@ -1,8 +1,9 @@
+import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Edge Cases Suite
 // Tests boundary conditions: empty results, null fields, large text, unicode.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const edgeCasesSuite = (
   getHandle: () => TckDriverHandle,

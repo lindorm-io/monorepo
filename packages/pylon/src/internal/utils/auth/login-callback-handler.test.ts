@@ -1,12 +1,13 @@
 import { ClientError } from "@lindorm/errors";
-import { createLoginCallbackHandler } from "./login-callback-handler";
-import { parseTokenData as _parseTokenData } from "./parse-token-data";
+import { createLoginCallbackHandler } from "./login-callback-handler.js";
+import { parseTokenData as _parseTokenData } from "./parse-token-data.js";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("./parse-token-data");
+vi.mock("./parse-token-data.js");
 
-const parseTokenData = _parseTokenData as jest.Mock;
+const parseTokenData = _parseTokenData as Mock;
 
-describe("createLoginCallbackHandler", () => {
+describe("createLoginCallbackHandler", async () => {
   let authConfig: any;
   let ctx: any;
 
@@ -24,16 +25,16 @@ describe("createLoginCallbackHandler", () => {
 
     ctx = {
       aegis: {
-        verify: jest.fn().mockResolvedValue({
+        verify: vi.fn().mockResolvedValue({
           header: { baseFormat: "JWT" },
           payload: { nonce: "nonce" },
         }),
       },
       auth: {
-        token: jest.fn().mockResolvedValue({ data: true }),
+        token: vi.fn().mockResolvedValue({ data: true }),
       },
       cookies: {
-        get: jest.fn().mockResolvedValue({
+        get: vi.fn().mockResolvedValue({
           codeChallengeMethod: "codeChallengeMethod",
           codeVerifier: "codeVerifier",
           nonce: "nonce",
@@ -42,21 +43,21 @@ describe("createLoginCallbackHandler", () => {
           scope: "scope",
           state: "state",
         }),
-        set: jest.fn(),
-        del: jest.fn(),
+        set: vi.fn(),
+        del: vi.fn(),
       },
       data: {
         state: "state",
         code: "code",
       },
-      redirect: jest.fn(),
+      redirect: vi.fn(),
       request: {
         origin: "http://localhost",
       },
       session: {
-        get: jest.fn(),
-        set: jest.fn(),
-        del: jest.fn(),
+        get: vi.fn(),
+        set: vi.fn(),
+        del: vi.fn(),
       },
       state: {
         origin: "http://localhost",
@@ -70,11 +71,11 @@ describe("createLoginCallbackHandler", () => {
     });
   });
 
-  afterEach(jest.clearAllMocks);
+  afterEach(vi.clearAllMocks);
 
   test("should resolve with code", async () => {
     await expect(
-      createLoginCallbackHandler(authConfig)(ctx, jest.fn()),
+      createLoginCallbackHandler(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.auth.token).toHaveBeenCalled();
@@ -100,7 +101,7 @@ describe("createLoginCallbackHandler", () => {
     });
 
     await expect(
-      createLoginCallbackHandler(authConfig)(ctx, jest.fn()),
+      createLoginCallbackHandler(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.session.set).toHaveBeenCalledWith({
@@ -114,7 +115,7 @@ describe("createLoginCallbackHandler", () => {
 
   test("should resolve with nonce verification via aegis verify", async () => {
     await expect(
-      createLoginCallbackHandler(authConfig)(ctx, jest.fn()),
+      createLoginCallbackHandler(authConfig)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.aegis.verify).toHaveBeenCalledWith("idToken");
@@ -123,7 +124,7 @@ describe("createLoginCallbackHandler", () => {
   test("should throw on invalid state", async () => {
     ctx.data.state = "wrong";
 
-    await expect(createLoginCallbackHandler(authConfig)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLoginCallbackHandler(authConfig)(ctx, vi.fn())).rejects.toThrow(
       ClientError,
     );
   });
@@ -139,7 +140,7 @@ describe("createLoginCallbackHandler", () => {
       state: "state",
     });
 
-    await expect(createLoginCallbackHandler(authConfig)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLoginCallbackHandler(authConfig)(ctx, vi.fn())).rejects.toThrow(
       ClientError,
     );
   });
@@ -152,10 +153,10 @@ describe("createLoginCallbackHandler", () => {
         state: "state",
       };
 
-      await createLoginCallbackHandler(authConfig)(ctx, jest.fn());
+      await createLoginCallbackHandler(authConfig)(ctx, vi.fn());
 
       expect(ctx.redirect).toHaveBeenCalledTimes(1);
-      const redirectArg = (ctx.redirect as jest.Mock).mock.calls[0][0] as string;
+      const redirectArg = (ctx.redirect as Mock).mock.calls[0][0] as string;
       const url = new URL(redirectArg);
       expect(url.pathname).toBe("/auth/error");
       expect(url.searchParams.get("error")).toBe("access_denied");
@@ -175,9 +176,9 @@ describe("createLoginCallbackHandler", () => {
     test("should redirect to errorRedirect even without state or description", async () => {
       ctx.data = { error: "server_error" };
 
-      await createLoginCallbackHandler(authConfig)(ctx, jest.fn());
+      await createLoginCallbackHandler(authConfig)(ctx, vi.fn());
 
-      const redirectArg = (ctx.redirect as jest.Mock).mock.calls[0][0] as string;
+      const redirectArg = (ctx.redirect as Mock).mock.calls[0][0] as string;
       const url = new URL(redirectArg);
       expect(url.searchParams.get("error")).toBe("server_error");
       expect(url.searchParams.get("error_description")).toBeNull();
@@ -190,9 +191,9 @@ describe("createLoginCallbackHandler", () => {
         errorUri: "https://idp.example.com/errors/invalid_scope",
       };
 
-      await createLoginCallbackHandler(authConfig)(ctx, jest.fn());
+      await createLoginCallbackHandler(authConfig)(ctx, vi.fn());
 
-      const redirectArg = (ctx.redirect as jest.Mock).mock.calls[0][0] as string;
+      const redirectArg = (ctx.redirect as Mock).mock.calls[0][0] as string;
       const url = new URL(redirectArg);
       expect(url.searchParams.get("error_uri")).toBe(
         "https://idp.example.com/errors/invalid_scope",
@@ -203,7 +204,7 @@ describe("createLoginCallbackHandler", () => {
       ctx.data = { error: "access_denied" };
       ctx.cookies.get.mockResolvedValueOnce(null);
 
-      await createLoginCallbackHandler(authConfig)(ctx, jest.fn());
+      await createLoginCallbackHandler(authConfig)(ctx, vi.fn());
 
       expect(ctx.cookies.del).not.toHaveBeenCalled();
       expect(ctx.redirect).toHaveBeenCalled();
@@ -226,7 +227,7 @@ describe("createLoginCallbackHandler", () => {
       state: "state",
     });
 
-    await expect(createLoginCallbackHandler(authConfig)(ctx, jest.fn())).rejects.toThrow(
+    await expect(createLoginCallbackHandler(authConfig)(ctx, vi.fn())).rejects.toThrow(
       ClientError,
     );
   });

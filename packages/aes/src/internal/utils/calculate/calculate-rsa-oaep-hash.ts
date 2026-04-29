@@ -1,6 +1,6 @@
-import { KryptosAlgorithm } from "@lindorm/kryptos";
-import { ShaAlgorithm } from "@lindorm/types";
-import { AesError } from "../../../errors";
+import type { KryptosAlgorithm } from "@lindorm/kryptos";
+import type { ShaAlgorithm } from "@lindorm/types";
+import { AesError } from "../../../errors/index.js";
 
 export const calculateRsaOaepHash = (algorithm: KryptosAlgorithm): ShaAlgorithm => {
   switch (algorithm) {

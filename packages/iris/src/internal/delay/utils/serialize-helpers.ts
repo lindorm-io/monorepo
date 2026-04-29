@@ -1,4 +1,4 @@
-import type { DelayedEntry } from "../../../types/delay";
+import type { DelayedEntry } from "../../../types/delay.js";
 
 export const serializeDelayedEntry = (entry: DelayedEntry): string => {
   return JSON.stringify({

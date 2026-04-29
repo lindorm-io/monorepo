@@ -1,5 +1,6 @@
-import { createMockLogger } from "@lindorm/logger";
-import { createHttpContextInitialisationMiddleware } from "./http-context-initialisation-middleware";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createHttpContextInitialisationMiddleware } from "./http-context-initialisation-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("createHttpContextInitialisationMiddleware", () => {
   let ctx: any;
@@ -21,7 +22,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
 
   test("should initialise context defaults", async () => {
     await expect(
-      createHttpContextInitialisationMiddleware(logger)(ctx, jest.fn()),
+      createHttpContextInitialisationMiddleware(logger)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.body).toEqual({});
@@ -31,7 +32,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
   });
 
   test("should create child logger with request metadata", async () => {
-    await createHttpContextInitialisationMiddleware(logger)(ctx, jest.fn());
+    await createHttpContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(logger.child).toHaveBeenCalledWith(["Request"], {
       correlationId: "8b39eafc-7e31-501b-ab7b-58514b14856a",
@@ -41,7 +42,7 @@ describe("createHttpContextInitialisationMiddleware", () => {
   });
 
   test("should call next", async () => {
-    const next = jest.fn();
+    const next = vi.fn();
 
     await createHttpContextInitialisationMiddleware(logger)(ctx, next);
 

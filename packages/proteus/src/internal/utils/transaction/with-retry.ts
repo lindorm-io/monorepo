@@ -1,5 +1,5 @@
 import { withRetry as _withRetry } from "@lindorm/retry";
-import type { RetryOptions } from "../../../types/transaction-options";
+import type { RetryOptions } from "../../../types/transaction-options.js";
 
 export type { RetryOptions };
 

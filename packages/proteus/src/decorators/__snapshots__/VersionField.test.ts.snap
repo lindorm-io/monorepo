@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`VersionField should register version field metadata 1`] = `
+exports[`VersionField > should register version field metadata 1`] = `
 {
   "appendOnly": false,
   "cache": null,

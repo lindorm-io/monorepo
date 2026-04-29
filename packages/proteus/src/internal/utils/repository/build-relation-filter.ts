@@ -1,6 +1,6 @@
-import type { IEntity } from "../../../interfaces";
-import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
-import type { MetaRelation } from "../../entity/types/metadata";
+import type { IEntity } from "../../../interfaces/index.js";
+import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
+import type { MetaRelation } from "../../entity/types/metadata.js";
 
 export const buildRelationFilter = (
   relation: MetaRelation,

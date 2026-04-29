@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`diffConstraints should add FK constraint 1`] = `
+exports[`diffConstraints > should add FK constraint 1`] = `
 [
   {
     "autocommit": false,
@@ -15,7 +15,7 @@ exports[`diffConstraints should add FK constraint 1`] = `
 ]
 `;
 
-exports[`diffConstraints should add new constraint 1`] = `
+exports[`diffConstraints > should add new constraint 1`] = `
 [
   {
     "autocommit": false,

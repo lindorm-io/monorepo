@@ -1,9 +1,9 @@
 import { ClientError } from "@lindorm/errors";
-import { PylonSocket } from "../../../types";
+import type { PylonSocket } from "../../../types/index.js";
 import {
-  HandshakeTokenSource,
+  type HandshakeTokenSource,
   resolveHandshakeTokenSource,
-} from "./resolve-handshake-token-source";
+} from "./resolve-handshake-token-source.js";
 
 export type HandshakeAccessTokenInput = {
   token: string;

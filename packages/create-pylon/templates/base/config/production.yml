@@ -1,0 +1,5 @@
+# Overrides applied when NODE_ENV=production.
+# Most prod-specific values belong in secrets / env vars, not here — reserve
+# this file for non-sensitive knobs (timeouts, pool sizes, feature flags).
+logger:
+  level: info

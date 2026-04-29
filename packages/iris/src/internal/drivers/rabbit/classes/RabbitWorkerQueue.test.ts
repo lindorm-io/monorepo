@@ -1,18 +1,19 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { RabbitWorkerQueue } from "./RabbitWorkerQueue";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { RabbitWorkerQueue } from "./RabbitWorkerQueue.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
-const mockPublishRabbitMessages = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/publish-messages", () => ({
+const mockPublishRabbitMessages = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/publish-messages.js", async () => ({
   publishRabbitMessages: (...args: Array<unknown>) => mockPublishRabbitMessages(...args),
 }));
 
-const mockWrapRabbitConsumer = jest.fn().mockReturnValue(jest.fn());
-jest.mock("../utils/wrap-rabbit-consumer", () => ({
+const mockWrapRabbitConsumer = vi.fn().mockReturnValue(vi.fn());
+vi.mock("../utils/wrap-rabbit-consumer.js", () => ({
   wrapRabbitConsumer: (...args: Array<unknown>) => mockWrapRabbitConsumer(...args),
 }));
 
@@ -26,30 +27,30 @@ class TckRabbitWqBasic implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockChannel = () => ({
-  assertQueue: jest
+  assertQueue: vi
     .fn()
     .mockResolvedValue({ queue: "amq.gen-ephemeral", messageCount: 0, consumerCount: 0 }),
-  bindQueue: jest.fn().mockResolvedValue(undefined),
-  consume: jest.fn().mockResolvedValue({ consumerTag: "ctag-1" }),
-  cancel: jest.fn().mockResolvedValue(undefined),
-  unbindQueue: jest.fn().mockResolvedValue(undefined),
-  ack: jest.fn(),
-  nack: jest.fn(),
+  bindQueue: vi.fn().mockResolvedValue(undefined),
+  consume: vi.fn().mockResolvedValue({ consumerTag: "ctag-1" }),
+  cancel: vi.fn().mockResolvedValue(undefined),
+  unbindQueue: vi.fn().mockResolvedValue(undefined),
+  ack: vi.fn(),
+  nack: vi.fn(),
 });
 
 const createMockState = (overrides?: Partial<RabbitSharedState>): RabbitSharedState => ({
   connection: {} as any,
-  publishChannel: { publish: jest.fn() } as any,
+  publishChannel: { publish: vi.fn() } as any,
   consumeChannel: createMockChannel() as any,
   exchange: "test-exchange",
   dlxExchange: "test-exchange.dlx",
@@ -157,7 +158,7 @@ describe("RabbitWorkerQueue", () => {
       const channel = state.consumeChannel!;
 
       let ctagCounter = 0;
-      (channel.consume as jest.Mock).mockImplementation(async () => ({
+      (channel.consume as Mock).mockImplementation(async () => ({
         consumerTag: `ctag-${++ctagCounter}`,
       }));
 
@@ -244,8 +245,8 @@ describe("RabbitWorkerQueue", () => {
 
       await queue.consume("my-queue", async () => {});
 
-      (channel.unbindQueue as jest.Mock).mockRejectedValueOnce(new Error("gone"));
-      (channel.cancel as jest.Mock).mockRejectedValueOnce(new Error("gone"));
+      (channel.unbindQueue as Mock).mockRejectedValueOnce(new Error("gone"));
+      (channel.cancel as Mock).mockRejectedValueOnce(new Error("gone"));
 
       await expect(queue.unconsume("my-queue")).resolves.toBeUndefined();
     });
@@ -257,7 +258,7 @@ describe("RabbitWorkerQueue", () => {
       const channel = state.consumeChannel!;
 
       let ctagCounter = 0;
-      (channel.consume as jest.Mock).mockImplementation(async () => ({
+      (channel.consume as Mock).mockImplementation(async () => ({
         consumerTag: `ctag-${++ctagCounter}`,
       }));
 
@@ -278,8 +279,8 @@ describe("RabbitWorkerQueue", () => {
 
       await queue.consume("q1", async () => {});
 
-      (channel.unbindQueue as jest.Mock).mockRejectedValue(new Error("gone"));
-      (channel.cancel as jest.Mock).mockRejectedValue(new Error("gone"));
+      (channel.unbindQueue as Mock).mockRejectedValue(new Error("gone"));
+      (channel.cancel as Mock).mockRejectedValue(new Error("gone"));
 
       await expect(queue.unconsumeAll()).resolves.toBeUndefined();
     });

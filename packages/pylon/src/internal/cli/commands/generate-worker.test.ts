@@ -1,32 +1,45 @@
+import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
+import { Logger as _Logger } from "@lindorm/logger";
 import { resolve, join } from "path";
-import { generateWorker } from "./generate-worker";
+import { generateWorker } from "./generate-worker.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-jest.mock("fs/promises", () => ({
-  mkdir: jest.fn().mockResolvedValue(undefined),
-  writeFile: jest.fn().mockResolvedValue(undefined),
+vi.mock("fs/promises", async () => ({
+  mkdir: vi.fn().mockResolvedValue(undefined),
+  writeFile: vi.fn().mockResolvedValue(undefined),
 }));
 
-jest.mock("@lindorm/logger", () => ({
+vi.mock("@lindorm/logger", () => ({
   Logger: {
     std: {
-      log: jest.fn(),
-      info: jest.fn(),
-      success: jest.fn(),
-      warn: jest.fn(),
-      error: jest.fn(),
-      debug: jest.fn(),
+      log: vi.fn(),
+      info: vi.fn(),
+      success: vi.fn(),
+      warn: vi.fn(),
+      error: vi.fn(),
+      debug: vi.fn(),
     },
   },
 }));
 
-const { mkdir, writeFile } = jest.requireMock("fs/promises");
-const { Logger } = jest.requireMock("@lindorm/logger");
+const mkdir = _mkdir as unknown as Mock;
+const writeFile = _writeFile as unknown as Mock;
+const Logger = _Logger as unknown as {
+  std: {
+    log: Mock;
+    info: Mock;
+    success: Mock;
+    warn: Mock;
+    error: Mock;
+    debug: Mock;
+  };
+};
 
 const defaultDir = resolve(process.cwd(), "./src/workers");
 
 describe("generateWorker", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should create worker file with kebab-case filename from PascalCase name", async () => {
@@ -98,15 +111,15 @@ describe("generateWorker", () => {
   });
 
   it("should prompt for name when not provided", async () => {
-    const mockInput = jest.fn().mockResolvedValue("HeartbeatWorker");
-    jest.doMock("@inquirer/prompts", () => ({ input: mockInput }));
+    const mockInput = vi.fn().mockResolvedValue("HeartbeatWorker");
+    vi.doMock("@inquirer/prompts", () => ({ input: mockInput }));
 
-    jest.resetModules();
-    const { generateWorker: freshGenerate } = await import("./generate-worker");
+    vi.resetModules();
+    const { generateWorker: freshGenerate } = await import("./generate-worker.js");
 
-    jest.doMock("fs/promises", () => ({
-      mkdir: jest.fn().mockResolvedValue(undefined),
-      writeFile: jest.fn().mockResolvedValue(undefined),
+    vi.doMock("fs/promises", () => ({
+      mkdir: vi.fn().mockResolvedValue(undefined),
+      writeFile: vi.fn().mockResolvedValue(undefined),
     }));
 
     await freshGenerate(undefined, {});

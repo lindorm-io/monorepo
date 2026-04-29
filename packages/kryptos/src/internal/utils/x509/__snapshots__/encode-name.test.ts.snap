@@ -1,7 +1,7 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`encodeX509Name encodes CN only 1`] = `"30173115301306035504030c0c6578616d706c652e74657374"`;
+exports[`encodeX509Name > encodes CN only 1`] = `"30173115301306035504030c0c6578616d706c652e74657374"`;
 
-exports[`encodeX509Name encodes non-ASCII UTF-8 CN 1`] = `"30133111300f06035504030c08c3966cc3a5c3b164"`;
+exports[`encodeX509Name > encodes non-ASCII UTF-8 CN 1`] = `"30133111300f06035504030c08c3966cc3a5c3b164"`;
 
-exports[`encodeX509Name encodes organization + CN 1`] = `"30293110300e060355040a0c074c696e646f726d3115301306035504030c0c6578616d706c652e74657374"`;
+exports[`encodeX509Name > encodes organization + CN 1`] = `"30293110300e060355040a0c074c696e646f726d3115301306035504030c0c6578616d706c652e74657374"`;

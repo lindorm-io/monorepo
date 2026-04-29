@@ -1,12 +1,12 @@
 import { B64 } from "@lindorm/b64";
-import { KryptosError } from "../../../errors";
-import { KryptosString } from "../../../types";
-import { ExportOptions } from "../../types/export-options";
-import { isAkpDer } from "../akp/is";
-import { isEcDer } from "../ec/is";
-import { isOctDer } from "../oct/is";
-import { isOkpDer } from "../okp/is";
-import { isRsaDer } from "../rsa/is";
+import { KryptosError } from "../../../errors/index.js";
+import type { KryptosString } from "../../../types/index.js";
+import type { ExportOptions } from "../../types/export-options.js";
+import { isAkpDer } from "../akp/is.js";
+import { isEcDer } from "../ec/is.js";
+import { isOctDer } from "../oct/is.js";
+import { isOkpDer } from "../okp/is.js";
+import { isRsaDer } from "../rsa/is.js";
 
 export const exportToB64 = (options: ExportOptions): KryptosString => {
   switch (options.type) {

@@ -1,5 +1,5 @@
 import type { ReadConcernLevel, W } from "mongodb";
-import type { IsolationLevel } from "../../../../types/transaction-options";
+import type { IsolationLevel } from "../../../../types/transaction-options.js";
 
 export type MongoTransactionConcern = {
   readConcern: { level: ReadConcernLevel };

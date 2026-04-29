@@ -9,7 +9,7 @@ import {
   OKP_SIG_ALGORITHMS,
   RSA_ENC_ALGORITHMS,
   RSA_SIG_ALGORITHMS,
-} from "./key-types";
+} from "./key-types/index.js";
 
 export const KRYPTOS_ENC_ALGORITHMS = [
   ...EC_ENC_ALGORITHMS,

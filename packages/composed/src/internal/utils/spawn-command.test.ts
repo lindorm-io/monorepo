@@ -1,24 +1,25 @@
 import { EventEmitter } from "events";
 import { spawn } from "child_process";
-import { spawnCommand } from "./spawn-command";
-import { forwardSignals } from "./forward-signals";
+import { spawnCommand } from "./spawn-command.js";
+import { forwardSignals } from "./forward-signals.js";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("child_process");
-jest.mock("./forward-signals");
+vi.mock("child_process");
+vi.mock("./forward-signals.js");
 
-const mockSpawn = spawn as jest.MockedFunction<typeof spawn>;
-const mockForwardSignals = forwardSignals as jest.MockedFunction<typeof forwardSignals>;
-const mockUnforward = jest.fn();
+const mockSpawn = spawn as MockedFunction<typeof spawn>;
+const mockForwardSignals = forwardSignals as MockedFunction<typeof forwardSignals>;
+const mockUnforward = vi.fn();
 
 const createMockChild = () => {
   const child = new EventEmitter();
-  (child as any).kill = jest.fn();
+  (child as any).kill = vi.fn();
   return child;
 };
 
-describe("spawnCommand", () => {
+describe("spawnCommand", async () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockForwardSignals.mockReturnValue(mockUnforward);
   });
 

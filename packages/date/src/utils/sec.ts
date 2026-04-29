@@ -1,5 +1,8 @@
-import { ReadableTime } from "../types";
-import { millisecondsToReadable, readableToMilliseconds } from "../internal/utils";
+import type { ReadableTime } from "../types/index.js";
+import {
+  millisecondsToReadable,
+  readableToMilliseconds,
+} from "../internal/utils/index.js";
 
 /**
  * Convert between a `ReadableTime` string and a second count. Year and

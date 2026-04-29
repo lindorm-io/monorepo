@@ -1,6 +1,7 @@
-import type { DbSnapshot } from "../../types/db-snapshot";
-import type { SyncOperation } from "../../types/sync-plan";
-import { generateDownSql } from "./generate-down-sql";
+import type { DbSnapshot } from "../../types/db-snapshot.js";
+import type { SyncOperation } from "../../types/sync-plan.js";
+import { generateDownSql } from "./generate-down-sql.js";
+import { describe, expect, it } from "vitest";
 
 const emptySnapshot: DbSnapshot = { tables: [], enums: [], schemas: [] };
 

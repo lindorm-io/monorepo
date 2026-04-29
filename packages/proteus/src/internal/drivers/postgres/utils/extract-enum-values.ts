@@ -1,1 +1,1 @@
-export { extractEnumValues } from "../../../utils/extract-enum-values";
+export { extractEnumValues } from "../../../utils/extract-enum-values.js";

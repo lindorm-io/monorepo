@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`TCK: MongoDB Complex Predicates Array operators $all — array contains all required elements matches entities containing all specified elements 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Array operators > $all — array contains all required elements > matches entities containing all specified elements 1`] = `
 [
   [
     "a",
@@ -14,14 +14,14 @@ exports[`TCK: MongoDB Complex Predicates Array operators $all — array contains
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates Array operators $all — array contains all required elements matches with single element 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Array operators > $all — array contains all required elements > matches with single element 1`] = `
 [
   "a",
   "d",
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates Array operators $contained — all array elements are in the given set matches only entities whose elements are a subset of the given set 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Array operators > $contained — all array elements are in the given set > matches only entities whose elements are a subset of the given set 1`] = `
 [
   [
     "a",
@@ -33,7 +33,7 @@ exports[`TCK: MongoDB Complex Predicates Array operators $contained — all arra
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates Array operators $length on numeric array (scores) matches entities where scores has specified length 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Array operators > $length on numeric array (scores) > matches entities where scores has specified length 1`] = `
 [
   [
     10,
@@ -48,7 +48,7 @@ exports[`TCK: MongoDB Complex Predicates Array operators $length on numeric arra
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates Array operators $length — array length equals N matches entities where array has specified length 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Array operators > $length — array length equals N > matches entities where array has specified length 1`] = `
 [
   [
     "a",
@@ -61,7 +61,7 @@ exports[`TCK: MongoDB Complex Predicates Array operators $length — array lengt
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates Array operators $overlap — array contains any of the given elements matches entities with any overlapping element 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Array operators > $overlap — array contains any of the given elements > matches entities with any overlapping element 1`] = `
 [
   [
     "a",
@@ -74,7 +74,7 @@ exports[`TCK: MongoDB Complex Predicates Array operators $overlap — array cont
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates Array operators logical composition with array operators $or with $all and $length 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Array operators > logical composition with array operators > $or with $all and $length 1`] = `
 [
   [],
   [
@@ -84,7 +84,7 @@ exports[`TCK: MongoDB Complex Predicates Array operators logical composition wit
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates Embedded criteria basic embedded criteria filters by embedded field value 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Embedded criteria > basic embedded criteria > filters by embedded field value 1`] = `
 TckAddress {
   "city": "London",
   "country": "UK",
@@ -92,21 +92,21 @@ TckAddress {
 }
 `;
 
-exports[`TCK: MongoDB Complex Predicates Embedded criteria embedded with country filter filters by embedded country 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Embedded criteria > embedded with country filter > filters by embedded country 1`] = `
 [
   "Alice",
   "Charlie",
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates Embedded criteria logical composition with embedded $or with embedded criteria returns union 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > Embedded criteria > logical composition with embedded > $or with embedded criteria returns union 1`] = `
 [
   "Alice",
   "Bob",
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates JSON containment ($has) $has on metadata (Record<string, unknown>) matches entities with matching key-value pair 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > JSON containment ($has) > $has on metadata (Record<string, unknown>) > matches entities with matching key-value pair 1`] = `
 [
   {
     "theme": "dark",
@@ -120,7 +120,7 @@ exports[`TCK: MongoDB Complex Predicates JSON containment ($has) $has on metadat
 ]
 `;
 
-exports[`TCK: MongoDB Complex Predicates JSON containment ($has) $has on payload (object with nested array) matches entities by payload nested array exact match 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > JSON containment ($has) > $has on payload (object with nested array) > matches entities by payload nested array exact match 1`] = `
 {
   "count": 2,
   "items": [
@@ -130,7 +130,7 @@ exports[`TCK: MongoDB Complex Predicates JSON containment ($has) $has on payload
 }
 `;
 
-exports[`TCK: MongoDB Complex Predicates JSON containment ($has) $has on payload (object with nested array) matches entities by payload scalar key-value 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > JSON containment ($has) > $has on payload (object with nested array) > matches entities by payload scalar key-value 1`] = `
 {
   "count": 2,
   "items": [
@@ -140,27 +140,27 @@ exports[`TCK: MongoDB Complex Predicates JSON containment ($has) $has on payload
 }
 `;
 
-exports[`TCK: MongoDB Complex Predicates JSON containment ($has) $has on settings (object field) matches entities by settings key-value 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > JSON containment ($has) > $has on settings (object field) > matches entities by settings key-value 1`] = `
 {
   "count": 5,
   "theme": "light",
 }
 `;
 
-exports[`TCK: MongoDB Complex Predicates JSON containment ($has) combined $has with another field predicate intersection of $has on two fields 1`] = `
+exports[`TCK: MongoDB > Complex Predicates > JSON containment ($has) > combined $has with another field predicate > intersection of $has on two fields 1`] = `
 {
   "theme": "dark",
 }
 `;
 
-exports[`TCK: MongoDB Complex Predicates JSON containment ($has) combined $has with another field predicate intersection of $has on two fields 2`] = `
+exports[`TCK: MongoDB > Complex Predicates > JSON containment ($has) > combined $has with another field predicate > intersection of $has on two fields 2`] = `
 {
   "count": 1,
   "theme": "light",
 }
 `;
 
-exports[`TCK: MongoDB encryption Encryption basic round-trip encrypted json/object field round-trips with deep equality 1`] = `
+exports[`TCK: MongoDB > encryption > Encryption > basic round-trip > encrypted json/object field round-trips with deep equality 1`] = `
 {
   "items": [
     1,
@@ -174,7 +174,7 @@ exports[`TCK: MongoDB encryption Encryption basic round-trip encrypted json/obje
 }
 `;
 
-exports[`TCK: MongoDB encryption Encryption findMany decrypts all encrypted fields find returns all entities with correctly decrypted fields 1`] = `
+exports[`TCK: MongoDB > encryption > Encryption > findMany decrypts all encrypted fields > find returns all entities with correctly decrypted fields 1`] = `
 [
   {
     "metadata": {
@@ -209,7 +209,7 @@ exports[`TCK: MongoDB encryption Encryption findMany decrypts all encrypted fiel
 ]
 `;
 
-exports[`TCK: MongoDB encryption Encryption update operations save (insert-or-update) with encrypted fields round-trips correctly 1`] = `
+exports[`TCK: MongoDB > encryption > Encryption > update operations > save (insert-or-update) with encrypted fields round-trips correctly 1`] = `
 {
   "saved": true,
 }

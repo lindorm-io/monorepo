@@ -1,16 +1,17 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisStreamPipeline, IMessage } from "../../interfaces";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import type { PipelineStage } from "../types/pipeline-stage";
+import type { IIrisStreamPipeline, IMessage } from "../../interfaces/index.js";
+import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import type { PipelineStage } from "../types/pipeline-stage.js";
 import type { IAmphora } from "@lindorm/amphora";
-import { applyStage } from "../message/utils/apply-stage";
-import { MessageManager } from "../message/classes/MessageManager";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
-import { prepareOutbound } from "../message/utils/prepare-outbound";
-import { prepareInbound } from "../message/utils/prepare-inbound";
-import { resolveDefaultTopic } from "../message/utils/resolve-default-topic";
-import { buildEnvelope } from "../utils/build-envelope";
+import { applyStage } from "../message/utils/apply-stage.js";
+import { MessageManager } from "../message/classes/MessageManager.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
+import { prepareOutbound } from "../message/utils/prepare-outbound.js";
+import { prepareInbound } from "../message/utils/prepare-inbound.js";
+import { resolveDefaultTopic } from "../message/utils/resolve-default-topic.js";
+import { buildEnvelope } from "../utils/build-envelope.js";
 
 export type DriverStreamPipelineBaseOptions = {
   logger: ILogger;
@@ -19,7 +20,7 @@ export type DriverStreamPipelineBaseOptions = {
   inputTopic?: string;
   outputClass: Constructor<IMessage>;
   outputTopic?: string;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: unknown;
 };
 
@@ -30,7 +31,7 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
   protected readonly inputTopic: string | undefined;
   protected readonly outputClass: Constructor<IMessage>;
   protected readonly outputTopic: string | undefined;
-  protected readonly context: unknown;
+  protected readonly meta: IrisHookMeta | undefined;
   protected readonly amphora: IAmphora | undefined;
   protected readonly outputManager: MessageManager<IMessage>;
   protected running = false;
@@ -46,11 +47,11 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
     this.inputTopic = options.inputTopic;
     this.outputClass = options.outputClass;
     this.outputTopic = options.outputTopic;
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora as IAmphora | undefined;
     this.outputManager = new MessageManager({
       target: this.outputClass,
-      context: this.context,
+      meta: this.meta,
       logger: options.logger,
     });
   }

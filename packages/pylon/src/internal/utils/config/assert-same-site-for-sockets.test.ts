@@ -1,6 +1,7 @@
-import { PylonError } from "../../../errors/PylonError";
-import { PylonSessionOptions } from "../../../types";
-import { assertSameSiteForSockets } from "./assert-same-site-for-sockets";
+import { PylonError } from "../../../errors/PylonError.js";
+import type { PylonSessionOptions } from "../../../types/index.js";
+import { assertSameSiteForSockets } from "./assert-same-site-for-sockets.js";
+import { describe, expect, test } from "vitest";
 
 const base: PylonSessionOptions = { enabled: true };
 
@@ -30,7 +31,7 @@ describe("assertSameSiteForSockets", () => {
   test("should throw with descriptive error when SameSite is none", () => {
     try {
       assertSameSiteForSockets({ ...base, sameSite: "none" });
-      fail("expected to throw");
+      expect.fail("expected to throw");
     } catch (err: any) {
       expect(err).toMatchSnapshot({
         id: expect.any(String),

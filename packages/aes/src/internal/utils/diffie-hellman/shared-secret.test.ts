@@ -1,5 +1,6 @@
-import { TEST_EC_KEY, TEST_OKP_KEY } from "../../../__fixtures__/keys";
-import { calculateSharedSecret, generateSharedSecret } from "./shared-secret";
+import { TEST_EC_KEY, TEST_OKP_KEY } from "../../../__fixtures__/keys.js";
+import { calculateSharedSecret, generateSharedSecret } from "./shared-secret.js";
+import { describe, expect, test } from "vitest";
 
 describe("sharedSecret", () => {
   test("should generate and calculate shared secret with EC", () => {

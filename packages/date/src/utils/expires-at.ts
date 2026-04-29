@@ -1,10 +1,10 @@
 import { isDate, isString } from "@lindorm/is";
-import { Expiry } from "../types";
+import type { Expiry } from "../types/index.js";
 import {
   addWithMilliseconds,
   assertExpiryDate,
   readableToDuration,
-} from "../internal/utils";
+} from "../internal/utils/index.js";
 
 /**
  * Resolve an `Expiry` to an absolute `Date`. Calendar-correct via date-fns

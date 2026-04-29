@@ -1,10 +1,11 @@
-import { makeField } from "../../__fixtures__/make-field";
+import { describe, expect, test } from "vitest";
+import { makeField } from "../../__fixtures__/make-field.js";
 import {
   generateAutoFilters,
   SCOPE_FILTER_NAME,
   SOFT_DELETE_FILTER_NAME,
   sortScopeFields,
-} from "./auto-filters";
+} from "./auto-filters.js";
 
 describe("generateAutoFilters", () => {
   test("should return empty array when no DeleteDate or Scope field is present", () => {

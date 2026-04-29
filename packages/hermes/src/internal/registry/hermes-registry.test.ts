@@ -1,8 +1,9 @@
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   TestAggregate,
   TestForgettableAggregate,
   TestUpcasterAggregate,
-} from "../../__fixtures__/modules/aggregates";
+} from "../../__fixtures__/modules/aggregates/index.js";
 import {
   TestCommandCreate,
   TestCommandDestroy,
@@ -13,7 +14,7 @@ import {
   TestCommandSetState,
   TestCommandThrows,
   TestCommandTimeout,
-} from "../../__fixtures__/modules/commands";
+} from "../../__fixtures__/modules/commands/index.js";
 import {
   TestEventCreate,
   TestEventDestroy,
@@ -27,14 +28,15 @@ import {
   TestEventUpcast_V1,
   TestEventUpcast_V2,
   TestEventUpcast_V3,
-} from "../../__fixtures__/modules/events";
-import { TestViewQuery } from "../../__fixtures__/modules/queries";
-import { TestSaga } from "../../__fixtures__/modules/sagas";
-import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
-import { TestView } from "../../__fixtures__/modules/views/TestView";
-import { TestViewEntity } from "../../__fixtures__/modules/views/TestViewEntity";
-import { HermesRegistry } from "./hermes-registry";
-import { HermesScanner } from "./HermesScanner";
+} from "../../__fixtures__/modules/events/index.js";
+import { TestViewQuery } from "../../__fixtures__/modules/queries/index.js";
+import { TestSaga } from "../../__fixtures__/modules/sagas/index.js";
+import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts/index.js";
+import { TestView } from "../../__fixtures__/modules/views/TestView.js";
+import { TestViewEntity } from "../../__fixtures__/modules/views/TestViewEntity.js";
+import { HermesRegistry } from "./hermes-registry.js";
+import { HermesScanner } from "./HermesScanner.js";
+import { beforeAll, describe, expect, test } from "vitest";
 
 const ALL_CONSTRUCTORS = [
   TestCommandCreate,
@@ -70,8 +72,8 @@ const ALL_CONSTRUCTORS = [
 describe("HermesRegistry", () => {
   let registry: HermesRegistry;
 
-  beforeAll(() => {
-    const scanned = HermesScanner.scan(ALL_CONSTRUCTORS);
+  beforeAll(async () => {
+    const scanned = await HermesScanner.scan(ALL_CONSTRUCTORS);
     registry = new HermesRegistry(scanned);
   });
 
@@ -585,7 +587,7 @@ describe("HermesRegistry", () => {
   // -- Duplicate upcaster detection --
 
   describe("duplicate upcaster detection", () => {
-    test("should throw when registering duplicate upcaster for same fromVersion", () => {
+    test("should throw when registering duplicate upcaster for same fromVersion", async () => {
       class DuplicateEvent_V1 {}
       (DuplicateEvent_V1 as any)[Symbol.metadata] = {
         dto: { kind: "event", name: "duplicate_event", version: 1 },
@@ -606,7 +608,7 @@ describe("HermesRegistry", () => {
         ],
       };
 
-      const scanned = HermesScanner.scan([
+      const scanned = await HermesScanner.scan([
         DuplicateEvent_V1,
         DuplicateEvent_V2,
         DuplicateAgg,
@@ -654,7 +656,6 @@ describe("HermesRegistry", () => {
 
   describe("validate", () => {
     test("should not warn when all events have at least one handler", () => {
-      const { createMockLogger } = require("@lindorm/logger");
       const mockLogger = createMockLogger();
       registry.validate(mockLogger);
       // All test events have handlers (aggregate, saga, or view)
@@ -673,7 +674,6 @@ describe("HermesRegistry", () => {
     });
 
     test("should not warn about upcaster gaps when chain is contiguous", () => {
-      const { createMockLogger } = require("@lindorm/logger");
       const mockLogger = createMockLogger();
       registry.validate(mockLogger);
       const gapWarnings = mockLogger.warn.mock.calls.filter(
@@ -682,8 +682,7 @@ describe("HermesRegistry", () => {
       expect(gapWarnings).toHaveLength(0);
     });
 
-    test("should warn about upcaster chain gap when versions are not contiguous", () => {
-      const { createMockLogger } = require("@lindorm/logger");
+    test("should warn about upcaster chain gap when versions are not contiguous", async () => {
       const mockLogger = createMockLogger();
 
       class GapEvent_V1 {}
@@ -713,7 +712,7 @@ describe("HermesRegistry", () => {
         ],
       };
 
-      const scanned = HermesScanner.scan([
+      const scanned = await HermesScanner.scan([
         GapEvent_V1,
         GapEvent_V2,
         GapEvent_V4,

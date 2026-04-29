@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileUpsert should compile MySQL ON DUPLICATE KEY UPDATE with AS _new 1`] = `
+exports[`compileUpsert > should compile MySQL ON DUPLICATE KEY UPDATE with AS _new 1`] = `
 {
   "params": [
     "abc-123",

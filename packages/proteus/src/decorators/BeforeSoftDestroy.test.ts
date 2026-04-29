@@ -1,9 +1,10 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { BeforeSoftDestroy } from "./BeforeSoftDestroy";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { BeforeSoftDestroy } from "./BeforeSoftDestroy.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test, vi } from "vitest";
 
-const beforeSoftDestroyCallback = jest.fn();
+const beforeSoftDestroyCallback = vi.fn();
 
 @Entity({ name: "BeforeSoftDestroyDecorated" })
 @BeforeSoftDestroy(beforeSoftDestroyCallback)
@@ -12,8 +13,8 @@ class BeforeSoftDestroyDecorated {
   id!: string;
 }
 
-const multiHookCb1 = jest.fn();
-const multiHookCb2 = jest.fn();
+const multiHookCb1 = vi.fn();
+const multiHookCb2 = vi.fn();
 
 @Entity({ name: "BeforeSoftDestroyMultiHook" })
 @BeforeSoftDestroy(multiHookCb1)

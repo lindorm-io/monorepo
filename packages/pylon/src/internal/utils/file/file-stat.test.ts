@@ -1,15 +1,16 @@
 import { ServerError } from "@lindorm/errors";
 import { Stats } from "fs";
 import { stat } from "fs/promises";
-import { fileStat } from "./file-stat";
+import { fileStat } from "./file-stat.js";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("fs/promises");
+vi.mock("fs/promises");
 
-const mockStat = stat as jest.MockedFunction<typeof stat>;
+const mockStat = stat as MockedFunction<typeof stat>;
 
-describe("fileStat", () => {
+describe("fileStat", async () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should return stats for a valid file", async () => {

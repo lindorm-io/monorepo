@@ -1,4 +1,4 @@
-import type { IEntity, IProteusRepository } from "../interfaces";
+import type { IEntity, IProteusRepository } from "../interfaces/index.js";
 
 type EntityFactory<E extends IEntity = IEntity> = (options?: any) => E;
 
@@ -7,82 +7,81 @@ const defaultFactory =
   (options) =>
     (options ?? {}) as E;
 
-export const createMockRepository = <E extends IEntity = IEntity>(
+export const _createMockRepository = <E extends IEntity = IEntity>(
+  mockFn: () => any,
   factory: EntityFactory<E> = defaultFactory(),
-): IProteusRepository<E> =>
-  ({
-    // Entity Handlers
+): IProteusRepository<E> => {
+  const impl = (fn: any) => {
+    const m = mockFn();
+    m.mockImplementation(fn);
+    return m;
+  };
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-    create: jest.fn().mockImplementation((opts) => factory(opts)),
-    copy: jest.fn().mockImplementation((e) => factory(e)),
-    validate: jest.fn(),
+  return {
+    // Entity Handlers
+    create: impl((opts: any) => factory(opts)),
+    copy: impl((e: any) => factory(e)),
+    validate: mockFn(),
 
     // Queries
-
-    count: jest.fn().mockResolvedValue(1),
-    exists: jest.fn().mockResolvedValue(true),
-    find: jest.fn().mockImplementation(async (criteria) => [factory(criteria)]),
-    findAndCount: jest
-      .fn()
-      .mockImplementation(async (criteria) => [[factory(criteria)], 1]),
-    findOne: jest.fn().mockImplementation(async (criteria) => factory(criteria)),
-    findOneOrFail: jest.fn().mockImplementation(async (criteria) => factory(criteria)),
-    findOneOrSave: jest.fn().mockImplementation(async (criteria) => factory(criteria)),
+    count: resolves(1),
+    exists: resolves(true),
+    find: impl(async (criteria: any) => [factory(criteria)]),
+    findAndCount: impl(async (criteria: any) => [[factory(criteria)], 1]),
+    findOne: impl(async (criteria: any) => factory(criteria)),
+    findOneOrFail: impl(async (criteria: any) => factory(criteria)),
+    findOneOrSave: impl(async (criteria: any) => factory(criteria)),
 
     // Upsert
-
-    upsert: jest.fn().mockImplementation(async (e) => e),
+    upsert: impl(async (e: any) => e),
 
     // Create/Update/Destroy
-
-    insert: jest.fn().mockImplementation(async (e) => e),
-    save: jest.fn().mockImplementation(async (e) => e),
-    update: jest.fn().mockImplementation(async (e) => e),
-    clone: jest.fn().mockImplementation(async (e) => e),
-    destroy: jest.fn(),
+    insert: impl(async (e: any) => e),
+    save: impl(async (e: any) => e),
+    update: impl(async (e: any) => e),
+    clone: impl(async (e: any) => e),
+    destroy: mockFn(),
 
     // Increments and Decrements
-
-    increment: jest.fn(),
-    decrement: jest.fn(),
+    increment: mockFn(),
+    decrement: mockFn(),
 
     // With Criteria
-
-    delete: jest.fn(),
-    updateMany: jest.fn(),
+    delete: mockFn(),
+    updateMany: mockFn(),
 
     // With Soft Deletes
-
-    softDestroy: jest.fn(),
-    softDelete: jest.fn(),
-    restore: jest.fn(),
+    softDestroy: mockFn(),
+    softDelete: mockFn(),
+    restore: mockFn(),
 
     // With Versioning
-
-    versions: jest.fn().mockImplementation(async (criteria) => [factory(criteria)]),
+    versions: impl(async (criteria: any) => [factory(criteria)]),
 
     // Aggregates
-
-    sum: jest.fn().mockResolvedValue(null),
-    average: jest.fn().mockResolvedValue(null),
-    minimum: jest.fn().mockResolvedValue(null),
-    maximum: jest.fn().mockResolvedValue(null),
+    sum: resolves(null),
+    average: resolves(null),
+    minimum: resolves(null),
+    maximum: resolves(null),
 
     // With Expiry
-
-    ttl: jest.fn().mockResolvedValue(60),
-    deleteExpired: jest.fn(),
+    ttl: resolves(60),
+    deleteExpired: mockFn(),
 
     // Pagination
-
-    paginate: jest.fn().mockResolvedValue({
+    paginate: resolves({
       data: [],
       startCursor: null,
       endCursor: null,
       hasNextPage: false,
       hasPreviousPage: false,
     }),
-    findPaginated: jest.fn().mockResolvedValue({
+    findPaginated: resolves({
       data: [],
       total: 0,
       page: 1,
@@ -92,16 +91,14 @@ export const createMockRepository = <E extends IEntity = IEntity>(
     }),
 
     // Cursor / Stream
-
-    cursor: jest.fn(),
-    stream: jest.fn(),
+    cursor: mockFn(),
+    stream: mockFn(),
 
     // Truncate
-
-    clear: jest.fn(),
+    clear: mockFn(),
 
     // Global
-
-    queryBuilder: jest.fn(),
-    setup: jest.fn(),
-  }) as unknown as IProteusRepository<E>;
+    queryBuilder: mockFn(),
+    setup: mockFn(),
+  } as unknown as IProteusRepository<E>;
+};

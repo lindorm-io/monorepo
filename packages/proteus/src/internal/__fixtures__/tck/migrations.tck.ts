@@ -1,3 +1,4 @@
+import { describe, test, it, expect, beforeEach, afterEach } from "vitest";
 // Migration TCK Suite
 //
 // Cross-driver integration tests for migration lifecycle behavior.
@@ -7,12 +8,12 @@ import { randomUUID } from "node:crypto";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import type { MigrationTckEntities } from "./create-migration-tck-entities";
-import type { IMigrationManager } from "../../interfaces/MigrationManager";
+import type { MigrationTckEntities } from "./create-migration-tck-entities.js";
+import type { IMigrationManager } from "../../interfaces/MigrationManager.js";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import type { NamespaceOptions } from "../../types/types";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { NamespaceOptions } from "../../types/types.js";
 
 export type MigrationTckContext = {
   createManager: (directory: string) => IMigrationManager;

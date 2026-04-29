@@ -1,25 +1,26 @@
 import { randomUUID as _randomUUID } from "crypto";
 import MockDate from "mockdate";
-import { getAuthorization as _getAuthorization } from "../utils/get-authorization";
-import { createHttpStateMiddleware } from "./http-state-middleware";
+import { getAuthorization as _getAuthorization } from "../utils/get-authorization.js";
+import { createHttpStateMiddleware } from "./http-state-middleware.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("crypto");
-jest.mock("../utils/get-authorization");
+vi.mock("crypto");
+vi.mock("../utils/get-authorization.js");
 
-const randomUUID = _randomUUID as jest.Mock;
-const getAuthorization = _getAuthorization as jest.Mock;
+const randomUUID = _randomUUID as Mock;
+const getAuthorization = _getAuthorization as Mock;
 
-describe("createHttpStateMiddleware", () => {
+describe("createHttpStateMiddleware", async () => {
   let ctx: any;
   let options: any;
 
   beforeEach(() => {
     ctx = {
-      get: jest.fn(),
-      set: jest.fn(),
+      get: vi.fn(),
+      set: vi.fn(),
       protocol: "https",
       host: "test.lindorm.io",
       request: { origin: "https://test.lindorm.io" },
@@ -58,7 +59,7 @@ describe("createHttpStateMiddleware", () => {
 
   test("should enrich context with metadata", async () => {
     await expect(
-      createHttpStateMiddleware(options)(ctx, jest.fn()),
+      createHttpStateMiddleware(options)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.state.metadata).toEqual({
@@ -89,7 +90,7 @@ describe("createHttpStateMiddleware", () => {
     ctx.get.mockReturnValue("");
 
     await expect(
-      createHttpStateMiddleware(options)(ctx, jest.fn()),
+      createHttpStateMiddleware(options)(ctx, vi.fn()),
     ).resolves.toBeUndefined();
 
     expect(ctx.state.metadata).toEqual({

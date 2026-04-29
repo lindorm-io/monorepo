@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Primitive array should resolve expected data 1`] = `
+exports[`Primitive > array > should resolve expected data 1`] = `
 [
   {
     "five": {
@@ -73,7 +73,7 @@ exports[`Primitive array should resolve expected data 1`] = `
 ]
 `;
 
-exports[`Primitive array should resolve expected json 1`] = `
+exports[`Primitive > array > should resolve expected json 1`] = `
 [
   {
     "five": {
@@ -164,7 +164,7 @@ exports[`Primitive array should resolve expected json 1`] = `
 ]
 `;
 
-exports[`Primitive array should resolve expected meta 1`] = `
+exports[`Primitive > array > should resolve expected meta 1`] = `
 [
   {
     "five": {
@@ -237,9 +237,9 @@ exports[`Primitive array should resolve expected meta 1`] = `
 ]
 `;
 
-exports[`Primitive array should resolve expected string 1`] = `"{"__meta__":[{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"}],"__array__":[{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"},{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}]}"`;
+exports[`Primitive > array > should resolve expected string 1`] = `"{"__meta__":[{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"}],"__array__":[{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"},{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}]}"`;
 
-exports[`Primitive dict should resolve expected data 1`] = `
+exports[`Primitive > dict > should resolve expected data 1`] = `
 {
   "five": {
     "eight": 0,
@@ -276,7 +276,7 @@ exports[`Primitive dict should resolve expected data 1`] = `
 }
 `;
 
-exports[`Primitive dict should resolve expected json 1`] = `
+exports[`Primitive > dict > should resolve expected json 1`] = `
 {
   "five": {
     "eight": null,
@@ -322,7 +322,7 @@ exports[`Primitive dict should resolve expected json 1`] = `
 }
 `;
 
-exports[`Primitive dict should resolve expected meta 1`] = `
+exports[`Primitive > dict > should resolve expected meta 1`] = `
 {
   "five": {
     "eight": "L",
@@ -359,9 +359,9 @@ exports[`Primitive dict should resolve expected meta 1`] = `
 }
 `;
 
-exports[`Primitive dict should resolve expected string 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}}"`;
+exports[`Primitive > dict > should resolve expected string 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}}"`;
 
-exports[`Primitive string (array) should resolve expected data 1`] = `
+exports[`Primitive > string (array) > should resolve expected data 1`] = `
 [
   {
     "five": {
@@ -434,7 +434,7 @@ exports[`Primitive string (array) should resolve expected data 1`] = `
 ]
 `;
 
-exports[`Primitive string (array) should resolve expected json 1`] = `
+exports[`Primitive > string (array) > should resolve expected json 1`] = `
 [
   {
     "five": {
@@ -525,7 +525,7 @@ exports[`Primitive string (array) should resolve expected json 1`] = `
 ]
 `;
 
-exports[`Primitive string (array) should resolve expected meta 1`] = `
+exports[`Primitive > string (array) > should resolve expected meta 1`] = `
 [
   {
     "five": {
@@ -598,9 +598,9 @@ exports[`Primitive string (array) should resolve expected meta 1`] = `
 ]
 `;
 
-exports[`Primitive string (array) should resolve expected string 1`] = `"{"__meta__":[{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"}],"__array__":[{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"},{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}]}"`;
+exports[`Primitive > string (array) > should resolve expected string 1`] = `"{"__meta__":[{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"}],"__array__":[{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"},{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}]}"`;
 
-exports[`Primitive string (json) should resolve expected data 1`] = `
+exports[`Primitive > string (json) > should resolve expected data 1`] = `
 {
   "five": {
     "eight": 0,
@@ -637,7 +637,7 @@ exports[`Primitive string (json) should resolve expected data 1`] = `
 }
 `;
 
-exports[`Primitive string (json) should resolve expected json 1`] = `
+exports[`Primitive > string (json) > should resolve expected json 1`] = `
 {
   "five": {
     "eight": null,
@@ -683,7 +683,7 @@ exports[`Primitive string (json) should resolve expected json 1`] = `
 }
 `;
 
-exports[`Primitive string (json) should resolve expected meta 1`] = `
+exports[`Primitive > string (json) > should resolve expected meta 1`] = `
 {
   "five": {
     "eight": "L",
@@ -720,4 +720,4 @@ exports[`Primitive string (json) should resolve expected meta 1`] = `
 }
 `;
 
-exports[`Primitive string (json) should resolve expected string 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}}"`;
+exports[`Primitive > string (json) > should resolve expected string 1`] = `"{"__meta__":{"one":["B","D","N","S",{"thirteen":["B","N","S","L","U"],"fourteen":"B","fifteen":"D","sixteen":"N","seventeen":"S"}],"two":"B","three":"D","four":"N","five":{"six":"S","seven":"N","eight":"L","nine":"B","ten":[],"eleven":"U"},"twelve":"S","thirteen":"F"},"__record__":{"one":["true","2020-01-01T08:00:00.000Z","12345","string",{"thirteen":["true","123","arr",0,0],"fourteen":"false","fifteen":"2020-01-01T08:00:00.000Z","sixteen":"123","seventeen":"str"}],"two":"true","three":"2020-01-01T08:00:00.000Z","four":"12345","five":{"six":"a","seven":"1","eight":0,"nine":"true","ten":[],"eleven":0},"twelve":"string","thirteen":"aGVsbG8"}}"`;

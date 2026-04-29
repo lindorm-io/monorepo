@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`applyUpcasters should apply chained upcasters in sequence 1`] = `
+exports[`applyUpcasters > should apply chained upcasters in sequence 1`] = `
 {
   "addedField": 0,
   "extraField": false,
@@ -8,7 +8,7 @@ exports[`applyUpcasters should apply chained upcasters in sequence 1`] = `
 }
 `;
 
-exports[`applyUpcasters should apply single upcaster step 1`] = `
+exports[`applyUpcasters > should apply single upcaster step 1`] = `
 {
   "addedField": 42,
   "value": "hello",

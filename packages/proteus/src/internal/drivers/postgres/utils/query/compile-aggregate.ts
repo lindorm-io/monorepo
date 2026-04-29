@@ -1,18 +1,18 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { QueryState } from "../../../../types/query";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { QueryState } from "../../../../types/query.js";
 import {
   type AggregateType,
   compileAggregate as shared,
-} from "../../../../utils/sql/compile-aggregate";
-import { postgresDialect } from "../postgres-dialect";
-import { compileCtes } from "./compile-cte";
-import { compileGroupBy } from "./compile-group-by";
-import { compileHaving } from "./compile-having";
-import { compileInheritanceJoin } from "./compile-inheritance-join";
-import { buildAliasMap, compileFrom } from "./compile-select";
-import type { CompiledSql } from "./compiled-sql";
-import { compileWhereWithFilters } from "./compile-system-filters";
+} from "../../../../utils/sql/compile-aggregate.js";
+import { postgresDialect } from "../postgres-dialect.js";
+import { compileCtes } from "./compile-cte.js";
+import { compileGroupBy } from "./compile-group-by.js";
+import { compileHaving } from "./compile-having.js";
+import { compileInheritanceJoin } from "./compile-inheritance-join.js";
+import { buildAliasMap, compileFrom } from "./compile-select.js";
+import type { CompiledSql } from "./compiled-sql.js";
+import { compileWhereWithFilters } from "./compile-system-filters.js";
 
 export type { AggregateType };
 

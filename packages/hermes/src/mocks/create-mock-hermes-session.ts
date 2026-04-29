@@ -1,11 +1,15 @@
-import type { IHermesSession } from "../interfaces/IHermesSession";
+import type { IHermesSession } from "../interfaces/IHermesSession.js";
 
-export type MockHermesSession = jest.Mocked<IHermesSession>;
+export const _createMockHermesSession = (mockFn: () => any): IHermesSession => {
+  const resolves = (value: any) => {
+    const m = mockFn();
+    m.mockResolvedValue(value);
+    return m;
+  };
 
-export const createMockHermesSession = (): MockHermesSession => ({
-  status: "ready",
-  command: jest
-    .fn()
-    .mockResolvedValue({ id: "mock-id", name: "mock", namespace: "mock" }),
-  query: jest.fn().mockResolvedValue(undefined),
-});
+  return {
+    status: "ready",
+    command: resolves({ id: "mock-id", name: "mock", namespace: "mock" }),
+    query: resolves(undefined),
+  } as unknown as IHermesSession;
+};

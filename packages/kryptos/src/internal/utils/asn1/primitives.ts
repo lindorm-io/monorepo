@@ -1,5 +1,5 @@
-import { KryptosError } from "../../../errors";
-import { encodeLength } from "./length";
+import { KryptosError } from "../../../errors/index.js";
+import { encodeLength } from "./length.js";
 import {
   ASN1_TAG_BIT_STRING,
   ASN1_TAG_BOOLEAN,
@@ -11,7 +11,7 @@ import {
   ASN1_TAG_PRINTABLE_STRING,
   ASN1_TAG_UTC_TIME,
   ASN1_TAG_UTF8_STRING,
-} from "./tags";
+} from "./tags.js";
 
 const wrap = (tag: number, content: Buffer): Buffer =>
   Buffer.concat([Buffer.from([tag]), encodeLength(content.length), content]);

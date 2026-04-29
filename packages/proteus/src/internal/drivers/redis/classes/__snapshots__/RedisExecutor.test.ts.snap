@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RedisExecutor executeFind should apply offset/limit pagination 1`] = `
+exports[`RedisExecutor > executeFind > should apply offset/limit pagination 1`] = `
 [
   TestEntity {
     "createdAt": 2025-01-01T00:00:00.000Z,
@@ -13,7 +13,7 @@ exports[`RedisExecutor executeFind should apply offset/limit pagination 1`] = `
 ]
 `;
 
-exports[`RedisExecutor executeFind should apply ordering 1`] = `
+exports[`RedisExecutor > executeFind > should apply ordering 1`] = `
 [
   "a",
   "b",
@@ -21,7 +21,7 @@ exports[`RedisExecutor executeFind should apply ordering 1`] = `
 ]
 `;
 
-exports[`RedisExecutor executeFind should apply pagination with offset and limit 1`] = `
+exports[`RedisExecutor > executeFind > should apply pagination with offset and limit 1`] = `
 [
   TestEntity {
     "createdAt": 2025-01-01T00:00:00.000Z,
@@ -34,7 +34,7 @@ exports[`RedisExecutor executeFind should apply pagination with offset and limit
 ]
 `;
 
-exports[`RedisExecutor executeFind should apply select to narrow returned fields 1`] = `
+exports[`RedisExecutor > executeFind > should apply select to narrow returned fields 1`] = `
 [
   TestEntity {
     "createdAt": undefined,
@@ -47,7 +47,7 @@ exports[`RedisExecutor executeFind should apply select to narrow returned fields
 ]
 `;
 
-exports[`RedisExecutor executeFind should use PK-exact HGETALL for direct lookup 1`] = `
+exports[`RedisExecutor > executeFind > should use PK-exact HGETALL for direct lookup 1`] = `
 [
   TestEntity {
     "createdAt": 2025-01-01T00:00:00.000Z,
@@ -60,14 +60,14 @@ exports[`RedisExecutor executeFind should use PK-exact HGETALL for direct lookup
 ]
 `;
 
-exports[`RedisExecutor executeFind should use defaultOrder when no explicit order given 1`] = `
+exports[`RedisExecutor > executeFind > should use defaultOrder when no explicit order given 1`] = `
 [
   "beta",
   "alpha",
 ]
 `;
 
-exports[`RedisExecutor executeInsert should insert entity into Redis HASH 1`] = `
+exports[`RedisExecutor > executeInsert > should insert entity into Redis HASH 1`] = `
 TestEntity {
   "createdAt": undefined,
   "id": "abc-123",
@@ -78,14 +78,14 @@ TestEntity {
 }
 `;
 
-exports[`RedisExecutor executeUpdate should perform unversioned update via GUARDED_HSET Lua script 1`] = `
+exports[`RedisExecutor > executeUpdate > should perform unversioned update via GUARDED_HSET Lua script 1`] = `
 SimpleEntity {
   "id": "simple-1",
   "label": "updated-label",
 }
 `;
 
-exports[`RedisExecutor executeUpdate should perform versioned update via Lua script 1`] = `
+exports[`RedisExecutor > executeUpdate > should perform versioned update via Lua script 1`] = `
 TestEntity {
   "createdAt": undefined,
   "id": "abc-123",

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`changeCase with camel mode should convert array with objects 1`] = `
+exports[`changeCase with camel mode > should convert array with objects 1`] = `
 [
   {
     "camelCase": true,
@@ -29,7 +29,7 @@ exports[`changeCase with camel mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with camel mode should convert object 1`] = `
+exports[`changeCase with camel mode > should convert object 1`] = `
 {
   "camelCase": true,
   "capitalCase": true,
@@ -44,7 +44,7 @@ exports[`changeCase with camel mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with capital mode should convert array with objects 1`] = `
+exports[`changeCase with capital mode > should convert array with objects 1`] = `
 [
   {
     "Camel Case": true,
@@ -73,7 +73,7 @@ exports[`changeCase with capital mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with capital mode should convert object 1`] = `
+exports[`changeCase with capital mode > should convert object 1`] = `
 {
   "Camel Case": true,
   "Capital Case": true,
@@ -88,7 +88,7 @@ exports[`changeCase with capital mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with constant mode should convert array with objects 1`] = `
+exports[`changeCase with constant mode > should convert array with objects 1`] = `
 [
   {
     "CAMEL_CASE": true,
@@ -117,7 +117,7 @@ exports[`changeCase with constant mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with constant mode should convert object 1`] = `
+exports[`changeCase with constant mode > should convert object 1`] = `
 {
   "CAMEL_CASE": true,
   "CAPITAL_CASE": true,
@@ -132,7 +132,7 @@ exports[`changeCase with constant mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with dot mode should convert array with objects 1`] = `
+exports[`changeCase with dot mode > should convert array with objects 1`] = `
 [
   {
     "camel.case": true,
@@ -161,7 +161,7 @@ exports[`changeCase with dot mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with dot mode should convert object 1`] = `
+exports[`changeCase with dot mode > should convert object 1`] = `
 {
   "camel.case": true,
   "capital.case": true,
@@ -176,7 +176,7 @@ exports[`changeCase with dot mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with header mode should convert array with objects 1`] = `
+exports[`changeCase with header mode > should convert array with objects 1`] = `
 [
   {
     "Camel-Case": true,
@@ -205,7 +205,7 @@ exports[`changeCase with header mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with header mode should convert object 1`] = `
+exports[`changeCase with header mode > should convert object 1`] = `
 {
   "Camel-Case": true,
   "Capital-Case": true,
@@ -220,7 +220,7 @@ exports[`changeCase with header mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with kebab mode should convert array with objects 1`] = `
+exports[`changeCase with kebab mode > should convert array with objects 1`] = `
 [
   {
     "camel-case": true,
@@ -249,7 +249,7 @@ exports[`changeCase with kebab mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with kebab mode should convert object 1`] = `
+exports[`changeCase with kebab mode > should convert object 1`] = `
 {
   "camel-case": true,
   "capital-case": true,
@@ -264,7 +264,7 @@ exports[`changeCase with kebab mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with lower mode should convert array with objects 1`] = `
+exports[`changeCase with lower mode > should convert array with objects 1`] = `
 [
   {
     "camel case": true,
@@ -293,7 +293,7 @@ exports[`changeCase with lower mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with lower mode should convert object 1`] = `
+exports[`changeCase with lower mode > should convert object 1`] = `
 {
   "camel case": true,
   "capital case": true,
@@ -308,7 +308,7 @@ exports[`changeCase with lower mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with none mode should convert array with objects 1`] = `
+exports[`changeCase with none mode > should convert array with objects 1`] = `
 [
   {
     "CONSTANT_CASE": true,
@@ -337,7 +337,7 @@ exports[`changeCase with none mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with none mode should convert object 1`] = `
+exports[`changeCase with none mode > should convert object 1`] = `
 {
   "CONSTANT_CASE": true,
   "Capital Case": true,
@@ -352,7 +352,7 @@ exports[`changeCase with none mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with pascal mode should convert array with objects 1`] = `
+exports[`changeCase with pascal mode > should convert array with objects 1`] = `
 [
   {
     "CamelCase": true,
@@ -381,7 +381,7 @@ exports[`changeCase with pascal mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with pascal mode should convert object 1`] = `
+exports[`changeCase with pascal mode > should convert object 1`] = `
 {
   "CamelCase": true,
   "CapitalCase": true,
@@ -396,7 +396,7 @@ exports[`changeCase with pascal mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with path mode should convert array with objects 1`] = `
+exports[`changeCase with path mode > should convert array with objects 1`] = `
 [
   {
     "camel/case": true,
@@ -425,7 +425,7 @@ exports[`changeCase with path mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with path mode should convert object 1`] = `
+exports[`changeCase with path mode > should convert object 1`] = `
 {
   "camel/case": true,
   "capital/case": true,
@@ -440,7 +440,7 @@ exports[`changeCase with path mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with sentence mode should convert array with objects 1`] = `
+exports[`changeCase with sentence mode > should convert array with objects 1`] = `
 [
   {
     "Camel case": true,
@@ -469,7 +469,7 @@ exports[`changeCase with sentence mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with sentence mode should convert object 1`] = `
+exports[`changeCase with sentence mode > should convert object 1`] = `
 {
   "Camel case": true,
   "Capital case": true,
@@ -484,7 +484,7 @@ exports[`changeCase with sentence mode should convert object 1`] = `
 }
 `;
 
-exports[`changeCase with snake mode should convert array with objects 1`] = `
+exports[`changeCase with snake mode > should convert array with objects 1`] = `
 [
   {
     "camel_case": true,
@@ -513,7 +513,7 @@ exports[`changeCase with snake mode should convert array with objects 1`] = `
 ]
 `;
 
-exports[`changeCase with snake mode should convert object 1`] = `
+exports[`changeCase with snake mode > should convert object 1`] = `
 {
   "camel_case": true,
   "capital_case": true,

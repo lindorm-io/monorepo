@@ -1,10 +1,10 @@
-import type { IDelayStore } from "../../interfaces/IrisDelayStore";
-import type { DelayedEntry } from "../../types/delay";
-import { checkPipelineResults } from "../utils/check-pipeline-results";
+import type { IDelayStore } from "../../interfaces/IrisDelayStore.js";
+import type { DelayedEntry } from "../../types/delay.js";
+import { checkPipelineResults } from "../utils/check-pipeline-results.js";
 import {
   deserializeDelayedEntry,
   serializeDelayedEntry,
-} from "./utils/serialize-helpers";
+} from "./utils/serialize-helpers.js";
 
 const POLL_SCRIPT = `
 local zsetKey = KEYS[1]

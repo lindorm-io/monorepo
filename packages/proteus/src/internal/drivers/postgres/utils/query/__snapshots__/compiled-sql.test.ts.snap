@@ -1,8 +1,8 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CompiledSql type accepts CompiledSql with Date param values 1`] = `"INSERT INTO "events" ("occurred_at") VALUES ($1)"`;
+exports[`CompiledSql type > accepts CompiledSql with Date param values 1`] = `"INSERT INTO "events" ("occurred_at") VALUES ($1)"`;
 
-exports[`CompiledSql type accepts CompiledSql with multiple params of mixed types 1`] = `
+exports[`CompiledSql type > accepts CompiledSql with multiple params of mixed types 1`] = `
 {
   "params": [
     "Alice",
@@ -13,7 +13,7 @@ exports[`CompiledSql type accepts CompiledSql with multiple params of mixed type
 }
 `;
 
-exports[`CompiledSql type accepts CompiledSql with non-empty params 1`] = `
+exports[`CompiledSql type > accepts CompiledSql with non-empty params 1`] = `
 {
   "params": [
     "abc-123",
@@ -22,7 +22,7 @@ exports[`CompiledSql type accepts CompiledSql with non-empty params 1`] = `
 }
 `;
 
-exports[`CompiledSql type accepts CompiledSql with null param values 1`] = `
+exports[`CompiledSql type > accepts CompiledSql with null param values 1`] = `
 {
   "params": [
     null,
@@ -32,7 +32,7 @@ exports[`CompiledSql type accepts CompiledSql with null param values 1`] = `
 }
 `;
 
-exports[`CompiledSql type accepts a minimal valid CompiledSql object 1`] = `
+exports[`CompiledSql type > accepts a minimal valid CompiledSql object 1`] = `
 {
   "params": [],
   "text": "SELECT 1",

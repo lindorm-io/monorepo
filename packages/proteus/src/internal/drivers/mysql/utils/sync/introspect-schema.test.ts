@@ -1,10 +1,14 @@
-import type { MysqlQueryClient, MysqlQueryResult } from "../../types/mysql-query-client";
-import { introspectSchema } from "./introspect-schema";
+import type {
+  MysqlQueryClient,
+  MysqlQueryResult,
+} from "../../types/mysql-query-client.js";
+import { introspectSchema } from "./introspect-schema.js";
+import { describe, expect, test, vi } from "vitest";
 
 const createMockClient = (
   responses: Record<string, Array<Record<string, unknown>>>,
 ): MysqlQueryClient => ({
-  query: jest.fn(async (sql: string, _params?: Array<unknown>) => {
+  query: vi.fn(async (sql: string, _params?: Array<unknown>) => {
     const trimmed = sql.trim().toUpperCase();
 
     for (const [key, rows] of Object.entries(responses)) {

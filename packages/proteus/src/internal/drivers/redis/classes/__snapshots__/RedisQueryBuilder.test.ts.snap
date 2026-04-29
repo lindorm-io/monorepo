@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RedisQueryBuilder getMany select projects only requested fields 1`] = `
+exports[`RedisQueryBuilder > getMany > select projects only requested fields 1`] = `
 TestProduct {
   "category": undefined,
   "createdAt": undefined,
@@ -12,7 +12,7 @@ TestProduct {
 }
 `;
 
-exports[`RedisQueryBuilder insert builder inserts a row via HSET 1`] = `
+exports[`RedisQueryBuilder > insert builder > inserts a row via HSET 1`] = `
 [
   "entity:test_product:manual-1",
   {
@@ -27,7 +27,7 @@ exports[`RedisQueryBuilder insert builder inserts a row via HSET 1`] = `
 ]
 `;
 
-exports[`RedisQueryBuilder toQuery / clone toQuery returns state and driver identifier 1`] = `
+exports[`RedisQueryBuilder > toQuery / clone > toQuery returns state and driver identifier 1`] = `
 {
   "driver": "redis",
   "state": {

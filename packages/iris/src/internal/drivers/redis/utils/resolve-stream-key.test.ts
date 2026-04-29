@@ -1,4 +1,5 @@
-import { resolveStreamKey } from "./resolve-stream-key";
+import { resolveStreamKey } from "./resolve-stream-key.js";
+import { describe, expect, it } from "vitest";
 
 describe("resolveStreamKey", () => {
   it("should build stream key from prefix and topic", () => {

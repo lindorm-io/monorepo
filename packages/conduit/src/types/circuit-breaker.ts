@@ -1,4 +1,4 @@
-import { CircuitBreakerOptions, ICircuitBreaker } from "@lindorm/breaker";
+import type { CircuitBreakerOptions, ICircuitBreaker } from "@lindorm/breaker";
 
 export type ConduitCircuitBreakerCache = Map<string, ICircuitBreaker>;
 

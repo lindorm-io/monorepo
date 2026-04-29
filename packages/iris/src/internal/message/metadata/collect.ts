@@ -1,4 +1,4 @@
-import type { StagedMetadata } from "../types/staged";
+import type { StagedMetadata } from "../types/staged.js";
 
 type ElementOf<T> = T extends Array<infer U> ? U : never;
 

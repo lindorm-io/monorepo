@@ -13,20 +13,21 @@
  */
 
 import { Command } from "commander";
-import { registerMigrateCommands } from "./internal/cli/commands/migrate";
-import { registerDbCommands } from "./internal/cli/commands/db";
+import { registerMigrateCommands } from "./internal/cli/commands/migrate.js";
+import { registerDbCommands } from "./internal/cli/commands/db.js";
+import { describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("./internal/cli/commands/migrate", () => ({
-  registerMigrateCommands: jest.fn(),
+vi.mock("./internal/cli/commands/migrate.js", () => ({
+  registerMigrateCommands: vi.fn(),
 }));
-jest.mock("./internal/cli/commands/db", () => ({
-  registerDbCommands: jest.fn(),
+vi.mock("./internal/cli/commands/db.js", () => ({
+  registerDbCommands: vi.fn(),
 }));
 
-const mockRegisterMigrateCommands = registerMigrateCommands as jest.MockedFunction<
+const mockRegisterMigrateCommands = registerMigrateCommands as MockedFunction<
   typeof registerMigrateCommands
 >;
-const mockRegisterDbCommands = registerDbCommands as jest.MockedFunction<
+const mockRegisterDbCommands = registerDbCommands as MockedFunction<
   typeof registerDbCommands
 >;
 
@@ -66,7 +67,7 @@ describe("cli program setup", () => {
   });
 
   it("registerMigrateCommands and registerDbCommands should be called once each per setup", () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const program = new Command();
     registerMigrateCommands(program);
     registerDbCommands(program);

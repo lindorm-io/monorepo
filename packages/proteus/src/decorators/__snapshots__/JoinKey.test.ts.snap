@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`JoinKey should match snapshot for auto join key 1`] = `
+exports[`JoinKey > should match snapshot for auto join key 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -97,7 +97,7 @@ exports[`JoinKey should match snapshot for auto join key 1`] = `
 }
 `;
 
-exports[`JoinKey should match snapshot for explicit join key 1`] = `
+exports[`JoinKey > should match snapshot for explicit join key 1`] = `
 {
   "appendOnly": false,
   "cache": null,

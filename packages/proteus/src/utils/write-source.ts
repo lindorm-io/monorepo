@@ -3,10 +3,10 @@ import { join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
 import {
   generateSource,
-  GenerateSourceOptions,
+  type GenerateSourceOptions,
   PROTEUS_ALL_DRIVERS,
   PROTEUS_SQL_DRIVERS,
-} from "./generate-source";
+} from "./generate-source.js";
 
 export type WriteSourceOptions = GenerateSourceOptions & {
   directory: string;
@@ -14,7 +14,8 @@ export type WriteSourceOptions = GenerateSourceOptions & {
 };
 
 export const writeSource = async (options: WriteSourceOptions): Promise<void> => {
-  const { driver, directory, dryRun, loggerImport } = options;
+  const { driver, directory, dryRun, loggerImport, configImport, cache, cacheKeyPrefix } =
+    options;
 
   if (!PROTEUS_ALL_DRIVERS.includes(driver)) {
     throw new Error(
@@ -28,7 +29,13 @@ export const writeSource = async (options: WriteSourceOptions): Promise<void> =>
   const files: Array<{ path: string; content: string }> = [
     {
       path: join(resolvedDirectory, "source.ts"),
-      content: generateSource({ driver, loggerImport }),
+      content: generateSource({
+        driver,
+        loggerImport,
+        configImport,
+        cache,
+        cacheKeyPrefix,
+      }),
     },
     { path: join(resolvedDirectory, "entities", ".gitkeep"), content: "" },
   ];

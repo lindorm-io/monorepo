@@ -1,14 +1,15 @@
-import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError";
-import { PostgresTransactionError } from "../../errors/PostgresTransactionError";
-import { SerializationError } from "../../../../errors/SerializationError";
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { commitTransaction } from "./commit-transaction";
+import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
+import { PostgresTransactionError } from "../../errors/PostgresTransactionError.js";
+import { SerializationError } from "../../../../errors/SerializationError.js";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { commitTransaction } from "./commit-transaction.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const makeHandle = (
   state: PostgresTransactionHandle["state"] = "active",
 ): PostgresTransactionHandle => ({
-  client: { query: jest.fn().mockResolvedValue({ rows: [], rowCount: 0 }) },
-  release: jest.fn(),
+  client: { query: vi.fn().mockResolvedValue({ rows: [], rowCount: 0 }) },
+  release: vi.fn(),
   state,
   savepointCounter: 0,
 });
@@ -32,7 +33,7 @@ describe("commitTransaction", () => {
 
   it("should release even when COMMIT query fails", async () => {
     const handle = makeHandle();
-    (handle.client.query as jest.Mock).mockRejectedValueOnce(new Error("network error"));
+    (handle.client.query as Mock).mockRejectedValueOnce(new Error("network error"));
 
     await expect(commitTransaction(handle)).rejects.toThrow(ProteusRepositoryError);
     expect(handle.release).toHaveBeenCalled();
@@ -41,7 +42,7 @@ describe("commitTransaction", () => {
   it("should throw SerializationError for PG code 40001 at commit time", async () => {
     const handle = makeHandle();
     const pgError = Object.assign(new Error("serialization_failure"), { code: "40001" });
-    (handle.client.query as jest.Mock).mockRejectedValueOnce(pgError);
+    (handle.client.query as Mock).mockRejectedValueOnce(pgError);
 
     await expect(commitTransaction(handle)).rejects.toThrow(SerializationError);
     expect(handle.release).toHaveBeenCalled();
@@ -50,7 +51,7 @@ describe("commitTransaction", () => {
   // P1-G: after a failed COMMIT the handle state must be "rolledback", not left as "active"
   it("should set handle state to rolledback when COMMIT query throws", async () => {
     const handle = makeHandle();
-    (handle.client.query as jest.Mock).mockRejectedValueOnce(new Error("network error"));
+    (handle.client.query as Mock).mockRejectedValueOnce(new Error("network error"));
 
     await expect(commitTransaction(handle)).rejects.toThrow();
 

@@ -1,13 +1,14 @@
-import { RedisCacheAdapter } from "./RedisCacheAdapter";
+import { RedisCacheAdapter } from "./RedisCacheAdapter.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // ─── Mocks ────────────────────────────────────────────────────────────────────
 
 // Plain mock object — no ioredis module import needed.
 // The adapter only uses get/set/del/eval, so we mock exactly those.
-const mockGet = jest.fn();
-const mockSet = jest.fn();
-const mockDel = jest.fn();
-const mockEval = jest.fn();
+const mockGet = vi.fn();
+const mockSet = vi.fn();
+const mockDel = vi.fn();
+const mockEval = vi.fn();
 
 const mockClient = {
   get: mockGet,
@@ -24,7 +25,7 @@ const createAdapter = (options?: { keyPrefix?: string; scanCount?: number }) =>
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
 });
 
 describe("RedisCacheAdapter", () => {

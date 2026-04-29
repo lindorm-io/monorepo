@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildKeysetOrder should preserve user-provided order 1`] = `
+exports[`buildKeysetOrder > should preserve user-provided order 1`] = `
 [
   {
     "column": "createdAt",
@@ -17,14 +17,14 @@ exports[`buildKeysetOrder should preserve user-provided order 1`] = `
 ]
 `;
 
-exports[`keysetOrderToRecord should convert entries to record 1`] = `
+exports[`keysetOrderToRecord > should convert entries to record 1`] = `
 {
   "createdAt": "ASC",
   "id": "ASC",
 }
 `;
 
-exports[`keysetOrderToRecord should flip directions when backward=true 1`] = `
+exports[`keysetOrderToRecord > should flip directions when backward=true 1`] = `
 {
   "createdAt": "DESC",
   "id": "DESC",

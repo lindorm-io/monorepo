@@ -1,10 +1,11 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { RabbitStreamProcessor } from "./RabbitStreamProcessor";
-import { RabbitStreamPipeline } from "./RabbitStreamPipeline";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { RabbitStreamProcessor } from "./RabbitStreamProcessor.js";
+import { RabbitStreamPipeline } from "./RabbitStreamPipeline.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test messages ---
 
@@ -21,13 +22,13 @@ class TckRabbitSpOut implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): RabbitSharedState => ({

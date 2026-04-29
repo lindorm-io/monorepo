@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`KryptosKit (AKP) from auto b64 1`] = `
+exports[`KryptosKit (AKP) > from > auto > b64 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -34,7 +34,7 @@ exports[`KryptosKit (AKP) from auto b64 1`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from auto b64 2`] = `
+exports[`KryptosKit (AKP) > from > auto > b64 2`] = `
 {
   "alg": "ML-DSA-65",
   "exp": 2493100800,
@@ -51,7 +51,7 @@ exports[`KryptosKit (AKP) from auto b64 2`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from auto b64 3`] = `
+exports[`KryptosKit (AKP) > from > auto > b64 3`] = `
 {
   "algorithm": "ML-DSA-65",
   "id": "7d8e9f10-2b3c-4d5e-8f9a-1b2c3d4e5f60",
@@ -62,7 +62,7 @@ exports[`KryptosKit (AKP) from auto b64 3`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from auto jwk 1`] = `
+exports[`KryptosKit (AKP) > from > auto > jwk 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -96,7 +96,7 @@ exports[`KryptosKit (AKP) from auto jwk 1`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from auto jwk 2`] = `
+exports[`KryptosKit (AKP) > from > auto > jwk 2`] = `
 {
   "alg": "ML-DSA-65",
   "exp": 2493100800,
@@ -113,7 +113,7 @@ exports[`KryptosKit (AKP) from auto jwk 2`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from auto jwk 3`] = `
+exports[`KryptosKit (AKP) > from > auto > jwk 3`] = `
 {
   "alg": "ML-DSA-65",
   "kid": "ff22a1b2-8eb0-59a8-8fc6-0ce23ad07e8f",
@@ -124,7 +124,7 @@ exports[`KryptosKit (AKP) from auto jwk 3`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from auto pem 1`] = `
+exports[`KryptosKit (AKP) > from > auto > pem 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -158,7 +158,7 @@ exports[`KryptosKit (AKP) from auto pem 1`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from auto pem 2`] = `
+exports[`KryptosKit (AKP) > from > auto > pem 2`] = `
 {
   "alg": "ML-DSA-65",
   "exp": 2493100800,
@@ -175,7 +175,7 @@ exports[`KryptosKit (AKP) from auto pem 2`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from auto pem 3`] = `
+exports[`KryptosKit (AKP) > from > auto > pem 3`] = `
 {
   "algorithm": "ML-DSA-65",
   "id": "aa22b1b2-e879-554e-ae49-e6330610f09e",
@@ -318,7 +318,7 @@ Q9jSCkTE
 }
 `;
 
-exports[`KryptosKit (AKP) from b64 1`] = `
+exports[`KryptosKit (AKP) > from > b64 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -352,7 +352,7 @@ exports[`KryptosKit (AKP) from b64 1`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from b64 2`] = `
+exports[`KryptosKit (AKP) > from > b64 2`] = `
 {
   "alg": "ML-DSA-65",
   "exp": 2493100800,
@@ -369,7 +369,7 @@ exports[`KryptosKit (AKP) from b64 2`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from b64 3`] = `
+exports[`KryptosKit (AKP) > from > b64 3`] = `
 {
   "algorithm": "ML-DSA-65",
   "id": "7d8e9f10-2b3c-4d5e-8f9a-1b2c3d4e5f60",
@@ -380,7 +380,7 @@ exports[`KryptosKit (AKP) from b64 3`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from jwk 1`] = `
+exports[`KryptosKit (AKP) > from > jwk 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -414,7 +414,7 @@ exports[`KryptosKit (AKP) from jwk 1`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from jwk 2`] = `
+exports[`KryptosKit (AKP) > from > jwk 2`] = `
 {
   "alg": "ML-DSA-65",
   "exp": 2493100800,
@@ -431,7 +431,7 @@ exports[`KryptosKit (AKP) from jwk 2`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from jwk 3`] = `
+exports[`KryptosKit (AKP) > from > jwk 3`] = `
 {
   "alg": "ML-DSA-65",
   "kid": "ff22a1b2-8eb0-59a8-8fc6-0ce23ad07e8f",
@@ -442,7 +442,7 @@ exports[`KryptosKit (AKP) from jwk 3`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from pem 1`] = `
+exports[`KryptosKit (AKP) > from > pem 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -476,7 +476,7 @@ exports[`KryptosKit (AKP) from pem 1`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from pem 2`] = `
+exports[`KryptosKit (AKP) > from > pem 2`] = `
 {
   "alg": "ML-DSA-65",
   "exp": 2493100800,
@@ -493,7 +493,7 @@ exports[`KryptosKit (AKP) from pem 2`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) from pem 3`] = `
+exports[`KryptosKit (AKP) > from > pem 3`] = `
 {
   "algorithm": "ML-DSA-65",
   "id": "aa22b1b2-e879-554e-ae49-e6330610f09e",
@@ -636,7 +636,7 @@ Q9jSCkTE
 }
 `;
 
-exports[`KryptosKit (AKP) generate auto 1`] = `
+exports[`KryptosKit (AKP) > generate > auto 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -670,7 +670,7 @@ exports[`KryptosKit (AKP) generate auto 1`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) generate sig ML-DSA-44 1`] = `
+exports[`KryptosKit (AKP) > generate > sig ML-DSA-44 1`] = `
 {
   "algorithm": "ML-DSA-44",
   "certificateChain": [],
@@ -704,7 +704,7 @@ exports[`KryptosKit (AKP) generate sig ML-DSA-44 1`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) generate sig ML-DSA-65 1`] = `
+exports[`KryptosKit (AKP) > generate > sig ML-DSA-65 1`] = `
 {
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
@@ -738,7 +738,7 @@ exports[`KryptosKit (AKP) generate sig ML-DSA-65 1`] = `
 }
 `;
 
-exports[`KryptosKit (AKP) generate sig ML-DSA-87 1`] = `
+exports[`KryptosKit (AKP) > generate > sig ML-DSA-87 1`] = `
 {
   "algorithm": "ML-DSA-87",
   "certificateChain": [],

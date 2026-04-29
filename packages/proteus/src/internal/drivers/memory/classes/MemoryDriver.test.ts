@@ -1,4 +1,5 @@
-import { createMockLogger } from "@lindorm/logger";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "vitest";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   CreateDateField,
   Entity,
@@ -6,10 +7,10 @@ import {
   PrimaryKeyField,
   UpdateDateField,
   VersionField,
-} from "../../../../decorators";
-import { ProteusSource } from "../../../../classes/ProteusSource";
-import { MemoryDriverError } from "../errors/MemoryDriverError";
-import type { IProteusRepository } from "../../../../interfaces";
+} from "../../../../decorators/index.js";
+import { ProteusSource } from "../../../../classes/ProteusSource.js";
+import { MemoryDriverError } from "../errors/MemoryDriverError.js";
+import type { IProteusRepository } from "../../../../interfaces/index.js";
 
 // ─── Entities ─────────────────────────────────────────────────────────────────
 

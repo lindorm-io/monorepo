@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import {
   TestUser,
   TestArticle,
@@ -7,9 +8,9 @@ import {
   TestUserWithProfile,
   TestCourse,
   TestStudent,
-} from "../../../../__fixtures__/test-entities";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { projectDesiredSchemaMysql } from "./project-desired-schema-mysql";
+} from "../../../../__fixtures__/test-entities.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { projectDesiredSchemaMysql } from "./project-desired-schema-mysql.js";
 
 describe("projectDesiredSchemaMysql", () => {
   test("projects a simple entity with UUID PK", () => {

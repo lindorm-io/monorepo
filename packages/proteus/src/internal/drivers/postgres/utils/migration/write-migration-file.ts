@@ -1,1 +1,1 @@
-export { writeMigrationFile } from "../../../../utils/migration/write-migration-file";
+export { writeMigrationFile } from "../../../../utils/migration/write-migration-file.js";

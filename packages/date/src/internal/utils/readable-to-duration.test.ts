@@ -1,4 +1,5 @@
-import { readableToDuration } from "./readable-to-duration";
+import { readableToDuration } from "./readable-to-duration.js";
+import { describe, expect, test } from "vitest";
 
 describe("readableToDuration", () => {
   describe("years", () => {

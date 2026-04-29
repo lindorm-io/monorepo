@@ -1,4 +1,5 @@
-import { DeadLetter } from "./DeadLetter";
+import { DeadLetter } from "./DeadLetter.js";
+import { describe, expect, it } from "vitest";
 
 describe("DeadLetter", () => {
   it("should stage dead letter metadata as true", () => {

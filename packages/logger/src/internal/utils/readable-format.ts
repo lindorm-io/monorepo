@@ -1,10 +1,9 @@
 import { isArray, isObject } from "@lindorm/is";
 import fastSafeStringify from "fast-safe-stringify";
-import { blue, cyan, gray, green, red, white, yellow } from "picocolors";
-import { Formatter } from "picocolors/types";
-import { LogContent, LogLevel } from "../../types";
-import { InternalLog } from "../types/internal-log";
-import { inspectDictionary } from "../../utils/inspect-dictionary";
+import pc, { type Formatter } from "picocolors";
+import type { LogContent, LogLevel } from "../../types/index.js";
+import type { InternalLog } from "../types/internal-log.js";
+import { inspectDictionary } from "../../utils/inspect-dictionary.js";
 
 const colourise = (
   formatter: Formatter,
@@ -15,34 +14,34 @@ const colourise = (
 const formatLevel = (level: LogLevel, colours: boolean = true): string => {
   switch (level) {
     case "error":
-      return colourise(red, level.toUpperCase(), colours);
+      return colourise(pc.red, level.toUpperCase(), colours);
     case "warn":
-      return colourise(yellow, level.toUpperCase(), colours);
+      return colourise(pc.yellow, level.toUpperCase(), colours);
     case "info":
-      return colourise(green, level.toUpperCase(), colours);
+      return colourise(pc.green, level.toUpperCase(), colours);
     case "verbose":
-      return colourise(cyan, level.toUpperCase(), colours);
+      return colourise(pc.cyan, level.toUpperCase(), colours);
     case "debug":
-      return colourise(blue, level.toUpperCase(), colours);
+      return colourise(pc.blue, level.toUpperCase(), colours);
     case "silly":
-      return colourise(gray, level.toUpperCase(), colours);
+      return colourise(pc.gray, level.toUpperCase(), colours);
 
     default:
-      return colourise(white, "UNKNOWN", colours);
+      return colourise(pc.white, "UNKNOWN", colours);
   }
 };
 
 const levelColor = (level: LogLevel, input: string, colours: boolean = true): string => {
   switch (level) {
     case "error":
-      return colourise(red, input, colours);
+      return colourise(pc.red, input, colours);
     case "warn":
-      return colourise(yellow, input, colours);
+      return colourise(pc.yellow, input, colours);
     case "silly":
-      return colourise(gray, input, colours);
+      return colourise(pc.gray, input, colours);
 
     default:
-      return colourise(white, input, colours);
+      return colourise(pc.white, input, colours);
   }
 };
 
@@ -51,12 +50,12 @@ const colouriseError = (error: Error, colours: boolean = true): string => {
 
   if (Object.keys(rest).length) {
     const content = inspectDictionary(rest, false);
-    return `${colourise(red, stack, colours)}\n${colourise(red, content, colours)}`;
+    return `${colourise(pc.red, stack, colours)}\n${colourise(pc.red, content, colours)}`;
   }
 
   const content = error.stack ? error.stack : error;
 
-  return `${colourise(red, content as string, colours)}`;
+  return `${colourise(pc.red, content as string, colours)}`;
 };
 
 const readableContent = (
@@ -98,16 +97,16 @@ const formatDuration = (ms: number): string => {
 
 export const readableFormat = (log: InternalLog): string => {
   try {
-    const time = colourise(gray, log.time.toISOString()) + " ";
-    const colon = colourise(gray, ": ");
+    const time = colourise(pc.gray, log.time.toISOString()) + " ";
+    const colon = colourise(pc.gray, ": ");
     const level = formatLevel(log.level);
     const message = levelColor(log.level, log.message);
 
     const scopeString = log.scope.length ? `[ ${log.scope.join(" | ")} ]` : undefined;
-    const scope = scopeString ? " " + colourise(gray, scopeString) : "";
+    const scope = scopeString ? " " + colourise(pc.gray, scopeString) : "";
     const duration =
       log.duration !== undefined
-        ? " " + colourise(gray, `(${formatDuration(log.duration)})`)
+        ? " " + colourise(pc.gray, `(${formatDuration(log.duration)})`)
         : "";
 
     const pre = `${time}${level}${colon}${message}${duration}${scope}`;

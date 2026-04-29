@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`tokenBucketStrategy should create new bucket with max tokens and allow 1`] = `
+exports[`tokenBucketStrategy > should create new bucket with max tokens and allow 1`] = `
 {
   "allowed": true,
   "remaining": 9,
@@ -8,7 +8,7 @@ exports[`tokenBucketStrategy should create new bucket with max tokens and allow 
 }
 `;
 
-exports[`tokenBucketStrategy should deny when no tokens remain 1`] = `
+exports[`tokenBucketStrategy > should deny when no tokens remain 1`] = `
 {
   "allowed": false,
   "remaining": 0,

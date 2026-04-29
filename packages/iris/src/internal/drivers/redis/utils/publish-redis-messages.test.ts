@@ -1,19 +1,23 @@
-import type { IMessage } from "../../../../interfaces";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { OutboundPayload } from "../../../message/utils/prepare-outbound";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { RedisSharedState } from "../types/redis-types";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
-import { publishRedisMessages, type RedisPublishDriver } from "./publish-redis-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { OutboundPayload } from "../../../message/utils/prepare-outbound.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { RedisSharedState } from "../types/redis-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
+import {
+  publishRedisMessages,
+  type RedisPublishDriver,
+} from "./publish-redis-messages.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMetadata = (overrides: Partial<MessageMetadata> = {}): MessageMetadata =>
@@ -40,25 +44,25 @@ const createDriver = (
   return {
     metadata,
     calls,
-    prepareForPublish: jest.fn(async (message: IMessage): Promise<OutboundPayload> => {
+    prepareForPublish: vi.fn(async (message: IMessage): Promise<OutboundPayload> => {
       calls.prepared.push(message);
       return { payload: Buffer.from("test-payload"), headers: {} };
     }),
-    completePublish: jest.fn(async (message: IMessage): Promise<void> => {
+    completePublish: vi.fn(async (message: IMessage): Promise<void> => {
       calls.completed.push(message);
     }),
   };
 };
 
 const createMockConnection = () => ({
-  xadd: jest.fn().mockResolvedValue("1700000000000-0"),
-  xreadgroup: jest.fn().mockResolvedValue(null),
-  xack: jest.fn().mockResolvedValue(1),
-  xgroup: jest.fn().mockResolvedValue("OK"),
-  del: jest.fn().mockResolvedValue(1),
-  duplicate: jest.fn(),
-  disconnect: jest.fn().mockResolvedValue(undefined),
-  on: jest.fn(),
+  xadd: vi.fn().mockResolvedValue("1700000000000-0"),
+  xreadgroup: vi.fn().mockResolvedValue(null),
+  xack: vi.fn().mockResolvedValue(1),
+  xgroup: vi.fn().mockResolvedValue("OK"),
+  del: vi.fn().mockResolvedValue(1),
+  duplicate: vi.fn(),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  on: vi.fn(),
 });
 
 const createState = (overrides?: Partial<RedisSharedState>): RedisSharedState => ({
@@ -81,15 +85,15 @@ const createMockDelayManager = (): DelayManager & { scheduledCalls: Array<any> }
   const scheduledCalls: Array<any> = [];
   return {
     scheduledCalls,
-    schedule: jest.fn(async (envelope: any, topic: string, delayMs: number) => {
+    schedule: vi.fn(async (envelope: any, topic: string, delayMs: number) => {
       scheduledCalls.push({ envelope, topic, delayMs });
       return "delay-id";
     }),
-    cancel: jest.fn(),
-    start: jest.fn(),
-    stop: jest.fn(),
-    size: jest.fn(),
-    close: jest.fn(),
+    cancel: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+    size: vi.fn(),
+    close: vi.fn(),
   } as any;
 };
 
@@ -123,7 +127,7 @@ describe("publishRedisMessages", () => {
     expect(driver.calls.completed).toHaveLength(1);
     expect(state.publishConnection!.xadd).toHaveBeenCalledTimes(1);
 
-    const xaddArgs = (state.publishConnection!.xadd as jest.Mock).mock.calls[0];
+    const xaddArgs = (state.publishConnection!.xadd as Mock).mock.calls[0];
     expect(xaddArgs[0]).toBe("iris:TestMessage");
     expect(xaddArgs[1]).toBe("*");
   });
@@ -159,7 +163,7 @@ describe("publishRedisMessages", () => {
       logger as any,
     );
 
-    const xaddArgs = (state.publishConnection!.xadd as jest.Mock).mock.calls[0];
+    const xaddArgs = (state.publishConnection!.xadd as Mock).mock.calls[0];
     expect(xaddArgs[0]).toBe("iris:TestMessage");
     expect(xaddArgs[1]).toBe("MAXLEN");
     expect(xaddArgs[2]).toBe("~");
@@ -180,7 +184,7 @@ describe("publishRedisMessages", () => {
       logger as any,
     );
 
-    const xaddArgs = (state.publishConnection!.xadd as jest.Mock).mock.calls[0];
+    const xaddArgs = (state.publishConnection!.xadd as Mock).mock.calls[0];
     expect(xaddArgs).not.toContain("MAXLEN");
   });
 
@@ -234,7 +238,7 @@ describe("publishRedisMessages", () => {
       logger as any,
     );
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
     expect(outbound.headers["x-iris-priority"]).toBe("5");
   });
@@ -252,7 +256,7 @@ describe("publishRedisMessages", () => {
       logger as any,
     );
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
     expect(outbound.headers["x-iris-priority"]).toBeUndefined();
   });
@@ -271,7 +275,7 @@ describe("publishRedisMessages", () => {
       logger as any,
     );
 
-    const prepared = (driver.prepareForPublish as jest.Mock).mock.results[0].value;
+    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
     const outbound = await prepared;
     expect(outbound.headers["x-iris-priority"]).toBe("7");
   });
@@ -310,7 +314,7 @@ describe("publishRedisMessages", () => {
       logger as any,
     );
 
-    const xaddArgs = (state.publishConnection!.xadd as jest.Mock).mock.calls[0];
+    const xaddArgs = (state.publishConnection!.xadd as Mock).mock.calls[0];
     expect(xaddArgs[0]).toBe("myapp:TestMessage");
   });
 
@@ -327,7 +331,7 @@ describe("publishRedisMessages", () => {
       logger as any,
     );
 
-    const xaddArgs = (state.publishConnection!.xadd as jest.Mock).mock.calls[0];
+    const xaddArgs = (state.publishConnection!.xadd as Mock).mock.calls[0];
     // After stream key and *, there should be field-value pairs
     const fieldsStart = xaddArgs.indexOf("*") + 1;
     const fields = xaddArgs.slice(fieldsStart);

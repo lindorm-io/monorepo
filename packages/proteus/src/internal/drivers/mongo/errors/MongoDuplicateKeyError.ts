@@ -1,1 +1,1 @@
-export { DuplicateKeyError as MongoDuplicateKeyError } from "../../../errors/DuplicateKeyError";
+export { DuplicateKeyError as MongoDuplicateKeyError } from "../../../errors/DuplicateKeyError.js";

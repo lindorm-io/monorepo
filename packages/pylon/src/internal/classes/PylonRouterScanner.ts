@@ -1,8 +1,8 @@
-import { ILogger } from "@lindorm/logger";
-import { PylonRouter } from "../../classes/PylonRouter";
-import { PylonError } from "../../errors";
-import { PylonHttpContext, PylonHttpMiddleware } from "../../types";
-import { PylonScannerBase, ScannedFile } from "./PylonScannerBase";
+import type { ILogger } from "@lindorm/logger";
+import { PylonRouter } from "../../classes/PylonRouter.js";
+import { PylonError } from "../../errors/index.js";
+import type { PylonHttpContext, PylonHttpMiddleware } from "../../types/index.js";
+import { PylonScannerBase, type ScannedFile } from "./PylonScannerBase.js";
 
 const HTTP_METHODS = [
   "GET",
@@ -22,12 +22,12 @@ export class PylonRouterScanner<
     super(logger.child(["PylonRouterScanner"]));
   }
 
-  public scan(directory: string): PylonRouter<C> {
+  public async scan(directory: string): Promise<PylonRouter<C>> {
     const start = Date.now();
 
     this.logger.debug("Scanning routes", { directory });
 
-    const files = this.scanDirectory(directory);
+    const files = await this.scanDirectory(directory);
     const root = new PylonRouter<C>();
 
     for (const file of files) {

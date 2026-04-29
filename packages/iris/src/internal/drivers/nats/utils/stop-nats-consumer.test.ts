@@ -1,12 +1,13 @@
-import type { NatsSharedState } from "../types/nats-types";
-import { stopNatsConsumer, stopAllNatsConsumers } from "./stop-nats-consumer";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { stopNatsConsumer, stopAllNatsConsumers } from "./stop-nats-consumer.js";
+import { describe, expect, it, vi } from "vitest";
 
 const createMockLoop = (overrides?: Record<string, any>) => ({
   consumerTag: overrides?.consumerTag ?? "tag-1",
   streamName: overrides?.streamName ?? "IRIS_TEST",
   consumerName: overrides?.consumerName ?? "test-consumer",
   subject: overrides?.subject ?? "test.events",
-  messages: overrides?.messages ?? { close: jest.fn().mockResolvedValue(undefined) },
+  messages: overrides?.messages ?? { close: vi.fn().mockResolvedValue(undefined) },
   abortController: overrides?.abortController ?? new AbortController(),
   loopPromise: overrides?.loopPromise ?? Promise.resolve(),
   ready: overrides?.ready ?? Promise.resolve(),
@@ -54,7 +55,7 @@ describe("stopNatsConsumer", () => {
   });
 
   it("should close the messages iterator", async () => {
-    const messages = { close: jest.fn().mockResolvedValue(undefined) };
+    const messages = { close: vi.fn().mockResolvedValue(undefined) };
     const state = createMockState([{ consumerTag: "tag-1", messages }]);
 
     await stopNatsConsumer(state, "tag-1");
@@ -63,7 +64,7 @@ describe("stopNatsConsumer", () => {
   });
 
   it("should tolerate messages.close() throwing", async () => {
-    const messages = { close: jest.fn().mockRejectedValue(new Error("already closed")) };
+    const messages = { close: vi.fn().mockRejectedValue(new Error("already closed")) };
     const state = createMockState([{ consumerTag: "tag-1", messages }]);
 
     await expect(stopNatsConsumer(state, "tag-1")).resolves.toBeUndefined();
@@ -126,8 +127,8 @@ describe("stopAllNatsConsumers", () => {
   });
 
   it("should close all message iterators", async () => {
-    const messages1 = { close: jest.fn().mockResolvedValue(undefined) };
-    const messages2 = { close: jest.fn().mockResolvedValue(undefined) };
+    const messages1 = { close: vi.fn().mockResolvedValue(undefined) };
+    const messages2 = { close: vi.fn().mockResolvedValue(undefined) };
     const state = createMockState([
       { consumerTag: "tag-1", messages: messages1 },
       { consumerTag: "tag-2", messages: messages2 },
@@ -147,8 +148,8 @@ describe("stopAllNatsConsumers", () => {
   });
 
   it("should tolerate mixed success and failure in close", async () => {
-    const messages1 = { close: jest.fn().mockRejectedValue(new Error("fail")) };
-    const messages2 = { close: jest.fn().mockResolvedValue(undefined) };
+    const messages1 = { close: vi.fn().mockRejectedValue(new Error("fail")) };
+    const messages2 = { close: vi.fn().mockResolvedValue(undefined) };
     const state = createMockState([
       { consumerTag: "tag-1", messages: messages1 },
       { consumerTag: "tag-2", messages: messages2 },

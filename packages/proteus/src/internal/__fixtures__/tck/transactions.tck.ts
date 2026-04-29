@@ -1,9 +1,10 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Transactions Suite
 // Split into rollback (basic commit/rollback) and savepoints (nested transactions).
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import type { ProteusSource } from "../../../classes/ProteusSource";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import type { ProteusSource } from "../../../classes/ProteusSource.js";
 
 export const transactionsRollbackSuite = (
   getHandle: () => TckDriverHandle,

@@ -1,7 +1,12 @@
-import { createMockProteusSource } from "./create-mock-proteus-source";
+import { createMockProteusSource } from "./vitest.js";
+import { describe, expect, it, vi } from "vitest";
+
+class TestEntity {
+  id!: string;
+}
 
 describe("createMockProteusSource", () => {
-  it("should create a mock source with all methods as jest.fn()", () => {
+  it("should create a mock source with all methods as vi.fn()", () => {
     const source = createMockProteusSource();
 
     expect(source).toMatchSnapshot();
@@ -17,11 +22,11 @@ describe("createMockProteusSource", () => {
 
   it("should return a mock repository from repository()", () => {
     const source = createMockProteusSource();
-    const repo = source.repository();
+    const repo = source.repository(TestEntity);
 
     expect(repo).toBeDefined();
     expect(repo.find).toBeDefined();
-    expect(jest.isMockFunction(repo.find)).toBe(true);
+    expect(vi.isMockFunction(repo.find)).toBe(true);
   });
 
   it("should return a new mock session from session()", () => {
@@ -32,7 +37,7 @@ describe("createMockProteusSource", () => {
     expect(session).not.toBe(source);
     expect(session.namespace).toBeNull();
     expect(session.driverType).toBe("memory");
-    expect(jest.isMockFunction(session.repository)).toBe(true);
+    expect(vi.isMockFunction(session.repository)).toBe(true);
   });
 
   it("should resolve true for ping()", async () => {
@@ -43,7 +48,7 @@ describe("createMockProteusSource", () => {
 
   it("should execute transaction callback", async () => {
     const source = createMockProteusSource();
-    const result = await source.transaction((ctx: unknown) => "done");
+    const result = await source.transaction(async () => "done");
 
     expect(result).toBe("done");
   });
@@ -54,5 +59,11 @@ describe("createMockProteusSource", () => {
 
     expect(registry).toBeInstanceOf(Map);
     expect(registry.size).toBe(0);
+  });
+
+  it("should return true by default for hasEntity()", () => {
+    const source = createMockProteusSource();
+
+    expect(source.hasEntity(TestEntity)).toBe(true);
   });
 });

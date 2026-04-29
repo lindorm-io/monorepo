@@ -1,19 +1,20 @@
-import type { IMessage, IMessageSubscriber } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore";
-import { DelayManager } from "../../../delay/DelayManager";
-import { MemoryDelayStore } from "../../../delay/MemoryDelayStore";
-import { createStore } from "../utils/create-store";
-import { MemoryDriver } from "./MemoryDriver";
-import { MemoryMessageBus } from "./MemoryMessageBus";
-import { MemoryPublisher } from "./MemoryPublisher";
-import { MemoryRpcClient } from "./MemoryRpcClient";
-import { MemoryRpcServer } from "./MemoryRpcServer";
-import { MemoryStreamProcessor } from "./MemoryStreamProcessor";
-import { MemoryWorkerQueue } from "./MemoryWorkerQueue";
+import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import { MemoryDeadLetterStore } from "../../../dead-letter/MemoryDeadLetterStore.js";
+import { DelayManager } from "../../../delay/DelayManager.js";
+import { MemoryDelayStore } from "../../../delay/MemoryDelayStore.js";
+import { createStore } from "../utils/create-store.js";
+import { MemoryDriver } from "./MemoryDriver.js";
+import { MemoryMessageBus } from "./MemoryMessageBus.js";
+import { MemoryPublisher } from "./MemoryPublisher.js";
+import { MemoryRpcClient } from "./MemoryRpcClient.js";
+import { MemoryRpcServer } from "./MemoryRpcServer.js";
+import { MemoryStreamProcessor } from "./MemoryStreamProcessor.js";
+import { MemoryWorkerQueue } from "./MemoryWorkerQueue.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -35,13 +36,13 @@ class TckDriverRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createDriver = (
@@ -162,7 +163,7 @@ describe("MemoryDriver", () => {
         store: new MemoryDelayStore(),
         logger: logger as any,
       });
-      const startSpy = jest.spyOn(delayManager, "start");
+      const startSpy = vi.spyOn(delayManager, "start");
 
       const driver = createDriver([], { delayManager });
       await driver.connect();
@@ -179,7 +180,7 @@ describe("MemoryDriver", () => {
         store: new MemoryDelayStore(),
         logger: logger as any,
       });
-      const stopSpy = jest.spyOn(delayManager, "stop");
+      const stopSpy = vi.spyOn(delayManager, "stop");
 
       const driver = createDriver([], { delayManager });
       await driver.connect();
@@ -223,7 +224,7 @@ describe("MemoryDriver", () => {
 
     it("should use the provided getSubscribers function", () => {
       const driver = createDriver();
-      const sub: IMessageSubscriber = { beforePublish: jest.fn() };
+      const sub: IMessageSubscriber = { beforePublish: vi.fn() };
       const cloned = driver.cloneWithGetters(() => [sub]);
 
       expect((cloned as any).getSubscribers()).toEqual([sub]);

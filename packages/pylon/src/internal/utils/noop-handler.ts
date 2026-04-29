@@ -1,4 +1,4 @@
-import { PylonHttpContext } from "../../types";
+import type { PylonHttpContext } from "../../types/index.js";
 
 export const noopHandler = async (ctx: PylonHttpContext): Promise<void> => {
   ctx.body = undefined;

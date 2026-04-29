@@ -1,8 +1,8 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity";
-import type { HydrateOptions } from "../../../../entity/utils/default-hydrate-entity";
-import { extractFieldDictFromReturning } from "./extract-field-dict";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity.js";
+import type { HydrateOptions } from "../../../../entity/utils/default-hydrate-entity.js";
+import { extractFieldDictFromReturning } from "./extract-field-dict.js";
 
 /**
  * Hydrate an entity from a SELECT-back result row.

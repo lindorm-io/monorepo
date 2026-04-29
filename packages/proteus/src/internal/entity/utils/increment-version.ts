@@ -1,7 +1,7 @@
 import { isNumber } from "@lindorm/is";
-import { ProteusError } from "../../../errors";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../types/metadata";
+import { ProteusError } from "../../../errors/index.js";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../types/metadata.js";
 
 export const incrementVersion = <E extends IEntity>(
   metadata: EntityMetadata,

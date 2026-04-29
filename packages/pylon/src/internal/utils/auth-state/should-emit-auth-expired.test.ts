@@ -1,4 +1,5 @@
-import { shouldEmitAuthExpired } from "./should-emit-auth-expired";
+import { shouldEmitAuthExpired } from "./should-emit-auth-expired.js";
+import { describe, expect, test } from "vitest";
 
 describe("shouldEmitAuthExpired", () => {
   const now = new Date("2026-04-11T12:00:00.000Z");

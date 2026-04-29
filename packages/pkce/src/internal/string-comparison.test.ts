@@ -1,4 +1,5 @@
-import { stringComparison } from "./string-comparison";
+import { stringComparison } from "./string-comparison.js";
+import { describe, expect, test } from "vitest";
 
 describe("stringComparison", () => {
   test("returns true", () => {

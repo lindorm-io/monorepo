@@ -1,12 +1,12 @@
 import { createCipheriv, createDecipheriv, timingSafeEqual } from "crypto";
-import {
+import type {
   KeyUnwrapOptions,
   KeyUnwrapResult,
   KeyWrapOptions,
   KeyWrapResult,
-} from "../../types/key-wrap";
-import { AesError } from "../../../errors/AesError";
-import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption";
+} from "../../types/key-wrap.js";
+import { AesError } from "../../../errors/AesError.js";
+import { calculateKeyWrapEncryption } from "../calculate/calculate-key-wrap-encryption.js";
 
 const AIV = "A6A6A6A6A6A6A6A6" as const;
 const AIV_BUFFER = Buffer.from(AIV, "hex");

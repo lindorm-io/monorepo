@@ -1,23 +1,24 @@
-import { AbstractMessage } from "../../../decorators/AbstractMessage";
-import { Default } from "../../../decorators/Default";
-import { Enum } from "../../../decorators/Enum";
-import { Field } from "../../../decorators/Field";
-import { Generated } from "../../../decorators/Generated";
-import { IdentifierField } from "../../../decorators/IdentifierField";
-import { Max } from "../../../decorators/Max";
-import { Message } from "../../../decorators/Message";
-import { Min } from "../../../decorators/Min";
-import { Namespace } from "../../../decorators/Namespace";
-import { Nullable } from "../../../decorators/Nullable";
-import { OnCreate } from "../../../decorators/OnCreate";
-import { OnHydrate } from "../../../decorators/OnHydrate";
-import { OnValidate } from "../../../decorators/OnValidate";
-import { Schema } from "../../../decorators/Schema";
-import { TimestampField } from "../../../decorators/TimestampField";
-import { Transform } from "../../../decorators/Transform";
-import { IrisError } from "../../../errors/IrisError";
-import { MessageManager } from "./MessageManager";
+import { AbstractMessage } from "../../../decorators/AbstractMessage.js";
+import { Default } from "../../../decorators/Default.js";
+import { Enum } from "../../../decorators/Enum.js";
+import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { IdentifierField } from "../../../decorators/IdentifierField.js";
+import { Max } from "../../../decorators/Max.js";
+import { Message } from "../../../decorators/Message.js";
+import { Min } from "../../../decorators/Min.js";
+import { Namespace } from "../../../decorators/Namespace.js";
+import { Nullable } from "../../../decorators/Nullable.js";
+import { OnCreate } from "../../../decorators/OnCreate.js";
+import { OnHydrate } from "../../../decorators/OnHydrate.js";
+import { OnValidate } from "../../../decorators/OnValidate.js";
+import { Schema } from "../../../decorators/Schema.js";
+import { TimestampField } from "../../../decorators/TimestampField.js";
+import { Transform } from "../../../decorators/Transform.js";
+import { IrisError } from "../../../errors/IrisError.js";
+import { MessageManager } from "./MessageManager.js";
 import { z } from "zod";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Test message classes ---
 
@@ -80,9 +81,9 @@ class GeneratedEvent {
   weight!: number;
 }
 
-const onCreateSpy = jest.fn();
-const onHydrateSpy = jest.fn();
-const onValidateSpy = jest.fn();
+const onCreateSpy = vi.fn();
+const onHydrateSpy = vi.fn();
+const onValidateSpy = vi.fn();
 
 @OnValidate(onValidateSpy)
 @OnHydrate(onHydrateSpy)
@@ -590,26 +591,34 @@ describe("MessageManager", () => {
     });
 
     it("should fire @OnCreate hook during create()", () => {
-      const ctx = { userId: "abc" };
+      const meta = {
+        correlationId: "corr-abc",
+        actor: "abc",
+        timestamp: new Date("2020-01-01T00:00:00Z"),
+      };
       const manager = new MessageManager({
         target: HookedEvent,
-        context: ctx,
+        meta,
       });
       const msg = manager.create({ name: "test" });
 
       expect(onCreateSpy).toHaveBeenCalledTimes(1);
       expect(onCreateSpy).toHaveBeenCalledWith(
         expect.objectContaining({ name: "test" }),
-        ctx,
+        meta,
       );
       expect(onCreateSpy.mock.calls[0][0]).toBe(msg);
     });
 
     it("should fire @OnHydrate hook during hydrate()", () => {
-      const ctx = { userId: "abc" };
+      const meta = {
+        correlationId: "corr-abc",
+        actor: "abc",
+        timestamp: new Date("2020-01-01T00:00:00Z"),
+      };
       const manager = new MessageManager({
         target: HookedEvent,
-        context: ctx,
+        meta,
       });
       manager.hydrate({
         id: "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
@@ -619,7 +628,7 @@ describe("MessageManager", () => {
       expect(onHydrateSpy).toHaveBeenCalledTimes(1);
       expect(onHydrateSpy).toHaveBeenCalledWith(
         expect.objectContaining({ name: "restored" }),
-        ctx,
+        meta,
       );
     });
 
@@ -634,10 +643,14 @@ describe("MessageManager", () => {
     });
 
     it("should fire @OnValidate hook during validate()", () => {
-      const ctx = { userId: "abc" };
+      const meta = {
+        correlationId: "corr-abc",
+        actor: "abc",
+        timestamp: new Date("2020-01-01T00:00:00Z"),
+      };
       const manager = new MessageManager({
         target: HookedEvent,
-        context: ctx,
+        meta,
       });
       const msg = manager.create({ name: "test" });
       onCreateSpy.mockReset();
@@ -645,7 +658,7 @@ describe("MessageManager", () => {
       manager.validate(msg);
 
       expect(onValidateSpy).toHaveBeenCalledTimes(1);
-      expect(onValidateSpy).toHaveBeenCalledWith(msg, ctx);
+      expect(onValidateSpy).toHaveBeenCalledWith(msg, meta);
     });
 
     it("should fire @OnCreate hook during copy()", () => {
@@ -659,7 +672,7 @@ describe("MessageManager", () => {
     });
 
     it("should throw when sync hook returns a Promise", () => {
-      const asyncCallback = jest.fn().mockResolvedValue(undefined);
+      const asyncCallback = vi.fn().mockResolvedValue(undefined);
 
       @OnCreate(asyncCallback)
       @Namespace("test")
@@ -681,10 +694,10 @@ describe("MessageManager", () => {
     // collection order is child-first. Hooks fire in that same collection order.
     it("should fire hooks in metadata collection order (child-first)", () => {
       const order: Array<string> = [];
-      const first = jest.fn(() => {
+      const first = vi.fn(() => {
         order.push("first");
       });
-      const second = jest.fn(() => {
+      const second = vi.fn(() => {
         order.push("second");
       });
 
@@ -705,10 +718,10 @@ describe("MessageManager", () => {
 
     it("should fire child hooks before parent hooks in inheritance", () => {
       const order: Array<string> = [];
-      const parentSpy = jest.fn(() => {
+      const parentSpy = vi.fn(() => {
         order.push("parent");
       });
-      const childSpy = jest.fn(() => {
+      const childSpy = vi.fn(() => {
         order.push("child");
       });
 
@@ -738,9 +751,9 @@ describe("MessageManager", () => {
 
   describe("async hooks", () => {
     it("should fire beforePublish", async () => {
-      const spy = jest.fn();
+      const spy = vi.fn();
 
-      const { BeforePublish } = await import("../../../decorators/BeforePublish");
+      const { BeforePublish } = await import("../../../decorators/BeforePublish.js");
 
       @BeforePublish(spy)
       @Namespace("test")
@@ -755,13 +768,20 @@ describe("MessageManager", () => {
       await manager.beforePublish(msg);
 
       expect(spy).toHaveBeenCalledTimes(1);
-      expect(spy).toHaveBeenCalledWith(msg, undefined);
+      expect(spy).toHaveBeenCalledWith(
+        msg,
+        expect.objectContaining({
+          correlationId: "unknown",
+          actor: "unknown",
+          timestamp: expect.any(Date),
+        }),
+      );
     });
 
     it("should fire afterConsume", async () => {
-      const spy = jest.fn();
+      const spy = vi.fn();
 
-      const { AfterConsume } = await import("../../../decorators/AfterConsume");
+      const { AfterConsume } = await import("../../../decorators/AfterConsume.js");
 
       @AfterConsume(spy)
       @Namespace("test")
@@ -863,7 +883,7 @@ describe("MessageManager", () => {
 
   describe("async hook error propagation", () => {
     it("should propagate errors from async hooks", async () => {
-      const { BeforePublish } = await import("../../../decorators/BeforePublish");
+      const { BeforePublish } = await import("../../../decorators/BeforePublish.js");
 
       @BeforePublish(() => {
         throw new Error("hook failed");

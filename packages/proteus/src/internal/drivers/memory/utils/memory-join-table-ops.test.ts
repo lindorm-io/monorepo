@@ -1,6 +1,7 @@
-import type { MetaRelation } from "../../../entity/types/metadata";
-import type { MemoryStore } from "../types/memory-store";
-import { createMemoryJoinTableOps } from "./memory-join-table-ops";
+import type { MetaRelation } from "../../../entity/types/metadata.js";
+import type { MemoryStore } from "../types/memory-store.js";
+import { createMemoryJoinTableOps } from "./memory-join-table-ops.js";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

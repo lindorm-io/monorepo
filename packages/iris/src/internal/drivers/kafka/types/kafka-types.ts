@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 
 export type CreateKafkaConsumerOptions = {
   kafka: KafkaClient;
@@ -144,7 +144,7 @@ export type KafkaSharedState = {
   admin: KafkaAdmin | null;
   connectionConfig: {
     brokers: Array<string>;
-  } & import("../../../../types").KafkaConnectionOptions;
+  } & import("../../../../types/index.js").KafkaConnectionOptions;
   acks: number;
   prefix: string;
   consumers: Array<KafkaConsumerHandle>;

@@ -1,7 +1,7 @@
 import type { ILogger } from "@lindorm/logger";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { IrisEnvelope } from "../../../types/iris-envelope";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 
 export type WrapRedisConsumerOptions = {
   deadLetterManager?: DeadLetterManager;
@@ -76,7 +76,9 @@ export type RedisClient = {
 
 export type RedisSharedState = {
   publishConnection: RedisClient | null;
-  connectionConfig: { url?: string } & import("../../../../types").RedisConnectionOptions;
+  connectionConfig: {
+    url?: string;
+  } & import("../../../../types/index.js").RedisConnectionOptions;
   prefix: string;
   consumerName: string;
   consumerLoops: Array<RedisConsumerLoop>;

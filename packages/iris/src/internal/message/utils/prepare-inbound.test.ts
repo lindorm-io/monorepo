@@ -1,17 +1,20 @@
 import { JsonKit } from "@lindorm/json-kit";
-import type { MessageMetadata } from "../types/metadata";
-import { prepareInbound } from "./prepare-inbound";
-import { prepareOutbound } from "./prepare-outbound";
+import type { MessageMetadata } from "../types/metadata.js";
+import { prepareInbound } from "./prepare-inbound.js";
+import { prepareOutbound } from "./prepare-outbound.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-const mockEncrypt = jest.fn();
-const mockDecrypt = jest.fn();
-const mockParseAes = jest.fn((_data: unknown) => ({ keyId: "key-1" }));
+const mockEncrypt = vi.fn();
+const mockDecrypt = vi.fn();
+const mockParseAes = vi.fn((_data: unknown) => ({ keyId: "key-1" }));
 
-jest.mock("@lindorm/aes", () => ({
-  AesKit: jest.fn().mockImplementation(() => ({
-    encrypt: mockEncrypt,
-    decrypt: mockDecrypt,
-  })),
+vi.mock("@lindorm/aes", async () => ({
+  AesKit: vi.fn(function () {
+    return {
+      encrypt: mockEncrypt,
+      decrypt: mockDecrypt,
+    };
+  }),
   parseAes: (data: unknown) => mockParseAes(data),
 }));
 
@@ -65,7 +68,7 @@ const baseMetadata: MessageMetadata = {
 
 describe("prepareInbound", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it("should deserialize plain payload", async () => {
@@ -110,8 +113,8 @@ describe("prepareInbound", () => {
       { "x-iris-encrypted": "true" },
       metadata,
       {
-        find: jest.fn().mockResolvedValue({ id: "key-1" }),
-        findById: jest.fn().mockResolvedValue({ id: "key-1" }),
+        find: vi.fn().mockResolvedValue({ id: "key-1" }),
+        findById: vi.fn().mockResolvedValue({ id: "key-1" }),
       } as any,
     );
 
@@ -134,8 +137,8 @@ describe("prepareInbound", () => {
     });
 
     const mockAmphora = {
-      find: jest.fn().mockResolvedValue({ id: "key-1" }),
-      findById: jest.fn().mockResolvedValue({ id: "key-1" }),
+      find: vi.fn().mockResolvedValue({ id: "key-1" }),
+      findById: vi.fn().mockResolvedValue({ id: "key-1" }),
     } as any;
     const outbound = await prepareOutbound(
       { name: "both", count: 3 },

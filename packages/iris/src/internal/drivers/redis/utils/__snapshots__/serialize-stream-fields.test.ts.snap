@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`serializeStreamFields should serialize a fully populated envelope 1`] = `
+exports[`serializeStreamFields > should serialize a fully populated envelope 1`] = `
 [
   "payload",
   "eyJoZWxsbyI6IndvcmxkIn0=",
@@ -39,7 +39,7 @@ exports[`serializeStreamFields should serialize a fully populated envelope 1`] =
 ]
 `;
 
-exports[`serializeStreamFields should serialize a minimal envelope 1`] = `
+exports[`serializeStreamFields > should serialize a minimal envelope 1`] = `
 [
   "payload",
   "eyJoZWxsbyI6IndvcmxkIn0=",

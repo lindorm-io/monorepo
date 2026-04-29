@@ -1,9 +1,10 @@
-import { ConduitMiddleware } from "../types";
-import { createConduitDeduplicationMiddleware } from "./conduit-deduplication-middleware";
+import type { ConduitMiddleware } from "../types/index.js";
+import { createConduitDeduplicationMiddleware } from "./conduit-deduplication-middleware.js";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("conduitDeduplicationMiddleware", () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
   let middleware: ConduitMiddleware;
 
   beforeEach(() => {
@@ -23,12 +24,12 @@ describe("conduitDeduplicationMiddleware", () => {
       },
     };
 
-    next = jest.fn().mockResolvedValue(undefined);
+    next = vi.fn().mockResolvedValue(undefined);
     middleware = createConduitDeduplicationMiddleware();
   });
 
   afterEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("concurrent identical GET requests only call next() once", async () => {

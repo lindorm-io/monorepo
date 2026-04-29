@@ -1,8 +1,9 @@
-import { ProteusError } from "../../../../errors";
-import { makeField } from "../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import type { PostgresQueryClient } from "../types/postgres-query-client";
-import { PostgresQueryBuilder } from "./PostgresQueryBuilder";
+import { ProteusError } from "../../../../errors/index.js";
+import { makeField } from "../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { PostgresQueryBuilder } from "./PostgresQueryBuilder.js";
+import { describe, expect, test, vi } from "vitest";
 
 const metadata = {
   appendOnly: false,
@@ -42,7 +43,7 @@ const metadata = {
 } as EntityMetadata;
 
 const createMockClient = (rows: Array<any> = []): PostgresQueryClient => ({
-  query: jest.fn(async () => ({ rows, rowCount: rows.length })),
+  query: vi.fn(async () => ({ rows, rowCount: rows.length })),
 });
 
 describe("PostgresQueryBuilder", () => {
@@ -166,7 +167,7 @@ describe("PostgresQueryBuilder", () => {
 
   describe("getManyAndCount", () => {
     test("should return entities and count", async () => {
-      const queryFn = jest
+      const queryFn = vi
         .fn()
         .mockResolvedValueOnce({
           rows: [{ t0_id: "1", t0_name: "Alice", t0_email: "a@t.com", t0_age: 25 }],

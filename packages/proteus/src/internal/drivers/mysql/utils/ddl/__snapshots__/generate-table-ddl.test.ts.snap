@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateTableDDL (MySQL) generates CREATE TABLE for a simple entity with UUID PK 1`] = `
+exports[`generateTableDDL (MySQL) > generates CREATE TABLE for a simple entity with UUID PK 1`] = `
 "CREATE TABLE IF NOT EXISTS \`TestUser\` (
   \`id\` CHAR(36) NOT NULL,
   \`version\` INT NOT NULL,
@@ -13,7 +13,7 @@ exports[`generateTableDDL (MySQL) generates CREATE TABLE for a simple entity wit
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 `;
 
-exports[`generateTableDDL (MySQL) generates CREATE TABLE for entity with UUID PK and ManyToOne FK column 1`] = `
+exports[`generateTableDDL (MySQL) > generates CREATE TABLE for entity with UUID PK and ManyToOne FK column 1`] = `
 "CREATE TABLE IF NOT EXISTS \`TestArticle\` (
   \`id\` CHAR(36) NOT NULL,
   \`version\` INT NOT NULL,
@@ -26,7 +26,7 @@ exports[`generateTableDDL (MySQL) generates CREATE TABLE for entity with UUID PK
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 `;
 
-exports[`generateTableDDL (MySQL) generates CREATE TABLE for owning side of OneToOne (includes FK column) 1`] = `
+exports[`generateTableDDL (MySQL) > generates CREATE TABLE for owning side of OneToOne (includes FK column) 1`] = `
 "CREATE TABLE IF NOT EXISTS \`TestUserWithProfile\` (
   \`id\` CHAR(36) NOT NULL,
   \`version\` INT NOT NULL,
@@ -39,7 +39,7 @@ exports[`generateTableDDL (MySQL) generates CREATE TABLE for owning side of OneT
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 `;
 
-exports[`generateTableDDL (MySQL) generates CREATE TABLE with check constraints 1`] = `
+exports[`generateTableDDL (MySQL) > generates CREATE TABLE with check constraints 1`] = `
 "CREATE TABLE IF NOT EXISTS \`TestChecked\` (
   \`id\` CHAR(36) NOT NULL,
   \`version\` INT NOT NULL,
@@ -53,7 +53,7 @@ exports[`generateTableDDL (MySQL) generates CREATE TABLE with check constraints 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 `;
 
-exports[`generateTableDDL (MySQL) generates CREATE TABLE with composite primary key 1`] = `
+exports[`generateTableDDL (MySQL) > generates CREATE TABLE with composite primary key 1`] = `
 "CREATE TABLE IF NOT EXISTS \`TestVersionKeyed\` (
   \`id\` CHAR(36) NOT NULL,
   \`versionId\` CHAR(36) NOT NULL,
@@ -64,7 +64,7 @@ exports[`generateTableDDL (MySQL) generates CREATE TABLE with composite primary 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 `;
 
-exports[`generateTableDDL (MySQL) generates CREATE TABLE with scope field 1`] = `
+exports[`generateTableDDL (MySQL) > generates CREATE TABLE with scope field 1`] = `
 "CREATE TABLE IF NOT EXISTS \`TestScopedEntity\` (
   \`id\` CHAR(36) NOT NULL,
   \`scope\` TEXT NOT NULL,
@@ -76,7 +76,7 @@ exports[`generateTableDDL (MySQL) generates CREATE TABLE with scope field 1`] = 
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 `;
 
-exports[`generateTableDDL (MySQL) generates CREATE TABLE with soft-delete and expiry date fields 1`] = `
+exports[`generateTableDDL (MySQL) > generates CREATE TABLE with soft-delete and expiry date fields 1`] = `
 "CREATE TABLE IF NOT EXISTS \`TestSoftDelete\` (
   \`id\` CHAR(36) NOT NULL,
   \`version\` INT NOT NULL,
@@ -89,7 +89,7 @@ exports[`generateTableDDL (MySQL) generates CREATE TABLE with soft-delete and ex
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
 `;
 
-exports[`generateTableDDL (MySQL) generates CREATE TABLE with unique constraints 1`] = `
+exports[`generateTableDDL (MySQL) > generates CREATE TABLE with unique constraints 1`] = `
 "CREATE TABLE IF NOT EXISTS \`TestIndexed\` (
   \`id\` CHAR(36) NOT NULL,
   \`version\` INT NOT NULL,

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`diffSchema (MySQL) detects unique constraint column composition changes 1`] = `
+exports[`diffSchema (MySQL) > detects unique constraint column composition changes 1`] = `
 {
   "operations": [
     {
@@ -19,7 +19,7 @@ exports[`diffSchema (MySQL) detects unique constraint column composition changes
 }
 `;
 
-exports[`diffSchema (MySQL) generates add_column for a new column on an existing table 1`] = `
+exports[`diffSchema (MySQL) > generates add_column for a new column on an existing table 1`] = `
 {
   "operations": [
     {
@@ -31,7 +31,7 @@ exports[`diffSchema (MySQL) generates add_column for a new column on an existing
 }
 `;
 
-exports[`diffSchema (MySQL) generates add_fk and drop_fk for FK changes 1`] = `
+exports[`diffSchema (MySQL) > generates add_fk and drop_fk for FK changes 1`] = `
 {
   "operations": [
     {
@@ -50,7 +50,7 @@ exports[`diffSchema (MySQL) generates add_fk and drop_fk for FK changes 1`] = `
 }
 `;
 
-exports[`diffSchema (MySQL) generates add_index and drop_index for index changes 1`] = `
+exports[`diffSchema (MySQL) > generates add_index and drop_index for index changes 1`] = `
 {
   "operations": [
     {
@@ -69,7 +69,7 @@ exports[`diffSchema (MySQL) generates add_index and drop_index for index changes
 }
 `;
 
-exports[`diffSchema (MySQL) generates add_unique for new unique constraints 1`] = `
+exports[`diffSchema (MySQL) > generates add_unique for new unique constraints 1`] = `
 {
   "operations": [
     {
@@ -82,7 +82,7 @@ exports[`diffSchema (MySQL) generates add_unique for new unique constraints 1`] 
 }
 `;
 
-exports[`diffSchema (MySQL) generates create_table for a new table 1`] = `
+exports[`diffSchema (MySQL) > generates create_table for a new table 1`] = `
 {
   "operations": [
     {
@@ -99,7 +99,7 @@ exports[`diffSchema (MySQL) generates create_table for a new table 1`] = `
 }
 `;
 
-exports[`diffSchema (MySQL) generates drop_column for removed columns 1`] = `
+exports[`diffSchema (MySQL) > generates drop_column for removed columns 1`] = `
 {
   "operations": [
     {
@@ -112,7 +112,7 @@ exports[`diffSchema (MySQL) generates drop_column for removed columns 1`] = `
 }
 `;
 
-exports[`diffSchema (MySQL) generates drop_constraint for removed check constraints 1`] = `
+exports[`diffSchema (MySQL) > generates drop_constraint for removed check constraints 1`] = `
 {
   "operations": [
     {
@@ -125,7 +125,7 @@ exports[`diffSchema (MySQL) generates drop_constraint for removed check constrai
 }
 `;
 
-exports[`diffSchema (MySQL) generates drop_unique for removed unique constraints 1`] = `
+exports[`diffSchema (MySQL) > generates drop_unique for removed unique constraints 1`] = `
 {
   "operations": [
     {
@@ -138,7 +138,7 @@ exports[`diffSchema (MySQL) generates drop_unique for removed unique constraints
 }
 `;
 
-exports[`diffSchema (MySQL) generates modify_column for enum value changes 1`] = `
+exports[`diffSchema (MySQL) > generates modify_column for enum value changes 1`] = `
 {
   "operations": [
     {
@@ -151,7 +151,7 @@ exports[`diffSchema (MySQL) generates modify_column for enum value changes 1`] =
 }
 `;
 
-exports[`diffSchema (MySQL) generates modify_column when column type changes 1`] = `
+exports[`diffSchema (MySQL) > generates modify_column when column type changes 1`] = `
 {
   "operations": [
     {

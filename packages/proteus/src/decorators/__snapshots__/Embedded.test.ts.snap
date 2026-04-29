@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Embedded — dehydration should flatten embedded object into prefixed columns 1`] = `
+exports[`Embedded — dehydration > should flatten embedded object into prefixed columns 1`] = `
 {
   "homeAddress_city": "Springfield",
   "homeAddress_street": "123 Main St",

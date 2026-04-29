@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compileUpdate should add optimistic locking WHERE when Version field exists 1`] = `
+exports[`compileUpdate > should add optimistic locking WHERE when Version field exists 1`] = `
 {
   "params": [
     "Alice Updated",
@@ -14,7 +14,7 @@ exports[`compileUpdate should add optimistic locking WHERE when Version field ex
 }
 `;
 
-exports[`compileUpdate should compile a basic update 1`] = `
+exports[`compileUpdate > should compile a basic update 1`] = `
 {
   "params": [
     "Alice Updated",
@@ -26,7 +26,7 @@ exports[`compileUpdate should compile a basic update 1`] = `
 }
 `;
 
-exports[`compileUpdateMany should compile criteria-based update 1`] = `
+exports[`compileUpdateMany > should compile criteria-based update 1`] = `
 {
   "params": [
     "new@example.com",

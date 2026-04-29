@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
-import { generateOkpKey } from "./okp/generate-key";
-import { stampCertificate } from "./stamp-certificate";
+import { generateOkpKey } from "./okp/generate-key.js";
+import { stampCertificate } from "./stamp-certificate.js";
+import { afterEach, beforeEach, describe, expect, test } from "vitest";
 
 const MOCKED_NOW = new Date("2024-01-01T08:00:00.000Z");
 const NOT_BEFORE = new Date("2024-01-01T00:00:00.000Z");
@@ -82,7 +83,7 @@ describe("stampCertificate determinism", () => {
     // Build a real CA via KryptosKit so stampCertificate's ca-signed branch has
     // a valid IKryptos to delegate to. Both CA and child use Ed25519 for
     // deterministic signatures.
-    const { KryptosKit } = await import("../../classes/KryptosKit");
+    const { KryptosKit } = await import("../../classes/KryptosKit.js");
     const ca = KryptosKit.generate.sig.okp({
       algorithm: "EdDSA",
       curve: "Ed25519",

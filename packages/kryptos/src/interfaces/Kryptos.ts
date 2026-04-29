@@ -1,4 +1,4 @@
-import {
+import type {
   KryptosAttributes,
   KryptosBuffer,
   KryptosDB,
@@ -9,7 +9,7 @@ import {
   KryptosString,
   LindormJwk,
   ParsedX509Certificate,
-} from "../types";
+} from "../types/index.js";
 
 export interface IKryptos
   extends Disposable, Readonly<KryptosAttributes>, Readonly<KryptosMetadata> {

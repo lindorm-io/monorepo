@@ -1,26 +1,27 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types";
-import { RedisWorkerQueue } from "./RedisWorkerQueue";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RedisSharedState, RedisConsumerLoop } from "../types/redis-types.js";
+import { RedisWorkerQueue } from "./RedisWorkerQueue.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
-const mockPublishRedisMessages = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/publish-redis-messages", () => ({
+const mockPublishRedisMessages = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/publish-redis-messages.js", async () => ({
   publishRedisMessages: (...args: Array<unknown>) => mockPublishRedisMessages(...args),
 }));
 
-const mockWrapRedisConsumer = jest.fn().mockReturnValue(jest.fn());
-jest.mock("../utils/wrap-redis-consumer", () => ({
+const mockWrapRedisConsumer = vi.fn().mockReturnValue(vi.fn());
+vi.mock("../utils/wrap-redis-consumer.js", () => ({
   wrapRedisConsumer: (...args: Array<unknown>) => mockWrapRedisConsumer(...args),
 }));
 
 let mockCreateConsumerLoopResult: Partial<RedisConsumerLoop>;
-const mockCreateConsumerLoop = jest
+const mockCreateConsumerLoop = vi
   .fn()
   .mockImplementation(async () => mockCreateConsumerLoopResult);
-jest.mock("../utils/create-consumer-loop", () => ({
+vi.mock("../utils/create-consumer-loop.js", () => ({
   createConsumerLoop: (...args: Array<unknown>) => mockCreateConsumerLoop(...args),
 }));
 
@@ -34,25 +35,25 @@ class TckRedisWqBasic implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): RedisSharedState => ({
   publishConnection: {
-    xadd: jest.fn(),
-    duplicate: jest.fn(),
-    disconnect: jest.fn(),
-    xgroup: jest.fn(),
-    del: jest.fn().mockResolvedValue(1),
-    xreadgroup: jest.fn(),
-    xack: jest.fn(),
-    on: jest.fn(),
+    xadd: vi.fn(),
+    duplicate: vi.fn(),
+    disconnect: vi.fn(),
+    xgroup: vi.fn(),
+    del: vi.fn().mockResolvedValue(1),
+    xreadgroup: vi.fn(),
+    xack: vi.fn(),
+    on: vi.fn(),
   } as any,
   connectionConfig: { url: "redis://localhost:6379" },
   prefix: "iris",
@@ -89,10 +90,10 @@ beforeEach(() => {
     consumerTag: "ctag-1",
     groupName: "iris.wq.my-queue",
     streamKey: "iris:my-queue",
-    callback: jest.fn(),
+    callback: vi.fn(),
     abortController: new AbortController(),
     loopPromise: Promise.resolve(),
-    connection: { disconnect: jest.fn() } as any,
+    connection: { disconnect: vi.fn() } as any,
   };
 });
 
@@ -155,12 +156,12 @@ describe("RedisWorkerQueue", () => {
   describe("unconsume", () => {
     it("should abort consumer loop for specified queue", async () => {
       const ac = new AbortController();
-      const dc = jest.fn().mockResolvedValue(undefined);
+      const dc = vi.fn().mockResolvedValue(undefined);
       mockCreateConsumerLoopResult = {
         consumerTag: "ctag-wq",
         groupName: "iris.wq.my-queue",
         streamKey: "iris:my-queue",
-        callback: jest.fn(),
+        callback: vi.fn(),
         abortController: ac,
         loopPromise: Promise.resolve(),
         connection: { disconnect: dc } as any,
@@ -185,9 +186,9 @@ describe("RedisWorkerQueue", () => {
   describe("unconsumeAll", () => {
     it("should abort all owned consumer loops", async () => {
       const ac1 = new AbortController();
-      const dc1 = jest.fn().mockResolvedValue(undefined);
+      const dc1 = vi.fn().mockResolvedValue(undefined);
       const ac2 = new AbortController();
-      const dc2 = jest.fn().mockResolvedValue(undefined);
+      const dc2 = vi.fn().mockResolvedValue(undefined);
 
       const { queue, state } = createQueue();
 
@@ -195,7 +196,7 @@ describe("RedisWorkerQueue", () => {
         consumerTag: "ctag-a",
         groupName: "iris.wq.q1",
         streamKey: "iris:q1",
-        callback: jest.fn(),
+        callback: vi.fn(),
         abortController: ac1,
         loopPromise: Promise.resolve(),
         connection: { disconnect: dc1 } as any,
@@ -206,7 +207,7 @@ describe("RedisWorkerQueue", () => {
         consumerTag: "ctag-b",
         groupName: "iris.wq.q2",
         streamKey: "iris:q2",
-        callback: jest.fn(),
+        callback: vi.fn(),
         abortController: ac2,
         loopPromise: Promise.resolve(),
         connection: { disconnect: dc2 } as any,

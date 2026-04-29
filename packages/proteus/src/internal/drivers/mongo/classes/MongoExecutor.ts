@@ -1,34 +1,53 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { ClientSession, Db, Document, Filter } from "mongodb";
 import type { DeepPartial, Predicate } from "@lindorm/types";
-import type { IEntity } from "../../../../interfaces";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
-import type { DeleteOptions, FindOptions } from "../../../../types";
-import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import { dehydrateEntity } from "../utils/dehydrate";
-import { hydrateEntity, hydrateEntities } from "../utils/hydrate";
-import { compileFilter, compileFilterWithSystem } from "../utils/compile-filter";
-import { compileSort, compileNullSafeSort } from "../utils/compile-sort";
-import { compileProjection } from "../utils/compile-projection";
-import { writeVersionSnapshot } from "../utils/write-version-snapshot";
-import { buildIdFilter } from "../utils/build-compound-id";
-import { MongoDriverError } from "../errors/MongoDriverError";
-import { MongoDuplicateKeyError } from "../errors/MongoDuplicateKeyError";
-import { MongoOptimisticLockError } from "../errors/MongoOptimisticLockError";
-import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug";
-import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria";
-import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria";
-import { resolveCollectionName } from "../utils/resolve-collection-name";
+import type { IEntity } from "../../../../interfaces/index.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
+import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
+import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import { toAbortError } from "../../../utils/abort.js";
+import { dehydrateEntity } from "../utils/dehydrate.js";
+import { hydrateEntity, hydrateEntities } from "../utils/hydrate.js";
+import { compileFilter, compileFilterWithSystem } from "../utils/compile-filter.js";
+import { compileSort, compileNullSafeSort } from "../utils/compile-sort.js";
+import { compileProjection } from "../utils/compile-projection.js";
+import { writeVersionSnapshot } from "../utils/write-version-snapshot.js";
+import { buildIdFilter } from "../utils/build-compound-id.js";
+import { MongoDriverError } from "../errors/MongoDriverError.js";
+import { MongoDuplicateKeyError } from "../errors/MongoDuplicateKeyError.js";
+import { MongoOptimisticLockError } from "../errors/MongoOptimisticLockError.js";
+import { buildPrimaryKeyDebug } from "../../../utils/repository/build-pk-debug.js";
+import { guardEmptyCriteria } from "../../../utils/repository/guard-empty-criteria.js";
+import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
+import { resolveCollectionName } from "../utils/resolve-collection-name.js";
 
 const DUPLICATE_KEY_CODE = 11000;
 
 /**
- * Get the session options object for MongoDB operations.
- * Returns undefined when no session is available.
+ * Get the session options object for mongo write operations. mongodb v7 does
+ * not accept the `signal` property on write-path methods, so writes rely on
+ * pre-flight cancellation instead of mid-flight signal forwarding.
  */
 const sessionOpts = (session?: ClientSession): { session: ClientSession } | undefined => {
   return session ? { session } : undefined;
+};
+
+/**
+ * Build a read-side options bag. mongodb v7 accepts the `signal` property on
+ * read methods (find, findOne, countDocuments, aggregate, command). Use this
+ * for cancellable reads; writes still go through `sessionOpts` alone since
+ * the write-path types reject the signal property.
+ */
+const readOpts = (
+  session: ClientSession | undefined,
+  signal: AbortSignal | undefined,
+): { session?: ClientSession; signal?: AbortSignal } | undefined => {
+  if (!session && !signal) return undefined;
+  const opts: { session?: ClientSession; signal?: AbortSignal } = {};
+  if (session) opts.session = session;
+  if (signal) opts.signal = signal;
+  return opts;
 };
 
 export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> {
@@ -36,6 +55,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   private readonly db: Db;
   private readonly filterRegistry: FilterRegistry;
   private readonly session: ClientSession | undefined;
+  private readonly signal: AbortSignal | undefined;
   private readonly collectionName: string;
   private readonly deleteFieldKey: string | null;
   private readonly expiryFieldKey: string | null;
@@ -52,11 +72,13 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     filterRegistry?: FilterRegistry,
     session?: ClientSession,
     amphora?: IAmphora,
+    signal?: AbortSignal,
   ) {
     this.metadata = metadata;
     this.db = db;
     this.filterRegistry = filterRegistry ?? new Map();
     this.session = session;
+    this.signal = signal;
     this.amphora = amphora;
     this.collectionName = resolveCollectionName(metadata);
     this.deleteFieldKey =
@@ -76,6 +98,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Insert ───────────────────────────────────────────────────────────
 
   public async executeInsert(entity: E): Promise<E> {
+    this.checkSignal();
     const collection = this.db.collection(this.collectionName);
     const doc = dehydrateEntity(entity, this.metadata, this.amphora);
 
@@ -113,6 +136,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Update ───────────────────────────────────────────────────────────
 
   public async executeUpdate(entity: E): Promise<E> {
+    this.checkSignal();
     const collection = this.db.collection(this.collectionName);
     const doc = dehydrateEntity(entity, this.metadata, this.amphora);
 
@@ -187,6 +211,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     criteria: Predicate<E>,
     options?: DeleteOptions,
   ): Promise<void> {
+    this.checkSignal();
     guardEmptyCriteria(criteria, "delete", MongoDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -214,6 +239,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Soft Delete ──────────────────────────────────────────────────────
 
   public async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+    this.checkSignal();
     if (!this.deleteFieldKey) {
       throw new MongoDriverError(
         "Entity does not support soft delete (missing @DeleteDate field)",
@@ -241,6 +267,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Restore ──────────────────────────────────────────────────────────
 
   public async executeRestore(criteria: Predicate<E>): Promise<void> {
+    this.checkSignal();
     if (!this.deleteFieldKey) {
       throw new MongoDriverError(
         "Entity does not support soft delete (missing @DeleteDate field)",
@@ -268,6 +295,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Delete Expired ───────────────────────────────────────────────────
 
   public async executeDeleteExpired(): Promise<void> {
+    this.checkSignal();
     if (!this.expiryFieldKey) return;
 
     const collection = this.db.collection(this.collectionName);
@@ -288,13 +316,16 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── TTL ──────────────────────────────────────────────────────────────
 
   public async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+    this.checkSignal();
     if (!this.expiryFieldKey) return null;
 
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const collection = this.db.collection(this.collectionName);
     const filter = compileFilter(criteria, this.metadata);
-    const doc = await collection.findOne(filter, sessionOpts(this.session));
+    const doc = await this.runReadable(() =>
+      collection.findOne(filter, readOpts(this.session, this.signal)),
+    );
 
     if (!doc) {
       throw new MongoDriverError(
@@ -322,6 +353,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     options: FindOptions<E>,
     _operationScope?: QueryScope,
   ): Promise<Array<E>> {
+    this.checkSignal();
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const collection = this.db.collection(this.collectionName);
@@ -353,10 +385,10 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (options.offset) pipeline.push({ $skip: options.offset });
       if (options.limit) pipeline.push({ $limit: options.limit });
 
-      const docs = await collection
-        .aggregate(pipeline, sessionOpts(this.session))
-        .toArray();
-      return hydrateEntities<E>(docs, this.metadata, this.amphora);
+      const docs = await this.runReadable(() =>
+        collection.aggregate(pipeline, readOpts(this.session, this.signal)).toArray(),
+      );
+      return hydrateEntities<E>(docs, this.metadata, this.amphora, options.snapshot);
     }
 
     const sort = compileSort(effectiveOrder, this.metadata);
@@ -365,15 +397,15 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       this.metadata,
     );
 
-    let cursor = collection.find(filter, sessionOpts(this.session));
+    let cursor = collection.find(filter, readOpts(this.session, this.signal));
 
     if (sort) cursor = cursor.sort(sort);
     if (projection) cursor = cursor.project(projection);
     if (options.offset) cursor = cursor.skip(options.offset);
     if (options.limit) cursor = cursor.limit(options.limit);
 
-    const docs = await cursor.toArray();
-    return hydrateEntities<E>(docs, this.metadata, this.amphora);
+    const docs = await this.runReadable(() => cursor.toArray());
+    return hydrateEntities<E>(docs, this.metadata, this.amphora, options.snapshot);
   }
 
   // ─── Count ────────────────────────────────────────────────────────────
@@ -382,6 +414,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     criteria: Predicate<E>,
     options: FindOptions<E>,
   ): Promise<number> {
+    this.checkSignal();
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const collection = this.db.collection(this.collectionName);
@@ -394,12 +427,15 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     // Apply version filtering for version-keyed entities
     filter = this.applyVersionFilter(filter, options);
 
-    return collection.countDocuments(filter, sessionOpts(this.session));
+    return this.runReadable(() =>
+      collection.countDocuments(filter, readOpts(this.session, this.signal)),
+    );
   }
 
   // ─── Exists ───────────────────────────────────────────────────────────
 
   public async executeExists(criteria: Predicate<E>): Promise<boolean> {
+    this.checkSignal();
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const collection = this.db.collection(this.collectionName);
@@ -408,10 +444,12 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     // Apply version filtering: only check current versions
     filter = this.applyVersionFilter(filter, {} as FindOptions<E>);
 
-    const count = await collection.countDocuments(filter, {
-      limit: 1,
-      ...sessionOpts(this.session),
-    });
+    const count = await this.runReadable(() =>
+      collection.countDocuments(filter, {
+        limit: 1,
+        ...readOpts(this.session, this.signal),
+      }),
+    );
 
     return count > 0;
   }
@@ -423,6 +461,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     property: keyof E,
     value: number,
   ): Promise<void> {
+    this.checkSignal();
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const collection = this.db.collection(this.collectionName);
@@ -445,6 +484,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     property: keyof E,
     value: number,
   ): Promise<void> {
+    this.checkSignal();
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const collection = this.db.collection(this.collectionName);
@@ -463,6 +503,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   // ─── Insert Bulk ──────────────────────────────────────────────────────
 
   public async executeInsertBulk(entities: Array<E>): Promise<Array<E>> {
+    this.checkSignal();
     if (entities.length === 0) return [];
 
     const collection = this.db.collection(this.collectionName);
@@ -524,6 +565,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     update: DeepPartial<E>,
     options?: { systemFilters?: boolean },
   ): Promise<number> {
+    this.checkSignal();
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
     const useSystemFilters = options?.systemFilters !== false;
@@ -557,6 +599,31 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   }
 
   // ─── Private ──────────────────────────────────────────────────────────
+
+  private checkSignal(): void {
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason, undefined, "MongoDB query cancelled");
+    }
+  }
+
+  /**
+   * Wrap a readable mongo operation so that errors thrown while the signal
+   * is aborted are rewrapped as AbortError carrying the signal reason. The
+   * mongo driver propagates `signal.reason` as the thrown value when a signal
+   * fires mid-op (see mongodb Abortable contract) — we normalise to our own
+   * `AbortError` so callers (including BreakerExecutor + classifyMongoError)
+   * can match uniformly.
+   */
+  private async runReadable<T>(fn: () => Promise<T>): Promise<T> {
+    try {
+      return await fn();
+    } catch (err) {
+      if (this.signal?.aborted) {
+        throw toAbortError(this.signal.reason, err, "MongoDB query cancelled");
+      }
+      throw err;
+    }
+  }
 
   private hydrateFromDoc(doc: Document): E {
     return hydrateEntity<E>(doc, this.metadata, this.amphora);

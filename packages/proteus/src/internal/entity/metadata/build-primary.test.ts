@@ -18,26 +18,27 @@
  * - primaryCache: repeated call returns cached result (same object reference)
  */
 
-import { buildPrimaryMetadata } from "./build-primary";
-import { AbstractEntity } from "../../../decorators/AbstractEntity";
-import { AppendOnly } from "../../../decorators/AppendOnly";
-import { Cache } from "../../../decorators/Cache";
-import { Computed } from "../../../decorators/Computed";
-import { DefaultOrder } from "../../../decorators/DefaultOrder";
-import { DeleteDateField } from "../../../decorators/DeleteDateField";
-import { Embeddable } from "../../../decorators/Embeddable";
-import { Embedded } from "../../../decorators/Embedded";
-import { EmbeddedList } from "../../../decorators/EmbeddedList";
-import { Entity } from "../../../decorators/Entity";
-import { ExpiryDateField } from "../../../decorators/ExpiryDateField";
-import { Field } from "../../../decorators/Field";
-import { Hide } from "../../../decorators/Hide";
-import { Namespace } from "../../../decorators/Namespace";
-import { Nullable } from "../../../decorators/Nullable";
-import { PrimaryKey } from "../../../decorators/PrimaryKey";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { VersionKeyField } from "../../../decorators/VersionKeyField";
-import { EntityMetadataError } from "../errors/EntityMetadataError";
+import { buildPrimaryMetadata } from "./build-primary.js";
+import { AbstractEntity } from "../../../decorators/AbstractEntity.js";
+import { AppendOnly } from "../../../decorators/AppendOnly.js";
+import { Cache } from "../../../decorators/Cache.js";
+import { Computed } from "../../../decorators/Computed.js";
+import { DefaultOrder } from "../../../decorators/DefaultOrder.js";
+import { DeleteDateField } from "../../../decorators/DeleteDateField.js";
+import { Embeddable } from "../../../decorators/Embeddable.js";
+import { Embedded } from "../../../decorators/Embedded.js";
+import { EmbeddedList } from "../../../decorators/EmbeddedList.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { ExpiryDateField } from "../../../decorators/ExpiryDateField.js";
+import { Field } from "../../../decorators/Field.js";
+import { Hide } from "../../../decorators/Hide.js";
+import { Namespace } from "../../../decorators/Namespace.js";
+import { Nullable } from "../../../decorators/Nullable.js";
+import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { VersionKeyField } from "../../../decorators/VersionKeyField.js";
+import { EntityMetadataError } from "../errors/EntityMetadataError.js";
+import { describe, expect, test } from "vitest";
 
 // ─── @AbstractEntity guard ────────────────────────────────────────────────────
 

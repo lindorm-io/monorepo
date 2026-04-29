@@ -1,11 +1,11 @@
 import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
-import { IKryptos } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { B64U } from "../internal/constants/format";
-import { JwsError } from "../errors";
-import { IJwsKit } from "../interfaces";
-import {
+import type { IKryptos } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
+import { B64U } from "../internal/constants/format.js";
+import { JwsError } from "../errors/index.js";
+import type { IJwsKit } from "../interfaces/index.js";
+import type {
   CertBindingMode,
   DecodedJws,
   JwsKitOptions,
@@ -14,20 +14,20 @@ import {
   SignJwsOptions,
   SignedJws,
   TokenHeaderOptions,
-} from "../types";
+} from "../types/index.js";
 import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
-} from "../internal/utils/compute-typ-header";
-import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header";
+} from "../internal/utils/compute-typ-header.js";
+import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import {
   createJoseSignature,
   verifyJoseSignature,
-} from "../internal/utils/jose-signature";
-import { parseTokenHeader } from "../internal/utils/token-header";
-import { resolveCertBinding } from "../internal/utils/resolve-cert-binding";
-import { verifyCertBinding } from "../internal/utils/verify-cert-binding";
-import { validateCrit } from "../internal/utils/validate-crit";
+} from "../internal/utils/jose-signature.js";
+import { parseTokenHeader } from "../internal/utils/token-header.js";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
+import { validateCrit } from "../internal/utils/validate-crit.js";
 
 export class JwsKit implements IJwsKit {
   private readonly certBindingMode: CertBindingMode;

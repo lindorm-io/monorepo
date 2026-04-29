@@ -1,5 +1,6 @@
-import { ProteusError } from "../../../../errors";
-import { extractEnumValues } from "./extract-enum-values";
+import { ProteusError } from "../../../../errors/index.js";
+import { extractEnumValues } from "./extract-enum-values.js";
+import { describe, expect, it } from "vitest";
 
 // --- String enums ---
 

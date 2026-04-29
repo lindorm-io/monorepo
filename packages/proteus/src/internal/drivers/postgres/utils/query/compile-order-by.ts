@@ -1,7 +1,7 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import { quoteIdentifier } from "../quote-identifier";
-import { resolveColumnName } from "../resolve-column-name";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnName } from "../resolve-column-name.js";
 
 export const compileOrderBy = <E extends IEntity>(
   orderBy: Partial<Record<keyof E, "ASC" | "DESC">> | null,

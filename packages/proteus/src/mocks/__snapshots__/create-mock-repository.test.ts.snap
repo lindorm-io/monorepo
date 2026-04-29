@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createMockRepository should create a mock with all methods as jest.fn() 1`] = `
+exports[`createMockRepository > should create a mock with all methods as vi.fn() 1`] = `
 {
   "average": [MockFunction],
   "clear": [MockFunction],
@@ -42,7 +42,7 @@ exports[`createMockRepository should create a mock with all methods as jest.fn()
 }
 `;
 
-exports[`createMockRepository should return sensible defaults for pagination methods 1`] = `
+exports[`createMockRepository > should return sensible defaults for pagination methods 1`] = `
 {
   "data": [],
   "endCursor": null,
@@ -52,7 +52,7 @@ exports[`createMockRepository should return sensible defaults for pagination met
 }
 `;
 
-exports[`createMockRepository should return sensible defaults for pagination methods 2`] = `
+exports[`createMockRepository > should return sensible defaults for pagination methods 2`] = `
 {
   "data": [],
   "hasMore": false,

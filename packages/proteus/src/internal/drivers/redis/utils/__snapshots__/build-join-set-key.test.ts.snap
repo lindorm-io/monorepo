@@ -1,11 +1,11 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildJoinSetKey should build forward key with namespace 1`] = `"myapp:join:post_x_tag:post_id:p1"`;
+exports[`buildJoinSetKey > should build forward key with namespace 1`] = `"myapp:join:post_x_tag:post_id:p1"`;
 
-exports[`buildJoinSetKey should build forward key without namespace 1`] = `"join:post_x_tag:post_id:p1"`;
+exports[`buildJoinSetKey > should build forward key without namespace 1`] = `"join:post_x_tag:post_id:p1"`;
 
-exports[`buildJoinSetKey should encode values containing colons 1`] = `"join:post_x_tag:post_id:val%3Acolon"`;
+exports[`buildJoinSetKey > should encode values containing colons 1`] = `"join:post_x_tag:post_id:val%3Acolon"`;
 
-exports[`buildReverseJoinSetKey should build reverse key with namespace 1`] = `"myapp:join:post_x_tag:rev:tag_id:t1"`;
+exports[`buildReverseJoinSetKey > should build reverse key with namespace 1`] = `"myapp:join:post_x_tag:rev:tag_id:t1"`;
 
-exports[`buildReverseJoinSetKey should build reverse key without namespace 1`] = `"join:post_x_tag:rev:tag_id:t1"`;
+exports[`buildReverseJoinSetKey > should build reverse key without namespace 1`] = `"join:post_x_tag:rev:tag_id:t1"`;

@@ -1,17 +1,18 @@
-import type { RedisClient } from "../types/redis-types";
+import type { RedisClient } from "../types/redis-types.js";
 import {
   createConsumerLoop,
   type CreateConsumerLoopOptions,
-} from "./create-consumer-loop";
+} from "./create-consumer-loop.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 // Simulate XREADGROUP BLOCK — must return a delayed promise so the consumer
@@ -20,26 +21,26 @@ const blockingNull = () => new Promise((r) => setTimeout(() => r(null), 50));
 
 const createMockConnection = (overrides?: Partial<RedisClient>): RedisClient => {
   const mock: RedisClient = {
-    xadd: jest.fn().mockResolvedValue("1-0"),
-    xreadgroup: jest.fn().mockImplementation(blockingNull),
-    xack: jest.fn().mockResolvedValue(1),
-    xgroup: jest.fn().mockResolvedValue("OK"),
-    del: jest.fn().mockResolvedValue(1),
-    ping: jest.fn().mockResolvedValue("PONG"),
-    duplicate: jest.fn(),
-    disconnect: jest.fn().mockResolvedValue(undefined),
-    quit: jest.fn().mockResolvedValue("OK"),
-    on: jest.fn(),
+    xadd: vi.fn().mockResolvedValue("1-0"),
+    xreadgroup: vi.fn().mockImplementation(blockingNull),
+    xack: vi.fn().mockResolvedValue(1),
+    xgroup: vi.fn().mockResolvedValue("OK"),
+    del: vi.fn().mockResolvedValue(1),
+    ping: vi.fn().mockResolvedValue("PONG"),
+    duplicate: vi.fn(),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+    quit: vi.fn().mockResolvedValue("OK"),
+    on: vi.fn(),
     ...overrides,
   };
-  (mock.duplicate as jest.Mock).mockReturnValue({
+  (mock.duplicate as Mock).mockReturnValue({
     ...mock,
-    duplicate: jest.fn(),
-    ping: jest.fn().mockResolvedValue("PONG"),
-    xreadgroup: overrides?.xreadgroup ?? jest.fn().mockImplementation(blockingNull),
-    xack: overrides?.xack ?? jest.fn().mockResolvedValue(1),
-    disconnect: jest.fn().mockResolvedValue(undefined),
-    on: jest.fn(),
+    duplicate: vi.fn(),
+    ping: vi.fn().mockResolvedValue("PONG"),
+    xreadgroup: overrides?.xreadgroup ?? vi.fn().mockImplementation(blockingNull),
+    xack: overrides?.xack ?? vi.fn().mockResolvedValue(1),
+    disconnect: vi.fn().mockResolvedValue(undefined),
+    on: vi.fn(),
   });
   return mock;
 };
@@ -84,7 +85,7 @@ describe("createConsumerLoop", () => {
     it("should create consumer group via XGROUP CREATE", async () => {
       const connection = createMockConnection();
       const logger = createMockLogger();
-      const onEntry = jest.fn();
+      const onEntry = vi.fn();
 
       const loop = await createConsumerLoop({
         publishConnection: connection,
@@ -111,12 +112,12 @@ describe("createConsumerLoop", () => {
 
     it("should handle BUSYGROUP error gracefully", async () => {
       const connection = createMockConnection({
-        xgroup: jest
+        xgroup: vi
           .fn()
           .mockRejectedValue(new Error("BUSYGROUP Consumer Group already exists")),
       });
       const logger = createMockLogger();
-      const onEntry = jest.fn();
+      const onEntry = vi.fn();
 
       const loop = await createConsumerLoop({
         publishConnection: connection,
@@ -140,10 +141,10 @@ describe("createConsumerLoop", () => {
 
     it("should rethrow non-BUSYGROUP errors", async () => {
       const connection = createMockConnection({
-        xgroup: jest.fn().mockRejectedValue(new Error("Connection refused")),
+        xgroup: vi.fn().mockRejectedValue(new Error("Connection refused")),
       });
       const logger = createMockLogger();
-      const onEntry = jest.fn();
+      const onEntry = vi.fn();
 
       await expect(
         createConsumerLoop({
@@ -164,7 +165,7 @@ describe("createConsumerLoop", () => {
     it("should return a RedisConsumerLoop with all required fields", async () => {
       const connection = createMockConnection();
       const logger = createMockLogger();
-      const onEntry = jest.fn();
+      const onEntry = vi.fn();
 
       const loop = await createConsumerLoop({
         publishConnection: connection,
@@ -193,7 +194,7 @@ describe("createConsumerLoop", () => {
     it("should duplicate the connection for the consumer", async () => {
       const connection = createMockConnection();
       const logger = createMockLogger();
-      const onEntry = jest.fn();
+      const onEntry = vi.fn();
 
       const loop = await createConsumerLoop({
         publishConnection: connection,
@@ -219,7 +220,7 @@ describe("createConsumerLoop", () => {
       const fields = createStreamEntryFields();
 
       const duplicatedConnection = {
-        xreadgroup: jest.fn().mockImplementation((...args: Array<any>) => {
+        xreadgroup: vi.fn().mockImplementation((...args: Array<any>) => {
           callCount++;
           const readId = args[args.length - 1];
 
@@ -234,16 +235,16 @@ describe("createConsumerLoop", () => {
             setTimeout(() => resolve(null), 50);
           });
         }),
-        xack: jest.fn().mockResolvedValue(1),
-        disconnect: jest.fn().mockResolvedValue(undefined),
-        on: jest.fn(),
+        xack: vi.fn().mockResolvedValue(1),
+        disconnect: vi.fn().mockResolvedValue(undefined),
+        on: vi.fn(),
       };
 
       const connection = createMockConnection();
-      (connection.duplicate as jest.Mock).mockReturnValue(duplicatedConnection);
+      (connection.duplicate as Mock).mockReturnValue(duplicatedConnection);
 
       const logger = createMockLogger();
-      const onEntry = jest.fn().mockResolvedValue(undefined);
+      const onEntry = vi.fn().mockResolvedValue(undefined);
 
       const loop = await createConsumerLoop({
         publishConnection: connection,
@@ -275,7 +276,7 @@ describe("createConsumerLoop", () => {
       let callCount = 0;
 
       const duplicatedConnection = {
-        xreadgroup: jest.fn().mockImplementation(() => {
+        xreadgroup: vi.fn().mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
             return Promise.resolve([
@@ -290,16 +291,16 @@ describe("createConsumerLoop", () => {
           }
           return new Promise((resolve) => setTimeout(() => resolve(null), 50));
         }),
-        xack: jest.fn().mockResolvedValue(1),
-        disconnect: jest.fn().mockResolvedValue(undefined),
-        on: jest.fn(),
+        xack: vi.fn().mockResolvedValue(1),
+        disconnect: vi.fn().mockResolvedValue(undefined),
+        on: vi.fn(),
       };
 
       const connection = createMockConnection();
-      (connection.duplicate as jest.Mock).mockReturnValue(duplicatedConnection);
+      (connection.duplicate as Mock).mockReturnValue(duplicatedConnection);
 
       const logger = createMockLogger();
-      const onEntry = jest.fn().mockResolvedValue(undefined);
+      const onEntry = vi.fn().mockResolvedValue(undefined);
 
       const loop = await createConsumerLoop({
         publishConnection: connection,
@@ -326,23 +327,23 @@ describe("createConsumerLoop", () => {
       let callCount = 0;
 
       const duplicatedConnection = {
-        xreadgroup: jest.fn().mockImplementation(() => {
+        xreadgroup: vi.fn().mockImplementation(() => {
           callCount++;
           if (callCount === 1) {
             return Promise.resolve([["iris:test-topic", [["1-0", fields]]]]);
           }
           return new Promise((resolve) => setTimeout(() => resolve(null), 50));
         }),
-        xack: jest.fn().mockResolvedValue(1),
-        disconnect: jest.fn().mockResolvedValue(undefined),
-        on: jest.fn(),
+        xack: vi.fn().mockResolvedValue(1),
+        disconnect: vi.fn().mockResolvedValue(undefined),
+        on: vi.fn(),
       };
 
       const connection = createMockConnection();
-      (connection.duplicate as jest.Mock).mockReturnValue(duplicatedConnection);
+      (connection.duplicate as Mock).mockReturnValue(duplicatedConnection);
 
       const logger = createMockLogger();
-      const onEntry = jest.fn().mockRejectedValue(new Error("handler failed"));
+      const onEntry = vi.fn().mockRejectedValue(new Error("handler failed"));
 
       const loop = await createConsumerLoop({
         publishConnection: connection,
@@ -376,21 +377,21 @@ describe("createConsumerLoop", () => {
   describe("abort", () => {
     it("should stop and disconnect when aborted", async () => {
       const duplicatedConnection = {
-        xreadgroup: jest
+        xreadgroup: vi
           .fn()
           .mockImplementation(
             () => new Promise((resolve) => setTimeout(() => resolve(null), 50)),
           ),
-        xack: jest.fn().mockResolvedValue(1),
-        disconnect: jest.fn().mockResolvedValue(undefined),
-        on: jest.fn(),
+        xack: vi.fn().mockResolvedValue(1),
+        disconnect: vi.fn().mockResolvedValue(undefined),
+        on: vi.fn(),
       };
 
       const connection = createMockConnection();
-      (connection.duplicate as jest.Mock).mockReturnValue(duplicatedConnection);
+      (connection.duplicate as Mock).mockReturnValue(duplicatedConnection);
 
       const logger = createMockLogger();
-      const onEntry = jest.fn();
+      const onEntry = vi.fn();
 
       const loop = await createConsumerLoop({
         publishConnection: connection,

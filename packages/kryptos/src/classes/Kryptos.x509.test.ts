@@ -10,13 +10,14 @@ import {
   TEST_X509_RSA_LEAF_PEM,
   TEST_X509_RSA_LEAF_PRIVATE_KEY_B64,
   TEST_X509_RSA_LEAF_PUBLIC_KEY_B64,
-} from "../__fixtures__/x509";
-import { KryptosError } from "../errors";
-import { Kryptos } from "./Kryptos";
+} from "../__fixtures__/x509.js";
+import { KryptosError } from "../errors/index.js";
+import { Kryptos } from "./Kryptos.js";
+import { describe, expect, test, vi } from "vitest";
 
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest.fn().mockReturnValue("6e6f84b0-e125-5e3f-90ae-c65269668d98"),
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi.fn().mockReturnValue("6e6f84b0-e125-5e3f-90ae-c65269668d98"),
 }));
 
 describe("Kryptos (X.509)", () => {

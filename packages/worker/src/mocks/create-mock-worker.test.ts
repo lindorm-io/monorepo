@@ -1,4 +1,5 @@
-import { createMockWorker } from "./create-mock-worker";
+import { createMockWorker } from "./vitest.js";
+import { describe, expect, test, vi } from "vitest";
 
 describe("createMockWorker", () => {
   test("should create mock with expected shape", () => {
@@ -31,7 +32,7 @@ describe("createMockWorker", () => {
   test("should track on calls", () => {
     const mock = createMockWorker();
 
-    mock.on("start", jest.fn());
+    mock.on("start", vi.fn());
 
     expect(mock.on).toHaveBeenCalledTimes(1);
   });

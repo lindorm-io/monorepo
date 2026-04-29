@@ -1,15 +1,15 @@
 import type { IIrisMessageBus, IIrisWorkerQueue, IrisSource } from "@lindorm/iris";
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ProteusSource } from "@lindorm/proteus";
 import { randomUUID } from "crypto";
 import {
   createTestIrisSource,
   createTestProteusSource,
-} from "../../__fixtures__/create-test-sources";
+} from "../../__fixtures__/create-test-sources.js";
 import {
   TestAggregate,
   TestForgettableAggregate,
-} from "../../__fixtures__/modules/aggregates";
+} from "../../__fixtures__/modules/aggregates/index.js";
 import {
   TestCommandCreate,
   TestCommandDestroy,
@@ -20,7 +20,7 @@ import {
   TestCommandSetState,
   TestCommandThrows,
   TestCommandTimeout,
-} from "../../__fixtures__/modules/commands";
+} from "../../__fixtures__/modules/commands/index.js";
 import {
   TestEventCreate,
   TestEventDestroy,
@@ -31,37 +31,51 @@ import {
   TestEventSetState,
   TestEventThrows,
   TestEventTimeout,
-} from "../../__fixtures__/modules/events";
-import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts";
-import { TestViewQuery } from "../../__fixtures__/modules/queries";
-import { TestSaga } from "../../__fixtures__/modules/sagas";
-import { TestView, TestViewEntity } from "../../__fixtures__/modules/views";
-import { AggregateAlreadyCreatedError, AggregateDestroyedError } from "../../errors";
+} from "../../__fixtures__/modules/events/index.js";
+import { TestTimeoutReminder } from "../../__fixtures__/modules/timeouts/index.js";
+import { TestViewQuery } from "../../__fixtures__/modules/queries/index.js";
+import { TestSaga } from "../../__fixtures__/modules/sagas/index.js";
+import { TestView, TestViewEntity } from "../../__fixtures__/modules/views/index.js";
+import {
+  AggregateAlreadyCreatedError,
+  AggregateDestroyedError,
+} from "../../errors/index.js";
 import {
   EventRecord,
   EncryptionRecord,
   CausationRecord,
   ChecksumRecord,
   SagaRecord,
-} from "../entities";
+} from "../entities/index.js";
 import {
   HermesCommandMessage,
   HermesEventMessage,
   HermesErrorMessage,
   HermesTimeoutMessage,
-} from "../messages";
-import { HermesScanner } from "../registry/HermesScanner";
-import { HermesRegistry } from "../registry/hermes-registry";
+} from "../messages/index.js";
+import { HermesScanner } from "../registry/HermesScanner.js";
+import { HermesRegistry } from "../registry/hermes-registry.js";
 import type {
   RegisteredAggregate,
   RegisteredSaga,
   RegisteredView,
   HandlerRegistration,
-} from "../registry/types";
-import { AggregateDomain } from "./aggregate-domain";
-import { SagaDomain } from "./saga-domain";
-import { ViewDomain } from "./view-domain";
-import { ChecksumDomain } from "./checksum-domain";
+} from "../registry/types.js";
+import { AggregateDomain } from "./aggregate-domain.js";
+import { SagaDomain } from "./saga-domain.js";
+import { ViewDomain } from "./view-domain.js";
+import { ChecksumDomain } from "./checksum-domain.js";
+import {
+  afterAll,
+  afterEach,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type MockInstance,
+} from "vitest";
 
 // This integration test exercises the full pipeline across all four domains
 // (aggregate, saga, view, checksum) with real memory drivers.
@@ -120,16 +134,16 @@ describe("Full Pipeline Integration", () => {
   let timeoutQueue: IIrisWorkerQueue<HermesTimeoutMessage>;
 
   // Spies to intercept event publishing (prevents double-dispatch issues)
-  let eventBusPublishSpy: jest.SpyInstance;
-  let commandPublishSpy: jest.SpyInstance;
-  let timeoutPublishSpy: jest.SpyInstance;
-  let errorPublishSpy: jest.SpyInstance;
+  let eventBusPublishSpy: MockInstance;
+  let commandPublishSpy: MockInstance;
+  let timeoutPublishSpy: MockInstance;
+  let errorPublishSpy: MockInstance;
 
   beforeAll(async () => {
     proteus = createTestProteusSource();
     iris = createTestIrisSource();
 
-    const scanned = HermesScanner.scan(ALL_MODULES);
+    const scanned = await HermesScanner.scan(ALL_MODULES);
     registry = new HermesRegistry(scanned);
 
     proteus.addEntities([
@@ -173,10 +187,10 @@ describe("Full Pipeline Integration", () => {
     // domain creates HermesEventMessage objects via Object.assign (not
     // through iris create()), so we intercept publish to manually feed
     // events to saga/view domains.
-    eventBusPublishSpy = jest.spyOn(eventBus, "publish").mockResolvedValue(undefined);
-    commandPublishSpy = jest.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
-    timeoutPublishSpy = jest.spyOn(timeoutQueue, "publish").mockResolvedValue(undefined);
-    errorPublishSpy = jest.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
+    eventBusPublishSpy = vi.spyOn(eventBus, "publish").mockResolvedValue(undefined);
+    commandPublishSpy = vi.spyOn(commandQueue, "publish").mockResolvedValue(undefined);
+    timeoutPublishSpy = vi.spyOn(timeoutQueue, "publish").mockResolvedValue(undefined);
+    errorPublishSpy = vi.spyOn(errorQueue, "publish").mockResolvedValue(undefined);
 
     aggregateDomain = new AggregateDomain({
       registry,

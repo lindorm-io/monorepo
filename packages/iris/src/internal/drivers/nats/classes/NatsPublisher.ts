@@ -1,10 +1,10 @@
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions } from "../../../../types";
-import type { DriverBaseOptions } from "../../../classes/DriverBase";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { NatsSharedState } from "../types/nats-types";
-import { DriverPublisherBase } from "../../../classes/DriverPublisherBase";
-import { publishNatsMessages } from "../utils/publish-nats-messages";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions } from "../../../../types/index.js";
+import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { NatsSharedState } from "../types/nats-types.js";
+import { DriverPublisherBase } from "../../../classes/DriverPublisherBase.js";
+import { publishNatsMessages } from "../utils/publish-nats-messages.js";
 
 export type NatsPublisherOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: NatsSharedState;

@@ -1,6 +1,7 @@
-import { Amphora, IAmphora } from "@lindorm/amphora";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { Kryptos } from "@lindorm/kryptos";
-import { ILogger, createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -10,9 +11,10 @@ import {
   TEST_X509_LEAF_PRIVATE_KEY_B64,
   TEST_X509_LEAF_PUBLIC_KEY_B64,
   TEST_X509_ROOT_PEM,
-} from "../__fixtures__/x509";
-import { Aegis } from "./Aegis";
-import { JwtKit } from "./JwtKit";
+} from "../__fixtures__/x509.js";
+import { Aegis } from "./Aegis.js";
+import { JwtKit } from "./JwtKit.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 // The X.509 fixtures have a validity window of 2026-04-13 .. 2126-03-20. We
 // pin MockDate inside the window so that any implicit time-based checks
@@ -20,9 +22,9 @@ import { JwtKit } from "./JwtKit";
 const MockedDate = new Date("2026-06-01T12:00:00.000Z");
 MockDate.set(MockedDate);
 
-jest.mock("crypto", () => ({
-  ...jest.requireActual("crypto"),
-  randomUUID: jest
+vi.mock("crypto", async () => ({
+  ...(await vi.importActual<typeof import("crypto")>("crypto")),
+  randomUUID: vi
     .fn()
     .mockReturnValueOnce("7a14c2ca-1111-4999-b111-aegis-cert-0001")
     .mockReturnValueOnce("7a14c2ca-1111-4999-b111-aegis-cert-0002")
@@ -230,7 +232,8 @@ describe("Aegis cert binding", () => {
 
       // Directly exercise verifyCertBinding for the "mismatch" branch by
       // constructing a header with a fake thumbprint.
-      const { verifyCertBinding } = await import("../internal/utils/verify-cert-binding");
+      const { verifyCertBinding } =
+        await import("../internal/utils/verify-cert-binding.js");
 
       expect(() =>
         verifyCertBinding({
@@ -318,7 +321,8 @@ describe("Aegis cert binding", () => {
       // the header and rebuild. The signature is broken by the header
       // mutation, but the check we care about fires independently — we
       // call verifyCertBinding directly to assert the error text.
-      const { verifyCertBinding } = await import("../internal/utils/verify-cert-binding");
+      const { verifyCertBinding } =
+        await import("../internal/utils/verify-cert-binding.js");
       const kryptos = buildChainlessKryptos();
 
       expect(() =>
@@ -454,7 +458,8 @@ describe("Aegis cert binding", () => {
       // signatures with different cert chains in-test is impractical with
       // a single fixture set. The invariant we're proving: lax skips ONLY
       // the "stranded" branch, never the "mismatch" branch.
-      const { verifyCertBinding } = await import("../internal/utils/verify-cert-binding");
+      const { verifyCertBinding } =
+        await import("../internal/utils/verify-cert-binding.js");
       const certKryptos = buildCertBoundKryptos();
 
       expect(() =>

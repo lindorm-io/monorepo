@@ -2,9 +2,10 @@
 // Tests @Transform, @OnCreate, @OnHydrate, @OnValidate, @Schema,
 // @MandatoryField, @PersistentField, and @CorrelationField decorators.
 
-import type { TckDriverHandle } from "./types";
-import type { TckMessages } from "./create-tck-messages";
-import { waitFor } from "./wait";
+import type { TckDriverHandle } from "./types.js";
+import type { TckMessages } from "./create-tck-messages.js";
+import { waitFor } from "./wait.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

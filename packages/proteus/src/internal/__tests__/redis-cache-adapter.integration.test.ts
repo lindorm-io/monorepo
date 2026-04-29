@@ -1,12 +1,13 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 // Redis Cache Adapter Integration Tests
 //
 // Exercises RedisCacheAdapter against a real Redis instance (via docker-compose).
 // Uses Redis DB 1 (isolated from other tests on DB 0) and FLUSHDB for clean state.
 
-import Redis from "ioredis";
-import { createMockLogger } from "@lindorm/logger";
-import { RedisCacheAdapter } from "../../classes/RedisCacheAdapter";
-import { ProteusSource } from "../../classes/ProteusSource";
+import { Redis } from "ioredis";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { RedisCacheAdapter } from "../../classes/RedisCacheAdapter.js";
+import { ProteusSource } from "../../classes/ProteusSource.js";
 import {
   Cache,
   CreateDateField,
@@ -16,9 +17,9 @@ import {
   PrimaryKeyField,
   UpdateDateField,
   VersionField,
-} from "../../decorators";
+} from "../../decorators/index.js";
 
-jest.setTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000 });
 
 // ─── Test Entity for full integration test ───────────────────────────────────
 
@@ -247,9 +248,9 @@ describe("RedisCacheAdapter: full CachingRepository integration", () => {
 
   it("should serve a cache miss on first find, cache hit on second, and miss again after insert", async () => {
     const repo = source.repository(RedisCachedProduct);
-    const getSpy = jest.spyOn(adapter, "get");
-    const setSpy = jest.spyOn(adapter, "set");
-    const delByPrefixSpy = jest.spyOn(adapter, "delByPrefix");
+    const getSpy = vi.spyOn(adapter, "get");
+    const setSpy = vi.spyOn(adapter, "set");
+    const delByPrefixSpy = vi.spyOn(adapter, "delByPrefix");
 
     // ── Step 1: first find is a cache miss ──────────────────────────────────
     const first = await repo.find({});

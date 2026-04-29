@@ -1,14 +1,14 @@
-import type { IDeadLetterStore } from "../../interfaces/IrisDeadLetterStore";
+import type { IDeadLetterStore } from "../../interfaces/IrisDeadLetterStore.js";
 import type {
   DeadLetterEntry,
   DeadLetterFilterOptions,
   DeadLetterListOptions,
-} from "../../types/dead-letter";
-import { checkPipelineResults } from "../utils/check-pipeline-results";
+} from "../../types/dead-letter.js";
+import { checkPipelineResults } from "../utils/check-pipeline-results.js";
 import {
   deserializeDeadLetterEntry,
   serializeDeadLetterEntry,
-} from "./utils/serialize-helpers";
+} from "./utils/serialize-helpers.js";
 
 export class RedisDeadLetterStore implements IDeadLetterStore {
   private readonly client: any;

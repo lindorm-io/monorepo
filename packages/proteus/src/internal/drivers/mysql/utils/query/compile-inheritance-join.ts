@@ -1,10 +1,10 @@
-import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import {
   type InheritanceAliasMap,
   buildInheritanceAliases as sharedBuildAliases,
   compileInheritanceJoin as sharedCompileJoin,
-} from "../../../../utils/sql/compile-inheritance-join";
-import { mysqlDialect } from "../mysql-dialect";
+} from "../../../../utils/sql/compile-inheritance-join.js";
+import { mysqlDialect } from "../mysql-dialect.js";
 
 export type { InheritanceAliasMap };
 

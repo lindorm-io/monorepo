@@ -1,13 +1,14 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { RabbitSharedState } from "../types/rabbit-types";
-import { RabbitPublisher } from "./RabbitPublisher";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { RabbitPublisher } from "./RabbitPublisher.js";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // --- Mocks ---
-const mockPublishRabbitMessages = jest.fn().mockResolvedValue(undefined);
-jest.mock("../utils/publish-messages", () => ({
+const mockPublishRabbitMessages = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/publish-messages.js", async () => ({
   publishRabbitMessages: (...args: Array<unknown>) => mockPublishRabbitMessages(...args),
 }));
 
@@ -21,18 +22,18 @@ class TckRabbitPubBasic implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (overrides?: Partial<RabbitSharedState>): RabbitSharedState => ({
   connection: {} as any,
-  publishChannel: { publish: jest.fn() } as any,
+  publishChannel: { publish: vi.fn() } as any,
   consumeChannel: null,
   exchange: "test-exchange",
   dlxExchange: "test-exchange.dlx",

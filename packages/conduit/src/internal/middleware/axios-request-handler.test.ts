@@ -1,17 +1,18 @@
-import { composeAxiosConfig as _composeAxiosConfig } from "../utils/compose-axios-config";
-import { requestWithRetry as _requestWithRetry } from "../utils/request-with-retry";
-import { useAxios as _useAxios } from "../utils/use-axios";
-import { axiosRequestHandler } from "./axios-request-handler";
+import { composeAxiosConfig as _composeAxiosConfig } from "../utils/compose-axios-config.js";
+import { requestWithRetry as _requestWithRetry } from "../utils/request-with-retry.js";
+import { useAxios as _useAxios } from "../utils/use-axios.js";
+import { axiosRequestHandler } from "./axios-request-handler.js";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../utils/compose-axios-config");
-jest.mock("../utils/request-with-retry");
-jest.mock("../utils/use-axios");
+vi.mock("../utils/compose-axios-config.js");
+vi.mock("../utils/request-with-retry.js");
+vi.mock("../utils/use-axios.js");
 
-const composeAxiosConfig = _composeAxiosConfig as jest.Mock;
-const requestWithRetry = _requestWithRetry as jest.Mock;
-const useAxios = _useAxios as jest.Mock;
+const composeAxiosConfig = _composeAxiosConfig as Mock;
+const requestWithRetry = _requestWithRetry as Mock;
+const useAxios = _useAxios as Mock;
 
-describe("axiosRequestHandler", () => {
+describe("axiosRequestHandler", async () => {
   let ctx: any;
 
   beforeEach(() => {
@@ -22,10 +23,10 @@ describe("axiosRequestHandler", () => {
     requestWithRetry.mockResolvedValueOnce({ response: true });
   });
 
-  afterEach(jest.resetAllMocks);
+  afterEach(vi.resetAllMocks);
 
   test("should resolve", async () => {
-    await expect(axiosRequestHandler(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(axiosRequestHandler(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(requestWithRetry).toHaveBeenCalledTimes(1);
     expect(requestWithRetry).toHaveBeenCalledWith(expect.any(Function), ctx);

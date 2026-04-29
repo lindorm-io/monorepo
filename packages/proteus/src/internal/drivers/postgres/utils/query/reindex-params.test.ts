@@ -1,4 +1,5 @@
-import { reindexParams } from "./reindex-params";
+import { reindexParams } from "./reindex-params.js";
+import { describe, expect, test } from "vitest";
 
 describe("reindexParams", () => {
   describe("when globalParams is empty (offset = 0)", () => {

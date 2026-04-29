@@ -6,44 +6,46 @@ import {
   type ICircuitBreaker,
 } from "@lindorm/breaker";
 import { ms } from "@lindorm/date";
-import { ILogger } from "@lindorm/logger";
+import type { ILogger } from "@lindorm/logger";
 import type { Constructor, Dict } from "@lindorm/types";
-import { NotSupportedError, ProteusError } from "../errors";
-import {
+import { NotSupportedError, ProteusError } from "../errors/index.js";
+import type {
   IEntity,
   IProteusQueryBuilder,
   IProteusRepository,
   IProteusSource,
-} from "../interfaces";
-import { ProteusSession } from "./ProteusSession";
-import type { ICacheAdapter } from "../interfaces/CacheAdapter";
+} from "../interfaces/index.js";
+import { ProteusSession } from "./ProteusSession.js";
+import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 import type {
   EntityEmitFn,
   EntityScannerInput,
   NamingStrategy,
   ProteusBreakerOptions,
+  ProteusHookMeta,
   ProteusSourceEventMap,
   ProteusSourceOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../types";
-import { classifyMongoError } from "../internal/drivers/mongo/utils/classify-breaker-error";
-import { classifyMysqlError } from "../internal/drivers/mysql/utils/classify-breaker-error";
-import { classifyPostgresError } from "../internal/drivers/postgres/utils/classify-breaker-error";
-import { classifyRedisError } from "../internal/drivers/redis/utils/classify-breaker-error";
-import { CachingRepository } from "../internal/classes/CachingRepository";
-import { EntityScanner } from "../internal/entity/classes/EntityScanner";
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { resolveInheritanceHierarchies } from "../internal/entity/metadata/resolve-inheritance";
-import { clearPrimaryCache } from "../internal/entity/metadata/build-primary";
-import { clearMetadataCache } from "../internal/entity/metadata/registry";
-import { validateEncryptedFields } from "../internal/entity/utils/validate-encrypted-fields";
-import { applyNamingStrategy } from "../internal/utils/naming/apply-naming-strategy";
-import type { MetaInheritance } from "../internal/entity/types/inheritance";
+} from "../types/index.js";
+import { createDefaultProteusHookMeta } from "../types/proteus-hook-meta.js";
+import { classifyMongoError } from "../internal/drivers/mongo/utils/classify-breaker-error.js";
+import { classifyMysqlError } from "../internal/drivers/mysql/utils/classify-breaker-error.js";
+import { classifyPostgresError } from "../internal/drivers/postgres/utils/classify-breaker-error.js";
+import { classifyRedisError } from "../internal/drivers/redis/utils/classify-breaker-error.js";
+import { CachingRepository } from "../internal/classes/CachingRepository.js";
+import { EntityScanner } from "../internal/entity/classes/EntityScanner.js";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { resolveInheritanceHierarchies } from "../internal/entity/metadata/resolve-inheritance.js";
+import { clearPrimaryCache } from "../internal/entity/metadata/build-primary.js";
+import { clearMetadataCache } from "../internal/entity/metadata/registry.js";
+import { validateEncryptedFields } from "../internal/entity/utils/validate-encrypted-fields.js";
+import { applyNamingStrategy } from "../internal/utils/naming/apply-naming-strategy.js";
+import type { MetaInheritance } from "../internal/entity/types/inheritance.js";
 import type {
   IProteusDriver,
   MetadataResolver,
-} from "../internal/interfaces/ProteusDriver";
+} from "../internal/interfaces/ProteusDriver.js";
 import {
   type FilterRegistry,
   createFilterRegistry,
@@ -51,17 +53,22 @@ import {
   setFilterParams as setFilterParamsUtil,
   enableFilter as enableFilterUtil,
   disableFilter as disableFilterUtil,
-} from "../internal/utils/query/filter-registry";
-import type { EntityMetadata } from "../internal/entity/types/metadata";
+} from "../internal/utils/query/filter-registry.js";
+import type { EntityMetadata } from "../internal/entity/types/metadata.js";
 
 /**
  * Options for creating a session from a ProteusSource.
  */
-export type SessionOptions<C = unknown> = {
+export type SessionOptions = {
   /** Override the logger on the session. */
   logger?: ILogger;
-  /** Override the context on the session. */
-  context?: C;
+  /** Override the request-scoped hook metadata on the session. */
+  meta?: ProteusHookMeta;
+  /**
+   * Optional AbortSignal scoped to the session. When aborted, in-flight queries
+   * issued through this session are cancelled server-side (Postgres only).
+   */
+  signal?: AbortSignal;
 };
 
 /**
@@ -71,14 +78,15 @@ export type SessionOptions<C = unknown> = {
  * obtain repositories, query builders, and run transactions. The source
  * manages connection pooling, entity metadata resolution, and caching.
  */
-export class ProteusSource<C = unknown> implements IProteusSource<C> {
+export class ProteusSource implements IProteusSource {
   private _driver: IProteusDriver | undefined;
   private readonly _breaker: ICircuitBreaker | null;
   private readonly _options: ProteusSourceOptions;
   private readonly _amphora: IAmphora | undefined;
   private readonly logger: ILogger;
-  private readonly context: C;
+  private readonly meta: ProteusHookMeta;
   private readonly _entities: Array<Constructor<IEntity>>;
+  private readonly _pendingEntityPaths: Array<EntityScannerInput[number]>;
   private readonly resolveMetadata: MetadataResolver;
   private readonly cacheAdapter: ICacheAdapter | undefined;
   private readonly sourceTtlMs: number | undefined;
@@ -96,8 +104,16 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["ProteusSource"]);
-    this.context = options.context as C;
-    this._entities = options.entities ? EntityScanner.scan(options.entities) : [];
+    this.meta = options.meta ?? createDefaultProteusHookMeta();
+    // Pre-loaded classes go straight into _entities; string paths are deferred
+    // to setup() since scanner.import() is async.
+    this._entities = ((options.entities ?? []) as Array<unknown>).filter(
+      (a): a is Constructor<IEntity> =>
+        typeof a !== "string" && (a as any)?.prototype != null,
+    );
+    this._pendingEntityPaths = ((options.entities ?? []) as Array<unknown>).filter(
+      (a): a is string => typeof a === "string",
+    );
 
     const namespace = options.namespace ?? null;
     this._namespace = namespace;
@@ -162,25 +178,25 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   // ─── Typed EventEmitter (composition) ──────────────────────────────
 
   /** Subscribe to a source event. */
-  public on<K extends keyof ProteusSourceEventMap<C>>(
+  public on<K extends keyof ProteusSourceEventMap>(
     event: K,
-    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+    listener: (payload: ProteusSourceEventMap[K]) => void,
   ): void {
     this._emitter.on(event as string, listener);
   }
 
   /** Unsubscribe from a source event. */
-  public off<K extends keyof ProteusSourceEventMap<C>>(
+  public off<K extends keyof ProteusSourceEventMap>(
     event: K,
-    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+    listener: (payload: ProteusSourceEventMap[K]) => void,
   ): void {
     this._emitter.off(event as string, listener);
   }
 
   /** Subscribe to a source event, firing only once. */
-  public once<K extends keyof ProteusSourceEventMap<C>>(
+  public once<K extends keyof ProteusSourceEventMap>(
     event: K,
-    listener: (payload: ProteusSourceEventMap<C>[K]) => void,
+    listener: (payload: ProteusSourceEventMap[K]) => void,
   ): void {
     this._emitter.once(event as string, listener);
   }
@@ -201,7 +217,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   };
 
   /** Create a lightweight, request-scoped session sharing the same connection pool but with a new logger and/or context. */
-  public session(options?: SessionOptions<C>): ProteusSession<C> {
+  public session(options?: SessionOptions): ProteusSession {
     // Reference cell pattern: new ref cell for filter registry isolation.
     const registryRef = { current: cloneFilterRegistry(this._registryRef.current) };
 
@@ -212,19 +228,24 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     };
 
     const clonedDriver = this._driver
-      ? this._driver.cloneWithGetters(() => registryRef.current, sessionEmitEntity)
+      ? this._driver.cloneWithGetters(
+          () => registryRef.current,
+          sessionEmitEntity,
+          options?.signal,
+        )
       : undefined;
 
-    return new ProteusSession<C>({
+    return new ProteusSession({
       source: this,
       logger: options?.logger?.child(["ProteusSource"]) ?? this.logger,
-      context: options?.context ?? this.context,
+      meta: options?.meta ?? this.meta,
       registryRef,
       resolveMetadata: this.resolveMetadata,
       cacheAdapter: this.cacheAdapter,
       sourceTtlMs: this.sourceTtlMs,
       parentEmitEntity: parentEmit,
       driver: clonedDriver!,
+      signal: options?.signal,
     });
   }
 
@@ -252,22 +273,24 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   }
 
   /** Register additional entity classes or glob patterns after construction. */
-  public addEntities(entities: EntityScannerInput): void {
+  public async addEntities(entities: EntityScannerInput): Promise<void> {
     if (this.isSetUp) {
       throw new ProteusError(
         "Cannot add entities after setup() has been called. Create a new ProteusSource instance instead.",
       );
     }
-    this._entities.push(
-      ...EntityScanner.scan(entities).filter(
-        (Entity) => !this._entities.includes(Entity),
-      ),
-    );
+    const scanned = await EntityScanner.scan(entities);
+    this._entities.push(...scanned.filter((Entity) => !this._entities.includes(Entity)));
   }
 
   /** Return resolved metadata for all registered entities. */
   public getEntityMetadata(): Array<EntityMetadata> {
     return this._entities.map((target) => this.resolveMetadata(target));
+  }
+
+  /** Check whether an entity class was registered with this source. */
+  public hasEntity<E extends IEntity>(target: Constructor<E>): boolean {
+    return this._entities.includes(target as Constructor<IEntity>);
   }
 
   /** Open the database connection (or connection pool). */
@@ -281,7 +304,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
     switch (opts.driver) {
       case "postgres": {
         const { PostgresDriver } =
-          await import("../internal/drivers/postgres/classes/PostgresDriver");
+          await import("../internal/drivers/postgres/classes/PostgresDriver.js");
         this._driver = new PostgresDriver(
           opts,
           this.logger,
@@ -296,7 +319,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "memory": {
         const { MemoryDriver } =
-          await import("../internal/drivers/memory/classes/MemoryDriver");
+          await import("../internal/drivers/memory/classes/MemoryDriver.js");
         this._driver = new MemoryDriver(
           opts,
           this.logger,
@@ -310,7 +333,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "redis": {
         const { RedisDriver } =
-          await import("../internal/drivers/redis/classes/RedisDriver");
+          await import("../internal/drivers/redis/classes/RedisDriver.js");
         this._driver = new RedisDriver(
           opts,
           this.logger,
@@ -325,7 +348,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "sqlite": {
         const { SqliteDriver } =
-          await import("../internal/drivers/sqlite/classes/SqliteDriver");
+          await import("../internal/drivers/sqlite/classes/SqliteDriver.js");
         this._driver = new SqliteDriver(
           opts,
           this.logger,
@@ -339,7 +362,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "mysql": {
         const { MySqlDriver } =
-          await import("../internal/drivers/mysql/classes/MySqlDriver");
+          await import("../internal/drivers/mysql/classes/MySqlDriver.js");
         this._driver = new MySqlDriver(
           opts,
           this.logger,
@@ -354,7 +377,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
       }
       case "mongo": {
         const { MongoDriver } =
-          await import("../internal/drivers/mongo/classes/MongoDriver");
+          await import("../internal/drivers/mongo/classes/MongoDriver.js");
         this._driver = new MongoDriver(
           opts,
           this.logger,
@@ -423,6 +446,16 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
   }
 
   private async _doSetup(): Promise<void> {
+    if (this._pendingEntityPaths.length) {
+      const scanned = await EntityScanner.scan(this._pendingEntityPaths);
+      for (const entity of scanned) {
+        if (!this._entities.includes(entity)) {
+          this._entities.push(entity);
+        }
+      }
+      this._pendingEntityPaths.length = 0;
+    }
+
     // Invalidate any metadata that may have been cached before setup() was called.
     clearPrimaryCache();
     clearMetadataCache();
@@ -457,7 +490,7 @@ export class ProteusSource<C = unknown> implements IProteusSource<C> {
 
   /** Obtain a repository for the given entity class. Wraps with caching if a cache adapter is configured. */
   public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
-    const inner = this.requireDriver().createRepository(target, undefined, this.context);
+    const inner = this.requireDriver().createRepository(target, undefined, this.meta);
     if (!this.cacheAdapter) return inner;
 
     const metadata = this.resolveMetadata(target);

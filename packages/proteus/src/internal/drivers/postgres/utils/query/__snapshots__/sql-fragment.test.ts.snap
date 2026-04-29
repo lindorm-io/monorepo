@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`sql mix of regular values and nested SqlFragments fragment first, then scalar value 1`] = `
+exports[`sql > mix of regular values and nested SqlFragments > fragment first, then scalar value 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -11,7 +11,7 @@ exports[`sql mix of regular values and nested SqlFragments fragment first, then 
 }
 `;
 
-exports[`sql mix of regular values and nested SqlFragments interleaves scalar values and fragment params with correct indices 1`] = `
+exports[`sql > mix of regular values and nested SqlFragments > interleaves scalar values and fragment params with correct indices 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -23,7 +23,7 @@ exports[`sql mix of regular values and nested SqlFragments interleaves scalar va
 }
 `;
 
-exports[`sql mix of regular values and nested SqlFragments scalar first, nested fragment with two params, then scalar 1`] = `
+exports[`sql > mix of regular values and nested SqlFragments > scalar first, nested fragment with two params, then scalar 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -36,7 +36,7 @@ exports[`sql mix of regular values and nested SqlFragments scalar first, nested 
 }
 `;
 
-exports[`sql multiple nested SqlFragments inlines three fragments with sequential param offsets 1`] = `
+exports[`sql > multiple nested SqlFragments > inlines three fragments with sequential param offsets 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -48,7 +48,7 @@ exports[`sql multiple nested SqlFragments inlines three fragments with sequentia
 }
 `;
 
-exports[`sql multiple nested SqlFragments inlines two fragments with correct param offsets 1`] = `
+exports[`sql > multiple nested SqlFragments > inlines two fragments with correct param offsets 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -59,7 +59,7 @@ exports[`sql multiple nested SqlFragments inlines two fragments with correct par
 }
 `;
 
-exports[`sql multiple nested SqlFragments nested fragment with 10+ params does not corrupt $1 when reindexing to $10/$11 1`] = `
+exports[`sql > multiple nested SqlFragments > nested fragment with 10+ params does not corrupt $1 when reindexing to $10/$11 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -79,7 +79,7 @@ exports[`sql multiple nested SqlFragments nested fragment with 10+ params does n
 }
 `;
 
-exports[`sql multiple values become $1, $2, $3 with values in params order 1`] = `
+exports[`sql > multiple values > become $1, $2, $3 with values in params order 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -91,7 +91,7 @@ exports[`sql multiple values become $1, $2, $3 with values in params order 1`] =
 }
 `;
 
-exports[`sql nested SqlFragment inlines nested fragment SQL and reindexes its params 1`] = `
+exports[`sql > nested SqlFragment > inlines nested fragment SQL and reindexes its params 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -101,7 +101,7 @@ exports[`sql nested SqlFragment inlines nested fragment SQL and reindexes its pa
 }
 `;
 
-exports[`sql nested SqlFragment nested fragment with multiple params gets all reindexed 1`] = `
+exports[`sql > nested SqlFragment > nested fragment with multiple params gets all reindexed 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -112,7 +112,7 @@ exports[`sql nested SqlFragment nested fragment with multiple params gets all re
 }
 `;
 
-exports[`sql nested SqlFragment reindexes nested fragment params when outer has preceding values 1`] = `
+exports[`sql > nested SqlFragment > reindexes nested fragment params when outer has preceding values 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -123,7 +123,7 @@ exports[`sql nested SqlFragment reindexes nested fragment params when outer has 
 }
 `;
 
-exports[`sql no interpolations returns SQL string with empty params 1`] = `
+exports[`sql > no interpolations > returns SQL string with empty params 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [],
@@ -131,7 +131,7 @@ exports[`sql no interpolations returns SQL string with empty params 1`] = `
 }
 `;
 
-exports[`sql single value becomes $1 with value in params 1`] = `
+exports[`sql > single value > becomes $1 with value in params 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -141,7 +141,7 @@ exports[`sql single value becomes $1 with value in params 1`] = `
 }
 `;
 
-exports[`sql value types handles a Date value 1`] = `
+exports[`sql > value types > handles a Date value 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -151,7 +151,7 @@ exports[`sql value types handles a Date value 1`] = `
 }
 `;
 
-exports[`sql value types handles a boolean value 1`] = `
+exports[`sql > value types > handles a boolean value 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -161,7 +161,7 @@ exports[`sql value types handles a boolean value 1`] = `
 }
 `;
 
-exports[`sql value types handles a null value 1`] = `
+exports[`sql > value types > handles a null value 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -171,7 +171,7 @@ exports[`sql value types handles a null value 1`] = `
 }
 `;
 
-exports[`sql value types handles a number value 1`] = `
+exports[`sql > value types > handles a number value 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [
@@ -181,7 +181,7 @@ exports[`sql value types handles a number value 1`] = `
 }
 `;
 
-exports[`sql value types handles a string value 1`] = `
+exports[`sql > value types > handles a string value 1`] = `
 {
   "__brand": "SqlFragment",
   "params": [

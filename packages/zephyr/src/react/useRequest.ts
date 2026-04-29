@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ZephyrError } from "../errors/ZephyrError";
-import { useZephyrContext } from "./ZephyrProvider";
+import type { ZephyrError } from "../errors/ZephyrError.js";
+import { useZephyrContext } from "./ZephyrProvider.js";
 
 type UseRequestOptions = {
   timeout?: number;

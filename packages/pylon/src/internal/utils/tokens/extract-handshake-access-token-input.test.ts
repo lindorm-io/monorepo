@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
-import { extractHandshakeAccessTokenInput } from "./extract-handshake-access-token-input";
+import { extractHandshakeAccessTokenInput } from "./extract-handshake-access-token-input.js";
+import { describe, expect, test } from "vitest";
 
 const makeSocket = (overrides: any = {}): any => ({
   handshake: { auth: {}, headers: {}, ...overrides.handshake },

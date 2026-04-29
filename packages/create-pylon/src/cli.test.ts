@@ -1,43 +1,53 @@
-jest.mock("./prompts", () => ({ runPrompts: jest.fn() }));
-jest.mock("./scaffold", () => ({
-  scaffold: jest.fn(),
-  buildDependencyList: jest.fn(() => []),
-  buildDevDependencyList: jest.fn(() => []),
+vi.mock("./prompts.js", async () => ({ runPrompts: vi.fn() }));
+vi.mock("./scaffold.js", () => ({
+  scaffold: vi.fn(),
+  buildDependencyList: vi.fn(() => []),
+  buildDevDependencyList: vi.fn(() => []),
 }));
-jest.mock("./install", () => ({
-  installDependencies: jest.fn(),
-  installDevDependencies: jest.fn(),
+vi.mock("./install.js", () => ({
+  installDependencies: vi.fn(),
+  installDevDependencies: vi.fn(),
 }));
-jest.mock("./git", () => ({ initGit: jest.fn() }));
-jest.mock("./drivers", () => ({
-  runProteusInit: jest.fn(),
-  runProteusGenerateSampleEntity: jest.fn(),
-  runIrisInit: jest.fn(),
-  runIrisGenerateSampleMessage: jest.fn(),
+vi.mock("./git.js", () => ({ initGit: vi.fn() }));
+vi.mock("./drivers.js", () => ({
+  runProteusInit: vi.fn(),
+  runProteusGenerateSampleEntity: vi.fn(),
+  runIrisInit: vi.fn(),
+  runIrisGenerateSampleMessage: vi.fn(),
 }));
 
-import { runPrompts } from "./prompts";
-import { scaffold } from "./scaffold";
-import { installDependencies, installDevDependencies } from "./install";
-import { initGit } from "./git";
+import { runPrompts } from "./prompts.js";
+import { scaffold } from "./scaffold.js";
+import { installDependencies, installDevDependencies } from "./install.js";
+import { initGit } from "./git.js";
 import {
   runIrisGenerateSampleMessage,
   runIrisInit,
   runProteusGenerateSampleEntity,
   runProteusInit,
-} from "./drivers";
-import { run } from "./cli";
-import type { Answers } from "./types";
+} from "./drivers.js";
+import { run } from "./cli.js";
+import type { Answers } from "./types.js";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
-const mockedRunPrompts = runPrompts as jest.Mock;
-const mockedScaffold = scaffold as jest.Mock;
-const mockedInstall = installDependencies as jest.Mock;
-const mockedInstallDev = installDevDependencies as jest.Mock;
-const mockedInitGit = initGit as jest.Mock;
-const mockedProteusInit = runProteusInit as jest.Mock;
-const mockedProteusSampleEntity = runProteusGenerateSampleEntity as jest.Mock;
-const mockedIrisInit = runIrisInit as jest.Mock;
-const mockedIrisSampleMessage = runIrisGenerateSampleMessage as jest.Mock;
+const mockedRunPrompts = runPrompts as Mock;
+const mockedScaffold = scaffold as Mock;
+const mockedInstall = installDependencies as Mock;
+const mockedInstallDev = installDevDependencies as Mock;
+const mockedInitGit = initGit as Mock;
+const mockedProteusInit = runProteusInit as Mock;
+const mockedProteusSampleEntity = runProteusGenerateSampleEntity as Mock;
+const mockedIrisInit = runIrisInit as Mock;
+const mockedIrisSampleMessage = runIrisGenerateSampleMessage as Mock;
 
 const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   projectName: "demo",
@@ -51,14 +61,14 @@ const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
     auth: false,
     rateLimit: false,
   },
-  proteusDriver: "none",
+  proteusDrivers: [],
   irisDriver: "none",
   workers: [],
   ...overrides,
 });
 
 describe("cli run orchestration", () => {
-  let stdout: jest.SpyInstance;
+  let stdout: MockInstance;
 
   beforeEach(() => {
     [
@@ -84,7 +94,7 @@ describe("cli run orchestration", () => {
       mockedIrisSampleMessage,
     ].forEach((m) => m.mockResolvedValue(undefined));
 
-    stdout = jest.spyOn(process.stdout, "write").mockImplementation(() => true);
+    stdout = vi.spyOn(process.stdout, "write").mockImplementation(() => true);
   });
 
   afterEach(() => stdout.mockRestore());
@@ -102,11 +112,14 @@ describe("cli run orchestration", () => {
   });
 
   test("runs proteus init + generate when driver selected", async () => {
-    mockedRunPrompts.mockResolvedValue(baseAnswers({ proteusDriver: "postgres" }));
+    mockedRunPrompts.mockResolvedValue(baseAnswers({ proteusDrivers: ["postgres"] }));
     await run();
 
-    expect(mockedProteusInit).toHaveBeenCalledWith("/tmp/demo", "postgres");
-    expect(mockedProteusSampleEntity).toHaveBeenCalledWith("/tmp/demo");
+    expect(mockedProteusInit).toHaveBeenCalledWith(
+      "/tmp/demo",
+      expect.objectContaining({ proteusDrivers: ["postgres"] }),
+    );
+    expect(mockedProteusSampleEntity).toHaveBeenCalledWith("/tmp/demo", undefined);
     expect(mockedIrisInit).not.toHaveBeenCalled();
   });
 
@@ -121,7 +134,7 @@ describe("cli run orchestration", () => {
 
   test("orchestration order: scaffold → install → drivers → git", async () => {
     mockedRunPrompts.mockResolvedValue(
-      baseAnswers({ proteusDriver: "postgres", irisDriver: "rabbit" }),
+      baseAnswers({ proteusDrivers: ["postgres"], irisDriver: "rabbit" }),
     );
 
     const calls: Array<string> = [];

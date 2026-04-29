@@ -1,4 +1,5 @@
-import { webCryptoToDpopSigner } from "./web-crypto-to-dpop-signer";
+import { webCryptoToDpopSigner } from "./web-crypto-to-dpop-signer.js";
+import { describe, expect, test } from "vitest";
 
 describe("webCryptoToDpopSigner", () => {
   test("should produce a signer from an ES256 key pair", async () => {

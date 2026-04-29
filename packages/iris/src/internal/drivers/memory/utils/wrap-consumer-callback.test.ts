@@ -1,39 +1,40 @@
-import type { IMessage } from "../../../../interfaces";
-import type { ConsumeEnvelope } from "../../../../types";
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store";
-import { createStore } from "./create-store";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { ConsumeEnvelope } from "../../../../types/index.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
+import { createStore } from "./create-store.js";
 import {
   wrapConsumerCallback,
   type ConsumerCallbackHost,
-} from "./wrap-consumer-callback";
+} from "./wrap-consumer-callback.js";
+import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockHost = <M extends IMessage>(): ConsumerCallbackHost<M> => ({
-  prepareForConsume: jest.fn().mockResolvedValue({ data: "hydrated" }),
-  afterConsumeSuccess: jest.fn().mockResolvedValue(undefined),
-  onConsumeError: jest.fn().mockResolvedValue(undefined),
+  prepareForConsume: vi.fn().mockResolvedValue({ data: "hydrated" }),
+  afterConsumeSuccess: vi.fn().mockResolvedValue(undefined),
+  onConsumeError: vi.fn().mockResolvedValue(undefined),
 });
 
 const createMockDeadLetterManager = (): DeadLetterManager =>
   ({
-    send: jest.fn().mockResolvedValue("dl-id"),
-    list: jest.fn().mockResolvedValue([]),
-    get: jest.fn().mockResolvedValue(null),
-    remove: jest.fn().mockResolvedValue(false),
-    purge: jest.fn().mockResolvedValue(0),
-    count: jest.fn().mockResolvedValue(0),
-    close: jest.fn().mockResolvedValue(undefined),
+    send: vi.fn().mockResolvedValue("dl-id"),
+    list: vi.fn().mockResolvedValue([]),
+    get: vi.fn().mockResolvedValue(null),
+    remove: vi.fn().mockResolvedValue(false),
+    purge: vi.fn().mockResolvedValue(0),
+    count: vi.fn().mockResolvedValue(0),
+    close: vi.fn().mockResolvedValue(undefined),
   }) as any;
 
 const createEnvelope = (overrides: Partial<MemoryEnvelope> = {}): MemoryEnvelope => ({
@@ -70,7 +71,7 @@ describe("wrapConsumerCallback", () => {
   describe("happy path", () => {
     it("should call prepareForConsume, callback, and afterConsumeSuccess", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const store = createStore();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -105,7 +106,7 @@ describe("wrapConsumerCallback", () => {
 
     it("should pass ConsumeEnvelope with metadata fields to callback", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const store = createStore();
       const metadata = createMetadata({
         namespace: "my-namespace",
@@ -138,7 +139,7 @@ describe("wrapConsumerCallback", () => {
   describe("expiry", () => {
     it("should skip expired envelopes", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockResolvedValue(undefined);
+      const callback = vi.fn().mockResolvedValue(undefined);
       const store = createStore();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -170,7 +171,7 @@ describe("wrapConsumerCallback", () => {
     it("should call onConsumeError when callback throws", async () => {
       const host = createMockHost();
       const error = new Error("callback failed");
-      const callback = jest.fn().mockRejectedValue(error);
+      const callback = vi.fn().mockRejectedValue(error);
       const store = createStore();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -190,7 +191,7 @@ describe("wrapConsumerCallback", () => {
 
     it("should wrap non-Error throws into Error instances", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue("string error");
+      const callback = vi.fn().mockRejectedValue("string error");
       const store = createStore();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -213,10 +214,8 @@ describe("wrapConsumerCallback", () => {
 
     it("should not call onConsumeError if prepareForConsume fails", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(
-        new Error("hydration failed"),
-      );
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("hydration failed"));
+      const callback = vi.fn();
       const store = createStore();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -241,10 +240,8 @@ describe("wrapConsumerCallback", () => {
 
     it("should send to dead letter on prepareForConsume failure when enabled", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(
-        new Error("hydration failed"),
-      );
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("hydration failed"));
+      const callback = vi.fn();
       const store = createStore();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -270,10 +267,8 @@ describe("wrapConsumerCallback", () => {
 
     it("should not send to dead letter on prepareForConsume failure when no manager", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(
-        new Error("hydration failed"),
-      );
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("hydration failed"));
+      const callback = vi.fn();
       const store = createStore();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -297,10 +292,8 @@ describe("wrapConsumerCallback", () => {
 
     it("should not retry on prepareForConsume failure even with retries remaining", async () => {
       const host = createMockHost();
-      (host.prepareForConsume as jest.Mock).mockRejectedValue(
-        new Error("hydration failed"),
-      );
-      const callback = jest.fn();
+      (host.prepareForConsume as Mock).mockRejectedValue(new Error("hydration failed"));
+      const callback = vi.fn();
       const store = createStore();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -320,8 +313,8 @@ describe("wrapConsumerCallback", () => {
 
     it("should log and swallow afterConsumeSuccess errors without retry", async () => {
       const host = createMockHost();
-      (host.afterConsumeSuccess as jest.Mock).mockRejectedValue(new Error("hook failed"));
-      const callback = jest.fn().mockResolvedValue(undefined);
+      (host.afterConsumeSuccess as Mock).mockRejectedValue(new Error("hook failed"));
+      const callback = vi.fn().mockResolvedValue(undefined);
       const store = createStore();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -348,16 +341,16 @@ describe("wrapConsumerCallback", () => {
 
   describe("retry", () => {
     beforeEach(() => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
     });
 
     afterEach(() => {
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it("should schedule retry when attempt < maxRetries", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const store = createStore();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -376,7 +369,7 @@ describe("wrapConsumerCallback", () => {
       expect(callback).toHaveBeenCalledTimes(1);
 
       // Advance timer to trigger retry
-      await jest.advanceTimersByTimeAsync(100);
+      await vi.advanceTimersByTimeAsync(100);
 
       expect(callback).toHaveBeenCalledTimes(2);
 
@@ -388,7 +381,7 @@ describe("wrapConsumerCallback", () => {
 
     it("should not retry when attempt >= maxRetries", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const store = createStore();
       const metadata = createMetadata();
       const logger = createMockLogger();
@@ -413,7 +406,7 @@ describe("wrapConsumerCallback", () => {
     it("should send to dead letter when retries exhausted and dead letter enabled", async () => {
       const host = createMockHost();
       const error = new Error("permanent failure");
-      const callback = jest.fn().mockRejectedValue(error);
+      const callback = vi.fn().mockRejectedValue(error);
       const store = createStore();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
@@ -440,7 +433,7 @@ describe("wrapConsumerCallback", () => {
 
     it("should not send to dead letter when dead letter is false", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const store = createStore();
       const metadata = createMetadata({ deadLetter: false });
       const logger = createMockLogger();
@@ -463,7 +456,7 @@ describe("wrapConsumerCallback", () => {
 
     it("should not crash when dead letter enabled but no manager provided", async () => {
       const host = createMockHost();
-      const callback = jest.fn().mockRejectedValue(new Error("fail"));
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const store = createStore();
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();

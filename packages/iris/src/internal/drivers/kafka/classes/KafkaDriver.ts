@@ -1,7 +1,7 @@
 import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IIrisDriver } from "../../../../interfaces/IrisDriver";
+import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
 import type {
   IIrisMessageBus,
   IIrisPublisher,
@@ -9,30 +9,31 @@ import type {
   IIrisWorkerQueue,
   IMessage,
   IMessageSubscriber,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   IrisConnectionState,
   IrisEvents,
+  IrisHookMeta,
   KafkaConnectionOptions,
-} from "../../../../types";
+} from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager";
-import type { DelayManager } from "../../../delay/DelayManager";
-import type { KafkaSharedState } from "../types/kafka-types";
-import { getMessageMetadata } from "../../../message/metadata/get-message-metadata";
-import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic";
-import { resolveTopicName } from "../utils/resolve-topic-name";
-import { serializeKafkaMessage } from "../utils/serialize-kafka-message";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
+import type { KafkaSharedState } from "../types/kafka-types.js";
+import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
+import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import { resolveTopicName } from "../utils/resolve-topic-name.js";
+import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
 import {
   detachAllKafkaConsumers,
   stopAllKafkaConsumers,
-} from "../utils/stop-kafka-consumer";
-import { KafkaMessageBus } from "./KafkaMessageBus";
-import { KafkaPublisher } from "./KafkaPublisher";
-import { KafkaRpcClient } from "./KafkaRpcClient";
-import { KafkaRpcServer } from "./KafkaRpcServer";
-import { KafkaStreamProcessor } from "./KafkaStreamProcessor";
-import { KafkaWorkerQueue } from "./KafkaWorkerQueue";
+} from "../utils/stop-kafka-consumer.js";
+import { KafkaMessageBus } from "./KafkaMessageBus.js";
+import { KafkaPublisher } from "./KafkaPublisher.js";
+import { KafkaRpcClient } from "./KafkaRpcClient.js";
+import { KafkaRpcServer } from "./KafkaRpcServer.js";
+import { KafkaStreamProcessor } from "./KafkaStreamProcessor.js";
+import { KafkaWorkerQueue } from "./KafkaWorkerQueue.js";
 
 const DEFAULT_PREFIX = "iris";
 const DEFAULT_PREFETCH = 10;
@@ -40,7 +41,7 @@ const DEFAULT_SESSION_TIMEOUT_MS = 30_000;
 
 export type KafkaDriverOptions = {
   logger: ILogger;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
   brokers: Array<string>;
@@ -55,7 +56,7 @@ export type KafkaDriverOptions = {
 
 export class KafkaDriver implements IIrisDriver {
   private readonly logger: ILogger;
-  private readonly context: unknown;
+  private readonly meta: IrisHookMeta | undefined;
   private readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: KafkaSharedState;
@@ -69,7 +70,7 @@ export class KafkaDriver implements IIrisDriver {
 
   public constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
     this.logger = options.logger.child(["KafkaDriver"]);
-    this.context = options.context;
+    this.meta = options.meta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
     this.delayManager = options.delayManager;
@@ -381,7 +382,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaPublisher<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -395,7 +396,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaMessageBus<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -410,7 +411,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaWorkerQueue<M>({
       target,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
       getSubscribers: this.getSubscribers,
       state: this.state,
@@ -423,7 +424,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaStreamProcessor({
       state: this.state,
       logger: this.logger,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -437,7 +438,7 @@ export class KafkaDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -451,7 +452,7 @@ export class KafkaDriver implements IIrisDriver {
       logger: this.logger,
       requestTarget,
       responseTarget,
-      context: this.context,
+      meta: this.meta,
       amphora: this.amphora,
     });
   }
@@ -470,7 +471,7 @@ export class KafkaDriver implements IIrisDriver {
     return new KafkaDriver(
       {
         logger: this.logger,
-        context: this.context,
+        meta: this.meta,
         amphora: this.amphora,
         getSubscribers,
         brokers: this.state.connectionConfig.brokers,
@@ -495,7 +496,7 @@ export class KafkaDriver implements IIrisDriver {
   }
 
   private registerProducerHandlers(
-    producer: import("../types/kafka-types").KafkaProducer,
+    producer: import("../types/kafka-types.js").KafkaProducer,
   ): void {
     const unsubDisconnect = producer.on(producer.events.DISCONNECT, () => {
       if (this._deliberateDisconnect) return;

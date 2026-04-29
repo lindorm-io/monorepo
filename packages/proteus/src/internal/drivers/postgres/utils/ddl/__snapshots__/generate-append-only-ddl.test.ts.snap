@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateAppendOnlyDDL (PostgreSQL) escapes identifier with embedded double quotes 1`] = `
+exports[`generateAppendOnlyDDL (PostgreSQL) > escapes identifier with embedded double quotes 1`] = `
 [
   "CREATE OR REPLACE FUNCTION "public"."proteus_append_only_guard"()
 RETURNS TRIGGER AS $$
@@ -26,7 +26,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;",
 ]
 `;
 
-exports[`generateAppendOnlyDDL (PostgreSQL) generates guard function and triggers with namespace 1`] = `
+exports[`generateAppendOnlyDDL (PostgreSQL) > generates guard function and triggers with namespace 1`] = `
 [
   "CREATE OR REPLACE FUNCTION "reporting"."proteus_append_only_guard"()
 RETURNS TRIGGER AS $$
@@ -52,7 +52,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;",
 ]
 `;
 
-exports[`generateAppendOnlyDDL (PostgreSQL) generates guard function and triggers without namespace 1`] = `
+exports[`generateAppendOnlyDDL (PostgreSQL) > generates guard function and triggers without namespace 1`] = `
 [
   "CREATE OR REPLACE FUNCTION "public"."proteus_append_only_guard"()
 RETURNS TRIGGER AS $$

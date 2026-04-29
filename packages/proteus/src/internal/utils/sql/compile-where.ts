@@ -1,11 +1,11 @@
 import { isObject } from "@lindorm/is";
 import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata, MetaField } from "../../entity/types/metadata";
-import type { PredicateEntry } from "../../types/query";
-import { NotSupportedError, ProteusError } from "../../../errors";
-import { resolveColumnName } from "./resolve-column-name";
-import type { SqlDialect } from "./sql-dialect";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
+import type { PredicateEntry } from "../../types/query.js";
+import { NotSupportedError, ProteusError } from "../../../errors/index.js";
+import { resolveColumnName } from "./resolve-column-name.js";
+import type { SqlDialect } from "./sql-dialect.js";
 
 const ARRAY_OPERATORS = ["$all", "$overlap", "$contained"] as const;
 

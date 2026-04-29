@@ -1,8 +1,8 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`serializeNatsMessage should encode payload as base64 1`] = `"{"body":"hello"}"`;
+exports[`serializeNatsMessage > should encode payload as base64 1`] = `"{"body":"hello"}"`;
 
-exports[`serializeNatsMessage should include all envelope fields 1`] = `
+exports[`serializeNatsMessage > should include all envelope fields 1`] = `
 {
   "attempt": 0,
   "broadcast": true,

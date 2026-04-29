@@ -1,34 +1,35 @@
+import { afterAll, beforeAll, describe, vi } from "vitest";
 // Postgres Migration TCK Harness
 //
 // Runs the migration TCK suite against a real PostgreSQL instance.
 // Uses a random schema for isolation; teardown drops the schema.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { randomBytes } from "node:crypto";
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Client } from "pg";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../interfaces";
-import { mockScannerImport } from "../../__fixtures__/mock-scanner-import";
-import { ProteusSource } from "../../classes/ProteusSource";
-import { MigrationManager } from "../drivers/postgres/classes/MigrationManager";
-import type { PostgresQueryClient } from "../drivers/postgres/types/postgres-query-client";
-import type { MigrationTableOptions } from "../drivers/postgres/types/migration";
-import { getEntityMetadata } from "../entity/metadata/get-entity-metadata";
+import type { IEntity } from "../../interfaces/index.js";
+import { mockScannerImport } from "../../__fixtures__/mock-scanner-import.js";
+import { ProteusSource } from "../../classes/ProteusSource.js";
+import { MigrationManager } from "../drivers/postgres/classes/MigrationManager.js";
+import type { PostgresQueryClient } from "../drivers/postgres/types/postgres-query-client.js";
+import type { MigrationTableOptions } from "../drivers/postgres/types/migration.js";
+import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
 import {
   createMigrationTckEntities,
   type MigrationTckEntities,
-} from "../__fixtures__/tck/create-migration-tck-entities";
+} from "../__fixtures__/tck/create-migration-tck-entities.js";
 import {
   migrationsSuite,
   type MigrationTckContext,
-} from "../__fixtures__/tck/migrations.tck";
+} from "../__fixtures__/tck/migrations.tck.js";
 
 mockScannerImport();
 
-jest.setTimeout(120_000);
+vi.setConfig({ testTimeout: 120_000 });
 
 const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
 

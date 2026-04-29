@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`migration-table (integration) ensureMigrationTable should create the migration table with correct columns 1`] = `
+exports[`migration-table (integration) > ensureMigrationTable > should create the migration table with correct columns 1`] = `
 [
   {
     "column_name": "id",
@@ -40,7 +40,7 @@ exports[`migration-table (integration) ensureMigrationTable should create the mi
 ]
 `;
 
-exports[`migration-table (integration) ensureMigrationTable should support custom schema and table name 1`] = `
+exports[`migration-table (integration) > ensureMigrationTable > should support custom schema and table name 1`] = `
 [
   {
     "column_name": "id",

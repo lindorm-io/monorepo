@@ -1,21 +1,22 @@
 import { ClientError, ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
-import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols";
-import { useRateLimit } from "./use-rate-limit";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { RATE_LIMIT_SOURCE } from "../../internal/constants/symbols.js";
+import { useRateLimit } from "./use-rate-limit.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-jest.mock("../../internal/utils/rate-limit/fixed-window-strategy");
-jest.mock("../../internal/utils/rate-limit/sliding-window-strategy");
-jest.mock("../../internal/utils/rate-limit/token-bucket-strategy");
-jest.mock("../../internal/utils/is-context");
+vi.mock("../../internal/utils/rate-limit/fixed-window-strategy.js");
+vi.mock("../../internal/utils/rate-limit/sliding-window-strategy.js");
+vi.mock("../../internal/utils/rate-limit/token-bucket-strategy.js");
+vi.mock("../../internal/utils/is-context.js");
 
-import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-window-strategy";
-import { slidingWindowStrategy } from "../../internal/utils/rate-limit/sliding-window-strategy";
-import { tokenBucketStrategy } from "../../internal/utils/rate-limit/token-bucket-strategy";
-import { isHttpContext, isSocketContext } from "../../internal/utils/is-context";
+import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-window-strategy.js";
+import { slidingWindowStrategy } from "../../internal/utils/rate-limit/sliding-window-strategy.js";
+import { tokenBucketStrategy } from "../../internal/utils/rate-limit/token-bucket-strategy.js";
+import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
 
 describe("useRateLimit", () => {
   let ctx: any;
-  let next: jest.Mock;
+  let next: Mock;
   let mockSource: any;
   let mockRepository: any;
 
@@ -25,26 +26,26 @@ describe("useRateLimit", () => {
   const deniedResult = { allowed: false, remaining: 0, resetAt };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
 
     mockRepository = {};
-    const sessionSource = { repository: jest.fn().mockReturnValue(mockRepository) };
-    mockSource = { session: jest.fn().mockReturnValue(sessionSource) };
+    const sessionSource = { repository: vi.fn().mockReturnValue(mockRepository) };
+    mockSource = { session: vi.fn().mockReturnValue(sessionSource) };
 
-    (fixedWindowStrategy as jest.Mock).mockResolvedValue(allowedResult);
-    (slidingWindowStrategy as jest.Mock).mockResolvedValue(allowedResult);
-    (tokenBucketStrategy as jest.Mock).mockResolvedValue(allowedResult);
+    (fixedWindowStrategy as Mock).mockResolvedValue(allowedResult);
+    (slidingWindowStrategy as Mock).mockResolvedValue(allowedResult);
+    (tokenBucketStrategy as Mock).mockResolvedValue(allowedResult);
 
-    (isHttpContext as unknown as jest.Mock).mockReturnValue(true);
-    (isSocketContext as unknown as jest.Mock).mockReturnValue(false);
+    (isHttpContext as unknown as Mock).mockReturnValue(true);
+    (isSocketContext as unknown as Mock).mockReturnValue(false);
 
     ctx = {
       logger: createMockLogger(),
       request: { ip: "192.168.1.1" },
-      set: jest.fn(),
+      set: vi.fn(),
       [RATE_LIMIT_SOURCE]: mockSource,
     };
-    next = jest.fn();
+    next = vi.fn();
   });
 
   test("should call next when under rate limit (fixed strategy)", async () => {
@@ -60,11 +61,11 @@ describe("useRateLimit", () => {
   });
 
   test("should throw 429 ClientError when rate limit exceeded", async () => {
-    (fixedWindowStrategy as jest.Mock).mockResolvedValue(deniedResult);
+    (fixedWindowStrategy as Mock).mockResolvedValue(deniedResult);
 
     try {
       await useRateLimit({ window: "1m", max: 10 })(ctx, next);
-      fail("Expected error to be thrown");
+      expect.fail("Expected error to be thrown");
     } catch (err: any) {
       expect(err).toBeInstanceOf(ClientError);
       expect(err.status).toBe(429);
@@ -93,14 +94,14 @@ describe("useRateLimit", () => {
   });
 
   test("should NOT set headers on socket context", async () => {
-    (isHttpContext as unknown as jest.Mock).mockReturnValue(false);
-    (isSocketContext as unknown as jest.Mock).mockReturnValue(true);
+    (isHttpContext as unknown as Mock).mockReturnValue(false);
+    (isSocketContext as unknown as Mock).mockReturnValue(true);
 
     ctx = {
       logger: createMockLogger(),
       event: "test:event",
       io: { socket: { id: "socket-123" } },
-      set: jest.fn(),
+      set: vi.fn(),
       [RATE_LIMIT_SOURCE]: mockSource,
     };
 
@@ -111,7 +112,7 @@ describe("useRateLimit", () => {
   });
 
   test("should use custom key function", async () => {
-    const customKey = jest.fn().mockReturnValue("custom-key");
+    const customKey = vi.fn().mockReturnValue("custom-key");
 
     await useRateLimit({ window: "1m", max: 10, key: customKey })(ctx, next);
 
@@ -125,7 +126,7 @@ describe("useRateLimit", () => {
   });
 
   test("should skip when skip function returns true", async () => {
-    const skip = jest.fn().mockReturnValue(true);
+    const skip = vi.fn().mockReturnValue(true);
 
     await useRateLimit({ window: "1m", max: 10, skip })(ctx, next);
 
@@ -189,14 +190,14 @@ describe("useRateLimit", () => {
   });
 
   test("should default key to socket.id for socket", async () => {
-    (isHttpContext as unknown as jest.Mock).mockReturnValue(false);
-    (isSocketContext as unknown as jest.Mock).mockReturnValue(true);
+    (isHttpContext as unknown as Mock).mockReturnValue(false);
+    (isSocketContext as unknown as Mock).mockReturnValue(true);
 
     ctx = {
       logger: createMockLogger(),
       event: "test:event",
       io: { socket: { id: "sock-abc" } },
-      set: jest.fn(),
+      set: vi.fn(),
       [RATE_LIMIT_SOURCE]: mockSource,
     };
 
@@ -211,11 +212,11 @@ describe("useRateLimit", () => {
   });
 
   test("should set Retry-After header on 429 for HTTP context", async () => {
-    (fixedWindowStrategy as jest.Mock).mockResolvedValue(deniedResult);
+    (fixedWindowStrategy as Mock).mockResolvedValue(deniedResult);
 
     try {
       await useRateLimit({ window: "1m", max: 10 })(ctx, next);
-      fail("Expected error to be thrown");
+      expect.fail("Expected error to be thrown");
     } catch {
       // expected
     }
@@ -224,21 +225,21 @@ describe("useRateLimit", () => {
   });
 
   test("should NOT set Retry-After header on 429 for socket context", async () => {
-    (isHttpContext as unknown as jest.Mock).mockReturnValue(false);
-    (isSocketContext as unknown as jest.Mock).mockReturnValue(true);
-    (fixedWindowStrategy as jest.Mock).mockResolvedValue(deniedResult);
+    (isHttpContext as unknown as Mock).mockReturnValue(false);
+    (isSocketContext as unknown as Mock).mockReturnValue(true);
+    (fixedWindowStrategy as Mock).mockResolvedValue(deniedResult);
 
     ctx = {
       logger: createMockLogger(),
       event: "test:event",
       io: { socket: { id: "socket-123" } },
-      set: jest.fn(),
+      set: vi.fn(),
       [RATE_LIMIT_SOURCE]: mockSource,
     };
 
     try {
       await useRateLimit({ window: "1m", max: 10 })(ctx, next);
-      fail("Expected error to be thrown");
+      expect.fail("Expected error to be thrown");
     } catch {
       // expected
     }

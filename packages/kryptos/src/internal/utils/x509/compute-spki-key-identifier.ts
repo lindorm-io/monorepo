@@ -1,6 +1,6 @@
-import { KryptosType } from "../../../types";
-import { computeSubjectKeyIdentifier } from "./encode-extensions";
-import { spkiFromPublicKey } from "./spki-from-public-key";
+import type { KryptosType } from "../../../types/index.js";
+import { computeSubjectKeyIdentifier } from "./encode-extensions.js";
+import { spkiFromPublicKey } from "./spki-from-public-key.js";
 
 export const computeSpkiKeyIdentifier = (
   publicKey: Buffer,

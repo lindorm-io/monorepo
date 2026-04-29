@@ -1,1 +1,1 @@
-export * from "./LindormWorker";
+export * from "./LindormWorker.js";

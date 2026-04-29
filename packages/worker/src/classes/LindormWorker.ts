@@ -1,13 +1,13 @@
 import { isReadableTime, ms } from "@lindorm/date";
 import { isNumber } from "@lindorm/is";
-import { ILogger } from "@lindorm/logger";
-import { calculateRetry, RetryConfig } from "@lindorm/retry";
+import type { ILogger } from "@lindorm/logger";
+import { calculateRetry, type RetryConfig } from "@lindorm/retry";
 import { noopAsync, sleep } from "@lindorm/utils";
 import { EventEmitter } from "events";
-import { LindormWorkerError } from "../errors";
-import { ILindormWorker } from "../interfaces";
-import { RETRY_CONFIG } from "../internal";
-import {
+import { LindormWorkerError } from "../errors/index.js";
+import type { ILindormWorker } from "../interfaces/index.js";
+import { RETRY_CONFIG } from "../internal/index.js";
+import type {
   LindormWorkerCallback,
   LindormWorkerContext,
   LindormWorkerErrorCallback,
@@ -16,7 +16,7 @@ import {
   LindormWorkerHealth,
   LindormWorkerListener,
   LindormWorkerOptions,
-} from "../types";
+} from "../types/index.js";
 
 export class LindormWorker implements ILindormWorker {
   public readonly alias: string;

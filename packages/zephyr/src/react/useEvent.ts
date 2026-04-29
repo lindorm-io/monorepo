@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useZephyrContext } from "./ZephyrProvider";
+import { useZephyrContext } from "./ZephyrProvider.js";
 
 export const useEvent = (event: string, handler: (data: any) => void): void => {
   const { client } = useZephyrContext();

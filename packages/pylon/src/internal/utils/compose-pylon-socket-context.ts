@@ -1,13 +1,13 @@
 import { changeKeys } from "@lindorm/case";
 import { isObject } from "@lindorm/is";
 import { randomUUID } from "crypto";
-import {
+import type {
   IoServer,
   PylonEnvelopeHeader,
   PylonSocket,
   PylonSocketContextBase,
   PylonSocketData,
-} from "../../types";
+} from "../../types/index.js";
 
 type Options = {
   args: Array<any>;

@@ -1,5 +1,6 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { Event } from "./Event";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { Event } from "./Event.js";
+import { describe, expect, test } from "vitest";
 
 const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>
   ({ metadata }) as ClassDecoratorContext;

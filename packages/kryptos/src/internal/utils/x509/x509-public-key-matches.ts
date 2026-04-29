@@ -1,5 +1,5 @@
-import { KryptosType } from "../../../types";
-import { spkiFromPublicKey } from "./spki-from-public-key";
+import type { KryptosType } from "../../../types/index.js";
+import { spkiFromPublicKey } from "./spki-from-public-key.js";
 
 export const x509PublicKeyMatches = (
   subjectPublicKeyInfo: Buffer,

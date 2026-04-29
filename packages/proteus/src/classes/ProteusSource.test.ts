@@ -1,10 +1,11 @@
-import { createMockLogger } from "@lindorm/logger";
-import { ProteusSession } from "./ProteusSession";
-import { ProteusSource } from "./ProteusSource";
-import { Entity } from "../decorators/Entity";
-import { Field } from "../decorators/Field";
-import { PrimaryKeyField } from "../decorators/PrimaryKeyField";
-import { Filter } from "../decorators/Filter";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { ProteusSession } from "./ProteusSession.js";
+import { ProteusSource } from "./ProteusSource.js";
+import { Entity } from "../decorators/Entity.js";
+import { Field } from "../decorators/Field.js";
+import { PrimaryKeyField } from "../decorators/PrimaryKeyField.js";
+import { Filter } from "../decorators/Filter.js";
+import { describe, expect, test } from "vitest";
 
 @Entity({ name: "SessionTestEntity" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
@@ -16,6 +17,12 @@ class SessionTestEntity {
   tenantId!: string;
 }
 
+@Entity({ name: "UnregisteredEntity" })
+class UnregisteredEntity {
+  @PrimaryKeyField()
+  id!: string;
+}
+
 const createSource = () =>
   new ProteusSource({
     driver: "memory",
@@ -24,6 +31,37 @@ const createSource = () =>
   });
 
 describe("ProteusSource", () => {
+  describe("hasEntity", () => {
+    test("should return true for a registered entity", () => {
+      const source = createSource();
+      expect(source.hasEntity(SessionTestEntity)).toBe(true);
+    });
+
+    test("should return false for an unregistered entity", () => {
+      const source = createSource();
+      expect(source.hasEntity(UnregisteredEntity)).toBe(false);
+    });
+
+    test("should return true for an entity added via addEntities", async () => {
+      const source = new ProteusSource({
+        driver: "memory",
+        entities: [],
+        logger: createMockLogger(),
+      });
+      await source.addEntities([UnregisteredEntity]);
+      expect(source.hasEntity(UnregisteredEntity)).toBe(true);
+    });
+
+    test("should return false on a source with no entities registered", () => {
+      const source = new ProteusSource({
+        driver: "memory",
+        entities: [],
+        logger: createMockLogger(),
+      });
+      expect(source.hasEntity(SessionTestEntity)).toBe(false);
+    });
+  });
+
   describe("session", () => {
     test("should produce a ProteusSession instance", () => {
       const source = createSource();
@@ -157,9 +195,11 @@ describe("ProteusSource", () => {
       expect(session).toBeInstanceOf(ProteusSession);
     });
 
-    test("should allow overriding context on session", () => {
+    test("should allow overriding meta on session", () => {
       const source = createSource();
-      const session = source.session({ context: { requestId: "abc-123" } });
+      const session = source.session({
+        meta: { correlationId: "abc-123", actor: "user-1", timestamp: new Date() },
+      });
 
       expect(session).toBeInstanceOf(ProteusSession);
     });

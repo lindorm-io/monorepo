@@ -1,4 +1,5 @@
-import { sanitizeRoutingKey } from "./sanitize-routing-key";
+import { sanitizeRoutingKey } from "./sanitize-routing-key.js";
+import { describe, expect, it } from "vitest";
 
 describe("sanitizeRoutingKey", () => {
   it("should return an already clean key unchanged", () => {

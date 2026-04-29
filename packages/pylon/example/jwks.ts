@@ -3,7 +3,7 @@ import { Conduit } from "@lindorm/conduit";
 import { KryptosKit } from "@lindorm/kryptos";
 import { Logger, LogLevel } from "@lindorm/logger";
 import { sleep } from "@lindorm/utils";
-import { AmphoraWorker, Environment, Pylon } from "../src";
+import { AmphoraWorker, Environment, Pylon } from "../src/index.js";
 
 const logger = new Logger({ level: LogLevel.Silly, readable: true });
 

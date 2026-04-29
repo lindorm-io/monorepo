@@ -1,16 +1,17 @@
-import { createMockAegis } from "@lindorm/aegis";
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
-import { createTokenMiddleware } from "./create-token-middleware";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createTokenMiddleware } from "./create-token-middleware.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createTokenMiddleware", () => {
   let ctx: any;
   let options: any;
-  let next: jest.Mock;
+  let next: Mock;
 
   beforeEach(() => {
     options = { contextKey: "idToken", issuer: "issuer" };
-    next = jest.fn();
+    next = vi.fn();
   });
 
   describe("HTTP context", () => {

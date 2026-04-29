@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`parseNatsMessage should handle all fields 1`] = `
+exports[`parseNatsMessage > should handle all fields 1`] = `
 {
   "attempt": 0,
   "broadcast": true,

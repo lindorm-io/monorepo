@@ -1,5 +1,6 @@
-import { PostgresMigrationError } from "../../errors/PostgresMigrationError";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
+import { describe, expect, it, vi, type Mock } from "vitest";
+import { PostgresMigrationError } from "../../errors/PostgresMigrationError.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import {
   ensureMigrationTable,
   getAppliedMigrations,
@@ -7,7 +8,7 @@ import {
   insertMigrationRecord,
   markMigrationFinished,
   markMigrationRolledBack,
-} from "./migration-table";
+} from "./migration-table.js";
 
 const createMockClient = (
   defaultRowCount = 0,
@@ -17,7 +18,7 @@ const createMockClient = (
   const calls: Array<{ sql: string; params?: Array<unknown> }> = [];
   return {
     calls,
-    query: jest.fn(async (sql: string, params?: Array<unknown>) => {
+    query: vi.fn(async (sql: string, params?: Array<unknown>) => {
       calls.push({ sql, params });
       return { rows: [], rowCount: defaultRowCount };
     }),
@@ -47,7 +48,7 @@ describe("getAppliedMigrations", () => {
   it("should query applied migrations and map rows to records", async () => {
     const now = new Date("2026-02-20T10:00:00Z");
     const client = createMockClient();
-    (client.query as jest.Mock).mockResolvedValueOnce({
+    (client.query as Mock).mockResolvedValueOnce({
       rows: [
         {
           id: "aaa",

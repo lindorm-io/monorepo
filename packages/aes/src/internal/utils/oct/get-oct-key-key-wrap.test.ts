@@ -2,7 +2,8 @@ import { KryptosKit } from "@lindorm/kryptos";
 import {
   getOctKeyWrapDecryptionKey,
   getOctKeyWrapEncryptionKey,
-} from "./get-oct-key-key-wrap";
+} from "./get-oct-key-key-wrap.js";
+import { describe, expect, test } from "vitest";
 
 describe("getOctKeyWrap", () => {
   describe("ECB", () => {

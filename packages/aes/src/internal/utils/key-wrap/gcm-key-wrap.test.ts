@@ -1,6 +1,7 @@
 import { KryptosKit } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { gcmKeyUnwrap, gcmKeyWrap } from "./gcm-key-wrap";
+import { gcmKeyUnwrap, gcmKeyWrap } from "./gcm-key-wrap.js";
+import { describe, expect, test } from "vitest";
 
 describe("gcmKeyWrap", () => {
   test("should wrap and unwrap key with A128GCMKW", () => {

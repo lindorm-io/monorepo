@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`deleteEmbeddedListRows issues a DELETE WHERE fk = $1 for embeddable list 1`] = `
+exports[`deleteEmbeddedListRows > issues a DELETE WHERE fk = $1 for embeddable list 1`] = `
 {
   "params": [
     "e1",
@@ -9,7 +9,7 @@ exports[`deleteEmbeddedListRows issues a DELETE WHERE fk = $1 for embeddable lis
 }
 `;
 
-exports[`deleteEmbeddedListRows issues a DELETE WHERE fk = $1 for primitive list 1`] = `
+exports[`deleteEmbeddedListRows > issues a DELETE WHERE fk = $1 for primitive list 1`] = `
 {
   "params": [
     "e1",
@@ -18,7 +18,7 @@ exports[`deleteEmbeddedListRows issues a DELETE WHERE fk = $1 for primitive list
 }
 `;
 
-exports[`deleteEmbeddedListRows uses qualified table name when namespace is provided 1`] = `
+exports[`deleteEmbeddedListRows > uses qualified table name when namespace is provided 1`] = `
 {
   "params": [
     "e1",
@@ -27,7 +27,7 @@ exports[`deleteEmbeddedListRows uses qualified table name when namespace is prov
 }
 `;
 
-exports[`insertEmbeddedListRows embeddable element insertion applies transform.to() on embeddable field values when transform is defined 1`] = `
+exports[`insertEmbeddedListRows > embeddable element insertion > applies transform.to() on embeddable field values when transform is defined 1`] = `
 {
   "params": [
     "e1",
@@ -39,7 +39,7 @@ exports[`insertEmbeddedListRows embeddable element insertion applies transform.t
 }
 `;
 
-exports[`insertEmbeddedListRows embeddable element insertion generates correct SQL for a single embeddable element 1`] = `
+exports[`insertEmbeddedListRows > embeddable element insertion > generates correct SQL for a single embeddable element 1`] = `
 {
   "params": [
     "e1",
@@ -51,7 +51,7 @@ exports[`insertEmbeddedListRows embeddable element insertion generates correct S
 }
 `;
 
-exports[`insertEmbeddedListRows embeddable element insertion generates correct SQL for multiple embeddable elements with correct ordinals 1`] = `
+exports[`insertEmbeddedListRows > embeddable element insertion > generates correct SQL for multiple embeddable elements with correct ordinals 1`] = `
 {
   "params": [
     "e1",
@@ -67,7 +67,7 @@ exports[`insertEmbeddedListRows embeddable element insertion generates correct S
 }
 `;
 
-exports[`insertEmbeddedListRows embeddable element insertion handles null element object — field values become null 1`] = `
+exports[`insertEmbeddedListRows > embeddable element insertion > handles null element object — field values become null 1`] = `
 {
   "params": [
     "e1",
@@ -79,7 +79,7 @@ exports[`insertEmbeddedListRows embeddable element insertion handles null elemen
 }
 `;
 
-exports[`insertEmbeddedListRows embeddable element insertion uses qualified table name for embeddable list with namespace 1`] = `
+exports[`insertEmbeddedListRows > embeddable element insertion > uses qualified table name for embeddable list with namespace 1`] = `
 {
   "params": [
     "e1",
@@ -91,7 +91,7 @@ exports[`insertEmbeddedListRows embeddable element insertion uses qualified tabl
 }
 `;
 
-exports[`insertEmbeddedListRows primitive element insertion generates correct SQL for a single primitive element 1`] = `
+exports[`insertEmbeddedListRows > primitive element insertion > generates correct SQL for a single primitive element 1`] = `
 {
   "params": [
     "e1",
@@ -102,7 +102,7 @@ exports[`insertEmbeddedListRows primitive element insertion generates correct SQ
 }
 `;
 
-exports[`insertEmbeddedListRows primitive element insertion generates correct SQL for multiple primitive elements 1`] = `
+exports[`insertEmbeddedListRows > primitive element insertion > generates correct SQL for multiple primitive elements 1`] = `
 {
   "params": [
     "e1",
@@ -119,7 +119,7 @@ exports[`insertEmbeddedListRows primitive element insertion generates correct SQ
 }
 `;
 
-exports[`insertEmbeddedListRows primitive element insertion handles null primitive element values 1`] = `
+exports[`insertEmbeddedListRows > primitive element insertion > handles null primitive element values 1`] = `
 {
   "params": [
     "e1",
@@ -133,7 +133,7 @@ exports[`insertEmbeddedListRows primitive element insertion handles null primiti
 }
 `;
 
-exports[`insertEmbeddedListRows primitive element insertion uses qualified table name when namespace is provided 1`] = `
+exports[`insertEmbeddedListRows > primitive element insertion > uses qualified table name when namespace is provided 1`] = `
 {
   "params": [
     "e1",
@@ -144,7 +144,7 @@ exports[`insertEmbeddedListRows primitive element insertion uses qualified table
 }
 `;
 
-exports[`loadEmbeddedListRows SQL generation issues SELECT with WHERE fk = $1 and ORDER BY __ordinal 1`] = `
+exports[`loadEmbeddedListRows > SQL generation > issues SELECT with WHERE fk = $1 and ORDER BY __ordinal 1`] = `
 {
   "params": [
     "e1",
@@ -153,7 +153,7 @@ exports[`loadEmbeddedListRows SQL generation issues SELECT with WHERE fk = $1 an
 }
 `;
 
-exports[`loadEmbeddedListRows SQL generation uses qualified table name when namespace is provided 1`] = `
+exports[`loadEmbeddedListRows > SQL generation > uses qualified table name when namespace is provided 1`] = `
 {
   "params": [
     "e1",
@@ -162,7 +162,7 @@ exports[`loadEmbeddedListRows SQL generation uses qualified table name when name
 }
 `;
 
-exports[`loadEmbeddedListRows embeddable element hydration creates class instances and maps field values 1`] = `
+exports[`loadEmbeddedListRows > embeddable element hydration > creates class instances and maps field values 1`] = `
 [
   TagEmbeddable {
     "label": "important",
@@ -175,7 +175,7 @@ exports[`loadEmbeddedListRows embeddable element hydration creates class instanc
 ]
 `;
 
-exports[`loadEmbeddedListRows embeddable element hydration snapshot for a single hydrated embeddable row 1`] = `
+exports[`loadEmbeddedListRows > embeddable element hydration > snapshot for a single hydrated embeddable row 1`] = `
 [
   TagEmbeddable {
     "label": "snap-label",
@@ -184,32 +184,32 @@ exports[`loadEmbeddedListRows embeddable element hydration snapshot for a single
 ]
 `;
 
-exports[`loadEmbeddedListRows primitive element hydration extracts value column from each row and assigns to entity 1`] = `
+exports[`loadEmbeddedListRows > primitive element hydration > extracts value column from each row and assigns to entity 1`] = `
 [
   "alpha",
   "beta",
 ]
 `;
 
-exports[`loadEmbeddedListRows primitive element hydration passes null values through without deserialising 1`] = `
+exports[`loadEmbeddedListRows > primitive element hydration > passes null values through without deserialising 1`] = `
 [
   null,
 ]
 `;
 
-exports[`loadEmbeddedListRows primitive element hydration passes undefined values through without deserialising 1`] = `
+exports[`loadEmbeddedListRows > primitive element hydration > passes undefined values through without deserialising 1`] = `
 [
   undefined,
 ]
 `;
 
-exports[`loadEmbeddedListRows primitive element hydration returns raw value when elementType is null 1`] = `
+exports[`loadEmbeddedListRows > primitive element hydration > returns raw value when elementType is null 1`] = `
 [
   "raw-string",
 ]
 `;
 
-exports[`loadEmbeddedListRowsBatch SQL generation passes all pk values as a single array parameter 1`] = `
+exports[`loadEmbeddedListRowsBatch > SQL generation > passes all pk values as a single array parameter 1`] = `
 [
   [
     "a1",
@@ -219,9 +219,9 @@ exports[`loadEmbeddedListRowsBatch SQL generation passes all pk values as a sing
 ]
 `;
 
-exports[`loadEmbeddedListRowsBatch SQL generation uses qualified table name with namespace 1`] = `"SELECT * FROM "myschema"."article_tags" WHERE "article_id" = ANY($1) ORDER BY "__ordinal""`;
+exports[`loadEmbeddedListRowsBatch > SQL generation > uses qualified table name with namespace 1`] = `"SELECT * FROM "myschema"."article_tags" WHERE "article_id" = ANY($1) ORDER BY "__ordinal""`;
 
-exports[`loadEmbeddedListRowsBatch embeddable element distribution hydrates embeddable instances and distributes them to the correct entity 1`] = `
+exports[`loadEmbeddedListRowsBatch > embeddable element distribution > hydrates embeddable instances and distributes them to the correct entity 1`] = `
 [
   TagEmbeddable {
     "label": "important",
@@ -234,7 +234,7 @@ exports[`loadEmbeddedListRowsBatch embeddable element distribution hydrates embe
 ]
 `;
 
-exports[`loadEmbeddedListRowsBatch embeddable element distribution hydrates embeddable instances and distributes them to the correct entity 2`] = `
+exports[`loadEmbeddedListRowsBatch > embeddable element distribution > hydrates embeddable instances and distributes them to the correct entity 2`] = `
 [
   TagEmbeddable {
     "label": "minor",
@@ -243,20 +243,20 @@ exports[`loadEmbeddedListRowsBatch embeddable element distribution hydrates embe
 ]
 `;
 
-exports[`loadEmbeddedListRowsBatch primitive element distribution distributes primitive rows to the correct entity by fk value 1`] = `
+exports[`loadEmbeddedListRowsBatch > primitive element distribution > distributes primitive rows to the correct entity by fk value 1`] = `
 [
   "alpha",
   "beta",
 ]
 `;
 
-exports[`loadEmbeddedListRowsBatch primitive element distribution distributes primitive rows to the correct entity by fk value 2`] = `
+exports[`loadEmbeddedListRowsBatch > primitive element distribution > distributes primitive rows to the correct entity by fk value 2`] = `
 [
   "gamma",
 ]
 `;
 
-exports[`loadEmbeddedListRowsBatch snapshot: complete batch result full batch distribution with mixed rows matches snapshot 1`] = `
+exports[`loadEmbeddedListRowsBatch > snapshot: complete batch result > full batch distribution with mixed rows matches snapshot 1`] = `
 [
   {
     "id": "u1",
@@ -281,7 +281,7 @@ exports[`loadEmbeddedListRowsBatch snapshot: complete batch result full batch di
 ]
 `;
 
-exports[`saveEmbeddedListRows executes DELETE then INSERT for embeddable elements 1`] = `
+exports[`saveEmbeddedListRows > executes DELETE then INSERT for embeddable elements 1`] = `
 [
   {
     "params": [
@@ -301,7 +301,7 @@ exports[`saveEmbeddedListRows executes DELETE then INSERT for embeddable element
 ]
 `;
 
-exports[`saveEmbeddedListRows executes DELETE then INSERT for primitive elements 1`] = `
+exports[`saveEmbeddedListRows > executes DELETE then INSERT for primitive elements 1`] = `
 [
   {
     "params": [
@@ -323,7 +323,7 @@ exports[`saveEmbeddedListRows executes DELETE then INSERT for primitive elements
 ]
 `;
 
-exports[`saveEmbeddedListRows snapshot for full save cycle with multiple primitive items 1`] = `
+exports[`saveEmbeddedListRows > snapshot for full save cycle with multiple primitive items 1`] = `
 [
   {
     "params": [

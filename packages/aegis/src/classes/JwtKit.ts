@@ -1,17 +1,17 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { Dict } from "@lindorm/types";
-import { JwtError } from "../errors";
+import type { IKryptos } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
+import type { Dict } from "@lindorm/types";
+import { JwtError } from "../errors/index.js";
 import {
   computeTypHeader,
   decodeTokenTypeFromTyp,
-} from "../internal/utils/compute-typ-header";
-import { extractTokenDelegation } from "../internal/utils/extract-token-delegation";
-import { validateActor } from "../internal/utils/validate-actor";
-import { validateCrit } from "../internal/utils/validate-crit";
-import { verifyDpopProof } from "../internal/utils/verify-dpop-proof";
-import { IJwtKit } from "../interfaces";
-import {
+} from "../internal/utils/compute-typ-header.js";
+import { extractTokenDelegation } from "../internal/utils/extract-token-delegation.js";
+import { validateActor } from "../internal/utils/validate-actor.js";
+import { validateCrit } from "../internal/utils/validate-crit.js";
+import { verifyDpopProof } from "../internal/utils/verify-dpop-proof.js";
+import type { IJwtKit } from "../interfaces/index.js";
+import type {
   CertBindingMode,
   DecodedJwt,
   JwtKitOptions,
@@ -24,23 +24,23 @@ import {
   TokenHeaderOptions,
   ValidateJwtOptions,
   VerifyJwtOptions,
-} from "../types";
-import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header";
+} from "../types/index.js";
+import { decodeJoseHeader, encodeJoseHeader } from "../internal/utils/jose-header.js";
 import {
   createJoseSignature,
   verifyJoseSignature,
-} from "../internal/utils/jose-signature";
-import { createJwtValidate } from "../internal/utils/jwt-validate";
+} from "../internal/utils/jose-signature.js";
+import { createJwtValidate } from "../internal/utils/jwt-validate.js";
 import {
   decodeJwtPayload,
   encodeJwtPayload,
   parseTokenPayload,
-} from "../internal/utils/jwt-payload";
-import { createJwtVerify } from "../internal/utils/jwt-verify";
-import { parseTokenHeader } from "../internal/utils/token-header";
-import { resolveCertBinding } from "../internal/utils/resolve-cert-binding";
-import { verifyCertBinding } from "../internal/utils/verify-cert-binding";
-import { validate } from "../internal/utils/validate";
+} from "../internal/utils/jwt-payload.js";
+import { createJwtVerify } from "../internal/utils/jwt-verify.js";
+import { parseTokenHeader } from "../internal/utils/token-header.js";
+import { resolveCertBinding } from "../internal/utils/resolve-cert-binding.js";
+import { verifyCertBinding } from "../internal/utils/verify-cert-binding.js";
+import { validate } from "../internal/utils/validate.js";
 
 const DEFAULT_DPOP_MAX_SKEW = 60;
 

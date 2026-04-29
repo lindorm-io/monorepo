@@ -1,15 +1,25 @@
 import type { Socket } from "socket.io-client";
-import { ZephyrError } from "../errors/ZephyrError";
-import { createCookieAuthStrategy } from "./cookie-auth-strategy";
+import { ZephyrError } from "../errors/ZephyrError.js";
+import { createCookieAuthStrategy } from "./cookie-auth-strategy.js";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
 type MockSocket = {
   socket: Socket;
-  timeout: jest.Mock;
+  timeout: Mock;
   io: { opts: Record<string, unknown> };
 };
 
-const createMockSocket = (emitWithAck: jest.Mock): MockSocket => {
-  const timeout = jest.fn().mockReturnValue({ emitWithAck });
+const createMockSocket = (emitWithAck: Mock): MockSocket => {
+  const timeout = vi.fn().mockReturnValue({ emitWithAck });
   const io = { opts: {} as Record<string, unknown> };
   const socket = {
     auth: undefined as unknown,
@@ -25,14 +35,14 @@ const createResponse = (
   ({
     ok: init.ok,
     status: init.status ?? (init.ok ? 200 : 500),
-    text: jest.fn().mockResolvedValue(init.body ?? ""),
+    text: vi.fn().mockResolvedValue(init.body ?? ""),
   }) as unknown as Response;
 
 describe("createCookieAuthStrategy", () => {
-  let fetchSpy: jest.SpyInstance;
+  let fetchSpy: MockInstance;
 
   beforeEach(() => {
-    fetchSpy = jest.spyOn(global, "fetch");
+    fetchSpy = vi.spyOn(global, "fetch");
   });
 
   afterEach(() => {
@@ -44,7 +54,7 @@ describe("createCookieAuthStrategy", () => {
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",
       });
-      const { socket, io } = createMockSocket(jest.fn());
+      const { socket, io } = createMockSocket(vi.fn());
 
       await strategy.prepareHandshake(socket);
 
@@ -55,7 +65,7 @@ describe("createCookieAuthStrategy", () => {
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",
       });
-      const { socket, io } = createMockSocket(jest.fn());
+      const { socket, io } = createMockSocket(vi.fn());
       io.opts.transports = ["websocket"];
       io.opts.reconnection = true;
 
@@ -68,7 +78,7 @@ describe("createCookieAuthStrategy", () => {
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",
       });
-      const { socket } = createMockSocket(jest.fn());
+      const { socket } = createMockSocket(vi.fn());
 
       await strategy.prepareHandshake(socket);
 
@@ -79,7 +89,7 @@ describe("createCookieAuthStrategy", () => {
   describe("refresh", () => {
     it("should POST to refreshUrl with credentials include and emit refresh event", async () => {
       fetchSpy.mockResolvedValue(createResponse({ ok: true }));
-      const emitWithAck = jest.fn().mockResolvedValue({ __pylon: true, ok: true });
+      const emitWithAck = vi.fn().mockResolvedValue({ __pylon: true, ok: true });
 
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",
@@ -98,7 +108,7 @@ describe("createCookieAuthStrategy", () => {
 
     it("should merge refreshFetchInit into the fetch call", async () => {
       fetchSpy.mockResolvedValue(createResponse({ ok: true }));
-      const emitWithAck = jest.fn().mockResolvedValue({ __pylon: true, ok: true });
+      const emitWithAck = vi.fn().mockResolvedValue({ __pylon: true, ok: true });
 
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",
@@ -119,7 +129,7 @@ describe("createCookieAuthStrategy", () => {
 
     it("should honour custom refreshAckTimeoutMs", async () => {
       fetchSpy.mockResolvedValue(createResponse({ ok: true }));
-      const emitWithAck = jest.fn().mockResolvedValue({ __pylon: true, ok: true });
+      const emitWithAck = vi.fn().mockResolvedValue({ __pylon: true, ok: true });
 
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",
@@ -136,7 +146,7 @@ describe("createCookieAuthStrategy", () => {
       fetchSpy.mockResolvedValue(
         createResponse({ ok: false, status: 401, body: "Unauthorized" }),
       );
-      const emitWithAck = jest.fn();
+      const emitWithAck = vi.fn();
 
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",
@@ -158,7 +168,7 @@ describe("createCookieAuthStrategy", () => {
 
     it("should throw ZEPHYR_COOKIE_REFRESH_FETCH_ERROR when fetch itself rejects", async () => {
       fetchSpy.mockRejectedValue(new Error("network down"));
-      const emitWithAck = jest.fn();
+      const emitWithAck = vi.fn();
 
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",
@@ -179,7 +189,7 @@ describe("createCookieAuthStrategy", () => {
 
     it("should throw and preserve envelope fields when ack is { ok: false }", async () => {
       fetchSpy.mockResolvedValue(createResponse({ ok: true }));
-      const emitWithAck = jest.fn().mockResolvedValue({
+      const emitWithAck = vi.fn().mockResolvedValue({
         __pylon: true,
         ok: false,
         error: {
@@ -209,9 +219,7 @@ describe("createCookieAuthStrategy", () => {
 
     it("should throw ZEPHYR_AUTH_REFRESH_TIMEOUT when emitWithAck rejects", async () => {
       fetchSpy.mockResolvedValue(createResponse({ ok: true }));
-      const emitWithAck = jest
-        .fn()
-        .mockRejectedValue(new Error("operation has timed out"));
+      const emitWithAck = vi.fn().mockRejectedValue(new Error("operation has timed out"));
 
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",
@@ -226,7 +234,7 @@ describe("createCookieAuthStrategy", () => {
 
     it("should throw ZEPHYR_AUTH_REFRESH_INVALID_ACK when ack is not a pylon envelope", async () => {
       fetchSpy.mockResolvedValue(createResponse({ ok: true }));
-      const emitWithAck = jest.fn().mockResolvedValue({ raw: "data" });
+      const emitWithAck = vi.fn().mockResolvedValue({ raw: "data" });
 
       const strategy = createCookieAuthStrategy({
         refreshUrl: "https://example.test/auth/refresh",

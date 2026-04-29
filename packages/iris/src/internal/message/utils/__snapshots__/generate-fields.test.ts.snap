@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateFields multiple fields should generate all fields in a single pass 1`] = `
+exports[`generateFields > multiple fields > should generate all fields in a single pass 1`] = `
 {
   "createdAt": Any<Date>,
   "id": Any<String>,

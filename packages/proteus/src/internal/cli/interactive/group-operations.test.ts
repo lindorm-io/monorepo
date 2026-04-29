@@ -1,9 +1,10 @@
-import type { SyncOperation } from "../../drivers/postgres/types/sync-plan";
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { groupOperationsByEntity } from "./group-operations";
+import type { SyncOperation } from "../../drivers/postgres/types/sync-plan.js";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { groupOperationsByEntity } from "./group-operations.js";
+import { describe, expect, it, vi } from "vitest";
 
-jest.mock("../../entity/utils/get-entity-name", () => ({
-  getEntityName: jest.fn((target: Function, options: { namespace?: string }) => ({
+vi.mock("../../entity/utils/get-entity-name.js", () => ({
+  getEntityName: vi.fn((target: Function, options: { namespace?: string }) => ({
     namespace: options.namespace ?? null,
     name: target.name.toLowerCase(),
     type: "entity",

@@ -2,9 +2,10 @@ import {
   TEST_EC_KEY_SIG,
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
-} from "../../__fixtures__/keys";
-import { JwtError } from "../../errors";
-import { computeJwkThumbprint } from "./compute-jwk-thumbprint";
+} from "../../__fixtures__/keys.js";
+import { JwtError } from "../../errors/index.js";
+import { computeJwkThumbprint } from "./compute-jwk-thumbprint.js";
+import { describe, expect, test } from "vitest";
 
 describe("computeJwkThumbprint", () => {
   test("should compute thumbprint for an EC JWK", () => {

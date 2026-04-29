@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateAutoIndexes should generate all indexes for deleteDate + expiryDate + version 1`] = `
+exports[`generateAutoIndexes > should generate all indexes for deleteDate + expiryDate + version 1`] = `
 [
   {
     "concurrent": false,
@@ -135,7 +135,7 @@ exports[`generateAutoIndexes should generate all indexes for deleteDate + expiry
 ]
 `;
 
-exports[`generateAutoIndexes should generate all indexes for deleteDate + expiryDate 1`] = `
+exports[`generateAutoIndexes > should generate all indexes for deleteDate + expiryDate 1`] = `
 [
   {
     "concurrent": false,
@@ -189,7 +189,7 @@ exports[`generateAutoIndexes should generate all indexes for deleteDate + expiry
 ]
 `;
 
-exports[`generateAutoIndexes should generate all indexes for deleteDate + version 1`] = `
+exports[`generateAutoIndexes > should generate all indexes for deleteDate + version 1`] = `
 [
   {
     "concurrent": false,
@@ -265,7 +265,7 @@ exports[`generateAutoIndexes should generate all indexes for deleteDate + versio
 ]
 `;
 
-exports[`generateAutoIndexes should generate deleteDate index when DeleteDate present 1`] = `
+exports[`generateAutoIndexes > should generate deleteDate index when DeleteDate present 1`] = `
 [
   {
     "concurrent": false,
@@ -292,7 +292,7 @@ exports[`generateAutoIndexes should generate deleteDate index when DeleteDate pr
 ]
 `;
 
-exports[`generateAutoIndexes should generate scope index when Scope present 1`] = `
+exports[`generateAutoIndexes > should generate scope index when Scope present 1`] = `
 [
   {
     "concurrent": false,
@@ -319,7 +319,7 @@ exports[`generateAutoIndexes should generate scope index when Scope present 1`] 
 ]
 `;
 
-exports[`generateAutoIndexes should generate unique version index when version keys exist 1`] = `
+exports[`generateAutoIndexes > should generate unique version index when version keys exist 1`] = `
 [
   {
     "concurrent": false,
@@ -346,7 +346,7 @@ exports[`generateAutoIndexes should generate unique version index when version k
 ]
 `;
 
-exports[`generateAutoIndexes should generate version index when Version present 1`] = `
+exports[`generateAutoIndexes > should generate version index when Version present 1`] = `
 [
   {
     "concurrent": false,
@@ -373,7 +373,7 @@ exports[`generateAutoIndexes should generate version index when Version present 
 ]
 `;
 
-exports[`generateAutoIndexes should generate versionStart + versionEnd index when both present 1`] = `
+exports[`generateAutoIndexes > should generate versionStart + versionEnd index when both present 1`] = `
 [
   {
     "concurrent": false,
@@ -427,7 +427,7 @@ exports[`generateAutoIndexes should generate versionStart + versionEnd index whe
 ]
 `;
 
-exports[`generateAutoIndexes should generate versionStartDate index when VersionStartDate present 1`] = `
+exports[`generateAutoIndexes > should generate versionStartDate index when VersionStartDate present 1`] = `
 [
   {
     "concurrent": false,

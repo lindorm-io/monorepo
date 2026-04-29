@@ -1,13 +1,22 @@
 import type { Pool, PoolConnection } from "mysql2/promise";
-import type { IsolationLevel } from "../../../../../types/transaction-options";
-import { MySqlTransactionError } from "../../errors/MySqlTransactionError";
-import type { MysqlQueryClient } from "../../types/mysql-query-client";
-import type { MysqlTransactionHandle } from "../../types/mysql-transaction-handle";
+import type { IsolationLevel } from "../../../../../types/transaction-options.js";
+import { MySqlTransactionError } from "../../errors/MySqlTransactionError.js";
+import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
+import type { MysqlTransactionHandle } from "../../types/mysql-transaction-handle.js";
 
 const SET_ISOLATION_SQL: Record<IsolationLevel, string> = {
   "READ COMMITTED": "SET TRANSACTION ISOLATION LEVEL READ COMMITTED",
   "REPEATABLE READ": "SET TRANSACTION ISOLATION LEVEL REPEATABLE READ",
   SERIALIZABLE: "SET TRANSACTION ISOLATION LEVEL SERIALIZABLE",
+};
+
+export type BeginMysqlTransactionHooks = {
+  /**
+   * Called after the PoolConnection is acquired but before START TRANSACTION.
+   * Returns an optional disposer run when the handle's release() fires. Used
+   * to wire per-connection abort listeners that fire KILL QUERY on signal.
+   */
+  onAcquired?: (connection: PoolConnection) => (() => void) | undefined;
 };
 
 /**
@@ -21,6 +30,7 @@ export const beginTransaction = async (
   pool: Pool,
   createMysqlClient: (connection: PoolConnection) => MysqlQueryClient,
   isolation?: IsolationLevel,
+  hooks?: BeginMysqlTransactionHooks,
 ): Promise<MysqlTransactionHandle> => {
   if (isolation && !(isolation in SET_ISOLATION_SQL)) {
     throw new MySqlTransactionError(`Invalid isolation level: "${isolation}"`, {
@@ -38,6 +48,8 @@ export const beginTransaction = async (
     });
   }
 
+  const dispose = hooks?.onAcquired?.(connection);
+
   try {
     const client = createMysqlClient(connection);
 
@@ -50,11 +62,15 @@ export const beginTransaction = async (
     return {
       client,
       connection,
-      release: () => connection.release(),
+      release: () => {
+        dispose?.();
+        connection.release();
+      },
       state: "active",
       savepointCounter: 0,
     };
   } catch (error) {
+    dispose?.();
     connection.release();
     throw new MySqlTransactionError("Failed to begin transaction", {
       error: error as Error,

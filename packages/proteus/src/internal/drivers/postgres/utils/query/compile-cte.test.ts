@@ -1,5 +1,6 @@
-import { compileCtes } from "./compile-cte";
-import type { CteSpec } from "../../../../types/query";
+import { compileCtes } from "./compile-cte.js";
+import type { CteSpec } from "../../../../types/query.js";
+import { describe, expect, test } from "vitest";
 
 // Helper to build a CteSpec with sensible defaults
 const makeCte = (overrides: Partial<CteSpec> = {}): CteSpec => ({

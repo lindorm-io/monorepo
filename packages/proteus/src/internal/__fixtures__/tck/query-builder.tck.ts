@@ -1,11 +1,12 @@
+import { describe, test, it, expect, beforeEach } from "vitest";
 // TCK: QueryBuilder Suite
 // Tests basic QueryBuilder operations: where, orderBy, skip, take, getOne,
 // getMany, count, exists, withDeleted. Excludes advanced features (raw SQL,
 // GROUP BY, window functions, CTEs, subqueries, set operations).
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
-import type { ProteusSource } from "../../../classes/ProteusSource";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
+import type { ProteusSource } from "../../../classes/ProteusSource.js";
 export const queryBuilderSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,

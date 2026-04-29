@@ -1,9 +1,10 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { AfterSave } from "./AfterSave";
-import { Entity } from "./Entity";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { AfterSave } from "./AfterSave.js";
+import { Entity } from "./Entity.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test, vi } from "vitest";
 
-const afterSaveCallback = jest.fn();
+const afterSaveCallback = vi.fn();
 
 @Entity({ name: "AfterSaveDecorated" })
 @AfterSave(afterSaveCallback)

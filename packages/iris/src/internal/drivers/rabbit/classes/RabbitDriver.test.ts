@@ -1,44 +1,45 @@
 import { EventEmitter } from "events";
-import { RabbitDriver, type RabbitDriverOptions } from "./RabbitDriver";
-import type { IrisConnectionState } from "../../../../types";
+import { RabbitDriver, type RabbitDriverOptions } from "./RabbitDriver.js";
+import type { IrisConnectionState } from "../../../../types/index.js";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Mock amqplib ────────────────────────────────────────────────────────────
 
 type MockChannel = EventEmitter & {
-  prefetch: jest.Mock;
-  assertExchange: jest.Mock;
-  assertQueue: jest.Mock;
-  bindQueue: jest.Mock;
-  consume: jest.Mock;
-  cancel: jest.Mock;
-  unbindQueue: jest.Mock;
-  close: jest.Mock;
-  ack: jest.Mock;
-  nack: jest.Mock;
-  publish: jest.Mock;
+  prefetch: Mock;
+  assertExchange: Mock;
+  assertQueue: Mock;
+  bindQueue: Mock;
+  consume: Mock;
+  cancel: Mock;
+  unbindQueue: Mock;
+  close: Mock;
+  ack: Mock;
+  nack: Mock;
+  publish: Mock;
 };
 
 type MockConnection = EventEmitter & {
-  createConfirmChannel: jest.Mock;
-  createChannel: jest.Mock;
-  close: jest.Mock;
+  createConfirmChannel: Mock;
+  createChannel: Mock;
+  close: Mock;
 };
 
 const createMockChannel = (): MockChannel => {
   const channel = new EventEmitter() as MockChannel;
-  channel.prefetch = jest.fn().mockResolvedValue(undefined);
-  channel.assertExchange = jest.fn().mockResolvedValue(undefined);
-  channel.assertQueue = jest
+  channel.prefetch = vi.fn().mockResolvedValue(undefined);
+  channel.assertExchange = vi.fn().mockResolvedValue(undefined);
+  channel.assertQueue = vi
     .fn()
     .mockResolvedValue({ queue: "q", messageCount: 0, consumerCount: 0 });
-  channel.bindQueue = jest.fn().mockResolvedValue(undefined);
-  channel.consume = jest.fn().mockResolvedValue({ consumerTag: "ctag-1" });
-  channel.cancel = jest.fn().mockResolvedValue(undefined);
-  channel.unbindQueue = jest.fn().mockResolvedValue(undefined);
-  channel.close = jest.fn().mockResolvedValue(undefined);
-  channel.ack = jest.fn();
-  channel.nack = jest.fn();
-  channel.publish = jest.fn((_ex, _rk, _buf, _opts, cb) => {
+  channel.bindQueue = vi.fn().mockResolvedValue(undefined);
+  channel.consume = vi.fn().mockResolvedValue({ consumerTag: "ctag-1" });
+  channel.cancel = vi.fn().mockResolvedValue(undefined);
+  channel.unbindQueue = vi.fn().mockResolvedValue(undefined);
+  channel.close = vi.fn().mockResolvedValue(undefined);
+  channel.ack = vi.fn();
+  channel.nack = vi.fn();
+  channel.publish = vi.fn((_ex, _rk, _buf, _opts, cb) => {
     process.nextTick(() => cb?.(null));
     return true;
   });
@@ -50,17 +51,17 @@ const createMockConnection = (
   consumeChannel?: MockChannel,
 ): MockConnection => {
   const conn = new EventEmitter() as MockConnection;
-  conn.createConfirmChannel = jest
+  conn.createConfirmChannel = vi
     .fn()
     .mockResolvedValue(publishChannel ?? createMockChannel());
-  conn.createChannel = jest.fn().mockResolvedValue(consumeChannel ?? createMockChannel());
-  conn.close = jest.fn().mockResolvedValue(undefined);
+  conn.createChannel = vi.fn().mockResolvedValue(consumeChannel ?? createMockChannel());
+  conn.close = vi.fn().mockResolvedValue(undefined);
   return conn;
 };
 
-let mockConnectFn: jest.Mock;
+let mockConnectFn: Mock;
 
-jest.mock("amqplib", () => ({
+vi.mock("amqplib", async () => ({
   __esModule: true,
   default: {
     connect: (...args: Array<unknown>) => mockConnectFn(...args),
@@ -70,20 +71,20 @@ jest.mock("amqplib", () => ({
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createDriverOptions = (
   overrides?: Partial<RabbitDriverOptions>,
 ): RabbitDriverOptions => ({
   logger: createMockLogger() as any,
-  getSubscribers: jest.fn().mockReturnValue([]),
+  getSubscribers: vi.fn().mockReturnValue([]),
   url: "amqp://localhost:5672",
   exchange: "test-exchange",
   ...overrides,
@@ -116,13 +117,13 @@ const waitFor = async (
 // Instead, we'll directly invoke the reconnect path by emitting 'close' on the mock
 // connection and waiting for the next connect call.
 
-jest.setTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000 });
 
 describe("RabbitDriver - reconnect logic", () => {
   let originalRandom: () => number;
 
   beforeEach(() => {
-    mockConnectFn = jest.fn();
+    mockConnectFn = vi.fn();
     originalRandom = Math.random;
     // Eliminate jitter so delays are predictable
     Math.random = () => 0;
@@ -148,7 +149,7 @@ describe("RabbitDriver - reconnect logic", () => {
       state.consumerRegistrations.push({
         queue: "test-queue",
         consumerTag: "ctag-old",
-        onMessage: jest.fn(),
+        onMessage: vi.fn(),
         routingKey: "test.key",
         exchange: "test-exchange",
         queueOptions: { durable: true },
@@ -197,7 +198,7 @@ describe("RabbitDriver - reconnect logic", () => {
 
       const logger = (driver as any).logger;
       const debugCalls: Array<{ attempt: number; delayMs: number }> = [];
-      logger.debug = jest.fn((_msg: string, data?: any) => {
+      logger.debug = vi.fn((_msg: string, data?: any) => {
         if (data?.attempt !== undefined && data?.delayMs !== undefined) {
           debugCalls.push({ attempt: data.attempt, delayMs: data.delayMs });
         }
@@ -338,7 +339,7 @@ describe("RabbitDriver - reconnect logic", () => {
 
 describe("RabbitDriver - return handler routes to DLX", () => {
   beforeEach(() => {
-    mockConnectFn = jest.fn();
+    mockConnectFn = vi.fn();
   });
 
   test("should publish returned message to DLX exchange", async () => {

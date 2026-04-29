@@ -1,2 +1,2 @@
-export * from "./JsonKit";
-export * from "./Primitive";
+export * from "./JsonKit.js";
+export * from "./Primitive.js";

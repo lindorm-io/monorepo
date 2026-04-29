@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`AbstractEntity should produce full metadata snapshot for concrete entity with abstract base 1`] = `
+exports[`AbstractEntity > should produce full metadata snapshot for concrete entity with abstract base 1`] = `
 [
   {
     "arrayType": null,
@@ -101,7 +101,7 @@ exports[`AbstractEntity should produce full metadata snapshot for concrete entit
 ]
 `;
 
-exports[`AbstractEntity should produce full metadata snapshot for concrete entity with abstract base 2`] = `
+exports[`AbstractEntity > should produce full metadata snapshot for concrete entity with abstract base 2`] = `
 [
   {
     "callback": [MockFunction],

@@ -1,10 +1,11 @@
-import { AbstractEntity } from "../../../decorators/AbstractEntity";
-import { Discriminator } from "../../../decorators/Discriminator";
-import { DiscriminatorValue } from "../../../decorators/DiscriminatorValue";
-import { Entity } from "../../../decorators/Entity";
-import { Inheritance } from "../../../decorators/Inheritance";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { Field } from "../../../decorators/Field";
+import { describe, expect, test } from "vitest";
+import { AbstractEntity } from "../../../decorators/AbstractEntity.js";
+import { Discriminator } from "../../../decorators/Discriminator.js";
+import { DiscriminatorValue } from "../../../decorators/DiscriminatorValue.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Inheritance } from "../../../decorators/Inheritance.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { Field } from "../../../decorators/Field.js";
 import {
   validateDiscriminatorRequiresInheritance,
   validateDiscriminatorValueNotOnRoot,
@@ -13,7 +14,7 @@ import {
   validateJoinedDepth,
   validateSubtypeHasDiscriminatorValue,
   validateUniqueDiscriminatorValues,
-} from "./validate-inheritance";
+} from "./validate-inheritance.js";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Test entity hierarchies

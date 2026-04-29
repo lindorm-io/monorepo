@@ -1,14 +1,13 @@
 import { Command } from "commander";
-import { registerGenerateCommands } from "./register-generate";
-import { generateMessage } from "./generate-message";
+import { registerGenerateCommands } from "./register-generate.js";
+import { generateMessage } from "./generate-message.js";
+import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
-jest.mock("./generate-message", () => ({
-  generateMessage: jest.fn(),
+vi.mock("./generate-message.js", async () => ({
+  generateMessage: vi.fn(),
 }));
 
-const mockGenerateMessage = generateMessage as jest.MockedFunction<
-  typeof generateMessage
->;
+const mockGenerateMessage = generateMessage as MockedFunction<typeof generateMessage>;
 
 describe("registerGenerateCommands", () => {
   let program: Command;
@@ -16,7 +15,7 @@ describe("registerGenerateCommands", () => {
   let messageCmd: Command;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     program = new Command();
     program.exitOverride();
     registerGenerateCommands(program);

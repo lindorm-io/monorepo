@@ -1,12 +1,13 @@
 import { randomBytes } from "crypto";
 import { Client } from "pg";
-import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client";
-import { diffSchema } from "../../../../drivers/postgres/utils/sync/diff-schema";
-import { SyncPlanExecutor } from "../../../../drivers/postgres/utils/sync/execute-sync-plan";
-import type { DesiredSchema } from "../../types/desired-schema";
-import type { PostgresQueryClient } from "../../types/postgres-query-client";
-import type { SyncOptions, SyncPlan } from "../../types/sync-plan";
-import { introspectSchema } from "./introspect-schema";
+import { createTestPgClient } from "../../../../__fixtures__/create-test-pg-client.js";
+import { diffSchema } from "../../../../drivers/postgres/utils/sync/diff-schema.js";
+import { SyncPlanExecutor } from "../../../../drivers/postgres/utils/sync/execute-sync-plan.js";
+import type { DesiredSchema } from "../../types/desired-schema.js";
+import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
+import type { SyncOptions, SyncPlan } from "../../types/sync-plan.js";
+import { introspectSchema } from "./introspect-schema.js";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 const executeSyncPlan = (
   client: PostgresQueryClient,

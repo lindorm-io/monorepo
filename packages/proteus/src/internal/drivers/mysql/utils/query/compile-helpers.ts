@@ -1,13 +1,13 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import {
   buildDiscriminatorPredicateQualified as sharedBuildDiscQualified,
   buildDiscriminatorPredicateUnqualified as sharedBuildDiscUnqualified,
   buildPrimaryKeyConditions as sharedBuildPk,
   buildPrimaryKeyConditionsQualified as sharedBuildPkQualified,
   getDiscriminatorColumnName,
-} from "../../../../utils/sql/compile-helpers";
-import { mysqlDialect } from "../mysql-dialect";
+} from "../../../../utils/sql/compile-helpers.js";
+import { mysqlDialect } from "../mysql-dialect.js";
 
 export { getDiscriminatorColumnName };
 

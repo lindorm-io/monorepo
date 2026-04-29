@@ -1,6 +1,7 @@
-import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects";
-import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings";
-import { pathArray, pathCase, pathKeys } from "./path";
+import { TEST_ARRAY_WITH_OBJECTS, TEST_OBJECT } from "../../__fixtures__/objects.js";
+import { INVALID_INPUT, TEST_STRINGS } from "../../__fixtures__/strings.js";
+import { pathArray, pathCase, pathKeys } from "./path.js";
+import { describe, expect, test } from "vitest";
 
 describe("pathCase", () => {
   test.each(TEST_STRINGS)("should convert %s", (input) => {

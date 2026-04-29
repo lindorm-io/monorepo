@@ -1,5 +1,6 @@
-import type { MessageMetadata } from "../types/metadata";
-import { resolveDelay } from "./resolve-delay";
+import type { MessageMetadata } from "../types/metadata.js";
+import { resolveDelay } from "./resolve-delay.js";
+import { describe, expect, it } from "vitest";
 
 const makeMetadata = (overrides: Partial<MessageMetadata> = {}): MessageMetadata =>
   ({

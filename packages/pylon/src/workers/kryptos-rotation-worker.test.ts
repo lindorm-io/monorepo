@@ -1,49 +1,63 @@
-const mockGenerate = jest.fn().mockReturnValue({
-  toDB: () => ({
-    id: "new-key-id",
-    algorithm: "ES512",
-    privateKey: "generated-private-key",
-  }),
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { LindormWorker } from "@lindorm/worker";
+import { Kryptos } from "../entities/Kryptos.js";
+import { createKryptosRotationWorker } from "./kryptos-rotation-worker.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+
+const {
+  mockGenerate,
+  mockFind,
+  mockCreate,
+  mockInsert,
+  mockRepository,
+  mockGetTypeForAlgorithm,
+} = vi.hoisted(() => {
+  const octAlgorithms = new Set([
+    "dir",
+    "HS256",
+    "HS384",
+    "HS512",
+    "A128KW",
+    "A192KW",
+    "A256KW",
+    "A128GCMKW",
+    "A192GCMKW",
+    "A256GCMKW",
+  ]);
+  return {
+    mockGenerate: vi.fn().mockReturnValue({
+      toDB: () => ({
+        id: "new-key-id",
+        algorithm: "ES512",
+        privateKey: "generated-private-key",
+      }),
+    }),
+    mockFind: vi.fn().mockResolvedValue([]),
+    mockCreate: vi.fn().mockImplementation((data: any) => data),
+    mockInsert: vi.fn().mockImplementation((entity: any) => ({
+      ...entity,
+      expiresAt: new Date("2026-10-01T00:00:00.000Z"),
+    })),
+    mockRepository: vi.fn(),
+    mockGetTypeForAlgorithm: vi.fn((algorithm: string) =>
+      octAlgorithms.has(algorithm) ? "oct" : "EC",
+    ),
+  };
 });
-const mockFind = jest.fn().mockResolvedValue([]);
-const mockCreate = jest.fn().mockImplementation((data: any) => data);
-const mockInsert = jest.fn().mockImplementation((entity: any) => ({
-  ...entity,
-  expiresAt: new Date("2026-10-01T00:00:00.000Z"),
-}));
-const mockRepository = jest.fn().mockReturnValue({
+mockRepository.mockReturnValue({
   find: mockFind,
   create: mockCreate,
   insert: mockInsert,
 });
-const octAlgorithms = new Set([
-  "dir",
-  "HS256",
-  "HS384",
-  "HS512",
-  "A128KW",
-  "A192KW",
-  "A256KW",
-  "A128GCMKW",
-  "A192GCMKW",
-  "A256GCMKW",
-]);
-const mockGetTypeForAlgorithm = jest.fn((algorithm: string) =>
-  octAlgorithms.has(algorithm) ? "oct" : "EC",
-);
-import { createMockLogger } from "@lindorm/logger";
+
 const mockLogger = createMockLogger();
 
-jest.mock("@lindorm/kryptos", () => ({
+vi.mock("@lindorm/kryptos", async () => ({
   KryptosKit: {
     generate: { auto: mockGenerate },
     getTypeForAlgorithm: mockGetTypeForAlgorithm,
   },
 }));
-
-import { LindormWorker } from "@lindorm/worker";
-import { Kryptos } from "../entities/Kryptos";
-import { createKryptosRotationWorker } from "./kryptos-rotation-worker";
 
 const future = new Date("2030-01-01T00:00:00.000Z");
 
@@ -64,8 +78,8 @@ describe("createKryptosRotationWorker", () => {
   class FakeKryptosDB {}
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    (mockLogger.child as jest.Mock).mockImplementation(() => mockLogger);
+    vi.clearAllMocks();
+    (mockLogger.child as Mock).mockImplementation(() => mockLogger);
     mockFind.mockResolvedValue([]);
     mockGenerate.mockReturnValue({
       toDB: () => ({

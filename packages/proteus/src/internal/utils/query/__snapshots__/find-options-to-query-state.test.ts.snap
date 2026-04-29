@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`findOptionsToQueryState should add criteria as predicate 1`] = `
+exports[`findOptionsToQueryState > should add criteria as predicate 1`] = `
 {
   "cteFrom": null,
   "ctes": [],
@@ -36,7 +36,7 @@ exports[`findOptionsToQueryState should add criteria as predicate 1`] = `
 }
 `;
 
-exports[`findOptionsToQueryState should convert empty criteria and options 1`] = `
+exports[`findOptionsToQueryState > should convert empty criteria and options 1`] = `
 {
   "cteFrom": null,
   "ctes": [],
@@ -65,7 +65,7 @@ exports[`findOptionsToQueryState should convert empty criteria and options 1`] =
 }
 `;
 
-exports[`findOptionsToQueryState should map limit and offset 1`] = `
+exports[`findOptionsToQueryState > should map limit and offset 1`] = `
 {
   "cteFrom": null,
   "ctes": [],
@@ -94,7 +94,7 @@ exports[`findOptionsToQueryState should map limit and offset 1`] = `
 }
 `;
 
-exports[`findOptionsToQueryState should map relations to include specs 1`] = `
+exports[`findOptionsToQueryState > should map relations to include specs 1`] = `
 [
   {
     "relation": "author",

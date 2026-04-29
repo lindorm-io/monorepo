@@ -6,29 +6,35 @@ import type {
   IProteusRepository,
   IProteusSession,
   IProteusSource,
-} from "../interfaces";
-import type { ICacheAdapter } from "../interfaces/CacheAdapter";
-import type { EntityEmitFn, TransactionCallback, TransactionOptions } from "../types";
-import { CachingRepository } from "../internal/classes/CachingRepository";
-import type { MetadataResolver } from "../internal/interfaces/ProteusDriver";
-import type { IProteusDriver } from "../internal/interfaces/ProteusDriver";
-import type { FilterRegistry } from "../internal/utils/query/filter-registry";
+} from "../interfaces/index.js";
+import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
+import type {
+  EntityEmitFn,
+  ProteusHookMeta,
+  TransactionCallback,
+  TransactionOptions,
+} from "../types/index.js";
+import { CachingRepository } from "../internal/classes/CachingRepository.js";
+import type { MetadataResolver } from "../internal/interfaces/ProteusDriver.js";
+import type { IProteusDriver } from "../internal/interfaces/ProteusDriver.js";
+import type { FilterRegistry } from "../internal/utils/query/filter-registry.js";
 import {
   setFilterParams as setFilterParamsUtil,
   enableFilter as enableFilterUtil,
   disableFilter as disableFilterUtil,
-} from "../internal/utils/query/filter-registry";
+} from "../internal/utils/query/filter-registry.js";
 
-export type ProteusSessionOptions<C = unknown> = {
-  source: IProteusSource<C>;
+export type ProteusSessionOptions = {
+  source: IProteusSource;
   logger: ILogger;
-  context: C;
+  meta: ProteusHookMeta;
   driver: IProteusDriver;
   registryRef: { current: FilterRegistry };
   resolveMetadata: MetadataResolver;
   cacheAdapter: ICacheAdapter | undefined;
   sourceTtlMs: number | undefined;
   parentEmitEntity: EntityEmitFn;
+  signal?: AbortSignal;
 };
 
 /**
@@ -41,27 +47,29 @@ export type ProteusSessionOptions<C = unknown> = {
  * Sessions are ephemeral data-access handles — they expose no lifecycle,
  * event-subscription, or configuration methods.
  */
-export class ProteusSession<C = unknown> implements IProteusSession<C> {
-  private readonly source: IProteusSource<C>;
+export class ProteusSession implements IProteusSession {
+  private readonly source: IProteusSource;
   private readonly logger: ILogger;
-  private readonly context: C;
+  private readonly meta: ProteusHookMeta;
   private readonly _driver: IProteusDriver;
   private _registryRef: { current: FilterRegistry };
   private readonly resolveMetadata: MetadataResolver;
   private readonly cacheAdapter: ICacheAdapter | undefined;
   private readonly sourceTtlMs: number | undefined;
   private readonly parentEmitEntity: EntityEmitFn;
+  private readonly _signal: AbortSignal | undefined;
 
-  public constructor(options: ProteusSessionOptions<C>) {
+  public constructor(options: ProteusSessionOptions) {
     this.source = options.source;
     this._driver = options.driver;
     this.logger = options.logger;
-    this.context = options.context;
+    this.meta = options.meta;
     this._registryRef = options.registryRef;
     this.resolveMetadata = options.resolveMetadata;
     this.cacheAdapter = options.cacheAdapter;
     this.sourceTtlMs = options.sourceTtlMs;
     this.parentEmitEntity = options.parentEmitEntity;
+    this._signal = options.signal;
   }
 
   // ─── Getters (delegated to source for immutable properties) ─────────
@@ -78,10 +86,22 @@ export class ProteusSession<C = unknown> implements IProteusSession<C> {
     return this.logger;
   }
 
+  /**
+   * The AbortSignal scoped to this session, or `undefined` when the session
+   * was created without one (workers, CLI, migrations, socket contexts).
+   */
+  public get signal(): AbortSignal | undefined {
+    return this._signal;
+  }
+
   // ─── Data-access methods ────────────────────────────────────────────
 
+  public hasEntity<E extends IEntity>(target: Constructor<E>): boolean {
+    return this.source.hasEntity(target);
+  }
+
   public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
-    const inner = this._driver.createRepository(target, undefined, this.context);
+    const inner = this._driver.createRepository(target, undefined, this.meta);
     if (!this.cacheAdapter) return inner;
 
     const metadata = this.resolveMetadata(target);

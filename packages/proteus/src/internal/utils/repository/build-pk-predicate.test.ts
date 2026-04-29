@@ -1,6 +1,7 @@
-import type { EntityMetadata } from "../../entity/types/metadata";
-import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError";
-import { buildPrimaryKeyPredicate } from "./build-pk-predicate";
+import type { EntityMetadata } from "../../entity/types/metadata.js";
+import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
+import { buildPrimaryKeyPredicate } from "./build-pk-predicate.js";
+import { describe, expect, test } from "vitest";
 
 const makeMetadata = (primaryKeys: Array<string>): EntityMetadata =>
   ({

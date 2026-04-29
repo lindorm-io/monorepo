@@ -1,4 +1,5 @@
-import { encodeCursor } from "./encode-cursor";
+import { encodeCursor } from "./encode-cursor.js";
+import { describe, expect, it } from "vitest";
 
 describe("encodeCursor", () => {
   it("should encode columns, directions, and values as base64url", () => {

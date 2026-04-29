@@ -1,1 +1,1 @@
-export { OptimisticLockError as MongoOptimisticLockError } from "../../../errors/OptimisticLockError";
+export { OptimisticLockError as MongoOptimisticLockError } from "../../../errors/OptimisticLockError.js";

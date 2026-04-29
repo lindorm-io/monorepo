@@ -1,11 +1,10 @@
 import type { Socket } from "socket.io-client";
-import { ZephyrError } from "../errors/ZephyrError";
-import { createBearerAuthStrategy } from "./bearer-auth-strategy";
+import { ZephyrError } from "../errors/ZephyrError.js";
+import { createBearerAuthStrategy } from "./bearer-auth-strategy.js";
+import { describe, expect, it, vi, type Mock } from "vitest";
 
-const createMockSocket = (
-  emitWithAck: jest.Mock,
-): { socket: Socket; timeout: jest.Mock } => {
-  const timeout = jest.fn().mockReturnValue({ emitWithAck });
+const createMockSocket = (emitWithAck: Mock): { socket: Socket; timeout: Mock } => {
+  const timeout = vi.fn().mockReturnValue({ emitWithAck });
   const socket = {
     auth: undefined as unknown,
     timeout,
@@ -16,12 +15,12 @@ const createMockSocket = (
 describe("createBearerAuthStrategy", () => {
   describe("prepareHandshake", () => {
     it("should resolve getBearerCredentials and set socket.auth.bearer", async () => {
-      const getBearerCredentials = jest
+      const getBearerCredentials = vi
         .fn()
         .mockResolvedValue({ bearer: "token-123", expiresIn: 300 });
 
       const strategy = createBearerAuthStrategy({ getBearerCredentials });
-      const { socket } = createMockSocket(jest.fn());
+      const { socket } = createMockSocket(vi.fn());
 
       await strategy.prepareHandshake(socket);
 
@@ -33,7 +32,7 @@ describe("createBearerAuthStrategy", () => {
       const strategy = createBearerAuthStrategy({
         getBearerCredentials: () => ({ bearer: "sync-token", expiresIn: 60 }),
       });
-      const { socket } = createMockSocket(jest.fn());
+      const { socket } = createMockSocket(vi.fn());
 
       await strategy.prepareHandshake(socket);
 
@@ -43,7 +42,7 @@ describe("createBearerAuthStrategy", () => {
 
   describe("refresh", () => {
     it("should emit refresh event with bearer and expiresIn and resolve on ok ack", async () => {
-      const emitWithAck = jest.fn().mockResolvedValue({ __pylon: true, ok: true });
+      const emitWithAck = vi.fn().mockResolvedValue({ __pylon: true, ok: true });
 
       const strategy = createBearerAuthStrategy({
         getBearerCredentials: async () => ({ bearer: "fresh-token", expiresIn: 300 }),
@@ -61,7 +60,7 @@ describe("createBearerAuthStrategy", () => {
     });
 
     it("should honour custom refreshAckTimeoutMs", async () => {
-      const emitWithAck = jest.fn().mockResolvedValue({ __pylon: true, ok: true });
+      const emitWithAck = vi.fn().mockResolvedValue({ __pylon: true, ok: true });
 
       const strategy = createBearerAuthStrategy({
         getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),
@@ -76,14 +75,14 @@ describe("createBearerAuthStrategy", () => {
     });
 
     it("should read bearer and expiresIn from a single getter call", async () => {
-      const getBearerCredentials = jest
+      const getBearerCredentials = vi
         .fn()
         .mockResolvedValue({ bearer: "t", expiresIn: 60 });
 
       const strategy = createBearerAuthStrategy({ getBearerCredentials });
 
       const { socket } = createMockSocket(
-        jest.fn().mockResolvedValue({ __pylon: true, ok: true }),
+        vi.fn().mockResolvedValue({ __pylon: true, ok: true }),
       );
 
       await strategy.refresh(socket);
@@ -92,7 +91,7 @@ describe("createBearerAuthStrategy", () => {
     });
 
     it("should throw when ack is { ok: false } and preserve error envelope fields", async () => {
-      const emitWithAck = jest.fn().mockResolvedValue({
+      const emitWithAck = vi.fn().mockResolvedValue({
         __pylon: true,
         ok: false,
         error: {
@@ -122,9 +121,7 @@ describe("createBearerAuthStrategy", () => {
     });
 
     it("should throw timeout error when emitWithAck rejects", async () => {
-      const emitWithAck = jest
-        .fn()
-        .mockRejectedValue(new Error("operation has timed out"));
+      const emitWithAck = vi.fn().mockRejectedValue(new Error("operation has timed out"));
 
       const strategy = createBearerAuthStrategy({
         getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),
@@ -143,7 +140,7 @@ describe("createBearerAuthStrategy", () => {
         getBearerCredentials: async () => ({ bearer: "t", expiresIn: 0 }),
       });
 
-      const { socket } = createMockSocket(jest.fn());
+      const { socket } = createMockSocket(vi.fn());
 
       await expect(strategy.refresh(socket)).rejects.toMatchObject({
         code: "ZEPHYR_AUTH_REFRESH_INVALID_EXPIRES_IN",
@@ -155,7 +152,7 @@ describe("createBearerAuthStrategy", () => {
         getBearerCredentials: async () => ({ bearer: "t", expiresIn: -10 }),
       });
 
-      const { socket } = createMockSocket(jest.fn());
+      const { socket } = createMockSocket(vi.fn());
 
       await expect(strategy.refresh(socket)).rejects.toMatchObject({
         code: "ZEPHYR_AUTH_REFRESH_INVALID_EXPIRES_IN",
@@ -163,7 +160,7 @@ describe("createBearerAuthStrategy", () => {
     });
 
     it("should throw when ack shape is not a pylon envelope", async () => {
-      const emitWithAck = jest.fn().mockResolvedValue({ raw: "data" });
+      const emitWithAck = vi.fn().mockResolvedValue({ raw: "data" });
 
       const strategy = createBearerAuthStrategy({
         getBearerCredentials: async () => ({ bearer: "t", expiresIn: 60 }),

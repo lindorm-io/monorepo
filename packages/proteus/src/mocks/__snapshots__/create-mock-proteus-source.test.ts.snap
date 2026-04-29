@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createMockProteusSource should create a mock source with all methods as jest.fn() 1`] = `
+exports[`createMockProteusSource > should create a mock source with all methods as vi.fn() 1`] = `
 {
   "addEntities": [MockFunction],
   "breaker": null,
@@ -12,6 +12,7 @@ exports[`createMockProteusSource should create a mock source with all methods as
   "enableFilter": [MockFunction],
   "getEntityMetadata": [MockFunction],
   "getFilterRegistry": [MockFunction],
+  "hasEntity": [MockFunction],
   "log": {
     "child": [MockFunction],
     "debug": [MockFunction],

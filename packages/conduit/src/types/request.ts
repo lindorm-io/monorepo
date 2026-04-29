@@ -1,10 +1,10 @@
-import { RetryOptions } from "@lindorm/retry";
-import { Dict, HttpMethod, Param, Query } from "@lindorm/types";
+import type { RetryOptions } from "@lindorm/retry";
+import type { Dict, HttpMethod, Param, Query } from "@lindorm/types";
 import { Readable } from "stream";
-import { ConduitAdapter, ExpectedResponse } from "../types";
-import { ConduitMiddleware } from "./conduit";
-import { ConfigOptions } from "./overrides";
-import { OnRetryCallback, RetryCallback } from "./retry";
+import type { ConduitAdapter, ExpectedResponse } from "../types/index.js";
+import type { ConduitMiddleware } from "./conduit.js";
+import type { ConfigOptions } from "./overrides.js";
+import type { OnRetryCallback, RetryCallback } from "./retry.js";
 
 export type MethodOptions = {
   method: HttpMethod;

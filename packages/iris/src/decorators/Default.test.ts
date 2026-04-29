@@ -1,7 +1,8 @@
-import { buildMessageMetadata } from "../internal/message/metadata/build-message-metadata";
-import { Default } from "./Default";
-import { Field } from "./Field";
-import { Message } from "./Message";
+import { buildMessageMetadata } from "../internal/message/metadata/build-message-metadata.js";
+import { Default } from "./Default.js";
+import { Field } from "./Field.js";
+import { Message } from "./Message.js";
+import { describe, expect, it } from "vitest";
 
 describe("Default", () => {
   it("should stage field modifier with literal default", () => {

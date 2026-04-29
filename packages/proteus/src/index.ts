@@ -1,6 +1,8 @@
-export * from "./classes";
-export * from "./decorators";
-export * from "./errors";
-export * from "./interfaces";
-export * from "./types";
-export * from "./utils";
+import "./internal/polyfill-symbol-metadata.js";
+
+export * from "./classes/index.js";
+export * from "./decorators/index.js";
+export * from "./errors/index.js";
+export * from "./interfaces/index.js";
+export * from "./types/index.js";
+export * from "./utils/index.js";

@@ -1,6 +1,6 @@
 import { isBoolean, isNumber, isString } from "@lindorm/is";
-import { IrisSerializationError } from "../../../errors/IrisSerializationError";
-import type { MetaFieldType } from "../types/types";
+import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
+import type { MetaFieldType } from "../types/types.js";
 
 export const deserialise = (value: any, type: MetaFieldType): any => {
   switch (type) {

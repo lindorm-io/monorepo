@@ -1,23 +1,26 @@
-import { EntityScanner } from "./EntityScanner";
-import { EntityScannerError } from "../errors/EntityScannerError";
+import { EntityScanner } from "./EntityScanner.js";
+import { EntityScannerError } from "../errors/EntityScannerError.js";
 import type { IScanData } from "@lindorm/scanner";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // ─── Mock @lindorm/scanner ────────────────────────────────────────────────────
 
 // We keep the mock scanner instance stable across tests so we can control
-// its return values per-test. jest.resetAllMocks() only resets mock *functions*,
+// its return values per-test. vi.resetAllMocks() only resets mock *functions*,
 // not the factory implementation, so we re-install the mock in beforeEach.
 
-const mockScan = jest.fn();
-const mockRequire = jest.fn();
-const mockScannerInstance = { scan: mockScan, require: mockRequire };
+const mockScan = vi.fn();
+const mockImport = vi.fn();
+const mockScannerInstance = { scan: mockScan, import: mockImport };
 
-jest.mock("@lindorm/scanner", () => ({
-  Scanner: jest.fn(() => mockScannerInstance),
+vi.mock("@lindorm/scanner", async () => ({
+  Scanner: vi.fn(function () {
+    return mockScannerInstance;
+  }),
 }));
 
 import { Scanner } from "@lindorm/scanner";
-const MockScanner = Scanner as unknown as jest.Mock;
+const MockScanner = Scanner as unknown as Mock;
 
 // ─── Fixture constructors ─────────────────────────────────────────────────────
 
@@ -48,34 +51,34 @@ const makeScanData = (overrides: Partial<IScanData> = {}): IScanData => ({
 describe("EntityScanner.scan", () => {
   beforeEach(() => {
     mockScan.mockReset();
-    mockRequire.mockReset();
+    mockImport.mockReset();
     MockScanner.mockClear();
   });
 
   // ─── Constructor input (no strings) ─────────────────────────────────
 
   describe("constructor input (no strings)", () => {
-    test("returns constructor elements directly from input array", () => {
-      const result = EntityScanner.scan([EntityA, EntityB]);
+    test("returns constructor elements directly from input array", async () => {
+      const result = await EntityScanner.scan([EntityA, EntityB]);
       expect(result).toMatchSnapshot();
       expect(result).toContain(EntityA);
       expect(result).toContain(EntityB);
     });
 
-    test("returns empty array for empty input", () => {
-      const result = EntityScanner.scan([]);
+    test("returns empty array for empty input", async () => {
+      const result = await EntityScanner.scan([]);
       expect(result).toMatchSnapshot();
     });
 
-    test("filters out plain objects from input", () => {
+    test("filters out plain objects from input", async () => {
       const plainObj = { id: "not-a-class" } as any;
-      const result = EntityScanner.scan([EntityA, plainObj]);
+      const result = await EntityScanner.scan([EntityA, plainObj]);
       expect(result).toContain(EntityA);
       expect(result).not.toContain(plainObj);
     });
 
-    test("does not invoke scanner when input contains only constructors", () => {
-      EntityScanner.scan([EntityA]);
+    test("does not invoke scanner when input contains only constructors", async () => {
+      await EntityScanner.scan([EntityA]);
       expect(mockScan).not.toHaveBeenCalled();
     });
   });
@@ -83,90 +86,94 @@ describe("EntityScanner.scan", () => {
   // ─── String path — file ───────────────────────────────────────────────
 
   describe("string path input — file", () => {
-    test("calls scanner.scan for string path", () => {
+    test("calls scanner.scan for string path", async () => {
       const fileScanData = makeScanData({ isFile: true, isDirectory: false });
       mockScan.mockReturnValue(fileScanData);
-      mockRequire.mockReturnValue({ EntityA });
+      mockImport.mockResolvedValue({ EntityA });
 
-      EntityScanner.scan(["/some/path/EntityA.ts"]);
+      await EntityScanner.scan(["/some/path/EntityA.ts"]);
 
       expect(mockScan).toHaveBeenCalledWith("/some/path/EntityA.ts");
     });
 
-    test("returns entities discovered in a file", () => {
+    test("returns entities discovered in a file", async () => {
       const fileScanData = makeScanData({
         isFile: true,
         isDirectory: false,
         fullPath: "/path/EntityA.ts",
       });
       mockScan.mockReturnValue(fileScanData);
-      mockRequire.mockReturnValue({ EntityA });
+      mockImport.mockResolvedValue({ EntityA });
 
-      const result = EntityScanner.scan(["/path/EntityA.ts"]);
+      const result = await EntityScanner.scan(["/path/EntityA.ts"]);
 
       expect(result).toContain(EntityA);
     });
 
-    test("returns multiple entities from a single file", () => {
+    test("returns multiple entities from a single file", async () => {
       const fileScanData = makeScanData({ isFile: true, isDirectory: false });
       mockScan.mockReturnValue(fileScanData);
-      mockRequire.mockReturnValue({ EntityA, EntityB });
+      mockImport.mockResolvedValue({ EntityA, EntityB });
 
-      const result = EntityScanner.scan(["/path/entities.ts"]);
+      const result = await EntityScanner.scan(["/path/entities.ts"]);
 
       expect(result).toContain(EntityA);
       expect(result).toContain(EntityB);
     });
 
-    test("skips values without a prototype (non-class exports)", () => {
+    test("skips values without a prototype (non-class exports)", async () => {
       const fileScanData = makeScanData({ isFile: true, isDirectory: false });
       mockScan.mockReturnValue(fileScanData);
       const helper = () => {};
-      mockRequire.mockReturnValue({ EntityA, helper });
+      mockImport.mockResolvedValue({ EntityA, helper });
 
-      const result = EntityScanner.scan(["/path/file.ts"]);
+      const result = await EntityScanner.scan(["/path/file.ts"]);
 
       expect(result).toContain(EntityA);
       expect(result).not.toContain(helper);
     });
 
-    test("throws EntityScannerError when file module exports nothing", () => {
+    test("throws EntityScannerError when file module exports nothing", async () => {
       const fileScanData = makeScanData({ isFile: true, isDirectory: false });
       mockScan.mockReturnValue(fileScanData);
-      mockRequire.mockReturnValue({});
+      mockImport.mockResolvedValue({});
 
-      expect(() => EntityScanner.scan(["/path/empty.ts"])).toThrow(EntityScannerError);
+      await expect(EntityScanner.scan(["/path/empty.ts"])).rejects.toThrow(
+        EntityScannerError,
+      );
     });
 
-    test("throws EntityScannerError when file module has no class exports", () => {
+    test("throws EntityScannerError when file module has no class exports", async () => {
       const fileScanData = makeScanData({ isFile: true, isDirectory: false });
       mockScan.mockReturnValue(fileScanData);
       // Arrow functions have no .prototype
-      mockRequire.mockReturnValue({ helper: () => "nope", CONSTANT: 42 });
+      mockImport.mockResolvedValue({ helper: () => "nope", CONSTANT: 42 });
 
-      expect(() => EntityScanner.scan(["/path/no-class.ts"])).toThrow(EntityScannerError);
+      await expect(EntityScanner.scan(["/path/no-class.ts"])).rejects.toThrow(
+        EntityScannerError,
+      );
     });
 
-    test("error message includes file path when no entities found", () => {
+    test("error message includes file path when no entities found", async () => {
       const fileScanData = makeScanData({
         isFile: true,
         isDirectory: false,
         fullPath: "/my/path/empty.ts",
       });
       mockScan.mockReturnValue(fileScanData);
-      mockRequire.mockReturnValue({});
+      mockImport.mockResolvedValue({});
 
-      expect(() => EntityScanner.scan(["/my/path/empty.ts"])).toThrow(
+      await expect(EntityScanner.scan(["/my/path/empty.ts"])).rejects.toThrow(
         /No entities found in file: \/my\/path\/empty\.ts/,
       );
     });
 
-    test("merges constructor input with file-scanned entities", () => {
+    test("merges constructor input with file-scanned entities", async () => {
       const fileScanData = makeScanData({ isFile: true, isDirectory: false });
       mockScan.mockReturnValue(fileScanData);
-      mockRequire.mockReturnValue({ EntityB });
+      mockImport.mockResolvedValue({ EntityB });
 
-      const result = EntityScanner.scan([EntityA, "/path/EntityB.ts"]);
+      const result = await EntityScanner.scan([EntityA, "/path/EntityB.ts"]);
 
       expect(result).toContain(EntityA);
       expect(result).toContain(EntityB);
@@ -176,7 +183,7 @@ describe("EntityScanner.scan", () => {
   // ─── String path — directory ──────────────────────────────────────────
 
   describe("string path input — directory", () => {
-    test("recursively discovers entities inside a directory", () => {
+    test("recursively discovers entities inside a directory", async () => {
       const fileData = makeScanData({
         isFile: true,
         isDirectory: false,
@@ -189,14 +196,14 @@ describe("EntityScanner.scan", () => {
         fullPath: "/dir",
       });
       mockScan.mockReturnValue(dirData);
-      mockRequire.mockReturnValue({ EntityA });
+      mockImport.mockResolvedValue({ EntityA });
 
-      const result = EntityScanner.scan(["/dir"]);
+      const result = await EntityScanner.scan(["/dir"]);
 
       expect(result).toContain(EntityA);
     });
 
-    test("recursively discovers entities in nested subdirectories", () => {
+    test("recursively discovers entities in nested subdirectories", async () => {
       const deepFile = makeScanData({
         isFile: true,
         isDirectory: false,
@@ -215,14 +222,14 @@ describe("EntityScanner.scan", () => {
         fullPath: "/dir",
       });
       mockScan.mockReturnValue(rootDir);
-      mockRequire.mockReturnValue({ EntityB });
+      mockImport.mockResolvedValue({ EntityB });
 
-      const result = EntityScanner.scan(["/dir"]);
+      const result = await EntityScanner.scan(["/dir"]);
 
       expect(result).toContain(EntityB);
     });
 
-    test("discovers entities from both files and subdirectories in same dir", () => {
+    test("discovers entities from both files and subdirectories in same dir", async () => {
       const fileDataA = makeScanData({
         isFile: true,
         isDirectory: false,
@@ -246,15 +253,15 @@ describe("EntityScanner.scan", () => {
         fullPath: "/dir",
       });
       mockScan.mockReturnValue(rootDir);
-      mockRequire.mockReturnValueOnce({ EntityA }).mockReturnValueOnce({ EntityB });
+      mockImport.mockResolvedValueOnce({ EntityA }).mockReturnValueOnce({ EntityB });
 
-      const result = EntityScanner.scan(["/dir"]);
+      const result = await EntityScanner.scan(["/dir"]);
 
       expect(result).toContain(EntityA);
       expect(result).toContain(EntityB);
     });
 
-    test("returns empty array for empty directory", () => {
+    test("returns empty array for empty directory", async () => {
       const dirData = makeScanData({
         isFile: false,
         isDirectory: true,
@@ -263,7 +270,7 @@ describe("EntityScanner.scan", () => {
       });
       mockScan.mockReturnValue(dirData);
 
-      const result = EntityScanner.scan(["/empty-dir"]);
+      const result = await EntityScanner.scan(["/empty-dir"]);
 
       expect(result).toMatchSnapshot();
       expect(result).toHaveLength(0);
@@ -273,12 +280,12 @@ describe("EntityScanner.scan", () => {
   // ─── Scanner instantiation ─────────────────────────────────────────────
 
   describe("Scanner construction", () => {
-    test("creates a new Scanner instance per scan() invocation with string path", () => {
+    test("creates a new Scanner instance per scan() invocation with string path", async () => {
       const fileScanData = makeScanData({ isFile: true, isDirectory: false });
       mockScan.mockReturnValue(fileScanData);
-      mockRequire.mockReturnValue({ EntityA });
+      mockImport.mockResolvedValue({ EntityA });
 
-      EntityScanner.scan(["/path/file.ts"]);
+      await EntityScanner.scan(["/path/file.ts"]);
 
       expect(MockScanner).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -288,12 +295,12 @@ describe("EntityScanner.scan", () => {
       );
     });
 
-    test("Scanner is constructed with denied filenames and types", () => {
+    test("Scanner is constructed with denied filenames and types", async () => {
       const fileScanData = makeScanData({ isFile: true, isDirectory: false });
       mockScan.mockReturnValue(fileScanData);
-      mockRequire.mockReturnValue({ EntityA });
+      mockImport.mockResolvedValue({ EntityA });
 
-      EntityScanner.scan(["/path/file.ts"]);
+      await EntityScanner.scan(["/path/file.ts"]);
 
       const constructorCall = MockScanner.mock.calls[0][0];
       expect(constructorCall.deniedFilenames).toMatchSnapshot();

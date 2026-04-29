@@ -1,6 +1,10 @@
-import { IAmphora } from "@lindorm/amphora";
-import { ILogger } from "@lindorm/logger";
-import { ILindormWorker, LindormWorker, LindormWorkerScanner } from "@lindorm/worker";
+import type { IAmphora } from "@lindorm/amphora";
+import type { ILogger } from "@lindorm/logger";
+import {
+  type ILindormWorker,
+  LindormWorker,
+  LindormWorkerScanner,
+} from "@lindorm/worker";
 
 type Options = {
   amphora: IAmphora;
@@ -15,7 +19,7 @@ const normalise = (input: Options["workers"]): Array<ILindormWorker | string> =>
   return [];
 };
 
-export const scanWorkers = (options: Options): Array<ILindormWorker> => {
+export const scanWorkers = async (options: Options): Promise<Array<ILindormWorker>> => {
   const workers = normalise(options.workers);
 
   return [
@@ -25,6 +29,6 @@ export const scanWorkers = (options: Options): Array<ILindormWorker> => {
       interval: "5m",
       logger: options.logger,
     }),
-    ...LindormWorkerScanner.scan(workers, options.logger),
+    ...(await LindormWorkerScanner.scan(workers, options.logger)),
   ];
 };

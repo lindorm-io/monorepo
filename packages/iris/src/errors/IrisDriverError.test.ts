@@ -1,5 +1,6 @@
-import { IrisError } from "./IrisError";
-import { IrisDriverError } from "./IrisDriverError";
+import { IrisError } from "./IrisError.js";
+import { IrisDriverError } from "./IrisDriverError.js";
+import { describe, expect, it } from "vitest";
 
 describe("IrisDriverError", () => {
   it("should be an instance of IrisError", () => {

@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`extractAegisProfile camelCase input should extract profile fields from camelCase data 1`] = `
+exports[`extractAegisProfile > camelCase input > should extract profile fields from camelCase data 1`] = `
 {
   "profile": {
     "email": "john@example.com",
@@ -17,7 +17,7 @@ exports[`extractAegisProfile camelCase input should extract profile fields from 
 }
 `;
 
-exports[`extractAegisProfile camelCase input should handle all standard OIDC profile fields 1`] = `
+exports[`extractAegisProfile > camelCase input > should handle all standard OIDC profile fields 1`] = `
 {
   "profile": {
     "birthdate": "1990-01-01",
@@ -39,7 +39,7 @@ exports[`extractAegisProfile camelCase input should handle all standard OIDC pro
 }
 `;
 
-exports[`extractAegisProfile camelCase input should return undefined profile when no profile fields present 1`] = `
+exports[`extractAegisProfile > camelCase input > should return undefined profile when no profile fields present 1`] = `
 {
   "profile": undefined,
   "rest": {
@@ -51,7 +51,7 @@ exports[`extractAegisProfile camelCase input should return undefined profile whe
 }
 `;
 
-exports[`extractAegisProfile snake_case input should extract profile fields from snake_case wire format 1`] = `
+exports[`extractAegisProfile > snake_case input > should extract profile fields from snake_case wire format 1`] = `
 {
   "profile": {
     "email": "john@example.com",
@@ -65,7 +65,7 @@ exports[`extractAegisProfile snake_case input should extract profile fields from
 }
 `;
 
-exports[`extractAegisProfile snake_case input should handle address field 1`] = `
+exports[`extractAegisProfile > snake_case input > should handle address field 1`] = `
 {
   "profile": {
     "address": {
@@ -78,7 +78,7 @@ exports[`extractAegisProfile snake_case input should handle address field 1`] = 
 }
 `;
 
-exports[`extractAegisProfile snake_case input should handle all lindorm extension fields 1`] = `
+exports[`extractAegisProfile > snake_case input > should handle all lindorm extension fields 1`] = `
 {
   "profile": {
     "department": "Engineering",
@@ -100,7 +100,7 @@ exports[`extractAegisProfile snake_case input should handle all lindorm extensio
 }
 `;
 
-exports[`extractAegisProfile snake_case input should return undefined profile when no profile fields present 1`] = `
+exports[`extractAegisProfile > snake_case input > should return undefined profile when no profile fields present 1`] = `
 {
   "profile": undefined,
   "rest": {

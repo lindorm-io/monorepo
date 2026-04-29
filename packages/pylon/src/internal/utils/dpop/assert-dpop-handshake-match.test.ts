@@ -1,5 +1,6 @@
 import { ClientError } from "@lindorm/errors";
-import { assertDpopHandshakeMatch } from "./assert-dpop-handshake-match";
+import { assertDpopHandshakeMatch } from "./assert-dpop-handshake-match.js";
+import { describe, expect, test } from "vitest";
 
 describe("assertDpopHandshakeMatch", () => {
   const handshake: any = {

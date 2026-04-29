@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Retry should allow partial override 1`] = `
+exports[`Retry > should allow partial override 1`] = `
 {
   "delay": 1000,
   "delayMax": 30000,
@@ -11,7 +11,7 @@ exports[`Retry should allow partial override 1`] = `
 }
 `;
 
-exports[`Retry should stage retry metadata with all options 1`] = `
+exports[`Retry > should stage retry metadata with all options 1`] = `
 {
   "delay": 500,
   "delayMax": 10000,
@@ -22,7 +22,7 @@ exports[`Retry should stage retry metadata with all options 1`] = `
 }
 `;
 
-exports[`Retry should stage retry metadata with custom options 1`] = `
+exports[`Retry > should stage retry metadata with custom options 1`] = `
 {
   "delay": 2000,
   "delayMax": 30000,
@@ -33,7 +33,7 @@ exports[`Retry should stage retry metadata with custom options 1`] = `
 }
 `;
 
-exports[`Retry should stage retry metadata with defaults 1`] = `
+exports[`Retry > should stage retry metadata with defaults 1`] = `
 {
   "delay": 1000,
   "delayMax": 30000,

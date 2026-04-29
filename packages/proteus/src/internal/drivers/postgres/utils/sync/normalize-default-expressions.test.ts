@@ -1,4 +1,5 @@
-import { normalizeDefaultExpressions } from "./normalize-default-expressions";
+import { normalizeDefaultExpressions } from "./normalize-default-expressions.js";
+import { describe, expect, test } from "vitest";
 
 describe("normalizeDefaultExpressions", () => {
   test("should return null for null input", () => {

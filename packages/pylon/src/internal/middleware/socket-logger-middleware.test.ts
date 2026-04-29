@@ -1,5 +1,6 @@
-import { createMockLogger } from "@lindorm/logger";
-import { socketLoggerMiddleware } from "./socket-logger-middleware";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { socketLoggerMiddleware } from "./socket-logger-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("socketLoggerMiddleware", () => {
   let ctx: any;
@@ -13,7 +14,7 @@ describe("socketLoggerMiddleware", () => {
   });
 
   test("should log event received and resolved", async () => {
-    await expect(socketLoggerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(socketLoggerMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.logger.info).toHaveBeenCalledWith("Socket event received", {
       event: "event",
@@ -34,7 +35,7 @@ describe("socketLoggerMiddleware", () => {
   });
 
   test("should call next", async () => {
-    const next = jest.fn();
+    const next = vi.fn();
 
     await socketLoggerMiddleware(ctx, next);
 

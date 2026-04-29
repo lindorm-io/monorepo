@@ -1,8 +1,8 @@
 import { Aegis } from "@lindorm/aegis";
-import { IAmphora } from "@lindorm/amphora";
+import type { IAmphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
-import { Middleware } from "@lindorm/middleware";
-import { PylonCommonContext } from "../../types";
+import type { Middleware } from "@lindorm/middleware";
+import type { PylonCommonContext } from "../../types/index.js";
 
 export const createCommonContextInitialisationMiddleware = <C extends PylonCommonContext>(
   amphora: IAmphora,

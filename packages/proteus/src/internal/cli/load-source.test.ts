@@ -1,36 +1,48 @@
-import { loadSource } from "./load-source";
+import { loadSource } from "./load-source.js";
 import { existsSync } from "fs";
 import { Scanner } from "@lindorm/scanner";
+import {
+  beforeEach,
+  describe,
+  expect,
+  it,
+  vi,
+  type Mock,
+  type MockedClass,
+  type MockedFunction,
+} from "vitest";
 
-jest.mock("fs", () => ({
-  existsSync: jest.fn(),
-  mkdirSync: jest.fn(),
-  readdirSync: jest.fn(() => []),
+vi.mock("fs", async () => ({
+  existsSync: vi.fn(),
+  mkdirSync: vi.fn(),
+  readdirSync: vi.fn(() => []),
 }));
 
-jest.mock("@lindorm/scanner");
+vi.mock("@lindorm/scanner");
 
 const PROTEUS_SOURCE_BRAND = Symbol.for("ProteusSource");
 
 const makeSource = () => {
-  const source = { connect: jest.fn(), ping: jest.fn(), disconnect: jest.fn() };
+  const source = { connect: vi.fn(), ping: vi.fn(), disconnect: vi.fn() };
   const ctor = function () {} as any;
   ctor[PROTEUS_SOURCE_BRAND] = true;
   Object.setPrototypeOf(source, { constructor: ctor });
   return source;
 };
 
-const mockExistsSync = existsSync as jest.MockedFunction<typeof existsSync>;
-const MockScanner = Scanner as jest.MockedClass<typeof Scanner>;
+const mockExistsSync = existsSync as MockedFunction<typeof existsSync>;
+const MockScanner = Scanner as MockedClass<typeof Scanner>;
 
 describe("loadSource", () => {
-  let mockImport: jest.Mock;
+  let mockImport: Mock;
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockExistsSync.mockReturnValue(true);
-    mockImport = jest.fn();
-    MockScanner.mockImplementation(() => ({ import: mockImport }) as any);
+    mockImport = vi.fn();
+    MockScanner.mockImplementation(function () {
+      return { import: mockImport } as any;
+    });
   });
 
   it("should throw when file does not exist", async () => {

@@ -2,10 +2,11 @@ import {
   TEST_X509_LEAF_PEM,
   TEST_X509_LEAF_PUBLIC_KEY_B64,
   TEST_X509_OTHER_PUBLIC_KEY_B64,
-} from "../../../__fixtures__/x509";
-import { extractLeafSpki } from "./extract-leaf-spki";
-import { parseX509 } from "./parse-x509";
-import { x509PublicKeyMatches } from "./x509-public-key-matches";
+} from "../../../__fixtures__/x509.js";
+import { extractLeafSpki } from "./extract-leaf-spki.js";
+import { parseX509 } from "./parse-x509.js";
+import { x509PublicKeyMatches } from "./x509-public-key-matches.js";
+import { describe, expect, test } from "vitest";
 
 describe("x509PublicKeyMatches", () => {
   test("returns true when leaf SPKI matches the kryptos EC public key", () => {

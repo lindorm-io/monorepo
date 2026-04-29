@@ -1,16 +1,17 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { Dict } from "@lindorm/types";
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata } from "../types/metadata";
-import { decryptFieldValue } from "./decrypt-field-value";
-import { deserialise } from "./deserialise";
-import { runHooksSync } from "./run-hooks-sync";
-import { storeSnapshot } from "./snapshot-store";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
+import type { EntityMetadata } from "../types/metadata.js";
+import { decryptFieldValue } from "./decrypt-field-value.js";
+import { deserialise } from "./deserialise.js";
+import { runHooksSync } from "./run-hooks-sync.js";
+import { storeSnapshot } from "./snapshot-store.js";
 
 export type HydrateOptions = {
   snapshot?: boolean;
   hooks?: boolean;
-  context?: unknown;
+  meta?: ProteusHookMeta;
   amphora?: IAmphora;
 };
 
@@ -31,7 +32,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
   metadata: EntityMetadata,
   options: HydrateOptions = {},
 ): E => {
-  const { snapshot = true, hooks = true, context, amphora } = options;
+  const { snapshot = true, hooks = true, meta, amphora } = options;
 
   const entity = new metadata.target() as any;
   const snapshotDict: Dict = {};
@@ -141,7 +142,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
   }
 
   if (hooks) {
-    runHooksSync("OnHydrate", metadata.hooks, entity, context);
+    runHooksSync("OnHydrate", metadata.hooks, entity, meta);
   }
 
   return entity as E;

@@ -1,8 +1,9 @@
+import { test, expect, beforeEach } from "vitest";
 // TCK: Increments Suite
 // Tests increment and decrement operations.
 
-import type { TckDriverHandle } from "./types";
-import type { TckEntities } from "./create-tck-entities";
+import type { TckDriverHandle } from "./types.js";
+import type { TckEntities } from "./create-tck-entities.js";
 
 export const incrementsSuite = (
   getHandle: () => TckDriverHandle,

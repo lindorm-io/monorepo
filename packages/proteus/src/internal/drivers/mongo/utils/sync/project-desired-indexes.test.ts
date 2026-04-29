@@ -1,11 +1,12 @@
+import { describe, expect, test } from "vitest";
 import type {
   EntityMetadata,
   MetaField,
   MetaIndex,
   MetaRelation,
   MetaUnique,
-} from "../../../../entity/types/metadata";
-import { projectDesiredIndexes } from "./project-desired-indexes";
+} from "../../../../entity/types/metadata.js";
+import { projectDesiredIndexes } from "./project-desired-indexes.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

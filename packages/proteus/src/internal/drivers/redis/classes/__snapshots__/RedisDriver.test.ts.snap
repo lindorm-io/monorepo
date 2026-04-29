@@ -1,18 +1,18 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`RedisDriver beginTransaction returns a handle with active state 1`] = `
+exports[`RedisDriver > beginTransaction > returns a handle with active state 1`] = `
 {
   "state": "active",
 }
 `;
 
-exports[`RedisDriver commitTransaction sets handle state to committed 1`] = `
+exports[`RedisDriver > commitTransaction > sets handle state to committed 1`] = `
 {
   "state": "committed",
 }
 `;
 
-exports[`RedisDriver rollbackTransaction sets handle state to rolledBack 1`] = `
+exports[`RedisDriver > rollbackTransaction > sets handle state to rolledBack 1`] = `
 {
   "state": "rolledBack",
 }

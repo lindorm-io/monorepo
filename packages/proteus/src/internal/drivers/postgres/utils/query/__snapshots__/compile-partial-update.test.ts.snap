@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-write params count is correct without duplicates 1`] = `
+exports[`compilePartialUpdate > Version/UpdateDate deduplication — no double-write > params count is correct without duplicates 1`] = `
 {
   "params": [
     "Bob",
@@ -13,7 +13,7 @@ exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-wri
 }
 `;
 
-exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-write updated_at column in changed dict appears exactly once in SET clause 1`] = `
+exports[`compilePartialUpdate > Version/UpdateDate deduplication — no double-write > updated_at column in changed dict appears exactly once in SET clause 1`] = `
 {
   "params": [
     "Bob",
@@ -26,7 +26,7 @@ exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-wri
 }
 `;
 
-exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-write version and updatedAt both in changed — no extra params 1`] = `
+exports[`compilePartialUpdate > Version/UpdateDate deduplication — no double-write > version and updatedAt both in changed — no extra params 1`] = `
 {
   "params": [
     "Charlie",
@@ -39,7 +39,7 @@ exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-wri
 }
 `;
 
-exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-write version column in changed dict appears exactly once in SET clause 1`] = `
+exports[`compilePartialUpdate > Version/UpdateDate deduplication — no double-write > version column in changed dict appears exactly once in SET clause 1`] = `
 {
   "params": [
     "Bob",
@@ -52,7 +52,7 @@ exports[`compilePartialUpdate Version/UpdateDate deduplication — no double-wri
 }
 `;
 
-exports[`compilePartialUpdate should compile UPDATE with only changed columns 1`] = `
+exports[`compilePartialUpdate > should compile UPDATE with only changed columns 1`] = `
 {
   "params": [
     "Bob",

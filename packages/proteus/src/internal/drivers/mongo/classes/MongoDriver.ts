@@ -13,44 +13,47 @@ import type {
   IEntity,
   IProteusQueryBuilder,
   IProteusRepository,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   FilterRegistryGetter,
   IProteusDriver,
   MetadataResolver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusMongoOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { MongoTransactionHandle } from "../types/mongo-types";
-import { detectReplicaSet } from "../utils/detect-replica-set";
-import { createMongoJoinTableOps } from "../utils/mongo-join-table-ops";
-import { mapIsolationLevel } from "../utils/map-isolation-level";
-import { isRetryableMongoError } from "../utils/is-retryable-mongo-error";
-import { withRetry } from "../../../utils/transaction/with-retry";
-import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
-import { MongoDriverError } from "../errors/MongoDriverError";
-import { MongoMigrationError } from "../errors/MongoMigrationError";
-import { MongoExecutor } from "./MongoExecutor";
-import { BreakerExecutor } from "../../../classes/BreakerExecutor";
-import { MongoMigrationManager } from "./MongoMigrationManager";
-import { MongoQueryBuilder } from "./MongoQueryBuilder";
-import { MongoRepository } from "./MongoRepository";
-import { MongoTransactionContext } from "./MongoTransactionContext";
-import { NotSupportedError } from "../../../../errors/NotSupportedError";
-import { resolveCollectionName } from "../utils/resolve-collection-name";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata";
-import { diffIndexes } from "../utils/sync/diff-indexes";
-import { executeSync } from "../utils/sync/execute-sync";
-import { introspectIndexes } from "../utils/sync/introspect-indexes";
-import { projectDesiredIndexes } from "../utils/sync/project-desired-indexes";
+} from "../../../../types/index.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
+import type { MongoTransactionHandle } from "../types/mongo-types.js";
+import { detectReplicaSet } from "../utils/detect-replica-set.js";
+import { createMongoJoinTableOps } from "../utils/mongo-join-table-ops.js";
+import { mapIsolationLevel } from "../utils/map-isolation-level.js";
+import { isRetryableMongoError } from "../utils/is-retryable-mongo-error.js";
+import { withRetry } from "../../../utils/transaction/with-retry.js";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
+import { MongoDriverError } from "../errors/MongoDriverError.js";
+import { MongoMigrationError } from "../errors/MongoMigrationError.js";
+import { MongoExecutor } from "./MongoExecutor.js";
+import { AbortError } from "@lindorm/errors";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { toAbortError } from "../../../utils/abort.js";
+import { MongoMigrationManager } from "./MongoMigrationManager.js";
+import { MongoQueryBuilder } from "./MongoQueryBuilder.js";
+import { MongoRepository } from "./MongoRepository.js";
+import { MongoTransactionContext } from "./MongoTransactionContext.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { resolveCollectionName } from "../utils/resolve-collection-name.js";
+import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { diffIndexes } from "../utils/sync/diff-indexes.js";
+import { executeSync } from "../utils/sync/execute-sync.js";
+import { introspectIndexes } from "../utils/sync/introspect-indexes.js";
+import { projectDesiredIndexes } from "../utils/sync/project-desired-indexes.js";
 
 export class MongoDriver implements IProteusDriver {
   private readonly options: ProteusMongoOptions;
@@ -77,6 +80,7 @@ export class MongoDriver implements IProteusDriver {
   private db: Db | null;
   private isReplicaSet: boolean;
   private connectingPromise: Promise<void> | null;
+  private signal: AbortSignal | undefined;
 
   public constructor(
     options: ProteusMongoOptions,
@@ -334,15 +338,16 @@ export class MongoDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const db = this.requireDb();
 
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createRepository(t, p, context);
+    ) => this.createRepository(t, p, meta);
 
     return new MongoRepository<E>({
       target,
@@ -354,13 +359,14 @@ export class MongoDriver implements IProteusDriver {
           this.getFilterRegistry(),
           undefined,
           this.amphora,
+          this.signal,
         ),
       ),
       queryBuilderFactory: () => this.createQueryBuilder(target),
       db,
       namespace: this.namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       emitEntity: this.emitEntity,
@@ -372,8 +378,9 @@ export class MongoDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
+    this.checkSignal();
     const txHandle = handle as MongoTransactionHandle;
     const metadata = this.resolveMetadata(target);
     const db = this.requireDb();
@@ -381,7 +388,7 @@ export class MongoDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createTransactionalRepository(t, handle, p, context);
+    ) => this.createTransactionalRepository(t, handle, p, meta);
 
     return new MongoRepository<E>({
       target,
@@ -392,12 +399,13 @@ export class MongoDriver implements IProteusDriver {
         this.getFilterRegistry(),
         txHandle.session,
         this.amphora,
+        this.signal,
       ),
       queryBuilderFactory: () => this.createTransactionalQueryBuilder(target, handle),
       db,
       namespace: this.namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       emitEntity: this.emitEntity,
@@ -411,6 +419,7 @@ export class MongoDriver implements IProteusDriver {
   public createExecutor<E extends IEntity>(
     target: Constructor<E>,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
 
     return this.wrapExecutor(
@@ -421,6 +430,7 @@ export class MongoDriver implements IProteusDriver {
         this.getFilterRegistry(),
         undefined,
         this.amphora,
+        this.signal,
       ),
     );
   }
@@ -429,6 +439,7 @@ export class MongoDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const txHandle = handle as MongoTransactionHandle;
     const metadata = this.resolveMetadata(target);
 
@@ -439,6 +450,7 @@ export class MongoDriver implements IProteusDriver {
       this.getFilterRegistry(),
       txHandle.session,
       this.amphora,
+      this.signal,
     );
   }
 
@@ -447,6 +459,7 @@ export class MongoDriver implements IProteusDriver {
   public createQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const db = this.requireDb();
 
@@ -465,6 +478,7 @@ export class MongoDriver implements IProteusDriver {
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const txHandle = handle as MongoTransactionHandle;
     const metadata = this.resolveMetadata(target);
     const db = this.requireDb();
@@ -491,6 +505,7 @@ export class MongoDriver implements IProteusDriver {
   public async beginTransaction(
     options?: TransactionOptions,
   ): Promise<TransactionHandle> {
+    this.checkSignal();
     if (!this.isReplicaSet) {
       throw new NotSupportedError(
         "MongoDB transactions require a replica set. Current connection is standalone.",
@@ -561,6 +576,7 @@ export class MongoDriver implements IProteusDriver {
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
+    this.checkSignal();
     if (!this.isReplicaSet) {
       this.logger.warn(
         "MongoDB transactions require a replica set — " +
@@ -585,7 +601,13 @@ export class MongoDriver implements IProteusDriver {
       }
     }
 
+    const sessionSignal = this.signal;
     const attempt = async (): Promise<T> => {
+      // Short-circuit on abort between attempts so retries stop once the
+      // session has been cancelled.
+      if (sessionSignal?.aborted) {
+        throw toAbortError(sessionSignal.reason, undefined, "MongoDB query cancelled");
+      }
       const handle = (await this.beginTransaction(options)) as MongoTransactionHandle;
 
       const repoFactory: RepositoryFactory = <C extends IEntity>(
@@ -632,7 +654,15 @@ export class MongoDriver implements IProteusDriver {
             });
           }),
       };
-      return withRetry(attempt, isRetryableMongoError, retryOptions);
+      // Abort is terminal: never retry after an AbortError or after the
+      // session signal has fired. Otherwise delegate to the mongo-specific
+      // retry classifier.
+      const isRetryable = (error: unknown): boolean => {
+        if (error instanceof AbortError) return false;
+        if (sessionSignal?.aborted) return false;
+        return isRetryableMongoError(error);
+      };
+      return withRetry(attempt, isRetryable, retryOptions);
     }
 
     return attempt();
@@ -643,6 +673,7 @@ export class MongoDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    signal?: AbortSignal,
   ): MongoDriver {
     const cloned = Object.create(MongoDriver.prototype) as MongoDriver;
     (cloned as any).options = this.options;
@@ -658,10 +689,24 @@ export class MongoDriver implements IProteusDriver {
     (cloned as any).db = this.db;
     (cloned as any).isReplicaSet = this.isReplicaSet;
     (cloned as any).connectingPromise = null;
+    // The signal is stored on the cloned driver and forwarded into the
+    // MongoExecutor on construction. The executor also runs a pre-flight
+    // check at every operation entry, and forwards `signal` into readable
+    // mongo operations (find / findOne / countDocuments / aggregate) where
+    // the mongodb v7 driver accepts it as `Abortable`. Writes fall back to
+    // pre-flight only since the mongo write-path types do not accept a
+    // signal option.
+    (cloned as any).signal = signal;
     return cloned;
   }
 
   // ─── Private ──────────────────────────────────────────────────────────
+
+  private checkSignal(): void {
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason, undefined, "MongoDB query cancelled");
+    }
+  }
 
   private wrapExecutor<E extends IEntity>(
     executor: IRepositoryExecutor<E>,

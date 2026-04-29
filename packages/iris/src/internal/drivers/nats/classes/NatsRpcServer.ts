@@ -1,19 +1,20 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { IrisDriverError } from "../../../../errors/IrisDriverError";
-import type { IMessage } from "../../../../interfaces";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { IrisHookMeta } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
-import type { NatsSharedState, NatsSubscription } from "../types/nats-types";
-import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase";
-import { serializeNatsMessage } from "../utils/serialize-nats-message";
-import { parseNatsMessage } from "../utils/parse-nats-message";
+import type { NatsSharedState, NatsSubscription } from "../types/nats-types.js";
+import { DriverRpcServerBase } from "../../../classes/DriverRpcServerBase.js";
+import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
+import { parseNatsMessage } from "../utils/parse-nats-message.js";
 
 export type NatsRpcServerOptions<Req extends IMessage, Res extends IMessage> = {
   state: NatsSharedState;
   logger: ILogger;
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
 };
 

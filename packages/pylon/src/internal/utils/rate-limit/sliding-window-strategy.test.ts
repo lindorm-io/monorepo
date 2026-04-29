@@ -1,23 +1,24 @@
-import { slidingWindowStrategy } from "./sliding-window-strategy";
+import { slidingWindowStrategy } from "./sliding-window-strategy.js";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("slidingWindowStrategy", () => {
-  let mockFindOneOrSave: jest.Mock;
-  let mockUpdate: jest.Mock;
+  let mockFindOneOrSave: Mock;
+  let mockUpdate: Mock;
   let repository: any;
 
   beforeEach(() => {
-    mockFindOneOrSave = jest.fn();
-    mockUpdate = jest.fn();
+    mockFindOneOrSave = vi.fn();
+    mockUpdate = vi.fn();
     repository = {
       findOneOrSave: mockFindOneOrSave,
       update: mockUpdate,
     };
-    jest.useFakeTimers();
-    jest.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
   });
 
   afterEach(() => {
-    jest.useRealTimers();
+    vi.useRealTimers();
   });
 
   test("should allow when no timestamps exist", async () => {

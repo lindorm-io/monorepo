@@ -1,7 +1,7 @@
-import { KryptosAttributes } from "./attributes";
-import { UnknownJwk } from "./jwk";
-import { KryptosBuffer, KryptosJwk, KryptosString } from "./kryptos";
-import { KryptosOptions } from "./options";
+import type { KryptosAttributes } from "./attributes.js";
+import type { UnknownJwk } from "./jwk.js";
+import type { KryptosBuffer, KryptosJwk, KryptosString } from "./kryptos.js";
+import type { KryptosOptions } from "./options.js";
 
 type Std = Omit<
   KryptosOptions,

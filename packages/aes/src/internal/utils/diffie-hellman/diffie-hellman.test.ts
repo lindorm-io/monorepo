@@ -1,8 +1,9 @@
-import { TEST_EC_KEY, TEST_OKP_KEY } from "../../../__fixtures__/keys";
+import { TEST_EC_KEY, TEST_OKP_KEY } from "../../../__fixtures__/keys.js";
 import {
   getDiffieHellmanDecryptionKey,
   getDiffieHellmanEncryptionKey,
-} from "./diffie-hellman";
+} from "./diffie-hellman.js";
+import { describe, expect, test } from "vitest";
 
 describe("diffieHellman", () => {
   test("should return encryption keys with EC", () => {

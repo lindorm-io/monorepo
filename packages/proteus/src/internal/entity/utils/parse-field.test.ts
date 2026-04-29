@@ -1,5 +1,6 @@
-import { makeField } from "../../__fixtures__/make-field";
-import { parseField } from "./parse-field";
+import { makeField } from "../../__fixtures__/make-field.js";
+import { parseField } from "./parse-field.js";
+import { describe, expect, test, vi } from "vitest";
 
 describe("parseField", () => {
   test("should prefer options value over entity value", () => {
@@ -28,7 +29,7 @@ describe("parseField", () => {
   });
 
   test("should call function default when value is null and default is function", () => {
-    const defaultFn = jest.fn().mockReturnValue(99);
+    const defaultFn = vi.fn().mockReturnValue(99);
     const field = makeField("count", { type: "integer", default: defaultFn });
     const entity = {} as any;
     const result = parseField(field, entity, {});

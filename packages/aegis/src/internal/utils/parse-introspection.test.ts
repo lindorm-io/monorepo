@@ -1,6 +1,7 @@
-import { AegisError } from "../../errors";
-import { AegisIntrospectionActive } from "../../types";
-import { IntrospectClaimsInput, parseIntrospection } from "./parse-introspection";
+import { AegisError } from "../../errors/index.js";
+import type { AegisIntrospectionActive } from "../../types/index.js";
+import { type IntrospectClaimsInput, parseIntrospection } from "./parse-introspection.js";
+import { describe, expect, test } from "vitest";
 
 const parseActive = (data: IntrospectClaimsInput): AegisIntrospectionActive => {
   const result = parseIntrospection(data);

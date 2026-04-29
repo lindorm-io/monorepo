@@ -1,16 +1,17 @@
-import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle";
-import { withSavepoint } from "./with-savepoint";
+import type { PostgresTransactionHandle } from "../../types/postgres-transaction-handle.js";
+import { withSavepoint } from "./with-savepoint.js";
+import { describe, expect, it, vi } from "vitest";
 
 const makeHandle = (): PostgresTransactionHandle => {
   const queries: Array<string> = [];
   return {
     client: {
-      query: jest.fn(async (sql: string) => {
+      query: vi.fn(async (sql: string) => {
         queries.push(sql);
         return { rows: [], rowCount: 0 };
       }),
     },
-    release: jest.fn(),
+    release: vi.fn(),
     state: "active",
     savepointCounter: 0,
     __queries: queries,
@@ -47,14 +48,14 @@ describe("withSavepoint", () => {
     // Override query so the rollback SQL throws
     const handle: PostgresTransactionHandle = {
       client: {
-        query: jest.fn(async (sql: string) => {
+        query: vi.fn(async (sql: string) => {
           if (sql.startsWith("ROLLBACK TO SAVEPOINT")) {
             throw rollbackError;
           }
           return { rows: [], rowCount: 0 };
         }),
       } as any,
-      release: jest.fn(),
+      release: vi.fn(),
       state: "active",
       savepointCounter: 0,
     };
@@ -95,14 +96,14 @@ describe("withSavepoint", () => {
 
     const handle: PostgresTransactionHandle = {
       client: {
-        query: jest.fn(async (sql: string) => {
+        query: vi.fn(async (sql: string) => {
           if (sql.startsWith("RELEASE SAVEPOINT")) {
             throw releaseError;
           }
           return { rows: [], rowCount: 0 };
         }),
       } as any,
-      release: jest.fn(),
+      release: vi.fn(),
       state: "active",
       savepointCounter: 0,
     };

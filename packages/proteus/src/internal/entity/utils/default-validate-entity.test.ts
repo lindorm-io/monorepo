@@ -1,18 +1,19 @@
 import { z } from "zod";
-import { defaultValidateEntity } from "./default-validate-entity";
-import { Embeddable } from "../../../decorators/Embeddable";
-import { Embedded } from "../../../decorators/Embedded";
-import { EmbeddedList } from "../../../decorators/EmbeddedList";
-import { Entity } from "../../../decorators/Entity";
-import { Enum } from "../../../decorators/Enum";
-import { Field } from "../../../decorators/Field";
-import { Max } from "../../../decorators/Max";
-import { Min } from "../../../decorators/Min";
-import { Nullable } from "../../../decorators/Nullable";
-import { OnValidate } from "../../../decorators/OnValidate";
-import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField";
-import { Schema } from "../../../decorators/Schema";
-import { VersionField } from "../../../decorators/VersionField";
+import { defaultValidateEntity } from "./default-validate-entity.js";
+import { Embeddable } from "../../../decorators/Embeddable.js";
+import { Embedded } from "../../../decorators/Embedded.js";
+import { EmbeddedList } from "../../../decorators/EmbeddedList.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Enum } from "../../../decorators/Enum.js";
+import { Field } from "../../../decorators/Field.js";
+import { Max } from "../../../decorators/Max.js";
+import { Min } from "../../../decorators/Min.js";
+import { Nullable } from "../../../decorators/Nullable.js";
+import { OnValidate } from "../../../decorators/OnValidate.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { Schema } from "../../../decorators/Schema.js";
+import { VersionField } from "../../../decorators/VersionField.js";
+import { describe, expect, test, vi } from "vitest";
 
 enum Status {
   Active = "active",
@@ -68,7 +69,7 @@ class ValidateEntityEnum {
 }
 
 const nameSchema = z.object({ name: z.string().min(1) }) as any;
-const validateSchemaCb = jest.fn();
+const validateSchemaCb = vi.fn();
 
 @Entity({ name: "ValidateEntityWithSchema" })
 @Schema(nameSchema)

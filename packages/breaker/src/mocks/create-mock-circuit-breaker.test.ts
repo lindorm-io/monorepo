@@ -1,4 +1,5 @@
-import { createMockCircuitBreaker } from "./create-mock-circuit-breaker";
+import { createMockCircuitBreaker } from "./vitest.js";
+import { describe, expect, test } from "vitest";
 
 describe("createMockCircuitBreaker", () => {
   test("should create mock with default values", () => {

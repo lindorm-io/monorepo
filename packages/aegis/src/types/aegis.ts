@@ -1,12 +1,12 @@
-import { AmphoraQuery, IAmphora } from "@lindorm/amphora";
-import {
+import type { AmphoraQuery, IAmphora } from "@lindorm/amphora";
+import type {
   KryptosEncAlgorithm,
   KryptosEncryption,
   KryptosSigAlgorithm,
 } from "@lindorm/kryptos";
-import { ILogger } from "@lindorm/logger";
-import { Predicate } from "@lindorm/types";
-import { CertBindingMode } from "./header";
+import type { ILogger } from "@lindorm/logger";
+import type { Predicate } from "@lindorm/types";
+import type { CertBindingMode } from "./header.js";
 
 export type AegisPredicate = Predicate<
   Pick<AmphoraQuery, "id" | "curve" | "purpose" | "type" | "use" | "ownerId">

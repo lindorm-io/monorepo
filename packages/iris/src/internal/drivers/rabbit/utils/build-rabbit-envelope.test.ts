@@ -1,6 +1,7 @@
-import type { MessageMetadata } from "../../../message/types/metadata";
-import type { ParsedAmqpMessage } from "./parse-amqp-headers";
-import { buildRabbitEnvelope } from "./build-rabbit-envelope";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
+import type { ParsedAmqpMessage } from "./parse-amqp-headers.js";
+import { buildRabbitEnvelope } from "./build-rabbit-envelope.js";
+import { describe, expect, it } from "vitest";
 
 const createParsed = (overrides: Partial<ParsedAmqpMessage> = {}): ParsedAmqpMessage => ({
   payload: Buffer.from("test-payload"),

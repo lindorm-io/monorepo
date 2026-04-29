@@ -1,5 +1,5 @@
-import type { IMessage } from "./Message";
-import type { PublishOptions, SubscribeOptions } from "../types";
+import type { IMessage } from "./Message.js";
+import type { PublishOptions, SubscribeOptions } from "../types/index.js";
 
 export interface IIrisMessageBus<M extends IMessage = IMessage> {
   create(options?: Partial<M>): M;

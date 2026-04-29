@@ -1,15 +1,15 @@
 import { ServerError } from "@lindorm/errors";
 import { createReadStream } from "fs";
 import { basename } from "path";
-import {
+import type {
   PylonHandlerFile,
   PylonHandlerFileDownloadOptions,
   PylonHandlerStream,
   PylonHttpContext,
-} from "../../types";
-import { fileExists } from "./file/file-exists";
-import { fileStat } from "./file/file-stat";
-import { fileType } from "./file/file-type";
+} from "../../types/index.js";
+import { fileExists } from "./file/file-exists.js";
+import { fileStat } from "./file/file-stat.js";
+import { fileType } from "./file/file-type.js";
 
 const BROTLI = ".br";
 const GZIP = ".gz";

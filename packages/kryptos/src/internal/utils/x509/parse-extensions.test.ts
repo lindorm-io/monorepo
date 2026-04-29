@@ -1,4 +1,9 @@
-import { encodeBoolean, encodeOctetString, encodeOid, encodeSequence } from "../asn1";
+import {
+  encodeBoolean,
+  encodeOctetString,
+  encodeOid,
+  encodeSequence,
+} from "../asn1/index.js";
 import {
   authorityKeyIdentifierExt,
   basicConstraintsExt,
@@ -6,10 +11,11 @@ import {
   subjectAlternativeNameExt,
   subjectKeyIdentifierExt,
   wrapExtension,
-} from "./encode-extensions";
-import { parseX509Extensions } from "./parse-extensions";
-import { spkiFromPublicKey } from "./spki-from-public-key";
+} from "./encode-extensions.js";
+import { parseX509Extensions } from "./parse-extensions.js";
+import { spkiFromPublicKey } from "./spki-from-public-key.js";
 import { generateKeyPairSync } from "crypto";
+import { describe, expect, test } from "vitest";
 
 const buildSpki = (): Buffer => {
   const { publicKey } = generateKeyPairSync("ec", { namedCurve: "P-256" });

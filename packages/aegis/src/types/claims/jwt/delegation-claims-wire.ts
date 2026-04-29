@@ -1,4 +1,4 @@
-import { ActClaimWire } from "./act-claim-wire";
+import type { ActClaimWire } from "./act-claim-wire.js";
 
 // Wire form of DelegationClaims — RFC 8693 §4.1 (OAuth 2.0 Token Exchange).
 // `act` and `may_act` describe the actor chain on the token.

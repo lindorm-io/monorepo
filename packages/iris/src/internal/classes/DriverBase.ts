@@ -1,18 +1,20 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import type { IMessage, IMessageSubscriber } from "../../interfaces";
-import type { MessageMetadata } from "../message/types/metadata";
-import { MessageManager } from "../message/classes/MessageManager";
-import { getMessageMetadata } from "../message/metadata/get-message-metadata";
-import { prepareOutbound } from "../message/utils/prepare-outbound";
-import type { OutboundPayload } from "../message/utils/prepare-outbound";
-import { prepareInbound } from "../message/utils/prepare-inbound";
+import type { IMessage, IMessageSubscriber } from "../../interfaces/index.js";
+import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
+import { createDefaultIrisHookMeta } from "../../types/iris-hook-meta.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
+import { MessageManager } from "../message/classes/MessageManager.js";
+import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
+import { prepareOutbound } from "../message/utils/prepare-outbound.js";
+import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
+import { prepareInbound } from "../message/utils/prepare-inbound.js";
 import type { IAmphora } from "@lindorm/amphora";
 
 export type DriverBaseOptions<M extends IMessage> = {
   target: Constructor<M>;
   logger: ILogger;
-  context?: unknown;
+  meta?: IrisHookMeta;
   amphora?: IAmphora;
   getSubscribers: () => Array<IMessageSubscriber>;
 };
@@ -22,20 +24,21 @@ export abstract class DriverBase<M extends IMessage> {
   protected readonly metadata: MessageMetadata;
   protected readonly manager: MessageManager<M>;
   protected readonly logger: ILogger;
-  protected readonly context: unknown;
+  protected readonly meta: IrisHookMeta;
   protected readonly amphora: IAmphora | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
 
   protected constructor(options: DriverBaseOptions<M>, loggerLabel: string) {
     this.target = options.target;
     this.metadata = getMessageMetadata(options.target);
+    const resolvedMeta = options.meta ?? createDefaultIrisHookMeta();
     this.manager = new MessageManager<M>({
       target: options.target,
       logger: options.logger,
-      context: options.context,
+      meta: resolvedMeta,
     });
     this.logger = options.logger.child([loggerLabel, this.metadata.message.name]);
-    this.context = options.context;
+    this.meta = resolvedMeta;
     this.amphora = options.amphora;
     this.getSubscribers = options.getSubscribers;
   }

@@ -1,5 +1,5 @@
 import type { Constructor } from "@lindorm/types";
-import type { IEntity, IProteusRepository } from "../../interfaces";
+import type { IEntity, IProteusRepository } from "../../interfaces/index.js";
 
 export type RepositoryFactory = <C extends IEntity>(
   target: Constructor<C>,

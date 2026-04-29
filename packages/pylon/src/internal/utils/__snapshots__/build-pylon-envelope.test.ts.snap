@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`buildPylonEnvelope should build envelope with null payload 1`] = `
+exports[`buildPylonEnvelope > should build envelope with null payload 1`] = `
 {
   "__pylon": true,
   "header": {
@@ -10,7 +10,7 @@ exports[`buildPylonEnvelope should build envelope with null payload 1`] = `
 }
 `;
 
-exports[`buildPylonEnvelope should build envelope with payload 1`] = `
+exports[`buildPylonEnvelope > should build envelope with payload 1`] = `
 {
   "__pylon": true,
   "header": {
@@ -22,7 +22,7 @@ exports[`buildPylonEnvelope should build envelope with payload 1`] = `
 }
 `;
 
-exports[`buildPylonEnvelope should build envelope with undefined payload 1`] = `
+exports[`buildPylonEnvelope > should build envelope with undefined payload 1`] = `
 {
   "__pylon": true,
   "header": {

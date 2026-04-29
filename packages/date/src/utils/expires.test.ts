@@ -1,5 +1,6 @@
 import MockDate from "mockdate";
-import { expires } from "./expires";
+import { expires } from "./expires.js";
+import { describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);

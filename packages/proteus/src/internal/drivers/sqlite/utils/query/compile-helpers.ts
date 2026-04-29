@@ -1,11 +1,11 @@
-import type { IEntity } from "../../../../../interfaces";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
+import type { IEntity } from "../../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import {
   buildDiscriminatorPredicateUnqualified as sharedBuildDiscUnqualified,
   buildPrimaryKeyConditions as sharedBuildPk,
   getDiscriminatorColumnName,
-} from "../../../../utils/sql/compile-helpers";
-import { sqliteDialect } from "../sqlite-dialect";
+} from "../../../../utils/sql/compile-helpers.js";
+import { sqliteDialect } from "../sqlite-dialect.js";
 
 export { getDiscriminatorColumnName };
 

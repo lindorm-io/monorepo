@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Transform should stage transform data without creating a field entry 1`] = `
+exports[`Transform > should stage transform data without creating a field entry 1`] = `
 {
   "key": "payload",
   "transform": {

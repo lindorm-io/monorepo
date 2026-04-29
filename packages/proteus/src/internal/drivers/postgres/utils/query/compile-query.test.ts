@@ -1,7 +1,8 @@
-import { makeField } from "../../../../__fixtures__/make-field";
-import type { EntityMetadata } from "../../../../entity/types/metadata";
-import type { QueryState } from "../../../../types/query";
-import { compileCount, compileQuery } from "./compile-query";
+import { makeField } from "../../../../__fixtures__/make-field.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import type { QueryState } from "../../../../types/query.js";
+import { compileCount, compileQuery } from "./compile-query.js";
+import { describe, expect, test } from "vitest";
 
 const metadata = {
   entity: {

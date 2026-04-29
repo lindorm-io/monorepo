@@ -1,9 +1,10 @@
 // TCK: Error Resilience Suite
 // Verifies the pipeline handles consumer errors gracefully without crashing.
 
-import type { TckCapabilities, TckDriverHandle } from "./types";
-import type { TckMessages } from "./create-tck-messages";
-import { wait, waitFor } from "./wait";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
+import type { TckMessages } from "./create-tck-messages.js";
+import { wait, waitFor } from "./wait.js";
+import { beforeEach, describe, expect, test } from "vitest";
 
 export const errorResilienceSuite = (
   getHandle: () => TckDriverHandle,

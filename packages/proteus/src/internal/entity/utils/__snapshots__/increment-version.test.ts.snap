@@ -1,36 +1,36 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`incrementVersion should do nothing when metadata has no Version field 1`] = `
+exports[`incrementVersion > should do nothing when metadata has no Version field 1`] = `
 {
   "version": 5,
 }
 `;
 
-exports[`incrementVersion should increment version from 0 to 1 1`] = `
+exports[`incrementVersion > should increment version from 0 to 1 1`] = `
 {
   "version": 1,
 }
 `;
 
-exports[`incrementVersion should increment version from 1 to 2 1`] = `
+exports[`incrementVersion > should increment version from 1 to 2 1`] = `
 {
   "version": 2,
 }
 `;
 
-exports[`incrementVersion should treat string as 0 and set version to 1 1`] = `
+exports[`incrementVersion > should treat string as 0 and set version to 1 1`] = `
 {
   "version": 1,
 }
 `;
 
-exports[`incrementVersion should treat undefined as 0 and set version to 1 1`] = `
+exports[`incrementVersion > should treat undefined as 0 and set version to 1 1`] = `
 {
   "version": 1,
 }
 `;
 
-exports[`incrementVersion should use the correct field key from metadata 1`] = `
+exports[`incrementVersion > should use the correct field key from metadata 1`] = `
 {
   "rev": 4,
 }

@@ -1,4 +1,4 @@
-export { HermesCommandMessage } from "./HermesCommandMessage";
-export { HermesErrorMessage } from "./HermesErrorMessage";
-export { HermesEventMessage } from "./HermesEventMessage";
-export { HermesTimeoutMessage } from "./HermesTimeoutMessage";
+export { HermesCommandMessage } from "./HermesCommandMessage.js";
+export { HermesErrorMessage } from "./HermesErrorMessage.js";
+export { HermesEventMessage } from "./HermesEventMessage.js";
+export { HermesTimeoutMessage } from "./HermesTimeoutMessage.js";

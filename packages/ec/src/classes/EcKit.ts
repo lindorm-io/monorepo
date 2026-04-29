@@ -1,17 +1,17 @@
 import {
   EC_SIG_ALGORITHMS,
-  EcSigAlgorithm,
-  IKryptosEc,
+  type EcSigAlgorithm,
+  type IKryptosEc,
   KryptosKit,
 } from "@lindorm/kryptos";
-import { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
-import { EcError } from "../errors";
-import { EcKitOptions } from "../types";
+import type { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
+import { EcError } from "../errors/index.js";
+import type { EcKitOptions } from "../types/index.js";
 import {
   assertEcSignature,
   createEcSignature,
   verifyEcSignature,
-} from "../internal/index";
+} from "../internal/index.js";
 
 export class EcKit implements IKeyKit {
   private readonly dsa: DsaEncoding;

@@ -1,15 +1,16 @@
-import { createMockAegis } from "@lindorm/aegis";
+import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { ClientError, ServerError } from "@lindorm/errors";
-import { createMockLogger } from "@lindorm/logger";
-import { createAccessTokenMiddleware } from "./create-access-token-middleware";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createAccessTokenMiddleware } from "./create-access-token-middleware.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("createAccessTokenMiddleware", () => {
-  let next: jest.Mock;
+  let next: Mock;
 
   const options: any = { issuer: "https://test.lindorm.io/" };
 
   beforeEach(() => {
-    next = jest.fn();
+    next = vi.fn();
   });
 
   describe("HTTP context", () => {
@@ -52,7 +53,7 @@ describe("createAccessTokenMiddleware", () => {
         scope: ["openid"],
         subject: "alice",
       };
-      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+      (ctx.aegis.verify as Mock).mockResolvedValue({
         payload: { subject: "alice" },
         header: { baseFormat: "JWT" },
         token: "session-jwt",
@@ -102,8 +103,9 @@ describe("createAccessTokenMiddleware", () => {
         scope: ["openid"],
         subject: "alice",
       };
-      const { AegisError } = jest.requireActual("@lindorm/aegis");
-      (ctx.aegis.verify as jest.Mock).mockRejectedValue(new AegisError("bad token"));
+      const { AegisError } =
+        await vi.importActual<typeof import("@lindorm/aegis")>("@lindorm/aegis");
+      (ctx.aegis.verify as Mock).mockRejectedValue(new AegisError("bad token"));
 
       const middleware = createAccessTokenMiddleware(options);
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
@@ -121,7 +123,7 @@ describe("createAccessTokenMiddleware", () => {
         origin: "https://api.example.com",
         path: "/orders",
         request: {},
-        get: jest.fn((header: string) =>
+        get: vi.fn((header: string) =>
           header.toLowerCase() === "dpop" ? "proof-jwt" : undefined,
         ),
         state: {
@@ -131,7 +133,7 @@ describe("createAccessTokenMiddleware", () => {
         },
       };
 
-      (ctx.aegis.verify as jest.Mock).mockResolvedValue({
+      (ctx.aegis.verify as Mock).mockResolvedValue({
         header: { tokenType: "access_token" },
         payload: {
           subject: "verified_subject",
@@ -200,7 +202,7 @@ describe("createAccessTokenMiddleware", () => {
                 },
               },
             },
-            emit: jest.fn(),
+            emit: vi.fn(),
           },
         },
       };
@@ -281,7 +283,7 @@ describe("createAccessTokenMiddleware", () => {
         },
       };
 
-      (ctx.aegis.verify as jest.Mock).mockRejectedValue(new Error("invalid signature"));
+      (ctx.aegis.verify as Mock).mockRejectedValue(new Error("invalid signature"));
 
       const middleware = createAccessTokenMiddleware(options);
       await expect(middleware(ctx, next)).rejects.toThrow(ClientError);

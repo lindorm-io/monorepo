@@ -1,15 +1,18 @@
 import type { ILogger } from "@lindorm/logger";
-import type { IMessage } from "../../../../interfaces";
-import type { PublishOptions } from "../../../../types";
-import type { PublishRedisMessagesOptions, RedisSharedState } from "../types/redis-types";
-import { IrisPublishError } from "../../../../errors/IrisPublishError";
+import type { IMessage } from "../../../../interfaces/index.js";
+import type { PublishOptions } from "../../../../types/index.js";
+import type {
+  PublishRedisMessagesOptions,
+  RedisSharedState,
+} from "../types/redis-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import {
   preparePublishBatch,
   type PublishDriverLike,
-} from "../../../utils/prepare-publish-batch";
-import { resolveStreamKey } from "./resolve-stream-key";
-import { serializeStreamFields } from "./serialize-stream-fields";
-import { xaddToStream } from "./xadd-to-stream";
+} from "../../../utils/prepare-publish-batch.js";
+import { resolveStreamKey } from "./resolve-stream-key.js";
+import { serializeStreamFields } from "./serialize-stream-fields.js";
+import { xaddToStream } from "./xadd-to-stream.js";
 
 export type RedisPublishDriver<M extends IMessage> = PublishDriverLike<M>;
 

@@ -1,16 +1,16 @@
 import type { ClientSession, Db, Document } from "mongodb";
 import type { DeepPartial } from "@lindorm/types";
-import type { IEntity } from "../../../../interfaces";
+import type { IEntity } from "../../../../interfaces/index.js";
 import type {
   IInsertQueryBuilder,
   WriteResult,
-} from "../../../../interfaces/InsertQueryBuilder";
-import type { EntityMetadata } from "../../../entity/types/metadata";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError";
-import { MongoDuplicateKeyError } from "../errors/MongoDuplicateKeyError";
-import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
-import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata";
-import { resolveCollectionName } from "../utils/resolve-collection-name";
+} from "../../../../interfaces/InsertQueryBuilder.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { MongoDuplicateKeyError } from "../errors/MongoDuplicateKeyError.js";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
+import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
+import { resolveCollectionName } from "../utils/resolve-collection-name.js";
 
 const DUPLICATE_KEY_CODE = 11000;
 

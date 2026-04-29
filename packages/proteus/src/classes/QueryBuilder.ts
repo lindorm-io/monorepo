@@ -1,20 +1,20 @@
 import type { Dict, Predicate } from "@lindorm/types";
-import { ProteusError } from "../errors";
+import { ProteusError } from "../errors/index.js";
 import type {
   IDeleteQueryBuilder,
   IEntity,
   IInsertQueryBuilder,
   IProteusQueryBuilder,
   IUpdateQueryBuilder,
-} from "../interfaces";
-import type { EntityMetadata } from "../internal/entity/types/metadata";
+} from "../interfaces/index.js";
+import type { EntityMetadata } from "../internal/entity/types/metadata.js";
 import type {
   IncludeOptions,
   QueryState,
   SqlFragment,
   WindowSpec,
-} from "../internal/types/query";
-import { resolveIncludeStrategy } from "../internal/utils/query/resolve-include-strategy";
+} from "../internal/types/query.js";
+import { resolveIncludeStrategy } from "../internal/utils/query/resolve-include-strategy.js";
 
 /**
  * Abstract base class for fluent query builders.

@@ -1,11 +1,15 @@
-import { AesContent } from "@lindorm/aes";
+import type { AesContent } from "@lindorm/aes";
 import { ServerError } from "@lindorm/errors";
 import { isObject, isString } from "@lindorm/is";
-import { PylonCookie } from "../classes/PylonCookie";
-import { PylonCookieConfig, PylonHttpMiddleware, PylonSetCookie } from "../../types";
-import { createGetCookie } from "../utils/cookies/create-get-cookie";
-import { parseCookieHeader } from "../utils/cookies/parse-cookie-header";
-import { signCookie } from "../utils/cookies/sign-cookie";
+import { PylonCookie } from "../classes/PylonCookie.js";
+import type {
+  PylonCookieConfig,
+  PylonHttpMiddleware,
+  PylonSetCookie,
+} from "../../types/index.js";
+import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
+import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
+import { signCookie } from "../utils/cookies/sign-cookie.js";
 
 export const createHttpCookiesMiddleware = (
   config: PylonCookieConfig = {},

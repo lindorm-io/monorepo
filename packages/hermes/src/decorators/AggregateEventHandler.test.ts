@@ -1,5 +1,6 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { AggregateEventHandler } from "./AggregateEventHandler";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { AggregateEventHandler } from "./AggregateEventHandler.js";
+import { describe, expect, test } from "vitest";
 
 const createMockMethodContext = (
   metadata: DecoratorMetadataObject,

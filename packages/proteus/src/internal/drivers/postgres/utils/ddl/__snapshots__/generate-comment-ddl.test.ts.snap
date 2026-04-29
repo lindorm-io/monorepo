@@ -1,50 +1,50 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`generateCommentDDL COLUMN comment uses qualified table name when namespace is provided 1`] = `
+exports[`generateCommentDDL > COLUMN comment uses qualified table name when namespace is provided 1`] = `
 [
   "COMMENT ON COLUMN "reporting"."test_comment_entity"."name" IS 'The name column';",
 ]
 `;
 
-exports[`generateCommentDDL escapes single quotes in field comment 1`] = `
+exports[`generateCommentDDL > escapes single quotes in field comment 1`] = `
 [
   "COMMENT ON COLUMN "test_comment_entity"."owner" IS 'Owner''s name';",
 ]
 `;
 
-exports[`generateCommentDDL escapes single quotes in table comment 1`] = `
+exports[`generateCommentDDL > escapes single quotes in table comment 1`] = `
 [
   "COMMENT ON TABLE "test_comment_entity" IS 'It''s a table';",
 ]
 `;
 
-exports[`generateCommentDDL generates COMMENT ON COLUMN for fields with comments 1`] = `
+exports[`generateCommentDDL > generates COMMENT ON COLUMN for fields with comments 1`] = `
 [
   "COMMENT ON COLUMN "test_comment_entity"."name" IS 'The display name';",
   "COMMENT ON COLUMN "test_comment_entity"."email" IS 'Primary contact email';",
 ]
 `;
 
-exports[`generateCommentDDL generates COMMENT ON TABLE when entity comment is set 1`] = `
+exports[`generateCommentDDL > generates COMMENT ON TABLE when entity comment is set 1`] = `
 [
   "COMMENT ON TABLE "test_comment_entity" IS 'Stores user accounts';",
 ]
 `;
 
-exports[`generateCommentDDL generates both TABLE and COLUMN comments when both are present 1`] = `
+exports[`generateCommentDDL > generates both TABLE and COLUMN comments when both are present 1`] = `
 [
   "COMMENT ON TABLE "test_comment_entity" IS 'A combined entity';",
   "COMMENT ON COLUMN "test_comment_entity"."label" IS 'The user label';",
 ]
 `;
 
-exports[`generateCommentDDL skips fields that have no comment 1`] = `
+exports[`generateCommentDDL > skips fields that have no comment 1`] = `
 [
   "COMMENT ON COLUMN "test_comment_entity"."name" IS 'Has a comment';",
 ]
 `;
 
-exports[`generateCommentDDL uses schema-qualified table name when namespace is provided 1`] = `
+exports[`generateCommentDDL > uses schema-qualified table name when namespace is provided 1`] = `
 [
   "COMMENT ON TABLE "reporting"."test_comment_entity" IS 'A scoped table';",
 ]

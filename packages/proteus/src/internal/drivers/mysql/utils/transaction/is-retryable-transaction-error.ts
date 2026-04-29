@@ -1,5 +1,5 @@
-import { DeadlockError } from "../../../../errors/DeadlockError";
-import { SerializationError } from "../../../../errors/SerializationError";
+import { DeadlockError } from "../../../../errors/DeadlockError.js";
+import { SerializationError } from "../../../../errors/SerializationError.js";
 
 /**
  * Determines whether a MySQL error is a transient transaction failure

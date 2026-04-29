@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`QueryBuilder andWhere should append with AND conjunction 1`] = `
+exports[`QueryBuilder > andWhere > should append with AND conjunction 1`] = `
 [
   {
     "conjunction": "and",
@@ -19,7 +19,7 @@ exports[`QueryBuilder andWhere should append with AND conjunction 1`] = `
 ]
 `;
 
-exports[`QueryBuilder chaining should support fluent chaining 1`] = `
+exports[`QueryBuilder > chaining > should support fluent chaining 1`] = `
 {
   "cteFrom": null,
   "ctes": [],
@@ -76,7 +76,7 @@ exports[`QueryBuilder chaining should support fluent chaining 1`] = `
 }
 `;
 
-exports[`QueryBuilder having should set having predicates 1`] = `
+exports[`QueryBuilder > having > should set having predicates 1`] = `
 [
   {
     "conjunction": "and",
@@ -89,7 +89,7 @@ exports[`QueryBuilder having should set having predicates 1`] = `
 ]
 `;
 
-exports[`QueryBuilder havingRaw should set rawHaving 1`] = `
+exports[`QueryBuilder > havingRaw > should set rawHaving 1`] = `
 [
   {
     "conjunction": "and",
@@ -101,7 +101,7 @@ exports[`QueryBuilder havingRaw should set rawHaving 1`] = `
 ]
 `;
 
-exports[`QueryBuilder include should add include spec with all options 1`] = `
+exports[`QueryBuilder > include > should add include spec with all options 1`] = `
 [
   {
     "relation": "posts",
@@ -122,7 +122,7 @@ exports[`QueryBuilder include should add include spec with all options 1`] = `
 ]
 `;
 
-exports[`QueryBuilder include should add include spec with defaults 1`] = `
+exports[`QueryBuilder > include > should add include spec with defaults 1`] = `
 [
   {
     "relation": "posts",
@@ -134,7 +134,7 @@ exports[`QueryBuilder include should add include spec with defaults 1`] = `
 ]
 `;
 
-exports[`QueryBuilder include should add include spec with options 1`] = `
+exports[`QueryBuilder > include > should add include spec with options 1`] = `
 [
   {
     "relation": "posts",
@@ -149,7 +149,7 @@ exports[`QueryBuilder include should add include spec with options 1`] = `
 ]
 `;
 
-exports[`QueryBuilder include should add include spec with where predicate 1`] = `
+exports[`QueryBuilder > include > should add include spec with where predicate 1`] = `
 [
   {
     "relation": "posts",
@@ -163,7 +163,7 @@ exports[`QueryBuilder include should add include spec with where predicate 1`] =
 ]
 `;
 
-exports[`QueryBuilder orWhere should append with OR conjunction 1`] = `
+exports[`QueryBuilder > orWhere > should append with OR conjunction 1`] = `
 [
   {
     "conjunction": "and",
@@ -182,7 +182,7 @@ exports[`QueryBuilder orWhere should append with OR conjunction 1`] = `
 ]
 `;
 
-exports[`QueryBuilder selectRaw should add raw selection 1`] = `
+exports[`QueryBuilder > selectRaw > should add raw selection 1`] = `
 [
   {
     "alias": "total",
@@ -192,7 +192,7 @@ exports[`QueryBuilder selectRaw should add raw selection 1`] = `
 ]
 `;
 
-exports[`QueryBuilder where should set predicates 1`] = `
+exports[`QueryBuilder > where > should set predicates 1`] = `
 [
   {
     "conjunction": "and",
@@ -203,7 +203,7 @@ exports[`QueryBuilder where should set predicates 1`] = `
 ]
 `;
 
-exports[`QueryBuilder whereRaw should set rawWhere with AND conjunction 1`] = `
+exports[`QueryBuilder > whereRaw > should set rawWhere with AND conjunction 1`] = `
 [
   {
     "conjunction": "and",
@@ -215,7 +215,7 @@ exports[`QueryBuilder whereRaw should set rawWhere with AND conjunction 1`] = `
 ]
 `;
 
-exports[`QueryBuilder window should add window spec 1`] = `
+exports[`QueryBuilder > window > should add window spec 1`] = `
 [
   {
     "alias": "rn",

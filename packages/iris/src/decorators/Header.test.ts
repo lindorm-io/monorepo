@@ -1,4 +1,5 @@
-import { Header } from "./Header";
+import { Header } from "./Header.js";
+import { describe, expect, it } from "vitest";
 
 describe("Header", () => {
   it("should stage header with explicit name", () => {

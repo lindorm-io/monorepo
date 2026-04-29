@@ -1,13 +1,14 @@
-import { Cascade } from "../../../../../decorators/Cascade";
-import { Entity } from "../../../../../decorators/Entity";
-import { Field } from "../../../../../decorators/Field";
-import { JoinKey } from "../../../../../decorators/JoinKey";
-import { ManyToOne } from "../../../../../decorators/ManyToOne";
-import { OneToMany } from "../../../../../decorators/OneToMany";
-import { OneToOne } from "../../../../../decorators/OneToOne";
-import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata";
-import { generateFkDDL } from "./generate-fk-ddl";
+import { Cascade } from "../../../../../decorators/Cascade.js";
+import { Entity } from "../../../../../decorators/Entity.js";
+import { Field } from "../../../../../decorators/Field.js";
+import { JoinKey } from "../../../../../decorators/JoinKey.js";
+import { ManyToOne } from "../../../../../decorators/ManyToOne.js";
+import { OneToMany } from "../../../../../decorators/OneToMany.js";
+import { OneToOne } from "../../../../../decorators/OneToOne.js";
+import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
+import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { generateFkDDL } from "./generate-fk-ddl.js";
+import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Test entities

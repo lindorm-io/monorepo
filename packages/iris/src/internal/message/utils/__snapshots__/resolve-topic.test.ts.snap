@@ -1,11 +1,11 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`resolveTopic should prefix with namespace when namespace is set and no topic callback 1`] = `"orders.OrderCreated"`;
+exports[`resolveTopic > should prefix with namespace when namespace is set and no topic callback 1`] = `"orders.OrderCreated"`;
 
-exports[`resolveTopic should prefix with namespace when namespace is set and topic callback is used 1`] = `"orders.events.order.created"`;
+exports[`resolveTopic > should prefix with namespace when namespace is set and topic callback is used 1`] = `"orders.events.order.created"`;
 
-exports[`resolveTopic should return the message name when metadata.topic is null 1`] = `"OrderCreated"`;
+exports[`resolveTopic > should return the message name when metadata.topic is null 1`] = `"OrderCreated"`;
 
-exports[`resolveTopic should return the topic from the callback when metadata.topic is set 1`] = `"events.order.created"`;
+exports[`resolveTopic > should return the topic from the callback when metadata.topic is set 1`] = `"events.order.created"`;
 
-exports[`resolveTopic should treat empty string namespace as no namespace 1`] = `"OrderCreated"`;
+exports[`resolveTopic > should treat empty string namespace as no namespace 1`] = `"OrderCreated"`;

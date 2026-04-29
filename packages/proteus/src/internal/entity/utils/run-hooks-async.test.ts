@@ -1,16 +1,17 @@
-import type { MetaHook } from "../types/metadata";
-import { runHooksAsync } from "./run-hooks-async";
+import type { MetaHook } from "../types/metadata.js";
+import { runHooksAsync } from "./run-hooks-async.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 describe("runHooksAsync", () => {
   const hooks: Array<MetaHook> = [
-    { decorator: "BeforeInsert", callback: jest.fn().mockResolvedValue(undefined) },
-    { decorator: "AfterInsert", callback: jest.fn().mockResolvedValue(undefined) },
-    { decorator: "BeforeInsert", callback: jest.fn().mockResolvedValue(undefined) },
+    { decorator: "BeforeInsert", callback: vi.fn().mockResolvedValue(undefined) },
+    { decorator: "AfterInsert", callback: vi.fn().mockResolvedValue(undefined) },
+    { decorator: "BeforeInsert", callback: vi.fn().mockResolvedValue(undefined) },
   ];
 
   beforeEach(() => {
     for (const h of hooks) {
-      (h.callback as jest.Mock).mockClear();
+      (h.callback as Mock).mockClear();
     }
   });
 
@@ -23,12 +24,16 @@ describe("runHooksAsync", () => {
     expect(hooks[2].callback).toHaveBeenCalledTimes(1);
   });
 
-  test("should pass context and entity to callbacks", async () => {
+  test("should pass entity and meta to callbacks in that order", async () => {
     const entity = { id: "1" };
-    const ctx = { user: "admin" };
-    await runHooksAsync("BeforeInsert", hooks, entity, ctx);
+    const meta = {
+      correlationId: "c-1",
+      actor: "admin",
+      timestamp: new Date("2024-01-01T00:00:00Z"),
+    };
+    await runHooksAsync("BeforeInsert", hooks, entity, meta);
 
-    expect(hooks[0].callback).toHaveBeenCalledWith(ctx, entity);
+    expect(hooks[0].callback).toHaveBeenCalledWith(entity, meta);
   });
 
   test("should execute hooks sequentially", async () => {
@@ -36,14 +41,14 @@ describe("runHooksAsync", () => {
     const seqHooks: Array<MetaHook> = [
       {
         decorator: "BeforeInsert",
-        callback: jest.fn(async () => {
+        callback: vi.fn(async () => {
           await new Promise((r) => setTimeout(r, 10));
           order.push(1);
         }),
       },
       {
         decorator: "BeforeInsert",
-        callback: jest.fn(async () => {
+        callback: vi.fn(async () => {
           order.push(2);
         }),
       },
@@ -66,7 +71,7 @@ describe("runHooksAsync", () => {
     const errorHooks: Array<MetaHook> = [
       {
         decorator: "BeforeInsert",
-        callback: jest.fn().mockRejectedValue(new Error("hook failed")),
+        callback: vi.fn().mockRejectedValue(new Error("hook failed")),
       },
     ];
 

@@ -1,10 +1,11 @@
-import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata";
-import { Embeddable } from "./Embeddable";
-import { Embedded } from "./Embedded";
-import { Entity } from "./Entity";
-import { Field } from "./Field";
-import { Nullable } from "./Nullable";
-import { PrimaryKeyField } from "./PrimaryKeyField";
+import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { Embeddable } from "./Embeddable.js";
+import { Embedded } from "./Embedded.js";
+import { Entity } from "./Entity.js";
+import { Field } from "./Field.js";
+import { Nullable } from "./Nullable.js";
+import { PrimaryKeyField } from "./PrimaryKeyField.js";
+import { describe, expect, test } from "vitest";
 
 @Embeddable()
 class Address {

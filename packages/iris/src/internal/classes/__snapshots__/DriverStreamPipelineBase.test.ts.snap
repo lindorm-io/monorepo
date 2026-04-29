@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`DriverStreamPipelineBase publishOutput() should hydrate, validate, and publish via doPublishEnvelope 1`] = `
+exports[`DriverStreamPipelineBase > publishOutput() > should hydrate, validate, and publish via doPublishEnvelope 1`] = `
 {
   "attempt": 0,
   "broadcast": false,

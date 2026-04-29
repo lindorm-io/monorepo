@@ -1,4 +1,5 @@
-import { RedisCursor } from "./RedisCursor";
+import { RedisCursor } from "./RedisCursor.js";
+import { describe, expect, test } from "vitest";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

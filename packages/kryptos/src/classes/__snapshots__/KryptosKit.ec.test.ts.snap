@@ -1,8 +1,8 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`KryptosKit (EC) env export 1`] = `"kryptos:eyJjcnYiOiJQLTUyMSIsIngiOiJBSTNZOGhXbEZOMTljdVkzR1NEd0dUYWJtZDYycGl3MWJZdDUtR1NXdmFOOG1KVlFsUU0taG1nWjlwc2JNY1NDd3FNX1lkRnMtd1FqLTAwUGZIZzMxVmJSIiwieSI6IkFBZ1BaUmhkcnNZM1NMTWRZZ1ZGMk5WaTVIbjdTUExBVzEzNmo4M1k4NTJ1LVZYekc2WjFVcjVPSkk4UWgxOHFndjhpN1I3c2dwT3dteVA1U1lUeXNNbWYiLCJkIjoiQUV3R0tOdzBHSzZBMWVSSUNVbExQNURpTDV4RW5HWHAtOTRGMnVhRUpMbTlIcEVKb0RpWFQwSXlEVkxIV0VaLXUwQ3Y2QVhUVklWVzdSdjZuY2FpSUdxMyIsImtpZCI6IjEzNjE3MWM1LTdiNzYtNWUxNC05YmI4LWM2MDU1MTk3N2M1OSIsImFsZyI6IkVDREgtRVMrQTI1NkdDTUtXIiwidXNlIjoiZW5jIiwia3R5IjoiRUMiLCJlbmMiOiJBMjU2R0NNIiwiZXhwIjoyNDkzMTAwODAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
+exports[`KryptosKit (EC) > env > export 1`] = `"kryptos:eyJjcnYiOiJQLTUyMSIsIngiOiJBSTNZOGhXbEZOMTljdVkzR1NEd0dUYWJtZDYycGl3MWJZdDUtR1NXdmFOOG1KVlFsUU0taG1nWjlwc2JNY1NDd3FNX1lkRnMtd1FqLTAwUGZIZzMxVmJSIiwieSI6IkFBZ1BaUmhkcnNZM1NMTWRZZ1ZGMk5WaTVIbjdTUExBVzEzNmo4M1k4NTJ1LVZYekc2WjFVcjVPSkk4UWgxOHFndjhpN1I3c2dwT3dteVA1U1lUeXNNbWYiLCJkIjoiQUV3R0tOdzBHSzZBMWVSSUNVbExQNURpTDV4RW5HWHAtOTRGMnVhRUpMbTlIcEVKb0RpWFQwSXlEVkxIV0VaLXUwQ3Y2QVhUVklWVzdSdjZuY2FpSUdxMyIsImtpZCI6IjEzNjE3MWM1LTdiNzYtNWUxNC05YmI4LWM2MDU1MTk3N2M1OSIsImFsZyI6IkVDREgtRVMrQTI1NkdDTUtXIiwidXNlIjoiZW5jIiwia3R5IjoiRUMiLCJlbmMiOiJBMjU2R0NNIiwiZXhwIjoyNDkzMTAwODAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
 
-exports[`KryptosKit (EC) from auto b64 1`] = `
+exports[`KryptosKit (EC) > from > auto > b64 1`] = `
 {
   "algorithm": "ES512",
   "certificateChain": [],
@@ -36,7 +36,7 @@ exports[`KryptosKit (EC) from auto b64 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto b64 2`] = `
+exports[`KryptosKit (EC) > from > auto > b64 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
@@ -55,7 +55,7 @@ exports[`KryptosKit (EC) from auto b64 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto b64 3`] = `
+exports[`KryptosKit (EC) > from > auto > b64 3`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
@@ -67,7 +67,7 @@ exports[`KryptosKit (EC) from auto b64 3`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto jwk 1`] = `
+exports[`KryptosKit (EC) > from > auto > jwk 1`] = `
 {
   "algorithm": "ES512",
   "certificateChain": [],
@@ -101,7 +101,7 @@ exports[`KryptosKit (EC) from auto jwk 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto jwk 2`] = `
+exports[`KryptosKit (EC) > from > auto > jwk 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
@@ -120,7 +120,7 @@ exports[`KryptosKit (EC) from auto jwk 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto jwk 3`] = `
+exports[`KryptosKit (EC) > from > auto > jwk 3`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
@@ -133,7 +133,7 @@ exports[`KryptosKit (EC) from auto jwk 3`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto pem 1`] = `
+exports[`KryptosKit (EC) > from > auto > pem 1`] = `
 {
   "algorithm": "ES512",
   "certificateChain": [],
@@ -167,7 +167,7 @@ exports[`KryptosKit (EC) from auto pem 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto pem 2`] = `
+exports[`KryptosKit (EC) > from > auto > pem 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
@@ -186,7 +186,7 @@ exports[`KryptosKit (EC) from auto pem 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from auto pem 3`] = `
+exports[`KryptosKit (EC) > from > auto > pem 3`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
@@ -212,7 +212,7 @@ QGygbB2Th7u8NIPlFVE=
 }
 `;
 
-exports[`KryptosKit (EC) from b64 1`] = `
+exports[`KryptosKit (EC) > from > b64 1`] = `
 {
   "algorithm": "ES512",
   "certificateChain": [],
@@ -246,7 +246,7 @@ exports[`KryptosKit (EC) from b64 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from b64 2`] = `
+exports[`KryptosKit (EC) > from > b64 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
@@ -265,7 +265,7 @@ exports[`KryptosKit (EC) from b64 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from b64 3`] = `
+exports[`KryptosKit (EC) > from > b64 3`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
@@ -277,7 +277,7 @@ exports[`KryptosKit (EC) from b64 3`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from jwk 1`] = `
+exports[`KryptosKit (EC) > from > jwk 1`] = `
 {
   "algorithm": "ES512",
   "certificateChain": [],
@@ -311,7 +311,7 @@ exports[`KryptosKit (EC) from jwk 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from jwk 2`] = `
+exports[`KryptosKit (EC) > from > jwk 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
@@ -330,7 +330,7 @@ exports[`KryptosKit (EC) from jwk 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from jwk 3`] = `
+exports[`KryptosKit (EC) > from > jwk 3`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
@@ -343,7 +343,7 @@ exports[`KryptosKit (EC) from jwk 3`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from pem 1`] = `
+exports[`KryptosKit (EC) > from > pem 1`] = `
 {
   "algorithm": "ES512",
   "certificateChain": [],
@@ -377,7 +377,7 @@ exports[`KryptosKit (EC) from pem 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from pem 2`] = `
+exports[`KryptosKit (EC) > from > pem 2`] = `
 {
   "alg": "ES512",
   "crv": "P-521",
@@ -396,7 +396,7 @@ exports[`KryptosKit (EC) from pem 2`] = `
 }
 `;
 
-exports[`KryptosKit (EC) from pem 3`] = `
+exports[`KryptosKit (EC) > from > pem 3`] = `
 {
   "algorithm": "ES512",
   "curve": "P-521",
@@ -422,7 +422,7 @@ QGygbB2Th7u8NIPlFVE=
 }
 `;
 
-exports[`KryptosKit (EC) generate auto 1`] = `
+exports[`KryptosKit (EC) > generate > auto 1`] = `
 {
   "algorithm": "ES256",
   "certificateChain": [],
@@ -456,7 +456,7 @@ exports[`KryptosKit (EC) generate auto 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) generate enc 1`] = `
+exports[`KryptosKit (EC) > generate > enc 1`] = `
 {
   "algorithm": "ECDH-ES+A192GCMKW",
   "certificateChain": [],
@@ -489,7 +489,7 @@ exports[`KryptosKit (EC) generate enc 1`] = `
 }
 `;
 
-exports[`KryptosKit (EC) generate sig 1`] = `
+exports[`KryptosKit (EC) > generate > sig 1`] = `
 {
   "algorithm": "ES256",
   "certificateChain": [],

@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { randomBytes } from "crypto";
-import { B64U } from "../constants/format";
+import { B64U } from "../constants/format.js";
 
 /**
  * @internal — aegis-private helper. MUST NOT be exported from src/index.ts

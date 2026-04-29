@@ -1,11 +1,11 @@
-import { ReadableTime } from "@lindorm/date";
-import { IIrisSource } from "@lindorm/iris";
-import { IKryptos } from "@lindorm/kryptos";
-import { IEntity, IProteusSource } from "@lindorm/proteus";
-import { Constructor, Dict, Priority } from "@lindorm/types";
-import { PylonCommonContext } from "./context-common";
-import { PylonHttpContext } from "./context-http";
-import { PylonSessionConfig } from "./session";
+import type { ReadableTime } from "@lindorm/date";
+import type { IIrisSource } from "@lindorm/iris";
+import type { IKryptos } from "@lindorm/kryptos";
+import type { IEntity, IProteusSource } from "@lindorm/proteus";
+import type { Constructor, Dict, Priority } from "@lindorm/types";
+import type { PylonCommonContext } from "./context-common.js";
+import type { PylonHttpContext } from "./context-http.js";
+import type { PylonSessionConfig } from "./session.js";
 
 // handlers
 
@@ -65,7 +65,6 @@ export type PylonAuditOptions = {
   enabled: boolean;
   proteus?: IProteusSource;
   iris?: IIrisSource;
-  actor: (ctx: any) => string;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
   entities?: Array<Constructor<IEntity>>;

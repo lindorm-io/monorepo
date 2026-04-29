@@ -3,9 +3,10 @@ import {
   TEST_X509_INTERMEDIATE_PEM,
   TEST_X509_LEAF_PEM,
   TEST_X509_ROOT_PEM,
-} from "../../../__fixtures__/x509";
-import { parseX509Certificate } from "./parse-certificate";
-import { parseX509 } from "./parse-x509";
+} from "../../../__fixtures__/x509.js";
+import { parseX509Certificate } from "./parse-certificate.js";
+import { parseX509 } from "./parse-x509.js";
+import { describe, expect, test } from "vitest";
 
 // End-to-end: walk a real chain using only our parser + crypto.verify, with no
 // Node X509Certificate involvement on the hot path.

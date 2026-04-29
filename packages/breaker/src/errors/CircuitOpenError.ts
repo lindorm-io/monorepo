@@ -1,3 +1,3 @@
-import { BreakerError } from "./BreakerError";
+import { BreakerError } from "./BreakerError.js";
 
 export class CircuitOpenError extends BreakerError {}

@@ -1,5 +1,6 @@
-import { createMockLogger } from "@lindorm/logger";
-import { httpRequestLoggerMiddleware } from "./http-request-logger-middleware";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { httpRequestLoggerMiddleware } from "./http-request-logger-middleware.js";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 describe("httpRequestLoggerMiddleware", () => {
   let ctx: any;
@@ -26,7 +27,7 @@ describe("httpRequestLoggerMiddleware", () => {
   });
 
   test("should log request information", async () => {
-    await expect(httpRequestLoggerMiddleware(ctx, jest.fn())).resolves.toBeUndefined();
+    await expect(httpRequestLoggerMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.logger.info).toHaveBeenCalledWith("Service request", {
       metadata: "metadata",

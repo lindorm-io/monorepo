@@ -1,8 +1,9 @@
-import Redis from "ioredis";
+import { Redis } from "ioredis";
 import { randomUUID } from "crypto";
-import type { IrisEnvelope } from "../types/iris-envelope";
-import type { DeadLetterEntry } from "../../types/dead-letter";
-import { RedisDeadLetterStore } from "./RedisDeadLetterStore";
+import type { IrisEnvelope } from "../types/iris-envelope.js";
+import type { DeadLetterEntry } from "../../types/dead-letter.js";
+import { RedisDeadLetterStore } from "./RedisDeadLetterStore.js";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const createEnvelope = (overrides: Partial<IrisEnvelope> = {}): IrisEnvelope => ({
   topic: "test-topic",

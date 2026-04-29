@@ -1,39 +1,40 @@
+import { afterAll, beforeAll, describe, vi } from "vitest";
 // SQLite Migration TCK Harness
 //
 // Runs the migration TCK suite against the SQLite driver.
 // No external services required — uses a temp file database.
 
-import { createMockLogger } from "@lindorm/logger";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { ILogger } from "@lindorm/logger";
 import { randomUUID } from "node:crypto";
 import { writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Constructor } from "@lindorm/types";
-import type { IEntity } from "../../interfaces";
-import { mockScannerImport } from "../../__fixtures__/mock-scanner-import";
-import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager";
-import { SyncPlanExecutor } from "../drivers/sqlite/utils/sync/execute-sync-plan";
-import { diffSchema } from "../drivers/sqlite/utils/sync/diff-schema";
-import { introspectSchema } from "../drivers/sqlite/utils/sync/introspect-schema";
-import { projectDesiredSchemaSqlite } from "../drivers/sqlite/utils/sync/project-desired-schema-sqlite";
+import type { IEntity } from "../../interfaces/index.js";
+import { mockScannerImport } from "../../__fixtures__/mock-scanner-import.js";
+import { SqliteMigrationManager } from "../drivers/sqlite/classes/SqliteMigrationManager.js";
+import { SyncPlanExecutor } from "../drivers/sqlite/utils/sync/execute-sync-plan.js";
+import { diffSchema } from "../drivers/sqlite/utils/sync/diff-schema.js";
+import { introspectSchema } from "../drivers/sqlite/utils/sync/introspect-schema.js";
+import { projectDesiredSchemaSqlite } from "../drivers/sqlite/utils/sync/project-desired-schema-sqlite.js";
 import type {
   SqliteQueryClient,
   SqliteRow,
-} from "../drivers/sqlite/types/sqlite-query-client";
-import { getEntityMetadata } from "../entity/metadata/get-entity-metadata";
+} from "../drivers/sqlite/types/sqlite-query-client.js";
+import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
 import {
   createMigrationTckEntities,
   type MigrationTckEntities,
-} from "../__fixtures__/tck/create-migration-tck-entities";
+} from "../__fixtures__/tck/create-migration-tck-entities.js";
 import {
   migrationsSuite,
   type MigrationTckContext,
-} from "../__fixtures__/tck/migrations.tck";
+} from "../__fixtures__/tck/migrations.tck.js";
 
 mockScannerImport();
 
-jest.setTimeout(120_000);
+vi.setConfig({ testTimeout: 120_000 });
 
 let db: SqliteQueryClient;
 let dbPath: string;

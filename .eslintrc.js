@@ -38,7 +38,7 @@ module.exports = {
   ],
   rules: {
     "@typescript-eslint/ban-ts-comment": 0,
-    "@typescript-eslint/explicit-function-return-type": ["warn"],
+    "@typescript-eslint/explicit-function-return-type": "off",
     "@typescript-eslint/explicit-member-accessibility": ["error"],
     "@typescript-eslint/no-explicit-any": 0,
     "@typescript-eslint/no-unused-vars": [

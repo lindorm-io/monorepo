@@ -1,4 +1,4 @@
-import Redis from "ioredis";
+import { Redis } from "ioredis";
 import type { IAmphora } from "@lindorm/amphora";
 import type { ICircuitBreaker } from "@lindorm/breaker";
 import type { ILogger } from "@lindorm/logger";
@@ -7,31 +7,33 @@ import type {
   IEntity,
   IProteusQueryBuilder,
   IProteusRepository,
-} from "../../../../interfaces";
+} from "../../../../interfaces/index.js";
 import type {
   FilterRegistryGetter,
   IProteusDriver,
   MetadataResolver,
   TransactionHandle,
-} from "../../../interfaces/ProteusDriver";
-import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor";
+} from "../../../interfaces/ProteusDriver.js";
+import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   ProteusRedisOptions,
   TransactionCallback,
   TransactionOptions,
-} from "../../../../types";
-import type { EntityEmitFn } from "../../../../types/event-map";
-import type { RepositoryFactory } from "../../../types/repository-factory";
-import type { FilterRegistry } from "../../../utils/query/filter-registry";
-import type { RedisTransactionHandle } from "../types/redis-types";
-import { BreakerExecutor } from "../../../classes/BreakerExecutor";
-import { RedisDriverError } from "../errors/RedisDriverError";
-import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options";
-import { RedisExecutor } from "./RedisExecutor";
-import { RedisQueryBuilder } from "./RedisQueryBuilder";
-import { RedisRepository } from "./RedisRepository";
-import { RedisTransactionContext } from "./RedisTransactionContext";
-import { validateRedisEntity } from "../utils/validate-redis-entity";
+} from "../../../../types/index.js";
+import type { EntityEmitFn } from "../../../../types/event-map.js";
+import type { ProteusHookMeta } from "../../../../types/proteus-hook-meta.js";
+import type { RepositoryFactory } from "../../../types/repository-factory.js";
+import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import type { RedisTransactionHandle } from "../types/redis-types.js";
+import { BreakerExecutor } from "../../../classes/BreakerExecutor.js";
+import { raceWithSignal, toAbortError } from "../../../utils/abort.js";
+import { RedisDriverError } from "../errors/RedisDriverError.js";
+import { validateConnectionMutualExclusivity } from "../../../utils/validate-connection-options.js";
+import { RedisExecutor } from "./RedisExecutor.js";
+import { RedisQueryBuilder } from "./RedisQueryBuilder.js";
+import { RedisRepository } from "./RedisRepository.js";
+import { RedisTransactionContext } from "./RedisTransactionContext.js";
+import { validateRedisEntity } from "../utils/validate-redis-entity.js";
 
 export class RedisDriver implements IProteusDriver {
   private readonly logger: ILogger;
@@ -59,6 +61,7 @@ export class RedisDriver implements IProteusDriver {
   };
   private client: Redis | null;
   private connectingPromise: Promise<void> | null;
+  private signal: AbortSignal | undefined;
 
   public constructor(
     options: ProteusRedisOptions,
@@ -155,8 +158,9 @@ export class RedisDriver implements IProteusDriver {
   public createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
+    this.checkSignal();
     // NOTE (F-040): resolveMetadata applies naming strategy (DB column names).
     // The executor receives this transformed metadata for HSET/HGETALL keys.
     // DriverRepositoryBase separately calls getEntityMetadata (raw TS property names)
@@ -169,7 +173,7 @@ export class RedisDriver implements IProteusDriver {
     const factory: RepositoryFactory = <C extends IEntity>(
       t: Constructor<C>,
       p?: Constructor<IEntity>,
-    ) => this.createRepository(t, p, context);
+    ) => this.createRepository(t, p, meta);
 
     return new RedisRepository<E>({
       target,
@@ -187,7 +191,7 @@ export class RedisDriver implements IProteusDriver {
       client,
       namespace: this.namespace,
       logger: this.logger,
-      context,
+      meta,
       parent,
       repositoryFactory: factory,
       emitEntity: this.emitEntity,
@@ -198,10 +202,10 @@ export class RedisDriver implements IProteusDriver {
     target: Constructor<E>,
     _handle: TransactionHandle,
     parent?: Constructor<IEntity>,
-    context?: unknown,
+    meta?: ProteusHookMeta,
   ): IProteusRepository<E> {
     // Redis has no transaction isolation -- delegate to non-transactional repository
-    return this.createRepository(target, parent, context);
+    return this.createRepository(target, parent, meta);
   }
 
   // ─── Executor ─────────────────────────────────────────────────────────
@@ -209,6 +213,7 @@ export class RedisDriver implements IProteusDriver {
   public createExecutor<E extends IEntity>(
     target: Constructor<E>,
   ): IRepositoryExecutor<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
 
     return this.wrapExecutor(
@@ -236,6 +241,7 @@ export class RedisDriver implements IProteusDriver {
   public createQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
   ): IProteusQueryBuilder<E> {
+    this.checkSignal();
     const metadata = this.resolveMetadata(target);
 
     return new RedisQueryBuilder<E>(
@@ -267,6 +273,7 @@ export class RedisDriver implements IProteusDriver {
   public async beginTransaction(
     _options?: TransactionOptions,
   ): Promise<TransactionHandle> {
+    this.checkSignal();
     const handle: RedisTransactionHandle = {
       state: "active",
     };
@@ -293,6 +300,7 @@ export class RedisDriver implements IProteusDriver {
     callback: TransactionCallback<T>,
     _options?: TransactionOptions,
   ): Promise<T> {
+    this.checkSignal();
     this.logger.warn(
       "Redis does not support interactive transactions — " +
         "the callback will execute without atomicity or isolation guarantees",
@@ -337,6 +345,7 @@ export class RedisDriver implements IProteusDriver {
   public cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
+    signal?: AbortSignal,
   ): RedisDriver {
     const cloned = Object.create(RedisDriver.prototype) as RedisDriver;
     (cloned as any).logger = this.logger;
@@ -349,6 +358,17 @@ export class RedisDriver implements IProteusDriver {
     (cloned as any).breaker = this.breaker;
     (cloned as any).client = this.client; // Share the same ioredis client
     (cloned as any).connectingPromise = null;
+    // ioredis has no native AbortSignal support. Session-level cancellation
+    // is handled in two layers:
+    //   (1) pre-flight check at every public entry point; and
+    //   (2) a Promise.race on the exposed client so in-flight commands can
+    //       reject the caller on abort. The background command still
+    //       completes on the wire — redis commands are sub-millisecond in
+    //       practice so the orphan cost is negligible. For long-running
+    //       blocking commands (BRPOP, BLPOP, SUBSCRIBE) the caller should
+    //       issue client.disconnect() explicitly rather than rely on this
+    //       session signal.
+    (cloned as any).signal = signal;
     return cloned;
   }
 
@@ -411,6 +431,26 @@ export class RedisDriver implements IProteusDriver {
     executor: IRepositoryExecutor<E>,
   ): IRepositoryExecutor<E> {
     return this.breaker ? new BreakerExecutor(executor, this.breaker) : executor;
+  }
+
+  private checkSignal(): void {
+    if (this.signal?.aborted) {
+      throw toAbortError(this.signal.reason, undefined, "Redis command cancelled");
+    }
+  }
+
+  /**
+   * Race a pending ioredis command against the session signal.
+   *
+   * Delegates to the shared raceWithSignal helper; exposed here as a
+   * convenience so executor / repository code can call
+   * `driver.raceSignal(client.get(...))` without reaching into utils.
+   * Off the default executor path for now: pre-flight covers the
+   * HTTP-abort use case and redis commands are sub-millisecond in
+   * practice. See utils/abort.ts for the full semantics.
+   */
+  public raceSignal<T>(promise: Promise<T>): Promise<T> {
+    return raceWithSignal(promise, this.signal, "Redis command cancelled");
   }
 
   private requireClient(): Redis {

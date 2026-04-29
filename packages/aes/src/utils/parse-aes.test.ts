@@ -1,41 +1,40 @@
-import { parseAes } from "./parse-aes";
-import { AesError } from "../errors";
-import {
+import { parseAes } from "./parse-aes.js";
+import { AesError } from "../errors/index.js";
+import type {
   AesDecryptionRecord,
   ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
-} from "../types";
-import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record";
-import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes";
-import { parseEncodedAesString } from "../internal/utils/encoded-aes";
-import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes";
-import { parseTokenisedAesString } from "../internal/utils/tokenised-aes";
+} from "../types/index.js";
+import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record.js";
+import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes.js";
+import { parseEncodedAesString } from "../internal/utils/encoded-aes.js";
+import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes.js";
+import { parseTokenisedAesString } from "../internal/utils/tokenised-aes.js";
+import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
-jest.mock("./is-aes");
-jest.mock("../internal/utils/encoded-aes");
-jest.mock("../internal/utils/serialised-aes");
-jest.mock("../internal/utils/tokenised-aes");
+vi.mock("./is-aes.js");
+vi.mock("../internal/utils/encoded-aes.js");
+vi.mock("../internal/utils/serialised-aes.js");
+vi.mock("../internal/utils/tokenised-aes.js");
 
-const mockIsAesBufferData = isAesBufferData as jest.MockedFunction<
-  typeof isAesBufferData
->;
-const mockIsAesSerialisedData = isAesSerialisedData as jest.MockedFunction<
+const mockIsAesBufferData = isAesBufferData as MockedFunction<typeof isAesBufferData>;
+const mockIsAesSerialisedData = isAesSerialisedData as MockedFunction<
   typeof isAesSerialisedData
 >;
-const mockIsAesTokenised = isAesTokenised as jest.MockedFunction<typeof isAesTokenised>;
-const mockParseEncodedAesString = parseEncodedAesString as jest.MockedFunction<
+const mockIsAesTokenised = isAesTokenised as MockedFunction<typeof isAesTokenised>;
+const mockParseEncodedAesString = parseEncodedAesString as MockedFunction<
   typeof parseEncodedAesString
 >;
-const mockParseSerialisedAesRecord = parseSerialisedAesRecord as jest.MockedFunction<
+const mockParseSerialisedAesRecord = parseSerialisedAesRecord as MockedFunction<
   typeof parseSerialisedAesRecord
 >;
-const mockParseTokenisedAesString = parseTokenisedAesString as jest.MockedFunction<
+const mockParseTokenisedAesString = parseTokenisedAesString as MockedFunction<
   typeof parseTokenisedAesString
 >;
 
 describe("parseAes", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe("tokenised string", () => {

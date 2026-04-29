@@ -1,6 +1,6 @@
-import { IKryptos } from "@lindorm/kryptos";
-import { SignatureKit } from "../../classes";
-import { B64U } from "../constants/format";
+import type { IKryptos } from "@lindorm/kryptos";
+import { SignatureKit } from "../../classes/index.js";
+import { B64U } from "../constants/format.js";
 
 type Options = {
   header: string;

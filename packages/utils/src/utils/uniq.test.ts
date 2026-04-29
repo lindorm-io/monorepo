@@ -1,4 +1,5 @@
-import { uniq, uniqFlat } from "./uniq";
+import { uniq, uniqFlat } from "./uniq.js";
+import { describe, expect, test } from "vitest";
 
 describe("uniq", () => {
   test("should return unique values", () => {

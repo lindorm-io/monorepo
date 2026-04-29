@@ -1,4 +1,4 @@
-import type { RedisClient } from "../types/redis-types";
+import type { RedisClient } from "../types/redis-types.js";
 
 export const xaddToStream = async (
   connection: RedisClient,

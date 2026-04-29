@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`introspectSchema (MySQL) introspects check constraints 1`] = `
+exports[`introspectSchema (MySQL) > introspects check constraints 1`] = `
 [
   {
     "checkClause": "\`age\` >= 0",
@@ -13,7 +13,7 @@ exports[`introspectSchema (MySQL) introspects check constraints 1`] = `
 ]
 `;
 
-exports[`introspectSchema (MySQL) introspects composite unique constraints 1`] = `
+exports[`introspectSchema (MySQL) > introspects composite unique constraints 1`] = `
 [
   {
     "columns": [
@@ -33,7 +33,7 @@ exports[`introspectSchema (MySQL) introspects composite unique constraints 1`] =
 ]
 `;
 
-exports[`introspectSchema (MySQL) introspects foreign keys 1`] = `
+exports[`introspectSchema (MySQL) > introspects foreign keys 1`] = `
 {
   "columns": [
     "author_id",
@@ -48,7 +48,7 @@ exports[`introspectSchema (MySQL) introspects foreign keys 1`] = `
 }
 `;
 
-exports[`introspectSchema (MySQL) introspects indexes 1`] = `
+exports[`introspectSchema (MySQL) > introspects indexes 1`] = `
 {
   "columns": [
     {
@@ -64,7 +64,7 @@ exports[`introspectSchema (MySQL) introspects indexes 1`] = `
 }
 `;
 
-exports[`introspectSchema (MySQL) introspects tables with columns 1`] = `
+exports[`introspectSchema (MySQL) > introspects tables with columns 1`] = `
 {
   "tables": Map {
     "users" => {
@@ -105,7 +105,7 @@ exports[`introspectSchema (MySQL) introspects tables with columns 1`] = `
 }
 `;
 
-exports[`introspectSchema (MySQL) introspects unique constraints 1`] = `
+exports[`introspectSchema (MySQL) > introspects unique constraints 1`] = `
 [
   {
     "columns": [

@@ -1,7 +1,8 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
+import type { KryptosEncryption } from "@lindorm/kryptos";
 import { randomBytes } from "crypto";
-import { AesError } from "../../../errors";
-import { assertHmacAuthTag, createHmacAuthTag } from "./auth-tag-hmac";
+import { AesError } from "../../../errors/index.js";
+import { assertHmacAuthTag, createHmacAuthTag } from "./auth-tag-hmac.js";
+import { describe, expect, test } from "vitest";
 
 describe("createHmacAuthTag", () => {
   test.each<[KryptosEncryption, number, number]>([

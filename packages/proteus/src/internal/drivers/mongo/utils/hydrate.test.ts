@@ -1,16 +1,17 @@
-import type { EntityMetadata, MetaField } from "../../../entity/types/metadata";
+import type { EntityMetadata, MetaField } from "../../../entity/types/metadata.js";
+import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
 // Mock dependencies before importing the module under test
-jest.mock("../../../entity/utils/default-hydrate-entity", () => ({
-  defaultHydrateEntity: jest.fn((row: any, _meta: any, _opts: any) => row),
+vi.mock("../../../entity/utils/default-hydrate-entity.js", () => ({
+  defaultHydrateEntity: vi.fn((row: any, _meta: any, _opts: any) => row),
 }));
 
-jest.mock("../../../entity/utils/resolve-polymorphic-metadata", () => ({
-  resolvePolymorphicMetadata: jest.fn((_row: any, meta: any) => meta),
+vi.mock("../../../entity/utils/resolve-polymorphic-metadata.js", () => ({
+  resolvePolymorphicMetadata: vi.fn((_row: any, meta: any) => meta),
 }));
 
-import { hydrateEntity, hydrateEntities } from "./hydrate";
-import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity";
+import { hydrateEntity, hydrateEntities } from "./hydrate.js";
+import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -36,7 +37,7 @@ const makeMetadata = (
 
 describe("hydrateEntity", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should map _id back to PK field for simple document", () => {
@@ -131,7 +132,7 @@ describe("hydrateEntity", () => {
 
 describe("hydrateEntities", () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test("should hydrate multiple documents", () => {

@@ -1,4 +1,4 @@
-import { Function } from "@lindorm/types";
+import type { Function as FunctionType } from "@lindorm/types";
 
-export const isFunction = (input?: any): input is Function =>
-  Boolean(input) && (input instanceof Function || typeof input === "function");
+export const isFunction = (input?: any): input is FunctionType =>
+  Boolean(input) && typeof input === "function";

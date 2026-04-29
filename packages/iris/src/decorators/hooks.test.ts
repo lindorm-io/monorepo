@@ -1,11 +1,12 @@
-import { OnCreate } from "./OnCreate";
-import { OnHydrate } from "./OnHydrate";
-import { OnValidate } from "./OnValidate";
-import { BeforePublish } from "./BeforePublish";
-import { AfterPublish } from "./AfterPublish";
-import { BeforeConsume } from "./BeforeConsume";
-import { AfterConsume } from "./AfterConsume";
-import { OnConsumeError } from "./OnConsumeError";
+import { OnCreate } from "./OnCreate.js";
+import { OnHydrate } from "./OnHydrate.js";
+import { OnValidate } from "./OnValidate.js";
+import { BeforePublish } from "./BeforePublish.js";
+import { AfterPublish } from "./AfterPublish.js";
+import { BeforeConsume } from "./BeforeConsume.js";
+import { AfterConsume } from "./AfterConsume.js";
+import { OnConsumeError } from "./OnConsumeError.js";
+import { describe, expect, it } from "vitest";
 
 const hookDecorators = [
   { name: "OnCreate", Decorator: OnCreate },

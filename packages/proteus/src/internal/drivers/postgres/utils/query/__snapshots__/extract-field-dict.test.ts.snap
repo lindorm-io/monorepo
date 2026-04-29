@@ -1,13 +1,13 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`extractFieldDictFromAliased should handle embedded fields with dotted keys 1`] = `
+exports[`extractFieldDictFromAliased > should handle embedded fields with dotted keys 1`] = `
 {
   "address.city": "London",
   "id": "xyz",
 }
 `;
 
-exports[`extractFieldDictFromAliased should map aliased column names to field keys 1`] = `
+exports[`extractFieldDictFromAliased > should map aliased column names to field keys 1`] = `
 {
   "email": "alice@test.com",
   "id": "abc",
@@ -15,7 +15,7 @@ exports[`extractFieldDictFromAliased should map aliased column names to field ke
 }
 `;
 
-exports[`extractFieldDictFromReturning should map column names to field keys 1`] = `
+exports[`extractFieldDictFromReturning > should map column names to field keys 1`] = `
 {
   "email": "alice@test.com",
   "id": "abc",

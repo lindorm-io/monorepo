@@ -1,5 +1,6 @@
-import type { StagedMetadata } from "../internal/metadata";
-import { Forgettable } from "./Forgettable";
+import type { StagedMetadata } from "../internal/metadata/index.js";
+import { Forgettable } from "./Forgettable.js";
+import { describe, expect, test } from "vitest";
 
 const createMockContext = (metadata: DecoratorMetadataObject): ClassDecoratorContext =>
   ({ metadata }) as ClassDecoratorContext;

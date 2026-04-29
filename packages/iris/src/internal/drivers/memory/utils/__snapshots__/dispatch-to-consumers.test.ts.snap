@@ -1,19 +1,19 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`dispatchToConsumers should dispatch to all consumers in broadcast mode 1`] = `
+exports[`dispatchToConsumers > should dispatch to all consumers in broadcast mode 1`] = `
 [
   "a",
   "b",
 ]
 `;
 
-exports[`dispatchToConsumers should only dispatch to consumers matching the topic 1`] = `
+exports[`dispatchToConsumers > should only dispatch to consumers matching the topic 1`] = `
 [
   "a",
 ]
 `;
 
-exports[`dispatchToConsumers should round-robin across multiple dispatches 1`] = `
+exports[`dispatchToConsumers > should round-robin across multiple dispatches 1`] = `
 [
   "a",
   "b",

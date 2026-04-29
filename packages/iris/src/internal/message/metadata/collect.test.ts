@@ -1,4 +1,5 @@
-import { collectAll, collectOwn, collectSingular } from "./collect";
+import { collectAll, collectOwn, collectSingular } from "./collect.js";
+import { describe, expect, it } from "vitest";
 
 describe("collect", () => {
   describe("collectOwn", () => {

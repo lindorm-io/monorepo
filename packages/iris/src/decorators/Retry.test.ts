@@ -1,4 +1,5 @@
-import { Retry } from "./Retry";
+import { Retry } from "./Retry.js";
+import { describe, expect, it } from "vitest";
 
 describe("Retry", () => {
   it("should stage retry metadata with defaults", () => {

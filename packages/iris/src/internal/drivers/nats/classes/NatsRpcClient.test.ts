@@ -1,17 +1,18 @@
-import type { IMessage } from "../../../../interfaces";
-import { Field } from "../../../../decorators/Field";
-import { Message } from "../../../../decorators/Message";
-import { clearRegistry } from "../../../message/metadata/registry";
-import type { NatsSharedState, NatsMsg } from "../types/nats-types";
-import { NatsRpcClient } from "./NatsRpcClient";
+import type { IMessage } from "../../../../interfaces/index.js";
+import { Field } from "../../../../decorators/Field.js";
+import { Message } from "../../../../decorators/Message.js";
+import { clearRegistry } from "../../../message/metadata/registry.js";
+import type { NatsSharedState, NatsMsg } from "../types/nats-types.js";
+import { NatsRpcClient } from "./NatsRpcClient.js";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mocks ---
-jest.mock("../utils/serialize-nats-message", () => ({
-  serializeNatsMessage: jest.fn().mockReturnValue({ data: new Uint8Array([1, 2, 3]) }),
+vi.mock("../utils/serialize-nats-message.js", async () => ({
+  serializeNatsMessage: vi.fn().mockReturnValue({ data: new Uint8Array([1, 2, 3]) }),
 }));
 
-const mockParseNatsMessage = jest.fn();
-jest.mock("../utils/parse-nats-message", () => ({
+const mockParseNatsMessage = vi.fn();
+vi.mock("../utils/parse-nats-message.js", () => ({
   parseNatsMessage: (...args: Array<unknown>) => mockParseNatsMessage(...args),
 }));
 
@@ -30,51 +31,49 @@ class TckNatsRpcRes implements IMessage {
 // --- Helpers ---
 
 const createMockLogger = () => ({
-  child: jest.fn().mockReturnThis(),
-  debug: jest.fn(),
-  info: jest.fn(),
-  warn: jest.fn(),
-  error: jest.fn(),
-  silly: jest.fn(),
-  verbose: jest.fn(),
+  child: vi.fn().mockReturnThis(),
+  debug: vi.fn(),
+  info: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
+  silly: vi.fn(),
+  verbose: vi.fn(),
 });
 
 const createMockState = (): NatsSharedState => ({
   nc: {
-    request: jest.fn().mockResolvedValue({
+    request: vi.fn().mockResolvedValue({
       data: new Uint8Array([]),
       subject: "reply",
       sid: 1,
-      respond: jest.fn(),
+      respond: vi.fn(),
     } as Partial<NatsMsg>),
-    jetstream: jest.fn(),
-    jetstreamManager: jest.fn(),
-    publish: jest.fn(),
-    subscribe: jest.fn(),
-    flush: jest.fn(),
-    close: jest.fn(),
-    drain: jest.fn(),
-    status: jest.fn(),
-    isClosed: jest.fn().mockReturnValue(false),
+    jetstream: vi.fn(),
+    jetstreamManager: vi.fn(),
+    publish: vi.fn(),
+    subscribe: vi.fn(),
+    flush: vi.fn(),
+    close: vi.fn(),
+    drain: vi.fn(),
+    status: vi.fn(),
+    isClosed: vi.fn().mockReturnValue(false),
   } as any,
   js: {
-    publish: jest
-      .fn()
-      .mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
-    consumers: { get: jest.fn() },
+    publish: vi.fn().mockResolvedValue({ seq: 1, stream: "IRIS_IRIS", duplicate: false }),
+    consumers: { get: vi.fn() },
   } as any,
   jsm: {
-    streams: { info: jest.fn(), add: jest.fn(), purge: jest.fn() },
+    streams: { info: vi.fn(), add: vi.fn(), purge: vi.fn() },
     consumers: {
-      add: jest.fn().mockResolvedValue({}),
-      delete: jest.fn().mockResolvedValue(true),
+      add: vi.fn().mockResolvedValue({}),
+      delete: vi.fn().mockResolvedValue(true),
     },
   } as any,
-  headersInit: jest.fn().mockReturnValue({
-    get: jest.fn(),
-    set: jest.fn(),
-    has: jest.fn(),
-    values: jest.fn(),
+  headersInit: vi.fn().mockReturnValue({
+    get: vi.fn(),
+    set: vi.fn(),
+    has: vi.fn(),
+    values: vi.fn(),
   }) as any,
   prefix: "iris",
   streamName: "IRIS_IRIS",
@@ -221,7 +220,7 @@ describe("NatsRpcClient", () => {
 
   it("should wrap NATS timeout error as IrisTimeoutError", async () => {
     const state = createMockState();
-    (state.nc!.request as jest.Mock).mockRejectedValue(new Error("TIMEOUT"));
+    (state.nc!.request as Mock).mockRejectedValue(new Error("TIMEOUT"));
 
     const client = new NatsRpcClient({
       state,

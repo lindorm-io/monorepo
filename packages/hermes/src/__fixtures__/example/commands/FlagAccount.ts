@@ -1,4 +1,4 @@
-import { Command } from "../../../decorators";
+import { Command } from "../../../decorators/index.js";
 
 @Command()
 export class FlagAccount {

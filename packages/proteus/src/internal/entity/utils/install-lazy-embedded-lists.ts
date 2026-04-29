@@ -1,6 +1,6 @@
-import type { IEntity } from "../../../interfaces";
-import type { EntityMetadata, MetaEmbeddedList, QueryScope } from "../types/metadata";
-import { LazyCollection } from "./lazy-collection";
+import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata, MetaEmbeddedList, QueryScope } from "../types/metadata.js";
+import { LazyCollection } from "./lazy-collection.js";
 
 export type LazyEmbeddedListLoader = (
   entity: IEntity,

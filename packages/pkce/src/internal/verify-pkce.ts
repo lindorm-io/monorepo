@@ -1,7 +1,7 @@
-import { PkceMethod } from "@lindorm/types";
-import { PkceError } from "../errors";
-import { createBaseHash } from "./create-base-hash";
-import { stringComparison } from "./string-comparison";
+import type { PkceMethod } from "@lindorm/types";
+import { PkceError } from "../errors/index.js";
+import { createBaseHash } from "./create-base-hash.js";
+import { stringComparison } from "./string-comparison.js";
 
 export const verifyPkce = (
   challenge: string,

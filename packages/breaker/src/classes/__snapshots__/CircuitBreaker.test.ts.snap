@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`CircuitBreaker close() should emit half-open event 1`] = `
+exports[`CircuitBreaker > close() > should emit half-open event 1`] = `
 [
   {
     "failures": 3,
@@ -12,7 +12,7 @@ exports[`CircuitBreaker close() should emit half-open event 1`] = `
 ]
 `;
 
-exports[`CircuitBreaker close() should work in cycle: open() -> close() -> probe success -> closed 1`] = `
+exports[`CircuitBreaker > close() > should work in cycle: open() -> close() -> probe success -> closed 1`] = `
 [
   "closed->open",
   "open->half-open",
@@ -20,7 +20,7 @@ exports[`CircuitBreaker close() should work in cycle: open() -> close() -> probe
 ]
 `;
 
-exports[`CircuitBreaker edge cases should handle rapid transitions: closed -> open -> half-open -> closed 1`] = `
+exports[`CircuitBreaker > edge cases > should handle rapid transitions: closed -> open -> half-open -> closed 1`] = `
 [
   "closed->open",
   "open->half-open",
@@ -28,7 +28,7 @@ exports[`CircuitBreaker edge cases should handle rapid transitions: closed -> op
 ]
 `;
 
-exports[`CircuitBreaker events should emit events with correct data on transitions 1`] = `
+exports[`CircuitBreaker > events > should emit events with correct data on transitions 1`] = `
 [
   {
     "failures": 3,
@@ -54,7 +54,7 @@ exports[`CircuitBreaker events should emit events with correct data on transitio
 ]
 `;
 
-exports[`CircuitBreaker open state should include debug info in CircuitOpenError 1`] = `
+exports[`CircuitBreaker > open state > should include debug info in CircuitOpenError 1`] = `
 {
   "failures": 3,
   "name": "test-breaker",
@@ -62,7 +62,7 @@ exports[`CircuitBreaker open state should include debug info in CircuitOpenError
 }
 `;
 
-exports[`CircuitBreaker open() should emit open event 1`] = `
+exports[`CircuitBreaker > open() > should emit open event 1`] = `
 [
   {
     "failures": 0,

@@ -1,15 +1,16 @@
-import { KryptosEncryption } from "@lindorm/kryptos";
-import { CipherGCM, DecipherGCM } from "crypto";
+import type { KryptosEncryption } from "@lindorm/kryptos";
+import type { CipherGCM, DecipherGCM } from "crypto";
 import { randomBytes } from "crypto";
-import { AesError } from "../../../errors";
-import { assertAuthTag, createAuthTag } from "./auth-tag";
+import { AesError } from "../../../errors/index.js";
+import { assertAuthTag, createAuthTag } from "./auth-tag.js";
+import { describe, expect, test, vi } from "vitest";
 
 describe("createAuthTag", () => {
   describe("GCM modes", () => {
     test("should call cipher.getAuthTag() for A128GCM", () => {
       const mockAuthTag = randomBytes(16);
       const mockCipher = {
-        getAuthTag: jest.fn().mockReturnValue(mockAuthTag),
+        getAuthTag: vi.fn().mockReturnValue(mockAuthTag),
       } as unknown as CipherGCM;
 
       const result = createAuthTag({
@@ -27,7 +28,7 @@ describe("createAuthTag", () => {
     test("should call cipher.getAuthTag() for A192GCM", () => {
       const mockAuthTag = randomBytes(16);
       const mockCipher = {
-        getAuthTag: jest.fn().mockReturnValue(mockAuthTag),
+        getAuthTag: vi.fn().mockReturnValue(mockAuthTag),
       } as unknown as CipherGCM;
 
       const result = createAuthTag({
@@ -45,7 +46,7 @@ describe("createAuthTag", () => {
     test("should call cipher.getAuthTag() for A256GCM", () => {
       const mockAuthTag = randomBytes(16);
       const mockCipher = {
-        getAuthTag: jest.fn().mockReturnValue(mockAuthTag),
+        getAuthTag: vi.fn().mockReturnValue(mockAuthTag),
       } as unknown as CipherGCM;
 
       const result = createAuthTag({
@@ -202,7 +203,7 @@ describe("assertAuthTag", () => {
     test("should call decipher.setAuthTag() for A128GCM", () => {
       const authTag = randomBytes(16);
       const mockDecipher = {
-        setAuthTag: jest.fn(),
+        setAuthTag: vi.fn(),
       } as unknown as DecipherGCM;
 
       assertAuthTag({
@@ -221,7 +222,7 @@ describe("assertAuthTag", () => {
     test("should call decipher.setAuthTag() for A192GCM", () => {
       const authTag = randomBytes(16);
       const mockDecipher = {
-        setAuthTag: jest.fn(),
+        setAuthTag: vi.fn(),
       } as unknown as DecipherGCM;
 
       assertAuthTag({
@@ -240,7 +241,7 @@ describe("assertAuthTag", () => {
     test("should call decipher.setAuthTag() for A256GCM", () => {
       const authTag = randomBytes(16);
       const mockDecipher = {
-        setAuthTag: jest.fn(),
+        setAuthTag: vi.fn(),
       } as unknown as DecipherGCM;
 
       assertAuthTag({

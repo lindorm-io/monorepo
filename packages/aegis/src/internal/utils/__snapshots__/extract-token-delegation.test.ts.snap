@@ -1,6 +1,6 @@
-// Jest Snapshot v1, https://jestjs.io/docs/snapshot-testing
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`extractTokenDelegation should return single-level actor chain 1`] = `
+exports[`extractTokenDelegation > should return single-level actor chain 1`] = `
 {
   "actorChain": [
     {
@@ -13,7 +13,7 @@ exports[`extractTokenDelegation should return single-level actor chain 1`] = `
 }
 `;
 
-exports[`extractTokenDelegation should return undelegated state when no act claim is present 1`] = `
+exports[`extractTokenDelegation > should return undelegated state when no act claim is present 1`] = `
 {
   "actorChain": [],
   "currentActor": undefined,
@@ -21,7 +21,7 @@ exports[`extractTokenDelegation should return undelegated state when no act clai
 }
 `;
 
-exports[`extractTokenDelegation should walk three-level nested act chain outermost to deepest 1`] = `
+exports[`extractTokenDelegation > should walk three-level nested act chain outermost to deepest 1`] = `
 {
   "actorChain": [
     {

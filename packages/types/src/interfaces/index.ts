@@ -1,1 +1,1 @@
-export * from "./KeyKit";
+export * from "./KeyKit.js";

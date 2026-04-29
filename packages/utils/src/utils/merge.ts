@@ -1,5 +1,5 @@
 import { isArray, isObject, isUndefined } from "@lindorm/is";
-import { DeepPartial, Dict } from "@lindorm/types";
+import type { DeepPartial, Dict } from "@lindorm/types";
 
 export const merge = <T extends Dict>(
   origin: DeepPartial<T>,
