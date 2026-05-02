@@ -159,7 +159,6 @@ const buildOptions = (answers: Answers): string => {
   if (answers.features.audit) {
     lines.push(`  audit: {`);
     lines.push(`    enabled: true,`);
-    lines.push(`    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",`);
     lines.push(`    // sanitise: (body) => body,`);
     lines.push(`    // skip: (ctx) => false,`);
     lines.push(`    // entities: [],`);
