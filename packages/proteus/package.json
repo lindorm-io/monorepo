@@ -63,9 +63,9 @@
     "zod": "^4.3.6"
   },
   "peerDependencies": {
-    "@lindorm/aes": "^0.6.4",
-    "@lindorm/amphora": "^0.4.1",
-    "@lindorm/logger": "^0.5.4",
+    "@lindorm/aes": ">=0.6.0",
+    "@lindorm/amphora": ">=0.4.0",
+    "@lindorm/logger": ">=0.5.0",
     "better-sqlite3": ">=12.6.0",
     "ioredis": ">=5.10.0",
     "mongodb": ">=6.17.0",

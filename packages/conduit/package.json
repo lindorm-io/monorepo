@@ -42,7 +42,7 @@
     "zod": "^4.3.6"
   },
   "peerDependencies": {
-    "@lindorm/logger": "^0.5.4"
+    "@lindorm/logger": ">=0.5.0"
   },
   "peerDependenciesMeta": {
     "@lindorm/logger": {
