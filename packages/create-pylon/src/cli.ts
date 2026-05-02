@@ -4,9 +4,9 @@ if (typeof Symbol.metadata === "undefined") {
   (Symbol as any).metadata = Symbol.for("Symbol.metadata");
 }
 
-import { readFileSync } from "fs";
+import { readFileSync, realpathSync } from "fs";
 import { dirname, resolve } from "path";
-import { fileURLToPath } from "url";
+import { fileURLToPath, pathToFileURL } from "url";
 import { Command } from "commander";
 import {
   runIrisGenerateSampleMessage,
@@ -123,7 +123,11 @@ program
     }
   });
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+const invokedAs = process.argv[1]
+  ? pathToFileURL(realpathSync(process.argv[1])).href
+  : "";
+
+if (import.meta.url === invokedAs) {
   void program.parseAsync(process.argv);
 }
 
