@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.2.0...@lindorm/create-pylon@0.2.1) (2026-05-02)
+
+### Bug Fixes
+
+- **create-pylon:** drop stale audit.actor from generated pylon.ts ([0ec1964](https://github.com/lindorm-io/monorepo/commit/0ec19646ba7c70b8bbbfa513bc7e7590a66ef04b))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.1.0...@lindorm/create-pylon@0.2.0) (2026-05-02)
 
 ### Bug Fixes
