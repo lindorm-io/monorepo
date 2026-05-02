@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.4.4...@lindorm/scanner@0.5.0) (2026-05-02)
+
+### Features
+
+- migrate 20 packages from jest to vitest ([d8bfda8](https://github.com/lindorm-io/monorepo/commit/d8bfda8854dc1cb9537ba0b3e47ec4e4c7bded08))
+- **scanner:** fall back to tsx loader for .ts files native import rejects ([6817867](https://github.com/lindorm-io/monorepo/commit/6817867b84fdcb31bc76cec391d263125a3e3157))
+- **scanner:** switch import() to native dynamic import and flatten ScanData ([bcfa584](https://github.com/lindorm-io/monorepo/commit/bcfa584f375470fcc982a277e3f35812ef6ce5bc))
+
 ## [0.4.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.4.3...@lindorm/scanner@0.4.4) (2026-04-19)
 
 **Note:** Version bump only for package @lindorm/scanner

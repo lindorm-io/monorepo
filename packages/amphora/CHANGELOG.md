@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.4.1...@lindorm/amphora@0.5.0) (2026-05-02)
+
+### Bug Fixes
+
+- widen @lindorm/\* peer ranges to unbounded >= ([f192b59](https://github.com/lindorm-io/monorepo/commit/f192b59107bf1f276d296837f40fa97765d9d2ba))
+
+### Features
+
+- migrate 20 packages from jest to vitest ([d8bfda8](https://github.com/lindorm-io/monorepo/commit/d8bfda8854dc1cb9537ba0b3e47ec4e4c7bded08))
+
 ## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.4.0...@lindorm/amphora@0.4.1) (2026-04-19)
 
 **Note:** Version bump only for package @lindorm/amphora

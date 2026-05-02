@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.4.0...@lindorm/worker@0.5.0) (2026-05-02)
+
+### Bug Fixes
+
+- widen @lindorm/\* peer ranges to unbounded >= ([f192b59](https://github.com/lindorm-io/monorepo/commit/f192b59107bf1f276d296837f40fa97765d9d2ba))
+
+### Features
+
+- migrate 20 packages from jest to vitest ([d8bfda8](https://github.com/lindorm-io/monorepo/commit/d8bfda8854dc1cb9537ba0b3e47ec4e4c7bded08))
+- **test:** alias @lindorm/\* to src so Scanner.import() works in tests ([05065ba](https://github.com/lindorm-io/monorepo/commit/05065ba72ba419eb69807905cbbbfe5ab3af15f9))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.3.0...@lindorm/worker@0.4.0) (2026-04-19)
 
 ### Features

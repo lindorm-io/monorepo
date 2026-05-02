@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.2.2...@lindorm/retry@0.3.0) (2026-05-02)
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([3eab5ab](https://github.com/lindorm-io/monorepo/commit/3eab5ab9d89cd529553a2aded3c311d3f393ca0f))
+
 ## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.2.1...@lindorm/retry@0.2.2) (2026-04-15)
 
 ### Bug Fixes

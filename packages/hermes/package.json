@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/hermes",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -45,18 +45,18 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
-    "@lindorm/aes": "^0.6.5",
-    "@lindorm/case": "^0.1.16",
-    "@lindorm/date": "^0.4.4",
-    "@lindorm/errors": "^0.1.18",
-    "@lindorm/is": "^0.1.16",
-    "@lindorm/json-kit": "^0.5.8",
-    "@lindorm/kryptos": "^0.7.0",
-    "@lindorm/random": "^0.2.4",
-    "@lindorm/scanner": "^0.4.4",
-    "@lindorm/sha": "^0.4.1",
-    "@lindorm/types": "^0.5.0",
-    "@lindorm/utils": "^0.7.1",
+    "@lindorm/aes": "^0.7.0",
+    "@lindorm/case": "^0.2.0",
+    "@lindorm/date": "^0.5.0",
+    "@lindorm/errors": "^0.2.0",
+    "@lindorm/is": "^0.2.0",
+    "@lindorm/json-kit": "^0.6.0",
+    "@lindorm/kryptos": "^0.8.0",
+    "@lindorm/random": "^0.3.0",
+    "@lindorm/scanner": "^0.5.0",
+    "@lindorm/sha": "^0.5.0",
+    "@lindorm/types": "^0.6.0",
+    "@lindorm/utils": "^0.8.0",
     "commander": "^14.0.3",
     "deepmerge": "^4.3.1",
     "zod": "^4.3.6"
@@ -67,8 +67,8 @@
     "@lindorm/proteus": ">=0.5.0"
   },
   "devDependencies": {
-    "@lindorm/iris": "^0.3.0",
-    "@lindorm/logger": "^0.5.4",
-    "@lindorm/proteus": "^0.5.1"
+    "@lindorm/iris": "^0.4.0",
+    "@lindorm/logger": "^0.6.0",
+    "@lindorm/proteus": "^0.6.0"
   }
 }

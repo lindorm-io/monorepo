@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.6.0...@lindorm/aegis@0.7.0) (2026-05-02)
+
+### Bug Fixes
+
+- **aegis:** drop createRequire interop workaround in jwt-interop test ([492e3df](https://github.com/lindorm-io/monorepo/commit/492e3dff29971a3958b0628ce5465195f8a8cfe5))
+- widen @lindorm/\* peer ranges to unbounded >= ([f192b59](https://github.com/lindorm-io/monorepo/commit/f192b59107bf1f276d296837f40fa97765d9d2ba))
+
+### Features
+
+- migrate 20 packages from jest to vitest ([d8bfda8](https://github.com/lindorm-io/monorepo/commit/d8bfda8854dc1cb9537ba0b3e47ec4e4c7bded08))
+
 # [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.5.0...@lindorm/aegis@0.6.0) (2026-04-19)
 
 ### Features

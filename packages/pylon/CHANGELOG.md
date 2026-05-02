@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.9.0...@lindorm/pylon@0.10.0) (2026-05-02)
+
+### Bug Fixes
+
+- **esm:** switch ioredis imports to named Redis export ([88e7365](https://github.com/lindorm-io/monorepo/commit/88e7365e0a3e2780087449c34bdb47b886d37ef0))
+- **esm:** use default imports for picocolors and object-path ([4846e60](https://github.com/lindorm-io/monorepo/commit/4846e60cc2503eef8c86fb113004aad1667ff006))
+- **pylon:** replace jest global fail() with expect.fail() in tests ([e014fe4](https://github.com/lindorm-io/monorepo/commit/e014fe4f9b67e0843c798000db9e7b47349215fe))
+- **pylon:** typecheck cleanup ([95593d2](https://github.com/lindorm-io/monorepo/commit/95593d26e7271f5eb08a7e88c84539c8482c5b91))
+- widen @lindorm/\* peer ranges to unbounded >= ([f192b59](https://github.com/lindorm-io/monorepo/commit/f192b59107bf1f276d296837f40fa97765d9d2ba))
+
+### Features
+
+- **pylon:** add buildHookMeta helper for proteus + iris ([40fcf87](https://github.com/lindorm-io/monorepo/commit/40fcf877f1c9a312ca44ff9c284c4d6182eb7c5c))
+- **pylon:** add createAttachProteusSourceMiddleware and createAttachIrisSourceMiddleware ([58149da](https://github.com/lindorm-io/monorepo/commit/58149da58e49393585f5d0c4bbef16211512aacf))
+- **pylon:** add ctx.state.actor and top-level actor option ([ae97a04](https://github.com/lindorm-io/monorepo/commit/ae97a04b753e0eab93a7e5195294a8066aa1e0a4))
+- **pylon:** add http abort-signal middleware and ctx.signal ([24b1eda](https://github.com/lindorm-io/monorepo/commit/24b1eda965c782e1b76c17c50a499f9f4f6c680a))
+- **pylon:** forward ctx.signal to proteus.session for HTTP context ([9782ed2](https://github.com/lindorm-io/monorepo/commit/9782ed2255fc3871b1cb0da37c336ae3e87243f6))
+- **pylon:** migrate tests from jest to vitest ([72098bd](https://github.com/lindorm-io/monorepo/commit/72098bd8830ea2d3ae2f5ca4bb4ed24dfe2c2ff5))
+
+### Reverts
+
+- Revert "test(pylon): add pylon+proteus end-to-end abort flow" ([f33b484](https://github.com/lindorm-io/monorepo/commit/f33b4846b84d55441e52f584dcd7bed74a1d5075))
+
 # [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.8.0...@lindorm/pylon@0.9.0) (2026-04-19)
 
 ### Bug Fixes

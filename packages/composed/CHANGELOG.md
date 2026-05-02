@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/composed@0.1.5...@lindorm/composed@0.2.0) (2026-05-02)
+
+### Features
+
+- **composed:** surface docker stdout/stderr on failure and report timing ([f850381](https://github.com/lindorm-io/monorepo/commit/f850381fa8eb064b14cf973cb55e7f4974cfe57b))
+- migrate 20 packages from jest to vitest ([d8bfda8](https://github.com/lindorm-io/monorepo/commit/d8bfda8854dc1cb9537ba0b3e47ec4e4c7bded08))
+
 ## [0.1.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/composed@0.1.4...@lindorm/composed@0.1.5) (2026-04-19)
 
 **Note:** Version bump only for package @lindorm/composed

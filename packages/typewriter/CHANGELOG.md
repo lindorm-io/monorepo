@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/typewriter@0.1.7...@lindorm/typewriter@0.2.0) (2026-05-02)
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([3eab5ab](https://github.com/lindorm-io/monorepo/commit/3eab5ab9d89cd529553a2aded3c311d3f393ca0f))
+
 ## [0.1.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/typewriter@0.1.6...@lindorm/typewriter@0.1.7) (2026-04-19)
 
 **Note:** Version bump only for package @lindorm/typewriter

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.5.0...@lindorm/types@0.6.0) (2026-05-02)
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([3eab5ab](https://github.com/lindorm-io/monorepo/commit/3eab5ab9d89cd529553a2aded3c311d3f393ca0f))
+- **types:** add AbortReason union and WithSignal<T> mixin ([cd116dd](https://github.com/lindorm-io/monorepo/commit/cd116dd9cdd2f7c7faa2ae1b5b915ea7ed97ba12))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.4.1...@lindorm/types@0.5.0) (2026-04-15)
 
 ### Bug Fixes

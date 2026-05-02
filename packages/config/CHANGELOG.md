@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.2.10...@lindorm/config@0.3.0) (2026-05-02)
+
+### Features
+
+- **config:** resolve npm.package via explicit scope, not cwd ([279b633](https://github.com/lindorm-io/monorepo/commit/279b63307beb103a82f15aeb63e637f168ef9635))
+- migrate 20 packages from jest to vitest ([d8bfda8](https://github.com/lindorm-io/monorepo/commit/d8bfda8854dc1cb9537ba0b3e47ec4e4c7bded08))
+
 ## [0.2.10](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.2.9...@lindorm/config@0.2.10) (2026-04-19)
 
 **Note:** Version bump only for package @lindorm/config

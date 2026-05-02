@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.6.1...@lindorm/hermes@0.7.0) (2026-05-02)
+
+### Bug Fixes
+
+- **hermes:** typecheck cleanup ([e124a0a](https://github.com/lindorm-io/monorepo/commit/e124a0a30f97f8f225c767164e43dd5af4fd1b84))
+- widen @lindorm/\* peer ranges to unbounded >= ([f192b59](https://github.com/lindorm-io/monorepo/commit/f192b59107bf1f276d296837f40fa97765d9d2ba))
+
+### Features
+
+- **hermes:** migrate tests from jest to vitest ([5e0573d](https://github.com/lindorm-io/monorepo/commit/5e0573d59c31b394198183d36cfd0398d2dffc9b))
+
 ## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.6.0...@lindorm/hermes@0.6.1) (2026-04-19)
 
 ### Bug Fixes
