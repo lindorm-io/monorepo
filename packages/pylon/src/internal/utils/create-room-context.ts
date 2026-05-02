@@ -1,7 +1,6 @@
 import { expiresAt } from "@lindorm/date";
 import type { ILogger } from "@lindorm/logger";
-import type { IProteusSource } from "@lindorm/proteus";
-import { Presence } from "../../entities/index.js";
+import type { IProteusRepository, IProteusSource } from "@lindorm/proteus";
 import type { PylonRoomContextHttp, PylonRoomContextSocket } from "../../types/index.js";
 import type { PylonSocket } from "../../types/pylon-socket.js";
 import type { IoServer } from "../../types/socket.js";
@@ -21,15 +20,27 @@ type CreateHttpRoomContextOptions = {
   presence?: boolean;
 };
 
+const createPresenceRepoFactory = (
+  proteusSource: IProteusSource,
+  logger: ILogger,
+): (() => Promise<IProteusRepository<any>>) => {
+  let cached: IProteusRepository<any> | undefined;
+  return async () => {
+    if (!cached) {
+      const { Presence } = await import("../../entities/Presence.js");
+      cached = proteusSource.session({ logger }).repository(Presence);
+    }
+    return cached;
+  };
+};
+
 export const createHttpRoomContext = (
   options: CreateHttpRoomContextOptions,
 ): PylonRoomContextHttp => {
   const { io, logger, proteusSource, presence } = options;
 
-  const presenceRepo =
-    presence && proteusSource
-      ? proteusSource.session({ logger }).repository(Presence)
-      : null;
+  const getPresenceRepo =
+    presence && proteusSource ? createPresenceRepoFactory(proteusSource, logger) : null;
 
   return {
     members: async (room: string): Promise<Array<string>> => {
@@ -37,13 +48,14 @@ export const createHttpRoomContext = (
       return sockets.map((s) => s.id);
     },
 
-    ...(presenceRepo
+    ...(getPresenceRepo
       ? {
           presence: async (
             room: string,
           ): Promise<Array<{ userId: string; socketId: string; joinedAt: Date }>> => {
+            const presenceRepo = await getPresenceRepo();
             const records = await presenceRepo.find({ room });
-            return records.map((r) => ({
+            return records.map((r: any) => ({
               userId: r.userId,
               socketId: r.socketId,
               joinedAt: r.joinedAt,
@@ -59,10 +71,8 @@ export const createRoomContext = (
 ): PylonRoomContextSocket => {
   const { socket, io, logger, proteusSource, presence } = options;
 
-  const presenceRepo =
-    presence && proteusSource
-      ? proteusSource.session({ logger }).repository(Presence)
-      : null;
+  const getPresenceRepo =
+    presence && proteusSource ? createPresenceRepoFactory(proteusSource, logger) : null;
 
   const userId = (socket.data as any)?.tokens?.accessToken?.payload?.subject ?? socket.id;
 
@@ -71,7 +81,8 @@ export const createRoomContext = (
       await socket.join(room);
       logger.debug("Joined room", { room, socketId: socket.id });
 
-      if (presenceRepo) {
+      if (getPresenceRepo) {
+        const presenceRepo = await getPresenceRepo();
         const id = `${room}:${socket.id}`;
         await presenceRepo.findOneOrSave(
           { id },
@@ -91,7 +102,8 @@ export const createRoomContext = (
       await socket.leave(room);
       logger.debug("Left room", { room, socketId: socket.id });
 
-      if (presenceRepo) {
+      if (getPresenceRepo) {
+        const presenceRepo = await getPresenceRepo();
         const id = `${room}:${socket.id}`;
         const existing = await presenceRepo.findOne({ id });
         if (existing) {
@@ -105,13 +117,14 @@ export const createRoomContext = (
       return sockets.map((s) => s.id);
     },
 
-    ...(presenceRepo
+    ...(getPresenceRepo
       ? {
           presence: async (
             room: string,
           ): Promise<Array<{ userId: string; socketId: string; joinedAt: Date }>> => {
+            const presenceRepo = await getPresenceRepo();
             const records = await presenceRepo.find({ room });
-            return records.map((r) => ({
+            return records.map((r: any) => ({
               userId: r.userId,
               socketId: r.socketId,
               joinedAt: r.joinedAt,

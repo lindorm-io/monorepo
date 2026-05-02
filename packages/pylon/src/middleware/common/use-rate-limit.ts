@@ -7,11 +7,6 @@ import { fixedWindowStrategy } from "../../internal/utils/rate-limit/fixed-windo
 import type { RateLimitResult } from "../../internal/utils/rate-limit/fixed-window-strategy.js";
 import { slidingWindowStrategy } from "../../internal/utils/rate-limit/sliding-window-strategy.js";
 import { tokenBucketStrategy } from "../../internal/utils/rate-limit/token-bucket-strategy.js";
-import {
-  RateLimitBucket,
-  RateLimitFixed,
-  RateLimitSliding,
-} from "../../entities/index.js";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type RateLimitStrategy = "fixed" | "sliding" | "token-bucket";
@@ -42,17 +37,23 @@ const executeStrategy = async (
   max: number,
 ): Promise<RateLimitResult> => {
   switch (strategy) {
-    case "fixed":
+    case "fixed": {
+      const { RateLimitFixed } = await import("../../entities/RateLimitFixed.js");
       return fixedWindowStrategy(source.repository(RateLimitFixed), key, windowMs, max);
-    case "sliding":
+    }
+    case "sliding": {
+      const { RateLimitSliding } = await import("../../entities/RateLimitSliding.js");
       return slidingWindowStrategy(
         source.repository(RateLimitSliding),
         key,
         windowMs,
         max,
       );
-    case "token-bucket":
+    }
+    case "token-bucket": {
+      const { RateLimitBucket } = await import("../../entities/RateLimitBucket.js");
       return tokenBucketStrategy(source.repository(RateLimitBucket), key, windowMs, max);
+    }
   }
 };
 

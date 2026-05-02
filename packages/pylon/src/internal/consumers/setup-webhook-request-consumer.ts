@@ -1,8 +1,6 @@
 import type { IIrisSource } from "@lindorm/iris";
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
-import { WebhookSubscription } from "../../entities/index.js";
-import { WebhookDispatch, WebhookRequest } from "../../messages/index.js";
 
 export const WEBHOOK_REQUEST_QUEUE = "pylon.webhook.request.fanout";
 
@@ -11,6 +9,10 @@ export const setupWebhookRequestConsumer = async (
   proteus: IProteusSource,
   logger: ILogger,
 ): Promise<void> => {
+  const { WebhookRequest } = await import("../../messages/WebhookRequest.js");
+  const { WebhookDispatch } = await import("../../messages/WebhookDispatch.js");
+  const { WebhookSubscription } = await import("../../entities/WebhookSubscription.js");
+
   const wq = iris.workerQueue(WebhookRequest);
 
   await wq.consume(WEBHOOK_REQUEST_QUEUE, async (message) => {

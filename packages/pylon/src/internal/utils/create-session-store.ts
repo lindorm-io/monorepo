@@ -1,6 +1,5 @@
 import { AesKit } from "@lindorm/aes";
 import type { IProteusSession, IProteusSource } from "@lindorm/proteus";
-import { Session } from "../../entities/index.js";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type { IPylonSessionStore } from "../../interfaces/PylonSessionStore.js";
 import type { PylonCommonContext, PylonSessionOptions } from "../../types/index.js";
@@ -18,6 +17,16 @@ const getSource = (
     });
   }
   return ctx.proteus ?? null;
+};
+
+let cachedSession: typeof import("../../entities/Session.js").Session | undefined;
+const getSessionEntity = async (): Promise<
+  typeof import("../../entities/Session.js").Session
+> => {
+  if (!cachedSession) {
+    cachedSession = (await import("../../entities/Session.js")).Session;
+  }
+  return cachedSession;
 };
 
 export const createSessionStore = (
@@ -46,6 +55,7 @@ export const createSessionStore = (
         }
       }
 
+      const Session = await getSessionEntity();
       const result = await source.repository(Session).upsert(session);
       return result.id;
     },
@@ -54,6 +64,7 @@ export const createSessionStore = (
       const source = getSource(ctx, options.proteus);
       if (!source) return null;
 
+      const Session = await getSessionEntity();
       const session = await source.repository(Session).findOne({ id });
 
       if (!session) return null;
@@ -77,6 +88,7 @@ export const createSessionStore = (
       const source = getSource(ctx, options.proteus);
       if (!source) return;
 
+      const Session = await getSessionEntity();
       await source.repository(Session).delete({ id });
     },
 
@@ -84,6 +96,7 @@ export const createSessionStore = (
       const source = getSource(ctx, options.proteus);
       if (!source) return;
 
+      const Session = await getSessionEntity();
       await source.repository(Session).delete({ subject });
     },
   };

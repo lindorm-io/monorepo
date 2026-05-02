@@ -12,24 +12,6 @@ import type {
   PylonSocketContext,
   PylonTeardown,
 } from "../types/index.js";
-import {
-  DataAuditLog,
-  Kryptos,
-  Presence,
-  RateLimitBucket,
-  RateLimitFixed,
-  RateLimitSliding,
-  RequestAuditLog,
-  Session,
-  WebhookSubscription,
-} from "../entities/index.js";
-import {
-  DataAuditChange,
-  Job,
-  RequestAudit,
-  WebhookDispatch,
-  WebhookRequest,
-} from "../messages/index.js";
 import { setupAuditConsumer } from "../internal/consumers/setup-audit-consumer.js";
 import { setupDataAuditConsumer } from "../internal/consumers/setup-data-audit-consumer.js";
 import { setupDataAuditListeners } from "../internal/listeners/setup-data-audit-listeners.js";
@@ -114,7 +96,7 @@ export class Pylon<
 
     this.logger.verbose("Pylon setup");
 
-    this.loadSources();
+    await this.loadSources();
 
     await this.amphora.setup();
 
@@ -254,10 +236,11 @@ export class Pylon<
     }, 10000).unref();
   }
 
-  private loadSources(): void {
+  private async loadSources(): Promise<void> {
     if (this.options.session?.enabled) {
       const source = this.options.session.proteus ?? this.options.proteus;
       if (source) {
+        const { Session } = await import("../entities/Session.js");
         source.addEntities([Session]);
       }
     }
@@ -265,6 +248,7 @@ export class Pylon<
     if (this.options.kryptos?.enabled) {
       const source = this.options.kryptos.proteus ?? this.options.proteus;
       if (source) {
+        const { Kryptos } = await import("../entities/Kryptos.js");
         source.addEntities([Kryptos]);
       }
     }
@@ -272,6 +256,7 @@ export class Pylon<
     if (this.options.queue?.enabled) {
       const source = this.options.queue.iris ?? this.options.iris;
       if (source) {
+        const { Job } = await import("../messages/Job.js");
         source.addMessages([Job]);
       }
     }
@@ -279,11 +264,15 @@ export class Pylon<
     if (this.options.webhook?.enabled) {
       const proteusSource = this.options.webhook.proteus ?? this.options.proteus;
       if (proteusSource) {
+        const { WebhookSubscription } =
+          await import("../entities/WebhookSubscription.js");
         proteusSource.addEntities([WebhookSubscription]);
       }
 
       const irisSource = this.options.webhook.iris ?? this.options.iris;
       if (irisSource) {
+        const { WebhookRequest } = await import("../messages/WebhookRequest.js");
+        const { WebhookDispatch } = await import("../messages/WebhookDispatch.js");
         irisSource.addMessages([WebhookRequest, WebhookDispatch]);
       }
     }
@@ -291,6 +280,9 @@ export class Pylon<
     if (this.options.rateLimit?.enabled) {
       const source = this.options.rateLimit.proteus ?? this.options.proteus;
       if (source) {
+        const { RateLimitFixed } = await import("../entities/RateLimitFixed.js");
+        const { RateLimitSliding } = await import("../entities/RateLimitSliding.js");
+        const { RateLimitBucket } = await import("../entities/RateLimitBucket.js");
         source.addEntities([RateLimitFixed, RateLimitSliding, RateLimitBucket]);
       }
     }
@@ -298,6 +290,7 @@ export class Pylon<
     if (this.options.rooms?.presence) {
       const source = this.options.rooms.proteus ?? this.options.proteus;
       if (source) {
+        const { Presence } = await import("../entities/Presence.js");
         source.addEntities([Presence]);
       }
     }
@@ -305,18 +298,22 @@ export class Pylon<
     if (this.options.audit?.enabled) {
       const proteusSource = this.options.audit.proteus ?? this.options.proteus;
       if (proteusSource) {
+        const { RequestAuditLog } = await import("../entities/RequestAuditLog.js");
         proteusSource.addEntities([RequestAuditLog]);
 
         if (this.options.audit.entities?.length) {
+          const { DataAuditLog } = await import("../entities/DataAuditLog.js");
           proteusSource.addEntities([DataAuditLog]);
         }
       }
 
       const irisSource = this.options.audit.iris ?? this.options.iris;
       if (irisSource) {
+        const { RequestAudit } = await import("../messages/RequestAudit.js");
         irisSource.addMessages([RequestAudit]);
 
         if (this.options.audit.entities?.length) {
+          const { DataAuditChange } = await import("../messages/DataAuditChange.js");
           irisSource.addMessages([DataAuditChange]);
         }
       }
@@ -332,7 +329,7 @@ export class Pylon<
         await setupAuditConsumer(iris, proteus, this.logger);
 
         if (this.options.audit.entities?.length) {
-          setupDataAuditListeners(
+          await setupDataAuditListeners(
             proteus,
             iris,
             this.options.audit.entities,
