@@ -1,5 +1,5 @@
 import { ClientError } from "@lindorm/errors";
-import { WebhookSubscription } from "@lindorm/pylon";
+import { WebhookSubscription } from "@lindorm/pylon/entities";
 import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
 
