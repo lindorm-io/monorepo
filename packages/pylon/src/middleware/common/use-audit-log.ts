@@ -3,7 +3,6 @@ import type { IIrisSource } from "@lindorm/iris";
 import { AUDIT_SOURCE } from "../../internal/constants/symbols.js";
 import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
 import { resolveActor } from "../../internal/utils/resolve-actor.js";
-import { RequestAudit } from "../../messages/index.js";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type AuditConfig = {
@@ -44,6 +43,7 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
 
       const actor = resolveActor(ctx);
       const iris = config.iris.session({ logger: ctx.logger });
+      const { RequestAudit } = await import("../../messages/RequestAudit.js");
       const publisher = iris.publisher(RequestAudit);
 
       let endpoint: string;

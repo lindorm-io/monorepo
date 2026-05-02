@@ -1,8 +1,6 @@
 import type { IIrisSource } from "@lindorm/iris";
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
-import { RequestAuditLog } from "../../entities/index.js";
-import { RequestAudit } from "../../messages/index.js";
 
 export const AUDIT_QUEUE = "pylon.audit.request.persist";
 
@@ -11,6 +9,8 @@ export const setupAuditConsumer = async (
   proteus: IProteusSource,
   logger: ILogger,
 ): Promise<void> => {
+  const { RequestAudit } = await import("../../messages/RequestAudit.js");
+  const { RequestAuditLog } = await import("../../entities/RequestAuditLog.js");
   const wq = iris.workerQueue(RequestAudit);
 
   await wq.consume(AUDIT_QUEUE, async (message) => {

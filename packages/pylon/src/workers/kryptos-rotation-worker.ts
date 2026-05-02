@@ -9,7 +9,6 @@ import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
 import type { Constructor } from "@lindorm/types";
 import { type CreateLindormWorkerOptions, LindormWorker } from "@lindorm/worker";
-import { Kryptos } from "../entities/Kryptos.js";
 
 type KeyOption = Pick<
   KryptosAuto,
@@ -47,7 +46,8 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
     retry: options.retry,
     logger: options.logger,
     callback: async (ctx): Promise<void> => {
-      const repository = options.proteus.repository(options.target ?? Kryptos);
+      const target = options.target ?? (await import("../entities/Kryptos.js")).Kryptos;
+      const repository = options.proteus.repository(target);
       const existing = await repository.find();
 
       const rotation: ReadableTime = ms(ms(expiry) / 2);

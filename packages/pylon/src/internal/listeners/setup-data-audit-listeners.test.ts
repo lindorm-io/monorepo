@@ -45,11 +45,11 @@ describe("setupDataAuditListeners", () => {
     timestamp: new Date("2025-01-01T00:00:00Z"),
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
     Object.keys(listeners).forEach((k) => delete listeners[k]);
 
-    setupDataAuditListeners(proteus, iris, [AuditedEntity as any], logger);
+    await setupDataAuditListeners(proteus, iris, [AuditedEntity as any], logger);
   });
 
   test("should register listeners for all four event types", () => {
@@ -274,7 +274,7 @@ describe("setupDataAuditListeners", () => {
     expect(mockCreate).toHaveBeenCalled();
   });
 
-  test("should log error and not throw when create fails", () => {
+  test("should log error and not throw when create fails", async () => {
     mockWorkerQueue.mockReturnValueOnce({
       create: vi.fn().mockImplementation(() => {
         throw new Error("create failed");
@@ -284,7 +284,7 @@ describe("setupDataAuditListeners", () => {
 
     // Re-setup with the failing workerQueue
     Object.keys(listeners).forEach((k) => delete listeners[k]);
-    setupDataAuditListeners(proteus, iris, [AuditedEntity as any], logger);
+    await setupDataAuditListeners(proteus, iris, [AuditedEntity as any], logger);
 
     listeners["entity:after-insert"]({
       entity: { id: "ent-8" },

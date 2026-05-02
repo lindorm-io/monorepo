@@ -2,7 +2,6 @@ import type { IIrisSource } from "@lindorm/iris";
 import type { ILogger } from "@lindorm/logger";
 import type { IEntity, IProteusSource } from "@lindorm/proteus";
 import type { Constructor } from "@lindorm/types";
-import { DataAuditChange } from "../../messages/index.js";
 
 type AuditAction = "insert" | "update" | "destroy" | "soft_destroy";
 
@@ -36,9 +35,13 @@ const computeFieldDiffs = (
   return Object.keys(changes).length > 0 ? changes : null;
 };
 
+type DataAuditChangeCtor =
+  (typeof import("../../messages/DataAuditChange.js"))["DataAuditChange"];
+
 const publishAuditMessage = (
   iris: IIrisSource,
   logger: ILogger,
+  DataAuditChange: DataAuditChangeCtor,
   event: {
     entity: any;
     metadata: any;
@@ -72,12 +75,14 @@ const publishAuditMessage = (
   }
 };
 
-export const setupDataAuditListeners = (
+export const setupDataAuditListeners = async (
   proteus: IProteusSource,
   iris: IIrisSource,
   entities: Array<Constructor<IEntity>>,
   logger: ILogger,
-): void => {
+): Promise<void> => {
+  const { DataAuditChange } = await import("../../messages/DataAuditChange.js");
+
   const auditedTargets = new Set<Constructor<IEntity>>(entities);
 
   const isAudited = (metadata: any): boolean => {
@@ -86,7 +91,7 @@ export const setupDataAuditListeners = (
 
   proteus.on("entity:after-insert", (event) => {
     if (!isAudited(event.metadata)) return;
-    publishAuditMessage(iris, logger, event, "insert", null);
+    publishAuditMessage(iris, logger, DataAuditChange, event, "insert", null);
   });
 
   proteus.on("entity:after-update", (event) => {
@@ -98,17 +103,17 @@ export const setupDataAuditListeners = (
       changes = computeFieldDiffs(event.oldEntity, event.entity, event.metadata.fields);
     }
 
-    publishAuditMessage(iris, logger, event, "update", changes);
+    publishAuditMessage(iris, logger, DataAuditChange, event, "update", changes);
   });
 
   proteus.on("entity:after-destroy", (event) => {
     if (!isAudited(event.metadata)) return;
-    publishAuditMessage(iris, logger, event, "destroy", null);
+    publishAuditMessage(iris, logger, DataAuditChange, event, "destroy", null);
   });
 
   proteus.on("entity:after-soft-destroy", (event) => {
     if (!isAudited(event.metadata)) return;
-    publishAuditMessage(iris, logger, event, "soft_destroy", null);
+    publishAuditMessage(iris, logger, DataAuditChange, event, "soft_destroy", null);
   });
 
   logger.verbose("Data audit listeners registered", {
