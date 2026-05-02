@@ -835,7 +835,6 @@ export const pylon = new Pylon({
   webhook: { enabled: true },
   audit: {
     enabled: true,
-    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",
     // sanitise: (body) => body,
     // skip: (ctx) => false,
     // entities: [],
@@ -1895,7 +1894,6 @@ export const pylon = new Pylon({
   webhook: { enabled: true },
   audit: {
     enabled: true,
-    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",
     // sanitise: (body) => body,
     // skip: (ctx) => false,
     // entities: [],
@@ -1981,7 +1979,6 @@ export const pylon = new Pylon({
   webhook: { enabled: true },
   audit: {
     enabled: true,
-    actor: (ctx) => ctx.state.session?.subject ?? "anonymous",
     // sanitise: (body) => body,
     // skip: (ctx) => false,
     // entities: [],
