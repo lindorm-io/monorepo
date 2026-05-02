@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.6.5...@lindorm/aes@0.7.0) (2026-05-02)
+
+### Bug Fixes
+
+- **aes:** mark type-only imports in **tests** ([23ade84](https://github.com/lindorm-io/monorepo/commit/23ade8444b945be2eed225f1c8587b60a32d530a))
+- **aes:** use IKryptos interface for fixture helper return type ([42d1a28](https://github.com/lindorm-io/monorepo/commit/42d1a287d69977b6f2f39782910a5d45dffdbfdb))
+
+### Features
+
+- migrate 20 packages from jest to vitest ([d8bfda8](https://github.com/lindorm-io/monorepo/commit/d8bfda8854dc1cb9537ba0b3e47ec4e4c7bded08))
+
 ## [0.6.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.6.4...@lindorm/aes@0.6.5) (2026-04-19)
 
 **Note:** Version bump only for package @lindorm/aes

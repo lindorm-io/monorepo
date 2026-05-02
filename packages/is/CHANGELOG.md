@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.16...@lindorm/is@0.2.0) (2026-05-02)
+
+### Bug Fixes
+
+- **is:** rename Function alias to avoid shadowing the global constructor ([064854b](https://github.com/lindorm-io/monorepo/commit/064854bde2c336a4f3662861d9aa08b81d5f67ec))
+- **is:** use type-only imports from @lindorm/types ([c60e92f](https://github.com/lindorm-io/monorepo/commit/c60e92f5566828bd0d2c130734d92e28070f6250))
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([3eab5ab](https://github.com/lindorm-io/monorepo/commit/3eab5ab9d89cd529553a2aded3c311d3f393ca0f))
+
 ## [0.1.16](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.15...@lindorm/is@0.1.16) (2026-04-19)
 
 **Note:** Version bump only for package @lindorm/is

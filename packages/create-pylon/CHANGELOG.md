@@ -3,6 +3,25 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.1.0...@lindorm/create-pylon@0.2.0) (2026-05-02)
+
+### Bug Fixes
+
+- **create-pylon:** mark parseAsync floating promise with void ([1328022](https://github.com/lindorm-io/monorepo/commit/13280220af688d373afd390ad203ec70ed2ed657))
+- **create-pylon:** use public attach-source middleware in generated scaffolder output ([bf0ec2d](https://github.com/lindorm-io/monorepo/commit/bf0ec2da773c469049f347126ce765ee03f2f330))
+
+### Features
+
+- **create-pylon:** mount non-primary Proteus sources on ctx.<driver> ([6c169a7](https://github.com/lindorm-io/monorepo/commit/6c169a7af3620f6039ba64073281a3044fb43974))
+- **create-pylon:** multi-driver proteus selection + per-driver sources ([9679366](https://github.com/lindorm-io/monorepo/commit/9679366d6a50bc964a8e7e6eb077bff98ac72b74))
+- **create-pylon:** narrow nodeEnv to the Environment union and wire to pylon ([29a1f21](https://github.com/lindorm-io/monorepo/commit/29a1f21cd83e92f46e612ee70a6e13bfb0e2f513))
+- **create-pylon:** pass scope: import.meta.url to configuration() ([f5e6ee9](https://github.com/lindorm-io/monorepo/commit/f5e6ee97e4c518536e87bceecf8bcf955de0f62d))
+- **create-pylon:** per-env YAML config examples with logger.level ([5ee37d2](https://github.com/lindorm-io/monorepo/commit/5ee37d2b4fbc6c6e18d2da28b692eef22782ccf8))
+- **create-pylon:** prefer fast stores for session, mirror rate-limit pattern ([7c0ec08](https://github.com/lindorm-io/monorepo/commit/7c0ec08df91dd8b770e07ce0488512e460984ccf))
+- **create-pylon:** scaffold ESM projects on vitest ([ebdd771](https://github.com/lindorm-io/monorepo/commit/ebdd771102e60e96c33129eabbb6b3c101ae385d))
+- **create-pylon:** wire package name and version into pylon options ([d99ceaa](https://github.com/lindorm-io/monorepo/commit/d99ceaa7d14ba1d2c147ae4956eeb71105edcbc3))
+- migrate 20 packages from jest to vitest ([d8bfda8](https://github.com/lindorm-io/monorepo/commit/d8bfda8854dc1cb9537ba0b3e47ec4e4c7bded08))
+
 # 0.1.0 (2026-04-19)
 
 ### Bug Fixes

@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.3.0...@lindorm/iris@0.4.0) (2026-05-02)
+
+### Bug Fixes
+
+- **esm:** switch ioredis imports to named Redis export ([88e7365](https://github.com/lindorm-io/monorepo/commit/88e7365e0a3e2780087449c34bdb47b886d37ef0))
+- **iris:** polyfill Symbol.metadata at package entry ([a6be1d3](https://github.com/lindorm-io/monorepo/commit/a6be1d3b95114dab515acef6e4b56cfb7c6c6ac7))
+- **iris:** typecheck cleanup ([c4e6c04](https://github.com/lindorm-io/monorepo/commit/c4e6c04ee6a8139203e289a9b3e262a151ae5f78))
+- **iris:** update ioredis mock for ESM named Redis export ([972fafc](https://github.com/lindorm-io/monorepo/commit/972fafcdca71fcef60ae9c41637653dc316cfb6e))
+- **iris:** use positional filter in test:integration script ([444b87e](https://github.com/lindorm-io/monorepo/commit/444b87e2067be32dfe7ef8d97169cd9aa1073d37))
+- widen @lindorm/\* peer ranges to unbounded >= ([f192b59](https://github.com/lindorm-io/monorepo/commit/f192b59107bf1f276d296837f40fa97765d9d2ba))
+
+### Features
+
+- **iris:** migrate tests from jest to vitest ([12518ab](https://github.com/lindorm-io/monorepo/commit/12518ab51f234a485d83039470a261d4f6179b29))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.2.0...@lindorm/iris@0.3.0) (2026-04-19)
 
 ### Bug Fixes

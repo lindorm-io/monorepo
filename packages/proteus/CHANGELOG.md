@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.5.1...@lindorm/proteus@0.6.0) (2026-05-02)
+
+### Bug Fixes
+
+- **esm:** switch ioredis imports to named Redis export ([88e7365](https://github.com/lindorm-io/monorepo/commit/88e7365e0a3e2780087449c34bdb47b886d37ef0))
+- **proteus:** check mysql signal.aborted after successful tx-scoped query ([2337f26](https://github.com/lindorm-io/monorepo/commit/2337f26d04f3da7dbe182679540eeb66bc61d659))
+- **proteus:** polyfill Symbol.metadata at package entry ([b486ba7](https://github.com/lindorm-io/monorepo/commit/b486ba7df2c9b8e875370cd744b9026f34b4fbd9))
+- **proteus:** restore stripped non-null assertions in executeQueryIncludes ([1c9157c](https://github.com/lindorm-io/monorepo/commit/1c9157cf74168cd02b2a406d561e3299d3938936))
+- **proteus:** typecheck cleanup ([61b67bd](https://github.com/lindorm-io/monorepo/commit/61b67bdf4da8c8e765d60373f9b04267040368d1))
+- **proteus:** update ioredis mock for ESM named Redis export ([d43bb37](https://github.com/lindorm-io/monorepo/commit/d43bb37c1ef1a5d571ee3981a7ba5ea70c5f1a02))
+- **proteus:** use positional filter in test:integration script ([13008ae](https://github.com/lindorm-io/monorepo/commit/13008ae09d2c243125eb45b55c8b5b8cbb9a03d2))
+- widen @lindorm/\* peer ranges to unbounded >= ([f192b59](https://github.com/lindorm-io/monorepo/commit/f192b59107bf1f276d296837f40fa97765d9d2ba))
+
+### Features
+
+- **proteus:** add client<T>() escape hatch to ITransactionContext ([0db19ce](https://github.com/lindorm-io/monorepo/commit/0db19cee608d7099aa2bdc73e571bd9ee32ff1e6))
+- **proteus:** add hasEntity introspection to repository provider ([0a2a52c](https://github.com/lindorm-io/monorepo/commit/0a2a52c3174cb035dd494264460580736f58e041))
+- **proteus:** expose snapshot opt-out on FindOptions and PaginateOptions ([9866ab7](https://github.com/lindorm-io/monorepo/commit/9866ab7abe5aec103b9b906caa073f4de9a3468f))
+- **proteus:** extend generateSource with configImport and cache options ([cbc7387](https://github.com/lindorm-io/monorepo/commit/cbc7387ccde1d1775048672ec525dbcb6c13f34f))
+- **proteus:** forward session signal to mongo operations ([143d78e](https://github.com/lindorm-io/monorepo/commit/143d78e244d1b36a000e61f71eb8259efdeef53d))
+- **proteus:** migrate tests from jest to vitest ([74801a6](https://github.com/lindorm-io/monorepo/commit/74801a636ce1936a920032044a52ef64c1aee84a))
+- **proteus:** pre-flight + race-based redis session signal handling ([94d15cf](https://github.com/lindorm-io/monorepo/commit/94d15cf650798a6dd13296218878f7fe05bf5c3c))
+- **proteus:** store session signal on memory driver ([2644ba7](https://github.com/lindorm-io/monorepo/commit/2644ba713b1ba1d8cb785364f5cd9b94083147c3))
+- **proteus:** store session signal on sqlite driver ([8cfa590](https://github.com/lindorm-io/monorepo/commit/8cfa5907fd2f8e3cc71ab535522f7ba8e63b506b))
+- **proteus:** thread AbortSignal through session and query options ([01e7ff8](https://github.com/lindorm-io/monorepo/commit/01e7ff8f8fe9d3b3295a865472fa22b1ddc10941))
+- **proteus:** wire mysql session signal cancellation via KILL QUERY ([896cac5](https://github.com/lindorm-io/monorepo/commit/896cac5c5d9d3d36dc98ce2697c206dc8c36b8e7))
+- **proteus:** wire Tier 3 pg query cancellation via pg_cancel_backend ([b925de8](https://github.com/lindorm-io/monorepo/commit/b925de8176b2b44b2f77fc9179bccfaf37233f8b))
+- **test:** shared vitest base config + remove proteus jest config ([964ed32](https://github.com/lindorm-io/monorepo/commit/964ed32c3ebc3ecf153af734ff96222c1e5f9141))
+
 ## [0.5.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.5.0...@lindorm/proteus@0.5.1) (2026-04-19)
 
 ### Bug Fixes

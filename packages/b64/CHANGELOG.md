@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.10...@lindorm/b64@0.2.0) (2026-05-02)
+
+### Features
+
+- **b64:** switch internals to Uint8Array.fromBase64/toBase64 and add toBytes ([d8bb48a](https://github.com/lindorm-io/monorepo/commit/d8bb48af255ccc4726a305c33a76b8a2c754b011))
+- migrate 13 utility packages + drop jest configs from types/enums ([3eab5ab](https://github.com/lindorm-io/monorepo/commit/3eab5ab9d89cd529553a2aded3c311d3f393ca0f))
+
 ## [0.1.10](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.9...@lindorm/b64@0.1.10) (2026-04-19)
 
 **Note:** Version bump only for package @lindorm/b64

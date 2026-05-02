@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/aegis",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -41,20 +41,20 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/aes": "^0.6.5",
-    "@lindorm/akp": "^0.1.0",
-    "@lindorm/b64": "^0.1.10",
-    "@lindorm/date": "^0.4.4",
-    "@lindorm/ec": "^0.2.11",
-    "@lindorm/errors": "^0.1.18",
-    "@lindorm/is": "^0.1.16",
-    "@lindorm/kryptos": "^0.7.0",
-    "@lindorm/oct": "^0.2.11",
-    "@lindorm/okp": "^0.2.11",
-    "@lindorm/rsa": "^0.2.11",
-    "@lindorm/sha": "^0.4.1",
-    "@lindorm/types": "^0.5.0",
-    "@lindorm/utils": "^0.7.1",
+    "@lindorm/aes": "^0.7.0",
+    "@lindorm/akp": "^0.2.0",
+    "@lindorm/b64": "^0.2.0",
+    "@lindorm/date": "^0.5.0",
+    "@lindorm/ec": "^0.3.0",
+    "@lindorm/errors": "^0.2.0",
+    "@lindorm/is": "^0.2.0",
+    "@lindorm/kryptos": "^0.8.0",
+    "@lindorm/oct": "^0.3.0",
+    "@lindorm/okp": "^0.3.0",
+    "@lindorm/rsa": "^0.3.0",
+    "@lindorm/sha": "^0.5.0",
+    "@lindorm/types": "^0.6.0",
+    "@lindorm/utils": "^0.8.0",
     "cbor": "^10.0.12"
   },
   "peerDependencies": {
@@ -63,8 +63,8 @@
   },
   "devDependencies": {
     "@auth0/cose": "^1.0.2",
-    "@lindorm/amphora": "^0.4.1",
-    "@lindorm/logger": "^0.5.4",
+    "@lindorm/amphora": "^0.5.0",
+    "@lindorm/logger": "^0.6.0",
     "@types/jsonwebtoken": "^9.0.10",
     "jose": "^6.2.1",
     "jsonwebtoken": "^9.0.3"

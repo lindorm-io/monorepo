@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/pkce",
-  "version": "0.1.14",
+  "version": "0.2.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -33,8 +33,8 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/enums": "^0.1.8",
-    "@lindorm/errors": "^0.1.18",
-    "@lindorm/types": "^0.5.0"
+    "@lindorm/enums": "^0.2.0",
+    "@lindorm/errors": "^0.2.0",
+    "@lindorm/types": "^0.6.0"
   }
 }

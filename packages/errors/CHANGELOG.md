@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.1.18...@lindorm/errors@0.2.0) (2026-05-02)
+
+### Features
+
+- **errors:** add AbortError extending LindormError ([365185d](https://github.com/lindorm-io/monorepo/commit/365185deb90f52163caaae767cd76d7d8bb7e7d2))
+- **errors:** add ErrorRegistry and HTTP-status error subclasses ([0bf09f6](https://github.com/lindorm-io/monorepo/commit/0bf09f6c22cf5532a6256263879af7d514301cac))
+- migrate 13 utility packages + drop jest configs from types/enums ([3eab5ab](https://github.com/lindorm-io/monorepo/commit/3eab5ab9d89cd529553a2aded3c311d3f393ca0f))
+
 ## [0.1.18](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.1.17...@lindorm/errors@0.1.18) (2026-04-19)
 
 **Note:** Version bump only for package @lindorm/errors
