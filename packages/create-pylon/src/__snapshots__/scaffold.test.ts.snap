@@ -158,7 +158,8 @@ export const pingHandler: ServerSocketHandler<typeof pingSchema> = async (ctx) =
   });
 };
 ",
-  "src/features/webhooks/create-webhook-handler.ts": "import { WebhookAuth, WebhookMethod, WebhookSubscription } from "@lindorm/pylon";
+  "src/features/webhooks/create-webhook-handler.ts": "import { WebhookAuth, WebhookMethod } from "@lindorm/pylon";
+import { WebhookSubscription } from "@lindorm/pylon/entities";
 import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
 
@@ -199,7 +200,7 @@ export const createWebhookHandler: ServerHandler<typeof createWebhookSchema> = a
 };
 ",
   "src/features/webhooks/delete-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
-import { WebhookSubscription } from "@lindorm/pylon";
+import { WebhookSubscription } from "@lindorm/pylon/entities";
 import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
 
@@ -225,7 +226,7 @@ export const deleteWebhookHandler: ServerHandler<typeof deleteWebhookSchema> = a
 };
 ",
   "src/features/webhooks/get-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
-import { WebhookSubscription } from "@lindorm/pylon";
+import { WebhookSubscription } from "@lindorm/pylon/entities";
 import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
 
@@ -246,7 +247,7 @@ export const getWebhookHandler: ServerHandler<typeof getWebhookSchema> = async (
   return { body: subscription };
 };
 ",
-  "src/features/webhooks/list-webhooks-handler.ts": "import { WebhookSubscription } from "@lindorm/pylon";
+  "src/features/webhooks/list-webhooks-handler.ts": "import { WebhookSubscription } from "@lindorm/pylon/entities";
 import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
 
@@ -273,7 +274,8 @@ export const listWebhooksHandler: ServerHandler<typeof listWebhooksSchema> = asy
 };
 ",
   "src/features/webhooks/update-webhook-handler.ts": "import { ClientError } from "@lindorm/errors";
-import { WebhookMethod, WebhookSubscription } from "@lindorm/pylon";
+import { WebhookMethod } from "@lindorm/pylon";
+import { WebhookSubscription } from "@lindorm/pylon/entities";
 import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
 

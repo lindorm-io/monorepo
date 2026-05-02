@@ -1,4 +1,5 @@
-import { WebhookAuth, WebhookMethod, WebhookSubscription } from "@lindorm/pylon";
+import { WebhookAuth, WebhookMethod } from "@lindorm/pylon";
+import { WebhookSubscription } from "@lindorm/pylon/entities";
 import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
 
