@@ -21,6 +21,14 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./entities": {
+      "types": "./dist/entities/index.d.ts",
+      "default": "./dist/entities/index.js"
+    },
+    "./messages": {
+      "types": "./dist/messages/index.d.ts",
+      "default": "./dist/messages/index.js"
+    },
     "./mocks": {
       "types": "./dist/mocks/index.d.ts",
       "default": "./dist/mocks/index.js"
