@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.2.1...@lindorm/create-pylon@0.2.2) (2026-05-02)
+
+### Bug Fixes
+
+- **create-pylon:** resolve symlinked argv[1] in CLI entry-point guard ([cf7cbb9](https://github.com/lindorm-io/monorepo/commit/cf7cbb9a31936c2c9100e6e99714f821aae40bbd))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.2.0...@lindorm/create-pylon@0.2.1) (2026-05-02)
 
 ### Bug Fixes
