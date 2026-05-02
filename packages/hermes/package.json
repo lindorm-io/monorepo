@@ -62,9 +62,9 @@
     "zod": "^4.3.6"
   },
   "peerDependencies": {
-    "@lindorm/iris": "^0.2.0",
-    "@lindorm/logger": "^0.5.4",
-    "@lindorm/proteus": "^0.5.0"
+    "@lindorm/iris": ">=0.2.0",
+    "@lindorm/logger": ">=0.5.0",
+    "@lindorm/proteus": ">=0.5.0"
   },
   "devDependencies": {
     "@lindorm/iris": "^0.3.0",
