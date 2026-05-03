@@ -99,7 +99,7 @@ const buildOptions = (answers: Answers): string => {
     `  amphora,`,
     `  name: config.npm.package.name,`,
     `  version: config.npm.package.version,`,
-    `  environment: config.node.env,`,
+    `  environment: config.nodeEnv,`,
     `  port: config.server.port,`,
   ];
   const drivers = answers.proteusDrivers;

@@ -39,56 +39,56 @@ exports[`scaffold > buildDependencyList > snapshot: sqlite-kafka 1`] = `
 exports[`scaffold > buildEnvLines > snapshot: mongo-nats 1`] = `
 [
   "NODE_ENV=development",
-  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
-  "MONGO_URL=mongodb://localhost:27017/app",
-  "NATS_SERVERS=localhost:4222",
+  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
+  "MONGO__URL=mongodb://localhost:27017/app",
+  "NATS__SERVERS=localhost:4222",
 ]
 `;
 
 exports[`scaffold > buildEnvLines > snapshot: mysql-rabbit 1`] = `
 [
   "NODE_ENV=development",
-  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
-  "MYSQL_URL=mysql://localhost:3306/app",
-  "RABBIT_URL=amqp://localhost:5672",
+  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
+  "MYSQL__URL=mysql://localhost:3306/app",
+  "RABBIT__URL=amqp://localhost:5672",
 ]
 `;
 
 exports[`scaffold > buildEnvLines > snapshot: none-none + auth 1`] = `
 [
   "NODE_ENV=development",
-  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
-  "AUTH_CLIENT_ID=",
-  "AUTH_CLIENT_SECRET=",
-  "AUTH_ISSUER=https://auth.example.com",
+  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
+  "AUTH__CLIENT_ID=",
+  "AUTH__CLIENT_SECRET=",
+  "AUTH__ISSUER=https://auth.example.com",
 ]
 `;
 
 exports[`scaffold > buildEnvLines > snapshot: none-none 1`] = `
 [
   "NODE_ENV=development",
-  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
+  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
 ]
 `;
 
 exports[`scaffold > buildEnvLines > snapshot: postgres-rabbit + auth 1`] = `
 [
   "NODE_ENV=development",
-  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
-  "POSTGRES_URL=postgresql://localhost:5432/app",
-  "RABBIT_URL=amqp://localhost:5672",
-  "AUTH_CLIENT_ID=",
-  "AUTH_CLIENT_SECRET=",
-  "AUTH_ISSUER=https://auth.example.com",
+  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
+  "POSTGRES__URL=postgresql://localhost:5432/app",
+  "RABBIT__URL=amqp://localhost:5672",
+  "AUTH__CLIENT_ID=",
+  "AUTH__CLIENT_SECRET=",
+  "AUTH__ISSUER=https://auth.example.com",
 ]
 `;
 
 exports[`scaffold > buildEnvLines > snapshot: sqlite-redis 1`] = `
 [
   "NODE_ENV=development",
-  "PYLON_KEK=kryptos:test-fixed-kek-placeholder",
-  "SQLITE_PATH=./data/app.db",
-  "REDIS_URL=redis://localhost:6379",
+  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
+  "SQLITE__PATH=./data/app.db",
+  "REDIS__URL=redis://localhost:6379",
 ]
 `;
 
@@ -106,12 +106,6 @@ coverage/
 
 .DS_Store
 *.log
-",
-  "config/default.yml": "server:
-  port: 3000
-
-logger:
-  level: info
 ",
   "config/development.yml": "# Overrides applied when NODE_ENV=development.
 # Merged on top of default.yml — only list the keys you want to change.
@@ -349,7 +343,7 @@ import { config } from "../pylon/config.js";
 
 export const logger = new Logger({
   level: config.logger.level,
-  readable: config.node.env !== "production",
+  readable: config.nodeEnv !== "production",
 });
 ",
   "src/middleware/http-example.ts": "import type { ServerHttpMiddleware } from "../types/context.js";
@@ -523,12 +517,6 @@ coverage/
 .DS_Store
 *.log
 ",
-  "config/default.yml": "server:
-  port: 3000
-
-logger:
-  level: info
-",
   "config/development.yml": "# Overrides applied when NODE_ENV=development.
 # Merged on top of default.yml — only list the keys you want to change.
 logger:
@@ -566,7 +554,7 @@ import { config } from "../pylon/config.js";
 
 export const logger = new Logger({
   level: config.logger.level,
-  readable: config.node.env !== "production",
+  readable: config.nodeEnv !== "production",
 });
 ",
   "src/middleware/http-example.ts": "import type { ServerHttpMiddleware } from "../types/context.js";
@@ -664,12 +652,6 @@ coverage/
 .DS_Store
 *.log
 ",
-  "config/default.yml": "server:
-  port: 3000
-
-logger:
-  level: info
-",
   "config/development.yml": "# Overrides applied when NODE_ENV=development.
 # Merged on top of default.yml — only list the keys you want to change.
 logger:
@@ -695,7 +677,7 @@ import { config } from "../pylon/config.js";
 
 export const logger = new Logger({
   level: config.logger.level,
-  readable: config.node.env !== "production",
+  readable: config.nodeEnv !== "production",
 });
 ",
   "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
@@ -759,13 +741,13 @@ export default defineConfig({
 
 exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers > .env 1`] = `
 "NODE_ENV=development
-PYLON_KEK=kryptos:test-fixed-kek-placeholder
-POSTGRES_URL=postgresql://localhost:5432/app
-REDIS_URL=redis://localhost:6379
-RABBIT_URL=amqp://localhost:5672
-AUTH_CLIENT_ID=
-AUTH_CLIENT_SECRET=
-AUTH_ISSUER=https://auth.example.com
+PYLON__KEK=kryptos:test-fixed-kek-placeholder
+POSTGRES__URL=postgresql://localhost:5432/app
+REDIS__URL=redis://localhost:6379
+RABBIT__URL=amqp://localhost:5672
+AUTH__CLIENT_ID=
+AUTH__CLIENT_SECRET=
+AUTH__ISSUER=https://auth.example.com
 "
 `;
 
@@ -773,19 +755,28 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit +
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   postgres: z.object({
     url: z.string(),
   }),
@@ -820,7 +811,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [...attachSourcesMiddlewares],
@@ -935,10 +926,10 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit +
 
 exports[`scaffold > scaffold orchestration > auth-only combo (auto-forces session) > .env 1`] = `
 "NODE_ENV=development
-PYLON_KEK=kryptos:test-fixed-kek-placeholder
-AUTH_CLIENT_ID=
-AUTH_CLIENT_SECRET=
-AUTH_ISSUER=https://auth.example.com
+PYLON__KEK=kryptos:test-fixed-kek-placeholder
+AUTH__CLIENT_ID=
+AUTH__CLIENT_SECRET=
+AUTH__ISSUER=https://auth.example.com
 "
 `;
 
@@ -946,19 +937,28 @@ exports[`scaffold > scaffold orchestration > auth-only combo (auto-forces sessio
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   auth: z.object({
     clientId: z.string(),
     clientSecret: z.string(),
@@ -980,7 +980,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   session: {
@@ -1086,7 +1086,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [...attachSourcesMiddlewares],
@@ -1123,7 +1123,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [...attachSourcesMiddlewares],
@@ -1221,19 +1221,28 @@ exports[`scaffold > writeConfigFile > snapshot: auth only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   auth: z.object({
     clientId: z.string(),
     clientSecret: z.string(),
@@ -1247,19 +1256,28 @@ exports[`scaffold > writeConfigFile > snapshot: kafka only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   kafka: z.object({
     brokers: z.string().transform((s) => s.split(",")),
   }),
@@ -1271,19 +1289,28 @@ exports[`scaffold > writeConfigFile > snapshot: memory proteus only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
 }, { scope: import.meta.url });
 "
 `;
@@ -1292,19 +1319,28 @@ exports[`scaffold > writeConfigFile > snapshot: mongo + nats 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   mongo: z.object({
     url: z.string(),
   }),
@@ -1319,19 +1355,28 @@ exports[`scaffold > writeConfigFile > snapshot: nats only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   nats: z.object({
     servers: z.string(),
   }),
@@ -1343,19 +1388,28 @@ exports[`scaffold > writeConfigFile > snapshot: no drivers 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
 }, { scope: import.meta.url });
 "
 `;
@@ -1364,19 +1418,28 @@ exports[`scaffold > writeConfigFile > snapshot: postgres + auth 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   postgres: z.object({
     url: z.string(),
   }),
@@ -1393,19 +1456,28 @@ exports[`scaffold > writeConfigFile > snapshot: postgres + kafka 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   postgres: z.object({
     url: z.string(),
   }),
@@ -1420,19 +1492,28 @@ exports[`scaffold > writeConfigFile > snapshot: postgres only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   postgres: z.object({
     url: z.string(),
   }),
@@ -1444,19 +1525,28 @@ exports[`scaffold > writeConfigFile > snapshot: rabbit only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   rabbit: z.object({
     url: z.string(),
   }),
@@ -1468,19 +1558,28 @@ exports[`scaffold > writeConfigFile > snapshot: redis only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   redis: z.object({
     url: z.string(),
   }),
@@ -1492,23 +1591,268 @@ exports[`scaffold > writeConfigFile > snapshot: sqlite only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
 export const config = configuration({
-  node: z.object({
-    env: z
-      .enum(["production", "staging", "development", "test", "unknown"])
-      .default("development"),
-  }),
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
-  logger: z.object({
-    level: z
-      .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-      .default("info"),
-  }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+    })
+    .default({}),
   sqlite: z.object({
     path: z.string(),
   }),
 }, { scope: import.meta.url });
+"
+`;
+
+exports[`scaffold > writeConfigYaml > snapshot: nats only 1`] = `
+"# Default configuration loaded by @lindorm/config.
+#
+# Resolution order (later wins):
+#   1. config/default.yml  (this file)
+#   2. config/{NODE_ENV}.yml
+#   3. NODE_CONFIG          (a JSON blob in one env var)
+#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
+#                           (CONSTANT_CASE per segment, joined by __)
+#
+# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
+# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
+# SM, etc.) in production. Don't commit them here.
+#
+# Env-var override reference for this service:
+#   nodeEnv       NODE_ENV
+#   pylon.kek     PYLON__KEK
+#   server.port   SERVER__PORT
+#   logger.level  LOGGER__LEVEL
+#   nats.servers  NATS__SERVERS
+
+server:
+  port: 3000
+
+logger:
+  level: info
+"
+`;
+
+exports[`scaffold > writeConfigYaml > snapshot: no drivers 1`] = `
+"# Default configuration loaded by @lindorm/config.
+#
+# Resolution order (later wins):
+#   1. config/default.yml  (this file)
+#   2. config/{NODE_ENV}.yml
+#   3. NODE_CONFIG          (a JSON blob in one env var)
+#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
+#                           (CONSTANT_CASE per segment, joined by __)
+#
+# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
+# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
+# SM, etc.) in production. Don't commit them here.
+#
+# Env-var override reference for this service:
+#   nodeEnv       NODE_ENV
+#   pylon.kek     PYLON__KEK
+#   server.port   SERVER__PORT
+#   logger.level  LOGGER__LEVEL
+
+server:
+  port: 3000
+
+logger:
+  level: info
+"
+`;
+
+exports[`scaffold > writeConfigYaml > snapshot: postgres + auth 1`] = `
+"# Default configuration loaded by @lindorm/config.
+#
+# Resolution order (later wins):
+#   1. config/default.yml  (this file)
+#   2. config/{NODE_ENV}.yml
+#   3. NODE_CONFIG          (a JSON blob in one env var)
+#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
+#                           (CONSTANT_CASE per segment, joined by __)
+#
+# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
+# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
+# SM, etc.) in production. Don't commit them here.
+#
+# Env-var override reference for this service:
+#   nodeEnv            NODE_ENV
+#   pylon.kek          PYLON__KEK
+#   server.port        SERVER__PORT
+#   logger.level       LOGGER__LEVEL
+#   postgres.url       POSTGRES__URL
+#   auth.clientId      AUTH__CLIENT_ID
+#   auth.clientSecret  AUTH__CLIENT_SECRET
+#   auth.issuer        AUTH__ISSUER
+
+server:
+  port: 3000
+
+logger:
+  level: info
+"
+`;
+
+exports[`scaffold > writeConfigYaml > snapshot: postgres + kafka 1`] = `
+"# Default configuration loaded by @lindorm/config.
+#
+# Resolution order (later wins):
+#   1. config/default.yml  (this file)
+#   2. config/{NODE_ENV}.yml
+#   3. NODE_CONFIG          (a JSON blob in one env var)
+#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
+#                           (CONSTANT_CASE per segment, joined by __)
+#
+# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
+# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
+# SM, etc.) in production. Don't commit them here.
+#
+# Env-var override reference for this service:
+#   nodeEnv        NODE_ENV
+#   pylon.kek      PYLON__KEK
+#   server.port    SERVER__PORT
+#   logger.level   LOGGER__LEVEL
+#   postgres.url   POSTGRES__URL
+#   kafka.brokers  KAFKA__BROKERS
+
+server:
+  port: 3000
+
+logger:
+  level: info
+"
+`;
+
+exports[`scaffold > writeConfigYaml > snapshot: postgres + redis 1`] = `
+"# Default configuration loaded by @lindorm/config.
+#
+# Resolution order (later wins):
+#   1. config/default.yml  (this file)
+#   2. config/{NODE_ENV}.yml
+#   3. NODE_CONFIG          (a JSON blob in one env var)
+#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
+#                           (CONSTANT_CASE per segment, joined by __)
+#
+# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
+# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
+# SM, etc.) in production. Don't commit them here.
+#
+# Env-var override reference for this service:
+#   nodeEnv       NODE_ENV
+#   pylon.kek     PYLON__KEK
+#   server.port   SERVER__PORT
+#   logger.level  LOGGER__LEVEL
+#   postgres.url  POSTGRES__URL
+#   redis.url     REDIS__URL
+
+server:
+  port: 3000
+
+logger:
+  level: info
+"
+`;
+
+exports[`scaffold > writeConfigYaml > snapshot: postgres only 1`] = `
+"# Default configuration loaded by @lindorm/config.
+#
+# Resolution order (later wins):
+#   1. config/default.yml  (this file)
+#   2. config/{NODE_ENV}.yml
+#   3. NODE_CONFIG          (a JSON blob in one env var)
+#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
+#                           (CONSTANT_CASE per segment, joined by __)
+#
+# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
+# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
+# SM, etc.) in production. Don't commit them here.
+#
+# Env-var override reference for this service:
+#   nodeEnv       NODE_ENV
+#   pylon.kek     PYLON__KEK
+#   server.port   SERVER__PORT
+#   logger.level  LOGGER__LEVEL
+#   postgres.url  POSTGRES__URL
+
+server:
+  port: 3000
+
+logger:
+  level: info
+"
+`;
+
+exports[`scaffold > writeConfigYaml > snapshot: redis proteus + redis iris (deduped) 1`] = `
+"# Default configuration loaded by @lindorm/config.
+#
+# Resolution order (later wins):
+#   1. config/default.yml  (this file)
+#   2. config/{NODE_ENV}.yml
+#   3. NODE_CONFIG          (a JSON blob in one env var)
+#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
+#                           (CONSTANT_CASE per segment, joined by __)
+#
+# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
+# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
+# SM, etc.) in production. Don't commit them here.
+#
+# Env-var override reference for this service:
+#   nodeEnv       NODE_ENV
+#   pylon.kek     PYLON__KEK
+#   server.port   SERVER__PORT
+#   logger.level  LOGGER__LEVEL
+#   redis.url     REDIS__URL
+
+server:
+  port: 3000
+
+logger:
+  level: info
+"
+`;
+
+exports[`scaffold > writeConfigYaml > snapshot: sqlite only 1`] = `
+"# Default configuration loaded by @lindorm/config.
+#
+# Resolution order (later wins):
+#   1. config/default.yml  (this file)
+#   2. config/{NODE_ENV}.yml
+#   3. NODE_CONFIG          (a JSON blob in one env var)
+#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
+#                           (CONSTANT_CASE per segment, joined by __)
+#
+# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
+# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
+# SM, etc.) in production. Don't commit them here.
+#
+# Env-var override reference for this service:
+#   nodeEnv       NODE_ENV
+#   pylon.kek     PYLON__KEK
+#   server.port   SERVER__PORT
+#   logger.level  LOGGER__LEVEL
+#   sqlite.path   SQLITE__PATH
+
+server:
+  port: 3000
+
+logger:
+  level: info
 "
 `;
 
@@ -1677,15 +2021,15 @@ exports[`scaffold > writeDockerCompose > snapshot: redis dedup 1`] = `
 
 exports[`scaffold > writeEnvFile > none drivers 1`] = `
 "NODE_ENV=development
-PYLON_KEK=kryptos:test-fixed-kek-placeholder
+PYLON__KEK=kryptos:test-fixed-kek-placeholder
 "
 `;
 
 exports[`scaffold > writeEnvFile > postgres + kafka 1`] = `
 "NODE_ENV=development
-PYLON_KEK=kryptos:test-fixed-kek-placeholder
-POSTGRES_URL=postgresql://localhost:5432/app
-KAFKA_BROKERS=localhost:9092
+PYLON__KEK=kryptos:test-fixed-kek-placeholder
+POSTGRES__URL=postgresql://localhost:5432/app
+KAFKA__BROKERS=localhost:9092
 "
 `;
 
@@ -1881,7 +2225,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   socket: {
@@ -1924,7 +2268,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   session: {
@@ -1971,7 +2315,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   proteus: proteusSource,
@@ -2010,7 +2354,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   proteus: proteusSource,
@@ -2041,7 +2385,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   proteus: proteusSource,
@@ -2069,7 +2413,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   iris: irisSource,
@@ -2096,7 +2440,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   socket: {
@@ -2125,7 +2469,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   setup: async () => {
@@ -2152,7 +2496,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [...attachSourcesMiddlewares],
@@ -2192,7 +2536,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   httpMiddleware: [...attachSourcesMiddlewares],
@@ -2251,7 +2595,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   session: {
@@ -2285,7 +2629,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
   proteus: proteusSource,
@@ -2322,7 +2666,7 @@ export const pylon = new Pylon({
   amphora,
   name: config.npm.package.name,
   version: config.npm.package.version,
-  environment: config.node.env,
+  environment: config.nodeEnv,
   port: config.server.port,
   socket: {
     enabled: true,
