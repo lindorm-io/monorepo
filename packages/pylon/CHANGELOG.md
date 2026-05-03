@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.10.0...@lindorm/pylon@0.11.0) (2026-05-03)
+
+### Bug Fixes
+
+- **pylon:** make iris and proteus truly optional peers ([8671dbb](https://github.com/lindorm-io/monorepo/commit/8671dbbffe7ae752779c95c83fc290dfdd8eaef5))
+
+### Features
+
+- **pylon:** add ./entities and ./messages subpath exports ([0616077](https://github.com/lindorm-io/monorepo/commit/06160774af08a78ab6769ce7123db559a0ba7b70))
+
 # [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.9.0...@lindorm/pylon@0.10.0) (2026-05-02)
 
 ### Bug Fixes
