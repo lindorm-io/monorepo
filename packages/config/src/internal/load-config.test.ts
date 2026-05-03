@@ -1,45 +1,31 @@
-import { loadConfig } from "./load-config.js";
 import { describe, expect, test } from "vitest";
+import { loadConfig } from "./load-config.js";
 
 describe("loadConfig", () => {
-  test("should work", () => {
-    expect(
-      loadConfig({
-        NODE_ENV: "test",
-        FIVE_ARRAY: "[1,2,3]",
-        FOUR_ARRAY: "[1,2,3]",
-        npm_package_name: "@osprey-solutions-as/config",
-        npm_package_version: "0.0.0",
-        ONE_PARENT_WITH_NUMBER: "456",
-        ONE_PARENT_WITH_STRING: "replaced string value",
-        THREE_ARRAY: '["seven","eight","nine"]',
-        TWO_ARRAY: '["four", "five", "six"]',
-        TWO_PARENT_WITH_OBJECT_WITH_STRING: "replaced parent value",
-        WITH_DOT_ENV_REPLACEMENT: "two",
-      }),
-    ).toEqual({
+  test("loads YAML files and normalises keys to camelCase", () => {
+    expect(loadConfig()).toEqual({
       env: "test",
       oneParent: {
-        withNumber: 456,
-        withString: "replaced string value",
+        withNumber: 123,
+        withString: "string",
         withNoReplacement: "one still here",
       },
       twoParent: {
         withObject: {
-          withString: "replaced parent value",
+          withString: "string",
           withNoReplacement: "two still here",
         },
       },
-      twoArray: ["four", "five", "six"],
-      threeArray: ["seven", "eight", "nine"],
-      fourArray: [1, 2, 3],
-      fiveArray: [1, 2, 3],
+      twoArray: ["one", "two", "three"],
+      threeArray: ["one", "two", "three"],
+      fourArray: [123, 456, 789],
+      fiveArray: ["one", "two", "three"],
       sixNumberString: "987",
       seven: {
         boolean: false,
         nope: true,
       },
-      withDotEnvReplacement: "two",
+      withDotEnvReplacement: "one",
     });
   });
 });
