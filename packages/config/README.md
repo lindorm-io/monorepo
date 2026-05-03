@@ -15,7 +15,7 @@ This package is ESM-only. Import it with `import`; `require()` is not supported.
 - Validates the merged configuration with a Zod schema you supply.
 - Loads YAML files from a `config/` directory via the [`config`](https://www.npmjs.com/package/config) (node-config) package, layered by `NODE_ENV`.
 - Loads `.env` and `.env.${NODE_ENV}` via [`@dotenvx/dotenvx`](https://www.npmjs.com/package/@dotenvx/dotenvx).
-- Overrides any nested config value from a single environment variable named in `CONSTANT_CASE`.
+- **Schema-driven** environment-variable override: every leaf in the schema is checked against an env var named `SEGMENT__SEGMENT__LEAF`, regardless of whether YAML scaffolds the key. A service can run with no YAML at all if every required key is in env.
 - Accepts a full configuration object as JSON in the `NODE_CONFIG` environment variable.
 - Coerces string inputs to the schema's primitive types (numbers, booleans, dates, bigints) and parses JSON-encoded arrays and objects.
 - Resolves the running package's `name` and `version` and exposes them as `config.npm.package`.
@@ -54,8 +54,8 @@ console.log(config.npm.package.name); // resolved from the nearest package.json
 
 1. `.env` and `.env.${NODE_ENV}` files (loaded into `process.env` via `@dotenvx/dotenvx`).
 2. YAML files in `./config/` (loaded by the `config` npm package; see its docs for the full list of supported file types and search paths). Keys are normalised to `camelCase`.
-3. `process.env` entries that match a schema key in `CONSTANT_CASE` (nested keys joined with `_`).
-4. `NODE_CONFIG` — a JSON object passed in a single environment variable.
+3. `NODE_CONFIG` — a JSON object passed in a single environment variable.
+4. `process.env` entries derived from the schema's leaves: each leaf path is converted to `CONSTANT_CASE` per segment, joined with `__` (double underscore). Arrays are replaced (not concatenated).
 
 The merged object is then coerced and validated against the Zod schema.
 
@@ -94,20 +94,23 @@ is_production: true
 
 ### Environment variables
 
-Each schema key maps to a single environment variable in `CONSTANT_CASE`. Nested keys are joined with `_`.
+The env-var name for a schema leaf is built segment-by-segment: each path segment becomes `CONSTANT_CASE` (so `maxRetries` ↔ `MAX_RETRIES`), and segments are joined with `__` (double underscore). The double underscore keeps the segment boundary unambiguous when a segment itself contains internal word breaks.
 
-| Schema key              | Environment variable     |
-| ----------------------- | ------------------------ |
-| `server.port`           | `SERVER_PORT`            |
-| `database.poolSize`     | `DATABASE_POOL_SIZE`     |
-| `nested.some.deepValue` | `NESTED_SOME_DEEP_VALUE` |
+| Schema key              | Environment variable       |
+| ----------------------- | -------------------------- |
+| `server.port`           | `SERVER__PORT`             |
+| `database.poolSize`     | `DATABASE__POOL_SIZE`      |
+| `nested.some.deepValue` | `NESTED__SOME__DEEP_VALUE` |
+| `pylon.kek`             | `PYLON__KEK`               |
 
-Values are passed through `safelyParse` from `@lindorm/utils`, so JSON-encoded arrays and objects are decoded automatically:
+Binding is **schema-driven** — every leaf in your Zod schema is looked up in `process.env`. You don't need a YAML scaffold for env vars to work; if the env supplies every required key, you can run without `config/*.yml` at all.
+
+Values are passed through `safelyParse` from `@lindorm/utils`, so JSON-encoded arrays and objects are decoded automatically. Empty-string env values (`MY_VAR=""`) are preserved — they are not treated as "unset". Arrays from env replace (not concatenate) any earlier value:
 
 ```bash
-SERVER_PORT=8080
-DATABASE_URL=postgresql://prod-server/myapp
-DATABASE_POOL_SIZE=50
+SERVER__PORT=8080
+DATABASE__URL=postgresql://prod-server/myapp
+DATABASE__POOL_SIZE=50
 FEATURES='["feature1","feature2","feature3"]'
 IS_PRODUCTION=true
 ```
@@ -119,7 +122,7 @@ IS_PRODUCTION=true
 - `.env.${NODE_ENV}` (only when `NODE_ENV` is set)
 - `.env`
 
-The values become part of `process.env` and follow the same `CONSTANT_CASE` rules as above.
+The values become part of `process.env` and follow the same `__`-separator binding rules as above.
 
 ### `NODE_CONFIG`
 
