@@ -89,27 +89,31 @@ export const IRIS_DRIVER_DEV_PACKAGES: Record<IrisDriver, Array<string>> = {
 
 export type EnvEntry = { key: string; value: string };
 
+// Env-var names follow the @lindorm/config convention: each schema-path
+// segment in CONSTANT_CASE, joined by `__`. So `postgres.url` ↔ `POSTGRES__URL`.
+// `NODE_ENV` is a deliberate exception — it's a top-level single-segment key
+// (`nodeEnv`) so it lands on the universal Node.js env var unchanged.
 export const PROTEUS_ENV_VARS: Record<ProteusDriver, Array<EnvEntry>> = {
   memory: [],
-  mongo: [{ key: "MONGO_URL", value: "mongodb://localhost:27017/app" }],
-  mysql: [{ key: "MYSQL_URL", value: "mysql://localhost:3306/app" }],
-  postgres: [{ key: "POSTGRES_URL", value: "postgresql://localhost:5432/app" }],
-  redis: [{ key: "REDIS_URL", value: "redis://localhost:6379" }],
-  sqlite: [{ key: "SQLITE_PATH", value: "./data/app.db" }],
+  mongo: [{ key: "MONGO__URL", value: "mongodb://localhost:27017/app" }],
+  mysql: [{ key: "MYSQL__URL", value: "mysql://localhost:3306/app" }],
+  postgres: [{ key: "POSTGRES__URL", value: "postgresql://localhost:5432/app" }],
+  redis: [{ key: "REDIS__URL", value: "redis://localhost:6379" }],
+  sqlite: [{ key: "SQLITE__PATH", value: "./data/app.db" }],
 };
 
 export const IRIS_ENV_VARS: Record<IrisDriver, Array<EnvEntry>> = {
   none: [],
-  kafka: [{ key: "KAFKA_BROKERS", value: "localhost:9092" }],
-  nats: [{ key: "NATS_SERVERS", value: "localhost:4222" }],
-  rabbit: [{ key: "RABBIT_URL", value: "amqp://localhost:5672" }],
-  redis: [{ key: "REDIS_URL", value: "redis://localhost:6379" }],
+  kafka: [{ key: "KAFKA__BROKERS", value: "localhost:9092" }],
+  nats: [{ key: "NATS__SERVERS", value: "localhost:4222" }],
+  rabbit: [{ key: "RABBIT__URL", value: "amqp://localhost:5672" }],
+  redis: [{ key: "REDIS__URL", value: "redis://localhost:6379" }],
 };
 
 export const AUTH_ENV_VARS: ReadonlyArray<EnvEntry> = [
-  { key: "AUTH_CLIENT_ID", value: "" },
-  { key: "AUTH_CLIENT_SECRET", value: "" },
-  { key: "AUTH_ISSUER", value: "https://auth.example.com" },
+  { key: "AUTH__CLIENT_ID", value: "" },
+  { key: "AUTH__CLIENT_SECRET", value: "" },
+  { key: "AUTH__ISSUER", value: "https://auth.example.com" },
 ];
 
 export const PROTEUS_DEPENDENT_WORKERS: ReadonlyArray<WorkerKey> = [

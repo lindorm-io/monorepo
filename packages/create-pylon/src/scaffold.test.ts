@@ -7,6 +7,7 @@ import {
   copyTemplates,
   scaffold,
   writeConfigFile,
+  writeConfigYaml,
   writeDockerCompose,
   writeEnvFile,
   writeIrisSamples,
@@ -162,7 +163,7 @@ describe("scaffold", () => {
       const answers = baseAnswers({ projectDir });
       writeEnvFile(answers);
       const env = readFileSync(join(projectDir, ".env"), "utf-8");
-      expect(env).toMatch(/^PYLON_KEK=kryptos:[A-Za-z0-9_-]+$/m);
+      expect(env).toMatch(/^PYLON__KEK=kryptos:[A-Za-z0-9_-]+$/m);
     });
   });
 
@@ -224,6 +225,35 @@ describe("scaffold", () => {
       writeConfigFile(answers);
       expect(
         readFileSync(join(projectDir, "src/pylon/config.ts"), "utf-8"),
+      ).toMatchSnapshot();
+    });
+  });
+
+  describe("writeConfigYaml", () => {
+    test.each<[string, Partial<Answers>]>([
+      ["no drivers", {}],
+      ["postgres only", { proteusDrivers: ["postgres"] }],
+      ["sqlite only", { proteusDrivers: ["sqlite"] }],
+      ["postgres + redis", { proteusDrivers: ["postgres", "redis"] }],
+      [
+        "redis proteus + redis iris (deduped)",
+        {
+          proteusDrivers: ["redis"],
+          irisDriver: "redis",
+        },
+      ],
+      ["postgres + kafka", { proteusDrivers: ["postgres"], irisDriver: "kafka" }],
+      ["nats only", { irisDriver: "nats" }],
+      [
+        "postgres + auth",
+        { proteusDrivers: ["postgres"], features: baseFeatures({ auth: true }) },
+      ],
+    ])("snapshot: %s", (_name, overrides) => {
+      mkdirSync(projectDir, { recursive: true });
+      const answers = baseAnswers({ projectDir, ...overrides });
+      writeConfigYaml(answers);
+      expect(
+        readFileSync(join(projectDir, "config/default.yml"), "utf-8"),
       ).toMatchSnapshot();
     });
   });

@@ -11,6 +11,7 @@ import {
 import { dirname, join, resolve } from "path";
 import { buildAttachSourcesFile } from "./build-attach-sources-file.js";
 import { buildConfigFile } from "./build-config-file.js";
+import { buildConfigYaml } from "./build-config-yaml.js";
 import { buildContextFile } from "./build-context-file.js";
 import { buildDockerCompose } from "./build-docker-compose.js";
 import { buildIrisSamples } from "./build-iris-samples.js";
@@ -136,7 +137,7 @@ export const buildEnvLines = (
   answers: Answers,
   kek: string = generateKekEnvString(),
 ): Array<string> => {
-  const lines: Array<string> = ["NODE_ENV=development", `PYLON_KEK=${kek}`];
+  const lines: Array<string> = ["NODE_ENV=development", `PYLON__KEK=${kek}`];
   const seenEnvKeys = new Set<string>();
 
   const pushEnvEntries = (entries: ReadonlyArray<{ key: string; value: string }>) => {
@@ -179,6 +180,12 @@ export const writeConfigFile = (answers: Answers): void => {
   const target = join(answers.projectDir, "src/pylon/config.ts");
   ensureDir(target);
   writeFileSync(target, buildConfigFile(answers), "utf-8");
+};
+
+export const writeConfigYaml = (answers: Answers): void => {
+  const target = join(answers.projectDir, "config/default.yml");
+  ensureDir(target);
+  writeFileSync(target, buildConfigYaml(answers), "utf-8");
 };
 
 export const writeContextFile = (answers: Answers): void => {
@@ -252,6 +259,7 @@ export const scaffold = async (
   writePackageJson(answers);
   writeEnvFile(answers, kek);
   writeConfigFile(answers);
+  writeConfigYaml(answers);
   writeContextFile(answers);
   writePylonFile(answers);
   writeDockerCompose(answers);
