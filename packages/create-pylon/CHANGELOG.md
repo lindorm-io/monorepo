@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.2.2...@lindorm/create-pylon@0.3.0) (2026-05-03)
+
+### Features
+
+- **create-pylon:** import WebhookSubscription from @lindorm/pylon/entities ([a186f35](https://github.com/lindorm-io/monorepo/commit/a186f3509aee518c42b0d680e137c1ba7d120dbd))
+
 ## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.2.1...@lindorm/create-pylon@0.2.2) (2026-05-02)
 
 ### Bug Fixes
