@@ -32,6 +32,7 @@ export const generateKekEnvString = (): string =>
       algorithm: "dir",
       expiresAt: KEK_EXPIRES_AT,
       hidden: true,
+      issuer: "urn:lindorm:pylon:kek",
       purpose: "pylon:kek",
     })
     .toEnvString();
