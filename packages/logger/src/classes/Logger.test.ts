@@ -1009,4 +1009,39 @@ describe("Logger", () => {
       }),
     );
   });
+
+  test("should route uncaughtException through the active logger", () => {
+    process.emit("uncaughtException", new Error("boom"));
+
+    expect(log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: "error",
+        message: "boom",
+        time: MockedDate,
+      }),
+    );
+  });
+
+  test("should route unhandledRejection through the active logger", () => {
+    process.emit("unhandledRejection", new Error("rejected"), Promise.resolve());
+
+    expect(log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: "error",
+        message: "rejected",
+        time: MockedDate,
+      }),
+    );
+  });
+
+  test("should wrap non-Error uncaughtException values into Error", () => {
+    process.emit("uncaughtException", "string thrown" as unknown as Error);
+
+    expect(log).toHaveBeenCalledWith(
+      expect.objectContaining({
+        level: "error",
+        message: "string thrown",
+      }),
+    );
+  });
 });
