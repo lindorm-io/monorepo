@@ -390,7 +390,7 @@ import { config } from "../pylon/config.js";
 
 export const logger = new Logger({
   level: config.logger.level,
-  readable: config.nodeEnv !== "production",
+  readable: config.logger.readable,
 });
 ",
   "src/middleware/http-example.ts": "import type { ServerHttpMiddleware } from "../types/context.js";
@@ -596,7 +596,7 @@ import { config } from "../pylon/config.js";
 
 export const logger = new Logger({
   level: config.logger.level,
-  readable: config.nodeEnv !== "production",
+  readable: config.logger.readable,
 });
 ",
   "src/middleware/http-example.ts": "import type { ServerHttpMiddleware } from "../types/context.js";
@@ -714,7 +714,7 @@ import { config } from "../pylon/config.js";
 
 export const logger = new Logger({
   level: config.logger.level,
-  readable: config.nodeEnv !== "production",
+  readable: config.logger.readable,
 });
 ",
   "src/pylon/amphora.ts": "import { Amphora } from "@lindorm/amphora";
@@ -807,6 +807,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   postgres: z.object({
@@ -988,6 +989,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   auth: z.object({
@@ -1259,6 +1261,7 @@ exports[`scaffold > writeConfigDevelopmentYaml > snapshot: mongo + rabbit 1`] = 
 
 logger:
   level: debug
+  readable: true
 
 mongo:
   url: mongodb://localhost:27017/app
@@ -1277,6 +1280,7 @@ exports[`scaffold > writeConfigDevelopmentYaml > snapshot: mysql only 1`] = `
 
 logger:
   level: debug
+  readable: true
 
 mysql:
   url: mysql://root:root@localhost:3306/app
@@ -1292,6 +1296,7 @@ exports[`scaffold > writeConfigDevelopmentYaml > snapshot: no drivers 1`] = `
 
 logger:
   level: debug
+  readable: true
 "
 `;
 
@@ -1304,6 +1309,7 @@ exports[`scaffold > writeConfigDevelopmentYaml > snapshot: postgres + kafka 1`] 
 
 logger:
   level: debug
+  readable: true
 
 postgres:
   url: postgresql://postgres:postgres@localhost:5432/app
@@ -1323,6 +1329,7 @@ exports[`scaffold > writeConfigDevelopmentYaml > snapshot: postgres + redis 1`] 
 
 logger:
   level: debug
+  readable: true
 
 postgres:
   url: postgresql://postgres:postgres@localhost:5432/app
@@ -1341,6 +1348,7 @@ exports[`scaffold > writeConfigDevelopmentYaml > snapshot: postgres only 1`] = `
 
 logger:
   level: debug
+  readable: true
 
 postgres:
   url: postgresql://postgres:postgres@localhost:5432/app
@@ -1356,6 +1364,7 @@ exports[`scaffold > writeConfigDevelopmentYaml > snapshot: redis proteus + redis
 
 logger:
   level: debug
+  readable: true
 
 redis:
   url: redis://localhost:6379
@@ -1371,6 +1380,7 @@ exports[`scaffold > writeConfigDevelopmentYaml > snapshot: sqlite + nats 1`] = `
 
 logger:
   level: debug
+  readable: true
 
 sqlite:
   path: ./data/app.db
@@ -1404,6 +1414,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   auth: z.object({
@@ -1439,6 +1450,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   kafka: z.object({
@@ -1472,6 +1484,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
 }, { scope: import.meta.url });
@@ -1502,6 +1515,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   mongo: z.object({
@@ -1538,6 +1552,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   nats: z.object({
@@ -1571,6 +1586,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
 }, { scope: import.meta.url });
@@ -1601,6 +1617,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   postgres: z.object({
@@ -1639,6 +1656,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   postgres: z.object({
@@ -1675,6 +1693,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   postgres: z.object({
@@ -1708,6 +1727,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   rabbit: z.object({
@@ -1741,6 +1761,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   redis: z.object({
@@ -1774,6 +1795,7 @@ export const config = configuration({
       level: z
         .enum(["error", "warn", "info", "verbose", "debug", "silly"])
         .default("info"),
+      readable: z.boolean().default(false),
     })
     .default({}),
   sqlite: z.object({
@@ -1799,17 +1821,19 @@ exports[`scaffold > writeConfigYaml > snapshot: nats only 1`] = `
 # config/development.yml.
 #
 # Env-var override reference for this service:
-#   nodeEnv       NODE_ENV
-#   pylon.kek     PYLON__KEK
-#   server.port   SERVER__PORT
-#   logger.level  LOGGER__LEVEL
-#   nats.servers  NATS__SERVERS
+#   nodeEnv          NODE_ENV
+#   pylon.kek        PYLON__KEK
+#   server.port      SERVER__PORT
+#   logger.level     LOGGER__LEVEL
+#   logger.readable  LOGGER__READABLE
+#   nats.servers     NATS__SERVERS
 
 server:
   port: 3000
 
 logger:
   level: info
+  readable: false
 "
 `;
 
@@ -1829,16 +1853,18 @@ exports[`scaffold > writeConfigYaml > snapshot: no drivers 1`] = `
 # config/development.yml.
 #
 # Env-var override reference for this service:
-#   nodeEnv       NODE_ENV
-#   pylon.kek     PYLON__KEK
-#   server.port   SERVER__PORT
-#   logger.level  LOGGER__LEVEL
+#   nodeEnv          NODE_ENV
+#   pylon.kek        PYLON__KEK
+#   server.port      SERVER__PORT
+#   logger.level     LOGGER__LEVEL
+#   logger.readable  LOGGER__READABLE
 
 server:
   port: 3000
 
 logger:
   level: info
+  readable: false
 "
 `;
 
@@ -1862,6 +1888,7 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + auth 1`] = `
 #   pylon.kek          PYLON__KEK
 #   server.port        SERVER__PORT
 #   logger.level       LOGGER__LEVEL
+#   logger.readable    LOGGER__READABLE
 #   postgres.url       POSTGRES__URL
 #   auth.clientId      AUTH__CLIENT_ID
 #   auth.clientSecret  AUTH__CLIENT_SECRET
@@ -1872,6 +1899,7 @@ server:
 
 logger:
   level: info
+  readable: false
 "
 `;
 
@@ -1891,18 +1919,20 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + kafka 1`] = `
 # config/development.yml.
 #
 # Env-var override reference for this service:
-#   nodeEnv        NODE_ENV
-#   pylon.kek      PYLON__KEK
-#   server.port    SERVER__PORT
-#   logger.level   LOGGER__LEVEL
-#   postgres.url   POSTGRES__URL
-#   kafka.brokers  KAFKA__BROKERS
+#   nodeEnv          NODE_ENV
+#   pylon.kek        PYLON__KEK
+#   server.port      SERVER__PORT
+#   logger.level     LOGGER__LEVEL
+#   logger.readable  LOGGER__READABLE
+#   postgres.url     POSTGRES__URL
+#   kafka.brokers    KAFKA__BROKERS
 
 server:
   port: 3000
 
 logger:
   level: info
+  readable: false
 "
 `;
 
@@ -1922,18 +1952,20 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + redis 1`] = `
 # config/development.yml.
 #
 # Env-var override reference for this service:
-#   nodeEnv       NODE_ENV
-#   pylon.kek     PYLON__KEK
-#   server.port   SERVER__PORT
-#   logger.level  LOGGER__LEVEL
-#   postgres.url  POSTGRES__URL
-#   redis.url     REDIS__URL
+#   nodeEnv          NODE_ENV
+#   pylon.kek        PYLON__KEK
+#   server.port      SERVER__PORT
+#   logger.level     LOGGER__LEVEL
+#   logger.readable  LOGGER__READABLE
+#   postgres.url     POSTGRES__URL
+#   redis.url        REDIS__URL
 
 server:
   port: 3000
 
 logger:
   level: info
+  readable: false
 "
 `;
 
@@ -1953,17 +1985,19 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres only 1`] = `
 # config/development.yml.
 #
 # Env-var override reference for this service:
-#   nodeEnv       NODE_ENV
-#   pylon.kek     PYLON__KEK
-#   server.port   SERVER__PORT
-#   logger.level  LOGGER__LEVEL
-#   postgres.url  POSTGRES__URL
+#   nodeEnv          NODE_ENV
+#   pylon.kek        PYLON__KEK
+#   server.port      SERVER__PORT
+#   logger.level     LOGGER__LEVEL
+#   logger.readable  LOGGER__READABLE
+#   postgres.url     POSTGRES__URL
 
 server:
   port: 3000
 
 logger:
   level: info
+  readable: false
 "
 `;
 
@@ -1983,17 +2017,19 @@ exports[`scaffold > writeConfigYaml > snapshot: redis proteus + redis iris (dedu
 # config/development.yml.
 #
 # Env-var override reference for this service:
-#   nodeEnv       NODE_ENV
-#   pylon.kek     PYLON__KEK
-#   server.port   SERVER__PORT
-#   logger.level  LOGGER__LEVEL
-#   redis.url     REDIS__URL
+#   nodeEnv          NODE_ENV
+#   pylon.kek        PYLON__KEK
+#   server.port      SERVER__PORT
+#   logger.level     LOGGER__LEVEL
+#   logger.readable  LOGGER__READABLE
+#   redis.url        REDIS__URL
 
 server:
   port: 3000
 
 logger:
   level: info
+  readable: false
 "
 `;
 
@@ -2013,17 +2049,19 @@ exports[`scaffold > writeConfigYaml > snapshot: sqlite only 1`] = `
 # config/development.yml.
 #
 # Env-var override reference for this service:
-#   nodeEnv       NODE_ENV
-#   pylon.kek     PYLON__KEK
-#   server.port   SERVER__PORT
-#   logger.level  LOGGER__LEVEL
-#   sqlite.path   SQLITE__PATH
+#   nodeEnv          NODE_ENV
+#   pylon.kek        PYLON__KEK
+#   server.port      SERVER__PORT
+#   logger.level     LOGGER__LEVEL
+#   logger.readable  LOGGER__READABLE
+#   sqlite.path      SQLITE__PATH
 
 server:
   port: 3000
 
 logger:
   level: info
+  readable: false
 "
 `;
 

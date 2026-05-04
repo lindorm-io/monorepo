@@ -51,6 +51,7 @@ const collectHints = (answers: Answers): Array<EnvHint> => {
     { path: "pylon.kek", envVar: "PYLON__KEK" },
     { path: "server.port", envVar: "SERVER__PORT" },
     { path: "logger.level", envVar: "LOGGER__LEVEL" },
+    { path: "logger.readable", envVar: "LOGGER__READABLE" },
   ];
   for (const driver of answers.proteusDrivers) {
     hints.push(...proteusEnvHints(driver));
@@ -103,6 +104,7 @@ export const buildConfigYaml = (answers: Answers): string => {
     ``,
     `logger:`,
     `  level: info`,
+    `  readable: false`,
     ``,
   ];
 
@@ -184,6 +186,7 @@ export const buildConfigDevelopmentYaml = (answers: Answers): string => {
     ``,
     `logger:`,
     `  level: debug`,
+    `  readable: true`,
     ``,
   ];
 
