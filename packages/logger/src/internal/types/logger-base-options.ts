@@ -15,11 +15,13 @@ export type KeyFilterRef = {
   patterns: Array<[RegExp, FilterCallback]>;
 };
 
-export type FromLogger = {
-  _mode: "from_logger";
+// Shape passed up to LoggerBase by both Logger (root, after building winston)
+// and LoggerChild (inheriting refs from a parent). All shared infrastructure
+// is provided by the constructing class — LoggerBase doesn't construct any.
+export type LoggerBaseOptions = {
   correlation: LogCorrelation;
-  filterRef: FilterEntriesRef;
   filters: LogFilters;
+  filterRef: FilterEntriesRef;
   keyFilterRef: KeyFilterRef;
   scope: LogScope;
   timers: Map<string, number>;

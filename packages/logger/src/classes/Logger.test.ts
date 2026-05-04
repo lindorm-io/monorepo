@@ -1,6 +1,7 @@
 import MockDate from "mockdate";
 import type { ILogger } from "../interfaces/index.js";
 import { Logger } from "./Logger.js";
+import { LoggerBase } from "./LoggerBase.js";
 import {
   afterEach,
   beforeEach,
@@ -214,7 +215,8 @@ describe("Logger", () => {
 
     expect(add).toHaveBeenCalledTimes(1);
 
-    expect(child).toBeInstanceOf(Logger);
+    expect(child).toBeInstanceOf(LoggerBase);
+    expect(child.__instanceof).toBe("Logger");
 
     child.correlation({ again: "again" });
     child.scope(["again"]);
@@ -245,7 +247,8 @@ describe("Logger", () => {
   test("should create child with no arguments", () => {
     const child = logger.child();
 
-    expect(child).toBeInstanceOf(Logger);
+    expect(child).toBeInstanceOf(LoggerBase);
+    expect(child.__instanceof).toBe("Logger");
     // @ts-expect-error
     expect(child._scope).toEqual([]);
     // @ts-expect-error
