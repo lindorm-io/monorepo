@@ -36,59 +36,111 @@ exports[`scaffold > buildDependencyList > snapshot: sqlite-kafka 1`] = `
 ]
 `;
 
-exports[`scaffold > buildEnvLines > snapshot: mongo-nats 1`] = `
+exports[`scaffold > buildEnvExampleLines > snapshot: mysql + rabbit 1`] = `
 [
-  "NODE_ENV=development",
-  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
-  "MONGO__URL=mongodb://localhost:27017/app",
-  "NATS__SERVERS=localhost:4222",
+  "# Reference for every env var the service's schema responds to.",
+  "# Copy to .env (gitignored) and fill in the secrets, or just keep using",
+  "# the defaults from config/default.yml + config/development.yml.",
+  "#",
+  "# Naming convention: each schema-path segment in CONSTANT_CASE, joined by",
+  "# __ (double underscore). e.g. database.maxRetries -> DATABASE__MAX_RETRIES.",
+  "",
+  "# --- Required secrets ---",
+  "PYLON__KEK=kryptos:GENERATE_VIA_create-pylon_OR_KryptosKit",
+  "",
+  "# --- Optional overrides (defaults already in config/*.yml) ---",
+  "# NODE_ENV=development",
+  "# SERVER__PORT=3000",
+  "# LOGGER__LEVEL=info",
+  "# MYSQL__URL=mysql://root:root@localhost:3306/app",
+  "# RABBIT__URL=amqp://guest:guest@localhost:5672",
 ]
 `;
 
-exports[`scaffold > buildEnvLines > snapshot: mysql-rabbit 1`] = `
+exports[`scaffold > buildEnvExampleLines > snapshot: no drivers 1`] = `
 [
-  "NODE_ENV=development",
-  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
-  "MYSQL__URL=mysql://localhost:3306/app",
-  "RABBIT__URL=amqp://localhost:5672",
+  "# Reference for every env var the service's schema responds to.",
+  "# Copy to .env (gitignored) and fill in the secrets, or just keep using",
+  "# the defaults from config/default.yml + config/development.yml.",
+  "#",
+  "# Naming convention: each schema-path segment in CONSTANT_CASE, joined by",
+  "# __ (double underscore). e.g. database.maxRetries -> DATABASE__MAX_RETRIES.",
+  "",
+  "# --- Required secrets ---",
+  "PYLON__KEK=kryptos:GENERATE_VIA_create-pylon_OR_KryptosKit",
+  "",
+  "# --- Optional overrides (defaults already in config/*.yml) ---",
+  "# NODE_ENV=development",
+  "# SERVER__PORT=3000",
+  "# LOGGER__LEVEL=info",
 ]
 `;
 
-exports[`scaffold > buildEnvLines > snapshot: none-none + auth 1`] = `
+exports[`scaffold > buildEnvExampleLines > snapshot: postgres + auth 1`] = `
 [
-  "NODE_ENV=development",
-  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
-  "AUTH__CLIENT_ID=",
+  "# Reference for every env var the service's schema responds to.",
+  "# Copy to .env (gitignored) and fill in the secrets, or just keep using",
+  "# the defaults from config/default.yml + config/development.yml.",
+  "#",
+  "# Naming convention: each schema-path segment in CONSTANT_CASE, joined by",
+  "# __ (double underscore). e.g. database.maxRetries -> DATABASE__MAX_RETRIES.",
+  "",
+  "# --- Required secrets ---",
+  "PYLON__KEK=kryptos:GENERATE_VIA_create-pylon_OR_KryptosKit",
+  "",
+  "# --- OIDC client (auth) ---",
   "AUTH__CLIENT_SECRET=",
-  "AUTH__ISSUER=https://auth.example.com",
+  "# AUTH__CLIENT_ID=",
+  "# AUTH__ISSUER=https://auth.example.com",
+  "",
+  "# --- Optional overrides (defaults already in config/*.yml) ---",
+  "# NODE_ENV=development",
+  "# SERVER__PORT=3000",
+  "# LOGGER__LEVEL=info",
+  "# POSTGRES__URL=postgresql://postgres:postgres@localhost:5432/app",
 ]
 `;
 
-exports[`scaffold > buildEnvLines > snapshot: none-none 1`] = `
+exports[`scaffold > buildEnvExampleLines > snapshot: postgres + kafka 1`] = `
+[
+  "# Reference for every env var the service's schema responds to.",
+  "# Copy to .env (gitignored) and fill in the secrets, or just keep using",
+  "# the defaults from config/default.yml + config/development.yml.",
+  "#",
+  "# Naming convention: each schema-path segment in CONSTANT_CASE, joined by",
+  "# __ (double underscore). e.g. database.maxRetries -> DATABASE__MAX_RETRIES.",
+  "",
+  "# --- Required secrets ---",
+  "PYLON__KEK=kryptos:GENERATE_VIA_create-pylon_OR_KryptosKit",
+  "",
+  "# --- Optional overrides (defaults already in config/*.yml) ---",
+  "# NODE_ENV=development",
+  "# SERVER__PORT=3000",
+  "# LOGGER__LEVEL=info",
+  "# POSTGRES__URL=postgresql://postgres:postgres@localhost:5432/app",
+  "# KAFKA__BROKERS=["localhost:9092"]",
+]
+`;
+
+exports[`scaffold > buildEnvLines > snapshot: drivers don't add anything to .env 1`] = `
 [
   "NODE_ENV=development",
   "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
 ]
 `;
 
-exports[`scaffold > buildEnvLines > snapshot: postgres-rabbit + auth 1`] = `
+exports[`scaffold > buildEnvLines > snapshot: minimal 1`] = `
 [
   "NODE_ENV=development",
   "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
-  "POSTGRES__URL=postgresql://localhost:5432/app",
-  "RABBIT__URL=amqp://localhost:5672",
-  "AUTH__CLIENT_ID=",
+]
+`;
+
+exports[`scaffold > buildEnvLines > snapshot: with auth (adds AUTH__CLIENT_SECRET placeholder) 1`] = `
+[
+  "NODE_ENV=development",
+  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
   "AUTH__CLIENT_SECRET=",
-  "AUTH__ISSUER=https://auth.example.com",
-]
-`;
-
-exports[`scaffold > buildEnvLines > snapshot: sqlite-redis 1`] = `
-[
-  "NODE_ENV=development",
-  "PYLON__KEK=kryptos:test-fixed-kek-placeholder",
-  "SQLITE__PATH=./data/app.db",
-  "REDIS__URL=redis://localhost:6379",
 ]
 `;
 
@@ -106,11 +158,6 @@ coverage/
 
 .DS_Store
 *.log
-",
-  "config/development.yml": "# Overrides applied when NODE_ENV=development.
-# Merged on top of default.yml — only list the keys you want to change.
-logger:
-  level: debug
 ",
   "config/production.yml": "# Overrides applied when NODE_ENV=production.
 # Most prod-specific values belong in secrets / env vars, not here — reserve
@@ -517,11 +564,6 @@ coverage/
 .DS_Store
 *.log
 ",
-  "config/development.yml": "# Overrides applied when NODE_ENV=development.
-# Merged on top of default.yml — only list the keys you want to change.
-logger:
-  level: debug
-",
   "config/production.yml": "# Overrides applied when NODE_ENV=production.
 # Most prod-specific values belong in secrets / env vars, not here — reserve
 # this file for non-sensitive knobs (timeouts, pool sizes, feature flags).
@@ -652,11 +694,6 @@ coverage/
 .DS_Store
 *.log
 ",
-  "config/development.yml": "# Overrides applied when NODE_ENV=development.
-# Merged on top of default.yml — only list the keys you want to change.
-logger:
-  level: debug
-",
   "config/production.yml": "# Overrides applied when NODE_ENV=production.
 # Most prod-specific values belong in secrets / env vars, not here — reserve
 # this file for non-sensitive knobs (timeouts, pool sizes, feature flags).
@@ -742,12 +779,7 @@ export default defineConfig({
 exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers > .env 1`] = `
 "NODE_ENV=development
 PYLON__KEK=kryptos:test-fixed-kek-placeholder
-POSTGRES__URL=postgresql://localhost:5432/app
-REDIS__URL=redis://localhost:6379
-RABBIT__URL=amqp://localhost:5672
-AUTH__CLIENT_ID=
 AUTH__CLIENT_SECRET=
-AUTH__ISSUER=https://auth.example.com
 "
 `;
 
@@ -878,6 +910,7 @@ export const pylon = new Pylon({
 exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers > tree 1`] = `
 [
   ".env",
+  ".env.example",
   ".gitignore",
   "config/default.yml",
   "config/development.yml",
@@ -927,9 +960,7 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit +
 exports[`scaffold > scaffold orchestration > auth-only combo (auto-forces session) > .env 1`] = `
 "NODE_ENV=development
 PYLON__KEK=kryptos:test-fixed-kek-placeholder
-AUTH__CLIENT_ID=
 AUTH__CLIENT_SECRET=
-AUTH__ISSUER=https://auth.example.com
 "
 `;
 
@@ -1151,6 +1182,7 @@ export const pylon = new Pylon({
 exports[`scaffold > scaffold orchestration > runs all write functions in sequence 1`] = `
 [
   ".env",
+  ".env.example",
   ".gitignore",
   "config/default.yml",
   "config/development.yml",
@@ -1195,6 +1227,7 @@ exports[`scaffold > scaffold orchestration > runs all write functions in sequenc
 exports[`scaffold > scaffold orchestration > session-only combo 1`] = `
 [
   ".env",
+  ".env.example",
   ".gitignore",
   "config/default.yml",
   "config/development.yml",
@@ -1215,6 +1248,136 @@ exports[`scaffold > scaffold orchestration > session-only combo 1`] = `
   "tsconfig.json",
   "vitest.config.mjs",
 ]
+`;
+
+exports[`scaffold > writeConfigDevelopmentYaml > snapshot: mongo + rabbit 1`] = `
+"# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+#
+# Driver URLs here line up with the credentials in docker-compose.yml.
+# Override per-developer via .env (which is gitignored).
+
+logger:
+  level: debug
+
+mongo:
+  url: mongodb://localhost:27017/app
+
+rabbit:
+  url: amqp://guest:guest@localhost:5672
+"
+`;
+
+exports[`scaffold > writeConfigDevelopmentYaml > snapshot: mysql only 1`] = `
+"# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+#
+# Driver URLs here line up with the credentials in docker-compose.yml.
+# Override per-developer via .env (which is gitignored).
+
+logger:
+  level: debug
+
+mysql:
+  url: mysql://root:root@localhost:3306/app
+"
+`;
+
+exports[`scaffold > writeConfigDevelopmentYaml > snapshot: no drivers 1`] = `
+"# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+#
+# Driver URLs here line up with the credentials in docker-compose.yml.
+# Override per-developer via .env (which is gitignored).
+
+logger:
+  level: debug
+"
+`;
+
+exports[`scaffold > writeConfigDevelopmentYaml > snapshot: postgres + kafka 1`] = `
+"# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+#
+# Driver URLs here line up with the credentials in docker-compose.yml.
+# Override per-developer via .env (which is gitignored).
+
+logger:
+  level: debug
+
+postgres:
+  url: postgresql://postgres:postgres@localhost:5432/app
+
+kafka:
+  brokers:
+    - localhost:9092
+"
+`;
+
+exports[`scaffold > writeConfigDevelopmentYaml > snapshot: postgres + redis 1`] = `
+"# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+#
+# Driver URLs here line up with the credentials in docker-compose.yml.
+# Override per-developer via .env (which is gitignored).
+
+logger:
+  level: debug
+
+postgres:
+  url: postgresql://postgres:postgres@localhost:5432/app
+
+redis:
+  url: redis://localhost:6379
+"
+`;
+
+exports[`scaffold > writeConfigDevelopmentYaml > snapshot: postgres only 1`] = `
+"# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+#
+# Driver URLs here line up with the credentials in docker-compose.yml.
+# Override per-developer via .env (which is gitignored).
+
+logger:
+  level: debug
+
+postgres:
+  url: postgresql://postgres:postgres@localhost:5432/app
+"
+`;
+
+exports[`scaffold > writeConfigDevelopmentYaml > snapshot: redis proteus + redis iris (deduped) 1`] = `
+"# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+#
+# Driver URLs here line up with the credentials in docker-compose.yml.
+# Override per-developer via .env (which is gitignored).
+
+logger:
+  level: debug
+
+redis:
+  url: redis://localhost:6379
+"
+`;
+
+exports[`scaffold > writeConfigDevelopmentYaml > snapshot: sqlite + nats 1`] = `
+"# Overrides applied when NODE_ENV=development.
+# Merged on top of default.yml — only list the keys you want to change.
+#
+# Driver URLs here line up with the credentials in docker-compose.yml.
+# Override per-developer via .env (which is gitignored).
+
+logger:
+  level: debug
+
+sqlite:
+  path: ./data/app.db
+
+nats:
+  servers: nats://localhost:4222
+"
 `;
 
 exports[`scaffold > writeConfigFile > snapshot: auth only 1`] = `
@@ -1279,7 +1442,7 @@ export const config = configuration({
     })
     .default({}),
   kafka: z.object({
-    brokers: z.string().transform((s) => s.split(",")),
+    brokers: z.array(z.string()),
   }),
 }, { scope: import.meta.url });
 "
@@ -1482,7 +1645,7 @@ export const config = configuration({
     url: z.string(),
   }),
   kafka: z.object({
-    brokers: z.string().transform((s) => s.split(",")),
+    brokers: z.array(z.string()),
   }),
 }, { scope: import.meta.url });
 "
@@ -1624,15 +1787,16 @@ exports[`scaffold > writeConfigYaml > snapshot: nats only 1`] = `
 "# Default configuration loaded by @lindorm/config.
 #
 # Resolution order (later wins):
-#   1. config/default.yml  (this file)
-#   2. config/{NODE_ENV}.yml
-#   3. NODE_CONFIG          (a JSON blob in one env var)
-#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
-#                           (CONSTANT_CASE per segment, joined by __)
+#   1. config/default.yml      (this file — all environments)
+#   2. config/{NODE_ENV}.yml   (per-environment overrides)
+#   3. NODE_CONFIG             (a JSON blob in one env var)
+#   4. process.env             schema-driven, named SCHEMA__PATH__SEGMENT
+#                              (CONSTANT_CASE per segment, joined by __)
 #
-# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
-# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
-# SM, etc.) in production. Don't commit them here.
+# Sensitive values (KEK, OIDC client secret) live in .env locally and in
+# your secret store (Kubernetes Secrets, Vault, AWS SM, etc.) in
+# production. Dev-only credentials that match docker-compose live in
+# config/development.yml.
 #
 # Env-var override reference for this service:
 #   nodeEnv       NODE_ENV
@@ -1653,15 +1817,16 @@ exports[`scaffold > writeConfigYaml > snapshot: no drivers 1`] = `
 "# Default configuration loaded by @lindorm/config.
 #
 # Resolution order (later wins):
-#   1. config/default.yml  (this file)
-#   2. config/{NODE_ENV}.yml
-#   3. NODE_CONFIG          (a JSON blob in one env var)
-#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
-#                           (CONSTANT_CASE per segment, joined by __)
+#   1. config/default.yml      (this file — all environments)
+#   2. config/{NODE_ENV}.yml   (per-environment overrides)
+#   3. NODE_CONFIG             (a JSON blob in one env var)
+#   4. process.env             schema-driven, named SCHEMA__PATH__SEGMENT
+#                              (CONSTANT_CASE per segment, joined by __)
 #
-# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
-# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
-# SM, etc.) in production. Don't commit them here.
+# Sensitive values (KEK, OIDC client secret) live in .env locally and in
+# your secret store (Kubernetes Secrets, Vault, AWS SM, etc.) in
+# production. Dev-only credentials that match docker-compose live in
+# config/development.yml.
 #
 # Env-var override reference for this service:
 #   nodeEnv       NODE_ENV
@@ -1681,15 +1846,16 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + auth 1`] = `
 "# Default configuration loaded by @lindorm/config.
 #
 # Resolution order (later wins):
-#   1. config/default.yml  (this file)
-#   2. config/{NODE_ENV}.yml
-#   3. NODE_CONFIG          (a JSON blob in one env var)
-#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
-#                           (CONSTANT_CASE per segment, joined by __)
+#   1. config/default.yml      (this file — all environments)
+#   2. config/{NODE_ENV}.yml   (per-environment overrides)
+#   3. NODE_CONFIG             (a JSON blob in one env var)
+#   4. process.env             schema-driven, named SCHEMA__PATH__SEGMENT
+#                              (CONSTANT_CASE per segment, joined by __)
 #
-# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
-# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
-# SM, etc.) in production. Don't commit them here.
+# Sensitive values (KEK, OIDC client secret) live in .env locally and in
+# your secret store (Kubernetes Secrets, Vault, AWS SM, etc.) in
+# production. Dev-only credentials that match docker-compose live in
+# config/development.yml.
 #
 # Env-var override reference for this service:
 #   nodeEnv            NODE_ENV
@@ -1713,15 +1879,16 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + kafka 1`] = `
 "# Default configuration loaded by @lindorm/config.
 #
 # Resolution order (later wins):
-#   1. config/default.yml  (this file)
-#   2. config/{NODE_ENV}.yml
-#   3. NODE_CONFIG          (a JSON blob in one env var)
-#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
-#                           (CONSTANT_CASE per segment, joined by __)
+#   1. config/default.yml      (this file — all environments)
+#   2. config/{NODE_ENV}.yml   (per-environment overrides)
+#   3. NODE_CONFIG             (a JSON blob in one env var)
+#   4. process.env             schema-driven, named SCHEMA__PATH__SEGMENT
+#                              (CONSTANT_CASE per segment, joined by __)
 #
-# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
-# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
-# SM, etc.) in production. Don't commit them here.
+# Sensitive values (KEK, OIDC client secret) live in .env locally and in
+# your secret store (Kubernetes Secrets, Vault, AWS SM, etc.) in
+# production. Dev-only credentials that match docker-compose live in
+# config/development.yml.
 #
 # Env-var override reference for this service:
 #   nodeEnv        NODE_ENV
@@ -1743,15 +1910,16 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + redis 1`] = `
 "# Default configuration loaded by @lindorm/config.
 #
 # Resolution order (later wins):
-#   1. config/default.yml  (this file)
-#   2. config/{NODE_ENV}.yml
-#   3. NODE_CONFIG          (a JSON blob in one env var)
-#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
-#                           (CONSTANT_CASE per segment, joined by __)
+#   1. config/default.yml      (this file — all environments)
+#   2. config/{NODE_ENV}.yml   (per-environment overrides)
+#   3. NODE_CONFIG             (a JSON blob in one env var)
+#   4. process.env             schema-driven, named SCHEMA__PATH__SEGMENT
+#                              (CONSTANT_CASE per segment, joined by __)
 #
-# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
-# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
-# SM, etc.) in production. Don't commit them here.
+# Sensitive values (KEK, OIDC client secret) live in .env locally and in
+# your secret store (Kubernetes Secrets, Vault, AWS SM, etc.) in
+# production. Dev-only credentials that match docker-compose live in
+# config/development.yml.
 #
 # Env-var override reference for this service:
 #   nodeEnv       NODE_ENV
@@ -1773,15 +1941,16 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres only 1`] = `
 "# Default configuration loaded by @lindorm/config.
 #
 # Resolution order (later wins):
-#   1. config/default.yml  (this file)
-#   2. config/{NODE_ENV}.yml
-#   3. NODE_CONFIG          (a JSON blob in one env var)
-#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
-#                           (CONSTANT_CASE per segment, joined by __)
+#   1. config/default.yml      (this file — all environments)
+#   2. config/{NODE_ENV}.yml   (per-environment overrides)
+#   3. NODE_CONFIG             (a JSON blob in one env var)
+#   4. process.env             schema-driven, named SCHEMA__PATH__SEGMENT
+#                              (CONSTANT_CASE per segment, joined by __)
 #
-# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
-# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
-# SM, etc.) in production. Don't commit them here.
+# Sensitive values (KEK, OIDC client secret) live in .env locally and in
+# your secret store (Kubernetes Secrets, Vault, AWS SM, etc.) in
+# production. Dev-only credentials that match docker-compose live in
+# config/development.yml.
 #
 # Env-var override reference for this service:
 #   nodeEnv       NODE_ENV
@@ -1802,15 +1971,16 @@ exports[`scaffold > writeConfigYaml > snapshot: redis proteus + redis iris (dedu
 "# Default configuration loaded by @lindorm/config.
 #
 # Resolution order (later wins):
-#   1. config/default.yml  (this file)
-#   2. config/{NODE_ENV}.yml
-#   3. NODE_CONFIG          (a JSON blob in one env var)
-#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
-#                           (CONSTANT_CASE per segment, joined by __)
+#   1. config/default.yml      (this file — all environments)
+#   2. config/{NODE_ENV}.yml   (per-environment overrides)
+#   3. NODE_CONFIG             (a JSON blob in one env var)
+#   4. process.env             schema-driven, named SCHEMA__PATH__SEGMENT
+#                              (CONSTANT_CASE per segment, joined by __)
 #
-# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
-# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
-# SM, etc.) in production. Don't commit them here.
+# Sensitive values (KEK, OIDC client secret) live in .env locally and in
+# your secret store (Kubernetes Secrets, Vault, AWS SM, etc.) in
+# production. Dev-only credentials that match docker-compose live in
+# config/development.yml.
 #
 # Env-var override reference for this service:
 #   nodeEnv       NODE_ENV
@@ -1831,15 +2001,16 @@ exports[`scaffold > writeConfigYaml > snapshot: sqlite only 1`] = `
 "# Default configuration loaded by @lindorm/config.
 #
 # Resolution order (later wins):
-#   1. config/default.yml  (this file)
-#   2. config/{NODE_ENV}.yml
-#   3. NODE_CONFIG          (a JSON blob in one env var)
-#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT
-#                           (CONSTANT_CASE per segment, joined by __)
+#   1. config/default.yml      (this file — all environments)
+#   2. config/{NODE_ENV}.yml   (per-environment overrides)
+#   3. NODE_CONFIG             (a JSON blob in one env var)
+#   4. process.env             schema-driven, named SCHEMA__PATH__SEGMENT
+#                              (CONSTANT_CASE per segment, joined by __)
 #
-# Sensitive values (KEK, database URLs, OIDC client secrets) belong in
-# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS
-# SM, etc.) in production. Don't commit them here.
+# Sensitive values (KEK, OIDC client secret) live in .env locally and in
+# your secret store (Kubernetes Secrets, Vault, AWS SM, etc.) in
+# production. Dev-only credentials that match docker-compose live in
+# config/development.yml.
 #
 # Env-var override reference for this service:
 #   nodeEnv       NODE_ENV
@@ -2028,8 +2199,6 @@ PYLON__KEK=kryptos:test-fixed-kek-placeholder
 exports[`scaffold > writeEnvFile > postgres + kafka 1`] = `
 "NODE_ENV=development
 PYLON__KEK=kryptos:test-fixed-kek-placeholder
-POSTGRES__URL=postgresql://localhost:5432/app
-KAFKA__BROKERS=localhost:9092
 "
 `;
 

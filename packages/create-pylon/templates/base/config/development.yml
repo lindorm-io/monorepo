@@ -1,4 +1,0 @@
-# Overrides applied when NODE_ENV=development.
-# Merged on top of default.yml — only list the keys you want to change.
-logger:
-  level: debug

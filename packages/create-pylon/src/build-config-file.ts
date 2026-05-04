@@ -25,10 +25,7 @@ const proteusGroup = (driver: ProteusDriver): Group | null => {
 const irisGroup = (driver: IrisDriver): Group | null => {
   switch (driver) {
     case "kafka":
-      return {
-        key: "kafka",
-        lines: [`    brokers: z.string().transform((s) => s.split(",")),`],
-      };
+      return { key: "kafka", lines: [`    brokers: z.array(z.string()),`] };
     case "nats":
       return { key: "nats", lines: [`    servers: z.string(),`] };
     case "rabbit":
