@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.3.0...@lindorm/create-pylon@0.4.0) (2026-05-04)
+
+### Features
+
+- **create-pylon:** codegen default.yml and adopt \_\_ env-var convention ([a522f54](https://github.com/lindorm-io/monorepo/commit/a522f5434f8e0d674d7a108d99c3bb22a1c01ef1))
+- **create-pylon:** codegen development.yml; split .env/.env.example ([0bf1983](https://github.com/lindorm-io/monorepo/commit/0bf19836f7dab12d8c7d1f550b16176317ef6d6d))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.2.2...@lindorm/create-pylon@0.3.0) (2026-05-03)
 
 ### Features
