@@ -69,6 +69,7 @@ export const buildConfigFile = (answers: Answers): string => {
     `      level: z`,
     `        .enum(["error", "warn", "info", "verbose", "debug", "silly"])`,
     `        .default("info"),`,
+    `      readable: z.boolean().default(false),`,
     `    })`,
     `    .default({}),`,
   ];
