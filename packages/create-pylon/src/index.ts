@@ -2,19 +2,22 @@ export { runPrompts, resolveExistingCollision } from "./prompts.js";
 export {
   buildDependencyList,
   buildDevDependencyList,
+  buildEnvExampleLines,
   buildEnvLines,
   copyTemplates,
   scaffold,
+  writeConfigDevelopmentYaml,
   writeConfigFile,
   writeConfigYaml,
   writeDockerCompose,
+  writeEnvExampleFile,
   writeEnvFile,
   writeIrisSamples,
   writePackageJson,
   writePylonFile,
   writeWorkerFiles,
 } from "./scaffold.js";
-export { buildConfigYaml } from "./build-config-yaml.js";
+export { buildConfigDevelopmentYaml, buildConfigYaml } from "./build-config-yaml.js";
 export { installDependencies, installDevDependencies } from "./install.js";
 export { initGit } from "./git.js";
 export {

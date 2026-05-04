@@ -45,26 +45,13 @@ const dedupByPath = (hints: ReadonlyArray<EnvHint>): Array<EnvHint> => {
   return out;
 };
 
-/**
- * Generates `config/default.yml` for a freshly scaffolded service.
- *
- * The role of this file is twofold:
- *   - It carries the non-secret defaults the service can run with out
- *     of the box (`server.port`, `logger.level`).
- *   - The header is a hand-readable map of every env-var the service's
- *     schema responds to — paths on the left, `__`-joined CONSTANT_CASE
- *     names on the right. Sensitive values (KEK, URLs, client secrets)
- *     are intentionally absent from the YAML; they're sourced from
- *     `.env` locally and from a secret store in production.
- */
-export const buildConfigYaml = (answers: Answers): string => {
+const collectHints = (answers: Answers): Array<EnvHint> => {
   const hints: Array<EnvHint> = [
     { path: "nodeEnv", envVar: "NODE_ENV" },
     { path: "pylon.kek", envVar: "PYLON__KEK" },
     { path: "server.port", envVar: "SERVER__PORT" },
     { path: "logger.level", envVar: "LOGGER__LEVEL" },
   ];
-
   for (const driver of answers.proteusDrivers) {
     hints.push(...proteusEnvHints(driver));
   }
@@ -78,23 +65,35 @@ export const buildConfigYaml = (answers: Answers): string => {
       { path: "auth.issuer", envVar: "AUTH__ISSUER" },
     );
   }
+  return dedupByPath(hints);
+};
 
-  const unique = dedupByPath(hints);
+/**
+ * Generates `config/default.yml` for a freshly scaffolded service.
+ *
+ * Role: cross-environment, non-secret defaults a dev can edit. The
+ * header maps every env-var the service's schema responds to so the
+ * full contract is discoverable. Per-environment overrides (dev URLs,
+ * test config) live in `config/{NODE_ENV}.yml`; secrets live in `.env`.
+ */
+export const buildConfigYaml = (answers: Answers): string => {
+  const unique = collectHints(answers);
   const widest = unique.reduce((max, h) => Math.max(max, h.path.length), 0);
 
   const lines: Array<string> = [
     `# Default configuration loaded by @lindorm/config.`,
     `#`,
     `# Resolution order (later wins):`,
-    `#   1. config/default.yml  (this file)`,
-    `#   2. config/{NODE_ENV}.yml`,
-    `#   3. NODE_CONFIG          (a JSON blob in one env var)`,
-    `#   4. process.env          schema-driven, named SCHEMA__PATH__SEGMENT`,
-    `#                           (CONSTANT_CASE per segment, joined by __)`,
+    `#   1. config/default.yml      (this file — all environments)`,
+    `#   2. config/{NODE_ENV}.yml   (per-environment overrides)`,
+    `#   3. NODE_CONFIG             (a JSON blob in one env var)`,
+    `#   4. process.env             schema-driven, named SCHEMA__PATH__SEGMENT`,
+    `#                              (CONSTANT_CASE per segment, joined by __)`,
     `#`,
-    `# Sensitive values (KEK, database URLs, OIDC client secrets) belong in`,
-    `# .env locally and in your secret store (Kubernetes Secrets, Vault, AWS`,
-    `# SM, etc.) in production. Don't commit them here.`,
+    `# Sensitive values (KEK, OIDC client secret) live in .env locally and in`,
+    `# your secret store (Kubernetes Secrets, Vault, AWS SM, etc.) in`,
+    `# production. Dev-only credentials that match docker-compose live in`,
+    `# config/development.yml.`,
     `#`,
     `# Env-var override reference for this service:`,
     ...unique.map((h) => `#   ${h.path.padEnd(widest)}  ${h.envVar}`),
@@ -106,6 +105,91 @@ export const buildConfigYaml = (answers: Answers): string => {
     `  level: info`,
     ``,
   ];
+
+  return lines.join("\n");
+};
+
+type YamlBlock = Array<string>;
+
+const proteusDevYaml = (driver: ProteusDriver): YamlBlock => {
+  switch (driver) {
+    case "postgres":
+      return [`postgres:`, `  url: postgresql://postgres:postgres@localhost:5432/app`];
+    case "mysql":
+      return [`mysql:`, `  url: mysql://root:root@localhost:3306/app`];
+    case "mongo":
+      return [`mongo:`, `  url: mongodb://localhost:27017/app`];
+    case "redis":
+      return [`redis:`, `  url: redis://localhost:6379`];
+    case "sqlite":
+      return [`sqlite:`, `  path: ./data/app.db`];
+    case "memory":
+      return [];
+  }
+};
+
+const irisDevYaml = (driver: IrisDriver): YamlBlock => {
+  switch (driver) {
+    case "kafka":
+      return [`kafka:`, `  brokers:`, `    - localhost:9092`];
+    case "nats":
+      return [`nats:`, `  servers: nats://localhost:4222`];
+    case "rabbit":
+      return [`rabbit:`, `  url: amqp://guest:guest@localhost:5672`];
+    case "redis":
+      return [`redis:`, `  url: redis://localhost:6379`];
+    case "none":
+      return [];
+  }
+};
+
+/**
+ * Generates `config/development.yml` for a freshly scaffolded service.
+ *
+ * Role: dev-only defaults that line up with `docker-compose.yml`, so
+ * `npm run docker:up && npm run dev` works without anyone manually
+ * filling in URLs. This file is committed — secrets that are *not*
+ * dev-only (KEK, OIDC client secret) stay out of it.
+ *
+ * Driver URLs duplicate the credentials baked into the docker-compose
+ * blocks (`postgres:postgres`, `root:root`, `guest:guest`). Override
+ * via env (`POSTGRES__URL=...`) or in `config/{NODE_ENV}.yml` if your
+ * docker-compose deviates.
+ */
+export const buildConfigDevelopmentYaml = (answers: Answers): string => {
+  const seenKeys = new Set<string>();
+  const blocks: Array<YamlBlock> = [];
+
+  const pushBlock = (block: YamlBlock): void => {
+    if (block.length === 0) return;
+    const key = block[0];
+    if (seenKeys.has(key)) return;
+    seenKeys.add(key);
+    blocks.push(block);
+  };
+
+  for (const driver of answers.proteusDrivers) {
+    pushBlock(proteusDevYaml(driver));
+  }
+  if (answers.irisDriver !== "none") {
+    pushBlock(irisDevYaml(answers.irisDriver));
+  }
+
+  const lines: Array<string> = [
+    `# Overrides applied when NODE_ENV=development.`,
+    `# Merged on top of default.yml — only list the keys you want to change.`,
+    `#`,
+    `# Driver URLs here line up with the credentials in docker-compose.yml.`,
+    `# Override per-developer via .env (which is gitignored).`,
+    ``,
+    `logger:`,
+    `  level: debug`,
+    ``,
+  ];
+
+  for (const block of blocks) {
+    lines.push(...block, ``);
+  }
 
   return lines.join("\n");
 };

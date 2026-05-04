@@ -3,12 +3,15 @@ import { tmpdir } from "os";
 import { join } from "path";
 import {
   buildDependencyList,
+  buildEnvExampleLines,
   buildEnvLines,
   copyTemplates,
   scaffold,
+  writeConfigDevelopmentYaml,
   writeConfigFile,
   writeConfigYaml,
   writeDockerCompose,
+  writeEnvExampleFile,
   writeEnvFile,
   writeIrisSamples,
   writePackageJson,
@@ -168,18 +171,19 @@ describe("scaffold", () => {
   });
 
   describe("buildEnvLines", () => {
+    // The slim .env only carries the per-developer secret(s). Driver URLs
+    // moved to config/development.yml; everything else is in default.yml.
     test.each([
-      ["none-none", baseAnswers()],
-      ["mongo-nats", baseAnswers({ proteusDrivers: ["mongo"], irisDriver: "nats" })],
-      ["sqlite-redis", baseAnswers({ proteusDrivers: ["sqlite"], irisDriver: "redis" })],
-      ["mysql-rabbit", baseAnswers({ proteusDrivers: ["mysql"], irisDriver: "rabbit" })],
-      ["none-none + auth", baseAnswers({ features: baseFeatures({ auth: true }) })],
+      ["minimal", baseAnswers()],
       [
-        "postgres-rabbit + auth",
+        "with auth (adds AUTH__CLIENT_SECRET placeholder)",
+        baseAnswers({ features: baseFeatures({ auth: true }) }),
+      ],
+      [
+        "drivers don't add anything to .env",
         baseAnswers({
-          proteusDrivers: ["postgres"],
-          irisDriver: "rabbit",
-          features: baseFeatures({ auth: true }),
+          proteusDrivers: ["postgres", "redis"],
+          irisDriver: "kafka",
         }),
       ],
     ])("snapshot: %s", (_name, answers) => {
@@ -255,6 +259,57 @@ describe("scaffold", () => {
       expect(
         readFileSync(join(projectDir, "config/default.yml"), "utf-8"),
       ).toMatchSnapshot();
+    });
+  });
+
+  describe("writeConfigDevelopmentYaml", () => {
+    test.each<[string, Partial<Answers>]>([
+      ["no drivers", {}],
+      ["postgres only", { proteusDrivers: ["postgres"] }],
+      ["mysql only", { proteusDrivers: ["mysql"] }],
+      ["postgres + redis", { proteusDrivers: ["postgres", "redis"] }],
+      ["postgres + kafka", { proteusDrivers: ["postgres"], irisDriver: "kafka" }],
+      ["mongo + rabbit", { proteusDrivers: ["mongo"], irisDriver: "rabbit" }],
+      ["sqlite + nats", { proteusDrivers: ["sqlite"], irisDriver: "nats" }],
+      [
+        "redis proteus + redis iris (deduped)",
+        { proteusDrivers: ["redis"], irisDriver: "redis" },
+      ],
+    ])("snapshot: %s", (_name, overrides) => {
+      mkdirSync(projectDir, { recursive: true });
+      const answers = baseAnswers({ projectDir, ...overrides });
+      writeConfigDevelopmentYaml(answers);
+      expect(
+        readFileSync(join(projectDir, "config/development.yml"), "utf-8"),
+      ).toMatchSnapshot();
+    });
+  });
+
+  describe("buildEnvExampleLines", () => {
+    test.each<[string, Partial<Answers>]>([
+      ["no drivers", {}],
+      ["postgres + kafka", { proteusDrivers: ["postgres"], irisDriver: "kafka" }],
+      ["mysql + rabbit", { proteusDrivers: ["mysql"], irisDriver: "rabbit" }],
+      [
+        "postgres + auth",
+        { proteusDrivers: ["postgres"], features: baseFeatures({ auth: true }) },
+      ],
+    ])("snapshot: %s", (_name, overrides) => {
+      const answers = baseAnswers({ ...overrides });
+      expect(buildEnvExampleLines(answers)).toMatchSnapshot();
+    });
+  });
+
+  describe("writeEnvExampleFile", () => {
+    test("writes .env.example to project root", () => {
+      mkdirSync(projectDir, { recursive: true });
+      const answers = baseAnswers({
+        projectDir,
+        proteusDrivers: ["postgres"],
+        irisDriver: "kafka",
+      });
+      writeEnvExampleFile(answers);
+      expect(existsSync(join(projectDir, ".env.example"))).toBe(true);
     });
   });
 

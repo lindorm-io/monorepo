@@ -11,21 +11,15 @@ import {
 import { dirname, join, resolve } from "path";
 import { buildAttachSourcesFile } from "./build-attach-sources-file.js";
 import { buildConfigFile } from "./build-config-file.js";
-import { buildConfigYaml } from "./build-config-yaml.js";
+import { buildConfigDevelopmentYaml, buildConfigYaml } from "./build-config-yaml.js";
 import { buildContextFile } from "./build-context-file.js";
 import { buildDockerCompose } from "./build-docker-compose.js";
 import { buildIrisSamples } from "./build-iris-samples.js";
 import { buildPylonFile } from "./build-pylon-file.js";
 import { buildWorkerFile } from "./build-worker-file.js";
 import { runProteusInit } from "./drivers.js";
-import type { Answers } from "./types.js";
-import {
-  AUTH_ENV_VARS,
-  IRIS_DRIVER_PACKAGES,
-  IRIS_ENV_VARS,
-  PROTEUS_DRIVER_PACKAGES,
-  PROTEUS_ENV_VARS,
-} from "./types.js";
+import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
+import { IRIS_DRIVER_PACKAGES, PROTEUS_DRIVER_PACKAGES } from "./types.js";
 
 // Far-future expiry — the KEK protects every @Encrypted field in the DB;
 // rotating it is a re-encryption migration, not a routine rotation, so a
@@ -133,31 +127,145 @@ export const writePackageJson = (answers: Answers): void => {
   writeFileSync(target, JSON.stringify(pkg, null, 2) + "\n", "utf-8");
 };
 
+/**
+ * Lines for the gitignored `.env` — only the values that genuinely have
+ * to live in a per-developer secret file. Driver URLs and similar
+ * dev-friendly defaults belong in `config/development.yml` instead, so
+ * they're committed and a teammate can clone-and-run.
+ */
 export const buildEnvLines = (
   answers: Answers,
   kek: string = generateKekEnvString(),
 ): Array<string> => {
   const lines: Array<string> = ["NODE_ENV=development", `PYLON__KEK=${kek}`];
-  const seenEnvKeys = new Set<string>();
+  if (answers.features.auth) {
+    lines.push(`AUTH__CLIENT_SECRET=`);
+  }
+  return lines;
+};
 
-  const pushEnvEntries = (entries: ReadonlyArray<{ key: string; value: string }>) => {
-    for (const entry of entries) {
-      if (seenEnvKeys.has(entry.key)) continue;
-      seenEnvKeys.add(entry.key);
-      lines.push(`${entry.key}=${entry.value}`);
+type ExampleEntry = {
+  key: string;
+  value: string;
+  // Commented entries serve as a "you can override this" reference; the
+  // value already lives in YAML, so users only uncomment if they need a
+  // per-developer override.
+  commented: boolean;
+};
+
+const proteusExampleEntries = (driver: ProteusDriver): Array<ExampleEntry> => {
+  switch (driver) {
+    case "postgres":
+      return [
+        {
+          key: "POSTGRES__URL",
+          value: "postgresql://postgres:postgres@localhost:5432/app",
+          commented: true,
+        },
+      ];
+    case "mysql":
+      return [
+        {
+          key: "MYSQL__URL",
+          value: "mysql://root:root@localhost:3306/app",
+          commented: true,
+        },
+      ];
+    case "mongo":
+      return [
+        { key: "MONGO__URL", value: "mongodb://localhost:27017/app", commented: true },
+      ];
+    case "redis":
+      return [{ key: "REDIS__URL", value: "redis://localhost:6379", commented: true }];
+    case "sqlite":
+      return [{ key: "SQLITE__PATH", value: "./data/app.db", commented: true }];
+    case "memory":
+      return [];
+  }
+};
+
+const irisExampleEntries = (driver: IrisDriver): Array<ExampleEntry> => {
+  switch (driver) {
+    case "kafka":
+      return [{ key: "KAFKA__BROKERS", value: `["localhost:9092"]`, commented: true }];
+    case "nats":
+      return [{ key: "NATS__SERVERS", value: "nats://localhost:4222", commented: true }];
+    case "rabbit":
+      return [
+        {
+          key: "RABBIT__URL",
+          value: "amqp://guest:guest@localhost:5672",
+          commented: true,
+        },
+      ];
+    case "redis":
+      return [{ key: "REDIS__URL", value: "redis://localhost:6379", commented: true }];
+    case "none":
+      return [];
+  }
+};
+
+const formatExampleEntry = (entry: ExampleEntry): string =>
+  entry.commented ? `# ${entry.key}=${entry.value}` : `${entry.key}=${entry.value}`;
+
+/**
+ * Lines for the committed `.env.example` — a copy-paste reference of
+ * every env var the service's schema responds to.
+ *
+ * Required secrets are uncommented (so `cp .env.example .env` produces
+ * a file the user knows to fill in). Everything else is commented and
+ * shows the same default that already lives in `config/{NODE_ENV}.yml`,
+ * so devs who only want defaults don't have to copy anything.
+ */
+export const buildEnvExampleLines = (answers: Answers): Array<string> => {
+  const lines: Array<string> = [
+    `# Reference for every env var the service's schema responds to.`,
+    `# Copy to .env (gitignored) and fill in the secrets, or just keep using`,
+    `# the defaults from config/default.yml + config/development.yml.`,
+    `#`,
+    `# Naming convention: each schema-path segment in CONSTANT_CASE, joined by`,
+    `# __ (double underscore). e.g. database.maxRetries -> DATABASE__MAX_RETRIES.`,
+    ``,
+    `# --- Required secrets ---`,
+    `PYLON__KEK=kryptos:GENERATE_VIA_create-pylon_OR_KryptosKit`,
+  ];
+
+  if (answers.features.auth) {
+    lines.push(
+      ``,
+      `# --- OIDC client (auth) ---`,
+      `AUTH__CLIENT_SECRET=`,
+      `# AUTH__CLIENT_ID=`,
+      `# AUTH__ISSUER=https://auth.example.com`,
+    );
+  }
+
+  const overrideEntries: Array<ExampleEntry> = [
+    { key: "NODE_ENV", value: "development", commented: true },
+    { key: "SERVER__PORT", value: "3000", commented: true },
+    { key: "LOGGER__LEVEL", value: "info", commented: true },
+  ];
+
+  const seenKeys = new Set<string>();
+  const pushEntries = (entries: ReadonlyArray<ExampleEntry>) => {
+    for (const e of entries) {
+      if (seenKeys.has(e.key)) continue;
+      seenKeys.add(e.key);
+      overrideEntries.push(e);
     }
   };
 
   for (const driver of answers.proteusDrivers) {
-    pushEnvEntries(PROTEUS_ENV_VARS[driver]);
+    pushEntries(proteusExampleEntries(driver));
   }
+  pushEntries(irisExampleEntries(answers.irisDriver));
 
-  pushEnvEntries(IRIS_ENV_VARS[answers.irisDriver]);
-
-  if (answers.features.auth) {
-    for (const entry of AUTH_ENV_VARS) {
-      lines.push(`${entry.key}=${entry.value}`);
-    }
+  if (overrideEntries.length > 0) {
+    lines.push(
+      ``,
+      `# --- Optional overrides (defaults already in config/*.yml) ---`,
+      ...overrideEntries.map(formatExampleEntry),
+    );
   }
 
   return lines;
@@ -169,6 +277,12 @@ export const writeEnvFile = (
 ): void => {
   const lines = buildEnvLines(answers, kek);
   const target = join(answers.projectDir, ".env");
+  writeFileSync(target, lines.join("\n") + "\n", "utf-8");
+};
+
+export const writeEnvExampleFile = (answers: Answers): void => {
+  const lines = buildEnvExampleLines(answers);
+  const target = join(answers.projectDir, ".env.example");
   writeFileSync(target, lines.join("\n") + "\n", "utf-8");
 };
 
@@ -186,6 +300,12 @@ export const writeConfigYaml = (answers: Answers): void => {
   const target = join(answers.projectDir, "config/default.yml");
   ensureDir(target);
   writeFileSync(target, buildConfigYaml(answers), "utf-8");
+};
+
+export const writeConfigDevelopmentYaml = (answers: Answers): void => {
+  const target = join(answers.projectDir, "config/development.yml");
+  ensureDir(target);
+  writeFileSync(target, buildConfigDevelopmentYaml(answers), "utf-8");
 };
 
 export const writeContextFile = (answers: Answers): void => {
@@ -258,8 +378,10 @@ export const scaffold = async (
   copyTemplates(answers);
   writePackageJson(answers);
   writeEnvFile(answers, kek);
+  writeEnvExampleFile(answers);
   writeConfigFile(answers);
   writeConfigYaml(answers);
+  writeConfigDevelopmentYaml(answers);
   writeContextFile(answers);
   writePylonFile(answers);
   writeDockerCompose(answers);
