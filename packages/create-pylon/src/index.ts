@@ -6,6 +6,7 @@ export {
   copyTemplates,
   scaffold,
   writeConfigFile,
+  writeConfigYaml,
   writeDockerCompose,
   writeEnvFile,
   writeIrisSamples,
@@ -13,6 +14,7 @@ export {
   writePylonFile,
   writeWorkerFiles,
 } from "./scaffold.js";
+export { buildConfigYaml } from "./build-config-yaml.js";
 export { installDependencies, installDevDependencies } from "./install.js";
 export { initGit } from "./git.js";
 export {
