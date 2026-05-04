@@ -1,4 +1,3 @@
-import { isError } from "@lindorm/is";
 import pc from "picocolors";
 import winston from "winston";
 import type { ILogger, ILoggerRoot } from "../interfaces/index.js";
@@ -7,36 +6,10 @@ import type { StdLogger } from "../types/index.js";
 import type { LoggerBaseOptions } from "../internal/types/logger-base-options.js";
 import type { InternalLog } from "../internal/types/internal-log.js";
 import { defaultFilterCallback } from "../internal/utils/default-filter-callback.js";
+import { setProcessErrorRoute } from "../internal/utils/process-error-route.js";
 import { readableFormat } from "../internal/utils/readable-format.js";
 import { LoggerBase } from "./LoggerBase.js";
 import { LoggerChild } from "./LoggerChild.js";
-
-// Module-level routing for uncaughtException / unhandledRejection. We attach
-// process listeners once for the lifetime of the module, then forward to the
-// most-recently-constructed Logger so its scope/correlation/filters apply.
-// Per-Logger `process.on(...)` would accumulate listeners (and hit Node's
-// MaxListeners warning) every time a fresh Logger is built — common in tests.
-let processHandlersInstalled = false;
-let activeRoute: ((error: Error) => void) | null = null;
-
-const installProcessHandlers = (): void => {
-  if (processHandlersInstalled) return;
-  processHandlersInstalled = true;
-
-  process.on("uncaughtException", (err: unknown) => {
-    if (!activeRoute) return;
-    activeRoute(isError(err) ? err : new Error(String(err)));
-  });
-
-  process.on("unhandledRejection", (reason: unknown) => {
-    if (!activeRoute) return;
-    activeRoute(isError(reason) ? reason : new Error(String(reason)));
-  });
-};
-
-const setActiveRoute = (route: (error: Error) => void): void => {
-  activeRoute = route;
-};
 
 export class Logger extends LoggerBase implements ILoggerRoot {
   public static std: StdLogger = {
@@ -73,8 +46,7 @@ export class Logger extends LoggerBase implements ILoggerRoot {
       winston: winstonInstance,
     });
 
-    installProcessHandlers();
-    setActiveRoute((error) => this.error(error));
+    setProcessErrorRoute((error) => this.error(error));
   }
 
   protected spawnChild(options: LoggerBaseOptions): ILogger {
