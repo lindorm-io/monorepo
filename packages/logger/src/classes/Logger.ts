@@ -27,6 +27,33 @@ import { defaultFilterCallback } from "../internal/utils/default-filter-callback
 import { readableFormat } from "../internal/utils/readable-format.js";
 import { LoggerTimer } from "./LoggerTimer.js";
 
+// Module-level routing for uncaughtException / unhandledRejection. We attach
+// process listeners once for the lifetime of the module, then forward to the
+// most-recently-constructed Logger so its scope/correlation/filters apply.
+// Per-Logger `process.on(...)` would accumulate listeners (and hit Node's
+// MaxListeners warning) every time a fresh Logger is built — common in tests.
+let processHandlersInstalled = false;
+let activeRoute: ((error: Error) => void) | null = null;
+
+const installProcessHandlers = (): void => {
+  if (processHandlersInstalled) return;
+  processHandlersInstalled = true;
+
+  process.on("uncaughtException", (err: unknown) => {
+    if (!activeRoute) return;
+    activeRoute(isError(err) ? err : new Error(String(err)));
+  });
+
+  process.on("unhandledRejection", (reason: unknown) => {
+    if (!activeRoute) return;
+    activeRoute(isError(reason) ? reason : new Error(String(reason)));
+  });
+};
+
+const setActiveRoute = (route: (error: Error) => void): void => {
+  activeRoute = route;
+};
+
 export class Logger implements ILogger {
   public readonly __instanceof = "Logger";
 
@@ -63,13 +90,15 @@ export class Logger implements ILogger {
 
       this.winston.add(
         new winston.transports.Console({
-          handleExceptions: true,
           level: logLevel,
           format: readable
             ? winston.format.printf((log) => readableFormat(log as InternalLog))
             : winston.format.json(),
         }),
       );
+
+      installProcessHandlers();
+      setActiveRoute((error) => this.error(error));
     }
   }
 
