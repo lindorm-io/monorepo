@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.3.0...@lindorm/config@0.4.0) (2026-05-04)
+
+### Features
+
+- **config:** schema-driven env binding with \_\_ separator ([bdbec63](https://github.com/lindorm-io/monorepo/commit/bdbec6316c7594693d32ed25e2d446e1f3d4271a))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.2.10...@lindorm/config@0.3.0) (2026-05-02)
 
 ### Features
