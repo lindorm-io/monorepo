@@ -1,11 +1,12 @@
 import { isError } from "@lindorm/is";
 import pc from "picocolors";
 import winston from "winston";
-import type { ILogger } from "../interfaces/index.js";
-import type { LoggerOptions } from "../types/index.js";
+import type { ILogger, ILoggerRoot } from "../interfaces/index.js";
+import type { FilterCallback, LogLevel, LoggerOptions } from "../types/index.js";
 import type { StdLogger } from "../types/index.js";
 import type { LoggerBaseOptions } from "../internal/types/logger-base-options.js";
 import type { InternalLog } from "../internal/types/internal-log.js";
+import { defaultFilterCallback } from "../internal/utils/default-filter-callback.js";
 import { readableFormat } from "../internal/utils/readable-format.js";
 import { LoggerBase } from "./LoggerBase.js";
 import { LoggerChild } from "./LoggerChild.js";
@@ -37,7 +38,7 @@ const setActiveRoute = (route: (error: Error) => void): void => {
   activeRoute = route;
 };
 
-export class Logger extends LoggerBase {
+export class Logger extends LoggerBase implements ILoggerRoot {
   public static std: StdLogger = {
     log: (msg: string) => console.log(msg),
     info: (msg: string) => console.info(pc.green(msg)),
@@ -78,5 +79,36 @@ export class Logger extends LoggerBase {
 
   protected spawnChild(options: LoggerBaseOptions): ILogger {
     return new LoggerChild(options);
+  }
+
+  // root-only mutators — config that touches shared infrastructure
+  // (winston level applies across every transport and every child;
+  // filters live in a registry shared by reference with every child).
+
+  public override get level(): LogLevel {
+    return super.level;
+  }
+
+  public override set level(level: LogLevel) {
+    this.winston.level = level;
+    this.winston.transports.forEach((t) => {
+      t.level = level;
+    });
+  }
+
+  public filterPath(path: string, callback?: FilterCallback): void {
+    this.filters[path] = callback ?? defaultFilterCallback;
+    this.filterRef.entries = Object.entries(this.filters);
+  }
+
+  public filterKey(key: string, callback?: FilterCallback): void;
+  public filterKey(pattern: RegExp, callback?: FilterCallback): void;
+  public filterKey(keyOrPattern: string | RegExp, callback?: FilterCallback): void {
+    const cb = callback ?? defaultFilterCallback;
+    if (typeof keyOrPattern === "string") {
+      this.keyFilterRef.exact.set(keyOrPattern, cb);
+    } else {
+      this.keyFilterRef.patterns.push([keyOrPattern, cb]);
+    }
   }
 }

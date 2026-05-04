@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import type { ILogger } from "../interfaces/index.js";
 import { Logger } from "./Logger.js";
 import { LoggerBase } from "./LoggerBase.js";
 import {
@@ -39,7 +38,7 @@ vi.mock("winston", async () => {
 });
 
 describe("Logger", () => {
-  let logger: ILogger;
+  let logger: Logger;
 
   beforeEach(() => {
     logger = new Logger();
@@ -359,12 +358,12 @@ describe("Logger", () => {
     );
   });
 
-  test("should share filters from child to parent", () => {
+  test("should propagate filterPath from root to child output", () => {
     const child = logger.child(["child"]);
 
-    child.filterPath("token");
+    logger.filterPath("token");
 
-    logger.info("message", { token: "abc123" });
+    child.info("message", { token: "abc123" });
 
     expect(log).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -437,12 +436,12 @@ describe("Logger", () => {
     );
   });
 
-  test("should share filterKey from child to parent", () => {
+  test("should propagate filterKey from root to child output", () => {
     const child = logger.child(["child"]);
 
-    child.filterKey("password");
+    logger.filterKey("password");
 
-    logger.info("message", { password: "secret" });
+    child.info("message", { password: "secret" });
 
     expect(log).toHaveBeenCalledWith(
       expect.objectContaining({

@@ -20,7 +20,6 @@ import type {
   LoggerBaseOptions,
 } from "../internal/types/logger-base-options.js";
 import type { InternalLog } from "../internal/types/internal-log.js";
-import { defaultFilterCallback } from "../internal/utils/default-filter-callback.js";
 import { LoggerTimer } from "./LoggerTimer.js";
 
 // Shared logger behaviour used by both Logger (root) and LoggerChild.
@@ -59,18 +58,12 @@ export abstract class LoggerBase implements ILogger {
     return this.winston.level as LogLevel;
   }
 
-  public set level(level: LogLevel) {
-    this.winston.level = level;
-    this.winston.transports.forEach((t) => {
-      t.level = level;
-    });
-  }
-
   // utility
 
   public child(): ILogger;
   public child(scope: LogScope): ILogger;
   public child(correlation: LogCorrelation): ILogger;
+  public child(scope: LogScope, correlation: LogCorrelation): ILogger;
   public child(arg1?: LogScope | LogCorrelation, arg2?: LogCorrelation): ILogger {
     const scope = isArray(arg1) ? arg1 : [];
     const correlation = isObject(arg1) ? arg1 : isObject(arg2) ? arg2 : {};
@@ -88,22 +81,6 @@ export abstract class LoggerBase implements ILogger {
 
   public correlation(correlation: LogCorrelation): void {
     this._correlation = this.getCorrelation(correlation);
-  }
-
-  public filterPath(path: string, callback?: FilterCallback): void {
-    this.filters[path] = callback ?? defaultFilterCallback;
-    this.filterRef.entries = Object.entries(this.filters);
-  }
-
-  public filterKey(key: string, callback?: FilterCallback): void;
-  public filterKey(pattern: RegExp, callback?: FilterCallback): void;
-  public filterKey(keyOrPattern: string | RegExp, callback?: FilterCallback): void {
-    const cb = callback ?? defaultFilterCallback;
-    if (typeof keyOrPattern === "string") {
-      this.keyFilterRef.exact.set(keyOrPattern, cb);
-    } else {
-      this.keyFilterRef.patterns.push([keyOrPattern, cb]);
-    }
   }
 
   public isLevelEnabled(level: LogLevel): boolean {

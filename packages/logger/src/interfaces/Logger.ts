@@ -8,10 +8,13 @@ import type {
 } from "../types/index.js";
 import type { ILoggerTimer } from "./LoggerTimer.js";
 
+// Surface available to every logger handle, including children.
+// Configuration of the underlying winston instance and the shared filter
+// registry is intentionally absent — see ILoggerRoot.
 export interface ILogger {
   __instanceof: "Logger";
 
-  level: LogLevel;
+  readonly level: LogLevel;
 
   child(): ILogger;
   child(scope: LogScope): ILogger;
@@ -19,9 +22,6 @@ export interface ILogger {
   child(scope: LogScope, correlation: LogCorrelation): ILogger;
 
   correlation(correlation: LogCorrelation): void;
-  filterPath(path: string, callback?: FilterCallback): void;
-  filterKey(key: string, callback?: FilterCallback): void;
-  filterKey(pattern: RegExp, callback?: FilterCallback): void;
   isLevelEnabled(level: LogLevel): boolean;
   scope(scope: LogScope): void;
 
@@ -45,4 +45,16 @@ export interface ILogger {
   silly(message: string, context?: LogContent, extra?: Array<LogContent>): void;
 
   log(log: Log): void;
+}
+
+// Surface available on the root logger only. Adds the mutators that
+// touch shared infrastructure: the winston level (affects every transport
+// and every child) and the filter registry (shared by reference with
+// every child). Children expose ILogger; only the root holds ILoggerRoot.
+export interface ILoggerRoot extends Omit<ILogger, "level"> {
+  level: LogLevel;
+
+  filterPath(path: string, callback?: FilterCallback): void;
+  filterKey(key: string, callback?: FilterCallback): void;
+  filterKey(pattern: RegExp, callback?: FilterCallback): void;
 }
