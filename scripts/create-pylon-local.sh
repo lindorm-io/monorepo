@@ -145,13 +145,6 @@ for pkg in "${RUNTIME_PKGS[@]}"; do
     rm -rf "$TARGET"
     mkdir -p "$TARGET"
     tar -xzf "$TARBALL" -C "$TARGET" --strip-components=1
-    # Workspace npm-pack omits dist/ for packages without a "files" field in
-    # package.json (the root .gitignore that excludes dist/ leaks in). Lerna's
-    # publish path doesn't have this problem, but our local pack does — so
-    # mirror dist/ explicitly from the built source after the tarball extract.
-    if [[ -d "$ROOT/packages/$pkg/dist" ]]; then
-      rsync -a --delete "$ROOT/packages/$pkg/dist/" "$TARGET/dist/"
-    fi
     echo "  overlaid @lindorm/$pkg -> $TARGET"
     OVERLAID=true
   done < <(locate_install_dirs "$pkg")
