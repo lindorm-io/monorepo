@@ -2068,7 +2068,7 @@ logger:
 exports[`scaffold > writeDockerCompose > snapshot: iris redis 1`] = `
 "services:
   redis:
-    image: redis:7
+    image: redis:8
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -2103,7 +2103,7 @@ exports[`scaffold > writeDockerCompose > snapshot: kafka + zookeeper 1`] = `
 exports[`scaffold > writeDockerCompose > snapshot: mongo + kafka 1`] = `
 "services:
   mongo:
-    image: mongo:7
+    image: mongo:8
     restart: unless-stopped
     ports:
       - "27017:27017"
@@ -2133,7 +2133,7 @@ exports[`scaffold > writeDockerCompose > snapshot: mongo + kafka 1`] = `
 exports[`scaffold > writeDockerCompose > snapshot: mongo 1`] = `
 "services:
   mongo:
-    image: mongo:7
+    image: mongo:8
     restart: unless-stopped
     ports:
       - "27017:27017"
@@ -2143,7 +2143,7 @@ exports[`scaffold > writeDockerCompose > snapshot: mongo 1`] = `
 exports[`scaffold > writeDockerCompose > snapshot: mysql 1`] = `
 "services:
   mysql:
-    image: mysql:8
+    image: mysql:9
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: app
@@ -2166,7 +2166,7 @@ exports[`scaffold > writeDockerCompose > snapshot: nats 1`] = `
 exports[`scaffold > writeDockerCompose > snapshot: postgres + rabbit 1`] = `
 "services:
   postgres:
-    image: postgres:16
+    image: postgres:18
     restart: unless-stopped
     environment:
       POSTGRES_DB: app
@@ -2175,7 +2175,7 @@ exports[`scaffold > writeDockerCompose > snapshot: postgres + rabbit 1`] = `
     ports:
       - "5432:5432"
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:4-management
     restart: unless-stopped
     ports:
       - "5672:5672"
@@ -2186,7 +2186,7 @@ exports[`scaffold > writeDockerCompose > snapshot: postgres + rabbit 1`] = `
 exports[`scaffold > writeDockerCompose > snapshot: postgres 1`] = `
 "services:
   postgres:
-    image: postgres:16
+    image: postgres:18
     restart: unless-stopped
     environment:
       POSTGRES_DB: app
@@ -2200,7 +2200,7 @@ exports[`scaffold > writeDockerCompose > snapshot: postgres 1`] = `
 exports[`scaffold > writeDockerCompose > snapshot: proteus redis 1`] = `
 "services:
   redis:
-    image: redis:7
+    image: redis:8
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -2210,7 +2210,7 @@ exports[`scaffold > writeDockerCompose > snapshot: proteus redis 1`] = `
 exports[`scaffold > writeDockerCompose > snapshot: rabbit 1`] = `
 "services:
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:4-management
     restart: unless-stopped
     ports:
       - "5672:5672"
@@ -2221,7 +2221,7 @@ exports[`scaffold > writeDockerCompose > snapshot: rabbit 1`] = `
 exports[`scaffold > writeDockerCompose > snapshot: redis dedup 1`] = `
 "services:
   redis:
-    image: redis:7
+    image: redis:8
     restart: unless-stopped
     ports:
       - "6379:6379"

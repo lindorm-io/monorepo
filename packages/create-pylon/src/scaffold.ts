@@ -330,7 +330,7 @@ export const writePylonFile = (answers: Answers): void => {
   writeFileSync(target, buildPylonFile(answers), "utf-8");
 };
 
-const needsDockerCompose = (answers: Answers): boolean =>
+export const needsDockerCompose = (answers: Answers): boolean =>
   answers.proteusDrivers.some((d) =>
     ["postgres", "mysql", "mongo", "redis"].includes(d),
   ) || ["kafka", "nats", "rabbit", "redis"].includes(answers.irisDriver);

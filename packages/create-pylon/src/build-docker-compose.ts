@@ -6,7 +6,7 @@ const postgresBlock = (): ServiceBlock => ({
   name: "postgres",
   lines: [
     `  postgres:`,
-    `    image: postgres:16`,
+    `    image: postgres:18`,
     `    restart: unless-stopped`,
     `    environment:`,
     `      POSTGRES_DB: app`,
@@ -21,7 +21,7 @@ const mysqlBlock = (): ServiceBlock => ({
   name: "mysql",
   lines: [
     `  mysql:`,
-    `    image: mysql:8`,
+    `    image: mysql:9`,
     `    restart: unless-stopped`,
     `    environment:`,
     `      MYSQL_DATABASE: app`,
@@ -35,7 +35,7 @@ const mongoBlock = (): ServiceBlock => ({
   name: "mongo",
   lines: [
     `  mongo:`,
-    `    image: mongo:7`,
+    `    image: mongo:8`,
     `    restart: unless-stopped`,
     `    ports:`,
     `      - "27017:27017"`,
@@ -46,7 +46,7 @@ const redisBlock = (): ServiceBlock => ({
   name: "redis",
   lines: [
     `  redis:`,
-    `    image: redis:7`,
+    `    image: redis:8`,
     `    restart: unless-stopped`,
     `    ports:`,
     `      - "6379:6379"`,
@@ -68,7 +68,7 @@ const rabbitBlock = (): ServiceBlock => ({
   name: "rabbit",
   lines: [
     `  rabbitmq:`,
-    `    image: rabbitmq:3-management`,
+    `    image: rabbitmq:4-management`,
     `    restart: unless-stopped`,
     `    ports:`,
     `      - "5672:5672"`,

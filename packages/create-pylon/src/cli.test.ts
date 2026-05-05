@@ -3,6 +3,7 @@ vi.mock("./scaffold.js", () => ({
   scaffold: vi.fn(),
   buildDependencyList: vi.fn(() => []),
   buildDevDependencyList: vi.fn(() => []),
+  needsDockerCompose: vi.fn(() => false),
 }));
 vi.mock("./install.js", () => ({
   installDependencies: vi.fn(),
@@ -17,7 +18,7 @@ vi.mock("./drivers.js", () => ({
 }));
 
 import { runPrompts } from "./prompts.js";
-import { scaffold } from "./scaffold.js";
+import { needsDockerCompose, scaffold } from "./scaffold.js";
 import { installDependencies, installDevDependencies } from "./install.js";
 import { initGit } from "./git.js";
 import {
@@ -41,6 +42,7 @@ import {
 
 const mockedRunPrompts = runPrompts as Mock;
 const mockedScaffold = scaffold as Mock;
+const mockedNeedsDockerCompose = needsDockerCompose as Mock;
 const mockedInstall = installDependencies as Mock;
 const mockedInstallDev = installDevDependencies as Mock;
 const mockedInitGit = initGit as Mock;
@@ -81,7 +83,10 @@ describe("cli run orchestration", () => {
       mockedProteusSampleEntity,
       mockedIrisInit,
       mockedIrisSampleMessage,
+      mockedNeedsDockerCompose,
     ].forEach((m) => m.mockReset());
+
+    mockedNeedsDockerCompose.mockReturnValue(false);
 
     [
       mockedScaffold,
@@ -181,5 +186,28 @@ describe("cli run orchestration", () => {
     mockedRunPrompts.mockResolvedValue(baseAnswers());
     await run("my-app");
     expect(mockedRunPrompts).toHaveBeenCalledWith({ positionalName: "my-app" });
+  });
+
+  test("next steps include docker:up when a compose file is generated", async () => {
+    mockedRunPrompts.mockResolvedValue(baseAnswers({ proteusDrivers: ["postgres"] }));
+    mockedNeedsDockerCompose.mockReturnValue(true);
+
+    await run();
+
+    const written = stdout.mock.calls.map(([s]) => String(s)).join("");
+    expect(written).toContain("npm run docker:up");
+    expect(written.indexOf("npm run docker:up")).toBeLessThan(
+      written.indexOf("npm run dev"),
+    );
+  });
+
+  test("next steps omit docker:up when no compose file is generated", async () => {
+    mockedRunPrompts.mockResolvedValue(baseAnswers());
+    mockedNeedsDockerCompose.mockReturnValue(false);
+
+    await run();
+
+    const written = stdout.mock.calls.map(([s]) => String(s)).join("");
+    expect(written).not.toContain("docker:up");
   });
 });

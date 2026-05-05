@@ -17,7 +17,12 @@ import {
 import { initGit } from "./git.js";
 import { installDependencies, installDevDependencies } from "./install.js";
 import { runPrompts } from "./prompts.js";
-import { buildDependencyList, buildDevDependencyList, scaffold } from "./scaffold.js";
+import {
+  buildDependencyList,
+  buildDevDependencyList,
+  needsDockerCompose,
+  scaffold,
+} from "./scaffold.js";
 import {
   BASE_DEV_DEPENDENCIES,
   BASE_RUNTIME_DEPENDENCIES,
@@ -34,6 +39,9 @@ const pkg = JSON.parse(readFileSync(resolve(here, "..", "package.json"), "utf-8"
 const printNextSteps = (answers: Answers): void => {
   process.stdout.write("\nDone. Next:\n");
   process.stdout.write(`  cd ${answers.projectName}\n`);
+  if (needsDockerCompose(answers)) {
+    process.stdout.write(`  npm run docker:up\n`);
+  }
   process.stdout.write(`  npm run dev\n\n`);
 };
 
