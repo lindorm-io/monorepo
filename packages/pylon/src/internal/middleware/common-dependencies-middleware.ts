@@ -54,7 +54,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
   options: Options,
 ): Middleware<C> => {
   return async function dependenciesMiddleware(ctx, next) {
-    const timer = ctx.logger.time();
+    const timer = ctx.logger.timer();
 
     try {
       // Resolve actor once per request from the top-level resolver (or the

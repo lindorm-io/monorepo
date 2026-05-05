@@ -12,7 +12,7 @@ export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
   handler: PylonHandler<C>,
 ): PylonHttpMiddleware<C> =>
   async function httpHandlerMiddleware(ctx, next) {
-    const timer = ctx.logger.time();
+    const timer = ctx.logger.timer();
 
     ctx.logger = ctx.logger.child([
       handler.name || handler.constructor.name || "handler",

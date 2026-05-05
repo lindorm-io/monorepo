@@ -74,7 +74,7 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
   options: Options,
 ): PylonMiddleware<C> =>
   async function accessTokenMiddleware(ctx, next): Promise<void> {
-    const timer = ctx.logger.time();
+    const timer = ctx.logger.timer();
 
     try {
       if (isSocketHandshakeContext(ctx as any)) {

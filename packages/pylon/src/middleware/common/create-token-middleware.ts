@@ -14,7 +14,7 @@ export const createTokenMiddleware =
   <C extends PylonContext = PylonContext>(options: Options) =>
   (path: string, optional: boolean = false): PylonMiddleware<C> =>
     async function tokenMiddleware(ctx, next): Promise<void> {
-      const timer = ctx.logger.time();
+      const timer = ctx.logger.timer();
 
       try {
         const token = objectPath.get(ctx, path);
