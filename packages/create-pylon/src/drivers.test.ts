@@ -48,6 +48,7 @@ describe("drivers", () => {
       directory: join("/tmp/project", "src/proteus"),
       loggerImport: "../logger/index.js",
       configImport: "../pylon/config.js",
+      amphoraImport: "../pylon/amphora.js",
       cache: null,
     });
   });
@@ -63,6 +64,7 @@ describe("drivers", () => {
       directory: join("/tmp/project", "src/proteus/postgres"),
       loggerImport: "../../logger/index.js",
       configImport: "../../pylon/config.js",
+      amphoraImport: "../../pylon/amphora.js",
       cache: "redis",
     });
     expect(mockedProteusWriteSource).toHaveBeenNthCalledWith(2, {
@@ -70,6 +72,7 @@ describe("drivers", () => {
       directory: join("/tmp/project", "src/proteus/redis"),
       loggerImport: "../../logger/index.js",
       configImport: "../../pylon/config.js",
+      amphoraImport: "../../pylon/amphora.js",
       cache: null,
     });
     expect(mockedProteusWriteSource).toHaveBeenNthCalledWith(3, {
@@ -77,6 +80,7 @@ describe("drivers", () => {
       directory: join("/tmp/project", "src/proteus/mongo"),
       loggerImport: "../../logger/index.js",
       configImport: "../../pylon/config.js",
+      amphoraImport: "../../pylon/amphora.js",
       cache: "redis",
     });
   });
@@ -91,6 +95,7 @@ describe("drivers", () => {
       directory: join("/tmp/project", "src/proteus/postgres"),
       loggerImport: "../../logger/index.js",
       configImport: "../../pylon/config.js",
+      amphoraImport: "../../pylon/amphora.js",
       cache: "memory",
     });
   });
@@ -105,6 +110,7 @@ describe("drivers", () => {
       directory: join("/tmp/project", "src/proteus/mongo"),
       loggerImport: "../../logger/index.js",
       configImport: "../../pylon/config.js",
+      amphoraImport: "../../pylon/amphora.js",
       cache: "redis",
     });
   });

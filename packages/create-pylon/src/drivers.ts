@@ -47,6 +47,7 @@ export const runProteusInit = async (
       directory,
       loggerImport: `${relative}logger/index.js`,
       configImport: `${relative}pylon/config.js`,
+      amphoraImport: `${relative}pylon/amphora.js`,
       cache: resolveCache(driver, drivers),
     });
   }
