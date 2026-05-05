@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.7.0...@lindorm/aegis@0.7.1) (2026-05-05)
+
+### Bug Fixes
+
+- **aegis:** extend timeout for RSA-OAEP-512 algorithm test ([b418307](https://github.com/lindorm-io/monorepo/commit/b4183075263fff656337663e8d0e0bcdb892309d))
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.6.0...@lindorm/aegis@0.7.0) (2026-05-02)
 
 ### Bug Fixes

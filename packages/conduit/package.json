@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/conduit",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -50,7 +50,7 @@
     }
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.6.0"
+    "@lindorm/logger": "^0.6.1"
   },
   "exports": {
     ".": {
