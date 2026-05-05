@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.7.0...@lindorm/aes@0.7.1) (2026-05-05)
+
+### Bug Fixes
+
+- **aes:** extend timeout for RSA-OAEP-512 algorithm tests ([1ef51d2](https://github.com/lindorm-io/monorepo/commit/1ef51d2c7e2d5b44a914939d921e3dab92f73ed7))
+- **packages:** declare files: ["dist"] for every publishable package ([6fe2ac8](https://github.com/lindorm-io/monorepo/commit/6fe2ac818d0deba7e68f799b7f856c7ebf419832))
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.6.5...@lindorm/aes@0.7.0) (2026-05-02)
 
 ### Bug Fixes

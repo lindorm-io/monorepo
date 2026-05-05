@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/okp",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -36,9 +36,9 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.2.0",
-    "@lindorm/is": "^0.2.0",
-    "@lindorm/kryptos": "^0.8.0",
-    "@lindorm/types": "^0.6.0"
+    "@lindorm/errors": "^0.2.1",
+    "@lindorm/is": "^0.2.1",
+    "@lindorm/kryptos": "^0.8.1",
+    "@lindorm/types": "^0.6.1"
   }
 }

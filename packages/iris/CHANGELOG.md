@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.4.1...@lindorm/iris@0.4.2) (2026-05-05)
+
+### Bug Fixes
+
+- **iris:** use import.meta.dirname and accept configImport in generateSource ([a195453](https://github.com/lindorm-io/monorepo/commit/a1954536f55155801700906f82236297acfc7732))
+
 ## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.4.0...@lindorm/iris@0.4.1) (2026-05-05)
 
 ### Bug Fixes
