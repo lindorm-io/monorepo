@@ -21,6 +21,7 @@ import type { QueryState } from "../../../types/query.js";
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { AggregateFunction } from "../../../types/aggregate.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { fanout } from "../../../utils/parallel.js";
 import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase.js";
 import { createEmptyState } from "../../../../classes/QueryBuilder.js";
 import { compileAggregate } from "../utils/query/compile-aggregate.js";
@@ -168,9 +169,15 @@ export class PostgresRepository<
         namespace: this.namespace,
         client: this.client,
       };
-      await Promise.all([
-        this.hasAsyncRelationIds ? loadRelationIds(entities, loadCtx) : undefined,
-        this.hasRelationCounts ? loadRelationCounts(entities, loadCtx) : undefined,
+      await fanout(this.client, [
+        () =>
+          this.hasAsyncRelationIds
+            ? loadRelationIds(entities, loadCtx)
+            : Promise.resolve(undefined),
+        () =>
+          this.hasRelationCounts
+            ? loadRelationCounts(entities, loadCtx)
+            : Promise.resolve(undefined),
       ]);
     }
 
@@ -212,9 +219,15 @@ export class PostgresRepository<
         namespace: this.namespace,
         client: this.client,
       };
-      await Promise.all([
-        this.hasAsyncRelationIds ? loadRelationIds(entities, loadCtx) : undefined,
-        this.hasRelationCounts ? loadRelationCounts(entities, loadCtx) : undefined,
+      await fanout(this.client, [
+        () =>
+          this.hasAsyncRelationIds
+            ? loadRelationIds(entities, loadCtx)
+            : Promise.resolve(undefined),
+        () =>
+          this.hasRelationCounts
+            ? loadRelationCounts(entities, loadCtx)
+            : Promise.resolve(undefined),
       ]);
     }
 

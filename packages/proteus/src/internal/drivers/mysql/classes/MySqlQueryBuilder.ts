@@ -16,6 +16,7 @@ import type {
   SubqueryPredicateSpec,
 } from "../../../types/query.js";
 import type { MysqlQueryClient } from "../types/mysql-query-client.js";
+import { fanout } from "../../../utils/parallel.js";
 import {
   compileAggregate,
   type AggregateType,
@@ -317,10 +318,10 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public async getManyAndCount(): Promise<[Array<E>, number]> {
-    const [entities, countResult] = await Promise.all([
-      this.getMany(),
-      this.executeCount(),
-    ]);
+    const [entities, countResult] = (await fanout<unknown>(this.client, [
+      () => this.getMany(),
+      () => this.executeCount(),
+    ])) as [Array<E>, number];
     return [entities, countResult];
   }
 

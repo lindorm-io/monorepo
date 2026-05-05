@@ -573,6 +573,7 @@ export class PostgresDriver implements IProteusDriver {
       sql: string,
       params?: Array<unknown>,
     ) => Promise<{ rows: Array<any>; rowCount: number | null }>,
+    multiplexed: boolean,
   ): PostgresQueryClient {
     return {
       query: async <R = Record<string, unknown>>(
@@ -599,6 +600,7 @@ export class PostgresDriver implements IProteusDriver {
           rowCount: result.rowCount ?? 0,
         };
       },
+      multiplexed,
     };
   }
 
@@ -607,7 +609,10 @@ export class PostgresDriver implements IProteusDriver {
     signal?: AbortSignal,
   ): PostgresQueryClient {
     if (!signal) {
-      return this.wrapWithQueryClient((sql, params) => poolClient.query(sql, params));
+      return this.wrapWithQueryClient(
+        (sql, params) => poolClient.query(sql, params),
+        false,
+      );
     }
 
     // Signal-aware: rewrap server-side cancel rejections (57014) as
@@ -625,7 +630,7 @@ export class PostgresDriver implements IProteusDriver {
         }
         throw err;
       }
-    });
+    }, false);
   }
 
   /**
@@ -649,7 +654,7 @@ export class PostgresDriver implements IProteusDriver {
   }
 
   private createPgClientFromPool(pool: Pool): PostgresQueryClient {
-    return this.wrapWithQueryClient((sql, params) => pool.query(sql, params));
+    return this.wrapWithQueryClient((sql, params) => pool.query(sql, params), true);
   }
 
   /**
@@ -688,7 +693,7 @@ export class PostgresDriver implements IProteusDriver {
         signal.removeEventListener("abort", onAbort);
         pc.release();
       }
-    });
+    }, true);
   }
 
   /**
@@ -744,16 +749,20 @@ export class PostgresDriver implements IProteusDriver {
     // Derive managed tables from desired schema — includes join tables (#7)
     const managedTables = desired.tables.map((t) => ({ schema: t.schema, name: t.name }));
 
-    // Check out a dedicated connection for the entire sync operation.
+    // Read-only introspection: use a pool wrapper so the introspect queries
+    // fan out across connections instead of queueing on one. Advisory locks
+    // and the executor still need a dedicated session-scoped connection,
+    // so they run separately below.
+    const introspectClient = this.createPgClientFromPool(pool);
+    const snapshot = await introspectSchema(introspectClient, managedTables);
+
+    // Check out a dedicated connection for the lock + executor portion.
     // Advisory locks and transactions are session-scoped — using pool.query()
     // would dispatch each statement to a random connection, breaking both.
     const poolClient = await pool.connect();
 
     try {
       const client = this.createPgClient(poolClient);
-
-      // Introspect current database state
-      const snapshot = await introspectSchema(client, managedTables);
 
       // Diff and execute
       const plan = diffSchema(snapshot, desired);
