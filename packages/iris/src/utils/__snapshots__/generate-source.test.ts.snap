@@ -7,7 +7,7 @@ import { IrisSource } from "@lindorm/iris";
 export const source = new IrisSource({
   driver: "rabbit",
   logger: logger, // TODO: import or create a Logger instance
-  messages: [join(__dirname, "messages")],
+  messages: [join(import.meta.dirname, "messages")],
   url: "amqp://localhost:5672",
 });
 "
@@ -20,7 +20,7 @@ import { IrisSource } from "@lindorm/iris";
 export const source = new IrisSource({
   driver: "rabbit",
   logger: logger, // TODO: import or create a Logger instance
-  messages: [join(__dirname, "messages")],
+  messages: [join(import.meta.dirname, "messages")],
   url: "amqp://localhost:5672",
 });
 "
@@ -34,7 +34,7 @@ import { IrisSource } from "@lindorm/iris";
 export const source = new IrisSource({
   driver: "kafka",
   logger: logger,
-  messages: [join(__dirname, "messages")],
+  messages: [join(import.meta.dirname, "messages")],
   brokers: ["localhost:9092"],
 });
 "
@@ -48,7 +48,7 @@ import { IrisSource } from "@lindorm/iris";
 export const source = new IrisSource({
   driver: "nats",
   logger: logger,
-  messages: [join(__dirname, "messages")],
+  messages: [join(import.meta.dirname, "messages")],
   servers: "localhost:4222",
 });
 "
@@ -62,7 +62,7 @@ import { IrisSource } from "@lindorm/iris";
 export const source = new IrisSource({
   driver: "redis",
   logger: logger,
-  messages: [join(__dirname, "messages")],
+  messages: [join(import.meta.dirname, "messages")],
   url: "redis://localhost:6379",
 });
 "
@@ -76,8 +76,68 @@ import { IrisSource } from "@lindorm/iris";
 export const source = new IrisSource({
   driver: "rabbit",
   logger: logger,
-  messages: [join(__dirname, "messages")],
+  messages: [join(import.meta.dirname, "messages")],
   url: "amqp://localhost:5672",
+});
+"
+`;
+
+exports[`generateSource > reads brokers from configImport for kafka 1`] = `
+"import { logger } from "../logger/index.js";
+import { config } from "../pylon/config.js";
+import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "kafka",
+  logger: logger,
+  messages: [join(import.meta.dirname, "messages")],
+  brokers: config.kafka.brokers,
+});
+"
+`;
+
+exports[`generateSource > reads servers from configImport for nats 1`] = `
+"import { logger } from "../logger/index.js";
+import { config } from "../pylon/config.js";
+import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "nats",
+  logger: logger,
+  messages: [join(import.meta.dirname, "messages")],
+  servers: config.nats.servers,
+});
+"
+`;
+
+exports[`generateSource > reads url from configImport for rabbit 1`] = `
+"import { logger } from "../logger/index.js";
+import { config } from "../pylon/config.js";
+import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "rabbit",
+  logger: logger,
+  messages: [join(import.meta.dirname, "messages")],
+  url: config.rabbit.url,
+});
+"
+`;
+
+exports[`generateSource > reads url from configImport for redis 1`] = `
+"import { logger } from "../logger/index.js";
+import { config } from "../pylon/config.js";
+import { join } from "path";
+import { IrisSource } from "@lindorm/iris";
+
+export const source = new IrisSource({
+  driver: "redis",
+  logger: logger,
+  messages: [join(import.meta.dirname, "messages")],
+  url: config.redis.url,
 });
 "
 `;
