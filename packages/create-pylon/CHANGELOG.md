@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.4.1...@lindorm/create-pylon@0.4.2) (2026-05-05)
+
+### Bug Fixes
+
+- **create-pylon:** import primary nested source in worker templates ([1cbf174](https://github.com/lindorm-io/monorepo/commit/1cbf1749a6666df935e8a0cd78a470b521e59417))
+
 ## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.4.0...@lindorm/create-pylon@0.4.1) (2026-05-05)
 
 ### Bug Fixes
