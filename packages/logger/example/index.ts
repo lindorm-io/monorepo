@@ -124,11 +124,11 @@ if (infoOnly.isLevelEnabled("debug")) {
   infoOnly.info("skipped expensive debug computation");
 }
 
-// -- time (LoggerTimer handle) --
+// -- timer (LoggerTimer handle) --
 
-console.log("\n--- time (LoggerTimer handle) ---");
+console.log("\n--- timer (LoggerTimer handle) ---");
 
-const syncTimer = logger.time();
+const syncTimer = logger.timer();
 
 let sum = 0;
 for (let i = 0; i < 1_000_000; i++) sum += i;
@@ -147,13 +147,13 @@ logger.timeEnd("label-operation"); // defaults to debug level
 logger.time("explicit-level-op");
 logger.timeEnd("explicit-level-op", "info", { product }); // explicit level with context
 
-const asyncTimer = logger.time();
+const asyncTimer = logger.timer();
 setTimeout(() => {
   asyncTimer.info("async-operation", { result: "done" });
 
   // child timer inherits parent logger's scope/correlation
   const timerChild = logger.child(["timerChild"]);
-  const childTimer = timerChild.time();
+  const childTimer = timerChild.timer();
   setTimeout(() => {
     childTimer.info("child-timed-operation", { note: "ended by child" });
 
@@ -204,8 +204,8 @@ setTimeout(() => {
     // error cause chain in JSON mode
     json.error(new Error("outer", { cause: new Error("inner cause") }));
 
-    // time in JSON mode
-    const jsonTimer = json.time();
+    // timer in JSON mode
+    const jsonTimer = json.timer();
     jsonTimer.info("json-timer", { mode: "json" });
   }, 10);
 }, 20);

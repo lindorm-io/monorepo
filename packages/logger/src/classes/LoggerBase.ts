@@ -91,13 +91,11 @@ export abstract class LoggerBase implements ILogger {
     this._scope = this.getScope(scope);
   }
 
-  public time(): ILoggerTimer;
-  public time(label: string): void;
-  public time(label?: string): ILoggerTimer | void {
-    if (label !== undefined) {
-      this.timers.set(label, performance.now());
-      return;
-    }
+  public time(label: string): void {
+    this.timers.set(label, performance.now());
+  }
+
+  public timer(): ILoggerTimer {
     return new LoggerTimer((level, message, context, extra, duration) => {
       this.logToWinston({ context: context ?? {}, duration, extra, level, message });
     });

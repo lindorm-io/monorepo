@@ -612,8 +612,8 @@ describe("Logger", () => {
 
   // time (LoggerTimer)
 
-  test("should return a LoggerTimer from time()", () => {
-    const timer = logger.time();
+  test("should return a LoggerTimer from timer()", () => {
+    const timer = logger.timer();
 
     expect(timer).toBeDefined();
     expect(typeof timer.debug).toBe("function");
@@ -630,7 +630,7 @@ describe("Logger", () => {
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 150.123);
 
-    const timer = logger.time();
+    const timer = logger.timer();
     timer.debug("Operation complete", { extra: "data" });
 
     expect(log).toHaveBeenCalledWith(
@@ -651,7 +651,7 @@ describe("Logger", () => {
       .mockReturnValueOnce(now)
       .mockReturnValueOnce(now + 50.456);
 
-    const timer = logger.time();
+    const timer = logger.timer();
     timer.info("Done");
 
     expect(log).toHaveBeenCalledWith(
@@ -673,7 +673,7 @@ describe("Logger", () => {
       .mockReturnValueOnce(now + 10);
 
     const child = logger.child(["child"], { requestId: "abc" });
-    const timer = child.time();
+    const timer = child.timer();
     timer.silly("Timed");
 
     expect(log).toHaveBeenCalledWith(
@@ -692,7 +692,7 @@ describe("Logger", () => {
   test("should respect level gating for timer", () => {
     isLevelEnabled.mockReturnValueOnce(false);
 
-    const timer = logger.time();
+    const timer = logger.timer();
     timer.debug("should not log");
 
     expect(log).not.toHaveBeenCalled();
