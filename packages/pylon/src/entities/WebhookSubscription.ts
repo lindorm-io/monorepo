@@ -34,7 +34,7 @@ export class WebhookSubscription implements IWebhookSubscription {
   public updatedAt!: Date;
 
   @Enum(WebhookAuth)
-  @Field("string")
+  @Field("enum")
   public auth!: WebhookAuth;
 
   @Field("string")
@@ -42,7 +42,7 @@ export class WebhookSubscription implements IWebhookSubscription {
 
   @Default(WebhookMethod.Post)
   @Enum(WebhookMethod)
-  @Field("string")
+  @Field("enum")
   public method!: WebhookMethod;
 
   @Field("json")
