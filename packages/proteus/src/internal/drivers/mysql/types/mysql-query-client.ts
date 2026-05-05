@@ -13,4 +13,10 @@ export type MysqlQueryClient = {
     sql: string,
     params?: Array<unknown>,
   ) => Promise<MysqlQueryResult<R>>;
+  /**
+   * True when the underlying transport multiplexes queries across connections
+   * (pool-backed). False / undefined when the client wraps a single
+   * connection (transactional, sync session). See packages/proteus/src/internal/utils/parallel.ts.
+   */
+  readonly multiplexed?: boolean;
 };

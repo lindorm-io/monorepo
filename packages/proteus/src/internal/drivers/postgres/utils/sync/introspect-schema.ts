@@ -4,6 +4,7 @@ import { introspectConstraints } from "../../../../drivers/postgres/utils/sync/i
 import { introspectEnums } from "../../../../drivers/postgres/utils/sync/introspect-enums.js";
 import { introspectIndexes } from "../../../../drivers/postgres/utils/sync/introspect-indexes.js";
 import { introspectTriggers } from "../../../../drivers/postgres/utils/sync/introspect-triggers.js";
+import { fanout } from "../../../../utils/parallel.js";
 import type { DbSnapshot, DbTable } from "../../types/db-snapshot.js";
 import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
 import { introspectTables } from "./introspect-tables.js";
@@ -30,18 +31,27 @@ export const introspectSchema = async (
   const tableNames = uniq(managedTables.map((t) => t.name));
 
   const [tables, constraintRows, indexRows, enums, commentRows, triggerRows, schemaRows] =
-    await Promise.all([
-      introspectTables(client, schemas, tableNames),
-      introspectConstraints(client, schemas, tableNames),
-      introspectIndexes(client, schemas, tableNames),
-      introspectEnums(client, schemas),
-      introspectComments(client, schemas, tableNames),
-      introspectTriggers(client, schemas, tableNames),
-      client.query<{ nspname: string }>(
-        `SELECT nspname FROM pg_catalog.pg_namespace WHERE nspname = ANY($1)`,
-        [schemas],
-      ),
-    ]);
+    (await fanout<unknown>(client, [
+      () => introspectTables(client, schemas, tableNames),
+      () => introspectConstraints(client, schemas, tableNames),
+      () => introspectIndexes(client, schemas, tableNames),
+      () => introspectEnums(client, schemas),
+      () => introspectComments(client, schemas, tableNames),
+      () => introspectTriggers(client, schemas, tableNames),
+      () =>
+        client.query<{ nspname: string }>(
+          `SELECT nspname FROM pg_catalog.pg_namespace WHERE nspname = ANY($1)`,
+          [schemas],
+        ),
+    ])) as [
+      Awaited<ReturnType<typeof introspectTables>>,
+      Awaited<ReturnType<typeof introspectConstraints>>,
+      Awaited<ReturnType<typeof introspectIndexes>>,
+      Awaited<ReturnType<typeof introspectEnums>>,
+      Awaited<ReturnType<typeof introspectComments>>,
+      Awaited<ReturnType<typeof introspectTriggers>>,
+      Awaited<ReturnType<typeof client.query<{ nspname: string }>>>,
+    ];
 
   const tableMap = new Map<string, DbTable>();
   for (const table of tables) {

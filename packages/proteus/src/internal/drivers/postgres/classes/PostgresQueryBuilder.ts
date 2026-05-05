@@ -19,6 +19,7 @@ import { PostgresUpdateQueryBuilder } from "./PostgresUpdateQueryBuilder.js";
 import { PostgresDeleteQueryBuilder } from "./PostgresDeleteQueryBuilder.js";
 import type { LockMode } from "../../../../types/index.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
+import { fanout } from "../../../utils/parallel.js";
 import {
   compileAggregate,
   type AggregateType,
@@ -323,10 +324,10 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   public async getManyAndCount(): Promise<[Array<E>, number]> {
-    const [entities, countResult] = await Promise.all([
-      this.getMany(),
-      this.executeCount(),
-    ]);
+    const [entities, countResult] = (await fanout<unknown>(this.client, [
+      () => this.getMany(),
+      () => this.executeCount(),
+    ])) as [Array<E>, number];
     return [entities, countResult];
   }
 

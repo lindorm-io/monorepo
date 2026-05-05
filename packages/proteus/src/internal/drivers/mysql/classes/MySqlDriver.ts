@@ -612,6 +612,7 @@ export class MySqlDriver implements IProteusDriver {
 
   private wrapWithQueryClient(
     queryFn: (sql: string, params?: Array<unknown>) => Promise<[Array<any>, any]>,
+    multiplexed: boolean,
   ): MysqlQueryClient {
     return {
       query: async <R = Record<string, unknown>>(
@@ -649,6 +650,7 @@ export class MySqlDriver implements IProteusDriver {
           insertId: Number((rows as any).insertId ?? 0),
         };
       },
+      multiplexed,
     };
   }
 
@@ -659,6 +661,7 @@ export class MySqlDriver implements IProteusDriver {
     if (!signal) {
       return this.wrapWithQueryClient(
         (sql, params) => connection.query(sql, params) as Promise<[Array<any>, any]>,
+        false,
       );
     }
 
@@ -691,12 +694,13 @@ export class MySqlDriver implements IProteusDriver {
         }
         throw err;
       }
-    });
+    }, false);
   }
 
   private createMysqlClientFromPool(pool: Pool): MysqlQueryClient {
     return this.wrapWithQueryClient(
       (sql, params) => pool.query(sql, params) as Promise<[Array<any>, any]>,
+      true,
     );
   }
 
@@ -743,7 +747,7 @@ export class MySqlDriver implements IProteusDriver {
         signal.removeEventListener("abort", onAbort);
         conn.release();
       }
-    });
+    }, true);
   }
 
   /**
