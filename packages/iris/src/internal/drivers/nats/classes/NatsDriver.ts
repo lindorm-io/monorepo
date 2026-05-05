@@ -228,13 +228,36 @@ export class NatsDriver implements IIrisDriver {
   public async reset(): Promise<void> {
     await stopAllNatsConsumers(this.state);
 
-    // Delete and recreate the stream so all durable consumers and messages are wiped.
-    // Just purging leaves stale consumers whose deliver_policy offsets are wrong.
+    // Delete and recreate the stream so all durable consumers and messages
+    // are wiped. Just purging leaves stale consumers whose deliver_policy
+    // offsets are wrong.
+    //
+    // Order matters for race-free reset under fast loops (TCK beforeEach):
+    //   1. Purge first — drops any messages whose pulls were still in flight
+    //      when stopAllNatsConsumers returned.
+    //   2. Delete the stream.
+    //   3. Poll streams.info() until it reports "not found" before recreating.
+    //      Without this, ensureNatsStream's "create if missing" can race the
+    //      cluster-side delete and either fail or create against a half-gone
+    //      stream definition.
     if (this.state.jsm) {
       try {
-        await this.state.jsm.streams.delete(this.state.streamName);
+        await this.state.jsm.streams.purge(this.state.streamName);
       } catch {
         // Stream may not exist
+      }
+      let deleted = false;
+      try {
+        await this.state.jsm.streams.delete(this.state.streamName);
+        deleted = true;
+      } catch {
+        // Stream may not exist (or delete genuinely failed). Either way,
+        // ensureNatsStream below will reconcile by creating only if missing.
+      }
+      if (deleted) {
+        // Only wait when delete succeeded — otherwise the stream may still
+        // be there and waitForStreamGone would spin until timeout.
+        await this.waitForStreamGone(this.state.streamName, 5000);
       }
       await ensureNatsStream({
         jsm: this.state.jsm,
@@ -249,6 +272,23 @@ export class NatsDriver implements IIrisDriver {
     this._replyQueueActive = false;
 
     this.logger.debug("Reset");
+  }
+
+  private async waitForStreamGone(streamName: string, timeoutMs: number): Promise<void> {
+    if (!this.state.jsm) return;
+    const deadline = Date.now() + timeoutMs;
+    while (Date.now() < deadline) {
+      try {
+        await this.state.jsm.streams.info(streamName);
+      } catch (err: any) {
+        if (String(err?.message).includes("stream not found") || err?.code === "404") {
+          return;
+        }
+        throw err;
+      }
+      await new Promise((r) => setTimeout(r, 25));
+    }
+    throw new Error(`waitForStreamGone: ${streamName} still exists after ${timeoutMs}ms`);
   }
 
   public getConnectionState(): IrisConnectionState {

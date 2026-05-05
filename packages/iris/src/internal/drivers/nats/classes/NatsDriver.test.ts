@@ -144,6 +144,17 @@ describe("NatsDriver", () => {
         }
       })(),
     );
+
+    // Mirror real JetStream: after delete, streams.info() reports
+    // "stream not found". reset() polls info() to confirm deletion before
+    // recreating, so without this the polling spins until timeout.
+    mockJsm.streams.info.mockResolvedValue({});
+    mockJsm.streams.delete.mockImplementation(async () => {
+      mockJsm.streams.info.mockRejectedValue(
+        Object.assign(new Error("stream not found"), { code: "404" }),
+      );
+      return {};
+    });
   });
 
   describe("lifecycle", () => {
