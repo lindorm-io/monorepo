@@ -19,6 +19,13 @@ export type GenerateSourceOptions = {
    */
   configImport?: string | null;
   /**
+   * Import path for an amphora instance (e.g. `../../pylon/amphora.js`).
+   * When provided, emits `import { amphora } from "<amphoraImport>"` and
+   * wires `amphora` into ProteusSource options so that `@Encrypted`
+   * fields on registered entities encrypt/decrypt transparently.
+   */
+  amphoraImport?: string | null;
+  /**
    * Attach a query-cache adapter. Only meaningful for DB drivers
    * (postgres/mysql/mongo); ignored for redis/sqlite/memory primaries.
    */
@@ -110,7 +117,8 @@ const cacheBlock = (
 };
 
 export const generateSource = (options: GenerateSourceOptions): string => {
-  const { driver, loggerImport, configImport, cache, cacheKeyPrefix } = options;
+  const { driver, loggerImport, configImport, amphoraImport, cache, cacheKeyPrefix } =
+    options;
   const isSql = SQL_DRIVERS.includes(driver);
   const effectiveCache = cache && DB_DRIVERS.includes(driver) ? cache : null;
   const adapterName = cacheImport(effectiveCache);
@@ -120,6 +128,10 @@ export const generateSource = (options: GenerateSourceOptions): string => {
 
   if (loggerImport) {
     lines.push(`import { logger } from "${loggerImport}";`);
+  }
+
+  if (amphoraImport) {
+    lines.push(`import { amphora } from "${amphoraImport}";`);
   }
 
   if (configImport) {
@@ -138,6 +150,10 @@ export const generateSource = (options: GenerateSourceOptions): string => {
     lines.push(`  logger: logger,`);
   } else {
     lines.push(`  logger: logger, // TODO: import or create a Logger instance`);
+  }
+
+  if (amphoraImport) {
+    lines.push(`  amphora: amphora,`);
   }
 
   lines.push(`  entities: [join(import.meta.dirname, "entities")],`);

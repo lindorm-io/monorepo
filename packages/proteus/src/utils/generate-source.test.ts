@@ -146,4 +146,25 @@ describe("generateSource", () => {
       }),
     ).toMatchSnapshot();
   });
+
+  it("emits amphora import and option when amphoraImport is provided", () => {
+    const out = generateSource({
+      driver: "postgres",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      amphoraImport: "../../pylon/amphora.js",
+    });
+    expect(out).toContain(`import { amphora } from "../../pylon/amphora.js";`);
+    expect(out).toContain(`  amphora: amphora,`);
+    expect(out).toMatchSnapshot();
+  });
+
+  it("omits amphora import and option when amphoraImport is not provided", () => {
+    const out = generateSource({
+      driver: "postgres",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+    });
+    expect(out).not.toContain("amphora");
+  });
 });
