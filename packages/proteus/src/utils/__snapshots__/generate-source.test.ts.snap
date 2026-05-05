@@ -72,6 +72,24 @@ export const source = new ProteusSource({
 "
 `;
 
+exports[`generateSource > emits amphora import and option when amphoraImport is provided 1`] = `
+"import { join } from "path";
+import { logger } from "../../logger/index.js";
+import { amphora } from "../../pylon/amphora.js";
+import { config } from "../../pylon/config.js";
+import { ProteusSource } from "@lindorm/proteus";
+
+export const source = new ProteusSource({
+  driver: "postgres",
+  logger: logger,
+  amphora: amphora,
+  entities: [join(import.meta.dirname, "entities")],
+  migrations: [join(import.meta.dirname, "migrations")],
+  url: config.postgres.url,
+});
+"
+`;
+
 exports[`generateSource > emits logger import for memory driver 1`] = `
 "import { join } from "path";
 import { logger } from "../logger";
