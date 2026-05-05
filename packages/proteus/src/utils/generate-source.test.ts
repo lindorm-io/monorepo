@@ -167,4 +167,118 @@ describe("generateSource", () => {
     });
     expect(out).not.toContain("amphora");
   });
+
+  it("emits naming option when provided (snake)", () => {
+    const out = generateSource({
+      driver: "postgres",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      naming: "snake",
+    });
+    expect(out).toContain(`  naming: "snake",`);
+    expect(out).toMatchSnapshot();
+  });
+
+  it("emits synchronize: config.<driver>.synchronize when synchronizeFromConfig is true", () => {
+    const out = generateSource({
+      driver: "postgres",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      synchronizeFromConfig: true,
+    });
+    expect(out).toContain(`  synchronize: config.postgres.synchronize,`);
+    expect(out).toMatchSnapshot();
+  });
+
+  it("emits runMigrations: config.<driver>.migrations when runMigrationsFromConfig is true", () => {
+    const out = generateSource({
+      driver: "postgres",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      runMigrationsFromConfig: true,
+    });
+    expect(out).toContain(`  runMigrations: config.postgres.migrations,`);
+    expect(out).toMatchSnapshot();
+  });
+
+  it("omits synchronize line when synchronizeFromConfig is true but configImport is missing", () => {
+    const out = generateSource({
+      driver: "postgres",
+      loggerImport: "../logger",
+      synchronizeFromConfig: true,
+    });
+    expect(out).not.toContain("synchronize:");
+  });
+
+  it("omits runMigrations line when runMigrationsFromConfig is true but configImport is missing", () => {
+    const out = generateSource({
+      driver: "postgres",
+      loggerImport: "../logger",
+      runMigrationsFromConfig: true,
+    });
+    expect(out).not.toContain("runMigrations:");
+  });
+
+  it("ignores synchronize/runMigrations flags for redis driver", () => {
+    const out = generateSource({
+      driver: "redis",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
+    });
+    expect(out).not.toContain("synchronize:");
+    expect(out).not.toContain("runMigrations:");
+  });
+
+  it("ignores synchronize/runMigrations flags for memory driver", () => {
+    const out = generateSource({
+      driver: "memory",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
+    });
+    expect(out).not.toContain("synchronize:");
+    expect(out).not.toContain("runMigrations:");
+  });
+
+  it("emits all three new options together for a postgres scaffold-like call", () => {
+    const out = generateSource({
+      driver: "postgres",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      amphoraImport: "../../pylon/amphora.js",
+      naming: "snake",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
+    });
+    expect(out).toMatchSnapshot();
+  });
+
+  it("emits synchronize/runMigrations for mongo (no migrations path array)", () => {
+    const out = generateSource({
+      driver: "mongo",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
+    });
+    expect(out).toContain(`  synchronize: config.mongo.synchronize,`);
+    expect(out).toContain(`  runMigrations: config.mongo.migrations,`);
+    expect(out).toMatchSnapshot();
+  });
+
+  it("emits synchronize/runMigrations for sqlite", () => {
+    const out = generateSource({
+      driver: "sqlite",
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
+    });
+    expect(out).toContain(`  synchronize: config.sqlite.synchronize,`);
+    expect(out).toContain(`  runMigrations: config.sqlite.migrations,`);
+    expect(out).toMatchSnapshot();
+  });
 });

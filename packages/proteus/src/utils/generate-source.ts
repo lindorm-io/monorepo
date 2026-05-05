@@ -1,5 +1,7 @@
 export type GenerateSourceCache = "redis" | "memory";
 
+export type GenerateSourceNaming = "snake" | "camel" | "none";
+
 export type GenerateSourceOptions = {
   /** Proteus driver name. */
   driver: string;
@@ -35,10 +37,31 @@ export type GenerateSourceOptions = {
    * Defaults to `"<driver>:cache:"` so parallel DB sources don't collide.
    */
   cacheKeyPrefix?: string;
+  /**
+   * Naming strategy for column name transformation. When set, emits
+   * `naming: "<value>",` in the generated source options. Proteus's own
+   * default is `"none"`; scaffolded services typically prefer `"snake"`
+   * to keep generated SQL idiomatic.
+   */
+  naming?: GenerateSourceNaming;
+  /**
+   * Emit `synchronize: config.<driver>.synchronize,` in the generated
+   * options. Requires `configImport`; ignored otherwise. Only honoured
+   * for schema-managed drivers (postgres/mysql/sqlite/mongo) — redis
+   * and memory don't manage DDL.
+   */
+  synchronizeFromConfig?: boolean;
+  /**
+   * Emit `runMigrations: config.<driver>.migrations,` in the generated
+   * options. Requires `configImport`; ignored otherwise. Only honoured
+   * for schema-managed drivers (postgres/mysql/sqlite/mongo).
+   */
+  runMigrationsFromConfig?: boolean;
 };
 
 const SQL_DRIVERS = ["postgres", "mysql", "sqlite"];
 const DB_DRIVERS = ["postgres", "mysql", "mongo"];
+const SCHEMA_MANAGED_DRIVERS = ["postgres", "mysql", "sqlite", "mongo"];
 
 const urlField = (driver: string, configImport: string | null | undefined): string => {
   if (!configImport) return "";
@@ -117,9 +140,19 @@ const cacheBlock = (
 };
 
 export const generateSource = (options: GenerateSourceOptions): string => {
-  const { driver, loggerImport, configImport, amphoraImport, cache, cacheKeyPrefix } =
-    options;
+  const {
+    driver,
+    loggerImport,
+    configImport,
+    amphoraImport,
+    cache,
+    cacheKeyPrefix,
+    naming,
+    synchronizeFromConfig,
+    runMigrationsFromConfig,
+  } = options;
   const isSql = SQL_DRIVERS.includes(driver);
+  const isSchemaManaged = SCHEMA_MANAGED_DRIVERS.includes(driver);
   const effectiveCache = cache && DB_DRIVERS.includes(driver) ? cache : null;
   const adapterName = cacheImport(effectiveCache);
   const keyPrefix = cacheKeyPrefix ?? `${driver}:cache:`;
@@ -156,10 +189,22 @@ export const generateSource = (options: GenerateSourceOptions): string => {
     lines.push(`  amphora: amphora,`);
   }
 
+  if (naming) {
+    lines.push(`  naming: "${naming}",`);
+  }
+
   lines.push(`  entities: [join(import.meta.dirname, "entities")],`);
 
   if (isSql) {
     lines.push(`  migrations: [join(import.meta.dirname, "migrations")],`);
+  }
+
+  if (isSchemaManaged && configImport && synchronizeFromConfig) {
+    lines.push(`  synchronize: config.${driver}.synchronize,`);
+  }
+
+  if (isSchemaManaged && configImport && runMigrationsFromConfig) {
+    lines.push(`  runMigrations: config.${driver}.migrations,`);
   }
 
   const conn = urlField(driver, configImport);
@@ -181,6 +226,7 @@ export const generateSource = (options: GenerateSourceOptions): string => {
 
 export const PROTEUS_SQL_DRIVERS = SQL_DRIVERS;
 export const PROTEUS_DB_DRIVERS = DB_DRIVERS;
+export const PROTEUS_SCHEMA_MANAGED_DRIVERS = SCHEMA_MANAGED_DRIVERS;
 export const PROTEUS_ALL_DRIVERS = [
   "postgres",
   "mysql",

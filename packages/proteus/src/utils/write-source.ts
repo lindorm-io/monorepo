@@ -23,6 +23,9 @@ export const writeSource = async (options: WriteSourceOptions): Promise<void> =>
     amphoraImport,
     cache,
     cacheKeyPrefix,
+    naming,
+    synchronizeFromConfig,
+    runMigrationsFromConfig,
   } = options;
 
   if (!PROTEUS_ALL_DRIVERS.includes(driver)) {
@@ -44,6 +47,9 @@ export const writeSource = async (options: WriteSourceOptions): Promise<void> =>
         amphoraImport,
         cache,
         cacheKeyPrefix,
+        naming,
+        synchronizeFromConfig,
+        runMigrationsFromConfig,
       }),
     },
     { path: join(resolvedDirectory, "entities", ".gitkeep"), content: "" },
