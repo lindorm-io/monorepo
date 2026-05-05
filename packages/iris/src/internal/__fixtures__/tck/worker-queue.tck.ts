@@ -41,18 +41,20 @@ export const workerQueueSuite = (
     test("3 consumers with 9 messages distribute across all consumers", async () => {
       const handle = getHandle();
       const wq = handle.workerQueue(messages.TckBasicMessage);
-      const r1: Array<any> = [];
-      const r2: Array<any> = [];
-      const r3: Array<any> = [];
+      // Track body + attempt so on failure the diff distinguishes redelivery
+      // (duplicate body, attempt > 0) from cross-test bleed (foreign body).
+      const r1: Array<{ body: string; attempt: number }> = [];
+      const r2: Array<{ body: string; attempt: number }> = [];
+      const r3: Array<{ body: string; attempt: number }> = [];
 
-      await wq.consume("TckBasicMessage", async (msg) => {
-        r1.push(msg);
+      await wq.consume("TckBasicMessage", async (msg, env) => {
+        r1.push({ body: (msg as any).body, attempt: env.attempt });
       });
-      await wq.consume("TckBasicMessage", async (msg) => {
-        r2.push(msg);
+      await wq.consume("TckBasicMessage", async (msg, env) => {
+        r2.push({ body: (msg as any).body, attempt: env.attempt });
       });
-      await wq.consume("TckBasicMessage", async (msg) => {
-        r3.push(msg);
+      await wq.consume("TckBasicMessage", async (msg, env) => {
+        r3.push({ body: (msg as any).body, attempt: env.attempt });
       });
 
       for (let i = 0; i < 9; i++) {
@@ -61,9 +63,15 @@ export const workerQueueSuite = (
       }
 
       await waitFor(() => r1.length + r2.length + r3.length >= 9, timeoutMs);
+      // Settle past waitFor so any redelivery / straggler surfaces here
+      // instead of being hidden by the snapshot-at-resolution timing.
+      await wait(200);
 
-      // All 9 messages distributed across consumers (distribution may vary by broker)
-      expect(r1.length + r2.length + r3.length).toBe(9);
+      const all = [...r1, ...r2, ...r3];
+      const bodies = all.map((m) => m.body).sort();
+      const expected = Array.from({ length: 9 }, (_, i) => `msg-${i}`).sort();
+      expect(bodies).toEqual(expected);
+      expect(all.map((m) => m.attempt).sort()).toEqual(new Array(9).fill(0));
       expect(r1.length).toBeGreaterThanOrEqual(1);
       expect(r2.length).toBeGreaterThanOrEqual(1);
       expect(r3.length).toBeGreaterThanOrEqual(1);
@@ -72,17 +80,22 @@ export const workerQueueSuite = (
     test("unconsume stops receiving messages", async () => {
       const handle = getHandle();
       const wq = handle.workerQueue(messages.TckBasicMessage);
-      const received: Array<any> = [];
+      // Track body + attempt so on failure the diff distinguishes redelivery
+      // (duplicate "before", attempt > 0) from cross-test bleed (foreign body).
+      const received: Array<{ body: string; attempt: number }> = [];
 
-      await wq.consume("TckBasicMessage", async (msg) => {
-        received.push(msg);
+      await wq.consume("TckBasicMessage", async (msg, env) => {
+        received.push({ body: (msg as any).body, attempt: env.attempt });
       });
 
       const msg1 = wq.create({ body: "before" } as any);
       await wq.publish(msg1);
 
       await waitFor(() => received.length >= 1, timeoutMs);
-      expect(received).toHaveLength(1);
+      // Settle past waitFor so any straggler / redelivery surfaces here.
+      await wait(200);
+      expect(received.map((m) => m.body)).toEqual(["before"]);
+      expect(received.map((m) => m.attempt)).toEqual([0]);
 
       await wq.unconsume("TckBasicMessage");
       await wait(200);
@@ -91,7 +104,7 @@ export const workerQueueSuite = (
       await wq.publish(msg2);
 
       await wait(200);
-      expect(received).toHaveLength(1);
+      expect(received.map((m) => m.body)).toEqual(["before"]);
     });
 
     test("unconsumeAll cleans up all consumers", async () => {
