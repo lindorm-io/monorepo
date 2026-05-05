@@ -49,6 +49,9 @@ export const runProteusInit = async (
       configImport: `${relative}pylon/config.js`,
       amphoraImport: `${relative}pylon/amphora.js`,
       cache: resolveCache(driver, drivers),
+      naming: "snake",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
     });
   }
 };
@@ -74,6 +77,7 @@ export const runIrisInit = async (
     driver,
     directory: join(projectDir, "src/iris"),
     loggerImport: "../logger/index.js",
+    configImport: "../pylon/config.js",
   });
 };
 

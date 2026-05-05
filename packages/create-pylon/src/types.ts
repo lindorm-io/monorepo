@@ -53,6 +53,17 @@ export const PROTEUS_DB_DRIVERS: ReadonlyArray<ProteusDriver> = [
   "mongo",
 ];
 
+/**
+ * Drivers that manage SQL/MongoDB schemas (DDL migrations + entity-driven
+ * synchronization). Redis and memory have no schema to manage.
+ */
+export const PROTEUS_SCHEMA_MANAGED_DRIVERS: ReadonlyArray<ProteusDriver> = [
+  "postgres",
+  "mysql",
+  "sqlite",
+  "mongo",
+];
+
 export const PROTEUS_DRIVER_PACKAGES: Record<ProteusDriver, Array<string>> = {
   memory: [],
   mongo: ["mongodb"],

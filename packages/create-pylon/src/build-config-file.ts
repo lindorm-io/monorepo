@@ -5,18 +5,35 @@ type Group = {
   lines: Array<string>;
 };
 
+const SCHEMA_FLAGS_LINES = [
+  `    synchronize: z.boolean().default(false),`,
+  `    migrations: z.boolean().default(false),`,
+];
+
 const proteusGroup = (driver: ProteusDriver): Group | null => {
   switch (driver) {
     case "postgres":
-      return { key: "postgres", lines: [`    url: z.string(),`] };
+      return {
+        key: "postgres",
+        lines: [`    url: z.string(),`, ...SCHEMA_FLAGS_LINES],
+      };
     case "mysql":
-      return { key: "mysql", lines: [`    url: z.string(),`] };
+      return {
+        key: "mysql",
+        lines: [`    url: z.string(),`, ...SCHEMA_FLAGS_LINES],
+      };
     case "mongo":
-      return { key: "mongo", lines: [`    url: z.string(),`] };
+      return {
+        key: "mongo",
+        lines: [`    url: z.string(),`, ...SCHEMA_FLAGS_LINES],
+      };
     case "redis":
       return { key: "redis", lines: [`    url: z.string(),`] };
     case "sqlite":
-      return { key: "sqlite", lines: [`    path: z.string(),`] };
+      return {
+        key: "sqlite",
+        lines: [`    path: z.string(),`, ...SCHEMA_FLAGS_LINES],
+      };
     case "memory":
       return null;
   }
