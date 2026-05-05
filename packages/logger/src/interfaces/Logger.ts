@@ -25,8 +25,8 @@ export interface ILogger {
   isLevelEnabled(level: LogLevel): boolean;
   scope(scope: LogScope): void;
 
-  time(): ILoggerTimer;
   time(label: string): void;
+  timer(): ILoggerTimer;
   timeEnd(label: string, context?: LogContent, extra?: Array<LogContent>): void;
   timeEnd(
     label: string,
