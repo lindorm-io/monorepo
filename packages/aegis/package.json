@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/aegis",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -63,8 +63,8 @@
   },
   "devDependencies": {
     "@auth0/cose": "^1.0.2",
-    "@lindorm/amphora": "^0.5.0",
-    "@lindorm/logger": "^0.6.0",
+    "@lindorm/amphora": "^0.5.1",
+    "@lindorm/logger": "^0.6.1",
     "@types/jsonwebtoken": "^9.0.10",
     "jose": "^6.2.1",
     "jsonwebtoken": "^9.0.3"

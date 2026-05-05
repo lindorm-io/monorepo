@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.4.0...@lindorm/create-pylon@0.4.1) (2026-05-05)
+
+### Bug Fixes
+
+- **create-pylon:** seed pylon:kek with urn issuer ([3fb8b80](https://github.com/lindorm-io/monorepo/commit/3fb8b80af99453ac926a5c266a2c0681a35b0eaa))
+- **create-pylon:** wire logger.readable through config ([2424856](https://github.com/lindorm-io/monorepo/commit/24248561b9e72fcddcfbaf6d0443e110f2a35dfb))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.3.0...@lindorm/create-pylon@0.4.0) (2026-05-04)
 
 ### Features

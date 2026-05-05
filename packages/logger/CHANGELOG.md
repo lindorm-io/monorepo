@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.6.0...@lindorm/logger@0.6.1) (2026-05-05)
+
+### Bug Fixes
+
+- **logger:** route uncaughtException through active Logger ([f016839](https://github.com/lindorm-io/monorepo/commit/f016839eb2b6524fe3c88aa147c243b350127727))
+
 # [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.5.4...@lindorm/logger@0.6.0) (2026-05-02)
 
 ### Bug Fixes

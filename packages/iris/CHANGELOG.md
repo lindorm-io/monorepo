@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.4.0...@lindorm/iris@0.4.1) (2026-05-05)
+
+### Bug Fixes
+
+- **iris:** harden NATS reset and surface flaky test diagnostics ([dd363f7](https://github.com/lindorm-io/monorepo/commit/dd363f7544764e89d18a8a0773b65a6cd3a9e939))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.3.0...@lindorm/iris@0.4.0) (2026-05-02)
 
 ### Bug Fixes

@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.7.0...@lindorm/hermes@0.7.1) (2026-05-05)
+
+**Note:** Version bump only for package @lindorm/hermes
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.6.1...@lindorm/hermes@0.7.0) (2026-05-02)
 
 ### Bug Fixes

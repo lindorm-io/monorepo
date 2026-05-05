@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/create-pylon",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -39,10 +39,10 @@
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
     "@lindorm/case": "^0.2.0",
-    "@lindorm/iris": "^0.4.0",
+    "@lindorm/iris": "^0.4.1",
     "@lindorm/kryptos": "^0.8.0",
-    "@lindorm/logger": "^0.6.0",
-    "@lindorm/proteus": "^0.6.0",
+    "@lindorm/logger": "^0.6.1",
+    "@lindorm/proteus": "^0.6.1",
     "@lindorm/types": "^0.6.0",
     "commander": "^14.0.3",
     "cross-spawn": "^7.0.6"
