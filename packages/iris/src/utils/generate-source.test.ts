@@ -33,4 +33,44 @@ describe("generateSource", () => {
       generateSource({ driver: "redis", loggerImport: "../logger" }),
     ).toMatchSnapshot();
   });
+
+  it("reads url from configImport for rabbit", () => {
+    expect(
+      generateSource({
+        driver: "rabbit",
+        loggerImport: "../logger/index.js",
+        configImport: "../pylon/config.js",
+      }),
+    ).toMatchSnapshot();
+  });
+
+  it("reads brokers from configImport for kafka", () => {
+    expect(
+      generateSource({
+        driver: "kafka",
+        loggerImport: "../logger/index.js",
+        configImport: "../pylon/config.js",
+      }),
+    ).toMatchSnapshot();
+  });
+
+  it("reads servers from configImport for nats", () => {
+    expect(
+      generateSource({
+        driver: "nats",
+        loggerImport: "../logger/index.js",
+        configImport: "../pylon/config.js",
+      }),
+    ).toMatchSnapshot();
+  });
+
+  it("reads url from configImport for redis", () => {
+    expect(
+      generateSource({
+        driver: "redis",
+        loggerImport: "../logger/index.js",
+        configImport: "../pylon/config.js",
+      }),
+    ).toMatchSnapshot();
+  });
 });
