@@ -14,7 +14,6 @@ import {
   EmbeddedList,
   Encrypted,
   Entity,
-  ExpiryDateField,
   Field,
   Index,
   Namespace,
@@ -35,7 +34,7 @@ export class Kryptos implements KryptosDB {
   @Field("timestamp")
   public notBefore!: Date;
 
-  @ExpiryDateField()
+  @Field("timestamp")
   public expiresAt!: Date;
 
   @Field("string")
