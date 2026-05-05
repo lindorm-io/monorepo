@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.6.1...@lindorm/proteus@0.7.0) (2026-05-05)
+
+### Bug Fixes
+
+- **packages:** declare files: ["dist"] for every publishable package ([6fe2ac8](https://github.com/lindorm-io/monorepo/commit/6fe2ac818d0deba7e68f799b7f856c7ebf419832))
+- **proteus:** serialize Promise.all on single-connection clients ([7194f02](https://github.com/lindorm-io/monorepo/commit/7194f028f5af9fe8b52cbf38386086e2a372d0cf))
+
+### Features
+
+- **proteus:** support amphoraImport in generateSource and writeSource ([4def80a](https://github.com/lindorm-io/monorepo/commit/4def80a2e48ec8aefbcc2f006f2df7e8cf91f51a))
+- **proteus:** support naming and config-driven sync flags in generateSource ([3d69812](https://github.com/lindorm-io/monorepo/commit/3d69812cd66f69068a3b3f76fa479bd9c7631965))
+
 ## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.6.0...@lindorm/proteus@0.6.1) (2026-05-05)
 
 **Note:** Version bump only for package @lindorm/proteus

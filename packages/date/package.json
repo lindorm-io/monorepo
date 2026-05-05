@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/date",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -29,7 +29,7 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/is": "^0.2.0",
+    "@lindorm/is": "^0.2.1",
     "date-fns": "^4.1.0"
   },
   "exports": {

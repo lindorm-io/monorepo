@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.4.3...@lindorm/create-pylon@0.5.0) (2026-05-05)
+
+### Features
+
+- **create-pylon:** scaffold snake naming and config-driven sync/migrations ([0451645](https://github.com/lindorm-io/monorepo/commit/0451645d7732ee4d11a04adac79801d99a9664f5))
+- **create-pylon:** wire amphora into scaffolded proteus sources ([13f9a40](https://github.com/lindorm-io/monorepo/commit/13f9a40dc849bb316d3fcd43e2ec492689ea9678))
+
 ## [0.4.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.4.2...@lindorm/create-pylon@0.4.3) (2026-05-05)
 
 ### Bug Fixes

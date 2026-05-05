@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.11.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.11.2...@lindorm/pylon@0.11.3) (2026-05-05)
+
+### Bug Fixes
+
+- **packages:** declare files: ["dist"] for every publishable package ([6fe2ac8](https://github.com/lindorm-io/monorepo/commit/6fe2ac818d0deba7e68f799b7f856c7ebf419832))
+- **pylon:** use Field("enum") for WebhookSubscription auth and method ([c280c44](https://github.com/lindorm-io/monorepo/commit/c280c44de049453c3ac4f3f6fa38e405bd012e71))
+
 ## [0.11.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.11.1...@lindorm/pylon@0.11.2) (2026-05-05)
 
 ### Bug Fixes

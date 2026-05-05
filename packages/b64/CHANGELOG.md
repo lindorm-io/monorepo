@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.2.0...@lindorm/b64@0.2.1) (2026-05-05)
+
+### Bug Fixes
+
+- **packages:** declare files: ["dist"] for every publishable package ([6fe2ac8](https://github.com/lindorm-io/monorepo/commit/6fe2ac818d0deba7e68f799b7f856c7ebf419832))
+
 # [0.2.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.10...@lindorm/b64@0.2.0) (2026-05-02)
 
 ### Features
