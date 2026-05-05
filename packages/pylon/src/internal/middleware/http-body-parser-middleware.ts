@@ -20,7 +20,7 @@ export const createHttpBodyParserMiddleware = (
   }
 
   return async function httpBodyParserMiddleware(ctx, next) {
-    const timer = ctx.logger.time();
+    const timer = ctx.logger.timer();
 
     ctx.data = {};
 

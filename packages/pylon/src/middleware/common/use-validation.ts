@@ -8,7 +8,7 @@ export const useValidation = (
   options: ValidateJwtOptions,
 ): PylonMiddleware =>
   async function validationMiddleware(ctx, next) {
-    const timer = ctx.logger.time();
+    const timer = ctx.logger.timer();
 
     try {
       const token = objectPath.get(ctx.state.tokens, tokenPath);
