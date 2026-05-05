@@ -72,6 +72,27 @@ export const source = new ProteusSource({
 "
 `;
 
+exports[`generateSource > emits all three new options together for a postgres scaffold-like call 1`] = `
+"import { join } from "path";
+import { logger } from "../../logger/index.js";
+import { amphora } from "../../pylon/amphora.js";
+import { config } from "../../pylon/config.js";
+import { ProteusSource } from "@lindorm/proteus";
+
+export const source = new ProteusSource({
+  driver: "postgres",
+  logger: logger,
+  amphora: amphora,
+  naming: "snake",
+  entities: [join(import.meta.dirname, "entities")],
+  migrations: [join(import.meta.dirname, "migrations")],
+  synchronize: config.postgres.synchronize,
+  runMigrations: config.postgres.migrations,
+  url: config.postgres.url,
+});
+"
+`;
+
 exports[`generateSource > emits amphora import and option when amphoraImport is provided 1`] = `
 "import { join } from "path";
 import { logger } from "../../logger/index.js";
@@ -179,6 +200,92 @@ export const source = new ProteusSource({
   host: "localhost",
   port: 5432,
   database: "app",
+});
+"
+`;
+
+exports[`generateSource > emits naming option when provided (snake) 1`] = `
+"import { join } from "path";
+import { logger } from "../../logger/index.js";
+import { config } from "../../pylon/config.js";
+import { ProteusSource } from "@lindorm/proteus";
+
+export const source = new ProteusSource({
+  driver: "postgres",
+  logger: logger,
+  naming: "snake",
+  entities: [join(import.meta.dirname, "entities")],
+  migrations: [join(import.meta.dirname, "migrations")],
+  url: config.postgres.url,
+});
+"
+`;
+
+exports[`generateSource > emits runMigrations: config.<driver>.migrations when runMigrationsFromConfig is true 1`] = `
+"import { join } from "path";
+import { logger } from "../../logger/index.js";
+import { config } from "../../pylon/config.js";
+import { ProteusSource } from "@lindorm/proteus";
+
+export const source = new ProteusSource({
+  driver: "postgres",
+  logger: logger,
+  entities: [join(import.meta.dirname, "entities")],
+  migrations: [join(import.meta.dirname, "migrations")],
+  runMigrations: config.postgres.migrations,
+  url: config.postgres.url,
+});
+"
+`;
+
+exports[`generateSource > emits synchronize/runMigrations for mongo (no migrations path array) 1`] = `
+"import { join } from "path";
+import { logger } from "../../logger/index.js";
+import { config } from "../../pylon/config.js";
+import { ProteusSource } from "@lindorm/proteus";
+
+export const source = new ProteusSource({
+  driver: "mongo",
+  logger: logger,
+  entities: [join(import.meta.dirname, "entities")],
+  synchronize: config.mongo.synchronize,
+  runMigrations: config.mongo.migrations,
+  url: config.mongo.url,
+});
+"
+`;
+
+exports[`generateSource > emits synchronize/runMigrations for sqlite 1`] = `
+"import { join } from "path";
+import { logger } from "../../logger/index.js";
+import { config } from "../../pylon/config.js";
+import { ProteusSource } from "@lindorm/proteus";
+
+export const source = new ProteusSource({
+  driver: "sqlite",
+  logger: logger,
+  entities: [join(import.meta.dirname, "entities")],
+  migrations: [join(import.meta.dirname, "migrations")],
+  synchronize: config.sqlite.synchronize,
+  runMigrations: config.sqlite.migrations,
+  filename: config.sqlite.path,
+});
+"
+`;
+
+exports[`generateSource > emits synchronize: config.<driver>.synchronize when synchronizeFromConfig is true 1`] = `
+"import { join } from "path";
+import { logger } from "../../logger/index.js";
+import { config } from "../../pylon/config.js";
+import { ProteusSource } from "@lindorm/proteus";
+
+export const source = new ProteusSource({
+  driver: "postgres",
+  logger: logger,
+  entities: [join(import.meta.dirname, "entities")],
+  migrations: [join(import.meta.dirname, "migrations")],
+  synchronize: config.postgres.synchronize,
+  url: config.postgres.url,
 });
 "
 `;
