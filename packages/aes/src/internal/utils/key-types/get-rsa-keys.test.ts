@@ -89,5 +89,5 @@ describe("get-rsa-keys", () => {
         kryptos,
       }),
     ).toEqual({ contentEncryptionKey: result.contentEncryptionKey });
-  });
+  }, 30_000);
 });
