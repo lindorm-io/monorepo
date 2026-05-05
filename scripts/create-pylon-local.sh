@@ -110,22 +110,55 @@ for pkg in "${RUNTIME_PKGS[@]}"; do
   (cd "$ROOT/packages/$pkg" && npm pack --pack-destination "$TARBALL_DIR" --silent >/dev/null)
 done
 
-echo "[create-pylon-local] Overlaying local tarballs onto $PROJECT_DIR/node_modules/@lindorm/*..."
+# Locate every node_modules/@lindorm/<pkg> directory walking up from the
+# project. If the project is itself inside an npm workspace (e.g.
+# lindorm-services/services/<svc>) deps are hoisted to the workspace root,
+# so the package may live one or more directories above the scaffolded
+# project rather than directly under it.
+locate_install_dirs() {
+  local pkg=$1
+  local dir=$PROJECT_DIR
+  while :; do
+    local candidate="$dir/node_modules/@lindorm/$pkg"
+    if [[ -d "$candidate" ]]; then
+      echo "$candidate"
+    fi
+    local parent
+    parent=$(dirname "$dir")
+    if [[ "$parent" == "$dir" ]]; then
+      break
+    fi
+    dir=$parent
+  done
+}
+
+echo "[create-pylon-local] Overlaying local tarballs onto installed @lindorm/* (searching up from $PROJECT_DIR)..."
 for pkg in "${RUNTIME_PKGS[@]}"; do
   TARBALL=$(ls "$TARBALL_DIR"/lindorm-"$pkg"-*.tgz 2>/dev/null | head -1 || true)
   if [[ -z "$TARBALL" ]]; then
     echo "  skip @lindorm/$pkg (no tarball — package may not be published-shaped)" >&2
     continue
   fi
-  TARGET="$PROJECT_DIR/node_modules/@lindorm/$pkg"
-  if [[ ! -d "$TARGET" ]]; then
-    # Not installed by the scaffold — nothing to override.
+  OVERLAID=false
+  while IFS= read -r TARGET; do
+    [[ -z "$TARGET" ]] && continue
+    rm -rf "$TARGET"
+    mkdir -p "$TARGET"
+    tar -xzf "$TARBALL" -C "$TARGET" --strip-components=1
+    # Workspace npm-pack omits dist/ for packages without a "files" field in
+    # package.json (the root .gitignore that excludes dist/ leaks in). Lerna's
+    # publish path doesn't have this problem, but our local pack does — so
+    # mirror dist/ explicitly from the built source after the tarball extract.
+    if [[ -d "$ROOT/packages/$pkg/dist" ]]; then
+      rsync -a --delete "$ROOT/packages/$pkg/dist/" "$TARGET/dist/"
+    fi
+    echo "  overlaid @lindorm/$pkg -> $TARGET"
+    OVERLAID=true
+  done < <(locate_install_dirs "$pkg")
+  if [[ "$OVERLAID" != "true" ]]; then
+    # Not installed anywhere up the tree — nothing to override.
     continue
   fi
-  rm -rf "$TARGET"
-  mkdir -p "$TARGET"
-  tar -xzf "$TARBALL" -C "$TARGET" --strip-components=1
-  echo "  overlaid @lindorm/$pkg"
 done
 
 echo "[create-pylon-local] Done. cd $PROJECT_DIR && npm run dev"
