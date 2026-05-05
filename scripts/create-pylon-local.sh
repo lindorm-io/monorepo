@@ -69,7 +69,7 @@ fi
 
 PROJECT_NAME="${ARGS[0]}"
 
-echo "[create-pylon-local] Building local lindorm packages…"
+echo "[create-pylon-local] Building local lindorm packages..."
 (
   cd "$ROOT"
   for pkg in "${BUILD_PKGS[@]}"; do
@@ -78,7 +78,7 @@ echo "[create-pylon-local] Building local lindorm packages…"
 )
 
 cd "$USER_CWD"
-echo "[create-pylon-local] Running local create-pylon in $USER_CWD…"
+echo "[create-pylon-local] Running local create-pylon in $USER_CWD..."
 node "$ROOT/packages/create-pylon/dist/cli.js" "${ARGS[@]}"
 
 PROJECT_DIR="$USER_CWD/$PROJECT_NAME"
@@ -94,7 +94,7 @@ fi
 
 # Build runtime packages too (some overlap with BUILD_PKGS, but cheap if
 # already built) so the tarball reflects current source.
-echo "[create-pylon-local] Building runtime lindorm packages…"
+echo "[create-pylon-local] Building runtime lindorm packages..."
 (
   cd "$ROOT"
   for pkg in "${RUNTIME_PKGS[@]}"; do
@@ -105,12 +105,12 @@ echo "[create-pylon-local] Building runtime lindorm packages…"
 TARBALL_DIR="$(mktemp -d)"
 trap 'rm -rf "$TARBALL_DIR"' EXIT
 
-echo "[create-pylon-local] Packing tarballs into $TARBALL_DIR…"
+echo "[create-pylon-local] Packing tarballs into $TARBALL_DIR..."
 for pkg in "${RUNTIME_PKGS[@]}"; do
   (cd "$ROOT/packages/$pkg" && npm pack --pack-destination "$TARBALL_DIR" --silent >/dev/null)
 done
 
-echo "[create-pylon-local] Overlaying local tarballs onto $PROJECT_DIR/node_modules/@lindorm/*…"
+echo "[create-pylon-local] Overlaying local tarballs onto $PROJECT_DIR/node_modules/@lindorm/*..."
 for pkg in "${RUNTIME_PKGS[@]}"; do
   TARBALL=$(ls "$TARBALL_DIR"/lindorm-"$pkg"-*.tgz 2>/dev/null | head -1 || true)
   if [[ -z "$TARBALL" ]]; then
