@@ -151,6 +151,9 @@ describe("tokenised-aes", () => {
       "RSA-OAEP-512",
     ];
 
+    // RSA-OAEP-512 generates a 4096-bit RSA key whose runtime varies
+    // significantly under CI load (3-10s observed). The default 5s timeout
+    // is not enough headroom; bump to 30s for the algorithm sweep.
     test.each(algorithms)(
       "should create and parse tokenised string for %s",
       (algorithm) => {
@@ -165,6 +168,7 @@ describe("tokenised-aes", () => {
         expect(parsed.content).toEqual(data.content);
         expect(parsed.aad).toBeInstanceOf(Buffer);
       },
+      30_000,
     );
   });
 

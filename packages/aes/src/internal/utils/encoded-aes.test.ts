@@ -149,20 +149,27 @@ describe("encoded-aes", () => {
       "RSA-OAEP-512",
     ];
 
-    test.each(algorithms)("should encode and decode %s", (algorithm) => {
-      const kryptos = KryptosKit.generate.auto({ algorithm });
-      const data = encryptAes({ data: "test", kryptos });
-      const encoded = createEncodedAesString(data);
-      const decoded = parseEncodedAesString(encoded);
+    // RSA-OAEP-512 generates a 4096-bit RSA key whose runtime varies
+    // significantly under CI load (3-10s observed). The default 5s timeout
+    // is not enough headroom; bump to 30s for the algorithm sweep.
+    test.each(algorithms)(
+      "should encode and decode %s",
+      (algorithm) => {
+        const kryptos = KryptosKit.generate.auto({ algorithm });
+        const data = encryptAes({ data: "test", kryptos });
+        const encoded = createEncodedAesString(data);
+        const decoded = parseEncodedAesString(encoded);
 
-      expect(encoded).toEqual(expect.any(String));
-      expect(decoded.algorithm).toBe(data.algorithm);
-      expect(decoded.encryption).toBe(data.encryption);
-      expect(decoded.content).toEqual(data.content);
-      expect(decoded.authTag).toEqual(data.authTag);
-      expect(decoded.initialisationVector).toEqual(data.initialisationVector);
-      expect(decoded.aad).toBeInstanceOf(Buffer);
-    });
+        expect(encoded).toEqual(expect.any(String));
+        expect(decoded.algorithm).toBe(data.algorithm);
+        expect(decoded.encryption).toBe(data.encryption);
+        expect(decoded.content).toEqual(data.content);
+        expect(decoded.authTag).toEqual(data.authTag);
+        expect(decoded.initialisationVector).toEqual(data.initialisationVector);
+        expect(decoded.aad).toBeInstanceOf(Buffer);
+      },
+      30_000,
+    );
   });
 
   describe("error handling", () => {
