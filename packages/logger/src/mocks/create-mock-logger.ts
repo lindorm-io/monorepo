@@ -34,7 +34,8 @@ export const _createMockLogger = (mockFn: () => any, logFn?: Function): ILogger 
     filterKey: mockFn(),
     isLevelEnabled: returns(true),
     scope: mockFn(),
-    time: impl((): ILoggerTimer => createMockTimer(mockFn)),
+    time: mockFn(),
+    timer: impl((): ILoggerTimer => createMockTimer(mockFn)),
     timeEnd: mockFn(),
 
     error: impl((...args: any[]) => logFn?.(...args)),
