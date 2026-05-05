@@ -351,7 +351,7 @@ export const writeWorkerFiles = (answers: Answers): void => {
   for (const key of answers.workers) {
     const target = join(answers.projectDir, "src/workers", `${key}.ts`);
     ensureDir(target);
-    writeFileSync(target, buildWorkerFile(key), "utf-8");
+    writeFileSync(target, buildWorkerFile(key, answers), "utf-8");
   }
 };
 
