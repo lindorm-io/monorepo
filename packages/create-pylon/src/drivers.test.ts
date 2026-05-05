@@ -50,6 +50,9 @@ describe("drivers", () => {
       configImport: "../pylon/config.js",
       amphoraImport: "../pylon/amphora.js",
       cache: null,
+      naming: "snake",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
     });
   });
 
@@ -66,6 +69,9 @@ describe("drivers", () => {
       configImport: "../../pylon/config.js",
       amphoraImport: "../../pylon/amphora.js",
       cache: "redis",
+      naming: "snake",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
     });
     expect(mockedProteusWriteSource).toHaveBeenNthCalledWith(2, {
       driver: "redis",
@@ -74,6 +80,9 @@ describe("drivers", () => {
       configImport: "../../pylon/config.js",
       amphoraImport: "../../pylon/amphora.js",
       cache: null,
+      naming: "snake",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
     });
     expect(mockedProteusWriteSource).toHaveBeenNthCalledWith(3, {
       driver: "mongo",
@@ -82,6 +91,9 @@ describe("drivers", () => {
       configImport: "../../pylon/config.js",
       amphoraImport: "../../pylon/amphora.js",
       cache: "redis",
+      naming: "snake",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
     });
   });
 
@@ -97,6 +109,9 @@ describe("drivers", () => {
       configImport: "../../pylon/config.js",
       amphoraImport: "../../pylon/amphora.js",
       cache: "memory",
+      naming: "snake",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
     });
   });
 
@@ -112,6 +127,9 @@ describe("drivers", () => {
       configImport: "../../pylon/config.js",
       amphoraImport: "../../pylon/amphora.js",
       cache: "redis",
+      naming: "snake",
+      synchronizeFromConfig: true,
+      runMigrationsFromConfig: true,
     });
   });
 
@@ -127,6 +145,7 @@ describe("drivers", () => {
       driver: "rabbit",
       directory: join("/tmp/project", "src/iris"),
       loggerImport: "../logger/index.js",
+      configImport: "../pylon/config.js",
     });
   });
 

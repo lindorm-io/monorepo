@@ -154,6 +154,13 @@ type ExampleEntry = {
   commented: boolean;
 };
 
+const schemaFlagExampleEntries = (
+  prefix: "POSTGRES" | "MYSQL" | "MONGO" | "SQLITE",
+): Array<ExampleEntry> => [
+  { key: `${prefix}__SYNCHRONIZE`, value: "false", commented: true },
+  { key: `${prefix}__MIGRATIONS`, value: "false", commented: true },
+];
+
 const proteusExampleEntries = (driver: ProteusDriver): Array<ExampleEntry> => {
   switch (driver) {
     case "postgres":
@@ -163,6 +170,7 @@ const proteusExampleEntries = (driver: ProteusDriver): Array<ExampleEntry> => {
           value: "postgresql://postgres:postgres@localhost:5432/app",
           commented: true,
         },
+        ...schemaFlagExampleEntries("POSTGRES"),
       ];
     case "mysql":
       return [
@@ -171,15 +179,20 @@ const proteusExampleEntries = (driver: ProteusDriver): Array<ExampleEntry> => {
           value: "mysql://root:root@localhost:3306/app",
           commented: true,
         },
+        ...schemaFlagExampleEntries("MYSQL"),
       ];
     case "mongo":
       return [
         { key: "MONGO__URL", value: "mongodb://localhost:27017/app", commented: true },
+        ...schemaFlagExampleEntries("MONGO"),
       ];
     case "redis":
       return [{ key: "REDIS__URL", value: "redis://localhost:6379", commented: true }];
     case "sqlite":
-      return [{ key: "SQLITE__PATH", value: "./data/app.db", commented: true }];
+      return [
+        { key: "SQLITE__PATH", value: "./data/app.db", commented: true },
+        ...schemaFlagExampleEntries("SQLITE"),
+      ];
     case "memory":
       return [];
   }

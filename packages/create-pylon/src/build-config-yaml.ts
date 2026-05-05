@@ -2,18 +2,34 @@ import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
 
 type EnvHint = { path: string; envVar: string };
 
+const schemaFlagHints = (
+  prefix: "postgres" | "mysql" | "mongo" | "sqlite",
+): Array<EnvHint> => {
+  const upper = prefix.toUpperCase();
+  return [
+    { path: `${prefix}.synchronize`, envVar: `${upper}__SYNCHRONIZE` },
+    { path: `${prefix}.migrations`, envVar: `${upper}__MIGRATIONS` },
+  ];
+};
+
 const proteusEnvHints = (driver: ProteusDriver): Array<EnvHint> => {
   switch (driver) {
     case "postgres":
-      return [{ path: "postgres.url", envVar: "POSTGRES__URL" }];
+      return [
+        { path: "postgres.url", envVar: "POSTGRES__URL" },
+        ...schemaFlagHints("postgres"),
+      ];
     case "mysql":
-      return [{ path: "mysql.url", envVar: "MYSQL__URL" }];
+      return [{ path: "mysql.url", envVar: "MYSQL__URL" }, ...schemaFlagHints("mysql")];
     case "mongo":
-      return [{ path: "mongo.url", envVar: "MONGO__URL" }];
+      return [{ path: "mongo.url", envVar: "MONGO__URL" }, ...schemaFlagHints("mongo")];
     case "redis":
       return [{ path: "redis.url", envVar: "REDIS__URL" }];
     case "sqlite":
-      return [{ path: "sqlite.path", envVar: "SQLITE__PATH" }];
+      return [
+        { path: "sqlite.path", envVar: "SQLITE__PATH" },
+        ...schemaFlagHints("sqlite"),
+      ];
     case "memory":
       return [];
   }
@@ -69,6 +85,18 @@ const collectHints = (answers: Answers): Array<EnvHint> => {
   return dedupByPath(hints);
 };
 
+const SCHEMA_MANAGED: ReadonlyArray<ProteusDriver> = [
+  "postgres",
+  "mysql",
+  "sqlite",
+  "mongo",
+];
+
+const proteusDefaultsBlock = (driver: ProteusDriver): YamlBlock => {
+  if (!SCHEMA_MANAGED.includes(driver)) return [];
+  return [`${driver}:`, `  synchronize: false`, `  migrations: false`];
+};
+
 /**
  * Generates `config/default.yml` for a freshly scaffolded service.
  *
@@ -108,6 +136,16 @@ export const buildConfigYaml = (answers: Answers): string => {
     ``,
   ];
 
+  const seenDefaultKeys = new Set<string>();
+  for (const driver of answers.proteusDrivers) {
+    const block = proteusDefaultsBlock(driver);
+    if (block.length === 0) continue;
+    const key = block[0];
+    if (seenDefaultKeys.has(key)) continue;
+    seenDefaultKeys.add(key);
+    lines.push(...block, ``);
+  }
+
   return lines.join("\n");
 };
 
@@ -116,15 +154,23 @@ type YamlBlock = Array<string>;
 const proteusDevYaml = (driver: ProteusDriver): YamlBlock => {
   switch (driver) {
     case "postgres":
-      return [`postgres:`, `  url: postgresql://postgres:postgres@localhost:5432/app`];
+      return [
+        `postgres:`,
+        `  url: postgresql://postgres:postgres@localhost:5432/app`,
+        `  synchronize: true`,
+      ];
     case "mysql":
-      return [`mysql:`, `  url: mysql://root:root@localhost:3306/app`];
+      return [
+        `mysql:`,
+        `  url: mysql://root:root@localhost:3306/app`,
+        `  synchronize: true`,
+      ];
     case "mongo":
-      return [`mongo:`, `  url: mongodb://localhost:27017/app`];
+      return [`mongo:`, `  url: mongodb://localhost:27017/app`, `  synchronize: true`];
     case "redis":
       return [`redis:`, `  url: redis://localhost:6379`];
     case "sqlite":
-      return [`sqlite:`, `  path: ./data/app.db`];
+      return [`sqlite:`, `  path: ./data/app.db`, `  synchronize: true`];
     case "memory":
       return [];
   }
