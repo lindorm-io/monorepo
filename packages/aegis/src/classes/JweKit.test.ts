@@ -418,15 +418,22 @@ describe("JweKit", () => {
       "RSA-OAEP",
     ];
 
-    test.each(algorithms)("should encrypt and decrypt data using %s", (algorithm) => {
-      const kryptos = KryptosKit.generate.auto({ algorithm });
+    // RSA-OAEP-512 generates a 4096-bit RSA key whose runtime varies
+    // significantly under CI load (3-10s observed). The default 5s timeout
+    // is not enough headroom; bump to 30s for the algorithm sweep.
+    test.each(algorithms)(
+      "should encrypt and decrypt data using %s",
+      (algorithm) => {
+        const kryptos = KryptosKit.generate.auto({ algorithm });
 
-      const jweKit = new JweKit({ logger, kryptos });
+        const jweKit = new JweKit({ logger, kryptos });
 
-      const { token } = jweKit.encrypt("data");
+        const { token } = jweKit.encrypt("data");
 
-      expect(jweKit.decrypt(token)).toBeDefined();
-    });
+        expect(jweKit.decrypt(token)).toBeDefined();
+      },
+      30_000,
+    );
   });
 
   describe("critical header parameter rejection", () => {
