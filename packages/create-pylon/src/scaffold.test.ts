@@ -450,6 +450,39 @@ describe("scaffold", () => {
       }
     });
 
+    test("multi-driver: imports primary nested source (postgres + redis)", () => {
+      mkdirSync(projectDir, { recursive: true });
+      const answers = baseAnswers({
+        projectDir,
+        proteusDrivers: ["postgres", "redis"],
+        workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"],
+      });
+      writeWorkerFiles(answers);
+      for (const key of answers.workers) {
+        const content = readFileSync(
+          join(projectDir, "src/workers", `${key}.ts`),
+          "utf-8",
+        );
+        expect(content).toContain(`from "../proteus/postgres/source.js"`);
+        expect(content).not.toContain(`from "../proteus/source.js"`);
+      }
+    });
+
+    test("multi-driver: redis-only fallback picks redis as primary", () => {
+      mkdirSync(projectDir, { recursive: true });
+      const answers = baseAnswers({
+        projectDir,
+        proteusDrivers: ["redis", "memory"],
+        workers: ["kryptos-rotation"],
+      });
+      writeWorkerFiles(answers);
+      const content = readFileSync(
+        join(projectDir, "src/workers/kryptos-rotation.ts"),
+        "utf-8",
+      );
+      expect(content).toContain(`from "../proteus/redis/source.js"`);
+    });
+
     test("skipped when no workers selected", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir });
