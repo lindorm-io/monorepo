@@ -23,4 +23,7 @@ export type OpenIdGrantType =
   // oauth2 password (short)
   | "password"
   // oauth2 refresh token (short)
-  | "refresh_token";
+  | "refresh_token"
+
+  // extension / vendor grant types
+  | (string & {});
