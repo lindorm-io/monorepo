@@ -18,4 +18,4 @@ type StandardScope =
   | "phone"
   | "profile";
 
-export type OpenIdScope = LindormScope | StandardScope;
+export type OpenIdScope = LindormScope | StandardScope | (string & {});
