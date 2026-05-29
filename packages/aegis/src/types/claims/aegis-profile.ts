@@ -11,7 +11,9 @@
 //   - external resource lists (social networks, IM handles, linked IdPs)
 //     — belong in a /me/* endpoint, not a token snapshot
 //   - highly sensitive regulated PII (SSN, national identity numbers)
-//     — require encrypted transport and separate typed claims
+//     — see AegisSensitiveIdentity, which travels as a single nested
+//       "sensitive_identity" claim that RPs should only honour inside a
+//       JWE-encrypted ID token (OIDC Core §13.3)
 //   - dynamic fields (geo location) — use fresh endpoints
 //   - redundancies with OIDC Core claims (language vs locale, timeZone
 //     vs zoneinfo, username vs preferred_username, gravatarUri/avatarUri

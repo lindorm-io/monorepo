@@ -2,6 +2,7 @@ import type { KryptosSigAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import type {
   AegisProfile,
+  AegisSensitiveIdentity,
   LindormClaims,
   OAuthClaims,
   OidcClaims,
@@ -32,6 +33,7 @@ export type ParsedJwtPayload<C extends Dict = Dict> = StdClaims &
     profile: AegisProfile | undefined;
     roles: Array<string>;
     scope: Array<string>;
+    sensitiveIdentity: AegisSensitiveIdentity | undefined;
     subject: string;
     tokenId: string;
   };
