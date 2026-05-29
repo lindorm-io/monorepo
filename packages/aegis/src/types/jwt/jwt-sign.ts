@@ -29,7 +29,7 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
     profile?: AegisProfile;
     sensitiveIdentity?: AegisSensitiveIdentity;
     subject: string;
-    tokenType: string;
+    tokenType: "Bearer" | "DPoP" | "N_A" | (string & {});
   };
 
 export type SignJwtOptions = {

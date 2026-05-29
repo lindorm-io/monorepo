@@ -1,3 +1,4 @@
+import type { OpenIdGrantType, OpenIdScope } from "@lindorm/types";
 import type { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance.js";
 
 export type AuthFactor = "knowledge" | "possession" | "inherence" | (string & {});
@@ -17,10 +18,10 @@ export type LindormClaims = {
   adjustedAccessLevel?: AdjustedAccessLevel;
   authFactor?: Array<AuthFactor>;
   clientId?: string;
-  grantType?: string;
+  grantType?: OpenIdGrantType;
   levelOfAssurance?: LevelOfAssurance;
   permissions?: Array<string>;
-  scope?: Array<string>;
+  scope?: Array<OpenIdScope>;
   sessionHint?: SessionHint;
   sessionId?: string;
   subjectHint?: SubjectHint;
