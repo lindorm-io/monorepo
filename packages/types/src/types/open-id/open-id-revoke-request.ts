@@ -31,5 +31,5 @@ export type OpenIdRevokeRequest = {
    * this specification MAY define other values for this
    * parameter using the registry defined in Section 4.1.2.
    */
-  tokenTypeHint?: "access_token" | "refresh_token" | string;
+  tokenTypeHint?: "access_token" | "refresh_token" | (string & {});
 };
