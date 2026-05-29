@@ -1,0 +1,68 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`extractSensitiveIdentity > should extract from camelCase pre-extracted claim 1`] = `
+{
+  "rest": {
+    "sub": "user-1",
+  },
+  "sensitiveIdentity": {
+    "nationalIdentityNumber": "19900101-1234",
+    "nationalIdentityNumberVerified": true,
+  },
+}
+`;
+
+exports[`extractSensitiveIdentity > should extract from snake_case wire-form claim 1`] = `
+{
+  "rest": {
+    "sub": "user-1",
+  },
+  "sensitiveIdentity": {
+    "nationalIdentityNumber": "19900101-1234",
+    "nationalIdentityNumberVerified": true,
+    "socialSecurityNumber": "123-45-6789",
+    "socialSecurityNumberVerified": false,
+  },
+}
+`;
+
+exports[`extractSensitiveIdentity > should leave other keys untouched in rest 1`] = `
+{
+  "rest": {
+    "custom_claim": 42,
+    "email": "a@b.c",
+    "sub": "user-1",
+  },
+  "sensitiveIdentity": {
+    "nationalIdentityNumber": "x",
+  },
+}
+`;
+
+exports[`extractSensitiveIdentity > should return undefined when claim absent 1`] = `
+{
+  "rest": {
+    "custom": "value",
+    "sub": "user-1",
+  },
+  "sensitiveIdentity": undefined,
+}
+`;
+
+exports[`extractSensitiveIdentity > should return undefined when claim is empty object 1`] = `
+{
+  "rest": {
+    "sub": "user-1",
+  },
+  "sensitiveIdentity": undefined,
+}
+`;
+
+exports[`extractSensitiveIdentity > should return undefined when claim is not an object 1`] = `
+{
+  "rest": {
+    "sub": "user-1",
+  },
+  "sensitiveIdentity": undefined,
+}
+`;

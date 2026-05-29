@@ -18,6 +18,7 @@ import type {
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { extractDomainClaims } from "./extract-claims.js";
+import { extractSensitiveIdentity } from "./extract-sensitive-identity.js";
 import { generateTokenId } from "./generate-token-id.js";
 
 type Config = {
@@ -148,8 +149,21 @@ export const encodeJwtPayload = <C extends Dict = Dict>(
   // live at the top level of the token, not nested under a "profile" key).
   const profileWire = isObject(content.profile) ? snakeKeys(content.profile) : {};
 
+  // AegisSensitiveIdentity travels as a single nested top-level claim
+  // (sensitive_identity) so the encryption boundary is visible on the wire.
+  // Relying parties MUST only honour this claim when the ID token arrived
+  // JWE-encrypted (OIDC Core §13.3).
+  const sensitiveIdentityWire = isObject(content.sensitiveIdentity)
+    ? { sensitive_identity: snakeKeys(content.sensitiveIdentity) }
+    : {};
+
   const payload = B64.encode(
-    JSON.stringify({ ...claims, ...profileWire, ...(content.claims ?? {}) }),
+    JSON.stringify({
+      ...claims,
+      ...profileWire,
+      ...sensitiveIdentityWire,
+      ...(content.claims ?? {}),
+    }),
     B64U,
   );
 
@@ -174,7 +188,9 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
   }
 
   const { claims: domain, rest } = extractDomainClaims(decoded);
-  const { profile, rest: customClaims } = extractAegisProfile(rest);
+  const { profile, rest: afterProfile } = extractAegisProfile(rest);
+  const { sensitiveIdentity, rest: customClaims } =
+    extractSensitiveIdentity(afterProfile);
 
   // ParsedJwtPayload uses non-optional arrays with [] defaults and
   // "unknown" fallbacks for required fields — stricter than DomainClaims.
@@ -196,6 +212,7 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     subject: domain.subject ?? "unknown",
     tokenId: domain.tokenId ?? "unknown",
     profile,
+    sensitiveIdentity,
     claims: customClaims as C,
   });
 };

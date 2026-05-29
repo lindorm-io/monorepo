@@ -1,6 +1,7 @@
 export * from "./act-claim.js";
 export * from "./aegis-introspection.js";
 export * from "./aegis-profile.js";
+export * from "./aegis-sensitive-identity.js";
 export * from "./aegis-userinfo.js";
 export * from "./confirmation-claim.js";
 export * from "./lindorm-claims.js";
