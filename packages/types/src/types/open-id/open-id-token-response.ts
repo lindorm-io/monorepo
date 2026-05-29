@@ -50,5 +50,5 @@ export type OpenIdTokenResponse = LindormResponse & {
    * The type of the token issued as described in
    * Section 7.1. Value is case insensitive.
    */
-  tokenType?: "Bearer" | string;
+  tokenType?: "Bearer" | "DPoP" | (string & {});
 };

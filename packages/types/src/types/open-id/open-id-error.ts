@@ -17,7 +17,7 @@ export type OpenIdErrorResponse = {
    *
    * Error code.
    */
-  error: OpenIdErrorCode | string;
+  error: OpenIdErrorCode | (string & {});
 
   /**
    * OPTIONAL
