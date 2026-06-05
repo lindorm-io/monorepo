@@ -16,6 +16,7 @@ type PylonError = {
     name: string;
     support: string;
     title: string;
+    type?: string;
   };
 };
 
