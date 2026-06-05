@@ -1,5 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`parseCookieHeader > should combine chunks with .sig and .kid siblings 1`] = `
+[
+  {
+    "chunkIndices": [
+      0,
+      1,
+    ],
+    "kid": "kid-1",
+    "name": "foo",
+    "signature": "signature",
+    "value": "alphabeta",
+  },
+]
+`;
+
 exports[`parseCookieHeader > should initialize both as null for plain cookies 1`] = `
 [
   {
@@ -52,6 +67,49 @@ exports[`parseCookieHeader > should parse cookies with sig and kid siblings 1`] 
     "name": "testTwo",
     "signature": null,
     "value": "dmFsdWVUd28",
+  },
+]
+`;
+
+exports[`parseCookieHeader > should reassemble chunked cookies arriving out of order 1`] = `
+[
+  {
+    "chunkIndices": [
+      0,
+      1,
+      2,
+    ],
+    "kid": null,
+    "name": "foo",
+    "signature": null,
+    "value": "alphabetagamma",
+  },
+]
+`;
+
+exports[`parseCookieHeader > should reassemble chunked cookies in order 1`] = `
+[
+  {
+    "chunkIndices": [
+      0,
+      1,
+      2,
+    ],
+    "kid": null,
+    "name": "foo",
+    "signature": null,
+    "value": "alphabetagamma",
+  },
+]
+`;
+
+exports[`parseCookieHeader > should treat a lone .5 without .0 as a regular cookie 1`] = `
+[
+  {
+    "kid": null,
+    "name": "foo.5",
+    "signature": null,
+    "value": "orphan",
   },
 ]
 `;
