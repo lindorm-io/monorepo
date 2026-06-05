@@ -29,6 +29,24 @@ describe("createErrorTypeUrn", () => {
   test("falls back to unknown when an empty string code resolves to empty slug", () => {
     expect(createErrorTypeUrn("", "Error")).toBe("urn:lindorm:error:unknown");
   });
+
+  test("inserts the namespace segment when provided", () => {
+    expect(createErrorTypeUrn("invalid_origin", "CorsError", "pylon")).toBe(
+      "urn:lindorm:pylon:error:invalid_origin",
+    );
+  });
+
+  test("derives a namespaced slug from the class name when code is null", () => {
+    expect(createErrorTypeUrn(null, "CorsError", "pylon")).toBe(
+      "urn:lindorm:pylon:error:cors",
+    );
+  });
+
+  test("collapses a class name that equals the namespace to unknown", () => {
+    expect(createErrorTypeUrn(null, "PylonError", "pylon")).toBe(
+      "urn:lindorm:pylon:error:unknown",
+    );
+  });
 });
 
 describe("assertValidErrorType", () => {
