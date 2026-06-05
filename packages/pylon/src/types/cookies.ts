@@ -5,6 +5,8 @@ export type CookiePriority = "low" | "medium" | "high";
 export type CookieSameSite = "strict" | "lax" | "none";
 
 export type PylonCookieOptions = {
+  chunked?: boolean;
+  chunkSize?: number;
   domain?: string;
   encoding?: CookieEncoding;
   encrypted?: boolean;
@@ -20,7 +22,7 @@ export type PylonCookieOptions = {
 
 export type PylonCookieConfig = Pick<
   PylonCookieOptions,
-  "domain" | "encoding" | "httpOnly" | "sameSite" | "secure"
+  "chunked" | "chunkSize" | "domain" | "encoding" | "httpOnly" | "sameSite" | "secure"
 >;
 
 export type PylonSetCookie = PylonCookieOptions;

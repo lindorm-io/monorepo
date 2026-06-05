@@ -23,6 +23,8 @@ describe("httpCookiesMiddleware", async () => {
   let next: Mock;
 
   beforeEach(() => {
+    vi.clearAllMocks();
+
     ctx = {
       aegis: createMockAegis(),
       amphora: createMockAmphora(),
@@ -206,7 +208,30 @@ describe("httpCookiesMiddleware", async () => {
     await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
   });
 
-  test("should delete cookie", async () => {
+  test("should delete cookie and expire its sig + kid companions", async () => {
+    next.mockImplementation(async () => {
+      ctx.cookies.del("cookie_name");
+    });
+
+    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+
+    expect(ctx.set).toHaveBeenCalledWith("set-cookie", [
+      "cookie_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
+      "cookie_name.sig=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
+      "cookie_name.kid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
+    ]);
+  });
+
+  test("should delete cookie without sig/kid when none are present", async () => {
+    parseCookieHeader.mockReturnValue([
+      {
+        name: "cookie_name",
+        signature: null,
+        kid: null,
+        value: "Y29va2llX3ZhbHVl",
+      },
+    ]);
+
     next.mockImplementation(async () => {
       ctx.cookies.del("cookie_name");
     });
@@ -216,5 +241,176 @@ describe("httpCookiesMiddleware", async () => {
     expect(ctx.set).toHaveBeenCalledWith("set-cookie", [
       "cookie_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
     ]);
+  });
+
+  test("should emit single bare-name cookie for under-threshold value (backwards-compat)", async () => {
+    next.mockImplementation(async () => {
+      ctx.cookies.set("new_cookie", "x".repeat(500));
+    });
+
+    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+
+    const setCookieHeader = ctx.set.mock.calls[0][1] as Array<string>;
+    expect(setCookieHeader).toHaveLength(1);
+    expect(setCookieHeader[0]).toMatch(/^new_cookie=/);
+    expect(setCookieHeader[0]).not.toMatch(/^new_cookie\.0=/);
+  });
+
+  test("should chunk an over-threshold value into name.0, name.1, ... entries", async () => {
+    next.mockImplementation(async () => {
+      ctx.cookies.set("new_cookie", "x".repeat(10_000));
+    });
+
+    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+
+    const headers = ctx.set.mock.calls[0][1] as Array<string>;
+    expect(headers.length).toBeGreaterThan(1);
+    expect(headers[0]).toMatch(/^new_cookie\.0=/);
+    expect(headers[1]).toMatch(/^new_cookie\.1=/);
+  });
+
+  test("should chunk + sign producing single sig + kid covering joined value", async () => {
+    next.mockImplementation(async () => {
+      ctx.cookies.set("new_cookie", "x".repeat(10_000), { signed: true });
+    });
+
+    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+
+    const headers = ctx.set.mock.calls[0][1] as Array<string>;
+
+    const chunkHeaders = headers.filter((h) => /^new_cookie\.\d+=/.test(h));
+    const sigHeaders = headers.filter((h) => h.startsWith("new_cookie.sig="));
+    const kidHeaders = headers.filter((h) => h.startsWith("new_cookie.kid="));
+
+    expect(chunkHeaders.length).toBeGreaterThan(1);
+    expect(sigHeaders).toHaveLength(1);
+    expect(kidHeaders).toHaveLength(1);
+
+    expect(signCookie).toHaveBeenCalledTimes(1);
+    const signedValue = signCookie.mock.calls[0][1] as string;
+
+    const expectedEncoded = Buffer.from("x".repeat(10_000)).toString("base64url");
+    expect(signedValue).toBe(expectedEncoded);
+
+    const chunkPattern = /^new_cookie\.(\d+)=([^;]*)/;
+    const reassembled = chunkHeaders
+      .map((h) => chunkPattern.exec(h))
+      .filter((m): m is RegExpExecArray => m !== null)
+      .sort((a, b) => Number(a[1]) - Number(b[1]))
+      .map((m) => m[2])
+      .join("");
+    expect(reassembled).toBe(signedValue);
+  });
+
+  test("should AES-tokenise first, then chunk, with byte-exact round-trip", async () => {
+    const tokenised = `aes:${"y".repeat(8_000)}`;
+    ctx.aegis.aes.encrypt = vi.fn().mockResolvedValue(tokenised);
+
+    next.mockImplementation(async () => {
+      ctx.cookies.set("new_cookie", "secret_value", { encrypted: true });
+    });
+
+    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+
+    expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith("secret_value", "tokenised");
+
+    const headers = ctx.set.mock.calls[0][1] as Array<string>;
+    expect(headers.length).toBeGreaterThan(1);
+
+    const chunkPattern = /^new_cookie\.(\d+)=([^;]*)/;
+    const reassembled = headers
+      .map((h) => chunkPattern.exec(h))
+      .filter((m): m is RegExpExecArray => m !== null)
+      .sort((a, b) => Number(a[1]) - Number(b[1]))
+      .map((m) => m[2])
+      .join("");
+
+    expect(reassembled).toBe(tokenised);
+  });
+
+  test("should expire stale chunks not produced by the new write", async () => {
+    parseCookieHeader.mockReturnValue([
+      {
+        name: "new_cookie",
+        signature: null,
+        kid: null,
+        value: "stalevalue",
+        chunkIndices: [0, 1, 2, 3, 4],
+      },
+    ]);
+
+    next.mockImplementation(async () => {
+      ctx.cookies.set("new_cookie", "y".repeat(8_000));
+    });
+
+    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+
+    const headers = ctx.set.mock.calls[0][1] as Array<string>;
+    const chunkHeaders = headers.filter((h) => /^new_cookie\.\d+=/.test(h));
+
+    const liveChunks = chunkHeaders.filter(
+      (h) => !h.includes("expires=Thu, 01 Jan 1970"),
+    );
+    const expiredChunks = chunkHeaders.filter((h) =>
+      h.includes("expires=Thu, 01 Jan 1970"),
+    );
+
+    expect(liveChunks.length).toBeGreaterThanOrEqual(1);
+
+    const liveIndices = liveChunks
+      .map((h) => /^new_cookie\.(\d+)=/.exec(h)?.[1])
+      .filter((idx): idx is string => idx !== undefined)
+      .map(Number);
+
+    const expiredIndices = expiredChunks
+      .map((h) => /^new_cookie\.(\d+)=/.exec(h)?.[1])
+      .filter((idx): idx is string => idx !== undefined)
+      .map(Number);
+
+    for (const stale of [0, 1, 2, 3, 4]) {
+      if (!liveIndices.includes(stale)) {
+        expect(expiredIndices).toContain(stale);
+      }
+    }
+  });
+
+  test("should expire all chunks plus sig + kid on del", async () => {
+    parseCookieHeader.mockReturnValue([
+      {
+        name: "cookie_name",
+        signature: "sigval",
+        kid: "kidval",
+        value: "joined",
+        chunkIndices: [0, 1, 2],
+      },
+    ]);
+
+    next.mockImplementation(async () => {
+      ctx.cookies.del("cookie_name");
+    });
+
+    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+
+    expect(ctx.set).toHaveBeenCalledWith("set-cookie", [
+      "cookie_name=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
+      "cookie_name.0=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
+      "cookie_name.1=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
+      "cookie_name.2=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
+      "cookie_name.sig=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
+      "cookie_name.kid=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT",
+    ]);
+  });
+
+  test("should honor chunked: false opt-out", async () => {
+    next.mockImplementation(async () => {
+      ctx.cookies.set("new_cookie", "x".repeat(10_000), { chunked: false });
+    });
+
+    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+
+    const headers = ctx.set.mock.calls[0][1] as Array<string>;
+    expect(headers).toHaveLength(1);
+    expect(headers[0]).toMatch(/^new_cookie=/);
+    expect(headers[0]).not.toMatch(/^new_cookie\.0=/);
   });
 });

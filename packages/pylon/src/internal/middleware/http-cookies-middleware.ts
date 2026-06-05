@@ -7,9 +7,12 @@ import type {
   PylonHttpMiddleware,
   PylonSetCookie,
 } from "../../types/index.js";
+import { chunkCookieValue } from "../utils/cookies/chunk-cookie-value.js";
 import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
 import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { signCookie } from "../utils/cookies/sign-cookie.js";
+
+const DEFAULT_CHUNK_SIZE = 4000;
 
 export const createHttpCookiesMiddleware = (
   config: PylonCookieConfig = {},
@@ -23,12 +26,19 @@ export const createHttpCookiesMiddleware = (
 
     let cookies: Array<PylonCookie> = [];
 
+    const isChunkOf = (cookieName: string, baseName: string): boolean => {
+      if (!cookieName.startsWith(`${baseName}.`)) return false;
+      const suffix = cookieName.slice(baseName.length + 1);
+      return /^\d+$/.test(suffix);
+    };
+
     const removeExisting = (name: string): void => {
       cookies = cookies.filter(
         (cookie) =>
           cookie.name !== name &&
           cookie.name !== `${name}.sig` &&
-          cookie.name !== `${name}.kid`,
+          cookie.name !== `${name}.kid` &&
+          !isChunkOf(cookie.name, name),
       );
     };
 
@@ -68,7 +78,27 @@ export const createHttpCookiesMiddleware = (
 
         removeExisting(name);
 
-        cookies.push(new PylonCookie(name, final, opts));
+        const chunkSize = opts.chunkSize ?? DEFAULT_CHUNK_SIZE;
+
+        const chunks =
+          opts.chunked === false
+            ? [{ name, value: final as string }]
+            : chunkCookieValue({ name, value: final, options: opts, chunkSize });
+
+        for (const chunk of chunks) {
+          cookies.push(new PylonCookie(chunk.name, chunk.value, opts));
+        }
+
+        const incoming = parsed.find((c) => c.name === name);
+        if (incoming?.chunkIndices) {
+          for (const index of incoming.chunkIndices) {
+            if (index >= chunks.length) {
+              cookies.push(
+                new PylonCookie(`${name}.${index}`, null, { expiry: new Date(0) }),
+              );
+            }
+          }
+        }
 
         if (opts.signed) {
           const { signature, kid } = await signCookie(ctx, final);
@@ -84,6 +114,24 @@ export const createHttpCookiesMiddleware = (
         removeExisting(name);
 
         cookies.push(new PylonCookie(name, null, { expiry: new Date(0) }));
+
+        const incoming = parsed.find((c) => c.name === name);
+
+        if (incoming) {
+          if (incoming.chunkIndices) {
+            for (const index of incoming.chunkIndices) {
+              cookies.push(
+                new PylonCookie(`${name}.${index}`, null, { expiry: new Date(0) }),
+              );
+            }
+          }
+          if (incoming.signature !== null) {
+            cookies.push(new PylonCookie(`${name}.sig`, null, { expiry: new Date(0) }));
+          }
+          if (incoming.kid !== null) {
+            cookies.push(new PylonCookie(`${name}.kid`, null, { expiry: new Date(0) }));
+          }
+        }
       },
     };
 
