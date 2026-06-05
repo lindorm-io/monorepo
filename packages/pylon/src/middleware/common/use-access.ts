@@ -53,7 +53,8 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
           .join("; ");
         throw new ClientError("Access denied", {
           details: details ?? err.message,
-          data: err.data,
+          data: { invalid: invalid?.map((i) => i.key) },
+          debug: err.data,
           status: ClientError.Status.Forbidden,
           code: "access_denied",
           type: "urn:lindorm:pylon:error:access_denied",
