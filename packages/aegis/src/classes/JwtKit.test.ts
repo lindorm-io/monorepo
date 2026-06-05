@@ -586,7 +586,7 @@ describe("JwtKit", () => {
       );
     });
 
-    test("actor.allowedSubjects accepts a chain of whitelisted subjects", () => {
+    test("actor.allowedActors ($in) accepts a chain of whitelisted subjects", () => {
       const { token } = kit.sign({
         ...baseContent,
         act: { subject: "service-1", act: { subject: "service-2" } },
@@ -594,20 +594,106 @@ describe("JwtKit", () => {
 
       expect(() =>
         kit.verify(token, {
-          actor: { allowedSubjects: ["service-1", "service-2"] },
+          actor: { allowedActors: { subject: { $in: ["service-1", "service-2"] } } },
         }),
       ).not.toThrow();
     });
 
-    test("actor.allowedSubjects rejects an unknown actor in the chain", () => {
+    test("actor.allowedActors defaults to 'every' and rejects an unknown actor", () => {
       const { token } = kit.sign({
         ...baseContent,
         act: { subject: "service-1", act: { subject: "rogue" } },
       });
 
       expect(() =>
-        kit.verify(token, { actor: { allowedSubjects: ["service-1"] } }),
+        kit.verify(token, {
+          actor: { allowedActors: { subject: { $in: ["service-1"] } } },
+        }),
       ).toThrow(/not allowed/);
+    });
+
+    test("actor.allowedActors matches across fields ($or of subject + clientId)", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: {
+          subject: "svc-billing",
+          act: { subject: "ignored", clientId: "internal" },
+        },
+      });
+
+      expect(() =>
+        kit.verify(token, {
+          actor: {
+            allowedActors: {
+              $or: [{ subject: { $regex: /^svc-/ } }, { clientId: "internal" }],
+            },
+          },
+        }),
+      ).not.toThrow();
+    });
+
+    test("actor.actorScope 'current' only checks the immediate actor", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { subject: "service-1", act: { subject: "rogue" } },
+      });
+
+      expect(() =>
+        kit.verify(token, {
+          actor: {
+            allowedActors: { subject: "service-1" },
+            actorScope: "current",
+          },
+        }),
+      ).not.toThrow();
+    });
+
+    test("actor.actorScope 'current' rejects when the immediate actor fails", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { subject: "rogue", act: { subject: "service-1" } },
+      });
+
+      expect(() =>
+        kit.verify(token, {
+          actor: {
+            allowedActors: { subject: "service-1" },
+            actorScope: "current",
+          },
+        }),
+      ).toThrow(/not allowed/);
+    });
+
+    test("actor.actorScope 'some' passes when any actor matches", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { subject: "rogue", act: { subject: "gateway" } },
+      });
+
+      expect(() =>
+        kit.verify(token, {
+          actor: {
+            allowedActors: { subject: "gateway" },
+            actorScope: "some",
+          },
+        }),
+      ).not.toThrow();
+    });
+
+    test("actor.actorScope 'some' rejects when no actor matches", () => {
+      const { token } = kit.sign({
+        ...baseContent,
+        act: { subject: "rogue-1", act: { subject: "rogue-2" } },
+      });
+
+      expect(() =>
+        kit.verify(token, {
+          actor: {
+            allowedActors: { subject: "gateway" },
+            actorScope: "some",
+          },
+        }),
+      ).toThrow(/no actor in the chain/i);
     });
 
     test("actor.maxChainDepth allows chains at or below the limit", () => {

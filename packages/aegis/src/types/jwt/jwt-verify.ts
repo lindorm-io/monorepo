@@ -1,10 +1,23 @@
+import type { Predicate } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
+import type { ActClaim } from "../claims/act-claim.js";
 import type { JwtClaimMatchers } from "./jwt-claim-matchers.js";
+
+// How `allowedActors` is applied to the token's actor chain:
+// - "every"   (default) every actor in the chain must match the predicate.
+//             Fail-closed; the only scope that catches an unauthorized
+//             intermediary, since aegis does not validate `may_act`.
+// - "current" only the immediate actor (actorChain[0]) must match. Trusts
+//             the rest of the chain — "is my caller allowed".
+// - "some"    at least one actor matches. Attestation ("token passed
+//             through gateway G at some point").
+export type ActorScope = "every" | "current" | "some";
 
 export type VerifyActorOptions = {
   required?: boolean;
   forbidden?: boolean;
-  allowedSubjects?: Array<string>;
+  allowedActors?: Predicate<ActClaim>;
+  actorScope?: ActorScope;
   maxChainDepth?: number;
 };
 
