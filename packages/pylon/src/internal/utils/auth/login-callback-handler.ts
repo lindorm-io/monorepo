@@ -78,11 +78,22 @@ export const createLoginCallbackHandler = (
     const cookie = await ctx.cookies.get<PylonLoginCookie>(routerConfig.cookies.login);
 
     if (!cookie) {
-      throw new ClientError("No login cookie found");
+      throw new ClientError("No login cookie found", {
+        code: "login_cookie_missing",
+        type: "urn:lindorm:pylon:error:login_cookie_missing",
+        status: ClientError.Status.BadRequest,
+        details:
+          "The login state cookie is absent — the callback was reached without an active login flow, or the cookie expired",
+      });
     }
 
     if (cookie.state && cookie.state !== ctx.data.state) {
-      throw new ClientError("Invalid state", {
+      throw new ClientError("Login state mismatch", {
+        code: "login_state_mismatch",
+        type: "urn:lindorm:pylon:error:login_state_mismatch",
+        status: ClientError.Status.BadRequest,
+        details:
+          "The state parameter returned by the IdP does not match the value stored in the login cookie (possible CSRF)",
         debug: { cookie, state: ctx.data.state },
       });
     }
@@ -115,7 +126,14 @@ export const createLoginCallbackHandler = (
     }
 
     if (!ctx.state.session) {
-      throw new ClientError("No session found");
+      throw new ClientError("Could not establish session from login callback", {
+        code: "login_session_not_established",
+        type: "urn:lindorm:pylon:error:login_session_not_established",
+        status: ClientError.Status.BadRequest,
+        details:
+          "Neither the token nor code response from the IdP yielded a usable session",
+        debug: { responseType: cookie.responseType },
+      });
     }
 
     if (ctx.state.session.idToken) {
@@ -126,7 +144,12 @@ export const createLoginCallbackHandler = (
         cookie.nonce &&
         cookie.nonce !== verified.payload.nonce
       ) {
-        throw new ClientError("Invalid nonce", {
+        throw new ClientError("Login nonce mismatch", {
+          code: "login_nonce_mismatch",
+          type: "urn:lindorm:pylon:error:login_nonce_mismatch",
+          status: ClientError.Status.BadRequest,
+          details:
+            "The nonce in the returned id_token does not match the value stored in the login cookie (possible token replay)",
           debug: { cookie, nonce: verified.payload.nonce },
         });
       }

@@ -30,6 +30,8 @@ export const registerBearerHandshakeAuth = async ({
 }: RegisterBearerHandshakeAuthOptions): Promise<void> => {
   if (dpopMode === "required" && !dpopProof) {
     throw new ClientError("Missing DPoP proof", {
+      code: "handshake_dpop_proof_required",
+      type: "urn:lindorm:pylon:error:handshake_dpop_proof_required",
       details: "DPoP is required on this handshake but no DPoP header was sent",
       status: ClientError.Status.Unauthorized,
     });
@@ -61,6 +63,8 @@ export const registerBearerHandshakeAuth = async ({
 
   if (dpopMode === "required" && !confirmedJkt) {
     throw new ClientError("Missing DPoP binding", {
+      code: "handshake_dpop_binding_missing",
+      type: "urn:lindorm:pylon:error:handshake_dpop_binding_missing",
       details: "DPoP is required but the access token has no cnf.jkt",
       status: ClientError.Status.Unauthorized,
     });
@@ -72,12 +76,16 @@ export const registerBearerHandshakeAuth = async ({
   if (dpopMode !== "disabled" && confirmedJkt) {
     if (!dpopProof) {
       throw new ClientError("Missing DPoP proof", {
+        code: "handshake_dpop_proof_missing_for_bound_token",
+        type: "urn:lindorm:pylon:error:handshake_dpop_proof_missing_for_bound_token",
         details: "Access token is DPoP-bound but handshake did not present a DPoP header",
         status: ClientError.Status.Unauthorized,
       });
     }
     if (!verified.dpop) {
       throw new ClientError("Invalid DPoP proof", {
+        code: "handshake_dpop_proof_unverified",
+        type: "urn:lindorm:pylon:error:handshake_dpop_proof_unverified",
         details: "DPoP proof could not be verified",
         status: ClientError.Status.Unauthorized,
       });

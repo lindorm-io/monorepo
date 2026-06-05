@@ -9,7 +9,12 @@ type UseScopeOptions = {
 export const useScope = (options: UseScopeOptions): PylonMiddleware => {
   return async function useScopeMiddleware(ctx: PylonContext, next) {
     if (!ctx.proteus) {
-      throw new ServerError("useScope requires ProteusSource on context");
+      throw new ServerError("useScope requires a ProteusSource on the context", {
+        code: "proteus_source_not_configured",
+        type: "urn:lindorm:pylon:error:proteus_source_not_configured",
+        details:
+          "Attach a ProteusSource to the pylon (e.g. via createAttachProteusSourceMiddleware) before using useScope",
+      });
     }
 
     const params = options.params(ctx);

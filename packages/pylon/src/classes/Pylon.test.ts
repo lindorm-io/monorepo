@@ -518,6 +518,7 @@ describe("Pylon", () => {
       error: {
         id: expect.any(String),
         code: "test_error_code",
+        type: "urn:lindorm:error:test_error_code",
         data: { test: "data" },
         message: "Test Error",
         name: "ServerError",

@@ -1,7 +1,9 @@
-import { ServerError } from "@lindorm/errors";
+import { type LindormErrorOptions, ServerError } from "@lindorm/errors";
 
 export class IntrospectionEndpointFailed extends ServerError {
-  public constructor(message?: string) {
-    super(message ?? "Introspection endpoint request failed");
+  public static readonly errorNamespace = "pylon";
+
+  public constructor(message?: string, options: LindormErrorOptions = {}) {
+    super(message ?? "Introspection endpoint request failed", options);
   }
 }

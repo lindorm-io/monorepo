@@ -115,7 +115,7 @@ describe("chunkCookieValue", () => {
         options: baseOptions,
         chunkSize: 10,
       }),
-    ).toThrow("Cookie chunk size too small");
+    ).toThrow("Cookie chunk size is too small for the cookie overhead");
   });
 
   test("should split equally when value length is a multiple of budget", () => {

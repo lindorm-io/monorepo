@@ -13,11 +13,22 @@ export const createLogoutCallbackHandler = <C extends PylonHttpContext>(
     const cookie = await ctx.cookies.get<PylonLogoutCookie>(routerConfig.cookies.logout);
 
     if (!cookie) {
-      throw new ClientError("No logout cookie found");
+      throw new ClientError("No logout cookie found", {
+        code: "logout_cookie_missing",
+        type: "urn:lindorm:pylon:error:logout_cookie_missing",
+        status: ClientError.Status.BadRequest,
+        details:
+          "The logout state cookie is absent — the callback was reached without an active logout flow, or the cookie expired",
+      });
     }
 
     if (cookie.state && cookie.state !== ctx.data.state) {
-      throw new ClientError("Invalid state", {
+      throw new ClientError("Logout state mismatch", {
+        code: "logout_state_mismatch",
+        type: "urn:lindorm:pylon:error:logout_state_mismatch",
+        status: ClientError.Status.BadRequest,
+        details:
+          "The state parameter returned by the IdP does not match the value stored in the logout cookie (possible CSRF)",
         debug: { cookie, state: ctx.data.state },
       });
     }

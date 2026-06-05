@@ -16,6 +16,7 @@ import {
 } from "@lindorm/conduit";
 import { sec } from "@lindorm/date";
 import type { IConduit } from "@lindorm/conduit";
+import { ServerError } from "@lindorm/errors";
 import { isNumberString } from "@lindorm/is";
 import { PKCE } from "@lindorm/pkce";
 import type {
@@ -96,7 +97,11 @@ export const createClaimsClient = (
     const accessToken = token ?? resolveAccessToken();
 
     if (!accessToken) {
-      throw new UserinfoEndpointFailed("No access token available for userinfo request");
+      throw new UserinfoEndpointFailed("No access token available for userinfo request", {
+        code: "userinfo_access_token_missing",
+        details:
+          "No explicit token was provided and none could be resolved from the session, authorization header, or context",
+      });
     }
 
     try {
@@ -110,6 +115,11 @@ export const createClaimsClient = (
     } catch (error) {
       throw new UserinfoEndpointFailed(
         error instanceof Error ? error.message : "Userinfo endpoint request failed",
+        {
+          code: "userinfo_endpoint_failed",
+          data: { userinfoEndpoint: openid.userinfoEndpoint },
+          debug: { error },
+        },
       );
     }
   };
@@ -151,6 +161,11 @@ export const createClaimsClient = (
     if (!accessToken) {
       throw new IntrospectionEndpointFailed(
         "No access token available for introspection request",
+        {
+          code: "introspect_access_token_missing",
+          details:
+            "No explicit token was provided and none could be resolved from the session, authorization header, or context",
+        },
       );
     }
 
@@ -169,6 +184,11 @@ export const createClaimsClient = (
     } catch (error) {
       throw new IntrospectionEndpointFailed(
         error instanceof Error ? error.message : "Introspection endpoint request failed",
+        {
+          code: "introspect_endpoint_failed",
+          data: { introspectEndpoint: openid.introspectEndpoint },
+          debug: { error },
+        },
       );
     }
   };
@@ -207,7 +227,12 @@ export const createAuthClient = (
 
   const login = (input: AuthorizeQuery = {}): AuthorizeResult => {
     if (!config.router) {
-      throw new Error("Auth router is not configured");
+      throw new ServerError("Auth router is not configured", {
+        code: "auth_router_not_configured",
+        type: "urn:lindorm:pylon:error:auth_router_not_configured",
+        details:
+          "ctx.auth.login() requires options.auth.router to be configured on the Pylon",
+      });
     }
 
     const {
@@ -277,7 +302,12 @@ export const createAuthClient = (
 
   const logout = (input: LogoutQuery = {}): LogoutResult => {
     if (!config.router) {
-      throw new Error("Auth router is not configured");
+      throw new ServerError("Auth router is not configured", {
+        code: "auth_router_not_configured",
+        type: "urn:lindorm:pylon:error:auth_router_not_configured",
+        details:
+          "ctx.auth.logout() requires options.auth.router to be configured on the Pylon",
+      });
     }
 
     const { clientId } = config;

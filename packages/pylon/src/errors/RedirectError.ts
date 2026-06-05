@@ -7,6 +7,8 @@ type Options = LindormErrorOptions & {
 };
 
 export class RedirectError extends LindormError {
+  public static readonly errorNamespace = "pylon";
+
   public readonly redirect: string;
   public readonly state: string | undefined;
   public readonly uri: string | undefined;

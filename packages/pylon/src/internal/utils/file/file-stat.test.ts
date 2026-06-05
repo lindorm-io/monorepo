@@ -27,8 +27,6 @@ describe("fileStat", async () => {
     mockStat.mockRejectedValue(new Error("ENOENT: no such file"));
 
     await expect(fileStat("/missing/file.ts")).rejects.toThrow(ServerError);
-    await expect(fileStat("/missing/file.ts")).rejects.toThrow(
-      "Unable to find stat for file",
-    );
+    await expect(fileStat("/missing/file.ts")).rejects.toThrow("Unable to stat file");
   });
 });

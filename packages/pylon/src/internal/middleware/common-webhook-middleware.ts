@@ -10,7 +10,12 @@ export const createWebhookMiddleware = <C extends PylonContext>(
   if (!options?.enabled) {
     return async function disabledWebhookMiddleware(ctx, next) {
       ctx.webhook = async (): Promise<never> => {
-        throw new ServerError("Webhook is not enabled");
+        throw new ServerError("Webhook is not enabled", {
+          code: "webhook_not_enabled",
+          type: "urn:lindorm:pylon:error:webhook_not_enabled",
+          details:
+            "ctx.webhook() was called but the webhook middleware is disabled; enable it in the pylon webhook options",
+        });
       };
       await next();
     };
