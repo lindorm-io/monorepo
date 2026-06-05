@@ -1,4 +1,5 @@
 import { errorRegistry, type LindormError, NetworkError } from "@lindorm/errors";
+import { isString } from "@lindorm/is";
 import type { AxiosError } from "axios";
 import { isPylonError } from "./is-pylon-error.js";
 
@@ -54,6 +55,9 @@ export const reconstructFromAxiosError = (err: AxiosError): LindormError => {
   const pylon = isPylonError(response.data) ? response.data.error : undefined;
   const debug = { transport: { config, request, response } };
 
+  const type =
+    isString(pylon?.type) && /^urn:/i.test(pylon.type) ? pylon.type : undefined;
+
   if (typeof status !== "number" || status <= 0) {
     return new NetworkError(pylon?.message ?? err.message, {
       code: pylon?.code ?? err.code,
@@ -62,6 +66,7 @@ export const reconstructFromAxiosError = (err: AxiosError): LindormError => {
       id: pylon?.id,
       support: pylon?.support,
       title: pylon?.title,
+      type,
     });
   }
 
@@ -75,5 +80,6 @@ export const reconstructFromAxiosError = (err: AxiosError): LindormError => {
     status,
     support: pylon?.support,
     title: pylon?.title,
+    type,
   });
 };
