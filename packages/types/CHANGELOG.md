@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.6.1...@lindorm/types@0.7.0) (2026-06-05)
+
+### Bug Fixes
+
+- **types:** use `| (string & {})` to preserve autocomplete on open unions ([e2092df](https://github.com/lindorm-io/monorepo/commit/e2092df31da0811262928a1b35db4d916f11388e))
+
+### Features
+
+- **types:** widen extensible OpenId unions while preserving autocomplete ([940cfb4](https://github.com/lindorm-io/monorepo/commit/940cfb4f95fead1e8ff9a9e3fad87f7a652eaa5a))
+
 ## [0.6.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.6.0...@lindorm/types@0.6.1) (2026-05-05)
 
 ### Bug Fixes
