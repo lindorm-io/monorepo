@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/pylon",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -54,7 +54,7 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
-    "@lindorm/aegis": "^0.8.0",
+    "@lindorm/aegis": "^0.8.1",
     "@lindorm/b64": "^0.2.1",
     "@lindorm/case": "^0.2.2",
     "@lindorm/conduit": "^0.6.3",
