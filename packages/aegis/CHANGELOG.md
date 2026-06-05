@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.7.2...@lindorm/aegis@0.8.0) (2026-06-05)
+
+### Features
+
+- **aegis:** add AegisSensitiveIdentity claim for regulated PII ([ac8f1ea](https://github.com/lindorm-io/monorepo/commit/ac8f1ea146c4a0c0402093237d148ce1df6b0d74))
+- **aegis:** tighten claim types with autocomplete hints ([aa8ea15](https://github.com/lindorm-io/monorepo/commit/aa8ea15c48973771db71ecc1e9dbbc15eaa96771))
+
 ## [0.7.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.7.1...@lindorm/aegis@0.7.2) (2026-05-05)
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/enigma",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -30,10 +30,10 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/aes": "^0.7.1",
-    "@lindorm/errors": "^0.2.1",
-    "@lindorm/kryptos": "^0.8.1",
-    "@lindorm/oct": "^0.3.1",
+    "@lindorm/aes": "^0.7.2",
+    "@lindorm/errors": "^0.2.2",
+    "@lindorm/kryptos": "^0.8.2",
+    "@lindorm/oct": "^0.3.2",
     "argon2": "^0.44.0"
   },
   "exports": {

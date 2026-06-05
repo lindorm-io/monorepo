@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.12.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.11.3...@lindorm/pylon@0.12.0) (2026-06-05)
+
+### Features
+
+- **pylon:** add chunkCookieValue util for splitting oversized cookies ([5067c78](https://github.com/lindorm-io/monorepo/commit/5067c7898c2666d91f2649af32e4c60ec33e996b))
+- **pylon:** chunk oversized cookies and expire stale companions ([ea7b7c4](https://github.com/lindorm-io/monorepo/commit/ea7b7c471c46b586f460bf5624bdcfe0eeefc277))
+- **pylon:** reassemble chunked cookies in parseCookieHeader ([f142a85](https://github.com/lindorm-io/monorepo/commit/f142a85fe25e5a12bc758df90f1a83aee07c6091))
+
 ## [0.11.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.11.2...@lindorm/pylon@0.11.3) (2026-05-05)
 
 ### Bug Fixes
