@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`chunkCookieValue > should return single un-chunked cookie when value fits under threshold 1`] = `
+[
+  {
+    "name": "session",
+    "value": "short_value",
+  },
+]
+`;
