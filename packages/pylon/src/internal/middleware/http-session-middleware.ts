@@ -59,7 +59,7 @@ export const createHttpSessionMiddleware = (
             type: "urn:lindorm:pylon:error:session_store_not_configured",
             details:
               "logout() was called but no session store is configured; cookie-only sessions cannot perform a server-side logout",
-            data: { subject },
+            debug: { subject },
           });
         }
       },
