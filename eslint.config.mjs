@@ -21,6 +21,7 @@ export default defineConfig(
       "**/*.integration.*",
       "**/*.test.ts",
       "**/*.test.tsx",
+      "**/vitest.setup.ts",
       "eslint.config.mjs",
     ],
   },
