@@ -24,6 +24,7 @@ export type ReconstructPayload = {
   status?: number;
   support?: string;
   title?: string;
+  type?: string;
 };
 
 export class ErrorRegistry {
@@ -63,6 +64,7 @@ export class ErrorRegistry {
       status: payload.status,
       support: payload.support,
       title: payload.title,
+      type: payload.type,
     });
   }
 
