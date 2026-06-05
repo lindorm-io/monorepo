@@ -53,6 +53,7 @@ describe("LindormError", () => {
         support: "56d82695bdbb3aab55ef",
         timestamp: new Date("2024-01-01T08:00:00.000Z"),
         title: "title",
+        type: "urn:lindorm:error:custom_code",
       });
     });
   });

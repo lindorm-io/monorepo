@@ -19,5 +19,6 @@ exports[`ErrorRegistry > reconstruct > should reconstruct an instance of the res
   "support": "support-token",
   "timestamp": Any<Date>,
   "title": "Custom Title",
+  "type": "urn:lindorm:error:missing_resource",
 }
 `;

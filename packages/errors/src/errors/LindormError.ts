@@ -9,6 +9,7 @@ import {
 } from "@lindorm/is";
 import { randomUUID } from "@lindorm/random";
 import type { Dict } from "@lindorm/types";
+import { assertValidErrorType, createErrorTypeUrn } from "../utils/index.js";
 
 export type LindormErrorAttributes = {
   id: string;
@@ -23,6 +24,7 @@ export type LindormErrorAttributes = {
   status: number;
   support: string | null;
   title: string | null;
+  type: string;
   timestamp: Date;
 };
 
@@ -36,6 +38,7 @@ export type LindormErrorOptions = {
   status?: number;
   support?: string;
   title?: string;
+  type?: string;
 };
 
 export class LindormError extends Error {
@@ -48,6 +51,7 @@ export class LindormError extends Error {
   public readonly status: number;
   public readonly support: string | null;
   public readonly title: string | null;
+  public readonly type: string;
   public readonly timestamp: Date;
 
   public constructor(message: string, options: LindormErrorOptions = {}) {
@@ -77,6 +81,13 @@ export class LindormError extends Error {
     this.title = title ?? destruct?.title ?? null;
     this.timestamp = destruct?.timestamp ?? new Date();
 
+    if (isString(options.type)) {
+      assertValidErrorType(options.type);
+      this.type = options.type;
+    } else {
+      this.type = destruct?.type ?? createErrorTypeUrn(this.code, this.name);
+    }
+
     if (options.error instanceof Error && options.error.name && options.error.message) {
       this.errors.push(`${destruct.name}: ${destruct.message}`);
     }
@@ -98,6 +109,7 @@ export class LindormError extends Error {
       status: this.status,
       support: this.support,
       title: this.title,
+      type: this.type,
       timestamp: this.timestamp,
     };
   }
@@ -118,6 +130,7 @@ export class LindormError extends Error {
       status: isFinite(error?.status) ? error.status : undefined,
       support: isString(error?.support) ? error.support : undefined,
       title: isString(error?.title) ? error.title : undefined,
+      type: isString(error?.type) ? error.type : undefined,
       timestamp: isDate(error?.timestamp) ? error.timestamp : undefined,
     };
   }
