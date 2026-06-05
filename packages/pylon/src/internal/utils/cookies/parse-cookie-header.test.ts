@@ -21,4 +21,22 @@ describe("parseCookieHeader", () => {
   test("should initialize both as null for plain cookies", () => {
     expect(parseCookieHeader("foo=bar")).toMatchSnapshot();
   });
+
+  test("should reassemble chunked cookies in order", () => {
+    expect(parseCookieHeader("foo.0=alpha; foo.1=beta; foo.2=gamma")).toMatchSnapshot();
+  });
+
+  test("should reassemble chunked cookies arriving out of order", () => {
+    expect(parseCookieHeader("foo.2=gamma; foo.0=alpha; foo.1=beta")).toMatchSnapshot();
+  });
+
+  test("should treat a lone .5 without .0 as a regular cookie", () => {
+    expect(parseCookieHeader("foo.5=orphan")).toMatchSnapshot();
+  });
+
+  test("should combine chunks with .sig and .kid siblings", () => {
+    expect(
+      parseCookieHeader("foo.0=alpha; foo.1=beta; foo.sig=signature; foo.kid=kid-1"),
+    ).toMatchSnapshot();
+  });
 });
