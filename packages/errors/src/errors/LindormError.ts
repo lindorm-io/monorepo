@@ -42,6 +42,8 @@ export type LindormErrorOptions = {
 };
 
 export class LindormError extends Error {
+  public static readonly errorNamespace: string | null = null;
+
   public readonly id: string;
   public readonly code: string | number | null;
   public readonly data: Dict;
@@ -85,7 +87,8 @@ export class LindormError extends Error {
       assertValidErrorType(options.type);
       this.type = options.type;
     } else {
-      this.type = destruct?.type ?? createErrorTypeUrn(this.code, this.name);
+      const namespace = (this.constructor as typeof LindormError).errorNamespace;
+      this.type = destruct?.type ?? createErrorTypeUrn(this.code, this.name, namespace);
     }
 
     if (options.error instanceof Error && options.error.name && options.error.message) {
