@@ -106,7 +106,16 @@ export const parseTokenData = async (
 
   // Step 5 — Throw if no subject
   if (!session.subject) {
-    throw new CannotEstablishSessionIdentity();
+    throw new CannotEstablishSessionIdentity({
+      code: "cannot_establish_session_identity",
+      details:
+        "No subject could be derived from the access token, id_token, or external resolver",
+      debug: {
+        hadAccessToken: Boolean(data.accessToken),
+        hadIdToken: Boolean(data.idToken),
+        usedResolver: Boolean(options?.resolveSubject),
+      },
+    });
   }
 
   return session;

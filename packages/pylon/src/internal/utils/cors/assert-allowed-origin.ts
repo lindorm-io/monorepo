@@ -7,17 +7,20 @@ export const assertAllowedOrigin = (
   allowOrigins: CorsOptions["allowOrigins"],
 ): void => {
   if (!origin) {
-    throw new ClientError("Missing Origin header", {
+    throw new ClientError("Origin header is missing", {
       status: ClientError.Status.Forbidden,
       code: "origin_missing",
+      type: "urn:lindorm:pylon:error:origin_missing",
     });
   }
 
   if (!matchOrigin(origin, allowOrigins)) {
-    throw new ClientError("Origin not allowed", {
+    throw new ClientError("Request origin is not allowed", {
       status: ClientError.Status.Forbidden,
       code: "origin_not_allowed",
-      debug: { origin },
+      type: "urn:lindorm:pylon:error:origin_not_allowed",
+      data: { origin },
+      debug: { origin, allowOrigins },
     });
   }
 };

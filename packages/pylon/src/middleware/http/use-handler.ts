@@ -31,7 +31,17 @@ export const useHandler = <C extends PylonHttpContext = PylonHttpContext>(
       }
 
       if (result.redirect && (result.file || result.stream)) {
-        throw new ServerError("Redirect cannot be used with file download");
+        throw new ServerError("Redirect cannot be used with a file download", {
+          code: "redirect_with_download",
+          type: "urn:lindorm:pylon:error:redirect_with_download",
+          details:
+            "A handler result may set either redirect or file/stream, but not both",
+          debug: {
+            redirect: Boolean(result.redirect),
+            file: Boolean(result.file),
+            stream: Boolean(result.stream),
+          },
+        });
       }
 
       if (result.redirect) {

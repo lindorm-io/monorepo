@@ -22,7 +22,12 @@ const getAutoRefresh = (ctx: PylonHttpContext, config: PylonAuthConfig): number 
       return ctx.state.session!.issuedAt.getTime() + ms(config.refresh.maxAge);
 
     default:
-      throw new ServerError("Invalid refresh mode");
+      throw new ServerError("Invalid refresh mode", {
+        code: "invalid_refresh_mode",
+        type: "urn:lindorm:pylon:error:invalid_refresh_mode",
+        details: "config.refresh.mode must be one of: none, force, half_life, max_age",
+        data: { mode: config.refresh.mode },
+      });
   }
 };
 
@@ -31,8 +36,11 @@ export const createRefreshMiddleware = <C extends PylonHttpContext>(
 ): PylonHttpMiddleware<C> =>
   async function refreshMiddleware(ctx, next) {
     if (!ctx.state.session) {
-      throw new ClientError("Session not found", {
+      throw new ClientError("No active session to refresh", {
+        code: "refresh_session_required",
+        type: "urn:lindorm:pylon:error:refresh_session_required",
         status: ClientError.Status.Unauthorized,
+        details: "The refresh middleware requires an authenticated session",
       });
     }
 

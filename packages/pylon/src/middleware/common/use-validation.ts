@@ -14,7 +14,13 @@ export const useValidation = (
       const token = objectPath.get(ctx.state.tokens, tokenPath);
 
       if (!token) {
-        throw new ClientError("Token not found");
+        throw new ClientError("Token not found", {
+          status: ClientError.Status.Unauthorized,
+          code: "token_not_found",
+          type: "urn:lindorm:pylon:error:token_not_found",
+          details: `Expected a token at path [${tokenPath}] on context state tokens`,
+          data: { token: tokenPath },
+        });
       }
 
       JwtKit.validate(token, options);
@@ -23,9 +29,17 @@ export const useValidation = (
     } catch (err: any) {
       timer.debug("Token validation failed", err);
 
-      throw new ClientError(err.message, {
+      if (err instanceof ClientError) {
+        throw err;
+      }
+
+      throw new ClientError("Token validation failed", {
         error: err,
         status: ClientError.Status.Forbidden,
+        code: "token_validation_failed",
+        type: "urn:lindorm:pylon:error:token_validation_failed",
+        details: err.message,
+        data: { token: tokenPath },
       });
     }
 

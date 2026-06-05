@@ -11,8 +11,11 @@ export const getOpenIdConfiguration = (
 
   if (!configuration) {
     throw new ServerError("OpenID configuration not found", {
+      code: "openid_configuration_not_found",
+      type: "urn:lindorm:pylon:error:openid_configuration_not_found",
       details:
         "Configuration not found in Amphora. Add the openIdConfigurationUri to the Amphora",
+      data: { issuer: config.issuer },
     });
   }
 

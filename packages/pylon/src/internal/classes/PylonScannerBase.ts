@@ -38,7 +38,12 @@ export abstract class PylonScannerBase {
 
   protected async scanDirectory(directory: string): Promise<Array<ScannedFile>> {
     if (!Scanner.hasFiles(directory)) {
-      throw new PylonError(`Directory [ ${directory} ] is empty`);
+      throw new PylonError(`Directory [ ${directory} ] is empty`, {
+        code: "scan_directory_empty",
+        details:
+          "The scanned directory contains no files; ensure the router/listener directory path is correct and populated",
+        data: { directory },
+      });
     }
 
     const root = this.scanner.scan(directory);

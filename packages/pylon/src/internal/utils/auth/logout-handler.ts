@@ -23,8 +23,11 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
     }
 
     if (!ctx.state.session) {
-      throw new ClientError("Session not found", {
+      throw new ClientError("No active session to log out", {
+        code: "logout_session_required",
+        type: "urn:lindorm:pylon:error:logout_session_required",
         status: ClientError.Status.Unauthorized,
+        details: "Logout requires an authenticated session",
       });
     }
 
@@ -38,7 +41,14 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
         }
       })
     ) {
-      throw new ClientError("Invalid redirect URI");
+      throw new ClientError("Logout redirect URI is not allowed", {
+        code: "logout_redirect_uri_not_allowed",
+        type: "urn:lindorm:pylon:error:logout_redirect_uri_not_allowed",
+        status: ClientError.Status.BadRequest,
+        details:
+          "The requested redirect URI origin is not present in the configured dynamicRedirectDomains allowlist",
+        data: { redirectUri: ctx.data.redirectUri },
+      });
     }
 
     const { redirect, state } = ctx.auth.logout({
@@ -50,7 +60,12 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
     const redirectUri = ctx.data.redirectUri || routerConfig.staticRedirect.logout;
 
     if (!redirectUri) {
-      throw new ClientError("Redirect URI is required", {
+      throw new ClientError("Logout redirect URI is required", {
+        code: "logout_redirect_uri_required",
+        type: "urn:lindorm:pylon:error:logout_redirect_uri_required",
+        status: ClientError.Status.BadRequest,
+        details:
+          "No redirect URI was supplied in the request and no static logout redirect is configured",
         debug: {
           query: ctx.data.redirectUri,
           config: routerConfig.staticRedirect.logout,

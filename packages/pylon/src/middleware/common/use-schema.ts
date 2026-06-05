@@ -25,7 +25,12 @@ export const useSchema = <T extends ZodRawShape>(
 ): PylonMiddleware =>
   async function schemaMiddleware(ctx, next): Promise<void> {
     if (HTTP_ONLY_PATHS.includes(path) && !isHttpContext(ctx)) {
-      throw new ServerError(`Schema path "${path}" is only available on HTTP contexts`);
+      throw new ServerError(`Schema path "${path}" is only available on HTTP contexts`, {
+        code: "schema_path_http_only",
+        type: "urn:lindorm:pylon:error:schema_path_http_only",
+        details: `The path [${path}] can only be validated on HTTP contexts`,
+        data: { path, httpOnlyPaths: HTTP_ONLY_PATHS },
+      });
     }
 
     try {
@@ -37,9 +42,13 @@ export const useSchema = <T extends ZodRawShape>(
 
       objectPath.set(ctx, path, output);
     } catch (error: any) {
-      throw new ClientError(error.message, {
+      throw new ClientError("Schema validation failed", {
         error,
-        data: error.details,
+        status: ClientError.Status.BadRequest,
+        code: "schema_validation_failed",
+        type: "urn:lindorm:pylon:error:schema_validation_failed",
+        details: error.message,
+        data: { path, issues: error.details },
       });
     }
 

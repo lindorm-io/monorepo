@@ -25,7 +25,10 @@ export const getFile = async (
   };
 
   if (!file.path) {
-    throw new ServerError("File path is required");
+    throw new ServerError("File path is required", {
+      code: "file_path_required",
+      type: "urn:lindorm:pylon:error:file_path_required",
+    });
   }
 
   let path = file.path;

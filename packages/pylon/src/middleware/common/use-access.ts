@@ -17,8 +17,11 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
       const introspection = await ctx.auth.introspect();
 
       if (!introspection.active) {
-        throw new ClientError("Token is not active", {
+        throw new ClientError("Access token is not active", {
           status: ClientError.Status.Unauthorized,
+          code: "token_not_active",
+          type: "urn:lindorm:pylon:error:token_not_active",
+          details: "Token introspection returned active: false",
         });
       }
 
@@ -28,8 +31,11 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
 
       if (!token || !isParsedJwt(token)) {
         throw new ClientError("Token not found", {
-          details: `Expected token [${tokenKey}] on context`,
+          details: `Expected a parsed JWT at token [${tokenKey}] on context`,
           status: ClientError.Status.Unauthorized,
+          code: "token_not_found",
+          type: "urn:lindorm:pylon:error:token_not_found",
+          data: { token: tokenKey },
         });
       }
 
@@ -49,6 +55,8 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
           details: details ?? err.message,
           data: err.data,
           status: ClientError.Status.Forbidden,
+          code: "access_denied",
+          type: "urn:lindorm:pylon:error:access_denied",
         });
       }
       throw err;

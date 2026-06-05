@@ -54,7 +54,13 @@ export const createHttpSessionMiddleware = (
         if (store) {
           await store.logout(ctx, subject);
         } else {
-          throw new ServerError("Session store not found");
+          throw new ServerError("Session logout requires a configured session store", {
+            code: "session_store_not_configured",
+            type: "urn:lindorm:pylon:error:session_store_not_configured",
+            details:
+              "logout() was called but no session store is configured; cookie-only sessions cannot perform a server-side logout",
+            data: { subject },
+          });
         }
       },
     };
