@@ -1,18 +1,32 @@
 import { snakeCase } from "@lindorm/case";
 import { isString } from "@lindorm/is";
 
+const createErrorSlug = (
+  code: string | number | null,
+  name: string,
+  namespace: string | null,
+): string => {
+  if (isString(code)) {
+    return snakeCase(code) || "unknown";
+  }
+
+  const slug = snakeCase(name.replace(/Error$/, ""));
+
+  if (!slug || slug === "lindorm" || slug === namespace) {
+    return "unknown";
+  }
+
+  return slug;
+};
+
 export const createErrorTypeUrn = (
   code: string | number | null,
   name: string,
+  namespace: string | null = null,
 ): string => {
-  if (isString(code)) {
-    return `urn:lindorm:error:${snakeCase(code) || "unknown"}`;
-  }
+  const prefix = `urn:lindorm:${namespace ? `${namespace}:` : ""}error`;
 
-  const base = name.replace(/Error$/, "");
-  const slug = base && base !== "Lindorm" ? snakeCase(base) : "unknown";
-
-  return `urn:lindorm:error:${slug}`;
+  return `${prefix}:${createErrorSlug(code, name, namespace)}`;
 };
 
 export const assertValidErrorType = (type: string): void => {
