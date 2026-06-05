@@ -35,6 +35,7 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
+    "@lindorm/case": "^0.2.2",
     "@lindorm/is": "^0.2.2",
     "@lindorm/random": "^0.3.2",
     "@lindorm/types": "^0.7.0"

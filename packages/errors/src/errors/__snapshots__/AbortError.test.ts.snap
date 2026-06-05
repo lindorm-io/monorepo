@@ -19,6 +19,7 @@ exports[`AbortError > serialisation > should serialise to json with custom optio
   "support": "56d82695bdbb3aab55ef",
   "timestamp": 2024-01-01T08:00:00.000Z,
   "title": "title",
+  "type": "urn:lindorm:error:custom_code",
 }
 `;
 
@@ -37,5 +38,6 @@ exports[`AbortError > serialisation > should serialise to json with default valu
   "support": null,
   "timestamp": 2024-01-01T08:00:00.000Z,
   "title": "Client Closed Request",
+  "type": "urn:lindorm:error:abort",
 }
 `;
