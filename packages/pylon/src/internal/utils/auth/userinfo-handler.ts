@@ -6,8 +6,11 @@ export const createUserinfoHandler = <
 >(): PylonHttpMiddleware<C> =>
   async function userinfoHandler(ctx) {
     if (!ctx.state.session) {
-      throw new ClientError("Session not found", {
+      throw new ClientError("No active session for userinfo request", {
+        code: "userinfo_session_required",
+        type: "urn:lindorm:pylon:error:userinfo_session_required",
         status: ClientError.Status.Unauthorized,
+        details: "The userinfo endpoint requires an authenticated session",
       });
     }
 

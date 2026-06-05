@@ -70,9 +70,13 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
 
     const rawSource = (ctx as any)[RATE_LIMIT_SOURCE] as IProteusSource | undefined;
     if (!rawSource) {
-      throw new ServerError(
-        "Rate limiting is not configured. Enable it in PylonOptions with rateLimit: { enabled: true }",
-      );
+      throw new ServerError("Rate limiting is not configured", {
+        code: "rate_limit_not_configured",
+        type: "urn:lindorm:pylon:error:rate_limit_not_configured",
+        details:
+          "Enable rate limiting in PylonOptions with rateLimit: { enabled: true } before using useRateLimit",
+        debug: { strategy },
+      });
     }
 
     const source = rawSource.session({ logger: ctx.logger });
@@ -93,13 +97,15 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
       }
 
       throw new ClientError("Rate limit exceeded", {
-        status: 429,
+        status: ClientError.Status.TooManyRequests,
         code: "rate_limit_exceeded",
+        type: "urn:lindorm:pylon:error:rate_limit_exceeded",
         data: {
           limit: options.max,
           remaining: result.remaining,
           resetAt: result.resetAt.toISOString(),
           retryAfter: Math.ceil((result.resetAt.getTime() - Date.now()) / 1000),
+          strategy,
         },
       });
     }

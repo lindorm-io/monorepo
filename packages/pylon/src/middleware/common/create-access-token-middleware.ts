@@ -36,6 +36,9 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
       throw new ClientError("Missing DPoP header", {
         details: "DPoP scheme requires a DPoP header on the request",
         status: ClientError.Status.Unauthorized,
+        code: "missing_dpop_header",
+        type: "urn:lindorm:pylon:error:missing_dpop_header",
+        data: { scheme: "dpop" },
       });
     }
 
@@ -58,6 +61,10 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
     if (!parsed) {
       throw new ClientError("Invalid session access token", {
         status: ClientError.Status.Unauthorized,
+        code: "invalid_session_access_token",
+        type: "urn:lindorm:pylon:error:invalid_session_access_token",
+        details: "No access token could be extracted from the session",
+        debug: { sessionId: source.session.id },
       });
     }
     ctx.state.tokens.accessToken = parsed;
@@ -67,6 +74,9 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
   throw new ClientError("Invalid credentials", {
     details: "No authorization header or session available",
     status: ClientError.Status.Unauthorized,
+    code: "missing_credentials",
+    type: "urn:lindorm:pylon:error:missing_credentials",
+    data: { source: source.kind },
   });
 };
 
@@ -79,7 +89,13 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
     try {
       if (isSocketHandshakeContext(ctx as any)) {
         throw new ServerError(
-          "createAccessTokenMiddleware cannot run in handshake phase — use createHandshakeTokenMiddleware",
+          "createAccessTokenMiddleware cannot run in the handshake phase",
+          {
+            code: "access_token_middleware_in_handshake",
+            type: "urn:lindorm:pylon:error:access_token_middleware_in_handshake",
+            details:
+              "Use createHandshakeTokenMiddleware in socket.connectionMiddleware for the handshake phase",
+          },
         );
       }
 
@@ -92,6 +108,8 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
             details:
               "No handshake auth state — install createHandshakeTokenMiddleware in socket.connectionMiddleware",
             status: ClientError.Status.Unauthorized,
+            code: "missing_handshake_auth_state",
+            type: "urn:lindorm:pylon:error:missing_handshake_auth_state",
           });
         }
 
@@ -101,6 +119,10 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
         if (isTokenExpired(expiresAt, now)) {
           throw new ClientError("Access token expired", {
             status: ClientError.Status.Unauthorized,
+            code: "access_token_expired",
+            type: "urn:lindorm:pylon:error:access_token_expired",
+            data: { expiresAt: expiresAt.toISOString() },
+            debug: { strategy: auth.strategy },
           });
         }
 
@@ -123,6 +145,10 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
       } else {
         throw new ClientError("Unsupported context for access token middleware", {
           status: ClientError.Status.Unauthorized,
+          code: "unsupported_context",
+          type: "urn:lindorm:pylon:error:unsupported_context",
+          details:
+            "createAccessTokenMiddleware only supports HTTP and socket-event contexts",
         });
       }
 
@@ -139,9 +165,12 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
         throw error;
       }
 
-      throw new ClientError("Invalid credentials", {
+      throw new ClientError("Access token verification failed", {
         error,
         status: ClientError.Status.Unauthorized,
+        code: "access_token_verification_failed",
+        type: "urn:lindorm:pylon:error:access_token_verification_failed",
+        details: error.message,
       });
     }
 

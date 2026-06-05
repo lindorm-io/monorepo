@@ -147,7 +147,13 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
     } catch (error: any) {
       timer.debug("Failed to add dependencies to context");
 
-      throw new ServerError("Failed to add dependencies to context", { error });
+      throw new ServerError("Failed to add dependencies to request context", {
+        code: "dependency_resolution_failed",
+        type: "urn:lindorm:pylon:error:dependency_resolution_failed",
+        details:
+          "One of the per-request dependencies (actor, hermes, proteus, iris, auth, socket, or rooms) could not be resolved",
+        debug: { error },
+      });
     }
 
     await next();

@@ -1,8 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`createTokenMiddleware > HTTP context > should throw ClientError 401 when token is not a string and not optional 1`] = `"Token must be of type JWT"`;
+exports[`createTokenMiddleware > HTTP context > should throw ClientError 401 when token is not a string and not optional 1`] = `"Token verification failed"`;
 
-exports[`createTokenMiddleware > HTTP context > should throw ClientError 401 when verification fails 1`] = `"invalid signature"`;
+exports[`createTokenMiddleware > HTTP context > should throw ClientError 401 when verification fails 1`] = `"Token verification failed"`;
 
 exports[`createTokenMiddleware > HTTP context > should verify token and write to ctx.state.tokens 1`] = `
 {

@@ -98,7 +98,10 @@ export class PylonCookie {
     if (!domain) return;
     if (!FIELD_CONTENT_REG_EXP.test(domain)) {
       throw new ServerError("Invalid cookie domain", {
+        code: "invalid_cookie_domain",
+        type: "urn:lindorm:pylon:error:invalid_cookie_domain",
         details: "Cookie domain must be a valid field content",
+        data: { domain },
       });
     }
   }
@@ -107,7 +110,10 @@ export class PylonCookie {
     if (!expiry) return;
     if (!isDate(expiry) && !isString(expiry)) {
       throw new ServerError("Invalid cookie expiry", {
+        code: "invalid_cookie_expiry",
+        type: "urn:lindorm:pylon:error:invalid_cookie_expiry",
         details: "Cookie expiry must be a valid date or string",
+        debug: { expiry },
       });
     }
   }
@@ -115,18 +121,27 @@ export class PylonCookie {
   private static verifyName(name: string): void {
     if (!FIELD_CONTENT_REG_EXP.test(name)) {
       throw new ServerError("Invalid cookie name", {
+        code: "invalid_cookie_name",
+        type: "urn:lindorm:pylon:error:invalid_cookie_name",
         details: "Cookie name must be a valid field content",
+        data: { name },
       });
     }
     if (RESTRICTED_NAME_CHARS_REGEXP.test(name)) {
       throw new ServerError("Invalid cookie name", {
+        code: "restricted_cookie_name_chars",
+        type: "urn:lindorm:pylon:error:restricted_cookie_name_chars",
         details: "Cookie name must not contain restricted characters",
+        data: { name },
         debug: { RESTRICTED_NAME_CHARS_REGEXP },
       });
     }
     if (RESTRICTED_NAMES_REGEXP.test(name)) {
       throw new ServerError("Invalid cookie name", {
+        code: "restricted_cookie_name",
+        type: "urn:lindorm:pylon:error:restricted_cookie_name",
         details: "Cookie name must not be a restricted name",
+        data: { name },
         debug: { RESTRICTED_NAMES_REGEXP },
       });
     }
@@ -136,7 +151,10 @@ export class PylonCookie {
     if (!path) return;
     if (!FIELD_CONTENT_REG_EXP.test(path)) {
       throw new ServerError("Invalid cookie path", {
+        code: "invalid_cookie_path",
+        type: "urn:lindorm:pylon:error:invalid_cookie_path",
         details: "Cookie path must be a valid field content",
+        data: { path },
       });
     }
   }
@@ -145,7 +163,10 @@ export class PylonCookie {
     if (!priority) return;
     if (!PRIORITY_REGEXP.test(priority)) {
       throw new ServerError("Invalid cookie priority", {
-        details: "Cookie priority must be a valid priority",
+        code: "invalid_cookie_priority",
+        type: "urn:lindorm:pylon:error:invalid_cookie_priority",
+        details: "Cookie priority must be one of: low, medium, high",
+        data: { priority },
         debug: { PRIORITY_REGEXP },
       });
     }
@@ -155,7 +176,10 @@ export class PylonCookie {
     if (!sameSite) return;
     if (!SAME_SITE_REGEXP.test(sameSite)) {
       throw new ServerError("Invalid cookie sameSite", {
-        details: "Cookie sameSite must be a valid sameSite",
+        code: "invalid_cookie_same_site",
+        type: "urn:lindorm:pylon:error:invalid_cookie_same_site",
+        details: "Cookie sameSite must be one of: strict, lax, none",
+        data: { sameSite },
         debug: { SAME_SITE_REGEXP },
       });
     }
@@ -165,11 +189,15 @@ export class PylonCookie {
     if (!value) return;
     if (!FIELD_CONTENT_REG_EXP.test(value)) {
       throw new ServerError("Invalid cookie value", {
+        code: "invalid_cookie_value",
+        type: "urn:lindorm:pylon:error:invalid_cookie_value",
         details: "Cookie value must be a valid field content",
       });
     }
     if (RESTRICTED_VALUE_CHARS_REGEXP.test(value)) {
       throw new ServerError("Invalid cookie value", {
+        code: "restricted_cookie_value_chars",
+        type: "urn:lindorm:pylon:error:restricted_cookie_value_chars",
         details: "Cookie value must not contain restricted characters",
         debug: { RESTRICTED_VALUE_CHARS_REGEXP },
       });

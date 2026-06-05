@@ -96,6 +96,15 @@ export class PylonListenerScanner<
 
     throw new PylonError(
       `File [ ${file.scan.relativePath} ] has no valid exports (expected PylonListener instance or listener method exports: ON, ONCE)`,
+      {
+        code: "invalid_listener_exports",
+        details:
+          "A scanned listener file must export either a PylonListener instance or one or more listener method handlers (ON, ONCE)",
+        data: {
+          file: file.scan.relativePath,
+          expected: ["PylonListener", "ON", "ONCE"],
+        },
+      },
     );
   }
 

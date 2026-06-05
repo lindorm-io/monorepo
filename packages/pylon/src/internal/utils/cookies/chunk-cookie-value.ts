@@ -30,8 +30,9 @@ export const chunkCookieValue = ({
   const valueBudget = chunkSize - chunkedOverhead;
 
   if (valueBudget <= 0) {
-    throw new ServerError("Cookie chunk size too small", {
+    throw new ServerError("Cookie chunk size is too small for the cookie overhead", {
       code: "invalid_cookie_chunk_size",
+      type: "urn:lindorm:pylon:error:invalid_cookie_chunk_size",
       debug: { name, chunkSize, chunkedOverhead },
     });
   }

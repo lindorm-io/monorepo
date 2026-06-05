@@ -6,8 +6,11 @@ export const createIntrospectHandler = <
 >(): PylonHttpMiddleware<C> =>
   async function introspectHandler(ctx) {
     if (!ctx.state.session) {
-      throw new ClientError("Session not found", {
+      throw new ClientError("No active session for introspection request", {
+        code: "introspect_session_required",
+        type: "urn:lindorm:pylon:error:introspect_session_required",
         status: ClientError.Status.Unauthorized,
+        details: "The introspection endpoint requires an authenticated session",
       });
     }
 

@@ -1,3 +1,5 @@
 import { LindormError } from "@lindorm/errors";
 
-export class PylonError extends LindormError {}
+export class PylonError extends LindormError {
+  public static readonly errorNamespace = "pylon";
+}

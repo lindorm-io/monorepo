@@ -22,8 +22,13 @@ export const createTokenMiddleware =
         ctx.logger.debug("Token found on path", { token, path });
 
         if (!isString(token) && !optional) {
-          throw new ClientError("Token must be of type JWT", {
+          throw new ClientError("Expected a JWT string token on the request", {
             status: ClientError.Status.Unauthorized,
+            code: "token_not_jwt",
+            type: "urn:lindorm:pylon:error:token_not_jwt",
+            details: `Expected a string token at path [${path}]`,
+            data: { path },
+            debug: { contextKey: options.contextKey, optional },
           });
         }
 
@@ -47,9 +52,14 @@ export const createTokenMiddleware =
       } catch (error: any) {
         timer.debug("Token verification failed", error);
 
-        throw new ClientError(error.message, {
+        throw new ClientError("Token verification failed", {
           error,
           status: ClientError.Status.Unauthorized,
+          code: "token_verification_failed",
+          type: "urn:lindorm:pylon:error:token_verification_failed",
+          details: error.message,
+          data: { path },
+          debug: { contextKey: options.contextKey, issuer: options.issuer },
         });
       }
 

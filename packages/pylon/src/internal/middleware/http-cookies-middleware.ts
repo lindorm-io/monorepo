@@ -51,15 +51,21 @@ export const createHttpCookiesMiddleware = (
         const opts = { ...config, ...options };
 
         if (!value) {
-          throw new ServerError("Cookie value is not set", {
-            code: "invalid_cookie_value",
+          throw new ServerError("Cookie value is required", {
+            code: "missing_cookie_value",
+            type: "urn:lindorm:pylon:error:missing_cookie_value",
+            details: `Cannot set cookie [ ${name} ] with an empty or undefined value`,
+            data: { name },
             debug: { name, value, opts },
           });
         }
 
         if (!opts.encoding && !opts.encrypted && isObject(value)) {
-          throw new ServerError("Encoding required for object value", {
-            code: "invalid_cookie_value",
+          throw new ServerError("Cookie encoding required for object value", {
+            code: "cookie_encoding_required",
+            type: "urn:lindorm:pylon:error:cookie_encoding_required",
+            details: `Cookie [ ${name} ] has an object value but no encoding or encryption configured; set an encoding or enable encryption`,
+            data: { name },
             debug: { name, value, opts },
           });
         }

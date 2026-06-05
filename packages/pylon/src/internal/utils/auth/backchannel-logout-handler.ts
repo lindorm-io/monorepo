@@ -8,7 +8,11 @@ export const backchannelLogoutHandler: PylonHttpMiddleware = async (ctx) => {
     !verified.payload.claims.events["http://schemas.openid.net/event/backchannel-logout"]
   ) {
     throw new ClientError("Invalid backchannel logout token", {
-      code: "INVALID_BACKCHANNEL_LOGOUT_TOKEN",
+      code: "invalid_backchannel_logout_token",
+      type: "urn:lindorm:pylon:error:invalid_backchannel_logout_token",
+      status: ClientError.Status.BadRequest,
+      details:
+        "The logout token is missing the OIDC backchannel-logout event claim (http://schemas.openid.net/event/backchannel-logout)",
       debug: { verified },
     });
   }

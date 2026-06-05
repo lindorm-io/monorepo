@@ -119,7 +119,7 @@ describe("httpCorsMiddleware", () => {
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
     expect(ctx.status).toEqual(403);
-    expect(ctx.body).toEqual("Invalid origin");
+    expect(ctx.body).toEqual("Request origin is not allowed");
 
     expect(next).not.toHaveBeenCalled();
   });
@@ -144,7 +144,7 @@ describe("httpCorsMiddleware", () => {
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
     expect(ctx.status).toEqual(403);
-    expect(ctx.body).toEqual("Invalid method");
+    expect(ctx.body).toEqual("Requested method is not allowed");
 
     expect(next).not.toHaveBeenCalled();
   });
@@ -155,7 +155,7 @@ describe("httpCorsMiddleware", () => {
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
     expect(ctx.status).toEqual(403);
-    expect(ctx.body).toEqual("Invalid headers");
+    expect(ctx.body).toEqual("One or more requested headers are not allowed");
 
     expect(next).not.toHaveBeenCalled();
   });

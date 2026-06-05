@@ -75,6 +75,7 @@ describe("useRateLimit", () => {
         remaining: 0,
         resetAt: deniedResult.resetAt.toISOString(),
         retryAfter: expect.any(Number),
+        strategy: "fixed",
       });
     }
 

@@ -6,8 +6,11 @@ export const assertSubjectUnchanged = (
 ): void => {
   if (!expected || !actual || expected !== actual) {
     throw new ClientError("Refresh subject mismatch", {
+      code: "refresh_subject_mismatch",
+      type: "urn:lindorm:pylon:error:refresh_subject_mismatch",
       details: "The refreshed token subject does not match the original",
       status: ClientError.Status.Unauthorized,
+      debug: { expected, actual },
     });
   }
 };

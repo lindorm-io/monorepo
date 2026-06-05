@@ -24,6 +24,10 @@ export const extractHandshakeAccessTokenInput = (
   }
 
   throw new ClientError("Missing handshake bearer token", {
+    code: "handshake_bearer_token_missing",
+    type: "urn:lindorm:pylon:error:handshake_bearer_token_missing",
     status: ClientError.Status.Unauthorized,
+    details:
+      "The socket handshake did not present a bearer or DPoP access token via auth payload, query, or Authorization header",
   });
 };

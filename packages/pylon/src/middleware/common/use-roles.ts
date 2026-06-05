@@ -21,6 +21,9 @@ export const useRoles = (...args: Array<string | TokenOption>): PylonMiddleware 
       throw new ClientError("Token not found", {
         details: `Expected token [${tokenKey}] on context`,
         status: ClientError.Status.Unauthorized,
+        code: "token_not_found",
+        type: "urn:lindorm:pylon:error:token_not_found",
+        data: { token: tokenKey },
       });
     }
 
@@ -31,6 +34,10 @@ export const useRoles = (...args: Array<string | TokenOption>): PylonMiddleware 
       throw new ClientError("Insufficient roles", {
         details: `Requires at least one of: ${required.join(", ")}`,
         status: ClientError.Status.Forbidden,
+        code: "insufficient_roles",
+        type: "urn:lindorm:pylon:error:insufficient_roles",
+        data: { required },
+        debug: { roles: payload.roles },
       });
     }
 

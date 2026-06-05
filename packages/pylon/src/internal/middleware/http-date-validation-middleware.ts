@@ -25,8 +25,10 @@ export const createHttpDateValidationMiddleware = (
     const maxDate = addMilliseconds(new Date(), ms(maxRequestAge));
 
     if (isBefore(ctx.state.metadata.date, minDate)) {
-      throw new ClientError("Suspicious request denied", {
-        code: "replay_denied",
+      throw new ClientError("Request timestamp is too old", {
+        status: ClientError.Status.BadRequest,
+        code: "request_replay_denied",
+        type: "urn:lindorm:pylon:error:request_replay_denied",
         details: "Request has been identified as a likely replay attack",
         data: {
           actual: ctx.state.metadata.date.toISOString(),
@@ -36,8 +38,10 @@ export const createHttpDateValidationMiddleware = (
     }
 
     if (isAfter(ctx.state.metadata.date, maxDate)) {
-      throw new ClientError("Suspicious request denied", {
-        code: "suspicious_request",
+      throw new ClientError("Request timestamp is too far in the future", {
+        status: ClientError.Status.BadRequest,
+        code: "request_timestamp_in_future",
+        type: "urn:lindorm:pylon:error:request_timestamp_in_future",
         details: "Request has been identified as suspicious",
         data: {
           actual: ctx.state.metadata.date.toISOString(),

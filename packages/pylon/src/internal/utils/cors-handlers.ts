@@ -29,8 +29,10 @@ export const handleAccessControlOrigin = (
     return true;
   }
 
-  throw new CorsError("Invalid origin", {
+  throw new CorsError("Request origin is not allowed", {
+    code: "cors_origin_not_allowed",
     status: CorsError.Status.Forbidden,
+    data: { origin: request, allowOrigins: config },
   });
 };
 
@@ -66,8 +68,10 @@ export const handleAccessControlHeaders = (
     return ctx.set("access-control-allow-headers", config.join(","));
   }
 
-  throw new CorsError("Invalid headers", {
+  throw new CorsError("One or more requested headers are not allowed", {
+    code: "cors_headers_not_allowed",
     status: CorsError.Status.Forbidden,
+    data: { requestedHeaders: request, allowHeaders: config },
   });
 };
 
@@ -93,8 +97,10 @@ export const handleAccessControlMethods = (
     return ctx.set("access-control-allow-methods", config.join(","));
   }
 
-  throw new CorsError("Invalid method", {
+  throw new CorsError("Requested method is not allowed", {
+    code: "cors_method_not_allowed",
     status: CorsError.Status.Forbidden,
+    data: { requestedMethod: request, allowMethods: config },
   });
 };
 

@@ -14,27 +14,46 @@ const hasContact = (contact: PylonSecurityTxt["contact"]): boolean => {
 export const assertSecurityTxtOptions = (input: PylonSecurityTxt): void => {
   if (!hasContact(input.contact)) {
     throw new ServerError(
-      "Invalid securityTxt.contact: must be a non-empty string or array of non-empty strings",
+      "securityTxt.contact must be a non-empty string or array of non-empty strings",
+      {
+        code: "invalid_security_txt_contact",
+        type: "urn:lindorm:pylon:error:invalid_security_txt_contact",
+        data: { contact: input.contact },
+      },
     );
   }
 
   const expires = input.expires instanceof Date ? input.expires : new Date(input.expires);
 
   if (isNaN(expires.getTime())) {
-    throw new ServerError(
-      "Invalid securityTxt.expires: value does not parse to a valid Date",
-    );
+    throw new ServerError("securityTxt.expires does not parse to a valid Date", {
+      code: "invalid_security_txt_expires",
+      type: "urn:lindorm:pylon:error:invalid_security_txt_expires",
+      data: { expires: input.expires },
+    });
   }
 
   const now = new Date();
 
   if (expires.getTime() < now.getTime()) {
-    throw new ServerError("Invalid securityTxt.expires: value is in the past");
+    throw new ServerError("securityTxt.expires is in the past", {
+      code: "expired_security_txt_expires",
+      type: "urn:lindorm:pylon:error:expired_security_txt_expires",
+      data: { expires: expires.toISOString(), now: now.toISOString() },
+    });
   }
 
   if (expires.getTime() > expiresAt(MAX_EXPIRES, now).getTime()) {
     throw new ServerError(
-      `Invalid securityTxt.expires: value is more than ${MAX_EXPIRES} in the future`,
+      `securityTxt.expires is more than ${MAX_EXPIRES} in the future`,
+      {
+        code: "security_txt_expires_too_far",
+        type: "urn:lindorm:pylon:error:security_txt_expires_too_far",
+        data: {
+          expires: expires.toISOString(),
+          maxExpires: expiresAt(MAX_EXPIRES, now).toISOString(),
+        },
+      },
     );
   }
 };

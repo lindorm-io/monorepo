@@ -10,15 +10,21 @@ export const verifyCookie = async (
   kid: string | null,
 ): Promise<void> => {
   if (!signature) {
-    throw new ClientError("Missing cookie signature", {
-      code: "missing_signature",
+    throw new ClientError("Cookie signature is missing", {
+      code: "missing_cookie_signature",
+      type: "urn:lindorm:pylon:error:missing_cookie_signature",
+      status: ClientError.Status.Unauthorized,
+      data: { name },
       debug: { name, value, signature, kid },
     });
   }
 
   if (!kid) {
-    throw new ClientError("Missing cookie kid", {
-      code: "missing_kid",
+    throw new ClientError("Cookie key id is missing", {
+      code: "missing_cookie_kid",
+      type: "urn:lindorm:pylon:error:missing_cookie_kid",
+      status: ClientError.Status.Unauthorized,
+      data: { name },
       debug: { name, value, signature, kid },
     });
   }
@@ -27,16 +33,22 @@ export const verifyCookie = async (
     const kryptos = ctx.amphora.findByIdSync(kid);
 
     if (!new SignatureKit({ kryptos }).verify(value, signature)) {
-      throw new ClientError("Invalid cookie signature", {
-        code: "invalid_signature",
+      throw new ClientError("Cookie signature is invalid", {
+        code: "invalid_cookie_signature",
+        type: "urn:lindorm:pylon:error:invalid_cookie_signature",
+        status: ClientError.Status.Unauthorized,
+        data: { name },
         debug: { name, value, signature, kid },
       });
     }
   } catch (error) {
     if (error instanceof ClientError) throw error;
 
-    throw new ClientError("Invalid cookie signature", {
-      code: "invalid_signature",
+    throw new ClientError("Cookie signature is invalid", {
+      code: "invalid_cookie_signature",
+      type: "urn:lindorm:pylon:error:invalid_cookie_signature",
+      status: ClientError.Status.Unauthorized,
+      data: { name },
       debug: {
         name,
         value,

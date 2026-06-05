@@ -14,16 +14,20 @@ const defaultCallback =
     if (!credential) {
       throw new ClientError("Invalid credentials", {
         status: ClientError.Status.Unauthorized,
+        code: "invalid_credentials",
+        type: "urn:lindorm:pylon:error:invalid_credentials",
         details: "No matching credential found",
-        debug: { username },
+        debug: { username, reason: "unknown_username" },
       });
     }
 
     if (credential.password !== password) {
       throw new ClientError("Invalid credentials", {
         status: ClientError.Status.Unauthorized,
+        code: "invalid_credentials",
+        type: "urn:lindorm:pylon:error:invalid_credentials",
         details: "Password does not match",
-        debug: { username, password },
+        debug: { username, password, reason: "password_mismatch" },
       });
     }
   };
@@ -32,7 +36,11 @@ export const createBasicAuthMiddleware = (
   credentials: Array<Credentials> | VerifyCredentialsFn,
 ): PylonMiddleware => {
   if (isArray(credentials) && !credentials.length) {
-    throw new PylonError("No credentials provided");
+    throw new PylonError("No credentials provided", {
+      code: "no_credentials_configured",
+      details:
+        "createBasicAuthMiddleware was given an empty credentials array; provide at least one credential or a verify callback",
+    });
   }
 
   const array = isArray(credentials) ? credentials : [];
@@ -44,6 +52,9 @@ export const createBasicAuthMiddleware = (
         details: "Authorization header must be of type basic",
         debug: { state: ctx.state.authorization },
         status: ClientError.Status.Unauthorized,
+        code: "invalid_authorization_header",
+        type: "urn:lindorm:pylon:error:invalid_authorization_header",
+        data: { expected: "basic", received: ctx.state.authorization.type },
       });
     }
 
@@ -52,8 +63,10 @@ export const createBasicAuthMiddleware = (
     if (!parsed.includes(":")) {
       throw new ClientError("Invalid credentials", {
         status: ClientError.Status.Unauthorized,
-        details: "Invalid credentials format",
-        debug: { parsed },
+        code: "invalid_credentials",
+        type: "urn:lindorm:pylon:error:invalid_credentials",
+        details: "Decoded basic credentials are not in username:password format",
+        debug: { parsed, reason: "malformed_credentials" },
       });
     }
 
@@ -64,8 +77,11 @@ export const createBasicAuthMiddleware = (
     } catch (error: any) {
       throw new ClientError("Invalid credentials", {
         error,
-        debug: { username, password },
         status: ClientError.Status.Unauthorized,
+        code: "invalid_credentials",
+        type: "urn:lindorm:pylon:error:invalid_credentials",
+        details: "Credential verification callback rejected the credentials",
+        debug: { username, password, reason: "verify_callback_rejected" },
       });
     }
 

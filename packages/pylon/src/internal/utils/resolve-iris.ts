@@ -17,5 +17,8 @@ export const resolveIris = (
   if (ctx.iris) {
     return ctx.iris;
   }
-  throw new ServerError("IrisSource is not configured");
+  throw new ServerError("IrisSource is not configured", {
+    code: "iris_source_not_configured",
+    type: "urn:lindorm:pylon:error:iris_source_not_configured",
+  });
 };

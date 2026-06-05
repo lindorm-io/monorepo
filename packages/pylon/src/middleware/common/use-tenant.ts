@@ -31,6 +31,8 @@ export const useTenant = (
           : "No tenant found in token introspection",
         status: ClientError.Status.Forbidden,
         code: "tenant_required",
+        type: "urn:lindorm:pylon:error:tenant_required",
+        data: { source: path ? "path" : "introspection", path: path ?? null },
       });
     }
 

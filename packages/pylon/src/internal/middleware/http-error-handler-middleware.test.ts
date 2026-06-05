@@ -45,6 +45,7 @@ describe("httpErrorHandlerMiddleware", () => {
       error: {
         id: expect.any(String),
         code: "unknown_error",
+        type: "urn:lindorm:error:unknown_error",
         data: {},
         message: "error message",
         name: "Error",
@@ -79,6 +80,7 @@ describe("httpErrorHandlerMiddleware", () => {
       error: {
         id: expect.any(String),
         code: "custom_error_code",
+        type: "urn:lindorm:error:custom_error_code",
         data: { value: "data" },
         message: "server error message",
         name: "ServerError",
@@ -113,6 +115,7 @@ describe("httpErrorHandlerMiddleware", () => {
       error: {
         id: expect.any(String),
         code: "custom_error_code",
+        type: "urn:lindorm:error:custom_error_code",
         data: { value: "data" },
         message: "client error message",
         name: "ClientError",
@@ -139,6 +142,7 @@ describe("httpErrorHandlerMiddleware", () => {
       error: {
         id: expect.any(String),
         code: "unexpected_exception",
+        type: "urn:lindorm:error:unexpected_exception",
         data: {},
         message: "An unexpected exception occurred while handling thrown error",
         name: "UnexpectedException",

@@ -59,13 +59,25 @@ export const createLoginHandler = (
         }
       })
     ) {
-      throw new ClientError("Invalid redirect URI");
+      throw new ClientError("Login redirect URI is not allowed", {
+        code: "login_redirect_uri_not_allowed",
+        type: "urn:lindorm:pylon:error:login_redirect_uri_not_allowed",
+        status: ClientError.Status.BadRequest,
+        details:
+          "The requested redirect URI origin is not present in the configured dynamicRedirectDomains allowlist",
+        data: { redirectUri: ctx.data.redirectUri },
+      });
     }
 
     const redirectUri = ctx.data.redirectUri || routerConfig.staticRedirect.login;
 
     if (!redirectUri) {
-      throw new ClientError("Redirect URI is required", {
+      throw new ClientError("Login redirect URI is required", {
+        code: "login_redirect_uri_required",
+        type: "urn:lindorm:pylon:error:login_redirect_uri_required",
+        status: ClientError.Status.BadRequest,
+        details:
+          "No redirect URI was supplied in the request and no static login redirect is configured",
         debug: {
           query: ctx.data.redirectUri,
           config: routerConfig.staticRedirect.login,

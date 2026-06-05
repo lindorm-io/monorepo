@@ -1,7 +1,9 @@
-import { ServerError } from "@lindorm/errors";
+import { type LindormErrorOptions, ServerError } from "@lindorm/errors";
 
 export class CannotEstablishSessionIdentity extends ServerError {
-  public constructor() {
-    super("Cannot establish session identity: no source yielded a subject");
+  public static readonly errorNamespace = "pylon";
+
+  public constructor(options: LindormErrorOptions = {}) {
+    super("Cannot establish session identity: no source yielded a subject", options);
   }
 }

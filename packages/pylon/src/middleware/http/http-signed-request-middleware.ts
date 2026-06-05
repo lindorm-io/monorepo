@@ -107,20 +107,35 @@ export const createHttpSignedRequestMiddleware = <
     const signature = ctx.get("signature");
 
     if (!signature && options.required) {
-      throw new ClientError("Signature is required");
+      throw new ClientError("Signature is required", {
+        status: ClientError.Status.Unauthorized,
+        code: "signature_required",
+        type: "urn:lindorm:pylon:error:signature_required",
+        details: "This endpoint requires a signed request with a Signature header",
+      });
     }
 
     if (signature) {
       ctx.logger.debug("Signature header found", { signature });
 
       if (!ctx.get("date")) {
-        throw new ClientError("Date header not found");
+        throw new ClientError("Date header not found", {
+          status: ClientError.Status.BadRequest,
+          code: "missing_date_header",
+          type: "urn:lindorm:pylon:error:missing_date_header",
+          details: "A signed request must include a Date header",
+        });
       }
 
       const digest = ctx.get("digest");
 
       if (!digest) {
-        throw new ClientError("Digest header not found");
+        throw new ClientError("Digest header not found", {
+          status: ClientError.Status.BadRequest,
+          code: "missing_digest_header",
+          type: "urn:lindorm:pylon:error:missing_digest_header",
+          details: "A signed request must include a Digest header",
+        });
       }
 
       ctx.logger.debug("Digest header found", { digest });

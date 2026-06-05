@@ -13,5 +13,6 @@ exports[`assertSessionCookieSafeForSockets > should throw with actionable error 
   "support": null,
   "timestamp": Any<Date>,
   "title": null,
+  "type": "urn:lindorm:pylon:error:wildcard_cors_allowlist_for_session",
 }
 `;

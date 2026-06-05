@@ -40,7 +40,7 @@ describe("useValidation", () => {
     try {
       await middleware(ctx, next);
     } catch (err: any) {
-      expect(err.status).toBe(403);
+      expect(err.status).toBe(401);
       expect(err.message).toMatchSnapshot();
     }
   });
