@@ -87,11 +87,16 @@ export class AesKit implements IAesKit {
           });
 
         default:
-          throw new AesError("Invalid encryption mode");
+          throw new AesError("Invalid encryption mode", {
+            code: "invalid_encryption_mode",
+          });
       }
     } catch (error) {
       if (error instanceof AesError) throw error;
-      throw new AesError("AES encryption failed", { error: error as Error });
+      throw new AesError("AES encryption failed", {
+        code: "encryption_failed",
+        error: error as Error,
+      });
     }
   }
 
@@ -115,7 +120,10 @@ export class AesKit implements IAesKit {
       });
     } catch (error) {
       if (error instanceof AesError) throw error;
-      throw new AesError("AES decryption failed", { error: error as Error });
+      throw new AesError("AES decryption failed", {
+        code: "decryption_failed",
+        error: error as Error,
+      });
     }
   }
 
@@ -137,7 +145,7 @@ export class AesKit implements IAesKit {
     options?: AesOperationOptions,
   ): void {
     if (this.verify(input, data, options)) return;
-    throw new AesError("Invalid AES cipher");
+    throw new AesError("Invalid AES cipher", { code: "invalid_cipher" });
   }
 
   public prepareEncryption(): PreparedEncryption {
@@ -145,7 +153,10 @@ export class AesKit implements IAesKit {
       return prepareAesEncryption({ encryption: this.encryption, kryptos: this.kryptos });
     } catch (error) {
       if (error instanceof AesError) throw error;
-      throw new AesError("AES prepare encryption failed", { error: error as Error });
+      throw new AesError("AES prepare encryption failed", {
+        code: "prepare_encryption_failed",
+        error: error as Error,
+      });
     }
   }
 

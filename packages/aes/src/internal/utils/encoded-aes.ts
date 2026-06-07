@@ -92,14 +92,18 @@ export const parseEncodedAesString = (encoded: string): ParsedAesDecryptionRecor
 
   // Read header length (uint16 BE)
   if (offset + 2 > buffer.length) {
-    throw new AesError("Unexpected end of encoded AES data: missing header length");
+    throw new AesError("Unexpected end of encoded AES data: missing header length", {
+      code: "malformed_encoded_data",
+    });
   }
   const headerJsonLength = buffer.readUInt16BE(offset);
   offset += 2;
 
   // Read header JSON
   if (offset + headerJsonLength > buffer.length) {
-    throw new AesError("Unexpected end of encoded AES data: header exceeds buffer");
+    throw new AesError("Unexpected end of encoded AES data: header exceeds buffer", {
+      code: "malformed_encoded_data",
+    });
   }
   const headerJsonBytes = buffer.subarray(offset, offset + headerJsonLength);
   offset += headerJsonLength;
@@ -114,7 +118,9 @@ export const parseEncodedAesString = (encoded: string): ParsedAesDecryptionRecor
 
   // Read CEK length (uint16 BE)
   if (offset + 2 > buffer.length) {
-    throw new AesError("Unexpected end of encoded AES data: missing CEK length");
+    throw new AesError("Unexpected end of encoded AES data: missing CEK length", {
+      code: "malformed_encoded_data",
+    });
   }
   const cekLength = buffer.readUInt16BE(offset);
   offset += 2;
@@ -123,7 +129,9 @@ export const parseEncodedAesString = (encoded: string): ParsedAesDecryptionRecor
   let publicEncryptionKey: Buffer | undefined;
   if (cekLength > 0) {
     if (offset + cekLength > buffer.length) {
-      throw new AesError("Unexpected end of encoded AES data: CEK exceeds buffer");
+      throw new AesError("Unexpected end of encoded AES data: CEK exceeds buffer", {
+        code: "malformed_encoded_data",
+      });
     }
     publicEncryptionKey = buffer.subarray(offset, offset + cekLength);
     offset += cekLength;
@@ -132,7 +140,9 @@ export const parseEncodedAesString = (encoded: string): ParsedAesDecryptionRecor
   // Read IV (fixed size from encryption)
   const ivSize = getIvSize(params.encryption);
   if (offset + ivSize > buffer.length) {
-    throw new AesError("Unexpected end of encoded AES data: IV exceeds buffer");
+    throw new AesError("Unexpected end of encoded AES data: IV exceeds buffer", {
+      code: "malformed_encoded_data",
+    });
   }
   const initialisationVector = buffer.subarray(offset, offset + ivSize);
   offset += ivSize;
@@ -140,7 +150,9 @@ export const parseEncodedAesString = (encoded: string): ParsedAesDecryptionRecor
   // Read tag (fixed size from encryption)
   const tagSize = getTagSize(params.encryption);
   if (offset + tagSize > buffer.length) {
-    throw new AesError("Unexpected end of encoded AES data: tag exceeds buffer");
+    throw new AesError("Unexpected end of encoded AES data: tag exceeds buffer", {
+      code: "malformed_encoded_data",
+    });
   }
   const authTag = buffer.subarray(offset, offset + tagSize);
   offset += tagSize;

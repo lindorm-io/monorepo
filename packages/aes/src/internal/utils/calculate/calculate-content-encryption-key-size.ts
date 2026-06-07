@@ -6,7 +6,9 @@ export const calculateContentEncryptionKeySize = (
   encryption: KryptosEncryption,
 ): AesKeyLength => {
   if (!encryption) {
-    throw new AesError("Encryption algorithm is required");
+    throw new AesError("Encryption algorithm is required", {
+      code: "encryption_required",
+    });
   }
 
   switch (encryption) {
@@ -29,6 +31,9 @@ export const calculateContentEncryptionKeySize = (
       return 64;
 
     default:
-      throw new AesError("Unsupported encryption", { debug: { encryption } });
+      throw new AesError("Unsupported encryption", {
+        code: "unsupported_encryption",
+        data: { encryption },
+      });
   }
 };

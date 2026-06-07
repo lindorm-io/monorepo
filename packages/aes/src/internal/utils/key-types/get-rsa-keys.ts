@@ -16,7 +16,7 @@ export const getRsaEncryptionKey = ({
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
   if (!KryptosKit.isRsa(kryptos)) {
-    throw new AesError("Invalid Kryptos instance");
+    throw new AesError("Invalid Kryptos instance", { code: "invalid_kryptos" });
   }
 
   if (
@@ -25,7 +25,10 @@ export const getRsaEncryptionKey = ({
     kryptos.algorithm !== "RSA-OAEP-384" &&
     kryptos.algorithm !== "RSA-OAEP-512"
   ) {
-    throw new AesError("Invalid encryption key algorithm");
+    throw new AesError("Invalid encryption key algorithm", {
+      code: "invalid_key_algorithm",
+      data: { algorithm: kryptos.algorithm },
+    });
   }
 
   const keyLength = calculateContentEncryptionKeySize(encryption);
@@ -50,10 +53,12 @@ export const getRsaDecryptionKey = ({
   publicEncryptionKey,
 }: DecryptCekOptions): DecryptCekResult => {
   if (!KryptosKit.isRsa(kryptos)) {
-    throw new AesError("Invalid Kryptos instance");
+    throw new AesError("Invalid Kryptos instance", { code: "invalid_kryptos" });
   }
   if (!publicEncryptionKey) {
-    throw new AesError("Missing publicEncryptionKey");
+    throw new AesError("Missing publicEncryptionKey", {
+      code: "missing_public_encryption_key",
+    });
   }
 
   if (
@@ -63,14 +68,17 @@ export const getRsaDecryptionKey = ({
     kryptos.algorithm !== "RSA-OAEP-512"
   ) {
     throw new AesError("Invalid encryption key algorithm", {
-      debug: { kryptos },
+      code: "invalid_key_algorithm",
+      data: { algorithm: kryptos.algorithm },
     });
   }
 
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
-    throw new AesError("Unable to decrypt AES without private key");
+    throw new AesError("Unable to decrypt AES without private key", {
+      code: "missing_private_key",
+    });
   }
 
   const contentEncryptionKey = privateDecrypt(

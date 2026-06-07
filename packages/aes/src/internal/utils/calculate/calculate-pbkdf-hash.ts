@@ -14,6 +14,9 @@ export const calculatePbkdfAlgorithm = (kryptos: IKryptos): ShaAlgorithm => {
       return "SHA512";
 
     default:
-      throw new AesError("Unsupported PBKDF2 algorithm");
+      throw new AesError("Unsupported PBKDF2 algorithm", {
+        code: "unsupported_pbkdf2_algorithm",
+        data: { algorithm: kryptos.algorithm },
+      });
   }
 };

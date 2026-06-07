@@ -50,7 +50,9 @@ export const getDiffieHellmanKeyWrapDecryptionKey = ({
   publicEncryptionTag,
 }: DecryptCekOptions): DecryptCekResult => {
   if (!publicEncryptionKey) {
-    throw new AesError("Missing publicEncryptionKey");
+    throw new AesError("Missing publicEncryptionKey", {
+      code: "missing_public_encryption_key",
+    });
   }
 
   const sharedSecret = calculateSharedSecret({ kryptos, publicEncryptionJwk });

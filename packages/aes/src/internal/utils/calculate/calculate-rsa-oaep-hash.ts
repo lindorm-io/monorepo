@@ -18,7 +18,8 @@ export const calculateRsaOaepHash = (algorithm: KryptosAlgorithm): ShaAlgorithm 
 
     default:
       throw new AesError("Unexpected encryption key algorithm", {
-        debug: { algorithm },
+        code: "unexpected_key_algorithm",
+        data: { algorithm },
       });
   }
 };

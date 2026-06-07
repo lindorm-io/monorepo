@@ -26,7 +26,8 @@ export const pbkdf = (options: Options): Result => {
 
   if (pbkdfIterations < 1000) {
     throw new AesError("PBKDF2 iteration count must be at least 1000", {
-      debug: { pbkdfIterations },
+      code: "insufficient_pbkdf2_iterations",
+      data: { pbkdfIterations },
     });
   }
 

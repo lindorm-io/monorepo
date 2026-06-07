@@ -13,7 +13,10 @@ export const getOctDirEncryptionKey = ({
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
   if (!KryptosKit.isOct(kryptos)) {
-    throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
+    throw new AesError("Invalid Kryptos", {
+      code: "invalid_kryptos",
+      debug: { kryptos: kryptos.toJSON() },
+    });
   }
 
   const der = kryptos.export("der");
@@ -21,7 +24,8 @@ export const getOctDirEncryptionKey = ({
 
   if (der.privateKey.length !== keyLength) {
     throw new AesError("Invalid key length", {
-      debug: { keyLength, privateKeyLength: der.privateKey.length },
+      code: "invalid_key_length",
+      data: { keyLength, privateKeyLength: der.privateKey.length },
     });
   }
 
@@ -33,7 +37,10 @@ export const getOctDirDecryptionKey = ({
   kryptos,
 }: DecryptCekOptions): DecryptCekResult => {
   if (!KryptosKit.isOct(kryptos)) {
-    throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
+    throw new AesError("Invalid Kryptos", {
+      code: "invalid_kryptos",
+      debug: { kryptos: kryptos.toJSON() },
+    });
   }
 
   const der = kryptos.export("der");
@@ -41,7 +48,8 @@ export const getOctDirDecryptionKey = ({
 
   if (der.privateKey.length !== keyLength) {
     throw new AesError("Invalid key length", {
-      debug: { keyLength, privateKeyLength: der.privateKey.length },
+      code: "invalid_key_length",
+      data: { keyLength, privateKeyLength: der.privateKey.length },
     });
   }
 

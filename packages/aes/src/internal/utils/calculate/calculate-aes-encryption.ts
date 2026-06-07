@@ -6,7 +6,9 @@ export const calculateAesEncryption = (
   encryption: KryptosEncryption,
 ): AesInternalEncryption => {
   if (!encryption) {
-    throw new AesError("Encryption algorithm is required");
+    throw new AesError("Encryption algorithm is required", {
+      code: "encryption_required",
+    });
   }
 
   switch (encryption) {
@@ -29,6 +31,9 @@ export const calculateAesEncryption = (
       return "aes-256-gcm";
 
     default:
-      throw new AesError("Unsupported encryption algorithm");
+      throw new AesError("Unsupported encryption algorithm", {
+        code: "unsupported_encryption",
+        data: { encryption },
+      });
   }
 };

@@ -16,7 +16,8 @@ export const getInitialisationVector = (encryption: KryptosEncryption): Buffer =
 
     default:
       throw new AesError("Unexpected algorithm", {
-        debug: { encryption },
+        code: "unsupported_encryption",
+        data: { encryption },
       });
   }
 };

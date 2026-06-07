@@ -27,7 +27,9 @@ export const keyWrap = (options: KeyWrapOptions): KeyWrapResult => {
       return gcmKeyWrap(options);
 
     default:
-      throw new AesError("Unsupported key wrap algorithm");
+      throw new AesError("Unsupported key wrap algorithm", {
+        code: "unsupported_key_wrap_algorithm",
+      });
   }
 };
 
@@ -50,6 +52,8 @@ export const keyUnwrap = (options: KeyUnwrapOptions): KeyUnwrapResult => {
       return gcmKeyUnwrap(options);
 
     default:
-      throw new AesError("Unsupported key wrap algorithm");
+      throw new AesError("Unsupported key wrap algorithm", {
+        code: "unsupported_key_wrap_algorithm",
+      });
   }
 };

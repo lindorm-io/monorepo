@@ -16,7 +16,10 @@ const shaHash = (encryption: KryptosEncryption): ShaAlgorithm => {
       return "SHA512";
 
     default:
-      throw new AesError("Unexpected algorithm");
+      throw new AesError("Unexpected algorithm", {
+        code: "unsupported_encryption",
+        data: { encryption },
+      });
   }
 };
 
@@ -63,5 +66,7 @@ export const assertHmacAuthTag = ({
 
   if (generated.length === authTag.length && timingSafeEqual(generated, authTag)) return;
 
-  throw new AesError("Auth tag verification failed");
+  throw new AesError("Auth tag verification failed", {
+    code: "auth_tag_verification_failed",
+  });
 };

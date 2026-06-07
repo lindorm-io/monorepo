@@ -39,6 +39,8 @@ export const calculateKeyWrapEncryption = (kryptos: IKryptos): KeywrapEncryption
       return "aes-256-gcm";
 
     default:
-      throw new AesError("Unsupported keywrap encryption");
+      throw new AesError("Unsupported keywrap encryption", {
+        code: "unsupported_key_wrap_encryption",
+      });
   }
 };

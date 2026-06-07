@@ -51,7 +51,9 @@ export const createTokenisedAesString = (data: AesEncryptionRecord): string => {
 
 export const parseTokenisedAesString = (data: string): ParsedAesDecryptionRecord => {
   if (!data.startsWith("aes:")) {
-    throw new AesError("Invalid tokenised AES string: must start with 'aes:'");
+    throw new AesError("Invalid tokenised AES string: must start with 'aes:'", {
+      code: "invalid_tokenised_string",
+    });
   }
 
   const withoutPrefix = data.slice(4); // Remove "aes:"
@@ -59,7 +61,8 @@ export const parseTokenisedAesString = (data: string): ParsedAesDecryptionRecord
 
   if (parts.length < 4 || parts.length > 5) {
     throw new AesError("Invalid tokenised AES string: unexpected number of segments", {
-      debug: { segmentCount: parts.length },
+      code: "invalid_tokenised_segments",
+      data: { segmentCount: parts.length },
     });
   }
 
@@ -76,12 +79,14 @@ export const parseTokenisedAesString = (data: string): ParsedAesDecryptionRecord
   if (isDirect && hasCek) {
     throw new AesError(
       "Invalid tokenised AES string: dir/ECDH-ES must not have CEK segment",
+      { code: "invalid_tokenised_segments" },
     );
   }
 
   if (!isDirect && !hasCek) {
     throw new AesError(
       "Invalid tokenised AES string: non-dir algorithm must have CEK segment",
+      { code: "invalid_tokenised_segments" },
     );
   }
 

@@ -22,7 +22,10 @@ const encryptionKeyLength = (encryption: KryptosEncryption): AesKeyLength => {
       return 32;
 
     default:
-      throw new AesError("Unexpected algorithm");
+      throw new AesError("Unexpected algorithm", {
+        code: "unsupported_encryption",
+        data: { encryption },
+      });
   }
 };
 
@@ -44,7 +47,7 @@ export const splitContentEncryptionKey = (
   const hashKey = contentEncryptionKey.subarray(keyLength);
 
   if (hashKey.length) {
-    throw new AesError("Unexpected hash key");
+    throw new AesError("Unexpected hash key", { code: "unexpected_hash_key" });
   }
 
   return { encryptionKey, hashKey };
