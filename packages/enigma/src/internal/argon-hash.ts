@@ -9,7 +9,9 @@ const getSecret = (kryptos?: IKryptosOct): Buffer | undefined => {
   const { privateKey } = kryptos.export("der");
 
   if (!privateKey) {
-    throw new ArgonError("Invalid Kryptos");
+    throw new ArgonError("Invalid Kryptos", {
+      code: "missing_private_key",
+    });
   }
 
   return privateKey;
@@ -46,5 +48,7 @@ export const verifyArgonHash = async ({
 
 export const assertArgonHash = async (options: VerifyArgonHashOptions): Promise<void> => {
   if (await verifyArgonHash(options)) return;
-  throw new ArgonError("Invalid Argon hash");
+  throw new ArgonError("Invalid Argon hash", {
+    code: "argon_hash_mismatch",
+  });
 };
