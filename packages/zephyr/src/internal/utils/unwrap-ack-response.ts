@@ -10,9 +10,9 @@ export const unwrapAckResponse = (ctx: ZephyrContext, response: any): void => {
       ctx.incoming = { data: ack.data, ok: true };
     } else {
       throw new ZephyrError(ack.error?.message ?? "Request failed", {
-        code: ack.error?.code,
-        data: ack.error?.data,
+        code: "request_failed",
         title: ack.error?.title,
+        debug: { serverError: ack.error },
       });
     }
   } else {

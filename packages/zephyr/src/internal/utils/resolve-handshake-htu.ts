@@ -1,4 +1,5 @@
 import type { Socket } from "socket.io-client";
+import { ZephyrError } from "../../errors/ZephyrError.js";
 
 const DEFAULT_SOCKET_IO_PATH = "/socket.io";
 
@@ -45,7 +46,9 @@ export const resolveHandshakeHtu = (socket: Socket): string => {
   const rawUri = manager.uri;
 
   if (typeof rawUri !== "string" || rawUri.length === 0) {
-    throw new Error("Unable to resolve DPoP htu: socket.io manager has no uri");
+    throw new ZephyrError("Unable to resolve DPoP htu: socket.io manager has no uri", {
+      code: "dpop_htu_unresolvable",
+    });
   }
 
   const parsed = new URL(rawUri);

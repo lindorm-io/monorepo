@@ -81,7 +81,7 @@ export const createDpopBearerAuthStrategy = (
 
     if (typeof expiresIn !== "number" || !Number.isFinite(expiresIn) || expiresIn <= 0) {
       throw new ZephyrError("Invalid expiresIn for auth refresh", {
-        code: "ZEPHYR_AUTH_REFRESH_INVALID_EXPIRES_IN",
+        code: "auth_refresh_invalid_expires_in",
         data: { expiresIn },
       });
     }
@@ -94,7 +94,7 @@ export const createDpopBearerAuthStrategy = (
         .emitWithAck(REFRESH_EVENT, { bearer, expiresIn });
     } catch (err) {
       throw new ZephyrError("Auth refresh ack timed out", {
-        code: "ZEPHYR_AUTH_REFRESH_TIMEOUT",
+        code: "auth_refresh_ack_timeout",
         data: { timeoutMs },
         error: err instanceof Error ? err : undefined,
       });
@@ -102,8 +102,9 @@ export const createDpopBearerAuthStrategy = (
 
     if (!isPylonAck(ack)) {
       throw new ZephyrError("Auth refresh returned unrecognised ack", {
-        code: "ZEPHYR_AUTH_REFRESH_INVALID_ACK",
-        data: { ack: ack as Record<string, unknown> },
+        code: "auth_refresh_unrecognised_ack",
+        data: { ackType: typeof ack },
+        debug: { ack },
       });
     }
 
@@ -112,10 +113,10 @@ export const createDpopBearerAuthStrategy = (
     const error = ack.error ?? {};
 
     throw new ZephyrError(error.message ?? "Auth refresh rejected", {
-      code: error.code ?? "ZEPHYR_AUTH_REFRESH_REJECTED",
+      code: "auth_refresh_rejected",
       status: error.status,
       title: error.title,
-      data: error.data,
+      debug: { serverError: error },
     });
   };
 
