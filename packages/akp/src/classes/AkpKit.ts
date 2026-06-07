@@ -16,7 +16,10 @@ export class AkpKit implements IKeyKit {
     this.encoding = options.encoding ?? "base64";
 
     if (!KryptosKit.isAkp(options.kryptos)) {
-      throw new AkpError("Invalid Kryptos instance");
+      throw new AkpError("Invalid Kryptos instance", {
+        code: "invalid_kryptos",
+        debug: { algorithm: options.kryptos.algorithm, type: options.kryptos.type },
+      });
     }
 
     this.kryptos = options.kryptos;
