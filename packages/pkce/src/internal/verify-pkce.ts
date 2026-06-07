@@ -17,7 +17,9 @@ export const verifyPkce = (
 
     default:
       throw new PkceError("Invalid PKCE method", {
-        debug: { challenge, method, verifier },
+        code: "invalid_pkce_method",
+        data: { method },
+        debug: { challenge, verifier },
       });
   }
 };
