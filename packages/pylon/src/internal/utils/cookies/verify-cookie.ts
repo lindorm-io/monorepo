@@ -15,7 +15,7 @@ export const verifyCookie = async (
       type: "urn:lindorm:pylon:error:missing_cookie_signature",
       status: ClientError.Status.Unauthorized,
       data: { name },
-      debug: { name, value, signature, kid },
+      debug: { value, signature, kid },
     });
   }
 
@@ -25,7 +25,7 @@ export const verifyCookie = async (
       type: "urn:lindorm:pylon:error:missing_cookie_kid",
       status: ClientError.Status.Unauthorized,
       data: { name },
-      debug: { name, value, signature, kid },
+      debug: { value, signature, kid },
     });
   }
 
@@ -38,7 +38,7 @@ export const verifyCookie = async (
         type: "urn:lindorm:pylon:error:invalid_cookie_signature",
         status: ClientError.Status.Unauthorized,
         data: { name },
-        debug: { name, value, signature, kid },
+        debug: { value, signature, kid },
       });
     }
   } catch (error) {
@@ -50,7 +50,6 @@ export const verifyCookie = async (
       status: ClientError.Status.Unauthorized,
       data: { name },
       debug: {
-        name,
         value,
         signature,
         kid,
