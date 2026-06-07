@@ -46,15 +46,18 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
       Aegis.validateClaims(claims, matchers);
     } catch (err) {
       if (err instanceof LindormError) {
-        const invalid = (err.data as { invalid?: Array<{ key: string; value: unknown }> })
-          ?.invalid;
+        // validateClaims keeps the failing claim VALUES in debug (not data); read
+        // them from there for the server-only details, and expose only keys to the client.
+        const invalid = (
+          err.debug as { invalid?: Array<{ key: string; value: unknown }> }
+        )?.invalid;
         const details = invalid
           ?.map((i) => `${i.key} (got: ${JSON.stringify(i.value)})`)
           .join("; ");
         throw new ClientError("Access denied", {
           details: details ?? err.message,
           data: { invalid: invalid?.map((i) => i.key) },
-          debug: err.data,
+          debug: err.debug,
           status: ClientError.Status.Forbidden,
           code: "access_denied",
           type: "urn:lindorm:pylon:error:access_denied",
