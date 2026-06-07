@@ -1,4 +1,6 @@
 import type { IrisPersistenceDelayConfig } from "../../../types/source-options.js";
+import { IrisNotSupportedError } from "../../../errors/IrisNotSupportedError.js";
+import { IrisTransportError } from "../../../errors/IrisTransportError.js";
 import type { IDelayStore } from "../../../interfaces/IrisDelayStore.js";
 import { MemoryDelayStore } from "../MemoryDelayStore.js";
 import { RedisDelayStore } from "../RedisDelayStore.js";
@@ -20,14 +22,19 @@ export const createDelayStore = async (
 
     try {
       await client.ping();
-    } catch (cause) {
-      throw new Error(`Failed to connect delay store to Redis at ${config.url}`, {
-        cause,
+    } catch (error) {
+      throw new IrisTransportError("Failed to connect delay store to Redis", {
+        code: "delay_store_connection_failed",
+        debug: { url: config.url },
+        error: error instanceof Error ? error : undefined,
       });
     }
 
     return new RedisDelayStore(client, { ownedClient: true });
   }
 
-  throw new Error(`Unknown delay store type: ${(config as Record<string, string>).type}`);
+  throw new IrisNotSupportedError("Unknown delay store type", {
+    code: "unknown_delay_store_type",
+    data: { type: (config as Record<string, string>).type },
+  });
 };

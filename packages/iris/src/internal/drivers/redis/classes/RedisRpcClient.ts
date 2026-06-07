@@ -42,7 +42,10 @@ export class RedisRpcClient<
     const correlationId = randomUUID();
 
     if (!this.state.publishConnection) {
-      throw new IrisDriverError("Cannot send RPC request: connection is not available");
+      throw new IrisDriverError("Cannot send RPC request: connection is not available", {
+        code: "connection_unavailable",
+        data: { driver: "redis" },
+      });
     }
 
     await this.ensureReplyConsumer();

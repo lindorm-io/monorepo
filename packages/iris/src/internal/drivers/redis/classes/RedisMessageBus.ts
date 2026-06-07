@@ -66,7 +66,10 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     }
 
     if (!this.state.publishConnection) {
-      throw new IrisDriverError("Cannot subscribe: connection is not available");
+      throw new IrisDriverError("Cannot subscribe: connection is not available", {
+        code: "connection_unavailable",
+        data: { driver: "redis" },
+      });
     }
 
     const streamKey = resolveStreamKey(this.state.prefix, options.topic);

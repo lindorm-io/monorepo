@@ -43,7 +43,10 @@ export class KafkaRpcClient<
     const correlationId = randomUUID();
 
     if (!this.state.producer) {
-      throw new IrisDriverError("Cannot send RPC request: producer is not connected");
+      throw new IrisDriverError("Cannot send RPC request: producer is not connected", {
+        code: "connection_unavailable",
+        data: { driver: "kafka" },
+      });
     }
 
     await this.ensureReplyConsumer();
@@ -90,6 +93,7 @@ export class KafkaRpcClient<
     if (!this.state.kafka) {
       throw new IrisDriverError(
         "Cannot create reply consumer: Kafka client is not connected",
+        { code: "connection_unavailable", data: { driver: "kafka" } },
       );
     }
 

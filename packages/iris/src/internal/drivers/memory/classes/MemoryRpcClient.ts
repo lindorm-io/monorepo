@@ -40,7 +40,9 @@ export class MemoryRpcClient<
 
     if (!handler) {
       throw new IrisTransportError(`No RPC handler registered for queue "${topic}"`, {
-        debug: { topic, correlationId },
+        code: "rpc_handler_not_found",
+        data: { topic },
+        debug: { correlationId },
       });
     }
 
@@ -84,7 +86,9 @@ export class MemoryRpcClient<
           error instanceof Error
             ? error
             : new IrisTransportError("RPC handler error", {
-                debug: { correlationId, topic },
+                code: "rpc_handler_error",
+                data: { topic },
+                debug: { correlationId },
               }),
         );
       });

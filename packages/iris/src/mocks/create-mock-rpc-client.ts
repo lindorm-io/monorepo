@@ -1,3 +1,4 @@
+import { IrisValidationError } from "../errors/IrisValidationError.js";
 import type { IIrisRpcClient } from "../interfaces/IrisRpcClient.js";
 import type { IMessage } from "../interfaces/Message.js";
 
@@ -27,8 +28,9 @@ export const _createMockRpcClient = <
       requests.push(message);
 
       if (!responseFactory) {
-        throw new Error(
+        throw new IrisValidationError(
           "MockRpcClient: no responseFactory provided — supply one via the constructor",
+          { code: "missing_response_factory" },
         );
       }
 

@@ -31,6 +31,7 @@ export const compress = async (
     default:
       throw new IrisSerializationError(
         `Unsupported compression algorithm: ${String(algorithm)}`,
+        { code: "unsupported_compression_algorithm", data: { algorithm } },
       );
   }
 };
@@ -49,6 +50,7 @@ export const decompress = async (
     default:
       throw new IrisSerializationError(
         `Unsupported decompression algorithm: ${String(algorithm)}`,
+        { code: "unsupported_decompression_algorithm", data: { algorithm } },
       );
   }
 };

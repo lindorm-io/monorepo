@@ -17,6 +17,7 @@ export const validateFields = (targetName: string, fields: Array<MetaField>): vo
   for (const field of fields) {
     if (seenKeys.has(field.key)) {
       throw new IrisMetadataError("Duplicate field metadata", {
+        code: "duplicate_field_metadata",
         debug: { target: targetName, field: field.key },
       });
     }
@@ -27,6 +28,7 @@ export const validateFields = (targetName: string, fields: Array<MetaField>): vo
     if (UNIQUE_DECORATORS.includes(decorator)) {
       if (seenDecorators.has(decorator)) {
         throw new IrisMetadataError("Duplicate unique field type", {
+          code: "duplicate_unique_field",
           debug: { target: targetName, field: field.key, decorator },
         });
       }

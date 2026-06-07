@@ -1,4 +1,6 @@
 import type { IrisPersistenceDeadLetterConfig } from "../../../types/source-options.js";
+import { IrisNotSupportedError } from "../../../errors/IrisNotSupportedError.js";
+import { IrisTransportError } from "../../../errors/IrisTransportError.js";
 import type { IDeadLetterStore } from "../../../interfaces/IrisDeadLetterStore.js";
 import { MemoryDeadLetterStore } from "../MemoryDeadLetterStore.js";
 import { RedisDeadLetterStore } from "../RedisDeadLetterStore.js";
@@ -20,16 +22,19 @@ export const createDeadLetterStore = async (
 
     try {
       await client.ping();
-    } catch (cause) {
-      throw new Error(`Failed to connect dead letter store to Redis at ${config.url}`, {
-        cause,
+    } catch (error) {
+      throw new IrisTransportError("Failed to connect dead letter store to Redis", {
+        code: "dead_letter_store_connection_failed",
+        debug: { url: config.url },
+        error: error instanceof Error ? error : undefined,
       });
     }
 
     return new RedisDeadLetterStore(client, { ownedClient: true });
   }
 
-  throw new Error(
-    `Unknown dead letter store type: ${(config as Record<string, string>).type}`,
-  );
+  throw new IrisNotSupportedError("Unknown dead letter store type", {
+    code: "unknown_dead_letter_store_type",
+    data: { type: (config as Record<string, string>).type },
+  });
 };

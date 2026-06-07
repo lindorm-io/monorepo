@@ -27,7 +27,10 @@ export const publishRedisMessages = async <M extends IMessage>(
   publishOptions?: PublishRedisMessagesOptions,
 ): Promise<void> => {
   if (!state.publishConnection) {
-    throw new IrisPublishError("Redis connection not available");
+    throw new IrisPublishError("Redis connection not available", {
+      code: "publish_connection_unavailable",
+      data: { driver: "redis" },
+    });
   }
 
   const prepared = await preparePublishBatch(messages, options, driver);

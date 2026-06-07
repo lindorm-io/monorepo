@@ -75,11 +75,16 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     const cb = typeof queueOrOptions === "string" ? callback : queueOrOptions.callback;
 
     if (!cb) {
-      throw new IrisDriverError("consume() requires a callback");
+      throw new IrisDriverError("consume() requires a callback", {
+        code: "consume_callback_required",
+      });
     }
 
     if (!this.state.publishConnection) {
-      throw new IrisDriverError("Cannot consume: connection is not available");
+      throw new IrisDriverError("Cannot consume: connection is not available", {
+        code: "connection_unavailable",
+        data: { driver: "redis" },
+      });
     }
 
     const streamKey = resolveStreamKey(this.state.prefix, queue);

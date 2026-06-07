@@ -49,7 +49,9 @@ export const stageHeader = (
   header: MetaHeader,
 ): void => {
   if (!header.headerName || !header.headerName.trim()) {
-    throw new IrisMetadataError("@Header name must not be empty");
+    throw new IrisMetadataError("@Header name must not be empty", {
+      code: "empty_header_name",
+    });
   }
   ensureOwnArray(metadata, "headers").push(header);
 };
@@ -72,11 +74,14 @@ export const stageMessage = (
   message: MetaMessage,
 ): void => {
   if (!message.name || !message.name.trim()) {
-    throw new IrisMetadataError("@Message name must not be empty");
+    throw new IrisMetadataError("@Message name must not be empty", {
+      code: "empty_message_name",
+    });
   }
   if (Object.hasOwn(metadata, ABSTRACT_MESSAGE_KEY)) {
     throw new IrisMetadataError(
       "Cannot combine @AbstractMessage and @Message on the same class",
+      { code: "conflicting_message_decorators" },
     );
   }
   metadata.message = message;
@@ -90,6 +95,7 @@ export const stageAbstractMessage = (
   if (Object.hasOwn(metadata, "__hasMessage")) {
     throw new IrisMetadataError(
       "Cannot combine @AbstractMessage and @Message on the same class",
+      { code: "conflicting_message_decorators" },
     );
   }
   metadata[ABSTRACT_MESSAGE_KEY] = true;
@@ -150,7 +156,9 @@ export const stageNamespace = (
   namespace: string,
 ): void => {
   if (!namespace || !namespace.trim()) {
-    throw new IrisMetadataError("@Namespace value must not be empty");
+    throw new IrisMetadataError("@Namespace value must not be empty", {
+      code: "empty_namespace",
+    });
   }
   metadata.namespace = namespace;
 };

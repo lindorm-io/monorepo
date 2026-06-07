@@ -21,6 +21,7 @@ export const validateGenerated = (
 
     if (!field) {
       throw new IrisMetadataError("Generated field not found", {
+        code: "generated_field_not_found",
         debug: { target: targetName, field: gen.key },
       });
     }
@@ -29,6 +30,7 @@ export const validateGenerated = (
 
     if (field.type !== expectedType) {
       throw new IrisMetadataError("Invalid @Generated strategy for field type", {
+        code: "invalid_generated_strategy",
         debug: {
           target: targetName,
           field: field.key,

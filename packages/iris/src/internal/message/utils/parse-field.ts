@@ -27,7 +27,10 @@ export const parseField = (field: MetaField, message: any, options: any): any =>
     throw new IrisSerializationError(
       `Failed to parse field "${field.key}" of type ${field.type}`,
       {
-        debug: { field: field.key, value, type: typeof value, error },
+        code: "field_parse_failed",
+        data: { field: field.key, type: field.type },
+        debug: { value, valueType: typeof value },
+        error: error instanceof Error ? error : undefined,
       },
     );
   }

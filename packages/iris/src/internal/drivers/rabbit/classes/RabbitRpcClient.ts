@@ -62,6 +62,7 @@ export class RabbitRpcClient<
     if (!publishChannel) {
       throw new IrisDriverError(
         "Cannot send RPC request: publish channel is not available",
+        { code: "connection_unavailable", data: { driver: "rabbit" } },
       );
     }
 
@@ -91,7 +92,9 @@ export class RabbitRpcClient<
             pending.cleanup();
             pending.reject(
               new IrisTransportError("Failed to publish RPC request", {
-                debug: { correlationId, topic },
+                code: "rpc_publish_failed",
+                data: { topic },
+                debug: { correlationId },
               }),
             );
           }
@@ -138,6 +141,7 @@ export class RabbitRpcClient<
     if (!channel) {
       throw new IrisDriverError(
         "Cannot consume RPC replies: publish channel is not available",
+        { code: "connection_unavailable", data: { driver: "rabbit" } },
       );
     }
 
