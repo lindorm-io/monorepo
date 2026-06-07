@@ -383,6 +383,11 @@ export class Amphora implements IAmphora {
         jwksUri: options.jwksUri,
         openIdConfigurationUri: options.openIdConfigurationUri,
       },
+      // Public, non-secret config — server-only in debug for diagnosis.
+      debug: {
+        openIdConfiguration: options.openIdConfiguration,
+        trustAnchors: options.trustAnchors,
+      },
       details:
         "An external option must provide either a valid openIdConfigurationUri, or both a string issuer and a valid jwksUri.",
     });
