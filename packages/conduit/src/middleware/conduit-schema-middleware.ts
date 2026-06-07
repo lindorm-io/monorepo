@@ -8,16 +8,18 @@ export const conduitSchemaMiddleware = <T extends ZodRawShape>(
   async function conduitSchemaMiddleware(ctx, next) {
     await next();
 
+    if (!(schema instanceof ZodObject) && !(schema instanceof ZodArray)) {
+      throw new ServerError("Invalid Zod schema provided", {
+        code: "invalid_zod_schema",
+        type: "urn:lindorm:conduit:error:invalid_zod_schema",
+      });
+    }
+
     try {
       if (schema instanceof ZodObject) {
         ctx.res.data = schema.loose().parse(ctx.res.data);
-      } else if (schema instanceof ZodArray) {
-        ctx.res.data = schema.parse(ctx.res.data);
       } else {
-        throw new ServerError("Invalid Zod schema provided", {
-          code: "invalid_zod_schema",
-          type: "urn:lindorm:conduit:error:invalid_zod_schema",
-        });
+        ctx.res.data = schema.parse(ctx.res.data);
       }
     } catch (err: any) {
       throw new BadGatewayError(err.message, {
