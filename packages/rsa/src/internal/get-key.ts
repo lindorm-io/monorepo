@@ -13,7 +13,11 @@ export const getSignKey = (
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
-    throw new RsaError("Private key not found in key set", { debug: { kryptos } });
+    throw new RsaError("Private key not found in key set", {
+      code: "private_key_not_found",
+      data: { algorithm: kryptos.algorithm },
+      debug: { id: kryptos.id },
+    });
   }
 
   if (kryptos.algorithm.startsWith("PS")) {
@@ -29,7 +33,11 @@ export const getSignKey = (
     return { key: privateKey, dsaEncoding };
   }
 
-  throw new RsaError("Unsupported RSA algorithm", { debug: { kryptos } });
+  throw new RsaError("Unsupported RSA algorithm", {
+    code: "unsupported_algorithm",
+    data: { algorithm: kryptos.algorithm },
+    debug: { id: kryptos.id },
+  });
 };
 
 export const getVerifyKey = (
@@ -39,7 +47,11 @@ export const getVerifyKey = (
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {
-    throw new RsaError("Public key not found in key set", { debug: { kryptos } });
+    throw new RsaError("Public key not found in key set", {
+      code: "public_key_not_found",
+      data: { algorithm: kryptos.algorithm },
+      debug: { id: kryptos.id },
+    });
   }
 
   if (kryptos.algorithm.startsWith("PS")) {
@@ -55,5 +67,9 @@ export const getVerifyKey = (
     return { key: publicKey, dsaEncoding };
   }
 
-  throw new RsaError("Unsupported RSA algorithm", { debug: { kryptos } });
+  throw new RsaError("Unsupported RSA algorithm", {
+    code: "unsupported_algorithm",
+    data: { algorithm: kryptos.algorithm },
+    debug: { id: kryptos.id },
+  });
 };
