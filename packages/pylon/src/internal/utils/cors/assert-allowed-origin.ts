@@ -20,7 +20,7 @@ export const assertAllowedOrigin = (
       code: "origin_not_allowed",
       type: "urn:lindorm:pylon:error:origin_not_allowed",
       data: { origin },
-      debug: { origin, allowOrigins },
+      debug: { allowOrigins },
     });
   }
 };
