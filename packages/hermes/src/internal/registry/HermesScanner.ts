@@ -12,6 +12,7 @@ import { type IScanData, Scanner } from "@lindorm/scanner";
 import type { Constructor } from "@lindorm/types";
 import type { z } from "zod";
 import { HermesViewEntity } from "../../entities/HermesViewEntity.js";
+import { DomainError } from "../../errors/index.js";
 import type {
   HandlerConditions,
   HandlerRegistration,
@@ -266,8 +267,12 @@ export class HermesScanner {
     const meta = getHermesMetadata(target);
 
     if (!meta.aggregate) {
-      throw new Error(
+      throw new DomainError(
         `Aggregate constructor ${target.name} referenced by saga/view has no @Aggregate() metadata`,
+        {
+          code: "missing_aggregate_metadata",
+          data: { aggregate: target.name },
+        },
       );
     }
 
@@ -282,8 +287,12 @@ export class HermesScanner {
     viewName: string,
   ): Constructor<HermesViewEntity> {
     if (!(entity.prototype instanceof HermesViewEntity)) {
-      throw new Error(
+      throw new DomainError(
         `View "${viewName}" entity class "${entity.name}" must extend HermesViewEntity`,
+        {
+          code: "invalid_view_entity",
+          data: { view: viewName, entity: entity.name },
+        },
       );
     }
     return entity as Constructor<HermesViewEntity>;

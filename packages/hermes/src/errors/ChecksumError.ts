@@ -1,7 +1,10 @@
-import { DomainError } from "./DomainError.js";
+import { DomainError, type DomainErrorOptions } from "./DomainError.js";
 
 export class ChecksumError extends DomainError {
-  public constructor(message: string, error?: Error) {
-    super(message, { permanent: true, error });
+  public constructor(
+    message: string,
+    options: Omit<DomainErrorOptions, "permanent"> = {},
+  ) {
+    super(message, { ...options, permanent: true });
   }
 }
