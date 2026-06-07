@@ -29,6 +29,8 @@ export class Enigma {
 
   public async assert(data: string, hash: string): Promise<void> {
     if (await this.verify(data, hash)) return;
-    throw new EnigmaError("Invalid Layered data");
+    throw new EnigmaError("Invalid Layered data", {
+      code: "layered_data_mismatch",
+    });
   }
 }
