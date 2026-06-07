@@ -22,7 +22,10 @@ export const publishRabbitMessages = async <M extends IMessage>(
   _logger: ILogger,
 ): Promise<void> => {
   if (!state.publishChannel) {
-    throw new IrisPublishError("Publish channel not available");
+    throw new IrisPublishError("Publish channel not available", {
+      code: "publish_connection_unavailable",
+      data: { driver: "rabbit" },
+    });
   }
 
   const prepared = await preparePublishBatch(messages, options, driver);

@@ -77,11 +77,16 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     const cb = typeof queueOrOptions === "string" ? callback : queueOrOptions.callback;
 
     if (!cb) {
-      throw new IrisDriverError("consume() requires a callback");
+      throw new IrisDriverError("consume() requires a callback", {
+        code: "consume_callback_required",
+      });
     }
 
     if (!this.state.kafka) {
-      throw new IrisDriverError("Cannot consume: Kafka client is not connected");
+      throw new IrisDriverError("Cannot consume: Kafka client is not connected", {
+        code: "connection_unavailable",
+        data: { driver: "kafka" },
+      });
     }
 
     const kafkaTopic = resolveTopicName(this.state.prefix, queue);
@@ -96,7 +101,10 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     const getConsumer = (): KafkaConsumer => {
       const p = this.state.consumerPool.get(groupId);
       if (!p)
-        throw new IrisDriverError("Pooled consumer not found for group: " + groupId);
+        throw new IrisDriverError("Pooled consumer not found for group: " + groupId, {
+          code: "consumer_not_found",
+          data: { driver: "kafka", groupId },
+        });
       return p.consumer;
     };
 
@@ -127,6 +135,10 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       if (!p)
         throw new IrisDriverError(
           "Pooled consumer not found for group: " + broadcastGroupId,
+          {
+            code: "consumer_not_found",
+            data: { driver: "kafka", groupId: broadcastGroupId },
+          },
         );
       return p.consumer;
     };

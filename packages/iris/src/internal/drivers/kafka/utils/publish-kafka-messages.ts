@@ -27,7 +27,10 @@ export const publishKafkaMessages = async <M extends IMessage>(
   publishOptions?: PublishKafkaMessagesOptions,
 ): Promise<void> => {
   if (!state.producer) {
-    throw new IrisPublishError("Kafka producer not available");
+    throw new IrisPublishError("Kafka producer not available", {
+      code: "publish_connection_unavailable",
+      data: { driver: "kafka" },
+    });
   }
 
   const prepared = await preparePublishBatch(messages, options, driver);

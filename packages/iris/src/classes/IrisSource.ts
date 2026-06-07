@@ -72,13 +72,19 @@ export class IrisSource implements IIrisSource {
 
       case "rabbit": {
         if (!options.url)
-          throw new IrisSourceError('Rabbit driver requires a "url" option');
+          throw new IrisSourceError('Rabbit driver requires a "url" option', {
+            code: "missing_driver_option",
+            data: { driver: options.driver, option: "url" },
+          });
         break;
       }
 
       case "kafka": {
         if (!options.brokers?.length)
-          throw new IrisSourceError('Kafka driver requires a non-empty "brokers" array');
+          throw new IrisSourceError('Kafka driver requires a non-empty "brokers" array', {
+            code: "missing_driver_option",
+            data: { driver: options.driver, option: "brokers" },
+          });
         break;
       }
 
@@ -87,7 +93,10 @@ export class IrisSource implements IIrisSource {
           !options.servers ||
           (Array.isArray(options.servers) && options.servers.length === 0)
         )
-          throw new IrisSourceError('NATS driver requires a "servers" option');
+          throw new IrisSourceError('NATS driver requires a "servers" option', {
+            code: "missing_driver_option",
+            data: { driver: options.driver, option: "servers" },
+          });
         break;
       }
 
@@ -95,6 +104,10 @@ export class IrisSource implements IIrisSource {
         const _exhaustive: never = options;
         throw new IrisNotSupportedError(
           `Unknown driver "${(_exhaustive as any).driver}"`,
+          {
+            code: "unknown_driver",
+            data: { driver: (_exhaustive as any).driver },
+          },
         );
       }
     }
@@ -110,7 +123,9 @@ export class IrisSource implements IIrisSource {
 
   public async addMessages(input: MessageScannerInput): Promise<void> {
     if (this.isSetUp) {
-      throw new IrisSourceError("Cannot add messages after setup() has been called");
+      throw new IrisSourceError("Cannot add messages after setup() has been called", {
+        code: "messages_after_setup",
+      });
     }
     const scanned = await MessageScanner.scan(input);
     for (const msg of scanned) {
@@ -254,7 +269,9 @@ export class IrisSource implements IIrisSource {
 
   private requireDriver(): IIrisDriver {
     if (!this._driver) {
-      throw new IrisSourceError("Driver not connected. Call connect() first.");
+      throw new IrisSourceError("Driver not connected. Call connect() first.", {
+        code: "driver_not_connected",
+      });
     }
     return this._driver;
   }
@@ -405,7 +422,13 @@ export class IrisSource implements IIrisSource {
 
       default: {
         const _exhaustive: never = this._options;
-        throw new IrisNotSupportedError(`Unknown driver: ${(_exhaustive as any).driver}`);
+        throw new IrisNotSupportedError(
+          `Unknown driver: ${(_exhaustive as any).driver}`,
+          {
+            code: "unknown_driver",
+            data: { driver: (_exhaustive as any).driver },
+          },
+        );
       }
     }
   }

@@ -5,7 +5,9 @@ export const Version =
   (version: number) =>
   (_target: Function, context: ClassDecoratorContext): void => {
     if (!Number.isInteger(version) || version < 1) {
-      throw new IrisMetadataError("@Version value must be a positive integer");
+      throw new IrisMetadataError("@Version value must be a positive integer", {
+        code: "invalid_version",
+      });
     }
 
     stageVersion(context.metadata, version);

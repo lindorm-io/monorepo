@@ -19,6 +19,7 @@ import type {
 } from "../../../../types/index.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { RabbitMessageBus } from "./RabbitMessageBus.js";
 import { RabbitPublisher } from "./RabbitPublisher.js";
 import { RabbitRpcClient } from "./RabbitRpcClient.js";
@@ -238,7 +239,10 @@ export class RabbitDriver implements IIrisDriver {
   public async setup(_messages: Array<Constructor<IMessage>>): Promise<void> {
     const channel = this.state.publishChannel;
     if (!channel) {
-      throw new Error("Cannot setup: publish channel is not available");
+      throw new IrisDriverError("Cannot setup: publish channel is not available", {
+        code: "connection_unavailable",
+        data: { driver: "rabbit" },
+      });
     }
 
     await channel.assertExchange(this.state.exchange, "topic", { durable: true });

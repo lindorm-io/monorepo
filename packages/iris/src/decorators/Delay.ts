@@ -5,7 +5,9 @@ export const Delay =
   (ms: number) =>
   (_target: Function, context: ClassDecoratorContext): void => {
     if (!Number.isInteger(ms) || ms < 0) {
-      throw new IrisMetadataError("@Delay value must be a non-negative integer");
+      throw new IrisMetadataError("@Delay value must be a non-negative integer", {
+        code: "invalid_delay",
+      });
     }
     stageDelay(context.metadata, ms);
   };

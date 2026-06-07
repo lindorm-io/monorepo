@@ -5,7 +5,9 @@ export const Expiry =
   (ms: number) =>
   (_target: Function, context: ClassDecoratorContext): void => {
     if (!Number.isInteger(ms) || ms < 0) {
-      throw new IrisMetadataError("@Expiry value must be a non-negative integer");
+      throw new IrisMetadataError("@Expiry value must be a non-negative integer", {
+        code: "invalid_expiry",
+      });
     }
     stageExpiry(context.metadata, ms);
   };

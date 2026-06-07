@@ -36,7 +36,10 @@ export class NatsRpcServer<
     handler: (request: Req) => Promise<Res>,
   ): Promise<void> {
     if (!this.state.nc || !this.state.headersInit) {
-      throw new IrisDriverError("Cannot serve RPC: connection is not available");
+      throw new IrisDriverError("Cannot serve RPC: connection is not available", {
+        code: "connection_unavailable",
+        data: { driver: "nats" },
+      });
     }
 
     // Use _rpc_ prefix to keep RPC outside the JetStream stream ({prefix}.>)

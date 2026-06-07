@@ -61,6 +61,6 @@ describe("createDelayStore", () => {
 
     await expect(
       createDelayStore({ type: "redis", url: "redis://localhost:9999" }),
-    ).rejects.toThrow("Failed to connect delay store to Redis at redis://localhost:9999");
+    ).rejects.toThrow("Failed to connect delay store to Redis");
   });
 });

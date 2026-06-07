@@ -35,6 +35,7 @@ const getValidator = (field: MetaField): z.ZodType | undefined => {
       if (!field.enum) {
         throw new IrisSerializationError(
           `Field "${field.key}" has type "enum" but no enum values provided`,
+          { code: "missing_enum_values", data: { field: field.key } },
         );
       }
       return z.nativeEnum(

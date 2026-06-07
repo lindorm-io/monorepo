@@ -64,8 +64,6 @@ describe("createDeadLetterStore", () => {
 
     await expect(
       createDeadLetterStore({ type: "redis", url: "redis://localhost:9999" }),
-    ).rejects.toThrow(
-      "Failed to connect dead letter store to Redis at redis://localhost:9999",
-    );
+    ).rejects.toThrow("Failed to connect dead letter store to Redis");
   });
 });

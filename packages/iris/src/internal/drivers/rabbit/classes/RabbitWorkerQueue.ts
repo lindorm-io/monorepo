@@ -62,12 +62,17 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     const cb = typeof queueOrOptions === "string" ? callback : queueOrOptions.callback;
 
     if (!cb) {
-      throw new IrisDriverError("consume() requires a callback");
+      throw new IrisDriverError("consume() requires a callback", {
+        code: "consume_callback_required",
+      });
     }
 
     const channel = this.state.consumeChannel;
     if (!channel) {
-      throw new IrisDriverError("Cannot consume: consume channel is not available");
+      throw new IrisDriverError("Cannot consume: consume channel is not available", {
+        code: "connection_unavailable",
+        data: { driver: "rabbit" },
+      });
     }
 
     let queueName: string;

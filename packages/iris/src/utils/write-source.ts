@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import { join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
+import { IrisNotSupportedError } from "../errors/IrisNotSupportedError.js";
 import {
   generateSource,
   type GenerateSourceOptions,
@@ -16,8 +17,9 @@ export const writeSource = async (options: WriteSourceOptions): Promise<void> =>
   const { driver, directory, dryRun, loggerImport, configImport } = options;
 
   if (!IRIS_ALL_DRIVERS.includes(driver)) {
-    throw new Error(
+    throw new IrisNotSupportedError(
       `Unknown driver: ${driver}. Valid drivers: ${IRIS_ALL_DRIVERS.join(", ")}`,
+      { code: "unknown_driver", data: { driver, drivers: IRIS_ALL_DRIVERS } },
     );
   }
 

@@ -76,11 +76,16 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
     const cb = typeof queueOrOptions === "string" ? callback : queueOrOptions.callback;
 
     if (!cb) {
-      throw new IrisDriverError("consume() requires a callback");
+      throw new IrisDriverError("consume() requires a callback", {
+        code: "consume_callback_required",
+      });
     }
 
     if (!this.state.js || !this.state.jsm) {
-      throw new IrisDriverError("Cannot consume: connection is not available");
+      throw new IrisDriverError("Cannot consume: connection is not available", {
+        code: "connection_unavailable",
+        data: { driver: "nats" },
+      });
     }
 
     const subject = resolveSubject(this.state.prefix, queue);

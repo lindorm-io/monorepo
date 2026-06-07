@@ -22,6 +22,8 @@ export const serializeMessage = (
         throw new IrisSerializationError(
           `@Transform.to failed for field "${field.key}"`,
           {
+            code: "transform_to_failed",
+            data: { field: field.key },
             error: error instanceof Error ? error : undefined,
           },
         );
@@ -45,7 +47,11 @@ export const serializeMessage = (
   } catch (error) {
     throw new IrisSerializationError(
       `Failed to serialize message "${metadata.message.name}"`,
-      { debug: { error: error instanceof Error ? error.message : String(error) } },
+      {
+        code: "message_serialize_failed",
+        data: { message: metadata.message.name },
+        debug: { error: error instanceof Error ? error.message : String(error) },
+      },
     );
   }
 

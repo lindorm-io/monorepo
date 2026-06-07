@@ -66,7 +66,10 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     }
 
     if (!this.state.js || !this.state.jsm) {
-      throw new IrisDriverError("Cannot subscribe: connection is not available");
+      throw new IrisDriverError("Cannot subscribe: connection is not available", {
+        code: "connection_unavailable",
+        data: { driver: "nats" },
+      });
     }
 
     const subject = resolveSubject(this.state.prefix, options.topic);

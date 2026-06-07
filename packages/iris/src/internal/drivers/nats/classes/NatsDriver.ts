@@ -20,6 +20,7 @@ import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.j
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { IAmphora } from "@lindorm/amphora";
 import type { NatsConnection, NatsSharedState } from "../types/nats-types.js";
+import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
 import { ensureNatsStream } from "../utils/ensure-nats-stream.js";
 import { resolveSubject } from "../utils/resolve-subject.js";
@@ -288,7 +289,13 @@ export class NatsDriver implements IIrisDriver {
       }
       await new Promise((r) => setTimeout(r, 25));
     }
-    throw new Error(`waitForStreamGone: ${streamName} still exists after ${timeoutMs}ms`);
+    throw new IrisTimeoutError(
+      `waitForStreamGone: ${streamName} still exists after ${timeoutMs}ms`,
+      {
+        code: "stream_deletion_timeout",
+        data: { driver: "nats", streamName, timeoutMs },
+      },
+    );
   }
 
   public getConnectionState(): IrisConnectionState {

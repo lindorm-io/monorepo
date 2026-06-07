@@ -1,4 +1,5 @@
 import type { ILogger } from "@lindorm/logger";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { KafkaClient, KafkaSharedState } from "../types/kafka-types.js";
 
 export const ensureKafkaTopic = async (
@@ -33,7 +34,10 @@ export const ensureKafkaTopicFromState = async (
   logger: ILogger,
 ): Promise<void> => {
   if (!state.kafka) {
-    throw new Error("Cannot ensure topic: Kafka client is not connected");
+    throw new IrisDriverError("Cannot ensure topic: Kafka client is not connected", {
+      code: "connection_unavailable",
+      data: { driver: "kafka", topic },
+    });
   }
   await ensureKafkaTopic(state.kafka, topic, state.createdTopics, logger);
 };

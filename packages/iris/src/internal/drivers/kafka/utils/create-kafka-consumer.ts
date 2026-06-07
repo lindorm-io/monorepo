@@ -9,6 +9,7 @@ import type {
   KafkaEachMessagePayload,
   KafkaPooledConsumer,
 } from "../types/kafka-types.js";
+import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { ensureKafkaTopic } from "./ensure-kafka-topic.js";
 
 export type { CreateKafkaConsumerOptions, GetOrCreatePooledConsumerOptions };
@@ -146,7 +147,10 @@ export const getOrCreatePooledConsumer = async (
   const { state, groupId, topic, onMessage, logger, fromBeginning = false } = options;
 
   if (!state.kafka) {
-    throw new Error("Cannot create pooled consumer: Kafka client is not connected");
+    throw new IrisDriverError(
+      "Cannot create pooled consumer: Kafka client is not connected",
+      { code: "connection_unavailable", data: { driver: "kafka", groupId } },
+    );
   }
 
   const consumerTag = randomUUID();

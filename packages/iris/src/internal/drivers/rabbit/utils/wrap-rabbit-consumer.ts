@@ -54,7 +54,10 @@ export const wrapRabbitConsumer = <M extends IMessage>(
       },
       retry: async (retryEnvelope: IrisEnvelope, _topic: string, retryDelay: number) => {
         if (!state.publishChannel) {
-          throw new IrisTransportError("Publish channel unavailable during retry");
+          throw new IrisTransportError("Publish channel unavailable during retry", {
+            code: "retry_mechanism_unavailable",
+            data: { driver: "rabbit" },
+          });
         }
 
         const routingKey = sanitizeRoutingKey(envelope.topic);

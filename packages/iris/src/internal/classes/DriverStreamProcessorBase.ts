@@ -121,6 +121,7 @@ export abstract class DriverStreamProcessorBase<
     if (this.stages.some((s) => s.type === "batch")) {
       throw new IrisNotSupportedError(
         "Only one batch stage is allowed per stream processor",
+        { code: "duplicate_batch_stage" },
       );
     }
     return this.createSelf({

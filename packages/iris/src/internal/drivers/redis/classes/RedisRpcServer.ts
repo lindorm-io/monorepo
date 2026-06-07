@@ -40,7 +40,10 @@ export class RedisRpcServer<
     handler: (request: Req) => Promise<Res>,
   ): Promise<void> {
     if (!this.state.publishConnection) {
-      throw new IrisDriverError("Cannot serve RPC: connection is not available");
+      throw new IrisDriverError("Cannot serve RPC: connection is not available", {
+        code: "connection_unavailable",
+        data: { driver: "redis" },
+      });
     }
 
     const streamKey = resolveStreamKey(this.state.prefix, `rpc:${topic}`);

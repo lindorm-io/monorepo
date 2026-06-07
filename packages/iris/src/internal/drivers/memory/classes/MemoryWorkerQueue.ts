@@ -63,7 +63,9 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     const cb = typeof queueOrOptions === "string" ? callback : queueOrOptions.callback;
 
     if (!cb) {
-      throw new IrisDriverError("consume() requires a callback");
+      throw new IrisDriverError("consume() requires a callback", {
+        code: "consume_callback_required",
+      });
     }
 
     const consumerTag = randomUUID();

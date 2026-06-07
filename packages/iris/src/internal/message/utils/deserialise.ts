@@ -13,7 +13,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
         throw new IrisSerializationError(
           "Cannot convert value to bigint during deserialisation",
           {
-            debug: { type, value: String(value) },
+            code: "bigint_deserialise_failed",
+            data: { type },
+            debug: { value: String(value) },
           },
         );
       }
@@ -30,7 +32,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
       if (value instanceof Date) {
         if (isNaN(value.getTime())) {
           throw new IrisSerializationError("Invalid Date object during deserialisation", {
-            debug: { type, value: String(value) },
+            code: "invalid_date_deserialise",
+            data: { type },
+            debug: { value: String(value) },
           });
         }
         return value;
@@ -41,7 +45,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
         throw new IrisSerializationError(
           "Cannot convert value to date during deserialisation",
           {
-            debug: { type, value: String(value) },
+            code: "date_deserialise_failed",
+            data: { type },
+            debug: { value: String(value) },
           },
         );
       }
@@ -56,7 +62,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
         throw new IrisSerializationError(
           "Cannot convert value to float during deserialisation",
           {
-            debug: { type, value: String(value) },
+            code: "float_deserialise_failed",
+            data: { type },
+            debug: { value: String(value) },
           },
         );
       }
@@ -74,7 +82,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
         throw new IrisSerializationError(
           "Cannot convert value to integer during deserialisation",
           {
-            debug: { type, value: String(value) },
+            code: "integer_deserialise_failed",
+            data: { type },
+            debug: { value: String(value) },
           },
         );
       }
@@ -89,7 +99,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
           throw new IrisSerializationError(
             "Failed to deserialise array value: invalid JSON",
             {
-              debug: { type, value },
+              code: "array_deserialise_failed",
+              data: { type },
+              debug: { value },
             },
           );
         }
@@ -105,7 +117,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
           throw new IrisSerializationError(
             "Failed to deserialise object value: invalid JSON",
             {
-              debug: { type, value },
+              code: "object_deserialise_failed",
+              data: { type },
+              debug: { value },
             },
           );
         }

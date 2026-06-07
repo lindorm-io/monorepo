@@ -55,6 +55,7 @@ export class MessageScanner {
       throw new IrisScannerError(
         `Failed to load message from "${data.fullPath}": ${err instanceof Error ? err.message : String(err)}`,
         {
+          code: "message_load_failed",
           error: err instanceof Error ? err : undefined,
           debug: { filePath: data.fullPath },
         },
@@ -62,7 +63,9 @@ export class MessageScanner {
     }
     const values = Object.values(module);
     if (values.length === 0) {
-      throw new IrisScannerError(`No messages found in file: ${data.fullPath}`);
+      throw new IrisScannerError(`No messages found in file: ${data.fullPath}`, {
+        code: "no_messages_in_file",
+      });
     }
     const result: Array<Constructor<T>> = [];
     for (const value of values) {
@@ -71,7 +74,9 @@ export class MessageScanner {
       }
     }
     if (result.length === 0) {
-      throw new IrisScannerError(`No messages found in file: ${data.fullPath}`);
+      throw new IrisScannerError(`No messages found in file: ${data.fullPath}`, {
+        code: "no_messages_in_file",
+      });
     }
     return result;
   }

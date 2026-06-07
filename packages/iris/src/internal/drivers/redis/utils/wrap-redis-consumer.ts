@@ -13,6 +13,7 @@ import type {
   RedisStreamEntry,
   WrapRedisConsumerOptions,
 } from "../types/redis-types.js";
+import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import { resolveStreamKey } from "./resolve-stream-key.js";
 import { serializeStreamFields } from "./serialize-stream-fields.js";
 import { xaddToStream } from "./xadd-to-stream.js";
@@ -63,8 +64,9 @@ export const wrapRedisConsumer = <M extends IMessage>(
             await xaddToStream(conn, streamKey, fields, state.maxStreamLength);
             state.publishedStreams.add(streamKey);
           } else {
-            throw new Error(
+            throw new IrisTransportError(
               "No retry mechanism available: both delay manager and publish connection are unavailable",
+              { code: "retry_mechanism_unavailable", data: { driver: "redis" } },
             );
           }
         }

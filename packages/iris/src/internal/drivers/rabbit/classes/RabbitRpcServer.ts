@@ -40,7 +40,10 @@ export class RabbitRpcServer<
   ): Promise<void> {
     const channel = this.state.consumeChannel;
     if (!channel) {
-      throw new IrisDriverError("Cannot serve RPC: consume channel is not available");
+      throw new IrisDriverError("Cannot serve RPC: consume channel is not available", {
+        code: "connection_unavailable",
+        data: { driver: "rabbit" },
+      });
     }
 
     const queueName = resolveQueueName({

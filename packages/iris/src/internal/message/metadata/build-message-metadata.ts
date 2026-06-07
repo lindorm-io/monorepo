@@ -34,14 +34,14 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
   if (isAbstract && hasMessage) {
     throw new IrisMetadataError(
       "@AbstractMessage and @Message cannot be used on the same class",
-      { debug: { target: target.name } },
+      { code: "conflicting_message_decorators", debug: { target: target.name } },
     );
   }
 
   if (isAbstract && !hasMessage) {
     throw new IrisMetadataError(
       "Cannot build metadata for abstract message without @Message on concrete subclass",
-      { debug: { target: target.name } },
+      { code: "abstract_message_not_concrete", debug: { target: target.name } },
     );
   }
 
@@ -49,6 +49,7 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
 
   if (!message || message.decorator !== "Message") {
     throw new IrisMetadataError("Message metadata not found", {
+      code: "message_metadata_not_found",
       debug: { target: target.name },
     });
   }
@@ -56,6 +57,7 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
   // Guard: concrete extending concrete
   if (hasConcreteAncestor(target)) {
     throw new IrisMetadataError("@Message class cannot extend another @Message class", {
+      code: "message_extends_message",
       debug: { target: target.name },
     });
   }
@@ -88,6 +90,7 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
   for (const { key } of transforms) {
     if (seenTransformKeys.has(key)) {
       throw new IrisMetadataError("Duplicate @Transform", {
+        code: "duplicate_transform",
         debug: { target: target.name, key },
       });
     }
@@ -100,7 +103,10 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
     if (!field) {
       throw new IrisMetadataError(
         `@Transform on property "${transform.key}" requires a @Field decorator`,
-        { debug: { target: target.name, property: transform.key } },
+        {
+          code: "transform_without_field",
+          debug: { target: target.name, property: transform.key },
+        },
       );
     }
     field.transform = transform.transform;
@@ -113,7 +119,10 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
     if (!field) {
       throw new IrisMetadataError(
         `@${mod.decorator} on property "${mod.key}" requires a @Field decorator`,
-        { debug: { target: target.name, property: mod.key } },
+        {
+          code: "field_modifier_without_field",
+          debug: { target: target.name, property: mod.key, decorator: mod.decorator },
+        },
       );
     }
     if (mod.min != null) field.min = mod.min;

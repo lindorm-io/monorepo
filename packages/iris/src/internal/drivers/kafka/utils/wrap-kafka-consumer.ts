@@ -13,6 +13,7 @@ import type {
   KafkaSharedState,
   WrapKafkaConsumerOptions,
 } from "../types/kafka-types.js";
+import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import { resolveTopicName } from "./resolve-topic-name.js";
 import { parseKafkaMessage } from "./parse-kafka-message.js";
 import { serializeKafkaMessage } from "./serialize-kafka-message.js";
@@ -77,8 +78,9 @@ export const wrapKafkaConsumer = <M extends IMessage>(
             acks: state.acks,
           });
         } else {
-          throw new Error(
+          throw new IrisTransportError(
             "No retry mechanism available: both delay manager and producer are unavailable",
+            { code: "retry_mechanism_unavailable", data: { driver: "kafka" } },
           );
         }
       },
