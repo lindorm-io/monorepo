@@ -520,7 +520,10 @@ describe("Amphora", () => {
         expect((error as AmphoraError).message).toBe(
           "Kryptos not found using query after refresh",
         );
-        expect((error as AmphoraError).debug).toEqual({
+        expect((error as AmphoraError).code).toBe(
+          "kryptos_not_found_by_query_after_refresh",
+        );
+        expect((error as AmphoraError).data).toEqual({
           queryKeys: ["issuer", "id"],
           totalKeys: 2,
           activeKeys: 2,
@@ -541,7 +544,8 @@ describe("Amphora", () => {
         expect((error as AmphoraError).message).toBe(
           "Kryptos not found using query (sync, no refresh)",
         );
-        expect((error as AmphoraError).debug).toEqual({
+        expect((error as AmphoraError).code).toBe("kryptos_not_found_by_query_sync");
+        expect((error as AmphoraError).data).toEqual({
           queryKeys: ["issuer", "id"],
           totalKeys: 2,
           activeKeys: 2,
