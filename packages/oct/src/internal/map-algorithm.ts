@@ -15,7 +15,8 @@ const OCT_SIG_ALGORITHM_MAP: Record<OctSigAlgorithm, ShaAlgorithm> = {
 export const mapOctAlgorithm = (kryptos: IKryptosOct): ShaAlgorithm => {
   if (!OCT_SIG_ALGORITHMS.includes(kryptos.algorithm as OctSigAlgorithm)) {
     throw new OctError("Unsupported OCT algorithm for signing", {
-      debug: { algorithm: kryptos.algorithm },
+      code: "unsupported_signing_algorithm",
+      data: { algorithm: kryptos.algorithm },
     });
   }
 
