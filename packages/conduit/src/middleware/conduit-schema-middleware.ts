@@ -14,12 +14,17 @@ export const conduitSchemaMiddleware = <T extends ZodRawShape>(
       } else if (schema instanceof ZodArray) {
         ctx.res.data = schema.parse(ctx.res.data);
       } else {
-        throw new ServerError("Invalid Zod schema provided");
+        throw new ServerError("Invalid Zod schema provided", {
+          code: "invalid_zod_schema",
+          type: "urn:lindorm:conduit:error:invalid_zod_schema",
+        });
       }
     } catch (err: any) {
       throw new BadGatewayError(err.message, {
+        code: "response_schema_validation_failed",
+        type: "urn:lindorm:conduit:error:response_schema_validation_failed",
         error: err,
-        data: err.details,
+        debug: { issues: err.details },
       });
     }
   };

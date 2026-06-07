@@ -147,6 +147,8 @@ export const conduitClientCredentialsMiddlewareFactory = (
 
         if (!tokenUri) {
           throw new BadGatewayError("Token endpoint not found in OpenID configuration", {
+            code: "token_endpoint_not_found",
+            type: "urn:lindorm:conduit:error:token_endpoint_not_found",
             debug: { issuer },
           });
         }
@@ -173,6 +175,8 @@ export const conduitClientCredentialsMiddlewareFactory = (
         requestOptions.form = form;
       } else {
         throw new InternalServerError("Unsupported content type", {
+          code: "unsupported_content_type",
+          type: "urn:lindorm:conduit:error:unsupported_content_type",
           debug: { contentType },
         });
       }
@@ -218,11 +222,19 @@ export const conduitClientCredentialsMiddlewareFactory = (
             : undefined;
 
       if (!data.accessToken) {
-        throw new BadGatewayError("Token not provided", { debug: data });
+        throw new BadGatewayError("Token not provided", {
+          code: "token_not_provided",
+          type: "urn:lindorm:conduit:error:token_not_provided",
+          debug: { response: data },
+        });
       }
 
       if (!ttl) {
-        throw new BadGatewayError("Token expiration not provided", { debug: data });
+        throw new BadGatewayError("Token expiration not provided", {
+          code: "token_expiration_not_provided",
+          type: "urn:lindorm:conduit:error:token_expiration_not_provided",
+          debug: { response: data },
+        });
       }
 
       replaceInCache(cache, {

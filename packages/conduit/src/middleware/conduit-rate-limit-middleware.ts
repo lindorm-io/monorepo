@@ -49,7 +49,15 @@ export const createConduitRateLimitMiddleware = (
     bucket.lastRefill = now;
 
     if (bucket.tokens < 1) {
-      throw new TooManyRequestsError("Rate limit exceeded");
+      throw new TooManyRequestsError("Rate limit exceeded", {
+        code: "rate_limit_exceeded",
+        type: "urn:lindorm:conduit:error:rate_limit_exceeded",
+        data: {
+          limit: maxRequests,
+          windowMs,
+          retryAfter: Math.ceil((1 - bucket.tokens) / refillRate / 1000),
+        },
+      });
     }
 
     bucket.tokens -= 1;
