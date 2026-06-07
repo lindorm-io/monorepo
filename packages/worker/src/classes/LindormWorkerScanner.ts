@@ -74,6 +74,10 @@ export class LindormWorkerScanner {
     if (!isFunction(module.CALLBACK)) {
       throw new LindormWorkerScannerError(
         `No LindormWorker export or CALLBACK export found in file: ${data.fullPath}`,
+        {
+          code: "missing_worker_export",
+          data: { fullPath: data.fullPath },
+        },
       );
     }
 
@@ -82,6 +86,10 @@ export class LindormWorkerScanner {
     if (!isReadableTime(module.INTERVAL) && !isNumber(module.INTERVAL)) {
       throw new LindormWorkerScannerError(
         `Missing INTERVAL export in file: ${data.fullPath}`,
+        {
+          code: "missing_interval_export",
+          data: { fullPath: data.fullPath },
+        },
       );
     }
 
