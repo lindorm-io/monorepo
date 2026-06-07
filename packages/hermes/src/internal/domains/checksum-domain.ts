@@ -142,6 +142,14 @@ export class ChecksumDomain {
       if (existing.checksum !== computedChecksum) {
         throw new ChecksumError(
           `Checksum mismatch for event ${message.id}: stored=${existing.checksum}, computed=${computedChecksum}`,
+          {
+            code: "checksum_mismatch",
+            data: {
+              eventId: message.id,
+              stored: existing.checksum,
+              computed: computedChecksum,
+            },
+          },
         );
       }
       return;

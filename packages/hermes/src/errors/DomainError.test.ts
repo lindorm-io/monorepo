@@ -113,7 +113,7 @@ describe("ChecksumError", () => {
 
   it("should accept an optional cause error", () => {
     const cause = new Error("underlying issue");
-    const error = new ChecksumError("checksum mismatch", cause);
+    const error = new ChecksumError("checksum mismatch", { error: cause });
 
     expect(error.permanent).toBe(true);
     expect(error).toMatchSnapshot();

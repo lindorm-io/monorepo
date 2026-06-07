@@ -4,7 +4,7 @@ import type { AggregateIdentifier, SagaDispatchOptions } from "../../types/index
 import type { HermesRegistry } from "../registry/index.js";
 import merge from "deepmerge";
 import { z } from "zod";
-import { SagaDestroyedError } from "../../errors/index.js";
+import { DomainError, SagaDestroyedError } from "../../errors/index.js";
 
 export type SagaPendingMessage = {
   kind: "command" | "timeout";
@@ -97,8 +97,12 @@ export class SagaModel<S extends Dict = Dict> {
     const isTimeout = this.registry.isTimeout(message.constructor);
 
     if (!isCommand && !isTimeout) {
-      throw new Error(
+      throw new DomainError(
         `Cannot dispatch message of type ${message.constructor.name} - not registered as command or timeout`,
+        {
+          code: "message_not_dispatchable",
+          data: { message: message.constructor.name },
+        },
       );
     }
 

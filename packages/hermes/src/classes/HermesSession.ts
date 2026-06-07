@@ -61,7 +61,10 @@ export class HermesSession implements IHermesSession {
     );
 
     if (!commandHandler) {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Command handler has not been registered", {
+        code: "command_handler_not_registered",
+        data: { command: metadata.name, version: metadata.version },
+      });
     }
 
     const aggregate: AggregateIdentifier = {
@@ -108,6 +111,8 @@ export class HermesSession implements IHermesSession {
   private assertReady(): void {
     if (this._statusRef.current !== "ready") {
       throw new LindormError("Hermes is not ready", {
+        code: "not_ready",
+        type: "urn:lindorm:hermes:error:not_ready",
         data: { status: this._statusRef.current },
       });
     }

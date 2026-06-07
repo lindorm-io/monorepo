@@ -1,6 +1,10 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
-import { UpcasterChainError } from "../../errors/index.js";
+import {
+  DomainError,
+  HandlerNotRegisteredError,
+  UpcasterChainError,
+} from "../../errors/index.js";
 import type {
   HandlerRegistration,
   RegisteredAggregate,
@@ -75,51 +79,81 @@ export class HermesRegistry {
 
   public getCommand(target: Constructor): RegisteredDto {
     const dto = this.commandsByTarget.get(target);
-    if (!dto) throw new Error(`Command not registered: ${target.name}`);
+    if (!dto)
+      throw new HandlerNotRegisteredError(`Command not registered: ${target.name}`, {
+        code: "command_not_registered",
+        data: { command: target.name },
+      });
     return dto;
   }
 
   public getCommandByName(name: string, version?: number): RegisteredDto {
     if (version !== undefined) {
       const dto = this.commandsByName.get(HermesRegistry.dtoKey(name, version));
-      if (!dto) throw new Error(`Command not found: ${name}:${version}`);
+      if (!dto)
+        throw new HandlerNotRegisteredError(`Command not found: ${name}:${version}`, {
+          code: "command_not_found",
+          data: { command: name, version },
+        });
       return dto;
     }
     // Fallback: search by name only (picks first match)
     for (const dto of this.commandsByName.values()) {
       if (dto.name === name) return dto;
     }
-    throw new Error(`Command not found: ${name}`);
+    throw new HandlerNotRegisteredError(`Command not found: ${name}`, {
+      code: "command_not_found",
+      data: { command: name },
+    });
   }
 
   public getEvent(target: Constructor): RegisteredDto {
     const dto = this.eventsByTarget.get(target);
-    if (!dto) throw new Error(`Event not registered: ${target.name}`);
+    if (!dto)
+      throw new HandlerNotRegisteredError(`Event not registered: ${target.name}`, {
+        code: "event_not_registered",
+        data: { event: target.name },
+      });
     return dto;
   }
 
   public getEventByName(name: string, version?: number): RegisteredDto {
     if (version !== undefined) {
       const dto = this.eventsByName.get(HermesRegistry.dtoKey(name, version));
-      if (!dto) throw new Error(`Event not found: ${name}:${version}`);
+      if (!dto)
+        throw new HandlerNotRegisteredError(`Event not found: ${name}:${version}`, {
+          code: "event_not_found",
+          data: { event: name, version },
+        });
       return dto;
     }
     // Fallback: search by name only (picks first match)
     for (const dto of this.eventsByName.values()) {
       if (dto.name === name) return dto;
     }
-    throw new Error(`Event not found: ${name}`);
+    throw new HandlerNotRegisteredError(`Event not found: ${name}`, {
+      code: "event_not_found",
+      data: { event: name },
+    });
   }
 
   public getQuery(target: Constructor): RegisteredDto {
     const dto = this.queriesByTarget.get(target);
-    if (!dto) throw new Error(`Query not registered: ${target.name}`);
+    if (!dto)
+      throw new HandlerNotRegisteredError(`Query not registered: ${target.name}`, {
+        code: "query_not_registered",
+        data: { query: target.name },
+      });
     return dto;
   }
 
   public getTimeout(target: Constructor): RegisteredDto {
     const dto = this.timeoutsByTarget.get(target);
-    if (!dto) throw new Error(`Timeout not registered: ${target.name}`);
+    if (!dto)
+      throw new HandlerNotRegisteredError(`Timeout not registered: ${target.name}`, {
+        code: "timeout_not_registered",
+        data: { timeout: target.name },
+      });
     return dto;
   }
 
@@ -145,37 +179,61 @@ export class HermesRegistry {
     const aggregate = this.aggregatesByName.get(
       HermesRegistry.domainKey(namespace, name),
     );
-    if (!aggregate) throw new Error(`Aggregate not found: ${namespace}.${name}`);
+    if (!aggregate)
+      throw new HandlerNotRegisteredError(`Aggregate not found: ${namespace}.${name}`, {
+        code: "aggregate_not_found",
+        data: { aggregate: { name, namespace } },
+      });
     return aggregate;
   }
 
   public getAggregateByTarget(target: Constructor): RegisteredAggregate {
     const aggregate = this.aggregatesByTarget.get(target);
-    if (!aggregate) throw new Error(`Aggregate not registered: ${target.name}`);
+    if (!aggregate)
+      throw new HandlerNotRegisteredError(`Aggregate not registered: ${target.name}`, {
+        code: "aggregate_not_registered",
+        data: { aggregate: target.name },
+      });
     return aggregate;
   }
 
   public getSaga(namespace: string, name: string): RegisteredSaga {
     const saga = this.sagasByName.get(HermesRegistry.domainKey(namespace, name));
-    if (!saga) throw new Error(`Saga not found: ${namespace}.${name}`);
+    if (!saga)
+      throw new HandlerNotRegisteredError(`Saga not found: ${namespace}.${name}`, {
+        code: "saga_not_found",
+        data: { saga: { name, namespace } },
+      });
     return saga;
   }
 
   public getSagaByTarget(target: Constructor): RegisteredSaga {
     const saga = this.sagasByTarget.get(target);
-    if (!saga) throw new Error(`Saga not registered: ${target.name}`);
+    if (!saga)
+      throw new HandlerNotRegisteredError(`Saga not registered: ${target.name}`, {
+        code: "saga_not_registered",
+        data: { saga: target.name },
+      });
     return saga;
   }
 
   public getView(namespace: string, name: string): RegisteredView {
     const view = this.viewsByName.get(HermesRegistry.domainKey(namespace, name));
-    if (!view) throw new Error(`View not found: ${namespace}.${name}`);
+    if (!view)
+      throw new HandlerNotRegisteredError(`View not found: ${namespace}.${name}`, {
+        code: "view_not_found",
+        data: { view: { name, namespace } },
+      });
     return view;
   }
 
   public getViewByTarget(target: Constructor): RegisteredView {
     const view = this.viewsByTarget.get(target);
-    if (!view) throw new Error(`View not registered: ${target.name}`);
+    if (!view)
+      throw new HandlerNotRegisteredError(`View not registered: ${target.name}`, {
+        code: "view_not_registered",
+        data: { view: target.name },
+      });
     return view;
   }
 
@@ -185,7 +243,10 @@ export class HermesRegistry {
         return view;
       }
     }
-    throw new Error(`No view registered for entity: ${entity.name}`);
+    throw new HandlerNotRegisteredError(`No view registered for entity: ${entity.name}`, {
+      code: "view_not_registered_for_entity",
+      data: { entity: entity.name },
+    });
   }
 
   // -- Handler lookup --
@@ -217,7 +278,13 @@ export class HermesRegistry {
         return aggregate;
       }
     }
-    throw new Error(`No aggregate found for event: ${eventTarget.name}`);
+    throw new HandlerNotRegisteredError(
+      `No aggregate found for event: ${eventTarget.name}`,
+      {
+        code: "aggregate_not_found_for_event",
+        data: { event: eventTarget.name },
+      },
+    );
   }
 
   public getViewsForEvent(eventTarget: Constructor): Array<RegisteredView> {
@@ -278,6 +345,10 @@ export class HermesRegistry {
       if (!upcaster) {
         throw new UpcasterChainError(
           `Upcaster chain gap: no upcaster from v${current} for event "${eventName}"`,
+          {
+            code: "upcaster_chain_gap",
+            data: { event: eventName, fromVersion: current, toVersion },
+          },
         );
       }
       chain.push(upcaster);
@@ -399,10 +470,17 @@ export class HermesRegistry {
         const dto = this.eventsByTarget.get(handler.trigger);
         if (!dto) continue;
         if (seenEventNames.has(dto.name)) {
-          throw new Error(
+          throw new DomainError(
             `Aggregate "${aggregate.namespace}.${aggregate.name}" has duplicate event handlers ` +
               `for event "${dto.name}". Only one handler per event name is allowed ` +
               `(use @EventUpcaster for version migration).`,
+            {
+              code: "duplicate_aggregate_event_handler",
+              data: {
+                aggregate: { name: aggregate.name, namespace: aggregate.namespace },
+                event: dto.name,
+              },
+            },
           );
         }
         seenEventNames.add(dto.name);
@@ -417,9 +495,13 @@ export class HermesRegistry {
         }
 
         if (versionMap.has(upcaster.fromVersion)) {
-          throw new Error(
+          throw new DomainError(
             `Duplicate upcaster: event "${upcaster.fromName}" v${upcaster.fromVersion} ` +
               `is already registered`,
+            {
+              code: "duplicate_upcaster",
+              data: { event: upcaster.fromName, fromVersion: upcaster.fromVersion },
+            },
           );
         }
 

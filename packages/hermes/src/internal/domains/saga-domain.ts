@@ -233,7 +233,13 @@ export class SagaDomain {
       const handlerFn = instance[handler.methodName];
 
       if (typeof handlerFn !== "function") {
-        throw new HandlerNotRegisteredError();
+        throw new HandlerNotRegisteredError("Saga event handler method is not callable", {
+          code: "saga_handler_method_not_callable",
+          data: {
+            saga: { name: saga.name, namespace: saga.namespace },
+            method: handler.methodName,
+          },
+        });
       }
 
       await handlerFn.call(instance, ctx);
@@ -314,7 +320,16 @@ export class SagaDomain {
       const handlerFn = instance[handler.methodName];
 
       if (typeof handlerFn !== "function") {
-        throw new HandlerNotRegisteredError();
+        throw new HandlerNotRegisteredError(
+          "Saga timeout handler method is not callable",
+          {
+            code: "saga_handler_method_not_callable",
+            data: {
+              saga: { name: saga.name, namespace: saga.namespace },
+              method: handler.methodName,
+            },
+          },
+        );
       }
 
       await handlerFn.call(instance, ctx);
@@ -368,7 +383,13 @@ export class SagaDomain {
     const handlerFn = instance[handler.methodName];
 
     if (typeof handlerFn !== "function") {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Saga error handler method is not callable", {
+        code: "saga_handler_method_not_callable",
+        data: {
+          saga: { name: saga.name, namespace: saga.namespace },
+          method: handler.methodName,
+        },
+      });
     }
 
     await handlerFn.call(instance, ctx);
@@ -394,7 +415,10 @@ export class SagaDomain {
     const commandAggregate = this.registry.getCommandHandler(command.constructor);
 
     if (!commandAggregate) {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Command handler has not been registered", {
+        code: "command_handler_not_registered",
+        data: { command: metadata.name, version: metadata.version },
+      });
     }
 
     const { ...data } = command;
@@ -582,8 +606,16 @@ export class SagaDomain {
           });
 
           if (!existing) {
-            throw new Error(
+            throw new DomainError(
               `Saga record not found for update: ${model.namespace}.${model.name}#${model.id}`,
+              {
+                code: "saga_record_not_found",
+                data: {
+                  sagaId: model.id,
+                  sagaName: model.name,
+                  sagaNamespace: model.namespace,
+                },
+              },
             );
           }
 
@@ -607,6 +639,7 @@ export class SagaDomain {
     } catch (err: unknown) {
       if (isNew && this.isDuplicateKeyError(err)) {
         throw new ConcurrencyError("Concurrency conflict creating saga", {
+          code: "concurrency_conflict",
           data: {
             sagaId: model.id,
             sagaName: model.name,
@@ -618,6 +651,7 @@ export class SagaDomain {
         throw new ConcurrencyError(
           "Concurrency conflict updating saga (optimistic lock)",
           {
+            code: "saga_optimistic_lock",
             data: {
               sagaId: model.id,
               sagaName: model.name,

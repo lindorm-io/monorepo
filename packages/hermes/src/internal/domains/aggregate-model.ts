@@ -149,7 +149,14 @@ export class AggregateModel<S extends Dict = Dict> {
           event: message.name,
           version: message.version,
         });
-        throw new HandlerNotRegisteredError();
+        throw new HandlerNotRegisteredError("Event handler has not been registered", {
+          code: "event_handler_not_registered",
+          data: {
+            aggregate: { name: this.name, namespace: this.namespace },
+            event: message.name,
+            version: message.version,
+          },
+        });
       }
 
       const handlerDto = this.registry.getEvent(handlerByName.trigger);
@@ -163,7 +170,15 @@ export class AggregateModel<S extends Dict = Dict> {
           eventVersion: message.version,
           handlerVersion: handlerDto.version,
         });
-        throw new HandlerNotRegisteredError();
+        throw new HandlerNotRegisteredError("Event version exceeds handler version", {
+          code: "event_version_exceeds_handler",
+          data: {
+            aggregate: { name: this.name, namespace: this.namespace },
+            event: message.name,
+            eventVersion: message.version,
+            handlerVersion: handlerDto.version,
+          },
+        });
       }
 
       this.logger.debug("Upcasting event", {
@@ -249,7 +264,13 @@ export class AggregateModel<S extends Dict = Dict> {
     const method = (instance as Record<string, unknown>)[handler.methodName];
 
     if (typeof method !== "function") {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Event handler method is not callable", {
+        code: "event_handler_method_not_callable",
+        data: {
+          aggregate: { name: this.name, namespace: this.namespace },
+          method: handler.methodName,
+        },
+      });
     }
 
     return method.bind(instance);
