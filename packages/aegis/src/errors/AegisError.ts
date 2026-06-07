@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm/errors";
 
 export class AegisError extends LindormError {
-  public static readonly errorNamespace = "aegis";
+  public static readonly namespace = "aegis";
 }

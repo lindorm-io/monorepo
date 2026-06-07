@@ -42,7 +42,7 @@ export type LindormErrorOptions = {
 };
 
 export class LindormError extends Error {
-  public static readonly errorNamespace: string | null = null;
+  public static readonly namespace: string | null = null;
 
   public readonly id: string;
   public readonly code: string | number | null;
@@ -87,7 +87,7 @@ export class LindormError extends Error {
       assertValidErrorType(options.type);
       this.type = options.type;
     } else {
-      const namespace = (this.constructor as typeof LindormError).errorNamespace;
+      const namespace = (this.constructor as typeof LindormError).namespace;
       this.type = destruct?.type ?? createErrorTypeUrn(this.code, this.name, namespace);
     }
 
