@@ -89,12 +89,16 @@ export class JwsKit implements IJwsKit {
     // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
     if (parsed.header.critical?.length) {
       for (const param of parsed.header.critical) {
-        throw new JwsError(`Unsupported critical header parameter: ${param}`);
+        throw new JwsError(`Unsupported critical header parameter: ${param}`, {
+          code: "jws_unsupported_crit_param",
+          data: { param },
+        });
       }
     }
 
     if (this.kryptos.algorithm !== parsed.header.algorithm) {
       throw new JwsError("Invalid token", {
+        code: "jws_algorithm_mismatch",
         data: { algorithm: parsed.header.algorithm },
         debug: { expected: this.kryptos.algorithm },
       });
@@ -104,7 +108,8 @@ export class JwsKit implements IJwsKit {
 
     if (!verified) {
       throw new JwsError("Invalid token", {
-        data: { verified, token: token },
+        code: "jws_signature_invalid",
+        debug: { token },
       });
     }
 
@@ -171,6 +176,7 @@ export class JwsKit implements IJwsKit {
       !(typeof typ === "string" && typ.endsWith("+jws"))
     ) {
       throw new JwsError("Invalid token", {
+        code: "jws_invalid_typ",
         data: { typ },
         details: "Header type must be JWS, JOSE, <type>+jws, or undefined",
       });
@@ -179,6 +185,7 @@ export class JwsKit implements IJwsKit {
     const critError = validateCrit(decoded.header);
     if (critError) {
       throw new JwsError(`Invalid crit header: ${critError}`, {
+        code: "jws_invalid_crit",
         data: { crit: decoded.header.crit },
       });
     }

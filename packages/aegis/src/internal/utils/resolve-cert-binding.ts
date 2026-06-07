@@ -19,6 +19,7 @@ export const resolveCertBinding = (
 
   if (!kryptos.hasCertificate) {
     throw new AegisError("bindCertificate requires kryptos with certificateChain", {
+      code: "cert_binding_chain_required",
       debug: { kryptosId: kryptos.id, mode },
     });
   }

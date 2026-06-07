@@ -52,7 +52,9 @@ export class SignatureKit implements IKeyKit {
         return new OctKit(options);
 
       default:
-        throw new AegisError("Unsupported kryptos type");
+        throw new AegisError("Unsupported kryptos type", {
+          code: "unsupported_kryptos_type",
+        });
     }
   }
 }
