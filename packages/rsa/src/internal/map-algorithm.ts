@@ -18,7 +18,8 @@ const RSA_SIG_ALGORITHM_MAP: Record<RsaSigAlgorithm, ShaAlgorithm> = {
 export const mapRsaAlgorithm = (kryptos: IKryptosRsa): ShaAlgorithm => {
   if (!RSA_SIG_ALGORITHMS.includes(kryptos.algorithm as RsaSigAlgorithm)) {
     throw new RsaError("Unsupported RSA algorithm for signing", {
-      debug: { algorithm: kryptos.algorithm },
+      code: "unsupported_signing_algorithm",
+      data: { algorithm: kryptos.algorithm },
     });
   }
 
