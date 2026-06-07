@@ -31,6 +31,7 @@ const computeCanonicalJwk = (jwk: RawJwk): Record<string, unknown> => {
     default:
       throw new JwtError(
         `Cannot compute JWK thumbprint: unsupported kty "${String(jwk.kty)}"`,
+        { code: "jwt_jwk_unsupported_kty", data: { kty: jwk.kty } },
       );
   }
 };

@@ -69,7 +69,9 @@ export class JwtKit implements IJwtKit {
     this.logger.debug("Signing token", { content, options });
 
     if (!this.issuer) {
-      throw new JwtError("Issuer is required to sign JWT");
+      throw new JwtError("Issuer is required to sign JWT", {
+        code: "jwt_issuer_required",
+      });
     }
 
     const objectId = options.objectId;
@@ -118,12 +120,16 @@ export class JwtKit implements IJwtKit {
     // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
     if (parsed.header.critical?.length) {
       for (const param of parsed.header.critical) {
-        throw new JwtError(`Unsupported critical header parameter: ${param}`);
+        throw new JwtError(`Unsupported critical header parameter: ${param}`, {
+          code: "jwt_unsupported_crit_param",
+          data: { param },
+        });
       }
     }
 
     if (this.kryptos.algorithm !== parsed.header.algorithm) {
       throw new JwtError("Invalid token", {
+        code: "jwt_algorithm_mismatch",
         data: { algorithm: parsed.header.algorithm },
         debug: { expected: this.kryptos.algorithm },
       });
@@ -133,6 +139,7 @@ export class JwtKit implements IJwtKit {
       const expectedTyp = computeTypHeader(verify.tokenType, "jwt");
       if (parsed.decoded.header.typ !== expectedTyp) {
         throw new JwtError("Invalid token", {
+          code: "jwt_typ_mismatch",
           data: { typ: parsed.decoded.header.typ },
           debug: { expected: expectedTyp },
         });
@@ -143,7 +150,8 @@ export class JwtKit implements IJwtKit {
 
     if (!verified) {
       throw new JwtError("Invalid token", {
-        data: { verified, token: token },
+        code: "jwt_signature_invalid",
+        debug: { token },
       });
     }
 
@@ -181,12 +189,16 @@ export class JwtKit implements IJwtKit {
     try {
       validate(withDates, predicate);
     } catch (err) {
-      throw new JwtError("Invalid token", { data: (err as any).data });
+      throw new JwtError("Invalid token", {
+        code: "jwt_claims_invalid",
+        data: { invalid: (err as any).data?.invalid },
+        debug: { invalid: (err as any).debug?.invalid },
+      });
     }
 
     const actorError = validateActor(parsed.delegation, verify.actor);
     if (actorError) {
-      throw new JwtError(actorError);
+      throw new JwtError(actorError, { code: "jwt_actor_not_allowed" });
     }
 
     const boundThumbprint = parsed.payload.confirmation?.thumbprint;
@@ -194,6 +206,7 @@ export class JwtKit implements IJwtKit {
     if (verify.dpopProof !== undefined) {
       if (!boundThumbprint) {
         throw new JwtError("Invalid token: DPoP proof provided but token is not bound", {
+          code: "jwt_dpop_token_not_bound",
           debug: { confirmation: parsed.payload.confirmation },
         });
       }
@@ -206,6 +219,7 @@ export class JwtKit implements IJwtKit {
     } else if (boundThumbprint && !verify.trustBoundThumbprint) {
       throw new JwtError(
         "Invalid token: token is DPoP-bound but no DPoP proof was provided",
+        { code: "jwt_dpop_proof_required" },
       );
     }
 
@@ -246,6 +260,7 @@ export class JwtKit implements IJwtKit {
     const typ = decoded.header.typ;
     if (typ !== "JWT" && !(typeof typ === "string" && typ.endsWith("+jwt"))) {
       throw new JwtError("Invalid token", {
+        code: "jwt_invalid_typ",
         data: { typ },
         details: "Header type must be JWT or <type>+jwt",
       });
@@ -254,12 +269,14 @@ export class JwtKit implements IJwtKit {
     const critError = validateCrit(decoded.header);
     if (critError) {
       throw new JwtError(`Invalid crit header: ${critError}`, {
+        code: "jwt_invalid_crit",
         data: { crit: decoded.header.crit },
       });
     }
 
     if (!decoded.payload.iss) {
       throw new JwtError("Invalid token", {
+        code: "jwt_issuer_missing",
         data: { iss: decoded.payload.iss },
         details: "Issuer is required to decode JWT",
       });

@@ -51,16 +51,16 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
   options: SignJwtOptions,
 ): JwtClaims => {
   if (!isString(config.algorithm)) {
-    throw new JwtError("Algorithm is required");
+    throw new JwtError("Algorithm is required", { code: "jwt_algorithm_required" });
   }
   if (!isUrlLike(config.issuer)) {
-    throw new JwtError("Issuer is required");
+    throw new JwtError("Issuer is required", { code: "jwt_issuer_required" });
   }
   if (!content.expires) {
-    throw new JwtError("Expires is required");
+    throw new JwtError("Expires is required", { code: "jwt_expires_required" });
   }
   if (!isString(content.subject)) {
-    throw new JwtError("Subject is required");
+    throw new JwtError("Subject is required", { code: "jwt_subject_required" });
   }
 
   const { expiresOn } = expires(content.expires);
@@ -178,13 +178,13 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
   decoded: DecodeClaims<C>,
 ): ParsedJwtPayload<C> => {
   if (!isFinite(decoded.exp)) {
-    throw new JwtError("Missing claim: exp");
+    throw new JwtError("Missing claim: exp", { code: "jwt_missing_claim_exp" });
   }
   if (!isFinite(decoded.iat)) {
-    throw new JwtError("Missing claim: iat");
+    throw new JwtError("Missing claim: iat", { code: "jwt_missing_claim_iat" });
   }
   if (!isString(decoded.iss)) {
-    throw new JwtError("Missing claim: iss");
+    throw new JwtError("Missing claim: iss", { code: "jwt_missing_claim_iss" });
   }
 
   const { claims: domain, rest } = extractDomainClaims(decoded);
