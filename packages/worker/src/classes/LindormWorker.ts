@@ -67,13 +67,22 @@ export class LindormWorker implements ILindormWorker {
         : 0;
 
     if (this.interval <= 0) {
-      throw new LindormWorkerError("Interval must be a positive number");
+      throw new LindormWorkerError("Interval must be a positive number", {
+        code: "invalid_interval",
+        data: { interval: this.interval },
+      });
     }
     if (this.jitter < 0) {
-      throw new LindormWorkerError("Jitter must be a non-negative number");
+      throw new LindormWorkerError("Jitter must be a non-negative number", {
+        code: "invalid_jitter",
+        data: { jitter: this.jitter },
+      });
     }
     if (this.callbackTimeout < 0) {
-      throw new LindormWorkerError("Callback timeout must be a non-negative number");
+      throw new LindormWorkerError("Callback timeout must be a non-negative number", {
+        code: "invalid_callback_timeout",
+        data: { callbackTimeout: this.callbackTimeout },
+      });
     }
 
     this._destroyed = false;
@@ -286,6 +295,7 @@ export class LindormWorker implements ILindormWorker {
     if (this.callbackTimeout > 0) {
       const timeoutPromise = sleep(this.callbackTimeout).then(() => {
         throw new LindormWorkerError("Callback timed out", {
+          code: "callback_timed_out",
           data: { timeout: this.callbackTimeout },
         });
       });
@@ -320,7 +330,9 @@ export class LindormWorker implements ILindormWorker {
 
   private assertNotDestroyed(): void {
     if (this._destroyed) {
-      throw new LindormWorkerError("Worker has been destroyed");
+      throw new LindormWorkerError("Worker has been destroyed", {
+        code: "worker_destroyed",
+      });
     }
   }
 }
