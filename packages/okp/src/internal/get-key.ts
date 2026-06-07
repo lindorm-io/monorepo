@@ -5,7 +5,9 @@ export const getSignKey = (kryptos: IKryptosOkp): string => {
   const { privateKey } = kryptos.export("pem");
 
   if (!privateKey) {
-    throw new OkpError("Missing private key");
+    throw new OkpError("Missing private key", {
+      code: "missing_private_key",
+    });
   }
 
   return privateKey;
@@ -15,7 +17,9 @@ export const getVerifyKey = (kryptos: IKryptosOkp): string => {
   const { publicKey } = kryptos.export("pem");
 
   if (!publicKey) {
-    throw new OkpError("Missing public key");
+    throw new OkpError("Missing public key", {
+      code: "missing_public_key",
+    });
   }
 
   return publicKey;
