@@ -135,7 +135,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
   public async refresh(): Promise<void> {
     if (!this.auth) {
       throw new ZephyrError("No auth strategy configured", {
-        code: "ZEPHYR_NO_AUTH_STRATEGY",
+        code: "no_auth_strategy_configured",
       });
     }
 
@@ -268,7 +268,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
   private async performRefresh(): Promise<void> {
     if (!this.socket) {
       throw new ZephyrError("Cannot refresh before connect", {
-        code: "ZEPHYR_REFRESH_BEFORE_CONNECT",
+        code: "refresh_before_connect",
       });
     }
 
@@ -419,7 +419,9 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
 
   private assertConnected(): void {
     if (!this.socket?.connected) {
-      throw new ZephyrError("Socket is not connected");
+      throw new ZephyrError("Socket is not connected", {
+        code: "socket_not_connected",
+      });
     }
   }
 }

@@ -142,7 +142,7 @@ describe("createCookieAuthStrategy", () => {
       expect(timeout).toHaveBeenCalledWith(2500);
     });
 
-    it("should throw ZEPHYR_COOKIE_REFRESH_FETCH_FAILED when response is not ok", async () => {
+    it("should throw cookie_refresh_non_ok_response when response is not ok", async () => {
       fetchSpy.mockResolvedValue(
         createResponse({ ok: false, status: 401, body: "Unauthorized" }),
       );
@@ -161,12 +161,12 @@ describe("createCookieAuthStrategy", () => {
       }
 
       expect(caught).toBeInstanceOf(ZephyrError);
-      expect(caught?.code).toBe("ZEPHYR_COOKIE_REFRESH_FETCH_FAILED");
+      expect(caught?.code).toBe("cookie_refresh_non_ok_response");
       expect(caught?.status).toBe(401);
       expect(emitWithAck).not.toHaveBeenCalled();
     });
 
-    it("should throw ZEPHYR_COOKIE_REFRESH_FETCH_ERROR when fetch itself rejects", async () => {
+    it("should throw cookie_refresh_unreachable when fetch itself rejects", async () => {
       fetchSpy.mockRejectedValue(new Error("network down"));
       const emitWithAck = vi.fn();
 
@@ -183,7 +183,7 @@ describe("createCookieAuthStrategy", () => {
       }
 
       expect(caught).toBeInstanceOf(ZephyrError);
-      expect(caught?.code).toBe("ZEPHYR_COOKIE_REFRESH_FETCH_ERROR");
+      expect(caught?.code).toBe("cookie_refresh_unreachable");
       expect(emitWithAck).not.toHaveBeenCalled();
     });
 
@@ -213,11 +213,11 @@ describe("createCookieAuthStrategy", () => {
 
       expect(caught).toBeInstanceOf(ZephyrError);
       expect(caught?.message).toBe("Session revoked");
-      expect(caught?.code).toBe("AUTH_REFRESH_REJECTED");
+      expect(caught?.code).toBe("auth_refresh_rejected");
       expect(caught?.status).toBe(401);
     });
 
-    it("should throw ZEPHYR_AUTH_REFRESH_TIMEOUT when emitWithAck rejects", async () => {
+    it("should throw auth_refresh_ack_timeout when emitWithAck rejects", async () => {
       fetchSpy.mockResolvedValue(createResponse({ ok: true }));
       const emitWithAck = vi.fn().mockRejectedValue(new Error("operation has timed out"));
 
@@ -228,11 +228,11 @@ describe("createCookieAuthStrategy", () => {
 
       await expect(strategy.refresh(socket)).rejects.toMatchObject({
         name: "ZephyrError",
-        code: "ZEPHYR_AUTH_REFRESH_TIMEOUT",
+        code: "auth_refresh_ack_timeout",
       });
     });
 
-    it("should throw ZEPHYR_AUTH_REFRESH_INVALID_ACK when ack is not a pylon envelope", async () => {
+    it("should throw auth_refresh_unrecognised_ack when ack is not a pylon envelope", async () => {
       fetchSpy.mockResolvedValue(createResponse({ ok: true }));
       const emitWithAck = vi.fn().mockResolvedValue({ raw: "data" });
 
@@ -242,7 +242,7 @@ describe("createCookieAuthStrategy", () => {
       const { socket } = createMockSocket(emitWithAck);
 
       await expect(strategy.refresh(socket)).rejects.toMatchObject({
-        code: "ZEPHYR_AUTH_REFRESH_INVALID_ACK",
+        code: "auth_refresh_unrecognised_ack",
       });
     });
   });

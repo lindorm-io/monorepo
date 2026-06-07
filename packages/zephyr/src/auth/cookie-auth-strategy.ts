@@ -73,7 +73,7 @@ export const createCookieAuthStrategy = (
       });
     } catch (err) {
       throw new ZephyrError("Cookie refresh fetch failed to reach server", {
-        code: "ZEPHYR_COOKIE_REFRESH_FETCH_ERROR",
+        code: "cookie_refresh_unreachable",
         data: { refreshUrl: options.refreshUrl },
         error: err instanceof Error ? err : undefined,
       });
@@ -82,9 +82,10 @@ export const createCookieAuthStrategy = (
     if (!response.ok) {
       const body = await readResponseBodySafely(response);
       throw new ZephyrError("Cookie refresh fetch returned non-ok response", {
-        code: "ZEPHYR_COOKIE_REFRESH_FETCH_FAILED",
+        code: "cookie_refresh_non_ok_response",
         status: response.status,
-        data: { refreshUrl: options.refreshUrl, status: response.status, body },
+        data: { refreshUrl: options.refreshUrl, status: response.status },
+        debug: { body },
       });
     }
 
@@ -94,7 +95,7 @@ export const createCookieAuthStrategy = (
       ack = await socket.timeout(timeoutMs).emitWithAck(REFRESH_EVENT, {});
     } catch (err) {
       throw new ZephyrError("Auth refresh ack timed out", {
-        code: "ZEPHYR_AUTH_REFRESH_TIMEOUT",
+        code: "auth_refresh_ack_timeout",
         data: { timeoutMs },
         error: err instanceof Error ? err : undefined,
       });
@@ -102,8 +103,9 @@ export const createCookieAuthStrategy = (
 
     if (!isPylonAck(ack)) {
       throw new ZephyrError("Auth refresh returned unrecognised ack", {
-        code: "ZEPHYR_AUTH_REFRESH_INVALID_ACK",
-        data: { ack: ack as Record<string, unknown> },
+        code: "auth_refresh_unrecognised_ack",
+        data: { ackType: typeof ack },
+        debug: { ack },
       });
     }
 
@@ -112,10 +114,10 @@ export const createCookieAuthStrategy = (
     const error = ack.error ?? {};
 
     throw new ZephyrError(error.message ?? "Auth refresh rejected", {
-      code: error.code ?? "ZEPHYR_AUTH_REFRESH_REJECTED",
+      code: "auth_refresh_rejected",
       status: error.status,
       title: error.title,
-      data: error.data,
+      debug: { serverError: error },
     });
   };
 
