@@ -54,7 +54,10 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
 
     const channel = this.state.consumeChannel;
     if (!channel) {
-      throw new IrisDriverError("Cannot subscribe: consume channel is not available");
+      throw new IrisDriverError("Cannot subscribe: consume channel is not available", {
+        code: "connection_unavailable",
+        data: { driver: "rabbit" },
+      });
     }
 
     const routingKey = sanitizeRoutingKey(options.topic);

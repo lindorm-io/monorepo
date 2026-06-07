@@ -22,12 +22,14 @@ export const prepareInbound = async (
   if (headers["x-iris-encrypted"] === "true" && !metadata.encrypted) {
     throw new IrisSerializationError(
       "Received encrypted message but @Encrypted is not configured on this message class",
+      { code: "unexpected_encrypted_message" },
     );
   }
 
   if (headers["x-iris-encrypted"] !== "true" && metadata.encrypted) {
     throw new IrisSerializationError(
       "Message requires encryption but received unencrypted payload",
+      { code: "missing_encrypted_payload" },
     );
   }
 
@@ -37,6 +39,10 @@ export const prepareInbound = async (
     if (!validAlgorithms.has(compressionAlgorithm)) {
       throw new IrisSerializationError(
         `Unsupported compression algorithm in header: "${compressionAlgorithm}"`,
+        {
+          code: "unsupported_compression_algorithm",
+          data: { algorithm: compressionAlgorithm },
+        },
       );
     }
     const buf = Buffer.isBuffer(data) ? data : Buffer.from(data, "utf-8");

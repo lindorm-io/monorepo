@@ -46,7 +46,10 @@ export class KafkaRpcServer<
     handler: (request: Req) => Promise<Res>,
   ): Promise<void> {
     if (!this.state.kafka || !this.state.producer) {
-      throw new IrisDriverError("Cannot serve RPC: Kafka client is not connected");
+      throw new IrisDriverError("Cannot serve RPC: Kafka client is not connected", {
+        code: "connection_unavailable",
+        data: { driver: "kafka" },
+      });
     }
 
     const kafkaTopic = resolveTopicName(this.state.prefix, `rpc.${topic}`);

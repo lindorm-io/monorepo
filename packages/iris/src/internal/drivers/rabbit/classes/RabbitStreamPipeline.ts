@@ -47,6 +47,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     if (!this.inputClass) {
       throw new IrisDriverError(
         "Stream pipeline requires an input class. Call .from() before .to().",
+        { code: "pipeline_input_class_required" },
       );
     }
 
@@ -54,6 +55,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     if (!channel) {
       throw new IrisDriverError(
         "Cannot start stream pipeline: consume channel is not available",
+        { code: "connection_unavailable", data: { driver: "rabbit" } },
       );
     }
 

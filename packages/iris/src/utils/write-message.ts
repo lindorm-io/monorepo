@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
+import { IrisValidationError } from "../errors/IrisValidationError.js";
 import { generateMessageSource, IRIS_MESSAGE_NAME_PATTERN } from "./generate-message.js";
 
 export type WriteMessageOptions = {
@@ -13,7 +14,13 @@ export const writeMessage = async (options: WriteMessageOptions): Promise<void> 
   const { name, directory, dryRun } = options;
 
   if (!IRIS_MESSAGE_NAME_PATTERN.test(name)) {
-    throw new Error(`Invalid message name: "${name}" — must be PascalCase`);
+    throw new IrisValidationError(
+      `Invalid message name: "${name}" — must be PascalCase`,
+      {
+        code: "invalid_message_name",
+        data: { name },
+      },
+    );
   }
 
   const resolvedDirectory = resolve(process.cwd(), directory);

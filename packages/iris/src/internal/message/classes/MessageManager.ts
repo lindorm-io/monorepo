@@ -33,6 +33,7 @@ export class MessageManager<M extends IMessage> {
   public constructor(options: MessageManagerOptions<M>) {
     if (!options.target) {
       throw new IrisError("MessageManager requires a target constructor", {
+        code: "missing_target_constructor",
         debug: { options },
       });
     }
@@ -47,6 +48,7 @@ export class MessageManager<M extends IMessage> {
       throw new IrisError(
         `Failed to retrieve metadata for message "${this.target.name}". Did you forget @Message()?`,
         {
+          code: "metadata_retrieval_failed",
           debug: { target: this.target.name },
           error: error instanceof Error ? error : undefined,
         },
@@ -105,6 +107,8 @@ export class MessageManager<M extends IMessage> {
         throw new IrisSerializationError(
           `@Transform.from failed for field "${field.key}"`,
           {
+            code: "transform_from_failed",
+            data: { field: field.key },
             error: error instanceof Error ? error : undefined,
           },
         );

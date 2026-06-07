@@ -11,6 +11,7 @@ export const encryptPayload = async (
   if (!amphora) {
     throw new IrisNotSupportedError(
       "@Encrypted requires an Amphora instance but none was configured",
+      { code: "missing_amphora_instance" },
     );
   }
 
@@ -22,6 +23,7 @@ export const encryptPayload = async (
   } catch (error) {
     if (error instanceof IrisNotSupportedError) throw error;
     throw new IrisSerializationError("Failed to encrypt message payload", {
+      code: "payload_encryption_failed",
       error: error instanceof Error ? error : undefined,
     });
   }
@@ -34,6 +36,7 @@ export const decryptPayload = async (
   if (!amphora) {
     throw new IrisNotSupportedError(
       "@Encrypted requires an Amphora instance but none was configured",
+      { code: "missing_amphora_instance" },
     );
   }
 
@@ -47,6 +50,7 @@ export const decryptPayload = async (
   } catch (error) {
     if (error instanceof IrisNotSupportedError) throw error;
     throw new IrisSerializationError("Failed to decrypt message payload", {
+      code: "payload_decryption_failed",
       error: error instanceof Error ? error : undefined,
     });
   }
