@@ -21,11 +21,19 @@ export class OctKit implements IKeyKit {
     this.encoding = options.encoding ?? "base64";
 
     if (!KryptosKit.isOct(options.kryptos)) {
-      throw new OctError("Invalid Kryptos instance");
+      throw new OctError("Invalid Kryptos instance", {
+        code: "invalid_kryptos_instance",
+      });
     }
 
     if (!OCT_SIG_ALGORITHMS.includes(options.kryptos.algorithm as OctSigAlgorithm)) {
-      throw new OctError("OctKit only supports signing algorithms (HS256, HS384, HS512)");
+      throw new OctError(
+        "OctKit only supports signing algorithms (HS256, HS384, HS512)",
+        {
+          code: "unsupported_algorithm",
+          data: { algorithm: options.kryptos.algorithm },
+        },
+      );
     }
 
     this.kryptos = options.kryptos;

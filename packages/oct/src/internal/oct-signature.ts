@@ -37,5 +37,5 @@ export const verifyOctSignature = ({
 
 export const assertOctSignature = (options: VerifyOctSignatureOptions): void => {
   if (verifyOctSignature(options)) return;
-  throw new OctError("OctSignature does not match");
+  throw new OctError("OctSignature does not match", { code: "invalid_signature" });
 };
