@@ -20,7 +20,9 @@ export const ecbKeyWrap = ({
   const algorithm = calculateKeyWrapEncryption(kryptos);
 
   if (contentEncryptionKey.length < 16 || contentEncryptionKey.length % 8 !== 0) {
-    throw new AesError("Key wrap input must be at least 16 bytes and a multiple of 8");
+    throw new AesError("Key wrap input must be at least 16 bytes and a multiple of 8", {
+      code: "invalid_key_wrap_input",
+    });
   }
 
   const n = contentEncryptionKey.length / BLOCK_SIZE;
@@ -91,7 +93,7 @@ export const ecbKeyUnwrap = ({
   decipher.final();
 
   if (!timingSafeEqual(a, AIV_BUFFER)) {
-    throw new AesError("Integrity check failed");
+    throw new AesError("Integrity check failed", { code: "key_unwrap_integrity_failed" });
   }
 
   return { contentEncryptionKey: Buffer.concat(r) };

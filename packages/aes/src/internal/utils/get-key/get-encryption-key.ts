@@ -24,6 +24,7 @@ export const getEncryptionKey = (options: CreateCekOptions): CreateCekResult => 
 
     default:
       throw new AesError("Unexpected Kryptos", {
+        code: "unexpected_kryptos",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }

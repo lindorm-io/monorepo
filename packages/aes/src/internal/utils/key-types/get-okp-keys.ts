@@ -29,6 +29,7 @@ export const getOkpEncryptionKey = (options: CreateCekOptions): CreateCekResult 
 
     default:
       throw new AesError("Unexpected Kryptos", {
+        code: "unexpected_kryptos",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }
@@ -49,6 +50,7 @@ export const getOkpDecryptionKey = (options: DecryptCekOptions): DecryptCekResul
 
     default:
       throw new AesError("Unexpected Kryptos", {
+        code: "unexpected_kryptos",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }

@@ -38,6 +38,7 @@ export const getOctEncryptionKey = (options: CreateCekOptions): CreateCekResult 
 
     default:
       throw new AesError("Unexpected Kryptos", {
+        code: "unexpected_kryptos",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }
@@ -63,6 +64,7 @@ export const getOctDecryptionKey = (options: DecryptCekOptions): DecryptCekResul
 
     default:
       throw new AesError("Unexpected Kryptos", {
+        code: "unexpected_kryptos",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }

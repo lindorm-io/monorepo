@@ -29,7 +29,10 @@ export const createAuthTag = ({
       return (cipher as CipherGCM).getAuthTag();
 
     default:
-      throw new AesError("Unexpected algorithm");
+      throw new AesError("Unexpected algorithm", {
+        code: "unsupported_encryption",
+        data: { encryption },
+      });
   }
 };
 
@@ -43,7 +46,7 @@ export const assertAuthTag = ({
   initialisationVector,
 }: SetAuthTagOptions): void => {
   if (!authTag) {
-    throw new AesError("Auth tag is missing");
+    throw new AesError("Auth tag is missing", { code: "missing_auth_tag" });
   }
 
   switch (encryption) {
@@ -67,6 +70,9 @@ export const assertAuthTag = ({
       return;
 
     default:
-      throw new AesError("Unexpected algorithm");
+      throw new AesError("Unexpected algorithm", {
+        code: "unsupported_encryption",
+        data: { encryption },
+      });
   }
 };
