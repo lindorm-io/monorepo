@@ -11,7 +11,7 @@ export const derToRaw = (kryptos: IKryptosEc, derSignature: Buffer): Buffer => {
   const keySize = KEY_SIZES[kryptos.curve];
 
   if (derSignature[0] !== 0x30) {
-    throw new EcError("Invalid DER format");
+    throw new EcError("Invalid DER format", { code: "invalid_der_format" });
   }
 
   let position = 2; // Skip 0x30 and the length byte(s)
@@ -25,7 +25,7 @@ export const derToRaw = (kryptos: IKryptosEc, derSignature: Buffer): Buffer => {
 
   function getInteger(): Buffer {
     if (derSignature[position] !== 0x02) {
-      throw new EcError("Expected integer");
+      throw new EcError("Expected integer", { code: "invalid_der_format" });
     }
     const length = derSignature[position + 1];
     position += 2;
@@ -56,7 +56,14 @@ export const rawToDer = (kryptos: IKryptosEc, rawSignature: Buffer): Buffer => {
   const keySize = KEY_SIZES[kryptos.curve];
 
   if (rawSignature.length !== 2 * keySize) {
-    throw new EcError("Invalid raw signature length");
+    throw new EcError("Invalid raw signature length", {
+      code: "invalid_raw_signature_length",
+      data: {
+        curve: kryptos.curve,
+        actual: rawSignature.length,
+        expected: 2 * keySize,
+      },
+    });
   }
 
   const r = rawSignature.subarray(0, keySize);

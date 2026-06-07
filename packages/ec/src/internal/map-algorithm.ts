@@ -15,7 +15,8 @@ const EC_SIG_ALGORITHM_MAP: Record<EcSigAlgorithm, ShaAlgorithm> = {
 export const mapEcAlgorithm = (kryptos: IKryptosEc): ShaAlgorithm => {
   if (!EC_SIG_ALGORITHMS.includes(kryptos.algorithm as EcSigAlgorithm)) {
     throw new EcError("Unsupported EC algorithm for signing", {
-      debug: { algorithm: kryptos.algorithm },
+      code: "unsupported_signing_algorithm",
+      data: { algorithm: kryptos.algorithm },
     });
   }
 

@@ -25,11 +25,16 @@ export class EcKit implements IKeyKit {
     this.raw = options.raw ?? false;
 
     if (!KryptosKit.isEc(options.kryptos)) {
-      throw new EcError("Invalid Kryptos instance");
+      throw new EcError("Invalid Kryptos instance", {
+        code: "invalid_kryptos_instance",
+      });
     }
 
     if (!EC_SIG_ALGORITHMS.includes(options.kryptos.algorithm as EcSigAlgorithm)) {
-      throw new EcError("EcKit only supports signing algorithms (ES256, ES384, ES512)");
+      throw new EcError("EcKit only supports signing algorithms (ES256, ES384, ES512)", {
+        code: "unsupported_algorithm",
+        data: { algorithm: options.kryptos.algorithm },
+      });
     }
 
     this.kryptos = options.kryptos;
