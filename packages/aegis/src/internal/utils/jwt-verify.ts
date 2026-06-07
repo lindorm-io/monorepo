@@ -2,6 +2,7 @@ import { addSeconds, subSeconds } from "@lindorm/date";
 import { isArray, isNumber, isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
+import { JwtError } from "../../errors/index.js";
 import type { JwtClaims, VerifyJwtOptions } from "../../types/index.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 
@@ -56,7 +57,10 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
     case "tenantId":
       return "tenant_id";
     default:
-      throw new Error(`Unsupported key: ${key as any} for JWT verification`);
+      throw new JwtError(`Unsupported key: ${key as any} for JWT verification`, {
+        code: "jwt_verify_unsupported_key",
+        data: { key },
+      });
   }
 };
 
@@ -142,7 +146,10 @@ export const createJwtVerify = (
       continue;
     }
 
-    throw new Error(`Unsupported value: ${value as any} for key: ${key}`);
+    throw new JwtError(`Unsupported value: ${value as any} for key: ${key}`, {
+      code: "jwt_verify_unsupported_value",
+      data: { key },
+    });
   }
 
   return predicate as Predicate<Dict>;

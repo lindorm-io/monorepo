@@ -87,7 +87,7 @@ export class JweKit implements IJweKit {
     const { authTag, content, initialisationVector } = prepared.encrypt(data, { aad });
 
     if (!authTag) {
-      throw new JweError("Missing auth tag");
+      throw new JweError("Missing auth tag", { code: "jwe_missing_auth_tag" });
     }
 
     // Step 6: Assemble the JWE compact serialisation
@@ -114,6 +114,7 @@ export class JweKit implements IJweKit {
     const typ = decoded.header.typ;
     if (typ !== "JWE" && !(typeof typ === "string" && typ.endsWith("+jwe"))) {
       throw new JweError("Invalid token", {
+        code: "jwe_invalid_typ",
         data: { typ },
       });
     }
@@ -123,6 +124,7 @@ export class JweKit implements IJweKit {
     // Explicit rejection is safer than silent passthrough.
     if ((decoded.header as { zip?: unknown }).zip !== undefined) {
       throw new JweError("Compressed JWE payloads are not supported", {
+        code: "jwe_compression_unsupported",
         data: { zip: (decoded.header as { zip?: unknown }).zip },
       });
     }
@@ -130,12 +132,14 @@ export class JweKit implements IJweKit {
     const critError = validateCrit(decoded.header);
     if (critError) {
       throw new JweError(`Invalid crit header: ${critError}`, {
+        code: "jwe_invalid_crit",
         data: { crit: decoded.header.crit },
       });
     }
 
     if (this.kryptos.algorithm !== decoded.header.alg) {
       throw new JweError("Invalid token", {
+        code: "jwe_algorithm_mismatch",
         data: { alg: decoded.header.alg },
         debug: { expected: this.kryptos.algorithm },
       });
@@ -146,6 +150,7 @@ export class JweKit implements IJweKit {
 
     if (header.encryption !== this.encryption) {
       throw new JweError("Unexpected encryption", {
+        code: "jwe_encryption_mismatch",
         debug: { actual: header.encryption, encryption: this.encryption },
       });
     }
@@ -153,7 +158,10 @@ export class JweKit implements IJweKit {
     // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
     if (header.critical?.length) {
       for (const param of header.critical) {
-        throw new JweError(`Unsupported critical header parameter: ${param}`);
+        throw new JweError(`Unsupported critical header parameter: ${param}`, {
+          code: "jwe_unsupported_crit_param",
+          data: { param },
+        });
       }
     }
 
@@ -234,7 +242,9 @@ export class JweKit implements IJweKit {
   public static decode(jwe: string): DecodedJwe {
     const parts = jwe.split(".");
     if (parts.length !== 5) {
-      throw new JweError("Invalid JWE format: expected 5 parts");
+      throw new JweError("Invalid JWE format: expected 5 parts", {
+        code: "jwe_invalid_format",
+      });
     }
 
     const [header, publicEncryptionKey, initialisationVector, content, authTag] = parts;

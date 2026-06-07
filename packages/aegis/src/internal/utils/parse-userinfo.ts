@@ -28,7 +28,9 @@ export const parseUserinfo = (data: UserinfoClaimsInput): AegisUserinfo => {
   const profile = preExtractedProfile ?? extractedProfile;
 
   if (!isString(claims.subject)) {
-    throw new AegisError("Missing subject claim");
+    throw new AegisError("Missing subject claim", {
+      code: "userinfo_missing_subject",
+    });
   }
 
   return {

@@ -1,4 +1,5 @@
 import { TOKEN_TYPE_TO_SHORT_NAME, type TokenType } from "../../constants/token-type.js";
+import { AegisError } from "../../errors/index.js";
 import type { BaseTokenFormat } from "../../types/header.js";
 
 export type KitFormat = "jwt" | "jws" | "jwe";
@@ -22,14 +23,20 @@ export const computeTypHeader = (
   if (tokenType === undefined) return FORMAT_FALLBACK[kitFormat];
 
   if (tokenType === "") {
-    throw new Error("tokenType cannot be an empty string");
+    throw new AegisError("tokenType cannot be an empty string", {
+      code: "invalid_token_type_value",
+    });
   }
   if (tokenType.trim() !== tokenType || /\s/.test(tokenType)) {
-    throw new Error("tokenType cannot contain whitespace");
+    throw new AegisError("tokenType cannot contain whitespace", {
+      code: "invalid_token_type_value",
+      data: { tokenType },
+    });
   }
   if (tokenType.includes("+")) {
-    throw new Error(
+    throw new AegisError(
       'tokenType cannot contain \'+\' — pass the bare type (e.g. "access_token"), not the full typ header (e.g. "at+jwt")',
+      { code: "invalid_token_type_value", data: { tokenType } },
     );
   }
 

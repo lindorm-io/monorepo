@@ -15,7 +15,9 @@ export type IntrospectClaimsInput = Dict & {
 
 export const parseIntrospection = (data: IntrospectClaimsInput): AegisIntrospection => {
   if (!isBoolean(data.active)) {
-    throw new AegisError("Missing active claim");
+    throw new AegisError("Missing active claim", {
+      code: "introspection_missing_active",
+    });
   }
 
   if (!data.active) {

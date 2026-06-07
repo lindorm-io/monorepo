@@ -1,6 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { B64U } from "../constants/format.js";
 import { TOKEN_HEADER_ALGORITHMS } from "../constants/header.js";
+import { AegisError } from "../../errors/index.js";
 import type {
   CertificateHeaderFields,
   DecodedTokenHeader,
@@ -14,16 +15,25 @@ export const encodeJoseHeader = (
   cert?: CertificateHeaderFields,
 ): string => {
   if (!options.algorithm) {
-    throw new Error("Algorithm is required");
+    throw new AegisError("Algorithm is required", {
+      code: "jose_header_algorithm_required",
+    });
   }
   if (!TOKEN_HEADER_ALGORITHMS.includes(options.algorithm)) {
-    throw new Error(`Invalid algorithm: ${options.algorithm}`);
+    throw new AegisError(`Invalid algorithm: ${options.algorithm}`, {
+      code: "jose_header_invalid_algorithm",
+      data: { algorithm: options.algorithm },
+    });
   }
   if (!options.headerType) {
-    throw new Error("Header type is required");
+    throw new AegisError("Header type is required", {
+      code: "jose_header_type_required",
+    });
   }
   if (!options.keyId) {
-    throw new Error("Key ID is required");
+    throw new AegisError("Key ID is required", {
+      code: "jose_header_key_id_required",
+    });
   }
 
   const raw = mapTokenHeader(options, cert);
@@ -48,7 +58,9 @@ export const decodeJoseHeader = (header: string): DecodedTokenHeader => {
   const json = JSON.parse(string) as Partial<TokenHeaderClaims>;
 
   if (!json.alg || typeof json.alg !== "string") {
-    throw new Error("Missing or invalid token header: alg");
+    throw new AegisError("Missing or invalid token header: alg", {
+      code: "jose_header_alg_invalid",
+    });
   }
   // Allowlist enforcement: the only algorithms aegis will even attempt to
   // decode are the ones kryptos currently supports. This catches `none`,
@@ -56,11 +68,16 @@ export const decodeJoseHeader = (header: string): DecodedTokenHeader => {
   // before the kryptos-match check in the Kit — and with a clearer error
   // message than "algorithm mismatch".
   if (!(TOKEN_HEADER_ALGORITHMS as ReadonlyArray<string>).includes(json.alg)) {
-    throw new Error(`Unsupported algorithm: ${json.alg}`);
+    throw new AegisError(`Unsupported algorithm: ${json.alg}`, {
+      code: "jose_header_unsupported_algorithm",
+      data: { alg: json.alg },
+    });
   }
   // typ is OPTIONAL per RFC 7515 Section 4.1.9
   if (json.typ !== undefined && typeof json.typ !== "string") {
-    throw new Error("Invalid token header: typ must be a string");
+    throw new AegisError("Invalid token header: typ must be a string", {
+      code: "jose_header_typ_invalid",
+    });
   }
   // Pass through as-is; individual Kit classes validate specific values if needed
 

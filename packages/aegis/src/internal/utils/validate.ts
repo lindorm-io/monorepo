@@ -15,5 +15,10 @@ export const validate = <C extends Dict = Dict>(
     }
   }
 
-  throw new LindormError("Invalid token", { data: { invalid } });
+  throw new LindormError("Invalid token", {
+    code: "jwt_claims_invalid",
+    type: "urn:lindorm:aegis:error:jwt_claims_invalid",
+    data: { invalid: invalid.map(({ key }) => key) },
+    debug: { invalid },
+  });
 };

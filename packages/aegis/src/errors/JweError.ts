@@ -1,3 +1,5 @@
 import { LindormError } from "@lindorm/errors";
 
-export class JweError extends LindormError {}
+export class JweError extends LindormError {
+  public static readonly errorNamespace = "aegis";
+}

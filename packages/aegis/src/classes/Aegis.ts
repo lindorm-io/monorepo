@@ -145,7 +145,10 @@ export class Aegis implements IAegis {
     if (Aegis.isJws(token)) {
       return (await this.jwsVerify(token)) as T;
     }
-    throw new AegisError("Invalid token type", { debug: { token } });
+    throw new AegisError("Invalid token type", {
+      code: "unsupported_token_type",
+      debug: { token },
+    });
   }
 
   // public static
@@ -177,7 +180,10 @@ export class Aegis implements IAegis {
     if (Aegis.isJwt(token)) {
       return JwtKit.decode(token) as T;
     }
-    throw new AegisError("Invalid token type", { debug: { token } });
+    throw new AegisError("Invalid token type", {
+      code: "unsupported_token_type",
+      debug: { token },
+    });
   }
 
   public static parse<T extends ParsedJwt | ParsedJws<any>>(token: string): T {
@@ -187,7 +193,10 @@ export class Aegis implements IAegis {
     if (Aegis.isJws(token)) {
       return JwsKit.parse(token) as T;
     }
-    throw new AegisError("Invalid token type", { debug: { token } });
+    throw new AegisError("Invalid token type", {
+      code: "unsupported_token_type",
+      debug: { token },
+    });
   }
 
   public static parseUserinfo(data: UserinfoClaimsInput): AegisUserinfo {
