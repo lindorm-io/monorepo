@@ -32,7 +32,10 @@ export const handleAccessControlOrigin = (
   throw new CorsError("Request origin is not allowed", {
     code: "cors_origin_not_allowed",
     status: CorsError.Status.Forbidden,
-    data: { origin: request, allowOrigins: config },
+    // allowOrigins is never disclosed by standard CORS (the server only echoes the
+    // single matching origin), so keep the allowlist server-side in debug.
+    data: { origin: request },
+    debug: { allowOrigins: config },
   });
 };
 
@@ -68,6 +71,8 @@ export const handleAccessControlHeaders = (
     return ctx.set("access-control-allow-headers", config.join(","));
   }
 
+  // allowHeaders is already public via the Access-Control-Allow-Headers preflight
+  // response header, and this branch is only reached after the origin check passes.
   throw new CorsError("One or more requested headers are not allowed", {
     code: "cors_headers_not_allowed",
     status: CorsError.Status.Forbidden,
@@ -97,6 +102,8 @@ export const handleAccessControlMethods = (
     return ctx.set("access-control-allow-methods", config.join(","));
   }
 
+  // allowMethods is already public via the Access-Control-Allow-Methods preflight
+  // response header, and this branch is only reached after the origin check passes.
   throw new CorsError("Requested method is not allowed", {
     code: "cors_method_not_allowed",
     status: CorsError.Status.Forbidden,
