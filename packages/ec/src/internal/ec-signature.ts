@@ -63,5 +63,5 @@ export const assertEcSignature = ({
   signature,
 }: VerifyEcSignatureOptions): void => {
   if (verifyEcSignature({ data, dsaEncoding, encoding, kryptos, raw, signature })) return;
-  throw new EcError("Invalid signature");
+  throw new EcError("Invalid signature", { code: "invalid_signature" });
 };
