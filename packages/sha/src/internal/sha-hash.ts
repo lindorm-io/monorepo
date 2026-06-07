@@ -13,5 +13,5 @@ export const verifyShaHash = ({ hash, ...options }: VerifyShaHashOptions): boole
 
 export const assertShaHash = (options: VerifyShaHashOptions): void => {
   if (verifyShaHash(options)) return;
-  throw new ShaError("Hash does not match");
+  throw new ShaError("Hash does not match", { code: "hash_mismatch" });
 };
