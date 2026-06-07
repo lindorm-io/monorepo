@@ -198,7 +198,10 @@ export class JwtKit implements IJwtKit {
 
     const actorError = validateActor(parsed.delegation, verify.actor);
     if (actorError) {
-      throw new JwtError(actorError, { code: "jwt_actor_not_allowed" });
+      throw new JwtError(actorError.message, {
+        code: "jwt_actor_not_allowed",
+        debug: actorError.debug,
+      });
     }
 
     const boundThumbprint = parsed.payload.confirmation?.thumbprint;
