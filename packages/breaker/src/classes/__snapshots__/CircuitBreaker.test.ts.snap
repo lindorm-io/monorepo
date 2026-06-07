@@ -57,8 +57,6 @@ exports[`CircuitBreaker > events > should emit events with correct data on trans
 exports[`CircuitBreaker > open state > should include debug info in CircuitOpenError 1`] = `
 {
   "failures": 3,
-  "name": "test-breaker",
-  "state": "open",
 }
 `;
 

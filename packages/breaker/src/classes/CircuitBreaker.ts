@@ -153,9 +153,12 @@ export class CircuitBreaker implements ICircuitBreaker {
 
     if (elapsed < delay) {
       throw new CircuitOpenError("Circuit is open", {
-        debug: {
+        code: "circuit_open",
+        data: {
           name: this._name,
           state: this._state,
+        },
+        debug: {
           failures: this.window.count(),
         },
       });
