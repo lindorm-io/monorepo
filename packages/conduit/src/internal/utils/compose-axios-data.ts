@@ -1,3 +1,4 @@
+import { NotImplementedError } from "@lindorm/errors";
 import { isObject } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type ServerFormData from "form-data";
@@ -5,7 +6,10 @@ import type { ConduitContext } from "../../types/index.js";
 
 const newServerFormData = async (): Promise<ServerFormData> => {
   if (typeof window !== "undefined") {
-    throw new Error("Stream requests are not supported in the browser");
+    throw new NotImplementedError("Stream requests are not supported in the browser", {
+      code: "browser_stream_unsupported",
+      type: "urn:lindorm:conduit:error:browser_stream_unsupported",
+    });
   }
 
   const ServerFormData = await import("form-data");

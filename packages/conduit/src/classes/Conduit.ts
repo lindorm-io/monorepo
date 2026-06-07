@@ -11,6 +11,7 @@ import { responseLogger } from "../internal/middleware/response-logger.js";
 import { defaultRetryCallback } from "../internal/utils/default-retry-callback.js";
 import { defaultValidateStatus } from "../internal/utils/default-validate-status.js";
 import { getOrigin } from "../internal/utils/get-origin.js";
+import { ClientError } from "@lindorm/errors";
 import type { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
 import { randomUUID } from "@lindorm/random";
@@ -195,7 +196,11 @@ export class Conduit implements IConduit {
     const pathOrUrl = url ?? path;
 
     if (!pathOrUrl) {
-      throw new Error(`Invalid request [ path: ${path} | url: ${url} ]`);
+      throw new ClientError("Invalid request: neither path nor url provided", {
+        code: "invalid_request",
+        type: "urn:lindorm:conduit:error:invalid_request",
+        data: { path, url },
+      });
     }
 
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(

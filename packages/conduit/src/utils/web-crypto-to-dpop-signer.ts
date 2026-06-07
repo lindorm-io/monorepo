@@ -1,3 +1,4 @@
+import { ServerError } from "@lindorm/errors";
 import type { DpopSigner, Jwks, JwksAlgorithm } from "@lindorm/types";
 
 // Produce a DpopSigner from a non-extractable Web Crypto key pair.
@@ -28,7 +29,14 @@ const deriveJoseAlgorithm = (algorithm: AnyKeyAlgorithm): JwksAlgorithm => {
         case "P-521":
           return "ES512";
         default:
-          throw new Error(`Unsupported ECDSA curve: ${String(algorithm.namedCurve)}`);
+          throw new ServerError(
+            `Unsupported ECDSA curve: ${String(algorithm.namedCurve)}`,
+            {
+              code: "unsupported_ecdsa_curve",
+              type: "urn:lindorm:conduit:error:unsupported_ecdsa_curve",
+              data: { curve: algorithm.namedCurve },
+            },
+          );
       }
     }
     case "RSASSA-PKCS1-v1_5":
@@ -44,11 +52,19 @@ const deriveJoseAlgorithm = (algorithm: AnyKeyAlgorithm): JwksAlgorithm => {
         case "SHA-512":
           return `${prefix}512` as JwksAlgorithm;
         default:
-          throw new Error(`Unsupported RSA hash: ${String(hashName)}`);
+          throw new ServerError(`Unsupported RSA hash: ${String(hashName)}`, {
+            code: "unsupported_rsa_hash",
+            type: "urn:lindorm:conduit:error:unsupported_rsa_hash",
+            data: { hash: hashName },
+          });
       }
     }
     default:
-      throw new Error(`Unsupported DPoP signing algorithm: ${algorithm.name}`);
+      throw new ServerError(`Unsupported DPoP signing algorithm: ${algorithm.name}`, {
+        code: "unsupported_dpop_algorithm",
+        type: "urn:lindorm:conduit:error:unsupported_dpop_algorithm",
+        data: { algorithm: algorithm.name },
+      });
   }
 };
 
@@ -70,7 +86,11 @@ const subtleSignParams = (
     case "RSASSA-PKCS1-v1_5":
       return { name: "RSASSA-PKCS1-v1_5" };
     default:
-      throw new Error(`Unsupported DPoP signing algorithm: ${algorithm.name}`);
+      throw new ServerError(`Unsupported DPoP signing algorithm: ${algorithm.name}`, {
+        code: "unsupported_dpop_algorithm",
+        type: "urn:lindorm:conduit:error:unsupported_dpop_algorithm",
+        data: { algorithm: algorithm.name },
+      });
   }
 };
 
