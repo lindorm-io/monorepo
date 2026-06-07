@@ -231,7 +231,7 @@ describe("createDpopBearerAuthStrategy", () => {
 
       expect(caught).toBeInstanceOf(ZephyrError);
       expect(caught?.message).toBe("jkt changed");
-      expect(caught?.code).toBe("AUTH_REFRESH_REJECTED");
+      expect(caught?.code).toBe("auth_refresh_rejected");
       expect(caught?.status).toBe(401);
     });
 
@@ -248,7 +248,7 @@ describe("createDpopBearerAuthStrategy", () => {
 
       await expect(strategy.refresh(socket)).rejects.toMatchObject({
         name: "ZephyrError",
-        code: "ZEPHYR_AUTH_REFRESH_TIMEOUT",
+        code: "auth_refresh_ack_timeout",
       });
     });
 
@@ -262,7 +262,7 @@ describe("createDpopBearerAuthStrategy", () => {
       const { socket } = createMockSocket(vi.fn());
 
       await expect(strategy.refresh(socket)).rejects.toMatchObject({
-        code: "ZEPHYR_AUTH_REFRESH_INVALID_EXPIRES_IN",
+        code: "auth_refresh_invalid_expires_in",
       });
     });
 
@@ -278,7 +278,7 @@ describe("createDpopBearerAuthStrategy", () => {
       const { socket } = createMockSocket(emitWithAck);
 
       await expect(strategy.refresh(socket)).rejects.toMatchObject({
-        code: "ZEPHYR_AUTH_REFRESH_INVALID_ACK",
+        code: "auth_refresh_unrecognised_ack",
       });
     });
   });
