@@ -125,6 +125,8 @@ export class Hermes implements IHermes {
   public async setup(): Promise<void> {
     if (this._statusRef.current !== "created") {
       throw new LindormError("Hermes.setup() can only be called once", {
+        code: "setup_already_called",
+        type: "urn:lindorm:hermes:error:setup_already_called",
         data: { status: this._statusRef.current },
       });
     }
@@ -214,7 +216,10 @@ export class Hermes implements IHermes {
     );
 
     if (!commandHandler) {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Command handler has not been registered", {
+        code: "command_handler_not_registered",
+        data: { command: metadata.name, version: metadata.version },
+      });
     }
 
     const aggregate: AggregateIdentifier = {
@@ -270,6 +275,11 @@ export class Hermes implements IHermes {
     } else {
       throw new LindormError(
         `Unrecognized event prefix: "${evt}". Expected "saga", "view", or "checksum".`,
+        {
+          code: "unrecognized_event_prefix",
+          type: "urn:lindorm:hermes:error:unrecognized_event_prefix",
+          data: { event: evt },
+        },
       );
     }
   }
@@ -284,6 +294,11 @@ export class Hermes implements IHermes {
     } else {
       throw new LindormError(
         `Unrecognized event prefix: "${evt}". Expected "saga", "view", or "checksum".`,
+        {
+          code: "unrecognized_event_prefix",
+          type: "urn:lindorm:hermes:error:unrecognized_event_prefix",
+          data: { event: evt },
+        },
       );
     }
   }
@@ -481,6 +496,13 @@ export class Hermes implements IHermes {
               throw new ChecksumError(
                 `Checksum verification failed during replay for event ${eventRecord.id} ` +
                   `(aggregate ${eventRecord.aggregateId}): ${checksumErr.message}`,
+                {
+                  code: "checksum_replay_failed",
+                  data: {
+                    eventId: eventRecord.id,
+                    aggregateId: eventRecord.aggregateId,
+                  },
+                },
               );
             }
 
@@ -843,6 +865,14 @@ export class Hermes implements IHermes {
     if (!source) {
       throw new LindormError(
         `No ProteusSource found for driver type "${view.driverType}" (required by view "${view.namespace}.${view.name}")`,
+        {
+          code: "view_source_not_found",
+          type: "urn:lindorm:hermes:error:view_source_not_found",
+          data: {
+            driverType: view.driverType,
+            view: { name: view.name, namespace: view.namespace },
+          },
+        },
       );
     }
 
@@ -854,6 +884,8 @@ export class Hermes implements IHermes {
   private assertReady(): void {
     if (this._statusRef.current !== "ready") {
       throw new LindormError("Hermes is not ready", {
+        code: "not_ready",
+        type: "urn:lindorm:hermes:error:not_ready",
         data: { status: this._statusRef.current },
       });
     }

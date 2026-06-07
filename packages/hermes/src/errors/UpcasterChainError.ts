@@ -1,7 +1,9 @@
-import { LindormError } from "@lindorm/errors";
+import { LindormError, type LindormErrorOptions } from "@lindorm/errors";
 
 export class UpcasterChainError extends LindormError {
-  public constructor(message: string) {
-    super(message);
+  public static readonly namespace = "hermes";
+
+  public constructor(message: string, options: LindormErrorOptions = {}) {
+    super(message, options);
   }
 }

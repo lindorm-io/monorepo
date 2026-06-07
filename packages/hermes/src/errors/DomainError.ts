@@ -5,6 +5,8 @@ export type DomainErrorOptions = LindormErrorOptions & {
 };
 
 export class DomainError extends LindormError {
+  public static readonly namespace = "hermes";
+
   public readonly permanent: boolean;
 
   public constructor(message: string, options: DomainErrorOptions = {}) {

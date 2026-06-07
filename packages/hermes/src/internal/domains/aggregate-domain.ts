@@ -285,7 +285,10 @@ export class AggregateDomain {
     const commandAggregate = this.registry.getCommandHandler(command.constructor);
 
     if (!commandAggregate) {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Command handler has not been registered", {
+        code: "command_handler_not_registered",
+        data: { command: metadata.name, version: metadata.version },
+      });
     }
 
     const aggregateIdentifier: AggregateIdentifier = {
@@ -408,8 +411,11 @@ export class AggregateDomain {
     } catch (err: any) {
       if (this.isDuplicateKeyError(err)) {
         throw new ConcurrencyError("Concurrency conflict saving events", {
+          code: "concurrency_conflict",
           data: {
             aggregateId: model.id,
+            aggregateName: model.name,
+            aggregateNamespace: model.namespace,
             expectedEvents: loadedEvents.length,
           },
         });
@@ -479,6 +485,11 @@ export class AggregateDomain {
         if (this.checksumMode === "strict") {
           throw new ChecksumError(
             `Checksum mismatch for event ${record.id}: ${error.message}`,
+            {
+              code: "checksum_mismatch",
+              data: { eventId: record.id, eventName: record.name },
+              debug: { reason: error.message },
+            },
           );
         }
         this.logger.warn("Checksum mismatch", error, [
@@ -678,7 +689,13 @@ export class AggregateDomain {
     const method = (instance as Record<string, unknown>)[handler.methodName];
 
     if (typeof method !== "function") {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Command handler method is not callable", {
+        code: "command_handler_method_not_callable",
+        data: {
+          aggregate: { name: aggregate.name, namespace: aggregate.namespace },
+          method: handler.methodName,
+        },
+      });
     }
 
     return method.bind(instance);

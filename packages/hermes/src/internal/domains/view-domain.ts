@@ -1,4 +1,5 @@
 import { snakeCase } from "@lindorm/case";
+import { LindormError } from "@lindorm/errors";
 import type { ILogger } from "@lindorm/logger";
 import type { IIrisMessageBus, IIrisWorkerQueue } from "@lindorm/iris";
 import { OptimisticLockError } from "@lindorm/proteus";
@@ -103,7 +104,10 @@ export class ViewDomain {
 
     const view = this.findViewForQuery(meta.name);
     if (!view) {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("No view registered for query", {
+        code: "query_view_not_registered",
+        data: { query: meta.name },
+      });
     }
 
     const queryHandler = view.queryHandlers.find((h) => {
@@ -112,7 +116,10 @@ export class ViewDomain {
     });
 
     if (!queryHandler) {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Query handler has not been registered", {
+        code: "query_handler_not_registered",
+        data: { query: meta.name, view: { name: view.name, namespace: view.namespace } },
+      });
     }
 
     const source = this.resolveSource(view);
@@ -122,7 +129,13 @@ export class ViewDomain {
     const handlerFn = instance[queryHandler.methodName];
 
     if (typeof handlerFn !== "function") {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Query handler method is not callable", {
+        code: "query_handler_method_not_callable",
+        data: {
+          view: { name: view.name, namespace: view.namespace },
+          method: queryHandler.methodName,
+        },
+      });
     }
 
     const ctx = {
@@ -216,7 +229,13 @@ export class ViewDomain {
     const handlerFn = instance[handler.methodName];
 
     if (typeof handlerFn !== "function") {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("View event handler method is not callable", {
+        code: "view_handler_method_not_callable",
+        data: {
+          view: { name: view.name, namespace: view.namespace },
+          method: handler.methodName,
+        },
+      });
     }
 
     await handlerFn.call(instance, ctx);
@@ -373,7 +392,13 @@ export class ViewDomain {
       const handlerFn = instance[handler.methodName];
 
       if (typeof handlerFn !== "function") {
-        throw new HandlerNotRegisteredError();
+        throw new HandlerNotRegisteredError("View event handler method is not callable", {
+          code: "view_handler_method_not_callable",
+          data: {
+            view: { name: view.name, namespace: view.namespace },
+            method: handler.methodName,
+          },
+        });
       }
 
       await handlerFn.call(instance, ctx);
@@ -390,6 +415,7 @@ export class ViewDomain {
       } catch (saveErr: unknown) {
         if (saveErr instanceof OptimisticLockError) {
           throw new ConcurrencyError("View update failed due to optimistic lock", {
+            code: "view_optimistic_lock",
             data: { viewId, ownerName },
           });
         }
@@ -502,8 +528,16 @@ export class ViewDomain {
 
     const source = this.viewSources.get(view.driverType);
     if (!source) {
-      throw new Error(
+      throw new LindormError(
         `No ProteusSource found for driver type "${view.driverType}" (required by view "${view.namespace}.${view.name}")`,
+        {
+          code: "view_source_not_found",
+          type: "urn:lindorm:hermes:error:view_source_not_found",
+          data: {
+            driverType: view.driverType,
+            view: { name: view.name, namespace: view.namespace },
+          },
+        },
       );
     }
     return source;
@@ -610,7 +644,10 @@ export class ViewDomain {
     );
 
     if (!commandHandler) {
-      throw new HandlerNotRegisteredError();
+      throw new HandlerNotRegisteredError("Command handler has not been registered", {
+        code: "command_handler_not_registered",
+        data: { command: metadata.name, version: metadata.version },
+      });
     }
 
     const { ...data } = command;

@@ -1,7 +1,12 @@
-import { LindormError } from "@lindorm/errors";
+import { LindormError, type LindormErrorOptions } from "@lindorm/errors";
 
 export class HandlerNotRegisteredError extends LindormError {
-  public constructor() {
-    super("Handler has not been registered");
+  public static readonly namespace = "hermes";
+
+  public constructor(
+    message = "Handler has not been registered",
+    options: LindormErrorOptions = {},
+  ) {
+    super(message, options);
   }
 }

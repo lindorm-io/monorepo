@@ -21,6 +21,10 @@ export const applyUpcasters = (
     if (typeof method !== "function") {
       throw new UpcasterChainError(
         `Upcaster method "${step.method}" not found on aggregate "${aggregate.name}"`,
+        {
+          code: "upcaster_method_not_found",
+          data: { aggregate: aggregate.name, method: step.method },
+        },
       );
     }
 
