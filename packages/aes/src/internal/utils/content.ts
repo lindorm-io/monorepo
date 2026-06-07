@@ -16,7 +16,8 @@ export const calculateContentType = (content: any): AesContentType => {
   }
 
   throw new AesError("Invalid content type", {
-    debug: { content, type: typeof content },
+    code: "invalid_content_type",
+    data: { type: typeof content },
   });
 };
 
@@ -33,7 +34,8 @@ export const contentToBuffer = (content: any, contentType: AesContentType): Buff
 
     default:
       throw new AesError("Invalid content type", {
-        debug: { content, type: typeof content },
+        code: "invalid_content_type",
+        data: { contentType, type: typeof content },
       });
   }
 };
@@ -54,7 +56,8 @@ export const parseContent = <T extends AesContent = string>(
 
     default:
       throw new AesError("Unexpected content type", {
-        debug: { contentType },
+        code: "unexpected_content_type",
+        data: { contentType },
       });
   }
 };

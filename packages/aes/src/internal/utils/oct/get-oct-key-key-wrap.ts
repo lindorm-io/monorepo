@@ -16,7 +16,10 @@ export const getOctKeyWrapEncryptionKey = ({
   kryptos,
 }: CreateCekOptions): CreateCekResult => {
   if (!KryptosKit.isOct(kryptos)) {
-    throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
+    throw new AesError("Invalid Kryptos", {
+      code: "invalid_kryptos",
+      debug: { kryptos: kryptos.toJSON() },
+    });
   }
 
   const der = kryptos.export("der");
@@ -48,10 +51,15 @@ export const getOctKeyWrapDecryptionKey = ({
   publicEncryptionTag,
 }: DecryptCekOptions): DecryptCekResult => {
   if (!KryptosKit.isOct(kryptos)) {
-    throw new AesError("Invalid Kryptos", { debug: { kryptos: kryptos.toJSON() } });
+    throw new AesError("Invalid Kryptos", {
+      code: "invalid_kryptos",
+      debug: { kryptos: kryptos.toJSON() },
+    });
   }
   if (!publicEncryptionKey) {
-    throw new AesError("Missing publicEncryptionKey");
+    throw new AesError("Missing publicEncryptionKey", {
+      code: "missing_public_encryption_key",
+    });
   }
 
   const der = kryptos.export("der");

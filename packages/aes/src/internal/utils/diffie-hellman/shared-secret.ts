@@ -35,7 +35,7 @@ const generateKryptos = (kryptos: IKryptos): IKryptos => {
     });
   }
 
-  throw new AesError("Invalid kryptos type");
+  throw new AesError("Invalid kryptos type", { code: "invalid_kryptos_type" });
 };
 
 export const generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
@@ -44,10 +44,14 @@ export const generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
   const sender = pek.export("der");
 
   if (!sender.privateKey) {
-    throw new AesError("Sender private key is missing");
+    throw new AesError("Sender private key is missing", {
+      code: "missing_private_key",
+    });
   }
   if (!der.publicKey) {
-    throw new AesError("Kryptos public key is missing");
+    throw new AesError("Kryptos public key is missing", {
+      code: "missing_public_key",
+    });
   }
 
   const sharedSecret = diffieHellman({
@@ -76,7 +80,9 @@ export const calculateSharedSecret = ({
   publicEncryptionJwk,
 }: CalculateSharedSecretOptions): Buffer => {
   if (!publicEncryptionJwk) {
-    throw new AesError("Missing publicEncryptionJwk");
+    throw new AesError("Missing publicEncryptionJwk", {
+      code: "missing_public_encryption_jwk",
+    });
   }
 
   const pek = KryptosKit.from.jwk({
@@ -88,10 +94,14 @@ export const calculateSharedSecret = ({
   const receiver = pek.export("der");
 
   if (!der.privateKey) {
-    throw new AesError("Kryptos private key is missing");
+    throw new AesError("Kryptos private key is missing", {
+      code: "missing_private_key",
+    });
   }
   if (!receiver.publicKey) {
-    throw new AesError("Receiver public key is missing");
+    throw new AesError("Receiver public key is missing", {
+      code: "missing_public_key",
+    });
   }
 
   return diffieHellman({

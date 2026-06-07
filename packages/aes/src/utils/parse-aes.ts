@@ -36,5 +36,5 @@ export const parseAes: ParseAes = (
     return parseSerialisedAesRecord(data);
   }
 
-  throw new AesError("Invalid AES data");
+  throw new AesError("Invalid AES data", { code: "invalid_aes_data" });
 };

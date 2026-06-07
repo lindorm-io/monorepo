@@ -26,6 +26,9 @@ export const calculateKeyWrapSize = (algorithm: KryptosAlgorithm): AesKeyLength 
       return 32;
 
     default:
-      throw new AesError("Unsupported algorithm", { debug: { algorithm } });
+      throw new AesError("Unsupported algorithm", {
+        code: "unsupported_key_wrap_algorithm",
+        data: { algorithm },
+      });
   }
 };

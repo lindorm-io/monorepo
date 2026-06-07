@@ -35,10 +35,12 @@ export const getDiffieHellmanDecryptionKey = ({
   publicEncryptionJwk,
 }: DecryptCekOptions): DecryptCekResult => {
   if (!KryptosKit.isEc(kryptos) && !KryptosKit.isOkp(kryptos)) {
-    throw new AesError("Invalid kryptos type");
+    throw new AesError("Invalid kryptos type", { code: "invalid_kryptos_type" });
   }
   if (!publicEncryptionJwk) {
-    throw new AesError("Missing publicEncryptionJwk");
+    throw new AesError("Missing publicEncryptionJwk", {
+      code: "missing_public_encryption_jwk",
+    });
   }
 
   const sharedSecret = calculateSharedSecret({ kryptos, publicEncryptionJwk });
