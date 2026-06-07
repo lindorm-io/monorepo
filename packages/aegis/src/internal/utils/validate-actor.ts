@@ -2,28 +2,30 @@ import { Predicated } from "@lindorm/utils";
 import type { ActClaim } from "../../types/claims/act-claim.js";
 import type { TokenDelegation, VerifyActorOptions } from "../../types/jwt/index.js";
 
-const describeActor = (actor: ActClaim): string =>
-  actor.subject ?? actor.clientId ?? "undefined";
+export type ActorValidationError = {
+  message: string;
+  debug?: { actor: ActClaim };
+};
 
 export const validateActor = (
   delegation: TokenDelegation,
   options: VerifyActorOptions | undefined,
-): string | null => {
+): ActorValidationError | null => {
   if (!options) return null;
 
   if (options.required && !delegation.isDelegated) {
-    return "Expected delegated token with act claim";
+    return { message: "Expected delegated token with act claim" };
   }
 
   if (options.forbidden && delegation.isDelegated) {
-    return "Expected non-delegated token";
+    return { message: "Expected non-delegated token" };
   }
 
   if (
     options.maxChainDepth !== undefined &&
     delegation.actorChain.length > options.maxChainDepth
   ) {
-    return `Actor chain exceeds maximum depth of ${options.maxChainDepth}`;
+    return { message: `Actor chain exceeds maximum depth of ${options.maxChainDepth}` };
   }
 
   if (options.allowedActors) {
@@ -34,14 +36,18 @@ export const validateActor = (
       case "current": {
         const current = delegation.actorChain[0];
         if (!current || !Predicated.match(current, predicate)) {
-          return `Actor not allowed: ${current ? describeActor(current) : "undefined"}`;
+          // The actor identifier is kept in debug, never in the client-facing message.
+          return {
+            message: "Actor not allowed",
+            debug: current ? { actor: current } : undefined,
+          };
         }
         break;
       }
 
       case "some": {
         if (!delegation.actorChain.some((entry) => Predicated.match(entry, predicate))) {
-          return "No actor in the chain matches the allowed predicate";
+          return { message: "No actor in the chain matches the allowed predicate" };
         }
         break;
       }
@@ -50,7 +56,7 @@ export const validateActor = (
       default: {
         for (const entry of delegation.actorChain) {
           if (!Predicated.match(entry, predicate)) {
-            return `Actor not allowed: ${describeActor(entry)}`;
+            return { message: "Actor not allowed", debug: { actor: entry } };
           }
         }
         break;
