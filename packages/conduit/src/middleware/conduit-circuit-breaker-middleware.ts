@@ -47,6 +47,8 @@ export const createConduitCircuitBreakerMiddleware = (
     } catch (error) {
       if (error instanceof CircuitOpenError) {
         throw new ServiceUnavailableError("Circuit breaker is open", {
+          code: "circuit_breaker_open",
+          type: "urn:lindorm:conduit:error:circuit_breaker_open",
           debug: { origin: ctx.req.origin },
         });
       }
