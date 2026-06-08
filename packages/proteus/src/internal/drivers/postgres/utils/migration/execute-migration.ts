@@ -78,7 +78,9 @@ export const executeMigrationUp = async (
       // Cleanup failure is secondary — the original migration error takes priority
     }
     throw new PostgresMigrationError("Migration up() failed", {
-      debug: { id: migration.id, name: metadata.name },
+      code: "migration_failed",
+      data: { migration: metadata.name },
+      debug: { id: migration.id },
       error: err as Error,
     });
   }
@@ -104,7 +106,9 @@ export const executeMigrationDown = async (
     await migration.down(runner);
   } catch (err) {
     throw new PostgresMigrationError("Migration down() failed", {
-      debug: { id: migration.id, name: metadata.name },
+      code: "migration_failed",
+      data: { migration: metadata.name },
+      debug: { id: migration.id },
       error: err as Error,
     });
   }

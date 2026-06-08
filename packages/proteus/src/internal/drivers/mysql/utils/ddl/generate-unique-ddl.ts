@@ -27,6 +27,7 @@ export const generateUniqueDDL = (
     if (unique.keys.length === 0) {
       throw new ProteusError(
         `Unique constraint on "${tableName}" has no keys — UNIQUE () is invalid SQL`,
+        { code: "schema_mismatch", data: { table: tableName } },
       );
     }
     const resolvedKeys = unique.keys.map((k) => resolveColumnNameSafe(fields, k));
@@ -41,6 +42,7 @@ export const generateUniqueDDL = (
     if (unique.name && unique.name.length > MYSQL_IDENTIFIER_LIMIT) {
       throw new ProteusError(
         `Unique constraint name exceeds ${MYSQL_IDENTIFIER_LIMIT} characters: "${unique.name}"`,
+        { code: "schema_mismatch", data: { table: tableName, constraint: unique.name } },
       );
     }
     const name = unique.name ?? autoName;

@@ -245,7 +245,10 @@ export class MySqlRepository<
     if (this.entityManager.updateStrategy === "version") {
       throw new ProteusRepositoryError(
         `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
-        { debug: { entityName: this.metadata.entity.name } },
+        {
+          code: "unsupported_operation",
+          data: { entity: this.metadata.entity.name, operation: "updateMany" },
+        },
       );
     }
 
@@ -561,7 +564,10 @@ export class MySqlRepository<
             if (result.rowCount === 0) {
               throw new ProteusRepositoryError(
                 `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
-                { debug: { entityName: this.metadata.entity.name } },
+                {
+                  code: "optimistic_lock_conflict",
+                  data: { entity: this.metadata.entity.name },
+                },
               );
             }
 
@@ -609,7 +615,10 @@ export class MySqlRepository<
               if (joinedPartial.rootIsUpdate && rootResult.rowCount === 0) {
                 throw new ProteusRepositoryError(
                   `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
-                  { debug: { entityName: this.metadata.entity.name } },
+                  {
+                    code: "optimistic_lock_conflict",
+                    data: { entity: this.metadata.entity.name },
+                  },
                 );
               }
 
@@ -644,7 +653,10 @@ export class MySqlRepository<
               if (result.rowCount === 0) {
                 throw new ProteusRepositoryError(
                   `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
-                  { debug: { entityName: this.metadata.entity.name } },
+                  {
+                    code: "optimistic_lock_conflict",
+                    data: { entity: this.metadata.entity.name },
+                  },
                 );
               }
 
@@ -794,7 +806,10 @@ export class MySqlRepository<
           if (rowCount === 0) {
             throw new ProteusRepositoryError(
               `Optimistic lock conflict: "${this.metadata.entity.name}" version was modified concurrently`,
-              { debug: { entityName: this.metadata.entity.name } },
+              {
+                code: "optimistic_lock_conflict",
+                data: { entity: this.metadata.entity.name },
+              },
             );
           }
 

@@ -6,8 +6,8 @@ import type {
 } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../../types/query.js";
-import { ProteusError } from "../../../../errors/ProteusError.js";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
 import { compileWhere } from "../utils/query/compile-where.js";
@@ -70,6 +70,10 @@ export class PostgresDeleteQueryBuilder<
     if (this.predicates.length === 0) {
       throw new ProteusError(
         `DELETE on "${this.metadata.entity.name}" requires at least one .where() predicate`,
+        {
+          code: "invalid_query",
+          data: { entity: this.metadata.entity.name, operation: "delete.execute" },
+        },
       );
     }
 
@@ -80,6 +84,10 @@ export class PostgresDeleteQueryBuilder<
     ) {
       throw new ProteusRepositoryError(
         "DELETE via QueryBuilder is not supported for joined inheritance entities",
+        {
+          code: "unsupported_operation",
+          data: { operation: "delete.execute", entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -99,6 +107,10 @@ export class PostgresDeleteQueryBuilder<
       if (!deleteField) {
         throw new ProteusError(
           `Entity "${this.metadata.entity.name}" has no @DeleteDateField — cannot use softDelete()`,
+          {
+            code: "invalid_query",
+            data: { entity: this.metadata.entity.name, operation: "delete.softDelete" },
+          },
         );
       }
       text = `UPDATE ${tableName} AS "t0" SET ${quoteIdentifier(deleteField.name)} = NOW() ${whereClause}${discClause}`;

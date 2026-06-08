@@ -19,6 +19,10 @@ export const generateCheckDDL = (
     if (check.name && check.name.length > SQLITE_IDENTIFIER_LIMIT) {
       throw new ProteusError(
         `Check constraint name exceeds ${SQLITE_IDENTIFIER_LIMIT} characters: "${check.name}"`,
+        {
+          code: "invalid_query",
+          data: { constraint: check.name, limit: SQLITE_IDENTIFIER_LIMIT },
+        },
       );
     }
     const name =

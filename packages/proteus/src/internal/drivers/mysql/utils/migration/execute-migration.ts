@@ -86,6 +86,7 @@ export const executeMigrationUp = async (
   if (!lockAcquired) {
     throw new MySqlMigrationError(
       "Could not acquire migration advisory lock — another migration is running",
+      { code: "migration_failed" },
     );
   }
 
@@ -117,7 +118,9 @@ export const executeMigrationUp = async (
         // Mark-failed failure is secondary — preserve the original error
       }
       throw new MySqlMigrationError("Migration up() failed", {
-        debug: { id: migration.id, name: metadata.name },
+        code: "migration_failed",
+        data: { migration: metadata.name },
+        debug: { id: migration.id },
         error: err as Error,
       });
     }
@@ -144,6 +147,7 @@ export const executeMigrationDown = async (
   if (!lockAcquired) {
     throw new MySqlMigrationError(
       "Could not acquire migration advisory lock — another migration is running",
+      { code: "migration_failed" },
     );
   }
 
@@ -156,7 +160,9 @@ export const executeMigrationDown = async (
       await migration.down(runner);
     } catch (err) {
       throw new MySqlMigrationError("Migration down() failed", {
-        debug: { id: migration.id, name: metadata.name },
+        code: "migration_failed",
+        data: { migration: metadata.name },
+        debug: { id: migration.id },
         error: err as Error,
       });
     }

@@ -5,8 +5,8 @@ import type {
   WriteResult,
 } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
-import { ProteusError } from "../../../../errors/ProteusError.js";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { PostgresQueryClient } from "../types/postgres-query-client.js";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
 import { coerceWriteValue } from "../utils/query/coerce-value.js";
@@ -61,6 +61,10 @@ export class PostgresInsertQueryBuilder<
     ) {
       throw new ProteusRepositoryError(
         "INSERT via QueryBuilder is not supported for joined inheritance entities — use repository.insert()",
+        {
+          code: "unsupported_operation",
+          data: { operation: "insert.execute", entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -75,6 +79,10 @@ export class PostgresInsertQueryBuilder<
       ) {
         throw new ProteusError(
           `INSERT on "${this.metadata.entity.name}": row ${i} has different keys than row 0`,
+          {
+            code: "invalid_query",
+            data: { entity: this.metadata.entity.name, operation: "insert.execute" },
+          },
         );
       }
     }

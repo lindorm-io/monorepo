@@ -146,6 +146,7 @@ export class RedisRepository<
   ): Promise<Array<E>> {
     throw new NotSupportedError(
       "Redis driver does not support versioned entities. Use a SQL or Memory driver for version history.",
+      { code: "unsupported_operation" },
     );
   }
 
@@ -253,7 +254,9 @@ export class RedisRepository<
       }
       const fetchResults = await fetchPipeline.exec();
       if (!fetchResults) {
-        throw new RedisDriverError("Pipeline execution returned null during clear()");
+        throw new RedisDriverError("Pipeline execution returned null during clear()", {
+          code: "command_execution_failed",
+        });
       }
 
       const keysToDelete: string[] = [];
@@ -278,7 +281,9 @@ export class RedisRepository<
       }
       const delResult = await delPipeline.exec();
       if (!delResult) {
-        throw new RedisDriverError("Pipeline execution returned null during clear()");
+        throw new RedisDriverError("Pipeline execution returned null during clear()", {
+          code: "command_execution_failed",
+        });
       }
       return;
     }
@@ -317,7 +322,9 @@ export class RedisRepository<
     }
     const result = await pipeline.exec();
     if (!result) {
-      throw new RedisDriverError("Pipeline execution returned null during clear()");
+      throw new RedisDriverError("Pipeline execution returned null during clear()", {
+        code: "command_execution_failed",
+      });
     }
   }
 
@@ -646,6 +653,7 @@ export class RedisRepository<
       throw new NotSupportedError(
         "Redis driver does not support upsert with conflictOn. " +
           "Use PK-based upsert or a driver with unique constraint support.",
+        { code: "unsupported_operation" },
       );
     }
 

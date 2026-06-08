@@ -1,4 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
+import { ProteusError } from "../../../../../errors/ProteusError.js";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { applyDiscriminatorColumn } from "../../../../utils/sql/apply-discriminator-column.js";
@@ -50,8 +51,9 @@ export const compileInsertBulk = <E extends IEntity>(
   amphora?: IAmphora,
 ): CompiledSql => {
   if (entities.length === 0) {
-    throw new Error(
+    throw new ProteusError(
       `compileInsertBulk: entities array must not be empty for "${metadata.entity.name}"`,
+      { code: "invalid_query", data: { entity: metadata.entity.name } },
     );
   }
 

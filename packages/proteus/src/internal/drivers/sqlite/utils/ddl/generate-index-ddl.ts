@@ -43,6 +43,10 @@ export const generateIndexDDL = (
     if (index.name && index.name.length > SQLITE_IDENTIFIER_LIMIT) {
       throw new ProteusError(
         `Index name exceeds ${SQLITE_IDENTIFIER_LIMIT} characters: "${index.name}"`,
+        {
+          code: "invalid_query",
+          data: { index: index.name, limit: SQLITE_IDENTIFIER_LIMIT },
+        },
       );
     }
     const name = index.name ?? autoName;

@@ -21,6 +21,7 @@ export const generateEnumTypeDDL = (
     if (field.enum && field.type !== "enum") {
       throw new ProteusError(
         `Field "${field.key}" has enum values but type is "${field.type}" — expected "enum"`,
+        { code: "schema_mismatch", data: { column: field.key } },
       );
     }
 
@@ -29,13 +30,17 @@ export const generateEnumTypeDDL = (
     if (!field.enum) {
       throw new ProteusError(
         `Field "${field.key}" has type "enum" but no enum values provided`,
+        { code: "schema_mismatch", data: { column: field.key } },
       );
     }
 
     const values = extractEnumValues(field.enum);
 
     if (values.length === 0) {
-      throw new ProteusError(`Enum for field "${field.key}" has no values`);
+      throw new ProteusError(`Enum for field "${field.key}" has no values`, {
+        code: "schema_mismatch",
+        data: { column: field.key },
+      });
     }
 
     const typeName = getEnumTypeName(tableName, field.name);

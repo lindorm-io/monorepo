@@ -28,9 +28,9 @@ export const checkUniqueConstraints = (
         throw new MemoryDuplicateKeyError(
           `Unique constraint violation for "${metadata.entity.name}" on columns [${columns.join(", ")}]`,
           {
+            code: "unique_violation",
+            data: { entityName: metadata.entity.name, columns },
             debug: {
-              entityName: metadata.entity.name,
-              columns,
               values: columns.map((c) => row[c]),
             },
           },

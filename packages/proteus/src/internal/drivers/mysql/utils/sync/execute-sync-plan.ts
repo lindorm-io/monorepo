@@ -60,6 +60,7 @@ export class SyncPlanExecutor {
       if (!lockAcquired) {
         throw new MySqlSyncError(
           "Could not acquire sync advisory lock — another sync process is running",
+          { code: "sync_failed" },
         );
       }
     }
