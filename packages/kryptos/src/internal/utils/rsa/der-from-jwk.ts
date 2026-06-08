@@ -21,7 +21,10 @@ export const createRsaDerFromJwk = (options: Options): Result => {
     const privateKey = privateObject.export({ format: "der", type: "pkcs1" });
 
     if (!isBuffer(privateKey)) {
-      throw new KryptosError("Key creation failed");
+      throw new KryptosError("Key creation failed", {
+        code: "rsa_key_creation_failed",
+        data: { component: "private" },
+      });
     }
 
     result.privateKey = privateKey;
@@ -32,14 +35,19 @@ export const createRsaDerFromJwk = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "der", type: "pkcs1" });
 
     if (!isBuffer(publicKey)) {
-      throw new KryptosError("Key creation failed");
+      throw new KryptosError("Key creation failed", {
+        code: "rsa_key_creation_failed",
+        data: { component: "public" },
+      });
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.privateKey && !result.publicKey.length) {
-    throw new KryptosError("Key creation failed");
+    throw new KryptosError("Key creation failed", {
+      code: "rsa_key_creation_failed",
+    });
   }
 
   return result;

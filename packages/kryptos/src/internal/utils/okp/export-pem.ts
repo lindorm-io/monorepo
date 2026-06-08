@@ -58,14 +58,19 @@ export const exportOkpToPem = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "pem", type: "spki" });
 
     if (!isString(publicKey)) {
-      throw new KryptosError("Key export failed [public]: expected PEM string");
+      throw new KryptosError("OKP PEM export failed: expected public key string", {
+        code: "okp_pem_export_failed",
+        data: { curve: options.curve, key: "public" },
+      });
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.publicKey.length) {
-    throw new KryptosError("Key export failed: no public key available");
+    throw new KryptosError("Key export failed: no public key available", {
+      code: "missing_okp_public_key",
+    });
   }
 
   return result;

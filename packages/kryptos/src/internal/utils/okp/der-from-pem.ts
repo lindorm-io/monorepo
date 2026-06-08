@@ -10,7 +10,10 @@ type Result = Omit<OkpBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createOkpDerFromPem = (options: Options): Result => {
   if (!isOkpCurve(options.curve)) {
-    throw new KryptosError("Curve is required");
+    throw new KryptosError("Invalid OKP curve", {
+      code: "invalid_okp_curve",
+      data: { curve: options.curve ?? null },
+    });
   }
 
   const result: Result = {
@@ -30,7 +33,10 @@ export const createOkpDerFromPem = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "der", type: "spki" });
 
     if (!isBuffer(privateKey)) {
-      throw new KryptosError("Key creation failed");
+      throw new KryptosError("Key creation failed", {
+        code: "okp_key_creation_failed",
+        data: { component: "privateKey", format: "der" },
+      });
     }
 
     result.privateKey = privateKey;
@@ -46,14 +52,20 @@ export const createOkpDerFromPem = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "der", type: "spki" });
 
     if (!isBuffer(publicKey)) {
-      throw new KryptosError("Key creation failed");
+      throw new KryptosError("Key creation failed", {
+        code: "okp_key_creation_failed",
+        data: { component: "publicKey", format: "der" },
+      });
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.privateKey && !result.publicKey.length) {
-    throw new KryptosError("Key creation failed");
+    throw new KryptosError("Key creation failed", {
+      code: "okp_key_creation_failed",
+      data: { curve: options.curve },
+    });
   }
 
   return result;

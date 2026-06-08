@@ -14,7 +14,9 @@ type Result = Omit<OctJwk, "kid" | "alg" | "kty" | "use">;
 
 export const exportOctToJwk = (options: Options): Result => {
   if (!options.privateKey) {
-    throw new KryptosError("Private key is required");
+    throw new KryptosError("Private key is required", {
+      code: "missing_oct_private_key",
+    });
   }
 
   if (options.mode !== "private") {

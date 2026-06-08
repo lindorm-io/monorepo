@@ -7,7 +7,9 @@ type Result = Omit<OctBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createOctDerFromPem = (options: Options): Result => {
   if (!options.privateKey) {
-    throw new KryptosError("Invalid key");
+    throw new KryptosError("Invalid key", {
+      code: "missing_oct_private_key",
+    });
   }
 
   const chunks = options.privateKey

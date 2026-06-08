@@ -46,7 +46,9 @@ export type GenerateX509Options = {
 const buildSerialNumber = (provided?: Buffer): Buffer => {
   if (provided !== undefined) {
     if (provided.length === 0) {
-      throw new KryptosError("serialNumber must be non-empty");
+      throw new KryptosError("serialNumber must be non-empty", {
+        code: "invalid_certificate_options",
+      });
     }
     return provided;
   }
@@ -61,13 +63,19 @@ const assertKeyUsageAgainstBasicConstraints = (
   basicConstraints: X509BasicConstraints,
 ): void => {
   if (keyUsage.length === 0) {
-    throw new KryptosError("keyUsage must contain at least one flag (RFC 5280 §4.2.1.3)");
+    throw new KryptosError(
+      "keyUsage must contain at least one flag (RFC 5280 §4.2.1.3)",
+      {
+        code: "invalid_certificate_options",
+      },
+    );
   }
 
   const needsCa = keyUsage.includes("keyCertSign") || keyUsage.includes("cRLSign");
   if (needsCa && !basicConstraints.ca) {
     throw new KryptosError(
       "keyUsage with keyCertSign or cRLSign requires basicConstraints.ca=true (RFC 5280 §4.2.1.3)",
+      { code: "invalid_certificate_options" },
     );
   }
 };
@@ -92,10 +100,22 @@ const buildExtensions = (options: GenerateX509Options, subjectSpki: Buffer): Buf
 
 export const generateX509Certificate = (options: GenerateX509Options): Buffer => {
   if (options.subjectKryptos.type === "oct" || options.issuerKryptos.type === "oct") {
-    throw new KryptosError("X.509 certificates require asymmetric keys");
+    throw new KryptosError("X.509 certificates require asymmetric keys", {
+      code: "unsupported_key_type",
+      data: {
+        subjectType: options.subjectKryptos.type,
+        issuerType: options.issuerKryptos.type,
+      },
+    });
   }
   if (options.notBefore.getTime() >= options.notAfter.getTime()) {
-    throw new KryptosError("notBefore must be strictly before notAfter");
+    throw new KryptosError("notBefore must be strictly before notAfter", {
+      code: "invalid_certificate_options",
+      data: {
+        notBefore: options.notBefore.toISOString(),
+        notAfter: options.notAfter.toISOString(),
+      },
+    });
   }
 
   assertKeyUsageAgainstBasicConstraints(options.keyUsage, options.basicConstraints);

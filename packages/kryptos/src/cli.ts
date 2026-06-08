@@ -4,6 +4,7 @@ import { input, select } from "@inquirer/prompts";
 import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
 import { program } from "commander";
 import { KryptosKit } from "./classes/index.js";
+import { KryptosError } from "./errors/index.js";
 import {
   EC_ENC_ALGORITHMS,
   EC_SIG_ALGORITHMS,
@@ -58,7 +59,10 @@ const switchAlgorithmChoices = (
         case "oct":
           return [...OCT_ENC_STD_ALGORITHMS, ...OCT_ENC_DIR_ALGORITHMS];
         default:
-          throw new Error("Unexpected Error");
+          throw new KryptosError("Unsupported key type", {
+            code: "unsupported_key_type",
+            data: { type, use },
+          });
       }
 
     case "sig":
@@ -72,11 +76,17 @@ const switchAlgorithmChoices = (
         case "oct":
           return OCT_SIG_ALGORITHMS;
         default:
-          throw new Error("Unexpected Error");
+          throw new KryptosError("Unsupported key type", {
+            code: "unsupported_key_type",
+            data: { type, use },
+          });
       }
 
     default:
-      throw new Error("Unexpected Error");
+      throw new KryptosError("Unsupported key use", {
+        code: "unsupported_key_use",
+        data: { use },
+      });
   }
 };
 
