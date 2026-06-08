@@ -30,7 +30,9 @@ export const scanAllRows = async (
   const results = await pipeline.exec();
 
   if (!results) {
-    throw new RedisDriverError("Pipeline execution failed — returned null");
+    throw new RedisDriverError("Pipeline execution failed — returned null", {
+      code: "command_execution_failed",
+    });
   }
 
   const rows: Array<Dict> = [];

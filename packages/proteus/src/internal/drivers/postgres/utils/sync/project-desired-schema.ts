@@ -47,6 +47,9 @@ const mapOnDeleteAction = (onDestroy: RelationDestroy): string => {
     default:
       throw new PostgresSyncError(
         `Unsupported onDestroy value: "${onDestroy as string}"`,
+        {
+          code: "unsupported_operation",
+        },
       );
   }
 };
@@ -64,7 +67,9 @@ const mapOnUpdateAction = (onUpdate: RelationChange): string => {
     case "ignore":
       return "NO ACTION";
     default:
-      throw new PostgresSyncError(`Unsupported onUpdate value: "${onUpdate as string}"`);
+      throw new PostgresSyncError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
+        code: "unsupported_operation",
+      });
   }
 };
 
@@ -202,6 +207,10 @@ export const projectDesiredSchema = (
       if (field.name.length > PG_IDENTIFIER_LIMIT) {
         throw new PostgresSyncError(
           `Column name "${field.name}" on "${metadata.target.name}" exceeds ${PG_IDENTIFIER_LIMIT} characters`,
+          {
+            code: "schema_mismatch",
+            data: { column: field.name, entity: metadata.target.name },
+          },
         );
       }
     }
@@ -264,6 +273,10 @@ export const projectDesiredSchema = (
       if (colliding) {
         throw new PostgresSyncError(
           `Column name "${fkCol}" on "${metadata.target.name}" collides — embedded field "${colliding.key}" produces column "${colliding.name}" which conflicts with a relation FK column of the same name`,
+          {
+            code: "schema_mismatch",
+            data: { column: fkCol, entity: metadata.target.name },
+          },
         );
       }
     }

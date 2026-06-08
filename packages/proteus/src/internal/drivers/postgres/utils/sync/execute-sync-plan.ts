@@ -90,6 +90,7 @@ export class SyncPlanExecutor {
               // ROLLBACK failure is secondary — preserve the original sync error
             }
             throw new PostgresSyncError("Sync transaction failed", {
+              code: "sync_failed",
               error: error as Error,
             });
           }

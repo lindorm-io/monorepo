@@ -20,6 +20,10 @@ export const resolveFkColumnType = (
   if (!pkField) {
     throw new ProteusError(
       `Foreign primary key field "${foreignPkKey}" not found on ${foreignMeta.entity.name}`,
+      {
+        code: "schema_mismatch",
+        data: { entity: foreignMeta.entity.name, column: foreignPkKey },
+      },
     );
   }
 

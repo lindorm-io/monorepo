@@ -21,6 +21,7 @@ export const generateCheckDDL = (
     if (check.name && check.name.length > MYSQL_IDENTIFIER_LIMIT) {
       throw new ProteusError(
         `Check constraint name exceeds ${MYSQL_IDENTIFIER_LIMIT} characters: "${check.name}"`,
+        { code: "schema_mismatch", data: { table: tableName, constraint: check.name } },
       );
     }
     const name =

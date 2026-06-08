@@ -732,6 +732,7 @@ const topologicallySortCreateTables = (
       .map((op) => op.tableName);
     throw new MySqlSyncError(
       `Circular foreign key dependency detected among tables: ${unsorted.join(", ")}. Cannot determine creation order.`,
+      { code: "schema_mismatch", data: { tables: unsorted } },
     );
   }
 

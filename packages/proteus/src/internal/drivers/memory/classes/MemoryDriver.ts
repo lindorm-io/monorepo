@@ -321,7 +321,10 @@ export class MemoryDriver implements IProteusDriver {
   }
 
   public async acquireClient(): Promise<never> {
-    throw new MemoryDriverError("Memory driver does not expose a client");
+    throw new MemoryDriverError("Memory driver does not expose a client", {
+      code: "unsupported_operation",
+      data: { operation: "acquireClient" },
+    });
   }
 
   public async beginTransaction(
@@ -339,7 +342,10 @@ export class MemoryDriver implements IProteusDriver {
   public async commitTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as MemoryTransactionHandle;
     if (txHandle.state !== "active") {
-      throw new MemoryDriverError(`Cannot commit: transaction is ${txHandle.state}`);
+      throw new MemoryDriverError(`Cannot commit: transaction is ${txHandle.state}`, {
+        code: "transaction_not_active",
+        data: { state: txHandle.state },
+      });
     }
 
     // Replace main store maps with transaction's working copy
@@ -353,7 +359,10 @@ export class MemoryDriver implements IProteusDriver {
   public async rollbackTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as MemoryTransactionHandle;
     if (txHandle.state !== "active") {
-      throw new MemoryDriverError(`Cannot rollback: transaction is ${txHandle.state}`);
+      throw new MemoryDriverError(`Cannot rollback: transaction is ${txHandle.state}`, {
+        code: "transaction_not_active",
+        data: { state: txHandle.state },
+      });
     }
 
     // Discard working copy — main store untouched

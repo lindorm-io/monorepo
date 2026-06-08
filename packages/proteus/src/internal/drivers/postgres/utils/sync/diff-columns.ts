@@ -79,6 +79,10 @@ export const diffColumns = (
           throw new PostgresSyncError(
             `Cannot add NOT NULL column ${quoteIdentifier(desired.name)} on ${q}: ` +
               `type ${desired.pgType} has no zero value — provide an explicit default`,
+            {
+              code: "schema_mismatch",
+              data: { schema, table, column: desired.name, type: desired.pgType },
+            },
           );
         }
         colDef += ` NOT NULL DEFAULT ${defVal}`;
@@ -221,6 +225,10 @@ export const diffColumns = (
               throw new PostgresSyncError(
                 `Cannot re-add NOT NULL column ${quoteIdentifier(desired.name)} on ${q}: ` +
                   `type ${desired.pgType} has no zero value — provide an explicit default`,
+                {
+                  code: "schema_mismatch",
+                  data: { schema, table, column: desired.name, type: desired.pgType },
+                },
               );
             }
             addDef += ` NOT NULL DEFAULT ${defVal}`;
@@ -321,6 +329,10 @@ export const diffColumns = (
           throw new PostgresSyncError(
             `Cannot set NOT NULL on ${quoteIdentifier(desired.name)} on ${q}: ` +
               `type ${desired.pgType} has no zero value for backfill — provide an explicit default`,
+            {
+              code: "schema_mismatch",
+              data: { schema, table, column: desired.name, type: desired.pgType },
+            },
           );
         }
         ops.push({

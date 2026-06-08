@@ -1,3 +1,4 @@
+import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
@@ -9,8 +10,9 @@ export const buildSimpleIn = (
   params: Array<unknown>,
 ): string => {
   if (values.length === 0) {
-    throw new Error(
+    throw new ProteusRepositoryError(
       "buildSimpleIn: values array must not be empty — IN () is invalid SQL",
+      { code: "invalid_query" },
     );
   }
 

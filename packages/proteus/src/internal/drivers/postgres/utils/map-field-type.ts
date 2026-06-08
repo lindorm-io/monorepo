@@ -1,5 +1,5 @@
 import { getEnumTypeName } from "../../../drivers/postgres/utils/get-enum-type-name.js";
-import { ProteusError } from "../../../../errors/index.js";
+import { NotSupportedError, ProteusError } from "../../../../errors/index.js";
 import type { MetaField } from "../../../entity/types/metadata.js";
 import { quoteQualifiedName } from "./quote-identifier.js";
 
@@ -17,7 +17,10 @@ export const mapFieldType = (
   const { type, key, max } = field;
 
   if (type === null) {
-    throw new ProteusError(`Field "${key}" has no type — cannot map to PostgreSQL type`);
+    throw new NotSupportedError(
+      `Field "${key}" has no type — cannot map to PostgreSQL type`,
+      { code: "unsupported_column_type", data: { column: key } },
+    );
   }
 
   switch (type) {
@@ -52,7 +55,13 @@ export const mapFieldType = (
       return max ? `VARCHAR(${max})` : "TEXT";
     case "varchar":
       if (!max) {
-        throw new ProteusError(`Field "${key}" uses "varchar" type but "max" is not set`);
+        throw new ProteusError(
+          `Field "${key}" uses "varchar" type but "max" is not set`,
+          {
+            code: "invalid_query",
+            data: { column: key },
+          },
+        );
       }
       return `VARCHAR(${max})`;
     case "text":
@@ -132,6 +141,9 @@ export const mapFieldType = (
       return "TEXT";
 
     default:
-      throw new ProteusError(`Unsupported MetaFieldType: "${type as string}"`);
+      throw new NotSupportedError(`Unsupported MetaFieldType: "${type as string}"`, {
+        code: "unsupported_column_type",
+        data: { type: type as string },
+      });
   }
 };

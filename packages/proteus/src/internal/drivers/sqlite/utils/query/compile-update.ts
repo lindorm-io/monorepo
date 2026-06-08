@@ -123,6 +123,7 @@ export const compileUpdateMany = <E extends IEntity>(
     throw new ProteusRepositoryError(
       `updateMany: no valid columns in update object for entity "${metadata.entity.name}"`,
       {
+        code: "invalid_query",
         debug: {
           entityName: metadata.entity.name,
           updateKeys: Object.keys(update as Record<string, unknown>),
@@ -138,6 +139,7 @@ export const compileUpdateMany = <E extends IEntity>(
   if (!whereClause) {
     throw new ProteusRepositoryError(
       `updateMany: criteria must not be empty for entity "${metadata.entity.name}"`,
+      { code: "invalid_query", data: { entity: metadata.entity.name } },
     );
   }
 
@@ -208,6 +210,7 @@ const compileJoinedUpdateMany = <E extends IEntity>(
     throw new ProteusRepositoryError(
       `updateMany: no valid columns in update object for entity "${metadata.entity.name}"`,
       {
+        code: "invalid_query",
         debug: {
           entityName: metadata.entity.name,
           updateKeys: Object.keys(update as Record<string, unknown>),
@@ -251,6 +254,7 @@ const compileJoinedUpdateMany = <E extends IEntity>(
   if (!whereClause) {
     throw new ProteusRepositoryError(
       `updateMany: criteria must not be empty for entity "${metadata.entity.name}"`,
+      { code: "invalid_query", data: { entity: metadata.entity.name } },
     );
   }
 

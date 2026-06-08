@@ -27,7 +27,9 @@ export class MemoryTransactionContext implements ITransactionContext {
 
   public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
     if (!this.repoFactory) {
-      throw new MemoryDriverError("Transactional repositories are not configured");
+      throw new MemoryDriverError("Transactional repositories are not configured", {
+        code: "transactional_repositories_not_configured",
+      });
     }
     return this.repoFactory(target);
   }

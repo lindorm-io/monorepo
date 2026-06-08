@@ -140,7 +140,10 @@ export const markMigrationFinished = async (
     id,
   ]);
   if (changes === 0) {
-    throw new SqliteMigrationError("No migration record found", { debug: { id } });
+    throw new SqliteMigrationError("No migration record found", {
+      code: "migration_not_found",
+      debug: { id },
+    });
   }
 };
 
@@ -155,6 +158,9 @@ export const markMigrationRolledBack = async (
     [new Date().toISOString(), new Date().toISOString(), id],
   );
   if (changes === 0) {
-    throw new SqliteMigrationError("No migration record found", { debug: { id } });
+    throw new SqliteMigrationError("No migration record found", {
+      code: "migration_not_found",
+      debug: { id },
+    });
   }
 };

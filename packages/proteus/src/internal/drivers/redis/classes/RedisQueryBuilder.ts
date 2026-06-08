@@ -49,6 +49,7 @@ import { scanAllRows as scanAllRowsShared } from "../utils/scan-all-rows.js";
 const guardRedisLockMode = (mode: LockMode): void => {
   throw new NotSupportedError(
     `Lock mode "${mode}" is not supported by the Redis driver — Redis provides no locking semantics`,
+    { code: "unsupported_operation", data: { lockMode: mode } },
   );
 };
 
@@ -57,7 +58,9 @@ const execPipeline = async (
 ): Promise<Array<[Error | null, any]>> => {
   const results = await pipeline.exec();
   if (!results) {
-    throw new ProteusRepositoryError("Pipeline execution returned null");
+    throw new ProteusRepositoryError("Pipeline execution returned null", {
+      code: "command_execution_failed",
+    });
   }
   return results;
 };
@@ -115,51 +118,75 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   // ─── Override raw SQL methods to throw ─────────────────────────────
 
   public override whereRaw(): this {
-    throw new NotSupportedError("whereRaw is not supported by the Redis driver");
+    throw new NotSupportedError("whereRaw is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override andWhereRaw(): this {
-    throw new NotSupportedError("andWhereRaw is not supported by the Redis driver");
+    throw new NotSupportedError("andWhereRaw is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override orWhereRaw(): this {
-    throw new NotSupportedError("orWhereRaw is not supported by the Redis driver");
+    throw new NotSupportedError("orWhereRaw is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override selectRaw(): this {
-    throw new NotSupportedError("selectRaw is not supported by the Redis driver");
+    throw new NotSupportedError("selectRaw is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override groupBy(): this {
-    throw new NotSupportedError("groupBy is not supported by the Redis driver");
+    throw new NotSupportedError("groupBy is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override having(): this {
-    throw new NotSupportedError("having is not supported by the Redis driver");
+    throw new NotSupportedError("having is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override andHaving(): this {
-    throw new NotSupportedError("andHaving is not supported by the Redis driver");
+    throw new NotSupportedError("andHaving is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override orHaving(): this {
-    throw new NotSupportedError("orHaving is not supported by the Redis driver");
+    throw new NotSupportedError("orHaving is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override havingRaw(): this {
-    throw new NotSupportedError("havingRaw is not supported by the Redis driver");
+    throw new NotSupportedError("havingRaw is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override andHavingRaw(): this {
-    throw new NotSupportedError("andHavingRaw is not supported by the Redis driver");
+    throw new NotSupportedError("andHavingRaw is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override orHavingRaw(): this {
-    throw new NotSupportedError("orHavingRaw is not supported by the Redis driver");
+    throw new NotSupportedError("orHavingRaw is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   public override window(): this {
-    throw new NotSupportedError("window is not supported by the Redis driver");
+    throw new NotSupportedError("window is not supported by the Redis driver", {
+      code: "unsupported_operation",
+    });
   }
 
   // ─── Terminal methods ─────────────────────────────────────────────
@@ -190,7 +217,13 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public async getOneOrFail(): Promise<E> {
     const entity = await this.getOne();
     if (!entity) {
-      throw new ProteusRepositoryError(`Entity "${this.metadata.entity.name}" not found`);
+      throw new ProteusRepositoryError(
+        `Entity "${this.metadata.entity.name}" not found`,
+        {
+          code: "entity_not_found",
+          data: { entityName: this.metadata.entity.name },
+        },
+      );
     }
     return entity;
   }
@@ -556,6 +589,10 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
     ) {
       throw new ProteusRepositoryError(
         `QB insert is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.insert() instead.`,
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name },
+        },
       );
     }
 
@@ -603,7 +640,10 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
       if (exists) {
         throw new RedisDuplicateKeyError(
           `Duplicate primary key for "${this.metadata.entity.name}": ${redisKey}`,
-          { debug: { entityName: this.metadata.entity.name, redisKey } },
+          {
+            code: "unique_violation",
+            debug: { entityName: this.metadata.entity.name, redisKey },
+          },
         );
       }
 
@@ -612,6 +652,7 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
       if (Object.keys(hash).length === 0) {
         throw new RedisDriverError(
           `Cannot insert entity "${this.metadata.entity.name}" — all fields serialized to null, which would create an invisible Redis key`,
+          { code: "invalid_query", data: { entityName: this.metadata.entity.name } },
         );
       }
 
@@ -629,6 +670,10 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
           if (isNaN(expiryDate.getTime())) {
             throw new RedisDriverError(
               `Invalid expiry date for "${this.metadata.entity.name}": ${String(expiresAt)}`,
+              {
+                code: "serialization_failure",
+                data: { entityName: this.metadata.entity.name },
+              },
             );
           }
           await this.client.pexpireat(redisKey, expiryDate.getTime());
@@ -961,6 +1006,10 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
     if (this.soft && !deleteField) {
       throw new NotSupportedError(
         "Entity does not support soft delete (missing @DeleteDate field)",
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name },
+        },
       );
     }
 

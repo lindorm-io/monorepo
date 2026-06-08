@@ -131,13 +131,19 @@ export class SqliteCursor<E extends IEntity> implements IProteusCursor<E> {
 
   private guardClosed(): void {
     if (this.closed) {
-      throw new SqliteDriverError("Cursor is closed");
+      throw new SqliteDriverError("Cursor is closed", {
+        code: "cursor_closed",
+        data: { operation: "cursor.read" },
+      });
     }
   }
 
   private guardReading(): void {
     if (this.reading) {
-      throw new SqliteDriverError("Concurrent cursor reads are not allowed");
+      throw new SqliteDriverError("Concurrent cursor reads are not allowed", {
+        code: "concurrent_cursor_read",
+        data: { operation: "cursor.read" },
+      });
     }
   }
 

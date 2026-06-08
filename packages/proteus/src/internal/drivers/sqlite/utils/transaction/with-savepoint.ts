@@ -21,6 +21,8 @@ export const withSavepoint = async <T>(
     handle.client.exec(`SAVEPOINT "${name}"`);
   } catch (error) {
     throw new SqliteTransactionError(`Failed to create savepoint "${name}"`, {
+      code: "query_execution_failed",
+      data: { operation: "SAVEPOINT" },
       error: error as Error,
     });
   }

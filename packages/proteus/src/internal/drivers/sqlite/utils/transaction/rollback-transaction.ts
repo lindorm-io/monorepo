@@ -11,6 +11,7 @@ export const rollbackTransaction = (handle: SqliteTransactionHandle): void => {
   } catch (error) {
     handle.state = "rolledback";
     throw new SqliteTransactionError("Failed to rollback transaction", {
+      code: "query_execution_failed",
       error: error as Error,
     });
   }

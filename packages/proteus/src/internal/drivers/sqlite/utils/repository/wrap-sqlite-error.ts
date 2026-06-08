@@ -14,37 +14,37 @@ export const wrapSqliteError = (
 
   if (error instanceof Error) {
     const msg = error.message;
-    const code = (error as any).code as string | undefined;
+    const sqliteCode = (error as any).code as string | undefined;
 
     if (msg.includes("UNIQUE constraint failed")) {
       throw new DuplicateKeyError(message, {
-        code,
+        code: "unique_violation",
         error,
-        debug: { ...context, detail: msg },
+        debug: { ...context, detail: msg, sqliteCode },
       });
     }
 
     if (msg.includes("FOREIGN KEY constraint failed")) {
       throw new ForeignKeyViolationError(message, {
-        code,
+        code: "foreign_key_violation",
         error,
-        debug: { ...context, detail: msg },
+        debug: { ...context, detail: msg, sqliteCode },
       });
     }
 
     if (msg.includes("NOT NULL constraint failed")) {
       throw new NotNullViolationError(message, {
-        code,
+        code: "not_null_violation",
         error,
-        debug: { ...context, detail: msg },
+        debug: { ...context, detail: msg, sqliteCode },
       });
     }
 
     if (msg.includes("CHECK constraint failed")) {
       throw new CheckConstraintError(message, {
-        code,
+        code: "check_constraint_violation",
         error,
-        debug: { ...context, detail: msg },
+        debug: { ...context, detail: msg, sqliteCode },
       });
     }
 
@@ -57,14 +57,16 @@ export const wrapSqliteError = (
       throw new ProteusRepositoryError(
         `${message} (database locked — retry the operation)`,
         {
+          code: "serialization_failure",
           error,
-          debug: { ...context, detail: msg },
+          debug: { ...context, detail: msg, sqliteCode },
         },
       );
     }
   }
 
   throw new ProteusRepositoryError(message, {
+    code: "query_execution_failed",
     error: error instanceof Error ? error : undefined,
     debug: {
       ...context,

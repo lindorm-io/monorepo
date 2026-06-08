@@ -44,11 +44,16 @@ const mapOnDeleteAction = (onDestroy: RelationDestroy): string => {
     case "set_null":
       return "SET NULL";
     case "set_default":
-      throw new MySqlSyncError("SET DEFAULT is not supported by MySQL InnoDB");
+      throw new MySqlSyncError("SET DEFAULT is not supported by MySQL InnoDB", {
+        code: "unsupported_operation",
+      });
     case "ignore":
       return "NO ACTION";
     default:
-      throw new MySqlSyncError(`Unsupported onDestroy value: "${onDestroy as string}"`);
+      throw new MySqlSyncError(`Unsupported onDestroy value: "${onDestroy as string}"`, {
+        code: "unsupported_operation",
+        data: { onDestroy: onDestroy as string },
+      });
   }
 };
 
@@ -61,11 +66,16 @@ const mapOnUpdateAction = (onUpdate: RelationChange): string => {
     case "set_null":
       return "SET NULL";
     case "set_default":
-      throw new MySqlSyncError("SET DEFAULT is not supported by MySQL InnoDB");
+      throw new MySqlSyncError("SET DEFAULT is not supported by MySQL InnoDB", {
+        code: "unsupported_operation",
+      });
     case "ignore":
       return "NO ACTION";
     default:
-      throw new MySqlSyncError(`Unsupported onUpdate value: "${onUpdate as string}"`);
+      throw new MySqlSyncError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
+        code: "unsupported_operation",
+        data: { onUpdate: onUpdate as string },
+      });
   }
 };
 
@@ -194,6 +204,10 @@ export const projectDesiredSchemaMysql = (
       if (field.name.length > MYSQL_IDENTIFIER_LIMIT) {
         throw new MySqlSyncError(
           `Column name "${field.name}" on "${metadata.target.name}" exceeds ${MYSQL_IDENTIFIER_LIMIT} characters`,
+          {
+            code: "schema_mismatch",
+            data: { column: field.name, entity: metadata.target.name },
+          },
         );
       }
     }
@@ -230,6 +244,10 @@ export const projectDesiredSchemaMysql = (
       if (colliding) {
         throw new MySqlSyncError(
           `Column name "${fkCol}" on "${metadata.target.name}" collides — embedded field "${colliding.key}" produces column "${colliding.name}" which conflicts with a relation FK column of the same name`,
+          {
+            code: "schema_mismatch",
+            data: { column: fkCol, entity: metadata.target.name },
+          },
         );
       }
     }

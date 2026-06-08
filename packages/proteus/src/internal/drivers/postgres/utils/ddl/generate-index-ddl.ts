@@ -44,6 +44,7 @@ export const generateIndexDDL = (
     if (index.name && index.name.length > PG_IDENTIFIER_LIMIT) {
       throw new ProteusError(
         `Index name exceeds ${PG_IDENTIFIER_LIMIT} characters: "${index.name}"`,
+        { code: "schema_mismatch", data: { table: tableName, index: index.name } },
       );
     }
     const name = index.name ?? autoName;
@@ -55,7 +56,10 @@ export const generateIndexDDL = (
     if (index.using) {
       const method = index.using.toLowerCase();
       if (!VALID_INDEX_METHODS.has(method)) {
-        throw new ProteusError(`Invalid index method: "${index.using}"`);
+        throw new ProteusError(`Invalid index method: "${index.using}"`, {
+          code: "unsupported_operation",
+          data: { table: tableName, method: index.using },
+        });
       }
       using = ` USING ${method}`;
     }

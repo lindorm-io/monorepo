@@ -283,7 +283,10 @@ export class RedisDriver implements IProteusDriver {
   public async commitTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as RedisTransactionHandle;
     if (txHandle.state !== "active") {
-      throw new RedisDriverError(`Cannot commit: transaction is ${txHandle.state}`);
+      throw new RedisDriverError(`Cannot commit: transaction is ${txHandle.state}`, {
+        code: "transaction_not_active",
+        data: { state: txHandle.state },
+      });
     }
     txHandle.state = "committed";
   }
@@ -291,7 +294,10 @@ export class RedisDriver implements IProteusDriver {
   public async rollbackTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as RedisTransactionHandle;
     if (txHandle.state !== "active") {
-      throw new RedisDriverError(`Cannot rollback: transaction is ${txHandle.state}`);
+      throw new RedisDriverError(`Cannot rollback: transaction is ${txHandle.state}`, {
+        code: "transaction_not_active",
+        data: { state: txHandle.state },
+      });
     }
     txHandle.state = "rolledBack";
   }
@@ -455,7 +461,9 @@ export class RedisDriver implements IProteusDriver {
 
   private requireClient(): Redis {
     if (!this.client) {
-      throw new RedisDriverError("Redis client is not connected. Call connect() first.");
+      throw new RedisDriverError("Redis client is not connected. Call connect() first.", {
+        code: "connection_not_established",
+      });
     }
     return this.client;
   }

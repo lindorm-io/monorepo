@@ -1,3 +1,4 @@
+import { ProteusError } from "../../../../../errors/ProteusError.js";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
@@ -52,7 +53,9 @@ export const compileSelectByPkBatch = <E extends IEntity>(
   namespace?: string | null,
 ): CompiledSql => {
   if (entities.length === 0) {
-    throw new Error("compileSelectByPkBatch requires at least one entity");
+    throw new ProteusError("compileSelectByPkBatch requires at least one entity", {
+      code: "invalid_query",
+    });
   }
 
   const resolved = resolveTableName(metadata, namespace);

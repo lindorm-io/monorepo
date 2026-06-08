@@ -198,6 +198,7 @@ export class MySqlDriver implements IProteusDriver {
     if (this.options.synchronize && this.options.runMigrations) {
       throw new MySqlMigrationError(
         "synchronize and runMigrations are mutually exclusive — use one or the other",
+        { code: "migration_failed" },
       );
     }
 
@@ -605,6 +606,7 @@ export class MySqlDriver implements IProteusDriver {
     if (!this.pool) {
       throw new MySqlDriverError(
         "Not connected — call connect() before calling setup() or query()",
+        { code: "connection_not_established" },
       );
     }
     return this.pool;
@@ -843,6 +845,7 @@ export class MySqlDriver implements IProteusDriver {
       if (lockRows[0]?.lock_result !== 1) {
         throw new MySqlDriverError(
           "Could not acquire sync advisory lock — another sync process is running",
+          { code: "sync_failed" },
         );
       }
 

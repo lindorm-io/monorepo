@@ -66,51 +66,87 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   // ─── Override raw SQL methods to throw ─────────────────────────────
 
   public override whereRaw(): this {
-    throw new NotSupportedError("whereRaw is not supported by the memory driver");
+    throw new NotSupportedError("whereRaw is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "whereRaw" },
+    });
   }
 
   public override andWhereRaw(): this {
-    throw new NotSupportedError("andWhereRaw is not supported by the memory driver");
+    throw new NotSupportedError("andWhereRaw is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "andWhereRaw" },
+    });
   }
 
   public override orWhereRaw(): this {
-    throw new NotSupportedError("orWhereRaw is not supported by the memory driver");
+    throw new NotSupportedError("orWhereRaw is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "orWhereRaw" },
+    });
   }
 
   public override selectRaw(): this {
-    throw new NotSupportedError("selectRaw is not supported by the memory driver");
+    throw new NotSupportedError("selectRaw is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "selectRaw" },
+    });
   }
 
   public override groupBy(): this {
-    throw new NotSupportedError("groupBy is not supported by the memory driver");
+    throw new NotSupportedError("groupBy is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "groupBy" },
+    });
   }
 
   public override having(): this {
-    throw new NotSupportedError("having is not supported by the memory driver");
+    throw new NotSupportedError("having is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "having" },
+    });
   }
 
   public override andHaving(): this {
-    throw new NotSupportedError("andHaving is not supported by the memory driver");
+    throw new NotSupportedError("andHaving is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "andHaving" },
+    });
   }
 
   public override orHaving(): this {
-    throw new NotSupportedError("orHaving is not supported by the memory driver");
+    throw new NotSupportedError("orHaving is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "orHaving" },
+    });
   }
 
   public override havingRaw(): this {
-    throw new NotSupportedError("havingRaw is not supported by the memory driver");
+    throw new NotSupportedError("havingRaw is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "havingRaw" },
+    });
   }
 
   public override andHavingRaw(): this {
-    throw new NotSupportedError("andHavingRaw is not supported by the memory driver");
+    throw new NotSupportedError("andHavingRaw is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "andHavingRaw" },
+    });
   }
 
   public override orHavingRaw(): this {
-    throw new NotSupportedError("orHavingRaw is not supported by the memory driver");
+    throw new NotSupportedError("orHavingRaw is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "orHavingRaw" },
+    });
   }
 
   public override window(): this {
-    throw new NotSupportedError("window is not supported by the memory driver");
+    throw new NotSupportedError("window is not supported by the memory driver", {
+      code: "unsupported_operation",
+      data: { operation: "window" },
+    });
   }
 
   // ─── Terminal methods ─────────────────────────────────────────────
@@ -141,7 +177,13 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public async getOneOrFail(): Promise<E> {
     const entity = await this.getOne();
     if (!entity) {
-      throw new ProteusRepositoryError(`Entity "${this.metadata.entity.name}" not found`);
+      throw new ProteusRepositoryError(
+        `Entity "${this.metadata.entity.name}" not found`,
+        {
+          code: "entity_not_found",
+          data: { entityName: this.metadata.entity.name },
+        },
+      );
     }
     return entity;
   }
@@ -421,6 +463,10 @@ class MemoryInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
     ) {
       throw new ProteusRepositoryError(
         `QB insert is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.insert() instead.`,
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name },
+        },
       );
     }
 
@@ -452,7 +498,10 @@ class MemoryInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
       if (table.has(pk)) {
         throw new MemoryDuplicateKeyError(
           `Duplicate primary key for "${this.metadata.entity.name}": ${pk}`,
-          { debug: { entityName: this.metadata.entity.name, primaryKey: pk } },
+          {
+            code: "unique_violation",
+            debug: { entityName: this.metadata.entity.name, primaryKey: pk },
+          },
         );
       }
 
@@ -516,6 +565,10 @@ class MemoryUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
     ) {
       throw new ProteusRepositoryError(
         `QB update is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.update() instead.`,
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name },
+        },
       );
     }
 
@@ -623,6 +676,10 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
     ) {
       throw new ProteusRepositoryError(
         `QB delete is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.destroy() instead.`,
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name },
+        },
       );
     }
 

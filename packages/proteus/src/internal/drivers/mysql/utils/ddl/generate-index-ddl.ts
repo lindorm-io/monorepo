@@ -37,6 +37,7 @@ export const generateIndexDDL = (
       throw new ProteusError(
         `Index has no valid key directions on table "${tableName}". ` +
           `Each index key must have direction "asc" or "desc".`,
+        { code: "schema_mismatch", data: { table: tableName } },
       );
     }
 
@@ -46,7 +47,10 @@ export const generateIndexDDL = (
       if (warnings) {
         warnings.push(msg);
       } else {
-        throw new ProteusError(msg);
+        throw new ProteusError(msg, {
+          code: "unsupported_operation",
+          data: { table: tableName },
+        });
       }
     }
 
@@ -84,6 +88,7 @@ export const generateIndexDDL = (
     if (index.name && index.name.length > MYSQL_IDENTIFIER_LIMIT) {
       throw new ProteusError(
         `Index name exceeds ${MYSQL_IDENTIFIER_LIMIT} characters: "${index.name}"`,
+        { code: "schema_mismatch", data: { table: tableName, index: index.name } },
       );
     }
     const name = index.name ?? autoName;
