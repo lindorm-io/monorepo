@@ -40,7 +40,10 @@ const parseEntry = (der: Buffer): ParsedEntry => {
   try {
     return { der, cert: parseX509Certificate(der) };
   } catch (err: any) {
-    throw new KryptosError("Failed to parse X.509 certificate", { error: err });
+    throw new KryptosError("Failed to parse X.509 certificate", {
+      code: "invalid_certificate",
+      debug: { error: err },
+    });
   }
 };
 
@@ -56,6 +59,10 @@ const verifySignature = (child: ParsedX509Certificate, issuerSpki: Buffer): bool
   if (!(child.signatureAlgorithm in SIG_ALG_HASH)) {
     throw new KryptosError(
       `Unsupported certificate signature algorithm OID: ${child.signatureAlgorithm}`,
+      {
+        code: "unsupported_signature_algorithm",
+        data: { oid: child.signatureAlgorithm },
+      },
     );
   }
   const hashName = SIG_ALG_HASH[child.signatureAlgorithm];
@@ -82,7 +89,9 @@ export const verifyX509Chain = (
   // (OCSP/CRL) and full RFC 5280 policy validation are explicitly out of scope.
 
   if (chain.length === 0) {
-    throw new KryptosError("Certificate chain is empty");
+    throw new KryptosError("Certificate chain is empty", {
+      code: "certificate_chain_empty",
+    });
   }
 
   const parsedChain = chain.map(parseEntry);
@@ -90,7 +99,9 @@ export const verifyX509Chain = (
   const anchorDers = toDerArray(trustAnchors);
 
   if (anchorDers.length === 0) {
-    throw new KryptosError("At least one trust anchor is required");
+    throw new KryptosError("At least one trust anchor is required", {
+      code: "trust_anchor_required",
+    });
   }
 
   const anchors = anchorDers.map(parseEntry);
@@ -101,6 +112,15 @@ export const verifyX509Chain = (
     if (!isWithinValidity(parsed.cert, now)) {
       throw new KryptosError(
         `Certificate ${describeCert(parsed.cert)} is outside its validity window`,
+        {
+          code: "certificate_outside_validity_window",
+          data: {
+            certificate: describeCert(parsed.cert),
+            notBefore: parsed.cert.notBefore.toISOString(),
+            notAfter: parsed.cert.notAfter.toISOString(),
+            now: now.toISOString(),
+          },
+        },
       );
     }
   }
@@ -109,6 +129,10 @@ export const verifyX509Chain = (
     if (!parsedChain[i].cert.extensions.basicConstraintsCa) {
       throw new KryptosError(
         `Non-leaf certificate ${describeCert(parsedChain[i].cert)} is not marked as a CA`,
+        {
+          code: "certificate_not_a_ca",
+          data: { certificate: describeCert(parsedChain[i].cert) },
+        },
       );
     }
   }
@@ -119,6 +143,13 @@ export const verifyX509Chain = (
     if (!verifySignature(current.cert, next.cert.subjectPublicKeyInfo)) {
       throw new KryptosError(
         `Signature verification failed for ${describeCert(current.cert)} against issuer ${describeCert(next.cert)}`,
+        {
+          code: "certificate_signature_verification_failed",
+          data: {
+            certificate: describeCert(current.cert),
+            issuer: describeCert(next.cert),
+          },
+        },
       );
     }
   }
@@ -137,6 +168,10 @@ export const verifyX509Chain = (
   if (!matchesAnchor && !lastVerifiableByAnchor) {
     throw new KryptosError(
       `Top of certificate chain ${describeCert(last.cert)} does not match any trust anchor`,
+      {
+        code: "trust_anchor_mismatch",
+        data: { certificate: describeCert(last.cert) },
+      },
     );
   }
 };

@@ -98,6 +98,7 @@ export class Kryptos implements IKryptos {
     if (!this._privateKey && !this._publicKey) {
       throw new KryptosError(
         "Kryptos must be initialised with private key, public key, or both",
+        { code: "missing_key_material" },
       );
     }
 
@@ -116,6 +117,7 @@ export class Kryptos implements IKryptos {
       if (!this._publicKey || this._publicKey.length === 0) {
         throw new KryptosError(
           "certificateChain requires a kryptos with a public key (oct keys are not supported)",
+          { code: "missing_public_key" },
         );
       }
 
@@ -125,6 +127,7 @@ export class Kryptos implements IKryptos {
       if (!x509PublicKeyMatches(leafSpki, this._publicKey, this._type)) {
         throw new KryptosError(
           "certificateChain leaf certificate public key does not match kryptos public key",
+          { code: "certificate_public_key_mismatch" },
         );
       }
 
@@ -261,7 +264,9 @@ export class Kryptos implements IKryptos {
     this.assertNotDisposed();
 
     if (!this._certificateChain) {
-      throw new KryptosError("Kryptos has no certificate to verify");
+      throw new KryptosError("Kryptos has no certificate to verify", {
+        code: "missing_certificate",
+      });
     }
 
     verifyX509Chain(this._certificateChain, options.trustAnchors);
@@ -369,7 +374,10 @@ export class Kryptos implements IKryptos {
       }
 
       default:
-        throw new KryptosError(`Invalid key format: ${format}`);
+        throw new KryptosError(`Invalid key format: ${format}`, {
+          code: "unsupported_export_format",
+          data: { format },
+        });
     }
   }
 
@@ -485,7 +493,9 @@ export class Kryptos implements IKryptos {
 
   private assertNotDisposed(): void {
     if (this._disposed) {
-      throw new KryptosError("Key has been disposed");
+      throw new KryptosError("Key has been disposed", {
+        code: "key_disposed",
+      });
     }
   }
 

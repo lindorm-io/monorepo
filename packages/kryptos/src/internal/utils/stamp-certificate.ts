@@ -44,7 +44,7 @@ const deriveSan = (issuer: string | null, id: string): string => {
   if (isUrl(issuer)) return issuer;
   throw new KryptosError(
     "Cannot derive SAN from non-URL issuer; supply explicit subjectAlternativeNames or use a URL-shaped issuer",
-    { data: { issuer } },
+    { code: "invalid_certificate_san_issuer", data: { issuer } },
   );
 };
 
@@ -80,12 +80,16 @@ export const stampCertificate = (input: StampInput): Array<string> => {
   const { certificate, subjectKryptos } = input;
 
   if (subjectKryptos.type === "oct") {
-    throw new KryptosError("symmetric keys cannot have certificates");
+    throw new KryptosError("symmetric keys cannot have certificates", {
+      code: "symmetric_key_certificate_unsupported",
+      data: { type: subjectKryptos.type },
+    });
   }
 
   if (!subjectKryptos.privateKey) {
     throw new KryptosError(
       "certificate generation requires the generated kryptos to have a private key",
+      { code: "missing_private_key" },
     );
   }
 
@@ -170,11 +174,15 @@ export const stampCertificate = (input: StampInput): Array<string> => {
   const ca = certificate.ca;
 
   if (!ca.hasPrivateKey) {
-    throw new KryptosError("ca-signed mode requires CA kryptos with a private key");
+    throw new KryptosError("ca-signed mode requires CA kryptos with a private key", {
+      code: "missing_ca_private_key",
+    });
   }
 
   if (!ca.hasCertificate || !ca.certificateChain || !ca.certificate) {
-    throw new KryptosError("ca-signed mode requires CA kryptos with a certificate");
+    throw new KryptosError("ca-signed mode requires CA kryptos with a certificate", {
+      code: "missing_ca_certificate",
+    });
   }
 
   const caLeaf = ca.certificate;
@@ -182,6 +190,7 @@ export const stampCertificate = (input: StampInput): Array<string> => {
   if (!caLeaf.extensions.basicConstraintsCa) {
     throw new KryptosError(
       "ca-signed requires CA kryptos whose leaf cert has basicConstraints cA=true",
+      { code: "invalid_ca_certificate" },
     );
   }
 
@@ -189,12 +198,14 @@ export const stampCertificate = (input: StampInput): Array<string> => {
   if (!caSki) {
     throw new KryptosError(
       "ca-signed requires CA leaf certificate with a subjectKeyIdentifier extension",
+      { code: "invalid_ca_certificate" },
     );
   }
 
   if (!caLeaf.extensions.keyUsage.includes("keyCertSign")) {
     throw new KryptosError(
       "ca-signed requires CA leaf certificate with keyCertSign in keyUsage",
+      { code: "invalid_ca_certificate" },
     );
   }
 
@@ -204,12 +215,15 @@ export const stampCertificate = (input: StampInput): Array<string> => {
   ) {
     throw new KryptosError(
       "ca-signed child validity window must fit within the CA's validity window",
+      { code: "invalid_certificate_validity_window" },
     );
   }
 
   const caDer = ca.export("der");
   if (!caDer.privateKey) {
-    throw new KryptosError("ca-signed mode requires CA kryptos with a private key");
+    throw new KryptosError("ca-signed mode requires CA kryptos with a private key", {
+      code: "missing_ca_private_key",
+    });
   }
 
   const caSignAlgorithm = resolveSignAlgorithmForCert({

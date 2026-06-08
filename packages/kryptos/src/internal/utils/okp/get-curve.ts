@@ -33,6 +33,9 @@ export const getOkpCurve = (options: Options): OkpCurve => {
       return "Ed25519";
 
     default:
-      throw new KryptosError("Unsupported curve");
+      throw new KryptosError("Unsupported curve", {
+        code: "unsupported_okp_curve",
+        data: { algorithm: options.algorithm },
+      });
   }
 };

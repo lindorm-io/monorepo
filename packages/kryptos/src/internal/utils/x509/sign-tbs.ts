@@ -30,6 +30,10 @@ export const detectOkpCurve = (
   if (obj.asymmetricKeyType === "ed25519") return "Ed25519";
   throw new KryptosError(
     `Unsupported OKP asymmetric key type for X.509 signing: ${obj.asymmetricKeyType}`,
+    {
+      code: "unsupported_signature_algorithm",
+      data: { keyType, asymmetricKeyType: obj.asymmetricKeyType },
+    },
   );
 };
 
@@ -44,13 +48,17 @@ export const signX509Tbs = (options: SignTbsOptions): Buffer => {
   ) {
     const signature = cryptoSign(null, tbsBytes, keyObject);
     if (!Buffer.isBuffer(signature)) {
-      throw new KryptosError("One-shot signing did not return a Buffer");
+      throw new KryptosError("One-shot signing did not return a Buffer", {
+        code: "certificate_signing_failed",
+      });
     }
     return signature;
   }
 
   if (descriptor.hashName === null) {
-    throw new KryptosError("Missing hash name for hashing signature algorithm");
+    throw new KryptosError("Missing hash name for hashing signature algorithm", {
+      code: "certificate_signing_failed",
+    });
   }
 
   const signer = createSign(descriptor.hashName);
@@ -58,7 +66,9 @@ export const signX509Tbs = (options: SignTbsOptions): Buffer => {
   const signature = signer.sign(keyObject);
 
   if (!Buffer.isBuffer(signature)) {
-    throw new KryptosError("Signing did not return a Buffer");
+    throw new KryptosError("Signing did not return a Buffer", {
+      code: "certificate_signing_failed",
+    });
   }
 
   return signature;

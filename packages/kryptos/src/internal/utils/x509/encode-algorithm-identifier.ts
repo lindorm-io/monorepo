@@ -36,6 +36,10 @@ export const resolveSignatureDescriptor = (
   if (algorithm === "PS256" || algorithm === "PS384" || algorithm === "PS512") {
     throw new KryptosError(
       `RSA-PSS signatures (${algorithm}) for X.509 are not yet supported`,
+      {
+        code: "unsupported_signature_algorithm",
+        data: { algorithm },
+      },
     );
   }
 
@@ -139,6 +143,10 @@ export const resolveSignatureDescriptor = (
 
   throw new KryptosError(
     `Unsupported X.509 signature combination: type=${keyType} algorithm=${algorithm}`,
+    {
+      code: "unsupported_signature_algorithm",
+      data: { keyType, algorithm },
+    },
   );
 };
 

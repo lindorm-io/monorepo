@@ -56,21 +56,29 @@ export const encodeOid = (dotted: string): Buffer => {
   const parts = dotted.split(".").map((p) => {
     const n = Number(p);
     if (!Number.isInteger(n) || n < 0) {
-      throw new KryptosError(`Invalid OID component: ${p}`);
+      throw new KryptosError(`Invalid OID component: ${p}`, {
+        code: "invalid_oid",
+      });
     }
     if (n > OID_SUBIDENTIFIER_MAX) {
-      throw new KryptosError(`OID subidentifier exceeds encoder range: ${p}`);
+      throw new KryptosError(`OID subidentifier exceeds encoder range: ${p}`, {
+        code: "invalid_oid",
+      });
     }
     return n;
   });
 
   if (parts.length < 2) {
-    throw new KryptosError(`OID must have at least two components: ${dotted}`);
+    throw new KryptosError(`OID must have at least two components: ${dotted}`, {
+      code: "invalid_oid",
+    });
   }
 
   const [first, second, ...rest] = parts;
   if (first > 2 || (first < 2 && second >= 40)) {
-    throw new KryptosError(`Invalid OID prefix: ${dotted}`);
+    throw new KryptosError(`Invalid OID prefix: ${dotted}`, {
+      code: "invalid_oid",
+    });
   }
 
   const encodeSub = (n: number): Array<number> => {
@@ -98,7 +106,9 @@ export const encodeOid = (dotted: string): Buffer => {
 
 export const decodeOid = (bytes: Buffer): string => {
   if (bytes.length === 0) {
-    throw new KryptosError("Empty OID content");
+    throw new KryptosError("Empty OID content", {
+      code: "invalid_oid",
+    });
   }
 
   const subs: Array<number> = [];
@@ -136,7 +146,9 @@ export const decodePrintableString = (bytes: Buffer): string => bytes.toString("
 export const encodeUtcTime = (date: Date): Buffer => {
   const y = date.getUTCFullYear();
   if (y < 1950 || y > 2049) {
-    throw new KryptosError(`UTCTime out of range: ${y}`);
+    throw new KryptosError(`UTCTime out of range: ${y}`, {
+      code: "invalid_asn1_time",
+    });
   }
   const yy = (y % 100).toString().padStart(2, "0");
   const str =
@@ -153,7 +165,9 @@ export const encodeUtcTime = (date: Date): Buffer => {
 export const decodeUtcTime = (bytes: Buffer): Date => {
   const str = bytes.toString("ascii");
   if (!/^\d{12}Z$/.test(str)) {
-    throw new KryptosError(`Invalid UTCTime: ${str}`);
+    throw new KryptosError(`Invalid UTCTime: ${str}`, {
+      code: "invalid_asn1_time",
+    });
   }
   const yy = parseInt(str.slice(0, 2), 10);
   const year = yy >= 50 ? 1900 + yy : 2000 + yy;
@@ -176,7 +190,9 @@ export const encodeGeneralizedTime = (date: Date): Buffer => {
 export const decodeGeneralizedTime = (bytes: Buffer): Date => {
   const str = bytes.toString("ascii");
   if (!/^\d{14}Z$/.test(str)) {
-    throw new KryptosError(`Invalid GeneralizedTime: ${str}`);
+    throw new KryptosError(`Invalid GeneralizedTime: ${str}`, {
+      code: "invalid_asn1_time",
+    });
   }
   const iso = `${str.slice(0, 4)}-${str.slice(4, 6)}-${str.slice(6, 8)}T${str.slice(8, 10)}:${str.slice(10, 12)}:${str.slice(12, 14)}Z`;
   return new Date(iso);
@@ -190,19 +206,26 @@ export const encodeTime = (date: Date): Buffer => {
 export const decodeTime = (bytes: Buffer, tag: number): Date => {
   if (tag === ASN1_TAG_UTC_TIME) return decodeUtcTime(bytes);
   if (tag === ASN1_TAG_GENERALIZED_TIME) return decodeGeneralizedTime(bytes);
-  throw new KryptosError(`Unexpected time tag: 0x${tag.toString(16)}`);
+  throw new KryptosError(`Unexpected time tag: 0x${tag.toString(16)}`, {
+    code: "unexpected_asn1_tag",
+    data: { tag },
+  });
 };
 
 export const encodeBitString = (bytes: Buffer, unusedBits = 0): Buffer => {
   if (unusedBits < 0 || unusedBits > 7) {
-    throw new KryptosError(`Invalid unused bits: ${unusedBits}`);
+    throw new KryptosError(`Invalid unused bits: ${unusedBits}`, {
+      code: "invalid_asn1_bit_string",
+    });
   }
   return wrap(ASN1_TAG_BIT_STRING, Buffer.concat([Buffer.from([unusedBits]), bytes]));
 };
 
 export const decodeBitString = (bytes: Buffer): { bytes: Buffer; unusedBits: number } => {
   if (bytes.length === 0) {
-    throw new KryptosError("Empty BIT STRING content");
+    throw new KryptosError("Empty BIT STRING content", {
+      code: "invalid_asn1_bit_string",
+    });
   }
   return { bytes: Buffer.from(bytes.subarray(1)), unusedBits: bytes[0] };
 };
@@ -212,7 +235,9 @@ export const encodeBoolean = (value: boolean): Buffer =>
 
 export const decodeBoolean = (bytes: Buffer): boolean => {
   if (bytes.length !== 1) {
-    throw new KryptosError("Invalid BOOLEAN length");
+    throw new KryptosError("Invalid BOOLEAN length", {
+      code: "invalid_asn1_boolean",
+    });
   }
   return bytes[0] !== 0x00;
 };

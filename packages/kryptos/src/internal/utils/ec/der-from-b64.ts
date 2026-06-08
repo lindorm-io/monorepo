@@ -9,7 +9,9 @@ type Result = Omit<EcBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createEcDerFromB64 = (options: Options): Result => {
   if (!isEcCurve(options.curve)) {
-    throw new KryptosError("Curve is required");
+    throw new KryptosError("Curve is required", {
+      code: "missing_ec_curve",
+    });
   }
 
   const result: Result = {
@@ -37,7 +39,10 @@ export const createEcDerFromB64 = (options: Options): Result => {
   }
 
   if (!result.privateKey && !result.publicKey.length) {
-    throw new KryptosError("Key creation failed");
+    throw new KryptosError("Key creation failed", {
+      code: "ec_key_creation_failed",
+      data: { curve: options.curve },
+    });
   }
 
   return result;

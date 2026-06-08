@@ -24,7 +24,9 @@ export const createAkpDerFromDer = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "der", type: "spki" });
 
     if (!isBuffer(privateKey)) {
-      throw new KryptosError("Key creation failed");
+      throw new KryptosError("Key creation failed", {
+        code: "akp_der_export_failed",
+      });
     }
 
     result.privateKey = privateKey;
@@ -40,14 +42,18 @@ export const createAkpDerFromDer = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "der", type: "spki" });
 
     if (!isBuffer(publicKey)) {
-      throw new KryptosError("Key creation failed");
+      throw new KryptosError("Key creation failed", {
+        code: "akp_der_export_failed",
+      });
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.privateKey && !result.publicKey.length) {
-    throw new KryptosError("Key creation failed");
+    throw new KryptosError("Key creation failed", {
+      code: "missing_akp_key_material",
+    });
   }
 
   return result;

@@ -54,6 +54,7 @@ export const basicConstraintsExt = (
   if (!ca && pathLengthConstraint !== undefined) {
     throw new KryptosError(
       "basicConstraints.pathLengthConstraint is only valid when ca=true (RFC 5280 §4.2.1.9)",
+      { code: "invalid_certificate_extension" },
     );
   }
 
@@ -64,11 +65,19 @@ export const basicConstraintsExt = (
       if (!Number.isInteger(pathLengthConstraint) || pathLengthConstraint < 0) {
         throw new KryptosError(
           "basicConstraints.pathLengthConstraint must be a non-negative integer",
+          {
+            code: "invalid_certificate_extension",
+            data: { pathLengthConstraint },
+          },
         );
       }
       if (pathLengthConstraint > 255) {
         throw new KryptosError(
           "basicConstraints.pathLengthConstraint must be between 0 and 255",
+          {
+            code: "invalid_certificate_extension",
+            data: { pathLengthConstraint },
+          },
         );
       }
       seqChildren.push(encodeInteger(Buffer.from([pathLengthConstraint & 0xff])));
@@ -97,6 +106,7 @@ export const keyUsageExt = (
   if (flags.length === 0) {
     throw new KryptosError(
       "keyUsage extension requires at least one bit (RFC 5280 §4.2.1.3)",
+      { code: "invalid_certificate_extension" },
     );
   }
 
@@ -104,7 +114,10 @@ export const keyUsageExt = (
   for (const flag of flags) {
     const index = KEY_USAGE_BIT_ORDER.indexOf(flag);
     if (index === -1) {
-      throw new KryptosError(`Unknown keyUsage flag: ${flag}`);
+      throw new KryptosError(`Unknown keyUsage flag: ${flag}`, {
+        code: "invalid_certificate_extension",
+        data: { flag },
+      });
     }
     bits.push(index);
   }
@@ -127,7 +140,9 @@ export const keyUsageExt = (
 const extractBitStringBody = (spkiBytes: Buffer): Buffer => {
   const outer = readTlv(spkiBytes, 0);
   if (outer.tag !== 0x30) {
-    throw new KryptosError("SPKI is not a SEQUENCE");
+    throw new KryptosError("SPKI is not a SEQUENCE", {
+      code: "invalid_spki",
+    });
   }
 
   let offset = outer.contentStart;
@@ -144,7 +159,9 @@ const extractBitStringBody = (spkiBytes: Buffer): Buffer => {
     offset = tlv.nextOffset;
   }
 
-  throw new KryptosError("SPKI has no BIT STRING child");
+  throw new KryptosError("SPKI has no BIT STRING child", {
+    code: "invalid_spki",
+  });
 };
 
 export const computeSubjectKeyIdentifier = (spkiBytes: Buffer): Buffer =>
@@ -167,6 +184,10 @@ const assertIa5String = (type: "uri" | "dns" | "email", value: string): void => 
     if (value.charCodeAt(i) > 0x7f) {
       throw new KryptosError(
         `subjectAlternativeName value for type '${type}' must be ASCII (IA5String)`,
+        {
+          code: "invalid_certificate_extension",
+          data: { type },
+        },
       );
     }
   }
@@ -228,6 +249,10 @@ const encodeIpSan = (value: string): Buffer => {
   }
   throw new KryptosError(
     `subjectAlternativeName ip value '${value}' is not a valid IPv4 or IPv6 address`,
+    {
+      code: "invalid_certificate_extension",
+      data: { value },
+    },
   );
 };
 
@@ -235,7 +260,9 @@ export const subjectAlternativeNameExt = (
   sans: ReadonlyArray<X509SubjectAltNameInput>,
 ): Buffer => {
   if (sans.length === 0) {
-    throw new KryptosError("subjectAlternativeNameExt requires at least one SAN");
+    throw new KryptosError("subjectAlternativeNameExt requires at least one SAN", {
+      code: "invalid_certificate_extension",
+    });
   }
   const children = sans.map((san) => {
     if (san.type === "ip") {

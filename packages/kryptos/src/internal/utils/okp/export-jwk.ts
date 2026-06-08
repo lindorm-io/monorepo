@@ -11,7 +11,10 @@ type Result = Omit<OkpJwk, "kid" | "alg" | "kty" | "use">;
 
 export const exportOkpToJwk = (options: Options): Result => {
   if (!isOkpCurve(options.curve)) {
-    throw new KryptosError("Curve is required");
+    throw new KryptosError("Invalid OKP curve", {
+      code: "invalid_okp_curve",
+      data: { curve: options.curve ?? null },
+    });
   }
 
   const result: Result = {
@@ -30,13 +33,23 @@ export const exportOkpToJwk = (options: Options): Result => {
     if (crv !== options.curve) {
       throw new KryptosError(
         `Key export failed [crv]: expected ${options.curve}, got ${crv}`,
+        {
+          code: "okp_jwk_export_failed",
+          data: { component: "crv", expected: options.curve, received: crv ?? null },
+        },
       );
     }
     if (!d) {
-      throw new KryptosError("Key export failed [d]: missing private key component");
+      throw new KryptosError("Key export failed [d]: missing private key component", {
+        code: "okp_jwk_export_failed",
+        data: { component: "d" },
+      });
     }
     if (!x) {
-      throw new KryptosError("Key export failed [x]: missing x coordinate");
+      throw new KryptosError("Key export failed [x]: missing x coordinate", {
+        code: "okp_jwk_export_failed",
+        data: { component: "x" },
+      });
     }
 
     result.d = d;
@@ -45,7 +58,9 @@ export const exportOkpToJwk = (options: Options): Result => {
 
   if (!result.x.length) {
     if (!options.publicKey) {
-      throw new KryptosError("Public key not available");
+      throw new KryptosError("Public key not available", {
+        code: "missing_okp_public_key",
+      });
     }
 
     const keyObject = createPublicKey({
@@ -58,17 +73,27 @@ export const exportOkpToJwk = (options: Options): Result => {
     if (crv !== options.curve) {
       throw new KryptosError(
         `Key export failed [crv]: expected ${options.curve}, got ${crv}`,
+        {
+          code: "okp_jwk_export_failed",
+          data: { component: "crv", expected: options.curve, received: crv ?? null },
+        },
       );
     }
     if (!x) {
-      throw new KryptosError("Key export failed [x]: missing x coordinate");
+      throw new KryptosError("Key export failed [x]: missing x coordinate", {
+        code: "okp_jwk_export_failed",
+        data: { component: "x" },
+      });
     }
 
     result.x = x;
   }
 
   if (!result.x.length) {
-    throw new KryptosError("Key export failed: no x coordinate available");
+    throw new KryptosError("Key export failed: no x coordinate available", {
+      code: "okp_jwk_export_failed",
+      data: { curve: options.curve },
+    });
   }
 
   return result;
