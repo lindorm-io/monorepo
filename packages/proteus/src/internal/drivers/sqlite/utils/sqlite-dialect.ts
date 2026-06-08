@@ -5,7 +5,7 @@ import type { LockMode } from "../../../../types/find-options.js";
 
 const quoteIdentifier = (name: string): string => {
   if (!name) {
-    throw new ProteusError("Identifier cannot be empty");
+    throw new ProteusError("Identifier cannot be empty", { code: "invalid_query" });
   }
   return `"${name.replace(/"/g, '""')}"`;
 };
@@ -109,6 +109,7 @@ export const sqliteDialect: SqlDialect = {
     if (lock) {
       throw new NotSupportedError(
         `Pessimistic lock mode "${lock}" is not supported by the SQLite driver. SQLite uses database-level locking via transactions.`,
+        { code: "unsupported_operation", data: { lock } },
       );
     }
     return "";

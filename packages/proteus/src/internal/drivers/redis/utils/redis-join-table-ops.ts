@@ -143,7 +143,9 @@ export const createRedisJoinTableOps = (
 
     const syncResult = await pipeline.exec();
     if (!syncResult) {
-      throw new RedisDriverError("Pipeline execution failed — returned null");
+      throw new RedisDriverError("Pipeline execution failed — returned null", {
+        code: "command_execution_failed",
+      });
     }
   },
 
@@ -207,7 +209,9 @@ export const createRedisJoinTableOps = (
 
     const deleteResult = await pipeline.exec();
     if (!deleteResult) {
-      throw new RedisDriverError("Pipeline execution failed — returned null");
+      throw new RedisDriverError("Pipeline execution failed — returned null", {
+        code: "command_execution_failed",
+      });
     }
   },
 });

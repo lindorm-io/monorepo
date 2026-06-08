@@ -6,7 +6,7 @@ import type {
 } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../../types/query.js";
-import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
+import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
 import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { MysqlQueryClient } from "../types/mysql-query-client.js";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
@@ -61,7 +61,7 @@ export class MySqlUpdateQueryBuilder<
   }
 
   public returning(..._fields: Array<keyof E | "*">): this {
-    throw new NotSupportedError(
+    throw new ProteusRepositoryError(
       "MySQL does not support RETURNING clauses. Use save()/insert()/update() repository methods instead, which automatically SELECT-back after write.",
       {
         code: "unsupported_operation",
@@ -90,7 +90,7 @@ export class MySqlUpdateQueryBuilder<
       this.metadata.inheritance?.strategy === "joined" &&
       this.metadata.inheritance.discriminatorValue != null
     ) {
-      throw new NotSupportedError(
+      throw new ProteusRepositoryError(
         "UPDATE via QueryBuilder is not supported for joined inheritance entities",
         {
           code: "unsupported_operation",

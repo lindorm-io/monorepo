@@ -111,6 +111,8 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
       throw new SqliteExecutorError(
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
         {
+          code: "query_execution_failed",
+          data: { entity: this.metadata.entity.name },
           debug: {
             primaryKey: buildPrimaryKeyDebug(
               entity as Record<string, unknown>,
@@ -364,6 +366,10 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     if (!rootRow) {
       throw new SqliteExecutorError(
         `Joined insert failed: root INSERT returned no rows for "${this.metadata.entity.name}"`,
+        {
+          code: "query_execution_failed",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -406,6 +412,8 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
         throw new SqliteExecutorError(
           `Update failed: no matching row found for "${this.metadata.entity.name}"`,
           {
+            code: "query_execution_failed",
+            data: { entity: this.metadata.entity.name },
             debug: {
               primaryKey: buildPrimaryKeyDebug(
                 entity as Record<string, unknown>,
@@ -427,6 +435,10 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     if (!joined.rootSql && !joined.childSql) {
       throw new SqliteExecutorError(
         `Joined update produced no SQL statements for "${this.metadata.entity.name}"`,
+        {
+          code: "query_execution_failed",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 

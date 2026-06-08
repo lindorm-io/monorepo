@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
 import { QueryBuilder } from "../../../../classes/QueryBuilder.js";
-import { ProteusError } from "../../../../errors/index.js";
+import { ProteusError, ProteusRepositoryError } from "../../../../errors/index.js";
 import type {
   IDeleteQueryBuilder,
   IEntity,
@@ -154,7 +154,10 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     options?: { materialized?: boolean },
   ): this {
     if (this.state.ctes.some((c) => c.name === name)) {
-      throw new ProteusError(`CTE "${name}" already defined on this query`);
+      throw new ProteusError(`CTE "${name}" already defined on this query`, {
+        code: "invalid_query",
+        data: { cte: name },
+      });
     }
 
     let sql: string;
@@ -182,6 +185,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     if (!this.state.ctes.some((c) => c.name === name)) {
       throw new ProteusError(
         `CTE "${name}" not defined. Define it with .withCte("${name}", ...) first.`,
+        { code: "invalid_query", data: { cte: name } },
       );
     }
     this.state.cteFrom = name;
@@ -280,7 +284,13 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public async getOneOrFail(): Promise<E> {
     const entity = await this.getOne();
     if (!entity) {
-      throw new ProteusError(`Expected entity "${this.metadata.entity.name}" not found`);
+      throw new ProteusRepositoryError(
+        `Expected entity "${this.metadata.entity.name}" not found`,
+        {
+          code: "entity_not_found",
+          data: { entity: this.metadata.entity.name },
+        },
+      );
     }
     return entity;
   }
@@ -382,6 +392,10 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     if (!subFieldMeta) {
       throw new ProteusError(
         `Field "${String(subqueryField)}" not found on subquery entity "${subMeta.entity.name}"`,
+        {
+          code: "invalid_query",
+          data: { entity: subMeta.entity.name, field: String(subqueryField) },
+        },
       );
     }
 
@@ -434,6 +448,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     if (other.state.ctes.length > 0) {
       throw new ProteusError(
         `Cannot use ${operation} with a query that has CTEs. Define CTEs on the primary query instead.`,
+        { code: "invalid_query", data: { operation } },
       );
     }
 

@@ -75,6 +75,10 @@ export const generateJoinTableDDL = (
     if (!inverseRelation?.joinKeys) {
       throw new ProteusError(
         `ManyToMany relation "${relation.key}" on "${metadata.target.name}" has no resolvable inverse joinKeys`,
+        {
+          code: "schema_mismatch",
+          data: { entity: metadata.target.name, relation: relation.key },
+        },
       );
     }
 

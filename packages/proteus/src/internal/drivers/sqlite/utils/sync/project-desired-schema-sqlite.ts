@@ -44,7 +44,10 @@ const mapOnDeleteAction = (onDestroy: RelationDestroy): string => {
     case "ignore":
       return "NO ACTION";
     default:
-      throw new SqliteSyncError(`Unsupported onDestroy value: "${onDestroy as string}"`);
+      throw new SqliteSyncError(`Unsupported onDestroy value: "${onDestroy as string}"`, {
+        code: "unsupported_operation",
+        data: { onDestroy: onDestroy as string },
+      });
   }
 };
 
@@ -61,7 +64,10 @@ const mapOnUpdateAction = (onUpdate: RelationChange): string => {
     case "ignore":
       return "NO ACTION";
     default:
-      throw new SqliteSyncError(`Unsupported onUpdate value: "${onUpdate as string}"`);
+      throw new SqliteSyncError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
+        code: "unsupported_operation",
+        data: { onUpdate: onUpdate as string },
+      });
   }
 };
 
@@ -188,6 +194,14 @@ export const projectDesiredSchemaSqlite = (
       if (field.name.length > SQLITE_IDENTIFIER_LIMIT) {
         throw new SqliteSyncError(
           `Column name "${field.name}" on "${metadata.target.name}" exceeds ${SQLITE_IDENTIFIER_LIMIT} characters`,
+          {
+            code: "schema_mismatch",
+            data: {
+              entity: metadata.target.name,
+              column: field.name,
+              limit: SQLITE_IDENTIFIER_LIMIT,
+            },
+          },
         );
       }
     }
@@ -217,6 +231,14 @@ export const projectDesiredSchemaSqlite = (
       if (colliding) {
         throw new SqliteSyncError(
           `Column name "${fkCol}" on "${metadata.target.name}" collides — embedded field "${colliding.key}" produces column "${colliding.name}" which conflicts with a relation FK column of the same name`,
+          {
+            code: "schema_mismatch",
+            data: {
+              entity: metadata.target.name,
+              column: fkCol,
+              embeddedField: colliding.key,
+            },
+          },
         );
       }
     }

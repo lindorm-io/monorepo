@@ -130,7 +130,10 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     if (table.has(pk)) {
       throw new MemoryDuplicateKeyError(
         `Duplicate primary key for "${this.metadata.entity.name}": ${pk}`,
-        { debug: { entityName: this.metadata.entity.name, primaryKey: pk } },
+        {
+          code: "unique_violation",
+          debug: { entityName: this.metadata.entity.name, primaryKey: pk },
+        },
       );
     }
 
@@ -155,6 +158,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
       throw new MemoryDriverError(
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
         {
+          code: "update_target_not_found",
           debug: {
             primaryKey: buildPrimaryKeyDebug(
               entity as Record<string, unknown>,
@@ -527,6 +531,10 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     if (field?.encrypted) {
       throw new MemoryDriverError(
         `Cannot increment encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name, property: String(property) },
+        },
       );
     }
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
@@ -549,6 +557,10 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     if (field?.encrypted) {
       throw new MemoryDriverError(
         `Cannot decrement encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name, property: String(property) },
+        },
       );
     }
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);

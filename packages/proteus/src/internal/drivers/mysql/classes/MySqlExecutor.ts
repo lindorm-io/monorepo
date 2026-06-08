@@ -147,6 +147,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         throw new MySqlExecutorError(
           `Update failed: no matching row found for "${this.metadata.entity.name}"`,
           {
+            code: "query_execution_failed",
+            data: { entity: this.metadata.entity.name },
             debug: {
               primaryKey: buildPrimaryKeyDebug(
                 entity as Record<string, unknown>,
@@ -481,7 +483,11 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
           throw new ProteusRepositoryError(
             `Bulk insert SELECT-back mismatch: expected ${entities.length} rows but got ${rows.length}. ` +
               `This may indicate non-contiguous AUTO_INCREMENT IDs under innodb_autoinc_lock_mode=2.`,
-            { debug: { firstId, expected: entities.length, actual: rows.length } },
+            {
+              code: "query_execution_failed",
+              data: { expected: entities.length, actual: rows.length },
+              debug: { firstId },
+            },
           );
         }
 
@@ -604,6 +610,10 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!rows[0]) {
       throw new MySqlExecutorError(
         `Joined insert failed: SELECT-back returned no rows for "${this.metadata.entity.name}"`,
+        {
+          code: "query_execution_failed",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -634,6 +644,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         throw new MySqlExecutorError(
           `Update failed: no matching row found for "${this.metadata.entity.name}"`,
           {
+            code: "query_execution_failed",
+            data: { entity: this.metadata.entity.name },
             debug: {
               primaryKey: buildPrimaryKeyDebug(
                 entity as Record<string, unknown>,
@@ -652,6 +664,10 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!joined.rootSql && !joined.childSql) {
       throw new MySqlExecutorError(
         `Joined update produced no SQL statements for "${this.metadata.entity.name}"`,
+        {
+          code: "query_execution_failed",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 

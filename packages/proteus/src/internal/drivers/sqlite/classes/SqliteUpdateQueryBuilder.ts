@@ -6,8 +6,8 @@ import type {
 } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../../types/query.js";
-import { ProteusError } from "../../../../errors/ProteusError.js";
 import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
+import { ProteusError } from "../../../../errors/ProteusError.js";
 import type { SqliteQueryClient } from "../types/sqlite-query-client.js";
 import { quoteIdentifier } from "../utils/quote-identifier.js";
 import { coerceWriteValue } from "../utils/query/coerce-value.js";
@@ -74,6 +74,10 @@ export class SqliteUpdateQueryBuilder<
     if (this.predicates.length === 0) {
       throw new ProteusError(
         `UPDATE on "${this.metadata.entity.name}" requires at least one .where() predicate`,
+        {
+          code: "invalid_query",
+          data: { entity: this.metadata.entity.name, operation: "update.execute" },
+        },
       );
     }
 
@@ -84,6 +88,10 @@ export class SqliteUpdateQueryBuilder<
     ) {
       throw new ProteusRepositoryError(
         "UPDATE via QueryBuilder is not supported for joined inheritance entities",
+        {
+          code: "unsupported_operation",
+          data: { operation: "update.execute", entity: this.metadata.entity.name },
+        },
       );
     }
 

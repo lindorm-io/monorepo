@@ -133,7 +133,10 @@ export const markMigrationFinished = async (
     [id],
   );
   if (rowCount === 0) {
-    throw new PostgresMigrationError("No migration record found", { debug: { id } });
+    throw new PostgresMigrationError("No migration record found", {
+      code: "migration_not_found",
+      debug: { id },
+    });
   }
 };
 
@@ -148,6 +151,9 @@ export const markMigrationRolledBack = async (
     [id],
   );
   if (rowCount === 0) {
-    throw new PostgresMigrationError("No migration record found", { debug: { id } });
+    throw new PostgresMigrationError("No migration record found", {
+      code: "migration_not_found",
+      debug: { id },
+    });
   }
 };

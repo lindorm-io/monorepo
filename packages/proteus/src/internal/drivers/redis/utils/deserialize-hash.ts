@@ -83,6 +83,7 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
       } catch {
         throw new RedisDriverError(
           `Failed to deserialize bigint from value: ${JSON.stringify(raw)}`,
+          { code: "serialization_failure" },
         );
       }
 
@@ -92,6 +93,7 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
       if (Number.isNaN(int)) {
         throw new RedisDriverError(
           `Failed to deserialize ${type} from value: ${JSON.stringify(raw)}`,
+          { code: "serialization_failure" },
         );
       }
       return int;
@@ -104,6 +106,7 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
       if (Number.isNaN(num)) {
         throw new RedisDriverError(
           `Failed to deserialize ${type} from value: ${JSON.stringify(raw)}`,
+          { code: "serialization_failure" },
         );
       }
       return num;
@@ -113,7 +116,9 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
     case "timestamp": {
       const dt = new Date(raw);
       if (isNaN(dt.getTime())) {
-        throw new RedisDriverError(`Invalid date value: ${raw}`);
+        throw new RedisDriverError(`Invalid date value: ${raw}`, {
+          code: "serialization_failure",
+        });
       }
       return dt;
     }

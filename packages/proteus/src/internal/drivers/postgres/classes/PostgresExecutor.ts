@@ -378,6 +378,10 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     if (!rootRow) {
       throw new PostgresExecutorError(
         `Joined insert failed: root INSERT returned no rows for "${this.metadata.entity.name}"`,
+        {
+          code: "query_execution_failed",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -433,6 +437,8 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
         throw new PostgresExecutorError(
           `Update failed: no matching row found for "${this.metadata.entity.name}"`,
           {
+            code: "update_target_not_found",
+            data: { entity: this.metadata.entity.name },
             debug: {
               primaryKey: buildPrimaryKeyDebug(
                 entity as Record<string, unknown>,
@@ -459,6 +465,10 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     if (!joined.rootSql && !joined.childSql) {
       throw new PostgresExecutorError(
         `Joined update produced no SQL statements for "${this.metadata.entity.name}"`,
+        {
+          code: "query_execution_failed",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 

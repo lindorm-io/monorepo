@@ -5,7 +5,7 @@ import type { LockMode } from "../../../../types/find-options.js";
 
 const quoteIdentifier = (name: string): string => {
   if (!name) {
-    throw new ProteusError("Identifier cannot be empty");
+    throw new ProteusError("Identifier cannot be empty", { code: "invalid_query" });
   }
   return `"${name.replace(/"/g, '""')}"`;
 };

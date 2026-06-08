@@ -32,6 +32,7 @@ export const compileUpsert = <E extends IEntity>(
   ) {
     throw new ProteusRepositoryError(
       "Upsert is not supported for joined inheritance entities",
+      { code: "unsupported_operation", data: { operation: "upsert" } },
     );
   }
 

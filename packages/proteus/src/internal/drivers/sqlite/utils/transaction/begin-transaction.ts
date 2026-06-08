@@ -7,6 +7,7 @@ export const beginTransaction = (client: SqliteQueryClient): SqliteTransactionHa
     client.exec("BEGIN IMMEDIATE");
   } catch (error) {
     throw new SqliteTransactionError("Failed to begin transaction", {
+      code: "query_execution_failed",
       error: error as Error,
     });
   }

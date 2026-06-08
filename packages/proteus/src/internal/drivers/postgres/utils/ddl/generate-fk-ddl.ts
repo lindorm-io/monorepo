@@ -1,4 +1,4 @@
-import { ProteusError } from "../../../../../errors/index.js";
+import { NotSupportedError } from "../../../../../errors/index.js";
 import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
 import type { NamespaceOptions } from "../../../../types/types.js";
 import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
@@ -20,7 +20,10 @@ const mapOnDelete = (onDestroy: MetaRelation["options"]["onDestroy"]): string =>
     case "ignore":
       return "ON DELETE NO ACTION";
     default:
-      throw new ProteusError(`Unsupported onDestroy value: "${onDestroy as string}"`);
+      throw new NotSupportedError(
+        `Unsupported onDestroy value: "${onDestroy as string}"`,
+        { code: "unsupported_operation" },
+      );
   }
 };
 
@@ -37,7 +40,9 @@ const mapOnUpdate = (onUpdate: MetaRelation["options"]["onUpdate"]): string => {
     case "ignore":
       return "ON UPDATE NO ACTION";
     default:
-      throw new ProteusError(`Unsupported onUpdate value: "${onUpdate as string}"`);
+      throw new NotSupportedError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
+        code: "unsupported_operation",
+      });
   }
 };
 

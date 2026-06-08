@@ -56,7 +56,10 @@ import { RedisDriverError } from "../errors/RedisDriverError.js";
 const validateDate = (value: unknown, context: string): Date => {
   const date = value instanceof Date ? value : new Date(value as string);
   if (isNaN(date.getTime())) {
-    throw new RedisDriverError(`Invalid date value in ${context}: ${String(value)}`);
+    throw new RedisDriverError(`Invalid date value in ${context}: ${String(value)}`, {
+      code: "serialization_failure",
+      data: { context },
+    });
   }
   return date;
 };
@@ -121,7 +124,10 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (exists) {
       throw new RedisDuplicateKeyError(
         `Duplicate primary key for "${this.metadata.entity.name}": ${redisKey}`,
-        { debug: { entityName: this.metadata.entity.name, redisKey } },
+        {
+          code: "unique_violation",
+          debug: { entityName: this.metadata.entity.name, redisKey },
+        },
       );
     }
 
@@ -132,6 +138,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (Object.keys(hash).length === 0) {
       throw new RedisDriverError(
         "Cannot insert entity with all null fields — hash would be empty",
+        { code: "invalid_query", data: { entityName: this.metadata.entity.name } },
       );
     }
 
@@ -221,6 +228,10 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!this.deleteFieldKey) {
       throw new RedisDriverError(
         "Entity does not support soft delete (missing @DeleteDate field)",
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name },
+        },
       );
     }
 
@@ -250,6 +261,10 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!this.deleteFieldKey) {
       throw new RedisDriverError(
         "Entity does not support soft delete (missing @DeleteDate field)",
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name },
+        },
       );
     }
 
@@ -320,7 +335,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     const pkValues = extractExactPk(criteria, this.metadata.primaryKeys);
 
     if (!pkValues) {
-      throw new RedisDriverError("TTL requires an exact primary key lookup");
+      throw new RedisDriverError("TTL requires an exact primary key lookup", {
+        code: "invalid_query",
+      });
     }
 
     const redisKey = buildEntityKey(this.storageTarget, pkValues, this.namespace);
@@ -329,7 +346,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (ttl === -2) {
       throw new RedisDriverError(
         `TTL failed: key not found for "${this.metadata.entity.name}"`,
-        { debug: { redisKey } },
+        { code: "key_not_found", debug: { redisKey } },
       );
     }
 
@@ -521,6 +538,10 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (field?.encrypted) {
       throw new RedisDriverError(
         `Cannot increment encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name, property: String(property) },
+        },
       );
     }
     const isFloat =
@@ -544,7 +565,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (result == null) {
         throw new RedisDriverError(
           `Increment failed: key not found for "${this.metadata.entity.name}"`,
-          { debug: { redisKey: rows[i].key, property, value } },
+          { code: "key_not_found", debug: { redisKey: rows[i].key, property, value } },
         );
       }
     }
@@ -562,6 +583,10 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (field?.encrypted) {
       throw new RedisDriverError(
         `Cannot decrement encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
+        {
+          code: "unsupported_operation",
+          data: { entityName: this.metadata.entity.name, property: String(property) },
+        },
       );
     }
     const isFloat =
@@ -585,7 +610,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (result == null) {
         throw new RedisDriverError(
           `Decrement failed: key not found for "${this.metadata.entity.name}"`,
-          { debug: { redisKey: rows[i].key, property, value } },
+          { code: "key_not_found", debug: { redisKey: rows[i].key, property, value } },
         );
       }
     }
@@ -774,13 +799,14 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (result === -1) {
       throw new RedisDriverError(
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
-        { debug: { primaryKey: redisKey } },
+        { code: "update_target_not_found", debug: { primaryKey: redisKey } },
       );
     }
 
     // F-003: Handle non-numeric version data
     if (result === -2) {
       throw new RedisDriverError("Version field contains non-numeric data", {
+        code: "serialization_failure",
         debug: { primaryKey: redisKey, versionKey },
       });
     }
@@ -815,7 +841,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (result === 0) {
       throw new RedisDriverError(
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
-        { debug: { primaryKey: redisKey } },
+        { code: "update_target_not_found", debug: { primaryKey: redisKey } },
       );
     }
   }
@@ -1094,7 +1120,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     const results = await pipeline.exec();
 
     if (!results) {
-      throw new RedisDriverError("Pipeline execution returned null");
+      throw new RedisDriverError("Pipeline execution returned null", {
+        code: "command_execution_failed",
+      });
     }
 
     return results;
