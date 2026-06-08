@@ -26,7 +26,10 @@ const EMPTY_EXTENSIONS: ParsedX509Extensions = {
 export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   const outer = readTlv(der, 0);
   if (outer.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("Certificate is not a SEQUENCE");
+    throw new KryptosError("Certificate is not a SEQUENCE", {
+      code: "invalid_certificate",
+      data: { field: "certificate" },
+    });
   }
 
   const outerEnd = outer.contentStart + outer.contentLength;
@@ -34,14 +37,20 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   // tbsCertificate
   const tbsTlv = readTlv(der, outer.contentStart);
   if (tbsTlv.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("TBSCertificate is not a SEQUENCE");
+    throw new KryptosError("TBSCertificate is not a SEQUENCE", {
+      code: "invalid_certificate",
+      data: { field: "tbsCertificate" },
+    });
   }
   const tbsBytes = Buffer.from(der.subarray(outer.contentStart, tbsTlv.nextOffset));
 
   // outer signatureAlgorithm
   const sigAlgTlv = readTlv(der, tbsTlv.nextOffset);
   if (sigAlgTlv.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("Certificate signatureAlgorithm is not a SEQUENCE");
+    throw new KryptosError("Certificate signatureAlgorithm is not a SEQUENCE", {
+      code: "invalid_certificate",
+      data: { field: "signatureAlgorithm" },
+    });
   }
   const sigAlgBytes = der.subarray(tbsTlv.nextOffset, sigAlgTlv.nextOffset);
   const signatureAlgorithm = parseX509AlgorithmIdentifier(sigAlgBytes);
@@ -49,10 +58,16 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   // signatureValue BIT STRING
   const sigValueTlv = readTlv(der, sigAlgTlv.nextOffset);
   if (sigValueTlv.tag !== ASN1_TAG_BIT_STRING) {
-    throw new KryptosError("Certificate signatureValue is not a BIT STRING");
+    throw new KryptosError("Certificate signatureValue is not a BIT STRING", {
+      code: "invalid_certificate",
+      data: { field: "signatureValue" },
+    });
   }
   if (sigValueTlv.nextOffset !== outerEnd) {
-    throw new KryptosError("Certificate has trailing bytes");
+    throw new KryptosError("Certificate has trailing bytes", {
+      code: "invalid_certificate",
+      data: { field: "certificate" },
+    });
   }
   const sigValueContent = der.subarray(
     sigValueTlv.contentStart,
@@ -73,7 +88,10 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
 
   // serialNumber INTEGER
   if (child.tag !== ASN1_TAG_INTEGER) {
-    throw new KryptosError("TBSCertificate serialNumber is not an INTEGER");
+    throw new KryptosError("TBSCertificate serialNumber is not an INTEGER", {
+      code: "invalid_certificate",
+      data: { field: "serialNumber" },
+    });
   }
   const serialNumber = decodeInteger(
     der.subarray(child.contentStart, child.contentStart + child.contentLength),
@@ -83,13 +101,17 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   // signature AlgorithmIdentifier
   child = readTlv(der, offset);
   if (child.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("TBSCertificate signature is not a SEQUENCE");
+    throw new KryptosError("TBSCertificate signature is not a SEQUENCE", {
+      code: "invalid_certificate",
+      data: { field: "signature" },
+    });
   }
   // RFC 5280 §4.1.1.2: inner TBS signature MUST byte-equal outer signatureAlgorithm.
   const innerSigAlgBytes = der.subarray(offset, child.nextOffset);
   if (!Buffer.from(innerSigAlgBytes).equals(Buffer.from(sigAlgBytes))) {
     throw new KryptosError(
       "Certificate signature algorithm mismatch between outer and inner TBS (RFC 5280 §4.1.1.2)",
+      { code: "certificate_signature_algorithm_mismatch" },
     );
   }
   offset = child.nextOffset;
@@ -97,7 +119,10 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   // issuer Name
   child = readTlv(der, offset);
   if (child.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("TBSCertificate issuer is not a SEQUENCE");
+    throw new KryptosError("TBSCertificate issuer is not a SEQUENCE", {
+      code: "invalid_certificate",
+      data: { field: "issuer" },
+    });
   }
   const issuer = parseX509Name(Buffer.from(der.subarray(offset, child.nextOffset)));
   offset = child.nextOffset;
@@ -105,7 +130,10 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   // validity
   child = readTlv(der, offset);
   if (child.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("TBSCertificate validity is not a SEQUENCE");
+    throw new KryptosError("TBSCertificate validity is not a SEQUENCE", {
+      code: "invalid_certificate",
+      data: { field: "validity" },
+    });
   }
   const { notBefore, notAfter } = parseX509Validity(
     Buffer.from(der.subarray(offset, child.nextOffset)),
@@ -115,7 +143,10 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   // subject Name
   child = readTlv(der, offset);
   if (child.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("TBSCertificate subject is not a SEQUENCE");
+    throw new KryptosError("TBSCertificate subject is not a SEQUENCE", {
+      code: "invalid_certificate",
+      data: { field: "subject" },
+    });
   }
   const subject = parseX509Name(Buffer.from(der.subarray(offset, child.nextOffset)));
   offset = child.nextOffset;
@@ -123,7 +154,10 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   // subjectPublicKeyInfo
   child = readTlv(der, offset);
   if (child.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("TBSCertificate SPKI is not a SEQUENCE");
+    throw new KryptosError("TBSCertificate SPKI is not a SEQUENCE", {
+      code: "invalid_certificate",
+      data: { field: "subjectPublicKeyInfo" },
+    });
   }
   const subjectPublicKeyInfo = Buffer.from(der.subarray(offset, child.nextOffset));
   offset = child.nextOffset;

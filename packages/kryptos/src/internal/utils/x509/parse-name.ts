@@ -24,7 +24,9 @@ const decodeDirectoryString = (tag: number, content: Buffer): string => {
 export const parseX509Name = (der: Buffer): ParsedX509Name => {
   const tlv = readTlv(der, 0);
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("Name is not a SEQUENCE");
+    throw new KryptosError("Name is not a SEQUENCE", {
+      code: "invalid_certificate_name",
+    });
   }
   const raw = Buffer.from(der.subarray(0, tlv.nextOffset));
   const body = der.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);

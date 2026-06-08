@@ -22,6 +22,7 @@ const computeCanonical = (jwk: KryptosJwk): Partial<KryptosJwk> => {
     default:
       throw new KryptosError(
         `Cannot compute thumbprint: unsupported kty "${jwk.kty as string}"`,
+        { code: "unsupported_key_type", data: { kty: jwk.kty } },
       );
   }
 };

@@ -16,7 +16,10 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
   switch (options.type) {
     case "AKP":
       if (!isAkpDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "AKP" },
+        });
       }
       return {
         ...exportAkpToPem(options),
@@ -28,7 +31,10 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
 
     case "EC":
       if (!isEcDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "EC" },
+        });
       }
       return {
         ...exportEcToPem(options),
@@ -40,7 +46,10 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
 
     case "oct":
       if (!isOctDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "oct" },
+        });
       }
       return {
         ...exportOctToPem(options),
@@ -52,7 +61,10 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
 
     case "OKP":
       if (!isOkpDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "OKP" },
+        });
       }
       return {
         ...exportOkpToPem(options),
@@ -64,7 +76,10 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
 
     case "RSA":
       if (!isRsaDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "RSA" },
+        });
       }
       return {
         ...exportRsaToPem(options),
@@ -75,6 +90,9 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       };
 
     default:
-      throw new KryptosError("Unsupported key type");
+      throw new KryptosError("Unsupported key type", {
+        code: "unsupported_export_key_type",
+        data: { type: options.type },
+      });
   }
 };
