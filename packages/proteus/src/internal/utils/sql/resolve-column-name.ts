@@ -26,6 +26,10 @@ export const resolveColumnName = (
 
   throw new ProteusError(
     `Field "${key}" not found in metadata. Valid fields: ${fields.map((f) => f.key).join(", ") || "(none)"}`,
+    {
+      code: "unknown_field",
+      data: { field: key, validFields: fields.map((f) => f.key) },
+    },
   );
 };
 

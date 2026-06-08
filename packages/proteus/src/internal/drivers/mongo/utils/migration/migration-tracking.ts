@@ -127,6 +127,7 @@ export const markMigrationFinished = async (
   );
   if (result.matchedCount === 0) {
     throw new MongoMigrationError("No migration record found", {
+      code: "migration_failed",
       debug: { id },
     });
   }
@@ -157,6 +158,7 @@ export const markMigrationRolledBack = async (
 
   if (result.matchedCount === 0) {
     throw new MongoMigrationError("No migration record found", {
+      code: "migration_failed",
       debug: { id },
     });
   }

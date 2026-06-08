@@ -146,7 +146,9 @@ export abstract class DriverRepositoryBase<
     _entity: E,
     _embeddedList: MetaEmbeddedList,
   ): Promise<void> | void {
-    throw new ProteusRepositoryError("Driver does not support @EmbeddedList fields");
+    throw new ProteusRepositoryError("Driver does not support @EmbeddedList fields", {
+      code: "embedded_list_not_supported",
+    });
   }
 
   /**
@@ -231,7 +233,11 @@ export abstract class DriverRepositoryBase<
     if (!entity) {
       throw new ProteusRepositoryError(
         `Entity "${this.metadata.entity.name}" not found`,
-        { debug: { criteria } },
+        {
+          code: "entity_not_found",
+          data: { entityName: this.metadata.entity.name },
+          debug: { criteria },
+        },
       );
     }
     return entity;
@@ -275,10 +281,16 @@ export abstract class DriverRepositoryBase<
     const pageSize = options?.pageSize ?? 10;
 
     if (page < 1) {
-      throw new ProteusRepositoryError("findPaginated: page must be >= 1");
+      throw new ProteusRepositoryError("findPaginated: page must be >= 1", {
+        code: "invalid_pagination",
+        data: { page },
+      });
     }
     if (pageSize < 1) {
-      throw new ProteusRepositoryError("findPaginated: pageSize must be >= 1");
+      throw new ProteusRepositoryError("findPaginated: pageSize must be >= 1", {
+        code: "invalid_pagination",
+        data: { pageSize },
+      });
     }
 
     const offset = (page - 1) * pageSize;
@@ -312,7 +324,10 @@ export abstract class DriverRepositoryBase<
     if (!options) {
       throw new ProteusRepositoryError(
         "paginate() requires options with at least `orderBy` and one of `first`/`last`",
-        { debug: { entityName: this.metadata.entity.name } },
+        {
+          code: "invalid_pagination",
+          data: { entityName: this.metadata.entity.name },
+        },
       );
     }
 
@@ -452,7 +467,10 @@ export abstract class DriverRepositoryBase<
     if (this.metadata.appendOnly) {
       throw new ProteusRepositoryError(
         `Cannot save an append-only entity "${this.metadata.entity.name}" — use insert() instead`,
-        { debug: { entityName: this.metadata.entity.name, method: "save" } },
+        {
+          code: "append_only_violation",
+          debug: { entityName: this.metadata.entity.name, method: "save" },
+        },
       );
     }
 
@@ -542,7 +560,10 @@ export abstract class DriverRepositoryBase<
     if (this.entityManager.updateStrategy === "version") {
       throw new ProteusRepositoryError(
         `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
-        { debug: { entityName: this.metadata.entity.name } },
+        {
+          code: "update_many_not_supported",
+          debug: { entityName: this.metadata.entity.name },
+        },
       );
     }
 
@@ -607,7 +628,11 @@ export abstract class DriverRepositoryBase<
     if (seconds == null) {
       throw new ProteusRepositoryError(
         `Entity "${this.metadata.entity.name}" not found or has no TTL set`,
-        { debug: { criteria } },
+        {
+          code: "entity_not_found",
+          data: { entityName: this.metadata.entity.name },
+          debug: { criteria },
+        },
       );
     }
 

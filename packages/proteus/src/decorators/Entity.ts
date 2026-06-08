@@ -1,3 +1,4 @@
+import { EntityMetadataError } from "../internal/entity/errors/EntityMetadataError.js";
 import type { EntityDecoratorOptions } from "../internal/entity/types/decorators.js";
 import { registerEntity } from "../internal/entity/metadata/registry.js";
 import { stageEntity } from "../internal/entity/metadata/stage-metadata.js";
@@ -14,8 +15,9 @@ export const Entity =
     const name = options.name ?? target.name;
 
     if (!name || !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
-      throw new Error(
+      throw new EntityMetadataError(
         `Invalid entity name "${name}": must match /^[a-zA-Z_][a-zA-Z0-9_]*$/`,
+        { code: "invalid_entity_name", data: { name } },
       );
     }
 

@@ -11,6 +11,7 @@ export const decryptFieldValue = (
   if (!amphora) {
     throw new ProteusError(
       "Encryption requires an amphora instance but none was provided",
+      { code: "missing_amphora" },
     );
   }
 
@@ -23,6 +24,8 @@ export const decryptFieldValue = (
     throw new ProteusError(
       `Failed to decrypt field "${fieldKey}" on entity "${entityName}"`,
       {
+        code: "decrypt_failed",
+        data: { field: fieldKey, entity: entityName },
         error: error as Error,
       },
     );

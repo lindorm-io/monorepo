@@ -1,3 +1,4 @@
+import { ProteusError } from "../errors/ProteusError.js";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 
 /**
@@ -45,7 +46,12 @@ export class MemoryCacheAdapter implements ICacheAdapter {
   };
 
   public set = async (key: string, value: string, ttlMs: number): Promise<void> => {
-    if (ttlMs < 0) throw new Error(`Invalid ttlMs: ${ttlMs}`);
+    if (ttlMs < 0) {
+      throw new ProteusError(`Invalid ttlMs: ${ttlMs}`, {
+        code: "invalid_ttl",
+        data: { ttlMs },
+      });
+    }
     if (ttlMs === 0) return; // Zero TTL means "don't cache"
 
     // Delete first to refresh LRU position (Map preserves insertion order)

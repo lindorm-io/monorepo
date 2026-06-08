@@ -13,7 +13,9 @@ export const getEntityName = <E extends IEntity>(
   const ns = metadata.entity.namespace || options.namespace;
 
   if (ns === "system") {
-    throw new EntityManagerError("The 'system' namespace is reserved for internal use");
+    throw new EntityManagerError("The 'system' namespace is reserved for internal use", {
+      code: "reserved_namespace",
+    });
   }
 
   const namespace = ns ?? null;
@@ -21,11 +23,17 @@ export const getEntityName = <E extends IEntity>(
   const type = snakeCase(metadata.entity.decorator);
 
   if (namespace && namespace.length > 63) {
-    throw new EntityManagerError(`Entity namespace exceeds 63 characters: ${namespace}`);
+    throw new EntityManagerError(`Entity namespace exceeds 63 characters: ${namespace}`, {
+      code: "namespace_too_long",
+      data: { namespace },
+    });
   }
 
   if (name.length > 63) {
-    throw new EntityManagerError(`Entity name exceeds 63 characters: ${name}`);
+    throw new EntityManagerError(`Entity name exceeds 63 characters: ${name}`, {
+      code: "name_too_long",
+      data: { name },
+    });
   }
 
   return {

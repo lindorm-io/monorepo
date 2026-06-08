@@ -9,7 +9,10 @@ export const buildRelationFilter = (
   if (!relation.findKeys) {
     throw new ProteusRepositoryError(
       `Cannot build relation filter: findKeys is null for relation "${relation.key}" on "${relation.type}"`,
-      { debug: { relationKey: relation.key, relationType: relation.type } },
+      {
+        code: "relation_find_keys_missing",
+        debug: { relationKey: relation.key, relationType: relation.type },
+      },
     );
   }
 

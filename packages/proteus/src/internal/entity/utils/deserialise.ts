@@ -22,7 +22,9 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
       if (value instanceof Date) {
         if (isNaN(value.getTime())) {
           throw new ProteusError("Invalid Date object during deserialisation", {
-            debug: { type, value: String(value) },
+            code: "deserialise_failed",
+            data: { type },
+            debug: { value: String(value) },
           });
         }
         return value;
@@ -31,7 +33,9 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
       const date = new Date(value);
       if (isNaN(date.getTime())) {
         throw new ProteusError("Cannot convert value to date during deserialisation", {
-          debug: { type, value: String(value) },
+          code: "deserialise_failed",
+          data: { type },
+          debug: { value: String(value) },
         });
       }
       return date;
@@ -44,7 +48,9 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
       const parsed = parseFloat(value);
       if (isNaN(parsed)) {
         throw new ProteusError("Cannot convert value to float during deserialisation", {
-          debug: { type, value: String(value) },
+          code: "deserialise_failed",
+          data: { type },
+          debug: { value: String(value) },
         });
       }
       return parsed;
@@ -60,7 +66,9 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
       const parsed = parseInt(value, 10);
       if (isNaN(parsed)) {
         throw new ProteusError("Cannot convert value to integer during deserialisation", {
-          debug: { type, value: String(value) },
+          code: "deserialise_failed",
+          data: { type },
+          debug: { value: String(value) },
         });
       }
       return parsed;

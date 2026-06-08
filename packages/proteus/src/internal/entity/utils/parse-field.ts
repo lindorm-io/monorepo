@@ -33,7 +33,10 @@ export const parseField = <E extends IEntity, O extends DeepPartial<E> = DeepPar
     throw new EntityManagerError(
       `Failed to parse field "${field.key}" of type ${field.type}`,
       {
-        debug: { field: field.key, value, type: typeof value, error },
+        code: "parse_field_failed",
+        data: { field: field.key, type: field.type },
+        debug: { value, valueType: typeof value },
+        error: error instanceof Error ? error : undefined,
       },
     );
   }

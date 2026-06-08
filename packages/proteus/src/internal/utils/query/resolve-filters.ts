@@ -57,6 +57,10 @@ const substituteParams = (
       if (!(paramKey in params)) {
         throw new ProteusError(
           `Filter "${filterName}" requires parameter "${paramKey}" but it was not provided`,
+          {
+            code: "missing_filter_param",
+            data: { filter: filterName, param: paramKey },
+          },
         );
       }
       return params[paramKey];
@@ -119,6 +123,10 @@ export const resolveFilters = (
           .filter((n) => !n.startsWith("__"));
         throw new ProteusError(
           `Filter "${name}" does not exist on this entity. Available filters: ${available.join(", ") || "(none)"}`,
+          {
+            code: "unknown_filter",
+            data: { filter: name, available },
+          },
         );
       }
     }

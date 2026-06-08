@@ -6,7 +6,10 @@ export const guardDeleteDateField = (metadata: EntityMetadata, method: string): 
   if (!field) {
     throw new ProteusRepositoryError(
       `${method}() requires @DeleteDateField on "${metadata.entity.name}"`,
-      { debug: { entityName: metadata.entity.name, method } },
+      {
+        code: "missing_delete_date_field",
+        debug: { entityName: metadata.entity.name, method },
+      },
     );
   }
 };
@@ -16,7 +19,10 @@ export const guardExpiryDateField = (metadata: EntityMetadata, method: string): 
   if (!field) {
     throw new ProteusRepositoryError(
       `${method}() requires @ExpiryDateField on "${metadata.entity.name}"`,
-      { debug: { entityName: metadata.entity.name, method } },
+      {
+        code: "missing_expiry_date_field",
+        debug: { entityName: metadata.entity.name, method },
+      },
     );
   }
 };
@@ -27,7 +33,10 @@ export const guardVersionFields = (metadata: EntityMetadata, method: string): vo
   if (!startDate || !endDate) {
     throw new ProteusRepositoryError(
       `${method}() requires @VersionStartDateField and @VersionEndDateField on "${metadata.entity.name}"`,
-      { debug: { entityName: metadata.entity.name, method } },
+      {
+        code: "missing_version_fields",
+        debug: { entityName: metadata.entity.name, method },
+      },
     );
   }
 };
@@ -41,7 +50,10 @@ export const guardUpsertBlocked = (metadata: EntityMetadata): void => {
   if (hasVersionStartDate || hasVersionEndDate) {
     throw new ProteusRepositoryError(
       `upsert() is not supported on versioned entity "${metadata.entity.name}"`,
-      { debug: { entityName: metadata.entity.name } },
+      {
+        code: "upsert_not_supported",
+        debug: { entityName: metadata.entity.name },
+      },
     );
   }
 
@@ -52,7 +64,10 @@ export const guardUpsertBlocked = (metadata: EntityMetadata): void => {
   if (hasIncrementPk) {
     throw new ProteusRepositoryError(
       `upsert() is not supported on entity "${metadata.entity.name}" with auto-increment primary key`,
-      { debug: { entityName: metadata.entity.name } },
+      {
+        code: "upsert_not_supported",
+        debug: { entityName: metadata.entity.name },
+      },
     );
   }
 };
@@ -61,7 +76,10 @@ export const guardAppendOnly = (metadata: EntityMetadata, method: string): void 
   if (metadata.appendOnly) {
     throw new ProteusRepositoryError(
       `Cannot ${method} an append-only entity "${metadata.entity.name}"`,
-      { debug: { entityName: metadata.entity.name, method } },
+      {
+        code: "append_only_violation",
+        debug: { entityName: metadata.entity.name, method },
+      },
     );
   }
 };
@@ -75,7 +93,10 @@ export const validateRelationNames = (
     if (!validNames.has(name)) {
       throw new ProteusRepositoryError(
         `Unknown relation "${name}" on "${metadata.entity.name}". Available: [${[...validNames].join(", ")}]`,
-        { debug: { entityName: metadata.entity.name, relation: name } },
+        {
+          code: "unknown_relation",
+          debug: { entityName: metadata.entity.name, relation: name },
+        },
       );
     }
   }

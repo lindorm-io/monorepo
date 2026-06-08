@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
+import { EntityMetadataError } from "../internal/entity/errors/EntityMetadataError.js";
 import { generateEntitySource, PROTEUS_ENTITY_NAME_PATTERN } from "./generate-entity.js";
 
 export type WriteEntityOptions = {
@@ -13,7 +14,10 @@ export const writeEntity = async (options: WriteEntityOptions): Promise<void> =>
   const { name, directory, dryRun } = options;
 
   if (!PROTEUS_ENTITY_NAME_PATTERN.test(name)) {
-    throw new Error(`Invalid entity name: "${name}" — must be PascalCase`);
+    throw new EntityMetadataError(`Invalid entity name: "${name}" — must be PascalCase`, {
+      code: "invalid_entity_name",
+      data: { name },
+    });
   }
 
   const resolvedDirectory = resolve(process.cwd(), directory);

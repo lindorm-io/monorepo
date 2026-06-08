@@ -19,12 +19,16 @@ const validateModifierFieldTypes = (targetName: string, field: MetaField): void 
   if (field.precision != null && (!type || !PRECISION_TYPES.includes(type))) {
     throw new EntityMetadataError(
       `@Precision on "${field.key}" requires a floating-point numeric type (decimal, float, real)`,
-      { debug: { target: targetName, field: field.key, actualType: type } },
+      {
+        code: "invalid_precision_type",
+        debug: { target: targetName, field: field.key, actualType: type },
+      },
     );
   }
 
   if (field.enum && type !== "enum") {
     throw new EntityMetadataError(`@Enum on "${field.key}" requires type "enum"`, {
+      code: "invalid_enum_type",
       debug: { target: targetName, field: field.key, actualType: type },
     });
   }
@@ -32,7 +36,7 @@ const validateModifierFieldTypes = (targetName: string, field: MetaField): void 
   if (type === "enum" && !field.enum) {
     throw new EntityMetadataError(
       `Enum type on "${field.key}" requires an @Enum decorator with values`,
-      { debug: { target: targetName, field: field.key } },
+      { code: "missing_enum_decorator", debug: { target: targetName, field: field.key } },
     );
   }
 };
@@ -45,6 +49,7 @@ export const validateFields = (targetName: string, fields: Array<MetaField>): vo
   for (const field of fields) {
     if (seenKeys.has(field.key)) {
       throw new EntityMetadataError("Duplicate field metadata", {
+        code: "duplicate_field",
         debug: { target: targetName, field: field.key },
       });
     }
@@ -52,6 +57,7 @@ export const validateFields = (targetName: string, fields: Array<MetaField>): vo
 
     if (seenNames.has(field.name)) {
       throw new EntityMetadataError("Duplicate field column name", {
+        code: "duplicate_column",
         debug: { target: targetName, field: field.key, name: field.name },
       });
     }
@@ -62,6 +68,7 @@ export const validateFields = (targetName: string, fields: Array<MetaField>): vo
     if (UNIQUE_FIELDS.includes(decorator)) {
       if (seenDecorators.has(decorator)) {
         throw new EntityMetadataError("Duplicate unique field type", {
+          code: "duplicate_unique_decorator",
           debug: { target: targetName, field: field.key, decorator },
         });
       }
