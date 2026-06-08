@@ -6,7 +6,7 @@ import { ProteusError } from "../../../../errors/ProteusError.js";
  */
 export const quoteIdentifier = (name: string): string => {
   if (!name) {
-    throw new ProteusError("Identifier cannot be empty");
+    throw new ProteusError("Identifier cannot be empty", { code: "invalid_query" });
   }
   return `\`${name.replace(/`/g, "``")}\``;
 };

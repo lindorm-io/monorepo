@@ -16,6 +16,7 @@ exports[`RedisDriverError snapshot > accepts debug metadata 1`] = `
   "support": null,
   "timestamp": 2024-01-01T00:00:00.000Z,
   "title": null,
+  "type": "urn:lindorm:proteus:error:redis_driver",
 }
 `;
 
@@ -33,5 +34,6 @@ exports[`RedisDriverError snapshot > serialises to JSON with expected shape 1`] 
   "support": null,
   "timestamp": 2024-01-01T00:00:00.000Z,
   "title": null,
+  "type": "urn:lindorm:proteus:error:redis_driver",
 }
 `;
