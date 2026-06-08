@@ -4,7 +4,10 @@ import type { KryptosType } from "../../../types/index.js";
 
 export const spkiFromPublicKey = (publicKey: Buffer, type: KryptosType): Buffer => {
   if (type === "oct") {
-    throw new KryptosError("Symmetric keys have no SubjectPublicKeyInfo");
+    throw new KryptosError("Symmetric keys have no SubjectPublicKeyInfo", {
+      code: "unsupported_key_type",
+      data: { type },
+    });
   }
 
   const sourceType = type === "RSA" ? "pkcs1" : "spki";
@@ -12,7 +15,10 @@ export const spkiFromPublicKey = (publicKey: Buffer, type: KryptosType): Buffer 
   const out = keyObject.export({ format: "der", type: "spki" });
 
   if (!Buffer.isBuffer(out)) {
-    throw new KryptosError("Failed to export kryptos public key as SPKI DER");
+    throw new KryptosError("Failed to export kryptos public key as SPKI DER", {
+      code: "spki_export_failed",
+      data: { type },
+    });
   }
 
   return out;

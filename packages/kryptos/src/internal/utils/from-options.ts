@@ -11,26 +11,49 @@ import { parseJwkOptions, parseStdOptions } from "./parse-options.js";
 export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOptions => {
   switch (format) {
     case "b64":
-      if (!isB64(arg)) throw new KryptosError("Invalid key format");
+      if (!isB64(arg))
+        throw new KryptosError("Invalid key format", {
+          code: "invalid_key_format",
+          data: { format },
+        });
       return { ...parseStdOptions(arg), ...createDerFromB64(arg) };
 
     case "der":
-      if (!isDer(arg)) throw new KryptosError("Invalid key format");
+      if (!isDer(arg))
+        throw new KryptosError("Invalid key format", {
+          code: "invalid_key_format",
+          data: { format },
+        });
       return { ...parseStdOptions(arg), ...createDerFromDer(arg) };
 
     case "jwk":
-      if (!isJwk(arg)) throw new KryptosError("Invalid key format");
+      if (!isJwk(arg))
+        throw new KryptosError("Invalid key format", {
+          code: "invalid_key_format",
+          data: { format },
+        });
       return { ...parseJwkOptions(arg), ...createDerFromJwk(arg) };
 
     case "pem":
-      if (!isPem(arg)) throw new KryptosError("Invalid key format");
+      if (!isPem(arg))
+        throw new KryptosError("Invalid key format", {
+          code: "invalid_key_format",
+          data: { format },
+        });
       return { ...parseStdOptions(arg), ...createDerFromPem(arg) };
 
     case "utf":
-      if (!isUtf(arg)) throw new KryptosError("Invalid key format");
+      if (!isUtf(arg))
+        throw new KryptosError("Invalid key format", {
+          code: "invalid_key_format",
+          data: { format },
+        });
       return { ...parseStdOptions(arg), ...createDerFromUtf(arg) };
 
     default:
-      throw new KryptosError("Invalid key format");
+      throw new KryptosError("Invalid key format", {
+        code: "invalid_key_format",
+        data: { format },
+      });
   }
 };
