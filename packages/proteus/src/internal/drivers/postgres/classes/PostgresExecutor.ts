@@ -113,6 +113,8 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
       throw new PostgresExecutorError(
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
         {
+          code: "update_target_not_found",
+          data: { entity: this.metadata.entity.name },
           debug: {
             primaryKey: buildPrimaryKeyDebug(
               entity as Record<string, unknown>,

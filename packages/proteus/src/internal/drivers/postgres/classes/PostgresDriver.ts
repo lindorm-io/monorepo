@@ -161,6 +161,7 @@ export class PostgresDriver implements IProteusDriver {
     if (this.options.synchronize && this.options.runMigrations) {
       throw new PostgresMigrationError(
         "synchronize and runMigrations are mutually exclusive — use one or the other",
+        { code: "invalid_configuration" },
       );
     }
 
@@ -563,6 +564,7 @@ export class PostgresDriver implements IProteusDriver {
     if (!this.pool) {
       throw new PostgresDriverError(
         "Not connected — call connect() before calling setup() or query()",
+        { code: "connection_not_established" },
       );
     }
     return this.pool;

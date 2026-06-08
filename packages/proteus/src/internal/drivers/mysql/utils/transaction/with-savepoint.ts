@@ -21,6 +21,8 @@ export const withSavepoint = async <T>(
     await handle.client.query(`SAVEPOINT \`${name}\``);
   } catch (error) {
     throw new MySqlTransactionError(`Failed to create savepoint "${name}"`, {
+      code: "query_execution_failed",
+      data: { operation: "SAVEPOINT" },
       error: error as Error,
     });
   }

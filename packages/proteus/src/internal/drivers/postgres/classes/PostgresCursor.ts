@@ -139,13 +139,15 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
 
   private guardClosed(): void {
     if (this.closed) {
-      throw new PostgresDriverError("Cursor is closed");
+      throw new PostgresDriverError("Cursor is closed", { code: "cursor_closed" });
     }
   }
 
   private guardReading(): void {
     if (this.reading) {
-      throw new PostgresDriverError("Concurrent cursor reads are not allowed");
+      throw new PostgresDriverError("Concurrent cursor reads are not allowed", {
+        code: "cursor_concurrent_read",
+      });
     }
   }
 

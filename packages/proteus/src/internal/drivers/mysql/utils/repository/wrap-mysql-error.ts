@@ -30,9 +30,9 @@ export const wrapMysqlError = (
     // Duplicate key (ER_DUP_ENTRY, ER_DUP_ENTRY_WITH_KEY_NAME)
     if (errno === 1062 || errno === 1586) {
       throw new DuplicateKeyError(message, {
-        code: errno,
+        code: "unique_violation",
         error,
-        debug: { ...context, detail, code },
+        debug: { ...context, detail, errno, sqlState: code },
       });
     }
 
@@ -41,9 +41,9 @@ export const wrapMysqlError = (
       throw new ForeignKeyViolationError(
         `${message} (foreign key violation: parent row referenced)`,
         {
-          code: errno,
+          code: "foreign_key_violation",
           error,
-          debug: { ...context, detail, code },
+          debug: { ...context, detail, errno, sqlState: code },
         },
       );
     }
@@ -53,9 +53,9 @@ export const wrapMysqlError = (
       throw new ForeignKeyViolationError(
         `${message} (foreign key violation: referenced row not found)`,
         {
-          code: errno,
+          code: "foreign_key_violation",
           error,
-          debug: { ...context, detail, code },
+          debug: { ...context, detail, errno, sqlState: code },
         },
       );
     }
@@ -63,18 +63,18 @@ export const wrapMysqlError = (
     // NOT NULL violation
     if (errno === 1048 || errno === 1364) {
       throw new NotNullViolationError(`${message} (NOT NULL constraint violation)`, {
-        code: errno,
+        code: "not_null_violation",
         error,
-        debug: { ...context, detail, code },
+        debug: { ...context, detail, errno, sqlState: code },
       });
     }
 
     // Deadlock
     if (errno === 1213) {
       throw new DeadlockError(`${message} (deadlock detected — retry the operation)`, {
-        code: errno,
+        code: "deadlock_detected",
         error,
-        debug: { ...context, detail, code },
+        debug: { ...context, detail, errno, sqlState: code },
       });
     }
 
@@ -83,9 +83,9 @@ export const wrapMysqlError = (
       throw new SerializationError(
         `${message} (lock wait timeout — retry the operation)`,
         {
-          code: errno,
+          code: "serialization_failure",
           error,
-          debug: { ...context, detail, code },
+          debug: { ...context, detail, errno, sqlState: code },
         },
       );
     }
@@ -93,15 +93,16 @@ export const wrapMysqlError = (
     // CHECK constraint violation (MySQL 8.0.16+)
     if (errno === 3819) {
       throw new CheckConstraintError(`${message} (CHECK constraint violation)`, {
-        code: errno,
+        code: "check_constraint_violation",
         error,
-        debug: { ...context, detail, code },
+        debug: { ...context, detail, errno, sqlState: code },
       });
     }
   }
 
   // Fallback: unknown error shape
   throw new ProteusRepositoryError(message, {
+    code: "query_execution_failed",
     error: error instanceof Error ? error : undefined,
     debug: {
       ...context,

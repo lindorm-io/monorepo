@@ -5,4 +5,6 @@ import { LindormError } from "@lindorm/errors";
  *
  * Extends `LindormError` for consistent error handling across the Lindorm ecosystem.
  */
-export class ProteusError extends LindormError {}
+export class ProteusError extends LindormError {
+  public static readonly namespace = "proteus";
+}

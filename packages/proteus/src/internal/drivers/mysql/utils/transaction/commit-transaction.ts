@@ -20,6 +20,8 @@ export const commitTransaction = async (
     }
     handle.state = "rolledback";
     throw new MySqlTransactionError("Failed to commit transaction", {
+      code: "query_execution_failed",
+      data: { operation: "COMMIT" },
       error: error as Error,
     });
   } finally {

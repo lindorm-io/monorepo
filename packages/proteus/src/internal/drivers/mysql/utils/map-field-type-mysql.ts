@@ -1,4 +1,4 @@
-import { ProteusError } from "../../../../errors/index.js";
+import { NotSupportedError } from "../../../../errors/index.js";
 import type { MetaField } from "../../../entity/types/metadata.js";
 
 /**
@@ -12,7 +12,10 @@ export const mapFieldTypeMysql = (field: MetaField): string => {
   const { type, key, max } = field;
 
   if (type === null) {
-    throw new ProteusError(`Field "${key}" has no type — cannot map to MySQL type`);
+    throw new NotSupportedError(`Field "${key}" has no type — cannot map to MySQL type`, {
+      code: "unsupported_column_type",
+      data: { column: key },
+    });
   }
 
   switch (type) {
@@ -99,11 +102,15 @@ export const mapFieldTypeMysql = (field: MetaField): string => {
     case "circle":
     case "vector":
     case "xml":
-      throw new ProteusError(
+      throw new NotSupportedError(
         `Field type "${type}" (field "${key}") is not supported by the MySQL driver`,
+        { code: "unsupported_column_type", data: { column: key, type } },
       );
 
     default:
-      throw new ProteusError(`Unsupported MetaFieldType: "${type as string}"`);
+      throw new NotSupportedError(`Unsupported MetaFieldType: "${type as string}"`, {
+        code: "unsupported_column_type",
+        data: { type: type as string },
+      });
   }
 };
