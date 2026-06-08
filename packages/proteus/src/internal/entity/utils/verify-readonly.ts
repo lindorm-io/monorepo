@@ -19,7 +19,11 @@ export const verifyReadonly = <E extends IEntity>(
     const field = metadata.fields.find((f) => f.key === key);
     if (!field) continue;
     if (field.readonly) {
-      throw new EntityMetadataError("Field is readonly", { debug: { key, entity } });
+      throw new EntityMetadataError("Field is readonly", {
+        code: "readonly_field",
+        data: { key },
+        debug: { entity },
+      });
     }
   }
 };

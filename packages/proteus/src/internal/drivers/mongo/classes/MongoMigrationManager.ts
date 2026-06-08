@@ -83,6 +83,7 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
+        { code: "migration_failed" },
       );
     }
 
@@ -112,6 +113,7 @@ export class MongoMigrationManager implements IMigrationManager {
           "Partially applied migrations detected — these started but never finished (possible crash). " +
             "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
           {
+            code: "migration_failed",
             debug: {
               partiallyApplied: partiallyApplied.map((r) => ({
                 id: r.id,
@@ -128,6 +130,7 @@ export class MongoMigrationManager implements IMigrationManager {
 
       if (mismatched.length > 0) {
         throw new MongoMigrationError("Checksum mismatch detected — aborting", {
+          code: "migration_failed",
           debug: {
             mismatched: mismatched.map((m) => ({
               id: m.migration.id,
@@ -171,6 +174,7 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
+        { code: "migration_failed" },
       );
     }
 
@@ -200,6 +204,7 @@ export class MongoMigrationManager implements IMigrationManager {
           "Partially applied migrations detected — these started but never finished (possible crash). " +
             "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
           {
+            code: "migration_failed",
             debug: {
               partiallyApplied: partiallyApplied.map((r) => ({
                 id: r.id,
@@ -216,6 +221,7 @@ export class MongoMigrationManager implements IMigrationManager {
         throw new MongoMigrationError(
           "Checksum mismatch detected — cannot safely rollback",
           {
+            code: "migration_failed",
             debug: {
               mismatched: mismatched.map((m) => ({
                 id: m.migration.id,
@@ -266,7 +272,9 @@ export class MongoMigrationManager implements IMigrationManager {
   ): Promise<GenerateMigrationResult> {
     const lockAcquired = await acquireLock(this.db, this.namespace);
     if (!lockAcquired) {
-      throw new MongoMigrationError("Could not acquire migration advisory lock");
+      throw new MongoMigrationError("Could not acquire migration advisory lock", {
+        code: "migration_failed",
+      });
     }
 
     try {
@@ -286,7 +294,9 @@ export class MongoMigrationManager implements IMigrationManager {
   ): Promise<GenerateBaselineResult> {
     const lockAcquired = await acquireLock(this.db, this.namespace);
     if (!lockAcquired) {
-      throw new MongoMigrationError("Could not acquire migration advisory lock");
+      throw new MongoMigrationError("Could not acquire migration advisory lock", {
+        code: "migration_failed",
+      });
     }
 
     try {
@@ -306,6 +316,7 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
+        { code: "migration_failed" },
       );
     }
 
@@ -318,6 +329,10 @@ export class MongoMigrationManager implements IMigrationManager {
         const available = loaded.map((l) => l.name);
         throw new MongoMigrationError(
           `Migration file not found: ${name}. Available migrations: ${available.join(", ") || "(none)"}`,
+          {
+            code: "migration_failed",
+            data: { name },
+          },
         );
       }
 
@@ -326,7 +341,13 @@ export class MongoMigrationManager implements IMigrationManager {
       const alreadyApplied = applied.find((r) => r.name === name);
 
       if (alreadyApplied) {
-        throw new MongoMigrationError(`Migration "${name}" is already marked as applied`);
+        throw new MongoMigrationError(
+          `Migration "${name}" is already marked as applied`,
+          {
+            code: "migration_failed",
+            data: { name },
+          },
+        );
       }
 
       const checksum = computeHash(match.migration);
@@ -387,6 +408,7 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
+        { code: "migration_failed" },
       );
     }
 
@@ -399,6 +421,10 @@ export class MongoMigrationManager implements IMigrationManager {
         const available = applied.map((r) => r.name);
         throw new MongoMigrationError(
           `Migration not found in tracking collection or already rolled back: ${name}. Available applied migrations: ${available.join(", ") || "(none)"}`,
+          {
+            code: "migration_failed",
+            data: { name },
+          },
         );
       }
 

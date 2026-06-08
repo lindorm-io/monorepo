@@ -50,6 +50,7 @@ export const executeMigrationUp = async (
       // Mark-failed failure is secondary — preserve the original error
     }
     throw new MongoMigrationError("Migration up() failed", {
+      code: "migration_failed",
       debug: { id: migration.id, name: metadata.name },
       error: err as Error,
     });
@@ -77,6 +78,7 @@ export const executeMigrationDown = async (
     await migration.down(runner);
   } catch (err) {
     throw new MongoMigrationError("Migration down() failed", {
+      code: "migration_failed",
       debug: { id: migration.id, name: metadata.name },
       error: err as Error,
     });

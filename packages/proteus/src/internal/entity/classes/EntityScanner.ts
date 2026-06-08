@@ -53,14 +53,18 @@ export class EntityScanner {
       throw new EntityScannerError(
         `Failed to load entity from "${data.fullPath}": ${err instanceof Error ? err.message : String(err)}`,
         {
+          code: "entity_load_failed",
           error: err instanceof Error ? err : undefined,
-          debug: { filePath: data.fullPath },
+          data: { filePath: data.fullPath },
         },
       );
     }
     const values = Object.values(module);
     if (values.length === 0) {
-      throw new EntityScannerError(`No entities found in file: ${data.fullPath}`);
+      throw new EntityScannerError(`No entities found in file: ${data.fullPath}`, {
+        code: "missing_entity_export",
+        data: { filePath: data.fullPath },
+      });
     }
     const result: Array<Constructor<T>> = [];
     for (const value of values) {
@@ -69,7 +73,10 @@ export class EntityScanner {
       }
     }
     if (result.length === 0) {
-      throw new EntityScannerError(`No entities found in file: ${data.fullPath}`);
+      throw new EntityScannerError(`No entities found in file: ${data.fullPath}`, {
+        code: "missing_entity_export",
+        data: { filePath: data.fullPath },
+      });
     }
     return result;
   }

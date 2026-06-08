@@ -2,7 +2,9 @@ import { ProteusError } from "../../../errors/index.js";
 
 export const quoteIdentifier = (name: string): string => {
   if (!name) {
-    throw new ProteusError("Identifier cannot be empty");
+    throw new ProteusError("Identifier cannot be empty", {
+      code: "empty_identifier",
+    });
   }
   return `"${name.replace(/"/g, '""')}"`;
 };

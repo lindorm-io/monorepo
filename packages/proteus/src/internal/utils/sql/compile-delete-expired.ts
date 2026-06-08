@@ -26,6 +26,10 @@ export const compileDeleteExpired = (
   if (!expiryField) {
     throw new ProteusError(
       `compileDeleteExpired: entity "${metadata.entity.name}" has no @ExpiryDate field`,
+      {
+        code: "missing_expiry_date_field",
+        data: { entityName: metadata.entity.name },
+      },
     );
   }
 

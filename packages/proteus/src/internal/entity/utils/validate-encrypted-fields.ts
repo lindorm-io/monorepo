@@ -25,24 +25,44 @@ export const validateEncryptedFields = (
       if (!amphora) {
         throw new ProteusError(
           `Entity "${metadata.entity.name}" has @Encrypted field "${field.key}" but no amphora instance was provided. Pass amphora to ProteusSource options.`,
+          {
+            code: "missing_amphora",
+            data: { entity: metadata.entity.name, field: field.key },
+          },
         );
       }
 
       if (primaryKeySet.has(field.key)) {
         throw new ProteusError(
           `@Encrypted cannot be used on primary key field "${field.key}" in entity "${metadata.entity.name}"`,
+          {
+            code: "invalid_encrypted_field",
+            data: { entity: metadata.entity.name, field: field.key },
+          },
         );
       }
 
       if (SYSTEM_DECORATORS.has(field.decorator)) {
         throw new ProteusError(
           `@Encrypted cannot be used on ${field.decorator} field "${field.key}" in entity "${metadata.entity.name}"`,
+          {
+            code: "invalid_encrypted_field",
+            data: {
+              entity: metadata.entity.name,
+              field: field.key,
+              decorator: field.decorator,
+            },
+          },
         );
       }
 
       if (field.computed !== null) {
         throw new ProteusError(
           `@Encrypted cannot be used on computed field "${field.key}" in entity "${metadata.entity.name}"`,
+          {
+            code: "invalid_encrypted_field",
+            data: { entity: metadata.entity.name, field: field.key },
+          },
         );
       }
     }

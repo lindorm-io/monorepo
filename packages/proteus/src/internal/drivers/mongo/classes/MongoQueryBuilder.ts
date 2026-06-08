@@ -81,41 +81,68 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   // ─── Lock mode ──────────────────────────────────────────────────────
 
   public lock(_mode: LockMode): this {
-    throw new NotSupportedError("Lock mode is not supported by the MongoDB driver");
+    throw new NotSupportedError("Lock mode is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      data: { operation: "lock" },
+    });
   }
 
   // ─── Override raw SQL methods to throw ─────────────────────────────
 
   public override whereRaw(): this {
-    throw new NotSupportedError("whereRaw is not supported by the MongoDB driver");
+    throw new NotSupportedError("whereRaw is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      data: { operation: "whereRaw" },
+    });
   }
 
   public override andWhereRaw(): this {
-    throw new NotSupportedError("andWhereRaw is not supported by the MongoDB driver");
+    throw new NotSupportedError("andWhereRaw is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      data: { operation: "andWhereRaw" },
+    });
   }
 
   public override orWhereRaw(): this {
-    throw new NotSupportedError("orWhereRaw is not supported by the MongoDB driver");
+    throw new NotSupportedError("orWhereRaw is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      data: { operation: "orWhereRaw" },
+    });
   }
 
   public override selectRaw(): this {
-    throw new NotSupportedError("selectRaw is not supported by the MongoDB driver");
+    throw new NotSupportedError("selectRaw is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      data: { operation: "selectRaw" },
+    });
   }
 
   public override havingRaw(): this {
-    throw new NotSupportedError("havingRaw is not supported by the MongoDB driver");
+    throw new NotSupportedError("havingRaw is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      data: { operation: "havingRaw" },
+    });
   }
 
   public override andHavingRaw(): this {
-    throw new NotSupportedError("andHavingRaw is not supported by the MongoDB driver");
+    throw new NotSupportedError("andHavingRaw is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      data: { operation: "andHavingRaw" },
+    });
   }
 
   public override orHavingRaw(): this {
-    throw new NotSupportedError("orHavingRaw is not supported by the MongoDB driver");
+    throw new NotSupportedError("orHavingRaw is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      data: { operation: "orHavingRaw" },
+    });
   }
 
   public override window(): this {
-    throw new NotSupportedError("window is not supported by the MongoDB driver");
+    throw new NotSupportedError("window is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      data: { operation: "window" },
+    });
   }
 
   // ─── Terminal methods ─────────────────────────────────────────────
@@ -187,7 +214,13 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public async getOneOrFail(): Promise<E> {
     const entity = await this.getOne();
     if (!entity) {
-      throw new ProteusRepositoryError(`Entity "${this.metadata.entity.name}" not found`);
+      throw new ProteusRepositoryError(
+        `Entity "${this.metadata.entity.name}" not found`,
+        {
+          code: "entity_not_found",
+          data: { entity: this.metadata.entity.name },
+        },
+      );
     }
     return entity;
   }

@@ -43,7 +43,10 @@ export const validateEmbeddedListInitializers = (
 
     throw new EntityMetadataError(
       `@EmbeddedList property "${key}" on "${targetName}" carries a runtime field initializer but resolves to a lazy loading scope — initializers are incompatible with lazy loading. Declare the field with the definite-assignment assertion instead: "${key}!: Array<T>".`,
-      { debug: { target: targetName, property: key } },
+      {
+        code: "lazy_embedded_list_initializer",
+        debug: { target: targetName, property: key },
+      },
     );
   }
 };

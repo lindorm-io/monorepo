@@ -16,6 +16,7 @@ export const validateMigrationDriver = (
       `Migration "${migrationName}" was generated for the "${migration.driver}" driver ` +
         `but is being run against "${currentDriver}". Aborting to prevent data corruption.`,
       {
+        code: "migration_driver_mismatch",
         debug: {
           migrationName,
           migrationDriver: migration.driver,

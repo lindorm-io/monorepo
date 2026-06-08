@@ -604,6 +604,7 @@ export class MongoRepository<
       throw new NotSupportedError(
         "MongoDB driver does not support upsert with conflictOn. " +
           "Use PK-based upsert or a driver with unique constraint support.",
+        { code: "unsupported_operation" },
       );
     }
 

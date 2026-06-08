@@ -33,7 +33,9 @@ export class MongoTransactionContext implements ITransactionContext {
 
   public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
     if (!this.repoFactory) {
-      throw new MongoDriverError("Transactional repositories are not configured");
+      throw new MongoDriverError("Transactional repositories are not configured", {
+        code: "unsupported_operation",
+      });
     }
     return this.repoFactory(target);
   }

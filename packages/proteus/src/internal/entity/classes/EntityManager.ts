@@ -53,13 +53,15 @@ export class EntityManager<
   public constructor(options: EntityManagerOptions<E>) {
     if (!options.target) {
       throw new EntityManagerError("EntityManager requires a target constructor", {
+        code: "missing_target",
         debug: { options },
       });
     }
 
     if (!options.driver) {
       throw new EntityManagerError("EntityManager requires a driver parameter", {
-        debug: { target: options.target.name },
+        code: "missing_driver",
+        data: { target: options.target.name },
       });
     }
 
@@ -76,7 +78,8 @@ export class EntityManager<
         `Failed to retrieve metadata for entity "${this.target.name}". Did you forget the
   @Entity() decorator?`,
         {
-          debug: { target: this.target.name },
+          code: "entity_not_registered",
+          data: { target: this.target.name },
           error: error instanceof Error ? error : undefined,
         },
       );
@@ -96,7 +99,8 @@ export class EntityManager<
       throw new EntityManagerError(
         `Entity "${this.target.name}" has @Generated fields with strategy "increment" but no getNextIncrement function was provided`,
         {
-          debug: {
+          code: "missing_increment_function",
+          data: {
             target: this.target.name,
             incrementFields: incrementFields.map((g) => g.key),
           },
@@ -197,13 +201,15 @@ export class EntityManager<
 
     if (!versionStartDate) {
       throw new EntityManagerError("versionCopy requires @VersionStartDate decorator", {
-        debug: { target: this.target.name },
+        code: "missing_version_start_date",
+        data: { target: this.target.name },
       });
     }
 
     if (!versionEndDate) {
       throw new EntityManagerError("versionCopy requires @VersionEndDate decorator", {
-        debug: { target: this.target.name },
+        code: "missing_version_end_date",
+        data: { target: this.target.name },
       });
     }
 
@@ -220,7 +226,8 @@ export class EntityManager<
 
     if (!versionEndDate) {
       throw new EntityManagerError("versionUpdate requires @VersionEndDate decorator", {
-        debug: { target: this.target.name },
+        code: "missing_version_end_date",
+        data: { target: this.target.name },
       });
     }
 

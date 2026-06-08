@@ -13,7 +13,7 @@ export const validateDiscriminatorRequiresInheritance = (target: Function): void
   if (discriminator && !inheritance) {
     throw new EntityMetadataError(
       `@Discriminator requires @Inheritance on the same class "${target.name}"`,
-      { debug: { target: target.name } },
+      { code: "missing_inheritance_decorator", debug: { target: target.name } },
     );
   }
 };
@@ -29,7 +29,7 @@ export const validateInheritanceRequiresDiscriminator = (target: Function): void
   if (inheritance && !discriminator) {
     throw new EntityMetadataError(
       `@Inheritance on "${target.name}" requires @Discriminator to specify the discriminator field`,
-      { debug: { target: target.name } },
+      { code: "missing_discriminator_decorator", debug: { target: target.name } },
     );
   }
 };
@@ -45,7 +45,7 @@ export const validateDiscriminatorValueNotOnRoot = (target: Function): void => {
   if (inheritance && discriminatorValue !== undefined) {
     throw new EntityMetadataError(
       `@DiscriminatorValue cannot be applied to inheritance root "${target.name}" — only subtypes may have a discriminator value`,
-      { debug: { target: target.name } },
+      { code: "discriminator_value_on_root", debug: { target: target.name } },
     );
   }
 };
@@ -63,7 +63,7 @@ export const validateDiscriminatorValueRequiresHierarchy = (target: Function): v
   if (!inheritance) {
     throw new EntityMetadataError(
       `@DiscriminatorValue on "${target.name}" requires @Inheritance in the class hierarchy`,
-      { debug: { target: target.name } },
+      { code: "discriminator_value_without_hierarchy", debug: { target: target.name } },
     );
   }
 };
@@ -83,6 +83,7 @@ export const validateUniqueDiscriminatorValues = (
     throw new EntityMetadataError(
       `Discriminator value "${String(newValue)}" is already used by entity "${existing.name}" in the "${rootName}" hierarchy`,
       {
+        code: "duplicate_discriminator_value",
         debug: {
           root: rootName,
           value: newValue,
@@ -108,7 +109,10 @@ export const validateSubtypeHasDiscriminatorValue = (
   if (discriminatorValue === undefined) {
     throw new EntityMetadataError(
       `Entity "${target.name}" extends inheritance root "${rootName}" but is missing @DiscriminatorValue`,
-      { debug: { root: rootName, target: target.name } },
+      {
+        code: "missing_discriminator_value",
+        debug: { root: rootName, target: target.name },
+      },
     );
   }
 };
@@ -154,7 +158,10 @@ export const validateJoinedDepth = (
   if (depth > 0) {
     throw new EntityMetadataError(
       `Joined inheritance in the "${rootName}" hierarchy does not support multi-level depth — "${target.name}" must directly extend the root`,
-      { debug: { root: rootName, target: target.name, depth: depth + 1 } },
+      {
+        code: "joined_inheritance_depth_unsupported",
+        debug: { root: rootName, target: target.name, depth: depth + 1 },
+      },
     );
   }
 };

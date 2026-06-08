@@ -62,6 +62,7 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
       throw new EntityMetadataError(
         `@${modifier.decorator} on property "${modifier.key}" requires a @Field decorator`,
         {
+          code: "missing_field_decorator",
           debug: {
             target: targetName,
             property: modifier.key,
@@ -81,7 +82,10 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
       if (propSet.has(modifier.decorator)) {
         throw new EntityMetadataError(
           `Duplicate @${modifier.decorator} on property "${modifier.key}"`,
-          { debug: { target: targetName, property: modifier.key } },
+          {
+            code: "duplicate_field_modifier",
+            debug: { target: targetName, property: modifier.key },
+          },
         );
       }
       propSet.add(modifier.decorator);
@@ -135,7 +139,10 @@ const flattenEmbeddedFields = <TDecorator extends MetaFieldDecorator>(
     if (!embeddableMeta || !embeddableMeta.__embeddable) {
       throw new EntityMetadataError(
         `@Embedded property "${embedded.key}" references class "${EmbeddableClass?.name ?? "(unknown)"}" which is not decorated with @Embeddable()`,
-        { debug: { target: targetName, property: embedded.key } },
+        {
+          code: "missing_embeddable_decorator",
+          debug: { target: targetName, property: embedded.key },
+        },
       );
     }
 
@@ -157,6 +164,7 @@ const flattenEmbeddedFields = <TDecorator extends MetaFieldDecorator>(
       throw new EntityMetadataError(
         `@Embedded property "${embedded.key}" references class "${EmbeddableClass.name}" which contains nested @Embedded fields. Nested embeddables are not supported — use a flat @Embeddable class or inline the fields directly.`,
         {
+          code: "nested_embeddable_unsupported",
           debug: {
             target: targetName,
             property: embedded.key,
@@ -192,6 +200,7 @@ const flattenEmbeddedFields = <TDecorator extends MetaFieldDecorator>(
       throw new EntityMetadataError(
         `Duplicate column name "${field.name}" — field "${field.key}" collides with "${existing}"`,
         {
+          code: "duplicate_column",
           debug: {
             target: targetName,
             field1: existing,
@@ -244,7 +253,10 @@ const resolveEmbeddedListLoading = (
     if (hasNonLoading) {
       throw new EntityMetadataError(
         `@${modifier.decorator} on property "${key}" is not valid on @EmbeddedList — only @Eager and @Lazy are supported`,
-        { debug: { target: targetName, property: key } },
+        {
+          code: "invalid_embedded_list_modifier",
+          debug: { target: targetName, property: key },
+        },
       );
     }
 
@@ -261,6 +273,7 @@ const resolveEmbeddedListLoading = (
         throw new EntityMetadataError(
           `Duplicate @${modifier.decorator} on property "${key}" of ${targetName}`,
           {
+            code: "duplicate_loading_decorator",
             debug: { target: targetName, property: key, decorator: modifier.decorator },
           },
         );
@@ -275,7 +288,10 @@ const resolveEmbeddedListLoading = (
       if (existing && existing.startsWith(opposite)) {
         throw new EntityMetadataError(
           `@Eager and @Lazy conflict on property "${key}" of ${targetName} (overlapping scope)`,
-          { debug: { target: targetName, property: key } },
+          {
+            code: "conflicting_loading_decorators",
+            debug: { target: targetName, property: key },
+          },
         );
       }
     }
@@ -304,7 +320,10 @@ const resolveEmbeddedLists = (
   if (primaryKeys.length !== 1) {
     throw new EntityMetadataError(
       `@EmbeddedList requires a single primary key, but "${targetName}" has ${primaryKeys.length}`,
-      { debug: { target: targetName, primaryKeys } },
+      {
+        code: "embedded_list_requires_single_primary_key",
+        debug: { target: targetName, primaryKeys },
+      },
     );
   }
 
@@ -329,7 +348,10 @@ const resolveEmbeddedLists = (
       if (!embeddableMeta || !embeddableMeta.__embeddable) {
         throw new EntityMetadataError(
           `@EmbeddedList property "${entry.key}" references class "${EmbeddableClass?.name ?? "(unknown)"}" which is not decorated with @Embeddable()`,
-          { debug: { target: targetName, property: entry.key } },
+          {
+            code: "missing_embeddable_decorator",
+            debug: { target: targetName, property: entry.key },
+          },
         );
       }
 
@@ -362,6 +384,7 @@ const resolveEmbeddedLists = (
         throw new EntityMetadataError(
           `@EmbeddedList property "${entry.key}" uses element type "${entry.elementType}" which is not supported. Use an @Embeddable class for structured elements, or a primitive type (string, integer, etc.) for scalar elements.`,
           {
+            code: "unsupported_embedded_list_element_type",
             debug: {
               target: targetName,
               property: entry.key,
@@ -391,7 +414,10 @@ const resolveEmbeddedLists = (
     if (seenTableNames.has(el.tableName)) {
       throw new EntityMetadataError(
         `Duplicate collection table name "${el.tableName}" — two @EmbeddedList fields resolve to the same table`,
-        { debug: { target: targetName, tableName: el.tableName } },
+        {
+          code: "duplicate_collection_table",
+          debug: { target: targetName, tableName: el.tableName },
+        },
       );
     }
     seenTableNames.add(el.tableName);
@@ -468,19 +494,20 @@ export const buildPrimaryMetadata = <
   if (isAbstract && entity) {
     throw new EntityMetadataError(
       "@AbstractEntity and @Entity cannot be used on the same class",
-      { debug: { target: target.name } },
+      { code: "conflicting_entity_decorators", debug: { target: target.name } },
     );
   }
 
   if (isAbstract && !collectOwn(target, "__inheritance")) {
     throw new EntityMetadataError(
       "Cannot build metadata for abstract entity — use a concrete @Entity() subclass",
-      { debug: { target: target.name } },
+      { code: "abstract_entity_not_buildable", debug: { target: target.name } },
     );
   }
 
   if (!entity) {
     throw new EntityMetadataError("Entity metadata not found", {
+      code: "missing_entity_metadata",
       debug: { target: target.name },
     });
   }
@@ -499,13 +526,19 @@ export const buildPrimaryMetadata = <
     if (allFields.some((f) => f.decorator === "DeleteDate")) {
       throw new EntityMetadataError(
         "@AppendOnly and @DeleteDateField are contradictory — append-only entities cannot be soft-deleted",
-        { debug: { target: target.name } },
+        {
+          code: "conflicting_append_only_delete_date",
+          debug: { target: target.name },
+        },
       );
     }
     if (allFields.some((f) => f.decorator === "ExpiryDate")) {
       throw new EntityMetadataError(
         "@AppendOnly and @ExpiryDateField are contradictory — append-only entities cannot expire",
-        { debug: { target: target.name } },
+        {
+          code: "conflicting_append_only_expiry_date",
+          debug: { target: target.name },
+        },
       );
     }
   }
@@ -563,6 +596,7 @@ export const buildPrimaryMetadata = <
   for (const pk of primaryKeys) {
     if (pk.includes(".")) {
       throw new EntityMetadataError(`Embedded field "${pk}" cannot be a primary key`, {
+        code: "embedded_field_primary_key",
         debug: { target: target.name, primaryKey: pk },
       });
     }
@@ -615,7 +649,10 @@ export const buildPrimaryMetadata = <
     if (fields.some((f) => f.key === el.key)) {
       throw new EntityMetadataError(
         `Property "${el.key}" is declared as both @Field and @EmbeddedList — use one or the other`,
-        { debug: { target: target.name, property: el.key } },
+        {
+          code: "conflicting_field_embedded_list",
+          debug: { target: target.name, property: el.key },
+        },
       );
     }
   }

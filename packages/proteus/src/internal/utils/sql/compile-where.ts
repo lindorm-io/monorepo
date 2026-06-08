@@ -46,6 +46,10 @@ const guardArrayField = (
   if (field.type === "array") return;
   throw new ProteusError(
     `Operator "${operator}" requires an array-typed column, but field "${fieldKey}" has type "${field.type}"`,
+    {
+      code: "invalid_operator_type",
+      data: { operator, field: fieldKey, fieldType: field.type },
+    },
   );
 };
 
@@ -334,7 +338,10 @@ const compileOperator = (
     const regex = raw instanceof RegExp ? raw : new RegExp(String(raw));
     const result = dialect.compileRegex(qualifiedCol, params, regex);
     if (result === null) {
-      throw new NotSupportedError("The $regex operator is not supported by this driver");
+      throw new NotSupportedError("The $regex operator is not supported by this driver", {
+        code: "unsupported_operator",
+        data: { operator: "$regex" },
+      });
     }
     clauses.push(result);
   }

@@ -195,7 +195,9 @@ export const compileSelect = <E extends IEntity>(
   // Raw selections — PG uses reindexRawParams for $N renumbering; MySQL/SQLite push directly
   if (rawSelections && rawSelections.length > 0) {
     if (!params) {
-      throw new ProteusError("params array required when rawSelections are provided");
+      throw new ProteusError("params array required when rawSelections are provided", {
+        code: "missing_params_array",
+      });
     }
     for (const raw of rawSelections) {
       if (dialect.reindexRawParams) {

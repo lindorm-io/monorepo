@@ -64,7 +64,10 @@ export const withMigrationManager = async (
   const driverType = source.driverType;
 
   if (!SUPPORTED_DRIVERS.includes(driverType)) {
-    throw new ProteusError(`Migrations not supported for driver "${driverType}"`);
+    throw new ProteusError(`Migrations not supported for driver "${driverType}"`, {
+      code: "migrations_not_supported",
+      data: { driverType },
+    });
   }
 
   const logger = source.log.child(["MigrationManager"]);

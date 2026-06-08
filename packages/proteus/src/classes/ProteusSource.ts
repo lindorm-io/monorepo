@@ -148,7 +148,10 @@ export class ProteusSource implements IProteusSource {
 
       default: {
         const _exhaustive: never = options;
-        throw new NotSupportedError(`Unknown driver "${(_exhaustive as any).driver}"`);
+        throw new NotSupportedError(`Unknown driver "${(_exhaustive as any).driver}"`, {
+          code: "unknown_driver",
+          data: { driver: (_exhaustive as any).driver },
+        });
       }
     }
 
@@ -157,7 +160,9 @@ export class ProteusSource implements IProteusSource {
 
   private requireDriver(): IProteusDriver {
     if (!this._driver) {
-      throw new ProteusError("ProteusSource is not connected. Call connect() first.");
+      throw new ProteusError("ProteusSource is not connected. Call connect() first.", {
+        code: "source_not_connected",
+      });
     }
     return this._driver;
   }
@@ -277,6 +282,7 @@ export class ProteusSource implements IProteusSource {
     if (this.isSetUp) {
       throw new ProteusError(
         "Cannot add entities after setup() has been called. Create a new ProteusSource instance instead.",
+        { code: "entities_added_after_setup" },
       );
     }
     const scanned = await EntityScanner.scan(entities);

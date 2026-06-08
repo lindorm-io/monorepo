@@ -5,7 +5,9 @@ export const extractEnumValues = (
   enumDef: Record<string, string | number>,
 ): Array<string> => {
   if (!isObjectLike(enumDef) || enumDef === null) {
-    throw new ProteusError("Enum definition must be a TypeScript enum object");
+    throw new ProteusError("Enum definition must be a TypeScript enum object", {
+      code: "invalid_enum_definition",
+    });
   }
   const values = new Set<string>();
   for (const key of Object.keys(enumDef)) {
