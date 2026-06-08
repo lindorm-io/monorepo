@@ -40,7 +40,10 @@ export const generateKey = (options: KryptosGenerate): GenerateResult => {
       return generateRsaKey(options);
 
     default:
-      throw new KryptosError("Invalid key type");
+      throw new KryptosError("Invalid key type", {
+        code: "unsupported_key_type",
+        data: { type: options.type },
+      });
   }
 };
 
@@ -64,7 +67,10 @@ export const generateKeyAsync = async (
       return generateRsaKeyAsync(options);
 
     default:
-      throw new KryptosError("Invalid key type");
+      throw new KryptosError("Invalid key type", {
+        code: "unsupported_key_type",
+        data: { type: options.type },
+      });
   }
 };
 
@@ -193,6 +199,9 @@ export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
       };
 
     default:
-      throw new KryptosError("Invalid algorithm");
+      throw new KryptosError("Invalid algorithm", {
+        code: "unsupported_algorithm",
+        data: { algorithm },
+      });
   }
 };

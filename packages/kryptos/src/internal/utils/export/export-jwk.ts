@@ -20,7 +20,10 @@ export const exportToJwk = (options: Options): KryptosJwk => {
   switch (options.type) {
     case "AKP":
       if (!isAkpDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "AKP" },
+        });
       }
       return {
         ...exportAkpToJwk(options),
@@ -32,7 +35,10 @@ export const exportToJwk = (options: Options): KryptosJwk => {
 
     case "EC":
       if (!isEcDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "EC" },
+        });
       }
       return {
         ...exportEcToJwk(options),
@@ -44,7 +50,10 @@ export const exportToJwk = (options: Options): KryptosJwk => {
 
     case "oct":
       if (!isOctDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "oct" },
+        });
       }
       return {
         ...exportOctToJwk(options),
@@ -56,7 +65,10 @@ export const exportToJwk = (options: Options): KryptosJwk => {
 
     case "OKP":
       if (!isOkpDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "OKP" },
+        });
       }
       return {
         ...exportOkpToJwk(options),
@@ -68,7 +80,10 @@ export const exportToJwk = (options: Options): KryptosJwk => {
 
     case "RSA":
       if (!isRsaDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "RSA" },
+        });
       }
       return {
         ...exportRsaToJwk(options),
@@ -79,6 +94,9 @@ export const exportToJwk = (options: Options): KryptosJwk => {
       };
 
     default:
-      throw new KryptosError("Unsupported key type");
+      throw new KryptosError("Unsupported key type", {
+        code: "unsupported_export_key_type",
+        data: { type: options.type },
+      });
   }
 };

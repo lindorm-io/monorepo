@@ -9,7 +9,10 @@ type Result = Omit<OkpBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createOkpDerFromB64 = (options: Options): Result => {
   if (!isOkpCurve(options.curve)) {
-    throw new KryptosError("Curve is required");
+    throw new KryptosError("Invalid OKP curve", {
+      code: "invalid_okp_curve",
+      data: { curve: options.curve ?? null },
+    });
   }
 
   const result: Result = {
@@ -37,7 +40,10 @@ export const createOkpDerFromB64 = (options: Options): Result => {
   }
 
   if (!result.privateKey && !result.publicKey.length) {
-    throw new KryptosError("Key creation failed");
+    throw new KryptosError("OKP key creation failed: no key material", {
+      code: "okp_key_creation_failed",
+      data: { curve: options.curve },
+    });
   }
 
   return result;

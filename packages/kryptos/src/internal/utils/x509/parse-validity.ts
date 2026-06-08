@@ -9,12 +9,17 @@ import {
 export const parseX509Validity = (der: Buffer): { notBefore: Date; notAfter: Date } => {
   const tlv = readTlv(der, 0);
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("Validity is not a SEQUENCE");
+    throw new KryptosError("Validity is not a SEQUENCE", {
+      code: "invalid_certificate_validity",
+    });
   }
   const body = der.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
   const children = readSequenceChildren(body);
   if (children.length !== 2) {
-    throw new KryptosError("Validity must have exactly two children");
+    throw new KryptosError("Validity must have exactly two children", {
+      code: "invalid_certificate_validity",
+      data: { childCount: children.length },
+    });
   }
   const notBefore = decodeTime(children[0].content, children[0].tag);
   const notAfter = decodeTime(children[1].content, children[1].tag);

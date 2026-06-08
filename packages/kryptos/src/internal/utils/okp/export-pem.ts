@@ -10,7 +10,10 @@ type Result = Omit<OkpString, "id" | "algorithm" | "type" | "use">;
 
 export const exportOkpToPem = (options: Options): Result => {
   if (!isOkpCurve(options.curve)) {
-    throw new KryptosError("Curve is required");
+    throw new KryptosError("Invalid OKP curve", {
+      code: "invalid_okp_curve",
+      data: { curve: options.curve ?? null },
+    });
   }
 
   const result: Result = {
@@ -30,10 +33,16 @@ export const exportOkpToPem = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "pem", type: "spki" });
 
     if (!isString(privateKey)) {
-      throw new KryptosError("Key export failed [private]: expected PEM string");
+      throw new KryptosError("OKP PEM export failed: expected private key string", {
+        code: "okp_pem_export_failed",
+        data: { curve: options.curve, key: "private" },
+      });
     }
     if (!isString(publicKey)) {
-      throw new KryptosError("Key export failed [public]: expected PEM string");
+      throw new KryptosError("OKP PEM export failed: expected public key string", {
+        code: "okp_pem_export_failed",
+        data: { curve: options.curve, key: "public" },
+      });
     }
 
     result.privateKey = privateKey;
