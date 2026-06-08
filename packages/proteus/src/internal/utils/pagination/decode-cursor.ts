@@ -24,12 +24,15 @@ export const decodeCursor = (
     const json = Buffer.from(token, "base64url").toString("utf8");
     parsed = JSON.parse(json);
   } catch {
-    throw new ProteusError("Invalid pagination cursor: failed to decode token");
+    throw new ProteusError("Invalid pagination cursor: failed to decode token", {
+      code: "invalid_cursor",
+    });
   }
 
   if (!Array.isArray(parsed) || parsed.length !== 3) {
     throw new ProteusError(
       "Invalid pagination cursor: expected [columns, directions, values]",
+      { code: "invalid_cursor" },
     );
   }
 
@@ -42,12 +45,14 @@ export const decodeCursor = (
   if (!Array.isArray(columns) || !Array.isArray(directions) || !Array.isArray(values)) {
     throw new ProteusError(
       "Invalid pagination cursor: columns, directions, and values must be arrays",
+      { code: "invalid_cursor" },
     );
   }
 
   if (columns.length !== directions.length || columns.length !== values.length) {
     throw new ProteusError(
       "Invalid pagination cursor: columns, directions, and values must have equal length",
+      { code: "invalid_cursor" },
     );
   }
 
@@ -55,6 +60,13 @@ export const decodeCursor = (
   if (columns.length !== expectedColumns.length) {
     throw new ProteusError(
       `Pagination cursor mismatch: cursor has ${columns.length} columns but query has ${expectedColumns.length}`,
+      {
+        code: "cursor_mismatch",
+        data: {
+          cursorColumnCount: columns.length,
+          queryColumnCount: expectedColumns.length,
+        },
+      },
     );
   }
 
@@ -62,11 +74,28 @@ export const decodeCursor = (
     if (columns[i] !== expectedColumns[i]) {
       throw new ProteusError(
         `Pagination cursor mismatch: cursor column "${columns[i]}" does not match query column "${expectedColumns[i]}" at position ${i}`,
+        {
+          code: "cursor_mismatch",
+          data: {
+            position: i,
+            cursorColumn: columns[i],
+            queryColumn: expectedColumns[i],
+          },
+        },
       );
     }
     if (directions[i] !== expectedDirections[i]) {
       throw new ProteusError(
         `Pagination cursor mismatch: cursor direction "${directions[i]}" does not match query direction "${expectedDirections[i]}" for column "${columns[i]}"`,
+        {
+          code: "cursor_mismatch",
+          data: {
+            position: i,
+            column: columns[i],
+            cursorDirection: directions[i],
+            queryDirection: expectedDirections[i],
+          },
+        },
       );
     }
   }

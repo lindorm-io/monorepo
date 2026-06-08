@@ -90,7 +90,10 @@ export class BreakerExecutor<E extends IEntity> implements IRepositoryExecutor<E
       return await this.breaker.execute(fn);
     } catch (error) {
       if (error instanceof BreakerCircuitOpenError) {
-        throw new CircuitOpenError(error.message, { debug: (error as any).debug });
+        throw new CircuitOpenError(error.message, {
+          code: "circuit_open",
+          debug: (error as any).debug,
+        });
       }
       // AbortError is a client-initiated cancellation, not a backend failure.
       // Pass it through without letting it influence the circuit breaker.

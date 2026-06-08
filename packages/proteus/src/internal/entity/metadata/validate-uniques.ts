@@ -10,6 +10,7 @@ export const validateUniques = (
     for (const key of unique.keys) {
       if (fields.find((f) => f.key === key)) continue;
       throw new EntityMetadataError("Unique constraint field not found", {
+        code: "missing_unique_field",
         debug: { target: targetName, key, unique: unique.name },
       });
     }

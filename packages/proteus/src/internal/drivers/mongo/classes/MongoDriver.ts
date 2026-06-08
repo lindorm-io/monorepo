@@ -168,6 +168,7 @@ export class MongoDriver implements IProteusDriver {
     if (this.options.synchronize && this.options.runMigrations) {
       throw new MongoMigrationError(
         "synchronize and runMigrations are mutually exclusive — use one or the other",
+        { code: "unsupported_operation" },
       );
     }
 
@@ -509,6 +510,7 @@ export class MongoDriver implements IProteusDriver {
     if (!this.isReplicaSet) {
       throw new NotSupportedError(
         "MongoDB transactions require a replica set. Current connection is standalone.",
+        { code: "unsupported_operation" },
       );
     }
 
@@ -532,7 +534,10 @@ export class MongoDriver implements IProteusDriver {
   public async commitTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as MongoTransactionHandle;
     if (txHandle.state !== "active") {
-      throw new MongoDriverError(`Cannot commit: transaction is ${txHandle.state}`);
+      throw new MongoDriverError(`Cannot commit: transaction is ${txHandle.state}`, {
+        code: "transaction_not_active",
+        data: { state: txHandle.state },
+      });
     }
 
     if (!txHandle.session) {
@@ -555,7 +560,10 @@ export class MongoDriver implements IProteusDriver {
   public async rollbackTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as MongoTransactionHandle;
     if (txHandle.state !== "active") {
-      throw new MongoDriverError(`Cannot rollback: transaction is ${txHandle.state}`);
+      throw new MongoDriverError(`Cannot rollback: transaction is ${txHandle.state}`, {
+        code: "transaction_not_active",
+        data: { state: txHandle.state },
+      });
     }
 
     if (!txHandle.session) {
@@ -879,6 +887,7 @@ export class MongoDriver implements IProteusDriver {
     if (!this.client) {
       throw new MongoDriverError(
         "MongoDB client is not connected. Call connect() first.",
+        { code: "connection_not_established" },
       );
     }
     return this.client;
@@ -888,6 +897,7 @@ export class MongoDriver implements IProteusDriver {
     if (!this.db) {
       throw new MongoDriverError(
         "MongoDB client is not connected. Call connect() first.",
+        { code: "connection_not_established" },
       );
     }
     return this.db;

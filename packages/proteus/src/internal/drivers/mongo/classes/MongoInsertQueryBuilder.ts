@@ -53,6 +53,10 @@ export class MongoInsertQueryBuilder<
     ) {
       throw new ProteusRepositoryError(
         `QB insert is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.insert() instead.`,
+        {
+          code: "unsupported_operation",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -128,7 +132,10 @@ export class MongoInsertQueryBuilder<
       if (error?.code === DUPLICATE_KEY_CODE) {
         throw new MongoDuplicateKeyError(
           `Duplicate primary key during QB insert for "${this.metadata.entity.name}"`,
-          { debug: { entityName: this.metadata.entity.name } },
+          {
+            code: "unique_violation",
+            debug: { entityName: this.metadata.entity.name },
+          },
         );
       }
       throw error;

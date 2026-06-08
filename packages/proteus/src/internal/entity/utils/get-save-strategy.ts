@@ -22,7 +22,8 @@ export const getSaveStrategy = <E extends IEntity>(
         !Number.isFinite(versionValue))
     ) {
       throw new EntityManagerError("Corrupted version value", {
-        debug: {
+        code: "corrupted_version",
+        data: {
           key: version.key,
           value: versionValue,
           entity: metadata.entity.name,

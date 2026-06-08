@@ -26,6 +26,10 @@ export const validateConnectionMutualExclusivity = (options: {
       `Connection options are mutually exclusive: when "url" is provided, ` +
         `individual connection fields must not be set. ` +
         `Found both "url" and: ${individualFields.join(", ")}`,
+      {
+        code: "ambiguous_connection_options",
+        data: { conflictingFields: individualFields },
+      },
     );
   }
 };

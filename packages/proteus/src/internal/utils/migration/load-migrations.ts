@@ -29,6 +29,7 @@ export const loadMigrations = async (
 
   if (!data.isDirectory) {
     throw new ProteusError("Migration path must be a directory", {
+      code: "invalid_migration_path",
       debug: { directory },
     });
   }
@@ -64,6 +65,7 @@ export const loadMigrations = async (
           const existing = seenIds.get(instance.id);
           if (existing) {
             throw new ProteusError("Duplicate migration ID", {
+              code: "duplicate_migration_id",
               debug: { id: instance.id, file: file.fullName, duplicateOf: existing },
             });
           }
@@ -78,6 +80,7 @@ export const loadMigrations = async (
         const existing = seenIds.get(exported.id);
         if (existing) {
           throw new ProteusError("Duplicate migration ID", {
+            code: "duplicate_migration_id",
             debug: { id: exported.id, file: file.fullName, duplicateOf: existing },
           });
         }

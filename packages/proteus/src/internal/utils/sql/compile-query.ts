@@ -119,7 +119,12 @@ export const compileQuery = <E extends IEntity>(
 
   // Validate: FOR UPDATE/SHARE is not allowed with UNION/INTERSECT/EXCEPT
   if (state.lock && state.setOperations.length > 0) {
-    throw new ProteusError("FOR UPDATE/SHARE is not allowed with UNION/INTERSECT/EXCEPT");
+    throw new ProteusError(
+      "FOR UPDATE/SHARE is not allowed with UNION/INTERSECT/EXCEPT",
+      {
+        code: "invalid_lock_with_set_operation",
+      },
+    );
   }
 
   // Lock clause — may throw for unsupported drivers (e.g. SQLite)

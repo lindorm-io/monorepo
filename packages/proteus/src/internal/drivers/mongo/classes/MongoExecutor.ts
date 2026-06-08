@@ -111,7 +111,10 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (error?.code === DUPLICATE_KEY_CODE) {
         throw new MongoDuplicateKeyError(
           `Duplicate primary key for "${this.metadata.entity.name}"`,
-          { debug: { entityName: this.metadata.entity.name, _id: doc._id } },
+          {
+            code: "unique_violation",
+            debug: { entityName: this.metadata.entity.name, _id: doc._id },
+          },
         );
       }
       throw error;
@@ -170,7 +173,10 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (error?.code === DUPLICATE_KEY_CODE) {
         throw new MongoDuplicateKeyError(
           `Unique constraint violation during update for "${this.metadata.entity.name}"`,
-          { debug: { entityName: this.metadata.entity.name } },
+          {
+            code: "unique_violation",
+            debug: { entityName: this.metadata.entity.name },
+          },
         );
       }
       throw error;
@@ -185,7 +191,10 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       }
       throw new MongoDriverError(
         `Update failed: no matching document found for "${this.metadata.entity.name}"`,
-        { debug: buildPrimaryKeyDebug(entity as any, this.metadata.primaryKeys) },
+        {
+          code: "update_target_not_found",
+          debug: buildPrimaryKeyDebug(entity as any, this.metadata.primaryKeys),
+        },
       );
     }
 
@@ -243,6 +252,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!this.deleteFieldKey) {
       throw new MongoDriverError(
         "Entity does not support soft delete (missing @DeleteDate field)",
+        { code: "unsupported_operation" },
       );
     }
 
@@ -271,6 +281,7 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!this.deleteFieldKey) {
       throw new MongoDriverError(
         "Entity does not support soft delete (missing @DeleteDate field)",
+        { code: "unsupported_operation" },
       );
     }
 
@@ -330,6 +341,10 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!doc) {
       throw new MongoDriverError(
         `TTL failed: document not found for "${this.metadata.entity.name}"`,
+        {
+          code: "entity_not_found",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -524,7 +539,10 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (error?.code === DUPLICATE_KEY_CODE) {
         throw new MongoDuplicateKeyError(
           `Duplicate primary key during bulk insert for "${this.metadata.entity.name}"`,
-          { debug: { entityName: this.metadata.entity.name } },
+          {
+            code: "unique_violation",
+            debug: { entityName: this.metadata.entity.name },
+          },
         );
       }
       throw error;

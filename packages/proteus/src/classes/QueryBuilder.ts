@@ -89,6 +89,10 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     if (!valid.includes(relation)) {
       throw new ProteusError(
         `Unknown relation "${relation}" on entity "${this.metadata.entity.name}". Valid relations: ${valid.join(", ") || "(none)"}`,
+        {
+          code: "unknown_relation",
+          data: { entityName: this.metadata.entity.name, relation },
+        },
       );
     }
 
@@ -96,6 +100,10 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     if (this.state.includes.some((i) => i.relation === relation)) {
       throw new ProteusError(
         `Relation "${relation}" already included on entity "${this.metadata.entity.name}"`,
+        {
+          code: "relation_already_included",
+          data: { entityName: this.metadata.entity.name, relation },
+        },
       );
     }
 
@@ -121,6 +129,10 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
       if (!validKeys.includes(field as string)) {
         throw new ProteusError(
           `Unknown field "${String(field)}" on entity "${this.metadata.entity.name}". Valid fields: ${validKeys.join(", ")}`,
+          {
+            code: "unknown_field",
+            data: { entityName: this.metadata.entity.name, field: String(field) },
+          },
         );
       }
     }
@@ -205,6 +217,10 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
       if (!validKeys.includes(key)) {
         throw new ProteusError(
           `Unknown field "${key}" in orderBy on entity "${this.metadata.entity.name}". Valid fields: ${validKeys.join(", ")}`,
+          {
+            code: "unknown_order_by_field",
+            data: { entityName: this.metadata.entity.name, field: key },
+          },
         );
       }
     }
@@ -303,7 +319,10 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     if (this.metadata.appendOnly) {
       throw new ProteusError(
         `Cannot ${method} an append-only entity "${this.metadata.entity.name}" via query builder`,
-        { debug: { entityName: this.metadata.entity.name, method } },
+        {
+          code: "append_only_write",
+          data: { entityName: this.metadata.entity.name, method },
+        },
       );
     }
   }

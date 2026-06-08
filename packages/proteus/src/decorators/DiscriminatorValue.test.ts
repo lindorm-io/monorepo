@@ -1,3 +1,4 @@
+import { ProteusError } from "../errors/ProteusError.js";
 import { DiscriminatorValue } from "./DiscriminatorValue.js";
 import { describe, expect, test } from "vitest";
 
@@ -65,22 +66,22 @@ describe("DiscriminatorValue", () => {
     expect(meta?.__discriminatorValue).toBeUndefined();
   });
 
-  test("should throw TypeError when decorator is applied with null value", () => {
+  test("should throw ProteusError when decorator is applied with null value", () => {
     expect(() => {
       // The guard runs inside the returned decorator, so apply it to a class
       const applyDecorator = DiscriminatorValue(null as any);
       applyDecorator(class Test {}, { metadata: {}, kind: "class", name: "Test" } as any);
-    }).toThrow(TypeError);
+    }).toThrow(ProteusError);
   });
 
-  test("should throw TypeError when decorator is applied with undefined value", () => {
+  test("should throw ProteusError when decorator is applied with undefined value", () => {
     expect(() => {
       const applyDecorator = DiscriminatorValue(undefined as any);
       applyDecorator(class Test {}, { metadata: {}, kind: "class", name: "Test" } as any);
-    }).toThrow(TypeError);
+    }).toThrow(ProteusError);
   });
 
-  test("should throw TypeError with a descriptive message when null value is applied", () => {
+  test("should throw ProteusError with a descriptive message when null value is applied", () => {
     expect(() => {
       const applyDecorator = DiscriminatorValue(null as any);
       applyDecorator(class Test {}, { metadata: {}, kind: "class", name: "Test" } as any);
@@ -94,17 +95,17 @@ describe("DiscriminatorValue", () => {
     }).toThrow("@DiscriminatorValue requires a string or number");
   });
 
-  test("should throw TypeError when decorator is applied with a boolean value", () => {
+  test("should throw ProteusError when decorator is applied with a boolean value", () => {
     expect(() => {
       const applyDecorator = DiscriminatorValue(true as any);
       applyDecorator(class Test {}, { metadata: {}, kind: "class", name: "Test" } as any);
-    }).toThrow(TypeError);
+    }).toThrow(ProteusError);
   });
 
-  test("should throw TypeError when decorator is applied with an array value", () => {
+  test("should throw ProteusError when decorator is applied with an array value", () => {
     expect(() => {
       const applyDecorator = DiscriminatorValue([] as any);
       applyDecorator(class Test {}, { metadata: {}, kind: "class", name: "Test" } as any);
-    }).toThrow(TypeError);
+    }).toThrow(ProteusError);
   });
 });

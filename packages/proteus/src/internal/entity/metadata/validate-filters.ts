@@ -68,7 +68,10 @@ export const validateFilters = (
     if (seenNames.has(filter.name)) {
       throw new EntityMetadataError(
         `Duplicate @Filter name "${filter.name}" on entity "${targetName}"`,
-        { debug: { target: targetName, filterName: filter.name } },
+        {
+          code: "duplicate_filter_name",
+          debug: { target: targetName, filterName: filter.name },
+        },
       );
     }
     seenNames.add(filter.name);
@@ -79,7 +82,10 @@ export const validateFilters = (
       if (!fieldKeys.has(key)) {
         throw new EntityMetadataError(
           `@Filter("${filter.name}") references unknown field "${key}" on entity "${targetName}". Valid fields: ${[...fieldKeys].join(", ")}`,
-          { debug: { target: targetName, filterName: filter.name, invalidField: key } },
+          {
+            code: "missing_filter_field",
+            debug: { target: targetName, filterName: filter.name, invalidField: key },
+          },
         );
       }
     }

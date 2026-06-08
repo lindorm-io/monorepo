@@ -16,7 +16,7 @@ export const incrementVersion = <E extends IEntity>(
   if (!Number.isInteger(version) || version < 0) {
     throw new ProteusError(
       `Invalid version number: ${version}. Version must be a non-negative integer.`,
-      { debug: { key: versionField.key, version } },
+      { code: "invalid_version", data: { key: versionField.key, version } },
     );
   }
 

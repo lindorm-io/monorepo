@@ -31,6 +31,10 @@ export const compileSoftDelete = <E extends IEntity>(
   if (!deleteField) {
     throw new ProteusError(
       `compileSoftDelete: entity "${metadata.entity.name}" has no @DeleteDate field`,
+      {
+        code: "missing_delete_date_field",
+        data: { entityName: metadata.entity.name },
+      },
     );
   }
 
@@ -66,6 +70,10 @@ export const compileRestore = <E extends IEntity>(
   if (!deleteField) {
     throw new ProteusError(
       `compileRestore: entity "${metadata.entity.name}" has no @DeleteDate field`,
+      {
+        code: "missing_delete_date_field",
+        data: { entityName: metadata.entity.name },
+      },
     );
   }
 

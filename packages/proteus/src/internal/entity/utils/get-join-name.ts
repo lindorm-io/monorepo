@@ -5,7 +5,9 @@ export const getJoinName = (joinTable: string, options: NamespaceOptions): Scope
   const ns = options.namespace;
 
   if (ns === "system") {
-    throw new EntityManagerError("The 'system' namespace is reserved for internal use");
+    throw new EntityManagerError("The 'system' namespace is reserved for internal use", {
+      code: "reserved_namespace",
+    });
   }
 
   const namespace = ns ?? null;
@@ -13,11 +15,17 @@ export const getJoinName = (joinTable: string, options: NamespaceOptions): Scope
   const type = "join";
 
   if (namespace && namespace.length > 63) {
-    throw new EntityManagerError(`Join namespace exceeds 63 characters: ${namespace}`);
+    throw new EntityManagerError(`Join namespace exceeds 63 characters: ${namespace}`, {
+      code: "namespace_too_long",
+      data: { namespace },
+    });
   }
 
   if (name.length > 63) {
-    throw new EntityManagerError(`Join name exceeds 63 characters: ${name}`);
+    throw new EntityManagerError(`Join name exceeds 63 characters: ${name}`, {
+      code: "name_too_long",
+      data: { name },
+    });
   }
 
   return {

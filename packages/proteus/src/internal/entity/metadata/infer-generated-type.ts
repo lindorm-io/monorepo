@@ -10,6 +10,7 @@ export const inferGeneratedTypes = (
     const field = fields.find((f) => f.key === generate.key);
     if (!field) {
       throw new EntityMetadataError("Generated field not found", {
+        code: "missing_generated_field",
         debug: { target: targetName, field: generate.key },
       });
     }
@@ -38,6 +39,7 @@ export const inferGeneratedTypes = (
         case "date":
           if (field.type !== "date" && field.type !== "timestamp") {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
+              code: "invalid_generated_strategy",
               debug: {
                 target: targetName,
                 field: field.key,
@@ -54,6 +56,7 @@ export const inferGeneratedTypes = (
             field.type !== "decimal"
           ) {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
+              code: "invalid_generated_strategy",
               debug: {
                 target: targetName,
                 field: field.key,
@@ -72,6 +75,7 @@ export const inferGeneratedTypes = (
             field.type !== "bigint"
           ) {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
+              code: "invalid_generated_strategy",
               debug: {
                 target: targetName,
                 field: field.key,
@@ -84,6 +88,7 @@ export const inferGeneratedTypes = (
         case "string":
           if (field.type !== "string" && field.type !== "text") {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
+              code: "invalid_generated_strategy",
               debug: {
                 target: targetName,
                 field: field.key,
@@ -96,6 +101,7 @@ export const inferGeneratedTypes = (
         case "uuid":
           if (field.type !== "uuid") {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
+              code: "invalid_generated_strategy",
               debug: {
                 target: targetName,
                 field: field.key,

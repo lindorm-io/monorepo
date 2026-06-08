@@ -13,6 +13,7 @@ export const validateIndexes = (
   for (const index of indexes) {
     if (!index.keys.length) {
       throw new EntityMetadataError("Index fields not found", {
+        code: "missing_index_fields",
         debug: { target: targetName, index: index.name },
       });
     }
@@ -20,6 +21,7 @@ export const validateIndexes = (
     if (index.name !== null) {
       if (seenNames.has(index.name)) {
         throw new EntityMetadataError("Duplicate index name", {
+          code: "duplicate_index_name",
           debug: { target: targetName, index: index.name },
         });
       }
@@ -29,6 +31,7 @@ export const validateIndexes = (
     for (const { key } of index.keys) {
       if (fieldKeys.has(key)) continue;
       throw new EntityMetadataError("Index field not found", {
+        code: "missing_index_field",
         debug: { target: targetName, key, index: index.name },
       });
     }
@@ -40,6 +43,7 @@ export const validateIndexes = (
 
     if (seenKeySignatures.has(signature)) {
       throw new EntityMetadataError("Duplicate index keys", {
+        code: "duplicate_index_keys",
         debug: { target: targetName, index: index.name },
       });
     }

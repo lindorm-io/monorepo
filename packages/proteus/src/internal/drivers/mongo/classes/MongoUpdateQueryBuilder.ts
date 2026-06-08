@@ -64,6 +64,10 @@ export class MongoUpdateQueryBuilder<
     ) {
       throw new ProteusRepositoryError(
         `QB update is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.save() instead.`,
+        {
+          code: "unsupported_operation",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -71,6 +75,10 @@ export class MongoUpdateQueryBuilder<
     if (this.predicates.length === 0) {
       throw new ProteusRepositoryError(
         `QB update requires a WHERE clause. Call .where() before .execute().`,
+        {
+          code: "invalid_query",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 

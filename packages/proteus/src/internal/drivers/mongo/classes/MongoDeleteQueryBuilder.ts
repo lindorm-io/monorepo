@@ -68,12 +68,20 @@ export class MongoDeleteQueryBuilder<
     ) {
       throw new ProteusRepositoryError(
         `QB delete is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.destroy() instead.`,
+        {
+          code: "unsupported_operation",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 
     if (this.predicates.length === 0) {
       throw new ProteusRepositoryError(
         `QB delete requires a WHERE clause. Call .where() before .execute().`,
+        {
+          code: "invalid_query",
+          data: { entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -87,6 +95,7 @@ export class MongoDeleteQueryBuilder<
       if (!deleteField) {
         throw new NotSupportedError(
           "Entity does not support soft delete (missing @DeleteDate field)",
+          { code: "unsupported_operation" },
         );
       }
 

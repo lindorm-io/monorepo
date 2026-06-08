@@ -15,7 +15,10 @@ export const buildPrimaryKeyPredicate = <E extends IEntity>(
     if (value == null) {
       throw new ProteusRepositoryError(
         `Cannot build primary key predicate: field "${key}" is null or undefined on "${metadata.entity.name}"`,
-        { debug: { key, entityName: metadata.entity.name } },
+        {
+          code: "missing_primary_key",
+          debug: { key, entityName: metadata.entity.name },
+        },
       );
     }
 

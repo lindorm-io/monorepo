@@ -62,6 +62,7 @@ export const compileAggregate = <E extends IEntity>(
   if (state.groupBy?.length) {
     throw new ProteusError(
       "compileAggregate() cannot be used with groupBy — use the QueryBuilder with .select() and .groupBy() instead",
+      { code: "invalid_aggregate" },
     );
   }
 

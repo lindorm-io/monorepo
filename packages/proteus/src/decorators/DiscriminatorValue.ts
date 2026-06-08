@@ -1,3 +1,4 @@
+import { ProteusError } from "../errors/ProteusError.js";
 import type { DiscriminatorValue as DiscriminatorValueType } from "../internal/entity/types/inheritance.js";
 import { stageDiscriminatorValue } from "../internal/entity/metadata/stage-metadata.js";
 
@@ -13,8 +14,9 @@ export const DiscriminatorValue =
   (value: DiscriminatorValueType) =>
   (_target: Function, context: ClassDecoratorContext): void => {
     if (typeof value !== "string" && typeof value !== "number") {
-      throw new TypeError(
+      throw new ProteusError(
         `@DiscriminatorValue requires a string or number, received ${typeof value}`,
+        { code: "invalid_decorator_usage", data: { decorator: "DiscriminatorValue" } },
       );
     }
     stageDiscriminatorValue(context.metadata, value);

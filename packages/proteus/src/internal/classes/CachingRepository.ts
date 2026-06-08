@@ -194,6 +194,8 @@ export class CachingRepository<
     const entity = await this.findOne(criteria, options);
     if (!entity) {
       throw new ProteusRepositoryError(`Entity "${this.entityName}" not found`, {
+        code: "entity_not_found",
+        data: { entityName: this.entityName },
         debug: { criteria },
       });
     }
@@ -232,10 +234,16 @@ export class CachingRepository<
     const pageSize = options?.pageSize ?? 10;
 
     if (page < 1) {
-      throw new ProteusRepositoryError("findPaginated: page must be >= 1");
+      throw new ProteusRepositoryError("findPaginated: page must be >= 1", {
+        code: "invalid_pagination",
+        data: { page },
+      });
     }
     if (pageSize < 1) {
-      throw new ProteusRepositoryError("findPaginated: pageSize must be >= 1");
+      throw new ProteusRepositoryError("findPaginated: pageSize must be >= 1", {
+        code: "invalid_pagination",
+        data: { pageSize },
+      });
     }
 
     const offset = (page - 1) * pageSize;

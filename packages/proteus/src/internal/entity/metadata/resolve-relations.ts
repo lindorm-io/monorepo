@@ -24,7 +24,10 @@ const mergeJoinFields = (
     if (!relation) {
       throw new EntityMetadataError(
         `@JoinKey on property "${jf.key}" requires a relation decorator`,
-        { debug: { target: targetName, property: jf.key } },
+        {
+          code: "missing_relation_decorator",
+          debug: { target: targetName, property: jf.key },
+        },
       );
     }
 
@@ -42,14 +45,20 @@ const mergeJoinTables = (
     if (!relation) {
       throw new EntityMetadataError(
         `@JoinTable on property "${jt.key}" requires a relation decorator`,
-        { debug: { target: targetName, property: jt.key } },
+        {
+          code: "missing_relation_decorator",
+          debug: { target: targetName, property: jt.key },
+        },
       );
     }
 
     if (relation.type !== "ManyToMany") {
       throw new EntityMetadataError(
         `@JoinTable on "${jt.key}" is only valid on @ManyToMany relations`,
-        { debug: { target: targetName, property: jt.key } },
+        {
+          code: "invalid_join_table",
+          debug: { target: targetName, property: jt.key },
+        },
       );
     }
 
@@ -57,7 +66,10 @@ const mergeJoinTables = (
     if (isString(relation.joinTable)) {
       throw new EntityMetadataError(
         `@JoinTable on "${jt.key}" conflicts with inline joinTable on the relation decorator`,
-        { debug: { target: targetName, property: jt.key } },
+        {
+          code: "conflicting_join_table",
+          debug: { target: targetName, property: jt.key },
+        },
       );
     }
 
@@ -94,7 +106,10 @@ const mergeRelationModifiers = (
       }
       throw new EntityMetadataError(
         `@${modifier.decorator} on property "${modifier.key}" requires a relation decorator`,
-        { debug: { target: targetName, property: modifier.key } },
+        {
+          code: "missing_relation_decorator",
+          debug: { target: targetName, property: modifier.key },
+        },
       );
     }
 
@@ -118,7 +133,10 @@ const mergeRelationModifiers = (
     if (decoratorsForScope.has(modifier.decorator)) {
       throw new EntityMetadataError(
         `Duplicate @${modifier.decorator} on property "${key}" of ${targetName}`,
-        { debug: { target: targetName, property: key, decorator: modifier.decorator } },
+        {
+          code: "duplicate_relation_modifier",
+          debug: { target: targetName, property: key, decorator: modifier.decorator },
+        },
       );
     }
 
@@ -135,7 +153,10 @@ const mergeRelationModifiers = (
           if (dec.startsWith(opposite)) {
             throw new EntityMetadataError(
               `@Eager and @Lazy conflict on property "${key}" of ${targetName} (overlapping scope)`,
-              { debug: { target: targetName, property: key } },
+              {
+                code: "conflicting_loading_decorators",
+                debug: { target: targetName, property: key },
+              },
             );
           }
         }
@@ -200,6 +221,7 @@ const resolveRelation = (
 
   if (!foreign) {
     throw new EntityMetadataError("Foreign relation metadata not found", {
+      code: "missing_foreign_relation",
       debug: { target: targetName, relation: staged.key },
     });
   }
@@ -214,6 +236,7 @@ const resolveRelation = (
 
   if (!staged.joinKeys && !foreign.joinKeys) {
     throw new EntityMetadataError("Join keys not found", {
+      code: "missing_join_keys",
       debug: { target: targetName, relation: staged.key },
     });
   }
@@ -223,6 +246,7 @@ const resolveRelation = (
       const field = primaryMeta.fields.find((f) => f.key === key);
       if (field) continue;
       throw new EntityMetadataError("Join key field not found", {
+        code: "missing_join_key_field",
         debug: { target: targetName, relation: staged.key, key },
       });
     }
@@ -231,6 +255,7 @@ const resolveRelation = (
       const field = foreignMeta.fields.find((f) => f.key === key);
       if (field) continue;
       throw new EntityMetadataError("Foreign join key field not found", {
+        code: "missing_foreign_join_key_field",
         debug: { target: targetName, relation: staged.key, key },
       });
     }
@@ -241,6 +266,7 @@ const resolveRelation = (
       const field = primaryMeta.fields.find((f) => f.key === key);
       if (field) continue;
       throw new EntityMetadataError("Join key field not found", {
+        code: "missing_join_key_field",
         debug: { target: targetName, relation: staged.key, key },
       });
     }
@@ -263,6 +289,7 @@ const resolveRelation = (
 
       if (!staged.joinTable && !foreign.joinTable) {
         throw new EntityMetadataError("Join table not found", {
+          code: "missing_join_table",
           debug: { target: targetName, relation: staged.key },
         });
       }
@@ -340,6 +367,7 @@ const resolveRelation = (
     case "OneToOne":
       if (staged.joinKeys && foreign.joinKeys) {
         throw new EntityMetadataError("Join keys cannot be set on both decorators", {
+          code: "conflicting_join_keys",
           debug: { target: targetName, relation: staged.key },
         });
       }
@@ -360,6 +388,7 @@ const resolveRelation = (
 
   if (!findKeys) {
     throw new EntityMetadataError("Unable to calculate find keys for relation", {
+      code: "missing_find_keys",
       debug: { target: targetName, relation: staged.key },
     });
   }

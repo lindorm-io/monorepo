@@ -6,7 +6,8 @@ import type { MetaRelation } from "../types/metadata.js";
 export const defaultRelationFilter = (relation: MetaRelation, entity: IEntity): Dict => {
   if (!relation.findKeys) {
     throw new EntityManagerError("Cannot build relation filter without findKeys", {
-      debug: { relation: relation.key, type: relation.type },
+      code: "missing_find_keys",
+      data: { relation: relation.key, type: relation.type },
     });
   }
   const filter: Dict = {};

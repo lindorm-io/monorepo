@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from "fs/promises";
 import { join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
+import { NotSupportedError } from "../errors/NotSupportedError.js";
 import {
   generateSource,
   type GenerateSourceOptions,
@@ -29,8 +30,9 @@ export const writeSource = async (options: WriteSourceOptions): Promise<void> =>
   } = options;
 
   if (!PROTEUS_ALL_DRIVERS.includes(driver)) {
-    throw new Error(
+    throw new NotSupportedError(
       `Unknown driver: ${driver}. Valid drivers: ${PROTEUS_ALL_DRIVERS.join(", ")}`,
+      { code: "unknown_driver", data: { driver } },
     );
   }
 

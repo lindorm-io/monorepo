@@ -15,6 +15,10 @@ export const findRelationByKey = (
   if (!relation) {
     throw new ProteusError(
       `Relation "${relationKey}" not found on entity "${metadata.entity.name}"`,
+      {
+        code: "unknown_relation",
+        data: { relation: relationKey, entityName: metadata.entity.name },
+      },
     );
   }
   return relation;
