@@ -146,7 +146,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
   private guardReading(): void {
     if (this.reading) {
       throw new PostgresDriverError("Concurrent cursor reads are not allowed", {
-        code: "cursor_concurrent_read",
+        code: "concurrent_cursor_read",
       });
     }
   }
