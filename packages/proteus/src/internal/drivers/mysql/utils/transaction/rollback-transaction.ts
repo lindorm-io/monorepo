@@ -13,6 +13,8 @@ export const rollbackTransaction = async (
   } catch (error) {
     handle.state = "rolledback";
     throw new MySqlTransactionError("Failed to rollback transaction", {
+      code: "query_execution_failed",
+      data: { operation: "ROLLBACK" },
       error: error as Error,
     });
   } finally {

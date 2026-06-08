@@ -6,8 +6,8 @@ import type {
 } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../../types/query.js";
+import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
 import { ProteusError } from "../../../../errors/ProteusError.js";
-import { ProteusRepositoryError } from "../../../../errors/ProteusRepositoryError.js";
 import type { MysqlQueryClient } from "../types/mysql-query-client.js";
 import { quoteIdentifier, quoteQualifiedName } from "../utils/quote-identifier.js";
 import { buildDiscriminatorPredicateUnqualified } from "../utils/query/compile-helpers.js";
@@ -59,8 +59,12 @@ export class MySqlDeleteQueryBuilder<
   }
 
   public returning(..._fields: Array<keyof E | "*">): this {
-    throw new ProteusRepositoryError(
+    throw new NotSupportedError(
       "MySQL does not support RETURNING clauses. Use save()/insert()/update() repository methods instead, which automatically SELECT-back after write.",
+      {
+        code: "unsupported_operation",
+        data: { operation: "delete.returning" },
+      },
     );
   }
 
@@ -68,6 +72,10 @@ export class MySqlDeleteQueryBuilder<
     if (this.predicates.length === 0) {
       throw new ProteusError(
         `DELETE on "${this.metadata.entity.name}" requires at least one .where() predicate`,
+        {
+          code: "invalid_query",
+          data: { entity: this.metadata.entity.name, operation: "delete.execute" },
+        },
       );
     }
 
@@ -76,8 +84,12 @@ export class MySqlDeleteQueryBuilder<
       this.metadata.inheritance?.strategy === "joined" &&
       this.metadata.inheritance.discriminatorValue != null
     ) {
-      throw new ProteusRepositoryError(
+      throw new NotSupportedError(
         "DELETE via QueryBuilder is not supported for joined inheritance entities",
+        {
+          code: "unsupported_operation",
+          data: { operation: "delete.execute", entity: this.metadata.entity.name },
+        },
       );
     }
 
@@ -99,6 +111,10 @@ export class MySqlDeleteQueryBuilder<
       if (!deleteField) {
         throw new ProteusError(
           `Entity "${this.metadata.entity.name}" has no @DeleteDateField — cannot use softDelete()`,
+          {
+            code: "invalid_query",
+            data: { entity: this.metadata.entity.name, operation: "delete.softDelete" },
+          },
         );
       }
       text = `UPDATE ${tableName} SET ${quoteIdentifier(deleteField.name)} = NOW(3) ${whereClause}${discClause}`;

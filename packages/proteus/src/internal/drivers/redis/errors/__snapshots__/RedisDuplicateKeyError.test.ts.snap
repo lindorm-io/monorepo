@@ -17,5 +17,6 @@ exports[`RedisDuplicateKeyError snapshot > serialises to JSON with expected shap
   "support": null,
   "timestamp": 2024-01-01T00:00:00.000Z,
   "title": null,
+  "type": "urn:lindorm:proteus:error:duplicate_key",
 }
 `;

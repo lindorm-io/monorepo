@@ -108,6 +108,7 @@ export class MigrationManager implements IMigrationManager {
             "Partially applied migrations detected — these started but never finished (possible crash). " +
               "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
             {
+              code: "migration_partially_applied",
               debug: {
                 partiallyApplied: partiallyApplied.map((r) => ({
                   id: r.id,
@@ -124,6 +125,7 @@ export class MigrationManager implements IMigrationManager {
 
         if (mismatched.length > 0) {
           throw new PostgresMigrationError("Checksum mismatch detected — aborting", {
+            code: "migration_checksum_mismatch",
             debug: {
               mismatched: mismatched.map((m) => ({
                 id: m.migration.id,
@@ -159,7 +161,9 @@ export class MigrationManager implements IMigrationManager {
     );
 
     if (result === null) {
-      throw new PostgresMigrationError("Could not acquire migration advisory lock");
+      throw new PostgresMigrationError("Could not acquire migration advisory lock", {
+        code: "migration_lock_unavailable",
+      });
     }
 
     return result;
@@ -196,6 +200,7 @@ export class MigrationManager implements IMigrationManager {
             "Partially applied migrations detected — these started but never finished (possible crash). " +
               "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
             {
+              code: "migration_partially_applied",
               debug: {
                 partiallyApplied: partiallyApplied.map((r) => ({
                   id: r.id,
@@ -212,6 +217,7 @@ export class MigrationManager implements IMigrationManager {
           throw new PostgresMigrationError(
             "Checksum mismatch detected — cannot safely rollback",
             {
+              code: "migration_checksum_mismatch",
               debug: {
                 mismatched: mismatched.map((m) => ({
                   id: m.migration.id,
@@ -252,7 +258,9 @@ export class MigrationManager implements IMigrationManager {
     );
 
     if (result === null) {
-      throw new PostgresMigrationError("Could not acquire migration advisory lock");
+      throw new PostgresMigrationError("Could not acquire migration advisory lock", {
+        code: "migration_lock_unavailable",
+      });
     }
 
     return result;
@@ -279,7 +287,9 @@ export class MigrationManager implements IMigrationManager {
     );
 
     if (result === null) {
-      throw new PostgresMigrationError("Could not acquire migration advisory lock");
+      throw new PostgresMigrationError("Could not acquire migration advisory lock", {
+        code: "migration_lock_unavailable",
+      });
     }
 
     return result;
@@ -302,7 +312,9 @@ export class MigrationManager implements IMigrationManager {
     );
 
     if (result === null) {
-      throw new PostgresMigrationError("Could not acquire migration advisory lock");
+      throw new PostgresMigrationError("Could not acquire migration advisory lock", {
+        code: "migration_lock_unavailable",
+      });
     }
 
     return result;
@@ -317,6 +329,7 @@ export class MigrationManager implements IMigrationManager {
       const available = loaded.map((l) => l.name);
       throw new PostgresMigrationError(
         `Migration file not found: ${name}. Available migrations: ${available.join(", ") || "(none)"}`,
+        { code: "migration_not_found", data: { name } },
       );
     }
 
@@ -327,6 +340,10 @@ export class MigrationManager implements IMigrationManager {
     if (alreadyApplied) {
       throw new PostgresMigrationError(
         `Migration "${name}" is already marked as applied`,
+        {
+          code: "migration_already_applied",
+          data: { name },
+        },
       );
     }
 
@@ -367,6 +384,7 @@ export class MigrationManager implements IMigrationManager {
       const available = applied.map((r) => r.name);
       throw new PostgresMigrationError(
         `Migration not found in tracking table or already rolled back: ${name}. Available applied migrations: ${available.join(", ") || "(none)"}`,
+        { code: "migration_not_found", data: { name } },
       );
     }
 
