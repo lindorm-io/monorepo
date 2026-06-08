@@ -56,7 +56,9 @@ const extractModulusBits = (der: Buffer, isPrivate: boolean): number => {
 
 export const modulusSize = (options: Options): RsaModulus => {
   if (!options.privateKey && !options.publicKey) {
-    throw new KryptosError("Missing RSA key");
+    throw new KryptosError("Missing RSA key", {
+      code: "missing_rsa_key",
+    });
   }
 
   const bits = options.privateKey
@@ -64,7 +66,10 @@ export const modulusSize = (options: Options): RsaModulus => {
     : extractModulusBits(options.publicKey, false);
 
   if (!VALID_MODULUS.has(bits)) {
-    throw new KryptosError(`Unsupported RSA modulus size: ${bits}`);
+    throw new KryptosError(`Unsupported RSA modulus size: ${bits}`, {
+      code: "unsupported_rsa_modulus_size",
+      data: { bits },
+    });
   }
 
   return bits as RsaModulus;

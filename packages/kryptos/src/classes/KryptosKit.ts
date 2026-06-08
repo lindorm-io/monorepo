@@ -184,7 +184,9 @@ export class KryptosKit {
 
   private static envImport(string: string): IKryptos {
     if (!string.startsWith("kryptos:")) {
-      throw new KryptosError("Invalid kryptos string");
+      throw new KryptosError("Invalid kryptos string", {
+        code: "invalid_kryptos_string",
+      });
     }
 
     const [_, jwk] = string.split(":");
@@ -204,7 +206,9 @@ export class KryptosKit {
     if (isJwk(options)) return KryptosKit.fromJwk(options);
     if (isPem(options)) return KryptosKit.fromPem(options);
 
-    throw new KryptosError("Unexpected key format");
+    throw new KryptosError("Unexpected key format", {
+      code: "unknown_key_format",
+    });
   }
 
   private static fromB64(options: KryptosFromString): IKryptos {
@@ -235,6 +239,7 @@ export class KryptosKit {
       if (incomingS256 && incomingS256 !== kryptos.certificateThumbprint) {
         throw new KryptosError(
           "fromJWK: x5t#S256 thumbprint does not match recomputed leaf cert hash",
+          { code: "certificate_thumbprint_mismatch" },
         );
       }
     }
@@ -254,13 +259,19 @@ export class KryptosKit {
     const options = fromOptions(format, arg);
 
     if (!options.algorithm) {
-      throw new KryptosError("Algorithm is required");
+      throw new KryptosError("Algorithm is required", {
+        code: "missing_algorithm",
+      });
     }
     if (!options.type) {
-      throw new KryptosError("Type is required");
+      throw new KryptosError("Type is required", {
+        code: "missing_key_type",
+      });
     }
     if (!options.use) {
-      throw new KryptosError("Use is required");
+      throw new KryptosError("Use is required", {
+        code: "missing_key_use",
+      });
     }
 
     return new Kryptos({
@@ -436,7 +447,10 @@ export class KryptosKit {
     }
 
     if (generate.type === "oct") {
-      throw new KryptosError("symmetric keys cannot have certificates");
+      throw new KryptosError("symmetric keys cannot have certificates", {
+        code: "symmetric_key_certificate_unsupported",
+        data: { type: generate.type },
+      });
     }
 
     const certificateChain = stampCertificate({

@@ -40,7 +40,9 @@ const KEY_USAGE_BITS: ReadonlyArray<ParsedX509KeyUsageFlag> = [
 const parseBasicConstraints = (extnValue: Buffer): { ca: boolean } => {
   const tlv = readTlv(extnValue, 0);
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("BasicConstraints is not a SEQUENCE");
+    throw new KryptosError("BasicConstraints is not a SEQUENCE", {
+      code: "invalid_certificate_extension",
+    });
   }
   const body = extnValue.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
   const children = readSequenceChildren(body);
@@ -55,7 +57,9 @@ const parseBasicConstraints = (extnValue: Buffer): { ca: boolean } => {
 const parseKeyUsage = (extnValue: Buffer): ReadonlyArray<ParsedX509KeyUsageFlag> => {
   const tlv = readTlv(extnValue, 0);
   if (tlv.tag !== ASN1_TAG_BIT_STRING) {
-    throw new KryptosError("KeyUsage is not a BIT STRING");
+    throw new KryptosError("KeyUsage is not a BIT STRING", {
+      code: "invalid_certificate_extension",
+    });
   }
   const body = extnValue.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
   const { bytes, unusedBits } = decodeBitString(body);
@@ -74,7 +78,9 @@ const parseKeyUsage = (extnValue: Buffer): ReadonlyArray<ParsedX509KeyUsageFlag>
 const parseSubjectKeyIdentifier = (extnValue: Buffer): Buffer => {
   const tlv = readTlv(extnValue, 0);
   if (tlv.tag !== ASN1_TAG_OCTET_STRING) {
-    throw new KryptosError("SubjectKeyIdentifier is not an OCTET STRING");
+    throw new KryptosError("SubjectKeyIdentifier is not an OCTET STRING", {
+      code: "invalid_certificate_extension",
+    });
   }
   return Buffer.from(
     extnValue.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength),
@@ -84,7 +90,9 @@ const parseSubjectKeyIdentifier = (extnValue: Buffer): Buffer => {
 const parseAuthorityKeyIdentifier = (extnValue: Buffer): Buffer | undefined => {
   const tlv = readTlv(extnValue, 0);
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("AuthorityKeyIdentifier is not a SEQUENCE");
+    throw new KryptosError("AuthorityKeyIdentifier is not a SEQUENCE", {
+      code: "invalid_certificate_extension",
+    });
   }
   let offset = tlv.contentStart;
   const end = tlv.contentStart + tlv.contentLength;
@@ -167,6 +175,10 @@ const decodeSanIpBytes = (bytes: Buffer): string => {
   if (bytes.length === 16) return decodeIpv6(bytes);
   throw new KryptosError(
     `subjectAlternativeName ip value has unexpected length ${bytes.length} (expected 4 or 16)`,
+    {
+      code: "invalid_certificate_extension",
+      data: { length: bytes.length, expected: [4, 16] },
+    },
   );
 };
 
@@ -175,7 +187,9 @@ const parseSubjectAltNames = (
 ): ReadonlyArray<ParsedX509SubjectAltName> => {
   const tlv = readTlv(extnValue, 0);
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("SubjectAltName is not a SEQUENCE");
+    throw new KryptosError("SubjectAltName is not a SEQUENCE", {
+      code: "invalid_certificate_extension",
+    });
   }
   const names: Array<ParsedX509SubjectAltName> = [];
   let offset = tlv.contentStart;
@@ -202,7 +216,9 @@ const parseSubjectAltNames = (
 export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
   const tlv = readTlv(der, 0);
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("Extensions is not a SEQUENCE");
+    throw new KryptosError("Extensions is not a SEQUENCE", {
+      code: "invalid_certificate_extension",
+    });
   }
   const body = der.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
 
@@ -225,7 +241,10 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
       valueIndex = 2;
     }
     if (parts.length <= valueIndex || parts[valueIndex].tag !== ASN1_TAG_OCTET_STRING) {
-      throw new KryptosError(`Extension ${oid} missing extnValue OCTET STRING`);
+      throw new KryptosError(`Extension ${oid} missing extnValue OCTET STRING`, {
+        code: "invalid_certificate_extension",
+        data: { oid },
+      });
     }
     const extnValue = parts[valueIndex].content;
 
@@ -240,7 +259,10 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
     } else if (oid === X509_OID_EXT_SUBJECT_ALT_NAME) {
       subjectAltNames = parseSubjectAltNames(extnValue);
     } else if (critical) {
-      throw new KryptosError(`Unknown critical X.509 extension: ${oid}`);
+      throw new KryptosError(`Unknown critical X.509 extension: ${oid}`, {
+        code: "unsupported_critical_certificate_extension",
+        data: { oid },
+      });
     }
   }
 

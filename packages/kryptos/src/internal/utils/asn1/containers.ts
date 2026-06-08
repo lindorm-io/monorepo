@@ -20,7 +20,10 @@ export const encodeSet = (children: Array<Buffer>): Buffer =>
 
 export const encodeExplicitTag = (tagNumber: number, inner: Buffer): Buffer => {
   if (tagNumber < 0 || tagNumber > 30) {
-    throw new KryptosError(`Unsupported context tag number: ${tagNumber}`);
+    throw new KryptosError(`Unsupported context tag number: ${tagNumber}`, {
+      code: "unsupported_asn1_tag",
+      data: { tagNumber },
+    });
   }
   return wrap(ASN1_CONTEXT_CONSTRUCTED_BASE | tagNumber, inner);
 };
@@ -31,7 +34,10 @@ export const encodeImplicitTag = (
   constructed = false,
 ): Buffer => {
   if (tagNumber < 0 || tagNumber > 30) {
-    throw new KryptosError(`Unsupported context tag number: ${tagNumber}`);
+    throw new KryptosError(`Unsupported context tag number: ${tagNumber}`, {
+      code: "unsupported_asn1_tag",
+      data: { tagNumber },
+    });
   }
   const classBits = 0x80 | (constructed ? 0x20 : 0x00) | tagNumber;
   return wrap(classBits, contentBytes);

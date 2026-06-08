@@ -21,7 +21,10 @@ export const parseJwkOptions = (
   const jwk = options as LooseJwk;
 
   if (!TYPES.includes(jwk.kty)) {
-    throw new KryptosError("Invalid key type", { data: { valid: TYPES } });
+    throw new KryptosError("Invalid key type", {
+      code: "unsupported_key_type",
+      data: { kty: jwk.kty, valid: TYPES },
+    });
   }
 
   return {

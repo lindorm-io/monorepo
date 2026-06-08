@@ -29,10 +29,14 @@ export const exportAkpToJwk = (options: Options): Result => {
     const jwk = keyObject.export({ format: "jwk" }) as NodeAkpJwk;
 
     if (!jwk.pub) {
-      throw new KryptosError("Key export failed [pub]: missing public key component");
+      throw new KryptosError("Key export failed [pub]: missing public key component", {
+        code: "akp_jwk_export_failed",
+      });
     }
     if (!jwk.priv) {
-      throw new KryptosError("Key export failed [priv]: missing private key seed");
+      throw new KryptosError("Key export failed [priv]: missing private key seed", {
+        code: "akp_jwk_export_failed",
+      });
     }
 
     result.pub = jwk.pub;
@@ -41,7 +45,9 @@ export const exportAkpToJwk = (options: Options): Result => {
 
   if (!result.pub.length) {
     if (!options.publicKey) {
-      throw new KryptosError("Public key not available");
+      throw new KryptosError("Public key not available", {
+        code: "missing_akp_key_material",
+      });
     }
 
     const keyObject = createPublicKey({
@@ -52,14 +58,18 @@ export const exportAkpToJwk = (options: Options): Result => {
     const jwk = keyObject.export({ format: "jwk" }) as NodeAkpJwk;
 
     if (!jwk.pub) {
-      throw new KryptosError("Key export failed [pub]: missing public key component");
+      throw new KryptosError("Key export failed [pub]: missing public key component", {
+        code: "akp_jwk_export_failed",
+      });
     }
 
     result.pub = jwk.pub;
   }
 
   if (!result.pub.length) {
-    throw new KryptosError("Key export failed: no public key available");
+    throw new KryptosError("Key export failed: no public key available", {
+      code: "missing_akp_key_material",
+    });
   }
 
   return result;

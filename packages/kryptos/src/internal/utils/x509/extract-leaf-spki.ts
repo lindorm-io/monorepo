@@ -10,11 +10,16 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
   try {
     outer = readTlv(der, 0);
   } catch (err: any) {
-    throw new KryptosError("Failed to extract SPKI: invalid DER", { error: err });
+    throw new KryptosError("Failed to extract SPKI: invalid DER", {
+      code: "spki_extraction_failed",
+      debug: { error: err },
+    });
   }
 
   if (outer.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("Failed to extract SPKI: certificate is not a SEQUENCE");
+    throw new KryptosError("Failed to extract SPKI: certificate is not a SEQUENCE", {
+      code: "spki_extraction_failed",
+    });
   }
 
   let tbs;
@@ -22,12 +27,15 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
     tbs = readTlv(der, outer.contentStart);
   } catch (err: any) {
     throw new KryptosError("Failed to extract SPKI: invalid TBSCertificate", {
-      error: err,
+      code: "spki_extraction_failed",
+      debug: { error: err },
     });
   }
 
   if (tbs.tag !== ASN1_TAG_SEQUENCE) {
-    throw new KryptosError("Failed to extract SPKI: TBSCertificate is not a SEQUENCE");
+    throw new KryptosError("Failed to extract SPKI: TBSCertificate is not a SEQUENCE", {
+      code: "spki_extraction_failed",
+    });
   }
 
   const tbsEnd = tbs.contentStart + tbs.contentLength;
@@ -35,7 +43,9 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
 
   const readChild = () => {
     if (offset >= tbsEnd) {
-      throw new KryptosError("Failed to extract SPKI: TBSCertificate truncated");
+      throw new KryptosError("Failed to extract SPKI: TBSCertificate truncated", {
+        code: "spki_extraction_failed",
+      });
     }
     return readTlv(der, offset);
   };
@@ -57,13 +67,17 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
   } catch (err: any) {
     if (err instanceof KryptosError) throw err;
     throw new KryptosError("Failed to extract SPKI: TBSCertificate walk failed", {
-      error: err,
+      code: "spki_extraction_failed",
+      debug: { error: err },
     });
   }
 
   if (child.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError(
       "Failed to extract SPKI: subjectPublicKeyInfo is not a SEQUENCE",
+      {
+        code: "spki_extraction_failed",
+      },
     );
   }
 

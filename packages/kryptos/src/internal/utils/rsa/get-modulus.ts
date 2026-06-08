@@ -26,6 +26,9 @@ export const getRsaModulus = (options: Options): RsaModulus => {
       return 4096;
 
     default:
-      throw new KryptosError("Unsupported algorithm");
+      throw new KryptosError("Unsupported algorithm", {
+        code: "unsupported_algorithm",
+        data: { algorithm: options.algorithm },
+      });
   }
 };

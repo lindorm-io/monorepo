@@ -11,7 +11,10 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
   switch (options.type) {
     case "AKP":
       if (!isAkpDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "AKP" },
+        });
       }
       return {
         id: options.id,
@@ -24,7 +27,10 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
 
     case "EC":
       if (!isEcDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "EC" },
+        });
       }
       return {
         id: options.id,
@@ -38,7 +44,10 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
 
     case "oct":
       if (!isOctDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "oct" },
+        });
       }
       return {
         id: options.id,
@@ -51,7 +60,10 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
 
     case "OKP":
       if (!isOkpDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "OKP" },
+        });
       }
       return {
         id: options.id,
@@ -65,7 +77,10 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
 
     case "RSA":
       if (!isRsaDer(options)) {
-        throw new KryptosError("Invalid options");
+        throw new KryptosError("Invalid options", {
+          code: "invalid_der_export_options",
+          data: { type: "RSA" },
+        });
       }
       return {
         id: options.id,
@@ -77,6 +92,9 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
       };
 
     default:
-      throw new KryptosError("Unsupported key type");
+      throw new KryptosError("Unsupported key type", {
+        code: "unsupported_export_key_type",
+        data: { type: options.type },
+      });
   }
 };

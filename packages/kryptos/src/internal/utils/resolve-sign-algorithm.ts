@@ -9,7 +9,10 @@ type Input = {
 
 export const resolveSignAlgorithmForCert = (input: Input): KryptosAlgorithm => {
   if (input.type === "oct") {
-    throw new KryptosError("symmetric keys cannot have certificates");
+    throw new KryptosError("symmetric keys cannot have certificates", {
+      code: "symmetric_key_certificate_unsupported",
+      data: { type: input.type },
+    });
   }
 
   if (input.type === "AKP") {
@@ -22,6 +25,10 @@ export const resolveSignAlgorithmForCert = (input: Input): KryptosAlgorithm => {
     }
     throw new KryptosError(
       `Unsupported AKP algorithm for X.509 certificate signing: ${String(input.algorithm)}`,
+      {
+        code: "unsupported_certificate_sign_algorithm",
+        data: { type: input.type, algorithm: input.algorithm },
+      },
     );
   }
 
@@ -54,6 +61,10 @@ export const resolveSignAlgorithmForCert = (input: Input): KryptosAlgorithm => {
       default:
         throw new KryptosError(
           `Cannot derive signing algorithm for EC curve: ${input.curve ?? "unknown"}`,
+          {
+            code: "unsupported_certificate_sign_curve",
+            data: { type: input.type, curve: input.curve ?? null },
+          },
         );
     }
   }
@@ -64,10 +75,18 @@ export const resolveSignAlgorithmForCert = (input: Input): KryptosAlgorithm => {
     }
     throw new KryptosError(
       `OKP curve ${input.curve ?? "unknown"} cannot sign X.509 certificates (use ca-signed mode with an Ed25519/Ed448 CA)`,
+      {
+        code: "unsupported_certificate_sign_curve",
+        data: { type: input.type, curve: input.curve ?? null },
+      },
     );
   }
 
   throw new KryptosError(
     `Unsupported key type for X.509 certificate signing: ${String(input.type)}`,
+    {
+      code: "unsupported_certificate_sign_key_type",
+      data: { type: input.type },
+    },
   );
 };

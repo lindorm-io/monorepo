@@ -54,6 +54,9 @@ export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
       };
 
     default:
-      throw new KryptosError("Invalid key type");
+      throw new KryptosError("Invalid key type", {
+        code: "unsupported_key_type",
+        data: { type: options.type },
+      });
   }
 };

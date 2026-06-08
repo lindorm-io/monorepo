@@ -32,7 +32,10 @@ export const getOctSize = (options: Options): OctSize => {
         return 64;
 
       default:
-        throw new KryptosError("Unsupported size");
+        throw new KryptosError("Unsupported size", {
+          code: "unsupported_encryption",
+          data: { encryption: options.encryption },
+        });
     }
   }
 
@@ -62,6 +65,9 @@ export const getOctSize = (options: Options): OctSize => {
       return 128;
 
     default:
-      throw new KryptosError("Unsupported size");
+      throw new KryptosError("Unsupported size", {
+        code: "unsupported_algorithm",
+        data: { algorithm: options.algorithm },
+      });
   }
 };

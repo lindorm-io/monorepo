@@ -30,7 +30,9 @@ export const createRsaDerFromB64 = (options: Options): Result => {
   }
 
   if (!result.privateKey && !result.publicKey.length) {
-    throw new KryptosError("Key creation failed");
+    throw new KryptosError("Key creation failed", {
+      code: "rsa_key_creation_failed",
+    });
   }
 
   return result;

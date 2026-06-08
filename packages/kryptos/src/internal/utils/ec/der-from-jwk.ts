@@ -10,7 +10,9 @@ type Result = Omit<EcBuffer, "id" | "algorithm" | "type" | "use">;
 
 export const createEcDerFromJwk = (options: Options): Result => {
   if (!isEcCurve(options.crv)) {
-    throw new KryptosError("Curve is required");
+    throw new KryptosError("Curve is required", {
+      code: "missing_ec_curve",
+    });
   }
 
   const result: Result = {
@@ -27,7 +29,10 @@ export const createEcDerFromJwk = (options: Options): Result => {
     const privateKey = privateObject.export({ format: "der", type: "pkcs8" });
 
     if (!isBuffer(privateKey)) {
-      throw new KryptosError("Key creation failed");
+      throw new KryptosError("Key creation failed", {
+        code: "ec_key_creation_failed",
+        data: { component: "privateKey", format: "der" },
+      });
     }
 
     result.privateKey = privateKey;
@@ -38,14 +43,20 @@ export const createEcDerFromJwk = (options: Options): Result => {
     const publicKey = publicObject.export({ format: "der", type: "spki" });
 
     if (!isBuffer(publicKey)) {
-      throw new KryptosError("Key creation failed");
+      throw new KryptosError("Key creation failed", {
+        code: "ec_key_creation_failed",
+        data: { component: "publicKey", format: "der" },
+      });
     }
 
     result.publicKey = publicKey;
   }
 
   if (!result.privateKey && !result.publicKey.length) {
-    throw new KryptosError("Key creation failed");
+    throw new KryptosError("Key creation failed", {
+      code: "ec_key_creation_failed",
+      data: { curve: options.crv },
+    });
   }
 
   return result;

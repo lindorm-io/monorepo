@@ -11,7 +11,9 @@ type Result = Omit<EcJwk, "kid" | "alg" | "kty" | "use">;
 
 export const exportEcToJwk = (options: Options): Result => {
   if (!isEcCurve(options.curve)) {
-    throw new KryptosError("Curve is required");
+    throw new KryptosError("Curve is required", {
+      code: "missing_ec_curve",
+    });
   }
 
   const result: Result = {
@@ -31,16 +33,29 @@ export const exportEcToJwk = (options: Options): Result => {
     if (crv !== options.curve) {
       throw new KryptosError(
         `Key export failed [crv]: expected ${options.curve}, got ${crv}`,
+        {
+          code: "ec_jwk_export_failed",
+          data: { component: "crv", expected: options.curve, received: crv ?? null },
+        },
       );
     }
     if (!d) {
-      throw new KryptosError("Key export failed [d]: missing private key component");
+      throw new KryptosError("Key export failed [d]: missing private key component", {
+        code: "ec_jwk_export_failed",
+        data: { component: "d" },
+      });
     }
     if (!x) {
-      throw new KryptosError("Key export failed [x]: missing x coordinate");
+      throw new KryptosError("Key export failed [x]: missing x coordinate", {
+        code: "ec_jwk_export_failed",
+        data: { component: "x" },
+      });
     }
     if (!y) {
-      throw new KryptosError("Key export failed [y]: missing y coordinate");
+      throw new KryptosError("Key export failed [y]: missing y coordinate", {
+        code: "ec_jwk_export_failed",
+        data: { component: "y" },
+      });
     }
 
     result.d = d;
@@ -50,7 +65,9 @@ export const exportEcToJwk = (options: Options): Result => {
 
   if (!result.x.length && !result.y.length) {
     if (!options.publicKey) {
-      throw new KryptosError("Public key is required");
+      throw new KryptosError("Public key is required", {
+        code: "missing_ec_public_key",
+      });
     }
 
     const keyObject = createPublicKey({
@@ -63,13 +80,23 @@ export const exportEcToJwk = (options: Options): Result => {
     if (crv !== options.curve) {
       throw new KryptosError(
         `Key export failed [crv]: expected ${options.curve}, got ${crv}`,
+        {
+          code: "ec_jwk_export_failed",
+          data: { component: "crv", expected: options.curve, received: crv ?? null },
+        },
       );
     }
     if (!x) {
-      throw new KryptosError("Key export failed [x]: missing x coordinate");
+      throw new KryptosError("Key export failed [x]: missing x coordinate", {
+        code: "ec_jwk_export_failed",
+        data: { component: "x" },
+      });
     }
     if (!y) {
-      throw new KryptosError("Key export failed [y]: missing y coordinate");
+      throw new KryptosError("Key export failed [y]: missing y coordinate", {
+        code: "ec_jwk_export_failed",
+        data: { component: "y" },
+      });
     }
 
     result.x = x;
@@ -77,7 +104,10 @@ export const exportEcToJwk = (options: Options): Result => {
   }
 
   if (!result.x?.length || !result.y?.length) {
-    throw new KryptosError("Key export failed");
+    throw new KryptosError("Key export failed", {
+      code: "ec_jwk_export_failed",
+      data: { curve: options.curve },
+    });
   }
 
   return result;

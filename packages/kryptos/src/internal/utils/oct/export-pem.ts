@@ -17,7 +17,9 @@ const splitStringIntoChunks = (input: string, size: number): Array<string> => {
 
 export const exportOctToPem = (options: Options): Result => {
   if (!options.privateKey) {
-    throw new KryptosError("Private key is required");
+    throw new KryptosError("Private key is required", {
+      code: "missing_oct_private_key",
+    });
   }
 
   const string = options.privateKey.toString("base64");

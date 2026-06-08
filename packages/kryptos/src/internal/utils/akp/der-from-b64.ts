@@ -30,7 +30,9 @@ export const createAkpDerFromB64 = (options: Options): Result => {
   }
 
   if (!result.privateKey && !result.publicKey.length) {
-    throw new KryptosError("Key creation failed");
+    throw new KryptosError("Key creation failed", {
+      code: "missing_akp_key_material",
+    });
   }
 
   return result;
