@@ -48,6 +48,9 @@ export const resolveHandshakeHtu = (socket: Socket): string => {
   if (typeof rawUri !== "string" || rawUri.length === 0) {
     throw new ZephyrError("Unable to resolve DPoP htu: socket.io manager has no uri", {
       code: "dpop_htu_unresolvable",
+      title: "DPoP HTU Unresolvable",
+      details:
+        "The socket.io manager exposed no uri, so the DPoP htu claim cannot be computed; ensure the socket is created with a valid URL before preparing the handshake.",
     });
   }
 
