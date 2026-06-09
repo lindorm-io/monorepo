@@ -35,5 +35,9 @@ export const verifyRsaSignature = ({
 
 export const assertRsaSignature = (options: VerifyRsaSignatureOptions): void => {
   if (verifyRsaSignature(options)) return;
-  throw new RsaError("Invalid signature", { code: "invalid_signature" });
+  throw new RsaError("Invalid signature", {
+    code: "invalid_signature",
+    title: "Invalid Signature",
+    details: "The provided RSA signature does not match the signed data.",
+  });
 };

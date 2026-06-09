@@ -19,6 +19,9 @@ export const mapRsaAlgorithm = (kryptos: IKryptosRsa): ShaAlgorithm => {
   if (!RSA_SIG_ALGORITHMS.includes(kryptos.algorithm as RsaSigAlgorithm)) {
     throw new RsaError("Unsupported RSA algorithm for signing", {
       code: "unsupported_signing_algorithm",
+      title: "Unsupported Signing Algorithm",
+      details:
+        "The RSA key algorithm cannot be mapped to a SHA hash for signing; expected one of RS256, RS384, RS512, PS256, PS384, or PS512.",
       data: { algorithm: kryptos.algorithm },
     });
   }
