@@ -69,18 +69,26 @@ export class LindormWorker implements ILindormWorker {
     if (this.interval <= 0) {
       throw new LindormWorkerError("Interval must be a positive number", {
         code: "invalid_interval",
+        title: "Invalid Interval",
+        details: "The worker interval must resolve to a positive number of milliseconds.",
         data: { interval: this.interval },
       });
     }
     if (this.jitter < 0) {
       throw new LindormWorkerError("Jitter must be a non-negative number", {
         code: "invalid_jitter",
+        title: "Invalid Jitter",
+        details:
+          "The worker jitter must resolve to a non-negative number of milliseconds.",
         data: { jitter: this.jitter },
       });
     }
     if (this.callbackTimeout < 0) {
       throw new LindormWorkerError("Callback timeout must be a non-negative number", {
         code: "invalid_callback_timeout",
+        title: "Invalid Callback Timeout",
+        details:
+          "The worker callback timeout must resolve to a non-negative number of milliseconds.",
         data: { callbackTimeout: this.callbackTimeout },
       });
     }
@@ -296,6 +304,9 @@ export class LindormWorker implements ILindormWorker {
       const timeoutPromise = sleep(this.callbackTimeout).then(() => {
         throw new LindormWorkerError("Callback timed out", {
           code: "callback_timed_out",
+          title: "Callback Timed Out",
+          details:
+            "The worker callback did not resolve before the configured callback timeout elapsed.",
           data: { timeout: this.callbackTimeout },
         });
       });
@@ -332,6 +343,8 @@ export class LindormWorker implements ILindormWorker {
     if (this._destroyed) {
       throw new LindormWorkerError("Worker has been destroyed", {
         code: "worker_destroyed",
+        title: "Worker Destroyed",
+        details: "The worker has been destroyed and can no longer be started or invoked.",
       });
     }
   }

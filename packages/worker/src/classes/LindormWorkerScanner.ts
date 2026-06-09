@@ -76,6 +76,9 @@ export class LindormWorkerScanner {
         `No LindormWorker export or CALLBACK export found in file: ${data.fullPath}`,
         {
           code: "missing_worker_export",
+          title: "Missing Worker Export",
+          details:
+            "The scanned file does not export a LindormWorker instance or a CALLBACK function.",
           data: { fullPath: data.fullPath },
         },
       );
@@ -88,6 +91,9 @@ export class LindormWorkerScanner {
         `Missing INTERVAL export in file: ${data.fullPath}`,
         {
           code: "missing_interval_export",
+          title: "Missing Interval Export",
+          details:
+            "The scanned file does not export an INTERVAL value as a readable time string or number.",
           data: { fullPath: data.fullPath },
         },
       );
