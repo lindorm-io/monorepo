@@ -35,6 +35,9 @@ export const getOkpCurve = (options: Options): OkpCurve => {
     default:
       throw new KryptosError("Unsupported curve", {
         code: "unsupported_okp_curve",
+        title: "Unsupported OKP Curve",
+        details:
+          "The provided algorithm does not map to any supported OKP curve (Ed25519, X25519, or X448).",
         data: { algorithm: options.algorithm },
       });
   }

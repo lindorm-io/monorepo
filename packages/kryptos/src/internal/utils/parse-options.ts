@@ -23,6 +23,8 @@ export const parseJwkOptions = (
   if (!TYPES.includes(jwk.kty)) {
     throw new KryptosError("Invalid key type", {
       code: "unsupported_key_type",
+      title: "Unsupported Key Type",
+      details: `The JWK key type "${String(jwk.kty)}" is not one of the supported types: ${TYPES.join(", ")}.`,
       data: { kty: jwk.kty, valid: TYPES },
     });
   }

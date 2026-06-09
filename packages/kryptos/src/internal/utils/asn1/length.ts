@@ -4,6 +4,8 @@ export const encodeLength = (n: number): Buffer => {
   if (!Number.isInteger(n) || n < 0) {
     throw new KryptosError(`Invalid ASN.1 length: ${n}`, {
       code: "invalid_der_length",
+      title: "Invalid DER Length",
+      details: "A DER length to encode must be a non-negative integer.",
     });
   }
 
@@ -21,6 +23,8 @@ export const encodeLength = (n: number): Buffer => {
   if (bytes.length > 0x7e) {
     throw new KryptosError(`ASN.1 length too large: ${n}`, {
       code: "invalid_der_length",
+      title: "Invalid DER Length",
+      details: "The long-form length requires more than 126 length octets to encode.",
     });
   }
 
@@ -34,6 +38,8 @@ export const decodeLength = (
   if (offset >= bytes.length) {
     throw new KryptosError("Unexpected end of ASN.1 length", {
       code: "invalid_der_length",
+      title: "Invalid DER Length",
+      details: "The length offset is at or beyond the end of the buffer.",
     });
   }
 
@@ -47,11 +53,15 @@ export const decodeLength = (
   if (count === 0) {
     throw new KryptosError("Indefinite-length ASN.1 encoding not supported", {
       code: "invalid_der_length",
+      title: "Invalid DER Length",
+      details: "Indefinite-length form (0x80) is not permitted in DER encoding.",
     });
   }
   if (offset + 1 + count > bytes.length) {
     throw new KryptosError("Unexpected end of ASN.1 long-form length", {
       code: "invalid_der_length",
+      title: "Invalid DER Length",
+      details: "The declared long-form length octets extend past the end of the buffer.",
     });
   }
 

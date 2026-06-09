@@ -12,6 +12,9 @@ const decodePemBlocks = (input: string): Array<Buffer> => {
   if (matches.length === 0) {
     throw new KryptosError("Invalid PEM certificate input", {
       code: "invalid_certificate_input",
+      title: "Invalid Certificate Input",
+      details:
+        "The input looked like PEM but contained no BEGIN/END CERTIFICATE blocks to decode.",
       data: { format: "pem" },
     });
   }
@@ -25,6 +28,9 @@ const decodeBase64Der = (input: string): Buffer => {
   if (trimmed.length === 0 || !/^[A-Za-z0-9+/=]+$/.test(trimmed)) {
     throw new KryptosError("Invalid base64-DER certificate input", {
       code: "invalid_certificate_input",
+      title: "Invalid Certificate Input",
+      details:
+        "The input was expected to be base64-encoded DER but was empty or contained non-base64 characters.",
       data: { format: "base64-der" },
     });
   }
@@ -41,6 +47,9 @@ export const parseX509 = (input: string | Array<string>): Array<Buffer> => {
   if (inputs.length === 0) {
     throw new KryptosError("certificateChain must contain at least one certificate", {
       code: "certificate_chain_empty",
+      title: "Certificate Chain Empty",
+      details:
+        "An empty certificateChain array was provided; at least one certificate is required.",
     });
   }
 
@@ -49,6 +58,9 @@ export const parseX509 = (input: string | Array<string>): Array<Buffer> => {
     if (typeof item !== "string" || item.length === 0) {
       throw new KryptosError("certificateChain entries must be non-empty strings", {
         code: "invalid_certificate_input",
+        title: "Invalid Certificate Input",
+        details:
+          "A certificateChain entry was not a non-empty string; each entry must be PEM or base64-DER text.",
       });
     }
     ders.push(...toDerBuffers(item));
@@ -57,6 +69,8 @@ export const parseX509 = (input: string | Array<string>): Array<Buffer> => {
   if (ders.length === 0) {
     throw new KryptosError("certificateChain produced no certificates", {
       code: "certificate_chain_empty",
+      title: "Certificate Chain Empty",
+      details: "Decoding the certificateChain input produced zero DER certificates.",
     });
   }
 

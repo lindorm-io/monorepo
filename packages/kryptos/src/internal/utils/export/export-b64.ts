@@ -14,6 +14,9 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
       if (!isAkpDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided AKP key options are not valid DER-encoded options and cannot be exported to base64url.",
           data: { type: "AKP" },
         });
       }
@@ -32,6 +35,9 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
       if (!isEcDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided EC key options are not valid DER-encoded options and cannot be exported to base64url.",
           data: { type: "EC" },
         });
       }
@@ -51,6 +57,9 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
       if (!isOctDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided oct key options are not valid DER-encoded options and cannot be exported to base64url.",
           data: { type: "oct" },
         });
       }
@@ -67,6 +76,9 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
       if (!isOkpDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided OKP key options are not valid DER-encoded options and cannot be exported to base64url.",
           data: { type: "OKP" },
         });
       }
@@ -86,6 +98,9 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
       if (!isRsaDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided RSA key options are not valid DER-encoded options and cannot be exported to base64url.",
           data: { type: "RSA" },
         });
       }
@@ -103,6 +118,8 @@ export const exportToB64 = (options: ExportOptions): KryptosString => {
     default:
       throw new KryptosError("Unsupported key type", {
         code: "unsupported_export_key_type",
+        title: "Unsupported Export Key Type",
+        details: `The key type "${options.type as string}" is not supported for base64url export.`,
         data: { type: options.type },
       });
   }

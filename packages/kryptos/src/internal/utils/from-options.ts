@@ -14,6 +14,9 @@ export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOpt
       if (!isB64(arg))
         throw new KryptosError("Invalid key format", {
           code: "invalid_key_format",
+          title: "Invalid Key Format",
+          details:
+            "The provided argument does not match the expected base64url (b64) key format.",
           data: { format },
         });
       return { ...parseStdOptions(arg), ...createDerFromB64(arg) };
@@ -22,6 +25,8 @@ export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOpt
       if (!isDer(arg))
         throw new KryptosError("Invalid key format", {
           code: "invalid_key_format",
+          title: "Invalid Key Format",
+          details: "The provided argument does not match the expected DER key format.",
           data: { format },
         });
       return { ...parseStdOptions(arg), ...createDerFromDer(arg) };
@@ -30,6 +35,8 @@ export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOpt
       if (!isJwk(arg))
         throw new KryptosError("Invalid key format", {
           code: "invalid_key_format",
+          title: "Invalid Key Format",
+          details: "The provided argument does not match the expected JWK key format.",
           data: { format },
         });
       return { ...parseJwkOptions(arg), ...createDerFromJwk(arg) };
@@ -38,6 +45,8 @@ export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOpt
       if (!isPem(arg))
         throw new KryptosError("Invalid key format", {
           code: "invalid_key_format",
+          title: "Invalid Key Format",
+          details: "The provided argument does not match the expected PEM key format.",
           data: { format },
         });
       return { ...parseStdOptions(arg), ...createDerFromPem(arg) };
@@ -46,6 +55,9 @@ export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOpt
       if (!isUtf(arg))
         throw new KryptosError("Invalid key format", {
           code: "invalid_key_format",
+          title: "Invalid Key Format",
+          details:
+            "The provided argument does not match the expected UTF-8 (utf) key format.",
           data: { format },
         });
       return { ...parseStdOptions(arg), ...createDerFromUtf(arg) };
@@ -53,6 +65,8 @@ export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOpt
     default:
       throw new KryptosError("Invalid key format", {
         code: "invalid_key_format",
+        title: "Invalid Key Format",
+        details: `The key format "${format as string}" is not a recognized Kryptos key format.`,
         data: { format },
       });
   }

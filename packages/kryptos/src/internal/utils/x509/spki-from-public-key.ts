@@ -6,6 +6,9 @@ export const spkiFromPublicKey = (publicKey: Buffer, type: KryptosType): Buffer 
   if (type === "oct") {
     throw new KryptosError("Symmetric keys have no SubjectPublicKeyInfo", {
       code: "unsupported_key_type",
+      title: "Unsupported Key Type",
+      details:
+        "A symmetric ('oct') key was supplied, but SubjectPublicKeyInfo can only be derived from an asymmetric public key.",
       data: { type },
     });
   }
@@ -17,6 +20,8 @@ export const spkiFromPublicKey = (publicKey: Buffer, type: KryptosType): Buffer 
   if (!Buffer.isBuffer(out)) {
     throw new KryptosError("Failed to export kryptos public key as SPKI DER", {
       code: "spki_export_failed",
+      title: "SPKI Export Failed",
+      details: `Exporting the '${type}' public key as SPKI DER did not return a Buffer.`,
       data: { type },
     });
   }

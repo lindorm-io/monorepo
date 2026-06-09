@@ -98,7 +98,12 @@ export class Kryptos implements IKryptos {
     if (!this._privateKey && !this._publicKey) {
       throw new KryptosError(
         "Kryptos must be initialised with private key, public key, or both",
-        { code: "missing_key_material" },
+        {
+          code: "missing_key_material",
+          title: "Missing Key Material",
+          details:
+            "A Kryptos instance must be initialised with a private key, a public key, or both.",
+        },
       );
     }
 
@@ -117,7 +122,12 @@ export class Kryptos implements IKryptos {
       if (!this._publicKey || this._publicKey.length === 0) {
         throw new KryptosError(
           "certificateChain requires a kryptos with a public key (oct keys are not supported)",
-          { code: "missing_public_key" },
+          {
+            code: "missing_public_key",
+            title: "Missing Public Key",
+            details:
+              "A certificate chain requires a Kryptos with a public key; symmetric (oct) keys are not supported.",
+          },
         );
       }
 
@@ -127,7 +137,12 @@ export class Kryptos implements IKryptos {
       if (!x509PublicKeyMatches(leafSpki, this._publicKey, this._type)) {
         throw new KryptosError(
           "certificateChain leaf certificate public key does not match kryptos public key",
-          { code: "certificate_public_key_mismatch" },
+          {
+            code: "certificate_public_key_mismatch",
+            title: "Certificate Public Key Mismatch",
+            details:
+              "The leaf certificate's public key in the certificate chain does not match the Kryptos public key.",
+          },
         );
       }
 
@@ -266,6 +281,8 @@ export class Kryptos implements IKryptos {
     if (!this._certificateChain) {
       throw new KryptosError("Kryptos has no certificate to verify", {
         code: "missing_certificate",
+        title: "Missing Certificate",
+        details: "This Kryptos has no certificate chain available to verify.",
       });
     }
 
@@ -376,6 +393,8 @@ export class Kryptos implements IKryptos {
       default:
         throw new KryptosError(`Invalid key format: ${format}`, {
           code: "unsupported_export_format",
+          title: "Unsupported Export Format",
+          details: `The export format "${format as string}" is not supported; use jwk, pem, der, or b64.`,
           data: { format },
         });
     }
@@ -495,6 +514,9 @@ export class Kryptos implements IKryptos {
     if (this._disposed) {
       throw new KryptosError("Key has been disposed", {
         code: "key_disposed",
+        title: "Key Disposed",
+        details:
+          "This Kryptos instance has been disposed and its key material is no longer available.",
       });
     }
   }

@@ -9,6 +9,8 @@ export const createOctDerFromPem = (options: Options): Result => {
   if (!options.privateKey) {
     throw new KryptosError("Invalid key", {
       code: "missing_oct_private_key",
+      title: "Missing Oct Private Key",
+      details: "No oct private key PEM was provided to decode into DER bytes.",
     });
   }
 

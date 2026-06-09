@@ -12,6 +12,9 @@ export const exportOkpToPem = (options: Options): Result => {
   if (!isOkpCurve(options.curve)) {
     throw new KryptosError("Invalid OKP curve", {
       code: "invalid_okp_curve",
+      title: "Invalid OKP Curve",
+      details:
+        "A valid OKP curve (Ed25519, Ed448, X25519, or X448) must be provided to export the key to PEM.",
       data: { curve: options.curve ?? null },
     });
   }
@@ -35,12 +38,16 @@ export const exportOkpToPem = (options: Options): Result => {
     if (!isString(privateKey)) {
       throw new KryptosError("OKP PEM export failed: expected private key string", {
         code: "okp_pem_export_failed",
+        title: "OKP PEM Export Failed",
+        details: "The private key PEM export did not return a string as expected.",
         data: { curve: options.curve, key: "private" },
       });
     }
     if (!isString(publicKey)) {
       throw new KryptosError("OKP PEM export failed: expected public key string", {
         code: "okp_pem_export_failed",
+        title: "OKP PEM Export Failed",
+        details: "The public key PEM export did not return a string as expected.",
         data: { curve: options.curve, key: "public" },
       });
     }
@@ -60,6 +67,8 @@ export const exportOkpToPem = (options: Options): Result => {
     if (!isString(publicKey)) {
       throw new KryptosError("OKP PEM export failed: expected public key string", {
         code: "okp_pem_export_failed",
+        title: "OKP PEM Export Failed",
+        details: "The public key PEM export did not return a string as expected.",
         data: { curve: options.curve, key: "public" },
       });
     }
@@ -70,6 +79,9 @@ export const exportOkpToPem = (options: Options): Result => {
   if (!result.publicKey.length) {
     throw new KryptosError("Key export failed: no public key available", {
       code: "missing_okp_public_key",
+      title: "Missing OKP Public Key",
+      details:
+        "No public key could be derived or supplied, so the OKP key cannot be exported to PEM.",
     });
   }
 

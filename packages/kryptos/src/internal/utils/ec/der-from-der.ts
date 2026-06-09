@@ -12,6 +12,9 @@ export const createEcDerFromDer = (options: Options): Result => {
   if (!isEcCurve(options.curve)) {
     throw new KryptosError("Curve is required", {
       code: "missing_ec_curve",
+      title: "Missing EC Curve",
+      details:
+        "A valid EC curve (P-256, P-384, or P-521) must be provided to normalize DER key material.",
     });
   }
 
@@ -34,12 +37,16 @@ export const createEcDerFromDer = (options: Options): Result => {
     if (!isBuffer(privateKey)) {
       throw new KryptosError("Key creation failed", {
         code: "ec_key_creation_failed",
+        title: "EC Key Creation Failed",
+        details: "The private key DER re-export did not return a Buffer as expected.",
         data: { component: "privateKey", format: "der" },
       });
     }
     if (!isBuffer(publicKey)) {
       throw new KryptosError("Key creation failed", {
         code: "ec_key_creation_failed",
+        title: "EC Key Creation Failed",
+        details: "The public key DER re-export did not return a Buffer as expected.",
         data: { component: "publicKey", format: "der" },
       });
     }
@@ -55,6 +62,8 @@ export const createEcDerFromDer = (options: Options): Result => {
     if (!isBuffer(publicKey)) {
       throw new KryptosError("Key creation failed", {
         code: "ec_key_creation_failed",
+        title: "EC Key Creation Failed",
+        details: "The public key DER re-export did not return a Buffer as expected.",
         data: { component: "publicKey", format: "der" },
       });
     }
@@ -65,6 +74,9 @@ export const createEcDerFromDer = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "ec_key_creation_failed",
+      title: "EC Key Creation Failed",
+      details:
+        "Neither a private nor a public key DER buffer was supplied, so no EC key could be created.",
       data: { curve: options.curve },
     });
   }

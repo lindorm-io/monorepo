@@ -18,6 +18,9 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       if (!isAkpDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided AKP key options are not valid DER-encoded options and cannot be exported to PEM.",
           data: { type: "AKP" },
         });
       }
@@ -33,6 +36,9 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       if (!isEcDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided EC key options are not valid DER-encoded options and cannot be exported to PEM.",
           data: { type: "EC" },
         });
       }
@@ -48,6 +54,9 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       if (!isOctDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided oct key options are not valid DER-encoded options and cannot be exported to PEM.",
           data: { type: "oct" },
         });
       }
@@ -63,6 +72,9 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       if (!isOkpDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided OKP key options are not valid DER-encoded options and cannot be exported to PEM.",
           data: { type: "OKP" },
         });
       }
@@ -78,6 +90,9 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
       if (!isRsaDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided RSA key options are not valid DER-encoded options and cannot be exported to PEM.",
           data: { type: "RSA" },
         });
       }
@@ -92,6 +107,8 @@ export const exportToPem = (options: ExportOptions): KryptosString => {
     default:
       throw new KryptosError("Unsupported key type", {
         code: "unsupported_export_key_type",
+        title: "Unsupported Export Key Type",
+        details: `The key type "${options.type as string}" is not supported for PEM export.`,
         data: { type: options.type },
       });
   }

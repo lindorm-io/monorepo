@@ -16,6 +16,8 @@ export const exportOctToJwk = (options: Options): Result => {
   if (!options.privateKey) {
     throw new KryptosError("Private key is required", {
       code: "missing_oct_private_key",
+      title: "Missing Oct Private Key",
+      details: "No oct private key was provided to export as a JWK.",
     });
   }
 

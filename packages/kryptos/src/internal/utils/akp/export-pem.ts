@@ -26,11 +26,15 @@ export const exportAkpToPem = (options: Options): Result => {
     if (!isString(privateKey)) {
       throw new KryptosError("Key export failed [private]: expected PEM string", {
         code: "akp_pem_export_failed",
+        title: "AKP PEM Export Failed",
+        details: "Exporting the private key to PKCS8 PEM did not return a string.",
       });
     }
     if (!isString(publicKey)) {
       throw new KryptosError("Key export failed [public]: expected PEM string", {
         code: "akp_pem_export_failed",
+        title: "AKP PEM Export Failed",
+        details: "Exporting the public key to SPKI PEM did not return a string.",
       });
     }
 
@@ -49,6 +53,8 @@ export const exportAkpToPem = (options: Options): Result => {
     if (!isString(publicKey)) {
       throw new KryptosError("Key export failed [public]: expected PEM string", {
         code: "akp_pem_export_failed",
+        title: "AKP PEM Export Failed",
+        details: "Exporting the public key to SPKI PEM did not return a string.",
       });
     }
 
@@ -58,6 +64,8 @@ export const exportAkpToPem = (options: Options): Result => {
   if (!result.publicKey.length) {
     throw new KryptosError("Key export failed: no public key available", {
       code: "missing_akp_key_material",
+      title: "Missing AKP Key Material",
+      details: "No public key was available to export to PEM.",
     });
   }
 

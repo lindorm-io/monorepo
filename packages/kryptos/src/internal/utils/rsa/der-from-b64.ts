@@ -32,6 +32,9 @@ export const createRsaDerFromB64 = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "rsa_key_creation_failed",
+      title: "RSA Key Creation Failed",
+      details:
+        "Neither a private nor a public RSA key was provided in the base64url input.",
     });
   }
 
