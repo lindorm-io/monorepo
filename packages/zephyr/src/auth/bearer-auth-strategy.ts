@@ -53,6 +53,9 @@ export const createBearerAuthStrategy = (
     if (typeof expiresIn !== "number" || !Number.isFinite(expiresIn) || expiresIn <= 0) {
       throw new ZephyrError("Invalid expiresIn for auth refresh", {
         code: "auth_refresh_invalid_expires_in",
+        title: "Auth Refresh Invalid Expires In",
+        details:
+          "The credentials provider returned an expiresIn that is not a positive finite number, so the access token lifetime cannot be scheduled.",
         data: { expiresIn },
       });
     }
@@ -66,6 +69,9 @@ export const createBearerAuthStrategy = (
     } catch (err) {
       throw new ZephyrError("Auth refresh ack timed out", {
         code: "auth_refresh_ack_timeout",
+        title: "Auth Refresh Ack Timeout",
+        details:
+          "The server did not acknowledge the auth refresh emit within the configured timeout; the connection may be slow or the server is not handling the refresh event.",
         data: { timeoutMs },
         error: err instanceof Error ? err : undefined,
       });
@@ -74,6 +80,9 @@ export const createBearerAuthStrategy = (
     if (!isPylonAck(ack)) {
       throw new ZephyrError("Auth refresh returned unrecognised ack", {
         code: "auth_refresh_unrecognised_ack",
+        title: "Auth Refresh Unrecognised Ack",
+        details:
+          "The auth refresh acknowledgement was not a recognised pylon envelope; the server may be running an incompatible version or a different handler answered the event.",
         data: { ackType: typeof ack },
         debug: { ack },
       });
@@ -86,7 +95,9 @@ export const createBearerAuthStrategy = (
     throw new ZephyrError(error.message ?? "Auth refresh rejected", {
       code: "auth_refresh_rejected",
       status: error.status,
-      title: error.title,
+      title: "Auth Refresh Rejected",
+      details:
+        "The server rejected the auth refresh; the supplied bearer credentials were likely invalid or expired. Inspect debug.serverError for the server's reason.",
       debug: { serverError: error },
     });
   };

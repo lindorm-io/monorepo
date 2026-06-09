@@ -136,6 +136,9 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     if (!this.auth) {
       throw new ZephyrError("No auth strategy configured", {
         code: "no_auth_strategy_configured",
+        title: "No Auth Strategy Configured",
+        details:
+          "refresh() was called but no auth strategy was provided in the Zephyr options; pass an auth strategy to enable credential refresh.",
       });
     }
 
@@ -269,6 +272,9 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     if (!this.socket) {
       throw new ZephyrError("Cannot refresh before connect", {
         code: "refresh_before_connect",
+        title: "Refresh Before Connect",
+        details:
+          "refresh() was called before connect(); establish the socket connection before attempting to refresh credentials.",
       });
     }
 
@@ -421,6 +427,9 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     if (!this.socket?.connected) {
       throw new ZephyrError("Socket is not connected", {
         code: "socket_not_connected",
+        title: "Socket Not Connected",
+        details:
+          "An emit or request was attempted while the socket was not connected; call connect() and wait for it to resolve before sending events.",
       });
     }
   }

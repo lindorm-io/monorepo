@@ -11,7 +11,9 @@ export const unwrapAckResponse = (ctx: ZephyrContext, response: any): void => {
     } else {
       throw new ZephyrError(ack.error?.message ?? "Request failed", {
         code: "request_failed",
-        title: ack.error?.title,
+        title: "Request Failed",
+        details:
+          "The server returned an error acknowledgement for this request; inspect debug.serverError for the server's reason.",
         debug: { serverError: ack.error },
       });
     }
