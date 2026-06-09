@@ -82,6 +82,8 @@ export class HermesRegistry {
     if (!dto)
       throw new HandlerNotRegisteredError(`Command not registered: ${target.name}`, {
         code: "command_not_registered",
+        title: "Command Not Registered",
+        details: `Command constructor "${target.name}" is not registered with this Hermes instance.`,
         data: { command: target.name },
       });
     return dto;
@@ -93,6 +95,8 @@ export class HermesRegistry {
       if (!dto)
         throw new HandlerNotRegisteredError(`Command not found: ${name}:${version}`, {
           code: "command_not_found",
+          title: "Command Not Found",
+          details: `No command named "${name}" at version ${version} is registered.`,
           data: { command: name, version },
         });
       return dto;
@@ -103,6 +107,8 @@ export class HermesRegistry {
     }
     throw new HandlerNotRegisteredError(`Command not found: ${name}`, {
       code: "command_not_found",
+      title: "Command Not Found",
+      details: `No command named "${name}" is registered at any version.`,
       data: { command: name },
     });
   }
@@ -112,6 +118,8 @@ export class HermesRegistry {
     if (!dto)
       throw new HandlerNotRegisteredError(`Event not registered: ${target.name}`, {
         code: "event_not_registered",
+        title: "Event Not Registered",
+        details: `Event constructor "${target.name}" is not registered with this Hermes instance.`,
         data: { event: target.name },
       });
     return dto;
@@ -123,6 +131,8 @@ export class HermesRegistry {
       if (!dto)
         throw new HandlerNotRegisteredError(`Event not found: ${name}:${version}`, {
           code: "event_not_found",
+          title: "Event Not Found",
+          details: `No event named "${name}" at version ${version} is registered.`,
           data: { event: name, version },
         });
       return dto;
@@ -133,6 +143,8 @@ export class HermesRegistry {
     }
     throw new HandlerNotRegisteredError(`Event not found: ${name}`, {
       code: "event_not_found",
+      title: "Event Not Found",
+      details: `No event named "${name}" is registered at any version.`,
       data: { event: name },
     });
   }
@@ -142,6 +154,8 @@ export class HermesRegistry {
     if (!dto)
       throw new HandlerNotRegisteredError(`Query not registered: ${target.name}`, {
         code: "query_not_registered",
+        title: "Query Not Registered",
+        details: `Query constructor "${target.name}" is not registered with this Hermes instance.`,
         data: { query: target.name },
       });
     return dto;
@@ -152,6 +166,8 @@ export class HermesRegistry {
     if (!dto)
       throw new HandlerNotRegisteredError(`Timeout not registered: ${target.name}`, {
         code: "timeout_not_registered",
+        title: "Timeout Not Registered",
+        details: `Timeout constructor "${target.name}" is not registered with this Hermes instance.`,
         data: { timeout: target.name },
       });
     return dto;
@@ -182,6 +198,8 @@ export class HermesRegistry {
     if (!aggregate)
       throw new HandlerNotRegisteredError(`Aggregate not found: ${namespace}.${name}`, {
         code: "aggregate_not_found",
+        title: "Aggregate Not Found",
+        details: `No aggregate is registered under "${namespace}.${name}".`,
         data: { aggregate: { name, namespace } },
       });
     return aggregate;
@@ -192,6 +210,8 @@ export class HermesRegistry {
     if (!aggregate)
       throw new HandlerNotRegisteredError(`Aggregate not registered: ${target.name}`, {
         code: "aggregate_not_registered",
+        title: "Aggregate Not Registered",
+        details: `Aggregate constructor "${target.name}" is not registered with this Hermes instance.`,
         data: { aggregate: target.name },
       });
     return aggregate;
@@ -202,6 +222,8 @@ export class HermesRegistry {
     if (!saga)
       throw new HandlerNotRegisteredError(`Saga not found: ${namespace}.${name}`, {
         code: "saga_not_found",
+        title: "Saga Not Found",
+        details: `No saga is registered under "${namespace}.${name}".`,
         data: { saga: { name, namespace } },
       });
     return saga;
@@ -212,6 +234,8 @@ export class HermesRegistry {
     if (!saga)
       throw new HandlerNotRegisteredError(`Saga not registered: ${target.name}`, {
         code: "saga_not_registered",
+        title: "Saga Not Registered",
+        details: `Saga constructor "${target.name}" is not registered with this Hermes instance.`,
         data: { saga: target.name },
       });
     return saga;
@@ -222,6 +246,8 @@ export class HermesRegistry {
     if (!view)
       throw new HandlerNotRegisteredError(`View not found: ${namespace}.${name}`, {
         code: "view_not_found",
+        title: "View Not Found",
+        details: `No view is registered under "${namespace}.${name}".`,
         data: { view: { name, namespace } },
       });
     return view;
@@ -232,6 +258,8 @@ export class HermesRegistry {
     if (!view)
       throw new HandlerNotRegisteredError(`View not registered: ${target.name}`, {
         code: "view_not_registered",
+        title: "View Not Registered",
+        details: `View constructor "${target.name}" is not registered with this Hermes instance.`,
         data: { view: target.name },
       });
     return view;
@@ -245,6 +273,8 @@ export class HermesRegistry {
     }
     throw new HandlerNotRegisteredError(`No view registered for entity: ${entity.name}`, {
       code: "view_not_registered_for_entity",
+      title: "View Not Registered For Entity",
+      details: `No view is registered that uses entity class "${entity.name}".`,
       data: { entity: entity.name },
     });
   }
@@ -282,6 +312,8 @@ export class HermesRegistry {
       `No aggregate found for event: ${eventTarget.name}`,
       {
         code: "aggregate_not_found_for_event",
+        title: "Aggregate Not Found For Event",
+        details: `No registered aggregate declares an event handler for event "${eventTarget.name}".`,
         data: { event: eventTarget.name },
       },
     );
@@ -347,6 +379,8 @@ export class HermesRegistry {
           `Upcaster chain gap: no upcaster from v${current} for event "${eventName}"`,
           {
             code: "upcaster_chain_gap",
+            title: "Upcaster Chain Gap",
+            details: `No upcaster is registered to migrate event "${eventName}" from version ${current} toward version ${toVersion}, leaving a gap in the upcaster chain.`,
             data: { event: eventName, fromVersion: current, toVersion },
           },
         );
@@ -476,6 +510,8 @@ export class HermesRegistry {
               `(use @EventUpcaster for version migration).`,
             {
               code: "duplicate_aggregate_event_handler",
+              title: "Duplicate Aggregate Event Handler",
+              details: `Aggregate "${aggregate.namespace}.${aggregate.name}" registers more than one handler for event "${dto.name}"; only one handler per event name is allowed (use @EventUpcaster for version migration).`,
               data: {
                 aggregate: { name: aggregate.name, namespace: aggregate.namespace },
                 event: dto.name,
@@ -500,6 +536,8 @@ export class HermesRegistry {
               `is already registered`,
             {
               code: "duplicate_upcaster",
+              title: "Duplicate Upcaster",
+              details: `An upcaster for event "${upcaster.fromName}" version ${upcaster.fromVersion} is already registered; each event version may only have one upcaster.`,
               data: { event: upcaster.fromName, fromVersion: upcaster.fromVersion },
             },
           );

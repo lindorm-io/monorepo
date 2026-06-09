@@ -235,6 +235,8 @@ export class SagaDomain {
       if (typeof handlerFn !== "function") {
         throw new HandlerNotRegisteredError("Saga event handler method is not callable", {
           code: "saga_handler_method_not_callable",
+          title: "Saga Handler Method Not Callable",
+          details: `Saga event handler method "${handler.methodName}" on saga "${saga.namespace}.${saga.name}" is not a callable function.`,
           data: {
             saga: { name: saga.name, namespace: saga.namespace },
             method: handler.methodName,
@@ -324,6 +326,8 @@ export class SagaDomain {
           "Saga timeout handler method is not callable",
           {
             code: "saga_handler_method_not_callable",
+            title: "Saga Handler Method Not Callable",
+            details: `Saga timeout handler method "${handler.methodName}" on saga "${saga.namespace}.${saga.name}" is not a callable function.`,
             data: {
               saga: { name: saga.name, namespace: saga.namespace },
               method: handler.methodName,
@@ -385,6 +389,8 @@ export class SagaDomain {
     if (typeof handlerFn !== "function") {
       throw new HandlerNotRegisteredError("Saga error handler method is not callable", {
         code: "saga_handler_method_not_callable",
+        title: "Saga Handler Method Not Callable",
+        details: `Saga error handler method "${handler.methodName}" on saga "${saga.namespace}.${saga.name}" is not a callable function.`,
         data: {
           saga: { name: saga.name, namespace: saga.namespace },
           method: handler.methodName,
@@ -417,6 +423,8 @@ export class SagaDomain {
     if (!commandAggregate) {
       throw new HandlerNotRegisteredError("Command handler has not been registered", {
         code: "command_handler_not_registered",
+        title: "Command Handler Not Registered",
+        details: `No command handler is registered for command "${metadata.name}" (version ${metadata.version}) dispatched from the saga error handler.`,
         data: { command: metadata.name, version: metadata.version },
       });
     }
@@ -518,11 +526,11 @@ export class SagaDomain {
     }
 
     if (handler.conditions.requireCreated && model.revision < 1) {
-      throw new SagaNotCreatedError(true);
+      throw new SagaNotCreatedError({ permanent: true });
     }
 
     if (handler.conditions.requireNotCreated && model.revision > 0) {
-      throw new SagaAlreadyCreatedError(true);
+      throw new SagaAlreadyCreatedError({ permanent: true });
     }
   }
 
@@ -610,6 +618,8 @@ export class SagaDomain {
               `Saga record not found for update: ${model.namespace}.${model.name}#${model.id}`,
               {
                 code: "saga_record_not_found",
+                title: "Saga Record Not Found",
+                details: `No persisted saga record exists for "${model.namespace}.${model.name}#${model.id}" to update.`,
                 data: {
                   sagaId: model.id,
                   sagaName: model.name,
@@ -640,6 +650,8 @@ export class SagaDomain {
       if (isNew && this.isDuplicateKeyError(err)) {
         throw new ConcurrencyError("Concurrency conflict creating saga", {
           code: "concurrency_conflict",
+          title: "Concurrency Conflict",
+          details: `Saga "${model.namespace}.${model.name}#${model.id}" was created concurrently by another process; this creation conflicts and should be retried.`,
           data: {
             sagaId: model.id,
             sagaName: model.name,
@@ -652,6 +664,8 @@ export class SagaDomain {
           "Concurrency conflict updating saga (optimistic lock)",
           {
             code: "saga_optimistic_lock",
+            title: "Saga Optimistic Lock",
+            details: `Saga "${model.namespace}.${model.name}#${model.id}" was modified concurrently; the update lost the optimistic lock and should be retried.`,
             data: {
               sagaId: model.id,
               sagaName: model.name,

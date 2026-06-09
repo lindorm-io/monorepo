@@ -126,6 +126,8 @@ export class Hermes implements IHermes {
     if (this._statusRef.current !== "created") {
       throw new LindormError("Hermes.setup() can only be called once", {
         code: "setup_already_called",
+        title: "Setup Already Called",
+        details: `Hermes.setup() may only run from the "created" status; current status is "${this._statusRef.current}".`,
         type: "urn:lindorm:hermes:error:setup_already_called",
         data: { status: this._statusRef.current },
       });
@@ -218,6 +220,8 @@ export class Hermes implements IHermes {
     if (!commandHandler) {
       throw new HandlerNotRegisteredError("Command handler has not been registered", {
         code: "command_handler_not_registered",
+        title: "Command Handler Not Registered",
+        details: `No command handler is registered for command "${metadata.name}" (version ${metadata.version}).`,
         data: { command: metadata.name, version: metadata.version },
       });
     }
@@ -277,6 +281,8 @@ export class Hermes implements IHermes {
         `Unrecognized event prefix: "${evt}". Expected "saga", "view", or "checksum".`,
         {
           code: "unrecognized_event_prefix",
+          title: "Unrecognized Event Prefix",
+          details: `Cannot subscribe to event "${evt}"; the event name must start with "saga", "view", or "checksum".`,
           type: "urn:lindorm:hermes:error:unrecognized_event_prefix",
           data: { event: evt },
         },
@@ -296,6 +302,8 @@ export class Hermes implements IHermes {
         `Unrecognized event prefix: "${evt}". Expected "saga", "view", or "checksum".`,
         {
           code: "unrecognized_event_prefix",
+          title: "Unrecognized Event Prefix",
+          details: `Cannot unsubscribe from event "${evt}"; the event name must start with "saga", "view", or "checksum".`,
           type: "urn:lindorm:hermes:error:unrecognized_event_prefix",
           data: { event: evt },
         },
@@ -498,6 +506,8 @@ export class Hermes implements IHermes {
                   `(aggregate ${eventRecord.aggregateId}): ${checksumErr.message}`,
                 {
                   code: "checksum_replay_failed",
+                  title: "Checksum Replay Failed",
+                  details: `Checksum verification failed in strict mode while replaying event "${eventRecord.id}" for aggregate "${eventRecord.aggregateId}".`,
                   data: {
                     eventId: eventRecord.id,
                     aggregateId: eventRecord.aggregateId,
@@ -867,6 +877,8 @@ export class Hermes implements IHermes {
         `No ProteusSource found for driver type "${view.driverType}" (required by view "${view.namespace}.${view.name}")`,
         {
           code: "view_source_not_found",
+          title: "View Source Not Found",
+          details: `No ProteusSource is registered for driver type "${view.driverType}" required by view "${view.namespace}.${view.name}".`,
           type: "urn:lindorm:hermes:error:view_source_not_found",
           data: {
             driverType: view.driverType,
@@ -885,6 +897,8 @@ export class Hermes implements IHermes {
     if (this._statusRef.current !== "ready") {
       throw new LindormError("Hermes is not ready", {
         code: "not_ready",
+        title: "Hermes Not Ready",
+        details: `Hermes must reach the "ready" status before handling requests; current status is "${this._statusRef.current}".`,
         type: "urn:lindorm:hermes:error:not_ready",
         data: { status: this._statusRef.current },
       });
