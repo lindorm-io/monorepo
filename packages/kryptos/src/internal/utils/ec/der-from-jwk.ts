@@ -12,6 +12,9 @@ export const createEcDerFromJwk = (options: Options): Result => {
   if (!isEcCurve(options.crv)) {
     throw new KryptosError("Curve is required", {
       code: "missing_ec_curve",
+      title: "Missing EC Curve",
+      details:
+        "The JWK crv must be a valid EC curve (P-256, P-384, or P-521) to build DER from the JWK.",
     });
   }
 
@@ -31,6 +34,9 @@ export const createEcDerFromJwk = (options: Options): Result => {
     if (!isBuffer(privateKey)) {
       throw new KryptosError("Key creation failed", {
         code: "ec_key_creation_failed",
+        title: "EC Key Creation Failed",
+        details:
+          "The private key DER export from the JWK (d, x, y) did not return a Buffer as expected.",
         data: { component: "privateKey", format: "der" },
       });
     }
@@ -45,6 +51,9 @@ export const createEcDerFromJwk = (options: Options): Result => {
     if (!isBuffer(publicKey)) {
       throw new KryptosError("Key creation failed", {
         code: "ec_key_creation_failed",
+        title: "EC Key Creation Failed",
+        details:
+          "The public key DER export from the JWK (x, y) did not return a Buffer as expected.",
         data: { component: "publicKey", format: "der" },
       });
     }
@@ -55,6 +64,9 @@ export const createEcDerFromJwk = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "ec_key_creation_failed",
+      title: "EC Key Creation Failed",
+      details:
+        "The JWK lacked the components needed to build either a private or public EC DER key.",
       data: { curve: options.crv },
     });
   }

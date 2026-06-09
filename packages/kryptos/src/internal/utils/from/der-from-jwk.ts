@@ -65,6 +65,8 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     default:
       throw new KryptosError("Invalid key type", {
         code: "unsupported_key_type",
+        title: "Unsupported Key Type",
+        details: `The JWK key type '${options.kty as string}' is not supported for import.`,
         data: { kty: options.kty },
       });
   }

@@ -32,6 +32,8 @@ export const createAkpDerFromB64 = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "missing_akp_key_material",
+      title: "Missing AKP Key Material",
+      details: "Neither a private key nor a public key was provided in base64url form.",
     });
   }
 

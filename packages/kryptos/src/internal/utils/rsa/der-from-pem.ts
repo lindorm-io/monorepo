@@ -26,12 +26,18 @@ export const createRsaDerFromPem = (options: Options): Result => {
     if (!isBuffer(privateKey)) {
       throw new KryptosError("Key creation failed", {
         code: "rsa_key_creation_failed",
+        title: "RSA Key Creation Failed",
+        details:
+          "Exporting the RSA private key from PEM to PKCS#1 DER did not produce a buffer.",
         data: { component: "private" },
       });
     }
     if (!isBuffer(publicKey)) {
       throw new KryptosError("Key creation failed", {
         code: "rsa_key_creation_failed",
+        title: "RSA Key Creation Failed",
+        details:
+          "Exporting the RSA public key from PEM to PKCS#1 DER did not produce a buffer.",
         data: { component: "public" },
       });
     }
@@ -51,6 +57,9 @@ export const createRsaDerFromPem = (options: Options): Result => {
     if (!isBuffer(publicKey)) {
       throw new KryptosError("Key creation failed", {
         code: "rsa_key_creation_failed",
+        title: "RSA Key Creation Failed",
+        details:
+          "Exporting the RSA public key from PEM to PKCS#1 DER did not produce a buffer.",
         data: { component: "public" },
       });
     }
@@ -61,6 +70,8 @@ export const createRsaDerFromPem = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "rsa_key_creation_failed",
+      title: "RSA Key Creation Failed",
+      details: "Neither a private nor a public RSA key was provided in the PEM input.",
     });
   }
 

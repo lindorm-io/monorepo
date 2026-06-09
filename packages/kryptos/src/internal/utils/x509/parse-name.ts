@@ -26,6 +26,9 @@ export const parseX509Name = (der: Buffer): ParsedX509Name => {
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("Name is not a SEQUENCE", {
       code: "invalid_certificate_name",
+      title: "Invalid Certificate Name",
+      details:
+        "The certificate Name field is not an ASN.1 SEQUENCE of RelativeDistinguishedName as required by RFC 5280.",
     });
   }
   const raw = Buffer.from(der.subarray(0, tlv.nextOffset));

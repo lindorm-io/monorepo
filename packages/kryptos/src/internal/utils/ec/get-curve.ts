@@ -30,6 +30,9 @@ export const getEcCurve = (options: Options): EcCurve => {
     default:
       throw new KryptosError("Unsupported curve", {
         code: "unsupported_ec_curve",
+        title: "Unsupported EC Curve",
+        details:
+          "The provided algorithm does not map to any supported EC curve (P-256, P-384, or P-521).",
         data: { algorithm: options.algorithm },
       });
   }

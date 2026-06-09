@@ -12,6 +12,9 @@ export const createOkpDerFromJwk = (options: Options): Result => {
   if (!isOkpCurve(options.crv)) {
     throw new KryptosError("Invalid OKP curve", {
       code: "invalid_okp_curve",
+      title: "Invalid OKP Curve",
+      details:
+        "The JWK crv must be a valid OKP curve (Ed25519, Ed448, X25519, or X448) to build DER from the JWK.",
       data: { curve: options.crv ?? null },
     });
   }
@@ -32,6 +35,9 @@ export const createOkpDerFromJwk = (options: Options): Result => {
     if (!isBuffer(privateKey)) {
       throw new KryptosError("Key creation failed", {
         code: "okp_key_creation_failed",
+        title: "OKP Key Creation Failed",
+        details:
+          "The private key DER export from the JWK (d, x) did not return a Buffer as expected.",
         data: { component: "privateKey", format: "der" },
       });
     }
@@ -46,6 +52,9 @@ export const createOkpDerFromJwk = (options: Options): Result => {
     if (!isBuffer(publicKey)) {
       throw new KryptosError("Key creation failed", {
         code: "okp_key_creation_failed",
+        title: "OKP Key Creation Failed",
+        details:
+          "The public key DER export from the JWK (x) did not return a Buffer as expected.",
         data: { component: "publicKey", format: "der" },
       });
     }
@@ -56,6 +65,9 @@ export const createOkpDerFromJwk = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "okp_key_creation_failed",
+      title: "OKP Key Creation Failed",
+      details:
+        "The JWK lacked the components needed to build either a private or public OKP DER key.",
       data: { curve: options.crv },
     });
   }

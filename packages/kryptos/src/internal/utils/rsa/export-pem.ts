@@ -26,12 +26,16 @@ export const exportRsaToPem = (options: Options): Result => {
     if (!isString(privateKey)) {
       throw new KryptosError("Key export failed [private]: expected PEM string", {
         code: "rsa_pem_export_failed",
+        title: "RSA PEM Export Failed",
+        details: "Exporting the RSA private key to PKCS#1 PEM did not produce a string.",
         data: { component: "private" },
       });
     }
     if (!isString(publicKey)) {
       throw new KryptosError("Key export failed [public]: expected PEM string", {
         code: "rsa_pem_export_failed",
+        title: "RSA PEM Export Failed",
+        details: "Exporting the RSA public key to PKCS#1 PEM did not produce a string.",
         data: { component: "public" },
       });
     }
@@ -51,6 +55,8 @@ export const exportRsaToPem = (options: Options): Result => {
     if (!isString(publicKey)) {
       throw new KryptosError("Key export failed [public]: expected PEM string", {
         code: "rsa_pem_export_failed",
+        title: "RSA PEM Export Failed",
+        details: "Exporting the RSA public key to PKCS#1 PEM did not produce a string.",
         data: { component: "public" },
       });
     }
@@ -61,6 +67,8 @@ export const exportRsaToPem = (options: Options): Result => {
   if (!result.publicKey.length) {
     throw new KryptosError("Key export failed: no public key available", {
       code: "missing_rsa_public_key",
+      title: "Missing RSA Public Key",
+      details: "No RSA public key could be derived or supplied for PEM export.",
     });
   }
 

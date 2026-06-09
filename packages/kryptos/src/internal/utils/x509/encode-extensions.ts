@@ -54,7 +54,12 @@ export const basicConstraintsExt = (
   if (!ca && pathLengthConstraint !== undefined) {
     throw new KryptosError(
       "basicConstraints.pathLengthConstraint is only valid when ca=true (RFC 5280 §4.2.1.9)",
-      { code: "invalid_certificate_extension" },
+      {
+        code: "invalid_certificate_extension",
+        title: "Invalid Certificate Extension",
+        details:
+          "A basicConstraints pathLengthConstraint was supplied while ca=false, which RFC 5280 §4.2.1.9 forbids.",
+      },
     );
   }
 
@@ -67,6 +72,8 @@ export const basicConstraintsExt = (
           "basicConstraints.pathLengthConstraint must be a non-negative integer",
           {
             code: "invalid_certificate_extension",
+            title: "Invalid Certificate Extension",
+            details: `The basicConstraints pathLengthConstraint must be a non-negative integer but received ${pathLengthConstraint}.`,
             data: { pathLengthConstraint },
           },
         );
@@ -76,6 +83,8 @@ export const basicConstraintsExt = (
           "basicConstraints.pathLengthConstraint must be between 0 and 255",
           {
             code: "invalid_certificate_extension",
+            title: "Invalid Certificate Extension",
+            details: `The basicConstraints pathLengthConstraint must be between 0 and 255 but received ${pathLengthConstraint}.`,
             data: { pathLengthConstraint },
           },
         );
@@ -106,7 +115,12 @@ export const keyUsageExt = (
   if (flags.length === 0) {
     throw new KryptosError(
       "keyUsage extension requires at least one bit (RFC 5280 §4.2.1.3)",
-      { code: "invalid_certificate_extension" },
+      {
+        code: "invalid_certificate_extension",
+        title: "Invalid Certificate Extension",
+        details:
+          "The keyUsage extension was requested with no flags; RFC 5280 §4.2.1.3 requires at least one bit to be set.",
+      },
     );
   }
 
@@ -116,6 +130,8 @@ export const keyUsageExt = (
     if (index === -1) {
       throw new KryptosError(`Unknown keyUsage flag: ${flag}`, {
         code: "invalid_certificate_extension",
+        title: "Invalid Certificate Extension",
+        details: `The keyUsage flag '${flag}' is not a recognized RFC 5280 §4.2.1.3 key usage bit.`,
         data: { flag },
       });
     }
@@ -142,6 +158,9 @@ const extractBitStringBody = (spkiBytes: Buffer): Buffer => {
   if (outer.tag !== 0x30) {
     throw new KryptosError("SPKI is not a SEQUENCE", {
       code: "invalid_spki",
+      title: "Invalid SPKI",
+      details:
+        "The SubjectPublicKeyInfo bytes are not an ASN.1 SEQUENCE while computing the subjectKeyIdentifier.",
     });
   }
 
@@ -161,6 +180,9 @@ const extractBitStringBody = (spkiBytes: Buffer): Buffer => {
 
   throw new KryptosError("SPKI has no BIT STRING child", {
     code: "invalid_spki",
+    title: "Invalid SPKI",
+    details:
+      "The SubjectPublicKeyInfo SEQUENCE contains no BIT STRING holding the public key bytes.",
   });
 };
 
@@ -186,6 +208,8 @@ const assertIa5String = (type: "uri" | "dns" | "email", value: string): void => 
         `subjectAlternativeName value for type '${type}' must be ASCII (IA5String)`,
         {
           code: "invalid_certificate_extension",
+          title: "Invalid Certificate Extension",
+          details: `A subjectAltName value of type '${type}' contained non-ASCII characters; GeneralName IA5String values must be ASCII.`,
           data: { type },
         },
       );
@@ -251,6 +275,8 @@ const encodeIpSan = (value: string): Buffer => {
     `subjectAlternativeName ip value '${value}' is not a valid IPv4 or IPv6 address`,
     {
       code: "invalid_certificate_extension",
+      title: "Invalid Certificate Extension",
+      details: `The subjectAltName iPAddress value '${value}' is neither a valid IPv4 nor IPv6 address.`,
       data: { value },
     },
   );
@@ -262,6 +288,9 @@ export const subjectAlternativeNameExt = (
   if (sans.length === 0) {
     throw new KryptosError("subjectAlternativeNameExt requires at least one SAN", {
       code: "invalid_certificate_extension",
+      title: "Invalid Certificate Extension",
+      details:
+        "The subjectAltName extension was requested with an empty list; at least one GeneralName is required.",
     });
   }
   const children = sans.map((san) => {
