@@ -31,6 +31,9 @@ export class Enigma {
     if (await this.verify(data, hash)) return;
     throw new EnigmaError("Invalid Layered data", {
       code: "layered_data_mismatch",
+      title: "Layered Data Mismatch",
+      details:
+        "The provided data does not match the layered Argon and AES protected hash.",
     });
   }
 }

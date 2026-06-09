@@ -11,6 +11,9 @@ const getSecret = (kryptos?: IKryptosOct): Buffer | undefined => {
   if (!privateKey) {
     throw new ArgonError("Invalid Kryptos", {
       code: "missing_private_key",
+      title: "Missing Private Key",
+      details:
+        "The Kryptos instance has no private key to use as the Argon hashing secret.",
     });
   }
 
@@ -50,5 +53,7 @@ export const assertArgonHash = async (options: VerifyArgonHashOptions): Promise<
   if (await verifyArgonHash(options)) return;
   throw new ArgonError("Invalid Argon hash", {
     code: "argon_hash_mismatch",
+    title: "Argon Hash Mismatch",
+    details: "The provided data does not match the stored Argon2 hash.",
   });
 };
