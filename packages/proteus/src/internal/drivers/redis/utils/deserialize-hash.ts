@@ -83,7 +83,12 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
       } catch {
         throw new RedisDriverError(
           `Failed to deserialize bigint from value: ${JSON.stringify(raw)}`,
-          { code: "serialization_failure" },
+          {
+            code: "serialization_failure",
+            title: "Serialization Failure",
+            details:
+              "A stored hash field typed as bigint could not be parsed into a BigInt during deserialization.",
+          },
         );
       }
 
@@ -93,7 +98,11 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
       if (Number.isNaN(int)) {
         throw new RedisDriverError(
           `Failed to deserialize ${type} from value: ${JSON.stringify(raw)}`,
-          { code: "serialization_failure" },
+          {
+            code: "serialization_failure",
+            title: "Serialization Failure",
+            details: `A stored hash field typed as ${type} could not be parsed into an integer during deserialization.`,
+          },
         );
       }
       return int;
@@ -106,7 +115,11 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
       if (Number.isNaN(num)) {
         throw new RedisDriverError(
           `Failed to deserialize ${type} from value: ${JSON.stringify(raw)}`,
-          { code: "serialization_failure" },
+          {
+            code: "serialization_failure",
+            title: "Serialization Failure",
+            details: `A stored hash field typed as ${type} could not be parsed into a number during deserialization.`,
+          },
         );
       }
       return num;
@@ -118,6 +131,8 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
       if (isNaN(dt.getTime())) {
         throw new RedisDriverError(`Invalid date value: ${raw}`, {
           code: "serialization_failure",
+          title: "Serialization Failure",
+          details: `A stored hash field typed as ${type} could not be parsed into a valid Date during deserialization.`,
         });
       }
       return dt;

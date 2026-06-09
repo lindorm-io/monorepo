@@ -5,7 +5,12 @@ import type { LockMode } from "../../../../types/find-options.js";
 
 const quoteIdentifier = (name: string): string => {
   if (!name) {
-    throw new ProteusError("Identifier cannot be empty", { code: "invalid_query" });
+    throw new ProteusError("Identifier cannot be empty", {
+      code: "invalid_query",
+      title: "Invalid Query",
+      details:
+        "A SQL identifier (table, column, or schema name) was empty and cannot be quoted.",
+    });
   }
   return `"${name.replace(/"/g, '""')}"`;
 };

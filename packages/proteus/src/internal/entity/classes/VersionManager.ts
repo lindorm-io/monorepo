@@ -32,7 +32,13 @@ export class VersionManager<E extends IEntity = IEntity> {
     if (!Number.isInteger(version) || version < 0) {
       throw new EntityManagerError(
         `Invalid version number: ${version}. Version must be non-negative integer.`,
-        { code: "invalid_version", debug: { version } },
+        {
+          code: "invalid_version",
+          title: "Invalid Version",
+          details:
+            "setVersion received a version that is not a non-negative integer; version numbers must be whole numbers of zero or greater.",
+          debug: { version },
+        },
       );
     }
     (entity as any)[this.versionField.key] = version;

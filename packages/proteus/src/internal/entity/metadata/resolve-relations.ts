@@ -26,6 +26,8 @@ const mergeJoinFields = (
         `@JoinKey on property "${jf.key}" requires a relation decorator`,
         {
           code: "missing_relation_decorator",
+          title: "Missing Relation Decorator",
+          details: `@JoinKey on "${jf.key}" of "${targetName}" has no accompanying relation decorator — add @OneToOne, @OneToMany, @ManyToOne, or @ManyToMany on that property.`,
           debug: { target: targetName, property: jf.key },
         },
       );
@@ -47,6 +49,8 @@ const mergeJoinTables = (
         `@JoinTable on property "${jt.key}" requires a relation decorator`,
         {
           code: "missing_relation_decorator",
+          title: "Missing Relation Decorator",
+          details: `@JoinTable on "${jt.key}" of "${targetName}" has no accompanying relation decorator — add @ManyToMany on that property.`,
           debug: { target: targetName, property: jt.key },
         },
       );
@@ -57,6 +61,8 @@ const mergeJoinTables = (
         `@JoinTable on "${jt.key}" is only valid on @ManyToMany relations`,
         {
           code: "invalid_join_table",
+          title: "Invalid Join Table",
+          details: `@JoinTable on "${jt.key}" of "${targetName}" is only valid on a @ManyToMany relation — remove @JoinTable or change the relation type.`,
           debug: { target: targetName, property: jt.key },
         },
       );
@@ -68,6 +74,8 @@ const mergeJoinTables = (
         `@JoinTable on "${jt.key}" conflicts with inline joinTable on the relation decorator`,
         {
           code: "conflicting_join_table",
+          title: "Conflicting Join Table",
+          details: `"${jt.key}" on "${targetName}" specifies a join table both via @JoinTable and via the inline joinTable option — use one or the other, not both.`,
           debug: { target: targetName, property: jt.key },
         },
       );
@@ -108,6 +116,8 @@ const mergeRelationModifiers = (
         `@${modifier.decorator} on property "${modifier.key}" requires a relation decorator`,
         {
           code: "missing_relation_decorator",
+          title: "Missing Relation Decorator",
+          details: `@${modifier.decorator} on "${modifier.key}" of "${targetName}" has no accompanying relation decorator — add @OneToOne, @OneToMany, @ManyToOne, or @ManyToMany on that property.`,
           debug: { target: targetName, property: modifier.key },
         },
       );
@@ -135,6 +145,8 @@ const mergeRelationModifiers = (
         `Duplicate @${modifier.decorator} on property "${key}" of ${targetName}`,
         {
           code: "duplicate_relation_modifier",
+          title: "Duplicate Relation Modifier",
+          details: `Relation property "${key}" on "${targetName}" carries @${modifier.decorator} more than once for the same scope — apply each relation modifier only once.`,
           debug: { target: targetName, property: key, decorator: modifier.decorator },
         },
       );
@@ -155,6 +167,8 @@ const mergeRelationModifiers = (
               `@Eager and @Lazy conflict on property "${key}" of ${targetName} (overlapping scope)`,
               {
                 code: "conflicting_loading_decorators",
+                title: "Conflicting Loading Decorators",
+                details: `Relation property "${key}" on "${targetName}" is marked both @Eager and @Lazy for an overlapping scope — choose a single loading strategy per scope.`,
                 debug: { target: targetName, property: key },
               },
             );
@@ -222,6 +236,8 @@ const resolveRelation = (
   if (!foreign) {
     throw new EntityMetadataError("Foreign relation metadata not found", {
       code: "missing_foreign_relation",
+      title: "Missing Foreign Relation",
+      details: `Relation "${staged.key}" on "${targetName}" has no matching inverse relation on the foreign entity — declare the inverse relation pointing back at "${staged.key}".`,
       debug: { target: targetName, relation: staged.key },
     });
   }
@@ -237,6 +253,8 @@ const resolveRelation = (
   if (!staged.joinKeys && !foreign.joinKeys) {
     throw new EntityMetadataError("Join keys not found", {
       code: "missing_join_keys",
+      title: "Missing Join Keys",
+      details: `Relation "${staged.key}" on "${targetName}" has no join keys on either side — add @JoinKey (or joinKeys) to define how the entities are linked.`,
       debug: { target: targetName, relation: staged.key },
     });
   }
@@ -247,6 +265,8 @@ const resolveRelation = (
       if (field) continue;
       throw new EntityMetadataError("Join key field not found", {
         code: "missing_join_key_field",
+        title: "Missing Join Key Field",
+        details: `Join key "${key}" on relation "${staged.key}" of "${targetName}" does not match any @Field on this entity — reference an existing local field key.`,
         debug: { target: targetName, relation: staged.key, key },
       });
     }
@@ -256,6 +276,8 @@ const resolveRelation = (
       if (field) continue;
       throw new EntityMetadataError("Foreign join key field not found", {
         code: "missing_foreign_join_key_field",
+        title: "Missing Foreign Join Key Field",
+        details: `Join key "${key}" on relation "${staged.key}" of "${targetName}" does not match any @Field on the foreign entity — reference an existing field key on the related entity.`,
         debug: { target: targetName, relation: staged.key, key },
       });
     }
@@ -267,6 +289,8 @@ const resolveRelation = (
       if (field) continue;
       throw new EntityMetadataError("Join key field not found", {
         code: "missing_join_key_field",
+        title: "Missing Join Key Field",
+        details: `Join key "${key as string}" on relation "${staged.key}" of "${targetName}" does not match any @Field on this entity — reference an existing local field key.`,
         debug: { target: targetName, relation: staged.key, key },
       });
     }
@@ -290,6 +314,8 @@ const resolveRelation = (
       if (!staged.joinTable && !foreign.joinTable) {
         throw new EntityMetadataError("Join table not found", {
           code: "missing_join_table",
+          title: "Missing Join Table",
+          details: `@ManyToMany relation "${staged.key}" on "${targetName}" has no join table on either side — add @JoinTable (or an inline joinTable) on one side of the relation.`,
           debug: { target: targetName, relation: staged.key },
         });
       }
@@ -368,6 +394,8 @@ const resolveRelation = (
       if (staged.joinKeys && foreign.joinKeys) {
         throw new EntityMetadataError("Join keys cannot be set on both decorators", {
           code: "conflicting_join_keys",
+          title: "Conflicting Join Keys",
+          details: `@OneToOne relation "${staged.key}" on "${targetName}" defines join keys on both sides — declare the join keys on only one side of the relation.`,
           debug: { target: targetName, relation: staged.key },
         });
       }
@@ -389,6 +417,8 @@ const resolveRelation = (
   if (!findKeys) {
     throw new EntityMetadataError("Unable to calculate find keys for relation", {
       code: "missing_find_keys",
+      title: "Missing Find Keys",
+      details: `Unable to derive find keys for relation "${staged.key}" on "${targetName}" — ensure the relation declares valid @JoinKey mappings on one side.`,
       debug: { target: targetName, relation: staged.key },
     });
   }

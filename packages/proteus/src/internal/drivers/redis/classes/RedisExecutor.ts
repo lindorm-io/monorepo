@@ -58,6 +58,9 @@ const validateDate = (value: unknown, context: string): Date => {
   if (isNaN(date.getTime())) {
     throw new RedisDriverError(`Invalid date value in ${context}: ${String(value)}`, {
       code: "serialization_failure",
+      title: "Serialization Failure",
+      details:
+        "A stored date field could not be parsed into a valid Date during the named operation.",
       data: { context },
     });
   }
@@ -126,6 +129,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         `Duplicate primary key for "${this.metadata.entity.name}": ${redisKey}`,
         {
           code: "unique_violation",
+          title: "Unique Violation",
+          details:
+            "A Redis key already exists for the primary key of the entity being inserted; primary keys must be unique.",
           debug: { entityName: this.metadata.entity.name, redisKey },
         },
       );
@@ -138,7 +144,13 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (Object.keys(hash).length === 0) {
       throw new RedisDriverError(
         "Cannot insert entity with all null fields — hash would be empty",
-        { code: "invalid_query", data: { entityName: this.metadata.entity.name } },
+        {
+          code: "invalid_query",
+          title: "Invalid Query",
+          details:
+            "Every field of the entity being inserted serialized to null, which would produce an empty Redis hash and an invisible key; provide at least one non-null field.",
+          data: { entityName: this.metadata.entity.name },
+        },
       );
     }
 
@@ -230,6 +242,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         "Entity does not support soft delete (missing @DeleteDate field)",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "A soft delete was requested but the entity has no @DeleteDate field to mark deletion; add one or perform a hard delete.",
           data: { entityName: this.metadata.entity.name },
         },
       );
@@ -263,6 +278,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         "Entity does not support soft delete (missing @DeleteDate field)",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "A restore was requested but the entity has no @DeleteDate field, so there is no soft-delete marker to clear.",
           data: { entityName: this.metadata.entity.name },
         },
       );
@@ -337,6 +355,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!pkValues) {
       throw new RedisDriverError("TTL requires an exact primary key lookup", {
         code: "invalid_query",
+        title: "Invalid Query",
+        details:
+          "ttl() requires criteria that resolve to a single exact primary key; range or partial criteria cannot address one Redis key.",
       });
     }
 
@@ -346,7 +367,13 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (ttl === -2) {
       throw new RedisDriverError(
         `TTL failed: key not found for "${this.metadata.entity.name}"`,
-        { code: "key_not_found", debug: { redisKey } },
+        {
+          code: "key_not_found",
+          title: "Key Not Found",
+          details:
+            "ttl() targeted a primary key that does not exist in Redis (PTTL returned -2).",
+          debug: { redisKey },
+        },
       );
     }
 
@@ -540,6 +567,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         `Cannot increment encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "increment() was called on an encrypted field; encrypted values are stored as ciphertext and cannot be incremented arithmetically.",
           data: { entityName: this.metadata.entity.name, property: String(property) },
         },
       );
@@ -565,7 +595,13 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (result == null) {
         throw new RedisDriverError(
           `Increment failed: key not found for "${this.metadata.entity.name}"`,
-          { code: "key_not_found", debug: { redisKey: rows[i].key, property, value } },
+          {
+            code: "key_not_found",
+            title: "Key Not Found",
+            details:
+              "increment() matched a row whose Redis key no longer existed when the guarded HINCRBY script ran, indicating a concurrent delete.",
+            debug: { redisKey: rows[i].key, property, value },
+          },
         );
       }
     }
@@ -585,6 +621,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         `Cannot decrement encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "decrement() was called on an encrypted field; encrypted values are stored as ciphertext and cannot be decremented arithmetically.",
           data: { entityName: this.metadata.entity.name, property: String(property) },
         },
       );
@@ -610,7 +649,13 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       if (result == null) {
         throw new RedisDriverError(
           `Decrement failed: key not found for "${this.metadata.entity.name}"`,
-          { code: "key_not_found", debug: { redisKey: rows[i].key, property, value } },
+          {
+            code: "key_not_found",
+            title: "Key Not Found",
+            details:
+              "decrement() matched a row whose Redis key no longer existed when the guarded HINCRBY script ran, indicating a concurrent delete.",
+            debug: { redisKey: rows[i].key, property, value },
+          },
         );
       }
     }
@@ -799,7 +844,13 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (result === -1) {
       throw new RedisDriverError(
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
-        { code: "update_target_not_found", debug: { primaryKey: redisKey } },
+        {
+          code: "update_target_not_found",
+          title: "Update Target Not Found",
+          details:
+            "The versioned update's Lua script found no existing Redis key for the entity's primary key (the row was deleted or never inserted).",
+          debug: { primaryKey: redisKey },
+        },
       );
     }
 
@@ -807,6 +858,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (result === -2) {
       throw new RedisDriverError("Version field contains non-numeric data", {
         code: "serialization_failure",
+        title: "Serialization Failure",
+        details:
+          "The stored @Version field on the target row could not be read as a number, so the optimistic-lock comparison could not run.",
         debug: { primaryKey: redisKey, versionKey },
       });
     }
@@ -841,7 +895,13 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (result === 0) {
       throw new RedisDriverError(
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
-        { code: "update_target_not_found", debug: { primaryKey: redisKey } },
+        {
+          code: "update_target_not_found",
+          title: "Update Target Not Found",
+          details:
+            "The unversioned update's guarded Lua script found no existing Redis key for the entity's primary key (the row was deleted or never inserted).",
+          debug: { primaryKey: redisKey },
+        },
       );
     }
   }
@@ -1122,6 +1182,9 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!results) {
       throw new RedisDriverError("Pipeline execution returned null", {
         code: "command_execution_failed",
+        title: "Command Execution Failed",
+        details:
+          "An executor pipeline returned null instead of an array of per-command results, so the batched commands could not be evaluated.",
       });
     }
 

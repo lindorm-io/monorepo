@@ -37,7 +37,13 @@ export const generateIndexDDL = (
       throw new ProteusError(
         `Index has no valid key directions on table "${tableName}". ` +
           `Each index key must have direction "asc" or "desc".`,
-        { code: "schema_mismatch", data: { table: tableName } },
+        {
+          code: "schema_mismatch",
+          title: "Schema Mismatch",
+          details:
+            "The index has no valid key directions; each index key must specify asc or desc.",
+          data: { table: tableName },
+        },
       );
     }
 
@@ -49,6 +55,8 @@ export const generateIndexDDL = (
       } else {
         throw new ProteusError(msg, {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: "MySQL does not support partial or sparse indexes (WHERE/sparse).",
           data: { table: tableName },
         });
       }
@@ -88,7 +96,12 @@ export const generateIndexDDL = (
     if (index.name && index.name.length > MYSQL_IDENTIFIER_LIMIT) {
       throw new ProteusError(
         `Index name exceeds ${MYSQL_IDENTIFIER_LIMIT} characters: "${index.name}"`,
-        { code: "schema_mismatch", data: { table: tableName, index: index.name } },
+        {
+          code: "schema_mismatch",
+          title: "Schema Mismatch",
+          details: "The index name exceeds the maximum MySQL identifier length.",
+          data: { table: tableName, index: index.name },
+        },
       );
     }
     const name = index.name ?? autoName;

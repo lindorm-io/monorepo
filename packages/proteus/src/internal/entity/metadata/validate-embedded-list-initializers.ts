@@ -45,6 +45,8 @@ export const validateEmbeddedListInitializers = (
       `@EmbeddedList property "${key}" on "${targetName}" carries a runtime field initializer but resolves to a lazy loading scope — initializers are incompatible with lazy loading. Declare the field with the definite-assignment assertion instead: "${key}!: Array<T>".`,
       {
         code: "lazy_embedded_list_initializer",
+        title: "Lazy Embedded List Initializer",
+        details: `Lazy @EmbeddedList property "${key}" on "${targetName}" has a runtime field initializer, which prevents the lazy loader from attaching — declare it with a definite-assignment assertion ("${key}!: Array<T>") and remove the initializer.`,
         debug: { target: targetName, property: key },
       },
     );

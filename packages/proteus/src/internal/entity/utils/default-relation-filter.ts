@@ -7,6 +7,8 @@ export const defaultRelationFilter = (relation: MetaRelation, entity: IEntity): 
   if (!relation.findKeys) {
     throw new EntityManagerError("Cannot build relation filter without findKeys", {
       code: "missing_find_keys",
+      title: "Missing Find Keys",
+      details: `Relation "${relation.key}" of type "${relation.type}" has no findKeys; declare the join keys so the relation filter can be built.`,
       data: { relation: relation.key, type: relation.type },
     });
   }

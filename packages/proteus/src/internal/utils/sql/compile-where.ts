@@ -48,6 +48,9 @@ const guardArrayField = (
     `Operator "${operator}" requires an array-typed column, but field "${fieldKey}" has type "${field.type}"`,
     {
       code: "invalid_operator_type",
+      title: "Invalid Operator Type",
+      details:
+        "This operator requires an array-typed column; the target field has a different type.",
       data: { operator, field: fieldKey, fieldType: field.type },
     },
   );
@@ -340,6 +343,8 @@ const compileOperator = (
     if (result === null) {
       throw new NotSupportedError("The $regex operator is not supported by this driver", {
         code: "unsupported_operator",
+        title: "Unsupported Operator",
+        details: "The $regex operator is not supported by the active database driver.",
         data: { operator: "$regex" },
       });
     }

@@ -92,7 +92,12 @@ export class MySqlMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MySqlMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
-        { code: "migration_failed" },
+        {
+          code: "migration_failed",
+          title: "Migration Failed",
+          details:
+            "The migration advisory lock could not be acquired because another migration is running.",
+        },
       );
     }
 
@@ -123,6 +128,9 @@ export class MySqlMigrationManager implements IMigrationManager {
             "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
           {
             code: "migration_failed",
+            title: "Migration Failed",
+            details:
+              "One or more migrations started but never finished, likely due to a crash, and require manual intervention.",
             debug: {
               partiallyApplied: partiallyApplied.map((r) => ({
                 id: r.id,
@@ -140,6 +148,9 @@ export class MySqlMigrationManager implements IMigrationManager {
       if (mismatched.length > 0) {
         throw new MySqlMigrationError("Checksum mismatch detected — aborting", {
           code: "schema_mismatch",
+          title: "Schema Mismatch",
+          details:
+            "One or more applied migrations have a checksum that no longer matches their source file.",
           debug: {
             mismatched: mismatched.map((m) => ({
               id: m.migration.id,
@@ -182,7 +193,12 @@ export class MySqlMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MySqlMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
-        { code: "migration_failed" },
+        {
+          code: "migration_failed",
+          title: "Migration Failed",
+          details:
+            "The migration advisory lock could not be acquired because another migration is running.",
+        },
       );
     }
 
@@ -213,6 +229,9 @@ export class MySqlMigrationManager implements IMigrationManager {
             "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
           {
             code: "migration_failed",
+            title: "Migration Failed",
+            details:
+              "One or more migrations started but never finished, likely due to a crash, and require manual intervention.",
             debug: {
               partiallyApplied: partiallyApplied.map((r) => ({
                 id: r.id,
@@ -230,6 +249,9 @@ export class MySqlMigrationManager implements IMigrationManager {
           "Checksum mismatch detected — cannot safely rollback",
           {
             code: "schema_mismatch",
+            title: "Schema Mismatch",
+            details:
+              "A migration checksum no longer matches its source file, so a rollback cannot be performed safely.",
             debug: {
               mismatched: mismatched.map((m) => ({
                 id: m.migration.id,
@@ -281,6 +303,9 @@ export class MySqlMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MySqlMigrationError("Could not acquire migration advisory lock", {
         code: "migration_failed",
+        title: "Migration Failed",
+        details:
+          "The migration advisory lock could not be acquired before generating a migration.",
       });
     }
 
@@ -303,6 +328,9 @@ export class MySqlMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MySqlMigrationError("Could not acquire migration advisory lock", {
         code: "migration_failed",
+        title: "Migration Failed",
+        details:
+          "The migration advisory lock could not be acquired before generating a migration.",
       });
     }
 
@@ -332,7 +360,13 @@ export class MySqlMigrationManager implements IMigrationManager {
       const available = loaded.map((l) => l.name);
       throw new MySqlMigrationError(
         `Migration file not found: ${name}. Available migrations: ${available.join(", ") || "(none)"}`,
-        { code: "migration_not_found", data: { migration: name } },
+        {
+          code: "migration_not_found",
+          title: "Migration Not Found",
+          details:
+            "No migration file with the requested name was found in the migrations directory.",
+          data: { migration: name },
+        },
       );
     }
 
@@ -343,6 +377,8 @@ export class MySqlMigrationManager implements IMigrationManager {
     if (alreadyApplied) {
       throw new MySqlMigrationError(`Migration "${name}" is already marked as applied`, {
         code: "migration_failed",
+        title: "Migration Failed",
+        details: "The migration is already recorded as applied in the tracking table.",
         data: { migration: name },
       });
     }
@@ -384,7 +420,13 @@ export class MySqlMigrationManager implements IMigrationManager {
       const available = applied.map((r) => r.name);
       throw new MySqlMigrationError(
         `Migration not found in tracking table or already rolled back: ${name}. Available applied migrations: ${available.join(", ") || "(none)"}`,
-        { code: "migration_not_found", data: { migration: name } },
+        {
+          code: "migration_not_found",
+          title: "Migration Not Found",
+          details:
+            "The migration is not present in the tracking table or has already been rolled back.",
+          data: { migration: name },
+        },
       );
     }
 

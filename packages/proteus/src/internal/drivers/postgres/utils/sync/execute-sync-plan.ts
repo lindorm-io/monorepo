@@ -91,6 +91,9 @@ export class SyncPlanExecutor {
             }
             throw new PostgresSyncError("Sync transaction failed", {
               code: "sync_failed",
+              title: "Sync Failed",
+              details:
+                "A schema sync DDL statement failed inside the transactional phase; the transaction was rolled back.",
               error: error as Error,
             });
           }

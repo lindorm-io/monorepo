@@ -44,7 +44,12 @@ export const generateIndexDDL = (
     if (index.name && index.name.length > PG_IDENTIFIER_LIMIT) {
       throw new ProteusError(
         `Index name exceeds ${PG_IDENTIFIER_LIMIT} characters: "${index.name}"`,
-        { code: "schema_mismatch", data: { table: tableName, index: index.name } },
+        {
+          code: "schema_mismatch",
+          title: "Schema Mismatch",
+          details: `The index name on table "${tableName}" exceeds PostgreSQL's ${PG_IDENTIFIER_LIMIT}-character identifier limit.`,
+          data: { table: tableName, index: index.name },
+        },
       );
     }
     const name = index.name ?? autoName;
@@ -58,6 +63,8 @@ export const generateIndexDDL = (
       if (!VALID_INDEX_METHODS.has(method)) {
         throw new ProteusError(`Invalid index method: "${index.using}"`, {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `Index method "${index.using}" on table "${tableName}" is not a supported PostgreSQL index access method.`,
           data: { table: tableName, method: index.using },
         });
       }

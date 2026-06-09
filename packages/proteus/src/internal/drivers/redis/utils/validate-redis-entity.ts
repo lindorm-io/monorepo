@@ -18,7 +18,13 @@ export const validateRedisEntity = (metadata: EntityMetadata, logger: ILogger): 
   if (metadata.inheritance?.strategy === "joined") {
     throw new NotSupportedError(
       `Redis driver does not support joined inheritance (entity: "${entityName}"). Use single-table instead.`,
-      { code: "unsupported_operation", data: { entityName } },
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The entity uses joined-table inheritance, which the Redis driver cannot model; switch the entity to single-table inheritance.",
+        data: { entityName },
+      },
     );
   }
 
@@ -26,7 +32,13 @@ export const validateRedisEntity = (metadata: EntityMetadata, logger: ILogger): 
   if (metadata.embeddedLists.length > 0) {
     throw new NotSupportedError(
       `Redis driver does not support @EmbeddedList (entity: "${entityName}")`,
-      { code: "unsupported_operation", data: { entityName } },
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The entity declares an @EmbeddedList, which has no Redis equivalent; remove the embedded list or use a SQL driver.",
+        data: { entityName },
+      },
     );
   }
 
@@ -40,7 +52,13 @@ export const validateRedisEntity = (metadata: EntityMetadata, logger: ILogger): 
   if (metadata.uniques.length > 0) {
     throw new NotSupportedError(
       `Redis driver does not support @Unique (entity: "${entityName}")`,
-      { code: "unsupported_operation", data: { entityName } },
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The entity declares an @Unique constraint, but Redis has no unique-constraint enforcement; remove it or use a SQL driver.",
+        data: { entityName },
+      },
     );
   }
 
@@ -48,7 +66,13 @@ export const validateRedisEntity = (metadata: EntityMetadata, logger: ILogger): 
   if (metadata.checks.length > 0) {
     throw new NotSupportedError(
       `Redis driver does not support @Check (entity: "${entityName}")`,
-      { code: "unsupported_operation", data: { entityName } },
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The entity declares an @Check constraint, but Redis has no check-constraint enforcement; remove it or use a SQL driver.",
+        data: { entityName },
+      },
     );
   }
 
@@ -56,7 +80,13 @@ export const validateRedisEntity = (metadata: EntityMetadata, logger: ILogger): 
   if (metadata.fields.some((f) => f.computed != null)) {
     throw new NotSupportedError(
       `Redis driver does not support @Computed (entity: "${entityName}")`,
-      { code: "unsupported_operation", data: { entityName } },
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The entity declares an @Computed field, but Redis has no computed columns; remove it or use a SQL driver.",
+        data: { entityName },
+      },
     );
   }
 
@@ -65,7 +95,13 @@ export const validateRedisEntity = (metadata: EntityMetadata, logger: ILogger): 
   if (metadata.fields.some((f) => versionKeyDecorators.includes(f.decorator))) {
     throw new NotSupportedError(
       `Redis driver does not support versioning (@VersionKey family) (entity: "${entityName}")`,
-      { code: "unsupported_operation", data: { entityName } },
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The entity declares @VersionStartDate/@VersionEndDate temporal versioning, which Redis cannot model; use a SQL driver for version history.",
+        data: { entityName },
+      },
     );
   }
 
@@ -81,6 +117,9 @@ export const validateRedisEntity = (metadata: EntityMetadata, logger: ILogger): 
         `Redis driver does not support @ManyToMany targeting an entity with composite primary key (entity: "${entityName}", relation: "${relation.key}", target: "${foreignMeta.entity.name}")`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "A @ManyToMany relation targets an entity with a composite primary key; Redis SET members are single-value, so only single-column primary keys are supported on the target.",
           data: {
             entityName,
             relation: relation.key,
@@ -100,7 +139,13 @@ export const validateRedisEntity = (metadata: EntityMetadata, logger: ILogger): 
   if (hasExpiryDate && hasDeleteDate) {
     throw new RedisDriverError(
       `Redis driver does not support expiry combined with soft-delete (entity: "${entityName}")`,
-      { code: "unsupported_operation", data: { entityName } },
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The entity combines @ExpiryDate (TTL) with @DeleteDate (soft-delete), which are contradictory in Redis; use only one of the two.",
+        data: { entityName },
+      },
     );
   }
 
@@ -112,6 +157,9 @@ export const validateRedisEntity = (metadata: EntityMetadata, logger: ILogger): 
           `Redis driver does not support expiry on entities that own a ManyToMany relation (entity: "${entityName}", relation: "${relation.key}")`,
           {
             code: "unsupported_operation",
+            title: "Unsupported Operation",
+            details:
+              "The entity has @ExpiryDate (TTL) and owns a @ManyToMany relation; the TTL would delete the key while the join SETs remain, leaving dangling references.",
             data: { entityName, relation: relation.key },
           },
         );

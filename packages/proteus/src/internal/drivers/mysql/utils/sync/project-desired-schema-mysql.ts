@@ -46,12 +46,17 @@ const mapOnDeleteAction = (onDestroy: RelationDestroy): string => {
     case "set_default":
       throw new MySqlSyncError("SET DEFAULT is not supported by MySQL InnoDB", {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "MySQL InnoDB does not support the SET DEFAULT referential action on foreign keys.",
       });
     case "ignore":
       return "NO ACTION";
     default:
       throw new MySqlSyncError(`Unsupported onDestroy value: "${onDestroy as string}"`, {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details: "The configured onDestroy referential action is not supported by MySQL.",
         data: { onDestroy: onDestroy as string },
       });
   }
@@ -68,12 +73,17 @@ const mapOnUpdateAction = (onUpdate: RelationChange): string => {
     case "set_default":
       throw new MySqlSyncError("SET DEFAULT is not supported by MySQL InnoDB", {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "MySQL InnoDB does not support the SET DEFAULT referential action on foreign keys.",
       });
     case "ignore":
       return "NO ACTION";
     default:
       throw new MySqlSyncError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details: "The configured onUpdate referential action is not supported by MySQL.",
         data: { onUpdate: onUpdate as string },
       });
   }
@@ -206,6 +216,8 @@ export const projectDesiredSchemaMysql = (
           `Column name "${field.name}" on "${metadata.target.name}" exceeds ${MYSQL_IDENTIFIER_LIMIT} characters`,
           {
             code: "schema_mismatch",
+            title: "Schema Mismatch",
+            details: "A column name exceeds the maximum MySQL identifier length.",
             data: { column: field.name, entity: metadata.target.name },
           },
         );
@@ -246,6 +258,9 @@ export const projectDesiredSchemaMysql = (
           `Column name "${fkCol}" on "${metadata.target.name}" collides — embedded field "${colliding.key}" produces column "${colliding.name}" which conflicts with a relation FK column of the same name`,
           {
             code: "schema_mismatch",
+            title: "Schema Mismatch",
+            details:
+              "An embedded field produces a column name that collides with a relation foreign key column.",
             data: { column: fkCol, entity: metadata.target.name },
           },
         );

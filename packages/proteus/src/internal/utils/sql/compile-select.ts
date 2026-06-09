@@ -197,6 +197,9 @@ export const compileSelect = <E extends IEntity>(
     if (!params) {
       throw new ProteusError("params array required when rawSelections are provided", {
         code: "missing_params_array",
+        title: "Missing Params Array",
+        details:
+          "A params array must be supplied so raw selection placeholders can be bound.",
       });
     }
     for (const raw of rawSelections) {

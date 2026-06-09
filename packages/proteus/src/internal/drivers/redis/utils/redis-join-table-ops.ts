@@ -145,6 +145,9 @@ export const createRedisJoinTableOps = (
     if (!syncResult) {
       throw new RedisDriverError("Pipeline execution failed — returned null", {
         code: "command_execution_failed",
+        title: "Command Execution Failed",
+        details:
+          "The pipeline syncing ManyToMany join SET members (forward and reverse) returned null instead of results; the join table may be partially updated.",
       });
     }
   },
@@ -211,6 +214,9 @@ export const createRedisJoinTableOps = (
     if (!deleteResult) {
       throw new RedisDriverError("Pipeline execution failed — returned null", {
         code: "command_execution_failed",
+        title: "Command Execution Failed",
+        details:
+          "The pipeline removing ManyToMany join SET members and deleting the forward SET key returned null instead of results; the join table may be partially deleted.",
       });
     }
   },

@@ -157,6 +157,8 @@ export class RedisCacheAdapter implements ICacheAdapter {
     if (ttlMs < 0) {
       throw new ProteusError(`Invalid ttlMs: ${ttlMs}`, {
         code: "invalid_ttl",
+        title: "Invalid TTL",
+        details: "The cache TTL in milliseconds must be zero or a positive number.",
         data: { ttlMs },
       });
     }

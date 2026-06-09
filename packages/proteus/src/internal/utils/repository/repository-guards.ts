@@ -8,6 +8,8 @@ export const guardDeleteDateField = (metadata: EntityMetadata, method: string): 
       `${method}() requires @DeleteDateField on "${metadata.entity.name}"`,
       {
         code: "missing_delete_date_field",
+        title: "Missing Delete Date Field",
+        details: "Add a @DeleteDateField to the entity to enable soft-delete operations.",
         debug: { entityName: metadata.entity.name, method },
       },
     );
@@ -21,6 +23,9 @@ export const guardExpiryDateField = (metadata: EntityMetadata, method: string): 
       `${method}() requires @ExpiryDateField on "${metadata.entity.name}"`,
       {
         code: "missing_expiry_date_field",
+        title: "Missing Expiry Date Field",
+        details:
+          "Add an @ExpiryDateField to the entity to enable expiry-based operations.",
         debug: { entityName: metadata.entity.name, method },
       },
     );
@@ -35,6 +40,9 @@ export const guardVersionFields = (metadata: EntityMetadata, method: string): vo
       `${method}() requires @VersionStartDateField and @VersionEndDateField on "${metadata.entity.name}"`,
       {
         code: "missing_version_fields",
+        title: "Missing Version Fields",
+        details:
+          "Add both @VersionStartDateField and @VersionEndDateField to the entity to enable versioned operations.",
         debug: { entityName: metadata.entity.name, method },
       },
     );
@@ -52,6 +60,9 @@ export const guardUpsertBlocked = (metadata: EntityMetadata): void => {
       `upsert() is not supported on versioned entity "${metadata.entity.name}"`,
       {
         code: "upsert_not_supported",
+        title: "Upsert Not Supported",
+        details:
+          "Upsert is not available on versioned entities; use insert or update instead.",
         debug: { entityName: metadata.entity.name },
       },
     );
@@ -66,6 +77,9 @@ export const guardUpsertBlocked = (metadata: EntityMetadata): void => {
       `upsert() is not supported on entity "${metadata.entity.name}" with auto-increment primary key`,
       {
         code: "upsert_not_supported",
+        title: "Upsert Not Supported",
+        details:
+          "Upsert is not available on entities with an auto-increment primary key; use insert or update instead.",
         debug: { entityName: metadata.entity.name },
       },
     );
@@ -78,6 +92,9 @@ export const guardAppendOnly = (metadata: EntityMetadata, method: string): void 
       `Cannot ${method} an append-only entity "${metadata.entity.name}"`,
       {
         code: "append_only_violation",
+        title: "Append Only Violation",
+        details:
+          "Append-only entities permit inserts only; update and delete operations are not allowed.",
         debug: { entityName: metadata.entity.name, method },
       },
     );
@@ -95,6 +112,8 @@ export const validateRelationNames = (
         `Unknown relation "${name}" on "${metadata.entity.name}". Available: [${[...validNames].join(", ")}]`,
         {
           code: "unknown_relation",
+          title: "Unknown Relation",
+          details: "The requested relation is not declared on this entity.",
           debug: { entityName: metadata.entity.name, relation: name },
         },
       );

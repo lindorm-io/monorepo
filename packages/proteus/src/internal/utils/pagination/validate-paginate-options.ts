@@ -24,14 +24,22 @@ export const validatePaginateOptions = <E extends IEntity>(
   if (!hasFirst && !hasLast) {
     throw new ProteusError(
       "paginate() requires either `first` or `last` to specify page size and direction",
-      { code: "invalid_pagination" },
+      {
+        code: "invalid_pagination",
+        title: "Invalid Pagination",
+        details: "Provide either `first` or `last` to set the page size and direction.",
+      },
     );
   }
 
   if (hasFirst && hasLast) {
     throw new ProteusError(
       "paginate() does not support both `first` and `last` simultaneously",
-      { code: "invalid_pagination" },
+      {
+        code: "invalid_pagination",
+        title: "Invalid Pagination",
+        details: "Provide only one of `first` or `last`, never both at once.",
+      },
     );
   }
 
@@ -39,13 +47,22 @@ export const validatePaginateOptions = <E extends IEntity>(
     if (!Number.isInteger(options.first) || options.first! <= 0) {
       throw new ProteusError(
         `paginate() \`first\` must be a positive integer, got ${options.first}`,
-        { code: "invalid_pagination", data: { first: options.first } },
+        {
+          code: "invalid_pagination",
+          title: "Invalid Pagination",
+          details: "The `first` page size must be a positive integer.",
+          data: { first: options.first },
+        },
       );
     }
     if (options.before != null) {
       throw new ProteusError(
         "paginate() `before` cursor is only valid with `last`, not `first`",
-        { code: "invalid_pagination" },
+        {
+          code: "invalid_pagination",
+          title: "Invalid Pagination",
+          details: "Use the `before` cursor only with `last`, and `after` with `first`.",
+        },
       );
     }
   }
@@ -54,13 +71,22 @@ export const validatePaginateOptions = <E extends IEntity>(
     if (!Number.isInteger(options.last) || options.last! <= 0) {
       throw new ProteusError(
         `paginate() \`last\` must be a positive integer, got ${options.last}`,
-        { code: "invalid_pagination", data: { last: options.last } },
+        {
+          code: "invalid_pagination",
+          title: "Invalid Pagination",
+          details: "The `last` page size must be a positive integer.",
+          data: { last: options.last },
+        },
       );
     }
     if (options.after != null) {
       throw new ProteusError(
         "paginate() `after` cursor is only valid with `first`, not `last`",
-        { code: "invalid_pagination" },
+        {
+          code: "invalid_pagination",
+          title: "Invalid Pagination",
+          details: "Use the `after` cursor only with `first`, and `before` with `last`.",
+        },
       );
     }
   }
@@ -69,6 +95,9 @@ export const validatePaginateOptions = <E extends IEntity>(
   if (orderEntries.length === 0) {
     throw new ProteusError("paginate() requires at least one entry in `orderBy`", {
       code: "invalid_pagination",
+      title: "Invalid Pagination",
+      details:
+        "Provide at least one orderBy entry so cursor pagination is deterministic.",
     });
   }
 
@@ -78,6 +107,8 @@ export const validatePaginateOptions = <E extends IEntity>(
       if (!validKeys.has(column)) {
         throw new ProteusError(`Unknown field "${column}" in paginate orderBy`, {
           code: "unknown_order_field",
+          title: "Unknown Order Field",
+          details: "Every orderBy key must reference a field declared on the entity.",
           data: { field: column },
         });
       }

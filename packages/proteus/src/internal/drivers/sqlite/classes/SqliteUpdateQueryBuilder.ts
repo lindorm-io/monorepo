@@ -76,6 +76,8 @@ export class SqliteUpdateQueryBuilder<
         `UPDATE on "${this.metadata.entity.name}" requires at least one .where() predicate`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details: "An UPDATE query must include at least one where() predicate.",
           data: { entity: this.metadata.entity.name, operation: "update.execute" },
         },
       );
@@ -90,6 +92,9 @@ export class SqliteUpdateQueryBuilder<
         "UPDATE via QueryBuilder is not supported for joined inheritance entities",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "UPDATE via the query builder is not supported for joined inheritance entities.",
           data: { operation: "update.execute", entity: this.metadata.entity.name },
         },
       );

@@ -128,6 +128,9 @@ export const markMigrationFinished = async (
   if (result.matchedCount === 0) {
     throw new MongoMigrationError("No migration record found", {
       code: "migration_failed",
+      title: "Migration Failed",
+      details:
+        "No tracking record exists for this migration id, so it cannot be marked finished.",
       debug: { id },
     });
   }
@@ -159,6 +162,9 @@ export const markMigrationRolledBack = async (
   if (result.matchedCount === 0) {
     throw new MongoMigrationError("No migration record found", {
       code: "migration_failed",
+      title: "Migration Failed",
+      details:
+        "No tracking record exists for this migration id, so it cannot be marked rolled back.",
       debug: { id },
     });
   }

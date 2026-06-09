@@ -39,6 +39,9 @@ export class TransactionContext implements ITransactionContext {
         "Transactional repositories are not configured",
         {
           code: "transactional_repositories_not_configured",
+          title: "Transactional Repositories Not Configured",
+          details:
+            "This transaction context has no repository factory, so transactional repositories cannot be resolved.",
         },
       );
     }

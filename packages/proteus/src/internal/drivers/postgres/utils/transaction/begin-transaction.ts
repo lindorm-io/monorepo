@@ -28,6 +28,8 @@ export const beginTransaction = async (
   if (isolation && !(isolation in ISOLATION_SQL)) {
     throw new PostgresTransactionError(`Invalid isolation level: "${isolation}"`, {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: `Isolation level "${isolation}" is not recognized; valid levels are READ COMMITTED, REPEATABLE READ, and SERIALIZABLE.`,
       debug: { isolation, valid: Object.keys(ISOLATION_SQL) },
     });
   }
@@ -39,6 +41,9 @@ export const beginTransaction = async (
   } catch (error) {
     throw new PostgresTransactionError("Failed to acquire pool connection", {
       code: "connection_failed",
+      title: "Connection Failed",
+      details:
+        "Could not acquire a client from the connection pool to begin the transaction.",
       error: error as Error,
     });
   }
@@ -65,6 +70,9 @@ export const beginTransaction = async (
     poolClient.release();
     throw new PostgresTransactionError("Failed to begin transaction", {
       code: "query_execution_failed",
+      title: "Query Execution Failed",
+      details:
+        "The BEGIN statement failed; the acquired pool connection has been released.",
       data: { operation: "BEGIN" },
       error: error as Error,
     });

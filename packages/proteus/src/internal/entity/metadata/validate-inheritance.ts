@@ -13,7 +13,12 @@ export const validateDiscriminatorRequiresInheritance = (target: Function): void
   if (discriminator && !inheritance) {
     throw new EntityMetadataError(
       `@Discriminator requires @Inheritance on the same class "${target.name}"`,
-      { code: "missing_inheritance_decorator", debug: { target: target.name } },
+      {
+        code: "missing_inheritance_decorator",
+        title: "Missing Inheritance Decorator",
+        details: `"${target.name}" has @Discriminator but no @Inheritance on the same class — add @Inheritance to define the inheritance strategy.`,
+        debug: { target: target.name },
+      },
     );
   }
 };
@@ -29,7 +34,12 @@ export const validateInheritanceRequiresDiscriminator = (target: Function): void
   if (inheritance && !discriminator) {
     throw new EntityMetadataError(
       `@Inheritance on "${target.name}" requires @Discriminator to specify the discriminator field`,
-      { code: "missing_discriminator_decorator", debug: { target: target.name } },
+      {
+        code: "missing_discriminator_decorator",
+        title: "Missing Discriminator Decorator",
+        details: `"${target.name}" has @Inheritance but no @Discriminator on the same class — add @Discriminator to name the column that distinguishes subtypes.`,
+        debug: { target: target.name },
+      },
     );
   }
 };
@@ -45,7 +55,12 @@ export const validateDiscriminatorValueNotOnRoot = (target: Function): void => {
   if (inheritance && discriminatorValue !== undefined) {
     throw new EntityMetadataError(
       `@DiscriminatorValue cannot be applied to inheritance root "${target.name}" — only subtypes may have a discriminator value`,
-      { code: "discriminator_value_on_root", debug: { target: target.name } },
+      {
+        code: "discriminator_value_on_root",
+        title: "Discriminator Value On Root",
+        details: `Inheritance root "${target.name}" has @DiscriminatorValue, which only subtypes may carry — remove @DiscriminatorValue from the root entity.`,
+        debug: { target: target.name },
+      },
     );
   }
 };
@@ -63,7 +78,12 @@ export const validateDiscriminatorValueRequiresHierarchy = (target: Function): v
   if (!inheritance) {
     throw new EntityMetadataError(
       `@DiscriminatorValue on "${target.name}" requires @Inheritance in the class hierarchy`,
-      { code: "discriminator_value_without_hierarchy", debug: { target: target.name } },
+      {
+        code: "discriminator_value_without_hierarchy",
+        title: "Discriminator Value Without Hierarchy",
+        details: `"${target.name}" has @DiscriminatorValue but no @Inheritance exists in its class hierarchy — add @Inheritance on the root entity or remove @DiscriminatorValue.`,
+        debug: { target: target.name },
+      },
     );
   }
 };
@@ -84,6 +104,8 @@ export const validateUniqueDiscriminatorValues = (
       `Discriminator value "${String(newValue)}" is already used by entity "${existing.name}" in the "${rootName}" hierarchy`,
       {
         code: "duplicate_discriminator_value",
+        title: "Duplicate Discriminator Value",
+        details: `Discriminator value "${String(newValue)}" in the "${rootName}" hierarchy is already used by "${existing.name}" — give "${newTarget.name}" a distinct @DiscriminatorValue.`,
         debug: {
           root: rootName,
           value: newValue,
@@ -111,6 +133,8 @@ export const validateSubtypeHasDiscriminatorValue = (
       `Entity "${target.name}" extends inheritance root "${rootName}" but is missing @DiscriminatorValue`,
       {
         code: "missing_discriminator_value",
+        title: "Missing Discriminator Value",
+        details: `Concrete subtype "${target.name}" extends inheritance root "${rootName}" but has no @DiscriminatorValue — add @DiscriminatorValue so rows can be mapped back to this subtype.`,
         debug: { root: rootName, target: target.name },
       },
     );
@@ -160,6 +184,8 @@ export const validateJoinedDepth = (
       `Joined inheritance in the "${rootName}" hierarchy does not support multi-level depth — "${target.name}" must directly extend the root`,
       {
         code: "joined_inheritance_depth_unsupported",
+        title: "Joined Inheritance Depth Unsupported",
+        details: `Joined inheritance in the "${rootName}" hierarchy supports only one level — "${target.name}" must extend the root directly rather than an intermediate entity.`,
         debug: { root: rootName, target: target.name, depth: depth + 1 },
       },
     );

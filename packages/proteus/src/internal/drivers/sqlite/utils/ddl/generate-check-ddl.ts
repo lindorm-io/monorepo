@@ -21,6 +21,9 @@ export const generateCheckDDL = (
         `Check constraint name exceeds ${SQLITE_IDENTIFIER_LIMIT} characters: "${check.name}"`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details:
+            "The check constraint name exceeds SQLite's maximum identifier length.",
           data: { constraint: check.name, limit: SQLITE_IDENTIFIER_LIMIT },
         },
       );

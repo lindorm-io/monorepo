@@ -32,6 +32,9 @@ export const scanAllRows = async (
   if (!results) {
     throw new RedisDriverError("Pipeline execution failed — returned null", {
       code: "command_execution_failed",
+      title: "Command Execution Failed",
+      details:
+        "The pipeline issuing HGETALL for each scanned entity key returned null instead of results, so no rows could be read.",
     });
   }
 

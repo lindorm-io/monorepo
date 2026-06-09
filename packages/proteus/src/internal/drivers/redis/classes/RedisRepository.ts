@@ -146,7 +146,12 @@ export class RedisRepository<
   ): Promise<Array<E>> {
     throw new NotSupportedError(
       "Redis driver does not support versioned entities. Use a SQL or Memory driver for version history.",
-      { code: "unsupported_operation" },
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "versions() requires temporal version history, which the Redis driver does not retain; use a SQL or Memory driver for version queries.",
+      },
     );
   }
 
@@ -256,6 +261,9 @@ export class RedisRepository<
       if (!fetchResults) {
         throw new RedisDriverError("Pipeline execution returned null during clear()", {
           code: "command_execution_failed",
+          title: "Command Execution Failed",
+          details:
+            "During clear() on a single-table child, the pipeline fetching candidate rows (HGETALL) to match the discriminator returned null instead of results.",
         });
       }
 
@@ -283,6 +291,9 @@ export class RedisRepository<
       if (!delResult) {
         throw new RedisDriverError("Pipeline execution returned null during clear()", {
           code: "command_execution_failed",
+          title: "Command Execution Failed",
+          details:
+            "During clear() on a single-table child, the pipeline deleting (DEL) the matched discriminator rows returned null instead of results.",
         });
       }
       return;
@@ -324,6 +335,9 @@ export class RedisRepository<
     if (!result) {
       throw new RedisDriverError("Pipeline execution returned null during clear()", {
         code: "command_execution_failed",
+        title: "Command Execution Failed",
+        details:
+          "During clear(), the pipeline deleting (DEL) all entity HASH keys and ManyToMany join SET keys returned null instead of results.",
       });
     }
   }
@@ -653,7 +667,12 @@ export class RedisRepository<
       throw new NotSupportedError(
         "Redis driver does not support upsert with conflictOn. " +
           "Use PK-based upsert or a driver with unique constraint support.",
-        { code: "unsupported_operation" },
+        {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "upsert() was given a conflictOn target, but Redis can only detect conflicts on the primary key; omit conflictOn or use a driver with unique-constraint support.",
+        },
       );
     }
 

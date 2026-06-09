@@ -116,7 +116,13 @@ const compileManyToManyJoin = (
   if (!joinTableAlias || !targetAlias) {
     throw new ProteusError(
       `compileJoin: missing alias for ManyToMany relation "${inc.relation}" -- ensure compile-select registered aliases`,
-      { code: "invalid_query", data: { relation: inc.relation } },
+      {
+        code: "invalid_query",
+        title: "Invalid Query",
+        details:
+          "No join-table or target alias was registered for the ManyToMany relation being joined.",
+        data: { relation: inc.relation },
+      },
     );
   }
 
@@ -194,7 +200,12 @@ const compileOwningJoin = (
   if (!targetAlias) {
     throw new ProteusError(
       `compileJoin: missing alias for owning relation "${inc.relation}" -- ensure compile-select registered aliases`,
-      { code: "invalid_query", data: { relation: inc.relation } },
+      {
+        code: "invalid_query",
+        title: "Invalid Query",
+        details: "No target alias was registered for the owning relation being joined.",
+        data: { relation: inc.relation },
+      },
     );
   }
 
@@ -245,7 +256,12 @@ const compileInverseJoin = (
   if (!targetAlias) {
     throw new ProteusError(
       `compileJoin: missing alias for inverse relation "${inc.relation}" -- ensure compile-select registered aliases`,
-      { code: "invalid_query", data: { relation: inc.relation } },
+      {
+        code: "invalid_query",
+        title: "Invalid Query",
+        details: "No target alias was registered for the inverse relation being joined.",
+        data: { relation: inc.relation },
+      },
     );
   }
 

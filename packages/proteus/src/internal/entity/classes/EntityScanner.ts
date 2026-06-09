@@ -54,6 +54,8 @@ export class EntityScanner {
         `Failed to load entity from "${data.fullPath}": ${err instanceof Error ? err.message : String(err)}`,
         {
           code: "entity_load_failed",
+          title: "Entity Load Failed",
+          details: `The entity module at "${data.fullPath}" threw while being imported; check that the file compiles and its top-level code does not throw.`,
           error: err instanceof Error ? err : undefined,
           data: { filePath: data.fullPath },
         },
@@ -63,6 +65,8 @@ export class EntityScanner {
     if (values.length === 0) {
       throw new EntityScannerError(`No entities found in file: ${data.fullPath}`, {
         code: "missing_entity_export",
+        title: "Missing Entity Export",
+        details: `The file "${data.fullPath}" has no exports; export the entity class from this file so the scanner can load it.`,
         data: { filePath: data.fullPath },
       });
     }
@@ -75,6 +79,8 @@ export class EntityScanner {
     if (result.length === 0) {
       throw new EntityScannerError(`No entities found in file: ${data.fullPath}`, {
         code: "missing_entity_export",
+        title: "Missing Entity Export",
+        details: `The file "${data.fullPath}" exports only non-constructor values; export an entity class (with a prototype) so the scanner can register it.`,
         data: { filePath: data.fullPath },
       });
     }

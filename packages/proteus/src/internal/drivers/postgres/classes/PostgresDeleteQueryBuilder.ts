@@ -72,6 +72,8 @@ export class PostgresDeleteQueryBuilder<
         `DELETE on "${this.metadata.entity.name}" requires at least one .where() predicate`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details: `DELETE on "${this.metadata.entity.name}" was rejected because it has no where() predicate, which would delete every row.`,
           data: { entity: this.metadata.entity.name, operation: "delete.execute" },
         },
       );
@@ -86,6 +88,8 @@ export class PostgresDeleteQueryBuilder<
         "DELETE via QueryBuilder is not supported for joined inheritance entities",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `Joined-inheritance entity "${this.metadata.entity.name}" spans multiple tables and cannot be deleted via the query builder; use repository.delete() instead.`,
           data: { operation: "delete.execute", entity: this.metadata.entity.name },
         },
       );
@@ -109,6 +113,8 @@ export class PostgresDeleteQueryBuilder<
           `Entity "${this.metadata.entity.name}" has no @DeleteDateField — cannot use softDelete()`,
           {
             code: "invalid_query",
+            title: "Invalid Query",
+            details: `Entity "${this.metadata.entity.name}" declares no @DeleteDateField column, so softDelete() has nothing to set.`,
             data: { entity: this.metadata.entity.name, operation: "delete.softDelete" },
           },
         );

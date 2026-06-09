@@ -21,6 +21,8 @@ export const verifyReadonly = <E extends IEntity>(
     if (field.readonly) {
       throw new EntityMetadataError("Field is readonly", {
         code: "readonly_field",
+        title: "Readonly Field",
+        details: `The update payload attempts to change readonly field "${key}"; remove it from the payload as readonly fields cannot be modified after creation.`,
         data: { key },
         debug: { entity },
       });

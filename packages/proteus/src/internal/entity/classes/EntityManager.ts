@@ -54,6 +54,9 @@ export class EntityManager<
     if (!options.target) {
       throw new EntityManagerError("EntityManager requires a target constructor", {
         code: "missing_target",
+        title: "Missing Target",
+        details:
+          "EntityManager was constructed without a target constructor; pass the entity class as options.target.",
         debug: { options },
       });
     }
@@ -61,6 +64,8 @@ export class EntityManager<
     if (!options.driver) {
       throw new EntityManagerError("EntityManager requires a driver parameter", {
         code: "missing_driver",
+        title: "Missing Driver",
+        details: `EntityManager for entity "${options.target.name}" was constructed without a driver; pass the driver identifier as options.driver.`,
         data: { target: options.target.name },
       });
     }
@@ -79,6 +84,8 @@ export class EntityManager<
   @Entity() decorator?`,
         {
           code: "entity_not_registered",
+          title: "Entity Not Registered",
+          details: `No metadata is registered for entity "${this.target.name}"; ensure the class is annotated with the @Entity() decorator.`,
           data: { target: this.target.name },
           error: error instanceof Error ? error : undefined,
         },
@@ -100,6 +107,8 @@ export class EntityManager<
         `Entity "${this.target.name}" has @Generated fields with strategy "increment" but no getNextIncrement function was provided`,
         {
           code: "missing_increment_function",
+          title: "Missing Increment Function",
+          details: `Entity "${this.target.name}" has @Generated("increment") fields but the driver is not postgres; provide a getNextIncrement function to the EntityManager.`,
           data: {
             target: this.target.name,
             incrementFields: incrementFields.map((g) => g.key),
@@ -202,6 +211,8 @@ export class EntityManager<
     if (!versionStartDate) {
       throw new EntityManagerError("versionCopy requires @VersionStartDate decorator", {
         code: "missing_version_start_date",
+        title: "Missing Version Start Date",
+        details: `versionCopy requires entity "${this.target.name}" to declare a @VersionStartDate field; add the decorator to enable versioned copies.`,
         data: { target: this.target.name },
       });
     }
@@ -209,6 +220,8 @@ export class EntityManager<
     if (!versionEndDate) {
       throw new EntityManagerError("versionCopy requires @VersionEndDate decorator", {
         code: "missing_version_end_date",
+        title: "Missing Version End Date",
+        details: `versionCopy requires entity "${this.target.name}" to declare a @VersionEndDate field; add the decorator to enable versioned copies.`,
         data: { target: this.target.name },
       });
     }
@@ -227,6 +240,8 @@ export class EntityManager<
     if (!versionEndDate) {
       throw new EntityManagerError("versionUpdate requires @VersionEndDate decorator", {
         code: "missing_version_end_date",
+        title: "Missing Version End Date",
+        details: `versionUpdate requires entity "${this.target.name}" to declare a @VersionEndDate field; add the decorator to close out the previous version.`,
         data: { target: this.target.name },
       });
     }

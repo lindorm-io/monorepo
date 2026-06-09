@@ -11,6 +11,8 @@ export const inferGeneratedTypes = (
     if (!field) {
       throw new EntityMetadataError("Generated field not found", {
         code: "missing_generated_field",
+        title: "Missing Generated Field",
+        details: `@Generated on "${generate.key}" targets a property with no matching @Field on "${targetName}" — add a @Field decorator for that property.`,
         debug: { target: targetName, field: generate.key },
       });
     }
@@ -40,6 +42,8 @@ export const inferGeneratedTypes = (
           if (field.type !== "date" && field.type !== "timestamp") {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
               code: "invalid_generated_strategy",
+              title: "Invalid Generated Strategy",
+              details: `@Generated("date") on "${field.key}" requires a date or timestamp field type, but "${field.type}" was declared — change the @Field type or the @Generated strategy.`,
               debug: {
                 target: targetName,
                 field: field.key,
@@ -57,6 +61,8 @@ export const inferGeneratedTypes = (
           ) {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
               code: "invalid_generated_strategy",
+              title: "Invalid Generated Strategy",
+              details: `@Generated("float") on "${field.key}" requires a float, real, or decimal field type, but "${field.type}" was declared — change the @Field type or the @Generated strategy.`,
               debug: {
                 target: targetName,
                 field: field.key,
@@ -76,6 +82,8 @@ export const inferGeneratedTypes = (
           ) {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
               code: "invalid_generated_strategy",
+              title: "Invalid Generated Strategy",
+              details: `@Generated("${generate.strategy}") on "${field.key}" requires an integer, smallint, or bigint field type, but "${field.type}" was declared — change the @Field type or the @Generated strategy.`,
               debug: {
                 target: targetName,
                 field: field.key,
@@ -89,6 +97,8 @@ export const inferGeneratedTypes = (
           if (field.type !== "string" && field.type !== "text") {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
               code: "invalid_generated_strategy",
+              title: "Invalid Generated Strategy",
+              details: `@Generated("string") on "${field.key}" requires a string or text field type, but "${field.type}" was declared — change the @Field type or the @Generated strategy.`,
               debug: {
                 target: targetName,
                 field: field.key,
@@ -102,6 +112,8 @@ export const inferGeneratedTypes = (
           if (field.type !== "uuid") {
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
               code: "invalid_generated_strategy",
+              title: "Invalid Generated Strategy",
+              details: `@Generated("uuid") on "${field.key}" requires a uuid field type, but "${field.type}" was declared — change the @Field type or the @Generated strategy.`,
               debug: {
                 target: targetName,
                 field: field.key,

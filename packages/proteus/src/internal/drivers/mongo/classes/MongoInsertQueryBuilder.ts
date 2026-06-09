@@ -55,6 +55,9 @@ export class MongoInsertQueryBuilder<
         `QB insert is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.insert() instead.`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "The query builder cannot insert joined-inheritance child entities; use repository.insert() instead.",
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -134,6 +137,9 @@ export class MongoInsertQueryBuilder<
           `Duplicate primary key during QB insert for "${this.metadata.entity.name}"`,
           {
             code: "unique_violation",
+            title: "Unique Violation",
+            details:
+              "A document with the same primary key already exists in the collection.",
             debug: { entityName: this.metadata.entity.name },
           },
         );

@@ -29,7 +29,11 @@ export class MongoCursor<E extends IEntity> implements IProteusCursor<E> {
   public async next(): Promise<E | null> {
     return this.serialize(async () => {
       if (this.closed) {
-        throw new ProteusError("Cursor is closed", { code: "unsupported_operation" });
+        throw new ProteusError("Cursor is closed", {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: "next() cannot be called after the cursor has been closed.",
+        });
       }
 
       const doc = await this.cursor.next();
@@ -42,7 +46,11 @@ export class MongoCursor<E extends IEntity> implements IProteusCursor<E> {
   public async nextBatch(size: number = 10): Promise<Array<E>> {
     return this.serialize(async () => {
       if (this.closed) {
-        throw new ProteusError("Cursor is closed", { code: "unsupported_operation" });
+        throw new ProteusError("Cursor is closed", {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: "nextBatch() cannot be called after the cursor has been closed.",
+        });
       }
 
       const results: Array<E> = [];

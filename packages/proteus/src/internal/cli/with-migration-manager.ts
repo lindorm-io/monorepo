@@ -66,6 +66,8 @@ export const withMigrationManager = async (
   if (!SUPPORTED_DRIVERS.includes(driverType)) {
     throw new ProteusError(`Migrations not supported for driver "${driverType}"`, {
       code: "migrations_not_supported",
+      title: "Migrations Not Supported",
+      details: "The active driver does not support migrations; only SQL drivers do.",
       data: { driverType },
     });
   }

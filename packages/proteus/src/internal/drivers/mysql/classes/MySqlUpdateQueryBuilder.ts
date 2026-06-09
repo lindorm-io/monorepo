@@ -65,6 +65,9 @@ export class MySqlUpdateQueryBuilder<
       "MySQL does not support RETURNING clauses. Use save()/insert()/update() repository methods instead, which automatically SELECT-back after write.",
       {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "MySQL does not support RETURNING clauses; use repository write methods that SELECT-back after writing.",
         data: { operation: "update.returning" },
       },
     );
@@ -80,6 +83,9 @@ export class MySqlUpdateQueryBuilder<
         `UPDATE on "${this.metadata.entity.name}" requires at least one .where() predicate`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details:
+            "An UPDATE requires at least one where() predicate to scope the affected rows.",
           data: { entity: this.metadata.entity.name, operation: "update.execute" },
         },
       );
@@ -94,6 +100,9 @@ export class MySqlUpdateQueryBuilder<
         "UPDATE via QueryBuilder is not supported for joined inheritance entities",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "UPDATE via the query builder is not supported for joined inheritance entities; use repository.update().",
           data: { operation: "update.execute", entity: this.metadata.entity.name },
         },
       );

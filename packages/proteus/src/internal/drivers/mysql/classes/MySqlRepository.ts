@@ -247,6 +247,9 @@ export class MySqlRepository<
         `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "updateMany is not supported for versioned entities; use update() for individual version updates.",
           data: { entity: this.metadata.entity.name, operation: "updateMany" },
         },
       );
@@ -566,6 +569,9 @@ export class MySqlRepository<
                 `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
                 {
                   code: "optimistic_lock_conflict",
+                  title: "Optimistic Lock Conflict",
+                  details:
+                    "The entity was modified concurrently, so the optimistic version check failed.",
                   data: { entity: this.metadata.entity.name },
                 },
               );
@@ -617,6 +623,9 @@ export class MySqlRepository<
                   `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
                   {
                     code: "optimistic_lock_conflict",
+                    title: "Optimistic Lock Conflict",
+                    details:
+                      "The entity was modified concurrently, so the optimistic version check failed.",
                     data: { entity: this.metadata.entity.name },
                   },
                 );
@@ -655,6 +664,9 @@ export class MySqlRepository<
                   `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
                   {
                     code: "optimistic_lock_conflict",
+                    title: "Optimistic Lock Conflict",
+                    details:
+                      "The entity was modified concurrently, so the optimistic version check failed.",
                     data: { entity: this.metadata.entity.name },
                   },
                 );
@@ -808,6 +820,9 @@ export class MySqlRepository<
               `Optimistic lock conflict: "${this.metadata.entity.name}" version was modified concurrently`,
               {
                 code: "optimistic_lock_conflict",
+                title: "Optimistic Lock Conflict",
+                details:
+                  "The entity version was modified concurrently, so the optimistic version check failed.",
                 data: { entity: this.metadata.entity.name },
               },
             );

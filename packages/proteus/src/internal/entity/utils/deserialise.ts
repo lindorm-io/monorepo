@@ -23,6 +23,8 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
         if (isNaN(value.getTime())) {
           throw new ProteusError("Invalid Date object during deserialisation", {
             code: "deserialise_failed",
+            title: "Deserialise Failed",
+            details: `A "${type}" field received a Date object representing an invalid time (NaN); ensure the stored value is a valid date.`,
             data: { type },
             debug: { value: String(value) },
           });
@@ -34,6 +36,8 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
       if (isNaN(date.getTime())) {
         throw new ProteusError("Cannot convert value to date during deserialisation", {
           code: "deserialise_failed",
+          title: "Deserialise Failed",
+          details: `A "${type}" field received a value that cannot be parsed into a valid Date; ensure the stored value is a date string or timestamp.`,
           data: { type },
           debug: { value: String(value) },
         });
@@ -49,6 +53,8 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
       if (isNaN(parsed)) {
         throw new ProteusError("Cannot convert value to float during deserialisation", {
           code: "deserialise_failed",
+          title: "Deserialise Failed",
+          details: `A "${type}" field received a value that cannot be parsed into a floating-point number; ensure the stored value is numeric.`,
           data: { type },
           debug: { value: String(value) },
         });
@@ -67,6 +73,8 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
       if (isNaN(parsed)) {
         throw new ProteusError("Cannot convert value to integer during deserialisation", {
           code: "deserialise_failed",
+          title: "Deserialise Failed",
+          details: `A "${type}" field received a value that cannot be parsed into an integer; ensure the stored value is numeric.`,
           data: { type },
           debug: { value: String(value) },
         });

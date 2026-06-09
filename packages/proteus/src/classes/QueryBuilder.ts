@@ -91,6 +91,8 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
         `Unknown relation "${relation}" on entity "${this.metadata.entity.name}". Valid relations: ${valid.join(", ") || "(none)"}`,
         {
           code: "unknown_relation",
+          title: "Unknown Relation",
+          details: "The requested relation is not declared on this entity.",
           data: { entityName: this.metadata.entity.name, relation },
         },
       );
@@ -102,6 +104,9 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
         `Relation "${relation}" already included on entity "${this.metadata.entity.name}"`,
         {
           code: "relation_already_included",
+          title: "Relation Already Included",
+          details:
+            "This relation has already been added to the query; include it only once.",
           data: { entityName: this.metadata.entity.name, relation },
         },
       );
@@ -131,6 +136,8 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
           `Unknown field "${String(field)}" on entity "${this.metadata.entity.name}". Valid fields: ${validKeys.join(", ")}`,
           {
             code: "unknown_field",
+            title: "Unknown Field",
+            details: "The selected field is not declared on this entity.",
             data: { entityName: this.metadata.entity.name, field: String(field) },
           },
         );
@@ -219,6 +226,8 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
           `Unknown field "${key}" in orderBy on entity "${this.metadata.entity.name}". Valid fields: ${validKeys.join(", ")}`,
           {
             code: "unknown_order_by_field",
+            title: "Unknown Order By Field",
+            details: "Every orderBy key must reference a field declared on this entity.",
             data: { entityName: this.metadata.entity.name, field: key },
           },
         );
@@ -321,6 +330,9 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
         `Cannot ${method} an append-only entity "${this.metadata.entity.name}" via query builder`,
         {
           code: "append_only_write",
+          title: "Append Only Write",
+          details:
+            "Append-only entities permit inserts only; update and delete via the query builder are not allowed.",
           data: { entityName: this.metadata.entity.name, method },
         },
       );

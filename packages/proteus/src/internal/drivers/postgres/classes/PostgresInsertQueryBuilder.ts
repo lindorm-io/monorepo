@@ -63,6 +63,8 @@ export class PostgresInsertQueryBuilder<
         "INSERT via QueryBuilder is not supported for joined inheritance entities — use repository.insert()",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `Joined-inheritance entity "${this.metadata.entity.name}" spans multiple tables and cannot be inserted via the query builder; use repository.insert() instead.`,
           data: { operation: "insert.execute", entity: this.metadata.entity.name },
         },
       );
@@ -81,6 +83,8 @@ export class PostgresInsertQueryBuilder<
           `INSERT on "${this.metadata.entity.name}": row ${i} has different keys than row 0`,
           {
             code: "invalid_query",
+            title: "Invalid Query",
+            details: `Batch INSERT on "${this.metadata.entity.name}" requires every row to share the same set of column keys, but row ${i} differs from row 0.`,
             data: { entity: this.metadata.entity.name, operation: "insert.execute" },
           },
         );

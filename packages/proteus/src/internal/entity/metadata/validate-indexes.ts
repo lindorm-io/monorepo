@@ -14,6 +14,8 @@ export const validateIndexes = (
     if (!index.keys.length) {
       throw new EntityMetadataError("Index fields not found", {
         code: "missing_index_fields",
+        title: "Missing Index Fields",
+        details: `@Index "${index.name ?? "(unnamed)"}" on "${targetName}" declares no fields — list at least one field key for the index.`,
         debug: { target: targetName, index: index.name },
       });
     }
@@ -22,6 +24,8 @@ export const validateIndexes = (
       if (seenNames.has(index.name)) {
         throw new EntityMetadataError("Duplicate index name", {
           code: "duplicate_index_name",
+          title: "Duplicate Index Name",
+          details: `Two @Index decorators on "${targetName}" share the name "${index.name}" — give each index a unique name.`,
           debug: { target: targetName, index: index.name },
         });
       }
@@ -32,6 +36,8 @@ export const validateIndexes = (
       if (fieldKeys.has(key)) continue;
       throw new EntityMetadataError("Index field not found", {
         code: "missing_index_field",
+        title: "Missing Index Field",
+        details: `@Index "${index.name ?? "(unnamed)"}" on "${targetName}" references field "${key}", which has no @Field decorator — index an existing field key.`,
         debug: { target: targetName, key, index: index.name },
       });
     }
@@ -44,6 +50,8 @@ export const validateIndexes = (
     if (seenKeySignatures.has(signature)) {
       throw new EntityMetadataError("Duplicate index keys", {
         code: "duplicate_index_keys",
+        title: "Duplicate Index Keys",
+        details: `Two @Index decorators on "${targetName}" cover the same key set and direction (${signature}) — remove the redundant index.`,
         debug: { target: targetName, index: index.name },
       });
     }

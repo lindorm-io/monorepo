@@ -14,6 +14,8 @@ export const rollbackTransaction = async (
     handle.state = "rolledback";
     throw new MySqlTransactionError("Failed to rollback transaction", {
       code: "query_execution_failed",
+      title: "Query Execution Failed",
+      details: "The ROLLBACK statement failed while aborting the transaction.",
       data: { operation: "ROLLBACK" },
       error: error as Error,
     });

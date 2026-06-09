@@ -123,6 +123,9 @@ export const compileQuery = <E extends IEntity>(
       "FOR UPDATE/SHARE is not allowed with UNION/INTERSECT/EXCEPT",
       {
         code: "invalid_lock_with_set_operation",
+        title: "Invalid Lock With Set Operation",
+        details:
+          "Row locking with FOR UPDATE/SHARE cannot be combined with UNION, INTERSECT, or EXCEPT.",
       },
     );
   }

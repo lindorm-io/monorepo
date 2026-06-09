@@ -81,6 +81,8 @@ export const diffColumns = (
               `type ${desired.pgType} has no zero value — provide an explicit default`,
             {
               code: "schema_mismatch",
+              title: "Schema Mismatch",
+              details: `NOT NULL column "${desired.name}" of type ${desired.pgType} cannot be added because the type has no implicit zero value to backfill existing rows; provide an explicit default.`,
               data: { schema, table, column: desired.name, type: desired.pgType },
             },
           );
@@ -227,6 +229,8 @@ export const diffColumns = (
                   `type ${desired.pgType} has no zero value — provide an explicit default`,
                 {
                   code: "schema_mismatch",
+                  title: "Schema Mismatch",
+                  details: `NOT NULL column "${desired.name}" of type ${desired.pgType} cannot be dropped and re-added because the type has no implicit zero value to backfill existing rows; provide an explicit default.`,
                   data: { schema, table, column: desired.name, type: desired.pgType },
                 },
               );
@@ -331,6 +335,8 @@ export const diffColumns = (
               `type ${desired.pgType} has no zero value for backfill — provide an explicit default`,
             {
               code: "schema_mismatch",
+              title: "Schema Mismatch",
+              details: `Column "${desired.name}" of type ${desired.pgType} cannot be altered to NOT NULL because the type has no implicit zero value to backfill existing NULLs; provide an explicit default.`,
               data: { schema, table, column: desired.name, type: desired.pgType },
             },
           );

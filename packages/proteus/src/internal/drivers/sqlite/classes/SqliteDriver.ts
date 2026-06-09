@@ -95,6 +95,9 @@ export class SqliteDriver implements IProteusDriver {
             `Invalid pragma name: "${name}". Pragma names must be alphanumeric with underscores.`,
             {
               code: "invalid_configuration",
+              title: "Invalid Configuration",
+              details:
+                "Pragma names must be alphanumeric with underscores and start with a letter or underscore.",
               data: { pragma: name },
             },
           );
@@ -136,7 +139,12 @@ export class SqliteDriver implements IProteusDriver {
     if (this.options.synchronize && this.options.runMigrations) {
       throw new SqliteMigrationError(
         "synchronize and runMigrations are mutually exclusive — use one or the other",
-        { code: "migration_failed" },
+        {
+          code: "migration_failed",
+          title: "Migration Failed",
+          details:
+            "The synchronize and runMigrations options are mutually exclusive; enable only one.",
+        },
       );
     }
 
@@ -436,7 +444,11 @@ export class SqliteDriver implements IProteusDriver {
     if (!this.db) {
       throw new SqliteDriverError(
         "Not connected — call connect() before calling setup() or query()",
-        { code: "connection_not_established" },
+        {
+          code: "connection_not_established",
+          title: "Connection Not Established",
+          details: "Call connect() before invoking setup() or query() on the driver.",
+        },
       );
     }
     return this.db;

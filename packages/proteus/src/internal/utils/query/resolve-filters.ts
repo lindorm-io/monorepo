@@ -59,6 +59,9 @@ const substituteParams = (
           `Filter "${filterName}" requires parameter "${paramKey}" but it was not provided`,
           {
             code: "missing_filter_param",
+            title: "Missing Filter Param",
+            details:
+              "This filter references a parameter that was not supplied; register it on the source or pass it per-request.",
             data: { filter: filterName, param: paramKey },
           },
         );
@@ -125,6 +128,8 @@ export const resolveFilters = (
           `Filter "${name}" does not exist on this entity. Available filters: ${available.join(", ") || "(none)"}`,
           {
             code: "unknown_filter",
+            title: "Unknown Filter",
+            details: "The referenced filter is not defined on this entity.",
             data: { filter: name, available },
           },
         );

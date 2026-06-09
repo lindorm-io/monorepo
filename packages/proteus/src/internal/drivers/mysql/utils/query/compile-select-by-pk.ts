@@ -55,6 +55,9 @@ export const compileSelectByPkBatch = <E extends IEntity>(
   if (entities.length === 0) {
     throw new ProteusError("compileSelectByPkBatch requires at least one entity", {
       code: "invalid_query",
+      title: "Invalid Query",
+      details:
+        "A batch primary-key SELECT requires at least one entity to build the IN clause.",
     });
   }
 

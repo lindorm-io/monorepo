@@ -13,7 +13,12 @@ export const encryptFieldValue = (
   if (!amphora) {
     throw new ProteusError(
       "Encryption requires an amphora instance but none was provided",
-      { code: "missing_amphora" },
+      {
+        code: "missing_amphora",
+        title: "Missing Amphora",
+        details:
+          "Encrypting an @Encrypted field requires an amphora instance; pass amphora to the ProteusSource options.",
+      },
     );
   }
 
@@ -26,6 +31,8 @@ export const encryptFieldValue = (
       `Failed to encrypt field "${fieldKey}" on entity "${entityName}"`,
       {
         code: "encrypt_failed",
+        title: "Encrypt Failed",
+        details: `Could not encrypt field "${fieldKey}" on entity "${entityName}"; the amphora may not have an encryption key matching the required predicate.`,
         data: { field: fieldKey, entity: entityName },
         error: error as Error,
       },

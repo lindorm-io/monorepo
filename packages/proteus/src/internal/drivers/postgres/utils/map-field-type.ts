@@ -19,7 +19,12 @@ export const mapFieldType = (
   if (type === null) {
     throw new NotSupportedError(
       `Field "${key}" has no type — cannot map to PostgreSQL type`,
-      { code: "unsupported_column_type", data: { column: key } },
+      {
+        code: "unsupported_column_type",
+        title: "Unsupported Column Type",
+        details: `Field "${key}" has no declared type, so no PostgreSQL column type can be mapped for it.`,
+        data: { column: key },
+      },
     );
   }
 
@@ -59,6 +64,8 @@ export const mapFieldType = (
           `Field "${key}" uses "varchar" type but "max" is not set`,
           {
             code: "invalid_query",
+            title: "Invalid Query",
+            details: `Field "${key}" is typed "varchar" but has no "max" length, which is required to emit VARCHAR(n).`,
             data: { column: key },
           },
         );
@@ -143,6 +150,8 @@ export const mapFieldType = (
     default:
       throw new NotSupportedError(`Unsupported MetaFieldType: "${type as string}"`, {
         code: "unsupported_column_type",
+        title: "Unsupported Column Type",
+        details: `MetaFieldType "${type as string}" has no PostgreSQL column-type mapping.`,
         data: { type: type as string },
       });
   }

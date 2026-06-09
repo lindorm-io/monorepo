@@ -33,6 +33,8 @@ export const compileSoftDelete = <E extends IEntity>(
       `compileSoftDelete: entity "${metadata.entity.name}" has no @DeleteDate field`,
       {
         code: "missing_delete_date_field",
+        title: "Missing Delete Date Field",
+        details: "Add a @DeleteDateField to the entity to enable soft-delete operations.",
         data: { entityName: metadata.entity.name },
       },
     );
@@ -72,6 +74,8 @@ export const compileRestore = <E extends IEntity>(
       `compileRestore: entity "${metadata.entity.name}" has no @DeleteDate field`,
       {
         code: "missing_delete_date_field",
+        title: "Missing Delete Date Field",
+        details: "Add a @DeleteDateField to the entity to enable restore operations.",
         data: { entityName: metadata.entity.name },
       },
     );

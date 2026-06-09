@@ -19,7 +19,12 @@ export const guardMemoryLockMode = (mode: LockMode): void => {
   if (EXTENDED_LOCK_MODES.has(mode)) {
     throw new NotSupportedError(
       `Lock mode "${mode}" is not supported by the Memory driver`,
-      { code: "unsupported_operation", data: { lockMode: mode } },
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details: `The extended lock mode "${mode}" has no meaning in the single-process memory store.`,
+        data: { lockMode: mode },
+      },
     );
   }
 };

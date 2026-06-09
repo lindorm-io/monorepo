@@ -119,6 +119,8 @@ export const compileUpdateMany = <E extends IEntity>(
       `updateMany: no valid columns in update object for entity "${metadata.entity.name}"`,
       {
         code: "invalid_query",
+        title: "Invalid Query",
+        details: `The updateMany payload for "${metadata.entity.name}" maps to no updatable columns, so no SET clause can be generated.`,
         data: { entity: metadata.entity.name },
         debug: {
           updateKeys: Object.keys(update as Record<string, unknown>),
@@ -133,7 +135,12 @@ export const compileUpdateMany = <E extends IEntity>(
   if (!whereClause) {
     throw new ProteusRepositoryError(
       `updateMany: criteria must not be empty for entity "${metadata.entity.name}"`,
-      { code: "invalid_query", data: { entity: metadata.entity.name } },
+      {
+        code: "invalid_query",
+        title: "Invalid Query",
+        details: `updateMany on "${metadata.entity.name}" was rejected because its criteria compiled to an empty WHERE clause, which would update every row.`,
+        data: { entity: metadata.entity.name },
+      },
     );
   }
 
@@ -213,6 +220,8 @@ const compileJoinedUpdateMany = <E extends IEntity>(
       `updateMany: no valid columns in update object for entity "${metadata.entity.name}"`,
       {
         code: "invalid_query",
+        title: "Invalid Query",
+        details: `The updateMany payload for joined-inheritance entity "${metadata.entity.name}" maps to no root or child columns, so no SET clause can be generated.`,
         data: { entity: metadata.entity.name },
         debug: {
           updateKeys: Object.keys(update as Record<string, unknown>),
@@ -260,7 +269,12 @@ const compileJoinedUpdateMany = <E extends IEntity>(
   if (!whereClause) {
     throw new ProteusRepositoryError(
       `updateMany: criteria must not be empty for entity "${metadata.entity.name}"`,
-      { code: "invalid_query", data: { entity: metadata.entity.name } },
+      {
+        code: "invalid_query",
+        title: "Invalid Query",
+        details: `updateMany on joined-inheritance entity "${metadata.entity.name}" was rejected because its criteria compiled to an empty WHERE clause, which would update every row.`,
+        data: { entity: metadata.entity.name },
+      },
     );
   }
 

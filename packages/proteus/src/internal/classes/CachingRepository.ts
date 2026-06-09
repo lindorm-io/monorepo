@@ -195,6 +195,8 @@ export class CachingRepository<
     if (!entity) {
       throw new ProteusRepositoryError(`Entity "${this.entityName}" not found`, {
         code: "entity_not_found",
+        title: "Entity Not Found",
+        details: `No "${this.entityName}" entity matched the criteria passed to findOneOrFail.`,
         data: { entityName: this.entityName },
         debug: { criteria },
       });
@@ -236,12 +238,16 @@ export class CachingRepository<
     if (page < 1) {
       throw new ProteusRepositoryError("findPaginated: page must be >= 1", {
         code: "invalid_pagination",
+        title: "Invalid Pagination",
+        details: `findPaginated requires page to be 1 or greater but received ${page}.`,
         data: { page },
       });
     }
     if (pageSize < 1) {
       throw new ProteusRepositoryError("findPaginated: pageSize must be >= 1", {
         code: "invalid_pagination",
+        title: "Invalid Pagination",
+        details: `findPaginated requires pageSize to be 1 or greater but received ${pageSize}.`,
         data: { pageSize },
       });
     }

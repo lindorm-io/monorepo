@@ -98,6 +98,9 @@ export class SqliteMigrationManager implements IMigrationManager {
           "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
         {
           code: "migration_partially_applied",
+          title: "Migration Partially Applied",
+          details:
+            "One or more migrations started but never finished; manual intervention is required.",
           debug: {
             partiallyApplied: partiallyApplied.map((r) => ({
               id: r.id,
@@ -115,6 +118,9 @@ export class SqliteMigrationManager implements IMigrationManager {
     if (mismatched.length > 0) {
       throw new SqliteMigrationError("Checksum mismatch detected — aborting", {
         code: "migration_checksum_mismatch",
+        title: "Migration Checksum Mismatch",
+        details:
+          "An applied migration's source checksum changed; aborting before applying pending migrations.",
         debug: {
           mismatched: mismatched.map((m) => ({
             id: m.migration.id,
@@ -175,6 +181,9 @@ export class SqliteMigrationManager implements IMigrationManager {
           "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
         {
           code: "migration_partially_applied",
+          title: "Migration Partially Applied",
+          details:
+            "One or more migrations started but never finished; manual intervention is required.",
           debug: {
             partiallyApplied: partiallyApplied.map((r) => ({
               id: r.id,
@@ -192,6 +201,9 @@ export class SqliteMigrationManager implements IMigrationManager {
         "Checksum mismatch detected — cannot safely rollback",
         {
           code: "migration_checksum_mismatch",
+          title: "Migration Checksum Mismatch",
+          details:
+            "An applied migration's source checksum changed; cannot safely roll back.",
           debug: {
             mismatched: mismatched.map((m) => ({
               id: m.migration.id,
@@ -239,7 +251,12 @@ export class SqliteMigrationManager implements IMigrationManager {
       const available = loaded.map((l) => l.name);
       throw new SqliteMigrationError(
         `Migration file not found: ${name}. Available migrations: ${available.join(", ") || "(none)"}`,
-        { code: "migration_not_found", data: { name } },
+        {
+          code: "migration_not_found",
+          title: "Migration Not Found",
+          details: "No migration file with the given name was found in the directory.",
+          data: { name },
+        },
       );
     }
 
@@ -250,6 +267,8 @@ export class SqliteMigrationManager implements IMigrationManager {
     if (alreadyApplied) {
       throw new SqliteMigrationError(`Migration "${name}" is already marked as applied`, {
         code: "migration_already_applied",
+        title: "Migration Already Applied",
+        details: "The migration is already recorded as applied in the tracking table.",
         data: { name },
       });
     }
@@ -291,7 +310,13 @@ export class SqliteMigrationManager implements IMigrationManager {
       const available = applied.map((r) => r.name);
       throw new SqliteMigrationError(
         `Migration not found in tracking table or already rolled back: ${name}. Available applied migrations: ${available.join(", ") || "(none)"}`,
-        { code: "migration_not_found", data: { name } },
+        {
+          code: "migration_not_found",
+          title: "Migration Not Found",
+          details:
+            "The migration is not present in the tracking table or was already rolled back.",
+          data: { name },
+        },
       );
     }
 

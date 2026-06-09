@@ -87,6 +87,8 @@ export const executeMigrationUp = async (
     }
     throw new SqliteMigrationError("Migration up() failed", {
       code: "migration_failed",
+      title: "Migration Failed",
+      details: "The migration's up() function threw while applying the migration.",
       data: { migration: metadata.name },
       debug: { id: migration.id },
       error: err as Error,
@@ -115,6 +117,8 @@ export const executeMigrationDown = async (
   } catch (err) {
     throw new SqliteMigrationError("Migration down() failed", {
       code: "migration_failed",
+      title: "Migration Failed",
+      details: "The migration's down() function threw while rolling back the migration.",
       data: { migration: metadata.name },
       debug: { id: migration.id },
       error: err as Error,

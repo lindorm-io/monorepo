@@ -51,6 +51,9 @@ export const executeMigrationUp = async (
     }
     throw new MongoMigrationError("Migration up() failed", {
       code: "migration_failed",
+      title: "Migration Failed",
+      details:
+        "The migration's up() handler threw; the record was marked failed for crash detection.",
       debug: { id: migration.id, name: metadata.name },
       error: err as Error,
     });
@@ -79,6 +82,8 @@ export const executeMigrationDown = async (
   } catch (err) {
     throw new MongoMigrationError("Migration down() failed", {
       code: "migration_failed",
+      title: "Migration Failed",
+      details: "The migration's down() handler threw while rolling back.",
       debug: { id: migration.id, name: metadata.name },
       error: err as Error,
     });

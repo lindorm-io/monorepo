@@ -16,6 +16,8 @@ export const writeEntity = async (options: WriteEntityOptions): Promise<void> =>
   if (!PROTEUS_ENTITY_NAME_PATTERN.test(name)) {
     throw new EntityMetadataError(`Invalid entity name: "${name}" — must be PascalCase`, {
       code: "invalid_entity_name",
+      title: "Invalid Entity Name",
+      details: "An entity name must be PascalCase.",
       data: { name },
     });
   }

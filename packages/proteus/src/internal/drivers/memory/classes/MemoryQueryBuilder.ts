@@ -68,6 +68,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override whereRaw(): this {
     throw new NotSupportedError("whereRaw is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver cannot execute raw SQL passed to whereRaw.",
       data: { operation: "whereRaw" },
     });
   }
@@ -75,6 +77,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override andWhereRaw(): this {
     throw new NotSupportedError("andWhereRaw is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver cannot execute raw SQL passed to andWhereRaw.",
       data: { operation: "andWhereRaw" },
     });
   }
@@ -82,6 +86,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override orWhereRaw(): this {
     throw new NotSupportedError("orWhereRaw is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver cannot execute raw SQL passed to orWhereRaw.",
       data: { operation: "orWhereRaw" },
     });
   }
@@ -89,6 +95,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override selectRaw(): this {
     throw new NotSupportedError("selectRaw is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver cannot execute raw SQL passed to selectRaw.",
       data: { operation: "selectRaw" },
     });
   }
@@ -96,6 +104,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override groupBy(): this {
     throw new NotSupportedError("groupBy is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver does not implement groupBy aggregation.",
       data: { operation: "groupBy" },
     });
   }
@@ -103,6 +113,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override having(): this {
     throw new NotSupportedError("having is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver does not implement having clauses on aggregations.",
       data: { operation: "having" },
     });
   }
@@ -110,6 +122,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override andHaving(): this {
     throw new NotSupportedError("andHaving is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver does not implement having clauses on aggregations.",
       data: { operation: "andHaving" },
     });
   }
@@ -117,6 +131,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override orHaving(): this {
     throw new NotSupportedError("orHaving is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver does not implement having clauses on aggregations.",
       data: { operation: "orHaving" },
     });
   }
@@ -124,6 +140,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override havingRaw(): this {
     throw new NotSupportedError("havingRaw is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver cannot execute raw SQL passed to havingRaw.",
       data: { operation: "havingRaw" },
     });
   }
@@ -131,6 +149,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override andHavingRaw(): this {
     throw new NotSupportedError("andHavingRaw is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver cannot execute raw SQL passed to andHavingRaw.",
       data: { operation: "andHavingRaw" },
     });
   }
@@ -138,6 +158,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override orHavingRaw(): this {
     throw new NotSupportedError("orHavingRaw is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver cannot execute raw SQL passed to orHavingRaw.",
       data: { operation: "orHavingRaw" },
     });
   }
@@ -145,6 +167,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override window(): this {
     throw new NotSupportedError("window is not supported by the memory driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver does not implement window functions.",
       data: { operation: "window" },
     });
   }
@@ -181,6 +205,8 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         `Entity "${this.metadata.entity.name}" not found`,
         {
           code: "entity_not_found",
+          title: "Entity Not Found",
+          details: `No "${this.metadata.entity.name}" entity matched the query passed to getOneOrFail.`,
           data: { entityName: this.metadata.entity.name },
         },
       );
@@ -465,6 +491,8 @@ class MemoryInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
         `QB insert is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.insert() instead.`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `Query-builder insert cannot span the joined-inheritance tables of "${this.metadata.entity.name}"; use repository.insert() instead.`,
           data: { entityName: this.metadata.entity.name },
         },
       );
@@ -500,6 +528,8 @@ class MemoryInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
           `Duplicate primary key for "${this.metadata.entity.name}": ${pk}`,
           {
             code: "unique_violation",
+            title: "Unique Violation",
+            details: `An entity with the same primary key already exists in "${this.metadata.entity.name}".`,
             debug: { entityName: this.metadata.entity.name, primaryKey: pk },
           },
         );
@@ -567,6 +597,8 @@ class MemoryUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
         `QB update is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.update() instead.`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `Query-builder update cannot span the joined-inheritance tables of "${this.metadata.entity.name}"; use repository.update() instead.`,
           data: { entityName: this.metadata.entity.name },
         },
       );
@@ -678,6 +710,8 @@ class MemoryDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
         `QB delete is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.destroy() instead.`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `Query-builder delete cannot span the joined-inheritance tables of "${this.metadata.entity.name}"; use repository.destroy() instead.`,
           data: { entityName: this.metadata.entity.name },
         },
       );

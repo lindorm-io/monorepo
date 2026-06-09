@@ -32,7 +32,12 @@ export const writeSource = async (options: WriteSourceOptions): Promise<void> =>
   if (!PROTEUS_ALL_DRIVERS.includes(driver)) {
     throw new NotSupportedError(
       `Unknown driver: ${driver}. Valid drivers: ${PROTEUS_ALL_DRIVERS.join(", ")}`,
-      { code: "unknown_driver", data: { driver } },
+      {
+        code: "unknown_driver",
+        title: "Unknown Driver",
+        details: "The configured driver is not one of the supported Proteus drivers.",
+        data: { driver },
+      },
     );
   }
 

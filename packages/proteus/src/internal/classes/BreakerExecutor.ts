@@ -92,6 +92,9 @@ export class BreakerExecutor<E extends IEntity> implements IRepositoryExecutor<E
       if (error instanceof BreakerCircuitOpenError) {
         throw new CircuitOpenError(error.message, {
           code: "circuit_open",
+          title: "Circuit Open",
+          details:
+            "The repository circuit breaker is open and is failing fast instead of calling the database.",
           debug: (error as any).debug,
         });
       }

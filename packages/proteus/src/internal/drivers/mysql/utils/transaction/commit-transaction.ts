@@ -21,6 +21,8 @@ export const commitTransaction = async (
     handle.state = "rolledback";
     throw new MySqlTransactionError("Failed to commit transaction", {
       code: "query_execution_failed",
+      title: "Query Execution Failed",
+      details: "The COMMIT statement failed and the transaction was rolled back.",
       data: { operation: "COMMIT" },
       error: error as Error,
     });

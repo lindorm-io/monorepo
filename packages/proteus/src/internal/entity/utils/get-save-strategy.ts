@@ -23,6 +23,8 @@ export const getSaveStrategy = <E extends IEntity>(
     ) {
       throw new EntityManagerError("Corrupted version value", {
         code: "corrupted_version",
+        title: "Corrupted Version",
+        details: `The @Version field "${version.key}" on entity "${metadata.entity.name}" holds a non-numeric or negative value; the save strategy cannot be determined from a corrupted version.`,
         data: {
           key: version.key,
           value: versionValue,

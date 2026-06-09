@@ -142,6 +142,8 @@ export const markMigrationFinished = async (
   if (changes === 0) {
     throw new SqliteMigrationError("No migration record found", {
       code: "migration_not_found",
+      title: "Migration Not Found",
+      details: "No migration record matched the given id in the tracking table.",
       debug: { id },
     });
   }
@@ -160,6 +162,8 @@ export const markMigrationRolledBack = async (
   if (changes === 0) {
     throw new SqliteMigrationError("No migration record found", {
       code: "migration_not_found",
+      title: "Migration Not Found",
+      details: "No migration record matched the given id in the tracking table.",
       debug: { id },
     });
   }

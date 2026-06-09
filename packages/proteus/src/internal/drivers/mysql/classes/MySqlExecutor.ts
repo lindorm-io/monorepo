@@ -148,6 +148,9 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
           `Update failed: no matching row found for "${this.metadata.entity.name}"`,
           {
             code: "query_execution_failed",
+            title: "Query Execution Failed",
+            details:
+              "The update matched no rows, so the target entity could not be updated.",
             data: { entity: this.metadata.entity.name },
             debug: {
               primaryKey: buildPrimaryKeyDebug(
@@ -485,6 +488,9 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
               `This may indicate non-contiguous AUTO_INCREMENT IDs under innodb_autoinc_lock_mode=2.`,
             {
               code: "query_execution_failed",
+              title: "Query Execution Failed",
+              details:
+                "The bulk insert SELECT-back returned a different row count than expected, possibly due to non-contiguous AUTO_INCREMENT IDs.",
               data: { expected: entities.length, actual: rows.length },
               debug: { firstId },
             },
@@ -612,6 +618,9 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         `Joined insert failed: SELECT-back returned no rows for "${this.metadata.entity.name}"`,
         {
           code: "query_execution_failed",
+          title: "Query Execution Failed",
+          details:
+            "The joined-inheritance insert SELECT-back returned no rows for the inserted entity.",
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -645,6 +654,9 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
           `Update failed: no matching row found for "${this.metadata.entity.name}"`,
           {
             code: "query_execution_failed",
+            title: "Query Execution Failed",
+            details:
+              "The update matched no rows, so the target entity could not be updated.",
             data: { entity: this.metadata.entity.name },
             debug: {
               primaryKey: buildPrimaryKeyDebug(
@@ -666,6 +678,9 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         `Joined update produced no SQL statements for "${this.metadata.entity.name}"`,
         {
           code: "query_execution_failed",
+          title: "Query Execution Failed",
+          details:
+            "The joined-inheritance update produced no root or child SQL statements to execute.",
           data: { entity: this.metadata.entity.name },
         },
       );

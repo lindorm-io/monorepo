@@ -21,6 +21,9 @@ export const loadSource = async (
   if (!existsSync(resolved)) {
     throw new ProteusError(`Source file not found: ${resolved}`, {
       code: "source_file_not_found",
+      title: "Source File Not Found",
+      details:
+        "No file exists at the resolved source path; check the path passed to the CLI.",
       data: { filePath },
       debug: { resolved },
     });
@@ -45,6 +48,9 @@ export const loadSource = async (
           `Available ProteusSource exports: ${sources.map((s) => s.name).join(", ") || "(none)"}`,
         {
           code: "export_not_proteus_source",
+          title: "Export Not Proteus Source",
+          details:
+            "The named export is not a ProteusSource instance; choose one of the available source exports.",
           data: { exportName, available: sources.map((s) => s.name) },
         },
       );
@@ -58,6 +64,8 @@ export const loadSource = async (
         "Ensure the file exports a ProteusSource instance.",
       {
         code: "no_proteus_source_found",
+        title: "No Proteus Source Found",
+        details: "The file must export a ProteusSource instance for the CLI to use.",
         data: { filePath },
         debug: { resolved },
       },
@@ -70,6 +78,9 @@ export const loadSource = async (
         "Use --export <name> to select one.",
       {
         code: "multiple_proteus_sources_found",
+        title: "Multiple Proteus Sources Found",
+        details:
+          "The file exports more than one ProteusSource; pass --export to select which one to use.",
         data: { available: sources.map((s) => s.name) },
       },
     );
