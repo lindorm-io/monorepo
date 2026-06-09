@@ -28,6 +28,8 @@ const resolveVariant = (algorithm: KryptosAlgorithm): NodeMlDsaVariant => {
   if (!variant) {
     throw new KryptosError(`Unsupported AKP algorithm: ${algorithm}`, {
       code: "unsupported_akp_algorithm",
+      title: "Unsupported AKP Algorithm",
+      details: `The algorithm "${algorithm}" is not a recognised ML-DSA AKP variant.`,
       data: { algorithm },
     });
   }

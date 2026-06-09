@@ -34,6 +34,8 @@ export const getOctSize = (options: Options): OctSize => {
       default:
         throw new KryptosError("Unsupported size", {
           code: "unsupported_encryption",
+          title: "Unsupported Encryption",
+          details: `The encryption '${options.encryption}' has no defined oct key size for the 'dir' algorithm.`,
           data: { encryption: options.encryption },
         });
     }
@@ -67,6 +69,8 @@ export const getOctSize = (options: Options): OctSize => {
     default:
       throw new KryptosError("Unsupported size", {
         code: "unsupported_algorithm",
+        title: "Unsupported Algorithm",
+        details: `The algorithm '${options.algorithm}' has no defined oct key size.`,
         data: { algorithm: options.algorithm },
       });
   }

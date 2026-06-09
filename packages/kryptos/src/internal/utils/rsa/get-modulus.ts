@@ -28,6 +28,8 @@ export const getRsaModulus = (options: Options): RsaModulus => {
     default:
       throw new KryptosError("Unsupported algorithm", {
         code: "unsupported_algorithm",
+        title: "Unsupported Algorithm",
+        details: `The algorithm '${options.algorithm}' has no defined RSA modulus size.`,
         data: { algorithm: options.algorithm },
       });
   }

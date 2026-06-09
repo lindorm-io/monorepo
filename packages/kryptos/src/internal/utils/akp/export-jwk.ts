@@ -31,11 +31,15 @@ export const exportAkpToJwk = (options: Options): Result => {
     if (!jwk.pub) {
       throw new KryptosError("Key export failed [pub]: missing public key component", {
         code: "akp_jwk_export_failed",
+        title: "AKP JWK Export Failed",
+        details: "The exported private key JWK was missing its 'pub' component.",
       });
     }
     if (!jwk.priv) {
       throw new KryptosError("Key export failed [priv]: missing private key seed", {
         code: "akp_jwk_export_failed",
+        title: "AKP JWK Export Failed",
+        details: "The exported private key JWK was missing its 'priv' seed component.",
       });
     }
 
@@ -47,6 +51,8 @@ export const exportAkpToJwk = (options: Options): Result => {
     if (!options.publicKey) {
       throw new KryptosError("Public key not available", {
         code: "missing_akp_key_material",
+        title: "Missing AKP Key Material",
+        details: "No private or public key was available to export to JWK.",
       });
     }
 
@@ -60,6 +66,8 @@ export const exportAkpToJwk = (options: Options): Result => {
     if (!jwk.pub) {
       throw new KryptosError("Key export failed [pub]: missing public key component", {
         code: "akp_jwk_export_failed",
+        title: "AKP JWK Export Failed",
+        details: "The exported public key JWK was missing its 'pub' component.",
       });
     }
 
@@ -69,6 +77,8 @@ export const exportAkpToJwk = (options: Options): Result => {
   if (!result.pub.length) {
     throw new KryptosError("Key export failed: no public key available", {
       code: "missing_akp_key_material",
+      title: "Missing AKP Key Material",
+      details: "No public key was available to export to JWK.",
     });
   }
 

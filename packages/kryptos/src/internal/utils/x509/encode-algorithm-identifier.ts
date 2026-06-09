@@ -38,6 +38,8 @@ export const resolveSignatureDescriptor = (
       `RSA-PSS signatures (${algorithm}) for X.509 are not yet supported`,
       {
         code: "unsupported_signature_algorithm",
+        title: "Unsupported Signature Algorithm",
+        details: `RSA-PSS signatures (${algorithm}) are not yet supported for X.509 certificate generation.`,
         data: { algorithm },
       },
     );
@@ -145,6 +147,8 @@ export const resolveSignatureDescriptor = (
     `Unsupported X.509 signature combination: type=${keyType} algorithm=${algorithm}`,
     {
       code: "unsupported_signature_algorithm",
+      title: "Unsupported Signature Algorithm",
+      details: `No X.509 signature algorithm is defined for key type '${keyType}' with algorithm '${algorithm}'.`,
       data: { keyType, algorithm },
     },
   );

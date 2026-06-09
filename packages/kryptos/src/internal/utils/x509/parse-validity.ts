@@ -11,6 +11,9 @@ export const parseX509Validity = (der: Buffer): { notBefore: Date; notAfter: Dat
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("Validity is not a SEQUENCE", {
       code: "invalid_certificate_validity",
+      title: "Invalid Certificate Validity",
+      details:
+        "The certificate Validity field is not an ASN.1 SEQUENCE as required by RFC 5280.",
     });
   }
   const body = der.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
@@ -18,6 +21,8 @@ export const parseX509Validity = (der: Buffer): { notBefore: Date; notAfter: Dat
   if (children.length !== 2) {
     throw new KryptosError("Validity must have exactly two children", {
       code: "invalid_certificate_validity",
+      title: "Invalid Certificate Validity",
+      details: `The certificate Validity SEQUENCE must contain exactly two Time values (notBefore and notAfter) but contained ${children.length}.`,
       data: { childCount: children.length },
     });
   }

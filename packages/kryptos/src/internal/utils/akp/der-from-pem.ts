@@ -26,6 +26,9 @@ export const createAkpDerFromPem = (options: Options): Result => {
     if (!isBuffer(privateKey)) {
       throw new KryptosError("Key creation failed", {
         code: "akp_der_export_failed",
+        title: "AKP DER Export Failed",
+        details:
+          "Exporting the private key from PEM to PKCS8 DER did not return a Buffer.",
       });
     }
 
@@ -44,6 +47,8 @@ export const createAkpDerFromPem = (options: Options): Result => {
     if (!isBuffer(publicKey)) {
       throw new KryptosError("Key creation failed", {
         code: "akp_der_export_failed",
+        title: "AKP DER Export Failed",
+        details: "Exporting the public key from PEM to SPKI DER did not return a Buffer.",
       });
     }
 
@@ -53,6 +58,8 @@ export const createAkpDerFromPem = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "missing_akp_key_material",
+      title: "Missing AKP Key Material",
+      details: "Neither a private key nor a public key was provided in PEM form.",
     });
   }
 

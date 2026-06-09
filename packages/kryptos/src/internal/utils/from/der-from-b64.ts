@@ -58,6 +58,8 @@ export const createDerFromB64 = (options: KryptosString): KryptosBuffer => {
     default:
       throw new KryptosError("Invalid key type", {
         code: "unsupported_key_type",
+        title: "Unsupported Key Type",
+        details: `The key type '${options.type as string}' is not supported for base64url import.`,
         data: { type: options.type },
       });
   }

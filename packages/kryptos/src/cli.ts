@@ -61,6 +61,8 @@ const switchAlgorithmChoices = (
         default:
           throw new KryptosError("Unsupported key type", {
             code: "unsupported_key_type",
+            title: "Unsupported Key Type",
+            details: `The key type "${type}" is not supported for encryption (enc) use.`,
             data: { type, use },
           });
       }
@@ -78,6 +80,8 @@ const switchAlgorithmChoices = (
         default:
           throw new KryptosError("Unsupported key type", {
             code: "unsupported_key_type",
+            title: "Unsupported Key Type",
+            details: `The key type "${type}" is not supported for signature (sig) use.`,
             data: { type, use },
           });
       }
@@ -85,6 +89,8 @@ const switchAlgorithmChoices = (
     default:
       throw new KryptosError("Unsupported key use", {
         code: "unsupported_key_use",
+        title: "Unsupported Key Use",
+        details: `The key use "${use as string}" is not supported; use sig or enc.`,
         data: { use },
       });
   }

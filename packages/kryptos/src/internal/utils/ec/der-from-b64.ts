@@ -11,6 +11,9 @@ export const createEcDerFromB64 = (options: Options): Result => {
   if (!isEcCurve(options.curve)) {
     throw new KryptosError("Curve is required", {
       code: "missing_ec_curve",
+      title: "Missing EC Curve",
+      details:
+        "A valid EC curve (P-256, P-384, or P-521) must be provided to build DER from base64url key material.",
     });
   }
 
@@ -41,6 +44,9 @@ export const createEcDerFromB64 = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "ec_key_creation_failed",
+      title: "EC Key Creation Failed",
+      details:
+        "Neither a private nor a public key was supplied as base64url, so no EC DER key could be created.",
       data: { curve: options.curve },
     });
   }

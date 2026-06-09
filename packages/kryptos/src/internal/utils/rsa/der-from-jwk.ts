@@ -23,6 +23,8 @@ export const createRsaDerFromJwk = (options: Options): Result => {
     if (!isBuffer(privateKey)) {
       throw new KryptosError("Key creation failed", {
         code: "rsa_key_creation_failed",
+        title: "RSA Key Creation Failed",
+        details: "Converting the RSA private JWK to PKCS#1 DER did not produce a buffer.",
         data: { component: "private" },
       });
     }
@@ -37,6 +39,8 @@ export const createRsaDerFromJwk = (options: Options): Result => {
     if (!isBuffer(publicKey)) {
       throw new KryptosError("Key creation failed", {
         code: "rsa_key_creation_failed",
+        title: "RSA Key Creation Failed",
+        details: "Converting the RSA public JWK to PKCS#1 DER did not produce a buffer.",
         data: { component: "public" },
       });
     }
@@ -47,6 +51,9 @@ export const createRsaDerFromJwk = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "rsa_key_creation_failed",
+      title: "RSA Key Creation Failed",
+      details:
+        "The RSA JWK did not contain a complete private or public key to convert to DER.",
     });
   }
 

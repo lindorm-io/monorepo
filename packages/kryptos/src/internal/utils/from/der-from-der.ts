@@ -56,6 +56,8 @@ export const createDerFromDer = (options: KryptosBuffer): KryptosBuffer => {
     default:
       throw new KryptosError("Invalid key type", {
         code: "unsupported_key_type",
+        title: "Unsupported Key Type",
+        details: `The key type '${options.type as string}' is not supported for DER import.`,
         data: { type: options.type },
       });
   }

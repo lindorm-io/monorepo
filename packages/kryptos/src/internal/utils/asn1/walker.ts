@@ -13,6 +13,8 @@ export const readTlv = (
   if (offset >= buffer.length) {
     throw new KryptosError("Unexpected end of ASN.1 buffer", {
       code: "invalid_asn1_structure",
+      title: "Invalid ASN.1 Structure",
+      details: "The read offset is at or beyond the end of the ASN.1 buffer.",
     });
   }
 
@@ -24,6 +26,8 @@ export const readTlv = (
   if (nextOffset > buffer.length) {
     throw new KryptosError("ASN.1 TLV exceeds buffer length", {
       code: "invalid_asn1_structure",
+      title: "Invalid ASN.1 Structure",
+      details: "The decoded TLV content length extends past the end of the buffer.",
     });
   }
 

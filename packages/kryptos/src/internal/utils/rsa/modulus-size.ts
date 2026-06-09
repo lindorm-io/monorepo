@@ -58,6 +58,9 @@ export const modulusSize = (options: Options): RsaModulus => {
   if (!options.privateKey && !options.publicKey) {
     throw new KryptosError("Missing RSA key", {
       code: "missing_rsa_key",
+      title: "Missing RSA Key",
+      details:
+        "Neither a private nor a public RSA key was provided to determine the modulus size.",
     });
   }
 
@@ -68,6 +71,8 @@ export const modulusSize = (options: Options): RsaModulus => {
   if (!VALID_MODULUS.has(bits)) {
     throw new KryptosError(`Unsupported RSA modulus size: ${bits}`, {
       code: "unsupported_rsa_modulus_size",
+      title: "Unsupported RSA Modulus Size",
+      details: `The RSA key modulus of ${bits} bits is not one of the supported sizes (1024, 2048, 3072, 4096).`,
       data: { bits },
     });
   }

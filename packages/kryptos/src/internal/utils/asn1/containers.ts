@@ -22,6 +22,8 @@ export const encodeExplicitTag = (tagNumber: number, inner: Buffer): Buffer => {
   if (tagNumber < 0 || tagNumber > 30) {
     throw new KryptosError(`Unsupported context tag number: ${tagNumber}`, {
       code: "unsupported_asn1_tag",
+      title: "Unsupported ASN.1 Tag",
+      details: "An explicit context tag number must be between 0 and 30 inclusive.",
       data: { tagNumber },
     });
   }
@@ -36,6 +38,8 @@ export const encodeImplicitTag = (
   if (tagNumber < 0 || tagNumber > 30) {
     throw new KryptosError(`Unsupported context tag number: ${tagNumber}`, {
       code: "unsupported_asn1_tag",
+      title: "Unsupported ASN.1 Tag",
+      details: "An implicit context tag number must be between 0 and 30 inclusive.",
       data: { tagNumber },
     });
   }

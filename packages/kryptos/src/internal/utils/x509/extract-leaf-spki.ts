@@ -12,6 +12,9 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
   } catch (err: any) {
     throw new KryptosError("Failed to extract SPKI: invalid DER", {
       code: "spki_extraction_failed",
+      title: "SPKI Extraction Failed",
+      details:
+        "The outer certificate DER could not be parsed while extracting the leaf SubjectPublicKeyInfo.",
       debug: { error: err },
     });
   }
@@ -19,6 +22,9 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
   if (outer.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("Failed to extract SPKI: certificate is not a SEQUENCE", {
       code: "spki_extraction_failed",
+      title: "SPKI Extraction Failed",
+      details:
+        "The outer Certificate structure is not an ASN.1 SEQUENCE while extracting the leaf SubjectPublicKeyInfo.",
     });
   }
 
@@ -28,6 +34,9 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
   } catch (err: any) {
     throw new KryptosError("Failed to extract SPKI: invalid TBSCertificate", {
       code: "spki_extraction_failed",
+      title: "SPKI Extraction Failed",
+      details:
+        "The TBSCertificate could not be parsed while extracting the leaf SubjectPublicKeyInfo.",
       debug: { error: err },
     });
   }
@@ -35,6 +44,9 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
   if (tbs.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("Failed to extract SPKI: TBSCertificate is not a SEQUENCE", {
       code: "spki_extraction_failed",
+      title: "SPKI Extraction Failed",
+      details:
+        "The TBSCertificate structure is not an ASN.1 SEQUENCE while extracting the leaf SubjectPublicKeyInfo.",
     });
   }
 
@@ -45,6 +57,9 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
     if (offset >= tbsEnd) {
       throw new KryptosError("Failed to extract SPKI: TBSCertificate truncated", {
         code: "spki_extraction_failed",
+        title: "SPKI Extraction Failed",
+        details:
+          "The TBSCertificate ended before the SubjectPublicKeyInfo field could be reached.",
       });
     }
     return readTlv(der, offset);
@@ -68,6 +83,9 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
     if (err instanceof KryptosError) throw err;
     throw new KryptosError("Failed to extract SPKI: TBSCertificate walk failed", {
       code: "spki_extraction_failed",
+      title: "SPKI Extraction Failed",
+      details:
+        "Walking the TBSCertificate fields to locate the SubjectPublicKeyInfo failed on a malformed TLV.",
       debug: { error: err },
     });
   }
@@ -77,6 +95,9 @@ export const extractLeafSpki = (der: Buffer): Buffer => {
       "Failed to extract SPKI: subjectPublicKeyInfo is not a SEQUENCE",
       {
         code: "spki_extraction_failed",
+        title: "SPKI Extraction Failed",
+        details:
+          "The field at the SubjectPublicKeyInfo position is not an ASN.1 SEQUENCE.",
       },
     );
   }

@@ -42,6 +42,8 @@ export const generateKey = (options: KryptosGenerate): GenerateResult => {
     default:
       throw new KryptosError("Invalid key type", {
         code: "unsupported_key_type",
+        title: "Unsupported Key Type",
+        details: `The key type "${options.type as string}" is not supported for synchronous key generation.`,
         data: { type: options.type },
       });
   }
@@ -69,6 +71,8 @@ export const generateKeyAsync = async (
     default:
       throw new KryptosError("Invalid key type", {
         code: "unsupported_key_type",
+        title: "Unsupported Key Type",
+        details: `The key type "${options.type as string}" is not supported for asynchronous key generation.`,
         data: { type: options.type },
       });
   }
@@ -201,6 +205,8 @@ export const autoGenerateConfig = (algorithm: KryptosAlgorithm): AutoResult => {
     default:
       throw new KryptosError("Invalid algorithm", {
         code: "unsupported_algorithm",
+        title: "Unsupported Algorithm",
+        details: `The algorithm "${algorithm as string}" has no automatic key generation configuration.`,
         data: { algorithm },
       });
   }

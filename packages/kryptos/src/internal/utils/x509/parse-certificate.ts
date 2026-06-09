@@ -28,6 +28,9 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (outer.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("Certificate is not a SEQUENCE", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The outer Certificate structure is not an ASN.1 SEQUENCE as required by RFC 5280 §4.1.",
       data: { field: "certificate" },
     });
   }
@@ -39,6 +42,9 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (tbsTlv.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("TBSCertificate is not a SEQUENCE", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The tbsCertificate field is not an ASN.1 SEQUENCE as required by RFC 5280 §4.1.",
       data: { field: "tbsCertificate" },
     });
   }
@@ -49,6 +55,9 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (sigAlgTlv.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("Certificate signatureAlgorithm is not a SEQUENCE", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The outer signatureAlgorithm field is not an ASN.1 SEQUENCE as required by RFC 5280 §4.1.1.2.",
       data: { field: "signatureAlgorithm" },
     });
   }
@@ -60,12 +69,18 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (sigValueTlv.tag !== ASN1_TAG_BIT_STRING) {
     throw new KryptosError("Certificate signatureValue is not a BIT STRING", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The signatureValue field is not an ASN.1 BIT STRING as required by RFC 5280 §4.1.1.3.",
       data: { field: "signatureValue" },
     });
   }
   if (sigValueTlv.nextOffset !== outerEnd) {
     throw new KryptosError("Certificate has trailing bytes", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "Extra bytes were present after the certificate signatureValue; a single DER certificate must end cleanly.",
       data: { field: "certificate" },
     });
   }
@@ -90,6 +105,9 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (child.tag !== ASN1_TAG_INTEGER) {
     throw new KryptosError("TBSCertificate serialNumber is not an INTEGER", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The tbsCertificate serialNumber field is not an ASN.1 INTEGER as required by RFC 5280 §4.1.2.2.",
       data: { field: "serialNumber" },
     });
   }
@@ -103,6 +121,9 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (child.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("TBSCertificate signature is not a SEQUENCE", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The tbsCertificate signature AlgorithmIdentifier field is not an ASN.1 SEQUENCE as required by RFC 5280 §4.1.2.3.",
       data: { field: "signature" },
     });
   }
@@ -111,7 +132,12 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (!Buffer.from(innerSigAlgBytes).equals(Buffer.from(sigAlgBytes))) {
     throw new KryptosError(
       "Certificate signature algorithm mismatch between outer and inner TBS (RFC 5280 §4.1.1.2)",
-      { code: "certificate_signature_algorithm_mismatch" },
+      {
+        code: "certificate_signature_algorithm_mismatch",
+        title: "Certificate Signature Algorithm Mismatch",
+        details:
+          "The tbsCertificate signature AlgorithmIdentifier does not byte-equal the outer signatureAlgorithm, violating RFC 5280 §4.1.1.2.",
+      },
     );
   }
   offset = child.nextOffset;
@@ -121,6 +147,9 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (child.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("TBSCertificate issuer is not a SEQUENCE", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The tbsCertificate issuer Name field is not an ASN.1 SEQUENCE as required by RFC 5280 §4.1.2.4.",
       data: { field: "issuer" },
     });
   }
@@ -132,6 +161,9 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (child.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("TBSCertificate validity is not a SEQUENCE", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The tbsCertificate validity field is not an ASN.1 SEQUENCE as required by RFC 5280 §4.1.2.5.",
       data: { field: "validity" },
     });
   }
@@ -145,6 +177,9 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (child.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("TBSCertificate subject is not a SEQUENCE", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The tbsCertificate subject Name field is not an ASN.1 SEQUENCE as required by RFC 5280 §4.1.2.6.",
       data: { field: "subject" },
     });
   }
@@ -156,6 +191,9 @@ export const parseX509Certificate = (der: Buffer): ParsedX509Certificate => {
   if (child.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("TBSCertificate SPKI is not a SEQUENCE", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "The tbsCertificate subjectPublicKeyInfo field is not an ASN.1 SEQUENCE as required by RFC 5280 §4.1.2.7.",
       data: { field: "subjectPublicKeyInfo" },
     });
   }

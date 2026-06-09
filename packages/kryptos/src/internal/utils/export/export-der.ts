@@ -13,6 +13,9 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
       if (!isAkpDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided AKP key options are not valid DER-encoded options and cannot be exported to DER.",
           data: { type: "AKP" },
         });
       }
@@ -29,6 +32,9 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
       if (!isEcDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided EC key options are not valid DER-encoded options and cannot be exported to DER.",
           data: { type: "EC" },
         });
       }
@@ -46,6 +52,9 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
       if (!isOctDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided oct key options are not valid DER-encoded options and cannot be exported to DER.",
           data: { type: "oct" },
         });
       }
@@ -62,6 +71,9 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
       if (!isOkpDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided OKP key options are not valid DER-encoded options and cannot be exported to DER.",
           data: { type: "OKP" },
         });
       }
@@ -79,6 +91,9 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
       if (!isRsaDer(options)) {
         throw new KryptosError("Invalid options", {
           code: "invalid_der_export_options",
+          title: "Invalid DER Export Options",
+          details:
+            "The provided RSA key options are not valid DER-encoded options and cannot be exported to DER.",
           data: { type: "RSA" },
         });
       }
@@ -94,6 +109,8 @@ export const exportToDer = (options: ExportOptions): KryptosBuffer => {
     default:
       throw new KryptosError("Unsupported key type", {
         code: "unsupported_export_key_type",
+        title: "Unsupported Export Key Type",
+        details: `The key type "${options.type as string}" is not supported for DER export.`,
         data: { type: options.type },
       });
   }

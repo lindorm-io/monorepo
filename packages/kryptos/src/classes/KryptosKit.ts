@@ -186,6 +186,8 @@ export class KryptosKit {
     if (!string.startsWith("kryptos:")) {
       throw new KryptosError("Invalid kryptos string", {
         code: "invalid_kryptos_string",
+        title: "Invalid Kryptos String",
+        details: 'The environment Kryptos string must begin with the "kryptos:" prefix.',
       });
     }
 
@@ -208,6 +210,9 @@ export class KryptosKit {
 
     throw new KryptosError("Unexpected key format", {
       code: "unknown_key_format",
+      title: "Unknown Key Format",
+      details:
+        "The provided argument did not match any recognized key format (b64, DER, JWK, or PEM).",
     });
   }
 
@@ -239,7 +244,12 @@ export class KryptosKit {
       if (incomingS256 && incomingS256 !== kryptos.certificateThumbprint) {
         throw new KryptosError(
           "fromJWK: x5t#S256 thumbprint does not match recomputed leaf cert hash",
-          { code: "certificate_thumbprint_mismatch" },
+          {
+            code: "certificate_thumbprint_mismatch",
+            title: "Certificate Thumbprint Mismatch",
+            details:
+              "The x5t#S256 thumbprint in the JWK does not match the recomputed SHA-256 hash of the leaf certificate.",
+          },
         );
       }
     }
@@ -261,16 +271,23 @@ export class KryptosKit {
     if (!options.algorithm) {
       throw new KryptosError("Algorithm is required", {
         code: "missing_algorithm",
+        title: "Missing Algorithm",
+        details: "An algorithm could not be resolved from the provided key options.",
       });
     }
     if (!options.type) {
       throw new KryptosError("Type is required", {
         code: "missing_key_type",
+        title: "Missing Key Type",
+        details: "A key type could not be resolved from the provided key options.",
       });
     }
     if (!options.use) {
       throw new KryptosError("Use is required", {
         code: "missing_key_use",
+        title: "Missing Key Use",
+        details:
+          "A key use (sig or enc) could not be resolved from the provided key options.",
       });
     }
 
@@ -449,6 +466,9 @@ export class KryptosKit {
     if (generate.type === "oct") {
       throw new KryptosError("symmetric keys cannot have certificates", {
         code: "symmetric_key_certificate_unsupported",
+        title: "Symmetric Key Certificate Unsupported",
+        details:
+          "Symmetric (oct) keys cannot be used to sign or carry X.509 certificates.",
         data: { type: generate.type },
       });
     }

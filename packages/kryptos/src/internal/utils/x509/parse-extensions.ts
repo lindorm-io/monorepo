@@ -42,6 +42,9 @@ const parseBasicConstraints = (extnValue: Buffer): { ca: boolean } => {
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("BasicConstraints is not a SEQUENCE", {
       code: "invalid_certificate_extension",
+      title: "Invalid Certificate Extension",
+      details:
+        "The basicConstraints extension value is not an ASN.1 SEQUENCE as required by RFC 5280 §4.2.1.9.",
     });
   }
   const body = extnValue.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
@@ -59,6 +62,9 @@ const parseKeyUsage = (extnValue: Buffer): ReadonlyArray<ParsedX509KeyUsageFlag>
   if (tlv.tag !== ASN1_TAG_BIT_STRING) {
     throw new KryptosError("KeyUsage is not a BIT STRING", {
       code: "invalid_certificate_extension",
+      title: "Invalid Certificate Extension",
+      details:
+        "The keyUsage extension value is not an ASN.1 BIT STRING as required by RFC 5280 §4.2.1.3.",
     });
   }
   const body = extnValue.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
@@ -80,6 +86,9 @@ const parseSubjectKeyIdentifier = (extnValue: Buffer): Buffer => {
   if (tlv.tag !== ASN1_TAG_OCTET_STRING) {
     throw new KryptosError("SubjectKeyIdentifier is not an OCTET STRING", {
       code: "invalid_certificate_extension",
+      title: "Invalid Certificate Extension",
+      details:
+        "The subjectKeyIdentifier extension value is not an ASN.1 OCTET STRING as required by RFC 5280 §4.2.1.2.",
     });
   }
   return Buffer.from(
@@ -92,6 +101,9 @@ const parseAuthorityKeyIdentifier = (extnValue: Buffer): Buffer | undefined => {
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("AuthorityKeyIdentifier is not a SEQUENCE", {
       code: "invalid_certificate_extension",
+      title: "Invalid Certificate Extension",
+      details:
+        "The authorityKeyIdentifier extension value is not an ASN.1 SEQUENCE as required by RFC 5280 §4.2.1.1.",
     });
   }
   let offset = tlv.contentStart;
@@ -177,6 +189,8 @@ const decodeSanIpBytes = (bytes: Buffer): string => {
     `subjectAlternativeName ip value has unexpected length ${bytes.length} (expected 4 or 16)`,
     {
       code: "invalid_certificate_extension",
+      title: "Invalid Certificate Extension",
+      details: `A subjectAltName iPAddress value had ${bytes.length} bytes; only 4 (IPv4) or 16 (IPv6) are valid.`,
       data: { length: bytes.length, expected: [4, 16] },
     },
   );
@@ -189,6 +203,9 @@ const parseSubjectAltNames = (
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("SubjectAltName is not a SEQUENCE", {
       code: "invalid_certificate_extension",
+      title: "Invalid Certificate Extension",
+      details:
+        "The subjectAltName extension value is not an ASN.1 SEQUENCE of GeneralName as required by RFC 5280 §4.2.1.6.",
     });
   }
   const names: Array<ParsedX509SubjectAltName> = [];
@@ -218,6 +235,9 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("Extensions is not a SEQUENCE", {
       code: "invalid_certificate_extension",
+      title: "Invalid Certificate Extension",
+      details:
+        "The TBSCertificate extensions field is not an ASN.1 SEQUENCE of Extension as required by RFC 5280 §4.1.",
     });
   }
   const body = der.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
@@ -243,6 +263,8 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
     if (parts.length <= valueIndex || parts[valueIndex].tag !== ASN1_TAG_OCTET_STRING) {
       throw new KryptosError(`Extension ${oid} missing extnValue OCTET STRING`, {
         code: "invalid_certificate_extension",
+        title: "Invalid Certificate Extension",
+        details: `The extension with OID ${oid} is missing its extnValue OCTET STRING wrapper required by RFC 5280 §4.1.`,
         data: { oid },
       });
     }
@@ -261,6 +283,8 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
     } else if (critical) {
       throw new KryptosError(`Unknown critical X.509 extension: ${oid}`, {
         code: "unsupported_critical_certificate_extension",
+        title: "Unsupported Critical Certificate Extension",
+        details: `The certificate contains an unrecognized extension with OID ${oid} marked critical, which RFC 5280 §4.2 requires processing to reject.`,
         data: { oid },
       });
     }

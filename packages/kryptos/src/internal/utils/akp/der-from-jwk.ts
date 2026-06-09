@@ -11,6 +11,8 @@ export const createAkpDerFromJwk = (options: Options): Result => {
   if (!options.pub) {
     throw new KryptosError("Missing public key component [pub]", {
       code: "missing_akp_jwk_component",
+      title: "Missing AKP JWK Component",
+      details: "The provided JWK was missing its required 'pub' component.",
     });
   }
 
@@ -29,6 +31,9 @@ export const createAkpDerFromJwk = (options: Options): Result => {
     if (!isBuffer(privateKey)) {
       throw new KryptosError("Key creation failed", {
         code: "akp_der_export_failed",
+        title: "AKP DER Export Failed",
+        details:
+          "Exporting the private key from JWK to PKCS8 DER did not return a Buffer.",
       });
     }
 
@@ -42,6 +47,8 @@ export const createAkpDerFromJwk = (options: Options): Result => {
     if (!isBuffer(publicKey)) {
       throw new KryptosError("Key creation failed", {
         code: "akp_der_export_failed",
+        title: "AKP DER Export Failed",
+        details: "Exporting the public key from JWK to SPKI DER did not return a Buffer.",
       });
     }
 
@@ -51,6 +58,8 @@ export const createAkpDerFromJwk = (options: Options): Result => {
   if (!result.privateKey && !result.publicKey.length) {
     throw new KryptosError("Key creation failed", {
       code: "missing_akp_key_material",
+      title: "Missing AKP Key Material",
+      details: "The JWK yielded neither a usable private key nor public key.",
     });
   }
 

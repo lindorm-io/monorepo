@@ -48,6 +48,9 @@ const buildSerialNumber = (provided?: Buffer): Buffer => {
     if (provided.length === 0) {
       throw new KryptosError("serialNumber must be non-empty", {
         code: "invalid_certificate_options",
+        title: "Invalid Certificate Options",
+        details:
+          "A zero-length serialNumber was provided; the certificate serial number must contain at least one byte.",
       });
     }
     return provided;
@@ -67,6 +70,9 @@ const assertKeyUsageAgainstBasicConstraints = (
       "keyUsage must contain at least one flag (RFC 5280 §4.2.1.3)",
       {
         code: "invalid_certificate_options",
+        title: "Invalid Certificate Options",
+        details:
+          "The keyUsage option was empty; RFC 5280 §4.2.1.3 requires at least one key usage flag.",
       },
     );
   }
@@ -75,7 +81,12 @@ const assertKeyUsageAgainstBasicConstraints = (
   if (needsCa && !basicConstraints.ca) {
     throw new KryptosError(
       "keyUsage with keyCertSign or cRLSign requires basicConstraints.ca=true (RFC 5280 §4.2.1.3)",
-      { code: "invalid_certificate_options" },
+      {
+        code: "invalid_certificate_options",
+        title: "Invalid Certificate Options",
+        details:
+          "keyUsage includes keyCertSign or cRLSign, which RFC 5280 §4.2.1.3 only permits when basicConstraints.ca=true.",
+      },
     );
   }
 };
@@ -102,6 +113,8 @@ export const generateX509Certificate = (options: GenerateX509Options): Buffer =>
   if (options.subjectKryptos.type === "oct" || options.issuerKryptos.type === "oct") {
     throw new KryptosError("X.509 certificates require asymmetric keys", {
       code: "unsupported_key_type",
+      title: "Unsupported Key Type",
+      details: `X.509 certificate generation requires asymmetric keys, but received subject type '${options.subjectKryptos.type}' and issuer type '${options.issuerKryptos.type}'.`,
       data: {
         subjectType: options.subjectKryptos.type,
         issuerType: options.issuerKryptos.type,
@@ -111,6 +124,8 @@ export const generateX509Certificate = (options: GenerateX509Options): Buffer =>
   if (options.notBefore.getTime() >= options.notAfter.getTime()) {
     throw new KryptosError("notBefore must be strictly before notAfter", {
       code: "invalid_certificate_options",
+      title: "Invalid Certificate Options",
+      details: `The validity window is invalid: notBefore (${options.notBefore.toISOString()}) must be strictly before notAfter (${options.notAfter.toISOString()}).`,
       data: {
         notBefore: options.notBefore.toISOString(),
         notAfter: options.notAfter.toISOString(),

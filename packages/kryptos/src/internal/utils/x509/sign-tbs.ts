@@ -32,6 +32,8 @@ export const detectOkpCurve = (
     `Unsupported OKP asymmetric key type for X.509 signing: ${obj.asymmetricKeyType}`,
     {
       code: "unsupported_signature_algorithm",
+      title: "Unsupported Signature Algorithm",
+      details: `The OKP issuer key has asymmetric type '${obj.asymmetricKeyType}'; only Ed25519 and Ed448 are supported for X.509 signing.`,
       data: { keyType, asymmetricKeyType: obj.asymmetricKeyType },
     },
   );
@@ -50,6 +52,9 @@ export const signX509Tbs = (options: SignTbsOptions): Buffer => {
     if (!Buffer.isBuffer(signature)) {
       throw new KryptosError("One-shot signing did not return a Buffer", {
         code: "certificate_signing_failed",
+        title: "Certificate Signing Failed",
+        details:
+          "One-shot signing of the TBSCertificate (EdDSA or ML-DSA) did not return a Buffer.",
       });
     }
     return signature;
@@ -58,6 +63,9 @@ export const signX509Tbs = (options: SignTbsOptions): Buffer => {
   if (descriptor.hashName === null) {
     throw new KryptosError("Missing hash name for hashing signature algorithm", {
       code: "certificate_signing_failed",
+      title: "Certificate Signing Failed",
+      details:
+        "The resolved signature descriptor has no hash name, so the hashing signature algorithm cannot be applied to the TBSCertificate.",
     });
   }
 
@@ -68,6 +76,8 @@ export const signX509Tbs = (options: SignTbsOptions): Buffer => {
   if (!Buffer.isBuffer(signature)) {
     throw new KryptosError("Signing did not return a Buffer", {
       code: "certificate_signing_failed",
+      title: "Certificate Signing Failed",
+      details: "Hashing-based signing of the TBSCertificate did not return a Buffer.",
     });
   }
 

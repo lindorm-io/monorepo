@@ -58,11 +58,15 @@ export const encodeOid = (dotted: string): Buffer => {
     if (!Number.isInteger(n) || n < 0) {
       throw new KryptosError(`Invalid OID component: ${p}`, {
         code: "invalid_oid",
+        title: "Invalid OID",
+        details: "An OID component was not a non-negative integer.",
       });
     }
     if (n > OID_SUBIDENTIFIER_MAX) {
       throw new KryptosError(`OID subidentifier exceeds encoder range: ${p}`, {
         code: "invalid_oid",
+        title: "Invalid OID",
+        details: `An OID subidentifier exceeded the maximum encodable value of ${OID_SUBIDENTIFIER_MAX}.`,
       });
     }
     return n;
@@ -71,6 +75,8 @@ export const encodeOid = (dotted: string): Buffer => {
   if (parts.length < 2) {
     throw new KryptosError(`OID must have at least two components: ${dotted}`, {
       code: "invalid_oid",
+      title: "Invalid OID",
+      details: "An OID must contain at least two dot-separated components.",
     });
   }
 
@@ -78,6 +84,9 @@ export const encodeOid = (dotted: string): Buffer => {
   if (first > 2 || (first < 2 && second >= 40)) {
     throw new KryptosError(`Invalid OID prefix: ${dotted}`, {
       code: "invalid_oid",
+      title: "Invalid OID",
+      details:
+        "The OID's first component must be 0-2, and the second must be below 40 when the first is below 2.",
     });
   }
 
@@ -108,6 +117,8 @@ export const decodeOid = (bytes: Buffer): string => {
   if (bytes.length === 0) {
     throw new KryptosError("Empty OID content", {
       code: "invalid_oid",
+      title: "Invalid OID",
+      details: "The OID content octets were empty and could not be decoded.",
     });
   }
 
@@ -148,6 +159,8 @@ export const encodeUtcTime = (date: Date): Buffer => {
   if (y < 1950 || y > 2049) {
     throw new KryptosError(`UTCTime out of range: ${y}`, {
       code: "invalid_asn1_time",
+      title: "Invalid ASN.1 Time",
+      details: "UTCTime only supports years from 1950 to 2049 inclusive.",
     });
   }
   const yy = (y % 100).toString().padStart(2, "0");
@@ -167,6 +180,8 @@ export const decodeUtcTime = (bytes: Buffer): Date => {
   if (!/^\d{12}Z$/.test(str)) {
     throw new KryptosError(`Invalid UTCTime: ${str}`, {
       code: "invalid_asn1_time",
+      title: "Invalid ASN.1 Time",
+      details: "UTCTime content must match the YYMMDDHHMMSSZ format.",
     });
   }
   const yy = parseInt(str.slice(0, 2), 10);
@@ -192,6 +207,8 @@ export const decodeGeneralizedTime = (bytes: Buffer): Date => {
   if (!/^\d{14}Z$/.test(str)) {
     throw new KryptosError(`Invalid GeneralizedTime: ${str}`, {
       code: "invalid_asn1_time",
+      title: "Invalid ASN.1 Time",
+      details: "GeneralizedTime content must match the YYYYMMDDHHMMSSZ format.",
     });
   }
   const iso = `${str.slice(0, 4)}-${str.slice(4, 6)}-${str.slice(6, 8)}T${str.slice(8, 10)}:${str.slice(10, 12)}:${str.slice(12, 14)}Z`;
@@ -208,6 +225,8 @@ export const decodeTime = (bytes: Buffer, tag: number): Date => {
   if (tag === ASN1_TAG_GENERALIZED_TIME) return decodeGeneralizedTime(bytes);
   throw new KryptosError(`Unexpected time tag: 0x${tag.toString(16)}`, {
     code: "unexpected_asn1_tag",
+    title: "Unexpected ASN.1 Tag",
+    details: "Decoding a time value requires a UTCTime or GeneralizedTime tag.",
     data: { tag },
   });
 };
@@ -216,6 +235,8 @@ export const encodeBitString = (bytes: Buffer, unusedBits = 0): Buffer => {
   if (unusedBits < 0 || unusedBits > 7) {
     throw new KryptosError(`Invalid unused bits: ${unusedBits}`, {
       code: "invalid_asn1_bit_string",
+      title: "Invalid ASN.1 BIT STRING",
+      details: "The BIT STRING unused-bits count must be between 0 and 7 inclusive.",
     });
   }
   return wrap(ASN1_TAG_BIT_STRING, Buffer.concat([Buffer.from([unusedBits]), bytes]));
@@ -225,6 +246,8 @@ export const decodeBitString = (bytes: Buffer): { bytes: Buffer; unusedBits: num
   if (bytes.length === 0) {
     throw new KryptosError("Empty BIT STRING content", {
       code: "invalid_asn1_bit_string",
+      title: "Invalid ASN.1 BIT STRING",
+      details: "A BIT STRING must contain at least the leading unused-bits octet.",
     });
   }
   return { bytes: Buffer.from(bytes.subarray(1)), unusedBits: bytes[0] };
@@ -237,6 +260,8 @@ export const decodeBoolean = (bytes: Buffer): boolean => {
   if (bytes.length !== 1) {
     throw new KryptosError("Invalid BOOLEAN length", {
       code: "invalid_asn1_boolean",
+      title: "Invalid ASN.1 BOOLEAN",
+      details: "A BOOLEAN value must encode to exactly one content octet.",
     });
   }
   return bytes[0] !== 0x00;

@@ -8,6 +8,8 @@ const allocate = (options: KryptosFromString): Buffer => {
   if (!options.privateKey) {
     throw new KryptosError("Missing private key", {
       code: "missing_oct_private_key",
+      title: "Missing Oct Private Key",
+      details: "No oct private key string was provided to allocate the key buffer.",
     });
   }
 
@@ -32,6 +34,8 @@ export const createDerFromUtf = (options: KryptosFromString): KryptosBuffer => {
     default:
       throw new KryptosError("Invalid key type", {
         code: "unsupported_key_type",
+        title: "Unsupported Key Type",
+        details: `The key type '${options.type}' is not supported for UTF-8 import; only 'oct' is allowed.`,
         data: { type: options.type },
       });
   }

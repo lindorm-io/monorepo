@@ -42,6 +42,9 @@ const parseEntry = (der: Buffer): ParsedEntry => {
   } catch (err: any) {
     throw new KryptosError("Failed to parse X.509 certificate", {
       code: "invalid_certificate",
+      title: "Invalid Certificate",
+      details:
+        "A certificate in the chain or trust anchor set could not be parsed as a valid X.509 DER structure.",
       debug: { error: err },
     });
   }
@@ -61,6 +64,8 @@ const verifySignature = (child: ParsedX509Certificate, issuerSpki: Buffer): bool
       `Unsupported certificate signature algorithm OID: ${child.signatureAlgorithm}`,
       {
         code: "unsupported_signature_algorithm",
+        title: "Unsupported Signature Algorithm",
+        details: `The certificate is signed with algorithm OID ${child.signatureAlgorithm}, which is not among the supported X.509 signature algorithms.`,
         data: { oid: child.signatureAlgorithm },
       },
     );
@@ -91,6 +96,9 @@ export const verifyX509Chain = (
   if (chain.length === 0) {
     throw new KryptosError("Certificate chain is empty", {
       code: "certificate_chain_empty",
+      title: "Certificate Chain Empty",
+      details:
+        "An empty certificate chain was passed to chain verification; at least the leaf certificate is required.",
     });
   }
 
@@ -101,6 +109,9 @@ export const verifyX509Chain = (
   if (anchorDers.length === 0) {
     throw new KryptosError("At least one trust anchor is required", {
       code: "trust_anchor_required",
+      title: "Trust Anchor Required",
+      details:
+        "No trust anchors were supplied; chain verification needs at least one trusted root or intermediate certificate.",
     });
   }
 
@@ -114,6 +125,8 @@ export const verifyX509Chain = (
         `Certificate ${describeCert(parsed.cert)} is outside its validity window`,
         {
           code: "certificate_outside_validity_window",
+          title: "Certificate Outside Validity Window",
+          details: `Certificate ${describeCert(parsed.cert)} is not valid at the current time (notBefore ${parsed.cert.notBefore.toISOString()}, notAfter ${parsed.cert.notAfter.toISOString()}).`,
           data: {
             certificate: describeCert(parsed.cert),
             notBefore: parsed.cert.notBefore.toISOString(),
@@ -131,6 +144,8 @@ export const verifyX509Chain = (
         `Non-leaf certificate ${describeCert(parsedChain[i].cert)} is not marked as a CA`,
         {
           code: "certificate_not_a_ca",
+          title: "Certificate Not A CA",
+          details: `Non-leaf certificate ${describeCert(parsedChain[i].cert)} lacks basicConstraints CA=true and cannot act as an issuer in the chain.`,
           data: { certificate: describeCert(parsedChain[i].cert) },
         },
       );
@@ -145,6 +160,8 @@ export const verifyX509Chain = (
         `Signature verification failed for ${describeCert(current.cert)} against issuer ${describeCert(next.cert)}`,
         {
           code: "certificate_signature_verification_failed",
+          title: "Certificate Signature Verification Failed",
+          details: `The signature on certificate ${describeCert(current.cert)} did not verify against the public key of its claimed issuer ${describeCert(next.cert)}.`,
           data: {
             certificate: describeCert(current.cert),
             issuer: describeCert(next.cert),
@@ -170,6 +187,8 @@ export const verifyX509Chain = (
       `Top of certificate chain ${describeCert(last.cert)} does not match any trust anchor`,
       {
         code: "trust_anchor_mismatch",
+        title: "Trust Anchor Mismatch",
+        details: `The top certificate ${describeCert(last.cert)} neither equals nor is verifiable by any supplied trust anchor.`,
         data: { certificate: describeCert(last.cert) },
       },
     );
