@@ -42,6 +42,9 @@ export class RedisRpcServer<
     if (!this.state.publishConnection) {
       throw new IrisDriverError("Cannot serve RPC: connection is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The Redis publish connection is not established, so the RPC server cannot register a handler.",
         data: { driver: "redis" },
       });
     }

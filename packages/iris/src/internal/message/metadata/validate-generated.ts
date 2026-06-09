@@ -22,6 +22,9 @@ export const validateGenerated = (
     if (!field) {
       throw new IrisMetadataError("Generated field not found", {
         code: "generated_field_not_found",
+        title: "Generated Field Not Found",
+        details:
+          "A @Generated decorator references a property that has no corresponding @Field. Add a @Field decorator to the generated property.",
         debug: { target: targetName, field: gen.key },
       });
     }
@@ -31,6 +34,9 @@ export const validateGenerated = (
     if (field.type !== expectedType) {
       throw new IrisMetadataError("Invalid @Generated strategy for field type", {
         code: "invalid_generated_strategy",
+        title: "Invalid Generated Strategy",
+        details:
+          "The @Generated strategy does not match the field's declared type, for example a uuid strategy on a non-uuid field. Align the strategy with the field type.",
         debug: {
           target: targetName,
           field: field.key,

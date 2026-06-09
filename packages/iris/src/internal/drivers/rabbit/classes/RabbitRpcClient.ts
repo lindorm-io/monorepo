@@ -62,7 +62,13 @@ export class RabbitRpcClient<
     if (!publishChannel) {
       throw new IrisDriverError(
         "Cannot send RPC request: publish channel is not available",
-        { code: "connection_unavailable", data: { driver: "rabbit" } },
+        {
+          code: "connection_unavailable",
+          title: "Connection Unavailable",
+          details:
+            "The RabbitMQ publish channel is not available, so the RPC request cannot be sent.",
+          data: { driver: "rabbit" },
+        },
       );
     }
 
@@ -93,6 +99,8 @@ export class RabbitRpcClient<
             pending.reject(
               new IrisTransportError("Failed to publish RPC request", {
                 code: "rpc_publish_failed",
+                title: "RPC Publish Failed",
+                details: `The broker could not route the RPC request for topic "${topic}"; the request was returned as undeliverable.`,
                 data: { topic },
                 debug: { correlationId },
               }),
@@ -141,7 +149,13 @@ export class RabbitRpcClient<
     if (!channel) {
       throw new IrisDriverError(
         "Cannot consume RPC replies: publish channel is not available",
-        { code: "connection_unavailable", data: { driver: "rabbit" } },
+        {
+          code: "connection_unavailable",
+          title: "Connection Unavailable",
+          details:
+            "The RabbitMQ publish channel is not available, so the RPC reply consumer cannot be established.",
+          data: { driver: "rabbit" },
+        },
       );
     }
 

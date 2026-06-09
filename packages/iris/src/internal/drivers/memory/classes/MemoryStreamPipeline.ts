@@ -44,7 +44,12 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
     if (!this.inputClass) {
       throw new IrisDriverError(
         "Stream pipeline requires an input class. Call .from() before .to().",
-        { code: "pipeline_input_class_required" },
+        {
+          code: "pipeline_input_class_required",
+          title: "Pipeline Input Class Required",
+          details:
+            "The stream pipeline was started without an input class; call .from() before .to().",
+        },
       );
     }
 

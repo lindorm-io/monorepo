@@ -16,7 +16,13 @@ export const runHooksSync = (
     if (result instanceof Promise) {
       throw new IrisError(
         `@${decorator} hook returned a Promise — ${decorator} hooks must be synchronous`,
-        { code: "async_sync_hook", data: { decorator } },
+        {
+          code: "async_sync_hook",
+          title: "Async Sync Hook",
+          details:
+            "A synchronous lifecycle hook returned a Promise. Make the named hook's callback synchronous, or move the logic to an async hook.",
+          data: { decorator },
+        },
       );
     }
   }

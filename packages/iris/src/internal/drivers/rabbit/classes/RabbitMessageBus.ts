@@ -56,6 +56,9 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     if (!channel) {
       throw new IrisDriverError("Cannot subscribe: consume channel is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The RabbitMQ consume channel is not available, so the message bus cannot subscribe.",
         data: { driver: "rabbit" },
       });
     }

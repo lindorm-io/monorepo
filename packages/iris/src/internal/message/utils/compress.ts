@@ -31,7 +31,13 @@ export const compress = async (
     default:
       throw new IrisSerializationError(
         `Unsupported compression algorithm: ${String(algorithm)}`,
-        { code: "unsupported_compression_algorithm", data: { algorithm } },
+        {
+          code: "unsupported_compression_algorithm",
+          title: "Unsupported Compression Algorithm",
+          details:
+            "The requested compression algorithm is not supported. Use one of: gzip, deflate, or brotli.",
+          data: { algorithm },
+        },
       );
   }
 };
@@ -50,7 +56,13 @@ export const decompress = async (
     default:
       throw new IrisSerializationError(
         `Unsupported decompression algorithm: ${String(algorithm)}`,
-        { code: "unsupported_decompression_algorithm", data: { algorithm } },
+        {
+          code: "unsupported_decompression_algorithm",
+          title: "Unsupported Decompression Algorithm",
+          details:
+            "The requested decompression algorithm is not supported. Use one of: gzip, deflate, or brotli.",
+          data: { algorithm },
+        },
       );
   }
 };

@@ -66,7 +66,13 @@ export const wrapRedisConsumer = <M extends IMessage>(
           } else {
             throw new IrisTransportError(
               "No retry mechanism available: both delay manager and publish connection are unavailable",
-              { code: "retry_mechanism_unavailable", data: { driver: "redis" } },
+              {
+                code: "retry_mechanism_unavailable",
+                title: "Retry Mechanism Unavailable",
+                details:
+                  "The message cannot be retried because neither the delay manager nor the Redis publish connection is available.",
+                data: { driver: "redis" },
+              },
             );
           }
         }

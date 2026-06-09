@@ -25,6 +25,9 @@ export const publishNatsMessages = async <M extends IMessage>(
   if (!state.js || !state.headersInit) {
     throw new IrisPublishError("NATS JetStream connection not available", {
       code: "publish_connection_unavailable",
+      title: "Publish Connection Unavailable",
+      details:
+        "The NATS JetStream connection is not established, so messages cannot be published.",
       data: { driver: "nats" },
     });
   }

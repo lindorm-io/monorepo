@@ -68,6 +68,9 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     if (!this.state.js || !this.state.jsm) {
       throw new IrisDriverError("Cannot subscribe: connection is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The NATS JetStream connection is not established, so the message bus cannot subscribe.",
         data: { driver: "nats" },
       });
     }

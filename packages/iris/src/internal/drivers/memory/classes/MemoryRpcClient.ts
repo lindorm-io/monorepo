@@ -41,6 +41,8 @@ export class MemoryRpcClient<
     if (!handler) {
       throw new IrisTransportError(`No RPC handler registered for queue "${topic}"`, {
         code: "rpc_handler_not_found",
+        title: "RPC Handler Not Found",
+        details: `No RPC handler is registered for queue "${topic}" on the in-memory driver.`,
         data: { topic },
         debug: { correlationId },
       });
@@ -87,6 +89,8 @@ export class MemoryRpcClient<
             ? error
             : new IrisTransportError("RPC handler error", {
                 code: "rpc_handler_error",
+                title: "RPC Handler Error",
+                details: `The RPC handler for queue "${topic}" rejected with a non-Error value.`,
                 data: { topic },
                 debug: { correlationId },
               }),

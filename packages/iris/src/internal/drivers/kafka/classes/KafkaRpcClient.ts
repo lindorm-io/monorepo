@@ -45,6 +45,9 @@ export class KafkaRpcClient<
     if (!this.state.producer) {
       throw new IrisDriverError("Cannot send RPC request: producer is not connected", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The Kafka producer is not connected, so the RPC request cannot be sent.",
         data: { driver: "kafka" },
       });
     }
@@ -93,7 +96,13 @@ export class KafkaRpcClient<
     if (!this.state.kafka) {
       throw new IrisDriverError(
         "Cannot create reply consumer: Kafka client is not connected",
-        { code: "connection_unavailable", data: { driver: "kafka" } },
+        {
+          code: "connection_unavailable",
+          title: "Connection Unavailable",
+          details:
+            "The Kafka client is not connected, so the RPC reply consumer cannot be created.",
+          data: { driver: "kafka" },
+        },
       );
     }
 
