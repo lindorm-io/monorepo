@@ -9,6 +9,8 @@ export const assertChecksum = (record: EventRecord): void => {
   if (!checksum) {
     throw new ChecksumError("Missing checksum", {
       code: "checksum_missing",
+      title: "Checksum Missing",
+      details: `Event "${record.id}" has no checksum stored and cannot be verified.`,
       data: { eventId: record.id },
     });
   }

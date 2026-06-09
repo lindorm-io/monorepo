@@ -144,6 +144,8 @@ export class ChecksumDomain {
           `Checksum mismatch for event ${message.id}: stored=${existing.checksum}, computed=${computedChecksum}`,
           {
             code: "checksum_mismatch",
+            title: "Checksum Mismatch",
+            details: `The stored checksum for event "${message.id}" does not match the recomputed checksum, indicating the event may have been tampered with.`,
             data: {
               eventId: message.id,
               stored: existing.checksum,

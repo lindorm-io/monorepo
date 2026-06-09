@@ -151,6 +151,8 @@ export class AggregateModel<S extends Dict = Dict> {
         });
         throw new HandlerNotRegisteredError("Event handler has not been registered", {
           code: "event_handler_not_registered",
+          title: "Event Handler Not Registered",
+          details: `Aggregate "${this.namespace}.${this.name}" has no handler registered for event "${message.name}" (version ${message.version}).`,
           data: {
             aggregate: { name: this.name, namespace: this.namespace },
             event: message.name,
@@ -172,6 +174,8 @@ export class AggregateModel<S extends Dict = Dict> {
         });
         throw new HandlerNotRegisteredError("Event version exceeds handler version", {
           code: "event_version_exceeds_handler",
+          title: "Event Version Exceeds Handler",
+          details: `Stored event "${message.name}" is at version ${message.version}, which exceeds the registered handler version ${handlerDto.version} on aggregate "${this.namespace}.${this.name}"; the handler is outdated.`,
           data: {
             aggregate: { name: this.name, namespace: this.namespace },
             event: message.name,
@@ -266,6 +270,8 @@ export class AggregateModel<S extends Dict = Dict> {
     if (typeof method !== "function") {
       throw new HandlerNotRegisteredError("Event handler method is not callable", {
         code: "event_handler_method_not_callable",
+        title: "Event Handler Method Not Callable",
+        details: `Event handler method "${handler.methodName}" on aggregate "${this.namespace}.${this.name}" is not a callable function.`,
         data: {
           aggregate: { name: this.name, namespace: this.namespace },
           method: handler.methodName,

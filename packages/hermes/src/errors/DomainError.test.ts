@@ -148,7 +148,7 @@ describe("SagaAlreadyCreatedError", () => {
   });
 
   it("should accept permanent flag", () => {
-    const error = new SagaAlreadyCreatedError(true);
+    const error = new SagaAlreadyCreatedError({ permanent: true });
 
     expect(error.permanent).toBe(true);
   });
@@ -164,7 +164,7 @@ describe("SagaNotCreatedError", () => {
   });
 
   it("should accept permanent flag", () => {
-    const error = new SagaNotCreatedError(true);
+    const error = new SagaNotCreatedError({ permanent: true });
 
     expect(error.permanent).toBe(true);
   });
@@ -190,7 +190,7 @@ describe("ViewAlreadyCreatedError", () => {
   });
 
   it("should accept permanent flag", () => {
-    const error = new ViewAlreadyCreatedError(true);
+    const error = new ViewAlreadyCreatedError({ permanent: true });
 
     expect(error.permanent).toBe(true);
   });
@@ -206,7 +206,7 @@ describe("ViewNotCreatedError", () => {
   });
 
   it("should accept permanent flag", () => {
-    const error = new ViewNotCreatedError(true);
+    const error = new ViewNotCreatedError({ permanent: true });
 
     expect(error.permanent).toBe(true);
   });
