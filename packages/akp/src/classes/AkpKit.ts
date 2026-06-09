@@ -18,6 +18,9 @@ export class AkpKit implements IKeyKit {
     if (!KryptosKit.isAkp(options.kryptos)) {
       throw new AkpError("Invalid Kryptos instance", {
         code: "invalid_kryptos",
+        title: "Invalid Kryptos",
+        details:
+          "The provided Kryptos instance is not an AKP key and cannot be used by AkpKit.",
         debug: { algorithm: options.kryptos.algorithm, type: options.kryptos.type },
       });
     }

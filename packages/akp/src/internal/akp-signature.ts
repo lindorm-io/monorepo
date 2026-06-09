@@ -33,5 +33,9 @@ export const assertAkpSignature = ({
   signature,
 }: VerifyAkpSignatureOptions): void => {
   if (verifyAkpSignature({ data, encoding, kryptos, signature })) return;
-  throw new AkpError("Invalid signature", { code: "invalid_signature" });
+  throw new AkpError("Invalid signature", {
+    code: "invalid_signature",
+    title: "Invalid Signature",
+    details: "The AKP signature does not match the provided data and verification key.",
+  });
 };
