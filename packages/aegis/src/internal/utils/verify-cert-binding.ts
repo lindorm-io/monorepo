@@ -41,7 +41,13 @@ export const verifyCertBinding = ({
     if (mode === "strict") {
       throw new AegisError(
         "token header x5t#S256 present but signing kryptos has no certificateChain",
-        { code: "cert_binding_chain_missing", debug: { kryptosId: kryptos.id } },
+        {
+          code: "cert_binding_chain_missing",
+          debug: { kryptosId: kryptos.id },
+          title: "Cert Binding Chain Missing",
+          details:
+            "The token header carries an x5t#S256 thumbprint, but the verifying kryptos has no certificateChain to confirm the binding in strict mode.",
+        },
       );
     }
     logger.warn(
@@ -58,6 +64,9 @@ export const verifyCertBinding = ({
         expected: kryptos.certificateThumbprint,
         received: header.x5tS256,
       },
+      title: "Cert Binding Thumbprint Mismatch",
+      details:
+        "The token header x5t#S256 does not match the certificateThumbprint of the verifying kryptos.",
     });
   }
 };

@@ -30,6 +30,9 @@ export const parseUserinfo = (data: UserinfoClaimsInput): AegisUserinfo => {
   if (!isString(claims.subject)) {
     throw new AegisError("Missing subject claim", {
       code: "userinfo_missing_subject",
+      title: "Userinfo Missing Subject",
+      details:
+        "An OIDC userinfo response must include a string sub claim, which was missing or non-string.",
     });
   }
 

@@ -28,6 +28,9 @@ const assertString = (value: unknown, claim: string): string => {
     throw new JwtError(`Invalid DPoP proof: "${claim}" claim is required`, {
       code: "jwt_dpop_claim_required",
       data: { claim },
+      title: "JWT DPoP Claim Required",
+      details:
+        "A required DPoP proof claim (jti, htm, or htu) was missing or not a non-empty string.",
     });
   }
   return value;
@@ -40,6 +43,9 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   if (parts.length !== 3) {
     throw new JwtError("Invalid DPoP proof: not a compact JWS", {
       code: "jwt_dpop_not_compact_jws",
+      title: "JWT DPoP Not Compact JWS",
+      details:
+        "The DPoP proof must be a compact JWS with exactly three dot-separated segments.",
     });
   }
   const [headerB64, payloadB64] = parts;
@@ -50,12 +56,17 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
     throw new JwtError("Invalid DPoP proof: header typ must be dpop+jwt", {
       code: "jwt_dpop_invalid_typ",
       data: { typ: header.typ },
+      title: "JWT DPoP Invalid Typ",
+      details: "The DPoP proof header typ must be exactly dpop+jwt per RFC 9449.",
     });
   }
 
   if (!header.jwk) {
     throw new JwtError("Invalid DPoP proof: header jwk is required", {
       code: "jwt_dpop_jwk_required",
+      title: "JWT DPoP JWK Required",
+      details:
+        "The DPoP proof header must carry a jwk so its thumbprint can be matched against cnf.jkt.",
     });
   }
 
@@ -69,6 +80,9 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
     throw new JwtError("Invalid DPoP proof: thumbprint does not match cnf.jkt", {
       code: "jwt_dpop_thumbprint_mismatch",
       debug: { expected: expectedThumbprint, actual: thumbprint },
+      title: "JWT DPoP Thumbprint Mismatch",
+      details:
+        "The RFC 7638 thumbprint of the proof header jwk does not match the token's bound cnf.jkt thumbprint.",
     });
   }
 
@@ -86,6 +100,9 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   if (!verifyJoseSignature(proofKryptos, proof)) {
     throw new JwtError("Invalid DPoP proof: signature verification failed", {
       code: "jwt_dpop_signature_invalid",
+      title: "JWT DPoP Signature Invalid",
+      details:
+        "The DPoP proof signature did not verify against the key embedded in its jwk header.",
     });
   }
 
@@ -98,6 +115,9 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   if (typeof payload.iat !== "number") {
     throw new JwtError("Invalid DPoP proof: iat claim is required", {
       code: "jwt_dpop_iat_required",
+      title: "JWT DPoP IAT Required",
+      details:
+        "The DPoP proof must carry a numeric iat claim so its freshness can be checked.",
     });
   }
   const now = Math.floor(Date.now() / 1000);
@@ -105,6 +125,9 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
     throw new JwtError("Invalid DPoP proof: iat is outside the allowed skew window", {
       code: "jwt_dpop_iat_skew",
       data: { iat: payload.iat, now, dpopMaxSkew },
+      title: "JWT DPoP IAT Skew",
+      details:
+        "The DPoP proof iat differs from the current time by more than the configured dpopMaxSkew window.",
     });
   }
 
@@ -112,6 +135,9 @@ export const verifyDpopProof = (options: Options): ParsedDpopProof => {
   if (payload.ath !== expectedAth) {
     throw new JwtError("Invalid DPoP proof: ath does not match access token hash", {
       code: "jwt_dpop_ath_mismatch",
+      title: "JWT DPoP ATH Mismatch",
+      details:
+        "The DPoP proof ath claim does not equal the SHA-256 hash of the presented access token.",
     });
   }
 

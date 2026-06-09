@@ -17,6 +17,9 @@ export const parseIntrospection = (data: IntrospectClaimsInput): AegisIntrospect
   if (!isBoolean(data.active)) {
     throw new AegisError("Missing active claim", {
       code: "introspection_missing_active",
+      title: "Introspection Missing Active",
+      details:
+        "An OAuth 2.0 introspection response must include a boolean active field, which was missing or non-boolean.",
     });
   }
 
