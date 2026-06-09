@@ -17,22 +17,32 @@ export const encodeJoseHeader = (
   if (!options.algorithm) {
     throw new AegisError("Algorithm is required", {
       code: "jose_header_algorithm_required",
+      title: "JOSE Header Algorithm Required",
+      details: "No alg was provided, so the protected JOSE header cannot be encoded.",
     });
   }
   if (!TOKEN_HEADER_ALGORITHMS.includes(options.algorithm)) {
     throw new AegisError(`Invalid algorithm: ${options.algorithm}`, {
       code: "jose_header_invalid_algorithm",
       data: { algorithm: options.algorithm },
+      title: "JOSE Header Invalid Algorithm",
+      details:
+        "The requested alg is not in the set of JOSE algorithms Aegis supports, so the header cannot be encoded.",
     });
   }
   if (!options.headerType) {
     throw new AegisError("Header type is required", {
       code: "jose_header_type_required",
+      title: "JOSE Header Type Required",
+      details: "No typ was provided, so the protected JOSE header cannot be encoded.",
     });
   }
   if (!options.keyId) {
     throw new AegisError("Key ID is required", {
       code: "jose_header_key_id_required",
+      title: "JOSE Header Key ID Required",
+      details:
+        "No kid was provided, so verifiers could not look up the signing key in Amphora; the header cannot be encoded.",
     });
   }
 
@@ -60,6 +70,8 @@ export const decodeJoseHeader = (header: string): DecodedTokenHeader => {
   if (!json.alg || typeof json.alg !== "string") {
     throw new AegisError("Missing or invalid token header: alg", {
       code: "jose_header_alg_invalid",
+      title: "JOSE Header Alg Invalid",
+      details: "The decoded JOSE header has no alg, or alg is not a string.",
     });
   }
   // Allowlist enforcement: the only algorithms aegis will even attempt to
@@ -71,12 +83,18 @@ export const decodeJoseHeader = (header: string): DecodedTokenHeader => {
     throw new AegisError(`Unsupported algorithm: ${json.alg}`, {
       code: "jose_header_unsupported_algorithm",
       data: { alg: json.alg },
+      title: "JOSE Header Unsupported Algorithm",
+      details:
+        "The decoded header alg is not in the allowlist of supported algorithms, rejecting weak or disallowed algorithms such as none.",
     });
   }
   // typ is OPTIONAL per RFC 7515 Section 4.1.9
   if (json.typ !== undefined && typeof json.typ !== "string") {
     throw new AegisError("Invalid token header: typ must be a string", {
       code: "jose_header_typ_invalid",
+      title: "JOSE Header Typ Invalid",
+      details:
+        "The decoded header typ is present but is not a string, which RFC 7515 requires.",
     });
   }
   // Pass through as-is; individual Kit classes validate specific values if needed

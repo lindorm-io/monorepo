@@ -71,6 +71,9 @@ export class JwtKit implements IJwtKit {
     if (!this.issuer) {
       throw new JwtError("Issuer is required to sign JWT", {
         code: "jwt_issuer_required",
+        title: "JWT Issuer Required",
+        details:
+          "The kit was constructed without an issuer, so it cannot populate the mandatory iss claim when signing.",
       });
     }
 
@@ -123,6 +126,9 @@ export class JwtKit implements IJwtKit {
         throw new JwtError(`Unsupported critical header parameter: ${param}`, {
           code: "jwt_unsupported_crit_param",
           data: { param },
+          title: "JWT Unsupported Crit Param",
+          details:
+            "The crit header marks an extension parameter as critical that Aegis does not understand, so the JWT must be rejected.",
         });
       }
     }
@@ -132,6 +138,9 @@ export class JwtKit implements IJwtKit {
         code: "jwt_algorithm_mismatch",
         data: { algorithm: parsed.header.algorithm },
         debug: { expected: this.kryptos.algorithm },
+        title: "JWT Algorithm Mismatch",
+        details:
+          "The header alg does not match the signing algorithm of the configured kryptos key.",
       });
     }
 
@@ -142,6 +151,9 @@ export class JwtKit implements IJwtKit {
           code: "jwt_typ_mismatch",
           data: { typ: parsed.decoded.header.typ },
           debug: { expected: expectedTyp },
+          title: "JWT Typ Mismatch",
+          details:
+            "The header typ does not match the typ expected for the requested tokenType during verification.",
         });
       }
     }
@@ -152,6 +164,9 @@ export class JwtKit implements IJwtKit {
       throw new JwtError("Invalid token", {
         code: "jwt_signature_invalid",
         debug: { token },
+        title: "JWT Signature Invalid",
+        details:
+          "The signature did not verify against the configured kryptos key, indicating the JWT was tampered with or signed by another key.",
       });
     }
 
@@ -193,6 +208,9 @@ export class JwtKit implements IJwtKit {
         code: "jwt_claims_invalid",
         data: { invalid: (err as any).data?.invalid },
         debug: { invalid: (err as any).debug?.invalid },
+        title: "JWT Claims Invalid",
+        details:
+          "One or more claims (such as exp, nbf, iat, or a verifier-supplied claim) failed the validation predicate.",
       });
     }
 
@@ -201,6 +219,9 @@ export class JwtKit implements IJwtKit {
       throw new JwtError(actorError.message, {
         code: "jwt_actor_not_allowed",
         debug: actorError.debug,
+        title: "JWT Actor Not Allowed",
+        details:
+          "The token's act delegation chain does not satisfy the expected actor supplied to verify.",
       });
     }
 
@@ -211,6 +232,9 @@ export class JwtKit implements IJwtKit {
         throw new JwtError("Invalid token: DPoP proof provided but token is not bound", {
           code: "jwt_dpop_token_not_bound",
           debug: { confirmation: parsed.payload.confirmation },
+          title: "JWT DPoP Token Not Bound",
+          details:
+            "A DPoP proof was supplied but the token carries no cnf.jkt thumbprint, so it cannot be DPoP-bound.",
         });
       }
       parsed.dpop = verifyDpopProof({
@@ -222,7 +246,12 @@ export class JwtKit implements IJwtKit {
     } else if (boundThumbprint && !verify.trustBoundThumbprint) {
       throw new JwtError(
         "Invalid token: token is DPoP-bound but no DPoP proof was provided",
-        { code: "jwt_dpop_proof_required" },
+        {
+          code: "jwt_dpop_proof_required",
+          title: "JWT DPoP Proof Required",
+          details:
+            "The token carries a cnf.jkt thumbprint, so a matching DPoP proof must be supplied unless trustBoundThumbprint is set.",
+        },
       );
     }
 
@@ -265,7 +294,8 @@ export class JwtKit implements IJwtKit {
       throw new JwtError("Invalid token", {
         code: "jwt_invalid_typ",
         data: { typ },
-        details: "Header type must be JWT or <type>+jwt",
+        title: "JWT Invalid Typ",
+        details: "Header typ must be JWT or a <type>+jwt media type to parse as a JWT.",
       });
     }
 
@@ -274,6 +304,9 @@ export class JwtKit implements IJwtKit {
       throw new JwtError(`Invalid crit header: ${critError}`, {
         code: "jwt_invalid_crit",
         data: { crit: decoded.header.crit },
+        title: "JWT Invalid Crit",
+        details:
+          "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
       });
     }
 
@@ -281,7 +314,8 @@ export class JwtKit implements IJwtKit {
       throw new JwtError("Invalid token", {
         code: "jwt_issuer_missing",
         data: { iss: decoded.payload.iss },
-        details: "Issuer is required to decode JWT",
+        title: "JWT Issuer Missing",
+        details: "The payload has no iss claim, which is required to parse a JWT.",
       });
     }
 

@@ -20,5 +20,8 @@ export const validate = <C extends Dict = Dict>(
     type: "urn:lindorm:aegis:error:jwt_claims_invalid",
     data: { invalid: invalid.map(({ key }) => key) },
     debug: { invalid },
+    title: "JWT Claims Invalid",
+    details:
+      "One or more claims did not satisfy the supplied validation predicate; see the invalid list for the failing claim keys.",
   });
 };

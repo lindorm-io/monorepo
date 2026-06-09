@@ -51,16 +51,35 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
   options: SignJwtOptions,
 ): JwtClaims => {
   if (!isString(config.algorithm)) {
-    throw new JwtError("Algorithm is required", { code: "jwt_algorithm_required" });
+    throw new JwtError("Algorithm is required", {
+      code: "jwt_algorithm_required",
+      title: "JWT Algorithm Required",
+      details: "No signing algorithm was supplied, so claim hashes cannot be computed.",
+    });
   }
   if (!isUrlLike(config.issuer)) {
-    throw new JwtError("Issuer is required", { code: "jwt_issuer_required" });
+    throw new JwtError("Issuer is required", {
+      code: "jwt_issuer_required",
+      title: "JWT Issuer Required",
+      details:
+        "The configured issuer is not a valid URL-like value, so the mandatory iss claim cannot be set.",
+    });
   }
   if (!content.expires) {
-    throw new JwtError("Expires is required", { code: "jwt_expires_required" });
+    throw new JwtError("Expires is required", {
+      code: "jwt_expires_required",
+      title: "JWT Expires Required",
+      details:
+        "The content has no expires value, so the mandatory exp claim cannot be computed.",
+    });
   }
   if (!isString(content.subject)) {
-    throw new JwtError("Subject is required", { code: "jwt_subject_required" });
+    throw new JwtError("Subject is required", {
+      code: "jwt_subject_required",
+      title: "JWT Subject Required",
+      details:
+        "The content has no string subject, so the mandatory sub claim cannot be set.",
+    });
   }
 
   const { expiresOn } = expires(content.expires);
@@ -178,13 +197,25 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
   decoded: DecodeClaims<C>,
 ): ParsedJwtPayload<C> => {
   if (!isFinite(decoded.exp)) {
-    throw new JwtError("Missing claim: exp", { code: "jwt_missing_claim_exp" });
+    throw new JwtError("Missing claim: exp", {
+      code: "jwt_missing_claim_exp",
+      title: "JWT Missing Claim Exp",
+      details: "The payload has no finite exp claim, which is required to parse a JWT.",
+    });
   }
   if (!isFinite(decoded.iat)) {
-    throw new JwtError("Missing claim: iat", { code: "jwt_missing_claim_iat" });
+    throw new JwtError("Missing claim: iat", {
+      code: "jwt_missing_claim_iat",
+      title: "JWT Missing Claim IAT",
+      details: "The payload has no finite iat claim, which is required to parse a JWT.",
+    });
   }
   if (!isString(decoded.iss)) {
-    throw new JwtError("Missing claim: iss", { code: "jwt_missing_claim_iss" });
+    throw new JwtError("Missing claim: iss", {
+      code: "jwt_missing_claim_iss",
+      title: "JWT Missing Claim ISS",
+      details: "The payload has no string iss claim, which is required to parse a JWT.",
+    });
   }
 
   const { claims: domain, rest } = extractDomainClaims(decoded);

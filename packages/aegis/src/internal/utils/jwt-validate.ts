@@ -43,6 +43,9 @@ export const createJwtValidate = (validate: ValidateJwtOptions): Predicate<Dict>
     throw new JwtError(`Unsupported value: ${value as any} for key: ${key}`, {
       code: "jwt_validate_unsupported_value",
       data: { key },
+      title: "JWT Validate Unsupported Value",
+      details:
+        "A claim matcher value must be a string, number, array, or predicate object; this key was given an unsupported type.",
     });
   }
 

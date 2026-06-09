@@ -54,6 +54,9 @@ export class SignatureKit implements IKeyKit {
       default:
         throw new AegisError("Unsupported kryptos type", {
           code: "unsupported_kryptos_type",
+          title: "Unsupported Kryptos Type",
+          details:
+            "The kryptos key type is not one of AKP, EC, RSA, OKP, or oct, so no signature kit can be selected.",
         });
     }
   }

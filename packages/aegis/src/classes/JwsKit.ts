@@ -92,6 +92,9 @@ export class JwsKit implements IJwsKit {
         throw new JwsError(`Unsupported critical header parameter: ${param}`, {
           code: "jws_unsupported_crit_param",
           data: { param },
+          title: "JWS Unsupported Crit Param",
+          details:
+            "The crit header marks an extension parameter as critical that Aegis does not understand, so the JWS must be rejected.",
         });
       }
     }
@@ -101,6 +104,9 @@ export class JwsKit implements IJwsKit {
         code: "jws_algorithm_mismatch",
         data: { algorithm: parsed.header.algorithm },
         debug: { expected: this.kryptos.algorithm },
+        title: "JWS Algorithm Mismatch",
+        details:
+          "The header alg does not match the signing algorithm of the configured kryptos key.",
       });
     }
 
@@ -110,6 +116,9 @@ export class JwsKit implements IJwsKit {
       throw new JwsError("Invalid token", {
         code: "jws_signature_invalid",
         debug: { token },
+        title: "JWS Signature Invalid",
+        details:
+          "The signature did not verify against the configured kryptos key, indicating the JWS was tampered with or signed by another key.",
       });
     }
 
@@ -178,7 +187,8 @@ export class JwsKit implements IJwsKit {
       throw new JwsError("Invalid token", {
         code: "jws_invalid_typ",
         data: { typ },
-        details: "Header type must be JWS, JOSE, <type>+jws, or undefined",
+        title: "JWS Invalid Typ",
+        details: "Header typ must be JWS, JOSE, a <type>+jws media type, or undefined.",
       });
     }
 
@@ -187,6 +197,9 @@ export class JwsKit implements IJwsKit {
       throw new JwsError(`Invalid crit header: ${critError}`, {
         code: "jws_invalid_crit",
         data: { crit: decoded.header.crit },
+        title: "JWS Invalid Crit",
+        details:
+          "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
       });
     }
 
