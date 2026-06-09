@@ -41,5 +41,7 @@ export const assertOkpSignature = ({
   if (verifyOkpSignature({ data, dsaEncoding, encoding, kryptos, signature })) return;
   throw new OkpError("Invalid signature", {
     code: "signature_mismatch",
+    title: "Signature Mismatch",
+    details: "The provided OKP signature does not match the signed data.",
   });
 };

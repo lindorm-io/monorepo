@@ -25,12 +25,17 @@ export class OkpKit implements IKeyKit {
     if (!KryptosKit.isOkp(options.kryptos)) {
       throw new OkpError("Invalid Kryptos instance", {
         code: "invalid_kryptos_instance",
+        title: "Invalid Kryptos Instance",
+        details:
+          "The provided Kryptos instance is not an OKP key and cannot be used with OkpKit.",
       });
     }
 
     if (!OKP_SIG_CURVES.includes(options.kryptos.curve as OkpSigCurve)) {
       throw new OkpError("OkpKit only supports signing curves (Ed25519, Ed448)", {
         code: "unsupported_curve",
+        title: "Unsupported Curve",
+        details: "OkpKit only supports the Ed25519 and Ed448 signing curves.",
         data: { curve: options.kryptos.curve, supported: OKP_SIG_CURVES },
       });
     }
