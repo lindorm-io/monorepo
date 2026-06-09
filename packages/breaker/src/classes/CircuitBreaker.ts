@@ -154,6 +154,9 @@ export class CircuitBreaker implements ICircuitBreaker {
     if (elapsed < delay) {
       throw new CircuitOpenError("Circuit is open", {
         code: "circuit_open",
+        title: "Circuit Open",
+        details:
+          "The circuit breaker is open and is rejecting calls until the half-open backoff delay has elapsed.",
         data: {
           name: this._name,
           state: this._state,
