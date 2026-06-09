@@ -16,6 +16,9 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     if (!isUrlLike(options.changePasswordUri)) {
       throw new ClientError("Change password URI is not configured", {
         code: "change_password_uri_not_configured",
+        title: "Change Password URI Not Configured",
+        details:
+          "This server has no changePasswordUri configured for the well-known redirect.",
         type: "urn:lindorm:pylon:error:change_password_uri_not_configured",
         status: ClientError.Status.NotFound,
       });
@@ -32,6 +35,9 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     if (!isUrlLike(options.auth?.issuer)) {
       throw new ClientError("Auth issuer is not configured", {
         code: "auth_issuer_not_configured",
+        title: "Auth Issuer Not Configured",
+        details:
+          "This server has no auth issuer configured for the protected resource metadata.",
         type: "urn:lindorm:pylon:error:auth_issuer_not_configured",
         status: ClientError.Status.NotFound,
       });
@@ -44,6 +50,7 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
     if (ctx.state.authorization.type !== "bearer") {
       throw new ClientError("Bearer authorization is required", {
         code: "bearer_authorization_required",
+        title: "Bearer Authorization Required",
         type: "urn:lindorm:pylon:error:bearer_authorization_required",
         details: "Right to be forgotten requires Bearer authorization",
         data: { authorizationType: ctx.state.authorization.type },

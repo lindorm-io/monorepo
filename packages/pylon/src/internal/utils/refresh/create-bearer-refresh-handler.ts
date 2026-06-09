@@ -29,6 +29,7 @@ export const createBearerRefreshHandler = ({
     ) {
       throw new ClientError("Invalid refresh payload", {
         code: "invalid_refresh_payload",
+        title: "Invalid Refresh Payload",
         type: "urn:lindorm:pylon:error:invalid_refresh_payload",
         details:
           "Expected { bearer: string, expiresIn: number } with a positive expiresIn",

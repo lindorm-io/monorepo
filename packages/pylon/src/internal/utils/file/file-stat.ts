@@ -8,6 +8,8 @@ export const fileStat = async (path: string): Promise<Stats> => {
   } catch (error: any) {
     throw new ServerError("Unable to stat file", {
       code: "file_stat_failed",
+      title: "File Stat Failed",
+      details: "The requested file could not be read from disk.",
       type: "urn:lindorm:pylon:error:file_stat_failed",
       error,
       debug: { path },

@@ -28,6 +28,7 @@ export const useSchema = <T extends ZodRawShape>(
       throw new ServerError(`Schema path "${path}" is only available on HTTP contexts`, {
         code: "schema_path_http_only",
         type: "urn:lindorm:pylon:error:schema_path_http_only",
+        title: "Schema Path HTTP Only",
         details: `The path [${path}] can only be validated on HTTP contexts`,
         data: { path, httpOnlyPaths: HTTP_ONLY_PATHS },
       });
@@ -47,6 +48,7 @@ export const useSchema = <T extends ZodRawShape>(
         status: ClientError.Status.BadRequest,
         code: "schema_validation_failed",
         type: "urn:lindorm:pylon:error:schema_validation_failed",
+        title: "Schema Validation Failed",
         details: error.message,
         data: { path, issues: error.details },
       });

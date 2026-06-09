@@ -17,6 +17,7 @@ export const assertSessionCookieSafeForSockets = (
           "Cookie-mode socket auth is Cross-Site WebSocket Hijacking (CSWSH) " +
           "vulnerable without server-side origin enforcement.",
         code: "missing_cors_allowlist_for_session",
+        title: "Missing CORS Allowlist for Session",
       },
     );
   }
@@ -30,6 +31,7 @@ export const assertSessionCookieSafeForSockets = (
           "Cookie-mode socket auth is Cross-Site WebSocket Hijacking (CSWSH) " +
           "vulnerable without an explicit origin allowlist.",
         code: "wildcard_cors_allowlist_for_session",
+        title: "Wildcard CORS Allowlist for Session",
       },
     );
   }

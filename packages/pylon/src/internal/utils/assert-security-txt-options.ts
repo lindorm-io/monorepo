@@ -17,6 +17,9 @@ export const assertSecurityTxtOptions = (input: PylonSecurityTxt): void => {
       "securityTxt.contact must be a non-empty string or array of non-empty strings",
       {
         code: "invalid_security_txt_contact",
+        title: "Invalid security.txt Contact",
+        details:
+          "securityTxt.contact must be a non-empty string or an array of non-empty strings.",
         type: "urn:lindorm:pylon:error:invalid_security_txt_contact",
         data: { contact: input.contact },
       },
@@ -28,6 +31,8 @@ export const assertSecurityTxtOptions = (input: PylonSecurityTxt): void => {
   if (isNaN(expires.getTime())) {
     throw new ServerError("securityTxt.expires does not parse to a valid Date", {
       code: "invalid_security_txt_expires",
+      title: "Invalid security.txt Expires",
+      details: "securityTxt.expires must be a value that parses to a valid Date.",
       type: "urn:lindorm:pylon:error:invalid_security_txt_expires",
       data: { expires: input.expires },
     });
@@ -38,6 +43,8 @@ export const assertSecurityTxtOptions = (input: PylonSecurityTxt): void => {
   if (expires.getTime() < now.getTime()) {
     throw new ServerError("securityTxt.expires is in the past", {
       code: "expired_security_txt_expires",
+      title: "Expired security.txt Expires",
+      details: "securityTxt.expires is in the past and must be a future date.",
       type: "urn:lindorm:pylon:error:expired_security_txt_expires",
       data: { expires: expires.toISOString(), now: now.toISOString() },
     });
@@ -48,6 +55,8 @@ export const assertSecurityTxtOptions = (input: PylonSecurityTxt): void => {
       `securityTxt.expires is more than ${MAX_EXPIRES} in the future`,
       {
         code: "security_txt_expires_too_far",
+        title: "security.txt Expires Too Far",
+        details: `securityTxt.expires must be no more than ${MAX_EXPIRES} in the future.`,
         type: "urn:lindorm:pylon:error:security_txt_expires_too_far",
         data: {
           expires: expires.toISOString(),

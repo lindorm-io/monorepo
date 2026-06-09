@@ -21,6 +21,7 @@ export const createQueueMiddleware = <C extends PylonContext>(
       ctx.queue = async (): Promise<never> => {
         throw new ServerError("Queue is not enabled", {
           code: "queue_not_enabled",
+          title: "Queue Not Enabled",
           type: "urn:lindorm:pylon:error:queue_not_enabled",
           details:
             "ctx.queue() was called but the queue middleware is disabled; enable it in the pylon queue options",

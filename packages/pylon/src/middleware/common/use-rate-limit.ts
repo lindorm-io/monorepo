@@ -73,6 +73,7 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
       throw new ServerError("Rate limiting is not configured", {
         code: "rate_limit_not_configured",
         type: "urn:lindorm:pylon:error:rate_limit_not_configured",
+        title: "Rate Limit Not Configured",
         details:
           "Enable rate limiting in PylonOptions with rateLimit: { enabled: true } before using useRateLimit",
         debug: { strategy },
@@ -100,6 +101,8 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
         status: ClientError.Status.TooManyRequests,
         code: "rate_limit_exceeded",
         type: "urn:lindorm:pylon:error:rate_limit_exceeded",
+        title: "Rate Limit Exceeded",
+        details: `Too many requests; retry after ${Math.ceil((result.resetAt.getTime() - Date.now()) / 1000)} seconds`,
         data: {
           limit: options.max,
           remaining: result.remaining,

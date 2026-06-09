@@ -28,6 +28,7 @@ export const createHttpDateValidationMiddleware = (
       throw new ClientError("Request timestamp is too old", {
         status: ClientError.Status.BadRequest,
         code: "request_replay_denied",
+        title: "Request Replay Denied",
         type: "urn:lindorm:pylon:error:request_replay_denied",
         details: "Request has been identified as a likely replay attack",
         data: {
@@ -41,6 +42,7 @@ export const createHttpDateValidationMiddleware = (
       throw new ClientError("Request timestamp is too far in the future", {
         status: ClientError.Status.BadRequest,
         code: "request_timestamp_in_future",
+        title: "Request Timestamp In Future",
         type: "urn:lindorm:pylon:error:request_timestamp_in_future",
         details: "Request has been identified as suspicious",
         data: {
