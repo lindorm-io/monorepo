@@ -15,6 +15,8 @@ export const getSignKey = (
   if (!privateKey) {
     throw new RsaError("Private key not found in key set", {
       code: "private_key_not_found",
+      title: "Private Key Not Found",
+      details: "The RSA key set does not contain a private key required for signing.",
       data: { algorithm: kryptos.algorithm },
       debug: { id: kryptos.id },
     });
@@ -35,6 +37,9 @@ export const getSignKey = (
 
   throw new RsaError("Unsupported RSA algorithm", {
     code: "unsupported_algorithm",
+    title: "Unsupported Algorithm",
+    details:
+      "The RSA key algorithm is not a recognised signing algorithm; expected an RS or PS prefixed algorithm.",
     data: { algorithm: kryptos.algorithm },
     debug: { id: kryptos.id },
   });
@@ -49,6 +54,8 @@ export const getVerifyKey = (
   if (!publicKey) {
     throw new RsaError("Public key not found in key set", {
       code: "public_key_not_found",
+      title: "Public Key Not Found",
+      details: "The RSA key set does not contain a public key required for verification.",
       data: { algorithm: kryptos.algorithm },
       debug: { id: kryptos.id },
     });
@@ -69,6 +76,9 @@ export const getVerifyKey = (
 
   throw new RsaError("Unsupported RSA algorithm", {
     code: "unsupported_algorithm",
+    title: "Unsupported Algorithm",
+    details:
+      "The RSA key algorithm is not a recognised signing algorithm; expected an RS or PS prefixed algorithm.",
     data: { algorithm: kryptos.algorithm },
     debug: { id: kryptos.id },
   });
