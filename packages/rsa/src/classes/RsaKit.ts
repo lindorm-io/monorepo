@@ -25,6 +25,9 @@ export class RsaKit implements IKeyKit {
     if (!KryptosKit.isRsa(options.kryptos)) {
       throw new RsaError("Invalid Kryptos instance", {
         code: "invalid_kryptos_instance",
+        title: "Invalid Kryptos Instance",
+        details:
+          "The provided Kryptos instance is not an RSA key and cannot be used with RsaKit.",
       });
     }
 
@@ -33,6 +36,9 @@ export class RsaKit implements IKeyKit {
         "RsaKit only supports signing algorithms (RS256, RS384, RS512, PS256, PS384, PS512)",
         {
           code: "unsupported_algorithm",
+          title: "Unsupported Algorithm",
+          details:
+            "RsaKit only supports the RS256, RS384, RS512, PS256, PS384, and PS512 signing algorithms.",
           data: { algorithm: options.kryptos.algorithm },
         },
       );
