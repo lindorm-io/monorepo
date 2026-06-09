@@ -58,6 +58,8 @@ export class Amphora implements IAmphora {
       throw new AmphoraError("Domain must be a valid URL", {
         code: "invalid_domain_url",
         data: { domain: this.domain },
+        title: "Invalid Domain URL",
+        details: `The configured domain "${this.domain as string}" is not a valid URL. Provide a fully-qualified URL such as https://example.com.`,
       });
     }
   }
@@ -72,6 +74,7 @@ export class Amphora implements IAmphora {
     if (!this.domain) {
       throw new AmphoraError("Domain is required to get JWKS", {
         code: "domain_required_for_jwks",
+        title: "Domain Required For JWKS",
         details:
           "Domain is used to determine the signing issuer of the keys. If your server signs tokens, it must have a domain.",
       });
@@ -119,6 +122,7 @@ export class Amphora implements IAmphora {
       if (!input.id) {
         throw new AmphoraError("Id is required when adding Kryptos", {
           code: "kryptos_id_required",
+          title: "Kryptos ID Required",
           details: "Every Kryptos added to the vault must have an id.",
         });
       }
@@ -150,6 +154,7 @@ export class Amphora implements IAmphora {
         throw new AmphoraError("Issuer is required when adding Kryptos", {
           code: "kryptos_issuer_required",
           data: { id: item.id },
+          title: "Kryptos Issuer Required",
           details:
             "A Kryptos must have an issuer, either set explicitly or derived from the Amphora domain.",
         });
@@ -159,6 +164,8 @@ export class Amphora implements IAmphora {
         throw new AmphoraError("Kryptos is expired", {
           code: "kryptos_expired",
           data: { id: item.id, issuer: item.issuer, expiresAt: item.expiresAt },
+          title: "Kryptos Expired",
+          details: `The Kryptos "${item.id}" (issuer "${item.issuer}") expired at ${item.expiresAt?.toISOString()} and cannot be added to the vault.`,
         });
       }
 
@@ -203,6 +210,10 @@ export class Amphora implements IAmphora {
         {
           code: this._setupPromise ? "setup_in_progress" : "setup_required_for_sync",
           data: { externalProviders: this._external.length },
+          title: this._setupPromise ? "Setup In Progress" : "Setup Required For Sync",
+          details: this._setupPromise
+            ? "Amphora setup() is currently running; await setup() to finish before calling synchronous methods."
+            : "External providers are configured, so setup() must complete before synchronous methods can be used. Call and await setup() first.",
         },
       );
     }
@@ -221,6 +232,8 @@ export class Amphora implements IAmphora {
         totalKeys: this._vault.length,
         activeKeys: this._vault.filter((i) => i.isActive).length,
       },
+      title: "Kryptos Not Found By Query After Refresh",
+      details: `No active Kryptos matched the query (${Object.keys(predicate).join(", ")}) even after refreshing external providers. Verify the query and that a matching key exists.`,
     });
   }
 
@@ -238,6 +251,8 @@ export class Amphora implements IAmphora {
     throw new AmphoraError("Kryptos not found by id", {
       code: "kryptos_not_found_by_id",
       data: { id, totalKeys: this._vault.length },
+      title: "Kryptos Not Found By ID",
+      details: `No Kryptos with id "${id}" exists in the vault, even after refreshing external providers. Confirm the id is correct and the key is available.`,
     });
   }
 
@@ -250,6 +265,10 @@ export class Amphora implements IAmphora {
         {
           code: this._setupPromise ? "setup_in_progress" : "setup_required_for_sync",
           data: { externalProviders: this._external.length },
+          title: this._setupPromise ? "Setup In Progress" : "Setup Required For Sync",
+          details: this._setupPromise
+            ? "Amphora setup() is currently running; await setup() to finish before calling synchronous methods."
+            : "External providers are configured, so setup() must complete before synchronous methods can be used. Call and await setup() first.",
         },
       );
     }
@@ -260,6 +279,8 @@ export class Amphora implements IAmphora {
     throw new AmphoraError("Kryptos not found by id", {
       code: "kryptos_not_found_by_id_sync",
       data: { id, totalKeys: this._vault.length },
+      title: "Kryptos Not Found By ID (Sync)",
+      details: `No Kryptos with id "${id}" exists in the vault. Synchronous lookup does not refresh external providers, so the key must already be loaded.`,
     });
   }
 
@@ -272,6 +293,10 @@ export class Amphora implements IAmphora {
         {
           code: this._setupPromise ? "setup_in_progress" : "setup_required_for_sync",
           data: { externalProviders: this._external.length },
+          title: this._setupPromise ? "Setup In Progress" : "Setup Required For Sync",
+          details: this._setupPromise
+            ? "Amphora setup() is currently running; await setup() to finish before calling synchronous methods."
+            : "External providers are configured, so setup() must complete before synchronous methods can be used. Call and await setup() first.",
         },
       );
     }
@@ -286,6 +311,8 @@ export class Amphora implements IAmphora {
         totalKeys: this._vault.length,
         activeKeys: this._vault.filter((i) => i.isActive).length,
       },
+      title: "Kryptos Not Found By Query (Sync)",
+      details: `No active Kryptos matched the query (${Object.keys(predicate).join(", ")}). Synchronous lookup does not refresh providers, so a matching key must already be loaded.`,
     });
   }
 
@@ -383,6 +410,7 @@ export class Amphora implements IAmphora {
         jwksUri: options.jwksUri,
         openIdConfigurationUri: options.openIdConfigurationUri,
       },
+      title: "Invalid Issuer Options",
       // Public, non-secret config — server-only in debug for diagnosis.
       debug: {
         openIdConfiguration: options.openIdConfiguration,
@@ -517,7 +545,12 @@ export class Amphora implements IAmphora {
       if (rejectedByTrust === keys.length) {
         throw new AmphoraError(
           "All external JWK keys rejected due to trust anchor validation",
-          { code: "external_jwks_all_rejected_by_trust", data },
+          {
+            code: "external_jwks_all_rejected_by_trust",
+            data,
+            title: "External JWKS All Rejected By Trust",
+            details: `Every key from issuer "${config.issuer}" failed trust anchor validation. Verify the configured trustAnchors and the keys' certificate chains.`,
+          },
         );
       }
 
@@ -525,13 +558,20 @@ export class Amphora implements IAmphora {
         throw new AmphoraError("All external JWK keys rejected due to issuer mismatch", {
           code: "external_jwks_issuer_mismatch",
           data,
+          title: "External JWKS Issuer Mismatch",
+          details: `Every key returned for issuer "${config.issuer}" declared a different "iss" value. Ensure the configured issuer matches the keys served at the JWKS endpoint.`,
         });
       }
 
       if (expiredCount + rejectedCount + rejectedByTrust === keys.length) {
         throw new AmphoraError(
           "No valid external JWK keys (expired, rejected, or untrusted)",
-          { code: "external_jwks_no_valid_keys", data },
+          {
+            code: "external_jwks_no_valid_keys",
+            data,
+            title: "External JWKS No Valid Keys",
+            details: `All keys from issuer "${config.issuer}" were unusable (expired, issuer-mismatched, or untrusted). Check that the endpoint serves current, trusted keys for this issuer.`,
+          },
         );
       }
     }
@@ -568,6 +608,7 @@ export class Amphora implements IAmphora {
       } else {
         throw new AmphoraError("Invalid external option", {
           code: "invalid_external_options",
+          title: "Invalid External Options",
           details:
             "An external option must provide a valid openIdConfigurationUri, a valid issuer URL, or both a string issuer and a valid jwksUri.",
           debug: { item },
@@ -600,6 +641,8 @@ export class Amphora implements IAmphora {
       throw new AmphoraError("All external config providers failed during refresh", {
         code: "external_config_providers_failed",
         data: { failed: failures, total: this._external.length },
+        title: "External Config Providers Failed",
+        details: `All ${this._external.length} external configuration provider(s) failed to load during refresh. Check provider availability and the openIdConfigurationUri/jwksUri endpoints.`,
       });
     }
   }
@@ -634,6 +677,8 @@ export class Amphora implements IAmphora {
       throw new AmphoraError("All external JWKS providers failed during refresh", {
         code: "external_jwks_providers_failed",
         data: { failed: failures, total: this._config.length },
+        title: "External JWKS Providers Failed",
+        details: `All ${this._config.length} external JWKS provider(s) failed to return usable keys during refresh. Check provider availability and the JWKS endpoints.`,
       });
     }
   }
