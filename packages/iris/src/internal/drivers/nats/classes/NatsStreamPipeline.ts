@@ -46,14 +46,25 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     if (!this.inputClass) {
       throw new IrisDriverError(
         "Stream pipeline requires an input class. Call .from() before .to().",
-        { code: "pipeline_input_class_required" },
+        {
+          code: "pipeline_input_class_required",
+          title: "Pipeline Input Class Required",
+          details:
+            "The stream pipeline was started without an input class; call .from() before .to().",
+        },
       );
     }
 
     if (!this.state.js || !this.state.jsm) {
       throw new IrisDriverError(
         "Cannot start stream pipeline: connection is not available",
-        { code: "connection_unavailable", data: { driver: "nats" } },
+        {
+          code: "connection_unavailable",
+          title: "Connection Unavailable",
+          details:
+            "The NATS JetStream connection is not established, so the stream pipeline cannot start.",
+          data: { driver: "nats" },
+        },
       );
     }
 

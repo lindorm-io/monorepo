@@ -56,6 +56,9 @@ export const wrapRabbitConsumer = <M extends IMessage>(
         if (!state.publishChannel) {
           throw new IrisTransportError("Publish channel unavailable during retry", {
             code: "retry_mechanism_unavailable",
+            title: "Retry Mechanism Unavailable",
+            details:
+              "The message cannot be retried because the RabbitMQ publish channel is unavailable.",
             data: { driver: "rabbit" },
           });
         }

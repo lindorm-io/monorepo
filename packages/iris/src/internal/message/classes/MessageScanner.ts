@@ -56,6 +56,9 @@ export class MessageScanner {
         `Failed to load message from "${data.fullPath}": ${err instanceof Error ? err.message : String(err)}`,
         {
           code: "message_load_failed",
+          title: "Message Load Failed",
+          details:
+            "The message module at the scanned file path could not be imported. Verify the file exports a valid message class and has no import-time errors.",
           error: err instanceof Error ? err : undefined,
           debug: { filePath: data.fullPath },
         },
@@ -65,6 +68,9 @@ export class MessageScanner {
     if (values.length === 0) {
       throw new IrisScannerError(`No messages found in file: ${data.fullPath}`, {
         code: "no_messages_in_file",
+        title: "No Messages In File",
+        details:
+          "The scanned file exports no values, so no message classes could be discovered. Ensure the file exports at least one decorated message class.",
       });
     }
     const result: Array<Constructor<T>> = [];
@@ -76,6 +82,9 @@ export class MessageScanner {
     if (result.length === 0) {
       throw new IrisScannerError(`No messages found in file: ${data.fullPath}`, {
         code: "no_messages_in_file",
+        title: "No Messages In File",
+        details:
+          "The scanned file exports no values, so no message classes could be discovered. Ensure the file exports at least one decorated message class.",
       });
     }
     return result;

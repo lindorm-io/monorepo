@@ -6,6 +6,9 @@ export const checkPipelineResults = (
   if (!results) {
     throw new IrisTransportError("Redis pipeline returned null results", {
       code: "pipeline_null_results",
+      title: "Pipeline Null Results",
+      details:
+        "The Redis pipeline returned null instead of a results array, indicating the pipeline did not execute. Retry the operation.",
     });
   }
 

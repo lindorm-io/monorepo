@@ -34,6 +34,9 @@ export class MessageManager<M extends IMessage> {
     if (!options.target) {
       throw new IrisError("MessageManager requires a target constructor", {
         code: "missing_target_constructor",
+        title: "Missing Target Constructor",
+        details:
+          "MessageManager was constructed without a target message constructor. Pass the message class as the target option.",
         debug: { options },
       });
     }
@@ -49,6 +52,9 @@ export class MessageManager<M extends IMessage> {
         `Failed to retrieve metadata for message "${this.target.name}". Did you forget @Message()?`,
         {
           code: "metadata_retrieval_failed",
+          title: "Metadata Retrieval Failed",
+          details:
+            "Message metadata could not be retrieved for the target class. Ensure the class is decorated with @Message().",
           debug: { target: this.target.name },
           error: error instanceof Error ? error : undefined,
         },
@@ -108,6 +114,9 @@ export class MessageManager<M extends IMessage> {
           `@Transform.from failed for field "${field.key}"`,
           {
             code: "transform_from_failed",
+            title: "Transform From Failed",
+            details:
+              "The @Transform.from function threw while converting the named field during hydration. Review the transform's from() implementation.",
             data: { field: field.key },
             error: error instanceof Error ? error : undefined,
           },

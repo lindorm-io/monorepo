@@ -77,12 +77,18 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     if (!cb) {
       throw new IrisDriverError("consume() requires a callback", {
         code: "consume_callback_required",
+        title: "Consume Callback Required",
+        details:
+          "consume() was called without a callback function to handle delivered messages.",
       });
     }
 
     if (!this.state.publishConnection) {
       throw new IrisDriverError("Cannot consume: connection is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The Redis publish connection is not established, so the worker queue cannot start consuming.",
         data: { driver: "redis" },
       });
     }

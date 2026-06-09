@@ -65,6 +65,9 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     if (!cb) {
       throw new IrisDriverError("consume() requires a callback", {
         code: "consume_callback_required",
+        title: "Consume Callback Required",
+        details:
+          "consume() was called without a callback function to handle delivered messages.",
       });
     }
 

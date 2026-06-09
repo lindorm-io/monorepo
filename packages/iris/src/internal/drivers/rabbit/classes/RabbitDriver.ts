@@ -241,6 +241,9 @@ export class RabbitDriver implements IIrisDriver {
     if (!channel) {
       throw new IrisDriverError("Cannot setup: publish channel is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The RabbitMQ publish channel is not available, so the exchange and queues cannot be set up.",
         data: { driver: "rabbit" },
       });
     }

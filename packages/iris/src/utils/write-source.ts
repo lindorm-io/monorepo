@@ -19,7 +19,13 @@ export const writeSource = async (options: WriteSourceOptions): Promise<void> =>
   if (!IRIS_ALL_DRIVERS.includes(driver)) {
     throw new IrisNotSupportedError(
       `Unknown driver: ${driver}. Valid drivers: ${IRIS_ALL_DRIVERS.join(", ")}`,
-      { code: "unknown_driver", data: { driver, drivers: IRIS_ALL_DRIVERS } },
+      {
+        code: "unknown_driver",
+        title: "Unknown Driver",
+        details:
+          "The requested driver is not recognized; choose one of the supported Iris drivers.",
+        data: { driver, drivers: IRIS_ALL_DRIVERS },
+      },
     );
   }
 

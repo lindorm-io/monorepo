@@ -24,6 +24,9 @@ export const publishRabbitMessages = async <M extends IMessage>(
   if (!state.publishChannel) {
     throw new IrisPublishError("Publish channel not available", {
       code: "publish_connection_unavailable",
+      title: "Publish Connection Unavailable",
+      details:
+        "The RabbitMQ publish channel is not available, so messages cannot be published.",
       data: { driver: "rabbit" },
     });
   }

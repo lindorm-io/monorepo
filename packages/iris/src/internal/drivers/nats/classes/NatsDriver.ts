@@ -293,6 +293,8 @@ export class NatsDriver implements IIrisDriver {
       `waitForStreamGone: ${streamName} still exists after ${timeoutMs}ms`,
       {
         code: "stream_deletion_timeout",
+        title: "Stream Deletion Timeout",
+        details: `The JetStream stream "${streamName}" still existed after waiting ${timeoutMs}ms for its deletion to propagate.`,
         data: { driver: "nats", streamName, timeoutMs },
       },
     );

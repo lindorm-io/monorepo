@@ -149,7 +149,13 @@ export const getOrCreatePooledConsumer = async (
   if (!state.kafka) {
     throw new IrisDriverError(
       "Cannot create pooled consumer: Kafka client is not connected",
-      { code: "connection_unavailable", data: { driver: "kafka", groupId } },
+      {
+        code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The Kafka client is not connected, so a pooled consumer cannot be created for the consumer group.",
+        data: { driver: "kafka", groupId },
+      },
     );
   }
 

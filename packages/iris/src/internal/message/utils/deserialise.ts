@@ -14,6 +14,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
           "Cannot convert value to bigint during deserialisation",
           {
             code: "bigint_deserialise_failed",
+            title: "Bigint Deserialise Failed",
+            details:
+              "The value could not be converted to a bigint during deserialisation. Ensure the field holds an integer-compatible value.",
             data: { type },
             debug: { value: String(value) },
           },
@@ -33,6 +36,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
         if (isNaN(value.getTime())) {
           throw new IrisSerializationError("Invalid Date object during deserialisation", {
             code: "invalid_date_deserialise",
+            title: "Invalid Date Deserialise",
+            details:
+              "The value is a Date object representing an invalid date (NaN time) and cannot be deserialised. Provide a valid date.",
             data: { type },
             debug: { value: String(value) },
           });
@@ -46,6 +52,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
           "Cannot convert value to date during deserialisation",
           {
             code: "date_deserialise_failed",
+            title: "Date Deserialise Failed",
+            details:
+              "The value could not be converted to a valid date during deserialisation. Ensure the field holds a parseable date value.",
             data: { type },
             debug: { value: String(value) },
           },
@@ -63,6 +72,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
           "Cannot convert value to float during deserialisation",
           {
             code: "float_deserialise_failed",
+            title: "Float Deserialise Failed",
+            details:
+              "The value could not be converted to a float during deserialisation. Ensure the field holds a numeric value.",
             data: { type },
             debug: { value: String(value) },
           },
@@ -83,6 +95,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
           "Cannot convert value to integer during deserialisation",
           {
             code: "integer_deserialise_failed",
+            title: "Integer Deserialise Failed",
+            details:
+              "The value could not be converted to an integer during deserialisation. Ensure the field holds a numeric value.",
             data: { type },
             debug: { value: String(value) },
           },
@@ -100,6 +115,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
             "Failed to deserialise array value: invalid JSON",
             {
               code: "array_deserialise_failed",
+              title: "Array Deserialise Failed",
+              details:
+                "The string value for an array field is not valid JSON and could not be parsed. Ensure array fields are serialised as valid JSON.",
               data: { type },
               debug: { value },
             },
@@ -118,6 +136,9 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
             "Failed to deserialise object value: invalid JSON",
             {
               code: "object_deserialise_failed",
+              title: "Object Deserialise Failed",
+              details:
+                "The string value for an object field is not valid JSON and could not be parsed. Ensure object fields are serialised as valid JSON.",
               data: { type },
               debug: { value },
             },

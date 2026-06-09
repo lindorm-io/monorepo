@@ -74,6 +74,8 @@ export class IrisSource implements IIrisSource {
         if (!options.url)
           throw new IrisSourceError('Rabbit driver requires a "url" option', {
             code: "missing_driver_option",
+            title: "Missing Driver Option",
+            details: 'The Rabbit driver requires a "url" connection option.',
             data: { driver: options.driver, option: "url" },
           });
         break;
@@ -83,6 +85,8 @@ export class IrisSource implements IIrisSource {
         if (!options.brokers?.length)
           throw new IrisSourceError('Kafka driver requires a non-empty "brokers" array', {
             code: "missing_driver_option",
+            title: "Missing Driver Option",
+            details: 'The Kafka driver requires a non-empty "brokers" array option.',
             data: { driver: options.driver, option: "brokers" },
           });
         break;
@@ -95,6 +99,8 @@ export class IrisSource implements IIrisSource {
         )
           throw new IrisSourceError('NATS driver requires a "servers" option', {
             code: "missing_driver_option",
+            title: "Missing Driver Option",
+            details: 'The NATS driver requires a non-empty "servers" option.',
             data: { driver: options.driver, option: "servers" },
           });
         break;
@@ -106,6 +112,9 @@ export class IrisSource implements IIrisSource {
           `Unknown driver "${(_exhaustive as any).driver}"`,
           {
             code: "unknown_driver",
+            title: "Unknown Driver",
+            details:
+              "The configured driver is not recognized; choose one of the supported Iris drivers.",
             data: { driver: (_exhaustive as any).driver },
           },
         );
@@ -125,6 +134,8 @@ export class IrisSource implements IIrisSource {
     if (this.isSetUp) {
       throw new IrisSourceError("Cannot add messages after setup() has been called", {
         code: "messages_after_setup",
+        title: "Messages After Setup",
+        details: "Messages must be registered before setup() is called on the source.",
       });
     }
     const scanned = await MessageScanner.scan(input);
@@ -271,6 +282,8 @@ export class IrisSource implements IIrisSource {
     if (!this._driver) {
       throw new IrisSourceError("Driver not connected. Call connect() first.", {
         code: "driver_not_connected",
+        title: "Driver Not Connected",
+        details: "The source driver is not connected; call connect() before using it.",
       });
     }
     return this._driver;
@@ -426,6 +439,9 @@ export class IrisSource implements IIrisSource {
           `Unknown driver: ${(_exhaustive as any).driver}`,
           {
             code: "unknown_driver",
+            title: "Unknown Driver",
+            details:
+              "The configured driver is not recognized; choose one of the supported Iris drivers.",
             data: { driver: (_exhaustive as any).driver },
           },
         );

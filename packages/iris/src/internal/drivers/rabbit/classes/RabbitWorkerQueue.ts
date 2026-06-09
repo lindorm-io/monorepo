@@ -64,6 +64,9 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     if (!cb) {
       throw new IrisDriverError("consume() requires a callback", {
         code: "consume_callback_required",
+        title: "Consume Callback Required",
+        details:
+          "consume() was called without a callback function to handle delivered messages.",
       });
     }
 
@@ -71,6 +74,9 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     if (!channel) {
       throw new IrisDriverError("Cannot consume: consume channel is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The RabbitMQ consume channel is not available, so the worker queue cannot start consuming.",
         data: { driver: "rabbit" },
       });
     }

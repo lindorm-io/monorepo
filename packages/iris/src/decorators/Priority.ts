@@ -7,6 +7,9 @@ export const Priority =
     if (!Number.isInteger(priority) || priority < 0 || priority > 10) {
       throw new IrisMetadataError("@Priority value must be an integer between 0 and 10", {
         code: "invalid_priority",
+        title: "Invalid Priority",
+        details:
+          "The @Priority decorator requires an integer between 0 and 10 inclusive.",
       });
     }
     stagePriority(context.metadata, priority);

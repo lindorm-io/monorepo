@@ -22,14 +22,24 @@ export const prepareInbound = async (
   if (headers["x-iris-encrypted"] === "true" && !metadata.encrypted) {
     throw new IrisSerializationError(
       "Received encrypted message but @Encrypted is not configured on this message class",
-      { code: "unexpected_encrypted_message" },
+      {
+        code: "unexpected_encrypted_message",
+        title: "Unexpected Encrypted Message",
+        details:
+          "An encrypted payload was received but the message class is not marked with @Encrypted. Add @Encrypted to the message class or stop encrypting the payload.",
+      },
     );
   }
 
   if (headers["x-iris-encrypted"] !== "true" && metadata.encrypted) {
     throw new IrisSerializationError(
       "Message requires encryption but received unencrypted payload",
-      { code: "missing_encrypted_payload" },
+      {
+        code: "missing_encrypted_payload",
+        title: "Missing Encrypted Payload",
+        details:
+          "The message class is marked with @Encrypted but the received payload was not encrypted. Ensure the producer encrypts this message.",
+      },
     );
   }
 
@@ -41,6 +51,9 @@ export const prepareInbound = async (
         `Unsupported compression algorithm in header: "${compressionAlgorithm}"`,
         {
           code: "unsupported_compression_algorithm",
+          title: "Unsupported Compression Algorithm",
+          details:
+            "The inbound message declares a compression algorithm that is not supported. Supported algorithms are gzip, deflate, and brotli.",
           data: { algorithm: compressionAlgorithm },
         },
       );

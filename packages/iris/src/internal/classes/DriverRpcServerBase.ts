@@ -63,6 +63,9 @@ export abstract class DriverRpcServerBase<
     if (this.registeredQueues.has(queue)) {
       throw new IrisDriverError(`RPC handler already registered for queue "${queue}"`, {
         code: "rpc_handler_already_registered",
+        title: "RPC Handler Already Registered",
+        details:
+          "An RPC handler is already registered for the named queue. Each queue may have only one handler; unserve the existing one first.",
         data: { queue },
       });
     }

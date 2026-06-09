@@ -68,6 +68,9 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     if (!this.state.publishConnection) {
       throw new IrisDriverError("Cannot subscribe: connection is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The Redis publish connection is not established, so the message bus cannot subscribe.",
         data: { driver: "redis" },
       });
     }

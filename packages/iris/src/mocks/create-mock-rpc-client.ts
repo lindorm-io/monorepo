@@ -30,7 +30,12 @@ export const _createMockRpcClient = <
       if (!responseFactory) {
         throw new IrisValidationError(
           "MockRpcClient: no responseFactory provided — supply one via the constructor",
-          { code: "missing_response_factory" },
+          {
+            code: "missing_response_factory",
+            title: "Missing Response Factory",
+            details:
+              "The mock RPC client needs a responseFactory to produce responses; pass one when creating the mock.",
+          },
         );
       }
 

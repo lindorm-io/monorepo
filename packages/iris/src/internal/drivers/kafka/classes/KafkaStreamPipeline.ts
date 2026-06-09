@@ -46,13 +46,21 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     if (!this.inputClass) {
       throw new IrisDriverError(
         "Stream pipeline requires an input class. Call .from() before .to().",
-        { code: "pipeline_input_class_required" },
+        {
+          code: "pipeline_input_class_required",
+          title: "Pipeline Input Class Required",
+          details:
+            "The stream pipeline was started without an input class; call .from() before .to().",
+        },
       );
     }
 
     if (!this.state.kafka) {
       throw new IrisDriverError("Cannot start pipeline: Kafka client is not connected", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The Kafka client is not connected, so the stream pipeline cannot start.",
         data: { driver: "kafka" },
       });
     }

@@ -28,6 +28,9 @@ export const parseField = (field: MetaField, message: any, options: any): any =>
       `Failed to parse field "${field.key}" of type ${field.type}`,
       {
         code: "field_parse_failed",
+        title: "Field Parse Failed",
+        details:
+          "The provided value for the named field could not be parsed into the field's declared type. Check that the value matches the expected type.",
         data: { field: field.key, type: field.type },
         debug: { value, valueType: typeof value },
         error: error instanceof Error ? error : undefined,

@@ -38,6 +38,9 @@ export class NatsRpcClient<
     if (!this.state.nc || !this.state.headersInit) {
       throw new IrisDriverError("Cannot send RPC request: connection is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The NATS connection is not established, so the RPC request cannot be sent.",
         data: { driver: "nats" },
       });
     }
@@ -57,6 +60,8 @@ export class NatsRpcClient<
           replyEnvelope.headers["x-iris-rpc-error-message"] ?? "RPC handler error";
         throw new IrisTransportError(errorMessage, {
           code: "rpc_handler_error",
+          title: "RPC Handler Error",
+          details: `The remote RPC handler for topic "${topic}" returned an error response.`,
           data: { topic },
         });
       }
@@ -77,7 +82,12 @@ export class NatsRpcClient<
       if (code === "TIMEOUT" || msg.includes("TIMEOUT") || msg.includes("timeout")) {
         throw new IrisTimeoutError(
           `RPC request timed out after ${timeoutMs}ms for topic "${topic}"`,
-          { code: "rpc_request_timeout", data: { topic, timeoutMs } },
+          {
+            code: "rpc_request_timeout",
+            title: "RPC Request Timeout",
+            details: `The RPC request for topic "${topic}" did not receive a reply within ${timeoutMs}ms.`,
+            data: { topic, timeoutMs },
+          },
         );
       }
       if (
@@ -88,6 +98,8 @@ export class NatsRpcClient<
       ) {
         throw new IrisTransportError(`No RPC handler registered for topic "${topic}"`, {
           code: "rpc_handler_not_found",
+          title: "RPC Handler Not Found",
+          details: `No responders are available for topic "${topic}"; no RPC handler is registered.`,
           data: { topic },
         });
       }

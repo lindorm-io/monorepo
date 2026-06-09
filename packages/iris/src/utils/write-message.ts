@@ -18,6 +18,9 @@ export const writeMessage = async (options: WriteMessageOptions): Promise<void> 
       `Invalid message name: "${name}" — must be PascalCase`,
       {
         code: "invalid_message_name",
+        title: "Invalid Message Name",
+        details:
+          "The message name must be PascalCase, starting with an uppercase letter.",
         data: { name },
       },
     );

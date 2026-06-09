@@ -78,12 +78,18 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
     if (!cb) {
       throw new IrisDriverError("consume() requires a callback", {
         code: "consume_callback_required",
+        title: "Consume Callback Required",
+        details:
+          "consume() was called without a callback function to handle delivered messages.",
       });
     }
 
     if (!this.state.js || !this.state.jsm) {
       throw new IrisDriverError("Cannot consume: connection is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The NATS JetStream connection is not established, so the worker queue cannot start consuming.",
         data: { driver: "nats" },
       });
     }

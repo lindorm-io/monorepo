@@ -13,7 +13,13 @@ export const validateEncryptedMessages = (
     if (metadata.encrypted && !amphora) {
       throw new IrisSourceError(
         `Message "${metadata.message.name}" uses @Encrypted but no amphora instance was provided to IrisSource`,
-        { code: "missing_amphora_instance", data: { message: metadata.message.name } },
+        {
+          code: "missing_amphora_instance",
+          title: "Missing Amphora Instance",
+          details:
+            "A registered message is marked with @Encrypted but no Amphora instance was provided to IrisSource. Provide an Amphora when constructing the source.",
+          data: { message: metadata.message.name },
+        },
       );
     }
   }

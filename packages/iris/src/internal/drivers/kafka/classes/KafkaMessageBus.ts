@@ -71,6 +71,9 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     if (!this.state.kafka) {
       throw new IrisDriverError("Cannot subscribe: Kafka client is not connected", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The Kafka client is not connected, so the message bus cannot subscribe.",
         data: { driver: "kafka" },
       });
     }
@@ -95,6 +98,9 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       if (!p)
         throw new IrisDriverError("Pooled consumer not found for group: " + groupId, {
           code: "consumer_not_found",
+          title: "Consumer Not Found",
+          details:
+            "The pooled Kafka consumer for the subscription's consumer group was not found; it may have been stopped or evicted.",
           data: { driver: "kafka", groupId },
         });
       return p.consumer;
@@ -129,6 +135,9 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
           "Pooled consumer not found for group: " + broadcastGroupId,
           {
             code: "consumer_not_found",
+            title: "Consumer Not Found",
+            details:
+              "The pooled Kafka consumer for the broadcast consumer group was not found; it may have been stopped or evicted.",
             data: { driver: "kafka", groupId: broadcastGroupId },
           },
         );

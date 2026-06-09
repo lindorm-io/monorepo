@@ -51,6 +51,9 @@ export const stageHeader = (
   if (!header.headerName || !header.headerName.trim()) {
     throw new IrisMetadataError("@Header name must not be empty", {
       code: "empty_header_name",
+      title: "Empty Header Name",
+      details:
+        "A @Header decorator was given an empty or whitespace-only name. Provide a non-empty header name.",
     });
   }
   ensureOwnArray(metadata, "headers").push(header);
@@ -76,12 +79,20 @@ export const stageMessage = (
   if (!message.name || !message.name.trim()) {
     throw new IrisMetadataError("@Message name must not be empty", {
       code: "empty_message_name",
+      title: "Empty Message Name",
+      details:
+        "A @Message decorator was given an empty or whitespace-only name. Provide a non-empty message name.",
     });
   }
   if (Object.hasOwn(metadata, ABSTRACT_MESSAGE_KEY)) {
     throw new IrisMetadataError(
       "Cannot combine @AbstractMessage and @Message on the same class",
-      { code: "conflicting_message_decorators" },
+      {
+        code: "conflicting_message_decorators",
+        title: "Conflicting Message Decorators",
+        details:
+          "The class is decorated with both @AbstractMessage and @Message. A class may use only one of these decorators.",
+      },
     );
   }
   metadata.message = message;
@@ -95,7 +106,12 @@ export const stageAbstractMessage = (
   if (Object.hasOwn(metadata, "__hasMessage")) {
     throw new IrisMetadataError(
       "Cannot combine @AbstractMessage and @Message on the same class",
-      { code: "conflicting_message_decorators" },
+      {
+        code: "conflicting_message_decorators",
+        title: "Conflicting Message Decorators",
+        details:
+          "The class is decorated with both @AbstractMessage and @Message. A class may use only one of these decorators.",
+      },
     );
   }
   metadata[ABSTRACT_MESSAGE_KEY] = true;
@@ -158,6 +174,9 @@ export const stageNamespace = (
   if (!namespace || !namespace.trim()) {
     throw new IrisMetadataError("@Namespace value must not be empty", {
       code: "empty_namespace",
+      title: "Empty Namespace",
+      details:
+        "A @Namespace decorator was given an empty or whitespace-only value. Provide a non-empty namespace.",
     });
   }
   metadata.namespace = namespace;
