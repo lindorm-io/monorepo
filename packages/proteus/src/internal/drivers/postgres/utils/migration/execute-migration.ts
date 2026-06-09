@@ -79,6 +79,8 @@ export const executeMigrationUp = async (
     }
     throw new PostgresMigrationError("Migration up() failed", {
       code: "migration_failed",
+      title: "Migration Failed",
+      details: `The up() function of migration "${metadata.name}" threw; its orphaned in-progress record has been cleaned up.`,
       data: { migration: metadata.name },
       debug: { id: migration.id },
       error: err as Error,
@@ -107,6 +109,8 @@ export const executeMigrationDown = async (
   } catch (err) {
     throw new PostgresMigrationError("Migration down() failed", {
       code: "migration_failed",
+      title: "Migration Failed",
+      details: `The down() function of migration "${metadata.name}" threw while rolling back.`,
       data: { migration: metadata.name },
       debug: { id: migration.id },
       error: err as Error,

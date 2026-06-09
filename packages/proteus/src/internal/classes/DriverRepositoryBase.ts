@@ -148,6 +148,8 @@ export abstract class DriverRepositoryBase<
   ): Promise<void> | void {
     throw new ProteusRepositoryError("Driver does not support @EmbeddedList fields", {
       code: "embedded_list_not_supported",
+      title: "Embedded List Not Supported",
+      details: "This driver cannot load @EmbeddedList fields for the entity.",
     });
   }
 
@@ -235,6 +237,8 @@ export abstract class DriverRepositoryBase<
         `Entity "${this.metadata.entity.name}" not found`,
         {
           code: "entity_not_found",
+          title: "Entity Not Found",
+          details: `No "${this.metadata.entity.name}" entity matched the criteria passed to findOneOrFail.`,
           data: { entityName: this.metadata.entity.name },
           debug: { criteria },
         },
@@ -283,12 +287,16 @@ export abstract class DriverRepositoryBase<
     if (page < 1) {
       throw new ProteusRepositoryError("findPaginated: page must be >= 1", {
         code: "invalid_pagination",
+        title: "Invalid Pagination",
+        details: `findPaginated requires page to be 1 or greater but received ${page}.`,
         data: { page },
       });
     }
     if (pageSize < 1) {
       throw new ProteusRepositoryError("findPaginated: pageSize must be >= 1", {
         code: "invalid_pagination",
+        title: "Invalid Pagination",
+        details: `findPaginated requires pageSize to be 1 or greater but received ${pageSize}.`,
         data: { pageSize },
       });
     }
@@ -326,6 +334,9 @@ export abstract class DriverRepositoryBase<
         "paginate() requires options with at least `orderBy` and one of `first`/`last`",
         {
           code: "invalid_pagination",
+          title: "Invalid Pagination",
+          details:
+            "paginate() requires an options object specifying orderBy and one of first or last.",
           data: { entityName: this.metadata.entity.name },
         },
       );
@@ -469,6 +480,8 @@ export abstract class DriverRepositoryBase<
         `Cannot save an append-only entity "${this.metadata.entity.name}" — use insert() instead`,
         {
           code: "append_only_violation",
+          title: "Append Only Violation",
+          details: `The append-only entity "${this.metadata.entity.name}" cannot be saved; use insert() instead.`,
           debug: { entityName: this.metadata.entity.name, method: "save" },
         },
       );
@@ -562,6 +575,8 @@ export abstract class DriverRepositoryBase<
         `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
         {
           code: "update_many_not_supported",
+          title: "Update Many Not Supported",
+          details: `updateMany cannot batch-update the versioned entity "${this.metadata.entity.name}"; use update() per row.`,
           debug: { entityName: this.metadata.entity.name },
         },
       );
@@ -630,6 +645,8 @@ export abstract class DriverRepositoryBase<
         `Entity "${this.metadata.entity.name}" not found or has no TTL set`,
         {
           code: "entity_not_found",
+          title: "Entity Not Found",
+          details: `No "${this.metadata.entity.name}" entity matched the ttl() criteria, or the match has no expiry set.`,
           data: { entityName: this.metadata.entity.name },
           debug: { criteria },
         },

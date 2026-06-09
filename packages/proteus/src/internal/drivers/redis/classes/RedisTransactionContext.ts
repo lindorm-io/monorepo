@@ -36,6 +36,9 @@ export class RedisTransactionContext implements ITransactionContext {
     if (!this.repoFactory) {
       throw new RedisDriverError("Transactional repositories are not configured", {
         code: "transactional_repositories_not_configured",
+        title: "Transactional Repositories Not Configured",
+        details:
+          "context.repository() was called but no repository factory was provided to the transaction context; configure transactional repositories before requesting one.",
       });
     }
     return this.repoFactory(target);

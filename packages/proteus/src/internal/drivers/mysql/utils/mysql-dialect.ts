@@ -4,7 +4,11 @@ import type { LockMode } from "../../../../types/find-options.js";
 
 const quoteIdentifier = (name: string): string => {
   if (!name) {
-    throw new ProteusError("Identifier cannot be empty", { code: "invalid_query" });
+    throw new ProteusError("Identifier cannot be empty", {
+      code: "invalid_query",
+      title: "Invalid Query",
+      details: "An empty identifier cannot be quoted for use in a MySQL statement.",
+    });
   }
   return `\`${name.replace(/`/g, "``")}\``;
 };

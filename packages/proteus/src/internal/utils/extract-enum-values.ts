@@ -7,6 +7,8 @@ export const extractEnumValues = (
   if (!isObjectLike(enumDef) || enumDef === null) {
     throw new ProteusError("Enum definition must be a TypeScript enum object", {
       code: "invalid_enum_definition",
+      title: "Invalid Enum Definition",
+      details: "Pass a TypeScript enum object so its values can be extracted.",
     });
   }
   const values = new Set<string>();

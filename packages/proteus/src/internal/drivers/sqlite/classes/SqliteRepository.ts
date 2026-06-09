@@ -250,6 +250,9 @@ export class SqliteRepository<
         `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "updateMany is not supported for versioned entities; use update() instead.",
           data: { entity: this.metadata.entity.name, operation: "updateMany" },
         },
       );
@@ -608,6 +611,9 @@ export class SqliteRepository<
               `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
               {
                 code: "optimistic_lock_conflict",
+                title: "Optimistic Lock Conflict",
+                details:
+                  "The entity was modified concurrently; reload it and retry the update.",
                 data: { entity: this.metadata.entity.name },
               },
             );
@@ -655,6 +661,9 @@ export class SqliteRepository<
                   `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
                   {
                     code: "optimistic_lock_conflict",
+                    title: "Optimistic Lock Conflict",
+                    details:
+                      "The entity was modified concurrently; reload it and retry the update.",
                     data: { entity: this.metadata.entity.name },
                   },
                 );
@@ -690,6 +699,9 @@ export class SqliteRepository<
                   `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
                   {
                     code: "optimistic_lock_conflict",
+                    title: "Optimistic Lock Conflict",
+                    details:
+                      "The entity was modified concurrently; reload it and retry the update.",
                     data: { entity: this.metadata.entity.name },
                   },
                 );
@@ -837,6 +849,9 @@ export class SqliteRepository<
               `Optimistic lock conflict: "${this.metadata.entity.name}" version was modified concurrently`,
               {
                 code: "optimistic_lock_conflict",
+                title: "Optimistic Lock Conflict",
+                details:
+                  "The entity was modified concurrently; reload it and retry the update.",
                 data: { entity: this.metadata.entity.name },
               },
             );

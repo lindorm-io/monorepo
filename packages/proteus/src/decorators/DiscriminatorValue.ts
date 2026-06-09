@@ -16,7 +16,12 @@ export const DiscriminatorValue =
     if (typeof value !== "string" && typeof value !== "number") {
       throw new ProteusError(
         `@DiscriminatorValue requires a string or number, received ${typeof value}`,
-        { code: "invalid_decorator_usage", data: { decorator: "DiscriminatorValue" } },
+        {
+          code: "invalid_decorator_usage",
+          title: "Invalid Decorator Usage",
+          details: "@DiscriminatorValue must be given a string or number value.",
+          data: { decorator: "DiscriminatorValue" },
+        },
       );
     }
     stageDiscriminatorValue(context.metadata, value);

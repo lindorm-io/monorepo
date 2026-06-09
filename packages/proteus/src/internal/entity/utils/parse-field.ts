@@ -34,6 +34,8 @@ export const parseField = <E extends IEntity, O extends DeepPartial<E> = DeepPar
       `Failed to parse field "${field.key}" of type ${field.type}`,
       {
         code: "parse_field_failed",
+        title: "Parse Field Failed",
+        details: `The value for field "${field.key}" could not be coerced to type "${field.type}"; check that the stored data matches the declared column type.`,
         data: { field: field.key, type: field.type },
         debug: { value, valueType: typeof value },
         error: error instanceof Error ? error : undefined,

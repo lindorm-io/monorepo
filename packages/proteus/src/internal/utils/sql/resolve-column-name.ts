@@ -28,6 +28,9 @@ export const resolveColumnName = (
     `Field "${key}" not found in metadata. Valid fields: ${fields.map((f) => f.key).join(", ") || "(none)"}`,
     {
       code: "unknown_field",
+      title: "Unknown Field",
+      details:
+        "The referenced field is not declared on the entity and cannot be resolved to a column.",
       data: { field: key, validFields: fields.map((f) => f.key) },
     },
   );

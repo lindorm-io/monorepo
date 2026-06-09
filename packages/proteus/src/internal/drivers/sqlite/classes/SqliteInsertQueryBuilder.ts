@@ -61,6 +61,9 @@ export class SqliteInsertQueryBuilder<
         "INSERT via QueryBuilder is not supported for joined inheritance entities — use repository.insert()",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "INSERT via the query builder is not supported for joined inheritance entities; use repository.insert().",
           data: { operation: "insert.execute", entity: this.metadata.entity.name },
         },
       );
@@ -78,6 +81,8 @@ export class SqliteInsertQueryBuilder<
           `INSERT on "${this.metadata.entity.name}": row ${i} has different keys than row 0`,
           {
             code: "invalid_query",
+            title: "Invalid Query",
+            details: "All rows in a bulk INSERT must share the same set of keys.",
             data: { entity: this.metadata.entity.name, operation: "insert.execute" },
           },
         );

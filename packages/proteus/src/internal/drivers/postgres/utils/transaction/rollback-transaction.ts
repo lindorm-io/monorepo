@@ -14,6 +14,9 @@ export const rollbackTransaction = async (
     handle.state = "rolledback";
     throw new PostgresTransactionError("Failed to rollback transaction", {
       code: "query_execution_failed",
+      title: "Query Execution Failed",
+      details:
+        "The ROLLBACK statement failed; the transaction is now marked as rolled back.",
       data: { operation: "ROLLBACK" },
       error: error as Error,
     });

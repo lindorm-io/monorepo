@@ -73,6 +73,8 @@ export class SyncPlanExecutor {
         }
         throw new SqliteSyncError("Sync transaction failed", {
           code: "sync_failed",
+          title: "Sync Failed",
+          details: "A schema-sync statement failed and the transaction was rolled back.",
           error: error as Error,
         });
       }
@@ -173,6 +175,9 @@ export class SyncPlanExecutor {
           `Foreign key violations detected after recreating table "${tableName}": ${violations.length} violation(s)`,
           {
             code: "foreign_key_violation",
+            title: "Foreign Key Violation",
+            details:
+              "Foreign key integrity check failed after recreating the table during sync.",
             data: { table: tableName, violations: violations.length },
           },
         );
@@ -195,6 +200,8 @@ export class SyncPlanExecutor {
       if (error instanceof SqliteSyncError) throw error;
       throw new SqliteSyncError(`Recreate table "${tableName}" failed`, {
         code: "sync_failed",
+        title: "Sync Failed",
+        details: "Recreating the table during schema sync failed and was rolled back.",
         data: { table: tableName },
         error: error as Error,
       });
@@ -268,7 +275,13 @@ export class SyncPlanExecutor {
       throw new SqliteSyncError(
         `Circular foreign key dependency detected among tables: ${unsorted.join(", ")}. ` +
           `Cannot determine creation order.`,
-        { code: "sync_failed", data: { tables: unsorted } },
+        {
+          code: "sync_failed",
+          title: "Sync Failed",
+          details:
+            "A circular foreign key dependency prevents determining table creation order.",
+          data: { tables: unsorted },
+        },
       );
     }
 

@@ -37,6 +37,9 @@ export class SqliteTransactionContext implements ITransactionContext {
     if (!this.repoFactory) {
       throw new SqliteTransactionError("Transactional repositories are not configured", {
         code: "transactional_repositories_not_configured",
+        title: "Transactional Repositories Not Configured",
+        details:
+          "The transaction context has no repository factory; configure one before requesting repositories.",
       });
     }
     return this.repoFactory(target);

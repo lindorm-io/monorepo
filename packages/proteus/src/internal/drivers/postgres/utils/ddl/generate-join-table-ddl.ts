@@ -78,6 +78,8 @@ export const generateJoinTableDDL = (
         `ManyToMany relation "${relation.key}" on "${metadata.target.name}" has no resolvable inverse joinKeys`,
         {
           code: "schema_mismatch",
+          title: "Schema Mismatch",
+          details: `ManyToMany relation "${relation.key}" on "${metadata.target.name}" has no resolvable inverse joinKeys, so the join table's foreign-side columns cannot be generated.`,
           data: { relation: relation.key, entity: metadata.target.name },
         },
       );

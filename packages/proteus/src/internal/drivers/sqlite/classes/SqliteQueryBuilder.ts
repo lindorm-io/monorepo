@@ -119,6 +119,8 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     if (this.state.ctes.some((c) => c.name === name)) {
       throw new ProteusError(`CTE "${name}" already defined on this query`, {
         code: "invalid_query",
+        title: "Invalid Query",
+        details: "A CTE with this name is already defined on the query.",
         data: { cte: name },
       });
     }
@@ -150,6 +152,8 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         `CTE "${name}" not defined. Define it with .withCte("${name}", ...) first.`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details: "Define the CTE with withCte() before referencing it in fromCte().",
           data: { cte: name },
         },
       );
@@ -247,6 +251,8 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         `Expected entity "${this.metadata.entity.name}" not found`,
         {
           code: "entity_not_found",
+          title: "Entity Not Found",
+          details: "getOneOrFail() found no entity matching the query.",
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -376,6 +382,8 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         `Field "${String(subqueryField)}" not found on subquery entity "${subMeta.entity.name}"`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details: "The referenced field does not exist on the subquery entity.",
           data: { entity: subMeta.entity.name, field: String(subqueryField) },
         },
       );
@@ -427,6 +435,8 @@ export class SqliteQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         `Cannot use ${operation} with a query that has CTEs. Define CTEs on the primary query instead.`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details: "Set operations cannot combine a query that defines its own CTEs.",
           data: { operation },
         },
       );

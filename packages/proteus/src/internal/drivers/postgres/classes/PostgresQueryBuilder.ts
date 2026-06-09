@@ -156,6 +156,8 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     if (this.state.ctes.some((c) => c.name === name)) {
       throw new ProteusError(`CTE "${name}" already defined on this query`, {
         code: "invalid_query",
+        title: "Invalid Query",
+        details: `A CTE named "${name}" is already defined on this query; CTE names must be unique.`,
         data: { cte: name },
       });
     }
@@ -185,7 +187,12 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     if (!this.state.ctes.some((c) => c.name === name)) {
       throw new ProteusError(
         `CTE "${name}" not defined. Define it with .withCte("${name}", ...) first.`,
-        { code: "invalid_query", data: { cte: name } },
+        {
+          code: "invalid_query",
+          title: "Invalid Query",
+          details: `No CTE named "${name}" has been defined on this query; define it with withCte() before referencing it.`,
+          data: { cte: name },
+        },
       );
     }
     this.state.cteFrom = name;
@@ -288,6 +295,8 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         `Expected entity "${this.metadata.entity.name}" not found`,
         {
           code: "entity_not_found",
+          title: "Entity Not Found",
+          details: `getOneOrFail() found no matching "${this.metadata.entity.name}" entity for the given query.`,
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -394,6 +403,8 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         `Field "${String(subqueryField)}" not found on subquery entity "${subMeta.entity.name}"`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details: `Field "${String(subqueryField)}" does not exist on subquery entity "${subMeta.entity.name}".`,
           data: { entity: subMeta.entity.name, field: String(subqueryField) },
         },
       );
@@ -448,7 +459,12 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     if (other.state.ctes.length > 0) {
       throw new ProteusError(
         `Cannot use ${operation} with a query that has CTEs. Define CTEs on the primary query instead.`,
-        { code: "invalid_query", data: { operation } },
+        {
+          code: "invalid_query",
+          title: "Invalid Query",
+          details: `The ${operation} secondary query cannot declare CTEs; define CTEs on the primary query instead.`,
+          data: { operation },
+        },
       );
     }
 

@@ -45,6 +45,8 @@ export const generateIndexDDL = (
         `Index name exceeds ${SQLITE_IDENTIFIER_LIMIT} characters: "${index.name}"`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details: "The index name exceeds SQLite's maximum identifier length.",
           data: { index: index.name, limit: SQLITE_IDENTIFIER_LIMIT },
         },
       );

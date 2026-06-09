@@ -15,14 +15,22 @@ export class ArrayCursor<E extends IEntity> implements IProteusCursor<E> {
 
   public async next(): Promise<E | null> {
     if (this.closed)
-      throw new ProteusError("Cursor is closed", { code: "cursor_closed" });
+      throw new ProteusError("Cursor is closed", {
+        code: "cursor_closed",
+        title: "Cursor Closed",
+        details: "next() cannot read from a cursor that has already been closed.",
+      });
     if (this.position >= this.items.length) return null;
     return this.items[this.position++];
   }
 
   public async nextBatch(size: number = 10): Promise<Array<E>> {
     if (this.closed)
-      throw new ProteusError("Cursor is closed", { code: "cursor_closed" });
+      throw new ProteusError("Cursor is closed", {
+        code: "cursor_closed",
+        title: "Cursor Closed",
+        details: "nextBatch() cannot read from a cursor that has already been closed.",
+      });
     if (this.position >= this.items.length) return [];
     const batch = this.items.slice(this.position, this.position + size);
     this.position += batch.length;

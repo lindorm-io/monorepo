@@ -20,7 +20,13 @@ export const generateUniqueDDL = (
     if (unique.keys.length === 0) {
       throw new ProteusError(
         `Unique constraint on "${tableName}" has no keys — UNIQUE () is invalid SQL`,
-        { code: "invalid_query", data: { table: tableName } },
+        {
+          code: "invalid_query",
+          title: "Invalid Query",
+          details:
+            "A unique constraint requires at least one key; UNIQUE () is invalid SQL.",
+          data: { table: tableName },
+        },
       );
     }
     const resolvedKeys = unique.keys.map((k) => resolveColumnNameSafe(fields, k));
@@ -31,6 +37,9 @@ export const generateUniqueDDL = (
         `Unique constraint name exceeds ${SQLITE_IDENTIFIER_LIMIT} characters: "${unique.name}"`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details:
+            "The unique constraint name exceeds SQLite's maximum identifier length.",
           data: { constraint: unique.name, limit: SQLITE_IDENTIFIER_LIMIT },
         },
       );

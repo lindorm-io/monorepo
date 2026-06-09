@@ -31,6 +31,8 @@ export const wrapMysqlError = (
     if (errno === 1062 || errno === 1586) {
       throw new DuplicateKeyError(message, {
         code: "unique_violation",
+        title: "Unique Violation",
+        details: "A unique constraint or primary key was violated by the affected row.",
         error,
         debug: { ...context, detail, errno, sqlState: code },
       });
@@ -42,6 +44,9 @@ export const wrapMysqlError = (
         `${message} (foreign key violation: parent row referenced)`,
         {
           code: "foreign_key_violation",
+          title: "Foreign Key Violation",
+          details:
+            "A parent row is still referenced by a child row, so it cannot be deleted or updated.",
           error,
           debug: { ...context, detail, errno, sqlState: code },
         },
@@ -54,6 +59,9 @@ export const wrapMysqlError = (
         `${message} (foreign key violation: referenced row not found)`,
         {
           code: "foreign_key_violation",
+          title: "Foreign Key Violation",
+          details:
+            "The inserted or updated row references a parent row that does not exist.",
           error,
           debug: { ...context, detail, errno, sqlState: code },
         },
@@ -64,6 +72,8 @@ export const wrapMysqlError = (
     if (errno === 1048 || errno === 1364) {
       throw new NotNullViolationError(`${message} (NOT NULL constraint violation)`, {
         code: "not_null_violation",
+        title: "Not Null Violation",
+        details: "A NOT NULL column received a null value during insert or update.",
         error,
         debug: { ...context, detail, errno, sqlState: code },
       });
@@ -73,6 +83,9 @@ export const wrapMysqlError = (
     if (errno === 1213) {
       throw new DeadlockError(`${message} (deadlock detected — retry the operation)`, {
         code: "deadlock_detected",
+        title: "Deadlock Detected",
+        details:
+          "The transaction was rolled back because a deadlock was detected; retry the operation.",
         error,
         debug: { ...context, detail, errno, sqlState: code },
       });
@@ -84,6 +97,9 @@ export const wrapMysqlError = (
         `${message} (lock wait timeout — retry the operation)`,
         {
           code: "serialization_failure",
+          title: "Serialization Failure",
+          details:
+            "A lock wait timeout was exceeded while acquiring a row lock; retry the operation.",
           error,
           debug: { ...context, detail, errno, sqlState: code },
         },
@@ -94,6 +110,8 @@ export const wrapMysqlError = (
     if (errno === 3819) {
       throw new CheckConstraintError(`${message} (CHECK constraint violation)`, {
         code: "check_constraint_violation",
+        title: "Check Constraint Violation",
+        details: "The affected row failed a CHECK constraint defined on the table.",
         error,
         debug: { ...context, detail, errno, sqlState: code },
       });
@@ -103,6 +121,9 @@ export const wrapMysqlError = (
   // Fallback: unknown error shape
   throw new ProteusRepositoryError(message, {
     code: "query_execution_failed",
+    title: "Query Execution Failed",
+    details:
+      "The MySQL query failed with an error that does not map to a known constraint condition.",
     error: error instanceof Error ? error : undefined,
     debug: {
       ...context,

@@ -144,6 +144,9 @@ export const markMigrationFinished = async (
   if (rowCount === 0) {
     throw new MySqlMigrationError("No migration record found", {
       code: "migration_not_found",
+      title: "Migration Not Found",
+      details:
+        "No migration record matched the given id when marking the migration finished.",
       debug: { id },
     });
   }
@@ -171,6 +174,9 @@ export const markMigrationRolledBack = async (
   if (rowCount === 0) {
     throw new MySqlMigrationError("No migration record found", {
       code: "migration_not_found",
+      title: "Migration Not Found",
+      details:
+        "No migration record matched the given id when marking the migration rolled back.",
       debug: { id },
     });
   }

@@ -66,6 +66,9 @@ export class MongoUpdateQueryBuilder<
         `QB update is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.save() instead.`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "The query builder cannot update joined-inheritance child entities; use repository.save() instead.",
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -77,6 +80,9 @@ export class MongoUpdateQueryBuilder<
         `QB update requires a WHERE clause. Call .where() before .execute().`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details:
+            "A query builder update requires a WHERE clause; call .where() before .execute().",
           data: { entity: this.metadata.entity.name },
         },
       );

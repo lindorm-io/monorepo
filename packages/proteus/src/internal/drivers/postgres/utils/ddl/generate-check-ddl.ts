@@ -19,7 +19,12 @@ export const generateCheckDDL = (
     if (check.name && check.name.length > PG_IDENTIFIER_LIMIT) {
       throw new ProteusError(
         `Check constraint name exceeds ${PG_IDENTIFIER_LIMIT} characters: "${check.name}"`,
-        { code: "schema_mismatch", data: { table: tableName, constraint: check.name } },
+        {
+          code: "schema_mismatch",
+          title: "Schema Mismatch",
+          details: `The check constraint name on table "${tableName}" exceeds PostgreSQL's ${PG_IDENTIFIER_LIMIT}-character identifier limit.`,
+          data: { table: tableName, constraint: check.name },
+        },
       );
     }
     const name =

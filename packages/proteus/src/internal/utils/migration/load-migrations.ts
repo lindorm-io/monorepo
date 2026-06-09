@@ -30,6 +30,8 @@ export const loadMigrations = async (
   if (!data.isDirectory) {
     throw new ProteusError("Migration path must be a directory", {
       code: "invalid_migration_path",
+      title: "Invalid Migration Path",
+      details: "The configured migrations path must point to a directory.",
       debug: { directory },
     });
   }
@@ -66,6 +68,9 @@ export const loadMigrations = async (
           if (existing) {
             throw new ProteusError("Duplicate migration ID", {
               code: "duplicate_migration_id",
+              title: "Duplicate Migration ID",
+              details:
+                "Two migration files declare the same id; each migration id must be unique.",
               debug: { id: instance.id, file: file.fullName, duplicateOf: existing },
             });
           }
@@ -81,6 +86,9 @@ export const loadMigrations = async (
         if (existing) {
           throw new ProteusError("Duplicate migration ID", {
             code: "duplicate_migration_id",
+            title: "Duplicate Migration ID",
+            details:
+              "Two migration files declare the same id; each migration id must be unique.",
             debug: { id: exported.id, file: file.fullName, duplicateOf: existing },
           });
         }

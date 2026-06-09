@@ -133,6 +133,8 @@ export class SqliteCursor<E extends IEntity> implements IProteusCursor<E> {
     if (this.closed) {
       throw new SqliteDriverError("Cursor is closed", {
         code: "cursor_closed",
+        title: "Cursor Closed",
+        details: "Cannot read from a cursor that has already been closed.",
         data: { operation: "cursor.read" },
       });
     }
@@ -142,6 +144,8 @@ export class SqliteCursor<E extends IEntity> implements IProteusCursor<E> {
     if (this.reading) {
       throw new SqliteDriverError("Concurrent cursor reads are not allowed", {
         code: "concurrent_cursor_read",
+        title: "Concurrent Cursor Read",
+        details: "A cursor read is already in progress; await it before reading again.",
         data: { operation: "cursor.read" },
       });
     }

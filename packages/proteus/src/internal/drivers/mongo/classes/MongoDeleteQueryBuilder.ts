@@ -70,6 +70,9 @@ export class MongoDeleteQueryBuilder<
         `QB delete is not supported for joined inheritance child "${this.metadata.entity.name}". Use repository.destroy() instead.`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "The query builder cannot delete joined-inheritance child entities; use repository.destroy() instead.",
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -80,6 +83,9 @@ export class MongoDeleteQueryBuilder<
         `QB delete requires a WHERE clause. Call .where() before .execute().`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details:
+            "A query builder delete requires a WHERE clause; call .where() before .execute().",
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -95,7 +101,12 @@ export class MongoDeleteQueryBuilder<
       if (!deleteField) {
         throw new NotSupportedError(
           "Entity does not support soft delete (missing @DeleteDate field)",
-          { code: "unsupported_operation" },
+          {
+            code: "unsupported_operation",
+            title: "Unsupported Operation",
+            details:
+              "Soft delete requires a field decorated with @DeleteDate on the entity.",
+          },
         );
       }
 

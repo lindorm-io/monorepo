@@ -17,7 +17,13 @@ export const Entity =
     if (!name || !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(name)) {
       throw new EntityMetadataError(
         `Invalid entity name "${name}": must match /^[a-zA-Z_][a-zA-Z0-9_]*$/`,
-        { code: "invalid_entity_name", data: { name } },
+        {
+          code: "invalid_entity_name",
+          title: "Invalid Entity Name",
+          details:
+            "An entity name must start with a letter or underscore and contain only letters, digits, and underscores.",
+          data: { name },
+        },
       );
     }
 

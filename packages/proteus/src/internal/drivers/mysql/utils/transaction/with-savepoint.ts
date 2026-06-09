@@ -22,6 +22,9 @@ export const withSavepoint = async <T>(
   } catch (error) {
     throw new MySqlTransactionError(`Failed to create savepoint "${name}"`, {
       code: "query_execution_failed",
+      title: "Query Execution Failed",
+      details:
+        "The SAVEPOINT statement failed while creating a nested transaction savepoint.",
       data: { operation: "SAVEPOINT" },
       error: error as Error,
     });

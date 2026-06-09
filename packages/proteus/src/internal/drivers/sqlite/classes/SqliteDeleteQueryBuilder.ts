@@ -68,6 +68,8 @@ export class SqliteDeleteQueryBuilder<
         `DELETE on "${this.metadata.entity.name}" requires at least one .where() predicate`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details: "A DELETE query must include at least one where() predicate.",
           data: { entity: this.metadata.entity.name, operation: "delete.execute" },
         },
       );
@@ -82,6 +84,9 @@ export class SqliteDeleteQueryBuilder<
         "DELETE via QueryBuilder is not supported for joined inheritance entities",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "DELETE via the query builder is not supported for joined inheritance entities.",
           data: { operation: "delete.execute", entity: this.metadata.entity.name },
         },
       );
@@ -106,6 +111,8 @@ export class SqliteDeleteQueryBuilder<
           `Entity "${this.metadata.entity.name}" has no @DeleteDateField — cannot use softDelete()`,
           {
             code: "invalid_query",
+            title: "Invalid Query",
+            details: "softDelete() requires the entity to declare a delete-date field.",
             data: { entity: this.metadata.entity.name, operation: "delete.softDelete" },
           },
         );

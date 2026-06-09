@@ -46,6 +46,9 @@ const mapOnDeleteAction = (onDestroy: RelationDestroy): string => {
     default:
       throw new SqliteSyncError(`Unsupported onDestroy value: "${onDestroy as string}"`, {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The relation's onDestroy action does not map to a SQLite ON DELETE action.",
         data: { onDestroy: onDestroy as string },
       });
   }
@@ -66,6 +69,9 @@ const mapOnUpdateAction = (onUpdate: RelationChange): string => {
     default:
       throw new SqliteSyncError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The relation's onUpdate action does not map to a SQLite ON UPDATE action.",
         data: { onUpdate: onUpdate as string },
       });
   }
@@ -196,6 +202,8 @@ export const projectDesiredSchemaSqlite = (
           `Column name "${field.name}" on "${metadata.target.name}" exceeds ${SQLITE_IDENTIFIER_LIMIT} characters`,
           {
             code: "schema_mismatch",
+            title: "Schema Mismatch",
+            details: "A column name exceeds SQLite's maximum identifier length.",
             data: {
               entity: metadata.target.name,
               column: field.name,
@@ -233,6 +241,9 @@ export const projectDesiredSchemaSqlite = (
           `Column name "${fkCol}" on "${metadata.target.name}" collides — embedded field "${colliding.key}" produces column "${colliding.name}" which conflicts with a relation FK column of the same name`,
           {
             code: "schema_mismatch",
+            title: "Schema Mismatch",
+            details:
+              "An embedded field's column name collides with a relation foreign-key column.",
             data: {
               entity: metadata.target.name,
               column: fkCol,

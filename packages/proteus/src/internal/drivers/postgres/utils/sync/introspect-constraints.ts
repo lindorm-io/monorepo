@@ -48,6 +48,8 @@ const mapConstraintType = (contype: string): DbConstraint["type"] => {
     default:
       throw new PostgresSyncError(`Unknown constraint type: ${contype}`, {
         code: "schema_mismatch",
+        title: "Schema Mismatch",
+        details: `Introspection encountered constraint type "${contype}", which is not one of the recognized pg_constraint contype values (p, u, f, c).`,
         data: { constraintType: contype },
       });
   }

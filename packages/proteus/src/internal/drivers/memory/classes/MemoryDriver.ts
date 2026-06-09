@@ -323,6 +323,8 @@ export class MemoryDriver implements IProteusDriver {
   public async acquireClient(): Promise<never> {
     throw new MemoryDriverError("Memory driver does not expose a client", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver has no underlying client to acquire.",
       data: { operation: "acquireClient" },
     });
   }
@@ -344,6 +346,8 @@ export class MemoryDriver implements IProteusDriver {
     if (txHandle.state !== "active") {
       throw new MemoryDriverError(`Cannot commit: transaction is ${txHandle.state}`, {
         code: "transaction_not_active",
+        title: "Transaction Not Active",
+        details: `Commit requires an active transaction but this one is ${txHandle.state}.`,
         data: { state: txHandle.state },
       });
     }
@@ -361,6 +365,8 @@ export class MemoryDriver implements IProteusDriver {
     if (txHandle.state !== "active") {
       throw new MemoryDriverError(`Cannot rollback: transaction is ${txHandle.state}`, {
         code: "transaction_not_active",
+        title: "Transaction Not Active",
+        details: `Rollback requires an active transaction but this one is ${txHandle.state}.`,
         data: { state: txHandle.state },
       });
     }

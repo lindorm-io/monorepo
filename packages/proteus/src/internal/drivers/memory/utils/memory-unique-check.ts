@@ -29,6 +29,8 @@ export const checkUniqueConstraints = (
           `Unique constraint violation for "${metadata.entity.name}" on columns [${columns.join(", ")}]`,
           {
             code: "unique_violation",
+            title: "Unique Violation",
+            details: `Another "${metadata.entity.name}" row already holds the same value on the unique columns [${columns.join(", ")}].`,
             data: { entityName: metadata.entity.name, columns },
             debug: {
               values: columns.map((c) => row[c]),

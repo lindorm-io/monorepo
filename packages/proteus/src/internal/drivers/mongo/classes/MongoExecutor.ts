@@ -113,6 +113,9 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
           `Duplicate primary key for "${this.metadata.entity.name}"`,
           {
             code: "unique_violation",
+            title: "Unique Violation",
+            details:
+              "A document with the same primary key already exists in the collection.",
             debug: { entityName: this.metadata.entity.name, _id: doc._id },
           },
         );
@@ -175,6 +178,9 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
           `Unique constraint violation during update for "${this.metadata.entity.name}"`,
           {
             code: "unique_violation",
+            title: "Unique Violation",
+            details:
+              "The update would collide with an existing document on a unique index.",
             debug: { entityName: this.metadata.entity.name },
           },
         );
@@ -193,6 +199,9 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         `Update failed: no matching document found for "${this.metadata.entity.name}"`,
         {
           code: "update_target_not_found",
+          title: "Update Target Not Found",
+          details:
+            "No document matched the primary key filter, so the update affected no rows.",
           debug: buildPrimaryKeyDebug(entity as any, this.metadata.primaryKeys),
         },
       );
@@ -252,7 +261,12 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!this.deleteFieldKey) {
       throw new MongoDriverError(
         "Entity does not support soft delete (missing @DeleteDate field)",
-        { code: "unsupported_operation" },
+        {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "Soft delete requires a field decorated with @DeleteDate on the entity.",
+        },
       );
     }
 
@@ -281,7 +295,11 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     if (!this.deleteFieldKey) {
       throw new MongoDriverError(
         "Entity does not support soft delete (missing @DeleteDate field)",
-        { code: "unsupported_operation" },
+        {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: "Restore requires a field decorated with @DeleteDate on the entity.",
+        },
       );
     }
 
@@ -343,6 +361,8 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         `TTL failed: document not found for "${this.metadata.entity.name}"`,
         {
           code: "entity_not_found",
+          title: "Entity Not Found",
+          details: "The TTL lookup found no document matching the criteria.",
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -541,6 +561,9 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
           `Duplicate primary key during bulk insert for "${this.metadata.entity.name}"`,
           {
             code: "unique_violation",
+            title: "Unique Violation",
+            details:
+              "One of the documents in the bulk insert duplicates an existing primary key.",
             debug: { entityName: this.metadata.entity.name },
           },
         );

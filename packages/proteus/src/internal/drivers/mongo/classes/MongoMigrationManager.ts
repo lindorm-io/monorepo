@@ -83,7 +83,12 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
-        { code: "migration_failed" },
+        {
+          code: "migration_failed",
+          title: "Migration Failed",
+          details:
+            "Could not acquire the migration advisory lock; another migration run holds it.",
+        },
       );
     }
 
@@ -114,6 +119,9 @@ export class MongoMigrationManager implements IMigrationManager {
             "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
           {
             code: "migration_failed",
+            title: "Migration Failed",
+            details:
+              "One or more migrations started but never finished (possible crash); manual intervention is required.",
             debug: {
               partiallyApplied: partiallyApplied.map((r) => ({
                 id: r.id,
@@ -131,6 +139,9 @@ export class MongoMigrationManager implements IMigrationManager {
       if (mismatched.length > 0) {
         throw new MongoMigrationError("Checksum mismatch detected — aborting", {
           code: "migration_failed",
+          title: "Migration Failed",
+          details:
+            "An already-applied migration's checksum no longer matches its source file; apply was aborted.",
           debug: {
             mismatched: mismatched.map((m) => ({
               id: m.migration.id,
@@ -174,7 +185,12 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
-        { code: "migration_failed" },
+        {
+          code: "migration_failed",
+          title: "Migration Failed",
+          details:
+            "Could not acquire the migration advisory lock; another migration run holds it.",
+        },
       );
     }
 
@@ -205,6 +221,9 @@ export class MongoMigrationManager implements IMigrationManager {
             "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
           {
             code: "migration_failed",
+            title: "Migration Failed",
+            details:
+              "One or more migrations started but never finished (possible crash); manual intervention is required.",
             debug: {
               partiallyApplied: partiallyApplied.map((r) => ({
                 id: r.id,
@@ -222,6 +241,9 @@ export class MongoMigrationManager implements IMigrationManager {
           "Checksum mismatch detected — cannot safely rollback",
           {
             code: "migration_failed",
+            title: "Migration Failed",
+            details:
+              "An already-applied migration's checksum no longer matches its source file; rollback cannot proceed safely.",
             debug: {
               mismatched: mismatched.map((m) => ({
                 id: m.migration.id,
@@ -274,6 +296,9 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError("Could not acquire migration advisory lock", {
         code: "migration_failed",
+        title: "Migration Failed",
+        details:
+          "Could not acquire the migration advisory lock; another migration run holds it.",
       });
     }
 
@@ -296,6 +321,9 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError("Could not acquire migration advisory lock", {
         code: "migration_failed",
+        title: "Migration Failed",
+        details:
+          "Could not acquire the migration advisory lock; another migration run holds it.",
       });
     }
 
@@ -316,7 +344,12 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
-        { code: "migration_failed" },
+        {
+          code: "migration_failed",
+          title: "Migration Failed",
+          details:
+            "Could not acquire the migration advisory lock; another migration run holds it.",
+        },
       );
     }
 
@@ -331,6 +364,9 @@ export class MongoMigrationManager implements IMigrationManager {
           `Migration file not found: ${name}. Available migrations: ${available.join(", ") || "(none)"}`,
           {
             code: "migration_failed",
+            title: "Migration Failed",
+            details:
+              "No migration source file matches the requested name in the migrations directory.",
             data: { name },
           },
         );
@@ -345,6 +381,9 @@ export class MongoMigrationManager implements IMigrationManager {
           `Migration "${name}" is already marked as applied`,
           {
             code: "migration_failed",
+            title: "Migration Failed",
+            details:
+              "The migration is already recorded as applied in the tracking collection.",
             data: { name },
           },
         );
@@ -408,7 +447,12 @@ export class MongoMigrationManager implements IMigrationManager {
     if (!lockAcquired) {
       throw new MongoMigrationError(
         "Could not acquire migration advisory lock — another migration is running",
-        { code: "migration_failed" },
+        {
+          code: "migration_failed",
+          title: "Migration Failed",
+          details:
+            "Could not acquire the migration advisory lock; another migration run holds it.",
+        },
       );
     }
 
@@ -423,6 +467,9 @@ export class MongoMigrationManager implements IMigrationManager {
           `Migration not found in tracking collection or already rolled back: ${name}. Available applied migrations: ${available.join(", ") || "(none)"}`,
           {
             code: "migration_failed",
+            title: "Migration Failed",
+            details:
+              "The migration is not recorded as applied in the tracking collection, so it cannot be marked rolled back.",
             data: { name },
           },
         );

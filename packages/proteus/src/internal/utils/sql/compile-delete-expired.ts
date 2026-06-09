@@ -28,6 +28,9 @@ export const compileDeleteExpired = (
       `compileDeleteExpired: entity "${metadata.entity.name}" has no @ExpiryDate field`,
       {
         code: "missing_expiry_date_field",
+        title: "Missing Expiry Date Field",
+        details:
+          "Add an @ExpiryDateField to the entity to enable deletion of expired rows.",
         data: { entityName: metadata.entity.name },
       },
     );

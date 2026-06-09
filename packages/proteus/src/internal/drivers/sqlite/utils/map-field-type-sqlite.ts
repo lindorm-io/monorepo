@@ -19,6 +19,9 @@ export const mapFieldTypeSqlite = (field: MetaField): string => {
       `Field "${key}" has no type — cannot map to SQLite type`,
       {
         code: "unsupported_column_type",
+        title: "Unsupported Column Type",
+        details:
+          "The field has no declared type and cannot be mapped to a SQLite affinity.",
         data: { column: key },
       },
     );
@@ -83,12 +86,21 @@ export const mapFieldTypeSqlite = (field: MetaField): string => {
     case "xml":
       throw new NotSupportedError(
         `Field type "${type}" (field "${key}") is not supported by the SQLite driver`,
-        { code: "unsupported_column_type", data: { column: key, type } },
+        {
+          code: "unsupported_column_type",
+          title: "Unsupported Column Type",
+          details:
+            "This field type is PostgreSQL-specific and not supported by the SQLite driver.",
+          data: { column: key, type },
+        },
       );
 
     default:
       throw new NotSupportedError(`Unsupported MetaFieldType: "${type as string}"`, {
         code: "unsupported_column_type",
+        title: "Unsupported Column Type",
+        details:
+          "The field declares a MetaFieldType the SQLite driver does not recognize.",
         data: { type: type as string },
       });
   }

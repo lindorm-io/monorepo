@@ -17,6 +17,8 @@ export const findRelationByKey = (
       `Relation "${relationKey}" not found on entity "${metadata.entity.name}"`,
       {
         code: "unknown_relation",
+        title: "Unknown Relation",
+        details: "The requested relation is not declared on this entity.",
         data: { relation: relationKey, entityName: metadata.entity.name },
       },
     );
