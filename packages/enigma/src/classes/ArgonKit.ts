@@ -19,6 +19,9 @@ export class ArgonKit {
     if (options.kryptos && !KryptosKit.isOct(options.kryptos)) {
       throw new ArgonError("Invalid Kryptos instance", {
         code: "invalid_kryptos_instance",
+        title: "Invalid Kryptos Instance",
+        details:
+          "The provided Kryptos instance is not an OCT key and cannot be used as an Argon secret.",
       });
     }
 
