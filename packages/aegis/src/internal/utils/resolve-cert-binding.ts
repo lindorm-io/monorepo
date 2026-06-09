@@ -21,6 +21,9 @@ export const resolveCertBinding = (
     throw new AegisError("bindCertificate requires kryptos with certificateChain", {
       code: "cert_binding_chain_required",
       debug: { kryptosId: kryptos.id, mode },
+      title: "Cert Binding Chain Required",
+      details:
+        "Certificate binding was requested, but the signing kryptos has no certificateChain to derive an x5t#S256 thumbprint from.",
     });
   }
 

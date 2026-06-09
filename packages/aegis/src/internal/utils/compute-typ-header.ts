@@ -25,18 +25,30 @@ export const computeTypHeader = (
   if (tokenType === "") {
     throw new AegisError("tokenType cannot be an empty string", {
       code: "invalid_token_type_value",
+      title: "Invalid Token Type Value",
+      details:
+        "tokenType was an empty string; pass a non-empty bare type such as access_token, or omit it to use the default typ.",
     });
   }
   if (tokenType.trim() !== tokenType || /\s/.test(tokenType)) {
     throw new AegisError("tokenType cannot contain whitespace", {
       code: "invalid_token_type_value",
       data: { tokenType },
+      title: "Invalid Token Type Value",
+      details:
+        "tokenType contains whitespace; pass a single bare type token with no leading, trailing, or interior spaces.",
     });
   }
   if (tokenType.includes("+")) {
     throw new AegisError(
       'tokenType cannot contain \'+\' — pass the bare type (e.g. "access_token"), not the full typ header (e.g. "at+jwt")',
-      { code: "invalid_token_type_value", data: { tokenType } },
+      {
+        code: "invalid_token_type_value",
+        data: { tokenType },
+        title: "Invalid Token Type Value",
+        details:
+          "tokenType contains a '+'; pass the bare type such as access_token, not a full typ header like at+jwt.",
+      },
     );
   }
 

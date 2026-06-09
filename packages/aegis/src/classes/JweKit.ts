@@ -87,7 +87,12 @@ export class JweKit implements IJweKit {
     const { authTag, content, initialisationVector } = prepared.encrypt(data, { aad });
 
     if (!authTag) {
-      throw new JweError("Missing auth tag", { code: "jwe_missing_auth_tag" });
+      throw new JweError("Missing auth tag", {
+        code: "jwe_missing_auth_tag",
+        title: "JWE Missing Auth Tag",
+        details:
+          "AES-GCM content encryption did not return an authentication tag, so the JWE cannot be assembled.",
+      });
     }
 
     // Step 6: Assemble the JWE compact serialisation
@@ -116,6 +121,8 @@ export class JweKit implements IJweKit {
       throw new JweError("Invalid token", {
         code: "jwe_invalid_typ",
         data: { typ },
+        title: "JWE Invalid Typ",
+        details: "Header typ must be JWE or a <type>+jwe media type to decrypt as a JWE.",
       });
     }
 
@@ -126,6 +133,9 @@ export class JweKit implements IJweKit {
       throw new JweError("Compressed JWE payloads are not supported", {
         code: "jwe_compression_unsupported",
         data: { zip: (decoded.header as { zip?: unknown }).zip },
+        title: "JWE Compression Unsupported",
+        details:
+          "The header carries a zip parameter, but Aegis rejects compressed JWE payloads to avoid compression-oracle attacks.",
       });
     }
 
@@ -134,6 +144,9 @@ export class JweKit implements IJweKit {
       throw new JweError(`Invalid crit header: ${critError}`, {
         code: "jwe_invalid_crit",
         data: { crit: decoded.header.crit },
+        title: "JWE Invalid Crit",
+        details:
+          "The crit header is malformed; it must be a non-empty array of strings naming extension parameters present in the header.",
       });
     }
 
@@ -142,6 +155,9 @@ export class JweKit implements IJweKit {
         code: "jwe_algorithm_mismatch",
         data: { alg: decoded.header.alg },
         debug: { expected: this.kryptos.algorithm },
+        title: "JWE Algorithm Mismatch",
+        details:
+          "The header alg does not match the key-management algorithm of the configured kryptos key.",
       });
     }
 
@@ -152,6 +168,9 @@ export class JweKit implements IJweKit {
       throw new JweError("Unexpected encryption", {
         code: "jwe_encryption_mismatch",
         debug: { actual: header.encryption, encryption: this.encryption },
+        title: "JWE Encryption Mismatch",
+        details:
+          "The header enc does not match the content-encryption algorithm this kit is configured to accept.",
       });
     }
 
@@ -161,6 +180,9 @@ export class JweKit implements IJweKit {
         throw new JweError(`Unsupported critical header parameter: ${param}`, {
           code: "jwe_unsupported_crit_param",
           data: { param },
+          title: "JWE Unsupported Crit Param",
+          details:
+            "The crit header marks an extension parameter as critical that Aegis does not understand, so the JWE must be rejected.",
         });
       }
     }
@@ -244,6 +266,9 @@ export class JweKit implements IJweKit {
     if (parts.length !== 5) {
       throw new JweError("Invalid JWE format: expected 5 parts", {
         code: "jwe_invalid_format",
+        title: "JWE Invalid Format",
+        details:
+          "A compact JWE must have exactly five dot-separated segments (header, encrypted key, iv, ciphertext, tag).",
       });
     }
 

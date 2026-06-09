@@ -148,6 +148,9 @@ export class Aegis implements IAegis {
     throw new AegisError("Invalid token type", {
       code: "unsupported_token_type",
       debug: { token },
+      title: "Unsupported Token Type",
+      details:
+        "The token is not a recognised JWT, JWE, or JWS, so Aegis cannot select a kit to verify it.",
     });
   }
 
@@ -183,6 +186,9 @@ export class Aegis implements IAegis {
     throw new AegisError("Invalid token type", {
       code: "unsupported_token_type",
       debug: { token },
+      title: "Unsupported Token Type",
+      details:
+        "The token is not a recognised JWT, JWE, or JWS, so Aegis cannot select a kit to decode it.",
     });
   }
 
@@ -196,6 +202,9 @@ export class Aegis implements IAegis {
     throw new AegisError("Invalid token type", {
       code: "unsupported_token_type",
       debug: { token },
+      title: "Unsupported Token Type",
+      details:
+        "The token is not a recognised JWT or JWS, so Aegis cannot select a kit to parse it.",
     });
   }
 

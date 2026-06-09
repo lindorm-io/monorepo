@@ -60,6 +60,9 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
       throw new JwtError(`Unsupported key: ${key as any} for JWT verification`, {
         code: "jwt_verify_unsupported_key",
         data: { key },
+        title: "JWT Verify Unsupported Key",
+        details:
+          "A verify option key does not map to any known JWT claim, so no predicate can be built for it.",
       });
   }
 };
@@ -149,6 +152,9 @@ export const createJwtVerify = (
     throw new JwtError(`Unsupported value: ${value as any} for key: ${key}`, {
       code: "jwt_verify_unsupported_value",
       data: { key },
+      title: "JWT Verify Unsupported Value",
+      details:
+        "A verify option value must be a string, number, array, or predicate object; this key was given an unsupported type.",
     });
   }
 
