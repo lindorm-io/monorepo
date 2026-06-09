@@ -23,6 +23,8 @@ export const applyUpcasters = (
         `Upcaster method "${step.method}" not found on aggregate "${aggregate.name}"`,
         {
           code: "upcaster_method_not_found",
+          title: "Upcaster Method Not Found",
+          details: `Upcaster method "${step.method}" is not defined on aggregate "${aggregate.name}".`,
           data: { aggregate: aggregate.name, method: step.method },
         },
       );

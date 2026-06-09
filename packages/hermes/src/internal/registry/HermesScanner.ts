@@ -271,6 +271,8 @@ export class HermesScanner {
         `Aggregate constructor ${target.name} referenced by saga/view has no @Aggregate() metadata`,
         {
           code: "missing_aggregate_metadata",
+          title: "Missing Aggregate Metadata",
+          details: `Aggregate constructor "${target.name}" referenced by a saga or view is missing its @Aggregate() decorator metadata.`,
           data: { aggregate: target.name },
         },
       );
@@ -291,6 +293,8 @@ export class HermesScanner {
         `View "${viewName}" entity class "${entity.name}" must extend HermesViewEntity`,
         {
           code: "invalid_view_entity",
+          title: "Invalid View Entity",
+          details: `View "${viewName}" entity class "${entity.name}" must extend HermesViewEntity.`,
           data: { view: viewName, entity: entity.name },
         },
       );

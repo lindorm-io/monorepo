@@ -106,6 +106,8 @@ export class ViewDomain {
     if (!view) {
       throw new HandlerNotRegisteredError("No view registered for query", {
         code: "query_view_not_registered",
+        title: "Query View Not Registered",
+        details: `No view is registered to serve query "${meta.name}".`,
         data: { query: meta.name },
       });
     }
@@ -118,6 +120,8 @@ export class ViewDomain {
     if (!queryHandler) {
       throw new HandlerNotRegisteredError("Query handler has not been registered", {
         code: "query_handler_not_registered",
+        title: "Query Handler Not Registered",
+        details: `View "${view.namespace}.${view.name}" has no handler registered for query "${meta.name}".`,
         data: { query: meta.name, view: { name: view.name, namespace: view.namespace } },
       });
     }
@@ -131,6 +135,8 @@ export class ViewDomain {
     if (typeof handlerFn !== "function") {
       throw new HandlerNotRegisteredError("Query handler method is not callable", {
         code: "query_handler_method_not_callable",
+        title: "Query Handler Method Not Callable",
+        details: `Method "${queryHandler.methodName}" on view "${view.namespace}.${view.name}" is not a callable function.`,
         data: {
           view: { name: view.name, namespace: view.namespace },
           method: queryHandler.methodName,
@@ -231,6 +237,8 @@ export class ViewDomain {
     if (typeof handlerFn !== "function") {
       throw new HandlerNotRegisteredError("View event handler method is not callable", {
         code: "view_handler_method_not_callable",
+        title: "View Handler Method Not Callable",
+        details: `Event handler method "${handler.methodName}" on view "${view.namespace}.${view.name}" is not a callable function.`,
         data: {
           view: { name: view.name, namespace: view.namespace },
           method: handler.methodName,
@@ -394,6 +402,8 @@ export class ViewDomain {
       if (typeof handlerFn !== "function") {
         throw new HandlerNotRegisteredError("View event handler method is not callable", {
           code: "view_handler_method_not_callable",
+          title: "View Handler Method Not Callable",
+          details: `Event handler method "${handler.methodName}" on view "${view.namespace}.${view.name}" is not a callable function.`,
           data: {
             view: { name: view.name, namespace: view.namespace },
             method: handler.methodName,
@@ -416,6 +426,8 @@ export class ViewDomain {
         if (saveErr instanceof OptimisticLockError) {
           throw new ConcurrencyError("View update failed due to optimistic lock", {
             code: "view_optimistic_lock",
+            title: "View Optimistic Lock",
+            details: `View "${viewId}" (owner "${ownerName}") was modified concurrently; the update lost the optimistic lock and should be retried.`,
             data: { viewId, ownerName },
           });
         }
@@ -476,11 +488,11 @@ export class ViewDomain {
     }
 
     if (handler.conditions.requireCreated && isNew) {
-      throw new ViewNotCreatedError(true);
+      throw new ViewNotCreatedError({ permanent: true });
     }
 
     if (handler.conditions.requireNotCreated && !isNew) {
-      throw new ViewAlreadyCreatedError(true);
+      throw new ViewAlreadyCreatedError({ permanent: true });
     }
   }
 
@@ -532,6 +544,8 @@ export class ViewDomain {
         `No ProteusSource found for driver type "${view.driverType}" (required by view "${view.namespace}.${view.name}")`,
         {
           code: "view_source_not_found",
+          title: "View Source Not Found",
+          details: `No ProteusSource is registered for driver type "${view.driverType}" required by view "${view.namespace}.${view.name}".`,
           type: "urn:lindorm:hermes:error:view_source_not_found",
           data: {
             driverType: view.driverType,
@@ -646,6 +660,8 @@ export class ViewDomain {
     if (!commandHandler) {
       throw new HandlerNotRegisteredError("Command handler has not been registered", {
         code: "command_handler_not_registered",
+        title: "Command Handler Not Registered",
+        details: `No command handler is registered for command "${metadata.name}" (version ${metadata.version}) dispatched from the view.`,
         data: { command: metadata.name, version: metadata.version },
       });
     }

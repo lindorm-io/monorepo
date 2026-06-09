@@ -287,6 +287,8 @@ export class AggregateDomain {
     if (!commandAggregate) {
       throw new HandlerNotRegisteredError("Command handler has not been registered", {
         code: "command_handler_not_registered",
+        title: "Command Handler Not Registered",
+        details: `No command handler is registered for command "${metadata.name}" (version ${metadata.version}) dispatched from the aggregate error handler.`,
         data: { command: metadata.name, version: metadata.version },
       });
     }
@@ -412,6 +414,8 @@ export class AggregateDomain {
       if (this.isDuplicateKeyError(err)) {
         throw new ConcurrencyError("Concurrency conflict saving events", {
           code: "concurrency_conflict",
+          title: "Concurrency Conflict",
+          details: `Aggregate "${model.namespace}.${model.name}" (${model.id}) was modified concurrently; the events could not be saved and the command should be retried.`,
           data: {
             aggregateId: model.id,
             aggregateName: model.name,
@@ -487,6 +491,8 @@ export class AggregateDomain {
             `Checksum mismatch for event ${record.id}: ${error.message}`,
             {
               code: "checksum_mismatch",
+              title: "Checksum Mismatch",
+              details: `Checksum verification failed in strict mode for event "${record.id}" ("${record.name}"), indicating the event may have been tampered with.`,
               data: { eventId: record.id, eventName: record.name },
               debug: { reason: error.message },
             },
@@ -691,6 +697,8 @@ export class AggregateDomain {
     if (typeof method !== "function") {
       throw new HandlerNotRegisteredError("Command handler method is not callable", {
         code: "command_handler_method_not_callable",
+        title: "Command Handler Method Not Callable",
+        details: `Command handler method "${handler.methodName}" on aggregate "${aggregate.namespace}.${aggregate.name}" is not a callable function.`,
         data: {
           aggregate: { name: aggregate.name, namespace: aggregate.namespace },
           method: handler.methodName,

@@ -63,6 +63,8 @@ export class HermesSession implements IHermesSession {
     if (!commandHandler) {
       throw new HandlerNotRegisteredError("Command handler has not been registered", {
         code: "command_handler_not_registered",
+        title: "Command Handler Not Registered",
+        details: `No command handler is registered for command "${metadata.name}" (version ${metadata.version}).`,
         data: { command: metadata.name, version: metadata.version },
       });
     }
@@ -112,6 +114,8 @@ export class HermesSession implements IHermesSession {
     if (this._statusRef.current !== "ready") {
       throw new LindormError("Hermes is not ready", {
         code: "not_ready",
+        title: "Hermes Not Ready",
+        details: `Hermes must reach the "ready" status before handling requests; current status is "${this._statusRef.current}".`,
         type: "urn:lindorm:hermes:error:not_ready",
         data: { status: this._statusRef.current },
       });

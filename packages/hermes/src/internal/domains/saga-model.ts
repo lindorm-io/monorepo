@@ -101,6 +101,8 @@ export class SagaModel<S extends Dict = Dict> {
         `Cannot dispatch message of type ${message.constructor.name} - not registered as command or timeout`,
         {
           code: "message_not_dispatchable",
+          title: "Message Not Dispatchable",
+          details: `The saga cannot dispatch "${message.constructor.name}" because it is not registered as a command or a timeout.`,
           data: { message: message.constructor.name },
         },
       );
