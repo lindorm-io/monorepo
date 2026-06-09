@@ -38,6 +38,7 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
         status: ClientError.Status.Unauthorized,
         code: "missing_dpop_header",
         type: "urn:lindorm:pylon:error:missing_dpop_header",
+        title: "Missing DPoP Header",
         data: { scheme: "dpop" },
       });
     }
@@ -63,6 +64,7 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
         status: ClientError.Status.Unauthorized,
         code: "invalid_session_access_token",
         type: "urn:lindorm:pylon:error:invalid_session_access_token",
+        title: "Invalid Session Access Token",
         details: "No access token could be extracted from the session",
         debug: { sessionId: source.session.id },
       });
@@ -76,6 +78,7 @@ const runHttp = async (ctx: PylonHttpContext, options: Options): Promise<void> =
     status: ClientError.Status.Unauthorized,
     code: "missing_credentials",
     type: "urn:lindorm:pylon:error:missing_credentials",
+    title: "Missing Credentials",
     data: { source: source.kind },
   });
 };
@@ -93,6 +96,7 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
           {
             code: "access_token_middleware_in_handshake",
             type: "urn:lindorm:pylon:error:access_token_middleware_in_handshake",
+            title: "Access Token Middleware in Handshake",
             details:
               "Use createHandshakeTokenMiddleware in socket.connectionMiddleware for the handshake phase",
           },
@@ -110,6 +114,7 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
             status: ClientError.Status.Unauthorized,
             code: "missing_handshake_auth_state",
             type: "urn:lindorm:pylon:error:missing_handshake_auth_state",
+            title: "Missing Handshake Auth State",
           });
         }
 
@@ -121,6 +126,7 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
             status: ClientError.Status.Unauthorized,
             code: "access_token_expired",
             type: "urn:lindorm:pylon:error:access_token_expired",
+            title: "Access Token Expired",
             data: { expiresAt: expiresAt.toISOString() },
             debug: { strategy: auth.strategy },
           });
@@ -147,6 +153,7 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
           status: ClientError.Status.Unauthorized,
           code: "unsupported_context",
           type: "urn:lindorm:pylon:error:unsupported_context",
+          title: "Unsupported Context",
           details:
             "createAccessTokenMiddleware only supports HTTP and socket-event contexts",
         });
@@ -170,6 +177,7 @@ export const createAccessTokenMiddleware = <C extends PylonContext = PylonContex
         status: ClientError.Status.Unauthorized,
         code: "access_token_verification_failed",
         type: "urn:lindorm:pylon:error:access_token_verification_failed",
+        title: "Access Token Verification Failed",
         details: error.message,
       });
     }

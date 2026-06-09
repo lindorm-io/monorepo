@@ -23,6 +23,7 @@ export const useRoles = (...args: Array<string | TokenOption>): PylonMiddleware 
         status: ClientError.Status.Unauthorized,
         code: "token_not_found",
         type: "urn:lindorm:pylon:error:token_not_found",
+        title: "Token Not Found",
         data: { token: tokenKey },
       });
     }
@@ -36,6 +37,7 @@ export const useRoles = (...args: Array<string | TokenOption>): PylonMiddleware 
         status: ClientError.Status.Forbidden,
         code: "insufficient_roles",
         type: "urn:lindorm:pylon:error:insufficient_roles",
+        title: "Insufficient Roles",
         data: { required },
         debug: { roles: payload.roles },
       });

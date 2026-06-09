@@ -26,6 +26,7 @@ export const createConduitWebhookAuthMiddleware = async (
       throw new InternalServerError("Webhook subscription is missing auth headers", {
         code: "webhook_missing_auth_headers",
         type: "urn:lindorm:pylon:error:webhook_missing_auth_headers",
+        title: "Missing Webhook Auth Headers",
         details:
           "Webhook auth is set to auth_headers but no authHeaders were configured on the subscription",
         data: { auth: subscription.auth, subscriptionId: subscription.id },
@@ -42,6 +43,7 @@ export const createConduitWebhookAuthMiddleware = async (
         {
           code: "webhook_missing_basic_credentials",
           type: "urn:lindorm:pylon:error:webhook_missing_basic_credentials",
+          title: "Missing Webhook Basic Credentials",
           details:
             "Webhook auth is set to basic but username and/or password were not configured",
           data: {
@@ -64,6 +66,7 @@ export const createConduitWebhookAuthMiddleware = async (
         {
           code: "webhook_missing_client_credentials",
           type: "urn:lindorm:pylon:error:webhook_missing_client_credentials",
+          title: "Missing Webhook Client Credentials",
           details:
             "Webhook auth is set to client_credentials but clientId, clientSecret and/or issuer were not configured",
           data: {
@@ -98,6 +101,7 @@ export const createConduitWebhookAuthMiddleware = async (
   throw new InternalServerError("Webhook subscription has an unknown auth type", {
     code: "webhook_unknown_auth_type",
     type: "urn:lindorm:pylon:error:webhook_unknown_auth_type",
+    title: "Unknown Webhook Auth Type",
     details: "The webhook subscription auth value did not match any supported strategy",
     data: { auth: subscription.auth, subscriptionId: subscription.id },
   });

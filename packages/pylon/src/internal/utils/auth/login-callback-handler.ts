@@ -80,6 +80,7 @@ export const createLoginCallbackHandler = (
     if (!cookie) {
       throw new ClientError("No login cookie found", {
         code: "login_cookie_missing",
+        title: "Login Cookie Missing",
         type: "urn:lindorm:pylon:error:login_cookie_missing",
         status: ClientError.Status.BadRequest,
         details:
@@ -90,6 +91,7 @@ export const createLoginCallbackHandler = (
     if (cookie.state && cookie.state !== ctx.data.state) {
       throw new ClientError("Login state mismatch", {
         code: "login_state_mismatch",
+        title: "Login State Mismatch",
         type: "urn:lindorm:pylon:error:login_state_mismatch",
         status: ClientError.Status.BadRequest,
         details:
@@ -128,6 +130,7 @@ export const createLoginCallbackHandler = (
     if (!ctx.state.session) {
       throw new ClientError("Could not establish session from login callback", {
         code: "login_session_not_established",
+        title: "Login Session Not Established",
         type: "urn:lindorm:pylon:error:login_session_not_established",
         status: ClientError.Status.BadRequest,
         details:
@@ -146,6 +149,7 @@ export const createLoginCallbackHandler = (
       ) {
         throw new ClientError("Login nonce mismatch", {
           code: "login_nonce_mismatch",
+          title: "Login Nonce Mismatch",
           type: "urn:lindorm:pylon:error:login_nonce_mismatch",
           status: ClientError.Status.BadRequest,
           details:

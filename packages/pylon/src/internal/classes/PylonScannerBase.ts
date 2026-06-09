@@ -40,6 +40,7 @@ export abstract class PylonScannerBase {
     if (!Scanner.hasFiles(directory)) {
       throw new PylonError(`Directory [ ${directory} ] is empty`, {
         code: "scan_directory_empty",
+        title: "Scan Directory Empty",
         details:
           "The scanned directory contains no files; ensure the router/listener directory path is correct and populated",
         data: { directory },

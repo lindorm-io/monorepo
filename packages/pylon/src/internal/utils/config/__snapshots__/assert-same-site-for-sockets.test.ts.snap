@@ -12,7 +12,7 @@ exports[`assertSameSiteForSockets > should throw with descriptive error when Sam
   "status": -1,
   "support": null,
   "timestamp": Any<Date>,
-  "title": null,
+  "title": "Invalid SameSite for Session",
   "type": "urn:lindorm:pylon:error:invalid_same_site_for_session",
 }
 `;

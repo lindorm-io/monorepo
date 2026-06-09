@@ -26,6 +26,7 @@ export const createConduitMiddleware = <C extends PylonContext = PylonContext>(
     throw new ServerError("Alias is required for conduit middleware", {
       code: "conduit_alias_required",
       type: "urn:lindorm:pylon:error:conduit_alias_required",
+      title: "Conduit Alias Required",
       details: "Every conduit passed to createConduitMiddleware must define an alias",
       // baseUrl is upstream infrastructure; keep it server-side in debug only.
       debug: { options },

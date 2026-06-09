@@ -60,6 +60,8 @@ export const parseBody = async (
       if (!multipart) {
         throw new ClientError("Multipart body parsing is not enabled", {
           code: "multipart_not_supported",
+          title: "Multipart Not Supported",
+          details: "Multipart body parsing is not enabled for this route.",
           type: "urn:lindorm:pylon:error:multipart_not_supported",
           data: { contentType: ctx.get("content-type") },
           status: ClientError.Status.BadRequest,

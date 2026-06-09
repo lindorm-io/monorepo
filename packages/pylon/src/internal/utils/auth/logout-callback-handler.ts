@@ -15,6 +15,7 @@ export const createLogoutCallbackHandler = <C extends PylonHttpContext>(
     if (!cookie) {
       throw new ClientError("No logout cookie found", {
         code: "logout_cookie_missing",
+        title: "Logout Cookie Missing",
         type: "urn:lindorm:pylon:error:logout_cookie_missing",
         status: ClientError.Status.BadRequest,
         details:
@@ -25,6 +26,7 @@ export const createLogoutCallbackHandler = <C extends PylonHttpContext>(
     if (cookie.state && cookie.state !== ctx.data.state) {
       throw new ClientError("Logout state mismatch", {
         code: "logout_state_mismatch",
+        title: "Logout State Mismatch",
         type: "urn:lindorm:pylon:error:logout_state_mismatch",
         status: ClientError.Status.BadRequest,
         details:
