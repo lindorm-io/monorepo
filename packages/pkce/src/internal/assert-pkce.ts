@@ -11,6 +11,9 @@ export const assertPkce = (
 
   throw new PkceError("Invalid PKCE", {
     code: "invalid_pkce",
+    title: "Invalid PKCE",
+    details:
+      "The PKCE code verifier does not match the code challenge for the given method.",
     debug: { challenge, method, verifier },
   });
 };
