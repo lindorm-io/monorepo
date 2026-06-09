@@ -198,6 +198,9 @@ export class Conduit implements IConduit {
     if (!pathOrUrl) {
       throw new ClientError("Invalid request: neither path nor url provided", {
         code: "invalid_request",
+        title: "Invalid Request",
+        details:
+          "The request options provided neither a path nor a url, so no request target could be resolved; supply one of them.",
         type: "urn:lindorm:conduit:error:invalid_request",
         data: { path, url },
       });
