@@ -41,6 +41,9 @@ export const calculateKeyWrapEncryption = (kryptos: IKryptos): KeywrapEncryption
     default:
       throw new AesError("Unsupported keywrap encryption", {
         code: "unsupported_key_wrap_encryption",
+        title: "Unsupported Key Wrap Encryption",
+        details:
+          "The Kryptos algorithm does not map to a supported AES cipher for encrypting the wrapped content encryption key.",
       });
   }
 };

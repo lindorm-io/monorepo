@@ -29,6 +29,9 @@ export const keyWrap = (options: KeyWrapOptions): KeyWrapResult => {
     default:
       throw new AesError("Unsupported key wrap algorithm", {
         code: "unsupported_key_wrap_algorithm",
+        title: "Unsupported Key Wrap Algorithm",
+        details:
+          "The Kryptos algorithm is not a recognised AES key wrapping algorithm for wrapping the content encryption key.",
       });
   }
 };
@@ -54,6 +57,9 @@ export const keyUnwrap = (options: KeyUnwrapOptions): KeyUnwrapResult => {
     default:
       throw new AesError("Unsupported key wrap algorithm", {
         code: "unsupported_key_wrap_algorithm",
+        title: "Unsupported Key Wrap Algorithm",
+        details:
+          "The Kryptos algorithm is not a recognised AES key wrapping algorithm for unwrapping the content encryption key.",
       });
   }
 };

@@ -17,6 +17,9 @@ export const calculateContentType = (content: any): AesContentType => {
 
   throw new AesError("Invalid content type", {
     code: "invalid_content_type",
+    title: "Invalid Content Type",
+    details:
+      "The content is not a supported type; expected a string, Buffer, array, boolean, number, or object.",
     data: { type: typeof content },
   });
 };
@@ -35,6 +38,9 @@ export const contentToBuffer = (content: any, contentType: AesContentType): Buff
     default:
       throw new AesError("Invalid content type", {
         code: "invalid_content_type",
+        title: "Invalid Content Type",
+        details:
+          "The content type is not a supported value for serialisation; expected application/json, application/octet-stream, or text/plain.",
         data: { contentType, type: typeof content },
       });
   }
@@ -57,6 +63,9 @@ export const parseContent = <T extends AesContent = string>(
     default:
       throw new AesError("Unexpected content type", {
         code: "unexpected_content_type",
+        title: "Unexpected Content Type",
+        details:
+          "The content type is not a supported value for parsing; expected application/json, application/octet-stream, or text/plain.",
         data: { contentType },
       });
   }

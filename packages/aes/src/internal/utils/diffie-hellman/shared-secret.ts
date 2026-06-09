@@ -35,7 +35,12 @@ const generateKryptos = (kryptos: IKryptos): IKryptos => {
     });
   }
 
-  throw new AesError("Invalid kryptos type", { code: "invalid_kryptos_type" });
+  throw new AesError("Invalid kryptos type", {
+    code: "invalid_kryptos_type",
+    title: "Invalid Kryptos Type",
+    details:
+      "Generating an ephemeral key for ECDH requires an EC or OKP Kryptos key type.",
+  });
 };
 
 export const generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
@@ -46,11 +51,17 @@ export const generateSharedSecret = (kryptos: IKryptos): GenerateResult => {
   if (!sender.privateKey) {
     throw new AesError("Sender private key is missing", {
       code: "missing_private_key",
+      title: "Missing Private Key",
+      details:
+        "The generated ephemeral sender key has no private key to compute the ECDH shared secret.",
     });
   }
   if (!der.publicKey) {
     throw new AesError("Kryptos public key is missing", {
       code: "missing_public_key",
+      title: "Missing Public Key",
+      details:
+        "The recipient Kryptos key has no public key to compute the ECDH shared secret.",
     });
   }
 
@@ -82,6 +93,9 @@ export const calculateSharedSecret = ({
   if (!publicEncryptionJwk) {
     throw new AesError("Missing publicEncryptionJwk", {
       code: "missing_public_encryption_jwk",
+      title: "Missing Public Encryption JWK",
+      details:
+        "Calculating the ECDH shared secret requires the sender's ephemeral public JWK, but it was not provided.",
     });
   }
 
@@ -96,11 +110,17 @@ export const calculateSharedSecret = ({
   if (!der.privateKey) {
     throw new AesError("Kryptos private key is missing", {
       code: "missing_private_key",
+      title: "Missing Private Key",
+      details:
+        "The recipient Kryptos key has no private key to compute the ECDH shared secret during decryption.",
     });
   }
   if (!receiver.publicKey) {
     throw new AesError("Receiver public key is missing", {
       code: "missing_public_key",
+      title: "Missing Public Key",
+      details:
+        "The sender's ephemeral JWK produced no public key to compute the ECDH shared secret during decryption.",
     });
   }
 

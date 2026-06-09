@@ -36,5 +36,10 @@ export const parseAes: ParseAes = (
     return parseSerialisedAesRecord(data);
   }
 
-  throw new AesError("Invalid AES data", { code: "invalid_aes_data" });
+  throw new AesError("Invalid AES data", {
+    code: "invalid_aes_data",
+    title: "Invalid AES Data",
+    details:
+      "The input could not be recognised as a tokenised string, encoded string, decryption record, or serialised AES record.",
+  });
 };

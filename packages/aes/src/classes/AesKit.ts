@@ -89,12 +89,18 @@ export class AesKit implements IAesKit {
         default:
           throw new AesError("Invalid encryption mode", {
             code: "invalid_encryption_mode",
+            title: "Invalid Encryption Mode",
+            details:
+              "The requested AES encryption mode is not one of the supported output modes (encoded, serialised, or tokenised).",
           });
       }
     } catch (error) {
       if (error instanceof AesError) throw error;
       throw new AesError("AES encryption failed", {
         code: "encryption_failed",
+        title: "Encryption Failed",
+        details:
+          "The AES encryption operation failed unexpectedly; see the underlying error for the root cause.",
         error: error as Error,
       });
     }
@@ -122,6 +128,9 @@ export class AesKit implements IAesKit {
       if (error instanceof AesError) throw error;
       throw new AesError("AES decryption failed", {
         code: "decryption_failed",
+        title: "Decryption Failed",
+        details:
+          "The AES decryption operation failed unexpectedly; see the underlying error for the root cause.",
         error: error as Error,
       });
     }
@@ -145,7 +154,12 @@ export class AesKit implements IAesKit {
     options?: AesOperationOptions,
   ): void {
     if (this.verify(input, data, options)) return;
-    throw new AesError("Invalid AES cipher", { code: "invalid_cipher" });
+    throw new AesError("Invalid AES cipher", {
+      code: "invalid_cipher",
+      title: "Invalid AES Cipher",
+      details:
+        "The decrypted AES content did not match the expected input value during assertion.",
+    });
   }
 
   public prepareEncryption(): PreparedEncryption {
@@ -155,6 +169,9 @@ export class AesKit implements IAesKit {
       if (error instanceof AesError) throw error;
       throw new AesError("AES prepare encryption failed", {
         code: "prepare_encryption_failed",
+        title: "Prepare Encryption Failed",
+        details:
+          "Deriving the content encryption key and parameters ahead of AES encryption failed; see the underlying error for the root cause.",
         error: error as Error,
       });
     }

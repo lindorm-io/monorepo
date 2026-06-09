@@ -30,6 +30,9 @@ export const getEcEncryptionKey = (options: CreateCekOptions): CreateCekResult =
     default:
       throw new AesError("Unexpected Kryptos", {
         code: "unexpected_kryptos",
+        title: "Unexpected Kryptos",
+        details:
+          "The EC Kryptos algorithm is not a supported ECDH-ES encryption variant.",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }
@@ -51,6 +54,9 @@ export const getEcDecryptionKey = (options: DecryptCekOptions): DecryptCekResult
     default:
       throw new AesError("Unexpected Kryptos", {
         code: "unexpected_kryptos",
+        title: "Unexpected Kryptos",
+        details:
+          "The EC Kryptos algorithm is not a supported ECDH-ES decryption variant.",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }
