@@ -23,6 +23,7 @@ export const usePermissions = (...args: Array<string | TokenOption>): PylonMiddl
         status: ClientError.Status.Unauthorized,
         code: "token_not_found",
         type: "urn:lindorm:pylon:error:token_not_found",
+        title: "Token Not Found",
         data: { token: tokenKey },
       });
     }
@@ -36,6 +37,7 @@ export const usePermissions = (...args: Array<string | TokenOption>): PylonMiddl
         status: ClientError.Status.Forbidden,
         code: "insufficient_permissions",
         type: "urn:lindorm:pylon:error:insufficient_permissions",
+        title: "Insufficient Permissions",
         data: { required, missing },
       });
     }

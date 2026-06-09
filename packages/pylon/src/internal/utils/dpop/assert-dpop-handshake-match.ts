@@ -13,6 +13,7 @@ export const assertDpopHandshakeMatch = (
   if (!htu) {
     throw new ClientError("Invalid DPoP proof", {
       code: "dpop_handshake_htu_unresolvable",
+      title: "DPoP Handshake HTU Unresolvable",
       type: "urn:lindorm:pylon:error:dpop_handshake_htu_unresolvable",
       details: "Unable to reconstruct handshake htu — missing host header",
       status: ClientError.Status.Unauthorized,

@@ -21,6 +21,7 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
           status: ClientError.Status.Unauthorized,
           code: "token_not_active",
           type: "urn:lindorm:pylon:error:token_not_active",
+          title: "Token Not Active",
           details: "Token introspection returned active: false",
         });
       }
@@ -35,6 +36,7 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
           status: ClientError.Status.Unauthorized,
           code: "token_not_found",
           type: "urn:lindorm:pylon:error:token_not_found",
+          title: "Token Not Found",
           data: { token: tokenKey },
         });
       }
@@ -61,6 +63,7 @@ export const useAccess = (options: UseAccessOptions): PylonMiddleware => {
           status: ClientError.Status.Forbidden,
           code: "access_denied",
           type: "urn:lindorm:pylon:error:access_denied",
+          title: "Access Denied",
         });
       }
       throw err;

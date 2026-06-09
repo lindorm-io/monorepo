@@ -36,6 +36,8 @@ export const getContentEncoding = (header?: string): string | null => {
   if (!VALID.includes(exists)) {
     throw new ClientError("Content encoding is not supported", {
       code: "invalid_content_encoding",
+      title: "Invalid Content Encoding",
+      details: `The charset '${exists}' is not a supported request content encoding.`,
       type: "urn:lindorm:pylon:error:invalid_content_encoding",
       data: {
         encoding: exists,

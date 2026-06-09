@@ -99,6 +99,7 @@ export const createClaimsClient = (
     if (!accessToken) {
       throw new UserinfoEndpointFailed("No access token available for userinfo request", {
         code: "userinfo_access_token_missing",
+        title: "Userinfo Access Token Missing",
         details:
           "No explicit token was provided and none could be resolved from the session, authorization header, or context",
       });
@@ -117,6 +118,9 @@ export const createClaimsClient = (
         error instanceof Error ? error.message : "Userinfo endpoint request failed",
         {
           code: "userinfo_endpoint_failed",
+          title: "Userinfo Endpoint Failed",
+          details:
+            "The request to the IdP userinfo endpoint did not complete successfully; see the userinfoEndpoint in error data",
           data: { userinfoEndpoint: openid.userinfoEndpoint },
           debug: { error },
         },
@@ -163,6 +167,7 @@ export const createClaimsClient = (
         "No access token available for introspection request",
         {
           code: "introspect_access_token_missing",
+          title: "Introspect Access Token Missing",
           details:
             "No explicit token was provided and none could be resolved from the session, authorization header, or context",
         },
@@ -186,6 +191,9 @@ export const createClaimsClient = (
         error instanceof Error ? error.message : "Introspection endpoint request failed",
         {
           code: "introspect_endpoint_failed",
+          title: "Introspect Endpoint Failed",
+          details:
+            "The request to the IdP introspection endpoint did not complete successfully; see the introspectEndpoint in error data",
           data: { introspectEndpoint: openid.introspectEndpoint },
           debug: { error },
         },
@@ -229,6 +237,7 @@ export const createAuthClient = (
     if (!config.router) {
       throw new ServerError("Auth router is not configured", {
         code: "auth_router_not_configured",
+        title: "Auth Router Not Configured",
         type: "urn:lindorm:pylon:error:auth_router_not_configured",
         details:
           "ctx.auth.login() requires options.auth.router to be configured on the Pylon",
@@ -304,6 +313,7 @@ export const createAuthClient = (
     if (!config.router) {
       throw new ServerError("Auth router is not configured", {
         code: "auth_router_not_configured",
+        title: "Auth Router Not Configured",
         type: "urn:lindorm:pylon:error:auth_router_not_configured",
         details:
           "ctx.auth.logout() requires options.auth.router to be configured on the Pylon",

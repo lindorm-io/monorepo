@@ -110,6 +110,7 @@ export class PylonRouterScanner<
       `File [ ${file.scan.relativePath} ] has no valid exports (expected PylonRouter instance or HTTP method exports: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)`,
       {
         code: "invalid_router_exports",
+        title: "Invalid Router Exports",
         details:
           "A scanned route file must export either a PylonRouter instance or one or more HTTP method handlers (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)",
         data: {

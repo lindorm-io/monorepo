@@ -6,6 +6,7 @@ const notConfigured = (method: string): never => {
     `ctx.auth.${method}() called but options.auth is not configured`,
     {
       code: "auth_not_configured",
+      title: "Auth Not Configured",
       type: "urn:lindorm:pylon:error:auth_not_configured",
       details:
         "Add `auth: { issuer, clientId, clientSecret, ... }` to your Pylon options to use auth features.",

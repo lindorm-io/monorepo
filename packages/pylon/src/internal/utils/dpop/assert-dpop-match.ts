@@ -19,6 +19,7 @@ export const assertDpopMatch = (
   if (proof.httpMethod !== target.method) {
     throw new ClientError("Invalid DPoP proof", {
       code: "dpop_htm_mismatch",
+      title: "DPoP HTM Mismatch",
       type: "urn:lindorm:pylon:error:dpop_htm_mismatch",
       details: "DPoP proof htm does not match request method",
       data: { proof: proof.httpMethod, request: target.method },
@@ -32,6 +33,7 @@ export const assertDpopMatch = (
   if (actual !== expected) {
     throw new ClientError("Invalid DPoP proof", {
       code: "dpop_htu_mismatch",
+      title: "DPoP HTU Mismatch",
       type: "urn:lindorm:pylon:error:dpop_htu_mismatch",
       details: "DPoP proof htu does not match request URI",
       data: { proof: actual, request: expected },

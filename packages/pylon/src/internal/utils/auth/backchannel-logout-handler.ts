@@ -9,6 +9,7 @@ export const backchannelLogoutHandler: PylonHttpMiddleware = async (ctx) => {
   ) {
     throw new ClientError("Invalid backchannel logout token", {
       code: "invalid_backchannel_logout_token",
+      title: "Invalid Backchannel Logout Token",
       type: "urn:lindorm:pylon:error:invalid_backchannel_logout_token",
       status: ClientError.Status.BadRequest,
       details:

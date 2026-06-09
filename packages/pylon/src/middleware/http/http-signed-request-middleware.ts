@@ -111,6 +111,7 @@ export const createHttpSignedRequestMiddleware = <
         status: ClientError.Status.Unauthorized,
         code: "signature_required",
         type: "urn:lindorm:pylon:error:signature_required",
+        title: "Signature Required",
         details: "This endpoint requires a signed request with a Signature header",
       });
     }
@@ -123,6 +124,7 @@ export const createHttpSignedRequestMiddleware = <
           status: ClientError.Status.BadRequest,
           code: "missing_date_header",
           type: "urn:lindorm:pylon:error:missing_date_header",
+          title: "Missing Date Header",
           details: "A signed request must include a Date header",
         });
       }
@@ -134,6 +136,7 @@ export const createHttpSignedRequestMiddleware = <
           status: ClientError.Status.BadRequest,
           code: "missing_digest_header",
           type: "urn:lindorm:pylon:error:missing_digest_header",
+          title: "Missing Digest Header",
           details: "A signed request must include a Digest header",
         });
       }

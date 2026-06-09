@@ -9,6 +9,7 @@ export const assertJktUnchanged = (
   if (!actual || actual !== expected) {
     throw new ClientError("DPoP key rotation requires reconnect", {
       code: "dpop_jkt_changed",
+      title: "DPoP JKT Changed",
       type: "urn:lindorm:pylon:error:dpop_jkt_changed",
       details: "The refreshed token cnf.jkt does not match the handshake binding",
       status: ClientError.Status.Unauthorized,

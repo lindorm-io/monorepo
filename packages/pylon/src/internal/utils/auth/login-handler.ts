@@ -61,6 +61,7 @@ export const createLoginHandler = (
     ) {
       throw new ClientError("Login redirect URI is not allowed", {
         code: "login_redirect_uri_not_allowed",
+        title: "Login Redirect URI Not Allowed",
         type: "urn:lindorm:pylon:error:login_redirect_uri_not_allowed",
         status: ClientError.Status.BadRequest,
         details:
@@ -74,6 +75,7 @@ export const createLoginHandler = (
     if (!redirectUri) {
       throw new ClientError("Login redirect URI is required", {
         code: "login_redirect_uri_required",
+        title: "Login Redirect URI Required",
         type: "urn:lindorm:pylon:error:login_redirect_uri_required",
         status: ClientError.Status.BadRequest,
         details:

@@ -53,6 +53,7 @@ export const createHttpCookiesMiddleware = (
         if (!value) {
           throw new ServerError("Cookie value is required", {
             code: "missing_cookie_value",
+            title: "Missing Cookie Value",
             type: "urn:lindorm:pylon:error:missing_cookie_value",
             details: `Cannot set cookie [ ${name} ] with an empty or undefined value`,
             data: { name },
@@ -63,6 +64,7 @@ export const createHttpCookiesMiddleware = (
         if (!opts.encoding && !opts.encrypted && isObject(value)) {
           throw new ServerError("Cookie encoding required for object value", {
             code: "cookie_encoding_required",
+            title: "Cookie Encoding Required",
             type: "urn:lindorm:pylon:error:cookie_encoding_required",
             details: `Cookie [ ${name} ] has an object value but no encoding or encryption configured; set an encoding or enable encryption`,
             data: { name },

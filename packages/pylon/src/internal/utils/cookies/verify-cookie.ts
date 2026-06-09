@@ -12,6 +12,8 @@ export const verifyCookie = async (
   if (!signature) {
     throw new ClientError("Cookie signature is missing", {
       code: "missing_cookie_signature",
+      title: "Missing Cookie Signature",
+      details: "The signed cookie is missing its signature component.",
       type: "urn:lindorm:pylon:error:missing_cookie_signature",
       status: ClientError.Status.Unauthorized,
       data: { name },
@@ -22,6 +24,8 @@ export const verifyCookie = async (
   if (!kid) {
     throw new ClientError("Cookie key id is missing", {
       code: "missing_cookie_kid",
+      title: "Missing Cookie Key ID",
+      details: "The signed cookie is missing the key ID needed to verify its signature.",
       type: "urn:lindorm:pylon:error:missing_cookie_kid",
       status: ClientError.Status.Unauthorized,
       data: { name },
@@ -35,6 +39,9 @@ export const verifyCookie = async (
     if (!new SignatureKit({ kryptos }).verify(value, signature)) {
       throw new ClientError("Cookie signature is invalid", {
         code: "invalid_cookie_signature",
+        title: "Invalid Cookie Signature",
+        details:
+          "The signed cookie's signature could not be verified against the configured keys.",
         type: "urn:lindorm:pylon:error:invalid_cookie_signature",
         status: ClientError.Status.Unauthorized,
         data: { name },
@@ -46,6 +53,9 @@ export const verifyCookie = async (
 
     throw new ClientError("Cookie signature is invalid", {
       code: "invalid_cookie_signature",
+      title: "Invalid Cookie Signature",
+      details:
+        "The signed cookie's signature could not be verified against the configured keys.",
       type: "urn:lindorm:pylon:error:invalid_cookie_signature",
       status: ClientError.Status.Unauthorized,
       data: { name },

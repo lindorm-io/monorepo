@@ -10,6 +10,8 @@ export const assertAllowedOrigin = (
     throw new ClientError("Origin header is missing", {
       status: ClientError.Status.Forbidden,
       code: "origin_missing",
+      title: "Origin Missing",
+      details: "The request is missing the Origin header required for origin validation.",
       type: "urn:lindorm:pylon:error:origin_missing",
     });
   }
@@ -18,6 +20,8 @@ export const assertAllowedOrigin = (
     throw new ClientError("Request origin is not allowed", {
       status: ClientError.Status.Forbidden,
       code: "origin_not_allowed",
+      title: "Origin Not Allowed",
+      details: "The request origin is not in the configured allowlist.",
       type: "urn:lindorm:pylon:error:origin_not_allowed",
       data: { origin },
       debug: { allowOrigins },

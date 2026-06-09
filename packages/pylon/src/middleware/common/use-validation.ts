@@ -18,6 +18,7 @@ export const useValidation = (
           status: ClientError.Status.Unauthorized,
           code: "token_not_found",
           type: "urn:lindorm:pylon:error:token_not_found",
+          title: "Token Not Found",
           details: `Expected a token at path [${tokenPath}] on context state tokens`,
           data: { token: tokenPath },
         });
@@ -38,6 +39,7 @@ export const useValidation = (
         status: ClientError.Status.Forbidden,
         code: "token_validation_failed",
         type: "urn:lindorm:pylon:error:token_validation_failed",
+        title: "Token Validation Failed",
         details: err.message,
         data: { token: tokenPath },
       });

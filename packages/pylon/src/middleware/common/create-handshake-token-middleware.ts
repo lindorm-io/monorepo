@@ -69,6 +69,7 @@ export const createHandshakeTokenMiddleware = <
       status: ClientError.Status.Unauthorized,
       code: "handshake_unauthorized",
       type: "urn:lindorm:pylon:error:handshake_unauthorized",
+      title: "Handshake Unauthorized",
       details:
         "Socket handshake provided no recognised credentials (bearer, dpop, or session)",
       data: { source: source.kind },

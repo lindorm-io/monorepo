@@ -12,6 +12,7 @@ export const useScope = (options: UseScopeOptions): PylonMiddleware => {
       throw new ServerError("useScope requires a ProteusSource on the context", {
         code: "proteus_source_not_configured",
         type: "urn:lindorm:pylon:error:proteus_source_not_configured",
+        title: "Proteus Source Not Configured",
         details:
           "Attach a ProteusSource to the pylon (e.g. via createAttachProteusSourceMiddleware) before using useScope",
       });

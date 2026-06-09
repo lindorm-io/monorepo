@@ -31,6 +31,8 @@ export const handleAccessControlOrigin = (
 
   throw new CorsError("Request origin is not allowed", {
     code: "cors_origin_not_allowed",
+    title: "CORS Origin Not Allowed",
+    details: "The request origin is not in the configured CORS allowlist.",
     status: CorsError.Status.Forbidden,
     // allowOrigins is never disclosed by standard CORS (the server only echoes the
     // single matching origin), so keep the allowlist server-side in debug.
@@ -75,6 +77,9 @@ export const handleAccessControlHeaders = (
   // response header, and this branch is only reached after the origin check passes.
   throw new CorsError("One or more requested headers are not allowed", {
     code: "cors_headers_not_allowed",
+    title: "CORS Headers Not Allowed",
+    details:
+      "One or more requested headers are not permitted by the CORS allowHeaders configuration.",
     status: CorsError.Status.Forbidden,
     data: { requestedHeaders: request, allowHeaders: config },
   });
@@ -106,6 +111,9 @@ export const handleAccessControlMethods = (
   // response header, and this branch is only reached after the origin check passes.
   throw new CorsError("Requested method is not allowed", {
     code: "cors_method_not_allowed",
+    title: "CORS Method Not Allowed",
+    details:
+      "The requested method is not permitted by the CORS allowMethods configuration.",
     status: CorsError.Status.Forbidden,
     data: { requestedMethod: request, allowMethods: config },
   });

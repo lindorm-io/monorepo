@@ -19,6 +19,9 @@ export const resolveIris = (
   }
   throw new ServerError("IrisSource is not configured", {
     code: "iris_source_not_configured",
+    title: "Iris Source Not Configured",
+    details:
+      "No IrisSource is configured on this server, so an Iris session cannot be resolved.",
     type: "urn:lindorm:pylon:error:iris_source_not_configured",
   });
 };

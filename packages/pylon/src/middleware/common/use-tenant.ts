@@ -32,6 +32,7 @@ export const useTenant = (
         status: ClientError.Status.Forbidden,
         code: "tenant_required",
         type: "urn:lindorm:pylon:error:tenant_required",
+        title: "Tenant Required",
         data: { source: path ? "path" : "introspection", path: path ?? null },
       });
     }

@@ -25,6 +25,7 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
     if (!ctx.state.session) {
       throw new ClientError("No active session to log out", {
         code: "logout_session_required",
+        title: "Logout Session Required",
         type: "urn:lindorm:pylon:error:logout_session_required",
         status: ClientError.Status.Unauthorized,
         details: "Logout requires an authenticated session",
@@ -43,6 +44,7 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
     ) {
       throw new ClientError("Logout redirect URI is not allowed", {
         code: "logout_redirect_uri_not_allowed",
+        title: "Logout Redirect URI Not Allowed",
         type: "urn:lindorm:pylon:error:logout_redirect_uri_not_allowed",
         status: ClientError.Status.BadRequest,
         details:
@@ -62,6 +64,7 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
     if (!redirectUri) {
       throw new ClientError("Logout redirect URI is required", {
         code: "logout_redirect_uri_required",
+        title: "Logout Redirect URI Required",
         type: "urn:lindorm:pylon:error:logout_redirect_uri_required",
         status: ClientError.Status.BadRequest,
         details:

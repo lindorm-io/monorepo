@@ -25,6 +25,7 @@ export const extractHandshakeAccessTokenInput = (
 
   throw new ClientError("Missing handshake bearer token", {
     code: "handshake_bearer_token_missing",
+    title: "Handshake Bearer Token Missing",
     type: "urn:lindorm:pylon:error:handshake_bearer_token_missing",
     status: ClientError.Status.Unauthorized,
     details:

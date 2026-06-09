@@ -38,6 +38,8 @@ export const buildDefaultHealthCallback = <C extends PylonHttpContext>({
     if (failures.length > 0) {
       throw new ServerError("One or more health checks failed", {
         code: "health_check_failed",
+        title: "Health Check Failed",
+        details: `One or more upstream sources failed their health check: ${failures.join(", ")}.`,
         type: "urn:lindorm:pylon:error:health_check_failed",
         data: { failures },
         status: ServerError.Status.ServiceUnavailable,

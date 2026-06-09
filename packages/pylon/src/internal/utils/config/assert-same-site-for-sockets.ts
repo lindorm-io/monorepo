@@ -19,6 +19,7 @@ export const assertSameSiteForSockets = (
           "(CSWSH) defense-in-depth requires SameSite=Lax or SameSite=Strict on " +
           "the session cookie. Set options.session.sameSite explicitly.",
         code: "missing_same_site_for_session",
+        title: "Missing SameSite for Session",
       },
     );
   }
@@ -34,6 +35,7 @@ export const assertSameSiteForSockets = (
           "Hijacking (CSWSH) defense-in-depth requires SameSite=Lax or " +
           "SameSite=Strict on the session cookie.",
         code: "invalid_same_site_for_session",
+        title: "Invalid SameSite for Session",
       },
     );
   }
