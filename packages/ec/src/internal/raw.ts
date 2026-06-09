@@ -11,7 +11,12 @@ export const derToRaw = (kryptos: IKryptosEc, derSignature: Buffer): Buffer => {
   const keySize = KEY_SIZES[kryptos.curve];
 
   if (derSignature[0] !== 0x30) {
-    throw new EcError("Invalid DER format", { code: "invalid_der_format" });
+    throw new EcError("Invalid DER format", {
+      code: "invalid_der_format",
+      title: "Invalid DER Format",
+      details:
+        "The DER signature does not begin with the expected ASN.1 sequence tag (0x30).",
+    });
   }
 
   let position = 2; // Skip 0x30 and the length byte(s)
@@ -25,7 +30,11 @@ export const derToRaw = (kryptos: IKryptosEc, derSignature: Buffer): Buffer => {
 
   function getInteger(): Buffer {
     if (derSignature[position] !== 0x02) {
-      throw new EcError("Expected integer", { code: "invalid_der_format" });
+      throw new EcError("Expected integer", {
+        code: "invalid_der_format",
+        title: "Invalid DER Format",
+        details: "The DER signature is missing an expected ASN.1 integer tag (0x02).",
+      });
     }
     const length = derSignature[position + 1];
     position += 2;
@@ -58,6 +67,9 @@ export const rawToDer = (kryptos: IKryptosEc, rawSignature: Buffer): Buffer => {
   if (rawSignature.length !== 2 * keySize) {
     throw new EcError("Invalid raw signature length", {
       code: "invalid_raw_signature_length",
+      title: "Invalid Raw Signature Length",
+      details:
+        "The raw EC signature length does not equal twice the curve key size as required for the concatenated r and s values.",
       data: {
         curve: kryptos.curve,
         actual: rawSignature.length,
