@@ -46,6 +46,9 @@ export class MySqlInsertQueryBuilder<
       "MySQL does not support RETURNING clauses. Use save()/insert()/update() repository methods instead, which automatically SELECT-back after write.",
       {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "MySQL does not support RETURNING clauses; use repository write methods that SELECT-back after writing.",
         data: { operation: "insert.returning" },
       },
     );
@@ -65,6 +68,9 @@ export class MySqlInsertQueryBuilder<
         "INSERT via QueryBuilder is not supported for joined inheritance entities — use repository.insert()",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "INSERT via the query builder is not supported for joined inheritance entities; use repository.insert().",
           data: { operation: "insert.execute", entity: this.metadata.entity.name },
         },
       );
@@ -83,6 +89,9 @@ export class MySqlInsertQueryBuilder<
           `INSERT on "${this.metadata.entity.name}": row ${i} has different keys than row 0`,
           {
             code: "invalid_query",
+            title: "Invalid Query",
+            details:
+              "All rows in a multi-row INSERT must share the same set of column keys.",
             data: { entity: this.metadata.entity.name, operation: "insert.execute" },
           },
         );

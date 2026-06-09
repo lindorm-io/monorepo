@@ -35,6 +35,9 @@ export class MongoTransactionContext implements ITransactionContext {
     if (!this.repoFactory) {
       throw new MongoDriverError("Transactional repositories are not configured", {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "This transaction context was created without a repository factory, so transactional repositories are unavailable.",
       });
     }
     return this.repoFactory(target);

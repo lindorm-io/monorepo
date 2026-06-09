@@ -37,6 +37,9 @@ export class MySqlTransactionContext implements ITransactionContext {
     if (!this.repoFactory) {
       throw new MySqlTransactionError("Transactional repositories are not configured", {
         code: "transactional_repositories_not_configured",
+        title: "Transactional Repositories Not Configured",
+        details:
+          "No repository factory is configured on this transaction context, so transactional repositories are unavailable.",
       });
     }
     return this.repoFactory(target);

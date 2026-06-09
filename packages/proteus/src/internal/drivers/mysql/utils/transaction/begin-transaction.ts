@@ -35,6 +35,9 @@ export const beginTransaction = async (
   if (isolation && !(isolation in SET_ISOLATION_SQL)) {
     throw new MySqlTransactionError(`Invalid isolation level: "${isolation}"`, {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details:
+        "The requested transaction isolation level is not a recognized MySQL isolation level.",
       debug: { isolation, valid: Object.keys(SET_ISOLATION_SQL) },
     });
   }
@@ -46,6 +49,9 @@ export const beginTransaction = async (
   } catch (error) {
     throw new MySqlTransactionError("Failed to acquire pool connection", {
       code: "connection_failed",
+      title: "Connection Failed",
+      details:
+        "A connection could not be acquired from the pool to begin the transaction.",
       error: error as Error,
     });
   }
@@ -76,6 +82,8 @@ export const beginTransaction = async (
     connection.release();
     throw new MySqlTransactionError("Failed to begin transaction", {
       code: "query_execution_failed",
+      title: "Query Execution Failed",
+      details: "The START TRANSACTION statement (or isolation level setup) failed.",
       data: { operation: "START TRANSACTION" },
       error: error as Error,
     });

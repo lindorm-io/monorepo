@@ -275,6 +275,8 @@ export class PostgresRepository<
         `updateMany is not supported for versioned entity "${this.metadata.entity.name}". Use update() for individual version updates.`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `updateMany() is not supported on versioned entity "${this.metadata.entity.name}"; use update() so each version row is handled individually.`,
           data: { entity: this.metadata.entity.name, operation: "updateMany" },
         },
       );
@@ -329,6 +331,8 @@ export class PostgresRepository<
         `cursor() is not available on transactional repositories`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `cursor() cannot be opened on a transactional repository for "${this.metadata.entity.name}"; open it on the non-transactional repository instead.`,
           data: { entity: this.metadata.entity.name, operation: "cursor" },
         },
       );
@@ -656,6 +660,8 @@ export class PostgresRepository<
               `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
               {
                 code: "optimistic_lock_conflict",
+                title: "Optimistic Lock Conflict",
+                details: `The version guard matched no rows when updating "${this.metadata.entity.name}"; another writer modified the row concurrently.`,
                 data: { entity: this.metadata.entity.name },
               },
             );
@@ -705,6 +711,8 @@ export class PostgresRepository<
                   `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
                   {
                     code: "optimistic_lock_conflict",
+                    title: "Optimistic Lock Conflict",
+                    details: `The version guard matched no rows on the root table of joined-inheritance entity "${this.metadata.entity.name}"; another writer modified the row concurrently.`,
                     data: { entity: this.metadata.entity.name },
                   },
                 );
@@ -743,6 +751,8 @@ export class PostgresRepository<
                   `Optimistic lock conflict: "${this.metadata.entity.name}" was modified concurrently`,
                   {
                     code: "optimistic_lock_conflict",
+                    title: "Optimistic Lock Conflict",
+                    details: `The version guard matched no rows when updating "${this.metadata.entity.name}" within the transaction; another writer modified the row concurrently.`,
                     data: { entity: this.metadata.entity.name },
                   },
                 );
@@ -902,6 +912,8 @@ export class PostgresRepository<
               `Optimistic lock conflict: "${this.metadata.entity.name}" version was modified concurrently`,
               {
                 code: "optimistic_lock_conflict",
+                title: "Optimistic Lock Conflict",
+                details: `Closing the current version row of "${this.metadata.entity.name}" affected zero rows; another writer advanced the version concurrently.`,
                 data: { entity: this.metadata.entity.name },
               },
             );

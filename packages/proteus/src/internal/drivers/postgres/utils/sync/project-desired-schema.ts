@@ -49,6 +49,8 @@ const mapOnDeleteAction = (onDestroy: RelationDestroy): string => {
         `Unsupported onDestroy value: "${onDestroy as string}"`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `onDestroy value "${onDestroy as string}" has no ON DELETE referential action mapping.`,
         },
       );
   }
@@ -69,6 +71,8 @@ const mapOnUpdateAction = (onUpdate: RelationChange): string => {
     default:
       throw new PostgresSyncError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details: `onUpdate value "${onUpdate as string}" has no ON UPDATE referential action mapping.`,
       });
   }
 };
@@ -209,6 +213,8 @@ export const projectDesiredSchema = (
           `Column name "${field.name}" on "${metadata.target.name}" exceeds ${PG_IDENTIFIER_LIMIT} characters`,
           {
             code: "schema_mismatch",
+            title: "Schema Mismatch",
+            details: `Column "${field.name}" on entity "${metadata.target.name}" exceeds PostgreSQL's ${PG_IDENTIFIER_LIMIT}-character identifier limit.`,
             data: { column: field.name, entity: metadata.target.name },
           },
         );
@@ -275,6 +281,8 @@ export const projectDesiredSchema = (
           `Column name "${fkCol}" on "${metadata.target.name}" collides — embedded field "${colliding.key}" produces column "${colliding.name}" which conflicts with a relation FK column of the same name`,
           {
             code: "schema_mismatch",
+            title: "Schema Mismatch",
+            details: `On entity "${metadata.target.name}", embedded field "${colliding.key}" produces column "${colliding.name}" that collides with a relation FK column of the same name.`,
             data: { column: fkCol, entity: metadata.target.name },
           },
         );

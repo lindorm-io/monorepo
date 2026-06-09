@@ -28,6 +28,9 @@ export const validateConnectionMutualExclusivity = (options: {
         `Found both "url" and: ${individualFields.join(", ")}`,
       {
         code: "ambiguous_connection_options",
+        title: "Ambiguous Connection Options",
+        details:
+          "Provide either a connection URL or individual host/port/user/password fields, not both.",
         data: { conflictingFields: individualFields },
       },
     );

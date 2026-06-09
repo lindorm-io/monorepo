@@ -22,6 +22,8 @@ export const withSavepoint = async <T>(
   } catch (error) {
     throw new SqliteTransactionError(`Failed to create savepoint "${name}"`, {
       code: "query_execution_failed",
+      title: "Query Execution Failed",
+      details: "SQLite rejected the SAVEPOINT statement opening a nested transaction.",
       data: { operation: "SAVEPOINT" },
       error: error as Error,
     });

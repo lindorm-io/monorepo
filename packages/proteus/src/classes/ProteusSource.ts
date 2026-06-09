@@ -150,6 +150,8 @@ export class ProteusSource implements IProteusSource {
         const _exhaustive: never = options;
         throw new NotSupportedError(`Unknown driver "${(_exhaustive as any).driver}"`, {
           code: "unknown_driver",
+          title: "Unknown Driver",
+          details: "The configured driver is not one of the supported Proteus drivers.",
           data: { driver: (_exhaustive as any).driver },
         });
       }
@@ -162,6 +164,8 @@ export class ProteusSource implements IProteusSource {
     if (!this._driver) {
       throw new ProteusError("ProteusSource is not connected. Call connect() first.", {
         code: "source_not_connected",
+        title: "Source Not Connected",
+        details: "Call connect() on the source before performing driver operations.",
       });
     }
     return this._driver;
@@ -282,7 +286,12 @@ export class ProteusSource implements IProteusSource {
     if (this.isSetUp) {
       throw new ProteusError(
         "Cannot add entities after setup() has been called. Create a new ProteusSource instance instead.",
-        { code: "entities_added_after_setup" },
+        {
+          code: "entities_added_after_setup",
+          title: "Entities Added After Setup",
+          details:
+            "Register all entities before calling setup(); create a new source to add more afterwards.",
+        },
       );
     }
     const scanned = await EntityScanner.scan(entities);

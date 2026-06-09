@@ -109,6 +109,8 @@ export class MigrationManager implements IMigrationManager {
               "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
             {
               code: "migration_partially_applied",
+              title: "Migration Partially Applied",
+              details: `Migration up aborted: ${partiallyApplied.length} migration record(s) were started but never marked finished, indicating a prior crash.`,
               debug: {
                 partiallyApplied: partiallyApplied.map((r) => ({
                   id: r.id,
@@ -126,6 +128,8 @@ export class MigrationManager implements IMigrationManager {
         if (mismatched.length > 0) {
           throw new PostgresMigrationError("Checksum mismatch detected — aborting", {
             code: "migration_checksum_mismatch",
+            title: "Migration Checksum Mismatch",
+            details: `${mismatched.length} already-applied migration(s) have a checksum that differs from their source file; the source was edited after being applied.`,
             debug: {
               mismatched: mismatched.map((m) => ({
                 id: m.migration.id,
@@ -163,6 +167,9 @@ export class MigrationManager implements IMigrationManager {
     if (result === null) {
       throw new PostgresMigrationError("Could not acquire migration advisory lock", {
         code: "migration_lock_unavailable",
+        title: "Migration Lock Unavailable",
+        details:
+          "Could not acquire the migration advisory lock to apply migrations; another process is likely running migrations.",
       });
     }
 
@@ -201,6 +208,8 @@ export class MigrationManager implements IMigrationManager {
               "Manual intervention required: delete the record to retry, or mark finished if the DDL landed.",
             {
               code: "migration_partially_applied",
+              title: "Migration Partially Applied",
+              details: `Rollback aborted: ${partiallyApplied.length} migration record(s) were started but never marked finished, indicating a prior crash.`,
               debug: {
                 partiallyApplied: partiallyApplied.map((r) => ({
                   id: r.id,
@@ -218,6 +227,8 @@ export class MigrationManager implements IMigrationManager {
             "Checksum mismatch detected — cannot safely rollback",
             {
               code: "migration_checksum_mismatch",
+              title: "Migration Checksum Mismatch",
+              details: `${mismatched.length} applied migration(s) have a checksum differing from their source file, so the down migration cannot be trusted to match.`,
               debug: {
                 mismatched: mismatched.map((m) => ({
                   id: m.migration.id,
@@ -260,6 +271,9 @@ export class MigrationManager implements IMigrationManager {
     if (result === null) {
       throw new PostgresMigrationError("Could not acquire migration advisory lock", {
         code: "migration_lock_unavailable",
+        title: "Migration Lock Unavailable",
+        details:
+          "Could not acquire the migration advisory lock to roll back migrations; another process is likely running migrations.",
       });
     }
 
@@ -289,6 +303,9 @@ export class MigrationManager implements IMigrationManager {
     if (result === null) {
       throw new PostgresMigrationError("Could not acquire migration advisory lock", {
         code: "migration_lock_unavailable",
+        title: "Migration Lock Unavailable",
+        details:
+          "Could not acquire the migration advisory lock to generate a baseline migration; another process is likely running migrations.",
       });
     }
 
@@ -314,6 +331,9 @@ export class MigrationManager implements IMigrationManager {
     if (result === null) {
       throw new PostgresMigrationError("Could not acquire migration advisory lock", {
         code: "migration_lock_unavailable",
+        title: "Migration Lock Unavailable",
+        details:
+          "Could not acquire the migration advisory lock to generate a migration; another process is likely running migrations.",
       });
     }
 
@@ -329,7 +349,12 @@ export class MigrationManager implements IMigrationManager {
       const available = loaded.map((l) => l.name);
       throw new PostgresMigrationError(
         `Migration file not found: ${name}. Available migrations: ${available.join(", ") || "(none)"}`,
-        { code: "migration_not_found", data: { name } },
+        {
+          code: "migration_not_found",
+          title: "Migration Not Found",
+          details: `No migration file named "${name}" was found in the migrations directory while resolving it as applied.`,
+          data: { name },
+        },
       );
     }
 
@@ -342,6 +367,8 @@ export class MigrationManager implements IMigrationManager {
         `Migration "${name}" is already marked as applied`,
         {
           code: "migration_already_applied",
+          title: "Migration Already Applied",
+          details: `Migration "${name}" already has a finished record in the migration tracking table; it cannot be resolved as applied again.`,
           data: { name },
         },
       );
@@ -384,7 +411,12 @@ export class MigrationManager implements IMigrationManager {
       const available = applied.map((r) => r.name);
       throw new PostgresMigrationError(
         `Migration not found in tracking table or already rolled back: ${name}. Available applied migrations: ${available.join(", ") || "(none)"}`,
-        { code: "migration_not_found", data: { name } },
+        {
+          code: "migration_not_found",
+          title: "Migration Not Found",
+          details: `Migration "${name}" has no applied record in the tracking table, so it cannot be resolved as rolled back.`,
+          data: { name },
+        },
       );
     }
 

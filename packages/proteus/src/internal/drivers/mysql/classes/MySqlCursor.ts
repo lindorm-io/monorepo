@@ -163,6 +163,8 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
     if (this.closed) {
       throw new MySqlDriverError("Cursor is closed", {
         code: "cursor_closed",
+        title: "Cursor Closed",
+        details: "The cursor has already been closed and can no longer be read from.",
         data: { operation: "cursor.read" },
       });
     }
@@ -172,6 +174,9 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
     if (this.reading) {
       throw new MySqlDriverError("Concurrent cursor reads are not allowed", {
         code: "concurrent_cursor_read",
+        title: "Concurrent Cursor Read",
+        details:
+          "A read is already in progress on this cursor; cursor reads must be sequential.",
         data: { operation: "cursor.read" },
       });
     }

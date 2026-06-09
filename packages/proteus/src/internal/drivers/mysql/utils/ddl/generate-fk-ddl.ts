@@ -18,6 +18,9 @@ const mapOnDelete = (onDestroy: MetaRelation["options"]["onDestroy"]): string =>
     case "set_default":
       throw new NotSupportedError("SET DEFAULT is not supported by MySQL InnoDB", {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "MySQL InnoDB does not support the SET DEFAULT referential action on foreign keys.",
       });
     case "ignore":
       return "NO ACTION";
@@ -26,6 +29,9 @@ const mapOnDelete = (onDestroy: MetaRelation["options"]["onDestroy"]): string =>
         `Unsupported onDestroy value: "${onDestroy as string}"`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "The configured onDestroy referential action is not supported by MySQL.",
         },
       );
   }
@@ -42,12 +48,17 @@ const mapOnUpdate = (onUpdate: MetaRelation["options"]["onUpdate"]): string => {
     case "set_default":
       throw new NotSupportedError("SET DEFAULT is not supported by MySQL InnoDB", {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "MySQL InnoDB does not support the SET DEFAULT referential action on foreign keys.",
       });
     case "ignore":
       return "NO ACTION";
     default:
       throw new NotSupportedError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details: "The configured onUpdate referential action is not supported by MySQL.",
       });
   }
 };

@@ -70,6 +70,8 @@ export const validateFilters = (
         `Duplicate @Filter name "${filter.name}" on entity "${targetName}"`,
         {
           code: "duplicate_filter_name",
+          title: "Duplicate Filter Name",
+          details: `Two @Filter decorators on "${targetName}" share the name "${filter.name}" — give each filter a unique name.`,
           debug: { target: targetName, filterName: filter.name },
         },
       );
@@ -84,6 +86,8 @@ export const validateFilters = (
           `@Filter("${filter.name}") references unknown field "${key}" on entity "${targetName}". Valid fields: ${[...fieldKeys].join(", ")}`,
           {
             code: "missing_filter_field",
+            title: "Missing Filter Field",
+            details: `@Filter("${filter.name}") on "${targetName}" references unknown field "${key}" — reference an existing @Field key in the filter condition.`,
             debug: { target: targetName, filterName: filter.name, invalidField: key },
           },
         );

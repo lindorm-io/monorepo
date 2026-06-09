@@ -53,7 +53,13 @@ export const compileInsertBulk = <E extends IEntity>(
   if (entities.length === 0) {
     throw new ProteusError(
       `compileInsertBulk: entities array must not be empty for "${metadata.entity.name}"`,
-      { code: "invalid_query", data: { entity: metadata.entity.name } },
+      {
+        code: "invalid_query",
+        title: "Invalid Query",
+        details:
+          "A bulk insert requires at least one entity to generate the INSERT statement.",
+        data: { entity: metadata.entity.name },
+      },
     );
   }
 

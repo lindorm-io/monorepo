@@ -23,6 +23,9 @@ const mapOnDelete = (onDestroy: MetaRelation["options"]["onDestroy"]): string =>
         `Unsupported onDestroy value: "${onDestroy as string}"`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "The relation's onDestroy action does not map to a SQLite ON DELETE action.",
           data: { onDestroy: onDestroy as string },
         },
       );
@@ -44,6 +47,9 @@ const mapOnUpdate = (onUpdate: MetaRelation["options"]["onUpdate"]): string => {
     default:
       throw new NotSupportedError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "The relation's onUpdate action does not map to a SQLite ON UPDATE action.",
         data: { onUpdate: onUpdate as string },
       });
   }

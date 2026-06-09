@@ -14,6 +14,9 @@ export const mapFieldTypeMysql = (field: MetaField): string => {
   if (type === null) {
     throw new NotSupportedError(`Field "${key}" has no type — cannot map to MySQL type`, {
       code: "unsupported_column_type",
+      title: "Unsupported Column Type",
+      details:
+        "The field has no declared type and cannot be mapped to a MySQL column type.",
       data: { column: key },
     });
   }
@@ -104,12 +107,20 @@ export const mapFieldTypeMysql = (field: MetaField): string => {
     case "xml":
       throw new NotSupportedError(
         `Field type "${type}" (field "${key}") is not supported by the MySQL driver`,
-        { code: "unsupported_column_type", data: { column: key, type } },
+        {
+          code: "unsupported_column_type",
+          title: "Unsupported Column Type",
+          details: "The field type is not supported by the MySQL driver.",
+          data: { column: key, type },
+        },
       );
 
     default:
       throw new NotSupportedError(`Unsupported MetaFieldType: "${type as string}"`, {
         code: "unsupported_column_type",
+        title: "Unsupported Column Type",
+        details:
+          "The MetaFieldType is not recognized and cannot be mapped to a MySQL column type.",
         data: { type: type as string },
       });
   }

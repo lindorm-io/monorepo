@@ -23,6 +23,9 @@ export const resolveFkColumnType = (
       `Foreign primary key field "${foreignPkKey}" not found on ${foreignMeta.entity.name}`,
       {
         code: "schema_mismatch",
+        title: "Schema Mismatch",
+        details:
+          "The referenced foreign primary key field does not exist on the foreign entity, so the FK column type cannot be resolved.",
         data: { column: foreignPkKey, entity: foreignMeta.entity.name },
       },
     );

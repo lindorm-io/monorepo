@@ -168,7 +168,12 @@ export class MongoDriver implements IProteusDriver {
     if (this.options.synchronize && this.options.runMigrations) {
       throw new MongoMigrationError(
         "synchronize and runMigrations are mutually exclusive — use one or the other",
-        { code: "unsupported_operation" },
+        {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "The synchronize and runMigrations options cannot both be enabled; choose exactly one.",
+        },
       );
     }
 
@@ -510,7 +515,12 @@ export class MongoDriver implements IProteusDriver {
     if (!this.isReplicaSet) {
       throw new NotSupportedError(
         "MongoDB transactions require a replica set. Current connection is standalone.",
-        { code: "unsupported_operation" },
+        {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "MongoDB multi-document transactions require a replica set; the current connection is standalone.",
+        },
       );
     }
 
@@ -536,6 +546,9 @@ export class MongoDriver implements IProteusDriver {
     if (txHandle.state !== "active") {
       throw new MongoDriverError(`Cannot commit: transaction is ${txHandle.state}`, {
         code: "transaction_not_active",
+        title: "Transaction Not Active",
+        details:
+          "commitTransaction() can only run while the transaction is in the active state.",
         data: { state: txHandle.state },
       });
     }
@@ -562,6 +575,9 @@ export class MongoDriver implements IProteusDriver {
     if (txHandle.state !== "active") {
       throw new MongoDriverError(`Cannot rollback: transaction is ${txHandle.state}`, {
         code: "transaction_not_active",
+        title: "Transaction Not Active",
+        details:
+          "rollbackTransaction() can only run while the transaction is in the active state.",
         data: { state: txHandle.state },
       });
     }
@@ -887,7 +903,12 @@ export class MongoDriver implements IProteusDriver {
     if (!this.client) {
       throw new MongoDriverError(
         "MongoDB client is not connected. Call connect() first.",
-        { code: "connection_not_established" },
+        {
+          code: "connection_not_established",
+          title: "Connection Not Established",
+          details:
+            "The MongoDB client has not been connected yet; call connect() before issuing operations.",
+        },
       );
     }
     return this.client;
@@ -897,7 +918,12 @@ export class MongoDriver implements IProteusDriver {
     if (!this.db) {
       throw new MongoDriverError(
         "MongoDB client is not connected. Call connect() first.",
-        { code: "connection_not_established" },
+        {
+          code: "connection_not_established",
+          title: "Connection Not Established",
+          details:
+            "The MongoDB database handle is unavailable because the client has not connected; call connect() first.",
+        },
       );
     }
     return this.db;

@@ -22,7 +22,11 @@ const mapOnDelete = (onDestroy: MetaRelation["options"]["onDestroy"]): string =>
     default:
       throw new NotSupportedError(
         `Unsupported onDestroy value: "${onDestroy as string}"`,
-        { code: "unsupported_operation" },
+        {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `onDestroy value "${onDestroy as string}" has no ON DELETE referential action mapping.`,
+        },
       );
   }
 };
@@ -42,6 +46,8 @@ const mapOnUpdate = (onUpdate: MetaRelation["options"]["onUpdate"]): string => {
     default:
       throw new NotSupportedError(`Unsupported onUpdate value: "${onUpdate as string}"`, {
         code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details: `onUpdate value "${onUpdate as string}" has no ON UPDATE referential action mapping.`,
       });
   }
 };

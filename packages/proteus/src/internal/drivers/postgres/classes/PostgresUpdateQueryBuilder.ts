@@ -80,6 +80,8 @@ export class PostgresUpdateQueryBuilder<
         `UPDATE on "${this.metadata.entity.name}" requires at least one .where() predicate`,
         {
           code: "invalid_query",
+          title: "Invalid Query",
+          details: `UPDATE on "${this.metadata.entity.name}" was rejected because it has no where() predicate, which would update every row.`,
           data: { entity: this.metadata.entity.name, operation: "update.execute" },
         },
       );
@@ -94,6 +96,8 @@ export class PostgresUpdateQueryBuilder<
         "UPDATE via QueryBuilder is not supported for joined inheritance entities",
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `Joined-inheritance entity "${this.metadata.entity.name}" spans multiple tables and cannot be updated via the query builder; use repository.update() instead.`,
           data: { operation: "update.execute", entity: this.metadata.entity.name },
         },
       );

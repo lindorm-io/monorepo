@@ -285,6 +285,9 @@ export class RedisDriver implements IProteusDriver {
     if (txHandle.state !== "active") {
       throw new RedisDriverError(`Cannot commit: transaction is ${txHandle.state}`, {
         code: "transaction_not_active",
+        title: "Transaction Not Active",
+        details:
+          "commitTransaction() was called on a transaction that is no longer active (already committed or rolled back).",
         data: { state: txHandle.state },
       });
     }
@@ -296,6 +299,9 @@ export class RedisDriver implements IProteusDriver {
     if (txHandle.state !== "active") {
       throw new RedisDriverError(`Cannot rollback: transaction is ${txHandle.state}`, {
         code: "transaction_not_active",
+        title: "Transaction Not Active",
+        details:
+          "rollbackTransaction() was called on a transaction that is no longer active (already committed or rolled back).",
         data: { state: txHandle.state },
       });
     }
@@ -463,6 +469,9 @@ export class RedisDriver implements IProteusDriver {
     if (!this.client) {
       throw new RedisDriverError("Redis client is not connected. Call connect() first.", {
         code: "connection_not_established",
+        title: "Connection Not Established",
+        details:
+          "A driver operation required the Redis client, but connect() has not been called or the connection was closed.",
       });
     }
     return this.client;

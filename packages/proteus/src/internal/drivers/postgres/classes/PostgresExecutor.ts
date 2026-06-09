@@ -114,6 +114,8 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
         {
           code: "update_target_not_found",
+          title: "Update Target Not Found",
+          details: `No existing "${this.metadata.entity.name}" row matched the primary key, so the update affected zero rows.`,
           data: { entity: this.metadata.entity.name },
           debug: {
             primaryKey: buildPrimaryKeyDebug(
@@ -380,6 +382,8 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
         `Joined insert failed: root INSERT returned no rows for "${this.metadata.entity.name}"`,
         {
           code: "query_execution_failed",
+          title: "Query Execution Failed",
+          details: `The root-table INSERT for joined-inheritance entity "${this.metadata.entity.name}" returned no RETURNING row.`,
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -438,6 +442,8 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
           `Update failed: no matching row found for "${this.metadata.entity.name}"`,
           {
             code: "update_target_not_found",
+            title: "Update Target Not Found",
+            details: `No existing root-table "${this.metadata.entity.name}" row matched the primary key, so the joined update affected zero rows.`,
             data: { entity: this.metadata.entity.name },
             debug: {
               primaryKey: buildPrimaryKeyDebug(
@@ -467,6 +473,8 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
         `Joined update produced no SQL statements for "${this.metadata.entity.name}"`,
         {
           code: "query_execution_failed",
+          title: "Query Execution Failed",
+          details: `The joined-inheritance update for "${this.metadata.entity.name}" produced neither a root nor a child UPDATE statement.`,
           data: { entity: this.metadata.entity.name },
         },
       );

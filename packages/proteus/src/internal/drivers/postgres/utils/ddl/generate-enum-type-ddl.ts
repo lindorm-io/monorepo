@@ -21,7 +21,12 @@ export const generateEnumTypeDDL = (
     if (field.enum && field.type !== "enum") {
       throw new ProteusError(
         `Field "${field.key}" has enum values but type is "${field.type}" — expected "enum"`,
-        { code: "schema_mismatch", data: { column: field.key } },
+        {
+          code: "schema_mismatch",
+          title: "Schema Mismatch",
+          details: `Field "${field.key}" supplies enum values but its declared type is "${field.type}"; it must be typed "enum".`,
+          data: { column: field.key },
+        },
       );
     }
 
@@ -30,7 +35,12 @@ export const generateEnumTypeDDL = (
     if (!field.enum) {
       throw new ProteusError(
         `Field "${field.key}" has type "enum" but no enum values provided`,
-        { code: "schema_mismatch", data: { column: field.key } },
+        {
+          code: "schema_mismatch",
+          title: "Schema Mismatch",
+          details: `Field "${field.key}" is typed "enum" but provides no enum values to define the PostgreSQL enum type.`,
+          data: { column: field.key },
+        },
       );
     }
 
@@ -39,6 +49,8 @@ export const generateEnumTypeDDL = (
     if (values.length === 0) {
       throw new ProteusError(`Enum for field "${field.key}" has no values`, {
         code: "schema_mismatch",
+        title: "Schema Mismatch",
+        details: `The enum for field "${field.key}" resolved to zero values, so no PostgreSQL enum type can be created.`,
         data: { column: field.key },
       });
     }

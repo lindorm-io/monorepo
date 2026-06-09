@@ -17,6 +17,9 @@ export const buildPrimaryKeyPredicate = <E extends IEntity>(
         `Cannot build primary key predicate: field "${key}" is null or undefined on "${metadata.entity.name}"`,
         {
           code: "missing_primary_key",
+          title: "Missing Primary Key",
+          details:
+            "Every primary key field must be populated before building a primary key predicate.",
           debug: { key, entityName: metadata.entity.name },
         },
       );

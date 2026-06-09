@@ -132,6 +132,8 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
         `Duplicate primary key for "${this.metadata.entity.name}": ${pk}`,
         {
           code: "unique_violation",
+          title: "Unique Violation",
+          details: `An entity with the same primary key already exists in "${this.metadata.entity.name}".`,
           debug: { entityName: this.metadata.entity.name, primaryKey: pk },
         },
       );
@@ -159,6 +161,8 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
         {
           code: "update_target_not_found",
+          title: "Update Target Not Found",
+          details: `No existing "${this.metadata.entity.name}" row matched the primary key supplied for update.`,
           debug: {
             primaryKey: buildPrimaryKeyDebug(
               entity as Record<string, unknown>,
@@ -533,6 +537,8 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
         `Cannot increment encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `The encrypted field "${String(property)}" cannot be incremented in place.`,
           data: { entityName: this.metadata.entity.name, property: String(property) },
         },
       );
@@ -559,6 +565,8 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
         `Cannot decrement encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
         {
           code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details: `The encrypted field "${String(property)}" cannot be decremented in place.`,
           data: { entityName: this.metadata.entity.name, property: String(property) },
         },
       );

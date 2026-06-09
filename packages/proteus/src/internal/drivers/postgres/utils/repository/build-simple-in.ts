@@ -12,7 +12,12 @@ export const buildSimpleIn = (
   if (values.length === 0) {
     throw new ProteusError(
       "buildSimpleIn: values array must not be empty — IN () is invalid SQL",
-      { code: "invalid_query" },
+      {
+        code: "invalid_query",
+        title: "Invalid Query",
+        details:
+          "An IN predicate was built with an empty values list, which produces invalid SQL.",
+      },
     );
   }
 

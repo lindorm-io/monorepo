@@ -17,7 +17,12 @@ export const runHooksSync = (
       throw new ProteusError(
         `@${decorator} hook returned a Promise — ${decorator} hooks must be synchronous. ` +
           `Use @AfterLoad for async post-load enrichment.`,
-        { code: "async_sync_hook", data: { decorator } },
+        {
+          code: "async_sync_hook",
+          title: "Async Sync Hook",
+          details: `A @${decorator} hook returned a Promise, but ${decorator} hooks run synchronously; move async work into an @AfterLoad hook.`,
+          data: { decorator },
+        },
       );
     }
   }

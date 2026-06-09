@@ -112,6 +112,8 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
         `Update failed: no matching row found for "${this.metadata.entity.name}"`,
         {
           code: "query_execution_failed",
+          title: "Query Execution Failed",
+          details: "The UPDATE matched no rows for the entity's primary key.",
           data: { entity: this.metadata.entity.name },
           debug: {
             primaryKey: buildPrimaryKeyDebug(
@@ -368,6 +370,8 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
         `Joined insert failed: root INSERT returned no rows for "${this.metadata.entity.name}"`,
         {
           code: "query_execution_failed",
+          title: "Query Execution Failed",
+          details: "The root INSERT of a joined-inheritance entity returned no rows.",
           data: { entity: this.metadata.entity.name },
         },
       );
@@ -413,6 +417,8 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
           `Update failed: no matching row found for "${this.metadata.entity.name}"`,
           {
             code: "query_execution_failed",
+            title: "Query Execution Failed",
+            details: "The UPDATE matched no rows for the entity's primary key.",
             data: { entity: this.metadata.entity.name },
             debug: {
               primaryKey: buildPrimaryKeyDebug(
@@ -437,6 +443,8 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
         `Joined update produced no SQL statements for "${this.metadata.entity.name}"`,
         {
           code: "query_execution_failed",
+          title: "Query Execution Failed",
+          details: "A joined-inheritance update produced no SQL statements to execute.",
           data: { entity: this.metadata.entity.name },
         },
       );

@@ -11,6 +11,9 @@ export const buildRelationFilter = (
       `Cannot build relation filter: findKeys is null for relation "${relation.key}" on "${relation.type}"`,
       {
         code: "relation_find_keys_missing",
+        title: "Relation Find Keys Missing",
+        details:
+          "This relation has no resolved find keys, so its filter cannot be built; check the relation mapping.",
         debug: { relationKey: relation.key, relationType: relation.type },
       },
     );

@@ -83,6 +83,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public lock(_mode: LockMode): this {
     throw new NotSupportedError("Lock mode is not supported by the MongoDB driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver does not support row-level lock modes.",
       data: { operation: "lock" },
     });
   }
@@ -92,6 +94,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override whereRaw(): this {
     throw new NotSupportedError("whereRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver has no raw SQL surface; whereRaw cannot be used.",
       data: { operation: "whereRaw" },
     });
   }
@@ -99,6 +103,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override andWhereRaw(): this {
     throw new NotSupportedError("andWhereRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver has no raw SQL surface; andWhereRaw cannot be used.",
       data: { operation: "andWhereRaw" },
     });
   }
@@ -106,6 +112,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override orWhereRaw(): this {
     throw new NotSupportedError("orWhereRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver has no raw SQL surface; orWhereRaw cannot be used.",
       data: { operation: "orWhereRaw" },
     });
   }
@@ -113,6 +121,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override selectRaw(): this {
     throw new NotSupportedError("selectRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver has no raw SQL surface; selectRaw cannot be used.",
       data: { operation: "selectRaw" },
     });
   }
@@ -120,6 +130,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override havingRaw(): this {
     throw new NotSupportedError("havingRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver has no raw SQL surface; havingRaw cannot be used.",
       data: { operation: "havingRaw" },
     });
   }
@@ -127,6 +139,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override andHavingRaw(): this {
     throw new NotSupportedError("andHavingRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver has no raw SQL surface; andHavingRaw cannot be used.",
       data: { operation: "andHavingRaw" },
     });
   }
@@ -134,6 +148,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override orHavingRaw(): this {
     throw new NotSupportedError("orHavingRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver has no raw SQL surface; orHavingRaw cannot be used.",
       data: { operation: "orHavingRaw" },
     });
   }
@@ -141,6 +157,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   public override window(): this {
     throw new NotSupportedError("window is not supported by the MongoDB driver", {
       code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver does not support SQL window functions.",
       data: { operation: "window" },
     });
   }
@@ -218,6 +236,8 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
         `Entity "${this.metadata.entity.name}" not found`,
         {
           code: "entity_not_found",
+          title: "Entity Not Found",
+          details: "getOneOrFail() found no document matching the query filter.",
           data: { entity: this.metadata.entity.name },
         },
       );

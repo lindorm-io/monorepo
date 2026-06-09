@@ -77,6 +77,8 @@ export const generateJoinTableDDL = (
         `ManyToMany relation "${relation.key}" on "${metadata.target.name}" has no resolvable inverse joinKeys`,
         {
           code: "schema_mismatch",
+          title: "Schema Mismatch",
+          details: "The ManyToMany relation has no resolvable inverse join keys.",
           data: { entity: metadata.target.name, relation: relation.key },
         },
       );
