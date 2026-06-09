@@ -11,6 +11,9 @@ export const conduitSchemaMiddleware = <T extends ZodRawShape>(
     if (!(schema instanceof ZodObject) && !(schema instanceof ZodArray)) {
       throw new ServerError("Invalid Zod schema provided", {
         code: "invalid_zod_schema",
+        title: "Invalid Zod Schema",
+        details:
+          "The value passed to conduitSchemaMiddleware is not a ZodObject or ZodArray; provide a valid Zod object or array schema for response validation.",
         type: "urn:lindorm:conduit:error:invalid_zod_schema",
       });
     }
@@ -24,6 +27,9 @@ export const conduitSchemaMiddleware = <T extends ZodRawShape>(
     } catch (err: any) {
       throw new BadGatewayError(err.message, {
         code: "response_schema_validation_failed",
+        title: "Response Schema Validation Failed",
+        details:
+          "The upstream response body did not match the expected Zod schema; inspect the validation issues to see which fields are missing or malformed.",
         type: "urn:lindorm:conduit:error:response_schema_validation_failed",
         error: err,
         debug: { issues: err.details },

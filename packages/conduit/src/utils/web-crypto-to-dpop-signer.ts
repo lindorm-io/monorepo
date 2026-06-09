@@ -33,6 +33,8 @@ const deriveJoseAlgorithm = (algorithm: AnyKeyAlgorithm): JwksAlgorithm => {
             `Unsupported ECDSA curve: ${String(algorithm.namedCurve)}`,
             {
               code: "unsupported_ecdsa_curve",
+              title: "Unsupported ECDSA Curve",
+              details: `The ECDSA curve "${String(algorithm.namedCurve)}" cannot be mapped to a JOSE algorithm; use P-256, P-384, or P-521.`,
               type: "urn:lindorm:conduit:error:unsupported_ecdsa_curve",
               data: { curve: algorithm.namedCurve },
             },
@@ -54,6 +56,8 @@ const deriveJoseAlgorithm = (algorithm: AnyKeyAlgorithm): JwksAlgorithm => {
         default:
           throw new ServerError(`Unsupported RSA hash: ${String(hashName)}`, {
             code: "unsupported_rsa_hash",
+            title: "Unsupported RSA Hash",
+            details: `The RSA hash "${String(hashName)}" cannot be mapped to a JOSE algorithm; use SHA-256, SHA-384, or SHA-512.`,
             type: "urn:lindorm:conduit:error:unsupported_rsa_hash",
             data: { hash: hashName },
           });
@@ -62,6 +66,8 @@ const deriveJoseAlgorithm = (algorithm: AnyKeyAlgorithm): JwksAlgorithm => {
     default:
       throw new ServerError(`Unsupported DPoP signing algorithm: ${algorithm.name}`, {
         code: "unsupported_dpop_algorithm",
+        title: "Unsupported DPoP Algorithm",
+        details: `The Web Crypto key algorithm "${algorithm.name}" is not a supported DPoP signing algorithm; use ECDSA, RSASSA-PKCS1-v1_5, or RSA-PSS.`,
         type: "urn:lindorm:conduit:error:unsupported_dpop_algorithm",
         data: { algorithm: algorithm.name },
       });
@@ -88,6 +94,8 @@ const subtleSignParams = (
     default:
       throw new ServerError(`Unsupported DPoP signing algorithm: ${algorithm.name}`, {
         code: "unsupported_dpop_algorithm",
+        title: "Unsupported DPoP Algorithm",
+        details: `The Web Crypto key algorithm "${algorithm.name}" is not a supported DPoP signing algorithm; use ECDSA, RSASSA-PKCS1-v1_5, or RSA-PSS.`,
         type: "urn:lindorm:conduit:error:unsupported_dpop_algorithm",
         data: { algorithm: algorithm.name },
       });

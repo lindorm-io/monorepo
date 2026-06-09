@@ -8,6 +8,9 @@ const newServerFormData = async (): Promise<ServerFormData> => {
   if (typeof window !== "undefined") {
     throw new NotImplementedError("Stream requests are not supported in the browser", {
       code: "browser_stream_unsupported",
+      title: "Browser Stream Unsupported",
+      details:
+        "Streaming multipart uploads rely on the Node-only form-data package and cannot run in a browser environment; send the payload as a body or form instead.",
       type: "urn:lindorm:conduit:error:browser_stream_unsupported",
     });
   }

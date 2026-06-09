@@ -51,6 +51,8 @@ export const createConduitRateLimitMiddleware = (
     if (bucket.tokens < 1) {
       throw new TooManyRequestsError("Rate limit exceeded", {
         code: "rate_limit_exceeded",
+        title: "Rate Limit Exceeded",
+        details: `The client-side rate limit of ${maxRequests} requests per ${windowMs}ms has been exhausted; wait roughly ${Math.ceil((1 - bucket.tokens) / refillRate / 1000)}s before retrying.`,
         type: "urn:lindorm:conduit:error:rate_limit_exceeded",
         data: {
           limit: maxRequests,

@@ -148,6 +148,8 @@ export const conduitClientCredentialsMiddlewareFactory = (
         if (!tokenUri) {
           throw new BadGatewayError("Token endpoint not found in OpenID configuration", {
             code: "token_endpoint_not_found",
+            title: "Token Endpoint Not Found",
+            details: `The OpenID configuration fetched from issuer "${issuer}" did not include a token_endpoint, so client credentials cannot be exchanged; verify the issuer's discovery document or set tokenUri explicitly.`,
             type: "urn:lindorm:conduit:error:token_endpoint_not_found",
             debug: { issuer },
           });
@@ -176,6 +178,8 @@ export const conduitClientCredentialsMiddlewareFactory = (
       } else {
         throw new InternalServerError("Unsupported content type", {
           code: "unsupported_content_type",
+          title: "Unsupported Content Type",
+          details: `The configured token request content type "${contentType as string}" is not supported; use "application/json" or "application/x-www-form-urlencoded".`,
           type: "urn:lindorm:conduit:error:unsupported_content_type",
           debug: { contentType },
         });
@@ -224,6 +228,9 @@ export const conduitClientCredentialsMiddlewareFactory = (
       if (!data.accessToken) {
         throw new BadGatewayError("Token not provided", {
           code: "token_not_provided",
+          title: "Token Not Provided",
+          details:
+            "The token endpoint responded without an access_token, so no bearer token could be cached; check the client credentials and the authorization server's response.",
           type: "urn:lindorm:conduit:error:token_not_provided",
           debug: { response: data },
         });
@@ -232,6 +239,9 @@ export const conduitClientCredentialsMiddlewareFactory = (
       if (!ttl) {
         throw new BadGatewayError("Token expiration not provided", {
           code: "token_expiration_not_provided",
+          title: "Token Expiration Not Provided",
+          details:
+            "The token endpoint returned neither expiresOn nor expiresIn and no defaultExpiration is configured, so the token's lifetime is unknown; set defaultExpiration or fix the authorization server response.",
           type: "urn:lindorm:conduit:error:token_expiration_not_provided",
           debug: { response: data },
         });
