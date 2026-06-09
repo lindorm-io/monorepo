@@ -18,6 +18,9 @@ export const verifyPkce = (
     default:
       throw new PkceError("Invalid PKCE method", {
         code: "invalid_pkce_method",
+        title: "Invalid PKCE Method",
+        details:
+          "The PKCE code challenge method is not supported; only 'S256' and 'plain' are recognised.",
         data: { method },
         debug: { challenge, verifier },
       });
