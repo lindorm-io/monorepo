@@ -16,6 +16,9 @@ export const mapOctAlgorithm = (kryptos: IKryptosOct): ShaAlgorithm => {
   if (!OCT_SIG_ALGORITHMS.includes(kryptos.algorithm as OctSigAlgorithm)) {
     throw new OctError("Unsupported OCT algorithm for signing", {
       code: "unsupported_signing_algorithm",
+      title: "Unsupported Signing Algorithm",
+      details:
+        "The oct key algorithm cannot be mapped to a SHA hash for signing; expected one of HS256, HS384, or HS512.",
       data: { algorithm: kryptos.algorithm },
     });
   }
