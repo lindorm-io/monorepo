@@ -39,6 +39,9 @@ export const getOctEncryptionKey = (options: CreateCekOptions): CreateCekResult 
     default:
       throw new AesError("Unexpected Kryptos", {
         code: "unexpected_kryptos",
+        title: "Unexpected Kryptos",
+        details:
+          "The oct Kryptos algorithm is not a supported dir, AES key-wrap, or PBES2 encryption variant.",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }
@@ -65,6 +68,9 @@ export const getOctDecryptionKey = (options: DecryptCekOptions): DecryptCekResul
     default:
       throw new AesError("Unexpected Kryptos", {
         code: "unexpected_kryptos",
+        title: "Unexpected Kryptos",
+        details:
+          "The oct Kryptos algorithm is not a supported dir, AES key-wrap, or PBES2 decryption variant.",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }

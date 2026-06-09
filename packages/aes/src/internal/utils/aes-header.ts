@@ -72,6 +72,9 @@ export const decodeAesHeader = (headerB64: string): AesHeader => {
     if (!parsed.alg || !parsed.enc || !parsed.v) {
       throw new AesError("Invalid AES header: missing required fields", {
         code: "invalid_header",
+        title: "Invalid Header",
+        details:
+          "The decoded AES header is missing one or more required fields (alg, enc, or v).",
         debug: { parsed },
       });
     }
@@ -83,6 +86,9 @@ export const decodeAesHeader = (headerB64: string): AesHeader => {
     if (error instanceof AesError) throw error;
     throw new AesError("Failed to decode AES header", {
       code: "header_decode_failed",
+      title: "Header Decode Failed",
+      details:
+        "The AES header could not be base64url-decoded and parsed as JSON; see the underlying error for the root cause.",
       error: error as Error,
     });
   }

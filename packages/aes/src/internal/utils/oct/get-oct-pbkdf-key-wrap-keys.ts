@@ -20,6 +20,8 @@ export const getOctPbkdfKeyWrapEncryptionKey = ({
   if (!KryptosKit.isOct(kryptos)) {
     throw new AesError("Invalid Kryptos", {
       code: "invalid_kryptos",
+      title: "Invalid Kryptos",
+      details: "PBES2 key-wrap encryption requires an oct (symmetric) Kryptos key type.",
       debug: { kryptos: kryptos.toJSON() },
     });
   }
@@ -59,12 +61,17 @@ export const getOctPbkdfKeyWrapDecryptionKey = ({
   if (!KryptosKit.isOct(kryptos)) {
     throw new AesError("Invalid Kryptos", {
       code: "invalid_kryptos",
+      title: "Invalid Kryptos",
+      details: "PBES2 key-wrap decryption requires an oct (symmetric) Kryptos key type.",
       debug: { kryptos: kryptos.toJSON() },
     });
   }
   if (!publicEncryptionKey) {
     throw new AesError("Missing publicEncryptionKey", {
       code: "missing_public_encryption_key",
+      title: "Missing Public Encryption Key",
+      details:
+        "PBES2 key-wrap decryption requires the wrapped content encryption key, but it was not provided.",
     });
   }
 

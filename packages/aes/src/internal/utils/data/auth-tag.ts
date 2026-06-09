@@ -31,6 +31,9 @@ export const createAuthTag = ({
     default:
       throw new AesError("Unexpected algorithm", {
         code: "unsupported_encryption",
+        title: "Unsupported Encryption",
+        details:
+          "Auth tag creation is only supported for AES-CBC-HMAC and AES-GCM encryption variants.",
         data: { encryption },
       });
   }
@@ -46,7 +49,12 @@ export const assertAuthTag = ({
   initialisationVector,
 }: SetAuthTagOptions): void => {
   if (!authTag) {
-    throw new AesError("Auth tag is missing", { code: "missing_auth_tag" });
+    throw new AesError("Auth tag is missing", {
+      code: "missing_auth_tag",
+      title: "Missing Auth Tag",
+      details:
+        "Authenticated decryption requires an auth tag to verify ciphertext integrity, but none was provided.",
+    });
   }
 
   switch (encryption) {
@@ -72,6 +80,9 @@ export const assertAuthTag = ({
     default:
       throw new AesError("Unexpected algorithm", {
         code: "unsupported_encryption",
+        title: "Unsupported Encryption",
+        details:
+          "Auth tag verification is only supported for AES-CBC-HMAC and AES-GCM encryption variants.",
         data: { encryption },
       });
   }

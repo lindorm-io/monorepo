@@ -25,6 +25,9 @@ export const getDecryptionKey = (options: DecryptCekOptions): DecryptCekResult =
     default:
       throw new AesError("Unexpected Kryptos", {
         code: "unexpected_kryptos",
+        title: "Unexpected Kryptos",
+        details:
+          "The Kryptos key type is not one of the supported types (EC, oct, OKP, RSA) for decryption key derivation.",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }

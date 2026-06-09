@@ -35,11 +35,18 @@ export const getDiffieHellmanDecryptionKey = ({
   publicEncryptionJwk,
 }: DecryptCekOptions): DecryptCekResult => {
   if (!KryptosKit.isEc(kryptos) && !KryptosKit.isOkp(kryptos)) {
-    throw new AesError("Invalid kryptos type", { code: "invalid_kryptos_type" });
+    throw new AesError("Invalid kryptos type", {
+      code: "invalid_kryptos_type",
+      title: "Invalid Kryptos Type",
+      details: "ECDH-ES decryption requires an EC or OKP Kryptos key type.",
+    });
   }
   if (!publicEncryptionJwk) {
     throw new AesError("Missing publicEncryptionJwk", {
       code: "missing_public_encryption_jwk",
+      title: "Missing Public Encryption JWK",
+      details:
+        "ECDH-ES decryption requires the sender's ephemeral public JWK, but it was not provided.",
     });
   }
 

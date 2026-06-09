@@ -52,6 +52,9 @@ export const getDiffieHellmanKeyWrapDecryptionKey = ({
   if (!publicEncryptionKey) {
     throw new AesError("Missing publicEncryptionKey", {
       code: "missing_public_encryption_key",
+      title: "Missing Public Encryption Key",
+      details:
+        "ECDH key-wrap decryption requires the wrapped content encryption key, but it was not provided.",
     });
   }
 

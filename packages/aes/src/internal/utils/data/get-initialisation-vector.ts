@@ -17,6 +17,9 @@ export const getInitialisationVector = (encryption: KryptosEncryption): Buffer =
     default:
       throw new AesError("Unexpected algorithm", {
         code: "unsupported_encryption",
+        title: "Unsupported Encryption",
+        details:
+          "The encryption algorithm is not a supported AES-CBC-HMAC or AES-GCM variant for generating an initialisation vector.",
         data: { encryption },
       });
   }

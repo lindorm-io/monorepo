@@ -13,6 +13,9 @@ export const validateAesVersion = (v: string): string => {
   if (/^\d+$/.test(v)) {
     throw new AesError("Legacy AES version format is no longer supported", {
       code: "legacy_version_unsupported",
+      title: "Legacy Version Unsupported",
+      details:
+        "The AES version is a legacy integer format that is no longer supported; a 'X.Y' version is required.",
       data: { version: v },
     });
   }
@@ -23,6 +26,8 @@ export const validateAesVersion = (v: string): string => {
   if (!match) {
     throw new AesError("Invalid AES version format", {
       code: "invalid_version_format",
+      title: "Invalid Version Format",
+      details: "The AES version must be in 'X.Y' format where X and Y are integers.",
       data: { version: v, expected: "X.Y" },
     });
   }
@@ -32,6 +37,9 @@ export const validateAesVersion = (v: string): string => {
   if (major !== AES_FORMAT_MAJOR) {
     throw new AesError("Incompatible AES version", {
       code: "incompatible_version",
+      title: "Incompatible Version",
+      details:
+        "The AES version has a major number that does not match the major version supported by this library.",
       data: { version: v, expectedMajor: AES_FORMAT_MAJOR },
     });
   }

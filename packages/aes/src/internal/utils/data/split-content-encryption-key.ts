@@ -24,6 +24,9 @@ const encryptionKeyLength = (encryption: KryptosEncryption): AesKeyLength => {
     default:
       throw new AesError("Unexpected algorithm", {
         code: "unsupported_encryption",
+        title: "Unsupported Encryption",
+        details:
+          "Determining the encryption key length is only supported for AES-CBC-HMAC and AES-GCM variants.",
         data: { encryption },
       });
   }
@@ -47,7 +50,12 @@ export const splitContentEncryptionKey = (
   const hashKey = contentEncryptionKey.subarray(keyLength);
 
   if (hashKey.length) {
-    throw new AesError("Unexpected hash key", { code: "unexpected_hash_key" });
+    throw new AesError("Unexpected hash key", {
+      code: "unexpected_hash_key",
+      title: "Unexpected Hash Key",
+      details:
+        "AES-GCM uses the full content encryption key for encryption and must not leave any leftover hash key octets.",
+    });
   }
 
   return { encryptionKey, hashKey };

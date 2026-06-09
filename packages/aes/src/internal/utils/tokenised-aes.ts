@@ -53,6 +53,8 @@ export const parseTokenisedAesString = (data: string): ParsedAesDecryptionRecord
   if (!data.startsWith("aes:")) {
     throw new AesError("Invalid tokenised AES string: must start with 'aes:'", {
       code: "invalid_tokenised_string",
+      title: "Invalid Tokenised String",
+      details: "A tokenised AES string must begin with the 'aes:' prefix.",
     });
   }
 
@@ -62,6 +64,9 @@ export const parseTokenisedAesString = (data: string): ParsedAesDecryptionRecord
   if (parts.length < 4 || parts.length > 5) {
     throw new AesError("Invalid tokenised AES string: unexpected number of segments", {
       code: "invalid_tokenised_segments",
+      title: "Invalid Tokenised Segments",
+      details:
+        "A tokenised AES string must contain 4 or 5 '$'-separated segments after the 'aes:' prefix.",
       data: { segmentCount: parts.length },
     });
   }
@@ -79,14 +84,24 @@ export const parseTokenisedAesString = (data: string): ParsedAesDecryptionRecord
   if (isDirect && hasCek) {
     throw new AesError(
       "Invalid tokenised AES string: dir/ECDH-ES must not have CEK segment",
-      { code: "invalid_tokenised_segments" },
+      {
+        code: "invalid_tokenised_segments",
+        title: "Invalid Tokenised Segments",
+        details:
+          "Direct (dir) and ECDH-ES algorithms derive the content encryption key and must not include a wrapped key segment.",
+      },
     );
   }
 
   if (!isDirect && !hasCek) {
     throw new AesError(
       "Invalid tokenised AES string: non-dir algorithm must have CEK segment",
-      { code: "invalid_tokenised_segments" },
+      {
+        code: "invalid_tokenised_segments",
+        title: "Invalid Tokenised Segments",
+        details:
+          "Key-wrapping algorithms require a wrapped content encryption key segment, which was missing from the tokenised string.",
+      },
     );
   }
 

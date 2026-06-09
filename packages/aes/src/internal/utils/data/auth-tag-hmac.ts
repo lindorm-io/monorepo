@@ -18,6 +18,9 @@ const shaHash = (encryption: KryptosEncryption): ShaAlgorithm => {
     default:
       throw new AesError("Unexpected algorithm", {
         code: "unsupported_encryption",
+        title: "Unsupported Encryption",
+        details:
+          "HMAC auth tag generation is only supported for AES-CBC-HMAC variants (A128CBC-HS256, A192CBC-HS384, A256CBC-HS512).",
         data: { encryption },
       });
   }
@@ -68,5 +71,8 @@ export const assertHmacAuthTag = ({
 
   throw new AesError("Auth tag verification failed", {
     code: "auth_tag_verification_failed",
+    title: "Auth Tag Verification Failed",
+    details:
+      "The computed HMAC auth tag does not match the provided tag, indicating tampered or corrupted ciphertext.",
   });
 };

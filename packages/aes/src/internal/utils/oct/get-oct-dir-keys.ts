@@ -15,6 +15,8 @@ export const getOctDirEncryptionKey = ({
   if (!KryptosKit.isOct(kryptos)) {
     throw new AesError("Invalid Kryptos", {
       code: "invalid_kryptos",
+      title: "Invalid Kryptos",
+      details: "Direct (dir) encryption requires an oct (symmetric) Kryptos key type.",
       debug: { kryptos: kryptos.toJSON() },
     });
   }
@@ -25,6 +27,9 @@ export const getOctDirEncryptionKey = ({
   if (der.privateKey.length !== keyLength) {
     throw new AesError("Invalid key length", {
       code: "invalid_key_length",
+      title: "Invalid Key Length",
+      details:
+        "The direct symmetric key length does not match the size required by the requested AES encryption algorithm.",
       data: { keyLength, privateKeyLength: der.privateKey.length },
     });
   }
@@ -39,6 +44,8 @@ export const getOctDirDecryptionKey = ({
   if (!KryptosKit.isOct(kryptos)) {
     throw new AesError("Invalid Kryptos", {
       code: "invalid_kryptos",
+      title: "Invalid Kryptos",
+      details: "Direct (dir) decryption requires an oct (symmetric) Kryptos key type.",
       debug: { kryptos: kryptos.toJSON() },
     });
   }
@@ -49,6 +56,9 @@ export const getOctDirDecryptionKey = ({
   if (der.privateKey.length !== keyLength) {
     throw new AesError("Invalid key length", {
       code: "invalid_key_length",
+      title: "Invalid Key Length",
+      details:
+        "The direct symmetric key length does not match the size required by the requested AES decryption algorithm.",
       data: { keyLength, privateKeyLength: der.privateKey.length },
     });
   }

@@ -19,6 +19,9 @@ export const calculateRsaOaepHash = (algorithm: KryptosAlgorithm): ShaAlgorithm 
     default:
       throw new AesError("Unexpected encryption key algorithm", {
         code: "unexpected_key_algorithm",
+        title: "Unexpected Key Algorithm",
+        details:
+          "The key algorithm is not a supported RSA-OAEP variant (RSA-OAEP, RSA-OAEP-256, RSA-OAEP-384, or RSA-OAEP-512).",
         data: { algorithm },
       });
   }

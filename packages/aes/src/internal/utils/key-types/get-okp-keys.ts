@@ -30,6 +30,9 @@ export const getOkpEncryptionKey = (options: CreateCekOptions): CreateCekResult 
     default:
       throw new AesError("Unexpected Kryptos", {
         code: "unexpected_kryptos",
+        title: "Unexpected Kryptos",
+        details:
+          "The OKP Kryptos algorithm is not a supported ECDH-ES encryption variant.",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }
@@ -51,6 +54,9 @@ export const getOkpDecryptionKey = (options: DecryptCekOptions): DecryptCekResul
     default:
       throw new AesError("Unexpected Kryptos", {
         code: "unexpected_kryptos",
+        title: "Unexpected Kryptos",
+        details:
+          "The OKP Kryptos algorithm is not a supported ECDH-ES decryption variant.",
         debug: { kryptos: options.kryptos.toJSON() },
       });
   }
