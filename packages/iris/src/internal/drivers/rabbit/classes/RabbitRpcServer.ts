@@ -42,6 +42,9 @@ export class RabbitRpcServer<
     if (!channel) {
       throw new IrisDriverError("Cannot serve RPC: consume channel is not available", {
         code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The RabbitMQ consume channel is not available, so the RPC server cannot register a handler.",
         data: { driver: "rabbit" },
       });
     }

@@ -29,6 +29,8 @@ export const publishKafkaMessages = async <M extends IMessage>(
   if (!state.producer) {
     throw new IrisPublishError("Kafka producer not available", {
       code: "publish_connection_unavailable",
+      title: "Publish Connection Unavailable",
+      details: "The Kafka producer is not connected, so messages cannot be published.",
       data: { driver: "kafka" },
     });
   }

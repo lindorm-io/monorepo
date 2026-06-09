@@ -36,6 +36,9 @@ export const ensureKafkaTopicFromState = async (
   if (!state.kafka) {
     throw new IrisDriverError("Cannot ensure topic: Kafka client is not connected", {
       code: "connection_unavailable",
+      title: "Connection Unavailable",
+      details:
+        "The Kafka client is not connected, so the topic cannot be created or verified.",
       data: { driver: "kafka", topic },
     });
   }

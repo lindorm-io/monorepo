@@ -23,6 +23,9 @@ export const serializeMessage = (
           `@Transform.to failed for field "${field.key}"`,
           {
             code: "transform_to_failed",
+            title: "Transform To Failed",
+            details:
+              "The @Transform.to function threw while converting the named field during serialization. Review the transform's to() implementation.",
             data: { field: field.key },
             error: error instanceof Error ? error : undefined,
           },
@@ -49,6 +52,9 @@ export const serializeMessage = (
       `Failed to serialize message "${metadata.message.name}"`,
       {
         code: "message_serialize_failed",
+        title: "Message Serialize Failed",
+        details:
+          "The message body could not be serialized to JSON. A field likely holds a value that is not JSON-serializable, such as a circular reference.",
         data: { message: metadata.message.name },
         debug: { error: error instanceof Error ? error.message : String(error) },
       },

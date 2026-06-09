@@ -29,6 +29,9 @@ export const publishRedisMessages = async <M extends IMessage>(
   if (!state.publishConnection) {
     throw new IrisPublishError("Redis connection not available", {
       code: "publish_connection_unavailable",
+      title: "Publish Connection Unavailable",
+      details:
+        "The Redis publish connection is not established, so messages cannot be published.",
       data: { driver: "redis" },
     });
   }
