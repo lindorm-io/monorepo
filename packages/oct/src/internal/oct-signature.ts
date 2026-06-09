@@ -37,5 +37,9 @@ export const verifyOctSignature = ({
 
 export const assertOctSignature = (options: VerifyOctSignatureOptions): void => {
   if (verifyOctSignature(options)) return;
-  throw new OctError("OctSignature does not match", { code: "invalid_signature" });
+  throw new OctError("OctSignature does not match", {
+    code: "invalid_signature",
+    title: "Invalid Signature",
+    details: "The provided HMAC signature does not match the signed data.",
+  });
 };

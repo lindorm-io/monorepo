@@ -23,6 +23,9 @@ export class OctKit implements IKeyKit {
     if (!KryptosKit.isOct(options.kryptos)) {
       throw new OctError("Invalid Kryptos instance", {
         code: "invalid_kryptos_instance",
+        title: "Invalid Kryptos Instance",
+        details:
+          "The provided Kryptos instance is not an oct key and cannot be used with OctKit.",
       });
     }
 
@@ -31,6 +34,8 @@ export class OctKit implements IKeyKit {
         "OctKit only supports signing algorithms (HS256, HS384, HS512)",
         {
           code: "unsupported_algorithm",
+          title: "Unsupported Algorithm",
+          details: "OctKit only supports the HS256, HS384, and HS512 signing algorithms.",
           data: { algorithm: options.kryptos.algorithm },
         },
       );
