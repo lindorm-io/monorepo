@@ -27,6 +27,9 @@ export const pbkdf = (options: Options): Result => {
   if (pbkdfIterations < 1000) {
     throw new AesError("PBKDF2 iteration count must be at least 1000", {
       code: "insufficient_pbkdf2_iterations",
+      title: "Insufficient PBKDF2 Iterations",
+      details:
+        "The PBKDF2 iteration count is below the minimum of 1000 required for safe key derivation.",
       data: { pbkdfIterations },
     });
   }

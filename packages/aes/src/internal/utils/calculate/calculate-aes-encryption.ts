@@ -8,6 +8,8 @@ export const calculateAesEncryption = (
   if (!encryption) {
     throw new AesError("Encryption algorithm is required", {
       code: "encryption_required",
+      title: "Encryption Required",
+      details: "An encryption algorithm must be provided but was missing or empty.",
     });
   }
 
@@ -33,6 +35,9 @@ export const calculateAesEncryption = (
     default:
       throw new AesError("Unsupported encryption algorithm", {
         code: "unsupported_encryption",
+        title: "Unsupported Encryption",
+        details:
+          "The encryption algorithm is not a supported AES content encryption (A128GCM, A192GCM, A256GCM, A128CBC-HS256, A192CBC-HS384, or A256CBC-HS512).",
         data: { encryption },
       });
   }

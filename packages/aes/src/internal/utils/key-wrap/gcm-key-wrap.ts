@@ -48,21 +48,32 @@ export const gcmKeyUnwrap = ({
   if (!publicEncryptionIv) {
     throw new AesError("Invalid public encryption iv", {
       code: "missing_key_wrap_iv",
+      title: "Missing Key Wrap IV",
+      details:
+        "GCM key unwrapping requires a public encryption IV, but none was supplied with the wrapped key.",
     });
   }
   if (!publicEncryptionTag) {
     throw new AesError("Invalid public encryption tag", {
       code: "missing_key_wrap_tag",
+      title: "Missing Key Wrap Tag",
+      details:
+        "GCM key unwrapping requires a public encryption auth tag, but none was supplied with the wrapped key.",
     });
   }
   if (publicEncryptionIv.length !== 12) {
     throw new AesError("Invalid GCM key wrap IV length", {
       code: "invalid_key_wrap_iv_length",
+      title: "Invalid Key Wrap IV Length",
+      details: "GCM key unwrapping requires a 12-byte (96-bit) public encryption IV.",
     });
   }
   if (publicEncryptionTag.length !== 16) {
     throw new AesError("Invalid GCM key wrap auth tag length", {
       code: "invalid_key_wrap_tag_length",
+      title: "Invalid Key Wrap Tag Length",
+      details:
+        "GCM key unwrapping requires a 16-byte (128-bit) public encryption auth tag.",
     });
   }
 

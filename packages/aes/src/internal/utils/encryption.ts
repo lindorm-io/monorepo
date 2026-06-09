@@ -95,6 +95,8 @@ export const decryptAes = <T extends AesContent = string>(
   if (isGcm && authTag && authTag.length !== 16) {
     throw new AesError("Invalid GCM auth tag length", {
       code: "invalid_auth_tag_length",
+      title: "Invalid Auth Tag Length",
+      details: "GCM decryption requires a 16-byte (128-bit) authentication tag.",
     });
   }
 
