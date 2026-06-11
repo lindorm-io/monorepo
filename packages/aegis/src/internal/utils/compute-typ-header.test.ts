@@ -30,6 +30,10 @@ describe("computeTypHeader", () => {
     test("maps logout_token to logout+jwt", () => {
       expect(computeTypHeader("logout_token", "jwt")).toBe("logout+jwt");
     });
+
+    test("maps erasure_token to erasure+jwt", () => {
+      expect(computeTypHeader("erasure_token", "jwt")).toBe("erasure+jwt");
+    });
   });
 
   describe("custom token types", () => {
@@ -88,6 +92,7 @@ describe("decodeTokenTypeFromTyp", () => {
     expect(decodeTokenTypeFromTyp("rt+jws", "jws")).toBe("refresh_token");
     expect(decodeTokenTypeFromTyp("secevent+jwt", "jwt")).toBe("security_event");
     expect(decodeTokenTypeFromTyp("dpop+jwt", "jwt")).toBe("dpop");
+    expect(decodeTokenTypeFromTyp("erasure+jwt", "jwt")).toBe("erasure_token");
   });
 
   test("returns the raw short name for unknown types", () => {

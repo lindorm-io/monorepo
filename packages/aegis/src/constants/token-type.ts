@@ -3,6 +3,7 @@ export const KNOWN_TOKEN_TYPES = [
   "refresh_token",
   "id_token",
   "logout_token",
+  "erasure_token",
   "security_event",
   "dpop",
 ] as const;
@@ -16,6 +17,7 @@ export const TOKEN_TYPE_TO_SHORT_NAME: Record<KnownTokenType, string> = {
   refresh_token: "rt",
   id_token: "JWT",
   logout_token: "logout",
+  erasure_token: "erasure",
   security_event: "secevent",
   dpop: "dpop",
 };
