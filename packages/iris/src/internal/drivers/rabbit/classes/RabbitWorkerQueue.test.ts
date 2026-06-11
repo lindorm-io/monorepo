@@ -112,12 +112,16 @@ describe("RabbitWorkerQueue", () => {
         durable: true,
         arguments: {
           "x-dead-letter-exchange": "test-exchange.dlx",
+          "x-max-priority": 10,
         },
       });
+      // The worker queue name groups competing consumers by the queue
+      // identifier, but the binding routing key is the message's resolved topic
+      // so it matches the routing key the publish side uses.
       expect(channel.bindQueue).toHaveBeenCalledWith(
         "test-exchange.wq.my-queue",
         "test-exchange",
-        "my-queue",
+        "TckRabbitWqBasic",
       );
     });
 

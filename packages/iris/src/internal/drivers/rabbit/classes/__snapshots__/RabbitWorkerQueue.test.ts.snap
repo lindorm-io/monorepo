@@ -9,9 +9,10 @@ exports[`RabbitWorkerQueue > consume > should register consumer in state.consume
   "queueOptions": {
     "arguments": {
       "x-dead-letter-exchange": "test-exchange.dlx",
+      "x-max-priority": 10,
     },
     "durable": true,
   },
-  "routingKey": "my-queue",
+  "routingKey": "TckRabbitWqBasic",
 }
 `;

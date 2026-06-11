@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`resolveConsumeTopic > should return the bare message name when namespace is null 1`] = `"OrderCreated"`;
+
+exports[`resolveConsumeTopic > should return the namespaced message name when namespace is set 1`] = `"ns.OrderCreated"`;
+
+exports[`resolveConsumeTopic > should warn and fall back to the static topic for a dynamic @Topic callback 1`] = `"ns.OrderCreated"`;

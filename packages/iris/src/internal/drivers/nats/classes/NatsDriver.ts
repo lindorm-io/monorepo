@@ -458,6 +458,7 @@ export class NatsDriver implements IIrisDriver {
           logger: this.logger,
           ensuredConsumers: this.state.ensuredConsumers,
           deliverPolicy: reg.deliverPolicy,
+          maxDeliver: reg.maxDeliver,
         });
         this.state.consumerLoops.push(loop);
 

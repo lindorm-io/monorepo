@@ -1,6 +1,7 @@
 export * from "./resolve-subject.js";
 export * from "./resolve-stream-name.js";
 export * from "./resolve-consumer-name.js";
+export * from "./resolve-max-deliver.js";
 export * from "./serialize-nats-message.js";
 export * from "./parse-nats-message.js";
 export * from "./ensure-nats-stream.js";

@@ -8,10 +8,12 @@ import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishRabbitMessages } from "../utils/publish-messages.js";
 import { wrapRabbitConsumer } from "../utils/wrap-rabbit-consumer.js";
 import { resolveQueueName } from "../utils/resolve-queue-name.js";
 import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
+import { RABBIT_MAX_PRIORITY } from "../utils/rabbit-constants.js";
 
 export type RabbitWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: RabbitSharedState;
@@ -82,7 +84,8 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     }
 
     let queueName: string;
-    const routingKey = sanitizeRoutingKey(queue);
+    const listenTopic = resolveConsumeTopic(this.metadata, this.logger);
+    const routingKey = sanitizeRoutingKey(listenTopic);
 
     if (this.metadata.broadcast) {
       const result = await channel.assertQueue("", {
@@ -104,6 +107,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
           durable: true,
           arguments: {
             "x-dead-letter-exchange": this.state.dlxExchange,
+            "x-max-priority": RABBIT_MAX_PRIORITY,
           },
         });
         await channel.bindQueue(queueName, this.state.exchange, routingKey);
@@ -141,6 +145,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
             durable: true,
             arguments: {
               "x-dead-letter-exchange": this.state.dlxExchange,
+              "x-max-priority": RABBIT_MAX_PRIORITY,
             },
           },
     });

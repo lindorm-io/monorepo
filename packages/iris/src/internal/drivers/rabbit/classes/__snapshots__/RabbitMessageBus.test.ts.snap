@@ -7,6 +7,9 @@ exports[`RabbitMessageBus > subscribe > should register consumer in state.consum
   "onMessage": [MockFunction],
   "queue": "test-exchange.TckRabbitBusBasic.q1",
   "queueOptions": {
+    "arguments": {
+      "x-max-priority": 10,
+    },
     "durable": true,
   },
   "routingKey": "TckRabbitBusBasic",

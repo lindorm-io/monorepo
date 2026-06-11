@@ -11,6 +11,7 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { KafkaConsumer, KafkaSharedState } from "../types/kafka-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
 import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 import { getOrCreatePooledConsumer } from "../utils/create-kafka-consumer.js";
@@ -95,10 +96,11 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       });
     }
 
-    const kafkaTopic = resolveTopicName(this.state.prefix, queue);
+    const listenTopic = resolveConsumeTopic(this.metadata, this.logger);
+    const kafkaTopic = resolveTopicName(this.state.prefix, listenTopic);
     const groupId = resolveGroupId({
       prefix: this.state.prefix,
-      topic: queue,
+      topic: listenTopic,
       queue,
       type: "worker",
       generation: this.state.resetGeneration,

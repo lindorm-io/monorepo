@@ -130,7 +130,7 @@ describe("RabbitMessageBus", () => {
 
       expect(channel.assertQueue).toHaveBeenCalledWith(
         "test-exchange.TckRabbitBusBasic.q1",
-        { durable: true },
+        { durable: true, arguments: { "x-max-priority": 10 } },
       );
       expect(channel.bindQueue).toHaveBeenCalledWith(
         "test-exchange.TckRabbitBusBasic.q1",

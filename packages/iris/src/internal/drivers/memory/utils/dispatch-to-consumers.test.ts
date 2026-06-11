@@ -40,6 +40,7 @@ describe("dispatchToConsumers", () => {
     store.consumers.push(
       {
         topic: "t1",
+        queue: "t1",
         callback: async () => {
           calls.push("a");
         },
@@ -47,6 +48,7 @@ describe("dispatchToConsumers", () => {
       },
       {
         topic: "t1",
+        queue: "t1",
         callback: async () => {
           calls.push("b");
         },
@@ -66,6 +68,7 @@ describe("dispatchToConsumers", () => {
     store.consumers.push(
       {
         topic: "t1",
+        queue: "t1",
         callback: async () => {
           calls.push("a");
         },
@@ -73,6 +76,7 @@ describe("dispatchToConsumers", () => {
       },
       {
         topic: "t1",
+        queue: "t1",
         callback: async () => {
           calls.push("b");
         },
@@ -80,6 +84,7 @@ describe("dispatchToConsumers", () => {
       },
       {
         topic: "t1",
+        queue: "t1",
         callback: async () => {
           calls.push("c");
         },
@@ -100,6 +105,7 @@ describe("dispatchToConsumers", () => {
     store.consumers.push(
       {
         topic: "t1",
+        queue: "t1",
         callback: async () => {
           calls.push("a");
         },
@@ -107,6 +113,7 @@ describe("dispatchToConsumers", () => {
       },
       {
         topic: "t1",
+        queue: "t1",
         callback: async () => {
           calls.push("b");
         },
@@ -125,6 +132,7 @@ describe("dispatchToConsumers", () => {
     store.consumers.push(
       {
         topic: "t1",
+        queue: "t1",
         callback: async () => {
           calls.push("a");
         },
@@ -132,6 +140,7 @@ describe("dispatchToConsumers", () => {
       },
       {
         topic: "t2",
+        queue: "t2",
         callback: async () => {
           calls.push("b");
         },
@@ -142,5 +151,34 @@ describe("dispatchToConsumers", () => {
     await dispatchToConsumers(store, makeEnvelope("t1"));
 
     expect(calls).toMatchSnapshot();
+  });
+
+  it("should deliver independently to each distinct queue group on the same topic", async () => {
+    const calls: Array<string> = [];
+
+    // Two distinct queue groups bound to the same resolved topic: each group is
+    // an independent competing-consumer set, so both must receive the message.
+    store.consumers.push(
+      {
+        topic: "t1",
+        queue: "group-x",
+        callback: async () => {
+          calls.push("x");
+        },
+        consumerTag: "x",
+      },
+      {
+        topic: "t1",
+        queue: "group-y",
+        callback: async () => {
+          calls.push("y");
+        },
+        consumerTag: "y",
+      },
+    );
+
+    await dispatchToConsumers(store, makeEnvelope("t1"));
+
+    expect(calls.sort()).toEqual(["x", "y"]);
   });
 });

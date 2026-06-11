@@ -21,6 +21,7 @@ export const createNatsConsumer = async (
     logger,
     ensuredConsumers,
     deliverPolicy = "new",
+    maxDeliver,
   } = options;
 
   const consumerTag = randomUUID();
@@ -36,6 +37,11 @@ export const createNatsConsumer = async (
         filter_subject: subject,
         max_ack_pending: prefetch,
         inactive_threshold: 300_000_000_000, // 5 minutes in nanoseconds
+        // Align server-side redelivery with the Iris retry contract. Iris itself
+        // dead-letters / terms on the final allowed delivery, so max_deliver is a
+        // backstop guaranteeing the server never redelivers beyond the contract
+        // even if a consumer crashes before ack/nak/term. Omitted => unlimited.
+        ...(maxDeliver !== undefined ? { max_deliver: maxDeliver } : {}),
       });
       ensuredConsumers.add(consumerName);
     } catch (err: any) {

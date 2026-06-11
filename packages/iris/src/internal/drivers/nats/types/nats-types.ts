@@ -12,6 +12,17 @@ export type CreateNatsConsumerOptions = {
   logger: ILogger;
   ensuredConsumers: Set<string>;
   deliverPolicy?: "all" | "new";
+  /**
+   * JetStream max_deliver — the maximum number of times the server will deliver
+   * a message before giving up. Aligned with the Iris retry contract:
+   *   - retry message:  maxRetries + 1 (initial delivery + maxRetries retries)
+   *   - non-retry:      1 (no server redelivery; Iris/DeadLetter is the single
+   *                        source of truth)
+   * Acts as a backstop so a crashed/slow consumer (one that never ack/nak/terms)
+   * can never receive more ack-wait redeliveries than the contract allows.
+   * Omitted (undefined) => JetStream default (unlimited) is left untouched.
+   */
+  maxDeliver?: number;
 };
 
 export type WrapNatsConsumerOptions = {
@@ -191,6 +202,7 @@ export type NatsConsumerRegistration = {
   subject: string;
   callback: (msg: NatsJsMsg) => Promise<void>;
   deliverPolicy: "all" | "new";
+  maxDeliver?: number;
 };
 
 // -- Shared state -------------------------------------------------------------

@@ -126,13 +126,16 @@ describe("NatsWorkerQueue", () => {
 
       // Creates 2 consumers: main (competing consumer) + broadcast
       expect(mockCreateNatsConsumer).toHaveBeenCalledTimes(2);
+      // The listen subject is derived from the message metadata (matching the
+      // publish-side resolved topic); the durable consumer name groups competing
+      // consumers by the queue identifier.
       const mainOpts = mockCreateNatsConsumer.mock.calls[0][0];
-      expect(mainOpts.subject).toBe("iris.my-queue");
+      expect(mainOpts.subject).toBe("iris.TckNatsWqBasic");
       expect(mainOpts.consumerName).toBe("iris_worker_my-queue");
       expect(mainOpts.deliverPolicy).toBe("all");
 
       const broadcastOpts = mockCreateNatsConsumer.mock.calls[1][0];
-      expect(broadcastOpts.subject).toBe("iris.my-queue.broadcast");
+      expect(broadcastOpts.subject).toBe("iris.TckNatsWqBasic.broadcast");
       expect(broadcastOpts.consumerName).toContain("iris_worker_my-queue_bc_");
       expect(broadcastOpts.deliverPolicy).toBe("new");
     });

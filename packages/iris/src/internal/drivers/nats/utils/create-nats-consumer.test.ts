@@ -181,6 +181,57 @@ describe("createNatsConsumer", () => {
     await loop.loopPromise;
   });
 
+  it("should set max_deliver when provided", async () => {
+    const { messages } = createMockMessages();
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
+    const jsm = { consumers: { add: vi.fn().mockResolvedValue({}) } };
+
+    const loop = await createNatsConsumer({
+      js: js as any,
+      jsm: jsm as any,
+      streamName: "IRIS_TEST",
+      consumerName: "test-consumer",
+      subject: "test.events",
+      prefetch: 10,
+      onMessage: vi.fn(),
+      logger: createMockLogger() as any,
+      ensuredConsumers: new Set(),
+      maxDeliver: 4,
+    });
+
+    expect(jsm.consumers.add).toHaveBeenCalledWith(
+      "IRIS_TEST",
+      expect.objectContaining({ max_deliver: 4 }),
+    );
+
+    await loop.loopPromise;
+  });
+
+  it("should omit max_deliver when not provided", async () => {
+    const { messages } = createMockMessages();
+    const mockConsumer = { consume: vi.fn().mockResolvedValue(messages) };
+    const js = { consumers: { get: vi.fn().mockResolvedValue(mockConsumer) } };
+    const jsm = { consumers: { add: vi.fn().mockResolvedValue({}) } };
+
+    const loop = await createNatsConsumer({
+      js: js as any,
+      jsm: jsm as any,
+      streamName: "IRIS_TEST",
+      consumerName: "test-consumer",
+      subject: "test.events",
+      prefetch: 10,
+      onMessage: vi.fn(),
+      logger: createMockLogger() as any,
+      ensuredConsumers: new Set(),
+    });
+
+    const config = jsm.consumers.add.mock.calls[0][1];
+    expect(config).not.toHaveProperty("max_deliver");
+
+    await loop.loopPromise;
+  });
+
   it("should call onMessage for each consumed message", async () => {
     const mockMsg = {
       data: new Uint8Array([1, 2, 3]),

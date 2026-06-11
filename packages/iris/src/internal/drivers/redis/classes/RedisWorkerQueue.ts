@@ -11,6 +11,7 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { RedisSharedState } from "../types/redis-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishRedisMessages } from "../utils/publish-redis-messages.js";
 import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
 import { createConsumerLoop } from "../utils/create-consumer-loop.js";
@@ -93,10 +94,11 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       });
     }
 
-    const streamKey = resolveStreamKey(this.state.prefix, queue);
+    const listenTopic = resolveConsumeTopic(this.metadata, this.logger);
+    const streamKey = resolveStreamKey(this.state.prefix, listenTopic);
     const groupName = resolveGroupName({
       prefix: this.state.prefix,
-      topic: queue,
+      topic: listenTopic,
       queue,
       type: "worker",
     });
