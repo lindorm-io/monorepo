@@ -2,6 +2,8 @@
 // https://www.rfc-editor.org/rfc/rfc8693
 // https://www.rfc-editor.org/rfc/rfc6749
 
+import type { AuthorizationDetail } from "./open-id-authorization-detail.js";
+
 type LindormResponse = {
   /**
    * The unix date in seconds for when the access token expires.
@@ -16,6 +18,18 @@ export type OpenIdTokenResponse = LindormResponse & {
    * The access token issued by the authorization server.
    */
   accessToken?: string;
+
+  /**
+   * RFC 9396 §7 — Rich Authorization Requests. The authorization
+   * details granted to the access token, as a JSON array of
+   * objects. Returned when the AS grants authorization details
+   * to the issued access token; the values reflect what was
+   * actually granted, which MAY differ from what was requested.
+   * Type-specific fields are carried verbatim.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9396
+   */
+  authorizationDetails?: Array<AuthorizationDetail>;
 
   /**
    * The lifetime in seconds of the access token. For example,
