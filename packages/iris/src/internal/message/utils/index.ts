@@ -8,6 +8,7 @@ export * from "./parse-field.js";
 export * from "./prepare-inbound.js";
 export * from "./prepare-outbound.js";
 export * from "./run-hooks.js";
+export * from "./resolve-consume-topic.js";
 export * from "./resolve-default-topic.js";
 export * from "./resolve-delay.js";
 export * from "./resolve-expiry.js";

@@ -113,14 +113,17 @@ describe("KafkaWorkerQueue", () => {
 
       await queue.consume("my-queue", async () => {});
 
-      // Creates 2 pooled consumers: main + broadcast
+      // Creates 2 pooled consumers: main + broadcast.
+      // The listen topic is derived from the message metadata (so it matches the
+      // publish-side resolved topic), while the consumer group derives from the
+      // queue identifier.
       expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(2);
       const mainOpts = mockGetOrCreatePooledConsumer.mock.calls[0][0];
-      expect(mainOpts.topic).toBe("iris.my-queue");
+      expect(mainOpts.topic).toBe("iris.TckKafkaWqBasic");
       expect(mainOpts.groupId).toBe("iris.wq.my-queue");
 
       const broadcastOpts = mockGetOrCreatePooledConsumer.mock.calls[1][0];
-      expect(broadcastOpts.topic).toBe("iris.my-queue.broadcast");
+      expect(broadcastOpts.topic).toBe("iris.TckKafkaWqBasic.broadcast");
     });
 
     it("should create pooled consumer with options object", async () => {
@@ -163,10 +166,10 @@ describe("KafkaWorkerQueue", () => {
       expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(2);
       const mainOpts = mockReleasePooledConsumer.mock.calls[0][0];
       expect(mainOpts.groupId).toBe("iris.wq.my-queue");
-      expect(mainOpts.topic).toBe("iris.my-queue");
+      expect(mainOpts.topic).toBe("iris.TckKafkaWqBasic");
 
       const broadcastOpts = mockReleasePooledConsumer.mock.calls[1][0];
-      expect(broadcastOpts.topic).toBe("iris.my-queue.broadcast");
+      expect(broadcastOpts.topic).toBe("iris.TckKafkaWqBasic.broadcast");
     });
 
     it("should be a no-op for unknown queue", async () => {

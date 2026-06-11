@@ -12,6 +12,7 @@ import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
 import { resolveSubject } from "../utils/resolve-subject.js";
 import { resolveConsumerName } from "../utils/resolve-consumer-name.js";
+import { resolveMaxDeliver } from "../utils/resolve-max-deliver.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
 
 export type NatsMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
@@ -105,6 +106,8 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
       { deadLetterManager: this.deadLetterManager },
     );
 
+    const maxDeliver = resolveMaxDeliver(this.metadata);
+
     const loop = await createNatsConsumer({
       js: this.state.js,
       jsm: this.state.jsm,
@@ -116,6 +119,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
       logger: this.logger,
       ensuredConsumers: this.state.ensuredConsumers,
       deliverPolicy: "new",
+      maxDeliver,
     });
     this.state.consumerLoops.push(loop);
 
@@ -126,6 +130,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
       subject,
       callback: wrappedCallback,
       deliverPolicy: "new",
+      maxDeliver,
     });
 
     const tagKey = `${options.topic}:${options.queue ?? ""}`;

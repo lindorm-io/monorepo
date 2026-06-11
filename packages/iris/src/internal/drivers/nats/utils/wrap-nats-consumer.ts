@@ -71,9 +71,21 @@ export const wrapNatsConsumer = <M extends IMessage>(
   return async (msg: NatsJsMsg): Promise<void> => {
     const envelope = parseNatsMessage(msg.data);
 
-    // Use NATS native delivery count for attempt tracking.
-    // NATS deliveryCount starts at 1 on first delivery (not 0), so subtract 1
-    // to align with Iris's zero-based attempt counter.
+    // Attempt-counting model (NATS): trust the server `deliveryCount`.
+    //
+    // Unlike Kafka/Rabbit/Redis (which re-publish an envelope carrying an
+    // incremented in-header `attempt`), NATS retries via `msg.nak(delay)` which
+    // makes the SERVER redeliver the same JetStream message. The serialized
+    // in-header `attempt` is therefore never re-incremented across retries, so
+    // `deliveryCount` is the authoritative attempt source on this driver.
+    //
+    // deliveryCount starts at 1 on first delivery, so subtract 1 for Iris's
+    // zero-based counter: delivery 1 -> attempt 0, delivery 2 -> attempt 1, ...
+    // This yields the same [0,1,2,3] sequence the retry TCK asserts. The
+    // consumer's `max_deliver` is set to maxRetries + 1 (see resolveMaxDeliver),
+    // so the server stops redelivering exactly when Iris would dead-letter —
+    // Iris dead-letters / terms on the final allowed delivery (attempt ==
+    // maxRetries), and max_deliver is the backstop if a consumer crashes first.
     const nativeAttempt = Math.max(0, (msg.info?.deliveryCount ?? 1) - 1);
     envelope.attempt = nativeAttempt;
 

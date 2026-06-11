@@ -11,11 +11,13 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { NatsSharedState } from "../types/nats-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishNatsMessages } from "../utils/publish-nats-messages.js";
 import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
 import { resolveSubject } from "../utils/resolve-subject.js";
 import { resolveConsumerName } from "../utils/resolve-consumer-name.js";
+import { resolveMaxDeliver } from "../utils/resolve-max-deliver.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
 
 export type NatsWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
@@ -94,10 +96,11 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
       });
     }
 
-    const subject = resolveSubject(this.state.prefix, queue);
+    const listenTopic = resolveConsumeTopic(this.metadata, this.logger);
+    const subject = resolveSubject(this.state.prefix, listenTopic);
     const consumerName = resolveConsumerName({
       prefix: this.state.prefix,
-      topic: queue,
+      topic: listenTopic,
       queue,
       type: "worker",
     });
@@ -115,6 +118,8 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
       { deadLetterManager: this.deadLetterManager },
     );
 
+    const maxDeliver = resolveMaxDeliver(this.metadata);
+
     // Main consumer: shared durable consumer for competing-consumer pattern
     const mainLoop = await createNatsConsumer({
       js: this.state.js,
@@ -127,6 +132,7 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
       logger: this.logger,
       ensuredConsumers: this.state.ensuredConsumers,
       deliverPolicy: "all",
+      maxDeliver,
     });
     this.state.consumerLoops.push(mainLoop);
     this.state.consumerRegistrations.push({
@@ -136,6 +142,7 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
       subject,
       callback: wrappedCallback,
       deliverPolicy: "all",
+      maxDeliver,
     });
 
     // Broadcast consumer: unique ephemeral consumer on the broadcast subject
@@ -157,6 +164,7 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
       logger: this.logger,
       ensuredConsumers: this.state.ensuredConsumers,
       deliverPolicy: "new",
+      maxDeliver,
     });
     this.state.consumerLoops.push(broadcastLoop);
     this.state.consumerRegistrations.push({
@@ -166,6 +174,7 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
       subject: broadcastSubject,
       callback: wrappedCallback,
       deliverPolicy: "new",
+      maxDeliver,
     });
 
     const existing = this.ownedConsumers.get(queue) ?? [];

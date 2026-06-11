@@ -112,6 +112,7 @@ describe("MemoryPublisher", () => {
       const received: Array<any> = [];
       store.consumers.push({
         topic: "TckPubBasic",
+        queue: "TckPubBasic",
         callback: async (envelope) => {
           received.push(envelope);
         },
@@ -262,6 +263,7 @@ describe("MemoryPublisher", () => {
 
       store.consumers.push({
         topic: "TckPubBasic",
+        queue: "TckPubBasic",
         callback: async (envelope) => {
           consumerReceived.push(envelope);
         },

@@ -33,6 +33,7 @@ export class RabbitRpcClient<
   private replyConsumerTag: string | null = null;
   private returnListenerAttached = false;
   private replyChannel: import("amqplib").ConfirmChannel | null = null;
+  private replyConsumerPromise: Promise<void> | null = null;
   private readonly onReturn = (returned: any): void => {
     const cid = returned.properties?.correlationId as string | undefined;
     if (!cid) return;
@@ -129,6 +130,7 @@ export class RabbitRpcClient<
       }
     }
     this.replyConsumerTag = null;
+    this.replyConsumerPromise = null;
 
     this.removeReturnListener();
 
@@ -142,9 +144,28 @@ export class RabbitRpcClient<
       this.replyConsumerTag = null;
       this.returnListenerAttached = false;
       this.replyChannel = null;
+      this.replyConsumerPromise = null;
     }
 
     if (this.replyConsumerTag) return;
+
+    // Concurrency guard: RabbitMQ allows only ONE consumer per channel on the
+    // `amq.rabbitmq.reply-to` pseudo-queue. Multiple in-flight request() calls
+    // must therefore share a single setup — otherwise the second consume errors
+    // the channel and nacks concurrent publishes ("Failed to publish RPC request").
+    if (!this.replyConsumerPromise) {
+      this.replyConsumerPromise = this.setupReplyConsumer().catch((error) => {
+        // Allow a later request to retry the setup after a transient failure.
+        this.replyConsumerPromise = null;
+        throw error;
+      });
+    }
+
+    return this.replyConsumerPromise;
+  }
+
+  private async setupReplyConsumer(): Promise<void> {
+    const channel = this.state.publishChannel;
 
     if (!channel) {
       throw new IrisDriverError(

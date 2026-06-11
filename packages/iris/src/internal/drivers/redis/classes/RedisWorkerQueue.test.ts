@@ -113,14 +113,17 @@ describe("RedisWorkerQueue", () => {
 
       await queue.consume("my-queue", async () => {});
 
-      // Creates 2 loops: main (competing consumer) + broadcast
+      // Creates 2 loops: main (competing consumer) + broadcast.
+      // The listen stream key is derived from the message metadata (matching the
+      // publish-side resolved topic); the consumer group derives from the queue
+      // identifier.
       expect(mockCreateConsumerLoop).toHaveBeenCalledTimes(2);
       const mainOpts = mockCreateConsumerLoop.mock.calls[0][0];
-      expect(mainOpts.streamKey).toBe("iris:my-queue");
+      expect(mainOpts.streamKey).toBe("iris:TckRedisWqBasic");
       expect(mainOpts.groupName).toBe("iris.wq.my-queue");
 
       const broadcastOpts = mockCreateConsumerLoop.mock.calls[1][0];
-      expect(broadcastOpts.streamKey).toBe("iris:my-queue:broadcast");
+      expect(broadcastOpts.streamKey).toBe("iris:TckRedisWqBasic:broadcast");
       expect(broadcastOpts.groupName).toContain("iris.wq.my-queue.bc.");
     });
 

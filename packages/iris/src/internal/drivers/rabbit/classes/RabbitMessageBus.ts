@@ -8,6 +8,7 @@ import { publishRabbitMessages } from "../utils/publish-messages.js";
 import { wrapRabbitConsumer } from "../utils/wrap-rabbit-consumer.js";
 import { resolveQueueName } from "../utils/resolve-queue-name.js";
 import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
+import { RABBIT_MAX_PRIORITY } from "../utils/rabbit-constants.js";
 
 export type RabbitMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: RabbitSharedState;
@@ -75,7 +76,12 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
       })!;
 
       if (!this.state.assertedQueues.has(queueName)) {
-        await channel.assertQueue(queueName, { durable: true });
+        await channel.assertQueue(queueName, {
+          durable: true,
+          arguments: {
+            "x-max-priority": RABBIT_MAX_PRIORITY,
+          },
+        });
         await channel.bindQueue(queueName, this.state.exchange, routingKey);
         this.state.assertedQueues.add(queueName);
       }
@@ -112,7 +118,12 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
       routingKey,
       exchange: this.state.exchange,
       queueOptions: options.queue
-        ? { durable: true }
+        ? {
+            durable: true,
+            arguments: {
+              "x-max-priority": RABBIT_MAX_PRIORITY,
+            },
+          }
         : { exclusive: true, autoDelete: true },
     });
   }

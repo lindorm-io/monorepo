@@ -68,6 +68,7 @@ describe("publishMessages", () => {
     const dispatched: Array<string> = [];
     store.consumers.push({
       topic: "TestMessage",
+      queue: "TestMessage",
       callback: async () => {
         dispatched.push("consumed");
       },
@@ -88,6 +89,7 @@ describe("publishMessages", () => {
     const dispatched: Array<string> = [];
     store.consumers.push({
       topic: "TestMessage",
+      queue: "TestMessage",
       callback: async () => {
         dispatched.push("consumed");
       },
@@ -108,6 +110,7 @@ describe("publishMessages", () => {
     const dispatched: Array<string> = [];
     store.consumers.push({
       topic: "TestMessage",
+      queue: "TestMessage",
       callback: async () => {
         dispatched.push("consumed");
       },
@@ -129,6 +132,7 @@ describe("publishMessages", () => {
     const dispatched: Array<string> = [];
     store.consumers.push({
       topic: "TestMessage",
+      queue: "TestMessage",
       callback: async () => {
         dispatched.push("consumed");
       },
@@ -152,6 +156,7 @@ describe("publishMessages", () => {
 
     store.consumers.push({
       topic: "TestMessage",
+      queue: "TestMessage",
       callback: async () => {},
       consumerTag: "c1",
     });
@@ -173,6 +178,7 @@ describe("publishMessages", () => {
 
     store.consumers.push({
       topic: "TestMessage",
+      queue: "TestMessage",
       callback: async () => {},
       consumerTag: "c1",
     });
@@ -191,6 +197,7 @@ describe("publishMessages", () => {
 
     store.consumers.push({
       topic: "TestMessage",
+      queue: "TestMessage",
       callback: async () => {},
       consumerTag: "c1",
     });
@@ -212,6 +219,7 @@ describe("publishMessages", () => {
 
     store.consumers.push({
       topic: "TestMessage",
+      queue: "TestMessage",
       callback: async () => {},
       consumerTag: "c1",
     });
@@ -225,6 +233,7 @@ describe("publishMessages", () => {
     const dispatched: Array<string> = [];
     store.consumers.push({
       topic: "TestMessage",
+      queue: "TestMessage",
       callback: async () => {
         dispatched.push("consumed");
       },
