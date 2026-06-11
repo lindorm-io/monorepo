@@ -179,6 +179,30 @@ describe("deserialise", () => {
     });
   });
 
+  describe("binary", () => {
+    test("should return Buffer as-is", () => {
+      const buffer = Buffer.from([1, 2, 3]);
+      const result = deserialise(buffer, "binary");
+      expect(Buffer.isBuffer(result)).toBe(true);
+      expect(result).toBe(buffer);
+    });
+
+    test("should coerce a Uint8Array to a Buffer", () => {
+      const bytes = Uint8Array.from([4, 5, 6]);
+      const result = deserialise(bytes, "binary");
+      expect(Buffer.isBuffer(result)).toBe(true);
+      expect([...result]).toEqual([4, 5, 6]);
+    });
+
+    test("should return null for null", () => {
+      expect(deserialise(null, "binary")).toBeNull();
+    });
+
+    test("should return null for undefined", () => {
+      expect(deserialise(undefined, "binary")).toBeNull();
+    });
+  });
+
   describe("array", () => {
     test("should return array as-is", () => {
       const arr = [1, 2, 3];

@@ -283,7 +283,8 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   public async executeExists(criteria: Predicate<E>): Promise<boolean> {
     const { text, params } = compileExists(criteria, this.metadata, this.namespace);
     const row = this.client.get(text, params);
-    return (row as any)?.exists === 1;
+    // safeIntegers mode returns the flag as BigInt; Number() normalises both.
+    return Number((row as any)?.exists) === 1;
   }
 
   public async executeIncrement(
