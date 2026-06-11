@@ -14,6 +14,7 @@ import {
   BeforeSave,
   BeforeUpdate,
   Cascade,
+  Check,
   CreateDateField,
   Default,
   DeleteDateField,
@@ -35,6 +36,7 @@ import {
   ManyToMany,
   ManyToOne,
   Nullable,
+  Precision,
   OneToMany,
   OneToOne,
   OnCreate,
@@ -985,6 +987,98 @@ export const createTckEntities = (hookCallback: Mock) => {
     tags!: string[];
   }
 
+  // ─── Divergent Column-Type Round-Trip Entity ──────────────────────
+  // Exercises types that hydrate differently across drivers:
+  //   bigint  → JS bigint (both drivers)
+  //   decimal → string, precision-preserving (both drivers)
+  //   binary  → Node Buffer (memory stores Uint8Array via structuredClone,
+  //             Postgres BYTEA returns Buffer; deserialise normalises both)
+
+  @Entity({ name: "TckTypeHolder" })
+  class TckTypeHolder {
+    @PrimaryKeyField()
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("bigint")
+    bigValue!: bigint;
+
+    @Precision(18, 4)
+    @Field("decimal")
+    decimalValue!: string;
+
+    @Field("binary")
+    binaryValue!: Buffer;
+  }
+
+  // ─── Renamed Scalar Column Entity ─────────────────────────────────
+  // Every scalar column uses an explicit @Field({ name }) override so the
+  // physical column name differs from the entity property key. Memory keys
+  // rows by field.key; SQL drivers key by field.name — this entity ensures
+  // both round-trip identically. NOTE: only scalar columns are renamed —
+  // relation/FK join columns are intentionally left default-named.
+
+  @Entity({ name: "TckRenamedColumns" })
+  class TckRenamedColumns {
+    @PrimaryKeyField()
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string", { name: "display_name" })
+    displayName!: string;
+
+    @Default(0)
+    @Field("integer", { name: "login_count" })
+    loginCount!: number;
+
+    @Nullable()
+    @Field("string", { name: "email_address" })
+    emailAddress!: string | null;
+  }
+
+  // ─── CHECK Constraint Entity ──────────────────────────────────────
+  // Memory cannot evaluate arbitrary SQL CHECK expressions; real SQL DBs
+  // enforce them. Gated behind caps.checkConstraints so the violation
+  // assertion only runs where the constraint is actually enforced.
+
+  @Entity({ name: "TckChecked" })
+  @Check("quantity >= 0")
+  class TckChecked {
+    @PrimaryKeyField()
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @Field("integer")
+    quantity!: number;
+  }
+
   return {
     TckSimpleUser,
     TckSimplePost,
@@ -1029,5 +1123,8 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckElEagerMultiple,
     TckElLazySingle,
     TckElEager,
+    TckTypeHolder,
+    TckRenamedColumns,
+    TckChecked,
   };
 };

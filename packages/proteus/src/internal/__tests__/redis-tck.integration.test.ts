@@ -37,6 +37,13 @@ const factory: TckDriverFactory = {
     queryBuilder: true,
     uniqueEnforcement: false,
     referentialIntegrity: false,
+    checkConstraints: false,
+    // Redis round-trips bigint and decimal fine, but stores binary as a string,
+    // so it cannot satisfy the binary leg of the type-coercion suite. The whole
+    // suite is gated off (binary-only failure) rather than split.
+    richColumnTypes: false,
+    // Redis's driver rejects conflictOn by design (NotSupportedError).
+    upsertConflictColumns: false,
     encryption: true,
     inheritance: { singleTable: true, joined: false },
     transactions: { rollback: false, savepoints: false },
