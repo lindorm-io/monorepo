@@ -11,6 +11,7 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
+import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
 import { publishMessages } from "../utils/publish-messages.js";
 import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 
@@ -88,7 +89,8 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     );
 
     this.store.consumers.push({
-      topic: queue,
+      topic: resolveConsumeTopic(this.metadata, this.logger),
+      queue,
       callback: wrappedCallback,
       consumerTag,
     });
@@ -99,7 +101,7 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
 
     for (let i = 0; i < this.store.consumers.length; i++) {
       const consumer = this.store.consumers[i];
-      if (consumer.topic !== queue) continue;
+      if (consumer.queue !== queue) continue;
       if (!this.ownedConsumerTags.has(consumer.consumerTag)) continue;
       toRemove.push(i);
     }

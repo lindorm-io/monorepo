@@ -1,4 +1,5 @@
 import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
+import { cloneEnvelopeForDelivery } from "./clone-envelope.js";
 
 export const dispatchToSubscribers = async (
   store: MemorySharedState,
@@ -22,13 +23,13 @@ export const dispatchToSubscribers = async (
   }
 
   for (const sub of broadcast) {
-    await sub.callback(envelope);
+    await sub.callback(cloneEnvelopeForDelivery(envelope));
   }
 
   for (const [queueName, group] of queueGroups) {
     const key = `sub:${envelope.topic}:${queueName}`;
     const idx = (store.roundRobinIndexes.get(key) ?? 0) % group.length;
     store.roundRobinIndexes.set(key, idx + 1);
-    await group[idx].callback(envelope);
+    await group[idx].callback(cloneEnvelopeForDelivery(envelope));
   }
 };

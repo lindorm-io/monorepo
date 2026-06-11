@@ -21,6 +21,7 @@ export type MemorySubscription = {
 
 export type MemoryConsumer = {
   topic: string;
+  queue: string;
   callback: (envelope: MemoryEnvelope) => Promise<void>;
   consumerTag: string;
 };

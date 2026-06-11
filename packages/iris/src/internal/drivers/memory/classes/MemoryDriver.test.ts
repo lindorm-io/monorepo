@@ -95,6 +95,7 @@ describe("MemoryDriver", () => {
 
       (driver as any).store.consumers.push({
         topic: "test",
+        queue: "test",
         callback: async () => {},
         consumerTag: "tag-1",
       });
