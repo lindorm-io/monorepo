@@ -8,4 +8,6 @@ export type OidcClaimsWire = {
   c_hash?: string; // code hash
   nonce?: string; // nonce
   s_hash?: string; // state hash
+  vot?: string; // vector of trust (RFC 8485)
+  vtm?: string; // vector trust mark (RFC 8485)
 };

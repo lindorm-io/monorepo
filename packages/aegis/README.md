@@ -217,6 +217,7 @@ const formatted = kit.format(signature); // string
   roles?: string[];
   groups?: string[];
   entitlements?: string[];
+  authorizationDetails?: AuthorizationDetail[]; // RFC 9396 (RAR) — see below
   clientId?: string;
   grantType?: string;
   tenantId?: string;
@@ -228,12 +229,37 @@ const formatted = kit.format(signature); // string
   authFactor?: string[];
   authMethods?: string[];
   authorizedParty?: string;
-  adjustedAccessLevel?: number;
   levelOfAssurance?: number;
   sessionHint?: string;
   subjectHint?: string;
   // …plus the rest of the StdClaims / OidcClaims / DelegationClaims surface
 }
+```
+
+### Rich Authorization Requests (RFC 9396)
+
+`authorizationDetails` carries the RFC 9396 `authorization_details` claim. The
+domain name (`authorizationDetails`) is translated to the registered wire name
+(`authorization_details`) on sign and back on parse. The array **contents travel
+verbatim** — type-specific inner fields (e.g. `instructedAmount`,
+`creditorAccount`) are never key-converted, so camelCase fields defined by a
+detail's own spec are preserved exactly. The claim also surfaces from
+`parseIntrospection` (RFC 9396 §9).
+
+```typescript
+kit.sign({
+  expires: "1h",
+  subject: "user-123",
+  tokenType: "access_token",
+  authorizationDetails: [
+    {
+      type: "payment_initiation",
+      actions: ["initiate"],
+      locations: ["https://api.bank.example.com/payments"],
+      instructedAmount: { currency: "EUR", amount: "123.50" }, // verbatim
+    },
+  ],
+});
 ```
 
 ## Verify options

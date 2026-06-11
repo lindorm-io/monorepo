@@ -154,6 +154,52 @@ describe("JwtKit", () => {
       const { header } = JwtKit.decode(token);
       expect(header).not.toHaveProperty("oid");
     });
+
+    test("should carry authorization_details (RFC 9396) verbatim on the wire", () => {
+      const authorizationDetails = [
+        {
+          type: "payment_initiation",
+          actions: ["initiate", "status"],
+          locations: ["https://api.bank.example.com/payments"],
+          // Type-specific camelCase fields defined by the detail's own spec —
+          // these MUST travel untouched (no snake_case conversion).
+          instructedAmount: { currency: "EUR", amount: "123.50" },
+          creditorAccount: { iban: "DE02100100109307118603" },
+        },
+      ];
+
+      const { token } = kit.sign({
+        authorizationDetails,
+        expires: "1h",
+        subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+        tokenType: "test_token",
+      });
+
+      const [, rawPayload] = token.split(".");
+      const decoded = JSON.parse(B64.toString(rawPayload));
+
+      // Wire claim name is snake_case, but the array contents are verbatim.
+      expect(decoded.authorization_details).toMatchSnapshot();
+      expect(decoded).not.toHaveProperty("authorizationDetails");
+
+      // Verbatim-preservation anchor: the camelCase type-specific inner
+      // fields survive the round trip on the wire untouched.
+      expect(decoded.authorization_details[0].instructedAmount).toEqual({
+        currency: "EUR",
+        amount: "123.50",
+      });
+      expect(decoded.authorization_details[0].creditorAccount).toEqual({
+        iban: "DE02100100109307118603",
+      });
+
+      // Parse path exposes the domain claim name and round-trips identically.
+      const { payload } = kit.verify(token);
+      expect(payload.authorizationDetails).toEqual(authorizationDetails);
+      expect(payload.authorizationDetails![0].instructedAmount).toEqual({
+        currency: "EUR",
+        amount: "123.50",
+      });
+    });
   });
 
   describe("verify", () => {
@@ -161,7 +207,6 @@ describe("JwtKit", () => {
       const { token, tokenId } = kit.sign({
         accessToken:
           "12ceb9251ddf52399fe62f122a45844865a83dcb52585fea90ae3448e0244ab0037950882d705675a4fe248e1c8d9f5c",
-        adjustedAccessLevel: 4,
         audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
         authCode: "999a8b01e27c56aeb5b2f47c001ef8be7be39a375f8c5e929f82df1626de01d8",
         authContextClass: "test_auth_context_class",
@@ -186,6 +231,8 @@ describe("JwtKit", () => {
         subjectHint: "test_subject_hint",
         tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
         tokenType: "test_token",
+        vectorOfTrust: "P1.Cc.Ce.Aa",
+        vectorTrustMark: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa",
       });
 
       expect(kit.verify(token)).toEqual({
@@ -198,7 +245,6 @@ describe("JwtKit", () => {
             typ: "test_token+jwt",
           },
           payload: {
-            aal: 4,
             acr: "test_auth_context_class",
             afr: ["test_auth_factor"],
             amr: ["test_auth_method"],
@@ -226,6 +272,8 @@ describe("JwtKit", () => {
             suh: "test_subject_hint",
             test_claim: "test_value",
             tenant_id: "55103fbe-a183-57ec-b553-13af34d83c23",
+            vot: "P1.Cc.Ce.Aa",
+            vtm: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa",
           },
           signature: expect.any(String),
         },
@@ -246,7 +294,6 @@ describe("JwtKit", () => {
         },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
-          adjustedAccessLevel: 4,
           audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
           authContextClass: "test_auth_context_class",
           authFactor: ["test_auth_factor"],
@@ -277,6 +324,8 @@ describe("JwtKit", () => {
           subjectHint: "test_subject_hint",
           tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
           tokenId: tokenId,
+          vectorOfTrust: "P1.Cc.Ce.Aa",
+          vectorTrustMark: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa",
         },
         token,
       });
@@ -334,7 +383,6 @@ describe("JwtKit", () => {
       const { token, tokenId } = kit.sign({
         accessToken:
           "12ceb9251ddf52399fe62f122a45844865a83dcb52585fea90ae3448e0244ab0037950882d705675a4fe248e1c8d9f5c",
-        adjustedAccessLevel: 4,
         audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
         authCode: "999a8b01e27c56aeb5b2f47c001ef8be7be39a375f8c5e929f82df1626de01d8",
         authContextClass: "test_auth_context_class",
@@ -359,6 +407,8 @@ describe("JwtKit", () => {
         subjectHint: "test_subject_hint",
         tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
         tokenType: "test_token",
+        vectorOfTrust: "P1.Cc.Ce.Aa",
+        vectorTrustMark: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa",
       });
 
       expect(JwtKit.parse(token)).toEqual({
@@ -371,7 +421,6 @@ describe("JwtKit", () => {
             typ: "test_token+jwt",
           },
           payload: {
-            aal: 4,
             acr: "test_auth_context_class",
             afr: ["test_auth_factor"],
             amr: ["test_auth_method"],
@@ -399,6 +448,8 @@ describe("JwtKit", () => {
             suh: "test_subject_hint",
             test_claim: "test_value",
             tenant_id: "55103fbe-a183-57ec-b553-13af34d83c23",
+            vot: "P1.Cc.Ce.Aa",
+            vtm: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa",
           },
           signature: expect.any(String),
         },
@@ -419,7 +470,6 @@ describe("JwtKit", () => {
         },
         payload: {
           accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
-          adjustedAccessLevel: 4,
           audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
           authContextClass: "test_auth_context_class",
           authFactor: ["test_auth_factor"],
@@ -450,6 +500,8 @@ describe("JwtKit", () => {
           subjectHint: "test_subject_hint",
           tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
           tokenId: tokenId,
+          vectorOfTrust: "P1.Cc.Ce.Aa",
+          vectorTrustMark: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa",
         },
         token,
       });
@@ -490,7 +542,6 @@ describe("JwtKit", () => {
       const { token } = kit.sign({
         accessToken:
           "12ceb9251ddf52399fe62f122a45844865a83dcb52585fea90ae3448e0244ab0037950882d705675a4fe248e1c8d9f5c",
-        adjustedAccessLevel: 4,
         audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
         authCode: "999a8b01e27c56aeb5b2f47c001ef8be7be39a375f8c5e929f82df1626de01d8",
         authContextClass: "test_auth_context_class",
@@ -515,6 +566,8 @@ describe("JwtKit", () => {
         subjectHint: "test_subject_hint",
         tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
         tokenType: "test_token",
+        vectorOfTrust: "P1.Cc.Ce.Aa",
+        vectorTrustMark: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa",
       });
 
       const { payload } = kit.verify(token);
@@ -724,7 +777,6 @@ describe("JwtKit", () => {
     const options: SignJwtContent = {
       accessToken:
         "12ceb9251ddf52399fe62f122a45844865a83dcb52585fea90ae3448e0244ab0037950882d705675a4fe248e1c8d9f5c",
-      adjustedAccessLevel: 4,
       audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
       authCode: "999a8b01e27c56aeb5b2f47c001ef8be7be39a375f8c5e929f82df1626de01d8",
       authContextClass: "test_auth_context_class",
@@ -749,6 +801,8 @@ describe("JwtKit", () => {
       subjectHint: "test_subject_hint",
       tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
       tokenType: "test_token",
+      vectorOfTrust: "P1.Cc.Ce.Aa",
+      vectorTrustMark: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa",
     };
 
     test("should verify token and resolve data", () => {
@@ -757,11 +811,12 @@ describe("JwtKit", () => {
       expect(() =>
         kit.verify(token, {
           accessToken: options.accessToken,
-          adjustedAccessLevel: { $gte: 3 },
           audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
           authCode: options.authCode,
           authState: options.authState,
           authTime: { $lte: new Date("2022-01-01T08:00:00.000Z") },
+          vectorOfTrust: "P1.Cc.Ce.Aa",
+          vectorTrustMark: { $eq: "https://trustmark.lindorm.io/vot/P1.Cc.Ce.Aa" },
         }),
       ).not.toThrow();
     });

@@ -1,5 +1,5 @@
 import type { OpenIdGrantType, OpenIdScope } from "@lindorm/types";
-import type { AdjustedAccessLevel, LevelOfAssurance } from "../level-of-assurance.js";
+import type { LevelOfAssurance } from "../level-of-assurance.js";
 
 export type AuthFactor = "knowledge" | "possession" | "inherence" | (string & {});
 
@@ -15,7 +15,6 @@ export type SubjectHint = "user" | "client" | "service" | "device" | (string & {
 
 // Lindorm-proprietary claims, domain form.
 export type LindormClaims = {
-  adjustedAccessLevel?: AdjustedAccessLevel;
   authFactor?: Array<AuthFactor>;
   clientId?: string;
   grantType?: OpenIdGrantType;
