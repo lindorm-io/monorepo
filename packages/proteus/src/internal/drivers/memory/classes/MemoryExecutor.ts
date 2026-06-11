@@ -29,6 +29,10 @@ import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-c
 import { applyAutoIncrement } from "../utils/memory-auto-increment.js";
 import { checkUniqueConstraints } from "../utils/memory-unique-check.js";
 import { guardMemoryLockMode } from "../utils/guard-memory-lock-mode.js";
+import {
+  applyDeleteReferentialActions,
+  assertForeignKeysExist,
+} from "../utils/memory-referential-integrity.js";
 
 const serializePk = (
   entity: Record<string, unknown>,
@@ -101,6 +105,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   private readonly deleteFieldKey: string | null;
   private readonly filterRegistry: FilterRegistry;
   private readonly amphora: IAmphora | undefined;
+  private readonly namespace: string | null;
 
   public constructor(
     metadata: EntityMetadata,
@@ -108,6 +113,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     getStore: () => MemoryStore,
     filterRegistry?: FilterRegistry,
     amphora?: IAmphora,
+    namespace: string | null = null,
   ) {
     this.metadata = metadata;
     this.getTable = getTable;
@@ -117,6 +123,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
       metadata.fields.find((f) => f.decorator === "DeleteDate")?.key ?? null;
     this.filterRegistry = filterRegistry ?? new Map();
     this.amphora = amphora;
+    this.namespace = namespace;
   }
 
   public async executeInsert(entity: E): Promise<E> {
@@ -140,6 +147,8 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
 
     checkUniqueConstraints(table, row, this.metadata, null);
+
+    assertForeignKeysExist(row, this.metadata, this.getStore(), this.namespace);
 
     table.set(pk, structuredClone(row));
 
@@ -218,6 +227,8 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
 
     checkUniqueConstraints(table, merged, this.metadata, pkForLookup);
 
+    assertForeignKeysExist(merged, this.metadata, this.getStore(), this.namespace);
+
     table.set(pkForLookup, structuredClone(merged));
 
     return hydrateFromRow<E>(structuredClone(merged), this.metadata, this.amphora);
@@ -237,14 +248,26 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     // Scope by discriminator for single-table inheritance child entities
     const discPks = this.getDiscriminatorFilteredPks(table);
 
+    const deletedRows: Dict[] = [];
     for (const [pk, row] of table) {
       if (discPks && !discPks.has(pk)) continue;
       if (matchesRow(row, flatCriteria)) {
         toDelete.push(pk);
+        deletedRows.push(structuredClone(row));
         count++;
         if (options?.limit && count >= options.limit) break;
       }
     }
+
+    // Enforce ON DELETE referential actions on dependent child rows BEFORE
+    // removing the parent rows. Restrict / NO ACTION throws here, aborting the
+    // whole delete with nothing removed.
+    applyDeleteReferentialActions(
+      deletedRows,
+      this.metadata,
+      this.getStore(),
+      this.namespace,
+    );
 
     // Clean up collection table rows before deleting parent rows
     // Note: collection tables are keyed by String(row[parentPkColumn]), NOT by serializePk
@@ -531,18 +554,8 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     property: keyof E,
     value: number,
   ): Promise<void> {
-    const field = this.metadata.fields.find((f) => f.key === (property as string));
-    if (field?.encrypted) {
-      throw new MemoryDriverError(
-        `Cannot increment encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
-        {
-          code: "unsupported_operation",
-          title: "Unsupported Operation",
-          details: `The encrypted field "${String(property)}" cannot be incremented in place.`,
-          data: { entityName: this.metadata.entity.name, property: String(property) },
-        },
-      );
-    }
+    // Encrypted-field rejection is enforced by guardEncryptedField in
+    // DriverRepositoryBase.increment (the canonical, driver-agnostic guard).
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
     const rows = this.getSystemFilteredRows([...this.getTable().values()]);
 
@@ -559,18 +572,8 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     property: keyof E,
     value: number,
   ): Promise<void> {
-    const field = this.metadata.fields.find((f) => f.key === (property as string));
-    if (field?.encrypted) {
-      throw new MemoryDriverError(
-        `Cannot decrement encrypted field "${String(property)}" on entity "${this.metadata.entity.name}"`,
-        {
-          code: "unsupported_operation",
-          title: "Unsupported Operation",
-          details: `The encrypted field "${String(property)}" cannot be decremented in place.`,
-          data: { entityName: this.metadata.entity.name, property: String(property) },
-        },
-      );
-    }
+    // Encrypted-field rejection is enforced by guardEncryptedField in
+    // DriverRepositoryBase.decrement (the canonical, driver-agnostic guard).
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
     const rows = this.getSystemFilteredRows([...this.getTable().values()]);
 
@@ -606,9 +609,12 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
       rows = this.getSystemFilteredRows(rows);
     }
 
+    const store = this.getStore();
+
     let count = 0;
     for (const row of rows) {
       if (matchesRow(row, flatCriteria)) {
+        const staged: Dict = {};
         for (const [key, value] of Object.entries(update as Record<string, unknown>)) {
           const field = this.metadata.fields.find((f) => f.key === key);
           let transformed =
@@ -622,7 +628,19 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
               this.metadata.entity.name,
             );
           }
-          row[key] = transformed;
+          staged[key] = transformed;
+        }
+
+        // Validate FK columns on the prospective row before mutating in place.
+        assertForeignKeysExist(
+          { ...row, ...staged },
+          this.metadata,
+          store,
+          this.namespace,
+        );
+
+        for (const [key, value] of Object.entries(staged)) {
+          row[key] = value;
         }
         count++;
       }

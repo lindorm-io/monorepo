@@ -460,6 +460,7 @@ export class MemoryDriver implements IProteusDriver {
       (): MemoryStore => store,
       this.getFilterRegistry(),
       this.amphora,
+      this.namespace,
     );
   }
 }
