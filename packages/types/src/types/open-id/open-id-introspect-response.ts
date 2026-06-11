@@ -1,5 +1,7 @@
 // https://www.rfc-editor.org/rfc/rfc7662#section-2.2
 
+import type { AuthorizationDetail } from "./open-id-authorization-detail.js";
+
 export type OpenIdIntrospectResponse = {
   /**
    * REQUIRED
@@ -26,6 +28,20 @@ export type OpenIdIntrospectResponse = {
    * token, as defined in JWT [RFC7519].
    */
   aud: Array<string>;
+
+  /**
+   * OPTIONAL
+   *
+   * RFC 9396 §9 — Rich Authorization Requests. The authorization
+   * details associated with this token, as a JSON array of
+   * objects, mirroring the `authorization_details` granted at
+   * issuance. Returned by the AS so that the protected resource
+   * can enforce the fine-grained authorization carried by the
+   * token. Type-specific fields are carried verbatim.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9396
+   */
+  authorizationDetails?: Array<AuthorizationDetail>;
 
   /**
    * OPTIONAL

@@ -1,4 +1,5 @@
 export * from "./open-id-address.js";
+export * from "./open-id-authorization-detail.js";
 export * from "./open-id-authorize-request.js";
 export * from "./open-id-authorize-response.js";
 export * from "./open-id-backchannel-authentication-request.js";

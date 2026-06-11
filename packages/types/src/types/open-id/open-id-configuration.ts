@@ -22,6 +22,18 @@ type ExternalConfiguration = {
 
 type StandardConfiguration = {
   acrValuesSupported: Array<string>;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9396 §10 — Rich Authorization Requests metadata. A JSON
+   * array containing the authorization details type values
+   * supported by the Authorization Server. Clients use this
+   * to discover which `authorization_details` `type` schemas
+   * the AS recognizes.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9396
+   */
+  authorizationDetailsTypesSupported?: Array<string>;
   authorizationEndpoint: string;
   backchannelAuthenticationEndpoint: string;
   backchannelAuthenticationRequestSigningAlgValuesSupported: [];
