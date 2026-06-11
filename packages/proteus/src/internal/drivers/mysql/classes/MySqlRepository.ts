@@ -31,7 +31,10 @@ import {
   compileJoinedPartialUpdate,
   compilePartialUpdate,
 } from "../utils/query/compile-partial-update.js";
-import { compileSelectByPk } from "../utils/query/compile-select-by-pk.js";
+import {
+  compileSelectByColumns,
+  compileSelectByPk,
+} from "../utils/query/compile-select-by-pk.js";
 import { hydrateReturning } from "../utils/query/hydrate-returning.js";
 import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
 import {
@@ -1038,10 +1041,25 @@ export class MySqlRepository<
     }
   }
 
-  protected async upsertOne(entity: E, _options?: UpsertOptions<E>): Promise<E> {
+  protected async upsertOne(entity: E, options?: UpsertOptions<E>): Promise<E> {
     try {
       const prepared = await this.entityManager.insert(entity);
       this.entityManager.validate(prepared);
+
+      // When conflictOn targets a non-PK unique column, ON DUPLICATE KEY UPDATE
+      // updates the existing row (which keeps its original PK). Selecting back by
+      // the new entity's PK would find nothing, so select back by the conflict
+      // columns instead. Falls back to PK select-back when conflictOn is absent.
+      const conflictOn = options?.conflictOn;
+      const selectBack = (): { text: string; params: Array<unknown> } =>
+        Array.isArray(conflictOn) && conflictOn.length > 0
+          ? compileSelectByColumns(
+              prepared,
+              this.metadata,
+              conflictOn as Array<string>,
+              this.namespace,
+            )
+          : compileSelectByPk(prepared, this.metadata, this.namespace);
 
       if (!this.hasRelations && !this.hasEmbeddedLists) {
         await this.fireBeforeHook("insert", prepared);
@@ -1057,7 +1075,7 @@ export class MySqlRepository<
         );
         await this.client.query(text, params);
         // SELECT-back the upserted row
-        const selectSql = compileSelectByPk(prepared, this.metadata, this.namespace);
+        const selectSql = selectBack();
         const { rows } = await this.client.query(selectSql.text, selectSql.params);
         const hydrated = hydrateReturning<E>(rows[0], this.metadata, {
           hooks: false,
@@ -1089,7 +1107,7 @@ export class MySqlRepository<
         );
         await client.query(text, params);
         // SELECT-back the upserted row
-        const selectSql = compileSelectByPk(prepared, this.metadata, this.namespace);
+        const selectSql = selectBack();
         const { rows } = await client.query(selectSql.text, selectSql.params);
         const hydrated = hydrateReturning<E>(rows[0], this.metadata, {
           hooks: false,

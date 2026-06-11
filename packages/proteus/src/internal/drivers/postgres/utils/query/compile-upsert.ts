@@ -4,6 +4,7 @@ import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
 import { getUpsertSetSkipColumns } from "../../../../utils/sql/get-upsert-set-skip-columns.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
+import { resolveColumnName } from "../resolve-column-name.js";
 import type { CompiledSql } from "./compiled-sql.js";
 import { applyDiscriminatorColumn } from "./compile-insert.js";
 import { dehydrateEntity } from "./dehydrate-entity.js";
@@ -49,13 +50,15 @@ export const compileUpsert = <E extends IEntity>(
   const params: Array<unknown> = columns.map((c) => c.value);
   const placeholders = columns.map((_, i) => `$${i + 1}`);
 
-  // Conflict target: explicit columns or primary key columns
+  // Conflict target: explicit columns or primary key columns. In both cases the
+  // supplied entity-property keys must be resolved to their DB column names.
   const conflictCols = options?.conflictColumns
-    ? options.conflictColumns.map((col) => quoteIdentifier(col))
-    : metadata.primaryKeys.map((pk) => {
-        const field = metadata.fields.find((f) => f.key === pk);
-        return quoteIdentifier(field?.name ?? pk);
-      });
+    ? options.conflictColumns.map((col) =>
+        quoteIdentifier(resolveColumnName(metadata.fields, col, metadata.relations)),
+      )
+    : metadata.primaryKeys.map((pk) =>
+        quoteIdentifier(resolveColumnName(metadata.fields, pk, metadata.relations)),
+      );
 
   // SET clause: all mutable columns (exclude PK, CreateDate, Generated increment)
   const setClauses = buildSetClauses(columns, metadata, params, tableName);

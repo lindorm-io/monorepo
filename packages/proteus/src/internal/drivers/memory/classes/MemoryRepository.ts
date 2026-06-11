@@ -18,6 +18,7 @@ import type { AggregateFunction } from "../../../types/aggregate.js";
 import type { MemoryStore } from "../types/memory-store.js";
 import { DriverRepositoryBase } from "../../../classes/DriverRepositoryBase.js";
 import { buildPrimaryKeyPredicate } from "../../../utils/repository/build-pk-predicate.js";
+import { buildConflictPredicate } from "../../../utils/repository/build-conflict-predicate.js";
 import {
   guardAppendOnly,
   guardVersionFields,
@@ -650,23 +651,37 @@ export class MemoryRepository<
     clearSnapshot(entity);
   }
 
-  protected async upsertOne(entity: E, _options?: UpsertOptions<E>): Promise<E> {
+  protected async upsertOne(entity: E, options?: UpsertOptions<E>): Promise<E> {
     const prepared = await this.entityManager.insert(entity);
     this.entityManager.validate(prepared);
 
+    const conflictOn = options?.conflictOn;
+    const useConflictOn = Array.isArray(conflictOn) && conflictOn.length > 0;
+
+    // When conflictOn is supplied, existence is determined by matching those
+    // columns rather than the primary key. The matched row's identity (PK,
+    // CreateDate) is preserved so the update lands on the existing row in place.
+    const matchPredicate = useConflictOn
+      ? buildConflictPredicate(prepared, this.metadata, conflictOn)
+      : buildPrimaryKeyPredicate(prepared, this.metadata);
+
+    const existingRows = await this.executor.executeFind(matchPredicate, { limit: 1 });
+    const existingRow = existingRows[0] as Record<string, unknown> | undefined;
+    const entityExists = existingRow != null;
+
+    if (useConflictOn && entityExists) {
+      this.adoptConflictTargetIdentity(prepared, existingRow);
+    }
+
     const pk = buildPrimaryKeyPredicate(prepared, this.metadata);
-    const entityExists = await this.exists(pk);
 
     // Fast path: no relations and no embedded lists
     if (!this.hasRelations && !this.hasEmbeddedLists) {
       if (entityExists) {
         const versionField = this.metadata.fields.find((f) => f.decorator === "Version");
-        if (versionField) {
-          const stored = await this.executor.executeFind(pk, { limit: 1 });
-          if (stored.length > 0) {
-            const storedVersion = (stored[0] as any)[versionField.key] as number;
-            (prepared as any)[versionField.key] = storedVersion + 1;
-          }
+        if (versionField && existingRow) {
+          const storedVersion = existingRow[versionField.key] as number;
+          (prepared as any)[versionField.key] = storedVersion + 1;
         }
         return this.executor.executeUpdate(prepared);
       }
@@ -710,6 +725,25 @@ export class MemoryRepository<
         return hydrated;
       },
     );
+  }
+
+  // Overwrite the prepared entity's identity (primary key + CreateDate) with the
+  // matched conflict-target row so that the subsequent update lands on the
+  // existing row in place rather than minting a new primary key.
+  private adoptConflictTargetIdentity(
+    prepared: E,
+    existingRow: Record<string, unknown>,
+  ): void {
+    for (const key of this.metadata.primaryKeys) {
+      (prepared as any)[key] = existingRow[key];
+    }
+
+    const createDateField = this.metadata.fields.find(
+      (f) => f.decorator === "CreateDate",
+    );
+    if (createDateField && createDateField.key in existingRow) {
+      (prepared as any)[createDateField.key] = existingRow[createDateField.key];
+    }
   }
 
   // ─── Abstract: aggregates ─────────────────────────────────────────
