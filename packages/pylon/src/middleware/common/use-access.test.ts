@@ -14,7 +14,6 @@ describe("useAccess", () => {
           permissions: ["users:read"],
           scope: ["openid"],
           levelOfAssurance: 2,
-          adjustedAccessLevel: 1,
         }),
       },
       state: {
@@ -26,7 +25,6 @@ describe("useAccess", () => {
               permissions: ["users:read"],
               scope: ["openid"],
               levelOfAssurance: 2,
-              adjustedAccessLevel: 1,
             },
           },
         },
@@ -44,7 +42,6 @@ describe("useAccess", () => {
           permissions: ["users:read"],
           scope: ["openid"],
           levelOfAssurance: 2,
-          adjustedAccessLevel: 1,
         })(ctx, next),
       ).resolves.toBeUndefined();
 
@@ -128,7 +125,6 @@ describe("useAccess", () => {
         roles: ["user"],
         permissions: ["users:read"],
         scope: ["openid"],
-        adjustedAccessLevel: 1,
       });
 
       await expect(useAccess({ levelOfAssurance: 1 })(ctx, vi.fn())).rejects.toThrow(
@@ -143,40 +139,6 @@ describe("useAccess", () => {
       }
     });
 
-    test("should throw 403 when adjustedAccessLevel is too low", async () => {
-      await expect(useAccess({ adjustedAccessLevel: 5 })(ctx, vi.fn())).rejects.toThrow(
-        ClientError,
-      );
-
-      try {
-        await useAccess({ adjustedAccessLevel: 5 })(ctx, vi.fn());
-      } catch (err: any) {
-        expect(err.status).toBe(403);
-        expect(err.details).toMatchSnapshot();
-      }
-    });
-
-    test("should throw 403 when adjustedAccessLevel is undefined on introspection", async () => {
-      ctx.auth.introspect.mockResolvedValue({
-        active: true,
-        roles: ["user"],
-        permissions: ["users:read"],
-        scope: ["openid"],
-        levelOfAssurance: 2,
-      });
-
-      await expect(useAccess({ adjustedAccessLevel: 1 })(ctx, vi.fn())).rejects.toThrow(
-        ClientError,
-      );
-
-      try {
-        await useAccess({ adjustedAccessLevel: 1 })(ctx, vi.fn());
-      } catch (err: any) {
-        expect(err.status).toBe(403);
-        expect(err.details).toMatchSnapshot();
-      }
-    });
-
     test("should collect all violations into a single error message", async () => {
       try {
         await useAccess({
@@ -184,7 +146,6 @@ describe("useAccess", () => {
           permissions: ["admin:write"],
           scope: ["admin:all"],
           levelOfAssurance: 4,
-          adjustedAccessLevel: 3,
         })(ctx, vi.fn());
         expect.fail("Expected error to be thrown");
       } catch (err: any) {
@@ -204,7 +165,6 @@ describe("useAccess", () => {
           permissions: ["profile:read"],
           scope: ["openid"],
           levelOfAssurance: 3,
-          adjustedAccessLevel: 2,
         },
       };
 
