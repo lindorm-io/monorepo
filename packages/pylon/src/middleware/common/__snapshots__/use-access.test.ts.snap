@@ -1,12 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`useAccess > with ctx.auth (introspection) > should collect all violations into a single error message 1`] = `"roles (got: ["user"]); permissions (got: ["users:read"]); scope (got: ["openid"]); levelOfAssurance (got: 2); adjustedAccessLevel (got: 1)"`;
+exports[`useAccess > with ctx.auth (introspection) > should collect all violations into a single error message 1`] = `"roles (got: ["user"]); permissions (got: ["users:read"]); scope (got: ["openid"]); levelOfAssurance (got: 2)"`;
 
 exports[`useAccess > with ctx.auth (introspection) > should throw 401 when token is not active 1`] = `"Access token is not active"`;
-
-exports[`useAccess > with ctx.auth (introspection) > should throw 403 when adjustedAccessLevel is too low 1`] = `"adjustedAccessLevel (got: 1)"`;
-
-exports[`useAccess > with ctx.auth (introspection) > should throw 403 when adjustedAccessLevel is undefined on introspection 1`] = `"adjustedAccessLevel (got: undefined)"`;
 
 exports[`useAccess > with ctx.auth (introspection) > should throw 403 when levelOfAssurance is too low 1`] = `"levelOfAssurance (got: 2)"`;
 
