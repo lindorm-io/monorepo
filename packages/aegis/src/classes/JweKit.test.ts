@@ -559,6 +559,18 @@ describe("JweKit", () => {
       expect(decrypted.header.tokenType).toBe("logout_token");
     });
 
+    test("should surface erasure_token on decrypted header when signed with it", () => {
+      const { token } = kit.encrypt("data", {
+        objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
+        tokenType: "erasure_token",
+      });
+
+      const decrypted = kit.decrypt(token);
+
+      expect(decrypted.header.headerType).toBe("erasure+jwe");
+      expect(decrypted.header.tokenType).toBe("erasure_token");
+    });
+
     test("should leave tokenType undefined when not supplied", () => {
       const { token } = kit.encrypt("data", {
         objectId: "5b63e7ec-5ca4-4083-8de9-de0d6e2ddd03",
