@@ -1,11 +1,10 @@
-import type { AdjustedAccessLevel, LevelOfAssurance } from "../../level-of-assurance.js";
+import type { LevelOfAssurance } from "../../level-of-assurance.js";
 import type { AuthFactor, SessionHint, SubjectHint } from "../lindorm-claims.js";
 
 // Wire form of LindormClaims — proprietary lindorm-only claims that do
 // not have a corresponding standard. `roles` lives on OAuthClaimsWire
 // (RFC 9068), not here.
 export type LindormClaimsWire = {
-  aal?: AdjustedAccessLevel; // adjusted access level
   afr?: Array<AuthFactor>; // auth factor references
   client_id?: string; // client id
   gty?: string; // grant type

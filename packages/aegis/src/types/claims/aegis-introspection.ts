@@ -2,6 +2,7 @@ import type { LindormClaims } from "./lindorm-claims.js";
 import type { OAuthClaims } from "./oauth-claims.js";
 import type { OidcClaims } from "./oidc-claims.js";
 import type { PopClaims } from "./pop-claims.js";
+import type { RarClaims } from "./rar-claims.js";
 import type { DelegationClaims } from "./delegation-claims.js";
 import type { StdClaims } from "./std-claims.js";
 
@@ -13,6 +14,7 @@ export type AegisIntrospectionActive = StdClaims &
   PopClaims &
   DelegationClaims &
   OAuthClaims &
+  RarClaims &
   LindormClaims & {
     active: true;
     tokenType?: string;

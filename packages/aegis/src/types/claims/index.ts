@@ -9,6 +9,7 @@ export * from "./lindorm-claims.js";
 export * from "./oauth-claims.js";
 export * from "./oidc-claims.js";
 export * from "./pop-claims.js";
+export * from "./rar-claims.js";
 export * from "./delegation-claims.js";
 export * from "./std-claims.js";
 
