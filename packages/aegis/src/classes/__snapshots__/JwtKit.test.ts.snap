@@ -45,3 +45,25 @@ exports[`JwtKit > confirmation claim > should round-trip all confirmation member
   "sub": "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
 }
 `;
+
+exports[`JwtKit > sign > should carry authorization_details (RFC 9396) verbatim on the wire 1`] = `
+[
+  {
+    "actions": [
+      "initiate",
+      "status",
+    ],
+    "creditorAccount": {
+      "iban": "DE02100100109307118603",
+    },
+    "instructedAmount": {
+      "amount": "123.50",
+      "currency": "EUR",
+    },
+    "locations": [
+      "https://api.bank.example.com/payments",
+    ],
+    "type": "payment_initiation",
+  },
+]
+`;

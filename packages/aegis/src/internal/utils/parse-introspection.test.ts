@@ -71,7 +71,6 @@ describe("parseIntrospection", () => {
       roles: ["admin", "user"],
       permissions: ["read", "write"],
       levelOfAssurance: 3,
-      adjustedAccessLevel: 2,
       sessionId: "session-xyz",
       sessionHint: "browser",
       subjectHint: "identity",
@@ -84,6 +83,40 @@ describe("parseIntrospection", () => {
     const result = parseActive(data);
 
     expect(result).toMatchSnapshot();
+  });
+
+  test("should surface authorization_details as authorizationDetails (RFC 9396)", () => {
+    const data = {
+      active: true,
+      sub: "user-rar-123",
+      clientId: "client-rar",
+      scope: "payment",
+      tokenType: "bearer",
+      exp: 1700003600,
+      iat: 1700000000,
+      nbf: 1700000000,
+      iss: "https://auth.example.com",
+      aud: ["https://api.example.com"],
+      jti: "tok-rar-456",
+      username: "rardoe",
+      authorization_details: [
+        {
+          type: "payment_initiation",
+          actions: ["initiate"],
+          locations: ["https://api.bank.example.com/payments"],
+          instructedAmount: { currency: "EUR", amount: "123.50" },
+        },
+      ],
+    } as IntrospectClaimsInput;
+
+    const result = parseActive(data);
+
+    expect(result.authorizationDetails).toMatchSnapshot();
+    expect(result).not.toHaveProperty("authorization_details");
+    expect(result.authorizationDetails![0].instructedAmount).toEqual({
+      currency: "EUR",
+      amount: "123.50",
+    });
   });
 
   test("should throw AegisError when active is missing", () => {
@@ -127,7 +160,7 @@ describe("parseIntrospection", () => {
     expect(result.scope).toMatchSnapshot();
   });
 
-  test("should handle loa and aal shorthand fields", () => {
+  test("should handle loa shorthand field", () => {
     const data = {
       active: true,
       sub: "user-loa",
@@ -142,13 +175,11 @@ describe("parseIntrospection", () => {
       jti: null,
       username: null,
       loa: 2,
-      aal: 1,
     } as IntrospectClaimsInput;
 
     const result = parseActive(data);
 
     expect(result.levelOfAssurance).toBe(2);
-    expect(result.adjustedAccessLevel).toBe(1);
   });
 
   test("should prefer long-form over shorthand when both present", () => {
@@ -167,14 +198,11 @@ describe("parseIntrospection", () => {
       username: null,
       levelOfAssurance: 4,
       loa: 2,
-      adjustedAccessLevel: 3,
-      aal: 1,
     } as IntrospectClaimsInput;
 
     const result = parseActive(data);
 
     expect(result.levelOfAssurance).toBe(4);
-    expect(result.adjustedAccessLevel).toBe(3);
   });
 
   test("should convert epoch timestamps to Date objects", () => {

@@ -9,7 +9,6 @@ exports[`parseIntrospection > should handle active false with minimal fields 1`]
 exports[`parseIntrospection > should map Lindorm extension fields 1`] = `
 {
   "active": true,
-  "adjustedAccessLevel": 2,
   "audience": [
     "https://api.example.com",
   ],
@@ -83,6 +82,24 @@ exports[`parseIntrospection > should split scope string into array 1`] = `
   "profile",
   "email",
   "offline_access",
+]
+`;
+
+exports[`parseIntrospection > should surface authorization_details as authorizationDetails (RFC 9396) 1`] = `
+[
+  {
+    "actions": [
+      "initiate",
+    ],
+    "instructedAmount": {
+      "amount": "123.50",
+      "currency": "EUR",
+    },
+    "locations": [
+      "https://api.bank.example.com/payments",
+    ],
+    "type": "payment_initiation",
+  },
 ]
 `;
 

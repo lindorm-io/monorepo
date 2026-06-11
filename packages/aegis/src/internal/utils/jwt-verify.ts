@@ -10,8 +10,6 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
   switch (key) {
     case "accessToken":
       return "at_hash";
-    case "adjustedAccessLevel":
-      return "aal";
     case "audience":
       return "aud";
     case "authCode":
@@ -56,6 +54,10 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
       return "suh";
     case "tenantId":
       return "tenant_id";
+    case "vectorOfTrust":
+      return "vot";
+    case "vectorTrustMark":
+      return "vtm";
     default:
       throw new JwtError(`Unsupported key: ${key as any} for JWT verification`, {
         code: "jwt_verify_unsupported_key",

@@ -7,6 +7,7 @@ import type {
   OAuthClaims,
   OidcClaims,
   PopClaims,
+  RarClaims,
   DelegationClaims,
   StdClaims,
 } from "../claims/index.js";
@@ -20,6 +21,7 @@ export type SignJwtContent<C extends Dict = Dict> = Omit<
   PopClaims &
   DelegationClaims &
   OAuthClaims &
+  RarClaims &
   LindormClaims & {
     accessToken?: string;
     authCode?: string;

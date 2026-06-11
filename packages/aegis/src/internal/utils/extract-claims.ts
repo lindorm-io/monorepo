@@ -1,5 +1,5 @@
 import { isArray, isFinite, isObject, isString } from "@lindorm/is";
-import type { Dict } from "@lindorm/types";
+import type { AuthorizationDetail, Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
 import type { ActClaim } from "../../types/claims/act-claim.js";
 import type { ConfirmationClaim } from "../../types/claims/confirmation-claim.js";
@@ -7,12 +7,10 @@ import type { LindormClaims } from "../../types/claims/lindorm-claims.js";
 import type { OAuthClaims } from "../../types/claims/oauth-claims.js";
 import type { OidcClaims } from "../../types/claims/oidc-claims.js";
 import type { PopClaims } from "../../types/claims/pop-claims.js";
+import type { RarClaims } from "../../types/claims/rar-claims.js";
 import type { DelegationClaims } from "../../types/claims/delegation-claims.js";
 import type { StdClaims } from "../../types/claims/std-claims.js";
-import type {
-  AdjustedAccessLevel,
-  LevelOfAssurance,
-} from "../../types/level-of-assurance.js";
+import type { LevelOfAssurance } from "../../types/level-of-assurance.js";
 
 // Unified domain claim set — RFC-grouped intersection that JWT parsing,
 // introspection parsing, and userinfo parsing all share.
@@ -21,6 +19,7 @@ export type DomainClaims = StdClaims &
   PopClaims &
   DelegationClaims &
   OAuthClaims &
+  RarClaims &
   LindormClaims;
 
 export type ExtractClaimsResult = {
@@ -54,14 +53,18 @@ const FIELD_KEYS: Record<string, ReadonlyArray<string>> = {
   codeHash: ["codeHash", "c_hash"],
   nonce: ["nonce"],
   stateHash: ["stateHash", "s_hash"],
+  vectorOfTrust: ["vectorOfTrust", "vot"],
+  vectorTrustMark: ["vectorTrustMark", "vtm"],
 
   // OAuthClaims (RFC 9068)
   entitlements: ["entitlements"],
   groups: ["groups"],
   roles: ["roles"],
 
+  // RarClaims (RFC 9396)
+  authorizationDetails: ["authorizationDetails", "authorization_details"],
+
   // LindormClaims
-  adjustedAccessLevel: ["adjustedAccessLevel", "aal"],
   authFactor: ["authFactor", "afr"],
   clientId: ["clientId", "client_id"],
   grantType: ["grantType", "gty"],
@@ -192,12 +195,15 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
   const codeHash = consume(FIELD_KEYS.codeHash);
   const nonce = consume(FIELD_KEYS.nonce);
   const stateHash = consume(FIELD_KEYS.stateHash);
+  const vectorOfTrust = consume(FIELD_KEYS.vectorOfTrust);
+  const vectorTrustMark = consume(FIELD_KEYS.vectorTrustMark);
 
   const entitlements = consume(FIELD_KEYS.entitlements);
   const groups = consume(FIELD_KEYS.groups);
   const roles = consume(FIELD_KEYS.roles);
 
-  const adjustedAccessLevel = consume(FIELD_KEYS.adjustedAccessLevel);
+  const authorizationDetails = consume(FIELD_KEYS.authorizationDetails);
+
   const authFactor = consume(FIELD_KEYS.authFactor);
   const clientId = consume(FIELD_KEYS.clientId);
   const grantType = consume(FIELD_KEYS.grantType);
@@ -232,6 +238,8 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
     codeHash: isString(codeHash) ? codeHash : undefined,
     nonce: isString(nonce) ? nonce : undefined,
     stateHash: isString(stateHash) ? stateHash : undefined,
+    vectorOfTrust: isString(vectorOfTrust) ? vectorOfTrust : undefined,
+    vectorTrustMark: isString(vectorTrustMark) ? vectorTrustMark : undefined,
 
     // PopClaims
     confirmation: toConfirmation(confirmation),
@@ -245,10 +253,12 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
     groups: isArray(groups) ? (groups as Array<string>) : undefined,
     roles: toStringArray(roles),
 
-    // LindormClaims
-    adjustedAccessLevel: isFinite<AdjustedAccessLevel>(adjustedAccessLevel)
-      ? adjustedAccessLevel
+    // RarClaims — carried verbatim, no key translation (RFC 9396)
+    authorizationDetails: isArray(authorizationDetails)
+      ? (authorizationDetails as Array<AuthorizationDetail>)
       : undefined,
+
+    // LindormClaims
     authFactor: isArray(authFactor) ? (authFactor as Array<string>) : undefined,
     clientId: isString(clientId) ? clientId : undefined,
     grantType: isString(grantType) ? grantType : undefined,

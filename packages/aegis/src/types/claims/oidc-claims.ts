@@ -10,4 +10,6 @@ export type OidcClaims = {
   codeHash?: string;
   nonce?: string;
   stateHash?: string;
+  vectorOfTrust?: string;
+  vectorTrustMark?: string;
 };

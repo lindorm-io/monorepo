@@ -7,6 +7,7 @@ import type {
   OAuthClaims,
   OidcClaims,
   PopClaims,
+  RarClaims,
   DelegationClaims,
   StdClaims,
 } from "../claims/index.js";
@@ -22,6 +23,7 @@ export type ParsedJwtPayload<C extends Dict = Dict> = StdClaims &
   PopClaims &
   DelegationClaims &
   OAuthClaims &
+  RarClaims &
   LindormClaims & {
     audience: Array<string>;
     authMethods: Array<string>;

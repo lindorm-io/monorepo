@@ -115,13 +115,15 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
     : undefined;
 
   return removeUndefined({
-    aal: isFinite(content.adjustedAccessLevel) ? content.adjustedAccessLevel : undefined,
     acr: isString(content.authContextClass) ? content.authContextClass : undefined,
     act: isObject(content.act) ? actClaimToWire(content.act) : undefined,
     afr: isArray(content.authFactor) ? content.authFactor : undefined,
     amr: isArray(content.authMethods) ? content.authMethods : undefined,
     at_hash,
     aud: isArray(content.audience) ? content.audience : undefined,
+    authorization_details: isArray(content.authorizationDetails)
+      ? content.authorizationDetails
+      : undefined,
     auth_time: isDate(content.authTime) ? getUnixTime(content.authTime) : undefined,
     azp: isString(content.authorizedParty) ? content.authorizedParty : undefined,
     c_hash,
@@ -151,6 +153,8 @@ export const mapJwtContentToClaims = <C extends Dict = Dict>(
     sub: content.subject,
     suh: isString(content.subjectHint) ? content.subjectHint : undefined,
     tenant_id: isString(content.tenantId) ? content.tenantId : undefined,
+    vot: isString(content.vectorOfTrust) ? content.vectorOfTrust : undefined,
+    vtm: isString(content.vectorTrustMark) ? content.vectorTrustMark : undefined,
   });
 };
 
