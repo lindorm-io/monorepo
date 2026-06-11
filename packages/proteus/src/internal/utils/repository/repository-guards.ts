@@ -101,6 +101,25 @@ export const guardAppendOnly = (metadata: EntityMetadata, method: string): void 
   }
 };
 
+export const guardEncryptedField = (
+  metadata: EntityMetadata,
+  property: string,
+  method: string,
+): void => {
+  const field = metadata.fields.find((f) => f.key === property);
+  if (field?.encrypted) {
+    throw new ProteusRepositoryError(
+      `Cannot ${method} encrypted field "${property}" on entity "${metadata.entity.name}"`,
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details: `The encrypted field "${property}" is stored as ciphertext and cannot be ${method}ed in place; read, mutate, and write the value back instead.`,
+        debug: { entityName: metadata.entity.name, property, method },
+      },
+    );
+  }
+};
+
 export const validateRelationNames = (
   metadata: EntityMetadata,
   names: Array<string>,
