@@ -18,6 +18,8 @@ export const registerEntity = (name: string, target: Function): void => {
 export const findEntityByName = (name: string): Function | undefined =>
   entityRegistry.get(name);
 
+export const getRegisteredTargets = (): Array<Function> => [...entityRegistry.values()];
+
 export const findEntityByTarget = (target: Function): string | undefined =>
   targetToName.get(target);
 
