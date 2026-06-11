@@ -1,0 +1,20 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildConflictPredicate > builds predicate from a single conflictOn field 1`] = `
+{
+  "email": "user@test.com",
+}
+`;
+
+exports[`buildConflictPredicate > builds predicate from multiple conflictOn fields 1`] = `
+{
+  "email": "user@test.com",
+  "tenantId": "t-1",
+}
+`;
+
+exports[`buildConflictPredicate > excludes non-conflict fields from the predicate 1`] = `
+{
+  "email": "user@test.com",
+}
+`;

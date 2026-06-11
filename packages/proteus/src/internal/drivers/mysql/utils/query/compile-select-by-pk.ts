@@ -23,10 +23,31 @@ export const compileSelectByPk = <E extends IEntity>(
   metadata: EntityMetadata,
   namespace?: string | null,
 ): CompiledSql => {
-  return buildSelectByPk(
+  return buildSelectByColumns(
     metadata,
     namespace,
-    (primaryKey) => (entity as any)[primaryKey],
+    metadata.primaryKeys,
+    (key) => (entity as any)[key],
+  );
+};
+
+/**
+ * Compile a SELECT by an arbitrary set of (conflict) columns for an entity
+ * instance. Used by upsert with `conflictOn` where the row must be selected
+ * back by the conflict columns rather than the primary key (the existing row
+ * keeps its original PK after ON DUPLICATE KEY UPDATE).
+ */
+export const compileSelectByColumns = <E extends IEntity>(
+  entity: E,
+  metadata: EntityMetadata,
+  columnKeys: Array<string>,
+  namespace?: string | null,
+): CompiledSql => {
+  return buildSelectByColumns(
+    metadata,
+    namespace,
+    columnKeys,
+    (key) => (entity as any)[key],
   );
 };
 
@@ -40,7 +61,12 @@ export const compileSelectByPkValues = (
   namespace?: string | null,
 ): CompiledSql => {
   let index = 0;
-  return buildSelectByPk(metadata, namespace, () => pkValues[index++]);
+  return buildSelectByColumns(
+    metadata,
+    namespace,
+    metadata.primaryKeys,
+    () => pkValues[index++],
+  );
 };
 
 /**
@@ -193,10 +219,11 @@ export const compileSelectByPkStartLimit = (
   return { text, params };
 };
 
-const buildSelectByPk = (
+const buildSelectByColumns = (
   metadata: EntityMetadata,
   namespace: string | null | undefined,
-  getPkValue: (key: string) => unknown,
+  columnKeys: Array<string>,
+  getValue: (key: string) => unknown,
 ): CompiledSql => {
   const resolved = resolveTableName(metadata, namespace);
   const rootAlias = "t0";
@@ -209,10 +236,10 @@ const buildSelectByPk = (
   const params: Array<unknown> = [];
   const conditions: Array<string> = [];
 
-  for (const primaryKey of metadata.primaryKeys) {
-    const field = metadata.fields.find((f) => f.key === primaryKey);
-    const colName = field?.name ?? primaryKey;
-    params.push(getPkValue(primaryKey));
+  for (const key of columnKeys) {
+    const field = metadata.fields.find((f) => f.key === key);
+    const colName = field?.name ?? key;
+    params.push(getValue(key));
     conditions.push(`${quoteIdentifier(rootAlias)}.${quoteIdentifier(colName)} = ?`);
   }
 

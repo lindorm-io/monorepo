@@ -531,6 +531,51 @@ describe("compileUpsert", () => {
       expect(result.text).not.toMatch(/ON CONFLICT \("id"\)/);
     });
 
+    test("resolves conflictColumns property keys to their DB column names", () => {
+      // The entity property key "emailAddress" maps to DB column "email_address".
+      // The ON CONFLICT target must use the resolved column name, not the key.
+      const meta = {
+        ...baseMetadata,
+        entity: { ...baseMetadata.entity, name: "accounts", namespace: "auth" },
+        fields: [
+          makeField("id", { type: "uuid", name: "account_id" }),
+          makeField("emailAddress", { type: "string", name: "email_address" }),
+          makeField("displayName", { type: "string", name: "display_name" }),
+        ],
+        primaryKeys: ["id"],
+      } as unknown as EntityMetadata;
+
+      const entity = {
+        id: "acc-1",
+        emailAddress: "user@test.com",
+        displayName: "User",
+      };
+      const result = compileUpsert(entity, meta, undefined, {
+        conflictColumns: ["emailAddress"],
+      });
+      expect(result).toMatchSnapshot();
+      expect(result.text).toContain('ON CONFLICT ("email_address")');
+      // The unresolved property key must NOT leak into the SQL
+      expect(result.text).not.toContain('ON CONFLICT ("emailAddress")');
+    });
+
+    test("resolves PK property keys to their DB column names in the default conflict target", () => {
+      const meta = {
+        ...baseMetadata,
+        entity: { ...baseMetadata.entity, name: "accounts", namespace: "auth" },
+        fields: [
+          makeField("id", { type: "uuid", name: "account_id" }),
+          makeField("status", { type: "string" }),
+        ],
+        primaryKeys: ["id"],
+      } as unknown as EntityMetadata;
+
+      const entity = { id: "acc-1", status: "active" };
+      const result = compileUpsert(entity, meta);
+      expect(result).toMatchSnapshot();
+      expect(result.text).toContain('ON CONFLICT ("account_id")');
+    });
+
     test("conflictColumns are quoted identifiers, not raw strings", () => {
       // Column names must be properly quoted even when coming from options
       const result = compileUpsert(baseEntity, baseMetadata, undefined, {
