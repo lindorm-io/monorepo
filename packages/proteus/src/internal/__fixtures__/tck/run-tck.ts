@@ -44,6 +44,9 @@ import {
 } from "./inheritance.tck.js";
 import { complexPredicatesSuite } from "./complex-predicates.tck.js";
 import { encryptionSuite } from "./encryption.tck.js";
+import { typeCoercionSuite } from "./type-coercion.tck.js";
+import { renamedColumnsSuite } from "./renamed-columns.tck.js";
+import { checkConstraintsSuite } from "./check-constraints.tck.js";
 
 const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {
   if (flag) {
@@ -93,6 +96,9 @@ export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource
     entities.TckArrayHolder,
     entities.TckJsonHolder,
     entities.TckWithAddress,
+    entities.TckTypeHolder,
+    entities.TckRenamedColumns,
+    entities.TckChecked,
   ];
 
   // Encryption test entity
@@ -143,8 +149,9 @@ export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource
   relationsOneToOneSuite(getHandle, entities);
   relationsOneToManySuite(getHandle, entities);
   relationsManyToManySuite(getHandle, entities);
-  upsertSuite(getHandle, entities);
+  upsertSuite(getHandle, entities, caps);
   complexPredicatesSuite(getHandle, entities);
+  renamedColumnsSuite(getHandle, entities);
 
   // Capability-gated suites
   maybeDescribe(caps.softDelete, "softDelete", () =>
@@ -172,6 +179,12 @@ export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource
   );
   maybeDescribe(caps.referentialIntegrity, "referentialIntegrity", () =>
     foreignKeysSuite(getHandle, entities),
+  );
+  maybeDescribe(caps.checkConstraints, "checkConstraints", () =>
+    checkConstraintsSuite(getHandle, entities),
+  );
+  maybeDescribe(caps.richColumnTypes, "typeCoercion", () =>
+    typeCoercionSuite(getHandle, entities),
   );
   maybeDescribe(caps.inheritance.singleTable, "inheritance:single-table", () =>
     inheritanceSingleTableSuite(getHandle, entities),
