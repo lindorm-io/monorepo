@@ -173,6 +173,50 @@ export const rpcSuite = (
       await client.close();
     });
 
+    test("should correctly correlate concurrent in-flight requests", async () => {
+      const handle = getHandle();
+      const { TckRpcRequest, TckRpcResponse } = messages;
+
+      const server = handle.rpcServer(TckRpcRequest, TckRpcResponse);
+      const client = handle.rpcClient(TckRpcRequest, TckRpcResponse);
+
+      // Variable per-question delays force responses to complete OUT of request
+      // order, so each promise can only resolve to its own answer via
+      // correlationId matching — not by arrival order. A broken reply-queue /
+      // correlationId on a real broker would cross-talk and fail this.
+      const delays: Record<string, number> = {
+        alpha: 120,
+        beta: 40,
+        gamma: 80,
+        delta: 10,
+      };
+
+      await server.serve(async (req) => {
+        await wait(delays[req.question] ?? 10);
+        const res = new TckRpcResponse();
+        res.answer = `reply-${req.question}`;
+        return res;
+      });
+
+      await wait(200);
+
+      const questions = ["alpha", "beta", "gamma", "delta"];
+
+      const responses = await Promise.all(
+        questions.map((q) => {
+          const req = new TckRpcRequest();
+          req.question = q;
+          return client.request(req);
+        }),
+      );
+
+      // Promise.all preserves position, so each response must match ITS request.
+      expect(responses.map((r) => r.answer)).toEqual(questions.map((q) => `reply-${q}`));
+
+      await server.unserveAll();
+      await client.close();
+    });
+
     test("should preserve message fields in request/response roundtrip", async () => {
       const handle = getHandle();
       const { TckRpcRequest, TckRpcResponse } = messages;

@@ -45,6 +45,10 @@ const factory: TckDriverFactory = {
     broadcast: true,
     encryption: true,
     compression: true,
+    strictOrdering: true,
+    evenDistribution: true,
+    exactlyOnce: true,
+    priority: false,
   },
   async setup(messages: Array<Constructor<IMessage>>): Promise<TckDriverHandle> {
     const logger = createMockLogger();
