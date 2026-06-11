@@ -34,6 +34,36 @@ export type TckCapabilities = {
   encryption: boolean;
   /** Compression via @Compressed */
   compression: boolean;
+
+  // ─── Delivery-guarantee capabilities ─────────────────────────────────────────
+
+  /**
+   * Delivery order equals publish order across a single consumer.
+   * Memory dispatches synchronously in publish order; real brokers (Kafka
+   * partitions, consumer-group rebalancing, Rabbit prefetch) do not guarantee
+   * global ordering across a consumer.
+   */
+  strictOrdering: boolean;
+  /**
+   * Competing consumers on a queue receive exactly-even counts.
+   * Memory uses a deterministic round-robin; real brokers distribute by
+   * prefetch / partition assignment, so counts may be uneven.
+   */
+  evenDistribution: boolean;
+  /**
+   * No redelivery or duplication — a successfully handled message is delivered
+   * exactly once (attempt stays 0 on success). Real brokers offer at-least-once
+   * delivery and may redeliver on rebalancing or ack timing.
+   */
+  exactlyOnce: boolean;
+  /**
+   * Higher-priority messages are delivered before lower-priority messages that
+   * are already waiting in the queue. Only brokers with native priority-queue
+   * support honor @Priority / the `priority` publish option (currently RabbitMQ
+   * via `x-max-priority`). Memory/Kafka/NATS/Redis treat priority as advisory
+   * metadata only and deliver in publish order.
+   */
+  priority: boolean;
 };
 
 export type TckDriverHandle = {

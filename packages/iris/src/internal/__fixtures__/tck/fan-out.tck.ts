@@ -1,7 +1,7 @@
 // TCK: Fan-Out Suite
 // Tests broadcast and queue-based subscription routing.
 
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckMessages } from "./create-tck-messages.js";
 import { wait, waitFor } from "./wait.js";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -10,6 +10,7 @@ export const fanOutSuite = (
   getHandle: () => TckDriverHandle,
   messages: TckMessages,
   timeoutMs: number,
+  caps?: TckCapabilities,
 ) => {
   describe("fan-out", () => {
     beforeEach(async () => {
@@ -47,9 +48,50 @@ export const fanOutSuite = (
 
       await waitFor(() => r1.length >= 1 && r2.length >= 1 && r3.length >= 1, timeoutMs);
 
-      expect(r1).toHaveLength(1);
-      expect(r2).toHaveLength(1);
-      expect(r3).toHaveLength(1);
+      if (caps?.exactlyOnce) {
+        // Exactly-once: each subscriber receives the single message precisely once.
+        expect(r1).toHaveLength(1);
+        expect(r2).toHaveLength(1);
+        expect(r3).toHaveLength(1);
+      } else {
+        // At-least-once: each subscriber received it (possibly redelivered).
+        expect(r1.length).toBeGreaterThanOrEqual(1);
+        expect(r2.length).toBeGreaterThanOrEqual(1);
+        expect(r3.length).toBeGreaterThanOrEqual(1);
+      }
+    });
+
+    test("a subscriber mutating its envelope headers does not leak to other subscribers", async () => {
+      const handle = getHandle();
+      const bus = handle.messageBus(messages.TckBasicMessage);
+
+      let aRan = false;
+      let bSawAsMutation: string | undefined = "sentinel";
+
+      // Subscriber A mutates its delivered envelope's headers.
+      await bus.subscribe({
+        topic: "TckBasicMessage",
+        callback: async (_msg, env) => {
+          env.headers["x-iso-leak"] = "mutated-by-A";
+          aRan = true;
+        },
+      });
+      // Subscriber B records whether it observes A's mutation. Each delivery must
+      // be isolated (real brokers re-parse per delivery); memory dispatches
+      // broadcast in subscription order, so A mutates before B reads.
+      await bus.subscribe({
+        topic: "TckBasicMessage",
+        callback: async (_msg, env) => {
+          bSawAsMutation = env.headers["x-iso-leak"];
+        },
+      });
+
+      await bus.publish(bus.create({ body: "iso" } as any));
+
+      await waitFor(() => aRan && bSawAsMutation !== "sentinel", timeoutMs);
+
+      // B must NOT see A's mutation — envelopes are isolated per delivery.
+      expect(bSawAsMutation).toBeUndefined();
     });
 
     test("queue grouping round-robins within queue", async () => {
@@ -80,9 +122,18 @@ export const fanOutSuite = (
 
       await waitFor(() => r1.length + r2.length >= 4, timeoutMs);
 
-      // Both consumers share the 4 messages (distribution may vary by broker —
-      // Redis Streams may assign all messages to one consumer with few messages)
-      expect(r1.length + r2.length).toBe(4);
+      const expected = ["rr-0", "rr-1", "rr-2", "rr-3"];
+      const all = [...r1, ...r2].map((m) => m.body);
+
+      if (caps?.exactlyOnce) {
+        // Exactly-once: the group receives the 4 messages, no duplication.
+        expect(r1.length + r2.length).toBe(4);
+        expect(all.sort()).toEqual(expected);
+      } else {
+        // At-least-once: every message delivered to the group at least once.
+        const unique = [...new Set(all)].sort();
+        expect(unique).toEqual(expected);
+      }
     });
 
     test("unsubscribe one subscriber does not affect others", async () => {
@@ -170,11 +221,21 @@ export const fanOutSuite = (
         timeoutMs,
       );
 
-      // Each group receives all 4 messages total
-      const totalA = groupA1.length + groupA2.length;
-      const totalB = groupB1.length + groupB2.length;
-      expect(totalA).toBe(4);
-      expect(totalB).toBe(4);
+      const expected = ["multi-q-0", "multi-q-1", "multi-q-2", "multi-q-3"];
+      const allA = [...groupA1, ...groupA2].map((m) => m.body);
+      const allB = [...groupB1, ...groupB2].map((m) => m.body);
+
+      if (caps?.exactlyOnce) {
+        // Exactly-once: each group receives all 4 messages total, no duplication.
+        expect(groupA1.length + groupA2.length).toBe(4);
+        expect(groupB1.length + groupB2.length).toBe(4);
+        expect(allA.sort()).toEqual(expected);
+        expect(allB.sort()).toEqual(expected);
+      } else {
+        // At-least-once: every message delivered to each group at least once.
+        expect([...new Set(allA)].sort()).toEqual(expected);
+        expect([...new Set(allB)].sort()).toEqual(expected);
+      }
 
       // Within each group, messages are distributed (distribution may vary by broker —
       // with few messages, one consumer in the group may receive all of them)

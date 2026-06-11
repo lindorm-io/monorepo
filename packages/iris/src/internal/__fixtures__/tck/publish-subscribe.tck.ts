@@ -1,7 +1,7 @@
 // TCK: Publish-Subscribe Suite
 // Structural assertions (not snapshots) for cross-driver portability.
 
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckMessages } from "./create-tck-messages.js";
 import { wait, waitFor } from "./wait.js";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -10,6 +10,7 @@ export const publishSubscribeSuite = (
   getHandle: () => TckDriverHandle,
   messages: TckMessages,
   timeoutMs: number,
+  caps?: TckCapabilities,
 ) => {
   describe("publish-subscribe", () => {
     const { TckBasicMessage } = messages;
@@ -61,10 +62,17 @@ export const publishSubscribeSuite = (
 
       await waitFor(() => received.length >= 3, timeoutMs);
 
-      expect(received).toHaveLength(3);
-      expect(received[0].body).toBe("first");
-      expect(received[1].body).toBe("second");
-      expect(received[2].body).toBe("third");
+      if (caps?.strictOrdering) {
+        expect(received).toHaveLength(3);
+        expect(received[0].body).toBe("first");
+        expect(received[1].body).toBe("second");
+        expect(received[2].body).toBe("third");
+      } else {
+        // Order not guaranteed across a single consumer on real brokers —
+        // assert set-equality: every message arrived, order-independent.
+        const bodies = received.map((m) => m.body).sort();
+        expect(bodies).toEqual(["first", "second", "third"]);
+      }
     });
 
     test("should not error when publishing to topic with no subscribers", async () => {
@@ -249,12 +257,19 @@ export const publishSubscribeSuite = (
 
       await waitFor(() => received.length >= 5, timeoutMs);
 
-      expect(received).toHaveLength(5);
-      expect(received[0].body).toBe("seq-0");
-      expect(received[1].body).toBe("seq-1");
-      expect(received[2].body).toBe("seq-2");
-      expect(received[3].body).toBe("seq-3");
-      expect(received[4].body).toBe("seq-4");
+      if (caps?.strictOrdering) {
+        expect(received).toHaveLength(5);
+        expect(received[0].body).toBe("seq-0");
+        expect(received[1].body).toBe("seq-1");
+        expect(received[2].body).toBe("seq-2");
+        expect(received[3].body).toBe("seq-3");
+        expect(received[4].body).toBe("seq-4");
+      } else {
+        // Order not guaranteed across a single consumer on real brokers —
+        // assert set-equality: every message arrived, order-independent.
+        const bodies = received.map((m) => m.body).sort();
+        expect(bodies).toEqual(["seq-0", "seq-1", "seq-2", "seq-3", "seq-4"]);
+      }
     });
 
     test("subscriber callback receives message with correct fields", async () => {

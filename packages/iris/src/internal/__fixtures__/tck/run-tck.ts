@@ -92,15 +92,15 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
 
   // Always-on suites
   if (shouldRun("publish-subscribe"))
-    publishSubscribeSuite(getHandle, messages, timeoutMs);
-  if (shouldRun("fan-out")) fanOutSuite(getHandle, messages, timeoutMs);
+    publishSubscribeSuite(getHandle, messages, timeoutMs, caps);
+  if (shouldRun("fan-out")) fanOutSuite(getHandle, messages, timeoutMs, caps);
   if (shouldRun("topic-resolution")) topicResolutionSuite(getHandle, messages, timeoutMs);
   if (shouldRun("hooks")) hooksSuite(getHandle, messages, hookLog, timeoutMs);
 
   // Capability-gated suites
   if (shouldRun("worker-queue"))
     maybeDescribe(caps.workerQueue, "workerQueue", () =>
-      workerQueueSuite(getHandle, messages, timeoutMs),
+      workerQueueSuite(getHandle, messages, timeoutMs, caps),
     );
   if (shouldRun("retry-dead-letter"))
     maybeDescribe(caps.retry, "retry", () =>

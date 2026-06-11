@@ -52,6 +52,10 @@ const factory: TckDriverFactory = {
     broadcast: true,
     encryption: true,
     compression: true,
+    strictOrdering: false,
+    evenDistribution: false,
+    exactlyOnce: false,
+    priority: true,
   },
   async setup(messages: Array<Constructor<IMessage>>): Promise<TckDriverHandle> {
     const logger = createMockLogger();
@@ -65,6 +69,11 @@ const factory: TckDriverFactory = {
       logger: logger as any,
       messages,
       amphora: mockAmphora as any,
+      // prefetch 1 so a single consumer drains the queue strictly one message
+      // at a time. This makes priority-queue ordering deterministic: the broker
+      // dispatches the highest-priority waiting message before lower-priority
+      // ones, and never has more than one unacked delivery in flight.
+      prefetch: 1,
     });
 
     await source.connect();
