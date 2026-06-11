@@ -37,6 +37,7 @@ import { buildPrimaryKeyPredicate } from "../utils/repository/build-pk-predicate
 import {
   guardAppendOnly,
   guardDeleteDateField,
+  guardEncryptedField,
   guardExpiryDateField,
   guardUpsertBlocked,
 } from "../utils/repository/repository-guards.js";
@@ -547,6 +548,7 @@ export abstract class DriverRepositoryBase<
     value: number,
   ): Promise<void> {
     guardAppendOnly(this.metadata, "increment");
+    guardEncryptedField(this.metadata, property as string, "increment");
     await this.executor.executeIncrement(criteria, property, value);
   }
 
@@ -556,6 +558,7 @@ export abstract class DriverRepositoryBase<
     value: number,
   ): Promise<void> {
     guardAppendOnly(this.metadata, "decrement");
+    guardEncryptedField(this.metadata, property as string, "decrement");
     await this.executor.executeDecrement(criteria, property, value);
   }
 
