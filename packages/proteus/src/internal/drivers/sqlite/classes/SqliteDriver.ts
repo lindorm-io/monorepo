@@ -80,6 +80,12 @@ export class SqliteDriver implements IProteusDriver {
       readonly: this.options.readonly ?? false,
     });
 
+    // Return 64-bit INTEGER columns as JS BigInt so values beyond
+    // Number.MAX_SAFE_INTEGER (2^53) round-trip without precision loss. The
+    // shared `deserialise` step narrows BigInt back to number for non-bigint
+    // field types, so only @Field("bigint") columns surface as BigInt.
+    database.defaultSafeIntegers(true);
+
     // Enable WAL mode for better concurrency
     database.pragma("journal_mode = WAL");
     // Enable foreign key enforcement

@@ -88,6 +88,11 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
       return String(value);
     }
 
+    case "binary": {
+      if (value == null) return null;
+      return Buffer.isBuffer(value) ? value : Buffer.from(value);
+    }
+
     case "array":
     case "object":
     case "json": {

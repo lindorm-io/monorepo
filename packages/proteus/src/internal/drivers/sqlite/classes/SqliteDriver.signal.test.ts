@@ -159,7 +159,8 @@ describe("SqliteDriver + AbortSignal", () => {
       cleanup = made.cleanup;
       const session = withSession(made.driver, undefined);
       const result = await session.query("SELECT 1 AS one");
-      expect(result.rows[0]).toEqual({ one: 1 });
+      // safeIntegers mode returns raw INTEGER columns as BigInt.
+      expect(result.rows[0]).toEqual({ one: 1n });
     });
 
     test("beginTransaction resolves when no signal", async () => {
@@ -179,7 +180,8 @@ describe("SqliteDriver + AbortSignal", () => {
       const controller = new AbortController();
       const session = withSession(made.driver, controller.signal);
       const result = await session.query("SELECT 1 AS one");
-      expect(result.rows[0]).toEqual({ one: 1 });
+      // safeIntegers mode returns raw INTEGER columns as BigInt.
+      expect(result.rows[0]).toEqual({ one: 1n });
     });
   });
 });
