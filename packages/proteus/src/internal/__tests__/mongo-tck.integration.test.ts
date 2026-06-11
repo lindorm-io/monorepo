@@ -37,6 +37,12 @@ const factory: TckDriverFactory = {
     queryBuilder: true,
     uniqueEnforcement: true,
     referentialIntegrity: false,
+    checkConstraints: false,
+    // Mongo stores bigint/decimal/binary as BSON Long/Decimal128/Binary, which
+    // do not round-trip to identical JS types through the shared deserialise.
+    richColumnTypes: false,
+    // Mongo's driver rejects conflictOn by design (NotSupportedError).
+    upsertConflictColumns: false,
     encryption: true,
     inheritance: { singleTable: true, joined: false },
     transactions: { rollback: true, savepoints: false },

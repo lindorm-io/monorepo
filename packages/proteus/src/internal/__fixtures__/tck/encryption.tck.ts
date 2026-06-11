@@ -2,6 +2,7 @@ import { describe, test, expect, beforeEach } from "vitest";
 // TCK: Encryption Suite
 // Tests field-level encryption via @Encrypted decorator across all drivers.
 
+import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 import type { TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 
@@ -320,6 +321,52 @@ export const encryptionSuite = (
         }));
 
         expect(mapped).toMatchSnapshot();
+      });
+    });
+
+    // ─── Increment / Decrement Rejection ───────────────────────────────
+    // Encrypted fields are stored as ciphertext; in-place arithmetic is
+    // nonsensical. The guard lives in DriverRepositoryBase so EVERY driver
+    // (memory + SQL) rejects symmetrically before any driver SQL is emitted.
+
+    describe("increment/decrement of an encrypted field is rejected", () => {
+      test("increment of an encrypted numeric field throws ProteusRepositoryError", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        const inserted = await repo.insert({
+          secret: "s",
+          pin: 1000,
+          verified: false,
+          metadata: {},
+          optionalSecret: null,
+          transformedSecret: "test",
+        });
+
+        await expect(repo.increment({ id: inserted.id }, "pin", 1)).rejects.toThrow(
+          ProteusRepositoryError,
+        );
+
+        // The ciphertext value is untouched — no partial mutation occurred.
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.pin).toBe(1000);
+      });
+
+      test("decrement of an encrypted numeric field throws ProteusRepositoryError", async () => {
+        const repo = getHandle().repository(TckEncrypted);
+        const inserted = await repo.insert({
+          secret: "s",
+          pin: 1000,
+          verified: false,
+          metadata: {},
+          optionalSecret: null,
+          transformedSecret: "test",
+        });
+
+        await expect(repo.decrement({ id: inserted.id }, "pin", 1)).rejects.toThrow(
+          ProteusRepositoryError,
+        );
+
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.pin).toBe(1000);
       });
     });
   });

@@ -2,11 +2,15 @@ import { test, expect, beforeEach } from "vitest";
 // TCK: Upsert Suite
 // Tests upsert (INSERT ON CONFLICT DO UPDATE) behavior.
 
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 import type { UpsertOptions } from "../../../types/index.js";
 
-export const upsertSuite = (getHandle: () => TckDriverHandle, entities: TckEntities) => {
+export const upsertSuite = (
+  getHandle: () => TckDriverHandle,
+  entities: TckEntities,
+  caps: TckCapabilities,
+) => {
   const { TckSimpleUser, TckUniqueConstrained } = entities;
 
   beforeEach(async () => {
@@ -94,24 +98,21 @@ export const upsertSuite = (getHandle: () => TckDriverHandle, entities: TckEntit
 
   // A31: upsert with conflictOn
 
-  test("upsert with conflictOn uses specified columns", async () => {
-    const repo = getHandle().repository(TckUniqueConstrained);
-    await repo.insert({ email: "test@test.com", name: "Original" });
+  if (caps.upsertConflictColumns) {
+    test("upsert with conflictOn uses specified columns", async () => {
+      const repo = getHandle().repository(TckUniqueConstrained);
+      await repo.insert({ email: "test@test.com", name: "Original" });
 
-    const newEntity = repo.create({ email: "test@test.com", name: "Updated" });
-    const options: UpsertOptions<typeof newEntity> = { conflictOn: ["email"] };
+      const newEntity = repo.create({ email: "test@test.com", name: "Updated" });
+      const options: UpsertOptions<typeof newEntity> = { conflictOn: ["email"] };
 
-    try {
       await repo.upsert(newEntity, options);
-    } catch {
-      // Some drivers (e.g. memory) don't support conflictOn — skip gracefully
-      return;
-    }
 
-    const count = await repo.count({ email: "test@test.com" });
-    expect(count).toBe(1);
+      const count = await repo.count({ email: "test@test.com" });
+      expect(count).toBe(1);
 
-    const found = await repo.findOne({ email: "test@test.com" });
-    expect(found!.name).toBe("Updated");
-  });
+      const found = await repo.findOne({ email: "test@test.com" });
+      expect(found!.name).toBe("Updated");
+    });
+  }
 };

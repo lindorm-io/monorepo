@@ -28,6 +28,20 @@ export type TckCapabilities = {
   uniqueEnforcement: boolean;
   /** DB-level FK constraint enforcement: ON DELETE CASCADE / RESTRICT / SET NULL */
   referentialIntegrity: boolean;
+  /** DB-level CHECK constraint enforcement via @Check() expressions */
+  checkConstraints: boolean;
+  /**
+   * Rich column types round-trip with identical JS types: bigint columns as
+   * JS bigint, decimal columns as precision-preserving string, binary columns
+   * as Node Buffer. Mongo (BSON Long/Decimal128/Binary) and Redis (binary
+   * stored as string) cannot satisfy all three through the shared deserialise.
+   */
+  richColumnTypes: boolean;
+  /**
+   * upsert() honours `conflictOn` to resolve conflicts on a non-PK unique
+   * column. Mongo and Redis reject conflictOn by design (NotSupportedError).
+   */
+  upsertConflictColumns: boolean;
   /** Table inheritance strategies */
   inheritance: {
     /** Single-table inheritance: all subtypes share one table with discriminator column */
