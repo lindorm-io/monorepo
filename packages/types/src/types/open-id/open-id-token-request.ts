@@ -2,6 +2,7 @@
 // https://www.rfc-editor.org/rfc/rfc8693
 // https://www.rfc-editor.org/rfc/rfc6749
 
+import type { AuthorizationDetail } from "./open-id-authorization-detail.js";
 import type { OpenIdGrantType } from "./open-id-grant-type.js";
 
 export type OpenIdTokenRequest = {
@@ -74,6 +75,20 @@ export type OpenIdTokenRequest = {
    * returned.
    */
   authReqId?: string;
+
+  /**
+   * OPTIONAL
+   *
+   * RFC 9396 §7 — Rich Authorization Requests at the token
+   * endpoint. A JSON array of objects, each specifying the
+   * authorization requirements for a particular type of
+   * resource. The values used MUST be a subset of those
+   * authorized in the preceding authorization request (when
+   * applicable). Type-specific fields are carried verbatim.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9396
+   */
+  authorizationDetails?: Array<AuthorizationDetail>;
 
   /**
    * OPTIONAL

@@ -2,6 +2,7 @@
 // https://www.rfc-editor.org/rfc/rfc7636#section-4.1
 // https://www.rfc-editor.org/rfc/rfc8707
 
+import type { AuthorizationDetail } from "./open-id-authorization-detail.js";
 import type { OpenIdCodeChallengeMethod } from "./open-id-code-challenge-method.js";
 import type { OpenIdDisplayMode } from "./open-id-display-mode.js";
 import type { OpenIdPromptMode } from "./open-id-prompt-mode.js";
@@ -56,6 +57,21 @@ export type OpenIdAuthorizeRequestQuery = ExtensionRequestQuery & {
    * Claim by this parameter.
    */
   acrValues?: string;
+
+  /**
+   * OPTIONAL
+   *
+   * RFC 9396 §3 — Rich Authorization Requests. A JSON array of
+   * objects, each specifying the authorization requirements for
+   * a particular type of resource. Each object identifies the
+   * authorization details `type` agreed between client and AS,
+   * and carries type-specific fields verbatim. On a raw query
+   * string this parameter is JSON-encoded as a single string;
+   * this type carries the parsed array form.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9396
+   */
+  authorizationDetails?: Array<AuthorizationDetail>;
 
   /**
    * REQUIRED
