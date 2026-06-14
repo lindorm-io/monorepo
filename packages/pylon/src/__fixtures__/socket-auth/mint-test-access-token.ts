@@ -20,7 +20,7 @@ export const mintTestAccessToken = async (
 ): Promise<MintTestAccessTokenResult> => {
   const expiresIn = input.expiresIn ?? 3600;
 
-  const signed = await aegis.jwt.sign({
+  const signed = await aegis.mint("default", {
     audience: [SOCKET_AUTH_TEST_ISSUER],
     expires: `${expiresIn} seconds`,
     subject: input.subject,
@@ -31,7 +31,9 @@ export const mintTestAccessToken = async (
   return {
     token: signed.token,
     expiresIn,
-    expiresAt: signed.expiresAt,
+    // The "default" profile always derives `exp` (and therefore expiresAt)
+    // when `expires` is supplied, so this is non-null here.
+    expiresAt: signed.expiresAt!,
     signed,
   };
 };
