@@ -5,7 +5,7 @@ export const router = new PylonRouter();
 router.get(
   "/",
   useHandler(async (ctx) => {
-    const token = await ctx.aegis.jwt.sign({
+    const token = await ctx.aegis.mint("default", {
       expires: "1h",
       subject: "test",
       tokenType: "access_token",
