@@ -1,9 +1,10 @@
 import { isBuffer } from "@lindorm/is";
 import { createPrivateKey, createPublicKey } from "crypto";
 import { KryptosError } from "../../../errors/index.js";
-import type { AkpBuffer, KryptosFromJwk } from "../../../types/index.js";
+import type { AkpBuffer, AkpJwk, KryptosFromJwk } from "../../../types/index.js";
+import { assertAkpJwk } from "./assert-jwk.js";
 
-type Options = Omit<KryptosFromJwk, "kid" | "alg" | "use">;
+type Options = Omit<KryptosFromJwk, "kid" | "use">;
 
 type Result = Omit<AkpBuffer, "id" | "algorithm" | "type" | "use">;
 
@@ -15,6 +16,8 @@ export const createAkpDerFromJwk = (options: Options): Result => {
       details: "The provided JWK was missing its required 'pub' component.",
     });
   }
+
+  assertAkpJwk(options as AkpJwk);
 
   const result: Result = {
     publicKey: Buffer.alloc(0),
