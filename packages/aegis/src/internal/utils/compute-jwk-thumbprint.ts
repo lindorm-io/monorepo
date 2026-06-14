@@ -16,6 +16,9 @@ export const computeJwkThumbprint = (jwk: RawJwk): string => {
 
 const computeCanonicalJwk = (jwk: RawJwk): Record<string, unknown> => {
   switch (jwk.kty) {
+    case "AKP":
+      return { alg: jwk.alg, kty: jwk.kty, pub: jwk.pub };
+
     case "EC":
       return { crv: jwk.crv, kty: jwk.kty, x: jwk.x, y: jwk.y };
 

@@ -1,4 +1,5 @@
 import {
+  TEST_AKP_KEY_SIG,
   TEST_EC_KEY_SIG,
   TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_SIG,
@@ -27,6 +28,25 @@ describe("computeJwkThumbprint", () => {
     const thumbprint = computeJwkThumbprint(jwk);
 
     expect(thumbprint).toBe(TEST_OKP_KEY_SIG.thumbprint);
+  });
+
+  test("should compute thumbprint for an AKP (ML-DSA) JWK", () => {
+    const jwk = TEST_AKP_KEY_SIG.export("jwk");
+    const thumbprint = computeJwkThumbprint(jwk);
+
+    expect(thumbprint).toBe(TEST_AKP_KEY_SIG.thumbprint);
+  });
+
+  test("should canonicalise an AKP JWK to exactly alg, kty, pub", () => {
+    const jwk = TEST_AKP_KEY_SIG.export("jwk");
+    const thumbprintWithExtras = computeJwkThumbprint({
+      ...jwk,
+      kid: "some-id",
+      use: "sig",
+      priv: "should-be-ignored",
+    });
+
+    expect(thumbprintWithExtras).toBe(TEST_AKP_KEY_SIG.thumbprint);
   });
 
   test("should compute the same thumbprint regardless of extra fields", () => {
