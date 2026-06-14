@@ -109,7 +109,7 @@ const selectEncryption = async (): Promise<KryptosEncryption> =>
   await select({
     message: "Encryption",
     choices: AES_ENCRYPTION_ALGORITHMS,
-    default: AES_ENCRYPTION_ALGORITHMS[AES_ENCRYPTION_ALGORITHMS.length - 1],
+    default: "A256GCM",
   });
 
 const inputPurpose = async (): Promise<string | null> => {
