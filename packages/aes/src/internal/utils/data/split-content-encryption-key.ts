@@ -1,60 +1,35 @@
 import type { KryptosEncryption } from "@lindorm/kryptos";
-import type { AesKeyLength } from "@lindorm/types";
 import { AesError } from "../../../errors/index.js";
+import { getAesDescriptor } from "../aes-descriptor.js";
 
 type Result = {
   encryptionKey: Buffer;
   hashKey: Buffer;
 };
 
-const encryptionKeyLength = (encryption: KryptosEncryption): AesKeyLength => {
-  switch (encryption) {
-    case "A128CBC-HS256":
-    case "A128GCM":
-      return 16;
-
-    case "A192CBC-HS384":
-    case "A192GCM":
-      return 24;
-
-    case "A256CBC-HS512":
-    case "A256GCM":
-      return 32;
-
-    default:
-      throw new AesError("Unexpected algorithm", {
-        code: "unsupported_encryption",
-        title: "Unsupported Encryption",
-        details:
-          "Determining the encryption key length is only supported for AES-CBC-HMAC and AES-GCM variants.",
-        data: { encryption },
-      });
-  }
-};
-
 export const splitContentEncryptionKey = (
   encryption: KryptosEncryption,
   contentEncryptionKey: Buffer,
 ): Result => {
-  const keyLength = encryptionKeyLength(encryption);
+  const { cipherKeyBytes, mode } = getAesDescriptor(encryption);
 
-  if (encryption.includes("CBC")) {
-    // RFC 7518 Section 5.2.2: MAC_KEY = initial octets, ENC_KEY = final octets
-    const hashKey = contentEncryptionKey.subarray(0, keyLength);
-    const encryptionKey = contentEncryptionKey.subarray(keyLength);
+  if (mode === "cbc-hmac") {
+    // RFC 7518 Section 5.2.2: MAC_KEY = initial octets, ENC_KEY = final octets.
+    const hashKey = contentEncryptionKey.subarray(0, cipherKeyBytes);
+    const encryptionKey = contentEncryptionKey.subarray(cipherKeyBytes);
     return { encryptionKey, hashKey };
   }
 
-  // GCM: encryptionKey = full CEK, hashKey = empty
-  const encryptionKey = contentEncryptionKey.subarray(0, keyLength);
-  const hashKey = contentEncryptionKey.subarray(keyLength);
+  // AEAD (GCM/CCM): encryptionKey = full CEK, hashKey = empty.
+  const encryptionKey = contentEncryptionKey.subarray(0, cipherKeyBytes);
+  const hashKey = contentEncryptionKey.subarray(cipherKeyBytes);
 
   if (hashKey.length) {
     throw new AesError("Unexpected hash key", {
       code: "unexpected_hash_key",
       title: "Unexpected Hash Key",
       details:
-        "AES-GCM uses the full content encryption key for encryption and must not leave any leftover hash key octets.",
+        "AEAD encryption (GCM/CCM) uses the full content encryption key for encryption and must not leave any leftover hash key octets.",
     });
   }
 

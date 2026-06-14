@@ -18,7 +18,7 @@ describe("calculateAesEncryption", () => {
   test("should throw AesError when encryption is falsy", () => {
     expect(() => calculateAesEncryption("" as KryptosEncryption)).toThrow(AesError);
     expect(() => calculateAesEncryption("" as KryptosEncryption)).toThrow(
-      "Encryption algorithm is required",
+      "Unsupported encryption algorithm",
     );
   });
 

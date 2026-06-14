@@ -6,6 +6,8 @@ export type AesInternalEncryption =
   | "aes-256-cbc"
   | "aes-128-gcm"
   | "aes-192-gcm"
-  | "aes-256-gcm";
+  | "aes-256-gcm"
+  | "aes-128-ccm"
+  | "aes-256-ccm";
 
 export type PublicEncryptionJwk = Pick<KryptosJwk, "crv" | "kty" | "x" | "y">;

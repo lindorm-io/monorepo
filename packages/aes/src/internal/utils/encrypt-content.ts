@@ -1,9 +1,14 @@
-import { type CipherGCM, type CipherGCMOptions, createCipheriv } from "crypto";
+import {
+  type CipherCCM,
+  type CipherCCMOptions,
+  type CipherGCM,
+  createCipheriv,
+} from "crypto";
 import type {
   EncryptContentOptions,
   EncryptContentResult,
 } from "../types/prepared-encryption.js";
-import { calculateAesEncryption } from "./calculate/calculate-aes-encryption.js";
+import { getAesDescriptor } from "./aes-descriptor.js";
 import { calculateContentType, contentToBuffer } from "./content.js";
 import { createAuthTag } from "./data/auth-tag.js";
 import { getInitialisationVector } from "./data/get-initialisation-vector.js";
@@ -14,30 +19,37 @@ export const encryptAesContent = (
 ): EncryptContentResult => {
   const { aad, contentEncryptionKey, data, encryption } = options;
 
+  const descriptor = getAesDescriptor(encryption);
   const { encryptionKey, hashKey } = splitContentEncryptionKey(
     encryption,
     contentEncryptionKey,
   );
-  const aesEncryption = calculateAesEncryption(encryption);
   const initialisationVector =
     options.initialisationVector ?? getInitialisationVector(encryption);
-  const isGcm = encryption.includes("GCM");
-  const cipherOptions: CipherGCMOptions | undefined = isGcm
-    ? { authTagLength: 16 }
+
+  const cipherOptions: CipherCCMOptions | undefined = descriptor.aead
+    ? { authTagLength: descriptor.tagBytes }
     : undefined;
   const cipher = createCipheriv(
-    aesEncryption,
+    descriptor.nodeCipher,
     encryptionKey,
     initialisationVector,
-    cipherOptions as CipherGCMOptions,
+    cipherOptions as CipherCCMOptions,
   );
-
-  if (isGcm && aad) {
-    (cipher as CipherGCM).setAAD(aad);
-  }
 
   const contentType = calculateContentType(data);
   const buffer = contentToBuffer(data, contentType);
+
+  // GCM and CCM both authenticate the AAD; CCM additionally requires the
+  // plaintext length up front, and `setAAD` must precede `update`.
+  if (descriptor.aead && aad) {
+    if (descriptor.mode === "ccm") {
+      (cipher as CipherCCM).setAAD(aad, { plaintextLength: buffer.length });
+    } else {
+      (cipher as CipherGCM).setAAD(aad);
+    }
+  }
+
   const content = Buffer.concat([cipher.update(buffer), cipher.final()]);
 
   const authTag = createAuthTag({
