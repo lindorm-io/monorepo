@@ -12,12 +12,34 @@ import {
   TEST_RSA_KEY_SIG,
 } from "../__fixtures__/keys.js";
 import { createJoseSignature } from "../internal/utils/jose-signature.js";
-import type { SignJwtContent } from "../types/index.js";
+import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
+import { defaultProfile } from "../internal/profiles/definitions/default.js";
+import type { ProfileSignOptions, SignContent, SignJwtContent } from "../types/index.js";
 import { JwtKit } from "./JwtKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
+
+// JwtKit.sign is now policy-free (T1): it maps domain → wire and injects no
+// envelope claims (iss/iat/jti/nbf). The historical auto-injecting floor lives
+// in the `default` profile. These tests exercise the full round-trip, so they
+// assemble the default-profile claims (iss/iat/jti/nbf/exp injected) and sign
+// them via JwtKit.signClaims — exactly what aegis.mint("default", …) does.
+const signDefault = (
+  kit: JwtKit,
+  issuer: string,
+  content: SignContent,
+  options: ProfileSignOptions = {},
+) => {
+  const claims = buildProfileClaims(
+    { algorithm: kit.algorithm, issuer },
+    defaultProfile,
+    content,
+    options,
+  );
+  return kit.signClaims(claims, content as SignJwtContent, options);
+};
 
 describe("JwtKit", () => {
   const issuer = "https://test.lindorm.io/";
@@ -33,7 +55,9 @@ describe("JwtKit", () => {
   describe("sign", () => {
     test("should sign token using EC", () => {
       expect(
-        kit.sign(
+        signDefault(
+          kit,
+          issuer,
           {
             expires: "1h",
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -55,7 +79,9 @@ describe("JwtKit", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_OCT_KEY_SIG });
 
       expect(
-        kit.sign(
+        signDefault(
+          kit,
+          issuer,
           {
             expires: "1h",
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -77,7 +103,9 @@ describe("JwtKit", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_OKP_KEY_SIG });
 
       expect(
-        kit.sign(
+        signDefault(
+          kit,
+          issuer,
           {
             expires: "1h",
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -99,7 +127,9 @@ describe("JwtKit", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_RSA_KEY_SIG });
 
       expect(
-        kit.sign(
+        signDefault(
+          kit,
+          issuer,
           {
             expires: "1h",
             subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -120,7 +150,9 @@ describe("JwtKit", () => {
     test("should sign token using AKP (ML-DSA)", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_AKP_KEY_SIG });
 
-      const signed = kit.sign(
+      const signed = signDefault(
+        kit,
+        issuer,
         {
           expires: "1h",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -143,7 +175,7 @@ describe("JwtKit", () => {
     });
 
     test("should sign token without objectId and omit oid from header", () => {
-      const { token, objectId } = kit.sign({
+      const { token, objectId } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -168,7 +200,7 @@ describe("JwtKit", () => {
         },
       ];
 
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         authorizationDetails,
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -204,7 +236,7 @@ describe("JwtKit", () => {
 
   describe("verify", () => {
     test("should verify token and resolve data", () => {
-      const { token, tokenId } = kit.sign({
+      const { token, tokenId } = signDefault(kit, issuer, {
         accessToken:
           "12ceb9251ddf52399fe62f122a45844865a83dcb52585fea90ae3448e0244ab0037950882d705675a4fe248e1c8d9f5c",
         audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
@@ -248,7 +280,7 @@ describe("JwtKit", () => {
             acr: "test_auth_context_class",
             afr: ["test_auth_factor"],
             amr: ["test_auth_method"],
-            at_hash: "ehXwFopDjJcovgdtD6uhQg",
+            at_hash: "ehXwFopDjJcovgdtD6uhQhwII5E___tRO573XDWUJ5Q",
             aud: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
             auth_time: 1641024000,
             azp: "6099162c-3853-5a28-ade1-7f354b68b54b",
@@ -264,7 +296,7 @@ describe("JwtKit", () => {
             nonce: "24d63b3e0be0538890b1",
             permissions: ["test_permission"],
             roles: ["test_role"],
-            s_hash: "LpadyLdMV2YGBJvsrNsr0A",
+            s_hash: "LpadyLdMV2YGBJvsrNsr0CDlm38M7SR_OSWVQsyD6Rc",
             scope: ["test_scope"],
             sid: "d5d79807-52c2-5ac1-a3f1-fc5fe8b9e9af",
             sih: "test_session_hint",
@@ -293,7 +325,7 @@ describe("JwtKit", () => {
           isDelegated: false,
         },
         payload: {
-          accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
+          accessTokenHash: "ehXwFopDjJcovgdtD6uhQhwII5E___tRO573XDWUJ5Q",
           audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
           authContextClass: "test_auth_context_class",
           authFactor: ["test_auth_factor"],
@@ -319,7 +351,7 @@ describe("JwtKit", () => {
           scope: ["test_scope"],
           sessionHint: "test_session_hint",
           sessionId: "d5d79807-52c2-5ac1-a3f1-fc5fe8b9e9af",
-          stateHash: "LpadyLdMV2YGBJvsrNsr0A",
+          stateHash: "LpadyLdMV2YGBJvsrNsr0CDlm38M7SR_OSWVQsyD6Rc",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           subjectHint: "test_subject_hint",
           tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
@@ -332,7 +364,7 @@ describe("JwtKit", () => {
     });
 
     test("should verify token with EC", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -344,7 +376,7 @@ describe("JwtKit", () => {
     test("should verify token with OCT", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_OCT_KEY_SIG });
 
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -356,7 +388,7 @@ describe("JwtKit", () => {
     test("should verify token with OKP", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_OKP_KEY_SIG });
 
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -368,7 +400,7 @@ describe("JwtKit", () => {
     test("should verify token with RSA", () => {
       kit = new JwtKit({ issuer, logger, kryptos: TEST_RSA_KEY_SIG });
 
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -380,7 +412,7 @@ describe("JwtKit", () => {
 
   describe("parse", () => {
     test("should parse token and resolve data", () => {
-      const { token, tokenId } = kit.sign({
+      const { token, tokenId } = signDefault(kit, issuer, {
         accessToken:
           "12ceb9251ddf52399fe62f122a45844865a83dcb52585fea90ae3448e0244ab0037950882d705675a4fe248e1c8d9f5c",
         audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
@@ -424,7 +456,7 @@ describe("JwtKit", () => {
             acr: "test_auth_context_class",
             afr: ["test_auth_factor"],
             amr: ["test_auth_method"],
-            at_hash: "ehXwFopDjJcovgdtD6uhQg",
+            at_hash: "ehXwFopDjJcovgdtD6uhQhwII5E___tRO573XDWUJ5Q",
             aud: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
             auth_time: 1641024000,
             azp: "6099162c-3853-5a28-ade1-7f354b68b54b",
@@ -440,7 +472,7 @@ describe("JwtKit", () => {
             nonce: "24d63b3e0be0538890b1",
             permissions: ["test_permission"],
             roles: ["test_role"],
-            s_hash: "LpadyLdMV2YGBJvsrNsr0A",
+            s_hash: "LpadyLdMV2YGBJvsrNsr0CDlm38M7SR_OSWVQsyD6Rc",
             scope: ["test_scope"],
             sid: "d5d79807-52c2-5ac1-a3f1-fc5fe8b9e9af",
             sih: "test_session_hint",
@@ -469,7 +501,7 @@ describe("JwtKit", () => {
           isDelegated: false,
         },
         payload: {
-          accessTokenHash: "ehXwFopDjJcovgdtD6uhQg",
+          accessTokenHash: "ehXwFopDjJcovgdtD6uhQhwII5E___tRO573XDWUJ5Q",
           audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
           authContextClass: "test_auth_context_class",
           authFactor: ["test_auth_factor"],
@@ -495,7 +527,7 @@ describe("JwtKit", () => {
           scope: ["test_scope"],
           sessionHint: "test_session_hint",
           sessionId: "d5d79807-52c2-5ac1-a3f1-fc5fe8b9e9af",
-          stateHash: "LpadyLdMV2YGBJvsrNsr0A",
+          stateHash: "LpadyLdMV2YGBJvsrNsr0CDlm38M7SR_OSWVQsyD6Rc",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           subjectHint: "test_subject_hint",
           tenantId: "55103fbe-a183-57ec-b553-13af34d83c23",
@@ -510,7 +542,7 @@ describe("JwtKit", () => {
 
   describe("decode", () => {
     test("should decode token", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -539,7 +571,7 @@ describe("JwtKit", () => {
 
   describe("validate", () => {
     test("should validate token payload", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         accessToken:
           "12ceb9251ddf52399fe62f122a45844865a83dcb52585fea90ae3448e0244ab0037950882d705675a4fe248e1c8d9f5c",
         audience: ["427d8455-7d5a-59d3-afb6-7ef2b5bba226"],
@@ -590,7 +622,7 @@ describe("JwtKit", () => {
     };
 
     test("delegation is empty when act claim is absent", () => {
-      const { token } = kit.sign(baseContent);
+      const { token } = signDefault(kit, issuer, baseContent);
 
       const parsed = kit.verify(token);
 
@@ -601,7 +633,7 @@ describe("JwtKit", () => {
     });
 
     test("delegation reflects a single-level act claim", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "service-1" },
       });
@@ -614,13 +646,13 @@ describe("JwtKit", () => {
     });
 
     test("actor.required throws when no act claim is present", () => {
-      const { token } = kit.sign(baseContent);
+      const { token } = signDefault(kit, issuer, baseContent);
 
       expect(() => kit.verify(token, { actor: { required: true } })).toThrow(/act claim/);
     });
 
     test("actor.required passes when act is present", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "service-1" },
       });
@@ -629,7 +661,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.forbidden throws when act is present", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "service-1" },
       });
@@ -640,7 +672,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.allowedActors ($in) accepts a chain of whitelisted subjects", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "service-1", act: { subject: "service-2" } },
       });
@@ -653,7 +685,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.allowedActors defaults to 'every' and rejects an unknown actor", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "service-1", act: { subject: "rogue" } },
       });
@@ -666,7 +698,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.allowedActors matches across fields ($or of subject + clientId)", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: {
           subject: "svc-billing",
@@ -686,7 +718,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.actorScope 'current' only checks the immediate actor", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "service-1", act: { subject: "rogue" } },
       });
@@ -702,7 +734,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.actorScope 'current' rejects when the immediate actor fails", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "rogue", act: { subject: "service-1" } },
       });
@@ -718,7 +750,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.actorScope 'some' passes when any actor matches", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "rogue", act: { subject: "gateway" } },
       });
@@ -734,7 +766,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.actorScope 'some' rejects when no actor matches", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "rogue-1", act: { subject: "rogue-2" } },
       });
@@ -750,7 +782,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.maxChainDepth allows chains at or below the limit", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: { subject: "service-1", act: { subject: "service-2" } },
       });
@@ -759,7 +791,7 @@ describe("JwtKit", () => {
     });
 
     test("actor.maxChainDepth rejects chains exceeding the limit", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         ...baseContent,
         act: {
           subject: "service-1",
@@ -806,7 +838,7 @@ describe("JwtKit", () => {
     };
 
     test("should verify token and resolve data", () => {
-      const { token } = kit.sign(options);
+      const { token } = signDefault(kit, issuer, options);
 
       expect(() =>
         kit.verify(token, {
@@ -820,12 +852,50 @@ describe("JwtKit", () => {
         }),
       ).not.toThrow();
     });
+
+    test("should round-trip at_hash/c_hash/s_hash for an EdDSA (SHA512) token", () => {
+      kit = new JwtKit({ issuer, logger, kryptos: TEST_OKP_KEY_SIG });
+
+      const { token } = signDefault(kit, issuer, options);
+
+      expect(() =>
+        kit.verify(token, {
+          accessToken: options.accessToken,
+          authCode: options.authCode,
+          authState: options.authState,
+        }),
+      ).not.toThrow();
+    });
+
+    test("should round-trip at_hash/c_hash/s_hash for an ML-DSA-65 (SHA512) token", () => {
+      kit = new JwtKit({ issuer, logger, kryptos: TEST_AKP_KEY_SIG });
+
+      const { token } = signDefault(kit, issuer, options);
+
+      expect(() =>
+        kit.verify(token, {
+          accessToken: options.accessToken,
+          authCode: options.authCode,
+          authState: options.authState,
+        }),
+      ).not.toThrow();
+    });
+
+    test("should reject verification when the access token does not match the at_hash", () => {
+      kit = new JwtKit({ issuer, logger, kryptos: TEST_OKP_KEY_SIG });
+
+      const { token } = signDefault(kit, issuer, options);
+
+      expect(() =>
+        kit.verify(token, { accessToken: "a-different-access-token" }),
+      ).toThrow();
+    });
   });
 
   describe("external validation", () => {
     describe("sign", () => {
       test("should sign tokens that other packages can decode", () => {
-        const { token } = kit.sign({
+        const { token } = signDefault(kit, issuer, {
           expires: "1h",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           tokenType: "test_token",
@@ -857,7 +927,7 @@ describe("JwtKit", () => {
       });
 
       test("should sign EC tokens that other packages can verify", () => {
-        const { token } = kit.sign({
+        const { token } = signDefault(kit, issuer, {
           expires: "1h",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           tokenType: "test_token",
@@ -882,7 +952,7 @@ describe("JwtKit", () => {
       test("should sign OCT tokens that other packages can verify", () => {
         kit = new JwtKit({ issuer, logger, kryptos: TEST_OCT_KEY_SIG });
 
-        const { token } = kit.sign({
+        const { token } = signDefault(kit, issuer, {
           expires: "1h",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           tokenType: "test_token",
@@ -905,7 +975,7 @@ describe("JwtKit", () => {
       test("should sign RSA tokens that other packages can verify", () => {
         kit = new JwtKit({ issuer, logger, kryptos: TEST_RSA_KEY_SIG });
 
-        const { token } = kit.sign({
+        const { token } = signDefault(kit, issuer, {
           expires: "1h",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
           tokenType: "test_token",
@@ -973,7 +1043,7 @@ describe("JwtKit", () => {
 
   describe("critical header parameter rejection", () => {
     test("should reject RFC-valid token with an extension critical parameter aegis does not implement", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1001,7 +1071,7 @@ describe("JwtKit", () => {
     });
 
     test("should reject malformed crit listing a parameter not present in the header", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1020,7 +1090,7 @@ describe("JwtKit", () => {
     });
 
     test("should reject crit containing an IANA-registered parameter name", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1039,7 +1109,7 @@ describe("JwtKit", () => {
     });
 
     test("should reject crit that is an empty array", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1058,7 +1128,7 @@ describe("JwtKit", () => {
     });
 
     test("should accept token with empty critical array", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1074,7 +1144,7 @@ describe("JwtKit", () => {
     // Amphora exclusively. See Aegis.kryptosSig for the invariant comment.
 
     test("a malicious jwk in the header must not be usable to verify the token", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1106,7 +1176,7 @@ describe("JwtKit", () => {
     });
 
     test("a malicious x5c in the header must not be usable to verify the token", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1132,7 +1202,7 @@ describe("JwtKit", () => {
       // any token whose `aud` claim includes that audience. Since aud is
       // always stored as an array in the payload, a naive $eq check would
       // incorrectly fail for this common case.
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         audience: ["saga", "mimir"],
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -1145,7 +1215,7 @@ describe("JwtKit", () => {
     });
 
     test("audience array verifier requires every listed audience to be present", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         audience: ["saga", "mimir"],
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -1160,7 +1230,7 @@ describe("JwtKit", () => {
     });
 
     test("AegisProfile round-trips: camelCase input → snake_case wire → camelCase parsed output", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "id_token",
@@ -1267,7 +1337,7 @@ describe("JwtKit", () => {
     });
 
     test("profile is undefined when not supplied on sign", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1278,7 +1348,7 @@ describe("JwtKit", () => {
     });
 
     test("custom claims and profile claims are kept in separate buckets", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1304,7 +1374,7 @@ describe("JwtKit", () => {
     });
 
     test("a malicious x5u in the header must not be fetched or used to verify the token", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
@@ -1331,7 +1401,9 @@ describe("JwtKit", () => {
 
   describe("confirmation claim", () => {
     test("should round-trip a DPoP thumbprint through sign and verify", () => {
-      const { token } = kit.sign(
+      const { token } = signDefault(
+        kit,
+        issuer,
         {
           expires: "1h",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -1352,7 +1424,9 @@ describe("JwtKit", () => {
     });
 
     test("should round-trip all confirmation members", () => {
-      const { token } = kit.sign(
+      const { token } = signDefault(
+        kit,
+        issuer,
         {
           expires: "1h",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -1375,7 +1449,7 @@ describe("JwtKit", () => {
     });
 
     test("should omit cnf entirely when confirmation is not provided", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "access_token",
@@ -1423,7 +1497,9 @@ describe("JwtKit", () => {
     };
 
     test("should verify a DPoP-bound access token with a valid proof", () => {
-      const { token } = kit.sign(
+      const { token } = signDefault(
+        kit,
+        issuer,
         {
           expires: "1h",
           subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -1451,7 +1527,7 @@ describe("JwtKit", () => {
     });
 
     test("should throw when a DPoP-bound access token is verified without a proof", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "access_token",
@@ -1464,7 +1540,7 @@ describe("JwtKit", () => {
     });
 
     test("should throw when a DPoP proof is provided for a non-bound token", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "access_token",
@@ -1477,7 +1553,7 @@ describe("JwtKit", () => {
     });
 
     test("should throw when the proof thumbprint does not match cnf.jkt", () => {
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, issuer, {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "access_token",

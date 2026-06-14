@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`audSingleResource > fails for an empty array 1`] = `
+[
+  {
+    "key": "aud",
+    "message": "Access token aud must resolve to exactly one resource",
+  },
+]
+`;
+
+exports[`audSingleResource > fails for multiple audiences 1`] = `
+[
+  {
+    "key": "aud",
+    "message": "Access token aud must resolve to exactly one resource",
+  },
+]
+`;

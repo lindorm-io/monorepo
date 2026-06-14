@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`subIdShape > fails when a required member of the format is missing 1`] = `
+[
+  {
+    "key": "sub_id.sub",
+    "message": "sub_id of format "iss_sub" requires member "sub"",
+  },
+]
+`;
+
+exports[`subIdShape > fails when format is missing 1`] = `
+[
+  {
+    "key": "sub_id.format",
+    "message": "sub_id.format must be a string",
+  },
+]
+`;
+
+exports[`subIdShape > fails when sub_id is not an object 1`] = `
+[
+  {
+    "key": "sub_id",
+    "message": "sub_id must be an object",
+  },
+]
+`;

@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`everyElementHasKey > fails when an element lacks the key 1`] = `
+[
+  {
+    "key": "authorization_details[1]",
+    "message": "Each "authorization_details" element must be an object with a "type" string member",
+  },
+]
+`;
+
+exports[`everyElementHasKey > fails when the claim is not an array 1`] = `
+[
+  {
+    "key": "authorization_details",
+    "message": "Claim "authorization_details" must be an array",
+  },
+]
+`;

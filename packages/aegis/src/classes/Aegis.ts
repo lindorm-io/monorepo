@@ -7,6 +7,8 @@ import {
   type SerialisedAesEncryption,
 } from "@lindorm/aes";
 import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
+import { isBuffer, isString } from "@lindorm/is";
+import { removeUndefined } from "@lindorm/utils";
 import type {
   IKryptos,
   KryptosEncAlgorithm,
@@ -38,15 +40,29 @@ import type {
   JwsContent,
   ParsedJws,
   ParsedJwt,
+  ProfileContent,
+  ProfileSignOptions,
+  ProfileVerifyOptions,
+  RawSignInput,
+  SignContent,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
   SignedJws,
   SignedJwt,
   TokenHeaderClaims,
+  TokenProfile,
   ValidateJwtOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
+import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
+import { selectEncoder } from "../internal/utils/select-encoder.js";
+import { validateProfileClaims } from "../internal/utils/validate-profile-claims.js";
+import { enforceVerifyFloor } from "../internal/utils/enforce-verify-floor.js";
+import {
+  registerProfile as registerProfileFn,
+  resolveProfile,
+} from "../internal/profiles/registry.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
 import { validate as validateClaims } from "../internal/utils/validate.js";
 import { decodeJoseHeader } from "../internal/utils/jose-header.js";
@@ -131,7 +147,60 @@ export class Aegis implements IAegis {
     };
   }
 
+  public registerProfile(profile: TokenProfile): void {
+    registerProfileFn(profile);
+  }
+
+  public sign(input: RawSignInput): Promise<SignedJws> {
+    return this.signRaw(input);
+  }
+
+  public mint<P extends keyof ProfileContent>(
+    profile: P,
+    content: ProfileContent[P],
+    options?: ProfileSignOptions,
+  ): Promise<SignedJwt>;
+  public mint(
+    profile: string & {},
+    content: SignContent,
+    options?: ProfileSignOptions,
+  ): Promise<SignedJwt>;
+  public mint(
+    profile: string,
+    content: SignContent,
+    options: ProfileSignOptions = {},
+  ): Promise<SignedJwt> {
+    return this.mintProfile(profile, content, options);
+  }
+
+  public verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
+  public verify<T extends ParsedJws<any>>(token: string): Promise<T>;
+  public verify<T extends ParsedJwt>(
+    token: string,
+    options?: VerifyJwtOptions,
+  ): Promise<T>;
+  public verify<T extends ParsedJwt>(
+    profile: string,
+    token: string,
+    options: ProfileVerifyOptions,
+  ): Promise<T>;
   public async verify<T extends ParsedJwt | ParsedJws<any>>(
+    tokenOrProfile: string,
+    optionsOrToken?: VerifyJwtOptions | string,
+    profileOptions?: ProfileVerifyOptions,
+  ): Promise<T> {
+    if (isString(optionsOrToken)) {
+      return this.verifyProfile<T>(
+        tokenOrProfile,
+        optionsOrToken,
+        profileOptions ?? ({} as ProfileVerifyOptions),
+      );
+    }
+
+    return this.verifySmart<T>(tokenOrProfile, optionsOrToken);
+  }
+
+  private async verifySmart<T extends ParsedJwt | ParsedJws<any>>(
     token: string,
     options?: VerifyJwtOptions,
   ): Promise<T> {
@@ -140,7 +209,7 @@ export class Aegis implements IAegis {
     }
     if (Aegis.isJwe(token)) {
       const decrypt = await this.jweDecrypt(token);
-      return await this.verify(decrypt.payload);
+      return await this.verifySmart(decrypt.payload, options);
     }
     if (Aegis.isJws(token)) {
       return (await this.jwsVerify(token)) as T;
@@ -348,6 +417,178 @@ export class Aegis implements IAegis {
     return kit.sign(content, options);
   }
 
+  // private sign tiers
+
+  private async signRaw(input: RawSignInput): Promise<SignedJws> {
+    const payload =
+      isString(input.payload) || isBuffer(input.payload)
+        ? input.payload
+        : JSON.stringify(input.payload);
+
+    return this.jwsSign(payload, {
+      bindCertificate: input.bindCertificate,
+      contentType: input.contentType,
+      header: input.header,
+      objectId: input.objectId,
+      tokenType: input.tokenType,
+    });
+  }
+
+  private async mintProfile(
+    name: string,
+    content: SignContent,
+    options: ProfileSignOptions,
+  ): Promise<SignedJwt> {
+    // T6 — encoding seam. Throws NotSupportedError for `format: "cose"`; the
+    // rest of the path stays encoding-neutral (plain claims dict). Resolved up
+    // front so an unsupported format fails before any key resolution or signing.
+    selectEncoder(options.format);
+
+    const profile = resolveProfile(name);
+
+    // T5 — `options.encrypt` is only meaningful for encryptable profiles.
+    // Passing it for a non-encryptable profile (access_token / SET / logout /
+    // erasure / DPoP) is a caller error, not a silent no-op.
+    if (options.encrypt !== undefined && !profile.encryptable) {
+      throw new AegisError("Encryption is not allowed for this profile", {
+        code: "encryption_not_allowed",
+        data: { profile: profile.name },
+        title: "Encryption Not Allowed",
+        details:
+          "This token profile is not encryptable, so an encrypt option cannot be supplied; remove it or use an encryptable profile.",
+      });
+    }
+
+    const kit = await this.jwtKit({ sign: true });
+
+    // T5 — resolve the recipient (client) enc key when encryption is in play.
+    // Encryption fires when the profile is encryptable AND either an explicit
+    // `encrypt` option is supplied OR the content carries `sensitive_identity`
+    // (forced within id_token). When no enc key is resolvable, encryption is
+    // skipped and any `sensitive_identity` is omitted (never emitted in clear).
+    const hasSensitiveIdentity = content.sensitiveIdentity != null;
+    const explicitEncrypt = options.encrypt !== undefined;
+    const wantsEncryption =
+      profile.encryptable && (explicitEncrypt || hasSensitiveIdentity);
+
+    // When the caller explicitly asked for encryption, a missing enc key is a
+    // hard error. When encryption is forced ONLY by `sensitive_identity`, a
+    // missing key is tolerated — the claim is omitted instead (see below).
+    const jweKit = wantsEncryption
+      ? await this.resolveEncKit(
+          {
+            id: options.encrypt?.kid,
+            algorithm: options.encrypt?.algorithm,
+            predicate: options.encrypt?.predicate,
+          },
+          explicitEncrypt,
+        )
+      : undefined;
+
+    // `sensitive_identity` MUST NOT travel in cleartext. If it cannot be
+    // encrypted (profile not encryptable, or no enc key resolvable), strip it
+    // from the content before signing so the claim is omitted entirely.
+    const signContent =
+      hasSensitiveIdentity && !jweKit
+        ? (removeUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
+        : content;
+
+    const claims = buildProfileClaims(
+      { algorithm: kit.algorithm, issuer: this.issuer },
+      profile,
+      signContent,
+      options,
+    );
+
+    validateProfileClaims(profile, claims, {
+      ...(options.context ?? {}),
+      algorithm: kit.algorithm as any,
+    });
+
+    // A profile typ stamps the header verbatim (e.g. `at+jwt`). A `null` profile
+    // typ means "none mandated": fall back to the tokenType-derived default
+    // (bare `JWT` when no tokenType), which JwtKit requires as a header floor.
+    const signed = kit.signClaims(claims, signContent as SignJwtContent, {
+      ...options,
+      ...(profile.typ !== null ? { typ: profile.typ } : {}),
+    });
+
+    if (!jweKit) {
+      return signed;
+    }
+
+    // T5 — sign-then-encrypt. The inner signed JWT keeps the profile typ
+    // (`at+jwt` / bare `JWT`); the outer JWE carries `cty: application/jwt`
+    // (set automatically by JweKit.encrypt from the inner-token shape). The
+    // read side (verifySmart recursion) decrypts then verifies the inner JWT,
+    // applying the profile floor to the inner claims/typ.
+    const { token } = jweKit.encrypt(signed.token);
+
+    return { ...signed, token };
+  }
+
+  private async resolveEncKit(
+    options: {
+      id?: string;
+      algorithm?: KryptosEncAlgorithm;
+      predicate?: AegisPredicate;
+    },
+    required: boolean,
+  ): Promise<JweKit | undefined> {
+    try {
+      return await this.jweKit({ encrypt: true, ...options });
+    } catch (error) {
+      // An explicit `encrypt` option means the caller demanded encryption, so a
+      // missing enc key must surface as an error.
+      if (required) {
+        throw error;
+      }
+
+      // Encryption was forced only by `sensitive_identity` and no enc key is
+      // resolvable. Encryption is skipped; the claim is omitted rather than
+      // leaked in cleartext (token-claims.md:98).
+      return undefined;
+    }
+  }
+
+  private async verifyProfile<T extends ParsedJwt | ParsedJws<any>>(
+    name: string,
+    token: string,
+    options: ProfileVerifyOptions,
+  ): Promise<T> {
+    // T6 — encoding seam. Throws NotSupportedError for `format: "cose"` before
+    // any decode/decrypt. The rest of the verify path stays encoding-neutral.
+    selectEncoder(options.format);
+
+    const profile = resolveProfile(name);
+
+    // The typ is enforced by enforceVerifyFloor against profile.typ, so we do
+    // NOT also pass tokenType to the standard verify (which would compute its
+    // own typ expectation and could disagree).
+    const {
+      audience: _audience,
+      issuer: _issuer,
+      clockTolerance: _ct,
+      format: _format,
+      ...rest
+    } = options;
+    const parsed = await this.verifySmart<ParsedJwt>(token, rest);
+
+    const expectedIssuer =
+      options.issuer ??
+      (profile.issuer === "platform" ? (this.issuer ?? undefined) : undefined);
+
+    enforceVerifyFloor({
+      audience: options.audience,
+      decodedTyp: parsed.decoded.header.typ,
+      expectedIssuer,
+      payload: parsed.decoded.payload as Dict,
+      profile,
+    });
+
+    return parsed as T;
+  }
+
   private async jwtVerify<T extends Dict = Dict>(
     jwt: string,
     verify: VerifyJwtOptions = {},
@@ -372,7 +613,7 @@ export class Aegis implements IAegis {
             { operations: ["deriveKey"] },
             { operations: ["wrapKey"] },
           ],
-          algorithm: this.encAlgorithm,
+          algorithm: options.algorithm ?? this.encAlgorithm,
           issuer: this.issuer ?? undefined,
           ...(options.predicate ?? {}),
         }

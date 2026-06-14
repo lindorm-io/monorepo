@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`create-hash > hash values > EdDSA produces stable SHA512-half hashes 1`] = `
+{
+  "at_hash": "Rb10lsqrobcpd02MQ_878ctvfDDbaRese_Z50nFw5Jw",
+  "c_hash": "bpIUCs4s1c9uprlj2l89rv6pzMH1aM8r7iQKZlnAUu8",
+  "s_hash": "9LAmr1mfo_PmwBl0Hy6ukcFoQwEl9m9E76NucwM2ETc",
+}
+`;
+
+exports[`create-hash > hash values > ML-DSA-65 produces stable SHA512-half hashes 1`] = `
+{
+  "at_hash": "Rb10lsqrobcpd02MQ_878ctvfDDbaRese_Z50nFw5Jw",
+  "c_hash": "bpIUCs4s1c9uprlj2l89rv6pzMH1aM8r7iQKZlnAUu8",
+  "s_hash": "9LAmr1mfo_PmwBl0Hy6ukcFoQwEl9m9E76NucwM2ETc",
+}
+`;
+
+exports[`create-hash > hash values > RS256 produces stable SHA256-half hashes 1`] = `
+{
+  "at_hash": "Pxa-1wifRlPl7yG_0oJNfw",
+  "c_hash": "CxJ8ZBP9W9pUlyHNd0IZMA",
+  "s_hash": "iq2LB09E7vWfDit0pWSxNQ",
+}
+`;

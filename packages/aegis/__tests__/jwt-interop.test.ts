@@ -3,7 +3,22 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { importJWK, jwtVerify, SignJWT } from "jose";
 import jsonwebtoken, { type JwtPayload } from "jsonwebtoken";
 import { JwtKit } from "../src/classes/JwtKit.js";
+import { buildProfileClaims } from "../src/internal/utils/build-profile-claims.js";
+import { defaultProfile } from "../src/internal/profiles/definitions/default.js";
+import type { SignContent } from "../src/types/index.js";
 import { describe, expect, test } from "vitest";
+
+// JwtKit.sign is policy-free (T1): it injects no iss/iat/jti/nbf. The historical
+// auto-injecting floor now lives in the `default` profile. Interop "aegis sign"
+// cases assemble default-profile claims (iss/iat/jti/nbf/exp) and sign them.
+const signDefault = (kit: JwtKit, issuer: string, content: SignContent) => {
+  const claims = buildProfileClaims(
+    { algorithm: kit.algorithm, issuer },
+    defaultProfile,
+    content,
+  );
+  return kit.signClaims(claims, content as any);
+};
 
 // ---------------------------------------------------------------------------
 // Shared constants
@@ -47,7 +62,7 @@ describe("JWT interop: aegis <-> jose", () => {
       const kryptos = createKey();
       const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
 
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, ISSUER, {
         expires: "1h",
         subject: SUBJECT,
         tokenType: "access_token",
@@ -102,7 +117,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
       const kryptos = createRsaSigKey();
       const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
 
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, ISSUER, {
         expires: "1h",
         subject: SUBJECT,
         tokenType: "access_token",
@@ -145,7 +160,7 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
       const kryptos = createOctSigKey();
       const kit = new JwtKit({ issuer: ISSUER, logger, kryptos });
 
-      const { token } = kit.sign({
+      const { token } = signDefault(kit, ISSUER, {
         expires: "1h",
         subject: SUBJECT,
         tokenType: "access_token",
