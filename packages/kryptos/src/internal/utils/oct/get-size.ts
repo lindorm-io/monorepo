@@ -31,6 +31,21 @@ export const getOctSize = (options: Options): OctSize => {
       case "A256CBC-HS512":
         return 64;
 
+      // AES-CCM is AEAD (single key, no enc+mac split), so the `dir` CEK size
+      // is the key size directly: the trailing segment of the name (128 ⇒ 16,
+      // 256 ⇒ 32). RFC 9053 §4.2.
+      case "AES-CCM-16-64-128":
+      case "AES-CCM-64-64-128":
+      case "AES-CCM-16-128-128":
+      case "AES-CCM-64-128-128":
+        return 16;
+
+      case "AES-CCM-16-64-256":
+      case "AES-CCM-64-64-256":
+      case "AES-CCM-16-128-256":
+      case "AES-CCM-64-128-256":
+        return 32;
+
       default:
         throw new KryptosError("Unsupported size", {
           code: "unsupported_encryption",
