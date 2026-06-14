@@ -1,171 +1,46 @@
 import { B64 } from "@lindorm/b64";
 import { snakeKeys } from "@lindorm/case";
-import { expires, getUnixTime } from "@lindorm/date";
-import { isArray, isDate, isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
+import { expires } from "@lindorm/date";
+import { isFinite, isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
 import { B64U } from "../constants/format.js";
 import { JwtError } from "../../errors/index.js";
 import type {
-  ActClaim,
-  ActClaimWire,
   JwtClaims,
   ParsedJwtPayload,
   SignJwtContent,
   SignJwtOptions,
 } from "../../types/index.js";
-import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { extractDomainClaims } from "./extract-claims.js";
 import { extractSensitiveIdentity } from "./extract-sensitive-identity.js";
-import { generateTokenId } from "./generate-token-id.js";
+import { mapContentToClaims } from "./map-content-to-claims.js";
 
 type Config = {
   algorithm: KryptosAlgorithm;
-  issuer: string;
 };
 
 type DecodeClaims<C extends Dict = Dict> = JwtClaims & C;
 
 type Result = {
-  expiresAt: Date;
-  expiresIn: number;
-  expiresOn: number;
+  expiresAt: Date | undefined;
+  expiresIn: number | undefined;
+  expiresOn: number | undefined;
   payload: string;
-  tokenId: string;
+  tokenId: string | undefined;
 };
 
-const actClaimToWire = (claim: ActClaim): ActClaimWire =>
-  removeUndefined({
-    sub: claim.subject,
-    iss: claim.issuer,
-    aud: claim.audience,
-    client_id: claim.clientId,
-    act: isObject(claim.act) ? actClaimToWire(claim.act) : undefined,
-  });
-
-export const mapJwtContentToClaims = <C extends Dict = Dict>(
-  config: Config,
-  content: SignJwtContent<C>,
-  options: SignJwtOptions,
-): JwtClaims => {
-  if (!isString(config.algorithm)) {
-    throw new JwtError("Algorithm is required", {
-      code: "jwt_algorithm_required",
-      title: "JWT Algorithm Required",
-      details: "No signing algorithm was supplied, so claim hashes cannot be computed.",
-    });
-  }
-  if (!isUrlLike(config.issuer)) {
-    throw new JwtError("Issuer is required", {
-      code: "jwt_issuer_required",
-      title: "JWT Issuer Required",
-      details:
-        "The configured issuer is not a valid URL-like value, so the mandatory iss claim cannot be set.",
-    });
-  }
-  if (!content.expires) {
-    throw new JwtError("Expires is required", {
-      code: "jwt_expires_required",
-      title: "JWT Expires Required",
-      details:
-        "The content has no expires value, so the mandatory exp claim cannot be computed.",
-    });
-  }
-  if (!isString(content.subject)) {
-    throw new JwtError("Subject is required", {
-      code: "jwt_subject_required",
-      title: "JWT Subject Required",
-      details:
-        "The content has no string subject, so the mandatory sub claim cannot be set.",
-    });
-  }
-
-  const { expiresOn } = expires(content.expires);
-
-  const at_hash = isString(options.accessTokenHash)
-    ? options.accessTokenHash
-    : isString(content.accessToken)
-      ? createAccessTokenHash(config.algorithm, content.accessToken)
-      : undefined;
-
-  const c_hash = isString(options.codeHash)
-    ? options.codeHash
-    : isString(content.authCode)
-      ? createCodeHash(config.algorithm, content.authCode)
-      : undefined;
-
-  const s_hash = isString(options.stateHash)
-    ? options.stateHash
-    : isString(content.authState)
-      ? createStateHash(config.algorithm, content.authState)
-      : undefined;
-
-  const tokenId = isString(options.tokenId) ? options.tokenId : generateTokenId();
-
-  const cnf = isObject(content.confirmation)
-    ? removeUndefined({
-        jkt: content.confirmation.thumbprint,
-        "x5t#S256": content.confirmation.mtlsCertThumbprint,
-        jwk: content.confirmation.key,
-        kid: content.confirmation.keyId,
-        jku: content.confirmation.jwkSetUri,
-      })
-    : undefined;
-
-  return removeUndefined({
-    acr: isString(content.authContextClass) ? content.authContextClass : undefined,
-    act: isObject(content.act) ? actClaimToWire(content.act) : undefined,
-    afr: isArray(content.authFactor) ? content.authFactor : undefined,
-    amr: isArray(content.authMethods) ? content.authMethods : undefined,
-    at_hash,
-    aud: isArray(content.audience) ? content.audience : undefined,
-    authorization_details: isArray(content.authorizationDetails)
-      ? content.authorizationDetails
-      : undefined,
-    auth_time: isDate(content.authTime) ? getUnixTime(content.authTime) : undefined,
-    azp: isString(content.authorizedParty) ? content.authorizedParty : undefined,
-    c_hash,
-    client_id: isString(content.clientId) ? content.clientId : undefined,
-    cnf: cnf && Object.keys(cnf).length > 0 ? cnf : undefined,
-    entitlements: isArray(content.entitlements) ? content.entitlements : undefined,
-    exp: expiresOn,
-    groups: isArray(content.groups) ? content.groups : undefined,
-    gty: isString(content.grantType) ? content.grantType : undefined,
-    may_act: isObject(content.mayAct) ? actClaimToWire(content.mayAct) : undefined,
-    iat: isDate(options.issuedAt)
-      ? getUnixTime(options.issuedAt)
-      : getUnixTime(new Date()),
-    iss: config.issuer,
-    jti: tokenId,
-    loa: isFinite(content.levelOfAssurance) ? content.levelOfAssurance : undefined,
-    nbf: isDate(content.notBefore)
-      ? getUnixTime(content.notBefore)
-      : getUnixTime(new Date()),
-    nonce: isString(content.nonce) ? content.nonce : undefined,
-    permissions: isArray(content.permissions) ? content.permissions : undefined,
-    roles: isArray(content.roles) ? content.roles : undefined,
-    s_hash,
-    scope: isArray(content.scope) ? content.scope : undefined,
-    sid: isString(content.sessionId) ? content.sessionId : undefined,
-    sih: isString(content.sessionHint) ? content.sessionHint : undefined,
-    sub: content.subject,
-    suh: isString(content.subjectHint) ? content.subjectHint : undefined,
-    tenant_id: isString(content.tenantId) ? content.tenantId : undefined,
-    vot: isString(content.vectorOfTrust) ? content.vectorOfTrust : undefined,
-    vtm: isString(content.vectorTrustMark) ? content.vectorTrustMark : undefined,
-  });
-};
-
-export const encodeJwtPayload = <C extends Dict = Dict>(
-  config: Config,
-  content: SignJwtContent<C>,
-  options: SignJwtOptions,
-): Result => {
-  const claims = mapJwtContentToClaims(config, content, options);
-  const { expiresAt, expiresIn, expiresOn } = expires(content.expires);
-
+/**
+ * Spread a profile/sensitive-identity/custom-claims envelope onto a set of
+ * already-mapped wire claims and base64url-encode the JSON payload. Shared by
+ * the policy-free `encodeJwtPayload` and the profiled signing path.
+ */
+export const encodeClaimsPayload = <C extends Dict = Dict>(
+  claims: Dict,
+  content: Pick<SignJwtContent<C>, "claims" | "profile" | "sensitiveIdentity">,
+): { payload: string; tokenId: string | undefined } => {
   // AegisProfile fields are spread into the top-level JSON payload via
   // mechanical snake_case conversion. This keeps aegis-signed tokens
   // OIDC-compliant (profile claims like given_name, family_name, etc.
@@ -190,7 +65,33 @@ export const encodeJwtPayload = <C extends Dict = Dict>(
     B64U,
   );
 
-  return { expiresAt, expiresIn, expiresOn, payload, tokenId: claims.jti! };
+  return { payload, tokenId: isString(claims.jti) ? claims.jti : undefined };
+};
+
+/**
+ * Policy-free payload encoding for the raw domain-mapper tier. Maps the
+ * domain content to wire claims WITHOUT auto-injecting any envelope claims,
+ * then spreads the profile/sensitive-identity/custom-claims envelope. The
+ * expiry bundle is only computed when `content.expires` is present.
+ */
+export const encodeJwtPayload = <C extends Dict = Dict>(
+  config: Config,
+  content: SignJwtContent<C>,
+  options: SignJwtOptions,
+): Result => {
+  const claims = mapContentToClaims<C>({ algorithm: config.algorithm }, content, options);
+
+  const { payload, tokenId } = encodeClaimsPayload<C>(claims, content);
+
+  const expiry = content.expires ? expires(content.expires) : undefined;
+
+  return {
+    expiresAt: expiry?.expiresAt,
+    expiresIn: expiry?.expiresIn,
+    expiresOn: isFinite(claims.exp) ? claims.exp : undefined,
+    payload,
+    tokenId,
+  };
 };
 
 export const decodeJwtPayload = <C extends Dict = Dict<never>>(

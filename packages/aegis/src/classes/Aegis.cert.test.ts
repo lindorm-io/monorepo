@@ -102,7 +102,7 @@ describe("Aegis cert binding", () => {
     });
 
     test("sign with bindCertificate: 'thumbprint' stamps x5t#S256, no x5c, no x5t", async () => {
-      const { token } = await aegis.jwt.sign(signContent, {
+      const { token } = await aegis.mint("default", signContent, {
         bindCertificate: "thumbprint",
       });
 
@@ -123,7 +123,7 @@ describe("Aegis cert binding", () => {
     });
 
     test("sign with bindCertificate: 'chain' stamps x5c + x5t#S256, no x5t", async () => {
-      const { token } = await aegis.jwt.sign(signContent, {
+      const { token } = await aegis.mint("default", signContent, {
         bindCertificate: "chain",
       });
 
@@ -145,7 +145,7 @@ describe("Aegis cert binding", () => {
     });
 
     test("sign omitted on cert-bearing kryptos stamps thumbprint by default", async () => {
-      const { token } = await aegis.jwt.sign(signContent);
+      const { token } = await aegis.mint("default", signContent);
 
       const decoded = JwtKit.decode(token);
       const stripped = {
@@ -164,7 +164,7 @@ describe("Aegis cert binding", () => {
     });
 
     test("sign with bindCertificate: 'none' on cert-bearing kryptos stamps nothing", async () => {
-      const { token } = await aegis.jwt.sign(signContent, {
+      const { token } = await aegis.mint("default", signContent, {
         bindCertificate: "none",
       });
 
@@ -175,7 +175,7 @@ describe("Aegis cert binding", () => {
     });
 
     test("verify with matching header x5t#S256 succeeds", async () => {
-      const { token } = await aegis.jwt.sign(signContent, {
+      const { token } = await aegis.mint("default", signContent, {
         bindCertificate: "thumbprint",
       });
 
@@ -183,7 +183,7 @@ describe("Aegis cert binding", () => {
     });
 
     test("verify with chain mode binding succeeds", async () => {
-      const { token } = await aegis.jwt.sign(signContent, {
+      const { token } = await aegis.mint("default", signContent, {
         bindCertificate: "chain",
       });
 
@@ -191,7 +191,7 @@ describe("Aegis cert binding", () => {
     });
 
     test("verify with tampered header x5t#S256 throws thumbprint mismatch", async () => {
-      const { token } = await aegis.jwt.sign(signContent, {
+      const { token } = await aegis.mint("default", signContent, {
         bindCertificate: "thumbprint",
       });
 
@@ -223,7 +223,7 @@ describe("Aegis cert binding", () => {
       // check in verifyCertBinding. We exercise the path by feeding a
       // header with a different but plausible thumbprint string and
       // asserting the exact error.
-      const good = await aegis.jwt.sign(signContent, {
+      const good = await aegis.mint("default", signContent, {
         bindCertificate: "thumbprint",
       });
       const decoded = JwtKit.decode(good.token);
@@ -261,7 +261,7 @@ describe("Aegis cert binding", () => {
       // original signature no longer matches the header, and verify fails.
       // The invariant is that the malicious x5c did NOT succeed in
       // selecting itself as the key source.
-      const { token } = await aegis.jwt.sign(signContent);
+      const { token } = await aegis.mint("default", signContent);
       const decoded = JwtKit.decode(token);
       const malicious = {
         ...decoded.header,
@@ -290,12 +290,12 @@ describe("Aegis cert binding", () => {
 
     test("sign with bindCertificate on chain-less kryptos throws", async () => {
       await expect(
-        aegis.jwt.sign(signContent, { bindCertificate: "thumbprint" }),
+        aegis.mint("default", signContent, { bindCertificate: "thumbprint" }),
       ).rejects.toThrow(/bindCertificate requires kryptos with certificateChain/);
     });
 
     test("sign with bindCertificate: 'none' on chain-less kryptos stamps nothing and does not throw", async () => {
-      const { token } = await aegis.jwt.sign(signContent, {
+      const { token } = await aegis.mint("default", signContent, {
         bindCertificate: "none",
       });
       const decoded = JwtKit.decode(token);
@@ -307,7 +307,7 @@ describe("Aegis cert binding", () => {
     });
 
     test("sign without bindCertificate succeeds (regression: base path unchanged)", async () => {
-      const { token } = await aegis.jwt.sign(signContent);
+      const { token } = await aegis.mint("default", signContent);
       const decoded = JwtKit.decode(token);
       expect(decoded.header).not.toHaveProperty("x5c");
       expect(decoded.header).not.toHaveProperty("x5t");
@@ -399,7 +399,7 @@ describe("Aegis cert binding", () => {
       const { aegis: localAegis, amphora: localAmphora } = await setupAegis();
       localAmphora.add(buildSharedCertBoundKryptos());
 
-      const { token } = await localAegis.jwt.sign(signContent);
+      const { token } = await localAegis.mint("default", signContent);
 
       // Simulate chain loss after signing: overwrite the same kid with a
       // chain-less kryptos that shares the key material so the signature
@@ -415,7 +415,7 @@ describe("Aegis cert binding", () => {
       const { aegis: localAegis, amphora: localAmphora } = await setupAegis("strict");
       localAmphora.add(buildSharedCertBoundKryptos());
 
-      const { token } = await localAegis.jwt.sign(signContent);
+      const { token } = await localAegis.mint("default", signContent);
 
       localAmphora.add(buildSharedChainlessKryptos());
 
@@ -441,7 +441,7 @@ describe("Aegis cert binding", () => {
       await localAmphora.setup();
       localAmphora.add(buildSharedCertBoundKryptos());
 
-      const { token } = await localAegis.jwt.sign(signContent);
+      const { token } = await localAegis.mint("default", signContent);
 
       localAmphora.add(buildSharedChainlessKryptos());
 
@@ -478,7 +478,7 @@ describe("Aegis cert binding", () => {
       const { aegis: localAegis, amphora: localAmphora } = await setupAegis("lax");
       localAmphora.add(buildChainlessKryptos());
 
-      const { token } = await localAegis.jwt.sign(signContent);
+      const { token } = await localAegis.mint("default", signContent);
       const decoded = JwtKit.decode(token);
       expect(decoded.header).not.toHaveProperty("x5t#S256");
 
@@ -489,7 +489,7 @@ describe("Aegis cert binding", () => {
       const { aegis: localAegis, amphora: localAmphora } = await setupAegis("strict");
       localAmphora.add(buildChainlessKryptos());
 
-      const { token } = await localAegis.jwt.sign(signContent);
+      const { token } = await localAegis.mint("default", signContent);
       await expect(localAegis.jwt.verify(token)).resolves.toBeDefined();
     });
   });

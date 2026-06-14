@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`crossField > fails when exp <= iat 1`] = `
+[
+  {
+    "key": "exp",
+    "message": "exp must be greater than iat",
+  },
+]
+`;
+
+exports[`crossField > fails when nbf > exp 1`] = `
+[
+  {
+    "key": "nbf",
+    "message": "nbf must be less than or equal to exp",
+  },
+]
+`;

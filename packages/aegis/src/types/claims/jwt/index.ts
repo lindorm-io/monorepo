@@ -7,5 +7,6 @@ export * from "./oauth-claims-wire.js";
 export * from "./oidc-claims-wire.js";
 export * from "./pop-claims-wire.js";
 export * from "./rar-claims-wire.js";
+export * from "./set-claims-wire.js";
 export * from "./sensitive-identity-claim-wire.js";
 export * from "./std-claims-wire.js";

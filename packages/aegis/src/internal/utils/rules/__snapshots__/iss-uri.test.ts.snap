@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`issUri > fails for a non-URI issuer 1`] = `
+[
+  {
+    "key": "iss",
+    "message": "iss must be a URI",
+  },
+]
+`;

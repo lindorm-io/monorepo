@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`requirePresent > returns an entry per missing claim 1`] = `
+[
+  {
+    "key": "exp",
+    "message": "Required claim "exp" is missing",
+  },
+  {
+    "key": "iss",
+    "message": "Required claim "iss" is missing",
+  },
+]
+`;

@@ -13,11 +13,17 @@ import type {
   JwsContent,
   ParsedJws,
   ParsedJwt,
+  ProfileContent,
+  ProfileSignOptions,
+  ProfileVerifyOptions,
+  RawSignInput,
+  SignContent,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
   SignedJws,
   SignedJwt,
+  TokenProfile,
   VerifyJwtOptions,
 } from "../types/index.js";
 
@@ -61,7 +67,27 @@ export interface IAegis {
   jws: IAegisJws;
   jwt: IAegisJwt;
 
+  registerProfile(profile: TokenProfile): void;
+
+  sign(input: RawSignInput): Promise<SignedJws>;
+
+  mint<P extends keyof ProfileContent>(
+    profile: P,
+    content: ProfileContent[P],
+    options?: ProfileSignOptions,
+  ): Promise<SignedJwt>;
+  mint(
+    profile: string & {},
+    content: SignContent,
+    options?: ProfileSignOptions,
+  ): Promise<SignedJwt>;
+
   verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
   verify<T extends ParsedJws<any>>(token: string): Promise<T>;
   verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
+  verify<T extends ParsedJwt>(
+    profile: string,
+    token: string,
+    options: ProfileVerifyOptions,
+  ): Promise<T>;
 }

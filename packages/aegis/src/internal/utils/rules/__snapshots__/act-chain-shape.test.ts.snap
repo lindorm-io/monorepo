@@ -1,0 +1,32 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`actChainShape > fails on a malformed nested act 1`] = `
+[
+  {
+    "key": "may_act.act.iss",
+    "message": ""may_act.act.iss" must be a string",
+  },
+]
+`;
+
+exports[`actChainShape > fails on an unknown member and a non-string sub 1`] = `
+[
+  {
+    "key": "act.surprise",
+    "message": "Unknown member "surprise" in "act"",
+  },
+  {
+    "key": "act.sub",
+    "message": ""act.sub" must be a string",
+  },
+]
+`;
+
+exports[`actChainShape > fails when act is not an object 1`] = `
+[
+  {
+    "key": "act",
+    "message": ""act" must be an object",
+  },
+]
+`;

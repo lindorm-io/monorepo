@@ -4,6 +4,7 @@ import type { OAuthClaimsWire } from "./oauth-claims-wire.js";
 import type { OidcClaimsWire } from "./oidc-claims-wire.js";
 import type { PopClaimsWire } from "./pop-claims-wire.js";
 import type { RarClaimsWire } from "./rar-claims-wire.js";
+import type { SetClaimsWire } from "./set-claims-wire.js";
 import type { SensitiveIdentityClaimWire } from "./sensitive-identity-claim-wire.js";
 import type { StdClaimsWire } from "./std-claims-wire.js";
 
@@ -18,5 +19,6 @@ export type JwtClaims = StdClaimsWire &
   DelegationClaimsWire &
   OAuthClaimsWire &
   RarClaimsWire &
+  SetClaimsWire &
   LindormClaimsWire &
   SensitiveIdentityClaimWire;

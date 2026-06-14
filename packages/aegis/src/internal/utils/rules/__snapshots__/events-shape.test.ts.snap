@@ -1,0 +1,32 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`eventsShape > fails for a non-URI key and a non-object payload 1`] = `
+[
+  {
+    "key": "events.not a uri",
+    "message": "event type "not a uri" must be a URI",
+  },
+  {
+    "key": "events.not a uri",
+    "message": "event "not a uri" payload must be an object",
+  },
+]
+`;
+
+exports[`eventsShape > fails when events is empty 1`] = `
+[
+  {
+    "key": "events",
+    "message": "events must contain at least one event type",
+  },
+]
+`;
+
+exports[`eventsShape > fails when events is not an object 1`] = `
+[
+  {
+    "key": "events",
+    "message": "events must be an object",
+  },
+]
+`;

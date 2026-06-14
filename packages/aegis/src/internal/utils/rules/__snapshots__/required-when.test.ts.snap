@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`requiredWhen > entry when the predicate is true and the claim is missing 1`] = `
+[
+  {
+    "key": "at_hash",
+    "message": "Conditionally required claim "at_hash" is missing",
+  },
+]
+`;

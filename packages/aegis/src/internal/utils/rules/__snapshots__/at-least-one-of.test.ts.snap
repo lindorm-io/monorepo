@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`atLeastOneOf > fails when no member of the group is present 1`] = `
+[
+  {
+    "key": "sub|sid",
+    "message": "At least one of [sub, sid] is required",
+  },
+]
+`;

@@ -4,6 +4,7 @@ import type { ILogger } from "@lindorm/logger";
 import MockDate from "mockdate";
 import { TEST_EC_KEY_SIG, TEST_OKP_KEY_ENC } from "../__fixtures__/keys.js";
 import { Aegis } from "./Aegis.js";
+import { JwtKit } from "./JwtKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
@@ -115,7 +116,8 @@ describe("Aegis", () => {
   });
 
   test("should sign and verify jwt", async () => {
-    const res = await aegis.jwt.sign(
+    const res = await aegis.mint(
+      "default",
       {
         expires: "1h",
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
@@ -204,7 +206,7 @@ describe("Aegis", () => {
   });
 
   test("should sign and verify jwe with jwt", async () => {
-    const jwt = await aegis.jwt.sign({
+    const jwt = await aegis.mint("default", {
       expires: "1h",
       subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       tokenType: "test_token",
@@ -237,7 +239,7 @@ describe("Aegis", () => {
   });
 
   test("should sign and verify jwt", async () => {
-    const jwt = await aegis.jwt.sign({
+    const jwt = await aegis.mint("default", {
       expires: "1h",
       subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
       tokenType: "test_token",
@@ -253,5 +255,78 @@ describe("Aegis", () => {
         }),
       }),
     );
+  });
+
+  test("sign('default', …) re-imposes the historical floor (iss/iat/jti/nbf/exp)", async () => {
+    const { token } = await aegis.mint("default", {
+      expires: "1h",
+      subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+      tokenType: "test_token",
+    });
+
+    const { payload } = JwtKit.decode(token);
+
+    expect(payload).toEqual({
+      exp: 1704099600,
+      iat: 1704096000,
+      iss: "https://test.lindorm.io/",
+      jti: expect.any(String),
+      nbf: 1704096000,
+      sub: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+    });
+  });
+
+  test("sign('default', …) throws when a required claim is missing", async () => {
+    await expect(
+      aegis.mint("default", { tokenType: "test_token" } as never),
+    ).rejects.toThrow();
+  });
+
+  test("sign({ payload }) signs a raw wire literal as a JWS", async () => {
+    const res = await aegis.sign({ payload: "raw-data" });
+
+    expect(res).toEqual({
+      objectId: undefined,
+      token: expect.any(String),
+    });
+
+    await expect(aegis.verify(res.token)).resolves.toEqual(
+      expect.objectContaining({ payload: "raw-data" }),
+    );
+  });
+
+  test("sign({ payload }) JSON-stringifies a plain object before signing", async () => {
+    const res = await aegis.sign({ payload: { hello: "world" } });
+
+    await expect(aegis.verify(res.token)).resolves.toEqual(
+      expect.objectContaining({ payload: JSON.stringify({ hello: "world" }) }),
+    );
+  });
+
+  test("registerProfile registers a custom profile usable by sign", async () => {
+    aegis.registerProfile({
+      name: "custom_aegis_profile",
+      typ: "custom+jwt",
+      required: ["sub"],
+      forbidden: [],
+      requiredWhen: [],
+      atLeastOneOf: [],
+      autoInject: { iat: true, jti: true, nbf: false, iss: true },
+      issuer: "platform",
+      lifetime: "1h",
+      encryptable: false,
+      validate: () => [],
+    });
+
+    const { token } = await aegis.mint("custom_aegis_profile", {
+      subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
+      tokenType: "test_token",
+    });
+
+    const { payload } = JwtKit.decode(token);
+
+    expect(payload.sub).toBe("3f2ae79d-f1d1-556b-a8bc-305e6b2334ad");
+    expect(payload.exp).toBe(1704099600);
+    expect(payload.nbf).toBeUndefined();
   });
 });

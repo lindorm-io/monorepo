@@ -1,3 +1,5 @@
+import { expires } from "@lindorm/date";
+import { isFinite } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
@@ -33,6 +35,7 @@ import {
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
 import {
   decodeJwtPayload,
+  encodeClaimsPayload,
   encodeJwtPayload,
   parseTokenPayload,
 } from "../internal/utils/jwt-payload.js";
@@ -48,56 +51,121 @@ export class JwtKit implements IJwtKit {
   private readonly certBindingMode: CertBindingMode;
   private readonly clockTolerance: number;
   private readonly dpopMaxSkew: number;
-  private readonly issuer: string | null;
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
   public constructor(options: JwtKitOptions) {
     this.logger = options.logger.child(["JwtKit"]);
     this.kryptos = options.kryptos;
-    this.issuer = options.issuer ?? null;
 
     this.certBindingMode = options.certBindingMode ?? "strict";
     this.clockTolerance = options.clockTolerance ?? 0;
     this.dpopMaxSkew = options.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW;
   }
 
+  public get algorithm(): IKryptos["algorithm"] {
+    return this.kryptos.algorithm;
+  }
+
+  /**
+   * Policy-free domain-mapper sign (T1). Maps the domain vocabulary to wire
+   * claims and signs. It injects NO envelope claims (`iat`/`jti`/`nbf`/`iss`),
+   * requires nothing, and throws nothing for a missing `iss`/`sub`/`exp`. Use
+   * `aegis.mint("default", content)` for the historical auto-injecting floor.
+   */
   public sign<C extends Dict = Dict>(
     content: SignJwtContent<C>,
     options: SignJwtOptions = {},
   ): SignedJwt {
     this.logger.debug("Signing token", { content, options });
 
-    if (!this.issuer) {
-      throw new JwtError("Issuer is required to sign JWT", {
-        code: "jwt_issuer_required",
-        title: "JWT Issuer Required",
-        details:
-          "The kit was constructed without an issuer, so it cannot populate the mandatory iss claim when signing.",
-      });
-    }
-
-    const objectId = options.objectId;
-
-    const headerOptions: TokenHeaderOptions = {
-      ...(options.header ?? {}),
-      algorithm: this.kryptos.algorithm,
-      contentType: "application/json",
-      headerType: computeTypHeader(content.tokenType, "jwt"),
-      jwksUri: this.kryptos.jwksUri ?? undefined,
-      keyId: this.kryptos.id,
-      objectId,
-    };
-
-    const cert = resolveCertBinding(this.kryptos, options.bindCertificate);
-
-    const header = encodeJoseHeader(headerOptions, cert);
-
     const { expiresAt, expiresIn, expiresOn, payload, tokenId } = encodeJwtPayload<C>(
-      { algorithm: this.kryptos.algorithm, issuer: this.issuer },
+      { algorithm: this.kryptos.algorithm },
       content,
       options,
     );
+
+    return this.signEncodedPayload(payload, {
+      bindCertificate: options.bindCertificate,
+      expiresAt,
+      expiresIn,
+      expiresOn,
+      header: options.header,
+      objectId: options.objectId,
+      tokenId,
+      tokenType: content.tokenType,
+    });
+  }
+
+  /**
+   * Sign an already-assembled set of wire claims. Used by the profiled
+   * signing path, where policy (auto-injection / required / forbidden) has
+   * already been applied by `buildProfileClaims`. The profile/sensitive-
+   * identity/custom-claims envelope is spread here.
+   */
+  public signClaims<C extends Dict = Dict>(
+    claims: Dict,
+    content: SignJwtContent<C>,
+    options: SignJwtOptions = {},
+  ): SignedJwt {
+    this.logger.debug("Signing claims", { claims, options });
+
+    const { payload, tokenId } = encodeClaimsPayload<C>(claims, content);
+
+    const expiry =
+      isFinite(claims.exp as number) && content.expires
+        ? expires(content.expires)
+        : undefined;
+
+    return this.signEncodedPayload(payload, {
+      bindCertificate: options.bindCertificate,
+      expiresAt: expiry?.expiresAt,
+      expiresIn: expiry?.expiresIn,
+      expiresOn: isFinite(claims.exp as number) ? (claims.exp as number) : undefined,
+      header: options.header,
+      objectId: options.objectId,
+      tokenId,
+      tokenType: content.tokenType,
+      typ: options.typ,
+    });
+  }
+
+  private signEncodedPayload(
+    payload: string,
+    meta: {
+      bindCertificate?: SignJwtOptions["bindCertificate"];
+      expiresAt: Date | undefined;
+      expiresIn: number | undefined;
+      expiresOn: number | undefined;
+      header?: TokenHeaderOptions;
+      objectId: string | undefined;
+      tokenId: string | undefined;
+      tokenType: SignJwtContent["tokenType"] | undefined;
+      typ?: string | null;
+    },
+  ): SignedJwt {
+    // An explicit `typ` (from a profile) wins; `null` omits the header;
+    // otherwise derive it from the bare tokenType (raw / default path).
+    const headerType =
+      meta.typ === null
+        ? undefined
+        : meta.typ !== undefined
+          ? meta.typ
+          : computeTypHeader(meta.tokenType, "jwt");
+
+    const headerOptions: TokenHeaderOptions = {
+      ...(meta.header ?? {}),
+      algorithm: this.kryptos.algorithm,
+      contentType: "application/json",
+      headerType,
+      jwksUri: this.kryptos.jwksUri ?? undefined,
+      keyId: this.kryptos.id,
+      objectId: meta.objectId,
+    };
+
+    const cert = resolveCertBinding(this.kryptos, meta.bindCertificate);
+
+    const header = encodeJoseHeader(headerOptions, cert);
 
     const signature = createJoseSignature({
       header,
@@ -109,7 +177,14 @@ export class JwtKit implements IJwtKit {
 
     this.logger.debug("Token signed", { token });
 
-    return { expiresAt, expiresIn, expiresOn, objectId, token, tokenId };
+    return {
+      expiresAt: meta.expiresAt,
+      expiresIn: meta.expiresIn,
+      expiresOn: meta.expiresOn,
+      objectId: meta.objectId,
+      token,
+      tokenId: meta.tokenId,
+    };
   }
 
   public verify<C extends Dict = Dict>(
