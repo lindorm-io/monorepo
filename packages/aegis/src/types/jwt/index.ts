@@ -5,5 +5,6 @@ export * from "./jwt-dpop.js";
 export * from "./jwt-kit.js";
 export * from "./jwt-parse.js";
 export * from "./jwt-sign.js";
+export * from "./profile.js";
 export * from "./jwt-validate.js";
 export * from "./jwt-verify.js";

@@ -10,19 +10,18 @@ export const shaAlgorithm = (algorithm: KryptosAlgorithm): ShaAlgorithm => {
   if (algorithm.endsWith("384")) return "SHA384";
   if (algorithm.endsWith("512")) return "SHA512";
 
-  return "SHA256";
+  return "SHA512";
 };
 
 const createHashBuffer = (algorithm: ShaAlgorithm, data: string): Buffer =>
   cryptoHash(algorithm).update(data, "utf8").digest();
 
-const getLeftBits = (buffer: Buffer, bits: number): Buffer =>
-  buffer.subarray(0, bits / 8);
+const getLeftHalf = (buffer: Buffer): Buffer => buffer.subarray(0, buffer.length / 2);
 
-const createHash = (algorithm: KryptosAlgorithm, data: string, bits: number): string => {
+const createHash = (algorithm: KryptosAlgorithm, data: string): string => {
   const sha = shaAlgorithm(algorithm);
   const buffer = createHashBuffer(sha, data);
-  const left = getLeftBits(buffer, bits);
+  const left = getLeftHalf(buffer);
 
   return B64.encode(left, B64U);
 };
@@ -30,10 +29,10 @@ const createHash = (algorithm: KryptosAlgorithm, data: string, bits: number): st
 export const createAccessTokenHash = (
   algorithm: KryptosAlgorithm,
   data: string,
-): string => createHash(algorithm, data, 128);
+): string => createHash(algorithm, data);
 
 export const createCodeHash = (algorithm: KryptosAlgorithm, data: string): string =>
-  createHash(algorithm, data, 256);
+  createHash(algorithm, data);
 
 export const createStateHash = (algorithm: KryptosAlgorithm, data: string): string =>
-  createHash(algorithm, data, 128);
+  createHash(algorithm, data);

@@ -1,0 +1,14 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`forbidPresent > returns an entry per present forbidden claim 1`] = `
+[
+  {
+    "key": "nonce",
+    "message": "Forbidden claim "nonce" is present",
+  },
+  {
+    "key": "exp",
+    "message": "Forbidden claim "exp" is present",
+  },
+]
+`;

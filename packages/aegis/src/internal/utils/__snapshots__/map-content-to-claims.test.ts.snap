@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`mapContentToClaims > maps the domain vocabulary to wire claims 1`] = `
+{
+  "aud": [
+    "resource-1",
+  ],
+  "cnf": {
+    "jkt": "jkt-value",
+  },
+  "exp": 1704099600,
+  "scope": [
+    "read",
+  ],
+  "sub": "subject-1",
+}
+`;

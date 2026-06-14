@@ -11,6 +11,7 @@ export * from "./oidc-claims.js";
 export * from "./pop-claims.js";
 export * from "./rar-claims.js";
 export * from "./delegation-claims.js";
+export * from "./set-claims.js";
 export * from "./std-claims.js";
 
 export * from "./jwt/index.js";
