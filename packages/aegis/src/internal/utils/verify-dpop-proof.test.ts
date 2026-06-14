@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { ShaKit } from "@lindorm/sha";
 import MockDate from "mockdate";
-import { TEST_RSA_KEY_SIG } from "../../__fixtures__/keys.js";
+import { TEST_AKP_KEY_SIG, TEST_RSA_KEY_SIG } from "../../__fixtures__/keys.js";
 import { JwtError } from "../../errors/index.js";
 import { createJoseSignature } from "./jose-signature.js";
 import { verifyDpopProof } from "./verify-dpop-proof.js";
@@ -149,6 +149,44 @@ describe("verifyDpopProof", () => {
         dpopMaxSkew: 60,
       }),
     ).toThrow(/"htm" claim is required/);
+  });
+
+  test("should verify a DPoP proof signed with an ML-DSA (AKP) key", () => {
+    const akpJwk = TEST_AKP_KEY_SIG.export("jwk");
+
+    const header = B64.encode(
+      JSON.stringify({
+        alg: TEST_AKP_KEY_SIG.algorithm,
+        typ: "dpop+jwt",
+        jwk: akpJwk,
+      }),
+      "b64u",
+    );
+    const payload = B64.encode(
+      JSON.stringify({
+        jti: "akp-proof-jti",
+        htm: "POST",
+        htu: "https://api.example.com/resource",
+        iat: Math.floor(MockedDate.getTime() / 1000),
+        ath: ShaKit.S256(accessToken),
+      }),
+      "b64u",
+    );
+    const signature = createJoseSignature({
+      header,
+      payload,
+      kryptos: TEST_AKP_KEY_SIG,
+    });
+    const proof = `${header}.${payload}.${signature}`;
+
+    expect(
+      verifyDpopProof({
+        proof,
+        accessToken,
+        expectedThumbprint: TEST_AKP_KEY_SIG.thumbprint,
+        dpopMaxSkew: 60,
+      }),
+    ).toMatchSnapshot();
   });
 
   test("should throw when signature verification fails", () => {
