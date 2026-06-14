@@ -51,7 +51,7 @@ describe("getInitialisationVector", () => {
     );
 
     expect(() => getInitialisationVector("UNSUPPORTED" as KryptosEncryption)).toThrow(
-      "Unexpected algorithm",
+      "Unsupported encryption algorithm",
     );
   });
 
@@ -63,7 +63,7 @@ describe("getInitialisationVector", () => {
       fail("Expected AesError to be thrown");
     } catch (error) {
       expect(error).toBeInstanceOf(AesError);
-      expect((error as AesError).message).toBe("Unexpected algorithm");
+      expect((error as AesError).message).toBe("Unsupported encryption algorithm");
       expect((error as AesError).data).toEqual({ encryption: unsupported });
     }
   });

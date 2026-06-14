@@ -12,6 +12,24 @@ export type AesOperationOptions = {
   aad?: Buffer;
 };
 
+export type AesContentOptions = {
+  aad?: Buffer;
+  iv?: Buffer;
+};
+
+export type AesContentEncryption = {
+  ciphertext: Buffer;
+  iv: Buffer;
+  tag: Buffer;
+};
+
+export type AesContentDecryption = {
+  aad?: Buffer;
+  ciphertext: Buffer;
+  iv: Buffer;
+  tag: Buffer;
+};
+
 export interface IAesKit {
   kryptos: IKryptos;
 
@@ -42,6 +60,9 @@ export interface IAesKit {
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
     options?: AesOperationOptions,
   ): void;
+
+  encryptContent(content: Buffer, options?: AesContentOptions): AesContentEncryption;
+  decryptContent(input: AesContentDecryption): Buffer;
 
   prepareEncryption(): PreparedEncryption;
 }

@@ -1,6 +1,7 @@
 import type { CipherGCM, DecipherGCM } from "crypto";
 import { AesError } from "../../../errors/index.js";
 import type { GetAuthTagOptions, SetAuthTagOptions } from "../../types/auth-tag.js";
+import { getAesDescriptor } from "../aes-descriptor.js";
 import { assertHmacAuthTag, createHmacAuthTag } from "./auth-tag-hmac.js";
 
 export const createAuthTag = ({
@@ -11,10 +12,10 @@ export const createAuthTag = ({
   hashKey,
   initialisationVector,
 }: GetAuthTagOptions): Buffer => {
-  switch (encryption) {
-    case "A128CBC-HS256":
-    case "A192CBC-HS384":
-    case "A256CBC-HS512":
+  const { mode } = getAesDescriptor(encryption);
+
+  switch (mode) {
+    case "cbc-hmac":
       return createHmacAuthTag({
         aad,
         content,
@@ -23,9 +24,9 @@ export const createAuthTag = ({
         initialisationVector,
       });
 
-    case "A128GCM":
-    case "A192GCM":
-    case "A256GCM":
+    // GCM and CCM are AEAD: the cipher produces the tag during finalisation.
+    case "gcm":
+    case "ccm":
       return (cipher as CipherGCM).getAuthTag();
 
     default:
@@ -33,7 +34,7 @@ export const createAuthTag = ({
         code: "unsupported_encryption",
         title: "Unsupported Encryption",
         details:
-          "Auth tag creation is only supported for AES-CBC-HMAC and AES-GCM encryption variants.",
+          "Auth tag creation is only supported for AES-CBC-HMAC, AES-GCM, and AES-CCM variants.",
         data: { encryption },
       });
   }
@@ -57,10 +58,10 @@ export const assertAuthTag = ({
     });
   }
 
-  switch (encryption) {
-    case "A128CBC-HS256":
-    case "A192CBC-HS384":
-    case "A256CBC-HS512":
+  const { mode } = getAesDescriptor(encryption);
+
+  switch (mode) {
+    case "cbc-hmac":
       assertHmacAuthTag({
         aad,
         authTag,
@@ -71,9 +72,11 @@ export const assertAuthTag = ({
       });
       return;
 
-    case "A128GCM":
-    case "A192GCM":
-    case "A256GCM":
+    // GCM and CCM: hand the tag to the cipher; `decipher.final()` then throws
+    // on mismatch. For CCM `setAuthTag` must precede `update` (the caller
+    // orders this correctly).
+    case "gcm":
+    case "ccm":
       (decipher as DecipherGCM).setAuthTag(authTag);
       return;
 
@@ -82,7 +85,7 @@ export const assertAuthTag = ({
         code: "unsupported_encryption",
         title: "Unsupported Encryption",
         details:
-          "Auth tag verification is only supported for AES-CBC-HMAC and AES-GCM encryption variants.",
+          "Auth tag verification is only supported for AES-CBC-HMAC, AES-GCM, and AES-CCM variants.",
         data: { encryption },
       });
   }
