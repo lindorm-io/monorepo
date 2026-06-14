@@ -171,7 +171,7 @@ describe("splitContentEncryptionKey", () => {
 
       expect(() =>
         splitContentEncryptionKey("UNSUPPORTED" as KryptosEncryption, cek),
-      ).toThrow("Unexpected algorithm");
+      ).toThrow("Unsupported encryption algorithm");
     });
   });
 });

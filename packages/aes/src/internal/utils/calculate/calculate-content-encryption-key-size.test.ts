@@ -20,7 +20,7 @@ describe("calculateContentEncryptionKeySize", () => {
       AesError,
     );
     expect(() => calculateContentEncryptionKeySize("" as KryptosEncryption)).toThrow(
-      "Encryption algorithm is required",
+      "Unsupported encryption algorithm",
     );
   });
 

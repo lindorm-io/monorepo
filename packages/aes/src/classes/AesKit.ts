@@ -1,7 +1,13 @@
 import { isEqual } from "@lindorm/is";
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../errors/index.js";
-import type { AesOperationOptions, IAesKit } from "../interfaces/index.js";
+import type {
+  AesContentDecryption,
+  AesContentEncryption,
+  AesContentOptions,
+  AesOperationOptions,
+  IAesKit,
+} from "../interfaces/index.js";
 import type {
   AesContent,
   AesContentType,
@@ -16,6 +22,10 @@ import type {
 import type { PreparedEncryption } from "../internal/types/prepared-encryption.js";
 import { isAesTokenised, parseAes } from "../utils/index.js";
 import { decryptAes, encryptAes } from "../internal/utils/encryption.js";
+import {
+  decryptContentDirect,
+  encryptContentDirect,
+} from "../internal/utils/content-primitive.js";
 import { prepareAesEncryption } from "../internal/utils/prepare-encryption.js";
 import { calculateContentType } from "../internal/utils/content.js";
 import { encryptEncoded } from "../internal/utils/encrypt-encoded.js";
@@ -160,6 +170,52 @@ export class AesKit implements IAesKit {
       details:
         "The decrypted AES content did not match the expected input value during assertion.",
     });
+  }
+
+  public encryptContent(
+    content: Buffer,
+    options?: AesContentOptions,
+  ): AesContentEncryption {
+    try {
+      return encryptContentDirect({
+        aad: options?.aad,
+        content,
+        encryption: this.encryption,
+        initialisationVector: options?.iv,
+        kryptos: this.kryptos,
+      });
+    } catch (error) {
+      if (error instanceof AesError) throw error;
+      throw new AesError("AES content encryption failed", {
+        code: "encryption_failed",
+        title: "Encryption Failed",
+        details:
+          "The AES content-encryption primitive failed unexpectedly; see the underlying error for the root cause.",
+        error: error as Error,
+      });
+    }
+  }
+
+  public decryptContent(input: AesContentDecryption): Buffer {
+    try {
+      return decryptContentDirect({
+        aad: input.aad,
+        ciphertext: input.ciphertext,
+        encryption: this.encryption,
+        initialisationVector: input.iv,
+        kryptos: this.kryptos,
+        tag: input.tag,
+      });
+    } catch (error) {
+      if (error instanceof AesError) throw error;
+      throw new AesError("AES content decryption failed", {
+        code: "decryption_failed",
+        title: "Decryption Failed",
+        details:
+          "The AES content-decryption primitive failed unexpectedly; see the underlying error for the root cause.",
+        error: error as Error,
+      });
+    }
   }
 
   public prepareEncryption(): PreparedEncryption {

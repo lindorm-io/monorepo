@@ -165,7 +165,7 @@ describe("createAuthTag", () => {
           hashKey: randomBytes(32),
           initialisationVector: randomBytes(16),
         }),
-      ).toThrow("Unexpected algorithm");
+      ).toThrow("Unsupported encryption algorithm");
     });
   });
 });
@@ -405,7 +405,7 @@ describe("assertAuthTag", () => {
           encryption: "UNSUPPORTED" as KryptosEncryption,
           initialisationVector: randomBytes(16),
         }),
-      ).toThrow("Unexpected algorithm");
+      ).toThrow("Unsupported encryption algorithm");
     });
   });
 });

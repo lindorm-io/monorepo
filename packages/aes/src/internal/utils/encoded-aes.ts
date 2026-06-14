@@ -1,7 +1,9 @@
 import { B64 } from "@lindorm/b64";
+import type { KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../../errors/AesError.js";
 import type { ParsedAesDecryptionRecord } from "../../types/aes-decryption-data.js";
 import type { AesEncryptionRecord } from "../../types/aes-encryption-data.js";
+import { getAesDescriptor } from "./aes-descriptor.js";
 import {
   buildAesHeader,
   computeAad,
@@ -16,33 +18,21 @@ import {
  * [N bytes: header JSON]
  * [2 bytes: CEK length (uint16 BE)]  -- 0 for dir mode
  * [M bytes: CEK]
- * [IV bytes]                    -- 12B (GCM) or 16B (CBC), derived from enc
- * [Tag bytes]                   -- 16B (GCM) or 32B (CBC-HMAC), derived from enc
+ * [IV bytes]                    -- 12B (GCM), 16B (CBC), or 13B/7B (CCM), per enc
+ * [Tag bytes]                   -- 16B (GCM), 16/24/32B (CBC), or 8/16B (CCM), per enc
  * [remaining bytes: ciphertext]
  *
  * The entire binary blob is base64url-encoded as a single string.
  *
  * AAD = the base64url-encoded header JSON (same as tokenised/serialised).
+ *
+ * IV and tag sizes come from the descriptor table so every supported AES
+ * encryption (GCM, CBC-HMAC, CCM) packs and unpacks at the correct offsets.
  */
 
-const getIvSize = (enc: string): number => (enc.includes("GCM") ? 12 : 16);
+const getIvSize = (enc: KryptosEncryption): number => getAesDescriptor(enc).ivBytes;
 
-/**
- * Returns the auth tag size for a given encryption algorithm.
- * - GCM: always 16 bytes
- * - CBC-HMAC: half the SHA hash output (RFC 7518 Section 5.2.2.1)
- *   - A128CBC-HS256 -> SHA256 (32 bytes) -> T = 16 bytes
- *   - A192CBC-HS384 -> SHA384 (48 bytes) -> T = 24 bytes
- *   - A256CBC-HS512 -> SHA512 (64 bytes) -> T = 32 bytes
- */
-const getTagSize = (enc: string): number => {
-  if (enc.includes("GCM")) return 16;
-  if (enc === "A128CBC-HS256") return 16;
-  if (enc === "A192CBC-HS384") return 24;
-  if (enc === "A256CBC-HS512") return 32;
-  // Fallback for unknown CBC-HMAC variants
-  return 16;
-};
+const getTagSize = (enc: KryptosEncryption): number => getAesDescriptor(enc).tagBytes;
 
 export const createEncodedAesString = (data: AesEncryptionRecord): string => {
   const header = buildAesHeader({

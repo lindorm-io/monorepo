@@ -82,6 +82,12 @@ export const _createMockAesKit = (mockFn: () => any, kryptos: IKryptos): IAesKit
 
     assert: mockFn(),
     verify: returns(true),
+    encryptContent: impl((content: Buffer) => ({
+      ciphertext: Buffer.isBuffer(content) ? content : Buffer.from(String(content)),
+      iv: Buffer.alloc(12),
+      tag: Buffer.alloc(16),
+    })),
+    decryptContent: impl((input: any) => input.ciphertext),
     prepareEncryption: returns({
       headerParams: {},
       publicEncryptionKey: undefined,
