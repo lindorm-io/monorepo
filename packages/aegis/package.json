@@ -58,7 +58,7 @@
     "@lindorm/sha": "^0.5.2",
     "@lindorm/types": "^0.7.0",
     "@lindorm/utils": "^0.8.2",
-    "cbor": "^10.0.12"
+    "cbor2": "^2.3.0"
   },
   "peerDependencies": {
     "@lindorm/amphora": ">=0.4.0",
