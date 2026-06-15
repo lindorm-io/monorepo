@@ -42,13 +42,27 @@ describe("validateProfileClaims", () => {
     ).toThrow(JwtError);
   });
 
-  test("throws when the access token signing alg is symmetric", () => {
+  const conformant = {
+    issuer: "https://test.lindorm.io/",
+    subject: "s",
+    audience: ["https://rs"],
+    clientId: "c",
+    issuedAt: d(100),
+    expiresAt: d(200),
+    tokenId: "j",
+  };
+
+  test("permits a symmetric signing alg on an access token (RFC 9068 §2.1)", () => {
+    // HS* is RFC-permitted (asymmetric is only RECOMMENDED); the warning is
+    // surfaced at the Aegis mint layer, not as a validation error.
     expect(() =>
-      validateProfileClaims(
-        accessTokenProfile,
-        { audience: ["https://rs"], issuedAt: d(100), expiresAt: d(200) },
-        { algorithm: "HS256" },
-      ),
+      validateProfileClaims(accessTokenProfile, conformant, { algorithm: "HS256" }),
+    ).not.toThrow();
+  });
+
+  test("throws when the access token signing alg is none", () => {
+    expect(() =>
+      validateProfileClaims(accessTokenProfile, conformant, { algorithm: "none" }),
     ).toThrow(JwtError);
   });
 
