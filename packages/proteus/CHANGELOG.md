@@ -3,6 +3,23 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.7.1...@lindorm/proteus@0.8.0) (2026-06-15)
+
+### Bug Fixes
+
+- **proteus:** align postgres cursor code with other drivers ([b0ce86a](https://github.com/lindorm-io/monorepo/commit/b0ce86ac4bec1376c546afec935537b9f8a32ef9))
+- **proteus:** guard increment/decrement of encrypted fields ([f2c866f](https://github.com/lindorm-io/monorepo/commit/f2c866f364a887cf48df7a39ddffd127e8540637))
+- **proteus:** honor upsert conflictOn across memory, postgres, and mysql ([14a4042](https://github.com/lindorm-io/monorepo/commit/14a4042cae0673ef9074e1f9d09cde572be54d4d))
+- **proteus:** preserve binary and 64-bit bigint fidelity on read ([33b58af](https://github.com/lindorm-io/monorepo/commit/33b58afae0ead6f8ef17c8a23a71fd90f9ec1d22))
+
+### Features
+
+- **proteus:** add titles and details to thrown errors ([6c164ca](https://github.com/lindorm-io/monorepo/commit/6c164ca3c23940a7de9137cbc8b5884475a0ca5b))
+- **proteus:** emulate referential integrity in the memory driver ([698b08b](https://github.com/lindorm-io/monorepo/commit/698b08b5b6084f826d1463cd2c928d1a4b9e2883))
+- **proteus:** enrich driver error throws with codes ([61147fe](https://github.com/lindorm-io/monorepo/commit/61147feda990433ec786aca5e10fad162ba1c30c))
+- **proteus:** finish enriching errors (mongo, entity, utils, cli) ([297da06](https://github.com/lindorm-io/monorepo/commit/297da063b65d52de9cb84de035d8a95bfd4ecc43))
+- **proteus:** namespace errors, begin throw enrichment ([749299b](https://github.com/lindorm-io/monorepo/commit/749299b1b0fd53bce71f639df0c56700c68b3840))
+
 ## [0.7.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.7.0...@lindorm/proteus@0.7.1) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/proteus

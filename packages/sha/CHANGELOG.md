@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.5.2...@lindorm/sha@0.6.0) (2026-06-15)
+
+### Features
+
+- **sha:** add titles and details to thrown errors ([db4fb15](https://github.com/lindorm-io/monorepo/commit/db4fb150cacb70035d3bbeeb71a5902c26ff860c))
+- **sha:** namespace and enrich thrown errors ([0bbfb96](https://github.com/lindorm-io/monorepo/commit/0bbfb96a04b0c7b9075d6322aff9c33e1de728b0))
+
 ## [0.5.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.5.1...@lindorm/sha@0.5.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/sha

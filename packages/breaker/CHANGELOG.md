@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/breaker@0.3.2...@lindorm/breaker@0.4.0) (2026-06-15)
+
+### Features
+
+- **breaker:** add titles and details to thrown errors ([3771335](https://github.com/lindorm-io/monorepo/commit/3771335a140fe4c96e1355b6cc9e1f1d29000ca5))
+- **breaker:** namespace and enrich thrown errors ([dde891f](https://github.com/lindorm-io/monorepo/commit/dde891f2eba91a29bedabcd25e33d7a00971da31))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/breaker@0.3.1...@lindorm/breaker@0.3.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/breaker

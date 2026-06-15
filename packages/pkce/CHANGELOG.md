@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pkce@0.2.2...@lindorm/pkce@0.3.0) (2026-06-15)
+
+### Features
+
+- **pkce:** add titles and details to thrown errors ([7ce6bb7](https://github.com/lindorm-io/monorepo/commit/7ce6bb7091eb867dffd99fa3da336a487c0e902b))
+- **pkce:** namespace and enrich thrown errors ([423d265](https://github.com/lindorm-io/monorepo/commit/423d265fa2e38fdd472c8bb848ad0c26d048584c))
+
 ## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/pkce@0.2.1...@lindorm/pkce@0.2.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/pkce

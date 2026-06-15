@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.5.3...@lindorm/amphora@0.6.0) (2026-06-15)
+
+### Bug Fixes
+
+- **amphora:** add public issuer config to invalid-options error debug ([995092b](https://github.com/lindorm-io/monorepo/commit/995092b11fa07dc5beef651f7c8e6ebaf200a583))
+
+### Features
+
+- **amphora:** add titles and details to thrown errors ([8c7f520](https://github.com/lindorm-io/monorepo/commit/8c7f5206f5612eb17c988188b3872fc945ee56e8))
+- **amphora:** namespace and enrich thrown errors ([0cf0a80](https://github.com/lindorm-io/monorepo/commit/0cf0a80b0b03d9c8934dbaee10e32fa90663473c))
+
 ## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.5.2...@lindorm/amphora@0.5.3) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/amphora

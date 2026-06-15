@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/ec@0.3.2...@lindorm/ec@0.4.0) (2026-06-15)
+
+### Features
+
+- **ec:** add titles and details to thrown errors ([b476082](https://github.com/lindorm-io/monorepo/commit/b476082faea6521514a9f67aed2c1451d97f767f))
+- **ec:** namespace and enrich thrown errors ([38b3ad5](https://github.com/lindorm-io/monorepo/commit/38b3ad51c10bd72264564058cdaef6ca4e26d33f))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/ec@0.3.1...@lindorm/ec@0.3.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/ec

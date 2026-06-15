@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.4.3...@lindorm/iris@0.5.0) (2026-06-15)
+
+### Bug Fixes
+
+- **iris:** honor the caller's explicit consume topic for dynamic @Topic messages ([805f87f](https://github.com/lindorm-io/monorepo/commit/805f87ff9f308bff4104cfd90fa7491b5981759f))
+
+### Features
+
+- **iris:** add titles and details to thrown errors ([e6d76a2](https://github.com/lindorm-io/monorepo/commit/e6d76a2be4a3c43016432cb2a11eb145e3bd5600))
+- **iris:** align driver behavior with real-broker semantics ([6a27fb6](https://github.com/lindorm-io/monorepo/commit/6a27fb6601ba25b9eb5ec4d5f7897524c81b5497))
+- **iris:** namespace and enrich thrown errors ([4a8db00](https://github.com/lindorm-io/monorepo/commit/4a8db00b1738547b1a5b1313ff6ca2f80c9a5faa))
+
 ## [0.4.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.4.2...@lindorm/iris@0.4.3) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/iris

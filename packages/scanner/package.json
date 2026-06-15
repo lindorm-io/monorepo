@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/scanner",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -30,12 +30,12 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/errors": "^0.2.2",
-    "@lindorm/is": "^0.2.2",
+    "@lindorm/errors": "^0.3.0",
+    "@lindorm/is": "^0.2.3",
     "tsx": "^4.21.0"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.6.3"
+    "@lindorm/logger": "^0.6.4"
   },
   "exports": {
     ".": {

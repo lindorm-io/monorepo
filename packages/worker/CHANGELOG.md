@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.5.3...@lindorm/worker@0.6.0) (2026-06-15)
+
+### Features
+
+- **worker:** add titles and details to thrown errors ([f0c92bf](https://github.com/lindorm-io/monorepo/commit/f0c92bf81e44f533f17ab2f82157e0285b510851))
+- **worker:** namespace and enrich thrown errors ([c512e7a](https://github.com/lindorm-io/monorepo/commit/c512e7a58a210ff13a2edfbae216563924199c3a))
+
 ## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.5.2...@lindorm/worker@0.5.3) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/worker
