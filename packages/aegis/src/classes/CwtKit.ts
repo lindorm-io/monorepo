@@ -10,6 +10,7 @@ import {
   COSE_TAG,
   decodeProtectedHeader,
 } from "../internal/cose/structures.js";
+import { CwmKit } from "./CwmKit.js";
 import { CwsKit } from "./CwsKit.js";
 
 export type CwtKitOptions = {
@@ -30,7 +31,7 @@ export type CwtVerifyResult = {
 };
 
 export type CwtDecoded = {
-  /** The COSE structure inside the CWT (a COSE_Sign1 Tag for now). */
+  /** The COSE structure inside the CWT (a COSE_Sign1 or COSE_Mac0 Tag). */
   cose: unknown;
   kid: string | undefined;
   algorithm: string | undefined;
@@ -44,9 +45,13 @@ const unwrapCwt = (value: unknown): unknown =>
 /**
  * CWT (RFC 8392) — the CBOR Web Token claims layer, the COSE analogue of
  * JwtKit. Encodes the DOMAIN-keyed common claims to a CWT claims map (via the
- * registry-driven codec), secures it with a COSE structure (COSE_Sign1 today),
- * and wraps the result in the CWT tag (61). Verify reverses it, returning the
- * domain-keyed claims the same verify floor consumes.
+ * registry-driven codec), secures it with a COSE structure, and wraps the
+ * result in the CWT tag (61). Verify reverses it, returning the domain-keyed
+ * claims the same verify floor consumes.
+ *
+ * The integrity structure follows the key type, exactly as COSE mandates:
+ * an asymmetric key signs (COSE_Sign1, tag 18); a symmetric `oct` key MACs
+ * (COSE_Mac0, tag 17) — HMAC is a MAC algorithm, never a Sign1 signature.
  */
 export class CwtKit {
   private readonly kryptos: IKryptos;
@@ -58,28 +63,31 @@ export class CwtKit {
   }
 
   public sign(common: Dict, options: CwtSignOptions = {}): Buffer {
-    this.logger.debug("Minting CWT (COSE_Sign1)", { options });
+    const mac = this.kryptos.type === "oct";
+    this.logger.debug(`Minting CWT (${mac ? "COSE_Mac0" : "COSE_Sign1"})`, { options });
 
     const payload = encodeCbor(
       encodeCwtClaims(common, { proprietary: options.proprietary }),
     );
-    const sign1 = new CwsKit({ kryptos: this.kryptos, logger: this.logger }).sign(
-      payload,
-      {
-        typ: options.typ,
-      },
-    );
+
+    const kit = { kryptos: this.kryptos, logger: this.logger };
+    const cose = mac
+      ? new CwmKit(kit).tag(payload, { typ: options.typ })
+      : new CwsKit(kit).sign(payload, { typ: options.typ });
 
     // Always emit the CWT tag (61); verify accepts tagged or untagged.
-    return encodeCbor(new Tag(COSE_TAG.cwt, sign1));
+    return encodeCbor(new Tag(COSE_TAG.cwt, cose));
   }
 
   public verify(token: Buffer): CwtVerifyResult {
     const cose = unwrapCwt(decodeCbor(token));
-    const { payload, protectedHeader } = new CwsKit({
-      kryptos: this.kryptos,
-      logger: this.logger,
-    }).verify(cose);
+
+    const kit = { kryptos: this.kryptos, logger: this.logger };
+    // COSE_Mac0 (tag 17) is MAC-verified; everything else is a COSE_Sign1.
+    const { payload, protectedHeader } =
+      cose instanceof Tag && cose.tag === COSE_TAG.mac0
+        ? new CwmKit(kit).verify(cose)
+        : new CwsKit(kit).verify(cose);
 
     // preferMap:false so nested claim objects (act, sub_id, events, custom)
     // decode as plain objects; the top CWT map has integer keys so it stays a Map.
