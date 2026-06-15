@@ -231,12 +231,24 @@ export class Aegis implements IAegis {
     if (Aegis.isJws(token)) {
       return (await this.jwsVerify(token)) as T;
     }
+
+    // A COSE token is base64url CBOR with no JOSE dot structure. Verify its
+    // integrity (decrypting a COSE_Encrypt0 if needed) and return the domain
+    // claims; like the profile-less JWT path, no profile floor is applied.
+    if (!token.includes(".")) {
+      const bytes = Buffer.from(token, "base64url");
+      if (this.coseKit.isCose(bytes)) {
+        const { claims, decoded } = await this.coseVerifyCore(bytes);
+        return { claims, header: decoded } as unknown as T;
+      }
+    }
+
     throw new AegisError("Invalid token type", {
       code: "unsupported_token_type",
       debug: { token },
       title: "Unsupported Token Type",
       details:
-        "The token is not a recognised JWT, JWE, or JWS, so Aegis cannot select a kit to verify it.",
+        "The token is not a recognised JWT, JWE, JWS, or COSE token, so Aegis cannot select a kit to verify it.",
     });
   }
 
@@ -640,24 +652,9 @@ export class Aegis implements IAegis {
     options: ProfileVerifyOptions,
   ): Promise<T> {
     const profile = resolveProfile(name);
-    let bytes: Buffer = Buffer.from(token, "base64url");
-
-    // An encrypted CWT (COSE_Encrypt0) is decrypted first: resolve the enc key
-    // by its kid (kid-only, never a header-embedded key), then verify the inner
-    // secured CWT exactly as a non-encrypted one.
-    if (this.coseKit.isEncrypted(bytes)) {
-      const encKryptos = await this.kryptosEnc({
-        id: this.coseKit.decodeEncryptedKid(bytes),
-      });
-      bytes = this.coseKit.decrypt(encKryptos, bytes);
-    }
-
-    // Decode the COSE headers (kid/alg/typ) WITHOUT verifying, resolve the key
-    // by kid through amphora (kid-only, no header-embedded key), then verify.
-    const decoded = this.coseKit.decode(bytes);
-    const kryptos = await this.kryptosSig({ id: decoded.kid });
-
-    const { claims, typ } = this.coseKit.verify(kryptos, bytes);
+    const { claims, decoded, typ } = await this.coseVerifyCore(
+      Buffer.from(token, "base64url"),
+    );
 
     const expectedIssuer =
       options.issuer ??
@@ -672,6 +669,27 @@ export class Aegis implements IAegis {
     });
 
     return { claims, header: decoded } as unknown as T;
+  }
+
+  // The integrity core shared by the profile (verifyCose) and profile-less
+  // (verifySmart) COSE paths: decrypt a COSE_Encrypt0 if present, then resolve
+  // the signing/MAC key by kid (kid-only, never a header-embedded key) and
+  // verify. The profile floor — if any — is applied by the caller.
+  private async coseVerifyCore(input: Buffer) {
+    let bytes = input;
+
+    if (this.coseKit.isEncrypted(bytes)) {
+      const encKryptos = await this.kryptosEnc({
+        id: this.coseKit.decodeEncryptedKid(bytes),
+      });
+      bytes = this.coseKit.decrypt(encKryptos, bytes);
+    }
+
+    const decoded = this.coseKit.decode(bytes);
+    const kryptos = await this.kryptosSig({ id: decoded.kid });
+    const { claims, typ } = this.coseKit.verify(kryptos, bytes);
+
+    return { claims, decoded, typ };
   }
 
   // RFC-conformance advisory: a profile that RECOMMENDS asymmetric (RFC 9068

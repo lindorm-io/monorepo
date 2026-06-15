@@ -79,6 +79,21 @@ export class CoseKit {
     return Buffer.from(encodeCbor(encrypt0));
   }
 
+  /**
+   * True if these bytes are a recognised COSE token — a CWT (tag 61) wrapping a
+   * COSE_Sign1/COSE_Mac0, or a bare COSE_Sign1 (18) / COSE_Mac0 (17) /
+   * COSE_Encrypt0 (16). Tolerant: non-CBOR / non-COSE input returns false, so it
+   * is safe to probe an unknown token with.
+   */
+  public isCose(token: Buffer): boolean {
+    try {
+      const tag = innerCose(decodeCbor(token))?.tag;
+      return tag === COSE_TAG.sign1 || tag === COSE_TAG.mac0 || tag === COSE_TAG.encrypt0;
+    } catch {
+      return false;
+    }
+  }
+
   /** True if the COSE token is an encrypted CWT (COSE_Encrypt0, tag 16). */
   public isEncrypted(token: Buffer): boolean {
     return innerCose(decodeCbor(token))?.tag === COSE_TAG.encrypt0;
