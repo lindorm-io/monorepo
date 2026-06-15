@@ -9,7 +9,7 @@ import type { TokenProfile } from "../../../types/index.js";
  */
 export const accessTokenProfile: TokenProfile = {
   name: "access_token",
-  typ: "at+jwt",
+  typ: "application/at+jwt",
   required: [
     "issuer",
     "expiresAt",

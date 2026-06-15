@@ -555,7 +555,7 @@ describe("JweKit", () => {
 
       const decrypted = kit.decrypt(token);
 
-      expect(decrypted.header.headerType).toBe("logout+jwe");
+      expect(decrypted.header.headerType).toBe("application/logout+jwe");
       expect(decrypted.header.tokenType).toBe("logout_token");
     });
 
@@ -567,7 +567,7 @@ describe("JweKit", () => {
 
       const decrypted = kit.decrypt(token);
 
-      expect(decrypted.header.headerType).toBe("erasure+jwe");
+      expect(decrypted.header.headerType).toBe("application/erasure+jwe");
       expect(decrypted.header.tokenType).toBe("erasure_token");
     });
 
