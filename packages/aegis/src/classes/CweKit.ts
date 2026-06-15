@@ -1,0 +1,114 @@
+import { AesKit } from "@lindorm/aes";
+import type { IKryptos } from "@lindorm/kryptos";
+import type { ILogger } from "@lindorm/logger";
+import { AegisError } from "../errors/index.js";
+import { Tag } from "../internal/cose/cbor.js";
+import { GCM_TAG_BYTES, encToCoseLabel } from "../internal/cose/enc-labels.js";
+import {
+  COSE_HEADER,
+  COSE_TAG,
+  buildEncStructure,
+  decodeProtectedHeader,
+  encodeProtectedHeader,
+} from "../internal/cose/structures.js";
+
+export type CweKitOptions = {
+  kryptos: IKryptos;
+  logger: ILogger;
+};
+
+export type CweEncryptOptions = {
+  typ?: string;
+};
+
+export type CweDecryptResult = {
+  payload: Buffer;
+  protectedHeader: Map<number, unknown>;
+};
+
+const unwrapEncrypt0 = (value: unknown): Array<unknown> => {
+  const contents =
+    value instanceof Tag && value.tag === COSE_TAG.encrypt0 ? value.contents : value;
+  if (!Array.isArray(contents) || contents.length !== 3) {
+    throw new AegisError("Malformed COSE_Encrypt0", {
+      code: "cose_malformed",
+      title: "Malformed COSE_Encrypt0",
+      details:
+        "A COSE_Encrypt0 must be a 3-element array [protected, unprotected, ciphertext].",
+    });
+  }
+  return contents;
+};
+
+/**
+ * COSE_Encrypt0 (RFC 9052 §5.2) — direct symmetric AEAD, the COSE analogue of
+ * JweKit. Reuses `AesKit.encryptContent`: the COSE `Enc_structure` is the AAD,
+ * the IV travels unprotected (label 5), and the COSE ciphertext is `ct‖tag`.
+ * AES-GCM today (CCM is a follow-up).
+ */
+export class CweKit {
+  private readonly kryptos: IKryptos;
+  private readonly logger: ILogger;
+
+  public constructor(options: CweKitOptions) {
+    this.kryptos = options.kryptos;
+    this.logger = options.logger.child(["CweKit"]);
+  }
+
+  public encrypt(payload: Buffer, options: CweEncryptOptions = {}): Tag {
+    this.logger.debug("Encrypting COSE_Encrypt0", { options });
+
+    const protectedMap = new Map<number, unknown>();
+    protectedMap.set(COSE_HEADER.alg, encToCoseLabel(this.kryptos.encryption));
+    if (options.typ !== undefined) protectedMap.set(COSE_HEADER.typ, options.typ);
+    const protectedHeader = encodeProtectedHeader(protectedMap);
+
+    const aad = buildEncStructure(protectedHeader);
+    const { ciphertext, iv, tag } = new AesKit({ kryptos: this.kryptos }).encryptContent(
+      payload,
+      { aad },
+    );
+
+    const unprotected = new Map<number, unknown>();
+    unprotected.set(COSE_HEADER.iv, iv);
+    unprotected.set(COSE_HEADER.kid, Buffer.from(this.kryptos.id, "utf8"));
+
+    return new Tag(COSE_TAG.encrypt0, [
+      protectedHeader,
+      unprotected,
+      Buffer.concat([ciphertext, tag]),
+    ]);
+  }
+
+  public decrypt(encrypt0: unknown): CweDecryptResult {
+    const [protectedHeader, unprotected, coseCiphertext] = unwrapEncrypt0(encrypt0) as [
+      Uint8Array,
+      Map<number, unknown>,
+      Uint8Array,
+    ];
+
+    const ivValue = unprotected.get(COSE_HEADER.iv);
+    if (!(ivValue instanceof Uint8Array)) {
+      throw new AegisError("COSE_Encrypt0 is missing its IV", {
+        code: "cose_malformed",
+        title: "Malformed COSE_Encrypt0",
+        details: "The unprotected header has no IV (label 5).",
+      });
+    }
+
+    // COSE ciphertext = ciphertext ‖ tag (GCM tag is the trailing 16 bytes).
+    const ct = Buffer.from(coseCiphertext);
+    const ciphertext = ct.subarray(0, ct.length - GCM_TAG_BYTES);
+    const tag = ct.subarray(ct.length - GCM_TAG_BYTES);
+
+    const aad = buildEncStructure(Buffer.from(protectedHeader));
+    const payload = new AesKit({ kryptos: this.kryptos }).decryptContent({
+      aad,
+      ciphertext,
+      iv: Buffer.from(ivValue),
+      tag,
+    });
+
+    return { payload, protectedHeader: decodeProtectedHeader(protectedHeader) };
+  }
+}
