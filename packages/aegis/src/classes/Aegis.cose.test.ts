@@ -2,7 +2,11 @@ import { Amphora } from "@lindorm/amphora";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import { beforeEach, describe, expect, test } from "vitest";
-import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
+import {
+  TEST_EC_KEY_SIG,
+  TEST_OCT_KEY_ENC,
+  TEST_OCT_KEY_SIG,
+} from "../__fixtures__/keys.js";
 import { CwtKit } from "./CwtKit.js";
 import { Aegis } from "./Aegis.js";
 
@@ -89,6 +93,44 @@ describe("Aegis — COSE", () => {
         "access_token",
         { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
         { format: "cose" },
+      ),
+    ).rejects.toThrow();
+  });
+
+  test("sign-then-encrypt: an id_token wrapped in COSE_Encrypt0 decrypts + verifies", async () => {
+    const logger = createMockLogger();
+    const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    const encAegis = new Aegis({ amphora, logger });
+    await amphora.setup();
+    amphora.add(TEST_EC_KEY_SIG); // signs the inner CWT
+    amphora.add(TEST_OCT_KEY_ENC); // direct (dir) recipient key for COSE_Encrypt0
+
+    const { token } = await encAegis.mint(
+      "id_token",
+      { subject: "user-1", audience: ["client-1"], clientId: "client-1" },
+      { format: "cose", encrypt: {} },
+    );
+
+    // The outer COSE structure is a COSE_Encrypt0 (CBOR tag 16 = 0xd0), not a
+    // bare CWT tag — the signed CWT is the encrypted plaintext.
+    const bytes = Buffer.from(token, "base64url");
+    expect(bytes[0]).toBe(0xd0);
+
+    const verified = (await encAegis.verify("id_token", token, {
+      format: "cose",
+      audience: "client-1",
+    })) as unknown as { claims: Record<string, unknown> };
+
+    expect(verified.claims.subject).toBe("user-1");
+    expect(verified.claims.issuer).toBe("https://test.lindorm.io/");
+  });
+
+  test("explicit encryption on a non-encryptable profile is rejected", async () => {
+    await expect(
+      aegis.mint(
+        "access_token",
+        { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
+        { format: "cose", encrypt: {} },
       ),
     ).rejects.toThrow();
   });

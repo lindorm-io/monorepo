@@ -559,20 +559,61 @@ export class Aegis implements IAegis {
 
   // The COSE encoder. Consumes the SAME domain-keyed common claims
   // (assembleCommonClaims) and profile validation as the JOSE path; only the
-  // wire encoding differs — a signed CWT (COSE_Sign1) wrapped in the CWT tag.
-  // The token bytes are base64url-encoded so the string-token API is preserved.
+  // wire encoding differs — a secured CWT (COSE_Sign1 / COSE_Mac0), optionally
+  // wrapped in a COSE_Encrypt0 (sign-then-encrypt), mirroring the JOSE
+  // sign-then-encrypt path. The token bytes are base64url-encoded so the
+  // string-token API is preserved.
   private async mintCose(
     name: string,
     content: SignContent,
     options: ProfileSignOptions,
   ): Promise<SignedJwt> {
     const profile = resolveProfile(name);
+
+    // Encryption is only meaningful for encryptable profiles; an encrypt option
+    // on a non-encryptable profile is a caller error, not a silent no-op.
+    if (options.encrypt !== undefined && !profile.encryptable) {
+      throw new AegisError("Encryption is not allowed for this profile", {
+        code: "encryption_not_allowed",
+        data: { profile: profile.name },
+        title: "Encryption Not Allowed",
+        details:
+          "This token profile is not encryptable, so an encrypt option cannot be supplied; remove it or use an encryptable profile.",
+      });
+    }
+
+    // Encryption fires when the profile is encryptable AND either an explicit
+    // `encrypt` option is supplied OR the content carries `sensitive_identity`.
+    // COSE_Encrypt0 is direct AEAD, so the recipient key is a symmetric enc key.
+    const hasSensitiveIdentity = content.sensitiveIdentity != null;
+    const explicitEncrypt = options.encrypt !== undefined;
+    const wantsEncryption =
+      profile.encryptable && (explicitEncrypt || hasSensitiveIdentity);
+
+    const encKryptos = wantsEncryption
+      ? await this.resolveCoseEncKey(
+          {
+            id: options.encrypt?.kid,
+            algorithm: options.encrypt?.algorithm,
+            predicate: options.encrypt?.predicate,
+          },
+          explicitEncrypt,
+        )
+      : undefined;
+
+    // `sensitive_identity` MUST NOT travel in cleartext: if it cannot be
+    // encrypted, strip it before securing the CWT so it is omitted entirely.
+    const signContent =
+      hasSensitiveIdentity && !encKryptos
+        ? (removeUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
+        : content;
+
     const kryptos = await this.kryptosSig({ sign: true });
 
     const common = assembleCommonClaims(
       { algorithm: kryptos.algorithm, issuer: this.issuer },
       profile,
-      content,
+      signContent,
       options,
     );
     validateProfileClaims(profile, common, {
@@ -580,10 +621,18 @@ export class Aegis implements IAegis {
       algorithm: kryptos.algorithm as any,
     });
 
-    const token = this.coseKit.sign(kryptos, common, {
+    let token = this.coseKit.sign(kryptos, common, {
       typ: profile.typ ?? undefined,
       proprietary: options.proprietary,
     });
+
+    // Sign-then-encrypt: the inner secured CWT is the COSE_Encrypt0 plaintext.
+    if (encKryptos) {
+      token = this.coseKit.encrypt(encKryptos, token, {
+        typ: profile.typ ?? undefined,
+        encryption: this.encryption,
+      });
+    }
 
     const expiresAt = isDate(common.expiresAt) ? common.expiresAt : undefined;
     const expiresOn = expiresAt ? getUnixTime(expiresAt) : undefined;
@@ -604,7 +653,17 @@ export class Aegis implements IAegis {
     options: ProfileVerifyOptions,
   ): Promise<T> {
     const profile = resolveProfile(name);
-    const bytes = Buffer.from(token, "base64url");
+    let bytes: Buffer = Buffer.from(token, "base64url");
+
+    // An encrypted CWT (COSE_Encrypt0) is decrypted first: resolve the enc key
+    // by its kid (kid-only, never a header-embedded key), then verify the inner
+    // secured CWT exactly as a non-encrypted one.
+    if (this.coseKit.isEncrypted(bytes)) {
+      const encKryptos = await this.kryptosEnc({
+        id: this.coseKit.decodeEncryptedKid(bytes),
+      });
+      bytes = this.coseKit.decrypt(encKryptos, bytes);
+    }
 
     // Decode the COSE headers (kid/alg/typ) WITHOUT verifying, resolve the key
     // by kid through amphora (kid-only, no header-embedded key), then verify.
@@ -626,6 +685,27 @@ export class Aegis implements IAegis {
     });
 
     return { claims, header: decoded } as unknown as T;
+  }
+
+  // Resolve the symmetric recipient key for a COSE_Encrypt0. A missing key is a
+  // hard error only when the caller explicitly asked to encrypt; when forced
+  // only by `sensitive_identity` it is tolerated (the claim is omitted instead).
+  private async resolveCoseEncKey(
+    options: {
+      id?: string;
+      algorithm?: KryptosEncAlgorithm;
+      predicate?: AegisPredicate;
+    },
+    required: boolean,
+  ): Promise<IKryptos | undefined> {
+    try {
+      return await this.kryptosEnc({ encrypt: true, ...options });
+    } catch (error) {
+      if (required) {
+        throw error;
+      }
+      return undefined;
+    }
   }
 
   private async resolveEncKit(

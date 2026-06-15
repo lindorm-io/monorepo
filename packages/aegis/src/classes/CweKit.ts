@@ -1,9 +1,13 @@
 import { AesKit } from "@lindorm/aes";
-import type { IKryptos } from "@lindorm/kryptos";
+import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { AegisError } from "../errors/index.js";
 import { Tag } from "../internal/cose/cbor.js";
-import { GCM_TAG_BYTES, encToCoseLabel } from "../internal/cose/enc-labels.js";
+import {
+  GCM_TAG_BYTES,
+  coseLabelToEnc,
+  encToCoseLabel,
+} from "../internal/cose/enc-labels.js";
 import {
   COSE_HEADER,
   COSE_TAG,
@@ -15,6 +19,12 @@ import {
 export type CweKitOptions = {
   kryptos: IKryptos;
   logger: ILogger;
+  /**
+   * The content-encryption algorithm. Defaults to the key's own `encryption`;
+   * supply it explicitly when the resolved key carries none (e.g. an Amphora
+   * key), exactly as JweKit takes its encryption from Aegis.
+   */
+  encryption?: KryptosEncryption;
 };
 
 export type CweEncryptOptions = {
@@ -49,25 +59,27 @@ const unwrapEncrypt0 = (value: unknown): Array<unknown> => {
 export class CweKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
+  private readonly encryption: KryptosEncryption | undefined;
 
   public constructor(options: CweKitOptions) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CweKit"]);
+    this.encryption = options.encryption ?? options.kryptos.encryption ?? undefined;
   }
 
   public encrypt(payload: Buffer, options: CweEncryptOptions = {}): Tag {
     this.logger.debug("Encrypting COSE_Encrypt0", { options });
 
     const protectedMap = new Map<number, unknown>();
-    protectedMap.set(COSE_HEADER.alg, encToCoseLabel(this.kryptos.encryption));
+    protectedMap.set(COSE_HEADER.alg, encToCoseLabel(this.encryption));
     if (options.typ !== undefined) protectedMap.set(COSE_HEADER.typ, options.typ);
     const protectedHeader = encodeProtectedHeader(protectedMap);
 
     const aad = buildEncStructure(protectedHeader);
-    const { ciphertext, iv, tag } = new AesKit({ kryptos: this.kryptos }).encryptContent(
-      payload,
-      { aad },
-    );
+    const { ciphertext, iv, tag } = new AesKit({
+      kryptos: this.kryptos,
+      encryption: this.encryption,
+    }).encryptContent(payload, { aad });
 
     const unprotected = new Map<number, unknown>();
     unprotected.set(COSE_HEADER.iv, iv);
@@ -101,14 +113,19 @@ export class CweKit {
     const ciphertext = ct.subarray(0, ct.length - GCM_TAG_BYTES);
     const tag = ct.subarray(ct.length - GCM_TAG_BYTES);
 
+    // The content-encryption algorithm is self-describing — read it from the
+    // protected header (label 1) rather than the key.
+    const decodedProtected = decodeProtectedHeader(protectedHeader);
+    const encryption = coseLabelToEnc(decodedProtected.get(COSE_HEADER.alg) as number);
+
     const aad = buildEncStructure(Buffer.from(protectedHeader));
-    const payload = new AesKit({ kryptos: this.kryptos }).decryptContent({
+    const payload = new AesKit({ kryptos: this.kryptos, encryption }).decryptContent({
       aad,
       ciphertext,
       iv: Buffer.from(ivValue),
       tag,
     });
 
-    return { payload, protectedHeader: decodeProtectedHeader(protectedHeader) };
+    return { payload, protectedHeader: decodedProtected };
   }
 }
