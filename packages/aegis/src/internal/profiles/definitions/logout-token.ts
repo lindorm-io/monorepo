@@ -9,10 +9,10 @@ import type { TokenProfile } from "../../../types/index.js";
 export const logoutTokenProfile: TokenProfile = {
   name: "logout_token",
   typ: "logout+jwt",
-  required: ["iss", "aud", "iat", "exp", "jti", "events"],
+  required: ["issuer", "audience", "issuedAt", "expiresAt", "tokenId", "events"],
   forbidden: ["nonce"],
   requiredWhen: [],
-  atLeastOneOf: [["sub", "sid"]],
+  atLeastOneOf: [["subject", "sessionId"]],
   autoInject: { iat: true, jti: true, nbf: false, iss: true },
   issuer: "platform",
   lifetime: "2m",

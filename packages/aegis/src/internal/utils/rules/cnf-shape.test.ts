@@ -10,18 +10,20 @@ describe("cnfShape", () => {
   });
 
   test("passes for a valid jkt thumbprint", () => {
-    expect(cnfShape({ cnf: { jkt: VALID_JKT } })).toEqual([]);
+    expect(cnfShape({ confirmation: { thumbprint: VALID_JKT } })).toEqual([]);
   });
 
   test("fails when cnf is not an object", () => {
-    expect(cnfShape({ cnf: "x" })).toMatchSnapshot();
+    expect(cnfShape({ confirmation: "x" })).toMatchSnapshot();
   });
 
   test("fails on an unknown cnf member", () => {
-    expect(cnfShape({ cnf: { jkt: VALID_JKT, surprise: true } })).toMatchSnapshot();
+    expect(
+      cnfShape({ confirmation: { thumbprint: VALID_JKT, surprise: true } }),
+    ).toMatchSnapshot();
   });
 
   test("fails when jkt is the wrong byte length", () => {
-    expect(cnfShape({ cnf: { jkt: "YWJj" } })).toMatchSnapshot();
+    expect(cnfShape({ confirmation: { thumbprint: "YWJj" } })).toMatchSnapshot();
   });
 });

@@ -121,8 +121,10 @@ export const buildProfileClaims = <C extends Dict = Dict>(
     iss,
   }) as Dict;
 
-  enforcePolicy(profile, claims, options.context ?? {});
-
+  // Policy (required/forbidden/atLeastOneOf/requiredWhen) is now enforced on the
+  // DOMAIN-keyed common layer by `assembleCommonClaims`, not here. This function
+  // is purely the JOSE wire mapper + envelope injection; `mintProfile` feeds it
+  // the envelope already resolved by `assembleCommonClaims` so the two agree.
   return claims;
 };
 

@@ -8,7 +8,7 @@ import type { TokenProfile } from "../../../types/index.js";
 export const userinfoProfile: TokenProfile = {
   name: "userinfo",
   typ: null,
-  required: ["iss", "sub", "aud"],
+  required: ["issuer", "subject", "audience"],
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],

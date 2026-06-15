@@ -55,6 +55,7 @@ import type {
   ValidateJwtOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
+import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { selectEncoder } from "../internal/utils/select-encoder.js";
 import { validateProfileClaims } from "../internal/utils/validate-profile-claims.js";
@@ -493,17 +494,40 @@ export class Aegis implements IAegis {
         ? (removeUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
         : content;
 
-    const claims = buildProfileClaims(
+    // Assemble + validate on the DOMAIN-keyed common layer: presence/forbid/
+    // conditional policy (inside assembleCommonClaims) + the structural RFC
+    // rules (validateProfileClaims). Business logic lives in domain terms.
+    const common = assembleCommonClaims(
       { algorithm: kit.algorithm, issuer: this.issuer },
       profile,
       signContent,
       options,
     );
 
-    validateProfileClaims(profile, claims, {
+    validateProfileClaims(profile, common, {
       ...(options.context ?? {}),
       algorithm: kit.algorithm as any,
     });
+
+    // JOSE wire claims: the existing wire mapper, fed the envelope ALREADY
+    // resolved on the common layer (iss/iat/jti/nbf/exp) so the signed token
+    // matches the validated common layer exactly — one source of truth, and
+    // byte-identical to the pre-rebase output.
+    const claims = buildProfileClaims(
+      { algorithm: kit.algorithm, issuer: this.issuer },
+      profile,
+      {
+        ...signContent,
+        notBefore: common.notBefore as Date | undefined,
+        issuer: common.issuer as string | undefined,
+        expires: common.expiresAt as Date | undefined,
+      } as SignContent,
+      {
+        ...options,
+        issuedAt: common.issuedAt as Date | undefined,
+        tokenId: common.tokenId as string | undefined,
+      },
+    );
 
     // A profile typ stamps the header verbatim (e.g. `at+jwt`). A `null` profile
     // typ means "none mandated": fall back to the tokenType-derived default
@@ -582,7 +606,9 @@ export class Aegis implements IAegis {
       audience: options.audience,
       decodedTyp: parsed.decoded.header.typ,
       expectedIssuer,
-      payload: parsed.decoded.payload as Dict,
+      // DOMAIN-keyed parsed payload (issuer/audience/expiresAt), not the raw
+      // wire claims — the floor reads domain names so it is format-agnostic.
+      payload: parsed.payload as Dict,
       profile,
     });
 

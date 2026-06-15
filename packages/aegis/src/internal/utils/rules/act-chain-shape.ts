@@ -2,7 +2,9 @@ import { isObject, isArray, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { InvalidEntry } from "../../../types/index.js";
 
-const PERMITTED_MEMBERS = new Set(["sub", "iss", "aud", "client_id", "act"]);
+// The common layer is DOMAIN-keyed: actor members are domain names
+// (subject→sub, issuer→iss, audience→aud, clientId→client_id, nested act).
+const PERMITTED_MEMBERS = new Set(["subject", "issuer", "audience", "clientId", "act"]);
 
 const validateActor = (
   actor: unknown,
@@ -25,22 +27,29 @@ const validateActor = (
     }
   }
 
-  if (node.sub !== undefined && !isString(node.sub)) {
-    invalid.push({ key: `${path}.sub`, message: `"${path}.sub" must be a string` });
-  }
-  if (node.iss !== undefined && !isString(node.iss)) {
-    invalid.push({ key: `${path}.iss`, message: `"${path}.iss" must be a string` });
-  }
-  if (node.client_id !== undefined && !isString(node.client_id)) {
+  if (node.subject !== undefined && !isString(node.subject)) {
     invalid.push({
-      key: `${path}.client_id`,
-      message: `"${path}.client_id" must be a string`,
+      key: `${path}.subject`,
+      message: `"${path}.subject" must be a string`,
     });
   }
-  if (node.aud !== undefined && !isArray(node.aud) && !isString(node.aud)) {
+  if (node.issuer !== undefined && !isString(node.issuer)) {
+    invalid.push({ key: `${path}.issuer`, message: `"${path}.issuer" must be a string` });
+  }
+  if (node.clientId !== undefined && !isString(node.clientId)) {
     invalid.push({
-      key: `${path}.aud`,
-      message: `"${path}.aud" must be a string or array of strings`,
+      key: `${path}.clientId`,
+      message: `"${path}.clientId" must be a string`,
+    });
+  }
+  if (
+    node.audience !== undefined &&
+    !isArray(node.audience) &&
+    !isString(node.audience)
+  ) {
+    invalid.push({
+      key: `${path}.audience`,
+      message: `"${path}.audience" must be a string or array of strings`,
     });
   }
 
@@ -50,15 +59,15 @@ const validateActor = (
 };
 
 /**
- * RFC 8693 — `act`/`may_act` are recursive actor objects whose members are
- * limited to `sub`/`iss`/`aud`/`client_id`/nested `act`. Validates each chain
- * when present.
+ * RFC 8693 — `act`/`mayAct` are recursive actor objects whose members are
+ * limited to `subject`/`issuer`/`audience`/`clientId`/nested `act`. Validates
+ * each chain when present. (Domain-keyed: `mayAct`, not the wire `may_act`.)
  */
 export const actChainShape = (claims: Dict): Array<InvalidEntry> => {
   const invalid: Array<InvalidEntry> = [];
 
   if (claims.act !== undefined) validateActor(claims.act, "act", invalid);
-  if (claims.may_act !== undefined) validateActor(claims.may_act, "may_act", invalid);
+  if (claims.mayAct !== undefined) validateActor(claims.mayAct, "mayAct", invalid);
 
   return invalid;
 };
