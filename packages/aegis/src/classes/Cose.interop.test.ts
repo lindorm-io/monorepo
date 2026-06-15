@@ -143,3 +143,98 @@ describe("COSE interop — cose-js", () => {
     expect(claims).toEqual(common);
   });
 });
+
+// A token exercising EVERY strand of our custom claim logic: proprietary
+// private-use labels (loa, tenantId), the compact integer-keyed structured
+// claims (act, sub_id), an OIDC hash as a byte string, a cnf, a passthrough
+// array (RFC 9396) and an unknown custom claim.
+const AT_HASH = "LXEWQrcmsEQBYnyp-6wy9chTD7GQPMTbAiWHF5IaSIE"; // 32-byte b64url
+const fullCommon = {
+  ...common,
+  levelOfAssurance: 3, // proprietary private-use label (-65537)
+  tenantId: "tenant-7", // proprietary private-use label (-65541)
+  accessTokenHash: AT_HASH, // bstr
+  act: { subject: "actor", issuer: "https://delegator/", clientId: "c-2" }, // compact map
+  subjectId: { format: "iss_sub", iss: "https://i/", sub: "u" }, // compact map
+  authorizationDetails: [{ type: "payment" }], // string-keyed passthrough
+  confirmation: { keyId: "proof-key-1" }, // cnf (RFC 8747)
+  token_introspection: { active: true }, // unknown custom claim
+};
+
+describe("COSE interop — custom logic does not break the token", () => {
+  // The CWT payload is opaque to the COSE layer, so a reference verifier need
+  // not understand our proprietary claims — it must only NOT throw: verify the
+  // signature, decode the envelope, and hand back the opaque payload. The
+  // payload stays well-formed CBOR with the standard labels intact.
+  test("our full proprietary CWT verifies in @auth0/cose without throwing", async () => {
+    const token = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(fullCommon);
+    const sign1 = Sign1.decode(toBareSign1(token));
+
+    await expect(
+      sign1.verify(await toKeyLike(TEST_EC_KEY_SIG, "public"), {
+        algorithms: [Algorithms.ES512],
+      }),
+    ).resolves.toBeUndefined();
+
+    const map = decodeCbor<Map<unknown, unknown>>(Buffer.from(sign1.payload));
+    expect(map.get(1)).toBe(fullCommon.issuer); // iss still readable
+    expect(map.get(2)).toBe(fullCommon.subject); // sub still readable
+    expect(map.get(-65537)).toBe(3); // loa — opaque private-use label, still valid CBOR
+    expect(map.get("act")).toBeInstanceOf(Map); // compact act — a valid CBOR sub-map
+
+    // …and the whole thing still round-trips losslessly on our side.
+    expect(new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).verify(token).claims).toEqual(
+      fullCommon,
+    );
+  });
+
+  test("our full proprietary CWT verifies in cose-js without throwing", async () => {
+    const token = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(fullCommon);
+    await expect(
+      coseJs.sign.verify(toBareSign1(token), ecRawKey(TEST_EC_KEY_SIG, "public")),
+    ).resolves.toBeDefined();
+  });
+
+  test("a reference-signed COSE_Sign1 over our proprietary payload round-trips in us", async () => {
+    const payload = Buffer.from(encodeCbor(encodeCwtClaims(fullCommon)));
+
+    const sign1 = await Sign1.sign(
+      new ProtectedHeaders([[Headers.Algorithm, Algorithms.ES512]]),
+      new UnprotectedHeaders([[Headers.KeyID, Buffer.from(TEST_EC_KEY_SIG.id, "utf8")]]),
+      payload,
+      await toKeyLike(TEST_EC_KEY_SIG, "private"),
+    );
+    const cwt = Buffer.from(
+      encodeCbor(
+        new Tag(COSE_TAG.cwt, new Tag(COSE_TAG.sign1, sign1.getContentForEncoding())),
+      ),
+    );
+
+    expect(new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).verify(cwt).claims).toEqual(
+      fullCommon,
+    );
+  });
+
+  test("proprietary:false yields an interoperable payload that still verifies", async () => {
+    const token = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(fullCommon, {
+      proprietary: false,
+    });
+    const sign1 = Sign1.decode(toBareSign1(token));
+
+    await expect(
+      sign1.verify(await toKeyLike(TEST_EC_KEY_SIG, "public"), {
+        algorithms: [Algorithms.ES512],
+      }),
+    ).resolves.toBeUndefined();
+
+    // preferMap:false so the now string-keyed act/sub_id decode as objects; the
+    // top map keeps its integer labels, so it stays a Map.
+    const map = decodeCbor<Map<unknown, unknown>>(Buffer.from(sign1.payload), {
+      preferMap: false,
+    });
+    expect(map.has(-65537)).toBe(false); // loa dropped (no interoperable form)
+    expect(map.has(-65541)).toBe(false); // tenantId dropped
+    expect(map.get("act")).toEqual(fullCommon.act); // act is now a string-keyed object
+    expect(map.get("sub_id")).toEqual(fullCommon.subjectId); // sub_id too
+  });
+});
