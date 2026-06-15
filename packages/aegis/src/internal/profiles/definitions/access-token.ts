@@ -1,9 +1,11 @@
 import type { TokenProfile } from "../../../types/index.js";
 
 /**
- * Access token — `at+jwt` (RFC 9068 §2.2). Server-signed, asymmetric only
- * (§5: never `HS*`/`none`), never encryptable. `aud` resolves to exactly one
- * resource URI (ADR-0014). REQUIRED: iss, exp, aud, sub, client_id, iat, jti.
+ * Access token — `at+jwt` (RFC 9068 §2.2). Server-signed; RFC 9068 §2.1 permits
+ * any signing algorithm but RECOMMENDS asymmetric, so `HS*` is allowed and
+ * surfaced as a warning (algClass `asymmetric-recommended`) while `none` stays
+ * forbidden. Never encryptable. `aud` resolves to exactly one resource URI
+ * (ADR-0014). REQUIRED: iss, exp, aud, sub, client_id, iat, jti.
  */
 export const accessTokenProfile: TokenProfile = {
   name: "access_token",
@@ -24,7 +26,7 @@ export const accessTokenProfile: TokenProfile = {
   issuer: "platform",
   lifetime: "1h",
   encryptable: false,
-  algClass: "asymmetric",
+  algClass: "asymmetric-recommended",
   rules: {
     issUri: true,
     crossField: true,

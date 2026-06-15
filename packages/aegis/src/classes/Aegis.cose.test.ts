@@ -79,22 +79,33 @@ describe("Aegis — COSE", () => {
     expect(verified.claims.issuer).toBe("https://test.lindorm.io/");
   });
 
-  test("the asymmetric-only policy rejects an oct key on the COSE path too", async () => {
-    const logger = createMockLogger();
+  test("an oct-key access token is permitted with a warning, not rejected", async () => {
+    // RFC 9068 §2.1 permits any signing algorithm and RECOMMENDS asymmetric, so
+    // HS* (COSE_Mac0) is allowed — lindorm only warns, it does not reject.
+    const logged: string[] = [];
+    const logger = createMockLogger((msg: unknown) => {
+      if (typeof msg === "string") logged.push(msg);
+    });
     const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
     const macAegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_OCT_KEY_SIG);
 
-    // RFC 9068 §5: access tokens are asymmetric-only — HS* (COSE_Mac0) is
-    // refused at the same algClass gate the JOSE path uses.
-    await expect(
-      macAegis.mint(
-        "access_token",
-        { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
-        { format: "cose" },
-      ),
-    ).rejects.toThrow();
+    const { token } = await macAegis.mint(
+      "access_token",
+      { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
+      { format: "cose" },
+    );
+
+    // Minted as a COSE_Mac0 (not rejected), and the advisory was warned.
+    expect(CwtKit.decode(Buffer.from(token, "base64url")).algorithm).toBe("HS256");
+    expect(logged.some((m) => m.includes("RFC 9068 §2.1"))).toBe(true);
+
+    const verified = (await macAegis.verify("access_token", token, {
+      format: "cose",
+      audience: "https://rs.lindorm.io/",
+    })) as unknown as { claims: Record<string, unknown> };
+    expect(verified.claims.subject).toBe("u");
   });
 
   test("sign-then-encrypt: an id_token wrapped in COSE_Encrypt0 decrypts + verifies", async () => {

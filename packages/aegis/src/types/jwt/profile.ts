@@ -148,7 +148,11 @@ export type InvalidEntry = {
 };
 
 /** The crypto class a profile permits for its signing algorithm (§5). */
-export type ProfileAlgClass = "asymmetric" | "confidential" | "fapi";
+export type ProfileAlgClass =
+  | "asymmetric"
+  | "asymmetric-recommended"
+  | "confidential"
+  | "fapi";
 
 /**
  * Declarative structural RFC rules a profile opts into. Each flag selects a

@@ -58,6 +58,7 @@ import type {
 } from "../types/index.js";
 import { CoseKit } from "./CoseKit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
+import { algAdvisory } from "../internal/utils/rules/alg-permitted.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { selectEncoder } from "../internal/utils/select-encoder.js";
 import { validateProfileClaims } from "../internal/utils/validate-profile-claims.js";
@@ -515,6 +516,8 @@ export class Aegis implements IAegis {
       algorithm: kit.algorithm as any,
     });
 
+    this.warnAlgAdvisory(profile, kit.algorithm);
+
     // JOSE wire claims: the existing wire mapper, fed the envelope ALREADY
     // resolved on the common layer (iss/iat/jti/nbf/exp) so the signed token
     // matches the validated common layer exactly — one source of truth, and
@@ -621,6 +624,8 @@ export class Aegis implements IAegis {
       algorithm: kryptos.algorithm as any,
     });
 
+    this.warnAlgAdvisory(profile, kryptos.algorithm);
+
     let token = this.coseKit.sign(kryptos, common, {
       typ: profile.typ ?? undefined,
       proprietary: options.proprietary,
@@ -705,6 +710,19 @@ export class Aegis implements IAegis {
         throw error;
       }
       return undefined;
+    }
+  }
+
+  // RFC-conformance advisory: a profile that RECOMMENDS asymmetric (RFC 9068
+  // §2.1 access tokens) still mints with an HS* key — we only WARN, never
+  // reject, since the RFC permits any signing algorithm.
+  private warnAlgAdvisory(profile: TokenProfile, algorithm: string): void {
+    const advisory = profile.algClass
+      ? algAdvisory(algorithm as KryptosSigAlgorithm, profile.algClass)
+      : undefined;
+
+    if (advisory) {
+      this.logger.warn(advisory, { profile: profile.name, algorithm });
     }
   }
 
