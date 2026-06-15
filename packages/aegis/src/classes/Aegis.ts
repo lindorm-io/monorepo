@@ -58,6 +58,7 @@ import type {
 } from "../types/index.js";
 import { CoseKit } from "./CoseKit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
+import { coseTyp } from "../internal/cose/cose-typ.js";
 import { algAdvisory } from "../internal/utils/rules/alg-permitted.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { selectEncoder } from "../internal/utils/select-encoder.js";
@@ -621,14 +622,14 @@ export class Aegis implements IAegis {
     this.warnAlgAdvisory(profile, kryptos.algorithm);
 
     let token = this.coseKit.sign(kryptos, common, {
-      typ: profile.typ ?? undefined,
+      typ: coseTyp(profile.typ),
       proprietary: options.proprietary,
     });
 
     // Sign-then-encrypt: the inner secured CWT is the COSE_Encrypt0 plaintext.
     if (encKryptos) {
       token = this.coseKit.encrypt(encKryptos, token, {
-        typ: profile.typ ?? undefined,
+        typ: coseTyp(profile.typ),
         encryption: this.encryption,
       });
     }
@@ -663,6 +664,7 @@ export class Aegis implements IAegis {
     enforceVerifyFloor({
       audience: options.audience,
       decodedTyp: typ,
+      expectedTyp: coseTyp(profile.typ),
       expectedIssuer,
       payload: claims,
       profile,

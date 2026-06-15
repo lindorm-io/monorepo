@@ -6,11 +6,17 @@ import type { TokenProfile } from "../../types/index.js";
 export type VerifyFloorInput = {
   audience: string;
   decodedTyp: string | undefined;
+  /**
+   * Overrides the expected `typ` (default: `profile.typ`). The COSE path passes
+   * the CWT media type (e.g. `application/at+cwt`) so the floor matches what
+   * mintCose stamped; the JOSE path leaves it unset and uses `profile.typ`.
+   */
+  expectedTyp?: string | undefined;
   expectedIssuer: string | undefined;
   /**
    * The DOMAIN-keyed parsed payload (`issuer`/`audience`/`expiresAt`), NOT the
-   * raw wire claims. Both the JOSE and (future) COSE verify paths produce this
-   * shape, so the floor is format-agnostic.
+   * raw wire claims. Both the JOSE and COSE verify paths produce this shape, so
+   * the floor is format-agnostic.
    */
   payload: Dict;
   profile: TokenProfile;
@@ -32,11 +38,15 @@ export type VerifyFloorInput = {
 export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
   const { audience, decodedTyp, expectedIssuer, payload, profile } = input;
 
-  if (profile.typ !== null && decodedTyp !== profile.typ) {
+  // The COSE path overrides the expected typ with the CWT media type; the JOSE
+  // path leaves it unset and falls back to the profile's (JWS) typ.
+  const expectedTyp = input.expectedTyp ?? profile.typ;
+
+  if (expectedTyp !== null && decodedTyp !== expectedTyp) {
     throw new JwtError("Invalid token", {
       code: "jwt_typ_mismatch",
       data: { typ: decodedTyp },
-      debug: { expected: profile.typ, profile: profile.name },
+      debug: { expected: expectedTyp, profile: profile.name },
       title: "JWT Typ Mismatch",
       details:
         "The header typ does not match the typ mandated by the profile being verified.",

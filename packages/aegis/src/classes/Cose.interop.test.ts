@@ -75,6 +75,24 @@ describe("COSE interop — @auth0/cose", () => {
     });
   });
 
+  test("tolerates a proprietary CWT typ (application/at+cwt) without throwing", async () => {
+    const token = new CwtKit({ kryptos: TEST_EC_KEY_SIG, logger }).sign(common, {
+      typ: "application/at+cwt",
+    });
+
+    // Our mint stamped the full CWT media type…
+    expect(CwtKit.decode(token).typ).toBe("application/at+cwt");
+
+    // …and @auth0/cose still verifies it WITHOUT throwing: RFC 9596 says the
+    // typ is passed through to the application, never validated by the library.
+    const sign1 = Sign1.decode(toBareSign1(token));
+    await expect(
+      sign1.verify(await toKeyLike(TEST_EC_KEY_SIG, "public"), {
+        algorithms: [Algorithms.ES512],
+      }),
+    ).resolves.toBeUndefined();
+  });
+
   describe("an @auth0/cose COSE_Sign1 verifies in our CwtKit", () => {
     test.each(cases)("$name", async ({ kryptos, alg }) => {
       const payload = Buffer.from(encodeCbor(encodeCwtClaims(common)));
