@@ -20,8 +20,8 @@ npm install @lindorm/amphora @lindorm/logger
 
 Aegis exposes two layers:
 
-- **`Aegis`** — async façade that resolves keys from an `IAmphora` key store and delegates to the kit classes. Use this when you want JWT/JWS/JWE operations driven by a managed key store with `kid`-based lookup.
-- **Kit classes** (`JwtKit`, `JwsKit`, `JweKit`, `SignatureKit`) — synchronous, single-key primitives. You supply an `IKryptos` key directly. Use these when you already have the key in hand and don't need the Amphora layer.
+- **`Aegis`** — async façade that resolves keys from an `IAmphora` key store and delegates to the kit classes. Use this when you want JWT/JWS/JWE or COSE/CWT operations driven by a managed key store with `kid`-based lookup.
+- **Kit classes** (`JwtKit`, `JwsKit`, `JweKit`, `SignatureKit`, plus the `CoseKit` COSE facade) — synchronous, single-key primitives. You supply an `IKryptos` key directly. Use these when you already have the key in hand and don't need the Amphora layer.
 
 The `Aegis` instance methods are async because they perform key lookups. All kit instance methods are synchronous.
 
@@ -80,7 +80,7 @@ const plain = await aegis.aes.decrypt(encoded);
 
 ### Universal verification
 
-`aegis.verify` auto-detects JWT, JWS, and JWE compact serialisations. JWE inputs are decrypted first, then the inner payload is re-verified.
+`aegis.verify` auto-detects JWT, JWS, and JWE compact serialisations. JWE inputs are decrypted first, then the inner payload is re-verified. A COSE token (base64url CBOR, no JOSE dot structure) is also auto-detected and its integrity verified — see [COSE / CWT](#cose--cwt).
 
 ```typescript
 const result = await aegis.verify(anyToken, {
@@ -200,6 +200,59 @@ kit.assert(data, signature); // throws on mismatch
 const formatted = kit.format(signature); // string
 ```
 
+## COSE / CWT
+
+Every token profile can be issued as a CBOR Web Token (CWT, RFC 8392) instead of a JWT by passing `format: "cose"` — the same profile, the same domain claims, the same validation floor, only the wire encoding differs. The token is returned as a base64url string.
+
+```typescript
+const { token } = await aegis.mint(
+  "access_token",
+  { subject: "user-123", audience: ["https://api.example.com"], clientId: "app-1" },
+  { format: "cose" },
+);
+
+const verified = await aegis.verify("access_token", token, {
+  format: "cose",
+  audience: "https://api.example.com",
+});
+
+// …or let aegis auto-detect it (no profile, no format flag — integrity only):
+const smart = await aegis.verify(token);
+```
+
+### Token structure
+
+The COSE structure follows the key and the profile:
+
+- **Signed** — an asymmetric key produces a `COSE_Sign1` (the default).
+- **MAC'd** — a symmetric `oct` key produces a `COSE_Mac0` (HMAC is a MAC algorithm, never a `COSE_Sign1` signature). The same `algClass` policy applies as for JWTs.
+- **Encrypted** — an encryptable profile minted with `encrypt` (or carrying `sensitive_identity`) is sign-then-encrypted into a `COSE_Encrypt0`. Direct AES-GCM and AES-CCM (all eight RFC 9053 variants) are supported.
+
+### `typ` and proprietary encoding
+
+The COSE `typ` header carries the CWT media type — `application/at+cwt`, `application/secevent+cwt`, etc. (the JWT path's `application/at+jwt` family with the `+jwt` suffix swapped for `+cwt`; bare `JWT` → `application/cwt`, the one IANA-registered CWT type).
+
+By default the claims use lindorm-proprietary compact encodings (integer-keyed `act` / `sub_id`, private-use labels for lindorm-only claims). Pass `proprietary: false` to emit a fully interoperable, string-keyed payload that a stock COSE/CWT verifier reads, at the cost of larger tokens:
+
+```typescript
+await aegis.mint("access_token", content, { format: "cose", proprietary: false });
+```
+
+Either way the signature itself is plain RFC 9052 — verified in interop tests against `@auth0/cose` and `cose-js`.
+
+### CoseKit
+
+`CoseKit` is the synchronous facade behind the COSE path (the COSE analogue of the JOSE kits). It also exposes the **COSE Key Thumbprint** (`ckt`, RFC 9679):
+
+```typescript
+import { CoseKit } from "@lindorm/aegis";
+
+const ckt = CoseKit.thumbprint(kryptos); // raw SHA-256 digest bytes
+const uri = CoseKit.thumbprintUri(kryptos); // urn:ietf:params:oauth:ckt:sha-256:…
+```
+
+> The `ckt` is **not** the same value as `kryptos.thumbprint` (the RFC 7638 `jkt`): the `ckt` hashes the deterministic-CBOR COSE_Key, the `jkt` hashes the canonical JSON JWK, so the same key has two different fingerprints. They are not interchangeable in a key-binding check.
+
 ## Sign content shape
 
 `SignJwtContent` accepts the standard, OIDC, OAuth, PoP, delegation, and Lindorm claim families plus:
@@ -310,7 +363,7 @@ import {
 
 ## Security notes
 
-- Signature/decryption keys are always sourced from the supplied `IAmphora`. The `jku`, `jwk`, `x5u`, `x5c`, `x5t`, and `x5t#S256` JOSE header parameters are never trusted as key sources during verification — only `kid` is used as a lookup key into Amphora.
+- Signature/decryption keys are always sourced from the supplied `IAmphora`. The `jku`, `jwk`, `x5u`, `x5c`, `x5t`, and `x5t#S256` JOSE header parameters are never trusted as key sources during verification — only `kid` is used as a lookup key into Amphora. The COSE verify path is the same: the signing/encryption key is resolved only by the COSE `kid` (unprotected header, label 4), never from anything embedded in the token.
 - JWE payload compression (`zip` header) is rejected outright.
 - Critical header parameters are enforced per RFC 7515 §4.1.11; unknown `crit` entries cause verification to fail.
 - DPoP-bound tokens (`cnf.jkt`) require either a matching DPoP proof or `trustBoundThumbprint: true` on verify.
