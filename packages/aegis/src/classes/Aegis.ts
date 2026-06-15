@@ -440,10 +440,12 @@ export class Aegis implements IAegis {
     content: SignContent,
     options: ProfileSignOptions,
   ): Promise<SignedJwt> {
-    // T6 — encoding seam. Throws NotSupportedError for `format: "cose"`; the
-    // rest of the path stays encoding-neutral (plain claims dict). Resolved up
-    // front so an unsupported format fails before any key resolution or signing.
-    selectEncoder(options.format);
+    // Encoding seam: dispatch on the per-call format. The COSE path is a
+    // separate encoder (P4) that consumes the same domain-keyed common claims;
+    // everything above this branch stays encoding-neutral.
+    if (selectEncoder(options.format).format === "cose") {
+      return this.mintCose(name, content, options);
+    }
 
     const profile = resolveProfile(name);
 
@@ -551,6 +553,39 @@ export class Aegis implements IAegis {
     return { ...signed, token };
   }
 
+  // P4 plug points — the COSE encoder. These consume the SAME domain-keyed
+  // common claims (assembleCommonClaims) and profile validation as the JOSE
+  // path; only the wire encoding (CWT claims → COSE_Sign1 / COSE_Encrypt0)
+  // differs. Until the encoder lands, the seam fails cleanly here rather than
+  // in the format resolver.
+  private async mintCose(
+    _name: string,
+    _content: SignContent,
+    _options: ProfileSignOptions,
+  ): Promise<SignedJwt> {
+    throw new AegisError("COSE encoding is not supported", {
+      code: "cose_not_supported",
+      data: { format: "cose" },
+      title: "COSE Not Supported",
+      details:
+        "COSE/CWT minting is planned but not yet implemented; only the JWT (JOSE) format is currently available.",
+    });
+  }
+
+  private async verifyCose<T extends ParsedJwt | ParsedJws<any>>(
+    _name: string,
+    _token: string,
+    _options: ProfileVerifyOptions,
+  ): Promise<T> {
+    throw new AegisError("COSE decoding is not supported", {
+      code: "cose_not_supported",
+      data: { format: "cose" },
+      title: "COSE Not Supported",
+      details:
+        "COSE/CWT verification is planned but not yet implemented; only the JWT (JOSE) format is currently available.",
+    });
+  }
+
   private async resolveEncKit(
     options: {
       id?: string;
@@ -580,9 +615,10 @@ export class Aegis implements IAegis {
     token: string,
     options: ProfileVerifyOptions,
   ): Promise<T> {
-    // T6 — encoding seam. Throws NotSupportedError for `format: "cose"` before
-    // any decode/decrypt. The rest of the verify path stays encoding-neutral.
-    selectEncoder(options.format);
+    // Encoding seam: dispatch on the per-call format (P4 fills the COSE arm).
+    if (selectEncoder(options.format).format === "cose") {
+      return this.verifyCose<T>(name, token, options);
+    }
 
     const profile = resolveProfile(name);
 
