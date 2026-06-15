@@ -15,4 +15,22 @@ describe("expiryObject", () => {
       fromUnix: 1704096000,
     });
   });
+
+  // Regression: `expires` must anchor the duration to the supplied `from`, not
+  // to real-now. Previously `expires` called `expiresAt(expiry)` without
+  // forwarding `from`, so `expiresAt`/`expiresOn` were computed from a fresh
+  // `new Date()` while `expiresIn` used `from` — an incoherent result. The
+  // `from` here is deliberately DIFFERENT from the mocked real-now so the bug
+  // cannot hide behind MockDate.
+  test("anchors a duration to the supplied `from`, not real-now", () => {
+    const from = new Date("2030-06-15T12:00:00.000Z"); // != MockedDate
+
+    const result = expires("1 hour", from);
+
+    expect(result.expiresAt).toEqual(new Date("2030-06-15T13:00:00.000Z"));
+    expect(result.expiresIn).toBe(3600);
+    expect(result.from).toEqual(from);
+    // expiresAt and expiresIn must agree about the base instant.
+    expect(result.expiresOn - result.fromUnix).toBe(result.expiresIn);
+  });
 });

@@ -16,7 +16,7 @@ type Result = {
  */
 export const expires = (expiry: Expiry, from: Date = new Date()): Result => {
   const fromUnix = getUnixTime(from);
-  const date = expiresAt(expiry);
+  const date = expiresAt(expiry, from);
   const expiresOn = getUnixTime(date);
   const expiresIn = expiresOn - fromUnix;
 
