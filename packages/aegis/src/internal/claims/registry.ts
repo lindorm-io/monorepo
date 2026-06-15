@@ -20,7 +20,8 @@
 /** How a claim's VALUE is encoded on each wire. */
 export type ClaimValueKind =
   | "text" // string scalar (iss, sub, acr…)
-  | "int" // numeric / NumericDate (exp, iat, auth_time…)
+  | "int" // plain number, no transform (loa…)
+  | "date" // NumericDate: domain Date <-> wire/COSE Unix-seconds int (exp, iat, nbf, auth_time)
   | "array" // array of strings (aud, scope, roles…)
   | "bstr" // byte string on the COSE wire (cti…)
   | "bespoke"; // needs a per-claim builder (cnf, hashes, act, sub_id, events…)
@@ -60,9 +61,9 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
   { domain: "issuer", jose: "iss", cose: 1, value: "text" },
   { domain: "subject", jose: "sub", cose: 2, value: "text" },
   { domain: "audience", jose: "aud", cose: 3, value: "array" },
-  { domain: "expiresAt", jose: "exp", cose: 4, value: "int" },
-  { domain: "notBefore", jose: "nbf", cose: 5, value: "int" },
-  { domain: "issuedAt", jose: "iat", cose: 6, value: "int" },
+  { domain: "expiresAt", jose: "exp", cose: 4, value: "date" },
+  { domain: "notBefore", jose: "nbf", cose: 5, value: "date" },
+  { domain: "issuedAt", jose: "iat", cose: 6, value: "date" },
   { domain: "tokenId", jose: "jti", cose: 7, value: "bstr" }, // CWT cti
   { domain: "confirmation", jose: "cnf", cose: 8, value: "bespoke" }, // RFC 8747
   { domain: "scope", jose: "scope", cose: 9, value: "array" }, // RFC 8693
@@ -78,7 +79,7 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
   { domain: "authContextClass", jose: "acr", cose: null, value: "text" },
   { domain: "authMethods", jose: "amr", cose: null, value: "array" },
   { domain: "authorizedParty", jose: "azp", cose: null, value: "text" },
-  { domain: "authTime", jose: "auth_time", cose: null, value: "int" },
+  { domain: "authTime", jose: "auth_time", cose: null, value: "date" },
   { domain: "vectorOfTrust", jose: "vot", cose: null, value: "text" },
   { domain: "vectorTrustMark", jose: "vtm", cose: null, value: "text" },
   {
