@@ -3,30 +3,22 @@ import { getUnixTime } from "@lindorm/date";
 import { isDate, isFinite } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { B64U } from "../constants/format.js";
-import { AegisError } from "../../errors/index.js";
 import {
   type ClaimSpec,
   specByCose,
   specByDomain,
   specByJose,
 } from "../claims/registry.js";
+import { decodeCnf, encodeCnf } from "./cose-key.js";
 
-// Structured claims whose COSE value representation is a later step:
-//   - confirmation (cnf): needs the JWK -> COSE_Key conversion (P6),
-//   - act / mayAct / subjectId / events / authorizationDetails: nested objects
-//     that need a decided CBOR shape + Map<->object fidelity handling (P4).
-// Their flat siblings (the OIDC hash claims) ARE handled, as bstr.
+// OIDC hash claims: b64url string <-> COSE byte string.
 const HASH_DOMAINS = new Set(["accessTokenHash", "codeHash", "stateHash"]);
 
-const deferred = (domain: string): never => {
-  throw new AegisError(`COSE encoding of the "${domain}" claim is not yet supported`, {
-    code: "cose_claim_not_supported",
-    data: { claim: domain },
-    title: "COSE Claim Not Supported",
-    details:
-      "This structured claim (cnf / act / mayAct / sub_id / events / authorization_details) needs its COSE value representation, which is a later step; flat claims are supported.",
-  });
-};
+// `confirmation` (cnf) -> a COSE cnf map (RFC 8747, via COSE_Key). The other
+// structured claims (act / mayAct / subjectId / events / authorizationDetails)
+// pass through: CBOR encodes their nested objects/arrays as maps/arrays, and
+// they decode back to objects (the payload is decoded with preferMap:false; the
+// top CWT map and cnf/COSE_Key maps have integer keys so they stay Maps).
 
 const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
   switch (spec.value) {
@@ -45,7 +37,9 @@ const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
         // OIDC hash: base64url string -> raw bytes (COSE bstr).
         return B64.toBuffer(String(value), B64U);
       }
-      return deferred(spec.domain);
+      if (spec.domain === "confirmation")
+        return encodeCnf(value as Record<string, unknown>);
+      return value; // act / mayAct / subjectId / events / authorizationDetails
   }
 };
 
@@ -64,7 +58,8 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
       if (HASH_DOMAINS.has(spec.domain)) {
         return B64.encode(Buffer.from(value as Uint8Array), B64U);
       }
-      return deferred(spec.domain);
+      if (spec.domain === "confirmation") return decodeCnf(value as Map<number, unknown>);
+      return value; // act / mayAct / subjectId / events / authorizationDetails
   }
 };
 
