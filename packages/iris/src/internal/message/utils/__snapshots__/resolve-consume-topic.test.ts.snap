@@ -1,5 +1,9 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`resolveConsumeTopic > should honor the explicit queue for a dynamic @Topic callback without warning 1`] = `"queue.aggregate.ns.order.create"`;
+
+exports[`resolveConsumeTopic > should ignore an explicit queue for a static topic and use the namespaced name 1`] = `"ns.OrderCreated"`;
+
 exports[`resolveConsumeTopic > should return the bare message name when namespace is null 1`] = `"OrderCreated"`;
 
 exports[`resolveConsumeTopic > should return the namespaced message name when namespace is set 1`] = `"ns.OrderCreated"`;

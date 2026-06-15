@@ -37,4 +37,32 @@ describe("resolveConsumeTopic", () => {
     expect(resolveConsumeTopic(metadata, logger)).toMatchSnapshot();
     expect(warn).toHaveBeenCalledTimes(1);
   });
+
+  it("should honor the explicit queue for a dynamic @Topic callback without warning", () => {
+    const warn = vi.fn();
+    const logger = { warn } as unknown as ILogger;
+
+    const metadata = {
+      namespace: "ns",
+      message: { name: "OrderCreated" },
+      topic: { callback: () => "dynamic" },
+    } as unknown as MessageMetadata;
+
+    expect(
+      resolveConsumeTopic(metadata, logger, "queue.aggregate.ns.order.create"),
+    ).toMatchSnapshot();
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it("should ignore an explicit queue for a static topic and use the namespaced name", () => {
+    const metadata = {
+      namespace: "ns",
+      message: { name: "OrderCreated" },
+      topic: null,
+    } as unknown as MessageMetadata;
+
+    expect(
+      resolveConsumeTopic(metadata, undefined, "some-explicit-queue"),
+    ).toMatchSnapshot();
+  });
 });

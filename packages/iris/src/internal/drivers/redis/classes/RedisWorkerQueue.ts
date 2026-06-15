@@ -94,7 +94,7 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       });
     }
 
-    const listenTopic = resolveConsumeTopic(this.metadata, this.logger);
+    const listenTopic = resolveConsumeTopic(this.metadata, this.logger, queue);
     const streamKey = resolveStreamKey(this.state.prefix, listenTopic);
     const groupName = resolveGroupName({
       prefix: this.state.prefix,

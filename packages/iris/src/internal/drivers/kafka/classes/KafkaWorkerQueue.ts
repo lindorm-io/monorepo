@@ -96,7 +96,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       });
     }
 
-    const listenTopic = resolveConsumeTopic(this.metadata, this.logger);
+    const listenTopic = resolveConsumeTopic(this.metadata, this.logger, queue);
     const kafkaTopic = resolveTopicName(this.state.prefix, listenTopic);
     const groupId = resolveGroupId({
       prefix: this.state.prefix,

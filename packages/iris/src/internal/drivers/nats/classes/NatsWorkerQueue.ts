@@ -96,7 +96,7 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
       });
     }
 
-    const listenTopic = resolveConsumeTopic(this.metadata, this.logger);
+    const listenTopic = resolveConsumeTopic(this.metadata, this.logger, queue);
     const subject = resolveSubject(this.state.prefix, listenTopic);
     const consumerName = resolveConsumerName({
       prefix: this.state.prefix,
