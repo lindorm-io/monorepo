@@ -46,6 +46,29 @@ describe("CwtKit (COSE_Sign1)", () => {
     expect(decoded.typ).toBe("application/at+cwt");
   });
 
+  test("round-trips structured claims (act, sub_id, events, authorization_details)", () => {
+    const withStructured = {
+      ...common,
+      act: { subject: "actor-1", issuer: "https://delegator/" },
+      subjectId: { format: "iss_sub", iss: "https://issuer/", sub: "u" },
+      events: { "urn:lindorm:event:test": {} },
+      authorizationDetails: [{ type: "payment_initiation", amount: 100 }],
+    };
+
+    const { claims } = kit.verify(kit.sign(withStructured));
+
+    expect(claims).toEqual(withStructured);
+  });
+
+  test("round-trips a cnf confirmation key via COSE_Key", () => {
+    const X = "LXEWQrcmsEQBYnyp-6wy9chTD7GQPMTbAiWHF5IaSIE"; // 32-byte b64url
+    const confirmation = { key: { kty: "EC", crv: "P-256", x: X, y: X } };
+
+    const { claims } = kit.verify(kit.sign({ ...common, confirmation }));
+
+    expect(claims.confirmation).toEqual(confirmation);
+  });
+
   test("rejects a tampered payload", () => {
     const token = kit.sign(common);
     token[token.length - 5] ^= 0xff; // flip a signature byte

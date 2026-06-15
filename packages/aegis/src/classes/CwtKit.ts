@@ -77,7 +77,11 @@ export class CwtKit {
       logger: this.logger,
     }).verify(cose);
 
-    const claims = decodeCwtClaims(decodeCbor<Map<unknown, unknown>>(payload));
+    // preferMap:false so nested claim objects (act, sub_id, events, custom)
+    // decode as plain objects; the top CWT map has integer keys so it stays a Map.
+    const claims = decodeCwtClaims(
+      decodeCbor<Map<unknown, unknown>>(payload, { preferMap: false }),
+    );
     const typ = protectedHeader.get(COSE_HEADER.typ);
 
     return {
