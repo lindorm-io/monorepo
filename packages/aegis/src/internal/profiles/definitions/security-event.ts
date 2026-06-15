@@ -9,8 +9,8 @@ import type { TokenProfile } from "../../../types/index.js";
 export const securityEventProfile: TokenProfile = {
   name: "security_event",
   typ: "secevent+jwt",
-  required: ["iss", "aud", "iat", "jti", "sub_id", "events"],
-  forbidden: ["sub", "exp", "nonce"],
+  required: ["issuer", "audience", "issuedAt", "tokenId", "subjectId", "events"],
+  forbidden: ["subject", "expiresAt", "nonce"],
   requiredWhen: [],
   atLeastOneOf: [],
   autoInject: { iat: true, jti: true, nbf: false, iss: true },

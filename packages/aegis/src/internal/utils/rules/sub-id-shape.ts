@@ -9,7 +9,7 @@ import type { InvalidEntry } from "../../../types/index.js";
  * accepted structurally (no extra required members).
  */
 export const subIdShape = (claims: Dict): Array<InvalidEntry> => {
-  const value = claims.sub_id;
+  const value = claims.subjectId;
 
   if (value === undefined) return [];
 

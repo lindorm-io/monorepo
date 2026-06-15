@@ -9,7 +9,7 @@ describe("actChainShape", () => {
   test("passes for a valid nested act chain", () => {
     expect(
       actChainShape({
-        act: { sub: "a", act: { sub: "b", client_id: "c" } },
+        act: { subject: "a", act: { subject: "b", clientId: "c" } },
       }),
     ).toEqual([]);
   });
@@ -19,10 +19,12 @@ describe("actChainShape", () => {
   });
 
   test("fails on an unknown member and a non-string sub", () => {
-    expect(actChainShape({ act: { sub: 1, surprise: true } })).toMatchSnapshot();
+    expect(actChainShape({ act: { subject: 1, surprise: true } })).toMatchSnapshot();
   });
 
   test("fails on a malformed nested act", () => {
-    expect(actChainShape({ may_act: { sub: "a", act: { iss: 5 } } })).toMatchSnapshot();
+    expect(
+      actChainShape({ mayAct: { subject: "a", act: { issuer: 5 } } }),
+    ).toMatchSnapshot();
   });
 });

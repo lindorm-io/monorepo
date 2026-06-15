@@ -1,19 +1,19 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`crossField > fails when exp <= iat 1`] = `
+exports[`crossField > fails when expiresAt <= issuedAt 1`] = `
 [
   {
-    "key": "exp",
-    "message": "exp must be greater than iat",
+    "key": "expiresAt",
+    "message": "expiresAt (exp) must be after issuedAt (iat)",
   },
 ]
 `;
 
-exports[`crossField > fails when nbf > exp 1`] = `
+exports[`crossField > fails when notBefore > expiresAt 1`] = `
 [
   {
-    "key": "nbf",
-    "message": "nbf must be less than or equal to exp",
+    "key": "notBefore",
+    "message": "notBefore (nbf) must be at or before expiresAt (exp)",
   },
 ]
 `;

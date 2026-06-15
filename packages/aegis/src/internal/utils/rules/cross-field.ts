@@ -1,4 +1,4 @@
-import { isFinite } from "@lindorm/is";
+import { isDate } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { InvalidEntry } from "../../../types/index.js";
 
@@ -6,25 +6,31 @@ import type { InvalidEntry } from "../../../types/index.js";
  * Cross-field temporal coherence on the envelope timestamps. Only checks
  * pairs that are both present (presence is handled by require/forbid rules):
  *
- *   - `exp` must be strictly greater than `iat`,
- *   - `nbf` must be less than or equal to `exp`,
- *   - `nbf` must be less than or equal to `exp` when `iat` absent too.
+ *   - `expiresAt` must be strictly after `issuedAt`,
+ *   - `notBefore` must be at or before `expiresAt`.
  *
- * Timestamps are Unix seconds.
+ * The common layer is DOMAIN-keyed, so these are `Date`s (`expiresAt`/
+ * `issuedAt`/`notBefore`), not Unix-seconds numbers — compared chronologically.
  */
 export const crossField = (claims: Dict): Array<InvalidEntry> => {
   const invalid: Array<InvalidEntry> = [];
 
-  const exp = claims.exp;
-  const iat = claims.iat;
-  const nbf = claims.nbf;
+  const exp = claims.expiresAt;
+  const iat = claims.issuedAt;
+  const nbf = claims.notBefore;
 
-  if (isFinite(exp) && isFinite(iat) && exp <= iat) {
-    invalid.push({ key: "exp", message: "exp must be greater than iat" });
+  if (isDate(exp) && isDate(iat) && exp.getTime() <= iat.getTime()) {
+    invalid.push({
+      key: "expiresAt",
+      message: "expiresAt (exp) must be after issuedAt (iat)",
+    });
   }
 
-  if (isFinite(nbf) && isFinite(exp) && nbf > exp) {
-    invalid.push({ key: "nbf", message: "nbf must be less than or equal to exp" });
+  if (isDate(nbf) && isDate(exp) && nbf.getTime() > exp.getTime()) {
+    invalid.push({
+      key: "notBefore",
+      message: "notBefore (nbf) must be at or before expiresAt (exp)",
+    });
   }
 
   return invalid;

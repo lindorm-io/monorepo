@@ -7,7 +7,7 @@ import type { InvalidEntry } from "../../../types/index.js";
  * StringOrURI; the platform always emits a URL issuer).
  */
 export const issUri = (claims: Dict): Array<InvalidEntry> => {
-  const iss = claims.iss;
+  const iss = claims.issuer;
 
   if (iss === undefined) return [];
 

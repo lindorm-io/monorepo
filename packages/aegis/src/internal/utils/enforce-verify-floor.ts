@@ -1,4 +1,4 @@
-import { isArray, isFinite, isString } from "@lindorm/is";
+import { isArray } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import { JwtError } from "../../errors/index.js";
 import type { TokenProfile } from "../../types/index.js";
@@ -7,6 +7,11 @@ export type VerifyFloorInput = {
   audience: string;
   decodedTyp: string | undefined;
   expectedIssuer: string | undefined;
+  /**
+   * The DOMAIN-keyed parsed payload (`issuer`/`audience`/`expiresAt`), NOT the
+   * raw wire claims. Both the JOSE and (future) COSE verify paths produce this
+   * shape, so the floor is format-agnostic.
+   */
   payload: Dict;
   profile: TokenProfile;
 };
@@ -38,32 +43,31 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
     });
   }
 
-  if (expectedIssuer !== undefined && payload.iss !== expectedIssuer) {
+  if (expectedIssuer !== undefined && payload.issuer !== expectedIssuer) {
     throw new JwtError("Invalid token", {
       code: "jwt_issuer_mismatch",
-      data: { iss: payload.iss },
+      data: { issuer: payload.issuer },
       debug: { expected: expectedIssuer, profile: profile.name },
       title: "JWT Issuer Mismatch",
       details:
-        "The token iss does not exactly match the issuer expected for this profile.",
+        "The token issuer (iss) does not exactly match the issuer expected for this profile.",
     });
   }
 
-  const aud = payload.aud;
-  const audList = isArray(aud) ? aud : isString(aud) ? [aud] : [];
+  const audList = isArray(payload.audience) ? (payload.audience as Array<string>) : [];
 
   if (!audList.includes(audience)) {
     throw new JwtError("Invalid token", {
       code: "jwt_audience_mismatch",
-      data: { aud },
+      data: { audience: payload.audience },
       debug: { expected: audience, profile: profile.name },
       title: "JWT Audience Mismatch",
       details:
-        "The token aud does not contain the verifier's own identity supplied to verify.",
+        "The token audience (aud) does not contain the verifier's own identity supplied to verify.",
     });
   }
 
-  if (profile.lifetime !== null && !isFinite(payload.exp)) {
+  if (profile.lifetime !== null && payload.expiresAt === undefined) {
     throw new JwtError("Invalid token", {
       code: "jwt_missing_claim_exp",
       debug: { profile: profile.name },
