@@ -4,9 +4,9 @@ import type { ILogger } from "@lindorm/logger";
 import { AegisError } from "../errors/index.js";
 import { Tag } from "../internal/cose/cbor.js";
 import {
-  GCM_TAG_BYTES,
   coseLabelToEnc,
   encToCoseLabel,
+  tagBytesForEncryption,
 } from "../internal/cose/enc-labels.js";
 import {
   COSE_HEADER,
@@ -54,7 +54,7 @@ const unwrapEncrypt0 = (value: unknown): Array<unknown> => {
  * COSE_Encrypt0 (RFC 9052 §5.2) — direct symmetric AEAD, the COSE analogue of
  * JweKit. Reuses `AesKit.encryptContent`: the COSE `Enc_structure` is the AAD,
  * the IV travels unprotected (label 5), and the COSE ciphertext is `ct‖tag`.
- * AES-GCM today (CCM is a follow-up).
+ * AES-GCM and AES-CCM (the tag length comes from the algorithm).
  */
 export class CweKit {
   private readonly kryptos: IKryptos;
@@ -108,15 +108,17 @@ export class CweKit {
       });
     }
 
-    // COSE ciphertext = ciphertext ‖ tag (GCM tag is the trailing 16 bytes).
-    const ct = Buffer.from(coseCiphertext);
-    const ciphertext = ct.subarray(0, ct.length - GCM_TAG_BYTES);
-    const tag = ct.subarray(ct.length - GCM_TAG_BYTES);
-
     // The content-encryption algorithm is self-describing — read it from the
-    // protected header (label 1) rather than the key.
+    // protected header (label 1) rather than the key. It also fixes the tag
+    // length (GCM/CCM-128 = 16 bytes, CCM-64 = 8).
     const decodedProtected = decodeProtectedHeader(protectedHeader);
     const encryption = coseLabelToEnc(decodedProtected.get(COSE_HEADER.alg) as number);
+
+    // COSE ciphertext = ciphertext ‖ tag (the tag is the trailing bytes).
+    const ct = Buffer.from(coseCiphertext);
+    const tagBytes = tagBytesForEncryption(encryption);
+    const ciphertext = ct.subarray(0, ct.length - tagBytes);
+    const tag = ct.subarray(ct.length - tagBytes);
 
     const aad = buildEncStructure(Buffer.from(protectedHeader));
     const payload = new AesKit({ kryptos: this.kryptos, encryption }).decryptContent({

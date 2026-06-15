@@ -32,7 +32,7 @@ const innerCose = (value: unknown): Tag | undefined => {
 };
 
 /**
- * The COSE format facade — the COSE analogue of (the future) JoseKit. Aegis
+ * The COSE format facade — the COSE analogue of JoseKit. Aegis
  * hands it the resolved key + the DOMAIN-keyed common claims and gets back / in
  * a COSE token, so Aegis itself never touches the COSE wire kits.
  *
