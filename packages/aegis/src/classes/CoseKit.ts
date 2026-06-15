@@ -2,6 +2,11 @@ import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
+import {
+  type CoseThumbprintHash,
+  computeCoseKeyThumbprint,
+  computeCoseKeyThumbprintUri,
+} from "../internal/cose/cose-key-thumbprint.js";
 import { COSE_HEADER, COSE_TAG } from "../internal/cose/structures.js";
 import { CweKit } from "./CweKit.js";
 import { CwtKit, type CwtDecoded, type CwtVerifyResult } from "./CwtKit.js";
@@ -114,5 +119,25 @@ export class CoseKit {
     const cose = innerCose(decodeCbor(token));
     const { payload } = new CweKit({ kryptos, logger: this.logger }).decrypt(cose);
     return payload;
+  }
+
+  /**
+   * The RFC 9679 COSE Key Thumbprint (`ckt`) of a key — the raw digest bytes
+   * over the required-only COSE_Key. The COSE analogue of the JWK Thumbprint
+   * (`jkt`); SHA-256 by default.
+   */
+  public static thumbprint(
+    kryptos: IKryptos,
+    hash: CoseThumbprintHash = "sha-256",
+  ): Buffer {
+    return computeCoseKeyThumbprint(kryptos.export("jwk") as Dict, hash);
+  }
+
+  /** The RFC 9679 §5.7 COSE Key Thumbprint URI (`urn:ietf:params:oauth:ckt:…`). */
+  public static thumbprintUri(
+    kryptos: IKryptos,
+    hash: CoseThumbprintHash = "sha-256",
+  ): string {
+    return computeCoseKeyThumbprintUri(kryptos.export("jwk") as Dict, hash);
   }
 }

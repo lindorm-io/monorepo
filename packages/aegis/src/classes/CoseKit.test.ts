@@ -2,6 +2,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { describe, expect, test } from "vitest";
 import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
+import { computeCoseKeyThumbprint } from "../internal/cose/cose-key-thumbprint.js";
 import { CoseKit } from "./CoseKit.js";
 
 const common = {
@@ -27,5 +28,17 @@ describe("CoseKit", () => {
 
     const decrypted = cose.decrypt(enc, encrypted);
     expect(cose.verify(TEST_EC_KEY_SIG, decrypted).claims).toEqual(common);
+  });
+
+  test("static thumbprint / thumbprintUri expose a key's RFC 9679 ckt", () => {
+    const ckt = CoseKit.thumbprint(TEST_EC_KEY_SIG);
+    expect(ckt).toHaveLength(32); // SHA-256
+    // matches the underlying RFC 9679 computation on the key's JWK
+    expect(
+      ckt.equals(computeCoseKeyThumbprint(TEST_EC_KEY_SIG.export("jwk") as never)),
+    ).toBe(true);
+    expect(CoseKit.thumbprintUri(TEST_EC_KEY_SIG)).toMatch(
+      /^urn:ietf:params:oauth:ckt:sha-256:[\w-]+$/,
+    );
   });
 });
