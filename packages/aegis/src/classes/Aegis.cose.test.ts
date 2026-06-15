@@ -146,6 +146,23 @@ describe("Aegis — COSE", () => {
     ).rejects.toThrow();
   });
 
+  test("verifySmart auto-detects a COSE token (no profile, no format flag)", async () => {
+    const { token } = await aegis.mint(
+      "access_token",
+      { subject: "user-1", audience: ["https://rs.lindorm.io/"], clientId: "client-1" },
+      { format: "cose" },
+    );
+
+    // Single-arg verify: no profile, no `format` — verifySmart sniffs the CBOR
+    // COSE structure and verifies integrity (no profile floor applied).
+    const verified = (await aegis.verify(token)) as unknown as {
+      claims: Record<string, unknown>;
+    };
+
+    expect(verified.claims.subject).toBe("user-1");
+    expect(verified.claims.issuer).toBe("https://test.lindorm.io/");
+  });
+
   test("a wrong audience is rejected by the verify floor", async () => {
     const { token } = await aegis.mint(
       "access_token",
