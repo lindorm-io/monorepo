@@ -582,6 +582,7 @@ export class Aegis implements IAegis {
 
     const token = this.coseKit.sign(kryptos, common, {
       typ: profile.typ ?? undefined,
+      proprietary: options.proprietary,
     });
 
     const expiresAt = isDate(common.expiresAt) ? common.expiresAt : undefined;

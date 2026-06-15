@@ -19,6 +19,8 @@ export type CwtKitOptions = {
 
 export type CwtSignOptions = {
   typ?: string;
+  /** Allow lindorm-proprietary COSE encodings (default true); see encodeCwtClaims. */
+  proprietary?: boolean;
 };
 
 export type CwtVerifyResult = {
@@ -58,7 +60,9 @@ export class CwtKit {
   public sign(common: Dict, options: CwtSignOptions = {}): Buffer {
     this.logger.debug("Minting CWT (COSE_Sign1)", { options });
 
-    const payload = encodeCbor(encodeCwtClaims(common));
+    const payload = encodeCbor(
+      encodeCwtClaims(common, { proprietary: options.proprietary }),
+    );
     const sign1 = new CwsKit({ kryptos: this.kryptos, logger: this.logger }).sign(
       payload,
       {

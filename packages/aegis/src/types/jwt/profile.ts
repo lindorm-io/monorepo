@@ -198,10 +198,16 @@ export type TokenProfile = {
 export type ProfileSignOptions = SignJwtOptions & {
   context?: SignContext;
   /**
-   * Per-call wire encoder (the COSE seam, T6). Defaults to `"jwt"`; `"cose"`
-   * throws `NotSupportedError` until the CBOR/CWT encoder lands.
+   * Per-call wire encoder. Defaults to `"jwt"`; `"cose"` mints a signed CWT.
    */
   format?: TokenFormat;
+  /**
+   * Allow lindorm-proprietary COSE encodings (default `true`): private-use
+   * labels for lindorm-internal claims and the compact integer-keyed `act`. Set
+   * `false` for off-platform tokens — proprietary claims are dropped and `act`
+   * is emitted as an interoperable string-keyed object. (COSE only.)
+   */
+  proprietary?: boolean;
   encrypt?: {
     kid?: string;
     algorithm?: KryptosEncAlgorithm;

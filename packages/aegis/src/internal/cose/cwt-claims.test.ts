@@ -49,6 +49,54 @@ describe("encodeCwtClaims", () => {
   });
 });
 
+describe("proprietary encoding", () => {
+  const act = { subject: "actor", issuer: "https://delegator/", clientId: "c-2" };
+
+  test("act is compact integer-keyed by default (proprietary)", () => {
+    const map = encodeCwtClaims({ act });
+    const encodedAct = map.get("act") as Map<number, unknown>;
+    expect(encodedAct).toBeInstanceOf(Map);
+    expect(encodedAct.get(1)).toBe("https://delegator/"); // issuer reuses CWT iss
+    expect(encodedAct.get(2)).toBe("actor"); // subject reuses CWT sub
+    expect(encodedAct.get(4)).toBe("c-2"); // clientId — lindorm label
+  });
+
+  test("act is interoperable string-keyed when proprietary:false", () => {
+    const map = encodeCwtClaims({ act }, { proprietary: false });
+    expect(map.get("act")).toEqual(act); // the plain object
+  });
+
+  test("proprietary-labelled claims are dropped when proprietary:false", () => {
+    const withLoa = { issuer: "https://i/", levelOfAssurance: 3 };
+    expect(encodeCwtClaims(withLoa).get(-65537)).toBe(3); // loa private label (default)
+    expect(encodeCwtClaims(withLoa, { proprietary: false }).has(-65537)).toBe(false);
+    expect(encodeCwtClaims(withLoa, { proprietary: false }).get(1)).toBe("https://i/"); // iss kept
+  });
+
+  test("sub_id is compact integer-keyed by default, string-keyed when proprietary:false", () => {
+    const subjectId = { format: "iss_sub", iss: "https://i/", sub: "u" };
+
+    const compact = encodeCwtClaims({ subjectId }).get("sub_id") as Map<number, unknown>;
+    expect(compact).toBeInstanceOf(Map);
+    expect(compact.get(0)).toBe("iss_sub"); // format
+    expect(compact.get(1)).toBe("https://i/"); // iss reuses CWT label 1
+    expect(compact.get(2)).toBe("u"); // sub reuses CWT label 2
+
+    expect(encodeCwtClaims({ subjectId }, { proprietary: false }).get("sub_id")).toEqual(
+      subjectId,
+    );
+  });
+
+  test("compact act round-trips through CBOR", () => {
+    const claims = { issuer: "https://i/", act }; // issuer (label 1) keeps the top a Map
+    const bytes = encodeCbor(encodeCwtClaims(claims));
+    const decoded = decodeCwtClaims(
+      decodeCbor<Map<unknown, unknown>>(bytes, { preferMap: false }),
+    );
+    expect(decoded).toEqual(claims);
+  });
+});
+
 describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
   test("standard envelope + flat claims survive a full encode/decode", () => {
     const common = {

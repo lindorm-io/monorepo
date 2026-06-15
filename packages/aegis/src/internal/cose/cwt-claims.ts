@@ -9,7 +9,11 @@ import {
   specByDomain,
   specByJose,
 } from "../claims/registry.js";
+import { decodeActCompact, encodeActCompact } from "./act-claim.js";
 import { decodeCnf, encodeCnf } from "./cose-key.js";
+import { decodeSubIdCompact, encodeSubIdCompact } from "./sub-id-claim.js";
+
+const ACT_DOMAINS = new Set(["act", "mayAct"]);
 
 // OIDC hash claims: b64url string <-> COSE byte string.
 const HASH_DOMAINS = new Set(["accessTokenHash", "codeHash", "stateHash"]);
@@ -20,7 +24,7 @@ const HASH_DOMAINS = new Set(["accessTokenHash", "codeHash", "stateHash"]);
 // they decode back to objects (the payload is decoded with preferMap:false; the
 // top CWT map and cnf/COSE_Key maps have integer keys so they stay Maps).
 
-const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
+const encodeValue = (spec: ClaimSpec, value: unknown, proprietary: boolean): unknown => {
   switch (spec.value) {
     case "text":
     case "array":
@@ -39,7 +43,15 @@ const encodeValue = (spec: ClaimSpec, value: unknown): unknown => {
       }
       if (spec.domain === "confirmation")
         return encodeCnf(value as Record<string, unknown>);
-      return value; // act / mayAct / subjectId / events / authorizationDetails
+      if (ACT_DOMAINS.has(spec.domain)) {
+        // Compact integer-keyed act when proprietary encoding is allowed
+        // (default); the interoperable string-keyed object otherwise.
+        return proprietary ? encodeActCompact(value as Dict) : value;
+      }
+      if (spec.domain === "subjectId") {
+        return proprietary ? encodeSubIdCompact(value as Dict) : value;
+      }
+      return value; // events / authorizationDetails (dynamic keys; string-keyed)
   }
 };
 
@@ -59,7 +71,14 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
         return B64.encode(Buffer.from(value as Uint8Array), B64U);
       }
       if (spec.domain === "confirmation") return decodeCnf(value as Map<number, unknown>);
-      return value; // act / mayAct / subjectId / events / authorizationDetails
+      if (ACT_DOMAINS.has(spec.domain)) {
+        // Compact act decodes from a Map; the interoperable form is an object.
+        return value instanceof Map ? decodeActCompact(value) : value;
+      }
+      if (spec.domain === "subjectId") {
+        return value instanceof Map ? decodeSubIdCompact(value) : value;
+      }
+      return value; // events / authorizationDetails (dynamic keys; string-keyed)
   }
 };
 
@@ -70,7 +89,21 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
  * transformed per the registry's value kind (timestamps -> int, cti/hashes ->
  * bstr, …). The returned `Map` is ready to hand to the CBOR encoder.
  */
-export const encodeCwtClaims = (common: Dict): Map<number | string, unknown> => {
+export type EncodeCwtOptions = {
+  /**
+   * Allow lindorm-proprietary COSE encodings (default `true`): the private-use
+   * labels for lindorm-internal claims and the compact integer-keyed `act`.
+   * Set `false` for off-platform tokens — proprietary-labelled claims are
+   * dropped and `act` is emitted as an interoperable string-keyed object.
+   */
+  proprietary?: boolean;
+};
+
+export const encodeCwtClaims = (
+  common: Dict,
+  options: EncodeCwtOptions = {},
+): Map<number | string, unknown> => {
+  const proprietary = options.proprietary ?? true;
   const map = new Map<number | string, unknown>();
 
   for (const [domain, value] of Object.entries(common)) {
@@ -83,7 +116,10 @@ export const encodeCwtClaims = (common: Dict): Map<number | string, unknown> => 
       continue;
     }
 
-    map.set(spec.cose ?? spec.jose, encodeValue(spec, value));
+    // Off-platform tokens drop lindorm-only claims (no interoperable form).
+    if (spec.proprietary && !proprietary) continue;
+
+    map.set(spec.cose ?? spec.jose, encodeValue(spec, value, proprietary));
   }
 
   return map;
