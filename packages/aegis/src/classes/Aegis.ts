@@ -56,7 +56,7 @@ import type {
   ValidateJwtOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
-import { CwtKit } from "./CwtKit.js";
+import { CoseKit } from "./CoseKit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { selectEncoder } from "../internal/utils/select-encoder.js";
@@ -103,6 +103,7 @@ export class Aegis implements IAegis {
   private readonly amphora: IAmphora;
   private readonly certBindingMode: CertBindingMode;
   private readonly clockTolerance: number;
+  private readonly coseKit: CoseKit;
   private readonly dpopMaxSkew: number | undefined;
   private readonly encAlgorithm: KryptosEncAlgorithm | undefined;
   private readonly encryption: KryptosEncryption;
@@ -113,6 +114,7 @@ export class Aegis implements IAegis {
     this.logger = options.logger.child(["AegisKit"]);
     this.amphora = options.amphora;
     this.issuer = options.issuer ?? this.amphora.domain;
+    this.coseKit = new CoseKit({ logger: this.logger });
 
     this.certBindingMode = options.certBindingMode ?? "strict";
     this.clockTolerance = options.clockTolerance ?? 0;
@@ -578,7 +580,7 @@ export class Aegis implements IAegis {
       algorithm: kryptos.algorithm as any,
     });
 
-    const token = new CwtKit({ kryptos, logger: this.logger }).sign(common, {
+    const token = this.coseKit.sign(kryptos, common, {
       typ: profile.typ ?? undefined,
     });
 
@@ -605,10 +607,10 @@ export class Aegis implements IAegis {
 
     // Decode the COSE headers (kid/alg/typ) WITHOUT verifying, resolve the key
     // by kid through amphora (kid-only, no header-embedded key), then verify.
-    const decoded = CwtKit.decode(bytes);
+    const decoded = this.coseKit.decode(bytes);
     const kryptos = await this.kryptosSig({ id: decoded.kid });
 
-    const { claims, typ } = new CwtKit({ kryptos, logger: this.logger }).verify(bytes);
+    const { claims, typ } = this.coseKit.verify(kryptos, bytes);
 
     const expectedIssuer =
       options.issuer ??
