@@ -7,38 +7,40 @@ import { describe, expect, test } from "vitest";
 
 describe("computeTypHeader", () => {
   describe("known token types", () => {
-    test("maps access_token to at+jwt for jwt format", () => {
-      expect(computeTypHeader("access_token", "jwt")).toBe("at+jwt");
+    test("maps access_token to application/at+jwt for jwt format", () => {
+      expect(computeTypHeader("access_token", "jwt")).toBe("application/at+jwt");
     });
 
-    test("maps refresh_token to rt+jws for jws format", () => {
-      expect(computeTypHeader("refresh_token", "jws")).toBe("rt+jws");
+    test("maps refresh_token to application/rt+jws for jws format", () => {
+      expect(computeTypHeader("refresh_token", "jws")).toBe("application/rt+jws");
     });
 
     test("maps id_token to bare JWT regardless of format", () => {
       expect(computeTypHeader("id_token", "jwt")).toBe("JWT");
     });
 
-    test("maps security_event to secevent+jwt", () => {
-      expect(computeTypHeader("security_event", "jwt")).toBe("secevent+jwt");
+    test("maps security_event to application/secevent+jwt", () => {
+      expect(computeTypHeader("security_event", "jwt")).toBe("application/secevent+jwt");
     });
 
-    test("maps dpop to dpop+jwt", () => {
-      expect(computeTypHeader("dpop", "jwt")).toBe("dpop+jwt");
+    test("maps dpop to application/dpop+jwt", () => {
+      expect(computeTypHeader("dpop", "jwt")).toBe("application/dpop+jwt");
     });
 
-    test("maps logout_token to logout+jwt", () => {
-      expect(computeTypHeader("logout_token", "jwt")).toBe("logout+jwt");
+    test("maps logout_token to application/logout+jwt", () => {
+      expect(computeTypHeader("logout_token", "jwt")).toBe("application/logout+jwt");
     });
 
-    test("maps erasure_token to erasure+jwt", () => {
-      expect(computeTypHeader("erasure_token", "jwt")).toBe("erasure+jwt");
+    test("maps erasure_token to application/erasure+jwt", () => {
+      expect(computeTypHeader("erasure_token", "jwt")).toBe("application/erasure+jwt");
     });
   });
 
   describe("custom token types", () => {
-    test("passes unknown token types through with suffix", () => {
-      expect(computeTypHeader("my_custom_thing", "jwt")).toBe("my_custom_thing+jwt");
+    test("passes unknown token types through with prefix and suffix", () => {
+      expect(computeTypHeader("my_custom_thing", "jwt")).toBe(
+        "application/my_custom_thing+jwt",
+      );
     });
   });
 
@@ -87,12 +89,24 @@ describe("computeTypHeader", () => {
 });
 
 describe("decodeTokenTypeFromTyp", () => {
-  test("reverses known short names back to canonical token types", () => {
+  test("reverses known short names back to canonical token types (bare, lenient)", () => {
     expect(decodeTokenTypeFromTyp("at+jwt", "jwt")).toBe("access_token");
     expect(decodeTokenTypeFromTyp("rt+jws", "jws")).toBe("refresh_token");
     expect(decodeTokenTypeFromTyp("secevent+jwt", "jwt")).toBe("security_event");
     expect(decodeTokenTypeFromTyp("dpop+jwt", "jwt")).toBe("dpop");
     expect(decodeTokenTypeFromTyp("erasure+jwt", "jwt")).toBe("erasure_token");
+  });
+
+  test("strips the application/ prefix and reverses to canonical token types", () => {
+    expect(decodeTokenTypeFromTyp("application/at+jwt", "jwt")).toBe("access_token");
+    expect(decodeTokenTypeFromTyp("application/rt+jws", "jws")).toBe("refresh_token");
+    expect(decodeTokenTypeFromTyp("application/secevent+jwt", "jwt")).toBe(
+      "security_event",
+    );
+    expect(decodeTokenTypeFromTyp("application/dpop+jwt", "jwt")).toBe("dpop");
+    expect(decodeTokenTypeFromTyp("application/erasure+jwt", "jwt")).toBe(
+      "erasure_token",
+    );
   });
 
   test("returns the raw short name for unknown types", () => {
@@ -138,6 +152,11 @@ describe("getBaseFormat", () => {
       expect(getBaseFormat("at+jwt")).toBe("JWT");
       expect(getBaseFormat("dpop+jwt")).toBe("JWT");
       expect(getBaseFormat("my_custom+jwt")).toBe("JWT");
+    });
+
+    test("recognizes the application/ prefixed +jwt suffix", () => {
+      expect(getBaseFormat("application/at+jwt")).toBe("JWT");
+      expect(getBaseFormat("application/secevent+jwt")).toBe("JWT");
     });
 
     test("recognizes +jws suffix", () => {

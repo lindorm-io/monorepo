@@ -127,7 +127,7 @@ describe("JwsKit", () => {
 
       const parsed = kit.verify(token);
 
-      expect(parsed.header.headerType).toBe("rt+jws");
+      expect(parsed.header.headerType).toBe("application/rt+jws");
       expect(parsed.header.tokenType).toBe("refresh_token");
     });
 
@@ -139,7 +139,7 @@ describe("JwsKit", () => {
 
       const parsed = kit.verify(token);
 
-      expect(parsed.header.headerType).toBe("my_custom_thing+jws");
+      expect(parsed.header.headerType).toBe("application/my_custom_thing+jws");
       expect(parsed.header.tokenType).toBe("my_custom_thing");
     });
 

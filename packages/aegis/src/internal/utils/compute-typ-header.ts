@@ -55,10 +55,14 @@ export const computeTypHeader = (
   const shortName =
     (TOKEN_TYPE_TO_SHORT_NAME as Record<string, string>)[tokenType] ?? tokenType;
 
-  // Special case: id_token maps to bare "JWT", no suffix (OIDC ecosystem compatibility)
+  // Special case: id_token maps to bare "JWT", no suffix (OIDC ecosystem
+  // compatibility — there is no registered structured `id+jwt` type, and an
+  // id_token's consumer is the OIDC RP, which expects a plain JWT).
   if (shortName === "JWT") return "JWT";
 
-  return `${shortName}${FORMAT_SUFFIX[kitFormat]}`;
+  // A structured type carries the full media type (`application/at+jwt`); only
+  // the bare conventional forms (JWT / JWS / JWE) omit the `application/` prefix.
+  return `application/${shortName}${FORMAT_SUFFIX[kitFormat]}`;
 };
 
 /**
@@ -75,7 +79,9 @@ export const decodeTokenTypeFromTyp = (
 
   const suffix = FORMAT_SUFFIX[kitFormat];
   if (typ.endsWith(suffix)) {
-    const shortName = typ.slice(0, -suffix.length);
+    // Structured types are minted as `application/<short>+jwt`; strip the
+    // prefix before the reverse lookup.
+    const shortName = typ.slice(0, -suffix.length).replace(/^application\//, "");
     // Reverse lookup known short names to their canonical tokenType
     for (const [tokenType, known] of Object.entries(TOKEN_TYPE_TO_SHORT_NAME)) {
       if (known === shortName) return tokenType;

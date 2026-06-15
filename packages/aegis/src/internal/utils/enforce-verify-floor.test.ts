@@ -9,7 +9,7 @@ const RESOURCE = "https://rs.lindorm.io/";
 
 const base = {
   audience: RESOURCE,
-  decodedTyp: "at+jwt",
+  decodedTyp: "application/at+jwt",
   expectedIssuer: ISSUER,
   profile: accessTokenProfile,
 };
@@ -28,7 +28,11 @@ describe("enforceVerifyFloor", () => {
 
   test("rejects a typ mismatch", () => {
     expect(() =>
-      enforceVerifyFloor({ ...base, decodedTyp: "logout+jwt", payload: validPayload }),
+      enforceVerifyFloor({
+        ...base,
+        decodedTyp: "application/logout+jwt",
+        payload: validPayload,
+      }),
     ).toThrow(JwtError);
   });
 
@@ -63,7 +67,7 @@ describe("enforceVerifyFloor", () => {
     expect(() =>
       enforceVerifyFloor({
         audience: RESOURCE,
-        decodedTyp: "secevent+jwt",
+        decodedTyp: "application/secevent+jwt",
         expectedIssuer: ISSUER,
         profile: securityEventProfile,
         payload: { issuer: ISSUER, audience: [RESOURCE] },

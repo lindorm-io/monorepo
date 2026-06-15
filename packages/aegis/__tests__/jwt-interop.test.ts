@@ -77,7 +77,7 @@ describe("JWT interop: aegis <-> jose", () => {
 
       expect(result.payload.iss).toBe(ISSUER);
       expect(result.payload.sub).toBe(SUBJECT);
-      expect(result.protectedHeader.typ).toBe("at+jwt");
+      expect(result.protectedHeader.typ).toBe("application/at+jwt");
       expect(result.payload.exp).toBeDefined();
     });
 
@@ -129,7 +129,9 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
       expect(result.iss).toBe(ISSUER);
       expect(result.sub).toBe(SUBJECT);
       // token_type is no longer a claim; jsonwebtoken verify doesn't expose header
-      expect(jsonwebtoken.decode(token, { complete: true })?.header.typ).toBe("at+jwt");
+      expect(jsonwebtoken.decode(token, { complete: true })?.header.typ).toBe(
+        "application/at+jwt",
+      );
       expect(result.exp).toBeDefined();
     });
 
@@ -171,7 +173,9 @@ describe("JWT interop: aegis <-> jsonwebtoken", () => {
 
       expect(result.iss).toBe(ISSUER);
       expect(result.sub).toBe(SUBJECT);
-      expect(jsonwebtoken.decode(token, { complete: true })?.header.typ).toBe("at+jwt");
+      expect(jsonwebtoken.decode(token, { complete: true })?.header.typ).toBe(
+        "application/at+jwt",
+      );
     });
 
     test("jsonwebtoken sign -> aegis verify", () => {
