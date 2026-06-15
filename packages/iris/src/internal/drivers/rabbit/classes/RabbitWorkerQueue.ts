@@ -84,7 +84,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     }
 
     let queueName: string;
-    const listenTopic = resolveConsumeTopic(this.metadata, this.logger);
+    const listenTopic = resolveConsumeTopic(this.metadata, this.logger, queue);
     const routingKey = sanitizeRoutingKey(listenTopic);
 
     if (this.metadata.broadcast) {
