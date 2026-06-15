@@ -4,14 +4,15 @@ import type { InvalidEntry } from "../../../types/index.js";
 /**
  * The crypto class a profile permits for its signing algorithm (token-claims
  * §5):
- *   - `asymmetric` — SETs (logout/erasure/secevent), DPoP: asymmetric only;
- *     `HS*`/`none` rejected.
+ *   - `asymmetric` — DPoP and delegation (ADR-0025, client-signed): asymmetric
+ *     only; `HS*`/`none` rejected.
  *   - `asymmetric-recommended` — access tokens (RFC 9068 §2.1): any signing
  *     algorithm is PERMITTED, but asymmetric is RECOMMENDED, so `HS*` is allowed
  *     and surfaced as a warning (see `algAdvisory`); only `none` is rejected.
- *   - `confidential` — server→confidential-client artifacts (id_token,
- *     userinfo, jarm, introspection): asymmetric OR `HS*` (the secret is the
- *     MAC key); `none` rejected.
+ *   - `confidential` — id_token, userinfo, jarm, introspection, logout
+ *     (Back-Channel Logout §2.6: alg as for ID Tokens) and the SET artifacts
+ *     (secevent/erasure; RFC 8417 + SSF permit `HS*`): asymmetric OR `HS*` (the
+ *     secret is the MAC key); `none` rejected.
  *   - `fapi` — the FAPI allowlist (`PS256`/`ES256`/`EdDSA`) only.
  */
 export type AlgClass = "asymmetric" | "asymmetric-recommended" | "confidential" | "fapi";

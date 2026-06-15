@@ -66,6 +66,25 @@ describe("validateProfileClaims", () => {
     ).toThrow(JwtError);
   });
 
+  test("permits a symmetric signing alg on a security event (SSF §4.1.1 / RFC 8417)", () => {
+    // SSF's own SET profile example uses alg HS256; RFC 8417 permits any JWS
+    // alg, so the security_event profile is `confidential`, not asymmetric-only.
+    expect(() =>
+      validateProfileClaims(
+        securityEventProfile,
+        {
+          issuer: "https://test.lindorm.io/",
+          audience: ["https://receiver"],
+          issuedAt: d(100),
+          tokenId: "j",
+          subjectId: { format: "iss_sub", iss: "https://i/", sub: "u" },
+          events: { "urn:lindorm:event:test": {} },
+        },
+        { algorithm: "HS256" },
+      ),
+    ).not.toThrow();
+  });
+
   test("throws when a security event sub_id is malformed", () => {
     expect(() =>
       validateProfileClaims(
