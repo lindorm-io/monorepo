@@ -7,7 +7,8 @@ import {
   type SerialisedAesEncryption,
 } from "@lindorm/aes";
 import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
-import { isBuffer, isString } from "@lindorm/is";
+import { getUnixTime } from "@lindorm/date";
+import { isBuffer, isDate, isString } from "@lindorm/is";
 import { removeUndefined } from "@lindorm/utils";
 import type {
   IKryptos,
@@ -55,6 +56,7 @@ import type {
   ValidateJwtOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
+import { CwtKit } from "./CwtKit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { selectEncoder } from "../internal/utils/select-encoder.js";
@@ -553,37 +555,74 @@ export class Aegis implements IAegis {
     return { ...signed, token };
   }
 
-  // P4 plug points — the COSE encoder. These consume the SAME domain-keyed
-  // common claims (assembleCommonClaims) and profile validation as the JOSE
-  // path; only the wire encoding (CWT claims → COSE_Sign1 / COSE_Encrypt0)
-  // differs. Until the encoder lands, the seam fails cleanly here rather than
-  // in the format resolver.
+  // The COSE encoder. Consumes the SAME domain-keyed common claims
+  // (assembleCommonClaims) and profile validation as the JOSE path; only the
+  // wire encoding differs — a signed CWT (COSE_Sign1) wrapped in the CWT tag.
+  // The token bytes are base64url-encoded so the string-token API is preserved.
   private async mintCose(
-    _name: string,
-    _content: SignContent,
-    _options: ProfileSignOptions,
+    name: string,
+    content: SignContent,
+    options: ProfileSignOptions,
   ): Promise<SignedJwt> {
-    throw new AegisError("COSE encoding is not supported", {
-      code: "cose_not_supported",
-      data: { format: "cose" },
-      title: "COSE Not Supported",
-      details:
-        "COSE/CWT minting is planned but not yet implemented; only the JWT (JOSE) format is currently available.",
+    const profile = resolveProfile(name);
+    const kryptos = await this.kryptosSig({ sign: true });
+
+    const common = assembleCommonClaims(
+      { algorithm: kryptos.algorithm, issuer: this.issuer },
+      profile,
+      content,
+      options,
+    );
+    validateProfileClaims(profile, common, {
+      ...(options.context ?? {}),
+      algorithm: kryptos.algorithm as any,
     });
+
+    const token = new CwtKit({ kryptos, logger: this.logger }).sign(common, {
+      typ: profile.typ ?? undefined,
+    });
+
+    const expiresAt = isDate(common.expiresAt) ? common.expiresAt : undefined;
+    const expiresOn = expiresAt ? getUnixTime(expiresAt) : undefined;
+
+    return {
+      token: token.toString("base64url"),
+      expiresAt,
+      expiresIn: expiresOn ? expiresOn - getUnixTime(new Date()) : undefined,
+      expiresOn,
+      objectId: undefined,
+      tokenId: isString(common.tokenId) ? common.tokenId : undefined,
+    };
   }
 
   private async verifyCose<T extends ParsedJwt | ParsedJws<any>>(
-    _name: string,
-    _token: string,
-    _options: ProfileVerifyOptions,
+    name: string,
+    token: string,
+    options: ProfileVerifyOptions,
   ): Promise<T> {
-    throw new AegisError("COSE decoding is not supported", {
-      code: "cose_not_supported",
-      data: { format: "cose" },
-      title: "COSE Not Supported",
-      details:
-        "COSE/CWT verification is planned but not yet implemented; only the JWT (JOSE) format is currently available.",
+    const profile = resolveProfile(name);
+    const bytes = Buffer.from(token, "base64url");
+
+    // Decode the COSE headers (kid/alg/typ) WITHOUT verifying, resolve the key
+    // by kid through amphora (kid-only, no header-embedded key), then verify.
+    const decoded = CwtKit.decode(bytes);
+    const kryptos = await this.kryptosSig({ id: decoded.kid });
+
+    const { claims, typ } = new CwtKit({ kryptos, logger: this.logger }).verify(bytes);
+
+    const expectedIssuer =
+      options.issuer ??
+      (profile.issuer === "platform" ? (this.issuer ?? undefined) : undefined);
+
+    enforceVerifyFloor({
+      audience: options.audience,
+      decodedTyp: typ,
+      expectedIssuer,
+      payload: claims,
+      profile,
     });
+
+    return { claims, header: decoded } as unknown as T;
   }
 
   private async resolveEncKit(
