@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/oct@0.3.2...@lindorm/oct@0.4.0) (2026-06-15)
+
+### Features
+
+- **oct:** add titles and details to thrown errors ([b6a7cd8](https://github.com/lindorm-io/monorepo/commit/b6a7cd89a40b37fdf06bec3c00f92539fd94cc76))
+- **oct:** namespace and enrich thrown errors ([2097d1d](https://github.com/lindorm-io/monorepo/commit/2097d1dcc53160b41004a445b3c0a112688203af))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/oct@0.3.1...@lindorm/oct@0.3.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/oct

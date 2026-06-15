@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.6.3...@lindorm/conduit@0.7.0) (2026-06-15)
+
+### Bug Fixes
+
+- **conduit:** surface invalid schema as 500 instead of swallowing it ([4618ee3](https://github.com/lindorm-io/monorepo/commit/4618ee391e19002b8220d5cae135b86856dbfe97))
+
+### Features
+
+- **conduit:** add titles and details to thrown errors ([2e2b5ba](https://github.com/lindorm-io/monorepo/commit/2e2b5ba58bd3f9d472accf426ebd1608fdedf8ab))
+- **conduit:** forward error type urn during reconstruction ([ca906b8](https://github.com/lindorm-io/monorepo/commit/ca906b826517a32cb79e6ab561c17a4a073c2715))
+- **conduit:** namespace and enrich thrown errors ([15ef67a](https://github.com/lindorm-io/monorepo/commit/15ef67a282b4469afc42dfac99610f52c0aafb0e))
+
 ## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.6.2...@lindorm/conduit@0.6.3) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/conduit

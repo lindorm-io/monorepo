@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/date@0.5.2...@lindorm/date@0.5.3) (2026-06-15)
+
+### Bug Fixes
+
+- **date:** anchor expires() duration to the supplied `from` instant ([0475e46](https://github.com/lindorm-io/monorepo/commit/0475e46f2ae0ca7558e60833164d936b94c5e419))
+
 ## [0.5.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/date@0.5.1...@lindorm/date@0.5.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/date

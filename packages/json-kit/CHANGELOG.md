@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.6.2...@lindorm/json-kit@0.6.3) (2026-06-15)
+
+**Note:** Version bump only for package @lindorm/json-kit
+
 ## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.6.1...@lindorm/json-kit@0.6.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/json-kit

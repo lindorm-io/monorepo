@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.8.2...@lindorm/kryptos@0.9.0) (2026-06-15)
+
+### Features
+
+- **kryptos:** add titles and details to thrown errors ([cd95d51](https://github.com/lindorm-io/monorepo/commit/cd95d513e2de5cfc761c5ecc9e97ff96c1138e5f))
+- **kryptos:** enforce RFC 9964 AKP JWK seed and public-key sizes ([48b6e6f](https://github.com/lindorm-io/monorepo/commit/48b6e6f1db91aadcfa724ccbfd5dcee156dec800))
+- **kryptos:** finish enriching thrown errors with codes ([0f0506d](https://github.com/lindorm-io/monorepo/commit/0f0506df2085b45f3ce603c797d26c3beaee838f))
+- **kryptos:** namespace errors, begin throw enrichment ([8b464ee](https://github.com/lindorm-io/monorepo/commit/8b464eeca2e61f0f6c101676c83c775eafcddd80))
+- **kryptos:** size AES-CCM dir keys ([9bc2ec3](https://github.com/lindorm-io/monorepo/commit/9bc2ec34ce38a6a78f926eb15cf30944d61d0949))
+
 ## [0.8.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.8.1...@lindorm/kryptos@0.8.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/kryptos

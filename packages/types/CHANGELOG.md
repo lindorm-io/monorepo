@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.7.0...@lindorm/types@0.8.0) (2026-06-15)
+
+### Features
+
+- **types:** add AES-CCM content-encryption algorithms ([57aa647](https://github.com/lindorm-io/monorepo/commit/57aa647f44f614381345a0d20b16cf4ae443e09d))
+- **types:** add RFC 9396 authorization details to OpenID types ([eb8cc5b](https://github.com/lindorm-io/monorepo/commit/eb8cc5bf6c2ecafc7bb59d5a58367d9bd893e111))
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.6.1...@lindorm/types@0.7.0) (2026-06-05)
 
 ### Bug Fixes

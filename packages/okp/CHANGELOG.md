@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/okp@0.3.2...@lindorm/okp@0.4.0) (2026-06-15)
+
+### Features
+
+- **okp:** add titles and details to thrown errors ([db63961](https://github.com/lindorm-io/monorepo/commit/db6396167be5af6f6efe33de049c9789e9e81228))
+- **okp:** namespace and enrich thrown errors ([ff44bb3](https://github.com/lindorm-io/monorepo/commit/ff44bb3bfe1ccd68ac977389473020e75ec8f2cf))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/okp@0.3.1...@lindorm/okp@0.3.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/okp

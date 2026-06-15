@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/enigma@0.3.2...@lindorm/enigma@0.4.0) (2026-06-15)
+
+### Features
+
+- **enigma:** add titles and details to thrown errors ([4f73b2e](https://github.com/lindorm-io/monorepo/commit/4f73b2e103d1b8b3a4686de1fd8bef34ffaca721))
+- **enigma:** namespace and enrich thrown errors ([12ea0a2](https://github.com/lindorm-io/monorepo/commit/12ea0a2c3b91c371428f624e0e13819fbc5ccd12))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/enigma@0.3.1...@lindorm/enigma@0.3.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/enigma

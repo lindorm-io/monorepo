@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.7.2...@lindorm/aes@0.8.0) (2026-06-15)
+
+### Features
+
+- **aes:** add AES-CCM, a descriptor table, and a content-encryption primitive ([0e4153b](https://github.com/lindorm-io/monorepo/commit/0e4153b8ce82e1eb5e3cf0fc5e9fe2bcd4ecbd6f))
+- **aes:** add titles and details to thrown errors ([e50de1a](https://github.com/lindorm-io/monorepo/commit/e50de1a3470e27a7dd0a84eda41984c762c07831))
+- **aes:** namespace and enrich thrown errors ([284cd74](https://github.com/lindorm-io/monorepo/commit/284cd74acae36cb338735b2f5748434051fb128a))
+
 ## [0.7.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.7.1...@lindorm/aes@0.7.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/aes

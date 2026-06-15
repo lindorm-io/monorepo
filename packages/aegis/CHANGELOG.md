@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.8.1...@lindorm/aegis@0.9.0) (2026-06-15)
+
+### Bug Fixes
+
+- **aegis:** keep actor subject out of the client-facing error message ([91341e8](https://github.com/lindorm-io/monorepo/commit/91341e88ac08ec3377ff5adf2232812ab532f137))
+- **aegis:** permit HS\* on logout/secevent/erasure tokens (spec-verified) ([893bb53](https://github.com/lindorm-io/monorepo/commit/893bb53bab80b5679213abd0dbb4ce6c9ccc6ec0))
+- **aegis:** stamp COSE tokens with a CWT media type, not the JWT typ ([a4288f0](https://github.com/lindorm-io/monorepo/commit/a4288f00e8c538633aa6b058e603f358687efdb6))
+
+### Features
+
+- **aegis:** add AES-CCM content encryption for COSE_Encrypt0 ([10d77bd](https://github.com/lindorm-io/monorepo/commit/10d77bdd7baa674de31f9250dccf26272e5b0419))
+- **aegis:** add authorization details claim, drop adjustedAccessLevel ([a9ee537](https://github.com/lindorm-io/monorepo/commit/a9ee537698b8fdb44bc0be0ce8056553172e89df))
+- **aegis:** add COSE primitive kits — Sign1, Encrypt0, Mac0 ([bd8774e](https://github.com/lindorm-io/monorepo/commit/bd8774e2318519e7f94bc67b60020b752cf6e7bb))
+- **aegis:** add erasure_token token type ([ce897b6](https://github.com/lindorm-io/monorepo/commit/ce897b65f4a8c5c05e739e604f69fb4f708f3375))
+- **aegis:** add RFC 9679 COSE Key Thumbprint (ckt) ([8c7ecaf](https://github.com/lindorm-io/monorepo/commit/8c7ecaf9085a82c5dc7288794a1d80cf3497c54d))
+- **aegis:** add the domain<->CWT claim codec via the registry ([1e52514](https://github.com/lindorm-io/monorepo/commit/1e5251491be054961b5e923e8890c9df3516aea7))
+- **aegis:** add titles and details to thrown errors ([11d9c47](https://github.com/lindorm-io/monorepo/commit/11d9c4721cbf0894308737ff5b2e60bccc03b120))
+- **aegis:** cbor2 bootstrap and encoder dispatch seam ([8bebe5f](https://github.com/lindorm-io/monorepo/commit/8bebe5fc01b7ea730a1a7313736f92b719e54dc8))
+- **aegis:** compact integer-keyed COSE encoding for act and sub_id ([fbb6bd0](https://github.com/lindorm-io/monorepo/commit/fbb6bd04d4a1557619f7c046c8bacc4203a1d48d))
+- **aegis:** encode the COSE structured claims (cnf, act, sub_id, events) ([08270d0](https://github.com/lindorm-io/monorepo/commit/08270d0eb6a148ee69f7e4e954e9d4d11df9b7d4)), closes [jkt/x5t#S256](https://github.com/jkt/x5t/issues/S256)
+- **aegis:** encrypt CWTs via COSE_Encrypt0 (sign-then-encrypt) ([659fb20](https://github.com/lindorm-io/monorepo/commit/659fb20ae3d00279ab8e8a55cfeb4bf7bcb58755))
+- **aegis:** mint and verify signed CWTs (COSE_Sign1) end to end ([82e6e38](https://github.com/lindorm-io/monorepo/commit/82e6e3880103cd572a6599d1db3ef16bf0c0f8b4))
+- **aegis:** mint symmetric CWTs as COSE_Mac0 ([d710eaf](https://github.com/lindorm-io/monorepo/commit/d710eafa2a5196dc989f15a8aa9381648ff259b9))
+- **aegis:** namespace and enrich thrown errors ([a1c9646](https://github.com/lindorm-io/monorepo/commit/a1c9646a5870da61821f947afe63a72af3cb2724))
+- **aegis:** permit HS\* on access tokens with a warning (RFC 9068 §2.1) ([a533b9e](https://github.com/lindorm-io/monorepo/commit/a533b9e3e242ef40777cd90aa5a606bfbce7d3e9))
+- **aegis:** profile-based token minting with RFC validation, verify floor, and hash conformance ([4505cf9](https://github.com/lindorm-io/monorepo/commit/4505cf9e6e7071cfd2479299c68e51e9718c3831))
+- **aegis:** support AKP keys in DPoP JWK thumbprint per RFC 9964 ([69029d9](https://github.com/lindorm-io/monorepo/commit/69029d95861745a635a73cdae947debf2aa27502))
+- **aegis:** use application/\* media types for structured token typ ([9f6341f](https://github.com/lindorm-io/monorepo/commit/9f6341f9cb0e46f448e3757f3690c80762e1247e))
+- **aegis:** verifySmart auto-detects COSE tokens ([43b0fed](https://github.com/lindorm-io/monorepo/commit/43b0fed0a90c44dd7f0e5bc8ff43e56ff5bdc8c9))
+
 ## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.8.0...@lindorm/aegis@0.8.1) (2026-06-05)
 
 ### Bug Fixes

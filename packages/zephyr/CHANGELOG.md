@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/zephyr@0.2.2...@lindorm/zephyr@0.3.0) (2026-06-15)
+
+### Features
+
+- **zephyr:** add titles and details to thrown errors ([dc14e12](https://github.com/lindorm-io/monorepo/commit/dc14e122675aba6fcc372c480937970fd51c0921))
+- **zephyr:** namespace and enrich thrown errors ([2d30517](https://github.com/lindorm-io/monorepo/commit/2d305175ceacd1f4a638d85f571da5491e0011f1))
+
 ## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/zephyr@0.2.1...@lindorm/zephyr@0.2.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/zephyr

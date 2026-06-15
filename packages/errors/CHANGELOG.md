@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.2.2...@lindorm/errors@0.3.0) (2026-06-15)
+
+### Features
+
+- **errors:** add type urn to LindormError ([6d88347](https://github.com/lindorm-io/monorepo/commit/6d88347103787bf3ebf0c8ed52f3b599f427a159))
+- **errors:** support package-namespaced type urns ([df7f626](https://github.com/lindorm-io/monorepo/commit/df7f62656575d87521a26d4ac19efd81e1ad701c))
+
 ## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.2.1...@lindorm/errors@0.2.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/errors

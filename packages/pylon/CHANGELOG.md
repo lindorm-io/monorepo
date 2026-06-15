@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.13.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.12.1...@lindorm/pylon@0.13.0) (2026-06-15)
+
+### Bug Fixes
+
+- **pylon:** keep cors origin allowlist and upstream baseurl out of client data ([5de24e8](https://github.com/lindorm-io/monorepo/commit/5de24e88b0373f1d0db39f53b67a3727b534d304))
+- **pylon:** keep subject and claim values out of client error data ([2044493](https://github.com/lindorm-io/monorepo/commit/20444933adfaa44256880b65450b8e7efd956596))
+- **pylon:** read access-denied claim values from aegis error debug ([55f3b26](https://github.com/lindorm-io/monorepo/commit/55f3b2665b5b788114187ec39f58a0a317b25319))
+
+### Features
+
+- **pylon:** add titles and details to thrown errors ([331cc62](https://github.com/lindorm-io/monorepo/commit/331cc621794b2053edd987e3c48f52e334812fa3))
+- **pylon:** namespace and enrich thrown errors ([d819c21](https://github.com/lindorm-io/monorepo/commit/d819c2186d3c88ae5f30f32648a31a029e438bc6))
+
 ## [0.12.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.12.0...@lindorm/pylon@0.12.1) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/pylon

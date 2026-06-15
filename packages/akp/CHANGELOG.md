@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/akp@0.2.2...@lindorm/akp@0.3.0) (2026-06-15)
+
+### Features
+
+- **akp:** add titles and details to thrown errors ([684a3a7](https://github.com/lindorm-io/monorepo/commit/684a3a703fd8f3b682fa8d0435485b773eb691fb))
+- **akp:** namespace and enrich thrown errors ([55c8f23](https://github.com/lindorm-io/monorepo/commit/55c8f239c55d31496db828f1636cf9b9a5c1cb5e))
+
 ## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/akp@0.2.1...@lindorm/akp@0.2.2) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/akp

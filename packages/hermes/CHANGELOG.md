@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.7.3...@lindorm/hermes@0.8.0) (2026-06-15)
+
+### Features
+
+- **hermes:** add titles and details to errors; widen fixed-constructor classes ([ea60636](https://github.com/lindorm-io/monorepo/commit/ea60636b6121f3a163c2d1a75a9533959729c608))
+- **hermes:** namespace and enrich thrown errors ([800a348](https://github.com/lindorm-io/monorepo/commit/800a3480fe26fee96ed5c976af6c474987d87859))
+
 ## [0.7.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.7.2...@lindorm/hermes@0.7.3) (2026-06-05)
 
 **Note:** Version bump only for package @lindorm/hermes
