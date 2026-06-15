@@ -9,7 +9,7 @@ import type { TokenProfile } from "../../../types/index.js";
  */
 export const erasureTokenProfile: TokenProfile = {
   name: "erasure_token",
-  typ: "erasure+jwt",
+  typ: "application/erasure+jwt",
   required: [
     "issuer",
     "audience",

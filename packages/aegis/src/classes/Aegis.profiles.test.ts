@@ -42,11 +42,11 @@ describe("Aegis profiles", () => {
       scope: ["openid", "profile"],
     };
 
-    test("happy path produces a conformant at+jwt", async () => {
+    test("happy path produces a conformant application/at+jwt", async () => {
       const { token } = await aegis.mint("access_token", content);
       const { header, payload } = JwtKit.decode(token);
 
-      expect(header.typ).toBe("at+jwt");
+      expect(header.typ).toBe("application/at+jwt");
       expect(payload).toMatchObject({
         iss: ISSUER,
         sub: "user-1",
@@ -171,11 +171,11 @@ describe("Aegis profiles", () => {
       events: { "http://schemas.openid.net/event/backchannel-logout": {} },
     };
 
-    test("happy path produces a logout+jwt with events", async () => {
+    test("happy path produces a application/logout+jwt with events", async () => {
       const { token } = await aegis.mint("logout_token", content);
       const { header, payload } = JwtKit.decode(token);
 
-      expect(header.typ).toBe("logout+jwt");
+      expect(header.typ).toBe("application/logout+jwt");
       expect(payload).toMatchObject({
         sub: "user-1",
         sid: "sess-1",
@@ -206,11 +206,11 @@ describe("Aegis profiles", () => {
       events: { "urn:lindorm:event:test": {} },
     };
 
-    test("happy path produces a secevent+jwt with no exp/sub", async () => {
+    test("happy path produces a application/secevent+jwt with no exp/sub", async () => {
       const { token } = await aegis.mint("security_event", content);
       const { header, payload } = JwtKit.decode(token);
 
-      expect(header.typ).toBe("secevent+jwt");
+      expect(header.typ).toBe("application/secevent+jwt");
       expect(payload.exp).toBeUndefined();
       expect(payload.sub).toBeUndefined();
       expect(payload.sub_id).toMatchObject({ format: "iss_sub" });
@@ -234,7 +234,7 @@ describe("Aegis profiles", () => {
   });
 
   describe("erasure_token", () => {
-    test("happy path produces an erasure+jwt", async () => {
+    test("happy path produces an application/erasure+jwt", async () => {
       const { token } = await aegis.mint("erasure_token", {
         audience: ["client-1"],
         subject: "user-1",
@@ -242,7 +242,7 @@ describe("Aegis profiles", () => {
       });
       const { header, payload } = JwtKit.decode(token);
 
-      expect(header.typ).toBe("erasure+jwt");
+      expect(header.typ).toBe("application/erasure+jwt");
       expect(payload).toMatchObject({ sub: "user-1" });
       expect(payload.events).toMatchObject({ "urn:lindorm:event:rtbf": {} });
     });
@@ -256,7 +256,7 @@ describe("Aegis profiles", () => {
       });
       const { header, payload } = JwtKit.decode(token);
 
-      expect(header.typ).toBe("token-introspection+jwt");
+      expect(header.typ).toBe("application/token-introspection+jwt");
       expect(payload.token_introspection).toMatchObject({ active: true });
     });
 
@@ -290,7 +290,7 @@ describe("Aegis profiles", () => {
       });
       const { header, payload } = JwtKit.decode(token);
 
-      expect(header.typ).toBe("delegation+jwt");
+      expect(header.typ).toBe("application/delegation+jwt");
       expect(payload.iss).toBe("client-1");
       expect(payload.sub).toBe("customer-sub");
     });

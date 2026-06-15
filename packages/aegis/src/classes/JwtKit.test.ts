@@ -274,7 +274,7 @@ describe("JwtKit", () => {
             cty: "application/json",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
-            typ: "test_token+jwt",
+            typ: "application/test_token+jwt",
           },
           payload: {
             acr: "test_auth_context_class",
@@ -314,7 +314,7 @@ describe("JwtKit", () => {
           baseFormat: "JWT",
           critical: [],
           contentType: "application/json",
-          headerType: "test_token+jwt",
+          headerType: "application/test_token+jwt",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
           tokenType: "test_token",
@@ -450,7 +450,7 @@ describe("JwtKit", () => {
             cty: "application/json",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
-            typ: "test_token+jwt",
+            typ: "application/test_token+jwt",
           },
           payload: {
             acr: "test_auth_context_class",
@@ -490,7 +490,7 @@ describe("JwtKit", () => {
           baseFormat: "JWT",
           critical: [],
           contentType: "application/json",
-          headerType: "test_token+jwt",
+          headerType: "application/test_token+jwt",
           jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
           keyId: TEST_EC_KEY_SIG.id,
           tokenType: "test_token",
@@ -554,7 +554,7 @@ describe("JwtKit", () => {
           cty: "application/json",
           jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
-          typ: "test_token+jwt",
+          typ: "application/test_token+jwt",
         },
         payload: {
           exp: 1704099600,
@@ -912,7 +912,7 @@ describe("JwtKit", () => {
             cty: "application/json",
             jku: "https://test.lindorm.io/.well-known/jwks.json",
             kid: TEST_EC_KEY_SIG.id,
-            typ: "test_token+jwt",
+            typ: "application/test_token+jwt",
           },
           payload: {
             exp: 1704099600,

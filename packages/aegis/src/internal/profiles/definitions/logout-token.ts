@@ -10,7 +10,7 @@ import type { TokenProfile } from "../../../types/index.js";
  */
 export const logoutTokenProfile: TokenProfile = {
   name: "logout_token",
-  typ: "logout+jwt",
+  typ: "application/logout+jwt",
   required: ["issuer", "audience", "issuedAt", "expiresAt", "tokenId", "events"],
   forbidden: ["nonce"],
   requiredWhen: [],

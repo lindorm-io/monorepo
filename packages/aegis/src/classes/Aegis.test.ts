@@ -143,7 +143,7 @@ describe("Aegis", () => {
           jku: "https://test.lindorm.io/.well-known/jwks.json",
           kid: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
           oid: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
-          typ: "test_token+jwt",
+          typ: "application/test_token+jwt",
         },
         payload: {
           exp: 1704099600,
@@ -160,7 +160,7 @@ describe("Aegis", () => {
         baseFormat: "JWT",
         contentType: "application/json",
         critical: [],
-        headerType: "test_token+jwt",
+        headerType: "application/test_token+jwt",
         jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
         keyId: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
         objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
