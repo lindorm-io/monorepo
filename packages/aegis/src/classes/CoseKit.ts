@@ -10,6 +10,8 @@ export type CoseKitOptions = {
 export type CoseMintOptions = {
   /** COSE `typ` header (label 16) — the profile's COSE media type. */
   typ?: string;
+  /** Allow lindorm-proprietary COSE encodings (default true); see encodeCwtClaims. */
+  proprietary?: boolean;
 };
 
 /**
