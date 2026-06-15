@@ -81,6 +81,7 @@ import {
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
+import { JoseKit } from "./JoseKit.js";
 
 type PredicateOptions = {
   predicate?: AegisPredicate;
@@ -108,6 +109,7 @@ export class Aegis implements IAegis {
   private readonly dpopMaxSkew: number | undefined;
   private readonly encAlgorithm: KryptosEncAlgorithm | undefined;
   private readonly encryption: KryptosEncryption;
+  private readonly joseKit: JoseKit;
   private readonly logger: ILogger;
   private readonly sigAlgorithm: KryptosSigAlgorithm | undefined;
 
@@ -123,6 +125,15 @@ export class Aegis implements IAegis {
     this.encAlgorithm = options.encAlgorithm;
     this.encryption = options.encryption ?? "A256GCM";
     this.sigAlgorithm = options.sigAlgorithm;
+
+    this.joseKit = new JoseKit({
+      certBindingMode: this.certBindingMode,
+      clockTolerance: this.clockTolerance,
+      dpopMaxSkew: this.dpopMaxSkew,
+      encryption: this.encryption,
+      issuer: this.issuer ?? undefined,
+      logger: this.logger,
+    });
   }
 
   public get aes(): IAegisAes {
@@ -336,91 +347,57 @@ export class Aegis implements IAegis {
 
   // private jwe
 
-  private async jweKit(options: EncOptions = {}): Promise<JweKit> {
-    const kryptos = await this.kryptosEnc(options);
-
-    return new JweKit({
-      certBindingMode: this.certBindingMode,
-      encryption: this.encryption,
-      kryptos,
-      logger: this.logger,
-    });
-  }
-
   private async jweEncrypt(
     data: string,
     options: JweEncryptOptions & PredicateOptions = {},
   ): Promise<EncryptedJwe> {
-    const kit = await this.jweKit({ encrypt: true });
+    const kryptos = await this.kryptosEnc({ encrypt: true });
 
-    return kit.encrypt(data, options);
+    return this.joseKit.encryptJwe(kryptos, data, options);
   }
 
   private async jweDecrypt(jwe: string): Promise<DecryptedJwe> {
     const decode = JweKit.decode(jwe);
 
-    const kit = await this.jweKit({
+    const kryptos = await this.kryptosEnc({
       id: decode.header.kid,
       algorithm: decode.header.alg as KryptosEncAlgorithm,
     });
 
-    return kit.decrypt(jwe);
+    return this.joseKit.decryptJwe(kryptos, jwe);
   }
 
   // private jws
-
-  private async jwsKit(options: SigOptions = {}): Promise<JwsKit> {
-    const kryptos = await this.kryptosSig(options);
-
-    return new JwsKit({
-      certBindingMode: this.certBindingMode,
-      kryptos,
-      logger: this.logger,
-    });
-  }
 
   private async jwsSign<T extends JwsContent>(
     data: T,
     options: SignJwsOptions & PredicateOptions = {},
   ): Promise<SignedJws> {
-    const kit = await this.jwsKit({ sign: true });
+    const kryptos = await this.kryptosSig({ sign: true });
 
-    return kit.sign(data, options);
+    return this.joseKit.signJws(kryptos, data, options);
   }
 
   private async jwsVerify<T extends JwsContent>(jws: string): Promise<ParsedJws<T>> {
     const decode = JwsKit.decode(jws);
 
-    const kit = await this.jwsKit({
+    const kryptos = await this.kryptosSig({
       id: decode.header.kid,
       algorithm: decode.header.alg as KryptosSigAlgorithm,
     });
 
-    return kit.verify(jws);
+    return this.joseKit.verifyJws(kryptos, jws);
   }
 
   // private jwt
-
-  private async jwtKit(options: SigOptions = {}): Promise<JwtKit> {
-    const kryptos = await this.kryptosSig(options);
-
-    return new JwtKit({
-      certBindingMode: this.certBindingMode,
-      clockTolerance: this.clockTolerance,
-      dpopMaxSkew: this.dpopMaxSkew,
-      issuer: this.issuer ?? undefined,
-      kryptos,
-      logger: this.logger,
-    });
-  }
 
   private async jwtSign<T extends Dict = Dict>(
     content: SignJwtContent<T>,
     options: SignJwtOptions & PredicateOptions = {},
   ): Promise<SignedJwt> {
-    const kit = await this.jwtKit({ sign: true });
+    const kryptos = await this.kryptosSig({ sign: true });
 
-    return kit.sign(content, options);
+    return this.joseKit.signJwt(kryptos, content, options);
   }
 
   // private sign tiers
@@ -467,7 +444,7 @@ export class Aegis implements IAegis {
       });
     }
 
-    const kit = await this.jwtKit({ sign: true });
+    const kryptos = await this.kryptosSig({ sign: true });
 
     // T5 — resolve the recipient (client) enc key when encryption is in play.
     // Encryption fires when the profile is encryptable AND either an explicit
@@ -482,8 +459,8 @@ export class Aegis implements IAegis {
     // When the caller explicitly asked for encryption, a missing enc key is a
     // hard error. When encryption is forced ONLY by `sensitive_identity`, a
     // missing key is tolerated — the claim is omitted instead (see below).
-    const jweKit = wantsEncryption
-      ? await this.resolveEncKit(
+    const encKryptos = wantsEncryption
+      ? await this.resolveEncKey(
           {
             id: options.encrypt?.kid,
             algorithm: options.encrypt?.algorithm,
@@ -497,7 +474,7 @@ export class Aegis implements IAegis {
     // encrypted (profile not encryptable, or no enc key resolvable), strip it
     // from the content before signing so the claim is omitted entirely.
     const signContent =
-      hasSensitiveIdentity && !jweKit
+      hasSensitiveIdentity && !encKryptos
         ? (removeUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
         : content;
 
@@ -505,7 +482,7 @@ export class Aegis implements IAegis {
     // conditional policy (inside assembleCommonClaims) + the structural RFC
     // rules (validateProfileClaims). Business logic lives in domain terms.
     const common = assembleCommonClaims(
-      { algorithm: kit.algorithm, issuer: this.issuer },
+      { algorithm: kryptos.algorithm, issuer: this.issuer },
       profile,
       signContent,
       options,
@@ -513,17 +490,17 @@ export class Aegis implements IAegis {
 
     validateProfileClaims(profile, common, {
       ...(options.context ?? {}),
-      algorithm: kit.algorithm as any,
+      algorithm: kryptos.algorithm as any,
     });
 
-    this.warnAlgAdvisory(profile, kit.algorithm);
+    this.warnAlgAdvisory(profile, kryptos.algorithm);
 
     // JOSE wire claims: the existing wire mapper, fed the envelope ALREADY
     // resolved on the common layer (iss/iat/jti/nbf/exp) so the signed token
     // matches the validated common layer exactly — one source of truth, and
     // byte-identical to the pre-rebase output.
     const claims = buildProfileClaims(
-      { algorithm: kit.algorithm, issuer: this.issuer },
+      { algorithm: kryptos.algorithm, issuer: this.issuer },
       profile,
       {
         ...signContent,
@@ -541,12 +518,17 @@ export class Aegis implements IAegis {
     // A profile typ stamps the header verbatim (e.g. `at+jwt`). A `null` profile
     // typ means "none mandated": fall back to the tokenType-derived default
     // (bare `JWT` when no tokenType), which JwtKit requires as a header floor.
-    const signed = kit.signClaims(claims, signContent as SignJwtContent, {
-      ...options,
-      ...(profile.typ !== null ? { typ: profile.typ } : {}),
-    });
+    const signed = this.joseKit.signClaims(
+      kryptos,
+      claims,
+      signContent as SignJwtContent,
+      {
+        ...options,
+        ...(profile.typ !== null ? { typ: profile.typ } : {}),
+      },
+    );
 
-    if (!jweKit) {
+    if (!encKryptos) {
       return signed;
     }
 
@@ -555,7 +537,7 @@ export class Aegis implements IAegis {
     // (set automatically by JweKit.encrypt from the inner-token shape). The
     // read side (verifySmart recursion) decrypts then verifies the inner JWT,
     // applying the profile floor to the inner claims/typ.
-    const { token } = jweKit.encrypt(signed.token);
+    const { token } = this.joseKit.encryptJwe(encKryptos, signed.token);
 
     return { ...signed, token };
   }
@@ -594,7 +576,7 @@ export class Aegis implements IAegis {
       profile.encryptable && (explicitEncrypt || hasSensitiveIdentity);
 
     const encKryptos = wantsEncryption
-      ? await this.resolveCoseEncKey(
+      ? await this.resolveEncKey(
           {
             id: options.encrypt?.kid,
             algorithm: options.encrypt?.algorithm,
@@ -692,27 +674,6 @@ export class Aegis implements IAegis {
     return { claims, header: decoded } as unknown as T;
   }
 
-  // Resolve the symmetric recipient key for a COSE_Encrypt0. A missing key is a
-  // hard error only when the caller explicitly asked to encrypt; when forced
-  // only by `sensitive_identity` it is tolerated (the claim is omitted instead).
-  private async resolveCoseEncKey(
-    options: {
-      id?: string;
-      algorithm?: KryptosEncAlgorithm;
-      predicate?: AegisPredicate;
-    },
-    required: boolean,
-  ): Promise<IKryptos | undefined> {
-    try {
-      return await this.kryptosEnc({ encrypt: true, ...options });
-    } catch (error) {
-      if (required) {
-        throw error;
-      }
-      return undefined;
-    }
-  }
-
   // RFC-conformance advisory: a profile that RECOMMENDS asymmetric (RFC 9068
   // §2.1 access tokens) still mints with an HS* key — we only WARN, never
   // reject, since the RFC permits any signing algorithm.
@@ -726,26 +687,25 @@ export class Aegis implements IAegis {
     }
   }
 
-  private async resolveEncKit(
+  // Resolve the recipient encryption key for both the JOSE (JWE) and COSE
+  // (COSE_Encrypt0) paths. A missing key is a hard error only when the caller
+  // explicitly asked to encrypt; when forced only by `sensitive_identity` it is
+  // tolerated — encryption is skipped and the claim is omitted rather than
+  // leaked in cleartext (token-claims.md:98).
+  private async resolveEncKey(
     options: {
       id?: string;
       algorithm?: KryptosEncAlgorithm;
       predicate?: AegisPredicate;
     },
     required: boolean,
-  ): Promise<JweKit | undefined> {
+  ): Promise<IKryptos | undefined> {
     try {
-      return await this.jweKit({ encrypt: true, ...options });
+      return await this.kryptosEnc({ encrypt: true, ...options });
     } catch (error) {
-      // An explicit `encrypt` option means the caller demanded encryption, so a
-      // missing enc key must surface as an error.
       if (required) {
         throw error;
       }
-
-      // Encryption was forced only by `sensitive_identity` and no enc key is
-      // resolvable. Encryption is skipped; the claim is omitted rather than
-      // leaked in cleartext (token-claims.md:98).
       return undefined;
     }
   }
@@ -797,12 +757,12 @@ export class Aegis implements IAegis {
   ): Promise<ParsedJwt<T>> {
     const decode = JwtKit.decode(jwt);
 
-    const kit = await this.jwtKit({
+    const kryptos = await this.kryptosSig({
       id: decode.header.kid,
       algorithm: decode.header.alg as KryptosSigAlgorithm,
     });
 
-    return kit.verify(jwt, verify);
+    return this.joseKit.verifyJwt(kryptos, jwt, verify);
   }
 
   // private kryptos
