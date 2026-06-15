@@ -68,14 +68,23 @@ describe("Aegis profiles", () => {
       ).rejects.toThrow(JwtError);
     });
 
-    test("rejects a symmetric signing key", async () => {
+    test("permits a symmetric signing key with a warning (RFC 9068 §2.1)", async () => {
+      // RFC 9068 §2.1 permits any signing algorithm and RECOMMENDS asymmetric:
+      // HS* is allowed and warned, never rejected.
       const { TEST_OCT_KEY_SIG } = await import("../__fixtures__/keys.js");
-      const symAmphora = new Amphora({ domain: ISSUER, logger });
+      const logged: string[] = [];
+      const symLogger = createMockLogger((msg: unknown) => {
+        if (typeof msg === "string") logged.push(msg);
+      });
+      const symAmphora = new Amphora({ domain: ISSUER, logger: symLogger });
       await symAmphora.setup();
       symAmphora.add(TEST_OCT_KEY_SIG);
-      const symAegis = new Aegis({ amphora: symAmphora, logger });
+      const symAegis = new Aegis({ amphora: symAmphora, logger: symLogger });
 
-      await expect(symAegis.mint("access_token", content)).rejects.toThrow(JwtError);
+      const { token } = await symAegis.mint("access_token", content);
+
+      expect(JwtKit.decode(token).header.alg).toBe("HS256"); // minted, not rejected
+      expect(logged.some((m) => m.includes("RFC 9068 §2.1"))).toBe(true);
     });
   });
 

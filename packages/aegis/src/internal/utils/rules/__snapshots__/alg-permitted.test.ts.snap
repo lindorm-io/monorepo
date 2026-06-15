@@ -9,6 +9,15 @@ exports[`algPermitted > asymmetric permits an asymmetric alg and rejects HS* 1`]
 ]
 `;
 
+exports[`algPermitted > asymmetric-recommended permits HS* (never rejects) but still rejects none 1`] = `
+[
+  {
+    "key": "alg",
+    "message": "alg: none is never permitted",
+  },
+]
+`;
+
 exports[`algPermitted > fapi permits only the allowlist 1`] = `
 [
   {
