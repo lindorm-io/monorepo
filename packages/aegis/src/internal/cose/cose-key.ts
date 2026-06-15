@@ -7,7 +7,12 @@ import { AegisError } from "../../errors/index.js";
 const KEY = { kty: 1, kid: 2, alg: 3, crv: -1, x: -2, y: -3 } as const;
 
 // kty labels (JWK kty -> COSE). JWK "EC" is COSE "EC2" (2).
-const KTY_TO_COSE: Readonly<Record<string, number>> = { OKP: 1, EC: 2, RSA: 3, oct: 4 };
+export const KTY_TO_COSE: Readonly<Record<string, number>> = {
+  OKP: 1,
+  EC: 2,
+  RSA: 3,
+  oct: 4,
+};
 const COSE_TO_KTY: Readonly<Record<number, string>> = {
   1: "OKP",
   2: "EC",
@@ -16,7 +21,7 @@ const COSE_TO_KTY: Readonly<Record<number, string>> = {
 };
 
 // Elliptic curve labels (RFC 9053 §7.1).
-const CRV_TO_COSE: Readonly<Record<string, number>> = {
+export const CRV_TO_COSE: Readonly<Record<string, number>> = {
   "P-256": 1,
   "P-384": 2,
   "P-521": 3,
