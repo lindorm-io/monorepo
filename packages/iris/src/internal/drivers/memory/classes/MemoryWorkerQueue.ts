@@ -89,7 +89,7 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     );
 
     this.store.consumers.push({
-      topic: resolveConsumeTopic(this.metadata, this.logger),
+      topic: resolveConsumeTopic(this.metadata, this.logger, queue),
       queue,
       callback: wrappedCallback,
       consumerTag,
