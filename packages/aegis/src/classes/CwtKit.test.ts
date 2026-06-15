@@ -1,7 +1,7 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test } from "vitest";
 import { AegisError } from "../errors/index.js";
-import { TEST_EC_KEY_SIG } from "../__fixtures__/keys.js";
+import { TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG } from "../__fixtures__/keys.js";
 import { CwtKit } from "./CwtKit.js";
 
 const common = {
@@ -72,6 +72,39 @@ describe("CwtKit (COSE_Sign1)", () => {
   test("rejects a tampered payload", () => {
     const token = kit.sign(common);
     token[token.length - 5] ^= 0xff; // flip a signature byte
+    expect(() => kit.verify(token)).toThrow(AegisError);
+  });
+});
+
+describe("CwtKit (COSE_Mac0, symmetric oct key)", () => {
+  let kit: CwtKit;
+
+  beforeEach(() => {
+    kit = new CwtKit({ logger: createMockLogger(), kryptos: TEST_OCT_KEY_SIG });
+  });
+
+  test("MACs an oct-key CWT as a COSE_Mac0 (HS256), tagged 61", () => {
+    const token = kit.sign(common, { typ: "application/at+cwt" });
+
+    // CBOR tag 61 = 0xd8 0x3d wraps the inner COSE_Mac0.
+    expect(token.subarray(0, 2).toString("hex")).toBe("d83d");
+
+    const decoded = CwtKit.decode(token);
+    expect(decoded.algorithm).toBe("HS256"); // HMAC -> COSE_Mac0, never Sign1
+    expect(decoded.kid).toBe(TEST_OCT_KEY_SIG.id);
+    expect(decoded.typ).toBe("application/at+cwt");
+  });
+
+  test("round-trips the domain claims through tag -> verify", () => {
+    const { claims, typ } = kit.verify(kit.sign(common, { typ: "application/at+cwt" }));
+
+    expect(claims).toEqual(common);
+    expect(typ).toBe("application/at+cwt");
+  });
+
+  test("rejects a tampered payload", () => {
+    const token = kit.sign(common);
+    token[token.length - 5] ^= 0xff; // flip a MAC byte
     expect(() => kit.verify(token)).toThrow(AegisError);
   });
 });
