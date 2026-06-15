@@ -14,10 +14,11 @@ const base = {
   profile: accessTokenProfile,
 };
 
+// DOMAIN-keyed payload (the floor now consumes `parsed.payload`, not raw wire claims).
 const validPayload = {
-  iss: ISSUER,
-  aud: [RESOURCE],
-  exp: 1704099600,
+  issuer: ISSUER,
+  audience: [RESOURCE],
+  expiresAt: new Date(1704099600 * 1000),
 };
 
 describe("enforceVerifyFloor", () => {
@@ -35,7 +36,7 @@ describe("enforceVerifyFloor", () => {
     expect(() =>
       enforceVerifyFloor({
         ...base,
-        payload: { ...validPayload, iss: "https://other/" },
+        payload: { ...validPayload, issuer: "https://other/" },
       }),
     ).toThrow(JwtError);
   });
@@ -44,7 +45,7 @@ describe("enforceVerifyFloor", () => {
     expect(() =>
       enforceVerifyFloor({
         ...base,
-        payload: { ...validPayload, aud: ["https://elsewhere"] },
+        payload: { ...validPayload, audience: ["https://elsewhere"] },
       }),
     ).toThrow(JwtError);
   });
@@ -53,7 +54,7 @@ describe("enforceVerifyFloor", () => {
     expect(() =>
       enforceVerifyFloor({
         ...base,
-        payload: { iss: ISSUER, aud: [RESOURCE] },
+        payload: { issuer: ISSUER, audience: [RESOURCE] },
       }),
     ).toThrow(JwtError);
   });
@@ -65,7 +66,7 @@ describe("enforceVerifyFloor", () => {
         decodedTyp: "secevent+jwt",
         expectedIssuer: ISSUER,
         profile: securityEventProfile,
-        payload: { iss: ISSUER, aud: [RESOURCE] },
+        payload: { issuer: ISSUER, audience: [RESOURCE] },
       }),
     ).not.toThrow();
   });

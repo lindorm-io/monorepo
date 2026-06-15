@@ -7,10 +7,10 @@ describe("issUri", () => {
   });
 
   test("passes for a URL issuer", () => {
-    expect(issUri({ iss: "https://test.lindorm.io/" })).toEqual([]);
+    expect(issUri({ issuer: "https://test.lindorm.io/" })).toEqual([]);
   });
 
   test("fails for a non-URI issuer", () => {
-    expect(issUri({ iss: "not a uri" })).toMatchSnapshot();
+    expect(issUri({ issuer: "not a uri" })).toMatchSnapshot();
   });
 });

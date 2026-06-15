@@ -7,7 +7,7 @@ describe("registry", () => {
   test("resolves the built-in default profile", () => {
     expect(resolveProfile("default")).toMatchObject({
       name: "default",
-      required: ["sub", "exp"],
+      required: ["subject", "expiresAt"],
       autoInject: { iat: true, jti: true, nbf: true, iss: true },
     });
   });
@@ -20,7 +20,7 @@ describe("registry", () => {
     const custom: TokenProfile = {
       name: "custom_test_profile",
       typ: "custom+jwt",
-      required: ["sub"],
+      required: ["subject"],
       forbidden: [],
       requiredWhen: [],
       atLeastOneOf: [],

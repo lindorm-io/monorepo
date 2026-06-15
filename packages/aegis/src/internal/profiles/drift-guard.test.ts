@@ -9,15 +9,6 @@ import { resolveProfile } from "./registry.js";
  * or pass mint with a hole the types claim is closed. The mapping below mirrors
  * the Pick<...> in types/jwt/profile.ts; update both together.
  */
-const DOMAIN_TO_WIRE: Record<string, string> = {
-  subject: "sub",
-  subjectId: "sub_id",
-  audience: "aud",
-  clientId: "client_id",
-  events: "events",
-  issuer: "iss",
-};
-
 const REQUIRED_DOMAIN_KEYS: Record<string, Array<string>> = {
   access_token: ["subject", "audience", "clientId"],
   id_token: ["subject", "audience"],
@@ -37,9 +28,7 @@ describe("profile content/descriptor drift guard", () => {
       const profile = resolveProfile(name);
 
       for (const domainKey of domainKeys) {
-        const wire = DOMAIN_TO_WIRE[domainKey];
-        expect(wire).toBeDefined();
-        expect(profile.required).toContain(wire);
+        expect(profile.required).toContain(domainKey);
       }
     });
   }

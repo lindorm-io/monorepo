@@ -11,7 +11,7 @@ import type { TokenProfile } from "../../../types/index.js";
 export const defaultProfile: TokenProfile = {
   name: "default",
   typ: null,
-  required: ["sub", "exp"],
+  required: ["subject", "expiresAt"],
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],

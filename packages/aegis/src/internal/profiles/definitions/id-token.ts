@@ -11,13 +11,13 @@ import type { SignContext, TokenProfile } from "../../../types/index.js";
 export const idTokenProfile: TokenProfile = {
   name: "id_token",
   typ: "JWT",
-  required: ["iss", "sub", "aud", "exp", "iat"],
+  required: ["issuer", "subject", "audience", "expiresAt", "issuedAt"],
   forbidden: [],
   requiredWhen: [
     {
-      claim: "at_hash",
+      claim: "accessTokenHash",
       when: (claims: Dict, ctx: SignContext) =>
-        ctx.accessTokenIssued === true || claims.at_hash !== undefined,
+        ctx.accessTokenIssued === true || claims.accessTokenHash !== undefined,
     },
   ],
   atLeastOneOf: [],

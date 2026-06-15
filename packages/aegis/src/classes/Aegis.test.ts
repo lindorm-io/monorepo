@@ -307,7 +307,7 @@ describe("Aegis", () => {
     aegis.registerProfile({
       name: "custom_aegis_profile",
       typ: "custom+jwt",
-      required: ["sub"],
+      required: ["subject"],
       forbidden: [],
       requiredWhen: [],
       atLeastOneOf: [],

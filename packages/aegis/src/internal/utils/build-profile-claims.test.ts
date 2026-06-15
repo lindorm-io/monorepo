@@ -1,5 +1,4 @@
 import MockDate from "mockdate";
-import { JwtError } from "../../errors/index.js";
 import type { TokenProfile } from "../../types/index.js";
 import { defaultProfile } from "../profiles/definitions/default.js";
 import { buildProfileClaims } from "./build-profile-claims.js";
@@ -80,35 +79,7 @@ describe("buildProfileClaims", () => {
     expect(claims.exp).toBe(1704099600);
   });
 
-  test("throws when a required claim is missing", () => {
-    expect(() =>
-      buildProfileClaims(CTX, defaultProfile, { expires: "1h" } as any),
-    ).toThrow(JwtError);
-  });
-
-  test("throws when a forbidden claim is present", () => {
-    expect(() =>
-      buildProfileClaims(
-        CTX,
-        { ...noInjectProfile, forbidden: ["sub"] },
-        { subject: "subject-1" },
-      ),
-    ).toThrow(JwtError);
-  });
-
-  test("throws when no atLeastOneOf member is present", () => {
-    expect(() =>
-      buildProfileClaims(CTX, { ...noInjectProfile, atLeastOneOf: [["sub", "sid"]] }, {}),
-    ).toThrow(JwtError);
-  });
-
-  test("passes when one atLeastOneOf member is present", () => {
-    expect(() =>
-      buildProfileClaims(
-        CTX,
-        { ...noInjectProfile, atLeastOneOf: [["sub", "sid"]] },
-        { subject: "subject-1" },
-      ),
-    ).not.toThrow();
-  });
+  // Policy (required/forbidden/atLeastOneOf/requiredWhen) is now enforced on the
+  // DOMAIN-keyed common layer — see assemble-common-claims.test.ts. This file
+  // only covers buildProfileClaims as the pure JOSE wire mapper + envelope.
 });

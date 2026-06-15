@@ -9,7 +9,7 @@ import type { TokenProfile } from "../../../types/index.js";
 export const clientAssertionProfile: TokenProfile = {
   name: "client_assertion",
   typ: "JWT",
-  required: ["iss", "sub", "aud", "exp", "jti"],
+  required: ["issuer", "subject", "audience", "expiresAt", "tokenId"],
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],

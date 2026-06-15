@@ -9,7 +9,7 @@ import type { TokenProfile } from "../../../types/index.js";
 export const jarmProfile: TokenProfile = {
   name: "jarm",
   typ: null,
-  required: ["iss", "aud", "exp"],
+  required: ["issuer", "audience", "expiresAt"],
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],

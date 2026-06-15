@@ -36,7 +36,7 @@ export const validateProfileClaims = (
   if (rules.crossField) invalid.push(...crossField(claims));
   if (rules.audSingleResource) invalid.push(...audSingleResource(claims));
   if (rules.authorizationDetailsType) {
-    invalid.push(...everyElementHasKey(claims, "authorization_details", "type"));
+    invalid.push(...everyElementHasKey(claims, "authorizationDetails", "type"));
   }
   if (rules.cnfShape) invalid.push(...cnfShape(claims));
   if (rules.actChainShape) invalid.push(...actChainShape(claims));

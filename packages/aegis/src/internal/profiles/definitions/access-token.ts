@@ -8,7 +8,15 @@ import type { TokenProfile } from "../../../types/index.js";
 export const accessTokenProfile: TokenProfile = {
   name: "access_token",
   typ: "at+jwt",
-  required: ["iss", "exp", "aud", "sub", "client_id", "iat", "jti"],
+  required: [
+    "issuer",
+    "expiresAt",
+    "audience",
+    "subject",
+    "clientId",
+    "issuedAt",
+    "tokenId",
+  ],
   forbidden: [],
   requiredWhen: [],
   atLeastOneOf: [],

@@ -8,7 +8,15 @@ import type { TokenProfile } from "../../../types/index.js";
 export const erasureTokenProfile: TokenProfile = {
   name: "erasure_token",
   typ: "erasure+jwt",
-  required: ["iss", "aud", "iat", "exp", "jti", "sub", "events"],
+  required: [
+    "issuer",
+    "audience",
+    "issuedAt",
+    "expiresAt",
+    "tokenId",
+    "subject",
+    "events",
+  ],
   forbidden: ["nonce"],
   requiredWhen: [],
   atLeastOneOf: [],

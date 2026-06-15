@@ -7,18 +7,18 @@ describe("audSingleResource", () => {
   });
 
   test("passes for an array of exactly one", () => {
-    expect(audSingleResource({ aud: ["https://rs"] })).toEqual([]);
+    expect(audSingleResource({ audience: ["https://rs"] })).toEqual([]);
   });
 
   test("passes for a bare string", () => {
-    expect(audSingleResource({ aud: "https://rs" })).toEqual([]);
+    expect(audSingleResource({ audience: "https://rs" })).toEqual([]);
   });
 
   test("fails for an empty array", () => {
-    expect(audSingleResource({ aud: [] })).toMatchSnapshot();
+    expect(audSingleResource({ audience: [] })).toMatchSnapshot();
   });
 
   test("fails for multiple audiences", () => {
-    expect(audSingleResource({ aud: ["https://a", "https://b"] })).toMatchSnapshot();
+    expect(audSingleResource({ audience: ["https://a", "https://b"] })).toMatchSnapshot();
   });
 });

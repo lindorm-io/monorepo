@@ -3,8 +3,8 @@
 exports[`actChainShape > fails on a malformed nested act 1`] = `
 [
   {
-    "key": "may_act.act.iss",
-    "message": ""may_act.act.iss" must be a string",
+    "key": "mayAct.act.issuer",
+    "message": ""mayAct.act.issuer" must be a string",
   },
 ]
 `;
@@ -16,8 +16,8 @@ exports[`actChainShape > fails on an unknown member and a non-string sub 1`] = `
     "message": "Unknown member "surprise" in "act"",
   },
   {
-    "key": "act.sub",
-    "message": ""act.sub" must be a string",
+    "key": "act.subject",
+    "message": ""act.subject" must be a string",
   },
 ]
 `;

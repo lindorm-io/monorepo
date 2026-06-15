@@ -8,7 +8,7 @@ import type { InvalidEntry } from "../../../types/index.js";
  * empty, or multi-element audience.
  */
 export const audSingleResource = (claims: Dict): Array<InvalidEntry> => {
-  const aud = claims.aud;
+  const aud = claims.audience;
 
   if (aud === undefined) return [];
 

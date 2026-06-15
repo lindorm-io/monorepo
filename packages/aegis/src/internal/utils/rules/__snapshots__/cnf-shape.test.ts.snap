@@ -3,8 +3,8 @@
 exports[`cnfShape > fails on an unknown cnf member 1`] = `
 [
   {
-    "key": "cnf.surprise",
-    "message": "Unknown cnf member "surprise"",
+    "key": "confirmation.surprise",
+    "message": "Unknown confirmation member "surprise"",
   },
 ]
 `;
@@ -12,8 +12,8 @@ exports[`cnfShape > fails on an unknown cnf member 1`] = `
 exports[`cnfShape > fails when cnf is not an object 1`] = `
 [
   {
-    "key": "cnf",
-    "message": "cnf must be an object",
+    "key": "confirmation",
+    "message": "confirmation (cnf) must be an object",
   },
 ]
 `;
@@ -21,8 +21,8 @@ exports[`cnfShape > fails when cnf is not an object 1`] = `
 exports[`cnfShape > fails when jkt is the wrong byte length 1`] = `
 [
   {
-    "key": "cnf.jkt",
-    "message": "cnf.jkt must be a base64url SHA-256 (32-byte) thumbprint",
+    "key": "confirmation.thumbprint",
+    "message": "confirmation.thumbprint (cnf.jkt) must be a base64url SHA-256 (32-byte) thumbprint",
   },
 ]
 `;
