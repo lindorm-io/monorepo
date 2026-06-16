@@ -10,7 +10,12 @@ import type { PopClaims } from "../../types/claims/pop-claims.js";
 import type { RarClaims } from "../../types/claims/rar-claims.js";
 import type { DelegationClaims } from "../../types/claims/delegation-claims.js";
 import type { StdClaims } from "../../types/claims/std-claims.js";
-import type { LevelOfAssurance } from "../../types/level-of-assurance.js";
+import type {
+  AuthenticatorAssuranceLevel,
+  FederationAssuranceLevel,
+  IdentityAssuranceLevel,
+  LevelOfAssurance,
+} from "../../types/level-of-assurance.js";
 
 // Unified domain claim set — RFC-grouped intersection that JWT parsing,
 // introspection parsing, and userinfo parsing all share.
@@ -65,9 +70,12 @@ const FIELD_KEYS: Record<string, ReadonlyArray<string>> = {
   authorizationDetails: ["authorizationDetails", "authorization_details"],
 
   // LindormClaims
+  authenticatorAssuranceLevel: ["authenticatorAssuranceLevel", "aal"],
   authFactor: ["authFactor", "afr"],
   clientId: ["clientId", "client_id"],
+  federationAssuranceLevel: ["federationAssuranceLevel", "fal"],
   grantType: ["grantType", "gty"],
+  identityAssuranceLevel: ["identityAssuranceLevel", "ial"],
   levelOfAssurance: ["levelOfAssurance", "loa"],
   permissions: ["permissions"],
   scope: ["scope"],
@@ -204,9 +212,12 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
 
   const authorizationDetails = consume(FIELD_KEYS.authorizationDetails);
 
+  const authenticatorAssuranceLevel = consume(FIELD_KEYS.authenticatorAssuranceLevel);
   const authFactor = consume(FIELD_KEYS.authFactor);
   const clientId = consume(FIELD_KEYS.clientId);
+  const federationAssuranceLevel = consume(FIELD_KEYS.federationAssuranceLevel);
   const grantType = consume(FIELD_KEYS.grantType);
+  const identityAssuranceLevel = consume(FIELD_KEYS.identityAssuranceLevel);
   const levelOfAssurance = consume(FIELD_KEYS.levelOfAssurance);
   const permissions = consume(FIELD_KEYS.permissions);
   const scope = consume(FIELD_KEYS.scope);
@@ -259,9 +270,20 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
       : undefined,
 
     // LindormClaims
+    authenticatorAssuranceLevel: isFinite<AuthenticatorAssuranceLevel>(
+      authenticatorAssuranceLevel,
+    )
+      ? authenticatorAssuranceLevel
+      : undefined,
     authFactor: isArray(authFactor) ? (authFactor as Array<string>) : undefined,
     clientId: isString(clientId) ? clientId : undefined,
+    federationAssuranceLevel: isFinite<FederationAssuranceLevel>(federationAssuranceLevel)
+      ? federationAssuranceLevel
+      : undefined,
     grantType: isString(grantType) ? grantType : undefined,
+    identityAssuranceLevel: isFinite<IdentityAssuranceLevel>(identityAssuranceLevel)
+      ? identityAssuranceLevel
+      : undefined,
     levelOfAssurance: isFinite<LevelOfAssurance>(levelOfAssurance)
       ? levelOfAssurance
       : undefined,

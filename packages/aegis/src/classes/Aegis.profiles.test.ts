@@ -163,6 +163,62 @@ describe("Aegis profiles", () => {
     });
   });
 
+  describe("assurance levels (loa / aal / ial / fal)", () => {
+    test("access_token mints and parses aal/ial (and loa) — fal omitted", async () => {
+      const { token } = await aegis.mint("access_token", {
+        subject: "user-1",
+        audience: [RESOURCE],
+        clientId: "client-1",
+        levelOfAssurance: 3,
+        authenticatorAssuranceLevel: 2,
+        identityAssuranceLevel: 3,
+      });
+      const { payload } = JwtKit.decode(token);
+
+      expect(payload).toMatchObject({ loa: 3, aal: 2, ial: 3 });
+
+      const parsed = JwtKit.parse(token);
+      expect(parsed.payload).toMatchObject({
+        levelOfAssurance: 3,
+        authenticatorAssuranceLevel: 2,
+        identityAssuranceLevel: 3,
+      });
+    });
+
+    test("access_token rejects fal (id-token-only)", async () => {
+      await expect(
+        aegis.mint("access_token", {
+          subject: "user-1",
+          audience: [RESOURCE],
+          clientId: "client-1",
+          federationAssuranceLevel: 2,
+        } as never),
+      ).rejects.toThrow(JwtError);
+    });
+
+    test("id_token mints and parses all four assurance levels", async () => {
+      const { token } = await aegis.mint("id_token", {
+        subject: "user-1",
+        audience: ["client-1"],
+        levelOfAssurance: 4,
+        authenticatorAssuranceLevel: 3,
+        identityAssuranceLevel: 2,
+        federationAssuranceLevel: 1,
+      });
+      const { payload } = JwtKit.decode(token);
+
+      expect(payload).toMatchObject({ loa: 4, aal: 3, ial: 2, fal: 1 });
+
+      const parsed = JwtKit.parse(token);
+      expect(parsed.payload).toMatchObject({
+        levelOfAssurance: 4,
+        authenticatorAssuranceLevel: 3,
+        identityAssuranceLevel: 2,
+        federationAssuranceLevel: 1,
+      });
+    });
+  });
+
   describe("logout_token", () => {
     const content = {
       audience: ["client-1"],
