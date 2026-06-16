@@ -91,10 +91,13 @@ const decodeValue = (spec: ClaimSpec, value: unknown): unknown => {
  */
 export type EncodeCwtOptions = {
   /**
-   * Allow lindorm-proprietary COSE encodings (default `true`): the private-use
-   * labels for lindorm-internal claims and the compact integer-keyed `act`.
-   * Set `false` for off-platform tokens — proprietary-labelled claims are
-   * dropped and `act` is emitted as an interoperable string-keyed object.
+   * Use compact private-use integer COSE labels (default `true`): claims with a
+   * private-use label (`< -65536`) are keyed by that integer on-platform, and
+   * the structured `act`/`subjectId` use their compact integer-keyed form. Set
+   * `false` for off-platform tokens — those claims are emitted under their JOSE
+   * string key instead of the private-use integer label (never dropped), and
+   * `act`/`subjectId` are emitted as interoperable string-keyed objects. The
+   * flag only chooses digit-vs-string; no claim is ever omitted.
    */
   proprietary?: boolean;
 };
@@ -116,10 +119,13 @@ export const encodeCwtClaims = (
       continue;
     }
 
-    // Off-platform tokens drop lindorm-only claims (no interoperable form).
-    if (spec.proprietary && !proprietary) continue;
-
-    map.set(spec.cose ?? spec.jose, encodeValue(spec, value, proprietary));
+    // Private-use labels (no registered CWT label; chosen because the integer
+    // is the smaller wire encoding) are keyed by that integer on-platform and
+    // degrade to their JOSE string key off-platform (interoperable). Claims are
+    // NEVER dropped.
+    const isPrivate = typeof spec.cose === "number" && spec.cose < -65536;
+    const key = isPrivate && !proprietary ? spec.jose : (spec.cose ?? spec.jose);
+    map.set(key, encodeValue(spec, value, proprietary));
   }
 
   return map;

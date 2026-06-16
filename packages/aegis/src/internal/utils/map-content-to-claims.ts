@@ -90,6 +90,9 @@ export const mapContentToClaims = <C extends Dict = Dict>(
     : undefined;
 
   return removeUndefined({
+    aal: isFinite(content.authenticatorAssuranceLevel)
+      ? content.authenticatorAssuranceLevel
+      : undefined,
     acr: isString(content.authContextClass) ? content.authContextClass : undefined,
     act: isObject(content.act) ? actClaimToWire(content.act) : undefined,
     afr: isArray(content.authFactor) ? content.authFactor : undefined,
@@ -107,8 +110,14 @@ export const mapContentToClaims = <C extends Dict = Dict>(
     entitlements: isArray(content.entitlements) ? content.entitlements : undefined,
     events: isObject(content.events) ? content.events : undefined,
     exp,
+    fal: isFinite(content.federationAssuranceLevel)
+      ? content.federationAssuranceLevel
+      : undefined,
     groups: isArray(content.groups) ? content.groups : undefined,
     gty: isString(content.grantType) ? content.grantType : undefined,
+    ial: isFinite(content.identityAssuranceLevel)
+      ? content.identityAssuranceLevel
+      : undefined,
     may_act: isObject(content.mayAct) ? actClaimToWire(content.mayAct) : undefined,
     iat: isDate(options.issuedAt) ? getUnixTime(options.issuedAt) : undefined,
     iss: isString(content.issuer) ? content.issuer : undefined,

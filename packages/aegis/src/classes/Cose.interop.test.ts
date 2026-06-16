@@ -162,16 +162,17 @@ describe("COSE interop — cose-js", () => {
   });
 });
 
-// A token exercising EVERY strand of our custom claim logic: proprietary
-// private-use labels (loa, tenantId), the compact integer-keyed structured
-// claims (act, sub_id), an OIDC hash as a byte string, a cnf, a passthrough
-// array (RFC 9396) and an unknown custom claim.
+// A token exercising EVERY strand of our custom claim logic: a string-keyed
+// standards-based assurance level (loa), a proprietary private-use label
+// (tenantId), the compact integer-keyed structured claims (act, sub_id), an
+// OIDC hash as a byte string, a cnf, a passthrough array (RFC 9396) and an
+// unknown custom claim.
 const AT_HASH = "LXEWQrcmsEQBYnyp-6wy9chTD7GQPMTbAiWHF5IaSIE"; // 32-byte b64url
 const fullCommon = {
   ...common,
-  levelOfAssurance: 3, // proprietary private-use label (-65537)
-  tenantId: "tenant-7", // proprietary private-use label (-65541)
-  accessTokenHash: AT_HASH, // bstr
+  levelOfAssurance: 3, // standards-based, short name -> string-keyed ("loa")
+  tenantId: "tenant-7", // private-use label P(14) = -65551
+  accessTokenHash: AT_HASH, // bstr, private-use label P(0) = -65537
   act: { subject: "actor", issuer: "https://delegator/", clientId: "c-2" }, // compact map
   subjectId: { format: "iss_sub", iss: "https://i/", sub: "u" }, // compact map
   authorizationDetails: [{ type: "payment" }], // string-keyed passthrough
@@ -197,7 +198,8 @@ describe("COSE interop — custom logic does not break the token", () => {
     const map = decodeCbor<Map<unknown, unknown>>(Buffer.from(sign1.payload));
     expect(map.get(1)).toBe(fullCommon.issuer); // iss still readable
     expect(map.get(2)).toBe(fullCommon.subject); // sub still readable
-    expect(map.get(-65537)).toBe(3); // loa — opaque private-use label, still valid CBOR
+    expect(map.get("loa")).toBe(3); // loa — string-keyed standards-based claim
+    expect(map.get(-65551)).toBe("tenant-7"); // tenantId — private-use label P(14)
     expect(map.get("act")).toBeInstanceOf(Map); // compact act — a valid CBOR sub-map
 
     // …and the whole thing still round-trips losslessly on our side.
@@ -250,8 +252,11 @@ describe("COSE interop — custom logic does not break the token", () => {
     const map = decodeCbor<Map<unknown, unknown>>(Buffer.from(sign1.payload), {
       preferMap: false,
     });
-    expect(map.has(-65537)).toBe(false); // loa dropped (no interoperable form)
-    expect(map.has(-65541)).toBe(false); // tenantId dropped
+    // Nothing is dropped: loa stays string-keyed; tenantId degrades from its
+    // private-use integer label to its JOSE string key.
+    expect(map.get("loa")).toBe(3); // standards-based, string-keyed both ways
+    expect(map.has(-65551)).toBe(false); // tenantId no longer integer-keyed
+    expect(map.get("tenant_id")).toBe("tenant-7"); // degraded to JOSE string key, NOT dropped
     expect(map.get("act")).toEqual(fullCommon.act); // act is now a string-keyed object
     expect(map.get("sub_id")).toEqual(fullCommon.subjectId); // sub_id too
   });

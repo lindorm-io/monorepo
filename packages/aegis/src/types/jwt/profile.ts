@@ -51,6 +51,8 @@ export type AccessTokenContent = Required<
       | "authMethods"
       | "authFactor"
       | "levelOfAssurance"
+      | "authenticatorAssuranceLevel"
+      | "identityAssuranceLevel"
       | "grantType"
       | "sessionHint"
       | "subjectHint"
@@ -74,6 +76,9 @@ export type IdTokenContent = Required<Pick<SignContent, "subject" | "audience">>
       | "authMethods"
       | "authFactor"
       | "levelOfAssurance"
+      | "authenticatorAssuranceLevel"
+      | "identityAssuranceLevel"
+      | "federationAssuranceLevel"
       | "authorizedParty"
       | "vectorOfTrust"
       | "vectorTrustMark"
@@ -206,10 +211,12 @@ export type ProfileSignOptions = SignJwtOptions & {
    */
   format?: TokenFormat;
   /**
-   * Allow lindorm-proprietary COSE encodings (default `true`): private-use
-   * labels for lindorm-internal claims and the compact integer-keyed `act`. Set
-   * `false` for off-platform tokens — proprietary claims are dropped and `act`
-   * is emitted as an interoperable string-keyed object. (COSE only.)
+   * Use compact private-use integer COSE labels (default `true`): claims with a
+   * private-use label and the structured `act`/`subjectId` are keyed by their
+   * compact integer form on-platform. Set `false` for off-platform tokens —
+   * those claims are emitted under their JOSE string key instead (interoperable,
+   * never dropped), and `act`/`subjectId` become string-keyed objects. (COSE
+   * only.)
    */
   proprietary?: boolean;
   encrypt?: {

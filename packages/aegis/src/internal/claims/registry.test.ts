@@ -43,18 +43,50 @@ describe("CLAIM_REGISTRY", () => {
     expect(new Set(labels).size).toBe(labels.length);
   });
 
-  test("proprietary claims use private-use labels (< -65536); standard claims do not", () => {
+  // Standards-based assurance axes: a standard meaning but NO registered CWT
+  // label, and short JOSE names (≤ 4 chars), so they are string-keyed (cose:null).
+  const STANDARDS_BASED_ASSURANCE = [
+    "levelOfAssurance",
+    "authenticatorAssuranceLevel",
+    "identityAssuranceLevel",
+    "federationAssuranceLevel",
+  ];
+
+  // The byte-size rule: a private-use label is 5 bytes; an N-char string key is
+  // N + 1 bytes; so the integer is chosen only when it saves bytes (name ≥ 5).
+  test("every private-use label (< -65536) has a JOSE name of length ≥ 5", () => {
     for (const spec of CLAIM_REGISTRY) {
-      if (spec.proprietary) {
-        expect(
-          spec.cose,
-          `${spec.domain} proprietary but not private-use`,
-        ).not.toBeNull();
-        expect(spec.cose as number).toBeLessThan(-65536);
-      } else if (spec.cose !== null) {
-        // non-proprietary registered labels are the standard CWT range (>= -65536)
-        expect(spec.cose).toBeGreaterThanOrEqual(-65536);
-      }
+      if (spec.cose === null || spec.cose >= -65536) continue;
+      expect(
+        spec.jose.length,
+        `${spec.domain} (${spec.jose}) is integer-keyed but ≤ 4 chars`,
+      ).toBeGreaterThanOrEqual(5);
+    }
+  });
+
+  test("every non-registered short claim (JOSE name ≤ 4 chars) is string-keyed (cose:null)", () => {
+    for (const spec of CLAIM_REGISTRY) {
+      // Registered standard CWT labels (1–9) are exempt from the byte-size rule.
+      if (spec.cose !== null && spec.cose >= -65536) continue;
+      if (spec.jose.length > 4) continue;
+      expect(
+        spec.cose,
+        `${spec.domain} (${spec.jose}) is ≤ 4 chars but not string-keyed`,
+      ).toBeNull();
+    }
+  });
+
+  test("registered labels (not private-use) are in the standard CWT range", () => {
+    for (const spec of CLAIM_REGISTRY) {
+      if (spec.cose === null || spec.cose < -65536) continue;
+      expect(spec.cose).toBeGreaterThanOrEqual(-65536);
+    }
+  });
+
+  test("standards-based assurance levels are string-keyed (cose:null)", () => {
+    for (const domain of STANDARDS_BASED_ASSURANCE) {
+      const spec = specByDomain(domain);
+      expect(spec?.cose, `${domain} must be string-keyed`).toBeNull();
     }
   });
 
@@ -71,7 +103,9 @@ describe("CLAIM_REGISTRY", () => {
   });
 
   test("OIDC nonce is NOT mapped to CWT label 10 (eat_nonce)", () => {
-    expect(specByDomain("nonce")?.cose).toBeNull();
+    // nonce has no registered CWT label; its name is ≥ 5 chars so it gets a
+    // private-use label, but never the registered EAT label 10.
+    expect(specByDomain("nonce")?.cose).not.toBe(10);
     expect(specByCose(10)).toBeUndefined();
   });
 

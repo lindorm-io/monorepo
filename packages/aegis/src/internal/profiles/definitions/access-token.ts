@@ -19,7 +19,7 @@ export const accessTokenProfile: TokenProfile = {
     "issuedAt",
     "tokenId",
   ],
-  forbidden: [],
+  forbidden: ["federationAssuranceLevel"],
   requiredWhen: [],
   atLeastOneOf: [],
   autoInject: { iat: true, jti: true, nbf: false, iss: true },
