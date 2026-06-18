@@ -8,6 +8,7 @@ exports[`Generated > should stage generated with date strategy 1`] = `
     "length": null,
     "max": null,
     "min": null,
+    "namespace": null,
     "strategy": "date",
   },
 ]
@@ -21,6 +22,7 @@ exports[`Generated > should stage generated with integer strategy and range 1`] 
     "length": null,
     "max": 1000,
     "min": 1,
+    "namespace": null,
     "strategy": "integer",
   },
 ]
@@ -34,6 +36,7 @@ exports[`Generated > should stage generated with string strategy and length 1`] 
     "length": 12,
     "max": null,
     "min": null,
+    "namespace": null,
     "strategy": "string",
   },
 ]
@@ -47,6 +50,7 @@ exports[`Generated > should stage generated with uuid strategy 1`] = `
     "length": null,
     "max": null,
     "min": null,
+    "namespace": null,
     "strategy": "uuid",
   },
 ]

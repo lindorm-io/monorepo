@@ -18,8 +18,11 @@ const generateValue = (gen: MetaGenerated): unknown => {
       return randomUUID();
 
     case "lindorm_id":
-      return gen.length != null
-        ? randomId({ length: gen.length as RandomIdLength })
+      return gen.namespace != null || gen.length != null
+        ? randomId({
+            namespace: gen.namespace ?? undefined,
+            length: (gen.length ?? undefined) as RandomIdLength | undefined,
+          })
         : randomId();
 
     case "date":

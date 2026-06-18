@@ -54,6 +54,40 @@ describe("Generated", () => {
     expect(gen.generator).toBeNull();
   });
 
+  it("should stage a lindorm_id namespace", () => {
+    class TestMsg {
+      @Generated("lindorm_id", { namespace: "user" })
+      id!: string;
+    }
+
+    const metadata = (TestMsg as any)[Symbol.metadata];
+    const gen = metadata.generated[0];
+    expect(gen.strategy).toBe("lindorm_id");
+    expect(gen.namespace).toBe("user");
+  });
+
+  it("should stage a lindorm_id namespace with a custom length", () => {
+    class TestMsg {
+      @Generated("lindorm_id", { namespace: "u", length: 32 })
+      id!: string;
+    }
+
+    const metadata = (TestMsg as any)[Symbol.metadata];
+    const gen = metadata.generated[0];
+    expect(gen.namespace).toBe("u");
+    expect(gen.length).toBe(32);
+  });
+
+  it("should default namespace to null", () => {
+    class TestMsg {
+      @Generated("lindorm_id")
+      id!: string;
+    }
+
+    const metadata = (TestMsg as any)[Symbol.metadata];
+    expect(metadata.generated[0].namespace).toBeNull();
+  });
+
   it("should stage a custom generator function with null strategy", () => {
     const fn = () => "x";
 

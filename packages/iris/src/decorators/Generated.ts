@@ -1,3 +1,4 @@
+import type { RandomIdOptions } from "@lindorm/random";
 import type { MetaGeneratedStrategy } from "../internal/message/types/types.js";
 import { stageGenerated } from "../internal/message/metadata/stage-metadata.js";
 import type { GeneratedDecoratorOptions } from "../types/decorator-options.js";
@@ -8,14 +9,18 @@ type GeneratedDecorator = (
 ) => void;
 
 export function Generated(): GeneratedDecorator;
+export function Generated(generator: () => unknown): GeneratedDecorator;
+export function Generated(
+  strategy: "lindorm_id",
+  options?: RandomIdOptions,
+): GeneratedDecorator;
 export function Generated(
   strategy: MetaGeneratedStrategy,
   options?: GeneratedDecoratorOptions,
 ): GeneratedDecorator;
-export function Generated(generator: () => unknown): GeneratedDecorator;
 export function Generated(
   strategyOrGenerator?: MetaGeneratedStrategy | (() => unknown),
-  options: GeneratedDecoratorOptions = {},
+  options: GeneratedDecoratorOptions & { namespace?: string } = {},
 ): GeneratedDecorator {
   const generator =
     typeof strategyOrGenerator === "function" ? strategyOrGenerator : null;
@@ -31,6 +36,7 @@ export function Generated(
       length: options.length ?? null,
       max: options.max ?? null,
       min: options.min ?? null,
+      namespace: options.namespace ?? null,
     });
   };
 }

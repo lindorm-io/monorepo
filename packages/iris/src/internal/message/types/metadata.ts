@@ -46,6 +46,7 @@ export type MetaGenerated = {
   length: number | null;
   max: number | null;
   min: number | null;
+  namespace: string | null;
   strategy: MetaGeneratedStrategy | null;
 };
 
