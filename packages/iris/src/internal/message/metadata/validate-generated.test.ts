@@ -52,6 +52,30 @@ describe("validateGenerated", () => {
     );
   });
 
+  it("should let @Generated determine the type for a role-marker field", () => {
+    const fields = [
+      makeField({ key: "id", decorator: "IdentifierField", type: "string" }),
+    ];
+    const generated = [makeGenerated({ key: "id", strategy: "uuid" })];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
+    expect(fields[0].type).toBe("uuid"); // inferred from the strategy, overriding the marker default
+  });
+
+  it("should let @CorrelationField pair with @Generated('uuid')", () => {
+    const fields = [
+      makeField({
+        key: "correlationId",
+        decorator: "CorrelationField",
+        type: "string",
+      }),
+    ];
+    const generated = [makeGenerated({ key: "correlationId", strategy: "uuid" })];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
+    expect(fields[0].type).toBe("uuid");
+  });
+
   it("should throw on strategy/type mismatch (date strategy on string field)", () => {
     const fields = [makeField({ key: "ts", type: "string" })];
     const generated = [makeGenerated({ key: "ts", strategy: "date" })];
