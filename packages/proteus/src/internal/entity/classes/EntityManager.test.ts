@@ -124,6 +124,25 @@ class EMVersioned {
   name!: string;
 }
 
+@Entity({ name: "EMVersionedLid" })
+class EMVersionedLid {
+  @PrimaryKey()
+  @Field("uuid")
+  @Generated("uuid")
+  id!: string;
+
+  @VersionKeyField() @Generated("lindorm_id", { namespace: "ver" }) versionId!: string;
+
+  @VersionStartDateField()
+  startAt!: Date;
+
+  @VersionEndDateField()
+  endAt!: Date | null;
+
+  @Field("string")
+  name!: string;
+}
+
 const makeOrderManager = () => new EntityManager({ target: EMOrder, driver: "postgres" });
 
 describe("EntityManager", () => {
@@ -471,6 +490,14 @@ describe("EntityManager", () => {
       expect(() => manager.versionCopy({}, entity)).toThrow(
         "versionCopy requires @VersionStartDate decorator",
       );
+    });
+
+    test("should regenerate the version key using its @Generated strategy, not a uuid", () => {
+      const manager = new EntityManager({ target: EMVersionedLid, driver: "postgres" });
+      const entity = manager.create({ name: "Test" } as any);
+      const copy = manager.versionCopy({ endAt: new Date("2024-06-01") } as any, entity);
+      // lindorm_id version key must be regenerated in its own format, not a uuid
+      expect((copy as any).versionId).toMatch(/^ver_[A-Za-z0-9]{24}$/);
     });
   });
 

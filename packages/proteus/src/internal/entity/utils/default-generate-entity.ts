@@ -6,7 +6,7 @@ import { EntityManagerError } from "../errors/EntityManagerError.js";
 import type { MetaGenerated } from "../types/metadata.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
-const generate = (config: MetaGenerated): any => {
+export const generateValue = (config: MetaGenerated): any => {
   if (config.generator) {
     return config.generator();
   }
@@ -58,7 +58,7 @@ export const defaultGenerateEntity = <E extends IEntity>(
   for (const config of metadata.generated) {
     if (entity[config.key] != null) continue;
     if (config.strategy === "increment" || config.strategy === "identity") continue;
-    (entity as any)[config.key] = generate(config);
+    (entity as any)[config.key] = generateValue(config);
   }
 
   // A primary key with no value AND no generator cannot be satisfied — natural keys
