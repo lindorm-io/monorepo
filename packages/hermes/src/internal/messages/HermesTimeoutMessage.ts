@@ -19,7 +19,7 @@ import type { AggregateIdentifier } from "../../types/aggregate-identifier.js";
 @Message({ name: "timeout" })
 export class HermesTimeoutMessage implements IMessage {
   @IdentifierField()
-  @Generated("uuid")
+  @Generated("lindorm_id", { namespace: "tmo" })
   public id!: string;
 
   @MandatoryField()

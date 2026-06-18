@@ -5,7 +5,7 @@ import type { ClassLike, Constructor, Dict } from "@lindorm/types";
 import EventEmitter from "events";
 import { ms } from "@lindorm/date";
 import { LindormError } from "@lindorm/errors";
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import { HermesViewEntity } from "../entities/HermesViewEntity.js";
 import { ChecksumError, HandlerNotRegisteredError } from "../errors/index.js";
 import type { IHermes } from "../interfaces/IHermes.js";
@@ -227,7 +227,7 @@ export class Hermes implements IHermes {
     }
 
     const aggregate: AggregateIdentifier = {
-      id: options.id || randomUUID(),
+      id: options.id || randomId({ namespace: "agg" }),
       name: commandHandler.aggregate.name,
       namespace: commandHandler.aggregate.namespace,
     };
@@ -236,7 +236,7 @@ export class Hermes implements IHermes {
     const { data: dtoData } = extractDto(command);
     const { correlationId, delay, meta = {} } = options;
 
-    const id = randomUUID();
+    const id = randomId({ namespace: "cmd" });
 
     const message = this.commandQueue.create({
       id,

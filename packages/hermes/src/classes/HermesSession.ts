@@ -2,7 +2,7 @@ import type { IIrisWorkerQueue } from "@lindorm/iris";
 import type { ILogger } from "@lindorm/logger";
 import type { ClassLike, Constructor, Dict } from "@lindorm/types";
 import { LindormError } from "@lindorm/errors";
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import { HandlerNotRegisteredError } from "../errors/index.js";
 import type { IHermesSession } from "../interfaces/IHermesSession.js";
 import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
@@ -70,7 +70,7 @@ export class HermesSession implements IHermesSession {
     }
 
     const aggregate: AggregateIdentifier = {
-      id: options.id || randomUUID(),
+      id: options.id || randomId({ namespace: "agg" }),
       name: commandHandler.aggregate.name,
       namespace: commandHandler.aggregate.namespace,
     };
@@ -79,7 +79,7 @@ export class HermesSession implements IHermesSession {
     const { data: dtoData } = extractDto(command);
     const { correlationId, delay, meta = {} } = options;
 
-    const id = randomUUID();
+    const id = randomId({ namespace: "cmd" });
 
     const message = this.commandQueue.create({
       id,
