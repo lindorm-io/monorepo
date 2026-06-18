@@ -3,29 +3,27 @@ import {
   Entity,
   ExpiryDateField,
   Field,
-  Generated,
-  Index,
+  Max,
   Namespace,
-  PrimaryKeyField,
-  Unique,
+  PrimaryKey,
 } from "@lindorm/proteus";
 
 @Namespace("hermes")
-@Unique<typeof CausationRecord>(["ownerId", "ownerName", "causationId"])
 @Entity({ name: "causation" })
 export class CausationRecord {
-  @PrimaryKeyField()
-  @Generated("lindorm_id", { namespace: "cau" })
-  public id!: string;
-
+  @PrimaryKey()
   @Field("string")
-  @Index()
+  @Max(128)
   public ownerId: string = "";
 
+  @PrimaryKey()
   @Field("string")
+  @Max(128)
   public ownerName: string = "";
 
+  @PrimaryKey()
   @Field("string")
+  @Max(64)
   public causationId: string = "";
 
   @ExpiryDateField()

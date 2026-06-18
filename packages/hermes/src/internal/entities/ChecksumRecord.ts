@@ -3,19 +3,20 @@ import {
   CreateDateField,
   Entity,
   Field,
-  Generated,
   Index,
+  Max,
   Namespace,
-  PrimaryKeyField,
+  PrimaryKey,
 } from "@lindorm/proteus";
 
 @Namespace("hermes")
 @AppendOnly()
 @Entity({ name: "checksum" })
 export class ChecksumRecord {
-  @PrimaryKeyField()
-  @Generated("lindorm_id", { namespace: "chk" })
-  public id!: string;
+  @PrimaryKey()
+  @Field("string")
+  @Max(64)
+  public eventId: string = "";
 
   @Field("string")
   @Index()
@@ -26,10 +27,6 @@ export class ChecksumRecord {
 
   @Field("string")
   public aggregateNamespace: string = "";
-
-  @Field("string")
-  @Index()
-  public eventId: string = "";
 
   @Field("string")
   public checksum: string = "";

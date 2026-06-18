@@ -2,30 +2,28 @@ import {
   CreateDateField,
   Entity,
   Field,
-  Generated,
-  Index,
+  Max,
   Namespace,
   Nullable,
-  PrimaryKeyField,
-  Unique,
+  PrimaryKey,
 } from "@lindorm/proteus";
 
 @Namespace("hermes")
-@Unique<typeof EncryptionRecord>(["aggregateId", "aggregateName", "aggregateNamespace"])
 @Entity({ name: "encryption" })
 export class EncryptionRecord {
-  @PrimaryKeyField()
-  @Generated("lindorm_id", { namespace: "enc" })
-  public id!: string;
-
+  @PrimaryKey()
   @Field("string")
-  @Index()
+  @Max(128)
   public aggregateId: string = "";
 
+  @PrimaryKey()
   @Field("string")
+  @Max(128)
   public aggregateName: string = "";
 
+  @PrimaryKey()
   @Field("string")
+  @Max(64)
   public aggregateNamespace: string = "";
 
   @Field("string")
