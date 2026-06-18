@@ -9,7 +9,7 @@ describe("composePylonHandshakeContext", () => {
     const ctx = composePylonHandshakeContext(io, socket);
 
     expect(ctx.handshakeId).toEqual(expect.any(String));
-    expect(ctx.handshakeId).toHaveLength(36);
+    expect(ctx.handshakeId).toMatch(/^hsk_[A-Za-z0-9]{16}$/);
     expect(ctx.io.app).toBe(io);
     expect(ctx.io.socket).toBe(socket);
   });

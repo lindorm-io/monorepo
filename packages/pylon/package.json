@@ -65,6 +65,7 @@
     "@lindorm/kryptos": "^0.9.0",
     "@lindorm/middleware": "^0.2.1",
     "@lindorm/pkce": "^0.3.0",
+    "@lindorm/random": "^0.3.2",
     "@lindorm/scanner": "^0.5.4",
     "@lindorm/sha": "^0.6.0",
     "@lindorm/types": "^0.8.0",

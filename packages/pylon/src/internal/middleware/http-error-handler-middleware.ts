@@ -1,6 +1,7 @@
 import { ServerError } from "@lindorm/errors";
 import { isNumber, isString } from "@lindorm/is";
-import { randomBytes, randomUUID } from "crypto";
+import { randomId } from "@lindorm/random";
+import { randomBytes } from "crypto";
 import { RedirectError } from "../../errors/index.js";
 import type { PylonHttpMiddleware } from "../../types/index.js";
 
@@ -39,7 +40,7 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
             version: ctx.state?.app?.version,
           },
           error: {
-            id: err.id ?? randomUUID(),
+            id: err.id ?? randomId({ namespace: "err", length: 16 }),
             name: err.name ?? "Error",
             title: err.title ?? "Error",
             message: err.message,
@@ -60,7 +61,7 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
           version: ctx.state?.app?.version,
         },
         error: {
-          id: err.id ?? randomUUID(),
+          id: err.id ?? randomId({ namespace: "err", length: 16 }),
           name: "UnexpectedException",
           title: "Unexpected Exception",
           message: "An unexpected exception occurred while handling thrown error",

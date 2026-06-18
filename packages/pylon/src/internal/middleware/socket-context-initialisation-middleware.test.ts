@@ -87,7 +87,7 @@ describe("createSocketContextInitialisationMiddleware", () => {
     await createSocketContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(ctx.state.metadata.correlationId).toEqual(expect.any(String));
-    expect(ctx.state.metadata.correlationId).toHaveLength(36); // UUID format
+    expect(ctx.state.metadata.correlationId).toMatch(/^cor_[A-Za-z0-9]{16}$/);
   });
 
   test("should extract correlationId from envelope header (priority over data)", async () => {

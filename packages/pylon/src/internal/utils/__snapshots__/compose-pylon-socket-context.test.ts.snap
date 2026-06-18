@@ -13,7 +13,7 @@ exports[`composePylonSocketContextBase > should compose context with a single ob
   },
   "envelope": false,
   "event": "test:event",
-  "eventId": "00000000-0000-0000-0000-000000000000",
+  "eventId": "sev_0000000000000000",
   "header": {},
   "io": {
     "app": {
@@ -35,7 +35,7 @@ exports[`composePylonSocketContextBase > should handle empty args array 1`] = `
   "data": [],
   "envelope": false,
   "event": "empty:event",
-  "eventId": "00000000-0000-0000-0000-000000000000",
+  "eventId": "sev_0000000000000000",
   "header": {},
   "io": {
     "app": {
@@ -65,7 +65,7 @@ exports[`composePylonSocketContextBase > should pass args through when multiple 
   ],
   "envelope": false,
   "event": "multi:args",
-  "eventId": "00000000-0000-0000-0000-000000000000",
+  "eventId": "sev_0000000000000000",
   "header": {},
   "io": {
     "app": {
@@ -99,7 +99,7 @@ exports[`composePylonSocketContextBase > should pass args through when single ar
   ],
   "envelope": false,
   "event": "array:event",
-  "eventId": "00000000-0000-0000-0000-000000000000",
+  "eventId": "sev_0000000000000000",
   "header": {},
   "io": {
     "app": {
@@ -125,7 +125,7 @@ exports[`composePylonSocketContextBase > should pass args through when single ar
   ],
   "envelope": false,
   "event": "string:event",
-  "eventId": "00000000-0000-0000-0000-000000000000",
+  "eventId": "sev_0000000000000000",
   "header": {},
   "io": {
     "app": {
