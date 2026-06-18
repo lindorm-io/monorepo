@@ -57,6 +57,47 @@ describe("IdentifierField", () => {
     expect(msg.id).toMatch(/^[A-Za-z0-9]{24}$/);
   });
 
+  it("should prefix the id with a lindorm_id namespace", () => {
+    @Message({ name: "IdentifierNamespacedMsg" })
+    class IdentifierNamespacedMsg {
+      @IdentifierField()
+      @Generated("lindorm_id", { namespace: "user" })
+      id!: string;
+    }
+
+    const manager = new MessageManager({ target: IdentifierNamespacedMsg });
+    const msg = manager.create();
+
+    expect(msg.id).toMatch(/^user_[A-Za-z0-9]{24}$/);
+  });
+
+  it("should combine a namespace with a custom length", () => {
+    @Message({ name: "IdentifierNamespacedLengthMsg" })
+    class IdentifierNamespacedLengthMsg {
+      @IdentifierField()
+      @Generated("lindorm_id", { namespace: "u", length: 32 })
+      id!: string;
+    }
+
+    const manager = new MessageManager({ target: IdentifierNamespacedLengthMsg });
+    const msg = manager.create();
+
+    expect(msg.id).toMatch(/^u_[A-Za-z0-9]{32}$/);
+  });
+
+  it("should propagate randomId's throw for an invalid namespace", () => {
+    @Message({ name: "IdentifierBadNamespaceMsg" })
+    class IdentifierBadNamespaceMsg {
+      @IdentifierField()
+      @Generated("lindorm_id", { namespace: "bad_ns" })
+      id!: string;
+    }
+
+    const manager = new MessageManager({ target: IdentifierBadNamespaceMsg });
+
+    expect(() => manager.create()).toThrow();
+  });
+
   it("should NOT auto-fill the id without @Generated()", () => {
     @Message({ name: "IdentifierBareMsg" })
     class IdentifierBareMsg {

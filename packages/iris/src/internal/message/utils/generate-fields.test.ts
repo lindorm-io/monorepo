@@ -4,11 +4,14 @@ import { describe, expect, it } from "vitest";
 
 const mockMetadata = (
   generated: Array<
-    Omit<MetaGenerated, "generator"> & { generator?: MetaGenerated["generator"] }
+    Omit<MetaGenerated, "generator" | "namespace"> & {
+      generator?: MetaGenerated["generator"];
+      namespace?: MetaGenerated["namespace"];
+    }
   >,
 ): MessageMetadata =>
   ({
-    generated: generated.map((gen) => ({ generator: null, ...gen })),
+    generated: generated.map((gen) => ({ generator: null, namespace: null, ...gen })),
   }) as unknown as MessageMetadata;
 
 describe("generateFields", () => {
@@ -154,6 +157,58 @@ describe("generateFields", () => {
       generateFields(metadata, message);
 
       expect(message.id).toMatch(/^[A-Za-z0-9]{32}$/);
+    });
+
+    it("should prefix the id with the namespace", () => {
+      const metadata = mockMetadata([
+        {
+          key: "id",
+          strategy: "lindorm_id",
+          length: null,
+          min: null,
+          max: null,
+          namespace: "user",
+        },
+      ]);
+      const message: Record<string, unknown> = { id: null };
+
+      generateFields(metadata, message);
+
+      expect(message.id).toMatch(/^user_[A-Za-z0-9]{24}$/);
+    });
+
+    it("should combine namespace with a custom length", () => {
+      const metadata = mockMetadata([
+        {
+          key: "id",
+          strategy: "lindorm_id",
+          length: 32,
+          min: null,
+          max: null,
+          namespace: "u",
+        },
+      ]);
+      const message: Record<string, unknown> = { id: null };
+
+      generateFields(metadata, message);
+
+      expect(message.id).toMatch(/^u_[A-Za-z0-9]{32}$/);
+    });
+
+    it("should propagate randomId's throw for an invalid namespace", () => {
+      const metadata = mockMetadata([
+        {
+          key: "id",
+          strategy: "lindorm_id",
+          length: null,
+          min: null,
+          max: null,
+          namespace: "bad_ns",
+        },
+      ]);
+      const message: Record<string, unknown> = { id: null };
+
+      expect(() => generateFields(metadata, message)).toThrow();
     });
   });
 

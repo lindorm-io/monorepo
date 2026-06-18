@@ -78,6 +78,7 @@ exports[`inheritance with real decorators > collectAll for generated > should sn
     "length": 8,
     "max": null,
     "min": null,
+    "namespace": null,
     "strategy": "string",
   },
   {
@@ -86,6 +87,7 @@ exports[`inheritance with real decorators > collectAll for generated > should sn
     "length": null,
     "max": null,
     "min": null,
+    "namespace": null,
     "strategy": "lindorm_id",
   },
   {
@@ -94,6 +96,7 @@ exports[`inheritance with real decorators > collectAll for generated > should sn
     "length": null,
     "max": null,
     "min": null,
+    "namespace": null,
     "strategy": "date",
   },
   {
@@ -102,6 +105,7 @@ exports[`inheritance with real decorators > collectAll for generated > should sn
     "length": null,
     "max": null,
     "min": null,
+    "namespace": null,
     "strategy": "uuid",
   },
 ]
