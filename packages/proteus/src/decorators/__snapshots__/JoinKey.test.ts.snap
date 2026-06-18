@@ -43,6 +43,7 @@ exports[`JoinKey > should match snapshot for auto join key 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,
@@ -164,6 +165,7 @@ exports[`JoinKey > should match snapshot for explicit join key 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

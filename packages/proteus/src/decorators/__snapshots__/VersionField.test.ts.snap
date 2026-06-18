@@ -67,6 +67,7 @@ exports[`VersionField > should register version field metadata 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

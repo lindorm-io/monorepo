@@ -1,3 +1,4 @@
+import { randomId } from "@lindorm/random";
 import type { Constructor, DeepPartial } from "@lindorm/types";
 import { randomBytes, randomInt, randomUUID } from "crypto";
 import type { IEntity } from "../../../interfaces/index.js";
@@ -5,6 +6,10 @@ import type { MetaGenerated } from "../types/metadata.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 const generate = (config: MetaGenerated): any => {
+  if (config.generator) {
+    return config.generator();
+  }
+
   switch (config.strategy) {
     case "date":
       return new Date();
@@ -24,6 +29,9 @@ const generate = (config: MetaGenerated): any => {
       const max = config.max ?? 999999;
       return randomInt(min, max);
     }
+
+    case "lindorm_id":
+      return config.length ? randomId({ length: config.length as 24 }) : randomId();
 
     case "string": {
       const length = config.length ?? 32;

@@ -53,9 +53,9 @@ export const stageFieldModifier = (
 
 export const stageGenerated = (
   metadata: DecoratorMetadataObject,
-  gen: MetaGenerated,
+  gen: Omit<MetaGenerated, "generator"> & { generator?: (() => unknown) | null },
 ): void => {
-  ensureOwnArray(metadata, "generated").push(gen);
+  ensureOwnArray(metadata, "generated").push({ generator: null, ...gen });
 };
 
 export const stageIndex = (metadata: DecoratorMetadataObject, idx: MetaIndex): void => {

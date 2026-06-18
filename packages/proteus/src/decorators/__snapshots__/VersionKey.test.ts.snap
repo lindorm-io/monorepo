@@ -67,6 +67,7 @@ exports[`VersionKey > should register class-level version keys 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,
@@ -74,6 +75,7 @@ exports[`VersionKey > should register class-level version keys 1`] = `
       "strategy": "uuid",
     },
     {
+      "generator": null,
       "key": "versionId",
       "length": null,
       "max": null,
@@ -170,6 +172,7 @@ exports[`VersionKey > should register field-level version key 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,
@@ -177,6 +180,7 @@ exports[`VersionKey > should register field-level version key 1`] = `
       "strategy": "uuid",
     },
     {
+      "generator": null,
       "key": "versionId",
       "length": null,
       "max": null,

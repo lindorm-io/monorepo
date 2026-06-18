@@ -1,0 +1,8 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateColumnDDL (SQLite) > lindorm_id field emits TEXT with no DEFAULT 1`] = `
+[
+  ""id" TEXT NOT NULL",
+  ""token" TEXT NOT NULL",
+]
+`;

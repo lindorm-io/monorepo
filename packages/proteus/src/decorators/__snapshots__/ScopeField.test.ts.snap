@@ -75,6 +75,7 @@ exports[`ScopeField > should register scope field with correct metadata 1`] = `
   ],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

@@ -43,6 +43,7 @@ exports[`Deferrable > should match snapshot for DEFERRABLE INITIALLY DEFERRED 1`
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,
@@ -140,6 +141,7 @@ exports[`Deferrable > should match snapshot for DEFERRABLE INITIALLY IMMEDIATE 1
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

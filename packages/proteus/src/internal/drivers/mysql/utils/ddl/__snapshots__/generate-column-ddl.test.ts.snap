@@ -66,6 +66,13 @@ exports[`generateColumnDDL (MySQL) > integer field with numeric DEFAULT 1`] = `
 ]
 `;
 
+exports[`generateColumnDDL (MySQL) > lindorm_id field emits VARCHAR(64) with no DEFAULT 1`] = `
+[
+  "\`id\` CHAR(36) NOT NULL",
+  "\`token\` VARCHAR(64) NOT NULL",
+]
+`;
+
 exports[`generateColumnDDL (MySQL) > nullable field omits NOT NULL 1`] = `
 [
   "\`id\` CHAR(36) NOT NULL",

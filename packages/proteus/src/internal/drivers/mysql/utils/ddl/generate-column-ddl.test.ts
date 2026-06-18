@@ -44,6 +44,17 @@ class MysColUuidGenerated {
   title!: string;
 }
 
+/** lindorm_id generated field (VARCHAR(64), no DEFAULT) */
+@Entity({ name: "MysColLindormId" })
+class MysColLindormId {
+  @PrimaryKeyField()
+  id!: string;
+
+  @Field("varchar")
+  @Generated("lindorm_id")
+  token!: string;
+}
+
 /** Integer primary key (AUTO_INCREMENT) */
 @Entity({ name: "MysColIntIdentity" })
 class MysColIntIdentity {
@@ -173,6 +184,15 @@ describe("generateColumnDDL (MySQL)", () => {
   test("integer field with AUTO_INCREMENT", () => {
     const meta = getEntityMetadata(MysColIntIdentity);
     expect(generateColumnDDL(meta, "mys_col_int_identity")).toMatchSnapshot();
+  });
+
+  test("lindorm_id field emits VARCHAR(64) with no DEFAULT", () => {
+    const meta = getEntityMetadata(MysColLindormId);
+    const cols = generateColumnDDL(meta, "mys_col_lindorm_id");
+    const tokenCol = cols.find((c) => c.includes("`token`"));
+    expect(tokenCol).toContain("VARCHAR(64)");
+    expect(tokenCol).not.toContain("DEFAULT");
+    expect(cols).toMatchSnapshot();
   });
 
   test("string field with string DEFAULT", () => {

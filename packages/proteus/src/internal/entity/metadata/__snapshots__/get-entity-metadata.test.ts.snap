@@ -91,6 +91,7 @@ exports[`getEntityMetadata > should return full entity metadata snapshot 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,
