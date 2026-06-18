@@ -132,16 +132,18 @@ export type MetaGeneratedStrategy =
   | "float"
   | "identity"
   | "integer"
+  | "lindorm_id"
   | "string"
   | "uuid"
   | "increment";
 
 export type MetaGenerated = {
   key: string;
+  generator: (() => unknown) | null;
   length: number | null;
   max: number | null;
   min: number | null;
-  strategy: MetaGeneratedStrategy;
+  strategy: MetaGeneratedStrategy | null;
 };
 
 export type MetaHookDecorator =

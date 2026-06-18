@@ -56,6 +56,7 @@
     "@lindorm/errors": "^0.3.0",
     "@lindorm/is": "^0.2.3",
     "@lindorm/json-kit": "^0.6.3",
+    "@lindorm/random": "^0.3.2",
     "@lindorm/retry": "^0.3.3",
     "@lindorm/scanner": "^0.5.4",
     "@lindorm/sha": "^0.6.0",

@@ -71,6 +71,7 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

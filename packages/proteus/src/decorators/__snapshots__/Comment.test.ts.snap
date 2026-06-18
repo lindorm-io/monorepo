@@ -67,6 +67,7 @@ exports[`Comment > should match snapshot 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

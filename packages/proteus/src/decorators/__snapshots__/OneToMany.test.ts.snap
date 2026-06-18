@@ -67,6 +67,7 @@ exports[`OneToMany > should register parent entity with OneToMany metadata 1`] =
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

@@ -16,6 +16,20 @@ export const inferGeneratedTypes = (
         debug: { target: targetName, field: generate.key },
       });
     }
+    // Function generators are client-side; a column type cannot be inferred from
+    // a function, so an explicit @Field type is required.
+    if (generate.generator) {
+      if (field.type === null) {
+        throw new EntityMetadataError("Invalid @Generated strategy for field type", {
+          code: "invalid_generated_strategy",
+          title: "Invalid Generated Strategy",
+          details: `@Generated(() => ...) on "${field.key}" requires an explicit @Field type — a column type cannot be inferred from a function generator.`,
+          debug: { target: targetName, field: field.key },
+        });
+      }
+      continue;
+    }
+
     if (field.type === null) {
       switch (generate.strategy) {
         case "identity":
@@ -28,6 +42,10 @@ export const inferGeneratedTypes = (
           break;
         case "uuid":
           field.type = "uuid";
+          break;
+        case "lindorm_id":
+          field.type = "varchar";
+          field.max = 64;
           break;
         case "string":
           field.type = "string";
@@ -121,6 +139,28 @@ export const inferGeneratedTypes = (
                 type: field.type,
               },
             });
+          }
+          break;
+        case "lindorm_id":
+          if (
+            field.type !== "varchar" &&
+            field.type !== "string" &&
+            field.type !== "text"
+          ) {
+            throw new EntityMetadataError("Invalid @Generated strategy for field type", {
+              code: "invalid_generated_strategy",
+              title: "Invalid Generated Strategy",
+              details: `@Generated("lindorm_id") on "${field.key}" requires a varchar, string, or text field type, but "${field.type}" was declared — change the @Field type or the @Generated strategy.`,
+              debug: {
+                target: targetName,
+                field: field.key,
+                strategy: "lindorm_id",
+                type: field.type,
+              },
+            });
+          }
+          if (field.type === "varchar" && field.max === null) {
+            field.max = 64;
           }
           break;
       }

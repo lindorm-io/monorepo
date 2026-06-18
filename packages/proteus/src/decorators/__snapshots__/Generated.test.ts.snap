@@ -43,6 +43,7 @@ exports[`Generated > should register increment generation strategy 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,
@@ -110,6 +111,7 @@ exports[`Generated > should register uuid generation strategy 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

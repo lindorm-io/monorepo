@@ -75,6 +75,7 @@ exports[`DeleteDateField > should match snapshot 1`] = `
   ],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

@@ -6,12 +6,15 @@ import { describe, expect, test } from "vitest";
 const makeGenerated = (
   key: string,
   strategy: MetaGenerated["strategy"],
+  overrides: Partial<MetaGenerated> = {},
 ): MetaGenerated => ({
   key,
   strategy,
+  generator: null,
   length: null,
   max: null,
   min: null,
+  ...overrides,
 });
 
 describe("inferGeneratedTypes", () => {
@@ -104,5 +107,65 @@ describe("inferGeneratedTypes", () => {
     expect(() =>
       inferGeneratedTypes("Test", [makeGenerated("createdAt", "date")], fields),
     ).not.toThrow();
+  });
+
+  test("should infer varchar(64) for lindorm_id strategy when type is null", () => {
+    const fields = [makeField("id", { type: null })];
+    inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields);
+    expect(fields[0].type).toBe("varchar");
+    expect(fields[0].max).toBe(64);
+  });
+
+  test("should accept lindorm_id on an existing varchar field and default max to 64", () => {
+    const fields = [makeField("id", { type: "varchar", max: null })];
+    inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields);
+    expect(fields[0].type).toBe("varchar");
+    expect(fields[0].max).toBe(64);
+  });
+
+  test("should not override an existing varchar max for lindorm_id", () => {
+    const fields = [makeField("id", { type: "varchar", max: 128 })];
+    inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields);
+    expect(fields[0].max).toBe(128);
+  });
+
+  test("should accept lindorm_id on string and text field types", () => {
+    const stringFields = [makeField("a", { type: "string" })];
+    const textFields = [makeField("b", { type: "text" })];
+    expect(() =>
+      inferGeneratedTypes("Test", [makeGenerated("a", "lindorm_id")], stringFields),
+    ).not.toThrow();
+    expect(() =>
+      inferGeneratedTypes("Test", [makeGenerated("b", "lindorm_id")], textFields),
+    ).not.toThrow();
+  });
+
+  test("should throw when lindorm_id strategy used on incompatible field type", () => {
+    const fields = [makeField("id", { type: "integer" })];
+    expect(() =>
+      inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields),
+    ).toThrow("Invalid @Generated strategy for field type");
+  });
+
+  test("should skip type inference for function generators with an explicit type", () => {
+    const fields = [makeField("id", { type: "varchar", max: 32 })];
+    inferGeneratedTypes(
+      "Test",
+      [makeGenerated("id", null, { generator: () => "x" })],
+      fields,
+    );
+    expect(fields[0].type).toBe("varchar");
+    expect(fields[0].max).toBe(32);
+  });
+
+  test("should throw when a function generator has no explicit field type", () => {
+    const fields = [makeField("id", { type: null })];
+    expect(() =>
+      inferGeneratedTypes(
+        "Test",
+        [makeGenerated("id", null, { generator: () => "x" })],
+        fields,
+      ),
+    ).toThrow("Invalid @Generated strategy for field type");
   });
 });

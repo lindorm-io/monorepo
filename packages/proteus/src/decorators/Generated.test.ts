@@ -62,6 +62,36 @@ class GeneratedDate {
   generatedAt!: Date;
 }
 
+@Entity({ name: "GeneratedLindormIdDefault" })
+class GeneratedLindormIdDefault {
+  @PrimaryKeyField()
+  id!: string;
+
+  @Field("varchar")
+  @Generated()
+  token!: string;
+}
+
+@Entity({ name: "GeneratedLindormIdExplicit" })
+class GeneratedLindormIdExplicit {
+  @PrimaryKeyField()
+  id!: string;
+
+  @Field("varchar")
+  @Generated("lindorm_id")
+  token!: string;
+}
+
+@Entity({ name: "GeneratedFunction" })
+class GeneratedFunction {
+  @PrimaryKeyField()
+  id!: string;
+
+  @Field("string")
+  @Generated(() => "static-value")
+  slug!: string;
+}
+
 describe("Generated", () => {
   test("should register uuid generation strategy", () => {
     expect(getEntityMetadata(GeneratedUuid)).toMatchSnapshot();
@@ -97,5 +127,47 @@ describe("Generated", () => {
     const meta = getEntityMetadata(GeneratedDate);
     const gen = meta.generated.find((g) => g.key === "generatedAt");
     expect(gen!.strategy).toBe("date");
+  });
+
+  test("should default to lindorm_id strategy and infer varchar(64)", () => {
+    const meta = getEntityMetadata(GeneratedLindormIdDefault);
+    const gen = meta.generated.find((g) => g.key === "token");
+    expect(gen!.strategy).toBe("lindorm_id");
+    expect(gen!.generator).toBeNull();
+
+    const field = meta.fields.find((f) => f.key === "token");
+    expect(field!.type).toBe("varchar");
+    expect(field!.max).toBe(64);
+  });
+
+  test("should register explicit lindorm_id strategy on varchar field", () => {
+    const meta = getEntityMetadata(GeneratedLindormIdExplicit);
+    const gen = meta.generated.find((g) => g.key === "token");
+    expect(gen!.strategy).toBe("lindorm_id");
+
+    const field = meta.fields.find((f) => f.key === "token");
+    expect(field!.type).toBe("varchar");
+    expect(field!.max).toBe(64);
+  });
+
+  test("should register a function generator with null strategy", () => {
+    const meta = getEntityMetadata(GeneratedFunction);
+    const gen = meta.generated.find((g) => g.key === "slug");
+    expect(gen!.strategy).toBeNull();
+    expect(typeof gen!.generator).toBe("function");
+  });
+
+  test("should throw when a function generator has no matching @Field", () => {
+    expect(() => {
+      @Entity({ name: "GeneratedFunctionNoType" })
+      class GeneratedFunctionNoType {
+        @PrimaryKeyField()
+        id!: string;
+
+        @Generated(() => "x")
+        slug!: string;
+      }
+      getEntityMetadata(GeneratedFunctionNoType);
+    }).toThrow("Generated field not found");
   });
 });
