@@ -66,10 +66,11 @@ describe("VersionKeyField", () => {
     expect(getEntityMetadata(VersionKeyFieldUuid)).toMatchSnapshot();
   });
 
-  test("bare marker (no type, no @Generated) throws a missing-field-type metadata error", () => {
-    expect(() => getEntityMetadata(VersionKeyFieldMarkerOnly)).toThrow(
-      "Field has no resolvable type",
-    );
+  test("bare marker (no type, no @Generated) falls back to VARCHAR(255)", () => {
+    const meta = getEntityMetadata(VersionKeyFieldMarkerOnly);
+    const field = meta.fields.find((f) => f.key === "versionId");
+    expect(field?.type).toBe("varchar");
+    expect(field?.max).toBe(255);
   });
 
   test("typed marker alone (no @Generated) stages a primary key + version key + field but NO generated entry", () => {

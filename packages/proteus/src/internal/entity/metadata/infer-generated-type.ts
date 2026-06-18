@@ -205,17 +205,15 @@ export const inferGeneratedTypes = (
     }
   }
 
-  // Any field still without a type had no @Field type and no @Generated to infer
-  // one (e.g. a bare `@PrimaryKeyField()`). Surface a clear metadata error instead
-  // of letting a null column type leak into DDL/sync.
+  // Any field still without a type had no @Field type and no @Generated to infer one
+  // (e.g. a bare `@PrimaryKeyField()` whose value is assigned imperatively, like the
+  // hermes EventRecord id). Fall back to a bounded VARCHAR so it is a valid primary key
+  // on every driver — an unbounded TEXT cannot be a MySQL key. A paired @Generated, when
+  // present, has already set a tighter type above, so this only affects the bare case.
   for (const field of fields) {
     if (field.type === null) {
-      throw new EntityMetadataError("Field has no resolvable type", {
-        code: "missing_field_type",
-        title: "Missing Field Type",
-        details: `Property "${field.key}" on "${targetName}" has no column type — give it an explicit type (e.g. @Field("uuid") or @PrimaryKeyField("uuid")) or add a @Generated(...) so the type can be inferred.`,
-        debug: { target: targetName, field: field.key },
-      });
+      field.type = "varchar";
+      field.max = 255;
     }
   }
 };
