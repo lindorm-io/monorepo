@@ -151,10 +151,13 @@ describe("EntityManager", () => {
       ).toThrow();
     });
 
-    test("should throw when increment entity has no getNextIncrement on non-postgres driver", () => {
+    test("should not throw when increment entity has no getNextIncrement on non-postgres driver", () => {
+      // Every driver assigns @Generated("increment") values itself (native
+      // AUTO_INCREMENT/IDENTITY for SQL, executor-level counters for
+      // memory/redis/mongo), so getNextIncrement is never required.
       expect(
         () => new EntityManager({ target: EMWithIncrement, driver: "mongo" }),
-      ).toThrow("no getNextIncrement function was provided");
+      ).not.toThrow();
     });
 
     test("should not throw when increment entity has no getNextIncrement on postgres driver", () => {

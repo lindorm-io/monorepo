@@ -43,7 +43,6 @@ export class EntityManager<
   private readonly meta: ProteusHookMeta | undefined;
   private readonly getNextIncrement: GetIncrementFn | undefined;
   private readonly logger: ILogger | undefined;
-  private readonly driver: string;
   private readonly versionManager: VersionManager<E>;
 
   public readonly target: Constructor<E>;
@@ -72,7 +71,6 @@ export class EntityManager<
 
     this.target = options.target;
     this.meta = options.meta;
-    this.driver = options.driver;
     this.getNextIncrement = options.getNextIncrement;
     this.logger = options.logger?.child(["EntityManager"]);
 
@@ -94,28 +92,10 @@ export class EntityManager<
 
     this.versionManager = new VersionManager<E>(this.metadata);
 
-    const incrementFields = this.metadata.generated.filter(
-      (g) => g.strategy === "increment",
-    );
-
-    if (
-      incrementFields.length > 0 &&
-      !this.getNextIncrement &&
-      this.driver !== "postgres"
-    ) {
-      throw new EntityManagerError(
-        `Entity "${this.target.name}" has @Generated fields with strategy "increment" but no getNextIncrement function was provided`,
-        {
-          code: "missing_increment_function",
-          title: "Missing Increment Function",
-          details: `Entity "${this.target.name}" has @Generated("increment") fields but the driver is not postgres; provide a getNextIncrement function to the EntityManager.`,
-          data: {
-            target: this.target.name,
-            incrementFields: incrementFields.map((g) => g.key),
-          },
-        },
-      );
-    }
+    // @Generated("increment") values are assigned by the driver itself: native
+    // AUTO_INCREMENT/IDENTITY for SQL drivers and executor-level counters for
+    // memory/redis/mongo. The optional getNextIncrement hook still takes
+    // precedence when supplied, but it is not required for any driver.
 
     this.updateStrategy = this.calculateUpdateStrategy();
   }

@@ -12,6 +12,7 @@ const fieldWithMinMax = [
   "float",
   "string",
   "text",
+  "varchar",
 ];
 
 const schemaCache = new WeakMap<Constructor<any>, z.ZodObject<any>>();
@@ -37,6 +38,7 @@ const getValidator = (field: MetaField): z.ZodType | undefined => {
 
     case "string":
     case "text":
+    case "varchar":
     case "xml":
     case "time":
     case "interval":
@@ -82,6 +84,15 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
   const metadata = getEntityMetadata(target);
   const validators: Record<string, z.ZodType> = {};
 
+  // DB-assigned identity columns (@Generated("increment"|"identity")) are still
+  // null when validation runs on insert — the driver assigns the value after
+  // validation — so they must validate as optional.
+  const dbAssignedKeys = new Set(
+    metadata.generated
+      .filter((g) => g.strategy === "increment" || g.strategy === "identity")
+      .map((g) => g.key),
+  );
+
   // Group embedded fields by parentKey for nested validation
   const embeddedGroups = new Map<string, Array<MetaField>>();
 
@@ -125,7 +136,7 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
         field.max,
       );
     }
-    if (field.nullable) {
+    if (field.nullable || dbAssignedKeys.has(field.key)) {
       validator = validator.nullish();
     }
     validators[field.key] = validator;
