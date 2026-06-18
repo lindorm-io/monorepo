@@ -1,6 +1,7 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { AfterSave } from "./AfterSave.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test, vi } from "vitest";
 
@@ -9,8 +10,7 @@ const afterSaveCallback = vi.fn();
 @Entity({ name: "AfterSaveDecorated" })
 @AfterSave(afterSaveCallback)
 class AfterSaveDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("AfterSave", () => {

@@ -5,6 +5,7 @@ import { JoinKey } from "../../../../../decorators/JoinKey.js";
 import { ManyToOne } from "../../../../../decorators/ManyToOne.js";
 import { OneToMany } from "../../../../../decorators/OneToMany.js";
 import { OneToOne } from "../../../../../decorators/OneToOne.js";
+import { Generated } from "../../../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
 import { generateFkDDL } from "./generate-fk-ddl.js";
@@ -16,8 +17,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "MysFkDefaultChild" })
 class MysFkDefaultChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ManyToOne(() => MysFkDefaultParent, "children")
   parent!: MysFkDefaultParent | null;
@@ -27,8 +27,7 @@ class MysFkDefaultChild {
 
 @Entity({ name: "MysFkDefaultParent" })
 class MysFkDefaultParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -39,8 +38,7 @@ class MysFkDefaultParent {
 
 @Entity({ name: "MysFkCascadeChild" })
 class MysFkCascadeChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Cascade({ onDestroy: "cascade", onUpdate: "cascade" })
   @ManyToOne(() => MysFkCascadeParent, "children")
@@ -51,8 +49,7 @@ class MysFkCascadeChild {
 
 @Entity({ name: "MysFkCascadeParent" })
 class MysFkCascadeParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => MysFkCascadeChild, "parent")
   children!: MysFkCascadeChild[];
@@ -60,8 +57,7 @@ class MysFkCascadeParent {
 
 @Entity({ name: "MysFkSetNullChild" })
 class MysFkSetNullChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Cascade({ onDestroy: "set_null", onUpdate: "set_null" })
   @ManyToOne(() => MysFkSetNullParent, "children")
@@ -72,8 +68,7 @@ class MysFkSetNullChild {
 
 @Entity({ name: "MysFkSetNullParent" })
 class MysFkSetNullParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => MysFkSetNullChild, "parent")
   children!: MysFkSetNullChild[];
@@ -81,8 +76,7 @@ class MysFkSetNullParent {
 
 @Entity({ name: "MysFkOneToOneProfile" })
 class MysFkOneToOneProfile {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToOne(() => MysFkOneToOneUser, "profile")
   user!: MysFkOneToOneUser | null;
@@ -90,8 +84,7 @@ class MysFkOneToOneProfile {
 
 @Entity({ name: "MysFkOneToOneUser" })
 class MysFkOneToOneUser {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @JoinKey()
   @OneToOne(() => MysFkOneToOneProfile, "user")
@@ -102,8 +95,7 @@ class MysFkOneToOneUser {
 
 @Entity({ name: "MysFkNoRelations" })
 class MysFkNoRelations {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

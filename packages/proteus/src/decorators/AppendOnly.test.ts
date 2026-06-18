@@ -1,20 +1,19 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { AppendOnly } from "./AppendOnly.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @AppendOnly()
 @Entity({ name: "AppendOnlyDecorated" })
 class AppendOnlyDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Entity({ name: "NotAppendOnly" })
 class NotAppendOnly {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("AppendOnly", () => {

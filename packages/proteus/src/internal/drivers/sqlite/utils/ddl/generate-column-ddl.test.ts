@@ -13,8 +13,7 @@ import { describe, expect, test } from "vitest";
 /** lindorm_id generated field — SQLite has no VARCHAR(n), so it maps to TEXT */
 @Entity({ name: "LiteColLindormId" })
 class LiteColLindormId {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("varchar")
   @Generated("lindorm_id")

@@ -2,13 +2,13 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity.js";
 import { Encrypted } from "./Encrypted.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "EncryptedNoOptions" })
 class EncryptedNoOptions {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Encrypted()
   @Field("string")
@@ -17,8 +17,7 @@ class EncryptedNoOptions {
 
 @Entity({ name: "EncryptedWithPurpose" })
 class EncryptedWithPurpose {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Encrypted({ purpose: "pii" })
   @Field("string")
@@ -27,8 +26,7 @@ class EncryptedWithPurpose {
 
 @Entity({ name: "EncryptedMultiplePredicateKeys" })
 class EncryptedMultiplePredicateKeys {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Encrypted({ id: "key-id", purpose: "pii" })
   @Field("string")
@@ -37,8 +35,7 @@ class EncryptedMultiplePredicateKeys {
 
 @Entity({ name: "EncryptedUndefinedValues" })
 class EncryptedUndefinedValues {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Encrypted({ purpose: undefined })
   @Field("string")
@@ -47,8 +44,7 @@ class EncryptedUndefinedValues {
 
 @Entity({ name: "EncryptedNotDecorated" })
 class EncryptedNotDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

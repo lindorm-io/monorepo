@@ -2,13 +2,13 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Index } from "./Index_.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "IndexFieldLevel" })
 class IndexFieldLevel {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Index()
   @Field("string")
@@ -17,8 +17,7 @@ class IndexFieldLevel {
 
 @Entity({ name: "IndexFieldLevelDesc" })
 class IndexFieldLevelDesc {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Index("desc", { name: "idx_email_desc" })
   @Field("string")
@@ -27,8 +26,7 @@ class IndexFieldLevelDesc {
 
 @Entity({ name: "IndexFieldLevelOptions" })
 class IndexFieldLevelOptions {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Index({ unique: true, name: "idx_unique_slug" })
   @Field("string")
@@ -38,8 +36,7 @@ class IndexFieldLevelOptions {
 @Entity({ name: "IndexClassLevelArray" })
 @Index<typeof IndexClassLevelArray>(["email", "name"])
 class IndexClassLevelArray {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -51,8 +48,7 @@ class IndexClassLevelArray {
 @Entity({ name: "IndexClassLevelDict" })
 @Index<typeof IndexClassLevelDict>({ email: "asc", name: "desc" })
 class IndexClassLevelDict {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

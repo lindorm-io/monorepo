@@ -6,6 +6,7 @@ import { JoinKey } from "../../../../../decorators/JoinKey.js";
 import { ManyToOne } from "../../../../../decorators/ManyToOne.js";
 import { OneToMany } from "../../../../../decorators/OneToMany.js";
 import { OneToOne } from "../../../../../decorators/OneToOne.js";
+import { Generated } from "../../../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
 import { generateFkDDL } from "./generate-fk-ddl.js";
@@ -21,8 +22,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "FkDefaultChild" })
 class FkDefaultChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ManyToOne(() => FkDefaultParent, "children")
   parent!: FkDefaultParent | null;
@@ -32,8 +32,7 @@ class FkDefaultChild {
 
 @Entity({ name: "FkDefaultParent" })
 class FkDefaultParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -46,8 +45,7 @@ class FkDefaultParent {
 
 @Entity({ name: "FkCascadeChild" })
 class FkCascadeChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Cascade({ onDestroy: "cascade", onUpdate: "cascade" })
   @ManyToOne(() => FkCascadeParent, "children")
@@ -58,8 +56,7 @@ class FkCascadeChild {
 
 @Entity({ name: "FkCascadeParent" })
 class FkCascadeParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => FkCascadeChild, "parent")
   children!: FkCascadeChild[];
@@ -69,8 +66,7 @@ class FkCascadeParent {
 
 @Entity({ name: "FkRestrictChild" })
 class FkRestrictChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Cascade({ onDestroy: "restrict" })
   @ManyToOne(() => FkRestrictParent, "children")
@@ -81,8 +77,7 @@ class FkRestrictChild {
 
 @Entity({ name: "FkRestrictParent" })
 class FkRestrictParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => FkRestrictChild, "parent")
   children!: FkRestrictChild[];
@@ -92,8 +87,7 @@ class FkRestrictParent {
 
 @Entity({ name: "FkOneToOneProfile" })
 class FkOneToOneProfile {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToOne(() => FkOneToOneUser, "profile")
   user!: FkOneToOneUser | null;
@@ -101,8 +95,7 @@ class FkOneToOneProfile {
 
 @Entity({ name: "FkOneToOneUser" })
 class FkOneToOneUser {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @JoinKey()
   @OneToOne(() => FkOneToOneProfile, "user")
@@ -115,8 +108,7 @@ class FkOneToOneUser {
 
 @Entity({ name: "FkNoRelations" })
 class FkNoRelations {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -126,8 +118,7 @@ class FkNoRelations {
 
 @Entity({ name: "FkSetNullChild" })
 class FkSetNullChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Cascade({ onDestroy: "set_null", onUpdate: "set_null" })
   @ManyToOne(() => FkSetNullParent, "children")
@@ -138,8 +129,7 @@ class FkSetNullChild {
 
 @Entity({ name: "FkSetNullParent" })
 class FkSetNullParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => FkSetNullChild, "parent")
   children!: FkSetNullChild[];
@@ -149,8 +139,7 @@ class FkSetNullParent {
 
 @Entity({ name: "FkSetDefaultChild" })
 class FkSetDefaultChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Cascade({ onDestroy: "set_default", onUpdate: "set_default" })
   @ManyToOne(() => FkSetDefaultParent, "children")
@@ -161,8 +150,7 @@ class FkSetDefaultChild {
 
 @Entity({ name: "FkSetDefaultParent" })
 class FkSetDefaultParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => FkSetDefaultChild, "parent")
   children!: FkSetDefaultChild[];
@@ -172,8 +160,7 @@ class FkSetDefaultParent {
 
 @Entity({ name: "FkDeferrableImmediateChild" })
 class FkDeferrableImmediateChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Deferrable()
   @ManyToOne(() => FkDeferrableImmediateParent, "children")
@@ -184,8 +171,7 @@ class FkDeferrableImmediateChild {
 
 @Entity({ name: "FkDeferrableImmediateParent" })
 class FkDeferrableImmediateParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => FkDeferrableImmediateChild, "parent")
   children!: FkDeferrableImmediateChild[];
@@ -195,8 +181,7 @@ class FkDeferrableImmediateParent {
 
 @Entity({ name: "FkDeferrableDeferredChild" })
 class FkDeferrableDeferredChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Deferrable({ initially: true })
   @ManyToOne(() => FkDeferrableDeferredParent, "children")
@@ -207,8 +192,7 @@ class FkDeferrableDeferredChild {
 
 @Entity({ name: "FkDeferrableDeferredParent" })
 class FkDeferrableDeferredParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => FkDeferrableDeferredChild, "parent")
   children!: FkDeferrableDeferredChild[];
@@ -218,8 +202,7 @@ class FkDeferrableDeferredParent {
 
 @Entity({ name: "FkInverseOnly" })
 class FkInverseOnly {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => FkDefaultChild, "parent")
   items!: FkDefaultChild[];

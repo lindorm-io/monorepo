@@ -4,6 +4,7 @@ import { DiscriminatorValue } from "../../../decorators/DiscriminatorValue.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Field } from "../../../decorators/Field.js";
 import { Inheritance } from "../../../decorators/Inheritance.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { resolveInheritanceHierarchies } from "./resolve-inheritance.js";
 import { beforeAll, describe, expect, test } from "vitest";
@@ -16,8 +17,7 @@ import { beforeAll, describe, expect, test } from "vitest";
 @Discriminator("type")
 @Inheritance("single-table")
 class RIVehicle {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   type!: string;
@@ -39,8 +39,7 @@ class RITruck extends RIVehicle {}
 @Discriminator("kind")
 @Inheritance("single-table")
 class RINumericRoot {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("integer")
   kind!: number;
@@ -62,8 +61,7 @@ class RINumericTypeTwo extends RINumericRoot {}
 @Discriminator("type")
 @Inheritance("single-table")
 class RILevelA {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   type!: string;
@@ -85,8 +83,7 @@ class RILevelC extends RILevelB {}
 @Discriminator("type")
 @Inheritance("single-table")
 class RIAbstractRoot {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   type!: string;
@@ -107,8 +104,7 @@ class RIConcreteLeaf extends RIAbstractMiddle {}
 @Discriminator("type")
 @Inheritance("joined")
 class RIJoinedRoot {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   type!: string;
@@ -130,8 +126,7 @@ class RIJoinedChildB extends RIJoinedRoot {}
 @Discriminator("type")
 @Inheritance("joined")
 class RIJoinedDepthRoot {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   type!: string;
@@ -153,8 +148,7 @@ class RIJoinedDepthLeaf extends RIJoinedDepthIntermediate {}
 @Discriminator("type")
 @Inheritance("single-table")
 class RIDuplicateRoot {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   type!: string;
@@ -399,8 +393,7 @@ describe("resolveInheritanceHierarchies", () => {
       @Entity({ name: "RIInvalidDiscriminator" })
       @Discriminator("type")
       class RIInvalidDiscriminator {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
         type!: string;
       }
 
@@ -415,8 +408,7 @@ describe("resolveInheritanceHierarchies", () => {
       @Entity({ name: "RIOrphanValue" })
       @DiscriminatorValue("orphan")
       class RIOrphanValue {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
       }
 
       expect(() => resolveInheritanceHierarchies([RIOrphanValue] as any[])).toThrow(
@@ -429,8 +421,7 @@ describe("resolveInheritanceHierarchies", () => {
     test("should return empty map when no entities participate in inheritance", () => {
       @Entity({ name: "RIPlain" })
       class RIPlain {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
       }
 
       const result = resolveInheritanceHierarchies([RIPlain] as any[]);

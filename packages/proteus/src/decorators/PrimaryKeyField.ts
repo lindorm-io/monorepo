@@ -2,16 +2,17 @@ import type { NamedDecoratorOptions } from "../internal/entity/types/decorators.
 import type { MetaFieldPrimaryType } from "../internal/entity/types/metadata.js";
 import {
   stageField,
-  stageGenerated,
   stagePrimaryKey,
 } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
- * Shorthand that combines `@Field`, `@PrimaryKey`, and `@Generated` in one decorator.
+ * Marker that combines `@Field` and `@PrimaryKey` in one decorator. It declares the
+ * column type and marks the field as the primary key, but does NOT generate the value —
+ * pair it with `@Generated(...)` to produce values.
  *
- * - `@PrimaryKeyField()` — UUID primary key (default)
- * - `@PrimaryKeyField("integer")` — auto-increment integer primary key
- * - `@PrimaryKeyField("string", { name: "pk" })` — random string PK with custom column name
+ * - `@PrimaryKeyField()` — UUID primary key column (default)
+ * - `@PrimaryKeyField("integer")` — integer primary key column
+ * - `@PrimaryKeyField("string", { name: "pk" })` — string PK column with custom column name
  */
 export const PrimaryKeyField =
   (type: MetaFieldPrimaryType = "uuid", options: NamedDecoratorOptions = {}) =>
@@ -42,11 +43,4 @@ export const PrimaryKeyField =
       type,
     });
     stagePrimaryKey(context.metadata, { key });
-    stageGenerated(context.metadata, {
-      key,
-      strategy: type === "integer" ? "increment" : type === "uuid" ? "uuid" : "string",
-      length: null,
-      max: null,
-      min: null,
-    });
   };

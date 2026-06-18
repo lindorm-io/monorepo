@@ -5,14 +5,14 @@ import { JoinKey } from "../../../decorators/JoinKey.js";
 import { ManyToOne } from "../../../decorators/ManyToOne.js";
 import { OneToMany } from "../../../decorators/OneToMany.js";
 import { OneToOne } from "../../../decorators/OneToOne.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { VersionField } from "../../../decorators/VersionField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CreateRawOwner" })
 class CreateRawOwner {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -23,8 +23,7 @@ class CreateRawOwner {
 
 @Entity({ name: "CreateRawItem" })
 class CreateRawItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -40,8 +39,7 @@ class CreateRawItem {
 
 @Entity({ name: "CreateRawWithOneToOne" })
 class CreateRawWithOneToOne {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -55,8 +53,7 @@ class CreateRawWithOneToOne {
 
 @Entity({ name: "CreateRawRelated" })
 class CreateRawRelated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   value!: string;

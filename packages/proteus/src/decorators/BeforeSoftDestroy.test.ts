@@ -1,6 +1,7 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { BeforeSoftDestroy } from "./BeforeSoftDestroy.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test, vi } from "vitest";
 
@@ -9,8 +10,7 @@ const beforeSoftDestroyCallback = vi.fn();
 @Entity({ name: "BeforeSoftDestroyDecorated" })
 @BeforeSoftDestroy(beforeSoftDestroyCallback)
 class BeforeSoftDestroyDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 const multiHookCb1 = vi.fn();
@@ -20,8 +20,7 @@ const multiHookCb2 = vi.fn();
 @BeforeSoftDestroy(multiHookCb1)
 @BeforeSoftDestroy(multiHookCb2)
 class BeforeSoftDestroyMultiHook {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("BeforeSoftDestroy", () => {

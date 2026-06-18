@@ -1,6 +1,7 @@
 import { VersionManager } from "./VersionManager.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { VersionField } from "../../../decorators/VersionField.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
@@ -8,8 +9,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VersionManagerVersioned" })
 class VersionManagerVersioned {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -20,8 +20,7 @@ class VersionManagerVersioned {
 
 @Entity({ name: "VersionManagerUnversioned" })
 class VersionManagerUnversioned {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

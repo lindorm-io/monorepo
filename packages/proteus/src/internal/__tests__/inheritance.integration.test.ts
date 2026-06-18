@@ -16,6 +16,7 @@ import {
   DiscriminatorValue,
   Entity,
   Field,
+  Generated,
   Inheritance,
   Nullable,
   PrimaryKeyField,
@@ -36,8 +37,7 @@ const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
 @Discriminator("type")
 @Entity({ name: "InhVehicle" })
 class InhVehicle {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   type!: string;
@@ -72,8 +72,7 @@ class InhTruck extends InhVehicle {
 @Discriminator("kind")
 @Entity({ name: "InhAnimal" })
 class InhAnimal {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   kind!: string;

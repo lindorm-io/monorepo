@@ -1,6 +1,7 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { BeforeDestroy } from "./BeforeDestroy.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test, vi } from "vitest";
 
@@ -9,8 +10,7 @@ const beforeDestroyCallback = vi.fn();
 @Entity({ name: "BeforeDestroyDecorated" })
 @BeforeDestroy(beforeDestroyCallback)
 class BeforeDestroyDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("BeforeDestroy", () => {

@@ -1,6 +1,7 @@
 import { verifyReadonly } from "./verify-readonly.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { ReadOnly } from "../../../decorators/ReadOnly.js";
 import { VersionField } from "../../../decorators/VersionField.js";
@@ -8,8 +9,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VerifyReadonlyEntity" })
 class VerifyReadonlyEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;

@@ -1,14 +1,14 @@
 import { SCOPE_FILTER_NAME } from "../internal/entity/metadata/auto-filters.js";
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { ScopeField } from "./ScopeField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ScopeFieldDecorated" })
 class ScopeFieldDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ScopeField()
   scope!: string;
@@ -16,8 +16,7 @@ class ScopeFieldDecorated {
 
 @Entity({ name: "ScopeFieldOrdered" })
 class ScopeFieldOrdered {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ScopeField({ order: 2 })
   tenantId!: string;
@@ -31,8 +30,7 @@ class ScopeFieldOrdered {
 
 @Entity({ name: "ScopeFieldMultiple" })
 class ScopeFieldMultiple {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ScopeField()
   tenantId!: string;
@@ -117,8 +115,7 @@ describe("ScopeField — auto-generated __scope filter", () => {
   test("should produce empty scopeKeys when no scope fields exist", () => {
     @Entity({ name: "NoScopeEntity" })
     class NoScopeEntity {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
     }
 
     const meta = getEntityMetadata(NoScopeEntity);

@@ -1,14 +1,14 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { Unique } from "./Unique.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "UniqueFieldLevel" })
 class UniqueFieldLevel {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Unique()
   @Field("string")
@@ -17,8 +17,7 @@ class UniqueFieldLevel {
 
 @Entity({ name: "UniqueFieldLevelNamed" })
 class UniqueFieldLevelNamed {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Unique({ name: "uq_username" })
   @Field("string")
@@ -28,8 +27,7 @@ class UniqueFieldLevelNamed {
 @Entity({ name: "UniqueClassLevel" })
 @Unique<typeof UniqueClassLevel>(["email", "tenantId"])
 class UniqueClassLevel {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   email!: string;
@@ -41,8 +39,7 @@ class UniqueClassLevel {
 @Entity({ name: "UniqueClassLevelNamed" })
 @Unique<typeof UniqueClassLevelNamed>(["email", "tenantId"], { name: "uq_tenant_email" })
 class UniqueClassLevelNamed {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   email!: string;

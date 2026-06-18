@@ -14,8 +14,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "FkRefUuid" })
 class FkRefUuid {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -39,8 +38,7 @@ enum Status {
 
 @Entity({ name: "FkRefEnum" })
 class FkRefEnum {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Enum(Status)
   @Field("enum")

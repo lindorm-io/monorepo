@@ -28,8 +28,7 @@ const emHookCb = vi.fn();
 
 @Entity({ name: "EMOrderItem" })
 class EMOrderItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -61,8 +60,7 @@ class EMOrderItem {
 @AfterDestroy(emHookCb)
 @AfterLoad(emHookCb)
 class EMOrder {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -108,8 +106,7 @@ class EMVersioned {
   @Generated("uuid")
   id!: string;
 
-  @VersionKeyField()
-  versionId!: string;
+  @VersionKeyField() @Generated("uuid") versionId!: string;
 
   @CreateDateField()
   createdAt!: Date;

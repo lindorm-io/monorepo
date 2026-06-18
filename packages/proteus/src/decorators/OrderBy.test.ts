@@ -4,13 +4,13 @@ import { Field } from "./Field.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { OneToMany } from "./OneToMany.js";
 import { OrderBy } from "./OrderBy.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "OrderByTeam" })
 class OrderByTeam {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -25,8 +25,7 @@ class OrderByTeam {
 
 @Entity({ name: "OrderByPlayer" })
 class OrderByPlayer {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -39,8 +38,7 @@ class OrderByPlayer {
 
 @Entity({ name: "OrderByCoach" })
 class OrderByCoach {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

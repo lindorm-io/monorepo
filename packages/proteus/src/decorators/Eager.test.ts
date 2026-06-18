@@ -5,13 +5,13 @@ import { Field } from "./Field.js";
 import { JoinKey } from "./JoinKey.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { OneToMany } from "./OneToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "EagerAuthor" })
 class EagerAuthor {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -28,8 +28,7 @@ class EagerAuthor {
 
 @Entity({ name: "EagerPost" })
 class EagerPost {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;
@@ -44,8 +43,7 @@ class EagerPost {
 
 @Entity({ name: "EagerSinglePost" })
 class EagerSinglePost {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;
@@ -60,8 +58,7 @@ class EagerSinglePost {
 
 @Entity({ name: "EagerMultiplePost" })
 class EagerMultiplePost {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;

@@ -19,8 +19,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "MysColParent" })
 class MysColParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -47,8 +46,7 @@ class MysColUuidGenerated {
 /** lindorm_id generated field (VARCHAR(64), no DEFAULT) */
 @Entity({ name: "MysColLindormId" })
 class MysColLindormId {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("varchar")
   @Generated("lindorm_id")
@@ -70,8 +68,7 @@ class MysColIntIdentity {
 /** Field with string default */
 @Entity({ name: "MysColStringDefault" })
 class MysColStringDefault {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Default("unknown")
   @Field("string")
@@ -81,8 +78,7 @@ class MysColStringDefault {
 /** Field with numeric default */
 @Entity({ name: "MysColNumericDefault" })
 class MysColNumericDefault {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Default(0)
   @Field("integer")
@@ -92,8 +88,7 @@ class MysColNumericDefault {
 /** Field with boolean default */
 @Entity({ name: "MysColBoolDefault" })
 class MysColBoolDefault {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Default(false)
   @Field("boolean")
@@ -103,8 +98,7 @@ class MysColBoolDefault {
 /** Nullable field */
 @Entity({ name: "MysColNullable" })
 class MysColNullable {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Nullable()
   @Field("string")
@@ -114,8 +108,7 @@ class MysColNullable {
 /** Entity with FK relation (ManyToOne owning side) */
 @Entity({ name: "MysColFkChild" })
 class MysColFkChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;
@@ -129,8 +122,7 @@ class MysColFkChild {
 /** Entity where FK field is explicitly declared */
 @Entity({ name: "MysColFkChildExplicit" })
 class MysColFkChildExplicit {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Nullable()
   @Field("uuid")

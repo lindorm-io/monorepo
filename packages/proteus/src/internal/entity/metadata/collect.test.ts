@@ -2,6 +2,7 @@ import { collectAll, collectOwn, collectSingular } from "./collect.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Field } from "../../../decorators/Field.js";
 import { Namespace } from "../../../decorators/Namespace.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { VersionField } from "../../../decorators/VersionField.js";
 import { describe, expect, test } from "vitest";
@@ -12,8 +13,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CollectOwnTest" })
 class CollectOwnTest {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -21,16 +21,14 @@ class CollectOwnTest {
 
 @Entity({ name: "CollectOwnMinimal" })
 class CollectOwnMinimal {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 class PlainClass {}
 
 @Entity({ name: "CollectAllOwn" })
 class CollectAllOwn {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -38,8 +36,7 @@ class CollectAllOwn {
 
 @Entity({ name: "CollectAllParent" })
 class CollectAllParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Entity({ name: "CollectAllChild" })
@@ -53,16 +50,14 @@ class PlainCollectAll {}
 @Namespace("test")
 @Entity({ name: "CollectSingularEntity" })
 class CollectSingularEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 class PlainCollectSingular {}
 
 @Entity({ name: "CollectSingularParentInherit" })
 class CollectSingularParentInherit {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -77,8 +72,7 @@ class CollectSingularChildInherit extends CollectSingularParentInherit {
 // Three-level inheritance chain
 @Entity({ name: "CollectGrandparent" })
 class CollectGrandparent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   gpField!: string;
