@@ -69,4 +69,17 @@ describe("randomId", () => {
       expect(body).not.toContain("_");
     }
   });
+
+  test("should accept an alphanumeric namespace", () => {
+    expect(() => randomId("client")).not.toThrow();
+    expect(() => randomId("Client0")).not.toThrow();
+    expect(() => randomId({ namespace: "user1" })).not.toThrow();
+  });
+
+  test.each(["my_ns", "ns-1", "ns space", "ns.x", "", "ns!"])(
+    "should reject a non-alphanumeric namespace: %j",
+    (namespace) => {
+      expect(() => randomId(namespace)).toThrow(/Invalid randomId namespace/);
+    },
+  );
 });
