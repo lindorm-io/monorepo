@@ -26,6 +26,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 @Message({ name: "TestEvent" })
 class TestEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @TimestampField()
@@ -43,6 +44,7 @@ class TestEvent {
 @Message({ name: "NullableEvent" })
 class NullableEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Nullable()
@@ -58,6 +60,7 @@ class NullableEvent {
 @Message({ name: "GeneratedEvent" })
 class GeneratedEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Generated("uuid")
@@ -92,6 +95,7 @@ const onValidateSpy = vi.fn();
 @Message({ name: "HookedEvent" })
 class HookedEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Field("string")
@@ -102,6 +106,7 @@ class HookedEvent {
 @Message({ name: "TransformEvent" })
 class TransformEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Transform({
@@ -116,6 +121,7 @@ class TransformEvent {
 @Message({ name: "SchemaEvent" })
 class SchemaEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Schema(z.string().min(1))
@@ -127,6 +133,7 @@ class SchemaEvent {
 @Message({ name: "MinMaxEvent" })
 class MinMaxEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Min(0)
@@ -143,6 +150,7 @@ class MinMaxEvent {
 @AbstractMessage()
 class BaseEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @TimestampField()
@@ -164,6 +172,7 @@ class ChildEvent extends BaseEvent {
 @Message({ name: "EnumEvent" })
 class EnumEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Enum({ A: "a", B: "b", C: "c" })
@@ -175,6 +184,7 @@ class EnumEvent {
 @Message({ name: "ComplexEvent" })
 class ComplexEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Field("array")
@@ -192,6 +202,7 @@ class ComplexEvent {
 @Message({ name: "NullableDefaultEvent" })
 class NullableDefaultEvent {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Nullable()
@@ -679,6 +690,7 @@ describe("MessageManager", () => {
       @Message({ name: "AsyncHookEvent" })
       class AsyncHookEvent {
         @IdentifierField()
+        @Generated()
         id!: string;
 
         @Field("string")
@@ -707,6 +719,7 @@ describe("MessageManager", () => {
       @Message({ name: "OrderedHookEvent" })
       class OrderedHookEvent {
         @IdentifierField()
+        @Generated()
         id!: string;
       }
 
@@ -729,6 +742,7 @@ describe("MessageManager", () => {
       @AbstractMessage()
       class ParentMsg {
         @IdentifierField()
+        @Generated()
         id!: string;
       }
 
@@ -760,6 +774,7 @@ describe("MessageManager", () => {
       @Message({ name: "PubHookEvent" })
       class PubHookEvent {
         @IdentifierField()
+        @Generated()
         id!: string;
       }
 
@@ -788,6 +803,7 @@ describe("MessageManager", () => {
       @Message({ name: "ConsumeHookEvent" })
       class ConsumeHookEvent {
         @IdentifierField()
+        @Generated()
         id!: string;
       }
 
@@ -892,6 +908,7 @@ describe("MessageManager", () => {
       @Message({ name: "AsyncErrorEvent" })
       class AsyncErrorEvent {
         @IdentifierField()
+        @Generated()
         id!: string;
       }
 
@@ -908,6 +925,7 @@ describe("MessageManager", () => {
       @Message({ name: "BadTransformEvent" })
       class BadTransformEvent {
         @IdentifierField()
+        @Generated()
         id!: string;
 
         @Transform({

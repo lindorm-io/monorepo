@@ -26,7 +26,7 @@ exports[`buildMessageMetadata > abstract + concrete hierarchy > should inherit f
     },
     {
       "decorator": "IdentifierField",
-      "default": "[function]",
+      "default": null,
       "enum": null,
       "key": "id",
       "max": null,
@@ -51,7 +51,16 @@ exports[`buildMessageMetadata > abstract + concrete hierarchy > should inherit f
       "type": "string",
     },
   ],
-  "generated": [],
+  "generated": [
+    {
+      "generator": null,
+      "key": "id",
+      "length": null,
+      "max": null,
+      "min": null,
+      "strategy": "lindorm_id",
+    },
+  ],
   "headers": [],
   "hooks": [
     {
@@ -114,7 +123,7 @@ exports[`buildMessageMetadata > multi-level hierarchy > should merge metadata fr
     },
     {
       "decorator": "IdentifierField",
-      "default": "[function]",
+      "default": null,
       "enum": null,
       "key": "id",
       "max": null,
@@ -126,7 +135,16 @@ exports[`buildMessageMetadata > multi-level hierarchy > should merge metadata fr
       "type": "string",
     },
   ],
-  "generated": [],
+  "generated": [
+    {
+      "generator": null,
+      "key": "id",
+      "length": null,
+      "max": null,
+      "min": null,
+      "strategy": "lindorm_id",
+    },
+  ],
   "headers": [],
   "hooks": [],
   "message": {
@@ -154,7 +172,7 @@ exports[`buildMessageMetadata > single class with mixed decorators > should reso
   "fields": [
     {
       "decorator": "IdentifierField",
-      "default": "[function]",
+      "default": null,
       "enum": null,
       "key": "id",
       "max": null,
@@ -167,7 +185,7 @@ exports[`buildMessageMetadata > single class with mixed decorators > should reso
     },
     {
       "decorator": "TimestampField",
-      "default": "[function]",
+      "default": null,
       "enum": null,
       "key": "createdAt",
       "max": null,
@@ -232,6 +250,22 @@ exports[`buildMessageMetadata > single class with mixed decorators > should reso
     },
   ],
   "generated": [
+    {
+      "generator": null,
+      "key": "id",
+      "length": null,
+      "max": null,
+      "min": null,
+      "strategy": "lindorm_id",
+    },
+    {
+      "generator": null,
+      "key": "createdAt",
+      "length": null,
+      "max": null,
+      "min": null,
+      "strategy": "date",
+    },
     {
       "generator": null,
       "key": "correlationId",

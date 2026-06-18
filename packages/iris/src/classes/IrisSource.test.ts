@@ -2,6 +2,7 @@ import { AbstractMessage } from "../decorators/AbstractMessage.js";
 import { Default } from "../decorators/Default.js";
 import { Encrypted } from "../decorators/Encrypted.js";
 import { Field } from "../decorators/Field.js";
+import { Generated } from "../decorators/Generated.js";
 import { IdentifierField } from "../decorators/IdentifierField.js";
 import { Message } from "../decorators/Message.js";
 import { IrisNotSupportedError } from "../errors/IrisNotSupportedError.js";
@@ -18,6 +19,7 @@ import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vite
 @Message({ name: "SourceTestMessage" })
 class SourceTestMessage {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Field("string")
@@ -27,6 +29,7 @@ class SourceTestMessage {
 @Message({ name: "AnotherTestMessage" })
 class AnotherTestMessage {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Default(0)
@@ -38,6 +41,7 @@ class AnotherTestMessage {
 @Message({ name: "EncryptedTestMessage" })
 class EncryptedTestMessage {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Field("string")
@@ -47,6 +51,7 @@ class EncryptedTestMessage {
 @AbstractMessage()
 class BaseMsg {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Field("string")

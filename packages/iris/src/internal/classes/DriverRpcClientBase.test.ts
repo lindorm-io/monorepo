@@ -1,6 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import { Default } from "../../decorators/Default.js";
 import { Field } from "../../decorators/Field.js";
+import { Generated } from "../../decorators/Generated.js";
 import { IdentifierField } from "../../decorators/IdentifierField.js";
 import { Message } from "../../decorators/Message.js";
 import { IrisTimeoutError } from "../../errors/IrisTimeoutError.js";
@@ -20,6 +21,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 @Message({ name: "RpcClientTestRequest" })
 class RpcClientTestRequest {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Field("string")
@@ -29,6 +31,7 @@ class RpcClientTestRequest {
 @Message({ name: "RpcClientTestResponse" })
 class RpcClientTestResponse {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Field("string")

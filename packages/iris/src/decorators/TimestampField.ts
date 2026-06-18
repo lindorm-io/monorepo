@@ -1,12 +1,17 @@
-import { stageField } from "../internal/message/metadata/stage-metadata.js";
+import {
+  stageField,
+  stageGenerated,
+} from "../internal/message/metadata/stage-metadata.js";
 
 export const TimestampField =
   () =>
   (_target: undefined, context: ClassFieldDecoratorContext): void => {
+    const key = String(context.name);
+
     stageField(context.metadata, {
-      key: String(context.name),
+      key,
       decorator: "TimestampField",
-      default: () => new Date(),
+      default: null,
       enum: null,
       max: null,
       min: null,
@@ -15,5 +20,14 @@ export const TimestampField =
       schema: null,
       transform: null,
       type: "date",
+    });
+
+    stageGenerated(context.metadata, {
+      key,
+      generator: null,
+      strategy: "date",
+      length: null,
+      max: null,
+      min: null,
     });
   };
