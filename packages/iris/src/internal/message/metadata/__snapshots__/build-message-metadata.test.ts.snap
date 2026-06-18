@@ -233,6 +233,7 @@ exports[`buildMessageMetadata > single class with mixed decorators > should reso
   ],
   "generated": [
     {
+      "generator": null,
       "key": "correlationId",
       "length": null,
       "max": null,

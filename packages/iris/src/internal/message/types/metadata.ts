@@ -42,10 +42,11 @@ export type MetaHook = {
 
 export type MetaGenerated = {
   key: string;
+  generator: (() => unknown) | null;
   length: number | null;
   max: number | null;
   min: number | null;
-  strategy: MetaGeneratedStrategy;
+  strategy: MetaGeneratedStrategy | null;
 };
 
 export type MetaTopic = {
