@@ -1,5 +1,5 @@
 import type { ILogger } from "@lindorm/logger";
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
 import type { IDeadLetterStore } from "../../interfaces/IrisDeadLetterStore.js";
 import type {
@@ -23,7 +23,7 @@ export class DeadLetterManager {
     topic: string,
     error: Error,
   ): Promise<string> {
-    const id = randomUUID();
+    const id = randomId({ namespace: "dlq", length: 16 });
 
     const entry: DeadLetterEntry = {
       id,
