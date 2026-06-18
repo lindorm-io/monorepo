@@ -133,4 +133,29 @@ describe("validateGenerated", () => {
       "Generated field not found",
     );
   });
+
+  it("should throw when two @Generated entries target the same field", () => {
+    const fields = [makeField({ key: "id", type: "uuid" })];
+    const generated = [
+      makeGenerated({ key: "id", strategy: "uuid" }),
+      makeGenerated({ key: "id", strategy: "uuid" }),
+    ];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).toThrow(
+      "Duplicate @Generated for field",
+    );
+  });
+
+  it("should not throw for a single @Generated on a field", () => {
+    const fields = [makeField({ key: "id", type: "uuid" })];
+    const generated = [makeGenerated({ key: "id", strategy: "uuid" })];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
+  });
+
+  it("should not throw when no @Generated entries are present", () => {
+    const fields = [makeField({ key: "id", type: "uuid" })];
+
+    expect(() => validateGenerated("TestMsg", [], fields)).not.toThrow();
+  });
 });
