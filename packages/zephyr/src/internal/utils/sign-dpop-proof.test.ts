@@ -1,12 +1,16 @@
 import { signDpopProof, toPublicJwk } from "./sign-dpop-proof.js";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("@lindorm/random", () => ({
+  randomId: vi.fn(() => "dpo_0000000000000000"),
+}));
+
 const decodePart = (part: string): Record<string, unknown> =>
   JSON.parse(Buffer.from(part, "base64url").toString("utf-8"));
 
 describe("signDpopProof", () => {
   const FIXED_DATE = new Date("2026-04-11T12:00:00.000Z");
-  const FIXED_JTI = "00000000-0000-4000-8000-000000000000";
+  const FIXED_JTI = "dpo_0000000000000000";
 
   let keyPair: CryptoKeyPair;
   let publicJwk: JsonWebKey;
@@ -22,7 +26,6 @@ describe("signDpopProof", () => {
 
   beforeEach(() => {
     vi.useFakeTimers().setSystemTime(FIXED_DATE);
-    vi.spyOn(crypto, "randomUUID").mockReturnValue(FIXED_JTI);
   });
 
   afterEach(() => {
