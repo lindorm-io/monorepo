@@ -210,11 +210,11 @@ describe("inferGeneratedTypes", () => {
     ).toThrow("Invalid @Generated strategy for field type");
   });
 
-  test("should throw when a field still has a null type and no @Generated to infer it", () => {
+  test("should fall back a null-type field (no @Generated) to VARCHAR(255)", () => {
     const fields = [makeField("id", { type: null })];
-    expect(() => inferGeneratedTypes("Test", [], fields)).toThrow(
-      "Field has no resolvable type",
-    );
+    inferGeneratedTypes("Test", [], fields);
+    expect(fields[0].type).toBe("varchar");
+    expect(fields[0].max).toBe(255);
   });
 
   test("should throw when two @Generated entries target the same field key", () => {
