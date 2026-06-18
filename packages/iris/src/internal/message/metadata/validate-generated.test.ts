@@ -19,6 +19,7 @@ const makeField = (overrides: Partial<MetaField> & { key: string }): MetaField =
 const makeGenerated = (
   overrides: Partial<MetaGenerated> & Pick<MetaGenerated, "key" | "strategy">,
 ): MetaGenerated => ({
+  generator: null,
   length: null,
   max: null,
   min: null,
@@ -95,5 +96,41 @@ describe("validateGenerated", () => {
     const generated = [makeGenerated({ key: "score", strategy: "float" })];
 
     expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
+  });
+
+  it("should pass for lindorm_id strategy on a string field", () => {
+    const fields = [makeField({ key: "id", type: "string" })];
+    const generated = [makeGenerated({ key: "id", strategy: "lindorm_id" })];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
+  });
+
+  it("should throw for lindorm_id strategy on a non-string field", () => {
+    const fields = [makeField({ key: "id", type: "integer" })];
+    const generated = [makeGenerated({ key: "id", strategy: "lindorm_id" })];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).toThrow(
+      "Invalid @Generated strategy for field type",
+    );
+  });
+
+  it("should skip strategy/type matching when a generator is set", () => {
+    const fields = [makeField({ key: "id", type: "integer" })];
+    const generated = [
+      makeGenerated({ key: "id", strategy: null, generator: () => "anything" }),
+    ];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
+  });
+
+  it("should still throw when a generator field has no matching field", () => {
+    const fields = [makeField({ key: "name" })];
+    const generated = [
+      makeGenerated({ key: "missing", strategy: null, generator: () => "x" }),
+    ];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).toThrow(
+      "Generated field not found",
+    );
   });
 });

@@ -3,6 +3,7 @@
 exports[`Generated > should stage generated with date strategy 1`] = `
 [
   {
+    "generator": null,
     "key": "createdAt",
     "length": null,
     "max": null,
@@ -15,6 +16,7 @@ exports[`Generated > should stage generated with date strategy 1`] = `
 exports[`Generated > should stage generated with integer strategy and range 1`] = `
 [
   {
+    "generator": null,
     "key": "sequence",
     "length": null,
     "max": 1000,
@@ -27,6 +29,7 @@ exports[`Generated > should stage generated with integer strategy and range 1`] 
 exports[`Generated > should stage generated with string strategy and length 1`] = `
 [
   {
+    "generator": null,
     "key": "code",
     "length": 12,
     "max": null,
@@ -39,6 +42,7 @@ exports[`Generated > should stage generated with string strategy and length 1`] 
 exports[`Generated > should stage generated with uuid strategy 1`] = `
 [
   {
+    "generator": null,
     "key": "id",
     "length": null,
     "max": null,
