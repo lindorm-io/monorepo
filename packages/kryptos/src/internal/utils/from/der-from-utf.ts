@@ -1,10 +1,8 @@
 import { KryptosError } from "../../../errors/index.js";
 import type { KryptosBuffer, KryptosFromString } from "../../../types/index.js";
-import { getOctSize } from "../oct/get-size.js";
+import { validateOctSecret } from "../oct/validate-secret.js";
 
 const allocate = (options: KryptosFromString): Buffer => {
-  const size = getOctSize(options);
-
   if (!options.privateKey) {
     throw new KryptosError("Missing private key", {
       code: "missing_oct_private_key",
@@ -13,10 +11,11 @@ const allocate = (options: KryptosFromString): Buffer => {
     });
   }
 
-  const buffer = Buffer.alloc(size);
-  buffer.write(options.privateKey);
+  const secret = Buffer.from(options.privateKey, "utf8");
 
-  return buffer;
+  validateOctSecret(options, secret);
+
+  return secret;
 };
 
 export const createDerFromUtf = (options: KryptosFromString): KryptosBuffer => {

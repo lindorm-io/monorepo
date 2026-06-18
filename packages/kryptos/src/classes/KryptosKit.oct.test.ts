@@ -97,6 +97,20 @@ describe("KryptosKit (oct)", () => {
       expect(kryptos.toJWK()).toMatchSnapshot();
       expect(kryptos.export("b64")).toMatchSnapshot();
     });
+
+    test("derive", () => {
+      const kryptos = KryptosKit.from.derive({
+        id: "key_derive_test",
+        algorithm: "A256KW",
+        deriveFrom: "correct horse battery staple",
+        type: "oct",
+        use: "enc",
+      });
+
+      expect(kryptos.toJSON()).toMatchSnapshot();
+      expect(kryptos.toJWK()).toMatchSnapshot();
+      expect(kryptos.export("b64")).toMatchSnapshot();
+    });
   });
 
   describe("is", () => {

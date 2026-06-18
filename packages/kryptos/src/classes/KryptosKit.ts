@@ -19,6 +19,7 @@ import type {
   KryptosFrom,
   KryptosFromBuffer,
   KryptosFromDb,
+  KryptosFromDerive,
   KryptosFromJwk,
   KryptosFromString,
   KryptosGenerateAkpSig,
@@ -55,6 +56,7 @@ type From = {
   b64(options: KryptosFromString): IKryptos;
   db(options: KryptosDB): IKryptos;
   der(options: KryptosFromBuffer): IKryptos;
+  derive(options: KryptosFromDerive): IKryptos;
   jwk(options: KryptosFromJwk): IKryptos;
   pem(options: KryptosFromString): IKryptos;
   utf(options: KryptosFromString): IKryptos;
@@ -126,6 +128,7 @@ export class KryptosKit {
       b64: KryptosKit.fromB64,
       db: KryptosKit.fromDb,
       der: KryptosKit.fromDer,
+      derive: KryptosKit.fromDerive,
       jwk: KryptosKit.fromJwk,
       pem: KryptosKit.fromPem,
       utf: KryptosKit.fromUtf,
@@ -234,6 +237,10 @@ export class KryptosKit {
 
   private static fromDer(options: KryptosFromBuffer): IKryptos {
     return KryptosKit.fromKryptos("der", options);
+  }
+
+  private static fromDerive(options: KryptosFromDerive): IKryptos {
+    return KryptosKit.fromKryptos("derive", options);
   }
 
   private static fromJwk(options: KryptosFromJwk): IKryptos {

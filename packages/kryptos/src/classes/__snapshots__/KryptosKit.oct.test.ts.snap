@@ -251,6 +251,67 @@ exports[`KryptosKit (oct) > from > b64 3`] = `
 }
 `;
 
+exports[`KryptosKit (oct) > from > derive 1`] = `
+{
+  "algorithm": "A256KW",
+  "certificateChain": [],
+  "certificateThumbprint": null,
+  "createdAt": 2024-01-01T08:00:00.000Z,
+  "curve": null,
+  "encryption": null,
+  "expiresAt": 2049-01-01T08:00:00.000Z,
+  "expiresIn": 789004800,
+  "hasCertificate": false,
+  "hasPrivateKey": true,
+  "hasPublicKey": false,
+  "hidden": false,
+  "id": "key_derive_test",
+  "isActive": true,
+  "isExpired": false,
+  "isExternal": false,
+  "issuer": null,
+  "jwksUri": null,
+  "modulus": null,
+  "notBefore": 2024-01-01T08:00:00.000Z,
+  "operations": [
+    "wrapKey",
+    "unwrapKey",
+  ],
+  "ownerId": null,
+  "purpose": null,
+  "thumbprint": "rP7pbuKrEWui2SlTyvGGVYlda7-4cSFV05FgS6z8T1o",
+  "type": "oct",
+  "use": "enc",
+}
+`;
+
+exports[`KryptosKit (oct) > from > derive 2`] = `
+{
+  "alg": "A256KW",
+  "exp": 2493100800,
+  "iat": 1704096000,
+  "key_ops": [
+    "wrapKey",
+    "unwrapKey",
+  ],
+  "kid": "key_derive_test",
+  "kty": "oct",
+  "nbf": 1704096000,
+  "use": "enc",
+}
+`;
+
+exports[`KryptosKit (oct) > from > derive 3`] = `
+{
+  "algorithm": "A256KW",
+  "id": "key_derive_test",
+  "privateKey": "TpmRGmq4AsAvKf8Oscduxri3QqjSXMJED2_U9_pr4w4",
+  "publicKey": "",
+  "type": "oct",
+  "use": "enc",
+}
+`;
+
 exports[`KryptosKit (oct) > from > jwk 1`] = `
 {
   "algorithm": "HS512",
@@ -406,7 +467,7 @@ exports[`KryptosKit (oct) > from > utf 1`] = `
   ],
   "ownerId": null,
   "purpose": null,
-  "thumbprint": "APp-U2WsdEMDRW5bW84JzzsSlyAGLY2nyZ_jyvSQ_9M",
+  "thumbprint": "O9DIX9-yzQNwmrt0vfXdusbgi5qeLebzE3JLauTA4T8",
   "type": "oct",
   "use": "sig",
 }
@@ -432,7 +493,7 @@ exports[`KryptosKit (oct) > from > utf 3`] = `
 {
   "algorithm": "HS512",
   "id": "19a58ae7-b62c-51be-8bd5-cc417002cee4",
-  "privateKey": "I-KCrCEuYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXouQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVouMDEyMzQ1Njc4OQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+  "privateKey": "I-KCrCEuYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXouQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVouMDEyMzQ1Njc4OQ",
   "publicKey": "",
   "type": "oct",
   "use": "sig",
