@@ -29,5 +29,6 @@ export const TimestampField =
       length: null,
       max: null,
       min: null,
+      namespace: null,
     });
   };
