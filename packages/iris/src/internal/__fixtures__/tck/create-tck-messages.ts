@@ -126,7 +126,6 @@ export const createTckMessages = (hookLog: Array<string>) => {
   @Message({ name: "TckEncryptedMessage" })
   class TckEncryptedMessage implements IMessage {
     @IdentifierField()
-    @Generated("uuid")
     id!: string;
 
     @TimestampField()
@@ -140,7 +139,6 @@ export const createTckMessages = (hookLog: Array<string>) => {
   @Message({ name: "TckCompressedMessage" })
   class TckCompressedMessage implements IMessage {
     @IdentifierField()
-    @Generated("uuid")
     id!: string;
 
     @TimestampField()
@@ -153,7 +151,6 @@ export const createTckMessages = (hookLog: Array<string>) => {
   @Message({ name: "TckHeaderMessage" })
   class TckHeaderMessage implements IMessage {
     @IdentifierField()
-    @Generated("uuid")
     id!: string;
 
     @TimestampField()

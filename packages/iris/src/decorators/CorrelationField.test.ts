@@ -14,11 +14,9 @@ describe("CorrelationField", () => {
     const field = metadata.fields[0];
     expect(field.key).toBe("correlationId");
     expect(field.decorator).toBe("CorrelationField");
-    expect(field.type).toBe("uuid");
+    expect(field.type).toBe("string");
     expect(field.nullable).toBe(false);
     expect(typeof field.default).toBe("function");
-    expect(field.default()).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
-    );
+    expect(field.default()).toMatch(/^[A-Za-z0-9]{24}$/);
   });
 });

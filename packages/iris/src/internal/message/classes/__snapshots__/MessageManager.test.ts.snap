@@ -3,7 +3,7 @@
 exports[`MessageManager > create() > should return a typed instance with all fields populated 1`] = `
 {
   "count": 0,
-  "id": "[uuid]",
+  "id": "[id]",
   "name": "hello",
   "timestamp": "[Date]",
 }
