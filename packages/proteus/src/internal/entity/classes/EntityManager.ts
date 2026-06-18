@@ -10,6 +10,7 @@ import type {
   UpdateStrategy,
 } from "../../types/types.js";
 import { EntityManagerError } from "../errors/EntityManagerError.js";
+import { generateValue } from "../utils/default-generate-entity.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 import type {
   EntityMetadata,
@@ -183,9 +184,12 @@ export class EntityManager<
     this.versionManager.prepareForUpdate(copy);
 
     if (versionKey) {
+      const generated = this.metadata.generated.find((g) => g.key === versionKey.key);
       (copy as any)[versionKey.key] = isFunction(versionKey.default)
         ? versionKey.default()
-        : randomUUID();
+        : generated
+          ? generateValue(generated)
+          : randomUUID();
     }
 
     if (!versionStartDate) {
