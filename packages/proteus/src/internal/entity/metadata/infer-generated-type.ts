@@ -6,6 +6,19 @@ export const inferGeneratedTypes = (
   generated: Array<MetaGenerated>,
   fields: Array<MetaField>,
 ): void => {
+  const seen = new Set<string>();
+  for (const generate of generated) {
+    if (seen.has(generate.key)) {
+      throw new EntityMetadataError("Duplicate @Generated for field", {
+        code: "duplicate_generated_field",
+        title: "Duplicate Generated Field",
+        details: `Property "${generate.key}" on "${targetName}" has more than one @Generated decorator — keep only a single @Generated for each property.`,
+        debug: { target: targetName, field: generate.key },
+      });
+    }
+    seen.add(generate.key);
+  }
+
   for (const generate of generated) {
     const field = fields.find((f) => f.key === generate.key);
     if (!field) {
@@ -164,6 +177,20 @@ export const inferGeneratedTypes = (
           }
           break;
       }
+    }
+  }
+
+  // Any field still without a type had no @Field type and no @Generated to infer
+  // one (e.g. a bare `@PrimaryKeyField()`). Surface a clear metadata error instead
+  // of letting a null column type leak into DDL/sync.
+  for (const field of fields) {
+    if (field.type === null) {
+      throw new EntityMetadataError("Field has no resolvable type", {
+        code: "missing_field_type",
+        title: "Missing Field Type",
+        details: `Property "${field.key}" on "${targetName}" has no column type — give it an explicit type (e.g. @Field("uuid") or @PrimaryKeyField("uuid")) or add a @Generated(...) so the type can be inferred.`,
+        debug: { target: targetName, field: field.key },
+      });
     }
   }
 };
