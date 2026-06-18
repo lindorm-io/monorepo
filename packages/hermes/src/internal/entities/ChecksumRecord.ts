@@ -3,6 +3,7 @@ import {
   CreateDateField,
   Entity,
   Field,
+  Generated,
   Index,
   Namespace,
   PrimaryKeyField,
@@ -13,7 +14,8 @@ import {
 @Entity({ name: "checksum" })
 export class ChecksumRecord {
   @PrimaryKeyField()
-  public id: string = "";
+  @Generated("lindorm_id", { namespace: "chk" })
+  public id!: string;
 
   @Field("string")
   @Index()

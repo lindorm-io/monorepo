@@ -2,6 +2,7 @@ import {
   CreateDateField,
   Entity,
   Field,
+  Generated,
   Index,
   Namespace,
   Nullable,
@@ -14,7 +15,8 @@ import {
 @Entity({ name: "encryption" })
 export class EncryptionRecord {
   @PrimaryKeyField()
-  public id: string = "";
+  @Generated("lindorm_id", { namespace: "enc" })
+  public id!: string;
 
   @Field("string")
   @Index()

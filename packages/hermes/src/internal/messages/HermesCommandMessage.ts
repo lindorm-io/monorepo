@@ -19,7 +19,7 @@ import type { AggregateIdentifier } from "../../types/aggregate-identifier.js";
 @Message({ name: "command" })
 export class HermesCommandMessage implements IMessage {
   @IdentifierField()
-  @Generated("uuid")
+  @Generated("lindorm_id", { namespace: "cmd" })
   public id!: string;
 
   @MandatoryField()
