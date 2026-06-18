@@ -2,8 +2,14 @@ import type { MetaGenerated, MessageMetadata } from "../types/metadata.js";
 import { generateFields } from "./generate-fields.js";
 import { describe, expect, it } from "vitest";
 
-const mockMetadata = (generated: Array<MetaGenerated>): MessageMetadata =>
-  ({ generated }) as unknown as MessageMetadata;
+const mockMetadata = (
+  generated: Array<
+    Omit<MetaGenerated, "generator"> & { generator?: MetaGenerated["generator"] }
+  >,
+): MessageMetadata =>
+  ({
+    generated: generated.map((gen) => ({ generator: null, ...gen })),
+  }) as unknown as MessageMetadata;
 
 describe("generateFields", () => {
   describe("strategy: uuid", () => {
@@ -123,6 +129,69 @@ describe("generateFields", () => {
 
       expect(message.weight as number).toBeGreaterThanOrEqual(0);
       expect(message.weight as number).toBeLessThan(999999);
+    });
+  });
+
+  describe("strategy: lindorm_id", () => {
+    it("should generate a 24-char base62 string by default", () => {
+      const metadata = mockMetadata([
+        { key: "id", strategy: "lindorm_id", length: null, min: null, max: null },
+      ]);
+      const message: Record<string, unknown> = { id: null };
+
+      generateFields(metadata, message);
+
+      expect(message.id).toEqual(expect.any(String));
+      expect(message.id).toMatch(/^[A-Za-z0-9]{24}$/);
+    });
+
+    it("should respect a requested length", () => {
+      const metadata = mockMetadata([
+        { key: "id", strategy: "lindorm_id", length: 32, min: null, max: null },
+      ]);
+      const message: Record<string, unknown> = { id: null };
+
+      generateFields(metadata, message);
+
+      expect(message.id).toMatch(/^[A-Za-z0-9]{32}$/);
+    });
+  });
+
+  describe("custom generator", () => {
+    it("should use the generator function when set, ignoring strategy", () => {
+      const metadata = mockMetadata([
+        {
+          key: "id",
+          strategy: null,
+          generator: () => "custom-value",
+          length: null,
+          min: null,
+          max: null,
+        },
+      ]);
+      const message: Record<string, unknown> = { id: null };
+
+      generateFields(metadata, message);
+
+      expect(message.id).toBe("custom-value");
+    });
+
+    it("should prefer the generator over a populated strategy", () => {
+      const metadata = mockMetadata([
+        {
+          key: "id",
+          strategy: "uuid",
+          generator: () => 42,
+          length: null,
+          min: null,
+          max: null,
+        },
+      ]);
+      const message: Record<string, unknown> = { id: null };
+
+      generateFields(metadata, message);
+
+      expect(message.id).toBe(42);
     });
   });
 

@@ -42,6 +42,42 @@ describe("Generated", () => {
     expect(metadata.generated).toMatchSnapshot();
   });
 
+  it("should default to lindorm_id strategy with no arguments", () => {
+    class TestMsg {
+      @Generated()
+      id!: string;
+    }
+
+    const metadata = (TestMsg as any)[Symbol.metadata];
+    const gen = metadata.generated[0];
+    expect(gen.strategy).toBe("lindorm_id");
+    expect(gen.generator).toBeNull();
+  });
+
+  it("should stage a custom generator function with null strategy", () => {
+    const fn = () => "x";
+
+    class TestMsg {
+      @Generated(fn)
+      id!: string;
+    }
+
+    const metadata = (TestMsg as any)[Symbol.metadata];
+    const gen = metadata.generated[0];
+    expect(gen.strategy).toBeNull();
+    expect(gen.generator).toBe(fn);
+  });
+
+  it("should leave generator null for string strategies", () => {
+    class TestMsg {
+      @Generated("uuid")
+      id!: string;
+    }
+
+    const metadata = (TestMsg as any)[Symbol.metadata];
+    expect(metadata.generated[0].generator).toBeNull();
+  });
+
   it("should default options to null", () => {
     class TestMsg {
       @Generated("float")

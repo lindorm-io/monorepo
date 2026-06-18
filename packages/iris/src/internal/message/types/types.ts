@@ -30,7 +30,13 @@ export type MetaHookDecorator =
   | "AfterConsume"
   | "OnConsumeError";
 
-export type MetaGeneratedStrategy = "uuid" | "date" | "string" | "integer" | "float";
+export type MetaGeneratedStrategy =
+  | "uuid"
+  | "date"
+  | "string"
+  | "integer"
+  | "float"
+  | "lindorm_id";
 
 export type FieldDefaultPrimitive = bigint | boolean | Date | number | string | null;
 export type FieldDefaultComplex =

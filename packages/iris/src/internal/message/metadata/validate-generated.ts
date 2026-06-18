@@ -9,6 +9,7 @@ const STRATEGY_TYPES: Record<MetaGeneratedStrategy, MetaFieldType> = {
   string: "string",
   integer: "integer",
   float: "float",
+  lindorm_id: "string",
 };
 
 export const validateGenerated = (
@@ -29,7 +30,9 @@ export const validateGenerated = (
       });
     }
 
-    const expectedType = STRATEGY_TYPES[gen.strategy];
+    if (gen.generator) continue;
+
+    const expectedType = STRATEGY_TYPES[gen.strategy as MetaGeneratedStrategy];
 
     if (field.type !== expectedType) {
       throw new IrisMetadataError("Invalid @Generated strategy for field type", {
