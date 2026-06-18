@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomId } from "@lindorm/random";
 import { KryptosError } from "../../../errors/index.js";
 import type {
   AkpJwk,
@@ -20,7 +20,7 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     case "AKP":
       return {
         ...createAkpDerFromJwk(options as AkpJwk),
-        id: options.kid || randomUUID(),
+        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -29,7 +29,7 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     case "EC":
       return {
         ...createEcDerFromJwk(options as EcJwk),
-        id: options.kid || randomUUID(),
+        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -38,7 +38,7 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     case "oct":
       return {
         ...createOctDerFromJwk(options as OctJwk),
-        id: options.kid || randomUUID(),
+        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -47,7 +47,7 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     case "OKP":
       return {
         ...createOkpDerFromJwk(options as OkpJwk),
-        id: options.kid || randomUUID(),
+        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -56,7 +56,7 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     case "RSA":
       return {
         ...createRsaDerFromJwk(options as RsaJwk),
-        id: options.kid || randomUUID(),
+        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,

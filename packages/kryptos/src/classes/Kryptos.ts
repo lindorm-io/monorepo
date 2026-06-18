@@ -1,8 +1,8 @@
 import { B64 } from "@lindorm/b64";
 import { expiresAt, getUnixTime, isAfter, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
+import { randomId } from "@lindorm/random";
 import { removeEmpty, removeUndefined } from "@lindorm/utils";
-import { randomUUID } from "crypto";
 import { KryptosError } from "../errors/index.js";
 import type { IKryptos } from "../interfaces/index.js";
 import type {
@@ -68,7 +68,7 @@ export class Kryptos implements IKryptos {
   private _disposed: boolean = false;
 
   public constructor(options: KryptosOptions) {
-    this._id = options.id || randomUUID();
+    this._id = options.id || randomId({ namespace: "key", length: 16 });
     this._algorithm = options.algorithm;
     this._createdAt = options.createdAt ?? new Date();
     this._curve = options.curve || null;

@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { expiresAt } from "@lindorm/date";
-import { randomUUID } from "crypto";
+import { randomId } from "@lindorm/random";
 import { KryptosError } from "../errors/index.js";
 import type {
   IKryptos,
@@ -426,7 +426,7 @@ export class KryptosKit {
     generate: KryptosGenerate,
     key: ReturnType<typeof generateKey>,
   ): IKryptos {
-    const id = generate.id ?? randomUUID();
+    const id = generate.id ?? randomId({ namespace: "key", length: 16 });
 
     // In ca-signed mode, the child's validity window MUST fit within the CA's.
     // Default the child's window to the CA's own window so that the natural
