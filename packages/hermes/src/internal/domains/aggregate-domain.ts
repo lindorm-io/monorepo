@@ -13,7 +13,7 @@ import { DuplicateKeyError } from "@lindorm/proteus";
 import type { IProteusSource } from "@lindorm/proteus";
 import type { ClassLike, Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import {
   AggregateAlreadyCreatedError,
   AggregateDestroyedError,
@@ -379,7 +379,7 @@ export class AggregateDomain {
     for (let i = 0; i < causationEvents.length; i++) {
       const event = causationEvents[i];
       const record = new EventRecord();
-      record.id = event.id ?? randomUUID();
+      record.id = event.id ?? randomId({ namespace: "evt" });
       event.id = record.id;
       record.aggregateId = model.id;
       record.aggregateName = model.name;
@@ -608,7 +608,6 @@ export class AggregateDomain {
 
     const encRepo = this.proteus.repository(EncryptionRecord);
     const record = new EncryptionRecord();
-    record.id = randomUUID();
     record.aggregateId = identifier.id;
     record.aggregateName = identifier.name;
     record.aggregateNamespace = identifier.namespace;

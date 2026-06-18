@@ -16,7 +16,7 @@ import type { AggregateIdentifier } from "../../types/aggregate-identifier.js";
 @Message({ name: "event" })
 export class HermesEventMessage implements IMessage {
   @IdentifierField()
-  @Generated("uuid")
+  @Generated("lindorm_id", { namespace: "evt" })
   public id!: string;
 
   @MandatoryField()

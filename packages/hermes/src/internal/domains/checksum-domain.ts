@@ -4,7 +4,6 @@ import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
 import type { Dict } from "@lindorm/types";
 import { sortKeys } from "@lindorm/utils";
-import { randomUUID } from "@lindorm/random";
 import EventEmitter from "events";
 import { ChecksumError } from "../../errors/index.js";
 import { ChecksumRecord } from "../entities/index.js";
@@ -158,7 +157,6 @@ export class ChecksumDomain {
     }
 
     const record = new ChecksumRecord();
-    record.id = randomUUID();
     record.aggregateId = message.aggregate.id;
     record.aggregateName = message.aggregate.name;
     record.aggregateNamespace = message.aggregate.namespace;

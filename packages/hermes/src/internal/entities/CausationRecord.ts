@@ -3,6 +3,7 @@ import {
   Entity,
   ExpiryDateField,
   Field,
+  Generated,
   Index,
   Namespace,
   PrimaryKeyField,
@@ -14,7 +15,8 @@ import {
 @Entity({ name: "causation" })
 export class CausationRecord {
   @PrimaryKeyField()
-  public id: string = "";
+  @Generated("lindorm_id", { namespace: "cau" })
+  public id!: string;
 
   @Field("string")
   @Index()
