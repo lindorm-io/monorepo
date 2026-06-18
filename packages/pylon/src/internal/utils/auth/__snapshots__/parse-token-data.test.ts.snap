@@ -145,7 +145,7 @@ exports[`parseTokenData > should resolve subject via resolveSubject callback whe
 {
   "accessToken": "accessToken",
   "expiresAt": 2024-01-01T09:00:00.000Z,
-  "id": "c8ff3952-8ba4-51a3-a4d5-2f0726c49524",
+  "id": "def_0000000000000000",
   "issuedAt": 2024-01-01T08:00:00.000Z,
   "refreshToken": "refreshToken",
   "scope": [
