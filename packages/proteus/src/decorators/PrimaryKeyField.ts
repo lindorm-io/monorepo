@@ -10,12 +10,17 @@ import {
  * column type and marks the field as the primary key, but does NOT generate the value —
  * pair it with `@Generated(...)` to produce values.
  *
- * - `@PrimaryKeyField()` — UUID primary key column (default)
+ * - `@PrimaryKeyField()` — type-less PK marker; pair with `@Generated(...)` to infer the column type
+ * - `@PrimaryKeyField("uuid")` — uuid primary key column
  * - `@PrimaryKeyField("integer")` — integer primary key column
  * - `@PrimaryKeyField("string", { name: "pk" })` — string PK column with custom column name
+ *
+ * When `type` is omitted, the column type is inferred from the paired `@Generated(...)`
+ * (`@Generated()` → varchar(64), `@Generated("uuid")` → uuid, `@Generated("increment")` → integer).
+ * A bare `@PrimaryKeyField()` with no `@Generated` and no type surfaces a metadata error.
  */
 export const PrimaryKeyField =
-  (type: MetaFieldPrimaryType = "uuid", options: NamedDecoratorOptions = {}) =>
+  (type?: MetaFieldPrimaryType, options: NamedDecoratorOptions = {}) =>
   (_target: undefined, context: ClassFieldDecoratorContext): void => {
     const key = String(context.name);
     stageField(context.metadata, {
@@ -40,7 +45,7 @@ export const PrimaryKeyField =
       scale: null,
       schema: null,
       transform: null,
-      type,
+      type: type ?? null,
     });
     stagePrimaryKey(context.metadata, { key });
   };

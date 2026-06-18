@@ -70,6 +70,14 @@ class GenerateFunctionEntity {
   slug!: string;
 }
 
+@Entity({ name: "NaturalKeyEntity" })
+class NaturalKeyEntity {
+  @PrimaryKeyField("string") id!: string;
+
+  @Field("string")
+  name!: string;
+}
+
 describe("defaultGenerateEntity", () => {
   test("should generate uuid for PrimaryKeyField", () => {
     const entity: any = { id: undefined, name: "test" };
@@ -130,5 +138,18 @@ describe("defaultGenerateEntity", () => {
     const entity: any = { id: "abc", slug: undefined };
     defaultGenerateEntity(GenerateFunctionEntity, entity);
     expect(entity.slug).toBe("fixed-value");
+  });
+
+  test("should throw when a PK has no generator and no provided value", () => {
+    const entity: any = { id: undefined, name: "test" };
+    expect(() => defaultGenerateEntity(NaturalKeyEntity, entity)).toThrow(
+      "Missing primary key value",
+    );
+  });
+
+  test("should accept a natural PK when the value is provided explicitly", () => {
+    const entity: any = { id: "user-provided", name: "test" };
+    const result = defaultGenerateEntity(NaturalKeyEntity, entity);
+    expect(result.id).toBe("user-provided");
   });
 });

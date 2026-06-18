@@ -168,4 +168,22 @@ describe("inferGeneratedTypes", () => {
       ),
     ).toThrow("Invalid @Generated strategy for field type");
   });
+
+  test("should throw when a field still has a null type and no @Generated to infer it", () => {
+    const fields = [makeField("id", { type: null })];
+    expect(() => inferGeneratedTypes("Test", [], fields)).toThrow(
+      "Field has no resolvable type",
+    );
+  });
+
+  test("should throw when two @Generated entries target the same field key", () => {
+    const fields = [makeField("id", { type: null })];
+    expect(() =>
+      inferGeneratedTypes(
+        "Test",
+        [makeGenerated("id", "uuid"), makeGenerated("id", "lindorm_id")],
+        fields,
+      ),
+    ).toThrow("Duplicate @Generated for field");
+  });
 });
