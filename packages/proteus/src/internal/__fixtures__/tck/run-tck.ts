@@ -12,6 +12,7 @@ import type { ProteusSource } from "../../../classes/ProteusSource.js";
 import { createTckEntities } from "./create-tck-entities.js";
 
 import { crudSuite } from "./crud.tck.js";
+import { generatedKeysSuite } from "./generated-keys.tck.js";
 import { queriesSuite } from "./queries.tck.js";
 import { softDeleteSuite } from "./soft-delete.tck.js";
 import { versioningSuite } from "./versioning.tck.js";
@@ -99,6 +100,9 @@ export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource
     entities.TckTypeHolder,
     entities.TckRenamedColumns,
     entities.TckChecked,
+    entities.TckPkString,
+    entities.TckPkIncrement,
+    entities.TckPkInteger,
   ];
 
   // Encryption test entity
@@ -138,6 +142,7 @@ export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource
 
   // Always-on suites
   crudSuite(getHandle, entities);
+  generatedKeysSuite(getHandle, entities);
   queriesSuite(getHandle, entities);
   aggregatesSuite(getHandle, entities);
   hooksSuite(getHandle, entities, hookCallback);
