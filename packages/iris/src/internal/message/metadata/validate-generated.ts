@@ -12,6 +12,10 @@ const STRATEGY_TYPES: Record<MetaGeneratedStrategy, MetaFieldType> = {
   lindorm_id: "string",
 };
 
+// Role-marker decorators declare a field's role, not its column/value type. When one
+// of these carries a @Generated, the strategy determines the field type.
+const ROLE_MARKERS = new Set(["IdentifierField", "CorrelationField", "TimestampField"]);
+
 export const validateGenerated = (
   targetName: string,
   generated: Array<MetaGenerated>,
@@ -50,6 +54,15 @@ export const validateGenerated = (
 
     const expectedType = STRATEGY_TYPES[gen.strategy as MetaGeneratedStrategy];
 
+    // Role markers (@IdentifierField/@CorrelationField/@TimestampField) declare the
+    // field's ROLE, not its type — so the @Generated strategy determines the type.
+    // The marker's own type is only a fallback for the bare (no-@Generated) case.
+    if (ROLE_MARKERS.has(field.decorator)) {
+      field.type = expectedType;
+      continue;
+    }
+
+    // An explicit @Field type must agree with the strategy.
     if (field.type !== expectedType) {
       throw new IrisMetadataError("Invalid @Generated strategy for field type", {
         code: "invalid_generated_strategy",
