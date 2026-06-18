@@ -2,7 +2,7 @@ import { createNatsConsumer } from "./create-nats-consumer.js";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@lindorm/random", async () => ({
-  randomUUID: vi.fn().mockReturnValue("mock-uuid-1234"),
+  randomId: vi.fn().mockReturnValue("con_mockconsumer01"),
 }));
 
 const createMockLogger = () => ({
@@ -72,7 +72,7 @@ describe("createNatsConsumer", () => {
       }),
     );
     expect(ensuredConsumers.has("test-consumer")).toBe(true);
-    expect(loop.consumerTag).toBe("mock-uuid-1234");
+    expect(loop.consumerTag).toBe("con_mockconsumer01");
     expect(loop.streamName).toBe("IRIS_TEST");
     expect(loop.consumerName).toBe("test-consumer");
     expect(loop.subject).toBe("test.events");
@@ -340,7 +340,7 @@ describe("createNatsConsumer", () => {
       ensuredConsumers: new Set(),
     });
 
-    expect(loop.consumerTag).toBe("mock-uuid-1234");
+    expect(loop.consumerTag).toBe("con_mockconsumer01");
     expect(loop.streamName).toBe("IRIS_TEST");
     expect(loop.consumerName).toBe("test-consumer");
     expect(loop.subject).toBe("test.events");

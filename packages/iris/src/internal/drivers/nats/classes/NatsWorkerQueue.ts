@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type {
   ConsumeEnvelope,
@@ -148,10 +148,8 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
     // Broadcast consumer: unique ephemeral consumer on the broadcast subject
     // so every worker instance independently receives broadcast messages.
     const broadcastSubject = `${subject}.broadcast`;
-    const broadcastConsumerName = `${consumerName}_bc_${randomUUID()}`.replace(
-      /[^a-zA-Z0-9_-]/g,
-      "_",
-    );
+    const broadcastConsumerName =
+      `${consumerName}_bc_${randomId({ length: 16 })}`.replace(/[^a-zA-Z0-9_-]/g, "_");
 
     const broadcastLoop = await createNatsConsumer({
       js: this.state.js,

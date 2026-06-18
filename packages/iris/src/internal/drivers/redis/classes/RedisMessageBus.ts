@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
 import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
@@ -86,7 +86,7 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
         type: "subscribe",
       });
     } else {
-      groupName = `${this.state.prefix}.sub.ephemeral.${randomUUID()}`;
+      groupName = `${this.state.prefix}.sub.ephemeral.${randomId({ length: 16 })}`;
     }
 
     const wrappedCallback = wrapRedisConsumer(
