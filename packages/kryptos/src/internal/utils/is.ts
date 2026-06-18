@@ -1,6 +1,8 @@
+import { isString } from "@lindorm/is";
 import type {
   KryptosFrom,
   KryptosFromBuffer,
+  KryptosFromDerive,
   KryptosFromJwk,
   KryptosFromString,
 } from "../../types/index.js";
@@ -56,6 +58,15 @@ export const isDer = (options: KryptosFrom): options is KryptosFromBuffer => {
     default:
       return false;
   }
+};
+
+export const isDerive = (options: KryptosFrom): options is KryptosFromDerive => {
+  const typed = options as KryptosFromDerive;
+
+  if (typed.type !== "oct") return false;
+  if (typed.curve) return false;
+
+  return isString(typed.deriveFrom);
 };
 
 export const isJwk = (options: KryptosFrom): options is KryptosFromJwk => {
