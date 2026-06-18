@@ -17,6 +17,16 @@ export type KryptosFromString = Std & KryptosString;
 
 export type KryptosFromBuffer = Std & KryptosBuffer;
 
+export type KryptosFromDerive = Std &
+  Omit<KryptosString, "privateKey" | "publicKey"> & {
+    deriveFrom: string;
+  };
+
 export type KryptosFromJwk = UnknownJwk & Partial<KryptosJwk>;
 
-export type KryptosFrom = KryptosFromString | KryptosFromBuffer | KryptosFromJwk | string;
+export type KryptosFrom =
+  | KryptosFromString
+  | KryptosFromBuffer
+  | KryptosFromDerive
+  | KryptosFromJwk
+  | string;

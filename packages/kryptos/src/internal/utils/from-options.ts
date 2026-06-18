@@ -2,10 +2,11 @@ import { KryptosError } from "../../errors/index.js";
 import type { KryptosFormat, KryptosFrom, KryptosOptions } from "../../types/index.js";
 import { createDerFromB64 } from "./from/der-from-b64.js";
 import { createDerFromDer } from "./from/der-from-der.js";
+import { createDerFromDerive } from "./from/der-from-derive.js";
 import { createDerFromJwk } from "./from/der-from-jwk.js";
 import { createDerFromPem } from "./from/der-from-pem.js";
 import { createDerFromUtf } from "./from/der-from-utf.js";
-import { isB64, isDer, isJwk, isPem, isUtf } from "./is.js";
+import { isB64, isDer, isDerive, isJwk, isPem, isUtf } from "./is.js";
 import { parseJwkOptions, parseStdOptions } from "./parse-options.js";
 
 export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOptions => {
@@ -30,6 +31,17 @@ export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOpt
           data: { format },
         });
       return { ...parseStdOptions(arg), ...createDerFromDer(arg) };
+
+    case "derive":
+      if (!isDerive(arg))
+        throw new KryptosError("Invalid key format", {
+          code: "invalid_key_format",
+          title: "Invalid Key Format",
+          details:
+            "The provided argument does not match the expected derive (passphrase) key format.",
+          data: { format },
+        });
+      return { ...parseStdOptions(arg), ...createDerFromDerive(arg) };
 
     case "jwk":
       if (!isJwk(arg))
