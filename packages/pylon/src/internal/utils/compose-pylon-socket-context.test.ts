@@ -1,10 +1,9 @@
 import { composePylonSocketContextBase } from "./compose-pylon-socket-context.js";
 import { describe, expect, test, vi } from "vitest";
 
-// randomUUID is called internally; mock it for deterministic snapshots
-vi.mock("crypto", async () => ({
-  ...(await vi.importActual<typeof import("crypto")>("crypto")),
-  randomUUID: () => "00000000-0000-0000-0000-000000000000",
+// randomId is called internally; mock it for deterministic snapshots
+vi.mock("@lindorm/random", () => ({
+  randomId: ({ namespace }: { namespace: string }) => `${namespace}_0000000000000000`,
 }));
 
 describe("composePylonSocketContextBase", () => {

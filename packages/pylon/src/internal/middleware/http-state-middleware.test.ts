@@ -1,4 +1,4 @@
-import { randomUUID as _randomUUID } from "crypto";
+import { randomId as _randomId } from "@lindorm/random";
 import MockDate from "mockdate";
 import { getAuthorization as _getAuthorization } from "../utils/get-authorization.js";
 import { createHttpStateMiddleware } from "./http-state-middleware.js";
@@ -7,10 +7,10 @@ import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
 
-vi.mock("crypto");
+vi.mock("@lindorm/random");
 vi.mock("../utils/get-authorization.js");
 
-const randomUUID = _randomUUID as Mock;
+const randomId = _randomId as Mock;
 const getAuthorization = _getAuthorization as Mock;
 
 describe("createHttpStateMiddleware", async () => {
@@ -53,7 +53,9 @@ describe("createHttpStateMiddleware", async () => {
       }
     });
 
-    randomUUID.mockReturnValue("2f881f6e-f7ce-554f-a5cd-cb80266ff3ec");
+    randomId.mockImplementation(
+      ({ namespace }: { namespace: string }) => `${namespace}_0000000000000000`,
+    );
     getAuthorization.mockReturnValue({ type: "Bearer", value: "token" });
   });
 
@@ -68,7 +70,7 @@ describe("createHttpStateMiddleware", async () => {
       date: MockedDate,
       environment: "test",
       origin: "test-origin",
-      responseId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
+      responseId: "res_0000000000000000",
       sessionId: "d8a044f5-5b49-5456-829a-b57b44caa785",
     });
 
@@ -94,23 +96,17 @@ describe("createHttpStateMiddleware", async () => {
     ).resolves.toBeUndefined();
 
     expect(ctx.state.metadata).toEqual({
-      id: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
-      correlationId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
+      id: "req_0000000000000000",
+      correlationId: "cor_0000000000000000",
       date: MockedDate,
       environment: "unknown",
       origin: null,
-      responseId: "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
+      responseId: "res_0000000000000000",
       sessionId: null,
     });
 
-    expect(ctx.set).toHaveBeenCalledWith(
-      "x-correlation-id",
-      "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
-    );
-    expect(ctx.set).toHaveBeenCalledWith(
-      "x-request-id",
-      "2f881f6e-f7ce-554f-a5cd-cb80266ff3ec",
-    );
+    expect(ctx.set).toHaveBeenCalledWith("x-correlation-id", "cor_0000000000000000");
+    expect(ctx.set).toHaveBeenCalledWith("x-request-id", "req_0000000000000000");
     expect(ctx.set).toHaveBeenCalledWith("x-server-environment", "test");
     expect(ctx.set).toHaveBeenCalledWith("x-server-version", "1.0.0");
   });

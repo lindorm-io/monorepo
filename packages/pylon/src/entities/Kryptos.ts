@@ -15,6 +15,7 @@ import {
   Encrypted,
   Entity,
   Field,
+  Generated,
   Index,
   Namespace,
   Nullable,
@@ -26,6 +27,7 @@ import {
 @Entity()
 export class Kryptos implements KryptosDB {
   @PrimaryKeyField()
+  @Generated("lindorm_id", { namespace: "key", length: 16 })
   public id!: string;
 
   @CreateDateField()
