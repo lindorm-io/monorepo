@@ -13,12 +13,7 @@ import {
 } from "../__fixtures__/x509.js";
 import { KryptosError } from "../errors/index.js";
 import { Kryptos } from "./Kryptos.js";
-import { describe, expect, test, vi } from "vitest";
-
-vi.mock("crypto", async () => ({
-  ...(await vi.importActual<typeof import("crypto")>("crypto")),
-  randomUUID: vi.fn().mockReturnValue("6e6f84b0-e125-5e3f-90ae-c65269668d98"),
-}));
+import { describe, expect, test } from "vitest";
 
 describe("Kryptos (X.509)", () => {
   const fixedDates = {
