@@ -17,6 +17,22 @@ export const validateGenerated = (
   generated: Array<MetaGenerated>,
   fields: Array<MetaField>,
 ): void => {
+  const seen = new Set<string>();
+
+  for (const gen of generated) {
+    if (seen.has(gen.key)) {
+      throw new IrisMetadataError("Duplicate @Generated for field", {
+        code: "duplicate_generated_field",
+        title: "Duplicate Generated Field",
+        details:
+          "Two @Generated decorators target the same property. A field can only have a single generator. Remove the duplicate @Generated decorator.",
+        debug: { target: targetName, field: gen.key },
+      });
+    }
+
+    seen.add(gen.key);
+  }
+
   for (const gen of generated) {
     const field = fields.find((f) => f.key === gen.key);
 
