@@ -37,8 +37,7 @@ class Address {
 
 @Entity({ name: "EmbeddedTestUser" })
 class EmbeddedTestUser {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -52,8 +51,7 @@ class EmbeddedTestUser {
 
 @Entity({ name: "EmbeddedCoordEntity" })
 class EmbeddedCoordEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Embedded(() => Coord, { prefix: "location_" })
   location!: Coord | null;
@@ -64,8 +62,7 @@ describe("Embedded — column collision detection", () => {
     expect(() => {
       @Entity({ name: "CollidingEntity" })
       class CollidingEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         // Both use default prefix "addr_", so column names collide
         @Embedded(() => Address, { prefix: "addr_" })
@@ -90,8 +87,7 @@ describe("Embedded — non-embeddable guard", () => {
     expect(() => {
       @Entity({ name: "BadEmbedEntity" })
       class BadEmbedEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Embedded(() => NotEmbeddable as any)
         nested!: any;

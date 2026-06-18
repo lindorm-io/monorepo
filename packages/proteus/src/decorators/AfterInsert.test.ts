@@ -1,6 +1,7 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { AfterInsert } from "./AfterInsert.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test, vi } from "vitest";
 
@@ -9,8 +10,7 @@ const afterInsertCallback = vi.fn();
 @Entity({ name: "AfterInsertDecorated" })
 @AfterInsert(afterInsertCallback)
 class AfterInsertDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 const multiHookCb1 = vi.fn();
@@ -20,8 +20,7 @@ const multiHookCb2 = vi.fn();
 @AfterInsert(multiHookCb1)
 @AfterInsert(multiHookCb2)
 class AfterInsertMultiHook {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("AfterInsert", () => {

@@ -6,13 +6,13 @@ import { JoinKey } from "./JoinKey.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { Nullable } from "./Nullable.js";
 import { OneToMany } from "./OneToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ManyToOneTag" })
 class ManyToOneTag {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -23,8 +23,7 @@ class ManyToOneTag {
 
 @Entity({ name: "ManyToOneItem" })
 class ManyToOneItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   label!: string;
@@ -41,8 +40,7 @@ class ManyToOneItem {
 // ManyToOne with explicit joinKeys
 @Entity({ name: "ManyToOneExplicitCategory" })
 class ManyToOneExplicitCategory {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -53,8 +51,7 @@ class ManyToOneExplicitCategory {
 
 @Entity({ name: "ManyToOneExplicitProduct" })
 class ManyToOneExplicitProduct {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;

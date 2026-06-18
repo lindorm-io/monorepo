@@ -1,26 +1,24 @@
 import { getIncrementName } from "./get-increment-name.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Namespace } from "../../../decorators/Namespace.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GetIncrementSimple" })
 class GetIncrementSimple {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Namespace("myApp")
 @Entity({ name: "GetIncrementWithNs" })
 class GetIncrementWithNs {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Entity({ name: "GetIncrementNoNs" })
 class GetIncrementNoNs {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("getIncrementName", () => {

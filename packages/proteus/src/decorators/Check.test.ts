@@ -2,14 +2,14 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Check } from "./Check.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CheckUnnamed" })
 @Check("age >= 0")
 class CheckUnnamed {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("integer")
   age!: number;
@@ -18,8 +18,7 @@ class CheckUnnamed {
 @Entity({ name: "CheckNamed" })
 @Check("score BETWEEN 0 AND 100", { name: "chk_score_range" })
 class CheckNamed {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("float")
   score!: number;
@@ -29,8 +28,7 @@ class CheckNamed {
 @Check("age >= 0", { name: "chk_age_positive" })
 @Check("score <= 100")
 class CheckMultiple {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("integer")
   age!: number;

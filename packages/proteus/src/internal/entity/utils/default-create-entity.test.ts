@@ -11,6 +11,7 @@ import { ManyToOne } from "../../../decorators/ManyToOne.js";
 import { OnCreate } from "../../../decorators/OnCreate.js";
 import { OneToMany } from "../../../decorators/OneToMany.js";
 import { OneToOne } from "../../../decorators/OneToOne.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { UpdateDateField } from "../../../decorators/UpdateDateField.js";
 import { VersionField } from "../../../decorators/VersionField.js";
@@ -20,8 +21,7 @@ const onCreateCb = vi.fn();
 
 @Entity({ name: "CreateEntityComment" })
 class CreateEntityComment {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -44,8 +44,7 @@ class CreateEntityComment {
 @Entity({ name: "CreateEntityPost" })
 @OnCreate(onCreateCb)
 class CreateEntityPost {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -73,8 +72,7 @@ class CreateEntityPost {
 
 @Entity({ name: "CreateEntityAddress" })
 class CreateEntityAddress {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   street!: string;
@@ -85,8 +83,7 @@ class CreateEntityAddress {
 
 @Entity({ name: "CreateEntityPerson" })
 class CreateEntityPerson {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -101,8 +98,7 @@ class CreateEntityPerson {
 // ManyToMany entities
 @Entity({ name: "CreateEntityM2MTag" })
 class CreateEntityM2MTag {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -113,8 +109,7 @@ class CreateEntityM2MTag {
 
 @Entity({ name: "CreateEntityM2MArticle" })
 class CreateEntityM2MArticle {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;

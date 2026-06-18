@@ -10,6 +10,18 @@ import { describe, expect, test } from "vitest";
 @Entity({ name: "VersionKeyFieldUuid" })
 class VersionKeyFieldUuid {
   @PrimaryKeyField()
+  @Generated("uuid")
+  id!: string;
+
+  @VersionKeyField()
+  @Generated("uuid")
+  versionId!: string;
+}
+
+@Entity({ name: "VersionKeyFieldMarkerOnly" })
+class VersionKeyFieldMarkerOnly {
+  @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionKeyField()
@@ -24,15 +36,18 @@ class VersionKeyFieldInteger {
   id!: string;
 
   @VersionKeyField("integer")
+  @Generated("increment")
   revision!: number;
 }
 
 @Entity({ name: "VersionKeyFieldTypeWithName" })
 class VersionKeyFieldTypeWithName {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionKeyField("uuid", { name: "version_id" })
+  @Generated("uuid")
   versionId!: string;
 }
 
@@ -41,7 +56,15 @@ describe("VersionKeyField", () => {
     expect(getEntityMetadata(VersionKeyFieldUuid)).toMatchSnapshot();
   });
 
-  test("should register field, primary key, version key, and generated", () => {
+  test("marker alone stages a primary key + version key + field but NO generated entry", () => {
+    const meta = getEntityMetadata(VersionKeyFieldMarkerOnly);
+    expect(meta.fields.find((f) => f.key === "versionId")).toBeDefined();
+    expect(meta.primaryKeys).toContain("versionId");
+    expect(meta.versionKeys).toContain("versionId");
+    expect(meta.generated.find((g) => g.key === "versionId")).toBeUndefined();
+  });
+
+  test("marker paired with @Generated stages field, primary key, version key, AND generated", () => {
     const meta = getEntityMetadata(VersionKeyFieldUuid);
     expect(meta.fields.find((f) => f.key === "versionId")).toBeDefined();
     expect(meta.primaryKeys).toContain("versionId");
@@ -49,7 +72,7 @@ describe("VersionKeyField", () => {
     expect(meta.generated.find((g) => g.key === "versionId")).toBeDefined();
   });
 
-  test("should register integer version key with increment strategy", () => {
+  test('integer marker with explicit @Generated("increment")', () => {
     const meta = getEntityMetadata(VersionKeyFieldInteger);
     const gen = meta.generated.find((g) => g.key === "revision");
     expect(gen!.strategy).toBe("increment");

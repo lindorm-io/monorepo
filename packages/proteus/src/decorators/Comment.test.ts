@@ -2,13 +2,13 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Comment } from "./Comment.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CommentDecorated" })
 class CommentDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Comment("The user's display name")
   @Field("string")
@@ -17,8 +17,7 @@ class CommentDecorated {
 
 @Entity({ name: "CommentNoDecorator" })
 class CommentNoDecorator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

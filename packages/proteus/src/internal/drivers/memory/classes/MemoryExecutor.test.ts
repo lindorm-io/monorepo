@@ -9,6 +9,7 @@ import {
   Entity,
   Field,
   Filter,
+  Generated,
   Nullable,
   PrimaryKeyField,
   ScopeField,
@@ -22,8 +23,7 @@ import type { IProteusRepository } from "../../../../interfaces/index.js";
 
 @Entity({ name: "NullSortEntity" })
 class NullSortEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -45,8 +45,7 @@ class NullSortEntity {
 @Entity({ name: "FilteredEntity" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
 class FilteredEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -66,8 +65,7 @@ class FilteredEntity {
 
 @Entity({ name: "ScopeFilterEntity" })
 class ScopeFilterEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;

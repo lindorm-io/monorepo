@@ -5,6 +5,7 @@ import {
   DeleteDateField,
   Entity,
   Field,
+  Generated,
   Nullable,
   PrimaryKeyField,
   UpdateDateField,
@@ -19,8 +20,7 @@ import type { IProteusRepository } from "../../../../interfaces/index.js";
 
 @Entity({ name: "QbTestProduct" })
 class QbTestProduct {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -44,8 +44,7 @@ class QbTestProduct {
 
 @Entity({ name: "QbSoftDeleteProduct" })
 class QbSoftDeleteProduct {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;

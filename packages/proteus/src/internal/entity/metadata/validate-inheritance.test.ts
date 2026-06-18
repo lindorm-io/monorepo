@@ -4,6 +4,7 @@ import { Discriminator } from "../../../decorators/Discriminator.js";
 import { DiscriminatorValue } from "../../../decorators/DiscriminatorValue.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Inheritance } from "../../../decorators/Inheritance.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { Field } from "../../../decorators/Field.js";
 import {
@@ -25,8 +26,7 @@ import {
 @Discriminator("type")
 @Inheritance()
 class ValidRoot {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   type!: string;
@@ -36,8 +36,7 @@ class ValidRoot {
 @Entity({ name: "DiscriminatorWithoutInheritance" })
 @Discriminator("type")
 class DiscriminatorWithoutInheritance {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   type!: string;
 }
 
@@ -45,8 +44,7 @@ class DiscriminatorWithoutInheritance {
 @Entity({ name: "InheritanceWithoutDiscriminator" })
 @Inheritance()
 class InheritanceWithoutDiscriminator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 // Root with @DiscriminatorValue (invalid — root should not have a discriminator value)
@@ -55,8 +53,7 @@ class InheritanceWithoutDiscriminator {
 @Discriminator("type")
 @Inheritance()
 class RootWithDiscriminatorValue {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   type!: string;
 }
 
@@ -65,8 +62,7 @@ class RootWithDiscriminatorValue {
 @Discriminator("type")
 @Inheritance()
 class ValidRootForSubtype {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   type!: string;
 }
 
@@ -79,8 +75,7 @@ class ValidSubtype extends ValidRootForSubtype {}
 @Discriminator("type")
 @Inheritance()
 class RootForMissingValue {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   type!: string;
 }
 
@@ -92,8 +87,7 @@ class SubtypeWithoutValue extends RootForMissingValue {}
 @Discriminator("type")
 @Inheritance()
 class RootForAbstractSubtype {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   type!: string;
 }
 
@@ -104,8 +98,7 @@ class AbstractSubtype extends RootForAbstractSubtype {}
 @Entity({ name: "OrphanDiscriminatorValue" })
 @DiscriminatorValue("orphan")
 class OrphanDiscriminatorValue {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 // Joined hierarchy: root and direct subtypes (valid)
@@ -113,8 +106,7 @@ class OrphanDiscriminatorValue {
 @Discriminator("type")
 @Inheritance("joined")
 class JoinedRoot {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   type!: string;
 }
 
@@ -127,8 +119,7 @@ class JoinedChild extends JoinedRoot {}
 @Discriminator("type")
 @Inheritance("joined")
 class JoinedMultiRoot {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   type!: string;
 }
 

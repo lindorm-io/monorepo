@@ -2,6 +2,7 @@ import { defaultUpdateEntity } from "./default-update-entity.js";
 import { CreateDateField } from "../../../decorators/CreateDateField.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { UpdateDateField } from "../../../decorators/UpdateDateField.js";
 import { VersionField } from "../../../decorators/VersionField.js";
@@ -9,8 +10,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "UpdateEntityVersioned" })
 class UpdateEntityVersioned {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -27,8 +27,7 @@ class UpdateEntityVersioned {
 
 @Entity({ name: "UpdateEntityNoVersion" })
 class UpdateEntityNoVersion {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @CreateDateField()
   createdAt!: Date;

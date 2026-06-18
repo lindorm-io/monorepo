@@ -1,6 +1,7 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { DefaultOrder } from "./DefaultOrder.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { Field } from "./Field.js";
 import { CreateDateField } from "./CreateDateField.js";
@@ -9,8 +10,7 @@ import { describe, expect, test } from "vitest";
 @Entity({ name: "DefaultOrderSingle" })
 @DefaultOrder({ createdAt: "DESC" })
 class DefaultOrderSingle {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @CreateDateField()
   createdAt!: Date;
@@ -19,8 +19,7 @@ class DefaultOrderSingle {
 @Entity({ name: "DefaultOrderMultiple" })
 @DefaultOrder({ lastName: "ASC", firstName: "ASC" })
 class DefaultOrderMultiple {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   firstName!: string;
@@ -31,8 +30,7 @@ class DefaultOrderMultiple {
 
 @Entity({ name: "NoDefaultOrder" })
 class NoDefaultOrder {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("DefaultOrder", () => {

@@ -4,6 +4,7 @@ import {
   CreateDateField,
   Entity,
   Field,
+  Generated,
   PrimaryKeyField,
   UpdateDateField,
   VersionField,
@@ -16,8 +17,7 @@ import type { IProteusRepository } from "../../../../interfaces/index.js";
 
 @Entity({ name: "DriverTestUser" })
 class DriverTestUser {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -34,8 +34,7 @@ class DriverTestUser {
 
 @Entity({ name: "DriverTestRole" })
 class DriverTestRole {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;

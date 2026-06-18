@@ -9,8 +9,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GetSaveStrategyVersioned" })
 class GetSaveStrategyVersioned {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;

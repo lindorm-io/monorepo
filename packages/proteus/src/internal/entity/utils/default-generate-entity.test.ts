@@ -8,8 +8,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GenerateUuidEntity" })
 class GenerateUuidEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -17,8 +16,7 @@ class GenerateUuidEntity {
 
 @Entity({ name: "GenerateStringEntity" })
 class GenerateStringEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   @Generated("string", { length: 16 })
@@ -38,8 +36,7 @@ class GenerateIncrementEntity {
 
 @Entity({ name: "GenerateDateEntity" })
 class GenerateDateEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("timestamp")
   @Generated("date")
@@ -48,8 +45,7 @@ class GenerateDateEntity {
 
 @Entity({ name: "GenerateLindormIdEntity" })
 class GenerateLindormIdEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("varchar")
   @Generated()
@@ -58,8 +54,7 @@ class GenerateLindormIdEntity {
 
 @Entity({ name: "GenerateLindormIdLengthEntity" })
 class GenerateLindormIdLengthEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("varchar")
   @Generated("lindorm_id", { length: 32 })
@@ -68,8 +63,7 @@ class GenerateLindormIdLengthEntity {
 
 @Entity({ name: "GenerateFunctionEntity" })
 class GenerateFunctionEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   @Generated(() => "fixed-value")

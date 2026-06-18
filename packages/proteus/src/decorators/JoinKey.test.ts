@@ -5,13 +5,13 @@ import { JoinKey } from "./JoinKey.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { Nullable } from "./Nullable.js";
 import { OneToMany } from "./OneToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "JoinKeyDepartment" })
 class JoinKeyDepartment {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -26,8 +26,7 @@ class JoinKeyDepartment {
 // Auto-calculated join key
 @Entity({ name: "JoinKeyEmployee" })
 class JoinKeyEmployee {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @JoinKey()
   @ManyToOne(() => JoinKeyDepartment, "employees")
@@ -39,8 +38,7 @@ class JoinKeyEmployee {
 // Explicit join key mapping
 @Entity({ name: "JoinKeyExplicitEmployee" })
 class JoinKeyExplicitEmployee {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Nullable()
   @Field("uuid")

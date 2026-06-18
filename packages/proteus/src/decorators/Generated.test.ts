@@ -24,8 +24,7 @@ class GeneratedIncrement {
 
 @Entity({ name: "GeneratedString" })
 class GeneratedString {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   @Generated("string", { length: 16 })
@@ -34,8 +33,7 @@ class GeneratedString {
 
 @Entity({ name: "GeneratedInteger" })
 class GeneratedInteger {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("integer")
   @Generated("integer", { min: 1, max: 100 })
@@ -44,8 +42,7 @@ class GeneratedInteger {
 
 @Entity({ name: "GeneratedFloat" })
 class GeneratedFloat {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("float")
   @Generated("float", { min: 0, max: 1 })
@@ -54,8 +51,7 @@ class GeneratedFloat {
 
 @Entity({ name: "GeneratedDate" })
 class GeneratedDate {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("timestamp")
   @Generated("date")
@@ -64,8 +60,7 @@ class GeneratedDate {
 
 @Entity({ name: "GeneratedLindormIdDefault" })
 class GeneratedLindormIdDefault {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("varchar")
   @Generated()
@@ -74,8 +69,7 @@ class GeneratedLindormIdDefault {
 
 @Entity({ name: "GeneratedLindormIdExplicit" })
 class GeneratedLindormIdExplicit {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("varchar")
   @Generated("lindorm_id")
@@ -84,8 +78,7 @@ class GeneratedLindormIdExplicit {
 
 @Entity({ name: "GeneratedFunction" })
 class GeneratedFunction {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   @Generated(() => "static-value")
@@ -161,8 +154,7 @@ describe("Generated", () => {
     expect(() => {
       @Entity({ name: "GeneratedFunctionNoType" })
       class GeneratedFunctionNoType {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Generated(() => "x")
         slug!: string;

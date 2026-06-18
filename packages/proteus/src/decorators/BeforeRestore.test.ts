@@ -1,6 +1,7 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { BeforeRestore } from "./BeforeRestore.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test, vi } from "vitest";
 
@@ -9,8 +10,7 @@ const beforeRestoreCallback = vi.fn();
 @Entity({ name: "BeforeRestoreDecorated" })
 @BeforeRestore(beforeRestoreCallback)
 class BeforeRestoreDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 const multiHookCb1 = vi.fn();
@@ -20,8 +20,7 @@ const multiHookCb2 = vi.fn();
 @BeforeRestore(multiHookCb1)
 @BeforeRestore(multiHookCb2)
 class BeforeRestoreMultiHook {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("BeforeRestore", () => {

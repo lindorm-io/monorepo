@@ -3,6 +3,7 @@ import { buildPrimaryMetadata } from "../internal/entity/metadata/build-primary.
 import { AbstractEntity } from "./AbstractEntity.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { CreateDateField } from "./CreateDateField.js";
 import { UpdateDateField } from "./UpdateDateField.js";
@@ -25,8 +26,7 @@ class Auditable {
 // Concrete entity inheriting from abstract base
 @Entity({ name: "ConcreteUser" })
 class ConcreteUser extends Auditable {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -35,8 +35,7 @@ class ConcreteUser extends Auditable {
 // Another concrete entity inheriting from the same abstract base
 @Entity({ name: "ConcretePost" })
 class ConcretePost extends Auditable {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;
@@ -46,8 +45,7 @@ class ConcretePost extends Auditable {
 @AbstractEntity()
 @Entity({ name: "InvalidDualDecorator" })
 class InvalidDualDecorator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("AbstractEntity", () => {

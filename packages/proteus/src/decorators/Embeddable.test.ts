@@ -4,6 +4,7 @@ import { Embedded } from "./Embedded.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Nullable } from "./Nullable.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
@@ -22,8 +23,7 @@ class Address {
 
 @Entity({ name: "PersonWithAddress" })
 class PersonWithAddress {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -34,8 +34,7 @@ class PersonWithAddress {
 
 @Entity({ name: "PersonWithTwoAddresses" })
 class PersonWithTwoAddresses {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Embedded(() => Address)
   homeAddress!: Address | null;

@@ -10,6 +10,7 @@ import { Max } from "../../../decorators/Max.js";
 import { Min } from "../../../decorators/Min.js";
 import { Nullable } from "../../../decorators/Nullable.js";
 import { OnValidate } from "../../../decorators/OnValidate.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { Schema } from "../../../decorators/Schema.js";
 import { VersionField } from "../../../decorators/VersionField.js";
@@ -22,8 +23,7 @@ enum Status {
 
 @Entity({ name: "ValidateEntityBasic" })
 class ValidateEntityBasic {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -44,8 +44,7 @@ class ValidateEntityBasic {
 
 @Entity({ name: "ValidateEntityMinMax" })
 class ValidateEntityMinMax {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Min(3)
   @Max(50)
@@ -60,8 +59,7 @@ class ValidateEntityMinMax {
 
 @Entity({ name: "ValidateEntityEnum" })
 class ValidateEntityEnum {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Enum(Status)
   @Field("enum")
@@ -75,8 +73,7 @@ const validateSchemaCb = vi.fn();
 @Schema(nameSchema)
 @OnValidate(validateSchemaCb)
 class ValidateEntityWithSchema {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -191,8 +188,7 @@ class TagItem {
 
 @Entity({ name: "ValidateEntityWithPrimitiveLists" })
 class ValidateEntityWithPrimitiveLists {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @EmbeddedList("string")
   tags!: string[];
@@ -203,8 +199,7 @@ class ValidateEntityWithPrimitiveLists {
 
 @Entity({ name: "ValidateEntityWithEmbeddableList" })
 class ValidateEntityWithEmbeddableList {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @EmbeddedList(() => TagItem)
   items!: TagItem[];
@@ -303,8 +298,7 @@ class H1Address {
 
 @Entity({ name: "H1EmbeddedNullableEntity" })
 class H1EmbeddedNullableEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Embedded(() => H1Address)
   address!: H1Address | null;

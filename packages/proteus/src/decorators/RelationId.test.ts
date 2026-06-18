@@ -5,14 +5,14 @@ import { JoinKey } from "./JoinKey.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { Nullable } from "./Nullable.js";
 import { OneToMany } from "./OneToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { RelationId } from "./RelationId.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "RelationIdCompany" })
 class RelationIdCompany {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -26,8 +26,7 @@ class RelationIdCompany {
 
 @Entity({ name: "RelationIdEmployee" })
 class RelationIdEmployee {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -43,8 +42,7 @@ class RelationIdEmployee {
 
 @Entity({ name: "RelationIdExplicitEmployee" })
 class RelationIdExplicitEmployee {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

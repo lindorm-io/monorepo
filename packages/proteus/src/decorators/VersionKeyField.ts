@@ -2,16 +2,17 @@ import type { NamedDecoratorOptions } from "../internal/entity/types/decorators.
 import type { MetaFieldPrimaryType } from "../internal/entity/types/metadata.js";
 import {
   stageField,
-  stageGenerated,
   stagePrimaryKey,
   stageVersionKey,
 } from "../internal/entity/metadata/stage-metadata.js";
 
 /**
- * Shorthand that combines `@Field`, `@PrimaryKey`, `@VersionKey`, and `@Generated` in one decorator.
+ * Marker that combines `@Field`, `@PrimaryKey`, and `@VersionKey` in one decorator. It
+ * declares the column type and marks the field as a primary/version key, but does NOT
+ * generate the value — pair it with `@Generated(...)` to produce values.
  *
- * - `@VersionKeyField()` — UUID version key (default)
- * - `@VersionKeyField("integer")` — auto-increment integer version key
+ * - `@VersionKeyField()` — UUID version key column (default)
+ * - `@VersionKeyField("integer")` — integer version key column
  */
 export const VersionKeyField =
   (type: MetaFieldPrimaryType = "uuid", options: NamedDecoratorOptions = {}) =>
@@ -43,11 +44,4 @@ export const VersionKeyField =
     });
     stagePrimaryKey(context.metadata, { key });
     stageVersionKey(context.metadata, { key });
-    stageGenerated(context.metadata, {
-      key,
-      strategy: type === "integer" ? "increment" : type === "uuid" ? "uuid" : "string",
-      length: null,
-      max: null,
-      min: null,
-    });
   };

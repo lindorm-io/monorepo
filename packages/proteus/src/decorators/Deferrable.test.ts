@@ -5,13 +5,13 @@ import { Field } from "./Field.js";
 import { JoinKey } from "./JoinKey.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { OneToMany } from "./OneToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "DeferrableOwner" })
 class DeferrableOwner {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -25,8 +25,7 @@ class DeferrableOwner {
 
 @Entity({ name: "DeferrableImmediate" })
 class DeferrableImmediate {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Deferrable()
   @JoinKey()
@@ -38,8 +37,7 @@ class DeferrableImmediate {
 
 @Entity({ name: "DeferrableDeferred" })
 class DeferrableDeferred {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Deferrable({ initially: true })
   @JoinKey()

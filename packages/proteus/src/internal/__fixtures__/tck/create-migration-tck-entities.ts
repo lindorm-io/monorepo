@@ -9,6 +9,7 @@ import {
   Default,
   Entity,
   Field,
+  Generated,
   Index,
   ManyToOne,
   Nullable,
@@ -31,6 +32,7 @@ export const createMigrationTckEntities = (): MigrationTckEntities => {
   @Entity({ name: "TckMigParent" })
   class TckMigParent {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -53,6 +55,7 @@ export const createMigrationTckEntities = (): MigrationTckEntities => {
   @Entity({ name: "TckMigChild" })
   class TckMigChild {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -78,6 +81,7 @@ export const createMigrationTckEntities = (): MigrationTckEntities => {
   @Entity({ name: "TckMigSimple" })
   class TckMigSimple {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -104,6 +108,7 @@ export const createMigrationTckEntities = (): MigrationTckEntities => {
   @Entity({ name: "TckMigIndexed" })
   class TckMigIndexed {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -126,6 +131,7 @@ export const createMigrationTckEntities = (): MigrationTckEntities => {
   @Entity({ name: "TckMigExtra" })
   class TckMigExtra {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()

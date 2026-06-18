@@ -9,6 +9,7 @@ import { JoinTable } from "../../../../../decorators/JoinTable.js";
 import { ManyToMany } from "../../../../../decorators/ManyToMany.js";
 import { ManyToOne } from "../../../../../decorators/ManyToOne.js";
 import { OneToMany } from "../../../../../decorators/OneToMany.js";
+import { Generated } from "../../../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
@@ -19,8 +20,7 @@ import { describe, expect, test } from "vitest";
 /** Non-M2M entity — generateJoinTableDDL should return empty output */
 @Entity({ name: "JoinNonM2M" })
 class JoinNonM2M {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -29,8 +29,7 @@ class JoinNonM2M {
 /** M2M owning side — custom join table name */
 @Entity({ name: "JoinTag" })
 class JoinTag {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   label!: string;
@@ -41,8 +40,7 @@ class JoinTag {
 
 @Entity({ name: "JoinPost" })
 class JoinPost {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;

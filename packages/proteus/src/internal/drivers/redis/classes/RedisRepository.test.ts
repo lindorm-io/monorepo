@@ -117,18 +117,19 @@ vi.mock("../../../utils/pagination/extract-cursor-values.js", () => ({
 import { randomUUID } from "crypto";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
+  CreateDateField,
+  DeleteDateField,
   Entity,
   Field,
+  Generated,
   JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
   PrimaryKey,
   PrimaryKeyField,
-  VersionField,
-  CreateDateField,
   UpdateDateField,
-  DeleteDateField,
+  VersionField,
 } from "../../../../decorators/index.js";
 import type { IProteusRepository } from "../../../../interfaces/index.js";
 import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
@@ -147,8 +148,7 @@ const mockedScanEntityKeys = scanEntityKeys as MockedFunction<typeof scanEntityK
 
 @Entity({ name: "repo_test_item" })
 class RepoItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -165,8 +165,7 @@ class RepoItem {
 
 @Entity({ name: "repo_test_tag" })
 class RepoTag {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -183,8 +182,7 @@ class RepoTag {
 
 @Entity({ name: "repo_soft_item" })
 class RepoSoftItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -204,8 +202,7 @@ class RepoSoftItem {
 
 @Entity({ name: "repo_parent" })
 class RepoParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -225,8 +222,7 @@ class RepoParent {
 
 @Entity({ name: "repo_child" })
 class RepoChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -246,8 +242,7 @@ class RepoChild {
 
 @Entity({ name: "repo_m2m_owner" })
 class RepoM2MOwner {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -280,8 +275,7 @@ class RepoManualPk {
 
 @Entity({ name: "repo_m2m_target" })
 class RepoM2MTarget {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;

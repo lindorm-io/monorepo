@@ -19,8 +19,7 @@ const cloneOnCreateCb = vi.fn();
 
 @Entity({ name: "CloneEntityChild" })
 class CloneEntityChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -65,8 +64,7 @@ class CloneEntityParent {
 // ManyToMany entities
 @Entity({ name: "CloneEntityM2MTag" })
 class CloneEntityM2MTag {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

@@ -2,13 +2,13 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Max } from "./Max.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "MaxDecoratedInteger" })
 class MaxDecoratedInteger {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Max(100)
   @Field("integer")
@@ -17,8 +17,7 @@ class MaxDecoratedInteger {
 
 @Entity({ name: "MaxDecoratedString" })
 class MaxDecoratedString {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Max(255)
   @Field("string")
@@ -27,8 +26,7 @@ class MaxDecoratedString {
 
 @Entity({ name: "MaxNoDecorator" })
 class MaxNoDecorator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("integer")
   count!: number;

@@ -6,6 +6,7 @@ import { EmbeddedList } from "./EmbeddedList.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Nullable } from "./Nullable.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
@@ -26,8 +27,7 @@ class Address {
 
 @Entity({ name: "UserWithTags" })
 class UserWithTags {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -38,8 +38,7 @@ class UserWithTags {
 
 @Entity({ name: "UserWithAddresses" })
 class UserWithAddresses {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -50,8 +49,7 @@ class UserWithAddresses {
 
 @Entity({ name: "UserWithCustomTable" })
 class UserWithCustomTable {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @EmbeddedList("string", { tableName: "custom_user_tags" })
   tags!: string[];
@@ -59,8 +57,7 @@ class UserWithCustomTable {
 
 @Entity({ name: "UserWithMultipleLists" })
 class UserWithMultipleLists {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @EmbeddedList("string")
   tags!: string[];
@@ -177,8 +174,7 @@ describe("EmbeddedList — validation", () => {
     expect(() => {
       @Entity({ name: "BadEmbeddedListEntity" })
       class BadEmbeddedListEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList(() => NotEmbeddable as any)
         items!: any[];

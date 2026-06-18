@@ -44,6 +44,7 @@ import {
 @Entity({ name: "TestUser" })
 export class TestUser {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -111,6 +112,7 @@ export class TestPost {
 @Entity({ name: "TestScopedEntity" })
 export class TestScopedEntity {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @ScopeField()
@@ -136,6 +138,7 @@ export class TestScopedEntity {
 @Entity({ name: "TestSoftDelete" })
 export class TestSoftDelete {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -175,6 +178,7 @@ const testHookCallback = vi.fn();
 @OnValidate(testHookCallback)
 export class TestWithHooks {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -202,6 +206,7 @@ const testSchema = z.object({
 @Schema(testSchema)
 export class TestWithSchema {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -224,6 +229,7 @@ export class TestWithSchema {
 @Entity({ name: "TestProfile" })
 export class TestProfile {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -247,6 +253,7 @@ export class TestProfile {
 @Entity({ name: "TestUserWithProfile" })
 export class TestUserWithProfile {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -279,6 +286,7 @@ export class TestUserWithProfile {
 @Entity({ name: "TestArticle" })
 export class TestArticle {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -303,6 +311,7 @@ export class TestArticle {
 @Entity({ name: "TestAuthor" })
 export class TestAuthor {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -329,6 +338,7 @@ export class TestAuthor {
 @Entity({ name: "TestCourse" })
 export class TestCourse {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -351,6 +361,7 @@ export class TestCourse {
 @Entity({ name: "TestStudent" })
 export class TestStudent {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -378,6 +389,7 @@ export class TestStudent {
 @Check("score BETWEEN 0 AND 100")
 export class TestChecked {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -405,6 +417,7 @@ export class TestChecked {
 @Unique<typeof TestIndexed>(["email"], { name: "unique_email" })
 export class TestIndexed {
   @PrimaryKeyField()
+  @Generated("uuid")
   id!: string;
 
   @VersionField()
@@ -436,6 +449,7 @@ export class TestVersionKeyed {
   id!: string;
 
   @VersionKeyField()
+  @Generated("uuid")
   versionId!: string;
 
   @CreateDateField()

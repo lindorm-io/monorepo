@@ -4,13 +4,13 @@ import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { OneToMany } from "./OneToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CascadeParent" })
 class CascadeParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -21,8 +21,7 @@ class CascadeParent {
 
 @Entity({ name: "CascadeChild" })
 class CascadeChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Cascade({ onInsert: "cascade", onUpdate: "cascade", onDestroy: "cascade" })
   @ManyToOne(() => CascadeParent, "children")
@@ -33,8 +32,7 @@ class CascadeChild {
 
 @Entity({ name: "CascadeSoftParent" })
 class CascadeSoftParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => CascadeSoftChild, "parent")
   children!: CascadeSoftChild[];
@@ -42,8 +40,7 @@ class CascadeSoftParent {
 
 @Entity({ name: "CascadeSoftChild" })
 class CascadeSoftChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Cascade({ onSoftDestroy: "cascade" })
   @ManyToOne(() => CascadeSoftParent, "children")

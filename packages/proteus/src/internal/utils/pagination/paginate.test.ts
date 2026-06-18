@@ -12,6 +12,7 @@ import {
   DeleteDateField,
   Entity,
   Field,
+  Generated,
   Nullable,
   PrimaryKeyField,
   ScopeField,
@@ -25,8 +26,7 @@ import type { IProteusRepository } from "../../../interfaces/index.js";
 
 @Entity({ name: "PaginateItem" })
 class PaginateItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -53,8 +53,7 @@ class PaginateItem {
 
 @Entity({ name: "PaginateScopedItem" })
 class PaginateScopedItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;

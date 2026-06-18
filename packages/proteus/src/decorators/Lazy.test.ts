@@ -5,13 +5,13 @@ import { JoinKey } from "./JoinKey.js";
 import { Lazy } from "./Lazy.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { OneToMany } from "./OneToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "LazyOrganization" })
 class LazyOrganization {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -28,8 +28,7 @@ class LazyOrganization {
 
 @Entity({ name: "LazyMember" })
 class LazyMember {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Lazy()
   @JoinKey()
@@ -41,8 +40,7 @@ class LazyMember {
 
 @Entity({ name: "LazySingleMember" })
 class LazySingleMember {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Lazy("single")
   @JoinKey()
@@ -54,8 +52,7 @@ class LazySingleMember {
 
 @Entity({ name: "LazyMultipleMember" })
 class LazyMultipleMember {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Lazy("multiple")
   @JoinKey()

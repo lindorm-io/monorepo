@@ -1,13 +1,13 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { DeleteDateField } from "./DeleteDateField.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "DeleteDateFieldDecorated" })
 class DeleteDateFieldDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @DeleteDateField()
   deletedAt!: Date | null;

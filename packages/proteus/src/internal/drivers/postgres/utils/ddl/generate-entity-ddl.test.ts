@@ -16,6 +16,7 @@ import { Entity } from "../../../../../decorators/Entity.js";
 import { Field } from "../../../../../decorators/Field.js";
 import { Max } from "../../../../../decorators/Max.js";
 import { Namespace } from "../../../../../decorators/Namespace.js";
+import { Generated } from "../../../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
 import { generateEntityDDL } from "./generate-entity-ddl.js";
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
@@ -27,8 +28,7 @@ import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metada
 /** Entity with a vector field — should auto-detect and add pgvector extension */
 @Entity({ name: "DdlVectorEntity" })
 class DdlVectorEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Max(1536)
   @Field("vector")
@@ -39,8 +39,7 @@ class DdlVectorEntity {
 @Namespace("analytics")
 @Entity({ name: "DdlNamespacedEntity" })
 class DdlNamespacedEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   label!: string;

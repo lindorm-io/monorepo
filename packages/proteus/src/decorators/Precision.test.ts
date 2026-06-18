@@ -2,13 +2,13 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Precision } from "./Precision.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "PrecisionWithScale" })
 class PrecisionWithScale {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Precision(10, 2)
   @Field("decimal")
@@ -17,8 +17,7 @@ class PrecisionWithScale {
 
 @Entity({ name: "PrecisionWithoutScale" })
 class PrecisionWithoutScale {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Precision(8)
   @Field("decimal")
@@ -27,8 +26,7 @@ class PrecisionWithoutScale {
 
 @Entity({ name: "PrecisionNoDecorator" })
 class PrecisionNoDecorator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("float")
   value!: number;

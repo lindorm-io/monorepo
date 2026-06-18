@@ -10,6 +10,7 @@ import { ManyToOne } from "../../../decorators/ManyToOne.js";
 import { Nullable } from "../../../decorators/Nullable.js";
 import { OneToMany } from "../../../decorators/OneToMany.js";
 import { OneToOne } from "../../../decorators/OneToOne.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
@@ -20,8 +21,7 @@ import { describe, expect, test } from "vitest";
 // OneToOne: User owns Profile (has FK)
 @Entity({ name: "RRProfile" })
 class RRProfile {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   bio!: string;
@@ -32,8 +32,7 @@ class RRProfile {
 
 @Entity({ name: "RRUser" })
 class RRUser {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -48,8 +47,7 @@ class RRUser {
 // OneToOne with explicit joinKeys
 @Entity({ name: "RRExplicitProfile" })
 class RRExplicitProfile {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   bio!: string;
@@ -60,8 +58,7 @@ class RRExplicitProfile {
 
 @Entity({ name: "RRExplicitUser" })
 class RRExplicitUser {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -78,8 +75,7 @@ class RRExplicitUser {
 // ManyToOne / OneToMany
 @Entity({ name: "RRComment" })
 class RRComment {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   body!: string;
@@ -92,8 +88,7 @@ class RRComment {
 
 @Entity({ name: "RRPost" })
 class RRPost {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;
@@ -105,8 +100,7 @@ class RRPost {
 // ManyToMany
 @Entity({ name: "RRStudent" })
 class RRStudent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -117,8 +111,7 @@ class RRStudent {
 
 @Entity({ name: "RRCourse" })
 class RRCourse {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -131,8 +124,7 @@ class RRCourse {
 // ManyToMany with custom joinTable name
 @Entity({ name: "RRCustomTableTag" })
 class RRCustomTableTag {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -143,8 +135,7 @@ class RRCustomTableTag {
 
 @Entity({ name: "RRCustomTableArticle" })
 class RRCustomTableArticle {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;
@@ -157,8 +148,7 @@ class RRCustomTableArticle {
 // Self-referential ManyToMany
 @Entity({ name: "RRSelfRefNode" })
 class RRSelfRefNode {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -178,8 +168,7 @@ class RRSelfRefNode {
 // Missing inverse relation
 @Entity({ name: "RRNoInverseParent" })
 class RRNoInverseParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -187,8 +176,7 @@ class RRNoInverseParent {
 
 @Entity({ name: "RRNoInverseChild" })
 class RRNoInverseChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ManyToOne(() => RRNoInverseParent, "children" as any)
   parent!: RRNoInverseParent | null;
@@ -199,8 +187,7 @@ class RRNoInverseChild {
 // Both OneToOne sides have @JoinKey
 @Entity({ name: "RRBothJoinA" })
 class RRBothJoinA {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @JoinKey()
   @OneToOne(() => RRBothJoinB, "a")
@@ -211,8 +198,7 @@ class RRBothJoinA {
 
 @Entity({ name: "RRBothJoinB" })
 class RRBothJoinB {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @JoinKey()
   @OneToOne(() => RRBothJoinA, "b")
@@ -224,8 +210,7 @@ class RRBothJoinB {
 // ManyToMany with no join table on either side
 @Entity({ name: "RRNoJoinTableA" })
 class RRNoJoinTableA {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ManyToMany(() => RRNoJoinTableB, "as")
   bs!: RRNoJoinTableB[];
@@ -233,8 +218,7 @@ class RRNoJoinTableA {
 
 @Entity({ name: "RRNoJoinTableB" })
 class RRNoJoinTableB {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ManyToMany(() => RRNoJoinTableA, "bs")
   as!: RRNoJoinTableA[];
@@ -243,8 +227,7 @@ class RRNoJoinTableB {
 // Join key field not found (local field doesn't exist)
 @Entity({ name: "RRBadJoinKeyForeign" })
 class RRBadJoinKeyForeign {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => RRBadJoinKeyOwner, "foreign")
   owners!: RRBadJoinKeyOwner[];
@@ -252,8 +235,7 @@ class RRBadJoinKeyForeign {
 
 @Entity({ name: "RRBadJoinKeyOwner" })
 class RRBadJoinKeyOwner {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @JoinKey({ nonExistentField: "id" })
   @ManyToOne(() => RRBadJoinKeyForeign, "owners")
@@ -263,8 +245,7 @@ class RRBadJoinKeyOwner {
 // Foreign join key field not found (foreign field doesn't exist)
 @Entity({ name: "RRBadForeignJoinForeign" })
 class RRBadForeignJoinForeign {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OneToMany(() => RRBadForeignJoinOwner, "foreign")
   owners!: RRBadForeignJoinOwner[];
@@ -272,8 +253,7 @@ class RRBadForeignJoinForeign {
 
 @Entity({ name: "RRBadForeignJoinOwner" })
 class RRBadForeignJoinOwner {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Nullable()
   @Field("uuid")

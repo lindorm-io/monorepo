@@ -3,14 +3,14 @@ import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { OneToMany } from "./OneToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { RelationCount } from "./RelationCount.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "RelationCountBlog" })
 class RelationCountBlog {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;
@@ -25,8 +25,7 @@ class RelationCountBlog {
 
 @Entity({ name: "RelationCountComment" })
 class RelationCountComment {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   body!: string;

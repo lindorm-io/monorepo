@@ -1,27 +1,25 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { Entity } from "./Entity.js";
 import { Namespace } from "./Namespace.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Namespace("tenant")
 @Entity({ name: "NamespacedEntity" })
 class NamespacedEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Namespace("public")
 @Entity({ name: "NamespacedPublicEntity" })
 class NamespacedPublicEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Entity({ name: "NoNamespaceEntity" })
 class NoNamespaceEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("Namespace", () => {

@@ -4,26 +4,24 @@ import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Namespace } from "./Namespace.js";
 import { PrimaryKey } from "./PrimaryKey.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity()
 class EntityDefaultName {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Entity({ name: "CustomEntityName" })
 class EntityWithCustomName {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Namespace("myapp")
 @Entity({ name: "EntityWithOptions" })
 class EntityWithOptions {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Namespace("myns")

@@ -3,14 +3,14 @@ import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Filter } from "./Filter.js";
 import { Nullable } from "./Nullable.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "FilterActive" })
 @Filter({ name: "active", condition: { status: "active" }, default: true })
 class FilterActive {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   status!: string;
@@ -19,8 +19,7 @@ class FilterActive {
 @Entity({ name: "FilterTenant" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
 class FilterTenant {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   tenantId!: string;
@@ -30,8 +29,7 @@ class FilterTenant {
 @Filter({ name: "active", condition: { deletedAt: null }, default: true })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
 class FilterMultiple {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   tenantId!: string;
@@ -48,8 +46,7 @@ class FilterMultiple {
   default: false,
 })
 class FilterNested {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("timestamp")
   createdAt!: Date;
@@ -62,8 +59,7 @@ class FilterNested {
   default: true,
 })
 class FilterAndOr {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   status!: string;

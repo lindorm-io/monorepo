@@ -5,13 +5,13 @@ import { JoinKey } from "./JoinKey.js";
 import { ManyToOne } from "./ManyToOne.js";
 import { OnOrphan } from "./OnOrphan.js";
 import { OneToMany } from "./OneToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "OnOrphanParent" })
 class OnOrphanParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -28,8 +28,7 @@ class OnOrphanParent {
 
 @Entity({ name: "OnOrphanDeleteChild" })
 class OnOrphanDeleteChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OnOrphan("delete")
   @JoinKey()
@@ -41,8 +40,7 @@ class OnOrphanDeleteChild {
 
 @Entity({ name: "OnOrphanNullifyChild" })
 class OnOrphanNullifyChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OnOrphan("nullify")
   @JoinKey()
@@ -54,8 +52,7 @@ class OnOrphanNullifyChild {
 
 @Entity({ name: "OnOrphanIgnoreChild" })
 class OnOrphanIgnoreChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @OnOrphan("ignore")
   @JoinKey()

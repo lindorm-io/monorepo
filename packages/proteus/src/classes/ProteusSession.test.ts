@@ -3,6 +3,7 @@ import { ProteusSession } from "./ProteusSession.js";
 import { ProteusSource } from "./ProteusSource.js";
 import { Entity } from "../decorators/Entity.js";
 import { Field } from "../decorators/Field.js";
+import { Generated } from "../decorators/Generated.js";
 import { PrimaryKeyField } from "../decorators/PrimaryKeyField.js";
 import { Filter } from "../decorators/Filter.js";
 import { describe, expect, test, vi } from "vitest";
@@ -10,8 +11,7 @@ import { describe, expect, test, vi } from "vitest";
 @Entity({ name: "SessionEntity" })
 @Filter({ name: "tenant", condition: { tenantId: "$tenantId" } })
 class SessionEntity {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   tenantId!: string;
@@ -19,8 +19,7 @@ class SessionEntity {
 
 @Entity({ name: "NotRegisteredOnSession" })
 class NotRegisteredOnSession {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 const createSource = () =>

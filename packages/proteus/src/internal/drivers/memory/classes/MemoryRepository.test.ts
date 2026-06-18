@@ -5,6 +5,7 @@ import {
   DeleteDateField,
   Entity,
   Field,
+  Generated,
   ManyToOne,
   Nullable,
   OneToMany,
@@ -21,8 +22,7 @@ import type { IProteusRepository } from "../../../../interfaces/index.js";
 
 @Entity({ name: "RepoTestCategory" })
 class RepoTestCategory {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -42,8 +42,7 @@ class RepoTestCategory {
 
 @Entity({ name: "RepoTestItem" })
 class RepoTestItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -67,8 +66,7 @@ class RepoTestItem {
 
 @Entity({ name: "RepoSoftItem" })
 class RepoSoftItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;

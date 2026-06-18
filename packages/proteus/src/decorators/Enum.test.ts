@@ -2,6 +2,7 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity.js";
 import { Enum } from "./Enum.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
@@ -19,8 +20,7 @@ const PriorityRecord = {
 
 @Entity({ name: "EnumWithTsEnum" })
 class EnumWithTsEnum {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Enum(StatusEnum)
   @Field("enum")
@@ -29,8 +29,7 @@ class EnumWithTsEnum {
 
 @Entity({ name: "EnumWithRecord" })
 class EnumWithRecord {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Enum(PriorityRecord)
   @Field("enum")
@@ -39,8 +38,7 @@ class EnumWithRecord {
 
 @Entity({ name: "EnumNoDecorator" })
 class EnumNoDecorator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   status!: string;

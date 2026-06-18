@@ -2,6 +2,7 @@ import { z } from "zod";
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { Schema } from "./Schema.js";
 import { describe, expect, test } from "vitest";
@@ -17,8 +18,7 @@ const emailSchema = z.object({
 @Entity({ name: "SchemaDecorated" })
 @Schema(nameSchema)
 class SchemaDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -28,8 +28,7 @@ class SchemaDecorated {
 @Schema(nameSchema)
 @Schema(emailSchema)
 class SchemaMultiple {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

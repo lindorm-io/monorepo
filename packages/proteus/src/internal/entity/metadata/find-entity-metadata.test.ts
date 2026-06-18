@@ -1,13 +1,13 @@
 import { findEntityMetadata } from "./find-entity-metadata.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "FindMetadataTarget" })
 class FindMetadataTarget {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

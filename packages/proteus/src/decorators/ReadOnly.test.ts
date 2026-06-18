@@ -1,14 +1,14 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { ReadOnly } from "./ReadOnly.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ReadOnlyDecorated" })
 class ReadOnlyDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @ReadOnly()
   @Field("string")
@@ -17,8 +17,7 @@ class ReadOnlyDecorated {
 
 @Entity({ name: "ReadOnlyNotDecorated" })
 class ReadOnlyNotDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
