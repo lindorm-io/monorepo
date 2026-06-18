@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
@@ -30,7 +30,7 @@ export class MemoryRpcClient<
 
   public async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
-    const correlationId = randomUUID();
+    const correlationId = randomId({ namespace: "cor", length: 16 });
 
     const { envelope, topic } = await this.prepareRequestEnvelope(message);
     envelope.replyTo = "__rpc_reply__";

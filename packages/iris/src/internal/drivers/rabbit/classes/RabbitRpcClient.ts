@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { ConsumeMessage } from "amqplib";
@@ -57,7 +57,7 @@ export class RabbitRpcClient<
 
   public async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
-    const correlationId = randomUUID();
+    const correlationId = randomId({ namespace: "cor", length: 16 });
 
     const publishChannel = this.state.publishChannel;
     if (!publishChannel) {

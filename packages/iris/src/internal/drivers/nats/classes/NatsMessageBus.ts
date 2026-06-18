@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
 import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
@@ -87,10 +87,11 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
         type: "subscribe",
       });
     } else {
-      consumerName = `${this.state.prefix}_sub_ephemeral_${randomUUID()}`.replace(
-        /[^a-zA-Z0-9_-]/g,
-        "_",
-      );
+      consumerName =
+        `${this.state.prefix}_sub_ephemeral_${randomId({ length: 16 })}`.replace(
+          /[^a-zA-Z0-9_-]/g,
+          "_",
+        );
     }
 
     const wrappedCallback = wrapNatsConsumer(

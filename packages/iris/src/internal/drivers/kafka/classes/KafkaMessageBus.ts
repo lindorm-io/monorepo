@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
 import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
@@ -90,7 +90,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
         generation: this.state.resetGeneration,
       });
     } else {
-      groupId = `${this.state.prefix}.sub.ephemeral.${randomUUID()}`;
+      groupId = `${this.state.prefix}.sub.ephemeral.${randomId({ length: 16 })}`;
     }
 
     const getConsumer = (): KafkaConsumer => {
@@ -126,7 +126,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     // Broadcast consumer: unique group per consumer on a separate broadcast
     // topic so every consumer independently receives every broadcast message.
     const broadcastTopic = `${kafkaTopic}.broadcast`;
-    const broadcastGroupId = `${groupId}.bc.${randomUUID()}`;
+    const broadcastGroupId = `${groupId}.bc.${randomId({ length: 16 })}`;
 
     const getBroadcastConsumer = (): KafkaConsumer => {
       const p = this.state.consumerPool.get(broadcastGroupId);

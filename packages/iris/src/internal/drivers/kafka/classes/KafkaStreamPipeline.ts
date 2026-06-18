@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { KafkaSharedState } from "../types/kafka-types.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
@@ -68,7 +68,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     const inputMetadata = getMessageMetadata(this.inputClass);
     const subscribeTopic = this.inputTopic ?? resolveDefaultTopic(inputMetadata);
     const kafkaTopic = resolveTopicName(this.state.prefix, subscribeTopic);
-    this.groupId = `${this.state.prefix}.pipeline.${randomUUID()}`;
+    this.groupId = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
 
     this.running = true;
     this.paused = false;
@@ -158,7 +158,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
 
     // Create a new group so messages published during the pause window
     // are skipped — only new messages after resume are processed.
-    this.groupId = `${this.state.prefix}.pipeline.${randomUUID()}`;
+    this.groupId = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
 
     const handle = await createKafkaConsumer({
       kafka: this.state.kafka,

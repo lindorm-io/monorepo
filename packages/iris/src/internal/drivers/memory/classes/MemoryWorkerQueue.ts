@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type {
   ConsumeEnvelope,
@@ -72,7 +72,7 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
       });
     }
 
-    const consumerTag = randomUUID();
+    const consumerTag = randomId({ namespace: "con", length: 16 });
     this.ownedConsumerTags.add(consumerTag);
 
     const wrappedCallback = wrapConsumerCallback(

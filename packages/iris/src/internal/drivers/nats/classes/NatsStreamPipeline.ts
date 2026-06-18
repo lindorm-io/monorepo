@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { NatsSharedState } from "../types/nats-types.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
@@ -71,10 +71,11 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     const inputMetadata = getMessageMetadata(this.inputClass);
     const subscribeTopic = this.inputTopic ?? resolveDefaultTopic(inputMetadata);
     const subject = resolveSubject(this.state.prefix, subscribeTopic);
-    const consumerName = `${this.state.prefix}_pipeline_${randomUUID()}`.replace(
-      /[^a-zA-Z0-9_-]/g,
-      "_",
-    );
+    const consumerName =
+      `${this.state.prefix}_pipeline_${randomId({ length: 16 })}`.replace(
+        /[^a-zA-Z0-9_-]/g,
+        "_",
+      );
 
     this.running = true;
     this.paused = false;
@@ -186,10 +187,11 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     const subject = resolveSubject(this.state.prefix, subscribeTopic);
 
     // Create a new consumer so messages published during the pause window are skipped
-    const consumerName = `${this.state.prefix}_pipeline_${randomUUID()}`.replace(
-      /[^a-zA-Z0-9_-]/g,
-      "_",
-    );
+    const consumerName =
+      `${this.state.prefix}_pipeline_${randomId({ length: 16 })}`.replace(
+        /[^a-zA-Z0-9_-]/g,
+        "_",
+      );
 
     const loop = await createNatsConsumer({
       js: this.state.js,

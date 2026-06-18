@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type {
   ConsumeEnvelope,
@@ -139,7 +139,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     // Broadcast consumer: unique group per consumer on a separate broadcast
     // topic so every consumer independently receives every broadcast message.
     const broadcastTopic = `${kafkaTopic}.broadcast`;
-    const broadcastGroupId = `${groupId}.bc.${randomUUID()}`;
+    const broadcastGroupId = `${groupId}.bc.${randomId({ length: 16 })}`;
 
     const getBroadcastConsumer = (): KafkaConsumer => {
       const p = this.state.consumerPool.get(broadcastGroupId);

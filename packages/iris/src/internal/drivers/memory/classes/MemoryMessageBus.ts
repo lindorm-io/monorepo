@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { PublishOptions, SubscribeOptions } from "../../../../types/index.js";
 import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
@@ -52,7 +52,7 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M
       return;
     }
 
-    const consumerTag = randomUUID();
+    const consumerTag = randomId({ namespace: "con", length: 16 });
     this.ownedConsumerTags.add(consumerTag);
 
     const wrappedCallback = wrapConsumerCallback(

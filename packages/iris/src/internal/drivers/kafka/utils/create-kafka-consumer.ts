@@ -1,5 +1,5 @@
 import type { ILogger } from "@lindorm/logger";
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type {
   CreateKafkaConsumerOptions,
   GetOrCreatePooledConsumerOptions,
@@ -131,7 +131,7 @@ export const createKafkaConsumer = async (
 
   await readyPromise;
 
-  const consumerTag = randomUUID();
+  const consumerTag = randomId({ namespace: "con", length: 16 });
 
   return {
     consumerTag,
@@ -159,7 +159,7 @@ export const getOrCreatePooledConsumer = async (
     );
   }
 
-  const consumerTag = randomUUID();
+  const consumerTag = randomId({ namespace: "con", length: 16 });
   const existing = state.consumerPool.get(groupId);
 
   if (existing) {

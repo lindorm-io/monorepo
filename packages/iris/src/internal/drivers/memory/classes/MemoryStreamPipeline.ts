@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { MemorySharedState } from "../types/memory-store.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
@@ -58,7 +58,7 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
 
     this.running = true;
     this.paused = false;
-    this.consumerTag = randomUUID();
+    this.consumerTag = randomId({ namespace: "con", length: 16 });
 
     this.store.subscriptions.push({
       topic: subscribeTopic,

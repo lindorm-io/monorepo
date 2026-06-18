@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
@@ -58,7 +58,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
     const inputMetadata = getMessageMetadata(this.inputClass);
     const subscribeTopic = this.inputTopic ?? resolveDefaultTopic(inputMetadata);
     const streamKey = resolveStreamKey(this.state.prefix, subscribeTopic);
-    this.groupName = `${this.state.prefix}.pipeline.${randomUUID()}`;
+    this.groupName = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
 
     this.running = true;
     this.paused = false;
@@ -141,7 +141,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
 
     // Create a new group starting at "$" so messages published during
     // the pause window are skipped — only new messages after resume.
-    this.groupName = `${this.state.prefix}.pipeline.${randomUUID()}`;
+    this.groupName = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
 
     const loop = await createConsumerLoop({
       publishConnection: this.state.publishConnection!,
