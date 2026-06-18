@@ -2,13 +2,13 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Min } from "./Min.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "MinDecoratedInteger" })
 class MinDecoratedInteger {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Min(0)
   @Field("integer")
@@ -17,8 +17,7 @@ class MinDecoratedInteger {
 
 @Entity({ name: "MinDecoratedNegative" })
 class MinDecoratedNegative {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Min(-273)
   @Field("float")
@@ -27,8 +26,7 @@ class MinDecoratedNegative {
 
 @Entity({ name: "MinNoDecorator" })
 class MinNoDecorator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("integer")
   count!: number;

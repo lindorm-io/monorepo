@@ -1,13 +1,13 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { CreateDateField } from "./CreateDateField.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "CreateDateFieldDecorated" })
 class CreateDateFieldDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @CreateDateField()
   createdAt!: Date;

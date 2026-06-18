@@ -1,26 +1,24 @@
 import { getEntityName } from "./get-entity-name.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Namespace } from "../../../decorators/Namespace.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "GetEntityNameSimple" })
 class GetEntityNameSimple {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Namespace("myApp")
 @Entity({ name: "GetEntityNameWithNs" })
 class GetEntityNameWithNs {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Entity({ name: "GetEntityNameNoNs" })
 class GetEntityNameNoNs {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("getEntityName", () => {

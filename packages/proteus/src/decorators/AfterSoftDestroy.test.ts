@@ -1,6 +1,7 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { AfterSoftDestroy } from "./AfterSoftDestroy.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test, vi } from "vitest";
 
@@ -9,8 +10,7 @@ const afterSoftDestroyCallback = vi.fn();
 @Entity({ name: "AfterSoftDestroyDecorated" })
 @AfterSoftDestroy(afterSoftDestroyCallback)
 class AfterSoftDestroyDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 const multiHookCb1 = vi.fn();
@@ -20,8 +20,7 @@ const multiHookCb2 = vi.fn();
 @AfterSoftDestroy(multiHookCb1)
 @AfterSoftDestroy(multiHookCb2)
 class AfterSoftDestroyMultiHook {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 describe("AfterSoftDestroy", () => {

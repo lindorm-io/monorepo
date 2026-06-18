@@ -3,13 +3,13 @@ import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { JoinTable } from "./JoinTable.js";
 import { ManyToMany } from "./ManyToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "JoinTableSkill" })
 class JoinTableSkill {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -21,8 +21,7 @@ class JoinTableSkill {
 
 @Entity({ name: "JoinTableDeveloper" })
 class JoinTableDeveloper {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -35,8 +34,7 @@ class JoinTableDeveloper {
 
 @Entity({ name: "JoinTableTag" })
 class JoinTableTag {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   label!: string;
@@ -47,8 +45,7 @@ class JoinTableTag {
 
 @Entity({ name: "JoinTableArticle" })
 class JoinTableArticle {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;

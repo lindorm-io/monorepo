@@ -13,6 +13,7 @@ import {
   CreateDateField,
   Entity,
   Field,
+  Generated,
   Nullable,
   PrimaryKeyField,
   UpdateDateField,
@@ -26,8 +27,7 @@ vi.setConfig({ testTimeout: 30_000 });
 @Entity({ name: "RedisCachedProduct" })
 @Cache("1 Minute")
 class RedisCachedProduct {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

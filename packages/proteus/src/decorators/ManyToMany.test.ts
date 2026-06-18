@@ -3,6 +3,7 @@ import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { JoinTable } from "./JoinTable.js";
 import { ManyToMany } from "./ManyToMany.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
@@ -10,8 +11,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ManyToManyProduct" })
 class ManyToManyProduct {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -23,8 +23,7 @@ class ManyToManyProduct {
 
 @Entity({ name: "ManyToManyCategory" })
 class ManyToManyCategory {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -38,8 +37,7 @@ class ManyToManyCategory {
 // ManyToMany with custom joinTable name
 @Entity({ name: "ManyToManyTagB" })
 class ManyToManyTagB {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -50,8 +48,7 @@ class ManyToManyTagB {
 
 @Entity({ name: "ManyToManyArticleB" })
 class ManyToManyArticleB {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;

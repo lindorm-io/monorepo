@@ -4,6 +4,7 @@ import {
   CreateDateField,
   Entity,
   Field,
+  Generated,
   ManyToOne,
   Nullable,
   OneToMany,
@@ -24,7 +25,7 @@ import {
 
 @Entity({ name: "RiParent" })
 class RiParent {
-  @PrimaryKeyField() id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   @VersionField() version!: number;
   @CreateDateField() createdAt!: Date;
   @UpdateDateField() updatedAt!: Date;
@@ -37,7 +38,7 @@ class RiParent {
 
 @Entity({ name: "RiCascadeChild" })
 class RiCascadeChild {
-  @PrimaryKeyField() id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   @VersionField() version!: number;
   @CreateDateField() createdAt!: Date;
   @UpdateDateField() updatedAt!: Date;
@@ -51,7 +52,7 @@ class RiCascadeChild {
 
 @Entity({ name: "RiRestrictChild" })
 class RiRestrictChild {
-  @PrimaryKeyField() id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   @VersionField() version!: number;
   @CreateDateField() createdAt!: Date;
   @UpdateDateField() updatedAt!: Date;
@@ -65,7 +66,7 @@ class RiRestrictChild {
 
 @Entity({ name: "RiNullifyChild" })
 class RiNullifyChild {
-  @PrimaryKeyField() id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
   @VersionField() version!: number;
   @CreateDateField() createdAt!: Date;
   @UpdateDateField() updatedAt!: Date;

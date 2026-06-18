@@ -62,6 +62,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckSimplePost" })
   class TckSimplePost {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -92,6 +93,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckSimpleUser" })
   class TckSimpleUser {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -123,6 +125,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckSoftDeletable" })
   class TckSoftDeletable {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -148,6 +151,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckExpirable" })
   class TckExpirable {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -174,6 +178,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     id!: string;
 
     @VersionKeyField()
+    @Generated("uuid")
     versionId!: string;
 
     @CreateDateField()
@@ -197,6 +202,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckDetail" })
   class TckDetail {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -219,6 +225,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckOwner" })
   class TckOwner {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -249,6 +256,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckRight" })
   class TckRight {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -271,6 +279,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckLeft" })
   class TckLeft {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -297,6 +306,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckLazyPost" })
   class TckLazyPost {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -323,6 +333,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckLazyUser" })
   class TckLazyUser {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -346,6 +357,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckLazyDetail" })
   class TckLazyDetail {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -368,6 +380,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckLazyOwner" })
   class TckLazyOwner {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -396,6 +409,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckLazyRight" })
   class TckLazyRight {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -418,6 +432,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckLazyLeft" })
   class TckLazyLeft {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -453,6 +468,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @AfterLoad(hookCallback)
   class TckHooked {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -471,6 +487,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckScoped" })
   class TckScoped {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @ScopeField()
@@ -492,6 +509,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckUnversioned" })
   class TckUnversioned {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @CreateDateField()
@@ -511,6 +529,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckUniqueConstrained" })
   class TckUniqueConstrained {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -534,7 +553,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckFkParent" })
   class TckFkParent {
-    @PrimaryKeyField() id!: string;
+    @PrimaryKeyField() @Generated("uuid") id!: string;
     @VersionField() version!: number;
     @CreateDateField() createdAt!: Date;
     @UpdateDateField() updatedAt!: Date;
@@ -552,7 +571,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckFkCascadeChild" })
   class TckFkCascadeChild {
-    @PrimaryKeyField() id!: string;
+    @PrimaryKeyField() @Generated("uuid") id!: string;
     @VersionField() version!: number;
     @CreateDateField() createdAt!: Date;
     @UpdateDateField() updatedAt!: Date;
@@ -566,7 +585,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckFkRestrictChild" })
   class TckFkRestrictChild {
-    @PrimaryKeyField() id!: string;
+    @PrimaryKeyField() @Generated("uuid") id!: string;
     @VersionField() version!: number;
     @CreateDateField() createdAt!: Date;
     @UpdateDateField() updatedAt!: Date;
@@ -580,7 +599,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckFkNullifyChild" })
   class TckFkNullifyChild {
-    @PrimaryKeyField() id!: string;
+    @PrimaryKeyField() @Generated("uuid") id!: string;
     @VersionField() version!: number;
     @CreateDateField() createdAt!: Date;
     @UpdateDateField() updatedAt!: Date;
@@ -599,6 +618,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Unique<typeof TckUniqueComposite>(["tenantId", "key"])
   class TckUniqueComposite {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -624,7 +644,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckCascadeParent" })
   class TckCascadeParent {
-    @PrimaryKeyField() id!: string;
+    @PrimaryKeyField() @Generated("uuid") id!: string;
     @VersionField() version!: number;
     @CreateDateField() createdAt!: Date;
     @UpdateDateField() updatedAt!: Date;
@@ -639,7 +659,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckCascadeChild" })
   class TckCascadeChild {
-    @PrimaryKeyField() id!: string;
+    @PrimaryKeyField() @Generated("uuid") id!: string;
     @VersionField() version!: number;
     @CreateDateField() createdAt!: Date;
     @UpdateDateField() updatedAt!: Date;
@@ -658,7 +678,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckScopedPost" })
   class TckScopedPost {
-    @PrimaryKeyField() id!: string;
+    @PrimaryKeyField() @Generated("uuid") id!: string;
     @VersionField() version!: number;
     @CreateDateField() createdAt!: Date;
     @UpdateDateField() updatedAt!: Date;
@@ -676,7 +696,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckScopedUser" })
   class TckScopedUser {
-    @PrimaryKeyField() id!: string;
+    @PrimaryKeyField() @Generated("uuid") id!: string;
     @VersionField() version!: number;
     @CreateDateField() createdAt!: Date;
     @UpdateDateField() updatedAt!: Date;
@@ -696,6 +716,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckVehicle" })
   class TckVehicle {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -737,6 +758,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckAnimal" })
   class TckAnimal {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -774,6 +796,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckArrayHolder" })
   class TckArrayHolder {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -803,6 +826,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckJsonHolder" })
   class TckJsonHolder {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -834,6 +858,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckWithAddress" })
   class TckWithAddress {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -859,6 +884,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckEncrypted" })
   class TckEncrypted {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -903,6 +929,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckElDefault" })
   class TckElDefault {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -924,6 +951,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckElEagerMultiple" })
   class TckElEagerMultiple {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -946,6 +974,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckElLazySingle" })
   class TckElLazySingle {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -968,6 +997,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckElEager" })
   class TckElEager {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -997,6 +1027,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckTypeHolder" })
   class TckTypeHolder {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -1029,6 +1060,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Entity({ name: "TckRenamedColumns" })
   class TckRenamedColumns {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()
@@ -1061,6 +1093,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @Check("quantity >= 0")
   class TckChecked {
     @PrimaryKeyField()
+    @Generated("uuid")
     id!: string;
 
     @VersionField()

@@ -17,6 +17,7 @@ import { Entity } from "../../../decorators/Entity.js";
 import { Field } from "../../../decorators/Field.js";
 import { Lazy } from "../../../decorators/Lazy.js";
 import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
@@ -43,8 +44,7 @@ describe("build-primary — nested @Embeddable guard (B7)", () => {
     expect(() => {
       @Entity({ name: "B7EntityNestedEmbeddable" })
       class B7EntityNestedEmbeddable {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Embedded(() => OuterAddressWithNested)
         address!: OuterAddressWithNested | null;
@@ -74,8 +74,7 @@ describe("build-primary — nested @Embeddable guard (B7)", () => {
     try {
       @Entity({ name: "B7ErrorMessageEntity" })
       class B7ErrorMessageEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Embedded(() => NestedOuter)
         profile!: NestedOuter | null;
@@ -105,8 +104,7 @@ describe("build-primary — nested @Embeddable guard (B7)", () => {
     expect(() => {
       @Entity({ name: "B7FlatEmbeddableEntity" })
       class B7FlatEmbeddableEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Embedded(() => FlatAddress)
         address!: FlatAddress | null;
@@ -126,8 +124,7 @@ describe("build-primary — duplicate @EmbeddedList table name guard (B11)", () 
     expect(() => {
       @Entity({ name: "B11DuplicateTableEntity" })
       class B11DuplicateTableEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("string", { tableName: "shared_collection" })
         tags!: string[];
@@ -145,8 +142,7 @@ describe("build-primary — duplicate @EmbeddedList table name guard (B11)", () 
     try {
       @Entity({ name: "B11ErrorMessageEntity" })
       class B11ErrorMessageEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("string", { tableName: "dup_table" })
         listA!: string[];
@@ -169,8 +165,7 @@ describe("build-primary — duplicate @EmbeddedList table name guard (B11)", () 
     expect(() => {
       @Entity({ name: "B11UniqueTableEntity" })
       class B11UniqueTableEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("string", { tableName: "table_one" })
         tags!: string[];
@@ -191,8 +186,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
     expect(() => {
       @Entity({ name: "B13ObjectTypeEntity" })
       class B13ObjectTypeEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("object" as any)
         data!: object[];
@@ -206,8 +200,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
     expect(() => {
       @Entity({ name: "B13JsonTypeEntity" })
       class B13JsonTypeEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("json" as any)
         payload!: object[];
@@ -221,8 +214,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
     expect(() => {
       @Entity({ name: "B13ArrayTypeEntity" })
       class B13ArrayTypeEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("array" as any)
         nested!: any[][];
@@ -237,8 +229,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
     try {
       @Entity({ name: "B13ErrorMsgEntity" })
       class B13ErrorMsgEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("json" as any)
         configs!: object[];
@@ -259,8 +250,7 @@ describe("build-primary — reject structured @EmbeddedList element types (B13)"
     expect(() => {
       @Entity({ name: "B13ValidScalarEntity" })
       class B13ValidScalarEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList("string")
         tags!: string[];
@@ -306,8 +296,7 @@ describe("build-primary — parentFkColumn uses column name not property key (C7
   test("parentFkColumn uses property key as fallback when field has no explicit name override", () => {
     @Entity({ name: "C7DefaultNameEntity" })
     class C7DefaultNameEntity {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @EmbeddedList("string", { tableName: "c7_default_tags" })
       tags!: string[];
@@ -381,8 +370,7 @@ describe("build-primary — validateFields called on embeddable element fields (
     expect(() => {
       @Entity({ name: "C8DuplicateEmbeddableColEntity" })
       class C8DuplicateEmbeddableColEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList(() => C8BadEmbeddable, { tableName: "c8_items" })
         items!: C8BadEmbeddable[];
@@ -405,8 +393,7 @@ describe("build-primary — validateFields called on embeddable element fields (
     expect(() => {
       @Entity({ name: "C8ValidEmbeddableEntity" })
       class C8ValidEmbeddableEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @EmbeddedList(() => C8GoodEmbeddable, { tableName: "c8_good_items" })
         items!: C8GoodEmbeddable[];
@@ -424,8 +411,7 @@ describe("build-primary — @EmbeddedList / @Field key collision guard (C9)", ()
     expect(() => {
       @Entity({ name: "C9CollisionEntity" })
       class C9CollisionEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Field("string")
         tags!: string;
@@ -453,8 +439,7 @@ describe("build-primary — @EmbeddedList / @Field key collision guard (C9)", ()
     try {
       @Entity({ name: "C9ErrorMsgEntity" })
       class C9ErrorMsgEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Field("string")
         items!: string;
@@ -482,8 +467,7 @@ describe("build-primary — @EmbeddedList / @Field key collision guard (C9)", ()
     expect(() => {
       @Entity({ name: "C9NoCollisionEntity" })
       class C9NoCollisionEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Field("string")
         label!: string;
@@ -504,8 +488,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
     expect(() => {
       @Entity({ name: "LazyElInitDefault" })
       class LazyElInitDefault {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Field("string")
         name!: string;
@@ -525,8 +508,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
     expect(() => {
       @Entity({ name: "LazyElInitExplicit" })
       class LazyElInitExplicit {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Field("string")
         name!: string;
@@ -544,8 +526,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
     expect(() => {
       @Entity({ name: "LazyElInitSingleScope" })
       class LazyElInitSingleScope {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Field("string")
         name!: string;
@@ -563,8 +544,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
     expect(() => {
       @Entity({ name: "EagerElInitAllowed" })
       class EagerElInitAllowed {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Field("string")
         name!: string;
@@ -583,8 +563,7 @@ describe("build-primary — lazy @EmbeddedList field-initializer guard", () => {
     expect(() => {
       @Entity({ name: "LazyElDefiniteAssignment" })
       class LazyElDefiniteAssignment {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Field("string")
         name!: string;

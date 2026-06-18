@@ -1,13 +1,13 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { Entity } from "./Entity.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { VersionEndDateField } from "./VersionEndDateField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "VersionEndDateFieldDecorated" })
 class VersionEndDateFieldDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionEndDateField()
   endAt!: Date | null;

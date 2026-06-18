@@ -1,6 +1,7 @@
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { Transform } from "./Transform.js";
 import { describe, expect, test } from "vitest";
@@ -13,8 +14,7 @@ const jsonFrom = (raw: unknown) => JSON.parse(raw as string);
 
 @Entity({ name: "TransformStringDecorated" })
 class TransformStringDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Transform({ to: toUpperCase, from: toLowerCase })
   @Field("string")
@@ -23,8 +23,7 @@ class TransformStringDecorated {
 
 @Entity({ name: "TransformJsonDecorated" })
 class TransformJsonDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Transform({ to: jsonTo, from: jsonFrom })
   @Field("string")
@@ -33,8 +32,7 @@ class TransformJsonDecorated {
 
 @Entity({ name: "TransformNoDecorator" })
 class TransformNoDecorator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

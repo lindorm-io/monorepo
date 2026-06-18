@@ -4,6 +4,7 @@ import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { JoinKey } from "./JoinKey.js";
 import { Nullable } from "./Nullable.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { OneToOne } from "./OneToOne.js";
 import { describe, expect, test } from "vitest";
@@ -12,8 +13,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "OneToOneProfile" })
 class OneToOneProfile {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   bio!: string;
@@ -26,8 +26,7 @@ class OneToOneProfile {
 
 @Entity({ name: "OneToOneUser" })
 class OneToOneUser {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -44,8 +43,7 @@ class OneToOneUser {
 // OneToOne with explicit joinKeys
 @Entity({ name: "OneToOneExplicitProfile" })
 class OneToOneExplicitProfile {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   bio!: string;
@@ -57,8 +55,7 @@ class OneToOneExplicitProfile {
 
 @Entity({ name: "OneToOneExplicitUser" })
 class OneToOneExplicitUser {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

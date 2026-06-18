@@ -35,6 +35,7 @@ import { Hide } from "../../../decorators/Hide.js";
 import { Namespace } from "../../../decorators/Namespace.js";
 import { Nullable } from "../../../decorators/Nullable.js";
 import { PrimaryKey } from "../../../decorators/PrimaryKey.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
 import { VersionKeyField } from "../../../decorators/VersionKeyField.js";
 import { EntityMetadataError } from "../errors/EntityMetadataError.js";
@@ -46,8 +47,7 @@ describe("buildPrimaryMetadata — @AbstractEntity guard", () => {
   test("throws when class has only @AbstractEntity (no @Entity)", () => {
     @AbstractEntity()
     class BpAbstractOnly {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
     }
 
     expect(() => buildPrimaryMetadata(BpAbstractOnly)).toThrow(EntityMetadataError);
@@ -61,8 +61,7 @@ describe("buildPrimaryMetadata — @AbstractEntity guard", () => {
     @AbstractEntity()
     @Entity({ name: "BpBothDecorators" })
     class BpBothDecorators {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
     }
 
     expect(() => buildPrimaryMetadata(BpBothDecorators)).toThrow(EntityMetadataError);
@@ -74,8 +73,7 @@ describe("buildPrimaryMetadata — @AbstractEntity guard", () => {
   test("subclass of @AbstractEntity with @Entity builds successfully", () => {
     @AbstractEntity()
     class BpAbstractBase {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @Field("string")
       baseField!: string;
@@ -103,8 +101,7 @@ describe("buildPrimaryMetadata — @Namespace merging", () => {
     @Namespace("my_schema")
     @Entity({ name: "BpWithNamespace" })
     class BpWithNamespace {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
     }
 
     const meta = buildPrimaryMetadata(BpWithNamespace);
@@ -114,8 +111,7 @@ describe("buildPrimaryMetadata — @Namespace merging", () => {
   test("entity without @Namespace has null namespace by default", () => {
     @Entity({ name: "BpNoNamespace" })
     class BpNoNamespace {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
     }
 
     const meta = buildPrimaryMetadata(BpNoNamespace);
@@ -130,8 +126,7 @@ describe("buildPrimaryMetadata — @Cache decorator", () => {
     @Cache("5m")
     @Entity({ name: "BpWithCache" })
     class BpWithCache {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
     }
 
     const meta = buildPrimaryMetadata(BpWithCache);
@@ -143,8 +138,7 @@ describe("buildPrimaryMetadata — @Cache decorator", () => {
   test("entity without @Cache has null cache", () => {
     @Entity({ name: "BpNoCache" })
     class BpNoCache {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
     }
 
     const meta = buildPrimaryMetadata(BpNoCache);
@@ -155,8 +149,7 @@ describe("buildPrimaryMetadata — @Cache decorator", () => {
     @Cache()
     @Entity({ name: "BpCacheNoTtl" })
     class BpCacheNoTtl {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
     }
 
     const meta = buildPrimaryMetadata(BpCacheNoTtl);
@@ -172,8 +165,7 @@ describe("buildPrimaryMetadata — @DefaultOrder decorator", () => {
     @DefaultOrder({ createdAt: "DESC" })
     @Entity({ name: "BpWithDefaultOrder" })
     class BpWithDefaultOrder {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @Field("timestamp")
       createdAt!: Date;
@@ -187,8 +179,7 @@ describe("buildPrimaryMetadata — @DefaultOrder decorator", () => {
   test("entity without @DefaultOrder has null defaultOrder", () => {
     @Entity({ name: "BpNoDefaultOrder" })
     class BpNoDefaultOrder {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
     }
 
     const meta = buildPrimaryMetadata(BpNoDefaultOrder);
@@ -204,8 +195,7 @@ describe("buildPrimaryMetadata — mergeFieldModifiers duplicate detection", () 
     expect(() => {
       @Entity({ name: "BpDupComputedEntity" })
       class BpDupComputedEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Computed("UPPER(name)")
         @Computed("LOWER(name)")
@@ -221,8 +211,7 @@ describe("buildPrimaryMetadata — mergeFieldModifiers duplicate detection", () 
     expect(() => {
       @Entity({ name: "BpMultiHideEntity" })
       class BpMultiHideEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Hide("single")
         @Hide("multiple")
@@ -238,8 +227,7 @@ describe("buildPrimaryMetadata — mergeFieldModifiers duplicate detection", () 
   test("merges multiple @Hide scopes into hideOn array", () => {
     @Entity({ name: "BpHideMergeEntity" })
     class BpHideMergeEntity {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @Hide("single")
       @Hide("multiple")
@@ -258,8 +246,7 @@ describe("buildPrimaryMetadata — mergeFieldModifiers duplicate detection", () 
     expect(() => {
       @Entity({ name: "BpModifierNoFieldEntity" })
       class BpModifierNoFieldEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         // @Nullable applied to a property that has no @Field
         @Nullable()
@@ -277,8 +264,7 @@ describe("buildPrimaryMetadata — @Computed auto-sets readonly", () => {
   test("@Computed field has readonly = true", () => {
     @Entity({ name: "BpComputedReadonlyEntity" })
     class BpComputedReadonlyEntity {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @Computed("UPPER(name)")
       @Field("string")
@@ -303,8 +289,7 @@ describe("buildPrimaryMetadata — flattenEmbeddedFields non-@Embeddable guard",
     expect(() => {
       @Entity({ name: "BpBadEmbedEntity" })
       class BpBadEmbedEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Embedded(() => PlainClass)
         address!: PlainClass | null;
@@ -330,8 +315,7 @@ describe("buildPrimaryMetadata — flattenEmbeddedFields duplicate column name",
     expect(() => {
       @Entity({ name: "BpDuplicateColumnEntity" })
       class BpDuplicateColumnEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         // Direct field whose column name will collide with embedded field's final name
         @Field("string", { name: "addr_name" })
@@ -357,8 +341,7 @@ describe("buildPrimaryMetadata — @EmbeddedList requires single PK", () => {
         @Field("uuid")
         id!: string;
 
-        @VersionKeyField()
-        versionId!: string;
+        @VersionKeyField() @Generated("uuid") versionId!: string;
 
         @EmbeddedList("string", { tableName: "bp_composite_tags" })
         tags!: string[];
@@ -382,8 +365,7 @@ describe("buildPrimaryMetadata — embedded field cannot be primary key", () => 
     expect(() => {
       @Entity({ name: "BpEmbeddedPkEntity" })
       class BpEmbeddedPkEntity {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @Embedded(() => BpPkEmbeddable)
         pk!: BpPkEmbeddable | null;
@@ -408,8 +390,7 @@ describe("buildPrimaryMetadata — primaryCache", () => {
   test("returns cached result on repeated calls (same object reference)", () => {
     @Entity({ name: "BpCachedEntity" })
     class BpCachedEntity {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @Field("string")
       name!: string;
@@ -428,8 +409,7 @@ describe("buildPrimaryMetadata — full metadata snapshot", () => {
   test("snapshot of complete metadata for a standard entity", () => {
     @Entity({ name: "BpSnapshotEntity" })
     class BpSnapshotEntity {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @Field("string")
       name!: string;
@@ -459,8 +439,7 @@ describe("buildPrimaryMetadata — @AppendOnly contradictory decorators", () => 
       @AppendOnly()
       @Entity({ name: "BpAppendOnlyDeleteDate" })
       class BpAppendOnlyDeleteDate {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @DeleteDateField()
         deletedAt!: Date | null;
@@ -475,8 +454,7 @@ describe("buildPrimaryMetadata — @AppendOnly contradictory decorators", () => 
       @AppendOnly()
       @Entity({ name: "BpAppendOnlyDeleteDate2" })
       class BpAppendOnlyDeleteDate2 {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @DeleteDateField()
         deletedAt!: Date | null;
@@ -491,8 +469,7 @@ describe("buildPrimaryMetadata — @AppendOnly contradictory decorators", () => 
       @AppendOnly()
       @Entity({ name: "BpAppendOnlyExpiryDate" })
       class BpAppendOnlyExpiryDate {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @ExpiryDateField()
         expiresAt!: Date | null;
@@ -507,8 +484,7 @@ describe("buildPrimaryMetadata — @AppendOnly contradictory decorators", () => 
       @AppendOnly()
       @Entity({ name: "BpAppendOnlyExpiryDate2" })
       class BpAppendOnlyExpiryDate2 {
-        @PrimaryKeyField()
-        id!: string;
+        @PrimaryKeyField() @Generated("uuid") id!: string;
 
         @ExpiryDateField()
         expiresAt!: Date | null;
@@ -522,8 +498,7 @@ describe("buildPrimaryMetadata — @AppendOnly contradictory decorators", () => 
     @AppendOnly()
     @Entity({ name: "BpAppendOnlyClean" })
     class BpAppendOnlyClean {
-      @PrimaryKeyField()
-      id!: string;
+      @PrimaryKeyField() @Generated("uuid") id!: string;
 
       @Field("string")
       data!: string;

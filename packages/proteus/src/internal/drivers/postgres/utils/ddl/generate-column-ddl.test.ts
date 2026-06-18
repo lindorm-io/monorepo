@@ -21,8 +21,7 @@ import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ColParent" })
 class ColParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -49,8 +48,7 @@ class ColUuidGenerated {
 /** lindorm_id generated field (VARCHAR(64), no server-side DEFAULT) */
 @Entity({ name: "ColLindormId" })
 class ColLindormId {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("varchar")
   @Generated("lindorm_id")
@@ -72,8 +70,7 @@ class ColIntIdentity {
 /** Field with string default */
 @Entity({ name: "ColStringDefault" })
 class ColStringDefault {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Default("unknown")
   @Field("string")
@@ -83,8 +80,7 @@ class ColStringDefault {
 /** Field with numeric default */
 @Entity({ name: "ColNumericDefault" })
 class ColNumericDefault {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Default(0)
   @Field("integer")
@@ -94,8 +90,7 @@ class ColNumericDefault {
 /** Field with boolean default */
 @Entity({ name: "ColBoolDefault" })
 class ColBoolDefault {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Default(false)
   @Field("boolean")
@@ -105,8 +100,7 @@ class ColBoolDefault {
 /** Nullable field */
 @Entity({ name: "ColNullable" })
 class ColNullable {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Nullable()
   @Field("string")
@@ -116,8 +110,7 @@ class ColNullable {
 /** Entity with FK relation (ManyToOne owning side — FK column is generated) */
 @Entity({ name: "ColFkChild" })
 class ColFkChild {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   title!: string;
@@ -131,8 +124,7 @@ class ColFkChild {
 /** Entity where FK field is explicitly declared — should NOT be duplicated */
 @Entity({ name: "ColFkChildExplicit" })
 class ColFkChildExplicit {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Nullable()
   @Field("uuid")

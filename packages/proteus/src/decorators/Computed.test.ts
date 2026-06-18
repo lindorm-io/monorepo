@@ -2,13 +2,13 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Computed } from "./Computed.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
 @Entity({ name: "ComputedDecorated" })
 class ComputedDecorated {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   firstName!: string;
@@ -23,8 +23,7 @@ class ComputedDecorated {
 
 @Entity({ name: "ComputedNoDecorator" })
 class ComputedNoDecorator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("integer")
   count!: number;

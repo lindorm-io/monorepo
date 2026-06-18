@@ -2,6 +2,7 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Default } from "./Default.js";
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
+import { Generated } from "./Generated.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
@@ -9,8 +10,7 @@ const defaultFactory = () => "guest";
 
 @Entity({ name: "DefaultLiteralValue" })
 class DefaultLiteralValue {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Default("active")
   @Field("string")
@@ -19,8 +19,7 @@ class DefaultLiteralValue {
 
 @Entity({ name: "DefaultFactoryValue" })
 class DefaultFactoryValue {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Default(defaultFactory)
   @Field("string")
@@ -29,8 +28,7 @@ class DefaultFactoryValue {
 
 @Entity({ name: "DefaultNullLiteral" })
 class DefaultNullLiteral {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Default(null)
   @Field("string")
@@ -39,8 +37,7 @@ class DefaultNullLiteral {
 
 @Entity({ name: "DefaultNoDecorator" })
 class DefaultNoDecorator {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;

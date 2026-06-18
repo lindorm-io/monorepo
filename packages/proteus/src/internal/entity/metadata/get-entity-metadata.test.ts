@@ -17,8 +17,7 @@ import { describe, expect, test, vi } from "vitest";
 
 @Entity({ name: "GetMetadataSimple" })
 class GetMetadataSimple {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;
@@ -29,8 +28,7 @@ class GetMetadataSimple {
 
 @Entity({ name: "GetMetadataParent" })
 class GetMetadataParent {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 }
 
 @Entity({ name: "GetMetadataChild" })
@@ -46,8 +44,7 @@ class NotAnEntity {
 // Dedicated class for caching test — only used in that test
 @Entity({ name: "GetMetadataCacheOnly" })
 class GetMetadataCacheOnly {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   value!: string;
@@ -58,8 +55,7 @@ const e2eOnCreateCb = vi.fn();
 
 @Entity({ name: "E2EComment" })
 class E2EComment {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @VersionField()
   version!: number;

@@ -22,6 +22,7 @@ import {
   CreateDateField,
   Entity,
   Field,
+  Generated,
   Nullable,
   PrimaryKeyField,
   UpdateDateField,
@@ -33,8 +34,7 @@ import {
 @Entity({ name: "CachedItem" })
 @Cache("1 Minute")
 class CachedItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -55,8 +55,7 @@ class CachedItem {
 
 @Entity({ name: "UncachedItem" })
 class UncachedItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   name!: string;
@@ -77,8 +76,7 @@ const afterLoadSpy = vi.fn();
 @Cache("1 Minute")
 @AfterLoad(afterLoadSpy)
 class HookedItem {
-  @PrimaryKeyField()
-  id!: string;
+  @PrimaryKeyField() @Generated("uuid") id!: string;
 
   @Field("string")
   label!: string;
