@@ -1,6 +1,6 @@
 import type { ILogger } from "@lindorm/logger";
+import { randomId } from "@lindorm/random";
 import type { Environment } from "@lindorm/types";
-import { randomUUID } from "crypto";
 import type { PylonConnectionMiddleware } from "../../types/index.js";
 import { getSocketAuthorization } from "../utils/get-socket-authorization.js";
 
@@ -9,7 +9,8 @@ export const createConnectionContextInitialisationMiddleware = (
 ): PylonConnectionMiddleware => {
   return async function connectionContextInitialisationMiddleware(ctx, next) {
     const correlationId =
-      (ctx.io.socket.handshake?.headers?.["x-correlation-id"] as string) ?? randomUUID();
+      (ctx.io.socket.handshake?.headers?.["x-correlation-id"] as string) ??
+      randomId({ namespace: "cor", length: 16 });
 
     ctx.state = {
       actor: "unknown",

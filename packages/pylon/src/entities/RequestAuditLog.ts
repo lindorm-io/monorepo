@@ -2,6 +2,7 @@ import {
   CreateDateField,
   Entity,
   Field,
+  Generated,
   Index,
   Namespace,
   Nullable,
@@ -12,6 +13,7 @@ import {
 @Entity()
 export class RequestAuditLog {
   @PrimaryKeyField()
+  @Generated("lindorm_id", { namespace: "aud" })
   public id!: string;
 
   @CreateDateField()

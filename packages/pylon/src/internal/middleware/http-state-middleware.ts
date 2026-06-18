@@ -1,5 +1,5 @@
+import { randomId } from "@lindorm/random";
 import type { Environment } from "@lindorm/types";
-import { randomUUID } from "crypto";
 import type { PylonHttpMiddleware } from "../../types/index.js";
 import { getAuthorization } from "../utils/get-authorization.js";
 
@@ -25,12 +25,13 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
         app: { domain, environment, name, version },
         authorization: getAuthorization(ctx),
         metadata: {
-          id: ctx.get("x-request-id") || randomUUID(),
-          correlationId: ctx.get("x-correlation-id") || randomUUID(),
+          id: ctx.get("x-request-id") || randomId({ namespace: "req", length: 16 }),
+          correlationId:
+            ctx.get("x-correlation-id") || randomId({ namespace: "cor", length: 16 }),
           date: requestDate ? new Date(requestDate) : new Date(),
           environment: (ctx.get("x-environment") as Environment) || "unknown",
           origin: ctx.get("x-origin") || ctx.get("origin") || null,
-          responseId: randomUUID(),
+          responseId: randomId({ namespace: "res", length: 16 }),
           sessionId: ctx.get("x-session-id") || null,
         },
         origin: ctx.request.origin || `${ctx.protocol}://${ctx.host}`,

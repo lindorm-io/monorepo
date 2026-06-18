@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomId } from "@lindorm/random";
 import type {
   IoServer,
   PylonSocket,
@@ -11,7 +11,7 @@ export const composePylonHandshakeContext = <D extends PylonSocketData = PylonSo
   socket: PylonSocket<D>,
 ): PylonSocketHandshakeContextBase<D> => {
   return {
-    handshakeId: randomUUID(),
+    handshakeId: randomId({ namespace: "hsk", length: 16 }),
     io: { app: io, socket },
   };
 };

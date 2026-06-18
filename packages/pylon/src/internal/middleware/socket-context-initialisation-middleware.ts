@@ -1,7 +1,7 @@
 import { isObject } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
+import { randomId } from "@lindorm/random";
 import type { Environment } from "@lindorm/types";
-import { randomUUID } from "crypto";
 import type { PylonSocketMiddleware } from "../../types/index.js";
 import { getSocketAuthorization } from "../utils/get-socket-authorization.js";
 
@@ -16,7 +16,7 @@ const extractCorrelationId = (ctx: any): string => {
   ) {
     return ctx.data.correlationId;
   }
-  return randomUUID();
+  return randomId({ namespace: "cor", length: 16 });
 };
 
 export const createSocketContextInitialisationMiddleware = (
