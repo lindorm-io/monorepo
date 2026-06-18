@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type {
   CreateConsumerLoopOptions,
   RedisConsumerLoop,
@@ -23,7 +23,7 @@ export const createConsumerLoop = async (
     startId = "$",
   } = options;
 
-  const consumerTag = randomUUID();
+  const consumerTag = randomId({ namespace: "con", length: 16 });
   // Each consumer loop needs a unique name within the group so Redis
   // distributes messages across them (not all to one logical consumer).
   const uniqueConsumerName = `${consumerName}:${consumerTag}`;

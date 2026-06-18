@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
@@ -35,12 +35,12 @@ export class KafkaRpcClient<
   public constructor(options: KafkaRpcClientOptions<Req, Res>) {
     super(options, "KafkaRpcClient");
     this.state = options.state;
-    this.replyTopic = `${this.state.prefix}.rpc.reply.${randomUUID()}`;
+    this.replyTopic = `${this.state.prefix}.rpc.reply.${randomId({ length: 16 })}`;
   }
 
   public async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
-    const correlationId = randomUUID();
+    const correlationId = randomId({ namespace: "cor", length: 16 });
 
     if (!this.state.producer) {
       throw new IrisDriverError("Cannot send RPC request: producer is not connected", {
@@ -106,7 +106,7 @@ export class KafkaRpcClient<
       );
     }
 
-    const replyGroupId = `${this.state.prefix}.rpc.reply.${randomUUID()}`;
+    const replyGroupId = `${this.state.prefix}.rpc.reply.${randomId({ length: 16 })}`;
 
     // Pre-create the dynamic reply topic before subscribing
     await ensureKafkaTopicFromState(this.state, this.replyTopic, this.logger);

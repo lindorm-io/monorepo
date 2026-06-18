@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type {
   ConsumeEnvelope,
@@ -141,7 +141,7 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     // Broadcast consumer loop: unique group per consumer on a separate broadcast
     // stream so every consumer independently receives every broadcast message.
     const broadcastStreamKey = `${streamKey}:broadcast`;
-    const broadcastGroupName = `${groupName}.bc.${randomUUID()}`;
+    const broadcastGroupName = `${groupName}.bc.${randomId({ length: 16 })}`;
 
     const broadcastLoop = await createConsumerLoop({
       publishConnection: this.state.publishConnection,

@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
@@ -34,12 +34,12 @@ export class RedisRpcClient<
   public constructor(options: RedisRpcClientOptions<Req, Res>) {
     super(options, "RedisRpcClient");
     this.state = options.state;
-    this.replyStreamKey = `${this.state.prefix}:rpc:reply:${randomUUID()}`;
+    this.replyStreamKey = `${this.state.prefix}:rpc:reply:${randomId({ length: 16 })}`;
   }
 
   public async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
-    const correlationId = randomUUID();
+    const correlationId = randomId({ namespace: "cor", length: 16 });
 
     if (!this.state.publishConnection) {
       throw new IrisDriverError("Cannot send RPC request: connection is not available", {
@@ -111,7 +111,7 @@ export class RedisRpcClient<
   }
 
   private async doEnsureReplyConsumer(): Promise<void> {
-    this.replyGroupName = `${this.state.prefix}.rpc.reply.${randomUUID()}`;
+    this.replyGroupName = `${this.state.prefix}.rpc.reply.${randomId({ length: 16 })}`;
 
     const loop = await createConsumerLoop({
       publishConnection: this.state.publishConnection!,
