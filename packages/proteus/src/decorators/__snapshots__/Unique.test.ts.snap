@@ -96,6 +96,7 @@ exports[`Unique > should register class-level composite unique constraint 1`] = 
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],

@@ -156,6 +156,7 @@ exports[`PrimaryKey > should register field-level primary key 1`] = `
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],

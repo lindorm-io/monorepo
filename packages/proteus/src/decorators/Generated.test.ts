@@ -2,6 +2,7 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Generated } from "./Generated.js";
+import { Max } from "./Max.js";
 import { PrimaryKey } from "./PrimaryKey.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
@@ -76,6 +77,11 @@ class GeneratedLindormIdExplicit {
   token!: string;
 }
 
+@Entity({ name: "GeneratedLindormIdNamespace" })
+class GeneratedLindormIdNamespace {
+  @PrimaryKeyField() @Generated("lindorm_id", { namespace: "user" }) id!: string;
+}
+
 @Entity({ name: "GeneratedFunction" })
 class GeneratedFunction {
   @PrimaryKeyField() @Generated("uuid") id!: string;
@@ -122,7 +128,7 @@ describe("Generated", () => {
     expect(gen!.strategy).toBe("date");
   });
 
-  test("should default to lindorm_id strategy and infer varchar(64)", () => {
+  test("should default to lindorm_id strategy and infer varchar(24)", () => {
     const meta = getEntityMetadata(GeneratedLindormIdDefault);
     const gen = meta.generated.find((g) => g.key === "token");
     expect(gen!.strategy).toBe("lindorm_id");
@@ -130,7 +136,7 @@ describe("Generated", () => {
 
     const field = meta.fields.find((f) => f.key === "token");
     expect(field!.type).toBe("varchar");
-    expect(field!.max).toBe(64);
+    expect(field!.max).toBe(24);
   });
 
   test("should register explicit lindorm_id strategy on varchar field", () => {
@@ -140,7 +146,33 @@ describe("Generated", () => {
 
     const field = meta.fields.find((f) => f.key === "token");
     expect(field!.type).toBe("varchar");
-    expect(field!.max).toBe(64);
+    expect(field!.max).toBe(24);
+  });
+
+  test("should compute varchar max from namespace for lindorm_id", () => {
+    const meta = getEntityMetadata(GeneratedLindormIdNamespace);
+    const gen = meta.generated.find((g) => g.key === "id");
+    expect(gen!.strategy).toBe("lindorm_id");
+    expect(gen!.namespace).toBe("user");
+
+    const field = meta.fields.find((f) => f.key === "id");
+    expect(field!.type).toBe("varchar");
+    expect(field!.max).toBe(29);
+  });
+
+  test("should throw when @Max is too small to hold a lindorm_id", () => {
+    expect(() => {
+      @Entity({ name: "GeneratedLindormIdTooSmall" })
+      class GeneratedLindormIdTooSmall {
+        @PrimaryKeyField() @Generated("uuid") id!: string;
+
+        @Field("varchar")
+        @Max(10)
+        @Generated("lindorm_id")
+        token!: string;
+      }
+      getEntityMetadata(GeneratedLindormIdTooSmall);
+    }).toThrow("Invalid @Max for lindorm_id field");
   });
 
   test("should register a function generator with null strategy", () => {

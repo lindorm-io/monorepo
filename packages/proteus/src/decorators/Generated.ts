@@ -1,3 +1,4 @@
+import type { RandomIdOptions } from "@lindorm/random";
 import type { GeneratedDecoratorOptions } from "../internal/entity/types/decorators.js";
 import type { MetaGeneratedStrategy } from "../internal/entity/types/metadata.js";
 import { stageGenerated } from "../internal/entity/metadata/stage-metadata.js";
@@ -15,17 +16,22 @@ type GeneratedDecorator = (
  * - `@Generated("increment")` — use a database auto-increment sequence
  * - `@Generated("string", { length: 12 })` — generate a random string with custom length
  * - `@Generated("lindorm_id", { length: 32 })` — generate a base62 lindorm id with custom length
+ * - `@Generated("lindorm_id", { namespace: "user" })` — generate a namespaced base62 lindorm id (`user_…`)
  * - `@Generated(() => myValue())` — use a custom client-side generator at insert time
  */
 export function Generated(): GeneratedDecorator;
 export function Generated(generator: () => unknown): GeneratedDecorator;
+export function Generated(
+  strategy: "lindorm_id",
+  options?: RandomIdOptions,
+): GeneratedDecorator;
 export function Generated(
   strategy: MetaGeneratedStrategy,
   options?: GeneratedDecoratorOptions,
 ): GeneratedDecorator;
 export function Generated(
   strategyOrGenerator?: MetaGeneratedStrategy | (() => unknown),
-  options: GeneratedDecoratorOptions = {},
+  options: GeneratedDecoratorOptions & { namespace?: string } = {},
 ): GeneratedDecorator {
   return (_target: undefined, context: ClassFieldDecoratorContext): void => {
     const isFunction = typeof strategyOrGenerator === "function";
@@ -37,6 +43,7 @@ export function Generated(
       length: options.length ?? null,
       max: options.max ?? null,
       min: options.min ?? null,
+      namespace: options.namespace ?? null,
     });
   };
 }

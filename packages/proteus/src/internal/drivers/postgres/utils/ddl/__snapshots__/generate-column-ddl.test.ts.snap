@@ -73,10 +73,10 @@ exports[`generateColumnDDL > integer field with numeric DEFAULT 1`] = `
 ]
 `;
 
-exports[`generateColumnDDL > lindorm_id field emits VARCHAR(64) with no DEFAULT 1`] = `
+exports[`generateColumnDDL > lindorm_id field emits VARCHAR(24) with no DEFAULT 1`] = `
 [
   ""id" UUID DEFAULT gen_random_uuid() NOT NULL",
-  ""token" VARCHAR(64) NOT NULL",
+  ""token" VARCHAR(24) NOT NULL",
 ]
 `;
 

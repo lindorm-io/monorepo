@@ -16,7 +16,7 @@ import {
  * - `@PrimaryKeyField("string", { name: "pk" })` — string PK column with custom column name
  *
  * When `type` is omitted, the column type is inferred from the paired `@Generated(...)`
- * (`@Generated()` → varchar(64), `@Generated("uuid")` → uuid, `@Generated("increment")` → integer).
+ * (`@Generated()` → varchar(24), `@Generated("uuid")` → uuid, `@Generated("increment")` → integer).
  * A bare `@PrimaryKeyField()` with no `@Generated` and no type surfaces a metadata error.
  */
 export const PrimaryKeyField =

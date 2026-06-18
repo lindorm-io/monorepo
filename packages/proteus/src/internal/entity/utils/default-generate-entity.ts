@@ -32,7 +32,10 @@ const generate = (config: MetaGenerated): any => {
     }
 
     case "lindorm_id":
-      return config.length ? randomId({ length: config.length as 24 }) : randomId();
+      return randomId({
+        namespace: config.namespace ?? undefined,
+        length: (config.length ?? 24) as 24,
+      });
 
     case "string": {
       const length = config.length ?? 32;

@@ -76,6 +76,7 @@ exports[`Enum > should match snapshot for TypeScript enum 1`] = `
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],

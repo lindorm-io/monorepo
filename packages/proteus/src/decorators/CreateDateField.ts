@@ -45,5 +45,6 @@ export const CreateDateField =
       length: null,
       max: null,
       min: null,
+      namespace: null,
     });
   };

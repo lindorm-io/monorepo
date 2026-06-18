@@ -468,7 +468,7 @@ export const createTckEntities = (hookCallback: Mock) => {
   @AfterDestroy(hookCallback)
   @AfterLoad(hookCallback)
   class TckHooked {
-    // Dogfoods the new default @Generated() strategy → lindorm_id (varchar(64)).
+    // Dogfoods the new default @Generated() strategy → lindorm_id (varchar(24)).
     @PrimaryKeyField()
     @Generated()
     id!: string;
@@ -488,7 +488,7 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckScoped" })
   class TckScoped {
-    // Dogfoods the new default @Generated() strategy → lindorm_id (varchar(64)).
+    // Dogfoods the new default @Generated() strategy → lindorm_id (varchar(24)).
     @PrimaryKeyField()
     @Generated()
     id!: string;

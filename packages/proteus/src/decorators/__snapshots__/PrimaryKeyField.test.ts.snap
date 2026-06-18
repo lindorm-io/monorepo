@@ -48,6 +48,7 @@ exports[`PrimaryKeyField > should register uuid primary key field (default) 1`] 
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],

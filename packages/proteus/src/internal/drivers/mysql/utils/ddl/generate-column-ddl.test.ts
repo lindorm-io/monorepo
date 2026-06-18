@@ -43,7 +43,7 @@ class MysColUuidGenerated {
   title!: string;
 }
 
-/** lindorm_id generated field (VARCHAR(64), no DEFAULT) */
+/** lindorm_id generated field (VARCHAR(24), no DEFAULT) */
 @Entity({ name: "MysColLindormId" })
 class MysColLindormId {
   @PrimaryKeyField() @Generated("uuid") id!: string;
@@ -178,11 +178,11 @@ describe("generateColumnDDL (MySQL)", () => {
     expect(generateColumnDDL(meta, "mys_col_int_identity")).toMatchSnapshot();
   });
 
-  test("lindorm_id field emits VARCHAR(64) with no DEFAULT", () => {
+  test("lindorm_id field emits VARCHAR(24) with no DEFAULT", () => {
     const meta = getEntityMetadata(MysColLindormId);
     const cols = generateColumnDDL(meta, "mys_col_lindorm_id");
     const tokenCol = cols.find((c) => c.includes("`token`"));
-    expect(tokenCol).toContain("VARCHAR(64)");
+    expect(tokenCol).toContain("VARCHAR(24)");
     expect(tokenCol).not.toContain("DEFAULT");
     expect(cols).toMatchSnapshot();
   });

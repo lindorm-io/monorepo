@@ -56,10 +56,13 @@ export const inferGeneratedTypes = (
         case "uuid":
           field.type = "uuid";
           break;
-        case "lindorm_id":
+        case "lindorm_id": {
+          const idLength = generate.length ?? 24;
+          const nsLength = generate.namespace ? generate.namespace.length + 1 : 0;
           field.type = "varchar";
-          field.max = 64;
+          field.max = nsLength + idLength;
           break;
+        }
         case "string":
           field.type = "string";
           break;
@@ -172,8 +175,30 @@ export const inferGeneratedTypes = (
               },
             });
           }
-          if (field.type === "varchar" && field.max === null) {
-            field.max = 64;
+          if (
+            field.type === "varchar" ||
+            field.type === "string" ||
+            field.type === "text"
+          ) {
+            const idLength = generate.length ?? 24;
+            const nsLength = generate.namespace ? generate.namespace.length + 1 : 0;
+            const computedMax = nsLength + idLength;
+            if (field.max === null) {
+              field.max = computedMax;
+            } else if (field.max < computedMax) {
+              throw new EntityMetadataError("Invalid @Max for lindorm_id field", {
+                code: "invalid_generated_max",
+                title: "Invalid Generated Max",
+                details: `@Generated("lindorm_id") on "${field.key}" needs a column wide enough to hold a ${computedMax}-character id (namespace + length), but @Max(${field.max}) was declared — raise the @Max or shorten the namespace/length.`,
+                debug: {
+                  target: targetName,
+                  field: field.key,
+                  strategy: "lindorm_id",
+                  computedMax,
+                  max: field.max,
+                },
+              });
+            }
           }
           break;
       }

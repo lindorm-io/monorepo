@@ -61,6 +61,11 @@ class GenerateLindormIdLengthEntity {
   token!: string;
 }
 
+@Entity({ name: "GenerateLindormIdNamespaceEntity" })
+class GenerateLindormIdNamespaceEntity {
+  @PrimaryKeyField() @Generated("lindorm_id", { namespace: "user" }) id!: string;
+}
+
 @Entity({ name: "GenerateFunctionEntity" })
 class GenerateFunctionEntity {
   @PrimaryKeyField() @Generated("uuid") id!: string;
@@ -132,6 +137,12 @@ describe("defaultGenerateEntity", () => {
     const entity: any = { id: "abc", token: undefined };
     defaultGenerateEntity(GenerateLindormIdLengthEntity, entity);
     expect(entity.token).toMatch(/^[A-Za-z0-9]{32}$/);
+  });
+
+  test("should respect the namespace option for lindorm_id", () => {
+    const entity: any = { id: undefined };
+    defaultGenerateEntity(GenerateLindormIdNamespaceEntity, entity);
+    expect(entity.id).toMatch(/^user_[A-Za-z0-9]{24}$/);
   });
 
   test("should use a function generator at insert time", () => {

@@ -48,6 +48,7 @@ exports[`Cascade > should match snapshot 1`] = `
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],

@@ -103,11 +103,11 @@ describe("PrimaryKeyField", () => {
     expect(field!.type).toBe("uuid");
   });
 
-  test("marker paired with @Generated() infers a varchar(64) lindorm_id column", () => {
+  test("marker paired with @Generated() infers a varchar(24) lindorm_id column", () => {
     const meta = getEntityMetadata(PrimaryKeyFieldLindormId);
     const field = meta.fields.find((f) => f.key === "id");
     expect(field!.type).toBe("varchar");
-    expect(field!.max).toBe(64);
+    expect(field!.max).toBe(24);
   });
 
   test('marker paired with @Generated("uuid") stays a uuid column (backward compat)', () => {

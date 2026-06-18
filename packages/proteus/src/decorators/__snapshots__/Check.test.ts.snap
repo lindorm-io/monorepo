@@ -105,6 +105,7 @@ exports[`Check > should register multiple check constraints 1`] = `
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],
