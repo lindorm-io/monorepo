@@ -72,6 +72,7 @@ exports[`OneToMany > should register parent entity with OneToMany metadata 1`] =
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],

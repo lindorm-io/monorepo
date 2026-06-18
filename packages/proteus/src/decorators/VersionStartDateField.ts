@@ -46,5 +46,6 @@ export const VersionStartDateField =
       length: null,
       max: null,
       min: null,
+      namespace: null,
     });
   };

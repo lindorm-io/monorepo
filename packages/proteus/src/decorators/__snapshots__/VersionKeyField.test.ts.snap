@@ -72,6 +72,7 @@ exports[`VersionKeyField > should register uuid version key field (default) 1`] 
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
     {
@@ -80,6 +81,7 @@ exports[`VersionKeyField > should register uuid version key field (default) 1`] 
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],
