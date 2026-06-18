@@ -56,10 +56,11 @@ describe("PrimaryKeyField", () => {
     expect(getEntityMetadata(PrimaryKeyFieldUuid)).toMatchSnapshot();
   });
 
-  test("bare marker (no type, no @Generated) throws a missing-field-type metadata error", () => {
-    expect(() => getEntityMetadata(PrimaryKeyFieldMarkerOnly)).toThrow(
-      "Field has no resolvable type",
-    );
+  test("bare marker (no type, no @Generated) falls back to VARCHAR(255)", () => {
+    const meta = getEntityMetadata(PrimaryKeyFieldMarkerOnly);
+    const field = meta.fields.find((f) => f.key === "id");
+    expect(field?.type).toBe("varchar");
+    expect(field?.max).toBe(255);
   });
 
   test("typed marker alone (no @Generated) stages a primary key and field but NO generated entry", () => {
