@@ -14,7 +14,7 @@ import { getOrigin } from "../internal/utils/get-origin.js";
 import { ClientError } from "@lindorm/errors";
 import type { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import type { RetryConfig } from "@lindorm/retry";
 import type { Dict, HttpMethod } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
@@ -264,8 +264,8 @@ export class Conduit implements IConduit {
       form,
       headers: { ...this.headers, ...headers },
       metadata: {
-        correlationId: randomUUID(),
-        requestId: randomUUID(),
+        correlationId: randomId({ namespace: "cor", length: 16 }),
+        requestId: randomId({ namespace: "req", length: 16 }),
         sessionId: null,
       },
       onDownloadProgress,
