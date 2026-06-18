@@ -1,4 +1,3 @@
-import { randomId } from "@lindorm/random";
 import { stageField } from "../internal/message/metadata/stage-metadata.js";
 
 export const CorrelationField =
@@ -7,7 +6,7 @@ export const CorrelationField =
     stageField(context.metadata, {
       key: String(context.name),
       decorator: "CorrelationField",
-      default: () => randomId(),
+      default: null,
       enum: null,
       max: null,
       min: null,

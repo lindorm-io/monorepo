@@ -2,7 +2,7 @@ import { CorrelationField } from "./CorrelationField.js";
 import { describe, expect, it } from "vitest";
 
 describe("CorrelationField", () => {
-  it("should stage correlation field metadata", () => {
+  it("should stage correlation field metadata as a pure marker", () => {
     class TestMsg {
       @CorrelationField()
       correlationId!: string;
@@ -16,7 +16,17 @@ describe("CorrelationField", () => {
     expect(field.decorator).toBe("CorrelationField");
     expect(field.type).toBe("string");
     expect(field.nullable).toBe(false);
-    expect(typeof field.default).toBe("function");
-    expect(field.default()).toMatch(/^[A-Za-z0-9]{24}$/);
+    expect(field.optional).toBe(false);
+    expect(field.default).toBeNull();
+  });
+
+  it("should NOT stage a generated entry on its own", () => {
+    class TestMsg {
+      @CorrelationField()
+      correlationId!: string;
+    }
+
+    const metadata = (TestMsg as any)[Symbol.metadata];
+    expect(metadata.generated ?? []).toHaveLength(0);
   });
 });

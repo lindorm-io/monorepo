@@ -1,6 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import { Default } from "../../decorators/Default.js";
 import { Field } from "../../decorators/Field.js";
+import { Generated } from "../../decorators/Generated.js";
 import { IdentifierField } from "../../decorators/IdentifierField.js";
 import { Message } from "../../decorators/Message.js";
 import { BeforePublish } from "../../decorators/BeforePublish.js";
@@ -28,6 +29,7 @@ const afterPublishSpy = vi.fn();
 @Message({ name: "PubTestMessage" })
 class PubTestMessage {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Field("string")
@@ -41,6 +43,7 @@ class PubTestMessage {
 @Message({ name: "SimplePubMessage" })
 class SimplePubMessage {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Default("default-val")
