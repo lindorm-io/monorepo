@@ -35,6 +35,7 @@ import {
   Lazy,
   ManyToMany,
   ManyToOne,
+  Max,
   Nullable,
   Precision,
   OneToMany,
@@ -467,8 +468,9 @@ export const createTckEntities = (hookCallback: Mock) => {
   @AfterDestroy(hookCallback)
   @AfterLoad(hookCallback)
   class TckHooked {
+    // Dogfoods the new default @Generated() strategy → lindorm_id (varchar(64)).
     @PrimaryKeyField()
-    @Generated("uuid")
+    @Generated()
     id!: string;
 
     @VersionField()
@@ -486,8 +488,9 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   @Entity({ name: "TckScoped" })
   class TckScoped {
+    // Dogfoods the new default @Generated() strategy → lindorm_id (varchar(64)).
     @PrimaryKeyField()
-    @Generated("uuid")
+    @Generated()
     id!: string;
 
     @ScopeField()
@@ -1112,6 +1115,69 @@ export const createTckEntities = (hookCallback: Mock) => {
     quantity!: number;
   }
 
+  // ─── Generated Identity Strategy Entities ─────────────────────────
+  // Each exercises one @Generated identity strategy as the primary key so
+  // the cross-driver TCK covers every strategy (not just uuid). All are
+  // standalone (no relations/FKs) and run on every driver.
+
+  @Entity({ name: "TckPkString" })
+  class TckPkString {
+    @PrimaryKeyField()
+    @Generated("string")
+    @Max(64)
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    label!: string;
+  }
+
+  @Entity({ name: "TckPkIncrement" })
+  class TckPkIncrement {
+    @PrimaryKeyField("integer")
+    @Generated("increment")
+    id!: number;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    label!: string;
+  }
+
+  @Entity({ name: "TckPkInteger" })
+  class TckPkInteger {
+    @PrimaryKeyField("integer")
+    @Generated("integer")
+    id!: number;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    label!: string;
+  }
+
   return {
     TckSimpleUser,
     TckSimplePost,
@@ -1159,5 +1225,8 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckTypeHolder,
     TckRenamedColumns,
     TckChecked,
+    TckPkString,
+    TckPkIncrement,
+    TckPkInteger,
   };
 };
