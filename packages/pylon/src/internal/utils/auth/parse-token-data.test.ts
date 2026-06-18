@@ -12,6 +12,11 @@ vi.mock("crypto", async () => ({
   randomUUID: vi.fn().mockImplementation(() => "c8ff3952-8ba4-51a3-a4d5-2f0726c49524"),
 }));
 
+vi.mock("@lindorm/random", async () => ({
+  ...(await vi.importActual<typeof import("@lindorm/random")>("@lindorm/random")),
+  randomId: vi.fn(() => "def_0000000000000000"),
+}));
+
 const createJwtVerifyResult = (overrides: Record<string, any> = {}) => ({
   payload: {
     expiresAt: new Date("2024-01-02T08:00:00.000Z"),
