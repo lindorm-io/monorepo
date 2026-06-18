@@ -1,4 +1,4 @@
-import { randomUUID } from "@lindorm/random";
+import { randomId } from "@lindorm/random";
 import { stageField } from "../internal/message/metadata/stage-metadata.js";
 
 export const IdentifierField =
@@ -7,7 +7,7 @@ export const IdentifierField =
     stageField(context.metadata, {
       key: String(context.name),
       decorator: "IdentifierField",
-      default: () => randomUUID(),
+      default: () => randomId(),
       enum: null,
       max: null,
       min: null,
@@ -15,6 +15,6 @@ export const IdentifierField =
       optional: false,
       schema: null,
       transform: null,
-      type: "uuid",
+      type: "string",
     });
   };

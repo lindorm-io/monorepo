@@ -39,7 +39,7 @@ exports[`inheritance with real decorators > collectAll for fields > should snaps
     "optional": false,
     "schema": null,
     "transform": null,
-    "type": "uuid",
+    "type": "string",
   },
   {
     "decorator": "TimestampField",
@@ -148,7 +148,7 @@ exports[`inheritance with real decorators > three-level inheritance > should sna
     "optional": false,
     "schema": null,
     "transform": null,
-    "type": "uuid",
+    "type": "string",
   },
 ]
 `;
