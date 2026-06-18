@@ -6,15 +6,10 @@ import {
   TEST_OCT_KEY_UTF,
 } from "../__fixtures__/oct-keys.js";
 import { KryptosKit } from "./KryptosKit.js";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate.toISOString());
-
-vi.mock("crypto", async () => ({
-  ...(await vi.importActual<typeof import("crypto")>("crypto")),
-  randomUUID: vi.fn().mockReturnValue("6e6f84b0-e125-5e3f-90ae-c65269668d98"),
-}));
 
 describe("KryptosKit (oct)", () => {
   describe("clone", () => {
@@ -136,9 +131,12 @@ describe("KryptosKit (oct)", () => {
         algorithm: "HS384",
       });
 
-      expect(kryptos.toJSON()).toMatchSnapshot({ thumbprint: expect.any(String) });
+      expect(kryptos.toJSON()).toMatchSnapshot({
+        id: expect.any(String),
+        thumbprint: expect.any(String),
+      });
       expect(kryptos.export("b64")).toEqual({
-        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+        id: expect.stringMatching(/^key_[A-Za-z0-9]{16}$/),
         algorithm: "HS384",
         privateKey: expect.any(String),
         publicKey: "",
@@ -153,9 +151,12 @@ describe("KryptosKit (oct)", () => {
         encryption: "A256GCM",
       });
 
-      expect(kryptos.toJSON()).toMatchSnapshot({ thumbprint: expect.any(String) });
+      expect(kryptos.toJSON()).toMatchSnapshot({
+        id: expect.any(String),
+        thumbprint: expect.any(String),
+      });
       expect(kryptos.export("b64")).toEqual({
-        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+        id: expect.stringMatching(/^key_[A-Za-z0-9]{16}$/),
         algorithm: "dir",
         encryption: "A256GCM",
         privateKey: expect.any(String),
@@ -170,9 +171,12 @@ describe("KryptosKit (oct)", () => {
         algorithm: "HS512",
       });
 
-      expect(kryptos.toJSON()).toMatchSnapshot({ thumbprint: expect.any(String) });
+      expect(kryptos.toJSON()).toMatchSnapshot({
+        id: expect.any(String),
+        thumbprint: expect.any(String),
+      });
       expect(kryptos.export("b64")).toEqual({
-        id: "6e6f84b0-e125-5e3f-90ae-c65269668d98",
+        id: expect.stringMatching(/^key_[A-Za-z0-9]{16}$/),
         algorithm: "HS512",
         privateKey: expect.any(String),
         publicKey: "",

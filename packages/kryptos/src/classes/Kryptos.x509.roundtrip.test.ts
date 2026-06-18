@@ -12,14 +12,9 @@ import {
 import { KryptosError } from "../errors/index.js";
 import { Kryptos } from "./Kryptos.js";
 import { KryptosKit } from "./KryptosKit.js";
-import { describe, expect, test, vi } from "vitest";
+import { describe, expect, test } from "vitest";
 
 MockDate.set(new Date("2025-06-15T12:00:00.000Z").toISOString());
-
-vi.mock("crypto", async () => ({
-  ...(await vi.importActual<typeof import("crypto")>("crypto")),
-  randomUUID: vi.fn().mockReturnValue("6e6f84b0-e125-5e3f-90ae-c65269668d98"),
-}));
 
 describe("Kryptos (X.509 round-trip)", () => {
   const fixedDates = {
