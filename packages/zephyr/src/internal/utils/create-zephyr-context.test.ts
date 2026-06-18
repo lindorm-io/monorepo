@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@lindorm/random", () => ({
   randomUUID: vi.fn().mockReturnValue("mock-uuid"),
+  randomId: vi.fn().mockReturnValue("mock-uuid"),
 }));
 
 describe("createZephyrContext", () => {
