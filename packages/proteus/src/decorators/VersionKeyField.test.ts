@@ -28,6 +28,16 @@ class VersionKeyFieldMarkerOnly {
   versionId!: string;
 }
 
+@Entity({ name: "VersionKeyFieldTypedMarkerOnly" })
+class VersionKeyFieldTypedMarkerOnly {
+  @PrimaryKeyField()
+  @Generated("uuid")
+  id!: string;
+
+  @VersionKeyField("uuid")
+  versionId!: string;
+}
+
 @Entity({ name: "VersionKeyFieldInteger" })
 class VersionKeyFieldInteger {
   @PrimaryKey()
@@ -56,8 +66,14 @@ describe("VersionKeyField", () => {
     expect(getEntityMetadata(VersionKeyFieldUuid)).toMatchSnapshot();
   });
 
-  test("marker alone stages a primary key + version key + field but NO generated entry", () => {
-    const meta = getEntityMetadata(VersionKeyFieldMarkerOnly);
+  test("bare marker (no type, no @Generated) throws a missing-field-type metadata error", () => {
+    expect(() => getEntityMetadata(VersionKeyFieldMarkerOnly)).toThrow(
+      "Field has no resolvable type",
+    );
+  });
+
+  test("typed marker alone (no @Generated) stages a primary key + version key + field but NO generated entry", () => {
+    const meta = getEntityMetadata(VersionKeyFieldTypedMarkerOnly);
     expect(meta.fields.find((f) => f.key === "versionId")).toBeDefined();
     expect(meta.primaryKeys).toContain("versionId");
     expect(meta.versionKeys).toContain("versionId");
