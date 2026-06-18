@@ -1,3 +1,5 @@
+import { randomId } from "@lindorm/random";
+
 export type SignDpopProofOptions = {
   privateKey: CryptoKey;
   publicJwk: JsonWebKey;
@@ -33,7 +35,7 @@ export const signDpopProof = async (options: SignDpopProofOptions): Promise<stri
   };
 
   const payload: Record<string, unknown> = {
-    jti: crypto.randomUUID(),
+    jti: randomId({ namespace: "dpo", length: 16 }),
     htm: options.htm,
     htu: options.htu,
     iat: Math.floor(Date.now() / 1000),

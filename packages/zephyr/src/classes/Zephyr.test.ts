@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 vi.mock("@lindorm/random", async () => ({
   randomUUID: vi.fn().mockReturnValue("mock-uuid"),
+  randomId: vi.fn().mockReturnValue("mock-uuid"),
 }));
 
 const mockSocket = {
