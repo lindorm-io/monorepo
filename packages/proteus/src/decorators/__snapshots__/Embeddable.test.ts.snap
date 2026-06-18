@@ -153,6 +153,7 @@ exports[`Embedded > should flatten embeddable fields into parent entity metadata
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],

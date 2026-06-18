@@ -14,6 +14,7 @@ const makeGenerated = (
   length: null,
   max: null,
   min: null,
+  namespace: null,
   ...overrides,
 });
 
@@ -109,24 +110,64 @@ describe("inferGeneratedTypes", () => {
     ).not.toThrow();
   });
 
-  test("should infer varchar(64) for lindorm_id strategy when type is null", () => {
+  test("should infer varchar(24) for lindorm_id strategy when type is null", () => {
     const fields = [makeField("id", { type: null })];
     inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields);
     expect(fields[0].type).toBe("varchar");
-    expect(fields[0].max).toBe(64);
+    expect(fields[0].max).toBe(24);
   });
 
-  test("should accept lindorm_id on an existing varchar field and default max to 64", () => {
+  test("should compute varchar max from namespace for lindorm_id when type is null", () => {
+    const fields = [makeField("id", { type: null })];
+    inferGeneratedTypes(
+      "Test",
+      [makeGenerated("id", "lindorm_id", { namespace: "user" })],
+      fields,
+    );
+    expect(fields[0].type).toBe("varchar");
+    expect(fields[0].max).toBe(29);
+  });
+
+  test("should compute varchar max from length for lindorm_id when type is null", () => {
+    const fields = [makeField("id", { type: null })];
+    inferGeneratedTypes(
+      "Test",
+      [makeGenerated("id", "lindorm_id", { length: 32 })],
+      fields,
+    );
+    expect(fields[0].type).toBe("varchar");
+    expect(fields[0].max).toBe(32);
+  });
+
+  test("should accept lindorm_id on an existing varchar field and default max to 24", () => {
     const fields = [makeField("id", { type: "varchar", max: null })];
     inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields);
     expect(fields[0].type).toBe("varchar");
-    expect(fields[0].max).toBe(64);
+    expect(fields[0].max).toBe(24);
   });
 
   test("should not override an existing varchar max for lindorm_id", () => {
     const fields = [makeField("id", { type: "varchar", max: 128 })];
     inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields);
     expect(fields[0].max).toBe(128);
+  });
+
+  test("should throw when @Max is too small to hold a lindorm_id", () => {
+    const fields = [makeField("id", { type: "varchar", max: 10 })];
+    expect(() =>
+      inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields),
+    ).toThrow("Invalid @Max for lindorm_id field");
+  });
+
+  test("should throw when @Max is too small for a namespaced lindorm_id", () => {
+    const fields = [makeField("id", { type: "varchar", max: 24 })];
+    expect(() =>
+      inferGeneratedTypes(
+        "Test",
+        [makeGenerated("id", "lindorm_id", { namespace: "user" })],
+        fields,
+      ),
+    ).toThrow("Invalid @Max for lindorm_id field");
   });
 
   test("should accept lindorm_id on string and text field types", () => {

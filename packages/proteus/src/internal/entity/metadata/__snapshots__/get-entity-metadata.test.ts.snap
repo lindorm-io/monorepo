@@ -96,6 +96,7 @@ exports[`getEntityMetadata > should return full entity metadata snapshot 1`] = `
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],

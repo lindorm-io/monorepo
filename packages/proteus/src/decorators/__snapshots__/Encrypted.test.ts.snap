@@ -76,6 +76,7 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
       "length": null,
       "max": null,
       "min": null,
+      "namespace": null,
       "strategy": "uuid",
     },
   ],
