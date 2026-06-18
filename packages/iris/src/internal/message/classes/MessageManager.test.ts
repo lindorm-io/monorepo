@@ -212,8 +212,8 @@ const stabilizeMessage = (msg: any, keys: Array<string>) => {
     const val = msg[key];
     if (val instanceof Date) {
       result[key] = "[Date]";
-    } else if (typeof val === "string" && /^[0-9a-f-]{36}$/.test(val)) {
-      result[key] = "[uuid]";
+    } else if (typeof val === "string" && /^[A-Za-z0-9]{24}$/.test(val)) {
+      result[key] = "[id]";
     } else {
       result[key] = val;
     }
@@ -261,12 +261,12 @@ describe("MessageManager", () => {
       expect(msg.count).toBe(0);
     });
 
-    it("should generate @IdentifierField (uuid) and @TimestampField (date)", () => {
+    it("should generate @IdentifierField (lindorm id) and @TimestampField (date)", () => {
       const manager = new MessageManager({ target: TestEvent });
       const msg = manager.create({ name: "test" });
 
       expect(msg.id).toEqual(expect.any(String));
-      expect(msg.id).toMatch(/^[0-9a-f-]{36}$/);
+      expect(msg.id).toMatch(/^[A-Za-z0-9]{24}$/);
       expect(msg.timestamp).toEqual(expect.any(Date));
     });
 

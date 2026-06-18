@@ -7,7 +7,7 @@ import type { TckMessages } from "./create-tck-messages.js";
 import { waitFor } from "./wait.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ID_RE = /^[A-Za-z0-9]{24}$/;
 
 export const decoratorCoverageSuite = (
   getHandle: () => TckDriverHandle,
@@ -176,13 +176,13 @@ export const decoratorCoverageSuite = (
     // ─── @CorrelationField ─────────────────────────────────────────────────────
 
     describe("@CorrelationField", () => {
-      test("auto-generates a UUID correlation ID on create", () => {
+      test("auto-generates a correlation ID on create", () => {
         const handle = getHandle();
         const bus = handle.messageBus(messages.TckCorrelationMessage);
 
         const msg = bus.create({ body: "corr-test" } as any);
 
-        expect(msg.correlationId).toMatch(UUID_RE);
+        expect(msg.correlationId).toMatch(ID_RE);
       });
 
       test("preserves provided correlation ID", () => {

@@ -35,7 +35,7 @@ exports[`buildMessageMetadata > abstract + concrete hierarchy > should inherit f
       "optional": false,
       "schema": null,
       "transform": null,
-      "type": "uuid",
+      "type": "string",
     },
     {
       "decorator": "Field",
@@ -123,7 +123,7 @@ exports[`buildMessageMetadata > multi-level hierarchy > should merge metadata fr
       "optional": false,
       "schema": null,
       "transform": null,
-      "type": "uuid",
+      "type": "string",
     },
   ],
   "generated": [],
@@ -163,7 +163,7 @@ exports[`buildMessageMetadata > single class with mixed decorators > should reso
       "optional": false,
       "schema": null,
       "transform": null,
-      "type": "uuid",
+      "type": "string",
     },
     {
       "decorator": "TimestampField",
