@@ -67,6 +67,7 @@ exports[`ManyToMany > should register inverse side metadata 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,
@@ -188,6 +189,7 @@ exports[`ManyToMany > should register owning side metadata 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

@@ -71,6 +71,7 @@ exports[`Enum > should match snapshot for TypeScript enum 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

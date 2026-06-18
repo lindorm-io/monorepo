@@ -148,6 +148,7 @@ exports[`Embedded > should flatten embeddable fields into parent entity metadata
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

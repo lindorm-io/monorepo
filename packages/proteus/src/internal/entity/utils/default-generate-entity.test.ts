@@ -46,6 +46,36 @@ class GenerateDateEntity {
   generatedAt!: Date;
 }
 
+@Entity({ name: "GenerateLindormIdEntity" })
+class GenerateLindormIdEntity {
+  @PrimaryKeyField()
+  id!: string;
+
+  @Field("varchar")
+  @Generated()
+  token!: string;
+}
+
+@Entity({ name: "GenerateLindormIdLengthEntity" })
+class GenerateLindormIdLengthEntity {
+  @PrimaryKeyField()
+  id!: string;
+
+  @Field("varchar")
+  @Generated("lindorm_id", { length: 32 })
+  token!: string;
+}
+
+@Entity({ name: "GenerateFunctionEntity" })
+class GenerateFunctionEntity {
+  @PrimaryKeyField()
+  id!: string;
+
+  @Field("string")
+  @Generated(() => "fixed-value")
+  slug!: string;
+}
+
 describe("defaultGenerateEntity", () => {
   test("should generate uuid for PrimaryKeyField", () => {
     const entity: any = { id: undefined, name: "test" };
@@ -88,5 +118,23 @@ describe("defaultGenerateEntity", () => {
     const entity: any = { id: undefined, name: "test" };
     const result = defaultGenerateEntity(GenerateUuidEntity, entity);
     expect(result).toBe(entity);
+  });
+
+  test("should generate a 24-char base62 lindorm id for default strategy", () => {
+    const entity: any = { id: "abc", token: undefined };
+    defaultGenerateEntity(GenerateLindormIdEntity, entity);
+    expect(entity.token).toMatch(/^[A-Za-z0-9]{24}$/);
+  });
+
+  test("should respect the length option for lindorm_id", () => {
+    const entity: any = { id: "abc", token: undefined };
+    defaultGenerateEntity(GenerateLindormIdLengthEntity, entity);
+    expect(entity.token).toMatch(/^[A-Za-z0-9]{32}$/);
+  });
+
+  test("should use a function generator at insert time", () => {
+    const entity: any = { id: "abc", slug: undefined };
+    defaultGenerateEntity(GenerateFunctionEntity, entity);
+    expect(entity.slug).toBe("fixed-value");
   });
 });

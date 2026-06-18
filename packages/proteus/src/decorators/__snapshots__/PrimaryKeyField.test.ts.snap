@@ -43,6 +43,7 @@ exports[`PrimaryKeyField > should register uuid primary key field (default) 1`] 
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

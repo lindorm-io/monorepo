@@ -91,6 +91,7 @@ exports[`Index > should register class-level array index 1`] = `
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,
@@ -205,6 +206,7 @@ exports[`Index > should register field-level index with custom direction and nam
   "filters": [],
   "generated": [
     {
+      "generator": null,
       "key": "id",
       "length": null,
       "max": null,

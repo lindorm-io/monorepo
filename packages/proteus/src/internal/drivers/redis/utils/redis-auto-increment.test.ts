@@ -36,6 +36,7 @@ const makeGenerated = (
 ): EntityMetadata["generated"][number] => ({
   strategy,
   key,
+  generator: null,
   length: null,
   max: null,
   min: null,
