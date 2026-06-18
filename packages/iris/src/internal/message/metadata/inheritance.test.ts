@@ -36,6 +36,7 @@ describe("inheritance with real decorators", () => {
   @BeforePublish(parentBeforePublish)
   class BaseEvent {
     @IdentifierField()
+    @Generated()
     id!: string;
 
     @TimestampField()
@@ -191,7 +192,10 @@ describe("inheritance with real decorators", () => {
 
     it("should have correct total generated count", () => {
       const generated = collectAll(UserCreatedEvent, "generated");
-      expect(generated).toHaveLength(2);
+      // Parent: id (@Generated), createdAt (@TimestampField stages a date),
+      //         correlationId (@Generated uuid)
+      // Child: shortCode (@Generated string)
+      expect(generated).toHaveLength(4);
     });
 
     it("should snapshot merged generated metadata", () => {
@@ -263,6 +267,7 @@ describe("inheritance with real decorators", () => {
     @OnCreate(() => {})
     class GrandparentMsg {
       @IdentifierField()
+      @Generated()
       id!: string;
     }
 

@@ -1,6 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import { Default } from "../../decorators/Default.js";
 import { Field } from "../../decorators/Field.js";
+import { Generated } from "../../decorators/Generated.js";
 import { IdentifierField } from "../../decorators/IdentifierField.js";
 import { Message } from "../../decorators/Message.js";
 import { BeforePublish } from "../../decorators/BeforePublish.js";
@@ -43,6 +44,7 @@ const onConsumeErrorSpy = vi.fn();
 @Message({ name: "BusTestMessage" })
 class BusTestMessage {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Field("string")
@@ -56,6 +58,7 @@ class BusTestMessage {
 @Message({ name: "SimpleBusMessage" })
 class SimpleBusMessage {
   @IdentifierField()
+  @Generated()
   id!: string;
 
   @Default("hello")

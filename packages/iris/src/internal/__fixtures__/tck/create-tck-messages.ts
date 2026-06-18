@@ -126,10 +126,10 @@ export const createTckMessages = (hookLog: Array<string>) => {
   @Message({ name: "TckEncryptedMessage" })
   class TckEncryptedMessage implements IMessage {
     @IdentifierField()
+    @Generated()
     id!: string;
 
     @TimestampField()
-    @Generated("date")
     createdAt!: Date;
 
     @Field("string") secretData!: string;
@@ -139,10 +139,10 @@ export const createTckMessages = (hookLog: Array<string>) => {
   @Message({ name: "TckCompressedMessage" })
   class TckCompressedMessage implements IMessage {
     @IdentifierField()
+    @Generated()
     id!: string;
 
     @TimestampField()
-    @Generated("date")
     createdAt!: Date;
 
     @Field("string") largePayload!: string;
@@ -151,10 +151,10 @@ export const createTckMessages = (hookLog: Array<string>) => {
   @Message({ name: "TckHeaderMessage" })
   class TckHeaderMessage implements IMessage {
     @IdentifierField()
+    @Generated()
     id!: string;
 
     @TimestampField()
-    @Generated("date")
     createdAt!: Date;
 
     @Field("string")
@@ -211,7 +211,7 @@ export const createTckMessages = (hookLog: Array<string>) => {
 
   @Message({ name: "TckCorrelationMessage" })
   class TckCorrelationMessage implements IMessage {
-    @CorrelationField() correlationId!: string;
+    @CorrelationField() @Generated() correlationId!: string;
     @Field("string") body!: string;
   }
 

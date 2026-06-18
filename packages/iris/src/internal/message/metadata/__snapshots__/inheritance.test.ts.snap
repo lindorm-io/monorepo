@@ -30,7 +30,7 @@ exports[`inheritance with real decorators > collectAll for fields > should snaps
   },
   {
     "decorator": "IdentifierField",
-    "default": "[function]",
+    "default": null,
     "enum": null,
     "key": "id",
     "max": null,
@@ -43,7 +43,7 @@ exports[`inheritance with real decorators > collectAll for fields > should snaps
   },
   {
     "decorator": "TimestampField",
-    "default": "[function]",
+    "default": null,
     "enum": null,
     "key": "createdAt",
     "max": null,
@@ -79,6 +79,22 @@ exports[`inheritance with real decorators > collectAll for generated > should sn
     "max": null,
     "min": null,
     "strategy": "string",
+  },
+  {
+    "generator": null,
+    "key": "id",
+    "length": null,
+    "max": null,
+    "min": null,
+    "strategy": "lindorm_id",
+  },
+  {
+    "generator": null,
+    "key": "createdAt",
+    "length": null,
+    "max": null,
+    "min": null,
+    "strategy": "date",
   },
   {
     "generator": null,
@@ -141,7 +157,7 @@ exports[`inheritance with real decorators > three-level inheritance > should sna
   },
   {
     "decorator": "IdentifierField",
-    "default": "[function]",
+    "default": null,
     "enum": null,
     "key": "id",
     "max": null,

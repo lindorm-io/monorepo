@@ -1,4 +1,5 @@
 import { Field } from "../../../decorators/Field.js";
+import { Generated } from "../../../decorators/Generated.js";
 import { IdentifierField } from "../../../decorators/IdentifierField.js";
 import { Message } from "../../../decorators/Message.js";
 import { clearMetadataCache } from "./registry.js";
@@ -13,6 +14,7 @@ describe("getMessageMetadata", () => {
   @Message({ name: "CachedMsg" })
   class CachedMsg {
     @IdentifierField()
+    @Generated()
     id!: string;
 
     @Field("string")

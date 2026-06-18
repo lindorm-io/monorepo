@@ -11,7 +11,7 @@ exports[`getMessageMetadata > should return correct metadata 1`] = `
   "fields": [
     {
       "decorator": "IdentifierField",
-      "default": "[function]",
+      "default": null,
       "enum": null,
       "key": "id",
       "max": null,
@@ -36,7 +36,16 @@ exports[`getMessageMetadata > should return correct metadata 1`] = `
       "type": "string",
     },
   ],
-  "generated": [],
+  "generated": [
+    {
+      "generator": null,
+      "key": "id",
+      "length": null,
+      "max": null,
+      "min": null,
+      "strategy": "lindorm_id",
+    },
+  ],
   "headers": [],
   "hooks": [],
   "message": {

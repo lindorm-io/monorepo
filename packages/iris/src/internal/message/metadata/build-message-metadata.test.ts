@@ -135,6 +135,7 @@ describe("buildMessageMetadata", () => {
     @OnCreate(onCreate)
     class SimpleEvent {
       @IdentifierField()
+      @Generated()
       id!: string;
 
       @TimestampField()
@@ -171,6 +172,7 @@ describe("buildMessageMetadata", () => {
     @OnCreate(parentHook)
     class BaseMsg {
       @IdentifierField()
+      @Generated()
       id!: string;
 
       @Field("string")
@@ -212,6 +214,7 @@ describe("buildMessageMetadata", () => {
     @Broadcast()
     class GrandparentMsg {
       @IdentifierField()
+      @Generated()
       id!: string;
     }
 
