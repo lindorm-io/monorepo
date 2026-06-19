@@ -72,16 +72,20 @@ describe("stage-metadata", () => {
       stageGenerated(metadata, {
         key: "id",
         strategy: "uuid",
+        generator: null,
         length: null,
         max: null,
         min: null,
+        namespace: null,
       });
       stageGenerated(metadata, {
         key: "ts",
         strategy: "date",
+        generator: null,
         length: null,
         max: null,
         min: null,
+        namespace: null,
       });
 
       expect(metadata.generated).toMatchSnapshot();
