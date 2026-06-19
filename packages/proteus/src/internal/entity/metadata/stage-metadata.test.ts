@@ -64,6 +64,7 @@ describe("stage-metadata", () => {
         length: null,
         max: null,
         min: null,
+        namespace: null,
       });
 
       expect(meta.fields).toHaveLength(1);
