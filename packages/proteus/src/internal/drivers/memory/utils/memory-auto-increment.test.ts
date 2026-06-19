@@ -22,6 +22,7 @@ const makeGenerated = (
   length: null,
   max: null,
   min: null,
+  namespace: null,
 });
 
 const makeMetadata = (
