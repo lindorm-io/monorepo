@@ -16,17 +16,21 @@ exports[`stage-metadata > array stage functions > should accumulate fields 1`] =
 exports[`stage-metadata > array stage functions > should accumulate generated 1`] = `
 [
   {
+    "generator": null,
     "key": "id",
     "length": null,
     "max": null,
     "min": null,
+    "namespace": null,
     "strategy": "uuid",
   },
   {
+    "generator": null,
     "key": "ts",
     "length": null,
     "max": null,
     "min": null,
+    "namespace": null,
     "strategy": "date",
   },
 ]
