@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.9.0...@lindorm/kryptos@0.10.0) (2026-06-19)
+
+### Features
+
+- **kryptos:** generate key ids as namespaced lindorm ids ([d786673](https://github.com/lindorm-io/monorepo/commit/d78667325ec4d7cbdb1e4c276cd1452d99b0727a))
+- **kryptos:** safe user-supplied oct secrets (validate raw + deriveFrom HKDF) ([4407804](https://github.com/lindorm-io/monorepo/commit/44078048e23d6c0f6fd5df2361c81fc6d236fd9c))
+
 # [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.8.2...@lindorm/kryptos@0.9.0) (2026-06-15)
 
 ### Features

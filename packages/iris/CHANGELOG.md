@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.5.0...@lindorm/iris@0.6.0) (2026-06-19)
+
+### Bug Fixes
+
+- **iris:** let @Generated determine the type of a role-marker field ([aa57761](https://github.com/lindorm-io/monorepo/commit/aa57761eec52dd5e5b8fd0e1664bd945ad1de747))
+
+### Features
+
+- **iris:** add lindorm_id strategy and function form to @Generated ([d54e53e](https://github.com/lindorm-io/monorepo/commit/d54e53ebc034a5cc25481ce046a79b3598185f65))
+- **iris:** default identifier and correlation ids to lindorm random id ([ba41d52](https://github.com/lindorm-io/monorepo/commit/ba41d529fc04801a26ecc4ced7754716b1a82a84))
+- **iris:** reject duplicate @Generated on a field ([56d5673](https://github.com/lindorm-io/monorepo/commit/56d5673cd95c50c881b09a9f8286b78c4de1186c))
+- **iris:** support namespace on @Generated("lindorm_id") ([cd92e0c](https://github.com/lindorm-io/monorepo/commit/cd92e0c59f3dafdd05cfa66eaaf71fbd7f240ef6))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.4.3...@lindorm/iris@0.5.0) (2026-06-15)
 
 ### Bug Fixes

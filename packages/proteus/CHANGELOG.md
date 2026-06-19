@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.8.0...@lindorm/proteus@0.9.0) (2026-06-19)
+
+### Bug Fixes
+
+- **proteus:** fall back a type-less PK marker to VARCHAR(255) ([620ec99](https://github.com/lindorm-io/monorepo/commit/620ec9901dfdaa1aa00fe4f92b6378fd8170289e))
+- **proteus:** regenerate version keys with their own @Generated strategy ([8028bd7](https://github.com/lindorm-io/monorepo/commit/8028bd7b3f01bdab1c3068e16470ffaa46690e35))
+
+### Features
+
+- **proteus:** add lindorm_id strategy and function form to @Generated ([2171440](https://github.com/lindorm-io/monorepo/commit/21714402340518d1579ec911a7fc13b2f9bb8bac))
+- **proteus:** enable lindorm_id primary keys and add generation guards ([4a5e1bb](https://github.com/lindorm-io/monorepo/commit/4a5e1bb083b705b18dca88ba20f0875701af85bc))
+- **proteus:** namespace on @Generated("lindorm_id"); size varchar to the id ([5ef68cb](https://github.com/lindorm-io/monorepo/commit/5ef68cba8a9e8c4529a87663f9cff594802e014a))
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.7.1...@lindorm/proteus@0.8.0) (2026-06-15)
 
 ### Bug Fixes
