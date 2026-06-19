@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.8.0...@lindorm/hermes@0.9.0) (2026-06-19)
+
+### Features
+
+- **hermes:** migrate ids to namespaced lindorm ids ([8388752](https://github.com/lindorm-io/monorepo/commit/83887527bb5048f35c69fbdd936189f5ae271010))
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.7.3...@lindorm/hermes@0.8.0) (2026-06-15)
 
 ### Features

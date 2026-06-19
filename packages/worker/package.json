@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/worker",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -47,13 +47,13 @@
     "@lindorm/date": "^0.5.3",
     "@lindorm/is": "^0.2.3",
     "@lindorm/retry": "^0.3.3",
-    "@lindorm/scanner": "^0.5.4",
+    "@lindorm/scanner": "^0.5.5",
     "@lindorm/utils": "^0.8.3"
   },
   "peerDependencies": {
     "@lindorm/logger": ">=0.5.0"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.6.4"
+    "@lindorm/logger": "^0.6.5"
   }
 }

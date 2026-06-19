@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.9.0...@lindorm/aegis@0.10.0) (2026-06-19)
+
+### Features
+
+- **aegis:** add NIST assurance-level claims (aal/ial/fal) ([82bd5fc](https://github.com/lindorm-io/monorepo/commit/82bd5fc17e9bc59b29c77be8c72973ccbaf47e1c))
+
 # [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/aegis@0.8.1...@lindorm/aegis@0.9.0) (2026-06-15)
 
 ### Bug Fixes

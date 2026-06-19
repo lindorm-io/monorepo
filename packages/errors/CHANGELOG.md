@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.3.0...@lindorm/errors@0.4.0) (2026-06-19)
+
+### Features
+
+- **errors:** generate the fallback error id as a namespaced lindorm id ([ff765e4](https://github.com/lindorm-io/monorepo/commit/ff765e4f7f3c2a459b59827808bab188a63c9376))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.2.2...@lindorm/errors@0.3.0) (2026-06-15)
 
 ### Features

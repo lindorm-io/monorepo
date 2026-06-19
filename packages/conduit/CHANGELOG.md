@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.7.0...@lindorm/conduit@0.8.0) (2026-06-19)
+
+### Features
+
+- **conduit:** namespaced lindorm ids for request context ([6609936](https://github.com/lindorm-io/monorepo/commit/66099367c311831fc8431f26e6c27e08f3af92c4))
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.6.3...@lindorm/conduit@0.7.0) (2026-06-15)
 
 ### Bug Fixes

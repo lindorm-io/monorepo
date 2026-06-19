@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/zephyr@0.3.0...@lindorm/zephyr@0.4.0) (2026-06-19)
+
+### Features
+
+- **zephyr:** namespaced lindorm ids for context and DPoP jti ([32a84c7](https://github.com/lindorm-io/monorepo/commit/32a84c7e1137c1b035569afb6bd51ce589f0db95))
+
 # [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/zephyr@0.2.2...@lindorm/zephyr@0.3.0) (2026-06-15)
 
 ### Features

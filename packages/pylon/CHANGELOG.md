@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.14.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.13.0...@lindorm/pylon@0.14.0) (2026-06-19)
+
+### Features
+
+- **pylon:** namespaced lindorm ids for context ids and audit/kryptos entities ([2eb340c](https://github.com/lindorm-io/monorepo/commit/2eb340c7745c1afc85d6c8ad0893c213dbb8c7f4))
+- **pylon:** session-id fallback uses a def\_ lindorm id ([1debb2b](https://github.com/lindorm-io/monorepo/commit/1debb2bd48fcb99f96f88b8db69bd8cf106f4701))
+
 # [0.13.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.12.1...@lindorm/pylon@0.13.0) (2026-06-15)
 
 ### Bug Fixes
