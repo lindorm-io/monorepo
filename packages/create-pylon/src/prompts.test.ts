@@ -63,6 +63,18 @@ describe("runPrompts", () => {
     }).toMatchSnapshot();
   });
 
+  test("scoped positional name keeps the scope but scaffolds into the basename dir (F9)", async () => {
+    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedSelect, ["none"]);
+    queueSequence(mockedConfirm, [false]);
+
+    const answers = await runPrompts({ positionalName: "@acme/proxy", cwd: sandboxDir });
+
+    expect(answers.projectName).toBe("@acme/proxy");
+    expect(answers.projectDir.endsWith("/proxy")).toBe(true);
+    expect(answers.projectDir).not.toContain("@acme");
+  });
+
   test("prompts for name when positional missing", async () => {
     mockedInput.mockResolvedValueOnce("prompted-name");
     queueSequence(mockedCheckbox, [["http", "socket"], []]);
