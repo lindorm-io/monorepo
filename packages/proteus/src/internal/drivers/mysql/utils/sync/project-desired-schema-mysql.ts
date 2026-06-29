@@ -21,7 +21,7 @@ import type {
 import type { NamespaceOptions } from "../../../../types/types.js";
 import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
 import { getJoinName } from "../../../../entity/utils/get-join-name.js";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { extractEnumValues } from "../../../../utils/extract-enum-values.js";
 import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
 import { hashIdentifier } from "../hash-identifier.js";
@@ -195,7 +195,7 @@ export const projectDesiredSchemaMysql = (
     let rootFieldKeys: Set<string> | null = null;
     let rootEntityName: ReturnType<typeof getEntityName> | null = null;
     if (isJoinedChild) {
-      const rootMeta = getEntityMetadata(metadata.inheritance!.root);
+      const rootMeta = getForeignMetadata(metadata, metadata.inheritance!.root);
       rootFieldKeys = new Set(rootMeta.fields.map((f) => f.key));
       rootEntityName = getEntityName(metadata.inheritance!.root, namespaceOptions);
     }
@@ -277,7 +277,7 @@ export const projectDesiredSchemaMysql = (
 
     // For joined children, add FK: child PK -> root PK
     if (isJoinedChild && rootEntityName) {
-      const rootMeta = getEntityMetadata(metadata.inheritance!.root);
+      const rootMeta = getForeignMetadata(metadata, metadata.inheritance!.root);
       const pkColumns = metadata.primaryKeys.map((k) =>
         resolveColumnNameSafe(metadata.fields, k),
       );
@@ -302,7 +302,7 @@ export const projectDesiredSchemaMysql = (
       if (relation.type === "ManyToMany") continue;
 
       const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
-      const foreignMeta = getEntityMetadata(relation.foreignConstructor());
+      const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
 
       for (const [joinCol, foreignPk] of Object.entries(relation.joinKeys)) {
         if (isJoinedChild && rootFieldKeys!.has(joinCol)) continue;
@@ -474,7 +474,7 @@ export const projectDesiredSchemaMysql = (
       }
 
       const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
-      const foreignMeta = getEntityMetadata(relation.foreignConstructor());
+      const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
       const inverseRelation = foreignMeta.relations.find(
         (r) =>
           r.foreignKey === relation.key &&

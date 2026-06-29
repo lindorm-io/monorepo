@@ -29,7 +29,7 @@ const makeRelation = (overrides: Partial<MetaRelation>): MetaRelation => ({
 });
 
 const makeMetadata = (relations: MetaRelation[]): EntityMetadata =>
-  ({ relations }) as EntityMetadata;
+  ({ relations, fields: [] }) as unknown as EntityMetadata;
 
 const mockLoadRelation = () => vi.fn().mockResolvedValue(null);
 

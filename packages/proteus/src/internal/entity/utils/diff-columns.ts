@@ -3,6 +3,7 @@ import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../types/metadata.js";
 import { resolveJoinKeyValue } from "./resolve-join-key-value.js";
+import { resolvePropertyKey } from "./resolve-property-key.js";
 
 /**
  * Compare current entity field values against a snapshot and return only
@@ -65,8 +66,15 @@ export const diffColumns = <E extends IEntity>(
     for (const [localKey, foreignKey] of Object.entries(relation.joinKeys)) {
       if (excludeKeys.has(localKey)) continue;
 
-      const current = resolveJoinKeyValue(entity, relation, localKey, foreignKey);
-      const previous = snapshot[localKey];
+      const propertyKey = resolvePropertyKey(metadata, localKey);
+      const current = resolveJoinKeyValue(
+        entity,
+        relation,
+        localKey,
+        foreignKey,
+        metadata,
+      );
+      const previous = snapshot[propertyKey] ?? snapshot[localKey];
 
       if (!valuesEqual(current, previous)) {
         changed[localKey] = current;

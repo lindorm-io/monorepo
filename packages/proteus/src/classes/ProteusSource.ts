@@ -36,6 +36,7 @@ import { classifyRedisError } from "../internal/drivers/redis/utils/classify-bre
 import { CachingRepository } from "../internal/classes/CachingRepository.js";
 import { EntityScanner } from "../internal/entity/classes/EntityScanner.js";
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
+import { registerMetadataResolver } from "../internal/entity/metadata/foreign-metadata.js";
 import { resolveInheritanceHierarchies } from "../internal/entity/metadata/resolve-inheritance.js";
 import { clearPrimaryCache } from "../internal/entity/metadata/build-primary.js";
 import { clearMetadataCache } from "../internal/entity/metadata/registry.js";
@@ -612,26 +613,28 @@ const createMetadataResolver = (
   getInheritanceMap: () => Map<Function, MetaInheritance> | undefined,
 ): { resolve: MetadataResolver; cache: Map<Function, EntityMetadata> | null } => {
   if (naming === "none") {
-    return {
-      resolve: (target) => getEntityMetadata(target, getInheritanceMap()),
-      cache: null,
+    const resolve: MetadataResolver = (target) => {
+      const metadata = getEntityMetadata(target, getInheritanceMap());
+      registerMetadataResolver(metadata, resolve);
+      return metadata;
     };
+    return { resolve, cache: null };
   }
 
   const cache = new Map<Function, EntityMetadata>();
 
-  return {
-    resolve: (target): EntityMetadata => {
-      let resolved = cache.get(target);
-      if (!resolved) {
-        resolved = applyNamingStrategy(
-          getEntityMetadata(target, getInheritanceMap()),
-          naming,
-        );
-        cache.set(target, resolved);
-      }
-      return resolved;
-    },
-    cache,
+  const resolve: MetadataResolver = (target): EntityMetadata => {
+    let resolved = cache.get(target);
+    if (!resolved) {
+      resolved = applyNamingStrategy(
+        getEntityMetadata(target, getInheritanceMap()),
+        naming,
+      );
+      cache.set(target, resolved);
+      registerMetadataResolver(resolved, resolve);
+    }
+    return resolved;
   };
+
+  return { resolve, cache };
 };

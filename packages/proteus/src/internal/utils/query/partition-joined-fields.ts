@@ -1,5 +1,5 @@
 import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../entity/metadata/foreign-metadata.js";
 
 export type JoinedFieldPartition = {
   /** Fields that belong to the root table (including PK and discriminator) */
@@ -27,7 +27,7 @@ export const partitionJoinedFields = (
   if (inh.strategy !== "joined") return null;
   if (inh.discriminatorValue == null) return null; // This is the root, not a child
 
-  const rootMeta = getEntityMetadata(inh.root);
+  const rootMeta = getForeignMetadata(metadata, inh.root);
   const rootFieldKeys = new Set(rootMeta.fields.map((f) => f.key));
   const pkKeys = new Set(metadata.primaryKeys);
 

@@ -4,7 +4,7 @@ import type {
   MetaRelationCount,
 } from "../../../../entity/types/metadata.js";
 import type { SqliteQueryClient } from "../../types/sqlite-query-client.js";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { getJoinName } from "../../../../entity/utils/get-join-name.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
@@ -35,8 +35,7 @@ export const loadRelationCounts = <E extends IEntity>(
     const relation = ctx.metadata.relations.find((r) => r.key === rc.relationKey);
     if (!relation) continue;
 
-    const foreignTarget = relation.foreignConstructor();
-    const foreignMeta = getEntityMetadata(foreignTarget);
+    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
 
     if (relation.type === "OneToMany") {
       loadOneToManyCount(entities, rc, relation, foreignMeta, ctx);

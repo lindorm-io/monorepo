@@ -20,7 +20,7 @@ import type {
 import type { NamespaceOptions } from "../../../../types/types.js";
 import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
 import { getJoinName } from "../../../../entity/utils/get-join-name.js";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
 import { extractEnumValues } from "../extract-enum-values.js";
 import { getEnumTypeName } from "../get-enum-type-name.js";
@@ -188,7 +188,7 @@ export const projectDesiredSchema = (
     let rootFieldKeys: Set<string> | null = null;
     let rootEntityName: ReturnType<typeof getEntityName> | null = null;
     if (isJoinedChild) {
-      const rootMeta = getEntityMetadata(metadata.inheritance!.root);
+      const rootMeta = getForeignMetadata(metadata, metadata.inheritance!.root);
       rootFieldKeys = new Set(rootMeta.fields.map((f) => f.key));
       rootEntityName = getEntityName(metadata.inheritance!.root, namespaceOptions);
     }
@@ -312,7 +312,7 @@ export const projectDesiredSchema = (
     // This links the child table's primary key to the root table, ensuring referential
     // integrity and cascading deletes from root to child.
     if (isJoinedChild && rootEntityName) {
-      const rootMeta = getEntityMetadata(metadata.inheritance!.root);
+      const rootMeta = getForeignMetadata(metadata, metadata.inheritance!.root);
       const pkColumns = metadata.primaryKeys.map((k) =>
         resolveColumnNameSafe(metadata.fields, k),
       );
@@ -393,7 +393,7 @@ export const projectDesiredSchema = (
 
       const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
 
-      const foreignMeta = getEntityMetadata(relation.foreignConstructor());
+      const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
       for (const [joinCol, foreignPk] of Object.entries(relation.joinKeys)) {
         // For joined children, skip FK constraints that belong to root table
         if (isJoinedChild && rootFieldKeys!.has(joinCol)) continue;
@@ -565,7 +565,7 @@ export const projectDesiredSchema = (
       }
 
       const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
-      const foreignMeta = getEntityMetadata(relation.foreignConstructor());
+      const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
       const inverseRelation = foreignMeta.relations.find(
         (r) =>
           r.foreignKey === relation.key &&

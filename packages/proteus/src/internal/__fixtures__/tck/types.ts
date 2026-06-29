@@ -1,6 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import type { IEntity, IProteusRepository } from "../../../interfaces/index.js";
 import type { MetaDriver } from "../../entity/types/metadata.js";
+import type { NamingStrategy } from "../../../types/source-options.js";
 
 export type TckCapabilities = {
   // ─── Always-on (tested unconditionally) ──────────────────────────────────────
@@ -76,5 +77,14 @@ export type TckDriverHandle = {
 export type TckDriverFactory = {
   driver: MetaDriver;
   capabilities: TckCapabilities;
-  setup(entities: Array<Constructor<IEntity>>): Promise<TckDriverHandle>;
+  /**
+   * Build a source/handle for the given entities under the given naming
+   * strategy. `naming` defaults to "none"; SQL driver harnesses run the suite
+   * under every strategy so key→column resolution is exercised, not just the
+   * "none" case where keys and columns coincide.
+   */
+  setup(
+    entities: Array<Constructor<IEntity>>,
+    naming?: NamingStrategy,
+  ): Promise<TckDriverHandle>;
 };

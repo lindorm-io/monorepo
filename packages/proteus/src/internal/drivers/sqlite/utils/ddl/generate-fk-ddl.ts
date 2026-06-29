@@ -2,7 +2,7 @@ import { NotSupportedError } from "../../../../../errors/index.js";
 import type { EntityMetadata, MetaRelation } from "../../../../entity/types/metadata.js";
 import type { NamespaceOptions } from "../../../../types/types.js";
 import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
 
@@ -78,7 +78,7 @@ export const generateInlineFkDDL = (
     );
     const foreignTable = quoteIdentifier(foreignName.name);
 
-    const foreignMeta = getEntityMetadata(relation.foreignConstructor());
+    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
 
     for (const [joinCol, foreignPk] of Object.entries(relation.joinKeys)) {
       const resolvedJoinCol = resolveColumnNameSafe(metadata.fields, joinCol);

@@ -1,5 +1,5 @@
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 import type { FieldAliasOverrides } from "./compile-where.js";
@@ -36,7 +36,7 @@ export const buildJoinedChildContext = (
   if (inh.strategy !== "joined") return null;
   if (inh.discriminatorValue == null) return null; // root, not child
 
-  const rootMeta = getEntityMetadata(inh.root);
+  const rootMeta = getForeignMetadata(metadata, inh.root);
   const rootFieldKeys = new Set(rootMeta.fields.map((f) => f.key));
   const pkKeys = new Set(metadata.primaryKeys);
 

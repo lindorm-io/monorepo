@@ -14,7 +14,7 @@ import type {
   FindOptions,
   UpsertOptions,
 } from "../../../../types/index.js";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   EntityMetadata,
@@ -335,7 +335,7 @@ export class MySqlRepository<
     // For inheritance children, always use the ROOT entity's table.
     const isInheritanceChild = this.metadata.inheritance?.discriminatorValue != null;
     const rootEntityName = isInheritanceChild
-      ? getEntityMetadata(this.metadata.inheritance!.root).entity.name
+      ? getForeignMetadata(this.metadata, this.metadata.inheritance!.root).entity.name
       : this.metadata.entity.name;
     const tableName = quoteQualifiedName(this.namespace, rootEntityName);
 
@@ -1204,7 +1204,7 @@ export class MySqlRepository<
     relation: MetaRelation,
   ): Promise<Array<IEntity>> {
     const foreignTarget = relation.foreignConstructor();
-    const foreignMeta = getEntityMetadata(foreignTarget);
+    const foreignMeta = getForeignMetadata(this.metadata, foreignTarget);
 
     const inverseRelation = foreignMeta.relations.find(
       (r) =>

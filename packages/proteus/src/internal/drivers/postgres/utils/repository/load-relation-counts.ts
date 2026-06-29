@@ -4,7 +4,7 @@ import type {
   MetaRelationCount,
 } from "../../../../entity/types/metadata.js";
 import type { PostgresQueryClient } from "../../types/postgres-query-client.js";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { getJoinName } from "../../../../entity/utils/get-join-name.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
@@ -36,7 +36,7 @@ export const loadRelationCounts = async <E extends IEntity>(
     if (!relation) continue;
 
     const foreignTarget = relation.foreignConstructor();
-    const foreignMeta = getEntityMetadata(foreignTarget);
+    const foreignMeta = getForeignMetadata(relation, foreignTarget);
     const schema = foreignMeta.entity.namespace ?? ctx.namespace;
 
     if (relation.type === "OneToMany") {
