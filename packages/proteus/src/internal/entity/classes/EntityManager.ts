@@ -25,6 +25,7 @@ import { defaultCreateRaw } from "../utils/default-create-raw.js";
 import { defaultGenerateEntity } from "../utils/default-generate-entity.js";
 import { defaultRelationFilter } from "../utils/default-relation-filter.js";
 import { defaultUpdateEntity } from "../utils/default-update-entity.js";
+import { assertSerialisableJsonFields } from "../utils/assert-serialisable-json.js";
 import { defaultValidateEntity } from "../utils/default-validate-entity.js";
 import { getEntityName } from "../utils/get-entity-name.js";
 import { getIncrementName } from "../utils/get-increment-name.js";
@@ -315,6 +316,7 @@ export class EntityManager<
 
   validate(entity: E): void {
     defaultValidateEntity(this.target, entity);
+    assertSerialisableJsonFields(this.metadata, entity);
     runHooksSync("OnValidate", this.metadata.hooks, entity, this.meta);
 
     this.logger?.silly("Validated entity", { entity });
