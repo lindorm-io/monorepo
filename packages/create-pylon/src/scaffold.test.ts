@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
+import prettier from "prettier";
 import { buildVitestConfig } from "./build-vitest-config.js";
 import {
   buildDependencyList,
@@ -598,6 +599,29 @@ describe("scaffold", () => {
       });
       await scaffold(answers, FIXED_KEK);
       expect(listTree(projectDir)).toMatchSnapshot();
+    });
+
+    test("generated output is prettier-stable under default config (F8)", async () => {
+      const answers = baseAnswers({
+        projectDir,
+        proteusDrivers: ["postgres", "redis"],
+        irisDriver: "kafka",
+        features: baseFeatures({ socket: true, webhooks: true, audit: true }),
+        workers: ["expiry-cleanup"],
+      });
+      await scaffold(answers, FIXED_KEK);
+
+      const unformatted: Array<string> = [];
+      for (const rel of listTree(projectDir)) {
+        const file = join(projectDir, rel);
+        const info = await prettier.getFileInfo(file);
+        if (info.ignored || !info.inferredParser) continue;
+        const source = readFileSync(file, "utf-8");
+        if (!(await prettier.check(source, { filepath: file }))) {
+          unformatted.push(rel);
+        }
+      }
+      expect(unformatted).toEqual([]);
     });
 
     test("session-only combo", async () => {
