@@ -627,6 +627,16 @@ export const buildPrimaryMetadata = <
     mergeSingleTableSubtypeFields(target, fields, inheritance);
   }
 
+  // @RelationCount columns are derived (recomputed on read) and skipped on
+  // write, so without a default the underlying NOT NULL column rejects inserts.
+  // Default the backing column to 0 unless the author set an explicit default.
+  for (const rc of relationCounts) {
+    const field = fields.find((f) => f.key === rc.key);
+    if (field && field.default == null) {
+      field.default = 0;
+    }
+  }
+
   validateFields(target.name, fields);
 
   const primaryKeys = primaryK.map((pk) => pk.key);
