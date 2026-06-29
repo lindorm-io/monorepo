@@ -31,6 +31,7 @@ import {
 import { RelationPersister } from "../../../utils/repository/RelationPersister.js";
 import { buildRelationFilter } from "../../../utils/repository/build-relation-filter.js";
 import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
+import { guardFindSortKey } from "../../../utils/query/guard-find-sort-key.js";
 import {
   computeAggregateFromValues,
   extractNumericValues,
@@ -102,6 +103,8 @@ export class RedisRepository<
     options?: FindOptions<E>,
     _scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
+    guardFindSortKey(options);
+
     if (options?.relations) {
       validateRelationNames(this.metadata, options.relations as Array<string>);
     }

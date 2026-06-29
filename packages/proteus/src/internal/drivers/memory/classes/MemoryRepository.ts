@@ -33,6 +33,7 @@ import { MemoryCursor } from "./MemoryCursor.js";
 import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store.js";
 import { diffColumns } from "../../../entity/utils/diff-columns.js";
 import { filterHiddenSelections } from "../../../utils/query/filter-hidden-selections.js";
+import { guardFindSortKey } from "../../../utils/query/guard-find-sort-key.js";
 import {
   computeAggregateFromValues,
   extractNumericValues,
@@ -115,6 +116,8 @@ export class MemoryRepository<
     options?: FindOptions<E>,
     _scope: QueryScope = "multiple",
   ): Promise<Array<E>> {
+    guardFindSortKey(options);
+
     if (options?.relations) {
       validateRelationNames(this.metadata, options.relations as Array<string>);
     }
