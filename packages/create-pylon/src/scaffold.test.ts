@@ -204,6 +204,19 @@ describe("scaffold", () => {
     ])("snapshot: %s", (_name, answers) => {
       expect(buildDependencyList(answers)).toMatchSnapshot();
     });
+
+    test("includes @lindorm/proteus and its @lindorm/aes encryption peer when a proteus driver is selected", () => {
+      const deps = buildDependencyList(baseAnswers({ proteusDrivers: ["postgres"] }));
+      expect(deps).toContain("@lindorm/proteus");
+      expect(deps).toContain("@lindorm/aes");
+      expect(deps).toContain("pg");
+    });
+
+    test("omits proteus deps (incl. @lindorm/aes) when no proteus driver is selected", () => {
+      const deps = buildDependencyList(baseAnswers({ proteusDrivers: [] }));
+      expect(deps).not.toContain("@lindorm/proteus");
+      expect(deps).not.toContain("@lindorm/aes");
+    });
   });
 
   describe("writeConfigFile", () => {
