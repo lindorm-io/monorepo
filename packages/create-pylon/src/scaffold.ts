@@ -16,6 +16,7 @@ import { buildContextFile } from "./build-context-file.js";
 import { buildDockerCompose } from "./build-docker-compose.js";
 import { buildIrisSamples } from "./build-iris-samples.js";
 import { buildPylonFile } from "./build-pylon-file.js";
+import { buildVitestConfig } from "./build-vitest-config.js";
 import { buildWorkerFile } from "./build-worker-file.js";
 import { runProteusInit } from "./drivers.js";
 import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
@@ -94,7 +95,14 @@ export const buildDependencyList = (answers: Answers): Array<string> => {
   return Array.from(new Set(deps));
 };
 
-export const buildDevDependencyList = (_answers: Answers): Array<string> => [];
+export const buildDevDependencyList = (answers: Answers): Array<string> => {
+  // Proteus entities use stage-3 decorators that the generated vitest config
+  // lowers via unplugin-swc (see buildVitestConfig); ship the transform deps.
+  if (answers.proteusDrivers.length > 0) {
+    return ["unplugin-swc", "@swc/core"];
+  }
+  return [];
+};
 
 export const writePackageJson = (answers: Answers): void => {
   const pkg: Record<string, unknown> = {
@@ -308,6 +316,11 @@ const ensureDir = (filePath: string): void => {
   mkdirSync(dirname(filePath), { recursive: true });
 };
 
+export const writeVitestConfig = (answers: Answers): void => {
+  const target = join(answers.projectDir, "vitest.config.mjs");
+  writeFileSync(target, buildVitestConfig(answers), "utf-8");
+};
+
 export const writeConfigFile = (answers: Answers): void => {
   const target = join(answers.projectDir, "src/pylon/config.ts");
   ensureDir(target);
@@ -395,6 +408,7 @@ export const scaffold = async (
 ): Promise<void> => {
   copyTemplates(answers);
   writePackageJson(answers);
+  writeVitestConfig(answers);
   writeEnvFile(answers, kek);
   writeEnvExampleFile(answers);
   writeConfigFile(answers);
