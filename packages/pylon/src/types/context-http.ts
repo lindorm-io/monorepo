@@ -1,4 +1,5 @@
 import type { Middleware } from "@lindorm/middleware";
+import type { Dict } from "@lindorm/types";
 import type { Files } from "formidable";
 import type { BaseRequest } from "koa";
 import type { RouterContext } from "koa-router";
@@ -37,6 +38,11 @@ type Context<Data, State> = {
   cookies: IPylonCookies;
   data: Data;
   io: PylonIoContextHttp;
+  // koa-router populates `params` at runtime; declare it explicitly so the type
+  // does not depend on koa-router's RouterContext surviving `Omit`/koa's
+  // ParameterizedContext plumbing. Required for assignability to PylonContext
+  // (so `useSchema` + `useHandler` can share a single route middleware array).
+  params: Dict<string>;
   request: Request;
   session: PylonSessionOnContext;
   signal: AbortSignal;
