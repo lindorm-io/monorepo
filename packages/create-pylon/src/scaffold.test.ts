@@ -1,12 +1,15 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
+import { buildVitestConfig } from "./build-vitest-config.js";
 import {
   buildDependencyList,
+  buildDevDependencyList,
   buildEnvExampleLines,
   buildEnvLines,
   copyTemplates,
   scaffold,
+  writeVitestConfig,
   writeConfigDevelopmentYaml,
   writeConfigFile,
   writeConfigYaml,
@@ -216,6 +219,37 @@ describe("scaffold", () => {
       const deps = buildDependencyList(baseAnswers({ proteusDrivers: [] }));
       expect(deps).not.toContain("@lindorm/proteus");
       expect(deps).not.toContain("@lindorm/aes");
+    });
+  });
+
+  describe("buildVitestConfig / writeVitestConfig (F5)", () => {
+    test("wires the swc decorator transform when a proteus driver is selected", () => {
+      const content = buildVitestConfig(baseAnswers({ proteusDrivers: ["postgres"] }));
+      expect(content).toContain('import swc from "unplugin-swc"');
+      expect(content).toContain("decorators: true");
+      expect(content).toContain('decoratorVersion: "2022-03"');
+      expect(content).toContain("oxc: false");
+    });
+
+    test("emits a bare config (no swc) when no proteus driver is selected", () => {
+      const content = buildVitestConfig(baseAnswers({ proteusDrivers: [] }));
+      expect(content).not.toContain("unplugin-swc");
+      expect(content).not.toContain("decorators");
+      expect(content).toContain("vitest/config");
+    });
+
+    test("adds unplugin-swc + @swc/core dev deps only when proteus is selected", () => {
+      expect(buildDevDependencyList(baseAnswers({ proteusDrivers: ["sqlite"] }))).toEqual(
+        ["unplugin-swc", "@swc/core"],
+      );
+      expect(buildDevDependencyList(baseAnswers({ proteusDrivers: [] }))).toEqual([]);
+    });
+
+    test("writeVitestConfig writes vitest.config.mjs to the project root", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writeVitestConfig(baseAnswers({ projectDir, proteusDrivers: ["postgres"] }));
+      const content = readFileSync(join(projectDir, "vitest.config.mjs"), "utf-8");
+      expect(content).toContain("unplugin-swc");
     });
   });
 

@@ -546,16 +546,6 @@ export const INTERVAL = "1m";
   "include": ["src/**/*"]
 }
 ",
-  "vitest.config.mjs": "import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  test: {
-    globals: false,
-    environment: "node",
-    include: ["src/**/*.test.ts"],
-  },
-});
-",
 }
 `;
 
@@ -676,16 +666,6 @@ export const GET: Array<ServerHttpMiddleware> = [
   "include": ["src/**/*"]
 }
 ",
-  "vitest.config.mjs": "import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  test: {
-    globals: false,
-    environment: "node",
-    include: ["src/**/*.test.ts"],
-  },
-});
-",
 }
 `;
 
@@ -772,16 +752,6 @@ amphora.env(config.pylon.kek);
   },
   "include": ["src/**/*"]
 }
-",
-  "vitest.config.mjs": "import { defineConfig } from "vitest/config";
-
-export default defineConfig({
-  test: {
-    globals: false,
-    environment: "node",
-    include: ["src/**/*.test.ts"],
-  },
-});
 ",
 }
 `;
