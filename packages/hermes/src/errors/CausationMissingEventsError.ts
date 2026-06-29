@@ -1,9 +1,9 @@
 import { LindormError, type LindormErrorOptions } from "@lindorm/errors";
 
 export class CausationMissingEventsError extends LindormError {
-  public static readonly namespace = "hermes";
+  static readonly namespace = "hermes";
 
-  public constructor(options: LindormErrorOptions = {}) {
+  constructor(options: LindormErrorOptions = {}) {
     super("Causation produces no event array in aggregate", {
       code: "causation_missing_events",
       title: "Causation Missing Events",

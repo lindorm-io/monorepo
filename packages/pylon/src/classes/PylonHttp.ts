@@ -46,9 +46,9 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
   private _callback: HttpCallback | undefined;
 
-  public readonly server: Koa;
+  readonly server: Koa;
 
-  public constructor(options: PylonHttpOptions<T>) {
+  constructor(options: PylonHttpOptions<T>) {
     this.logger = options.logger.child(["PylonHttp"]);
 
     this.authConfig = options.auth ? parseAuthConfig(options.auth) : undefined;
@@ -60,7 +60,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
   // public
 
-  public get callback(): HttpCallback {
+  get callback(): HttpCallback {
     if (this._callback) return this._callback;
 
     this._callback = this.server.callback();
@@ -68,11 +68,11 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     return this._callback;
   }
 
-  public use(middleware: Array<PylonHttpMiddleware<T>>): void {
+  use(middleware: Array<PylonHttpMiddleware<T>>): void {
     this.addMiddleware(middleware);
   }
 
-  public loadMiddleware(): void {
+  loadMiddleware(): void {
     this.logger.debug("Loading middleware");
 
     this.server.use(createHttpCorsMiddleware(this.options.cors));
@@ -141,7 +141,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.logger.debug("Middleware loaded");
   }
 
-  public async loadRouters(): Promise<void> {
+  async loadRouters(): Promise<void> {
     this.logger.debug("Loading routers");
 
     this.router.use(...this.middleware);

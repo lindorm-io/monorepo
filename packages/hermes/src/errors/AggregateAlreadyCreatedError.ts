@@ -1,7 +1,7 @@
 import { DomainError, type DomainErrorOptions } from "./DomainError.js";
 
 export class AggregateAlreadyCreatedError extends DomainError {
-  public constructor(options: Omit<DomainErrorOptions, "permanent"> = {}) {
+  constructor(options: Omit<DomainErrorOptions, "permanent"> = {}) {
     super("Aggregate has already been created", {
       code: "aggregate_already_created",
       title: "Aggregate Already Created",

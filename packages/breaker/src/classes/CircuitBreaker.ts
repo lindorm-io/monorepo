@@ -34,7 +34,7 @@ export class CircuitBreaker implements ICircuitBreaker {
   private probePromise: Promise<void> | null = null;
   private resolveProbe: (() => void) | null = null;
 
-  public constructor(options: CircuitBreakerOptions) {
+  constructor(options: CircuitBreakerOptions) {
     this._name = options.name;
     this.classifier = options.classifier ?? DEFAULT_CLASSIFIER;
     this.emitter = new EventEmitter();
@@ -45,27 +45,27 @@ export class CircuitBreaker implements ICircuitBreaker {
     this.window = new SlidingWindow(options.window ?? DEFAULT_WINDOW);
   }
 
-  public get name(): string {
+  get name(): string {
     return this._name;
   }
 
-  public get state(): CircuitBreakerState {
+  get state(): CircuitBreakerState {
     return this._state;
   }
 
-  public get isOpen(): boolean {
+  get isOpen(): boolean {
     return this._state === "open";
   }
 
-  public get isClosed(): boolean {
+  get isClosed(): boolean {
     return this._state === "closed";
   }
 
-  public get isHalfOpen(): boolean {
+  get isHalfOpen(): boolean {
     return this._state === "half-open";
   }
 
-  public execute = async <T>(fn: () => Promise<T>): Promise<T> => {
+  execute = async <T>(fn: () => Promise<T>): Promise<T> => {
     if (this._state === "closed") {
       return this.executeClosed(fn);
     }
@@ -82,7 +82,7 @@ export class CircuitBreaker implements ICircuitBreaker {
     return this.awaitProbeAndRetry(fn);
   };
 
-  public open = (): void => {
+  open = (): void => {
     if (this._state === "open") return;
     this.transitionTo("open");
     this.openedAt = Date.now();
@@ -90,20 +90,20 @@ export class CircuitBreaker implements ICircuitBreaker {
     this.window.reset();
   };
 
-  public close = (): void => {
+  close = (): void => {
     if (this._state !== "open") return;
     this.transitionTo("half-open");
     this.halfOpenAttempts = 0;
   };
 
-  public on(event: "open", listener: StateChangeListener): void;
-  public on(event: "half-open", listener: StateChangeListener): void;
-  public on(event: "closed", listener: StateChangeListener): void;
-  public on(event: string, listener: StateChangeListener): void {
+  on(event: "open", listener: StateChangeListener): void;
+  on(event: "half-open", listener: StateChangeListener): void;
+  on(event: "closed", listener: StateChangeListener): void;
+  on(event: string, listener: StateChangeListener): void {
     this.emitter.on(event, listener);
   }
 
-  public reset = (): void => {
+  reset = (): void => {
     this.transitionTo("closed");
     this.window.reset();
     this.halfOpenAttempts = 0;

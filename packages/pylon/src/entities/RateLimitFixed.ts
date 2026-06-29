@@ -11,15 +11,15 @@ import {
 @Entity()
 export class RateLimitFixed {
   @PrimaryKeyField()
-  public id!: string;
+  id!: string;
 
   @Default(0)
   @Field("integer")
-  public count!: number;
+  count!: number;
 
   @Field("timestamp")
-  public windowStart!: Date;
+  windowStart!: Date;
 
   @ExpiryDateField()
-  public expiresAt!: Date | null;
+  expiresAt!: Date | null;
 }

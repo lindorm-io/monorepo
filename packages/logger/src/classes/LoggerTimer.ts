@@ -14,18 +14,14 @@ export class LoggerTimer implements ILoggerTimer {
   private readonly start: number;
   private readonly logFn: TimerLogFn;
 
-  public constructor(logFn: TimerLogFn) {
+  constructor(logFn: TimerLogFn) {
     this.start = performance.now();
     this.logFn = logFn;
   }
 
-  public error(error: Error): void;
-  public error(message: string, context?: LogContent, extra?: Array<LogContent>): void;
-  public error(
-    arg1: Error | string,
-    context?: LogContent,
-    extra?: Array<LogContent>,
-  ): void {
+  error(error: Error): void;
+  error(message: string, context?: LogContent, extra?: Array<LogContent>): void;
+  error(arg1: Error | string, context?: LogContent, extra?: Array<LogContent>): void {
     if (isError(arg1)) {
       this.logFn(
         "error",
@@ -45,7 +41,7 @@ export class LoggerTimer implements ILoggerTimer {
     }
   }
 
-  public warn(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  warn(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logFn(
       "warn",
       message,
@@ -55,7 +51,7 @@ export class LoggerTimer implements ILoggerTimer {
     );
   }
 
-  public info(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  info(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logFn(
       "info",
       message,
@@ -65,7 +61,7 @@ export class LoggerTimer implements ILoggerTimer {
     );
   }
 
-  public verbose(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  verbose(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logFn(
       "verbose",
       message,
@@ -75,7 +71,7 @@ export class LoggerTimer implements ILoggerTimer {
     );
   }
 
-  public debug(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  debug(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logFn(
       "debug",
       message,
@@ -85,7 +81,7 @@ export class LoggerTimer implements ILoggerTimer {
     );
   }
 
-  public silly(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  silly(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logFn(
       "silly",
       message,

@@ -40,14 +40,14 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
   private readonly deadLetterManager: DeadLetterManager | undefined;
   private readonly ownedConsumers: Map<string, Array<OwnedConsumer>> = new Map();
 
-  public constructor(options: KafkaWorkerQueueOptions<M>) {
+  constructor(options: KafkaWorkerQueueOptions<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishKafkaMessages(
       message,
       options,
@@ -62,7 +62,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     );
   }
 
-  public async consume(
+  async consume(
     queueOrOptions: string | ConsumeOptions<M> | Array<ConsumeOptions<M>>,
     callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
   ): Promise<void> {
@@ -218,7 +218,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     this.ownedConsumers.set(queue, existing);
   }
 
-  public async unconsume(queue: string): Promise<void> {
+  async unconsume(queue: string): Promise<void> {
     const consumers = this.ownedConsumers.get(queue);
     if (!consumers || consumers.length === 0) return;
 
@@ -248,7 +248,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     this.ownedConsumers.delete(queue);
   }
 
-  public async unconsumeAll(): Promise<void> {
+  async unconsumeAll(): Promise<void> {
     for (const [, consumers] of this.ownedConsumers) {
       for (const consumer of consumers) {
         await releasePooledConsumer({

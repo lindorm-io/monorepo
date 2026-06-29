@@ -63,7 +63,7 @@ export class RedisDriver implements IProteusDriver {
   private connectingPromise: Promise<void> | null;
   private signal: AbortSignal | undefined;
 
-  public constructor(
+  constructor(
     options: ProteusRedisOptions,
     logger: ILogger,
     namespace: string | null,
@@ -102,7 +102,7 @@ export class RedisDriver implements IProteusDriver {
 
   // ─── Connection Lifecycle ─────────────────────────────────────────────
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     if (this.client) {
       this.logger.debug("Redis driver already connected");
       return;
@@ -121,7 +121,7 @@ export class RedisDriver implements IProteusDriver {
     }
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (!this.client) {
       this.logger.debug("Redis driver already disconnected");
       return;
@@ -137,14 +137,14 @@ export class RedisDriver implements IProteusDriver {
     this.logger.debug("Redis driver disconnected");
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     const result = await this.requireClient().ping();
     return result === "PONG";
   }
 
   // ─── Setup ────────────────────────────────────────────────────────────
 
-  public async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
+  async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
     for (const target of entities) {
       const metadata = this.resolveMetadata(target);
       validateRedisEntity(metadata, this.logger);
@@ -155,7 +155,7 @@ export class RedisDriver implements IProteusDriver {
 
   // ─── Repository ───────────────────────────────────────────────────────
 
-  public createRepository<E extends IEntity>(
+  createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
     meta?: ProteusHookMeta,
@@ -198,7 +198,7 @@ export class RedisDriver implements IProteusDriver {
     });
   }
 
-  public createTransactionalRepository<E extends IEntity>(
+  createTransactionalRepository<E extends IEntity>(
     target: Constructor<E>,
     _handle: TransactionHandle,
     parent?: Constructor<IEntity>,
@@ -210,9 +210,7 @@ export class RedisDriver implements IProteusDriver {
 
   // ─── Executor ─────────────────────────────────────────────────────────
 
-  public createExecutor<E extends IEntity>(
-    target: Constructor<E>,
-  ): IRepositoryExecutor<E> {
+  createExecutor<E extends IEntity>(target: Constructor<E>): IRepositoryExecutor<E> {
     this.checkSignal();
     const metadata = this.resolveMetadata(target);
 
@@ -228,7 +226,7 @@ export class RedisDriver implements IProteusDriver {
     );
   }
 
-  public createTransactionalExecutor<E extends IEntity>(
+  createTransactionalExecutor<E extends IEntity>(
     target: Constructor<E>,
     _handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
@@ -238,9 +236,7 @@ export class RedisDriver implements IProteusDriver {
 
   // ─── Query Builder ────────────────────────────────────────────────────
 
-  public createQueryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  createQueryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     this.checkSignal();
     const metadata = this.resolveMetadata(target);
 
@@ -254,7 +250,7 @@ export class RedisDriver implements IProteusDriver {
     );
   }
 
-  public createTransactionalQueryBuilder<E extends IEntity>(
+  createTransactionalQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
     _handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
@@ -264,15 +260,13 @@ export class RedisDriver implements IProteusDriver {
 
   // ─── Client Access ────────────────────────────────────────────────────
 
-  public async acquireClient(): Promise<Redis> {
+  async acquireClient(): Promise<Redis> {
     return this.requireClient();
   }
 
   // ─── Transactions (No-op) ─────────────────────────────────────────────
 
-  public async beginTransaction(
-    _options?: TransactionOptions,
-  ): Promise<TransactionHandle> {
+  async beginTransaction(_options?: TransactionOptions): Promise<TransactionHandle> {
     this.checkSignal();
     const handle: RedisTransactionHandle = {
       state: "active",
@@ -280,7 +274,7 @@ export class RedisDriver implements IProteusDriver {
     return handle;
   }
 
-  public async commitTransaction(handle: TransactionHandle): Promise<void> {
+  async commitTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as RedisTransactionHandle;
     if (txHandle.state !== "active") {
       throw new RedisDriverError(`Cannot commit: transaction is ${txHandle.state}`, {
@@ -294,7 +288,7 @@ export class RedisDriver implements IProteusDriver {
     txHandle.state = "committed";
   }
 
-  public async rollbackTransaction(handle: TransactionHandle): Promise<void> {
+  async rollbackTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as RedisTransactionHandle;
     if (txHandle.state !== "active") {
       throw new RedisDriverError(`Cannot rollback: transaction is ${txHandle.state}`, {
@@ -308,7 +302,7 @@ export class RedisDriver implements IProteusDriver {
     txHandle.state = "rolledBack";
   }
 
-  public async withTransaction<T>(
+  async withTransaction<T>(
     callback: TransactionCallback<T>,
     _options?: TransactionOptions,
   ): Promise<T> {
@@ -354,7 +348,7 @@ export class RedisDriver implements IProteusDriver {
   // This method bypasses TypeScript's private/readonly via (cloned as any) — there
   // is no compile-time check for missing fields.
   // Fields: client, options, logger, filterRegistry, connectingPromise, [any new fields]
-  public cloneWithGetters(
+  cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
     signal?: AbortSignal,
@@ -461,7 +455,7 @@ export class RedisDriver implements IProteusDriver {
    * HTTP-abort use case and redis commands are sub-millisecond in
    * practice. See utils/abort.ts for the full semantics.
    */
-  public raceSignal<T>(promise: Promise<T>): Promise<T> {
+  raceSignal<T>(promise: Promise<T>): Promise<T> {
     return raceWithSignal(promise, this.signal, "Redis command cancelled");
   }
 

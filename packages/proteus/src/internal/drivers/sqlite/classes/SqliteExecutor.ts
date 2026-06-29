@@ -43,7 +43,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   private readonly filterRegistry: FilterRegistry;
   private readonly amphora: IAmphora | undefined;
 
-  public constructor(
+  constructor(
     client: SqliteQueryClient,
     metadata: EntityMetadata,
     namespace?: string | null,
@@ -57,7 +57,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     this.amphora = amphora;
   }
 
-  public async executeInsert(entity: E): Promise<E> {
+  async executeInsert(entity: E): Promise<E> {
     const joined = compileJoinedInsert(
       entity,
       this.metadata,
@@ -78,7 +78,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return hydrateReturning<E>(rows[0], this.metadata, { amphora: this.amphora });
   }
 
-  public async executeUpdate(entity: E): Promise<E> {
+  async executeUpdate(entity: E): Promise<E> {
     const joined = compileJoinedUpdate(
       entity,
       this.metadata,
@@ -128,10 +128,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return hydrateReturning<E>(rows[0], this.metadata, { amphora: this.amphora });
   }
 
-  public async executeDelete(
-    criteria: Predicate<E>,
-    options?: DeleteOptions,
-  ): Promise<void> {
+  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     guardEmptyCriteria(criteria, "delete", SqliteExecutorError);
 
     // For joined inheritance children, explicitly delete child table rows first.
@@ -167,19 +164,19 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     this.client.run(text, params);
   }
 
-  public async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
     guardEmptyCriteria(criteria, "soft delete", SqliteExecutorError);
     const { text, params } = compileSoftDelete(criteria, this.metadata, this.namespace);
     this.client.run(text, params);
   }
 
-  public async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Predicate<E>): Promise<void> {
     guardEmptyCriteria(criteria, "restore", SqliteExecutorError);
     const { text, params } = compileRestore(criteria, this.metadata, this.namespace);
     this.client.run(text, params);
   }
 
-  public async executeDeleteExpired(): Promise<void> {
+  async executeDeleteExpired(): Promise<void> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return;
 
@@ -187,7 +184,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     this.client.run(text, params);
   }
 
-  public async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return null;
 
@@ -219,7 +216,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return Math.max(0, remainingMs);
   }
 
-  public async executeFind(
+  async executeFind(
     criteria: Predicate<E>,
     options: FindOptions<E>,
     operationScope: QueryScope = "multiple",
@@ -259,10 +256,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return entities;
   }
 
-  public async executeCount(
-    criteria: Predicate<E>,
-    options: FindOptions<E>,
-  ): Promise<number> {
+  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
     const state = findOptionsToQueryState(
       criteria,
       options,
@@ -280,14 +274,14 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return Number((row as any)?.count ?? 0);
   }
 
-  public async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Predicate<E>): Promise<boolean> {
     const { text, params } = compileExists(criteria, this.metadata, this.namespace);
     const row = this.client.get(text, params);
     // safeIntegers mode returns the flag as BigInt; Number() normalises both.
     return Number((row as any)?.exists) === 1;
   }
 
-  public async executeIncrement(
+  async executeIncrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -302,7 +296,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     this.client.run(text, params);
   }
 
-  public async executeDecrement(
+  async executeDecrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -317,7 +311,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     this.client.run(text, params);
   }
 
-  public async executeInsertBulk(entities: Array<E>): Promise<Array<E>> {
+  async executeInsertBulk(entities: Array<E>): Promise<Array<E>> {
     if (entities.length === 0) return [];
 
     if (
@@ -341,7 +335,7 @@ export class SqliteExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return hydrateReturningRows<E>(rows, this.metadata, { amphora: this.amphora });
   }
 
-  public async executeUpdateMany(
+  async executeUpdateMany(
     criteria: Predicate<E>,
     update: DeepPartial<E>,
   ): Promise<number> {

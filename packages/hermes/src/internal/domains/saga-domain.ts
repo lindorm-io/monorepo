@@ -57,7 +57,7 @@ export class SagaDomain {
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
   private readonly causationExpiryMs: number;
 
-  public constructor(options: SagaDomainOptions) {
+  constructor(options: SagaDomainOptions) {
     this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["SagaDomain"]);
     this.registry = options.registry;
@@ -69,19 +69,19 @@ export class SagaDomain {
     this.causationExpiryMs = options.causationExpiryMs;
   }
 
-  public on(evt: string, listener: (data: EventEmitterSagaData) => void): void {
+  on(evt: string, listener: (data: EventEmitterSagaData) => void): void {
     this.eventEmitter.on(evt, listener);
   }
 
-  public off(evt: string, listener: (data: EventEmitterSagaData) => void): void {
+  off(evt: string, listener: (data: EventEmitterSagaData) => void): void {
     this.eventEmitter.off(evt, listener);
   }
 
-  public removeAllListeners(): void {
+  removeAllListeners(): void {
     this.eventEmitter.removeAllListeners();
   }
 
-  public async registerHandlers(): Promise<void> {
+  async registerHandlers(): Promise<void> {
     for (const saga of this.registry.allSagas) {
       await this.registerSagaEventHandlers(saga);
       await this.registerSagaTimeoutHandlers(saga);
@@ -89,7 +89,7 @@ export class SagaDomain {
     }
   }
 
-  public async inspect(identifier: {
+  async inspect(identifier: {
     id: string;
     name: string;
     namespace: string;

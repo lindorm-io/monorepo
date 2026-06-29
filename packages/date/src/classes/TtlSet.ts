@@ -5,25 +5,25 @@ export class TtlSet<T> {
   private readonly defaultTtl: ReadableTime;
   private readonly store = new Map<T, number>();
 
-  public constructor(defaultTtl: ReadableTime) {
+  constructor(defaultTtl: ReadableTime) {
     this.defaultTtl = defaultTtl;
   }
 
-  public get size(): number {
+  get size(): number {
     this.cleanup();
     return this.store.size;
   }
 
-  public get [Symbol.toStringTag](): string {
+  get [Symbol.toStringTag](): string {
     return "TtlSet";
   }
 
-  public add = (value: T, ttl?: Expiry): this => {
+  add = (value: T, ttl?: Expiry): this => {
     this.store.set(value, expiresAt(ttl ?? this.defaultTtl).getTime());
     return this;
   };
 
-  public has = (value: T): boolean => {
+  has = (value: T): boolean => {
     const exp = this.store.get(value);
     if (exp === undefined) return false;
 
@@ -35,15 +35,15 @@ export class TtlSet<T> {
     return true;
   };
 
-  public delete = (value: T): boolean => {
+  delete = (value: T): boolean => {
     return this.store.delete(value);
   };
 
-  public clear = (): void => {
+  clear = (): void => {
     this.store.clear();
   };
 
-  public cleanup = (): void => {
+  cleanup = (): void => {
     const now = Date.now();
     for (const [value, exp] of this.store) {
       if (now >= exp) {
@@ -52,7 +52,7 @@ export class TtlSet<T> {
     }
   };
 
-  public forEach = (
+  forEach = (
     callbackfn: (value: T, value2: T, set: TtlSet<T>) => void,
     thisArg?: unknown,
   ): void => {
@@ -66,7 +66,7 @@ export class TtlSet<T> {
     }
   };
 
-  public *keys(): IterableIterator<T> {
+  *keys(): IterableIterator<T> {
     const now = Date.now();
     for (const [value, exp] of this.store) {
       if (now >= exp) {
@@ -77,11 +77,11 @@ export class TtlSet<T> {
     }
   }
 
-  public *values(): IterableIterator<T> {
+  *values(): IterableIterator<T> {
     return yield* this.keys();
   }
 
-  public *entries(): IterableIterator<[T, T]> {
+  *entries(): IterableIterator<[T, T]> {
     const now = Date.now();
     for (const [value, exp] of this.store) {
       if (now >= exp) {
@@ -92,7 +92,7 @@ export class TtlSet<T> {
     }
   }
 
-  public [Symbol.iterator](): IterableIterator<T> {
+  [Symbol.iterator](): IterableIterator<T> {
     return this.keys();
   }
 }

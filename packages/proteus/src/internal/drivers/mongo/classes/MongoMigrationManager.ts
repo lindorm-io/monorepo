@@ -51,7 +51,7 @@ export class MongoMigrationManager implements IMigrationManager {
   private readonly tableName: string | undefined;
   private cachedIsReplicaSet: boolean | null;
 
-  public constructor(options: MongoMigrationManagerOptions) {
+  constructor(options: MongoMigrationManagerOptions) {
     this.client = options.client;
     this.db = options.db;
     this.directory = options.directory;
@@ -67,7 +67,7 @@ export class MongoMigrationManager implements IMigrationManager {
     return this.cachedIsReplicaSet;
   }
 
-  public async status(): Promise<MigrationStatusResult> {
+  async status(): Promise<MigrationStatusResult> {
     const loaded = await loadMigrations(this.directory, this.logger);
 
     await ensureMigrationCollection(this.db, this.tableName);
@@ -78,7 +78,7 @@ export class MongoMigrationManager implements IMigrationManager {
     return { resolved, ghosts };
   }
 
-  public async apply(): Promise<MigrationApplyResult> {
+  async apply(): Promise<MigrationApplyResult> {
     const lockAcquired = await acquireLock(this.db, this.namespace);
     if (!lockAcquired) {
       throw new MongoMigrationError(
@@ -180,7 +180,7 @@ export class MongoMigrationManager implements IMigrationManager {
     }
   }
 
-  public async rollback(count: number = 1): Promise<MigrationApplyResult> {
+  async rollback(count: number = 1): Promise<MigrationApplyResult> {
     const lockAcquired = await acquireLock(this.db, this.namespace);
     if (!lockAcquired) {
       throw new MongoMigrationError(
@@ -287,7 +287,7 @@ export class MongoMigrationManager implements IMigrationManager {
     }
   }
 
-  public async generateMigration(
+  async generateMigration(
     metadataList: Array<EntityMetadata>,
     _namespaceOptions: NamespaceOptions,
     options?: { name?: string; timestamp?: Date; writeFile?: boolean },
@@ -312,7 +312,7 @@ export class MongoMigrationManager implements IMigrationManager {
     }
   }
 
-  public async generateBaseline(
+  async generateBaseline(
     metadataList: Array<EntityMetadata>,
     _namespaceOptions: NamespaceOptions,
     options?: { name?: string; timestamp?: Date },
@@ -339,7 +339,7 @@ export class MongoMigrationManager implements IMigrationManager {
     }
   }
 
-  public async resolveApplied(name: string, directory: string): Promise<void> {
+  async resolveApplied(name: string, directory: string): Promise<void> {
     const lockAcquired = await acquireLock(this.db, this.namespace);
     if (!lockAcquired) {
       throw new MongoMigrationError(
@@ -442,7 +442,7 @@ export class MongoMigrationManager implements IMigrationManager {
     }
   }
 
-  public async resolveRolledBack(name: string): Promise<void> {
+  async resolveRolledBack(name: string): Promise<void> {
     const lockAcquired = await acquireLock(this.db, this.namespace);
     if (!lockAcquired) {
       throw new MongoMigrationError(
@@ -481,7 +481,7 @@ export class MongoMigrationManager implements IMigrationManager {
     }
   }
 
-  public async getRecords(): Promise<Array<MigrationRecord>> {
+  async getRecords(): Promise<Array<MigrationRecord>> {
     await ensureMigrationCollection(this.db, this.tableName);
     return getAllMigrationRecords(this.db, this.tableName);
   }

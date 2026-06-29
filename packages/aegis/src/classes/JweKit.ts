@@ -34,14 +34,14 @@ export class JweKit implements IJweKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
 
-  public constructor(options: JweKitOptions) {
+  constructor(options: JweKitOptions) {
     this.logger = options.logger.child(["JweKit"]);
     this.kryptos = options.kryptos;
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
     this.certBindingMode = options.certBindingMode ?? "strict";
   }
 
-  public encrypt(data: string, options: JweEncryptOptions = {}): EncryptedJwe {
+  encrypt(data: string, options: JweEncryptOptions = {}): EncryptedJwe {
     const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
 
     this.logger.debug("Encrypting token", { options });
@@ -109,7 +109,7 @@ export class JweKit implements IJweKit {
     return { token };
   }
 
-  public decrypt(token: string): DecryptedJwe {
+  decrypt(token: string): DecryptedJwe {
     const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
 
     this.logger.debug("Decrypting token", { token });
@@ -247,7 +247,7 @@ export class JweKit implements IJweKit {
 
   // public static
 
-  public static isJwe(jwe: string): boolean {
+  static isJwe(jwe: string): boolean {
     if (typeof jwe !== "string") return false;
     const parts = jwe.split(".");
     if (parts.length !== 5) return false;
@@ -261,7 +261,7 @@ export class JweKit implements IJweKit {
     }
   }
 
-  public static decode(jwe: string): DecodedJwe {
+  static decode(jwe: string): DecodedJwe {
     const parts = jwe.split(".");
     if (parts.length !== 5) {
       throw new JweError("Invalid JWE format: expected 5 parts", {

@@ -27,7 +27,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
   protected readonly metadata: EntityMetadata;
   protected state: QueryState<E>;
 
-  public constructor(metadata: EntityMetadata) {
+  constructor(metadata: EntityMetadata) {
     this.metadata = metadata;
     this.state = createEmptyState<E>();
   }
@@ -38,33 +38,33 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
    * Sets the WHERE clause. Replaces any previously set predicates.
    * Use `.andWhere()` or `.orWhere()` to append additional conditions.
    */
-  public where(criteria: Predicate<E>): this {
+  where(criteria: Predicate<E>): this {
     this.state.predicates = [{ predicate: criteria, conjunction: "and" }];
     this.state.subqueryPredicates = [];
     this.state.rawWhere = [];
     return this;
   }
 
-  public andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Predicate<E>): this {
     this.state.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  public orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Predicate<E>): this {
     this.state.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
 
   // --- Raw WHERE ---
 
-  public whereRaw(fragment: SqlFragment): this {
+  whereRaw(fragment: SqlFragment): this {
     this.state.rawWhere = [
       { sql: fragment.sql, params: [...fragment.params], conjunction: "and" },
     ];
     return this;
   }
 
-  public andWhereRaw(fragment: SqlFragment): this {
+  andWhereRaw(fragment: SqlFragment): this {
     this.state.rawWhere.push({
       sql: fragment.sql,
       params: [...fragment.params],
@@ -73,7 +73,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     return this;
   }
 
-  public orWhereRaw(fragment: SqlFragment): this {
+  orWhereRaw(fragment: SqlFragment): this {
     this.state.rawWhere.push({
       sql: fragment.sql,
       params: [...fragment.params],
@@ -84,7 +84,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
 
   // --- Relations ---
 
-  public include(relation: string, options?: IncludeOptions): this {
+  include(relation: string, options?: IncludeOptions): this {
     const valid = this.metadata.relations.map((r) => r.key);
     if (!valid.includes(relation)) {
       throw new ProteusError(
@@ -128,7 +128,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
 
   // --- Projection ---
 
-  public select(...fields: Array<keyof E>): this {
+  select(...fields: Array<keyof E>): this {
     const validKeys = this.metadata.fields.map((f) => f.key);
     for (const field of fields) {
       if (!validKeys.includes(field as string)) {
@@ -148,7 +148,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     return this;
   }
 
-  public selectRaw(fragment: SqlFragment, alias: string): this {
+  selectRaw(fragment: SqlFragment, alias: string): this {
     this.state.rawSelections.push({
       expression: fragment.sql,
       alias,
@@ -157,41 +157,41 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     return this;
   }
 
-  public distinct(): this {
+  distinct(): this {
     this.state.distinct = true;
     return this;
   }
 
   // --- GROUP BY + HAVING ---
 
-  public groupBy(...fields: Array<keyof E>): this {
+  groupBy(...fields: Array<keyof E>): this {
     this.state.groupBy = fields;
     return this;
   }
 
-  public having(criteria: Predicate<E>): this {
+  having(criteria: Predicate<E>): this {
     this.state.having = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  public andHaving(criteria: Predicate<E>): this {
+  andHaving(criteria: Predicate<E>): this {
     this.state.having.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  public orHaving(criteria: Predicate<E>): this {
+  orHaving(criteria: Predicate<E>): this {
     this.state.having.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
 
-  public havingRaw(fragment: SqlFragment): this {
+  havingRaw(fragment: SqlFragment): this {
     this.state.rawHaving = [
       { sql: fragment.sql, params: [...fragment.params], conjunction: "and" },
     ];
     return this;
   }
 
-  public andHavingRaw(fragment: SqlFragment): this {
+  andHavingRaw(fragment: SqlFragment): this {
     this.state.rawHaving.push({
       sql: fragment.sql,
       params: [...fragment.params],
@@ -200,7 +200,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     return this;
   }
 
-  public orHavingRaw(fragment: SqlFragment): this {
+  orHavingRaw(fragment: SqlFragment): this {
     this.state.rawHaving.push({
       sql: fragment.sql,
       params: [...fragment.params],
@@ -211,14 +211,14 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
 
   // --- Window functions ---
 
-  public window(spec: WindowSpec<E>): this {
+  window(spec: WindowSpec<E>): this {
     this.state.windows.push(spec);
     return this;
   }
 
   // --- Ordering + Pagination ---
 
-  public orderBy(order: Partial<Record<keyof E, "ASC" | "DESC">>): this {
+  orderBy(order: Partial<Record<keyof E, "ASC" | "DESC">>): this {
     const validKeys = this.metadata.fields.map((f) => f.key);
     for (const key of Object.keys(order)) {
       if (!validKeys.includes(key)) {
@@ -238,26 +238,26 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     return this;
   }
 
-  public skip(offset: number): this {
+  skip(offset: number): this {
     this.state.skip = offset;
     return this;
   }
 
-  public take(limit: number): this {
+  take(limit: number): this {
     this.state.take = limit;
     return this;
   }
 
   // --- Soft-delete ---
 
-  public withDeleted(): this {
+  withDeleted(): this {
     this.state.withDeleted = true;
     return this;
   }
 
   // --- Scope ---
 
-  public withoutScope(): this {
+  withoutScope(): this {
     this.state.withoutScope = true;
     return this;
   }
@@ -271,56 +271,56 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
    * - `setFilter("tenant", true)` — enable with source-registered params
    * - `setFilter("tenant", false)` — disable (even if default-on)
    */
-  public setFilter(name: string, params?: boolean | Dict<unknown>): this {
+  setFilter(name: string, params?: boolean | Dict<unknown>): this {
     this.state.filterOverrides[name] = params ?? true;
     return this;
   }
 
   // --- Version filtering ---
 
-  public versionAt(timestamp: Date): this {
+  versionAt(timestamp: Date): this {
     this.state.versionTimestamp = timestamp;
     return this;
   }
 
-  public withAllVersions(): this {
+  withAllVersions(): this {
     this.state.withAllVersions = true;
     return this;
   }
 
   // --- Cloning ---
 
-  public abstract clone(): IProteusQueryBuilder<E>;
+  abstract clone(): IProteusQueryBuilder<E>;
 
   // --- Debug ---
 
-  public abstract toQuery(): unknown;
+  abstract toQuery(): unknown;
 
   // --- Terminal methods ---
 
-  public abstract getOne(): Promise<E | null>;
-  public abstract getOneOrFail(): Promise<E>;
-  public abstract getMany(): Promise<Array<E>>;
-  public abstract getManyAndCount(): Promise<[Array<E>, number]>;
-  public abstract count(): Promise<number>;
-  public abstract exists(): Promise<boolean>;
+  abstract getOne(): Promise<E | null>;
+  abstract getOneOrFail(): Promise<E>;
+  abstract getMany(): Promise<Array<E>>;
+  abstract getManyAndCount(): Promise<[Array<E>, number]>;
+  abstract count(): Promise<number>;
+  abstract exists(): Promise<boolean>;
 
   // Raw result terminal
-  public abstract getRawRows<
+  abstract getRawRows<
     T extends Record<string, unknown> = Record<string, unknown>,
   >(): Promise<Array<T>>;
 
   // Aggregate terminal methods
-  public abstract sum(field: keyof E): Promise<number | null>;
-  public abstract average(field: keyof E): Promise<number | null>;
-  public abstract minimum(field: keyof E): Promise<number | null>;
-  public abstract maximum(field: keyof E): Promise<number | null>;
+  abstract sum(field: keyof E): Promise<number | null>;
+  abstract average(field: keyof E): Promise<number | null>;
+  abstract minimum(field: keyof E): Promise<number | null>;
+  abstract maximum(field: keyof E): Promise<number | null>;
 
   // Write builders — raw SQL, no hooks/cascades/version checks
-  public abstract insert(): IInsertQueryBuilder<E>;
-  public abstract update(): IUpdateQueryBuilder<E>;
-  public abstract delete(): IDeleteQueryBuilder<E>;
-  public abstract softDelete(): IDeleteQueryBuilder<E>;
+  abstract insert(): IInsertQueryBuilder<E>;
+  abstract update(): IUpdateQueryBuilder<E>;
+  abstract delete(): IDeleteQueryBuilder<E>;
+  abstract softDelete(): IDeleteQueryBuilder<E>;
 
   // --- Protected helpers ---
 

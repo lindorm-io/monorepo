@@ -28,7 +28,7 @@ export class PostgresUpdateQueryBuilder<
   private predicates: Array<PredicateEntry<E>> = [];
   private returningFields: Array<string> | "*" | null = null;
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     client: PostgresQueryClient,
     namespace?: string | null,
@@ -38,27 +38,27 @@ export class PostgresUpdateQueryBuilder<
     this.namespace = namespace ?? null;
   }
 
-  public set(data: DeepPartial<E>): this {
+  set(data: DeepPartial<E>): this {
     this.data = data as Dict;
     return this;
   }
 
-  public where(criteria: Predicate<E>): this {
+  where(criteria: Predicate<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  public andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  public orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
 
-  public returning(...fields: Array<keyof E | "*">): this {
+  returning(...fields: Array<keyof E | "*">): this {
     if (fields.includes("*" as any)) {
       this.returningFields = "*";
     } else {
@@ -70,7 +70,7 @@ export class PostgresUpdateQueryBuilder<
     return this;
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     if (!this.data || Object.keys(this.data).length === 0) {
       return { rows: [], rowCount: 0 };
     }

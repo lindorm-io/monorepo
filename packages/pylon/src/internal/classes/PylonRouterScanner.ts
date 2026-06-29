@@ -18,11 +18,11 @@ type HttpMethod = (typeof HTTP_METHODS)[number];
 export class PylonRouterScanner<
   C extends PylonHttpContext = PylonHttpContext,
 > extends PylonScannerBase {
-  public constructor(logger: ILogger) {
+  constructor(logger: ILogger) {
     super(logger.child(["PylonRouterScanner"]));
   }
 
-  public async scan(directory: string): Promise<PylonRouter<C>> {
+  async scan(directory: string): Promise<PylonRouter<C>> {
     const start = Date.now();
 
     this.logger.debug("Scanning routes", { directory });

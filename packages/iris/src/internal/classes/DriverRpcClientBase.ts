@@ -64,9 +64,9 @@ export abstract class DriverRpcClientBase<
     this.amphora = options.amphora;
   }
 
-  public abstract request(message: Req, options?: { timeout?: number }): Promise<Res>;
+  abstract request(message: Req, options?: { timeout?: number }): Promise<Res>;
 
-  public abstract close(): Promise<void>;
+  abstract close(): Promise<void>;
 
   protected async prepareRequestEnvelope(
     message: Req,

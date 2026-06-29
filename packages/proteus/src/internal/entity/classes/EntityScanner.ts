@@ -5,7 +5,7 @@ import type { EntityScannerInput } from "../../../types/index.js";
 import { EntityScannerError } from "../errors/EntityScannerError.js";
 
 export class EntityScanner {
-  public static async scan<T extends Dict = Dict>(
+  static async scan<T extends Dict = Dict>(
     input: EntityScannerInput<T>,
   ): Promise<Array<Constructor<T>>> {
     const entities = input.filter(

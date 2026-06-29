@@ -24,12 +24,12 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
   private readonly state: RabbitSharedState;
   private readonly ownedSubscriptions: Map<string, OwnedSubscription> = new Map();
 
-  public constructor(options: RabbitMessageBusOptions<M>) {
+  constructor(options: RabbitMessageBusOptions<M>) {
     super(options);
     this.state = options.state;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishRabbitMessages(
       message,
       options,
@@ -43,7 +43,7 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     );
   }
 
-  public async subscribe(
+  async subscribe(
     options: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void> {
     if (Array.isArray(options)) {
@@ -128,7 +128,7 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     });
   }
 
-  public async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
+  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
     const tagKey = `${options.topic}:${options.queue ?? ""}`;
     const sub = this.ownedSubscriptions.get(tagKey);
 
@@ -159,7 +159,7 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     );
   }
 
-  public async unsubscribeAll(): Promise<void> {
+  async unsubscribeAll(): Promise<void> {
     const channel = this.state.consumeChannel;
 
     for (const [, sub] of this.ownedSubscriptions) {

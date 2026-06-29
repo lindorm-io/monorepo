@@ -29,7 +29,7 @@ export abstract class PylonScannerBase {
   protected readonly logger: ILogger;
   protected readonly scanner: IScanner;
 
-  public constructor(logger: ILogger) {
+  constructor(logger: ILogger) {
     this.logger = logger;
     this.scanner = new Scanner({
       deniedTypes: [/^fixture$/, /^spec$/, /^test$/, /^integration$/],

@@ -44,7 +44,7 @@ export class Pylon<
   private readonly _setup: PylonSetup | undefined;
   private readonly _teardown: PylonTeardown | undefined;
 
-  public constructor(options: PylonOptions<E, H, S>) {
+  constructor(options: PylonOptions<E, H, S>) {
     this.isSetup = false;
     this.isStarted = false;
     this.isTeardown = false;
@@ -87,11 +87,11 @@ export class Pylon<
 
   // public
 
-  public get callback(): HttpCallback {
+  get callback(): HttpCallback {
     return this.http.callback;
   }
 
-  public async setup(): Promise<void> {
+  async setup(): Promise<void> {
     if (this.isSetup) return;
 
     this.logger.verbose("Pylon setup");
@@ -135,7 +135,7 @@ export class Pylon<
     this.isTeardown = false;
   }
 
-  public async start(): Promise<void> {
+  async start(): Promise<void> {
     if (this.isStarted) return;
 
     this.logger.verbose("Pylon starting", { port: this.port });
@@ -155,7 +155,7 @@ export class Pylon<
     process.on("SIGTERM", this.handleSignal.bind(this, "SIGTERM"));
   }
 
-  public async stop(): Promise<void> {
+  async stop(): Promise<void> {
     if (!this.isStarted) return;
 
     this.logger.verbose("Pylon stopping");
@@ -175,7 +175,7 @@ export class Pylon<
     process.removeListener("SIGTERM", this.handleSignal.bind(this, "SIGTERM"));
   }
 
-  public async teardown(): Promise<void> {
+  async teardown(): Promise<void> {
     if (!this._teardown) return;
     if (this.isTeardown) return;
 
@@ -196,7 +196,7 @@ export class Pylon<
     this.isTeardown = true;
   }
 
-  public async work(): Promise<void> {
+  async work(): Promise<void> {
     if (this.isStarted) return;
 
     this.logger.verbose("Pylon working");

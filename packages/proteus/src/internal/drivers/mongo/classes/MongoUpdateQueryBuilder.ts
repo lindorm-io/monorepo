@@ -25,38 +25,38 @@ export class MongoUpdateQueryBuilder<
   private updateData: DeepPartial<E> | null = null;
   private predicates: Array<{ predicate: Predicate<E>; conjunction: "and" | "or" }> = [];
 
-  public constructor(db: Db, metadata: EntityMetadata, session?: ClientSession) {
+  constructor(db: Db, metadata: EntityMetadata, session?: ClientSession) {
     this.db = db;
     this.metadata = metadata;
     this.session = session;
   }
 
-  public set(data: DeepPartial<E>): this {
+  set(data: DeepPartial<E>): this {
     this.updateData = data;
     return this;
   }
 
-  public where(criteria: Predicate<E>): this {
+  where(criteria: Predicate<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  public andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  public orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
 
-  public returning(): this {
+  returning(): this {
     // No-op for MongoDB — RETURNING is not supported, results are not returned
     return this;
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     // Reject joined inheritance children
     if (
       this.metadata.inheritance?.strategy === "joined" &&

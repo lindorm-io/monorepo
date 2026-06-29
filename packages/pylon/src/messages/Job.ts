@@ -6,11 +6,11 @@ import type { Dict } from "@lindorm/types";
 @Topic(() => "pylon.queue.job")
 export class Job {
   @CorrelationField()
-  public readonly correlationId!: string;
+  readonly correlationId!: string;
 
   @Field("string")
-  public readonly event!: string;
+  readonly event!: string;
 
   @Field("object")
-  public readonly payload!: Dict;
+  readonly payload!: Dict;
 }

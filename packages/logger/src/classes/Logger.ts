@@ -12,7 +12,7 @@ import { LoggerBase } from "./LoggerBase.js";
 import { LoggerChild } from "./LoggerChild.js";
 
 export class Logger extends LoggerBase implements ILoggerRoot {
-  public static std: StdLogger = {
+  static std: StdLogger = {
     log: (msg: string) => console.log(msg),
     info: (msg: string) => console.info(pc.green(msg)),
     success: (msg: string) => console.log(pc.green(msg)),
@@ -21,7 +21,7 @@ export class Logger extends LoggerBase implements ILoggerRoot {
     debug: (msg: string) => console.debug(pc.blue(msg)),
   };
 
-  public constructor(options: LoggerOptions = {}) {
+  constructor(options: LoggerOptions = {}) {
     const filters = options.filters ?? {};
     const winstonInstance = winston.createLogger();
     const logLevel = options.level ?? "info";
@@ -57,25 +57,25 @@ export class Logger extends LoggerBase implements ILoggerRoot {
   // (winston level applies across every transport and every child;
   // filters live in a registry shared by reference with every child).
 
-  public override get level(): LogLevel {
+  override get level(): LogLevel {
     return super.level;
   }
 
-  public override set level(level: LogLevel) {
+  override set level(level: LogLevel) {
     this.winston.level = level;
     this.winston.transports.forEach((t) => {
       t.level = level;
     });
   }
 
-  public filterPath(path: string, callback?: FilterCallback): void {
+  filterPath(path: string, callback?: FilterCallback): void {
     this.filters[path] = callback ?? defaultFilterCallback;
     this.filterRef.entries = Object.entries(this.filters);
   }
 
-  public filterKey(key: string, callback?: FilterCallback): void;
-  public filterKey(pattern: RegExp, callback?: FilterCallback): void;
-  public filterKey(keyOrPattern: string | RegExp, callback?: FilterCallback): void {
+  filterKey(key: string, callback?: FilterCallback): void;
+  filterKey(pattern: RegExp, callback?: FilterCallback): void;
+  filterKey(keyOrPattern: string | RegExp, callback?: FilterCallback): void {
     const cb = callback ?? defaultFilterCallback;
     if (typeof keyOrPattern === "string") {
       this.keyFilterRef.exact.set(keyOrPattern, cb);

@@ -2,21 +2,21 @@ export class SlidingWindow {
   private readonly timestamps: Array<number> = [];
   private readonly windowMs: number;
 
-  public constructor(windowMs: number) {
+  constructor(windowMs: number) {
     this.windowMs = windowMs;
   }
 
-  public record = (now: number = Date.now()): void => {
+  record = (now: number = Date.now()): void => {
     this.timestamps.push(now);
     this.prune(now);
   };
 
-  public count = (now: number = Date.now()): number => {
+  count = (now: number = Date.now()): number => {
     this.prune(now);
     return this.timestamps.length;
   };
 
-  public reset = (): void => {
+  reset = (): void => {
     this.timestamps.length = 0;
   };
 

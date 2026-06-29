@@ -23,7 +23,7 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
   private consumerTag: string | null = null;
   private consumerName: string | null = null;
 
-  public constructor(options: NatsStreamPipelineOptions) {
+  constructor(options: NatsStreamPipelineOptions) {
     super({
       ...options,
       logger: options.logger.child(["NatsStreamPipeline"]),
@@ -31,7 +31,7 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     this.state = options.state;
   }
 
-  public async start(): Promise<void> {
+  async start(): Promise<void> {
     if (this.running) {
       const loopExists =
         this.consumerTag != null &&
@@ -110,7 +110,7 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  public async stop(): Promise<void> {
+  async stop(): Promise<void> {
     if (!this.running) return;
 
     this.paused = false;
@@ -143,7 +143,7 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline stopped");
   }
 
-  public async pause(): Promise<void> {
+  async pause(): Promise<void> {
     if (this.paused) return;
 
     if (this.batchTimer) {
@@ -174,7 +174,7 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline paused");
   }
 
-  public async resume(): Promise<void> {
+  async resume(): Promise<void> {
     if (!this.paused) return;
     this.paused = false;
 

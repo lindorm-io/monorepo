@@ -23,7 +23,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
   private consumerTag: string | null = null;
   private groupId: string | null = null;
 
-  public constructor(options: KafkaStreamPipelineOptions) {
+  constructor(options: KafkaStreamPipelineOptions) {
     super({
       ...options,
       logger: options.logger.child(["KafkaStreamPipeline"]),
@@ -31,7 +31,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     this.state = options.state;
   }
 
-  public async start(): Promise<void> {
+  async start(): Promise<void> {
     if (this.running) {
       const loopExists =
         this.consumerTag != null &&
@@ -97,7 +97,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  public async stop(): Promise<void> {
+  async stop(): Promise<void> {
     if (!this.running) return;
 
     this.paused = false;
@@ -121,7 +121,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline stopped");
   }
 
-  public async pause(): Promise<void> {
+  async pause(): Promise<void> {
     if (this.paused) return;
 
     if (this.batchTimer) {
@@ -144,7 +144,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline paused");
   }
 
-  public async resume(): Promise<void> {
+  async resume(): Promise<void> {
     if (!this.paused) return;
     this.paused = false;
 

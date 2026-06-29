@@ -3,9 +3,9 @@ import type { HttpErrorOptions } from "../../types/HttpErrorOptions.js";
 import { ClientError } from "../ClientError.js";
 
 export class ConflictError extends ClientError {
-  public static readonly status = 409;
+  static readonly status = 409;
 
-  public constructor(message: string, options: HttpErrorOptions = {}) {
+  constructor(message: string, options: HttpErrorOptions = {}) {
     super(message, { ...options, status: ConflictError.status });
   }
 }

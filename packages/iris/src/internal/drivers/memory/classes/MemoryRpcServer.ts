@@ -25,7 +25,7 @@ export class MemoryRpcServer<
     (envelope: MemoryEnvelope) => Promise<MemoryEnvelope>
   > = new Map();
 
-  public constructor(options: MemoryRpcServerOptions<Req, Res>) {
+  constructor(options: MemoryRpcServerOptions<Req, Res>) {
     super(options, "MemoryRpcServer");
     this.store = options.store;
   }
@@ -59,7 +59,7 @@ export class MemoryRpcServer<
     });
   }
 
-  public async unserve(options?: { queue?: string }): Promise<void> {
+  async unserve(options?: { queue?: string }): Promise<void> {
     const queue = options?.queue ?? this.getDefaultQueue();
     const ownedHandler = this.ownedHandlers.get(queue);
     if (ownedHandler) {
@@ -73,7 +73,7 @@ export class MemoryRpcServer<
     this.logger.debug("RPC handler unregistered", { queue });
   }
 
-  public async unserveAll(): Promise<void> {
+  async unserveAll(): Promise<void> {
     for (const [, ownedHandler] of this.ownedHandlers) {
       this.store.rpcHandlers = this.store.rpcHandlers.filter(
         (h) => h.handler !== ownedHandler,

@@ -7,13 +7,13 @@ export class ArrayCursor<E extends IEntity> implements IProteusCursor<E> {
   private position: number;
   private closed: boolean;
 
-  public constructor(items: Array<E>) {
+  constructor(items: Array<E>) {
     this.items = items;
     this.position = 0;
     this.closed = false;
   }
 
-  public async next(): Promise<E | null> {
+  async next(): Promise<E | null> {
     if (this.closed)
       throw new ProteusError("Cursor is closed", {
         code: "cursor_closed",
@@ -24,7 +24,7 @@ export class ArrayCursor<E extends IEntity> implements IProteusCursor<E> {
     return this.items[this.position++];
   }
 
-  public async nextBatch(size: number = 10): Promise<Array<E>> {
+  async nextBatch(size: number = 10): Promise<Array<E>> {
     if (this.closed)
       throw new ProteusError("Cursor is closed", {
         code: "cursor_closed",
@@ -37,11 +37,11 @@ export class ArrayCursor<E extends IEntity> implements IProteusCursor<E> {
     return batch;
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     this.closed = true;
   }
 
-  public [Symbol.asyncIterator](): AsyncIterableIterator<E> {
+  [Symbol.asyncIterator](): AsyncIterableIterator<E> {
     return {
       next: async (): Promise<IteratorResult<E>> => {
         const item = await this.next();

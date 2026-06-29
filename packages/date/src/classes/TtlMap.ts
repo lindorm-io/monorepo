@@ -7,20 +7,20 @@ export class TtlMap<K, V> {
   private readonly defaultTtl: ReadableTime;
   private readonly store = new Map<K, TtlEntry<V>>();
 
-  public constructor(defaultTtl: ReadableTime) {
+  constructor(defaultTtl: ReadableTime) {
     this.defaultTtl = defaultTtl;
   }
 
-  public get size(): number {
+  get size(): number {
     this.cleanup();
     return this.store.size;
   }
 
-  public get [Symbol.toStringTag](): string {
+  get [Symbol.toStringTag](): string {
     return "TtlMap";
   }
 
-  public set = (key: K, value: V, ttl?: Expiry): this => {
+  set = (key: K, value: V, ttl?: Expiry): this => {
     this.store.set(key, {
       value,
       expiresAt: expiresAt(ttl ?? this.defaultTtl).getTime(),
@@ -28,7 +28,7 @@ export class TtlMap<K, V> {
     return this;
   };
 
-  public get = (key: K): V | undefined => {
+  get = (key: K): V | undefined => {
     const entry = this.store.get(key);
     if (!entry) return undefined;
 
@@ -40,7 +40,7 @@ export class TtlMap<K, V> {
     return entry.value;
   };
 
-  public has = (key: K): boolean => {
+  has = (key: K): boolean => {
     const entry = this.store.get(key);
     if (!entry) return false;
 
@@ -52,15 +52,15 @@ export class TtlMap<K, V> {
     return true;
   };
 
-  public delete = (key: K): boolean => {
+  delete = (key: K): boolean => {
     return this.store.delete(key);
   };
 
-  public clear = (): void => {
+  clear = (): void => {
     this.store.clear();
   };
 
-  public cleanup = (): void => {
+  cleanup = (): void => {
     const now = Date.now();
     for (const [key, entry] of this.store) {
       if (now >= entry.expiresAt) {
@@ -69,7 +69,7 @@ export class TtlMap<K, V> {
     }
   };
 
-  public forEach = (
+  forEach = (
     callbackfn: (value: V, key: K, map: TtlMap<K, V>) => void,
     thisArg?: unknown,
   ): void => {
@@ -83,7 +83,7 @@ export class TtlMap<K, V> {
     }
   };
 
-  public *keys(): IterableIterator<K> {
+  *keys(): IterableIterator<K> {
     const now = Date.now();
     for (const [key, entry] of this.store) {
       if (now >= entry.expiresAt) {
@@ -94,7 +94,7 @@ export class TtlMap<K, V> {
     }
   }
 
-  public *values(): IterableIterator<V> {
+  *values(): IterableIterator<V> {
     const now = Date.now();
     for (const [key, entry] of this.store) {
       if (now >= entry.expiresAt) {
@@ -105,7 +105,7 @@ export class TtlMap<K, V> {
     }
   }
 
-  public *entries(): IterableIterator<[K, V]> {
+  *entries(): IterableIterator<[K, V]> {
     const now = Date.now();
     for (const [key, entry] of this.store) {
       if (now >= entry.expiresAt) {
@@ -116,7 +116,7 @@ export class TtlMap<K, V> {
     }
   }
 
-  public [Symbol.iterator](): IterableIterator<[K, V]> {
+  [Symbol.iterator](): IterableIterator<[K, V]> {
     return this.entries();
   }
 }

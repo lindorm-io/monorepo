@@ -19,14 +19,14 @@ export class MongoCursor<E extends IEntity> implements IProteusCursor<E> {
   /** Serialization lock to prevent concurrent access to the underlying MongoDB cursor. */
   private pending: Promise<void>;
 
-  public constructor(cursor: FindCursor<Document>, metadata: EntityMetadata) {
+  constructor(cursor: FindCursor<Document>, metadata: EntityMetadata) {
     this.cursor = cursor;
     this.metadata = metadata;
     this.closed = false;
     this.pending = Promise.resolve();
   }
 
-  public async next(): Promise<E | null> {
+  async next(): Promise<E | null> {
     return this.serialize(async () => {
       if (this.closed) {
         throw new ProteusError("Cursor is closed", {
@@ -43,7 +43,7 @@ export class MongoCursor<E extends IEntity> implements IProteusCursor<E> {
     });
   }
 
-  public async nextBatch(size: number = 10): Promise<Array<E>> {
+  async nextBatch(size: number = 10): Promise<Array<E>> {
     return this.serialize(async () => {
       if (this.closed) {
         throw new ProteusError("Cursor is closed", {
@@ -96,13 +96,13 @@ export class MongoCursor<E extends IEntity> implements IProteusCursor<E> {
     });
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     if (this.closed) return;
     this.closed = true;
     await this.cursor.close();
   }
 
-  public [Symbol.asyncIterator](): AsyncIterableIterator<E> {
+  [Symbol.asyncIterator](): AsyncIterableIterator<E> {
     return {
       next: async (): Promise<IteratorResult<E>> => {
         const item = await this.next();

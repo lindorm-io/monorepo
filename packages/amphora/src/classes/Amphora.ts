@@ -17,7 +17,7 @@ import type {
 const OIDCONF = "/.well-known/openid-configuration" as const;
 
 export class Amphora implements IAmphora {
-  public readonly domain: string | null;
+  readonly domain: string | null;
 
   private readonly conduit: Conduit;
   private readonly logger: ILogger;
@@ -33,7 +33,7 @@ export class Amphora implements IAmphora {
   private _setupPromise: Promise<void> | null = null;
   private _vault: Array<IKryptos>;
 
-  public constructor(options: AmphoraOptions) {
+  constructor(options: AmphoraOptions) {
     this.logger = options.logger.child(["Amphora"]);
 
     this.conduit = new Conduit({
@@ -66,11 +66,11 @@ export class Amphora implements IAmphora {
 
   // public getters
 
-  public get config(): Array<AmphoraConfig> {
+  get config(): Array<AmphoraConfig> {
     return [...this._config];
   }
 
-  public get jwks(): AmphoraJwks {
+  get jwks(): AmphoraJwks {
     if (!this.domain) {
       throw new AmphoraError("Domain is required to get JWKS", {
         code: "domain_required_for_jwks",
@@ -83,7 +83,7 @@ export class Amphora implements IAmphora {
     return { keys: [...this._jwks] };
   }
 
-  public get vault(): Array<IKryptos> {
+  get vault(): Array<IKryptos> {
     return [...this._vault];
   }
 
@@ -96,7 +96,7 @@ export class Amphora implements IAmphora {
 
   // public setup
 
-  public async setup(): Promise<void> {
+  async setup(): Promise<void> {
     if (this._setup) return;
     if (this._setupPromise) return this._setupPromise;
 
@@ -115,7 +115,7 @@ export class Amphora implements IAmphora {
 
   // public methods
 
-  public add(kryptos: Array<IKryptos> | IKryptos): void {
+  add(kryptos: Array<IKryptos> | IKryptos): void {
     const array = isArray(kryptos) ? kryptos : [kryptos];
 
     for (const input of array) {
@@ -175,7 +175,7 @@ export class Amphora implements IAmphora {
     this.refreshJwks();
   }
 
-  public env(keys: Array<string> | string): void {
+  env(keys: Array<string> | string): void {
     const array = isArray(keys) ? keys : [keys];
 
     const result: Array<IKryptos> = [];
@@ -187,7 +187,7 @@ export class Amphora implements IAmphora {
     this.add(result);
   }
 
-  public async filter(predicate: AmphoraPredicate): Promise<Array<IKryptos>> {
+  async filter(predicate: AmphoraPredicate): Promise<Array<IKryptos>> {
     if (!this._setup && this._external.length) {
       await this.setup();
     }
@@ -201,7 +201,7 @@ export class Amphora implements IAmphora {
     return this.filteredKeys(predicate);
   }
 
-  public filterSync(predicate: AmphoraPredicate): Array<IKryptos> {
+  filterSync(predicate: AmphoraPredicate): Array<IKryptos> {
     if (!this._setup && this._external.length) {
       throw new AmphoraError(
         this._setupPromise
@@ -221,7 +221,7 @@ export class Amphora implements IAmphora {
     return this.filteredKeys(predicate);
   }
 
-  public async find(predicate: AmphoraPredicate): Promise<IKryptos> {
+  async find(predicate: AmphoraPredicate): Promise<IKryptos> {
     const [key] = await this.filter(predicate);
     if (key) return key;
 
@@ -237,7 +237,7 @@ export class Amphora implements IAmphora {
     });
   }
 
-  public async findById(id: string): Promise<IKryptos> {
+  async findById(id: string): Promise<IKryptos> {
     const existing = this._vault.find((i) => i.id === id);
     if (existing) return existing;
 
@@ -256,7 +256,7 @@ export class Amphora implements IAmphora {
     });
   }
 
-  public findByIdSync(id: string): IKryptos {
+  findByIdSync(id: string): IKryptos {
     if (!this._setup && this._external.length) {
       throw new AmphoraError(
         this._setupPromise
@@ -284,7 +284,7 @@ export class Amphora implements IAmphora {
     });
   }
 
-  public findSync(predicate: AmphoraPredicate): IKryptos {
+  findSync(predicate: AmphoraPredicate): IKryptos {
     if (!this._setup && this._external.length) {
       throw new AmphoraError(
         this._setupPromise
@@ -316,7 +316,7 @@ export class Amphora implements IAmphora {
     });
   }
 
-  public async refresh(): Promise<void> {
+  async refresh(): Promise<void> {
     if (this._refreshPromise) return this._refreshPromise;
 
     this._refreshPromise = this._refresh();
@@ -337,7 +337,7 @@ export class Amphora implements IAmphora {
     this._lastRefresh = new Date();
   }
 
-  public canEncrypt(): boolean {
+  canEncrypt(): boolean {
     return (
       this.filteredKeys({
         $or: [
@@ -348,7 +348,7 @@ export class Amphora implements IAmphora {
     );
   }
 
-  public canDecrypt(): boolean {
+  canDecrypt(): boolean {
     return (
       this.filteredKeys({
         $or: [
@@ -359,13 +359,13 @@ export class Amphora implements IAmphora {
     );
   }
 
-  public canSign(): boolean {
+  canSign(): boolean {
     return (
       this.filteredKeys({ $or: [{ operations: ["sign"] }, { use: "sig" }] }).length > 0
     );
   }
 
-  public canVerify(): boolean {
+  canVerify(): boolean {
     return (
       this.filteredKeys({ $or: [{ operations: ["verify"] }, { use: "sig" }] }).length > 0
     );

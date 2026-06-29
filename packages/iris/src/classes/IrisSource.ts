@@ -51,7 +51,7 @@ export class IrisSource implements IIrisSource {
   private _settingUpPromise: Promise<void> | null = null;
   private isSetUp = false;
 
-  public constructor(options: IrisSourceOptions) {
+  constructor(options: IrisSourceOptions) {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["IrisSource"]);
@@ -122,15 +122,15 @@ export class IrisSource implements IIrisSource {
     }
   }
 
-  public get driver(): IrisDriverType {
+  get driver(): IrisDriverType {
     return this._driverType;
   }
 
-  public get messages(): ReadonlyArray<Constructor<IMessage>> {
+  get messages(): ReadonlyArray<Constructor<IMessage>> {
     return this._messages;
   }
 
-  public async addMessages(input: MessageScannerInput): Promise<void> {
+  async addMessages(input: MessageScannerInput): Promise<void> {
     if (this.isSetUp) {
       throw new IrisSourceError("Cannot add messages after setup() has been called", {
         code: "messages_after_setup",
@@ -146,21 +146,21 @@ export class IrisSource implements IIrisSource {
     }
   }
 
-  public hasMessage(target: Constructor<IMessage>): boolean {
+  hasMessage(target: Constructor<IMessage>): boolean {
     return this._messages.includes(target);
   }
 
-  public addSubscriber(subscriber: IMessageSubscriber): void {
+  addSubscriber(subscriber: IMessageSubscriber): void {
     this._subscribersRef.current.push(subscriber);
   }
 
-  public removeSubscriber(subscriber: IMessageSubscriber): void {
+  removeSubscriber(subscriber: IMessageSubscriber): void {
     this._subscribersRef.current = this._subscribersRef.current.filter(
       (s) => s !== subscriber,
     );
   }
 
-  public session(options?: SessionOptions): IrisSession {
+  session(options?: SessionOptions): IrisSession {
     const subscribersRef = { current: [...this._subscribersRef.current] };
 
     const clonedDriver = this._driver
@@ -176,7 +176,7 @@ export class IrisSource implements IIrisSource {
     });
   }
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     if (this._driver) return;
     if (this._connectingPromise) return this._connectingPromise;
 
@@ -188,7 +188,7 @@ export class IrisSource implements IIrisSource {
     }
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (this._disconnectingPromise) return this._disconnectingPromise;
 
     this._disconnectingPromise = this._doDisconnect();
@@ -199,42 +199,42 @@ export class IrisSource implements IIrisSource {
     }
   }
 
-  public async drain(timeout?: number): Promise<void> {
+  async drain(timeout?: number): Promise<void> {
     if (!this._driver) return;
     await this._driver.drain(timeout);
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     return this.requireDriver().ping();
   }
 
-  public getConnectionState(): IrisConnectionState {
+  getConnectionState(): IrisConnectionState {
     if (!this._driver) return "disconnected";
     return this._driver.getConnectionState();
   }
 
-  public on<K extends keyof IrisEvents>(
+  on<K extends keyof IrisEvents>(
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void {
     this.requireDriver().on(event, listener);
   }
 
-  public off<K extends keyof IrisEvents>(
+  off<K extends keyof IrisEvents>(
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void {
     this.requireDriver().off(event, listener);
   }
 
-  public once<K extends keyof IrisEvents>(
+  once<K extends keyof IrisEvents>(
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void {
     this.requireDriver().once(event, listener);
   }
 
-  public async setup(): Promise<void> {
+  async setup(): Promise<void> {
     if (this.isSetUp) return;
     if (this._settingUpPromise) return this._settingUpPromise;
 
@@ -246,30 +246,30 @@ export class IrisSource implements IIrisSource {
     }
   }
 
-  public messageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
+  messageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
     return this.requireDriver().createMessageBus(target);
   }
 
-  public publisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
+  publisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
     return this.requireDriver().createPublisher(target);
   }
 
-  public workerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
+  workerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
     return this.requireDriver().createWorkerQueue(target);
   }
 
-  public stream(): IIrisStreamProcessor {
+  stream(): IIrisStreamProcessor {
     return this.requireDriver().createStreamProcessor();
   }
 
-  public rpcClient<Req extends IMessage, Res extends IMessage>(
+  rpcClient<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): IIrisRpcClient<Req, Res> {
     return this.requireDriver().createRpcClient(requestTarget, responseTarget);
   }
 
-  public rpcServer<Req extends IMessage, Res extends IMessage>(
+  rpcServer<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): IIrisRpcServer<Req, Res> {

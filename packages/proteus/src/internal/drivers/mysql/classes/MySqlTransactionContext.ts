@@ -21,7 +21,7 @@ export class MySqlTransactionContext implements ITransactionContext {
   private readonly logger: ILogger | undefined;
   private readonly repoFactory: RepositoryFactory | undefined;
 
-  public constructor(
+  constructor(
     handle: MysqlTransactionHandle,
     namespace?: string | null,
     logger?: ILogger,
@@ -33,7 +33,7 @@ export class MySqlTransactionContext implements ITransactionContext {
     this.repoFactory = repositoryFactory;
   }
 
-  public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
+  repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
     if (!this.repoFactory) {
       throw new MySqlTransactionError("Transactional repositories are not configured", {
         code: "transactional_repositories_not_configured",
@@ -45,9 +45,7 @@ export class MySqlTransactionContext implements ITransactionContext {
     return this.repoFactory(target);
   }
 
-  public queryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  queryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     const metadata = getEntityMetadata(target);
     return new MySqlQueryBuilder<E>(
       metadata,
@@ -57,21 +55,19 @@ export class MySqlTransactionContext implements ITransactionContext {
     );
   }
 
-  public async client<T>(): Promise<T> {
+  async client<T>(): Promise<T> {
     return this.handle.client as unknown as T;
   }
 
-  public async transaction<T>(
-    fn: (ctx: MySqlTransactionContext) => Promise<T>,
-  ): Promise<T> {
+  async transaction<T>(fn: (ctx: MySqlTransactionContext) => Promise<T>): Promise<T> {
     return withSavepoint(this.handle, () => fn(this));
   }
 
-  public async commit(): Promise<void> {
+  async commit(): Promise<void> {
     await commitTransaction(this.handle);
   }
 
-  public async rollback(): Promise<void> {
+  async rollback(): Promise<void> {
     await rollbackTransaction(this.handle);
   }
 }

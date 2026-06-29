@@ -96,7 +96,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly filterRegistry: FilterRegistry;
   private readonly amphora: IAmphora | undefined;
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     client: Redis,
     namespace: string | null,
@@ -118,7 +118,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // ─── Lock mode ──────────────────────────────────────────────────────
 
-  public lock(mode: LockMode): this {
+  lock(mode: LockMode): this {
     guardRedisLockMode(mode);
     this.state.lock = mode;
     return this;
@@ -126,7 +126,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // ─── Override raw SQL methods to throw ─────────────────────────────
 
-  public override whereRaw(): this {
+  override whereRaw(): this {
     throw new NotSupportedError("whereRaw is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -135,7 +135,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override andWhereRaw(): this {
+  override andWhereRaw(): this {
     throw new NotSupportedError("andWhereRaw is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -144,7 +144,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override orWhereRaw(): this {
+  override orWhereRaw(): this {
     throw new NotSupportedError("orWhereRaw is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -153,7 +153,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override selectRaw(): this {
+  override selectRaw(): this {
     throw new NotSupportedError("selectRaw is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -162,7 +162,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override groupBy(): this {
+  override groupBy(): this {
     throw new NotSupportedError("groupBy is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -171,7 +171,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override having(): this {
+  override having(): this {
     throw new NotSupportedError("having is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -180,7 +180,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override andHaving(): this {
+  override andHaving(): this {
     throw new NotSupportedError("andHaving is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -189,7 +189,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override orHaving(): this {
+  override orHaving(): this {
     throw new NotSupportedError("orHaving is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -198,7 +198,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override havingRaw(): this {
+  override havingRaw(): this {
     throw new NotSupportedError("havingRaw is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -207,7 +207,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override andHavingRaw(): this {
+  override andHavingRaw(): this {
     throw new NotSupportedError("andHavingRaw is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -216,7 +216,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override orHavingRaw(): this {
+  override orHavingRaw(): this {
     throw new NotSupportedError("orHavingRaw is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -225,7 +225,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override window(): this {
+  override window(): this {
     throw new NotSupportedError("window is not supported by the Redis driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -236,7 +236,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // ─── Terminal methods ─────────────────────────────────────────────
 
-  public clone(): IProteusQueryBuilder<E> {
+  clone(): IProteusQueryBuilder<E> {
     const cloned = new RedisQueryBuilder<E>(
       this.metadata,
       this.client,
@@ -249,17 +249,17 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return cloned;
   }
 
-  public toQuery(): unknown {
+  toQuery(): unknown {
     return { state: this.state, driver: "redis" };
   }
 
-  public async getOne(): Promise<E | null> {
+  async getOne(): Promise<E | null> {
     const rows = await this.resolveRows();
     if (rows.length === 0) return null;
     return this.hydrateRow(rows[0]);
   }
 
-  public async getOneOrFail(): Promise<E> {
+  async getOneOrFail(): Promise<E> {
     const entity = await this.getOne();
     if (!entity) {
       throw new ProteusRepositoryError(
@@ -276,12 +276,12 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return entity;
   }
 
-  public async getMany(): Promise<Array<E>> {
+  async getMany(): Promise<Array<E>> {
     const rows = await this.resolveRows();
     return rows.map((row) => this.hydrateRow(row));
   }
 
-  public async getManyAndCount(): Promise<[Array<E>, number]> {
+  async getManyAndCount(): Promise<[Array<E>, number]> {
     const allRows = await this.resolveRows(/* forCount */ true);
     const totalCount = allRows.length;
 
@@ -297,17 +297,17 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return [entities, totalCount];
   }
 
-  public async count(): Promise<number> {
+  async count(): Promise<number> {
     const rows = await this.resolveRows(/* forCount */ true);
     return rows.length;
   }
 
-  public async exists(): Promise<boolean> {
+  async exists(): Promise<boolean> {
     const rows = await this.resolveRows();
     return rows.length > 0;
   }
 
-  public async getRawRows<
+  async getRawRows<
     T extends Record<string, unknown> = Record<string, unknown>,
   >(): Promise<Array<T>> {
     const rows = await this.resolveRows();
@@ -316,19 +316,19 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // ─── Aggregates ───────────────────────────────────────────────────
 
-  public async sum(field: keyof E): Promise<number | null> {
+  async sum(field: keyof E): Promise<number | null> {
     return this.computeAggregate("sum", field);
   }
 
-  public async average(field: keyof E): Promise<number | null> {
+  async average(field: keyof E): Promise<number | null> {
     return this.computeAggregate("avg", field);
   }
 
-  public async minimum(field: keyof E): Promise<number | null> {
+  async minimum(field: keyof E): Promise<number | null> {
     return this.computeAggregate("min", field);
   }
 
-  public async maximum(field: keyof E): Promise<number | null> {
+  async maximum(field: keyof E): Promise<number | null> {
     return this.computeAggregate("max", field);
   }
 
@@ -339,7 +339,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
    * hooks (beforeInsert/afterInsert), validation, relation processing, and
    * subscriber events. Use repository.insert() for full lifecycle support.
    */
-  public insert(): IInsertQueryBuilder<E> {
+  insert(): IInsertQueryBuilder<E> {
     return new RedisInsertBuilder<E>(
       this.client,
       this.metadata,
@@ -353,7 +353,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
    * hooks (beforeUpdate/afterUpdate), validation, relation processing, and
    * subscriber events. Use repository.save() for full lifecycle support.
    */
-  public update(): IUpdateQueryBuilder<E> {
+  update(): IUpdateQueryBuilder<E> {
     this.guardAppendOnlyWrite("update");
     return new RedisUpdateBuilder<E>(
       this.client,
@@ -370,7 +370,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
    * hooks (beforeDestroy/afterDestroy), relation cascade/orphan processing,
    * and subscriber events. Use repository.destroy() for full lifecycle support.
    */
-  public delete(): IDeleteQueryBuilder<E> {
+  delete(): IDeleteQueryBuilder<E> {
     this.guardAppendOnlyWrite("delete");
     return new RedisDeleteBuilder<E>(
       this.client,
@@ -388,7 +388,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
    * lifecycle hooks, relation processing, and subscriber events.
    * Use repository.softDestroy() for full lifecycle support.
    */
-  public softDelete(): IDeleteQueryBuilder<E> {
+  softDelete(): IDeleteQueryBuilder<E> {
     this.guardAppendOnlyWrite("softDelete");
     return new RedisDeleteBuilder<E>(
       this.client,
@@ -602,7 +602,7 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
   private readonly amphora: IAmphora | undefined;
   private data: Array<DeepPartial<E>> = [];
 
-  public constructor(
+  constructor(
     client: Redis,
     metadata: EntityMetadata,
     namespace: string | null,
@@ -618,17 +618,17 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
     this.amphora = amphora;
   }
 
-  public values(data: Array<DeepPartial<E>>): this {
+  values(data: Array<DeepPartial<E>>): this {
     this.data = data;
     return this;
   }
 
-  public returning(): this {
+  returning(): this {
     // No-op for Redis driver -- all fields are always returned
     return this;
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     // QB insert is not supported for joined inheritance children (Redis doesn't
     // support joined inheritance; throw for API consistency).
     if (
@@ -766,7 +766,7 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   private updateData: DeepPartial<E> | null = null;
   private predicates: Array<{ predicate: Predicate<E>; conjunction: "and" | "or" }> = [];
 
-  public constructor(
+  constructor(
     client: Redis,
     metadata: EntityMetadata,
     namespace: string | null,
@@ -786,32 +786,32 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
     this.amphora = amphora;
   }
 
-  public set(data: DeepPartial<E>): this {
+  set(data: DeepPartial<E>): this {
     this.updateData = data;
     return this;
   }
 
-  public where(criteria: Predicate<E>): this {
+  where(criteria: Predicate<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  public andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  public orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
 
-  public returning(): this {
+  returning(): this {
     // No-op for Redis driver -- all fields are always returned
     return this;
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     if (!this.updateData) return { rows: [], rowCount: 0 };
 
     const pattern = buildScanPattern(this.storageTarget, this.namespace);
@@ -951,7 +951,7 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   private readonly amphora: IAmphora | undefined;
   private predicates: Array<{ predicate: Predicate<E>; conjunction: "and" | "or" }> = [];
 
-  public constructor(
+  constructor(
     client: Redis,
     metadata: EntityMetadata,
     namespace: string | null,
@@ -973,27 +973,27 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
     this.amphora = amphora;
   }
 
-  public where(criteria: Predicate<E>): this {
+  where(criteria: Predicate<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  public andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  public orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
 
-  public returning(): this {
+  returning(): this {
     // No-op for Redis driver -- all fields are always returned
     return this;
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     const pattern = buildScanPattern(this.storageTarget, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);
 

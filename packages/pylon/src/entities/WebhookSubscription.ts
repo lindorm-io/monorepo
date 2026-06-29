@@ -22,102 +22,102 @@ import type { IWebhookSubscription } from "../interfaces/index.js";
 @Entity()
 export class WebhookSubscription implements IWebhookSubscription {
   @PrimaryKeyField()
-  public id!: string;
+  id!: string;
 
   @VersionField()
-  public version!: number;
+  version!: number;
 
   @CreateDateField()
-  public createdAt!: Date;
+  createdAt!: Date;
 
   @UpdateDateField()
-  public updatedAt!: Date;
+  updatedAt!: Date;
 
   @Enum(WebhookAuth)
   @Field("enum")
-  public auth!: WebhookAuth;
+  auth!: WebhookAuth;
 
   @Field("string")
-  public event!: string;
+  event!: string;
 
   @Default(WebhookMethod.Post)
   @Enum(WebhookMethod)
   @Field("enum")
-  public method!: WebhookMethod;
+  method!: WebhookMethod;
 
   @Field("json")
-  public headers!: Dict<string>;
+  headers!: Dict<string>;
 
   @Field("string")
-  public ownerId!: string;
+  ownerId!: string;
 
   @Nullable()
   @Field("string")
-  public tenantId!: string | null;
+  tenantId!: string | null;
 
   @Field("url")
-  public url!: string;
+  url!: string;
 
   // auth headers
 
   @Field("json")
-  public authHeaders!: Dict<string>;
+  authHeaders!: Dict<string>;
 
   // basic auth
 
   @Nullable()
   @Field("string")
-  public username!: string | null;
+  username!: string | null;
 
   @Nullable()
   @Field("string")
-  public password!: string | null;
+  password!: string | null;
 
   // client credentials
 
   @Nullable()
   @Field("string")
-  public audience!: string | null;
+  audience!: string | null;
 
   @Nullable()
   @Field("string")
-  public authLocation!: ClientCredentialsAuthLocation | null;
+  authLocation!: ClientCredentialsAuthLocation | null;
 
   @Nullable()
   @Field("string")
-  public clientId!: string | null;
+  clientId!: string | null;
 
   @Nullable()
   @Field("string")
-  public clientSecret!: string | null;
+  clientSecret!: string | null;
 
   @Nullable()
   @Field("string")
-  public contentType!: ClientCredentialsContentType | null;
+  contentType!: ClientCredentialsContentType | null;
 
   @Nullable()
   @Field("string")
-  public issuer!: string | null;
+  issuer!: string | null;
 
   @Default([])
   @Field("array", { arrayType: "string" })
-  public scope!: Array<string>;
+  scope!: Array<string>;
 
   @Nullable()
   @Field("url")
-  public tokenUri!: string | null;
+  tokenUri!: string | null;
 
   // error tracking
 
   @Default(0)
   @Field("integer")
-  public errorCount!: number;
+  errorCount!: number;
 
   @Nullable()
   @Field("timestamp")
-  public lastErrorAt!: Date | null;
+  lastErrorAt!: Date | null;
 
   @Nullable()
   @Field("timestamp")
-  public suspendedAt!: Date | null;
+  suspendedAt!: Date | null;
 }

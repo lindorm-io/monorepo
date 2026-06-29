@@ -20,33 +20,33 @@ import type { AggregateIdentifier } from "../../types/aggregate-identifier.js";
 export class HermesCommandMessage implements IMessage {
   @IdentifierField()
   @Generated("lindorm_id", { namespace: "cmd" })
-  public id!: string;
+  id!: string;
 
   @MandatoryField()
-  public mandatory: boolean = true;
+  mandatory: boolean = true;
 
   @Field("object")
-  public aggregate: AggregateIdentifier = { id: "", name: "", namespace: "" };
+  aggregate: AggregateIdentifier = { id: "", name: "", namespace: "" };
 
   @Field("string")
-  public name: string = "";
+  name: string = "";
 
   @Field("integer")
-  public version: number = 1;
+  version: number = 1;
 
   @Field("string")
-  public causationId: string = "";
+  causationId: string = "";
 
   @Nullable()
   @Field("string")
-  public correlationId: string | null = null;
+  correlationId: string | null = null;
 
   @Field("object")
-  public data: Dict = {};
+  data: Dict = {};
 
   @Field("object")
-  public meta: Dict = {};
+  meta: Dict = {};
 
   @TimestampField()
-  public timestamp!: Date;
+  timestamp!: Date;
 }

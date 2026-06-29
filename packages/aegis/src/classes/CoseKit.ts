@@ -47,22 +47,22 @@ const innerCose = (value: unknown): Tag | undefined => {
 export class CoseKit {
   private readonly logger: ILogger;
 
-  public constructor(options: CoseKitOptions) {
+  constructor(options: CoseKitOptions) {
     this.logger = options.logger.child(["CoseKit"]);
   }
 
   /** Mint a secured CWT (COSE_Sign1 or COSE_Mac0) from the domain-keyed claims. */
-  public sign(kryptos: IKryptos, common: Dict, options: CoseMintOptions = {}): Buffer {
+  sign(kryptos: IKryptos, common: Dict, options: CoseMintOptions = {}): Buffer {
     return new CwtKit({ kryptos, logger: this.logger }).sign(common, options);
   }
 
   /** Verify a CWT with an already-resolved key; returns the domain-keyed claims. */
-  public verify(kryptos: IKryptos, token: Buffer): CwtVerifyResult {
+  verify(kryptos: IKryptos, token: Buffer): CwtVerifyResult {
     return new CwtKit({ kryptos, logger: this.logger }).verify(token);
   }
 
   /** Decode the COSE headers (kid/alg/typ) WITHOUT verifying, for key resolution. */
-  public decode(token: Buffer): CwtDecoded {
+  decode(token: Buffer): CwtDecoded {
     return CwtKit.decode(token);
   }
 
@@ -70,11 +70,7 @@ export class CoseKit {
    * Wrap an already-secured CWT in a COSE_Encrypt0 (sign-then-encrypt). The
    * inner CWT bytes are the plaintext; the result is a bare COSE_Encrypt0.
    */
-  public encrypt(
-    kryptos: IKryptos,
-    inner: Buffer,
-    options: CoseEncryptOptions = {},
-  ): Buffer {
+  encrypt(kryptos: IKryptos, inner: Buffer, options: CoseEncryptOptions = {}): Buffer {
     const encrypt0 = new CweKit({
       kryptos,
       logger: this.logger,
@@ -90,7 +86,7 @@ export class CoseKit {
    * COSE_Encrypt0 (16). Tolerant: non-CBOR / non-COSE input returns false, so it
    * is safe to probe an unknown token with.
    */
-  public isCose(token: Buffer): boolean {
+  isCose(token: Buffer): boolean {
     try {
       const tag = innerCose(decodeCbor(token))?.tag;
       return tag === COSE_TAG.sign1 || tag === COSE_TAG.mac0 || tag === COSE_TAG.encrypt0;
@@ -100,12 +96,12 @@ export class CoseKit {
   }
 
   /** True if the COSE token is an encrypted CWT (COSE_Encrypt0, tag 16). */
-  public isEncrypted(token: Buffer): boolean {
+  isEncrypted(token: Buffer): boolean {
     return innerCose(decodeCbor(token))?.tag === COSE_TAG.encrypt0;
   }
 
   /** Read the COSE_Encrypt0 kid (unprotected, label 4) WITHOUT decrypting. */
-  public decodeEncryptedKid(token: Buffer): string | undefined {
+  decodeEncryptedKid(token: Buffer): string | undefined {
     const cose = innerCose(decodeCbor(token));
     const unprotected = Array.isArray(cose?.contents)
       ? (cose.contents[1] as Map<number, unknown>)
@@ -115,7 +111,7 @@ export class CoseKit {
   }
 
   /** Decrypt a COSE_Encrypt0 to its inner (secured) CWT bytes. */
-  public decrypt(kryptos: IKryptos, token: Buffer): Buffer {
+  decrypt(kryptos: IKryptos, token: Buffer): Buffer {
     const cose = innerCose(decodeCbor(token));
     const { payload } = new CweKit({ kryptos, logger: this.logger }).decrypt(cose);
     return payload;
@@ -126,18 +122,12 @@ export class CoseKit {
    * over the required-only COSE_Key. The COSE analogue of the JWK Thumbprint
    * (`jkt`); SHA-256 by default.
    */
-  public static thumbprint(
-    kryptos: IKryptos,
-    hash: CoseThumbprintHash = "sha-256",
-  ): Buffer {
+  static thumbprint(kryptos: IKryptos, hash: CoseThumbprintHash = "sha-256"): Buffer {
     return computeCoseKeyThumbprint(kryptos.export("jwk") as Dict, hash);
   }
 
   /** The RFC 9679 §5.7 COSE Key Thumbprint URI (`urn:ietf:params:oauth:ckt:…`). */
-  public static thumbprintUri(
-    kryptos: IKryptos,
-    hash: CoseThumbprintHash = "sha-256",
-  ): string {
+  static thumbprintUri(kryptos: IKryptos, hash: CoseThumbprintHash = "sha-256"): string {
     return computeCoseKeyThumbprintUri(kryptos.export("jwk") as Dict, hash);
   }
 }

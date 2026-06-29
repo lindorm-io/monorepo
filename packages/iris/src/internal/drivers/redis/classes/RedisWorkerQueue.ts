@@ -38,14 +38,14 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
   private readonly deadLetterManager: DeadLetterManager | undefined;
   private readonly ownedConsumers: Map<string, Array<OwnedConsumer>> = new Map();
 
-  public constructor(options: RedisWorkerQueueOptions<M>) {
+  constructor(options: RedisWorkerQueueOptions<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishRedisMessages(
       message,
       options,
@@ -60,7 +60,7 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     );
   }
 
-  public async consume(
+  async consume(
     queueOrOptions: string | ConsumeOptions<M> | Array<ConsumeOptions<M>>,
     callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
   ): Promise<void> {
@@ -177,7 +177,7 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     await Promise.all([mainLoop.ready, broadcastLoop.ready]);
   }
 
-  public async unconsume(queue: string): Promise<void> {
+  async unconsume(queue: string): Promise<void> {
     const consumers = this.ownedConsumers.get(queue);
     if (!consumers || consumers.length === 0) return;
 
@@ -196,7 +196,7 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     this.ownedConsumers.delete(queue);
   }
 
-  public async unconsumeAll(): Promise<void> {
+  async unconsumeAll(): Promise<void> {
     for (const [, consumers] of this.ownedConsumers) {
       for (const consumer of consumers) {
         await stopConsumerLoop(this.state, consumer.mainConsumerTag);

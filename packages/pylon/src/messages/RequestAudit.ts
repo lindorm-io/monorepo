@@ -18,50 +18,50 @@ import {
 @DeadLetter()
 export class RequestAudit {
   @IdentifierField()
-  public readonly id!: string;
+  readonly id!: string;
 
   @CorrelationField()
-  public readonly correlationId!: string;
+  readonly correlationId!: string;
 
   @TimestampField()
-  public readonly timestamp!: Date;
+  readonly timestamp!: Date;
 
   @Field("string")
-  public readonly requestId!: string;
+  readonly requestId!: string;
 
   @Field("string")
-  public readonly actor!: string;
+  readonly actor!: string;
 
   @Field("string")
-  public readonly appName!: string;
+  readonly appName!: string;
 
   @Field("string")
-  public readonly endpoint!: string;
+  readonly endpoint!: string;
 
   @Field("string")
-  public readonly method!: string;
+  readonly method!: string;
 
   @Field("string")
-  public readonly transport!: string;
+  readonly transport!: string;
 
   @Field("integer")
-  public readonly statusCode!: number;
+  readonly statusCode!: number;
 
   @Field("integer")
-  public readonly duration!: number;
+  readonly duration!: number;
 
   @Field("string")
-  public readonly sourceIp!: string;
+  readonly sourceIp!: string;
 
   @Nullable()
   @Field("object")
-  public readonly requestBody!: Record<string, unknown> | null;
+  readonly requestBody!: Record<string, unknown> | null;
 
   @Nullable()
   @Field("string")
-  public readonly sessionId!: string | null;
+  readonly sessionId!: string | null;
 
   @Nullable()
   @Field("string")
-  public readonly userAgent!: string | null;
+  readonly userAgent!: string | null;
 }

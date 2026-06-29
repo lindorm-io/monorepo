@@ -50,12 +50,12 @@ export class RabbitRpcClient<
     );
   };
 
-  public constructor(options: RabbitRpcClientOptions<Req, Res>) {
+  constructor(options: RabbitRpcClientOptions<Req, Res>) {
     super(options, "RabbitRpcClient");
     this.state = options.state;
   }
 
-  public async request(message: Req, options?: { timeout?: number }): Promise<Res> {
+  async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
     const correlationId = randomId({ namespace: "cor", length: 16 });
 
@@ -114,7 +114,7 @@ export class RabbitRpcClient<
     return promise;
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     this.rejectAllPending();
 
     if (this.replyConsumerTag && this.state.publishChannel) {

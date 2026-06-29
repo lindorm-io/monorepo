@@ -32,13 +32,13 @@ export class KafkaRpcClient<
   private replyConsumerPromise: Promise<void> | null = null;
   private replyConsumerTag: string | null = null;
 
-  public constructor(options: KafkaRpcClientOptions<Req, Res>) {
+  constructor(options: KafkaRpcClientOptions<Req, Res>) {
     super(options, "KafkaRpcClient");
     this.state = options.state;
     this.replyTopic = `${this.state.prefix}.rpc.reply.${randomId({ length: 16 })}`;
   }
 
-  public async request(message: Req, options?: { timeout?: number }): Promise<Res> {
+  async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
     const correlationId = randomId({ namespace: "cor", length: 16 });
 
@@ -72,7 +72,7 @@ export class KafkaRpcClient<
     return promise;
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     this.rejectAllPending();
 
     if (this.replyConsumerTag) {

@@ -31,13 +31,13 @@ export class RedisRpcClient<
   private replyConsumerPromise: Promise<void> | null = null;
   private replyGroupName: string | null = null;
 
-  public constructor(options: RedisRpcClientOptions<Req, Res>) {
+  constructor(options: RedisRpcClientOptions<Req, Res>) {
     super(options, "RedisRpcClient");
     this.state = options.state;
     this.replyStreamKey = `${this.state.prefix}:rpc:reply:${randomId({ length: 16 })}`;
   }
 
-  public async request(message: Req, options?: { timeout?: number }): Promise<Res> {
+  async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
     const correlationId = randomId({ namespace: "cor", length: 16 });
 
@@ -72,7 +72,7 @@ export class RedisRpcClient<
     return promise;
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     this.rejectAllPending();
 
     const replyLoop = this.state.consumerLoops.find(

@@ -1,7 +1,7 @@
 import { DomainError, type DomainErrorOptions } from "./DomainError.js";
 
 export class AggregateNotCreatedError extends DomainError {
-  public constructor(options: Omit<DomainErrorOptions, "permanent"> = {}) {
+  constructor(options: Omit<DomainErrorOptions, "permanent"> = {}) {
     super("Aggregate has not been created", {
       code: "aggregate_not_created",
       title: "Aggregate Not Created",

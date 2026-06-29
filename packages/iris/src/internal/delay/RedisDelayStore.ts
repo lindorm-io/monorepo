@@ -36,10 +36,7 @@ export class RedisDelayStore implements IDelayStore {
   private readonly zsetKey: string;
   private readonly hashKey: string;
 
-  public constructor(
-    client: any,
-    options?: { keyPrefix?: string; ownedClient?: boolean },
-  ) {
+  constructor(client: any, options?: { keyPrefix?: string; ownedClient?: boolean }) {
     this.client = client;
     this.ownedClient = options?.ownedClient ?? false;
     const prefix = options?.keyPrefix ?? "iris:delay";
@@ -52,14 +49,14 @@ export class RedisDelayStore implements IDelayStore {
     });
   }
 
-  public async schedule(entry: DelayedEntry): Promise<void> {
+  async schedule(entry: DelayedEntry): Promise<void> {
     const pipeline = this.client.pipeline();
     pipeline.zadd(this.zsetKey, entry.deliverAt, entry.id);
     pipeline.hset(this.hashKey, entry.id, serializeDelayedEntry(entry));
     checkPipelineResults(await pipeline.exec());
   }
 
-  public async poll(now: number): Promise<Array<DelayedEntry>> {
+  async poll(now: number): Promise<Array<DelayedEntry>> {
     const results: Array<string> = await this.client.irisDelayPoll(
       this.zsetKey,
       this.hashKey,
@@ -69,7 +66,7 @@ export class RedisDelayStore implements IDelayStore {
     return results.map(deserializeDelayedEntry);
   }
 
-  public async cancel(id: string): Promise<boolean> {
+  async cancel(id: string): Promise<boolean> {
     const pipeline = this.client.pipeline();
     pipeline.zrem(this.zsetKey, id);
     pipeline.hdel(this.hashKey, id);
@@ -80,18 +77,18 @@ export class RedisDelayStore implements IDelayStore {
     return results![0][1] === 1;
   }
 
-  public async size(): Promise<number> {
+  async size(): Promise<number> {
     return this.client.zcard(this.zsetKey);
   }
 
-  public async clear(): Promise<void> {
+  async clear(): Promise<void> {
     const pipeline = this.client.pipeline();
     pipeline.del(this.zsetKey);
     pipeline.del(this.hashKey);
     checkPipelineResults(await pipeline.exec());
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     if (this.ownedClient) {
       await this.client.quit();
     }

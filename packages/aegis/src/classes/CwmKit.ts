@@ -50,12 +50,12 @@ export class CwmKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
 
-  public constructor(options: CwmKitOptions) {
+  constructor(options: CwmKitOptions) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwmKit"]);
   }
 
-  public tag(payload: Buffer, options: CwmTagOptions = {}): Tag {
+  tag(payload: Buffer, options: CwmTagOptions = {}): Tag {
     this.logger.debug("MAC'ing COSE_Mac0", { options });
 
     const protectedMap = new Map<number, unknown>();
@@ -72,7 +72,7 @@ export class CwmKit {
     return new Tag(COSE_TAG.mac0, [protectedHeader, unprotected, payload, tag]);
   }
 
-  public verify(mac0: unknown): CwmVerifyResult {
+  verify(mac0: unknown): CwmVerifyResult {
     const [protectedHeader, , payload, tag] = unwrapMac0(mac0) as [
       Uint8Array,
       unknown,

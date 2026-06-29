@@ -31,7 +31,7 @@ export class ErrorRegistry {
   private readonly byName: Map<string, LindormErrorClass> = new Map();
   private readonly byStatus: Map<number, LindormErrorClass> = new Map();
 
-  public register(cls: LindormErrorClass): void {
+  register(cls: LindormErrorClass): void {
     if (!cls.name) {
       throw new LindormError("Cannot register anonymous error class");
     }
@@ -41,7 +41,7 @@ export class ErrorRegistry {
     }
   }
 
-  public resolve(hint: ResolveHint): LindormErrorClass {
+  resolve(hint: ResolveHint): LindormErrorClass {
     if (hint.name && this.byName.has(hint.name)) {
       return this.byName.get(hint.name)!;
     }
@@ -54,7 +54,7 @@ export class ErrorRegistry {
     return LindormError;
   }
 
-  public reconstruct(payload: ReconstructPayload): LindormError {
+  reconstruct(payload: ReconstructPayload): LindormError {
     const Cls = this.resolve({ name: payload.name, status: payload.status });
     return new Cls(payload.message, {
       id: payload.id,
@@ -68,11 +68,11 @@ export class ErrorRegistry {
     });
   }
 
-  public has(name: string): boolean {
+  has(name: string): boolean {
     return this.byName.has(name);
   }
 
-  public unregister(name: string): boolean {
+  unregister(name: string): boolean {
     const cls = this.byName.get(name);
     if (!cls) return false;
     this.byName.delete(name);

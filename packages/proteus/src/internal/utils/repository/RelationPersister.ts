@@ -18,7 +18,7 @@ export class RelationPersister {
   private readonly joinTableOps: JoinTableOps;
   private readonly logger: ILogger;
 
-  public constructor(ctx: {
+  constructor(ctx: {
     metadata: EntityMetadata;
     namespace: string | null;
     parent: Constructor<IEntity> | undefined;
@@ -37,7 +37,7 @@ export class RelationPersister {
   // ─── Phase 1: Owning relations (ManyToOne + owning OneToOne) ───────
   // Must run BEFORE the entity is persisted so FK values are in the INSERT/UPDATE
 
-  public saveOwning = async <E extends IEntity>(
+  saveOwning = async <E extends IEntity>(
     entity: E,
     mode: "insert" | "update",
   ): Promise<void> => {
@@ -80,7 +80,7 @@ export class RelationPersister {
   // ─── Phase 2: Inverse relations (OneToMany + inverse OneToOne + ManyToMany) ──
   // Must run AFTER the entity is persisted so the entity's PK is available
 
-  public saveInverse = async <E extends IEntity>(
+  saveInverse = async <E extends IEntity>(
     entity: E,
     mode: "insert" | "update",
   ): Promise<void> => {
@@ -222,10 +222,7 @@ export class RelationPersister {
 
   // ─── Destroy: cascade-delete related entities ──────────────────────
 
-  public destroy = async <E extends IEntity>(
-    entity: E,
-    soft?: boolean,
-  ): Promise<void> => {
+  destroy = async <E extends IEntity>(entity: E, soft?: boolean): Promise<void> => {
     if (!this.metadata.relations.length) return;
 
     for (const relation of this.metadata.relations) {

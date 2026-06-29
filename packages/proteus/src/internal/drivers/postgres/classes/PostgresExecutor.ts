@@ -43,7 +43,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
   private readonly filterRegistry: FilterRegistry;
   private readonly amphora: IAmphora | undefined;
 
-  public constructor(
+  constructor(
     client: PostgresQueryClient,
     metadata: EntityMetadata,
     namespace?: string | null,
@@ -57,7 +57,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     this.amphora = amphora;
   }
 
-  public async executeInsert(entity: E): Promise<E> {
+  async executeInsert(entity: E): Promise<E> {
     // For joined inheritance children, perform multi-table INSERT
     const joined = compileJoinedInsert(
       entity,
@@ -79,7 +79,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     return hydrateReturning<E>(result.rows[0], this.metadata, { amphora: this.amphora });
   }
 
-  public async executeUpdate(entity: E): Promise<E> {
+  async executeUpdate(entity: E): Promise<E> {
     // For joined inheritance children, perform multi-table UPDATE
     const joined = compileJoinedUpdate(
       entity,
@@ -130,10 +130,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     return hydrateReturning<E>(result.rows[0], this.metadata, { amphora: this.amphora });
   }
 
-  public async executeDelete(
-    criteria: Predicate<E>,
-    options?: DeleteOptions,
-  ): Promise<void> {
+  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     guardEmptyCriteria(criteria, "delete", PostgresExecutorError);
 
     // For joined inheritance children, explicitly delete child table rows first.
@@ -169,19 +166,19 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     await this.client.query(text, params);
   }
 
-  public async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
     guardEmptyCriteria(criteria, "soft delete", PostgresExecutorError);
     const { text, params } = compileSoftDelete(criteria, this.metadata, this.namespace);
     await this.client.query(text, params);
   }
 
-  public async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Predicate<E>): Promise<void> {
     guardEmptyCriteria(criteria, "restore", PostgresExecutorError);
     const { text, params } = compileRestore(criteria, this.metadata, this.namespace);
     await this.client.query(text, params);
   }
 
-  public async executeDeleteExpired(): Promise<void> {
+  async executeDeleteExpired(): Promise<void> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return;
 
@@ -189,7 +186,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     await this.client.query(text, params);
   }
 
-  public async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return null;
 
@@ -221,7 +218,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     return Math.max(0, remainingMs);
   }
 
-  public async executeFind(
+  async executeFind(
     criteria: Predicate<E>,
     options: FindOptions<E>,
     operationScope: QueryScope = "multiple",
@@ -261,10 +258,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     return entities;
   }
 
-  public async executeCount(
-    criteria: Predicate<E>,
-    options: FindOptions<E>,
-  ): Promise<number> {
+  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
     const state = findOptionsToQueryState(
       criteria,
       options,
@@ -282,13 +276,13 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     return Number(result.rows[0]?.count ?? 0);
   }
 
-  public async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Predicate<E>): Promise<boolean> {
     const { text, params } = compileExists(criteria, this.metadata, this.namespace);
     const result = await this.client.query(text, params);
     return result.rows[0]?.exists === true;
   }
 
-  public async executeIncrement(
+  async executeIncrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -303,7 +297,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     await this.client.query(text, params);
   }
 
-  public async executeDecrement(
+  async executeDecrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -318,7 +312,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     await this.client.query(text, params);
   }
 
-  public async executeInsertBulk(entities: Array<E>): Promise<Array<E>> {
+  async executeInsertBulk(entities: Array<E>): Promise<Array<E>> {
     if (entities.length === 0) return [];
 
     // For joined inheritance, fall back to individual inserts
@@ -343,7 +337,7 @@ export class PostgresExecutor<E extends IEntity> implements IRepositoryExecutor<
     return hydrateReturningRows<E>(result.rows, this.metadata, { amphora: this.amphora });
   }
 
-  public async executeUpdateMany(
+  async executeUpdateMany(
     criteria: Predicate<E>,
     update: DeepPartial<E>,
   ): Promise<number> {

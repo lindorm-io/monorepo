@@ -70,7 +70,7 @@ export class CachingRepository<
   private readonly hasLazyRelations: boolean;
   private readonly inflight = new Map<string, Promise<unknown>>();
 
-  public constructor(options: CachingRepositoryOptions<E>) {
+  constructor(options: CachingRepositoryOptions<E>) {
     this.inner = options.inner as IProteusRepository<E, O>;
     this.adapter = options.adapter;
     this.metadata = options.metadata;
@@ -94,57 +94,54 @@ export class CachingRepository<
 
   // ─── Category C: Passthrough (no caching) ───────────────────────────
 
-  public create(options?: O | E): E {
+  create(options?: O | E): E {
     return this.inner.create(options);
   }
 
-  public copy(entity: E): E {
+  copy(entity: E): E {
     return this.inner.copy(entity);
   }
 
-  public validate(entity: E): void {
+  validate(entity: E): void {
     this.inner.validate(entity);
   }
 
-  public async ttl(criteria: Predicate<E>, options?: FindOptions<E>): Promise<number> {
+  async ttl(criteria: Predicate<E>, options?: FindOptions<E>): Promise<number> {
     return this.inner.ttl(criteria, options);
   }
 
-  public async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
+  async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
     return this.inner.cursor(options);
   }
 
-  public stream(options?: CursorOptions<E>): AsyncIterable<E> {
+  stream(options?: CursorOptions<E>): AsyncIterable<E> {
     return this.inner.stream(options);
   }
 
-  public async paginate(
+  async paginate(
     criteria?: Predicate<E>,
     options?: PaginateOptions<E>,
   ): Promise<PaginateResult<E>> {
     return this.inner.paginate(criteria, options);
   }
 
-  public async versions(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<Array<E>> {
+  async versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
     return this.inner.versions(criteria, options);
   }
 
-  public async sum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async sum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
     return this.inner.sum(field, criteria);
   }
 
-  public async average(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async average(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
     return this.inner.average(field, criteria);
   }
 
-  public async minimum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async minimum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
     return this.inner.minimum(field, criteria);
   }
 
-  public async maximum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async maximum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
     return this.inner.maximum(field, criteria);
   }
 
@@ -154,29 +151,23 @@ export class CachingRepository<
    * find/findOne after QB writes to get fresh data, or use the repository's
    * write methods (insert, update, save, etc.) which handle invalidation.
    */
-  public queryBuilder(): IProteusQueryBuilder<E> {
+  queryBuilder(): IProteusQueryBuilder<E> {
     return this.inner.queryBuilder();
   }
 
-  public async setup(): Promise<void> {
+  async setup(): Promise<void> {
     return this.inner.setup();
   }
 
   // ─── Category A: Cache-aside reads ──────────────────────────────────
 
-  public async find(
-    criteria?: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<Array<E>> {
+  async find(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
     return this.cachedEntities("find", criteria, options, () =>
       this.inner.find(criteria, options),
     );
   }
 
-  public async findOne(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<E | null> {
+  async findOne(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E | null> {
     const results = await this.cachedEntities(
       "findOne",
       criteria,
@@ -187,10 +178,7 @@ export class CachingRepository<
     return results[0] ?? null;
   }
 
-  public async findOneOrFail(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<E> {
+  async findOneOrFail(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E> {
     const entity = await this.findOne(criteria, options);
     if (!entity) {
       throw new ProteusRepositoryError(`Entity "${this.entityName}" not found`, {
@@ -204,7 +192,7 @@ export class CachingRepository<
     return entity;
   }
 
-  public async findAndCount(
+  async findAndCount(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
   ): Promise<[Array<E>, number]> {
@@ -213,22 +201,19 @@ export class CachingRepository<
     );
   }
 
-  public async count(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<number> {
+  async count(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<number> {
     return this.cachedScalar("count", criteria, options, () =>
       this.inner.count(criteria, options),
     );
   }
 
-  public async exists(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<boolean> {
+  async exists(criteria: Predicate<E>, options?: FindOptions<E>): Promise<boolean> {
     return this.cachedScalar("exists", criteria, options, () =>
       this.inner.exists(criteria, options),
     );
   }
 
-  public async findPaginated(
+  async findPaginated(
     criteria?: Predicate<E>,
     options?: FindPaginatedOptions<E>,
   ): Promise<FindPaginatedResult<E>> {
@@ -267,7 +252,7 @@ export class CachingRepository<
     return { data, total, page, pageSize, totalPages, hasMore };
   }
 
-  public async findOneOrSave(
+  async findOneOrSave(
     criteria: Predicate<E>,
     entity: O | E,
     options?: Omit<FindOptions<E>, "snapshot">,
@@ -279,87 +264,81 @@ export class CachingRepository<
 
   // ─── Category B: Write + invalidate ─────────────────────────────────
 
-  public insert(entity: O | E): Promise<E>;
-  public insert(entities: Array<O | E>): Promise<Array<E>>;
-  public async insert(input: O | E | Array<O | E>): Promise<E | Array<E>> {
+  insert(entity: O | E): Promise<E>;
+  insert(entities: Array<O | E>): Promise<Array<E>>;
+  async insert(input: O | E | Array<O | E>): Promise<E | Array<E>> {
     const result = await (this.inner.insert as any)(input);
     await this.invalidate();
     return result;
   }
 
-  public save(entity: O | E): Promise<E>;
-  public save(entities: Array<O | E>): Promise<Array<E>>;
-  public async save(input: O | E | Array<O | E>): Promise<E | Array<E>> {
+  save(entity: O | E): Promise<E>;
+  save(entities: Array<O | E>): Promise<Array<E>>;
+  async save(input: O | E | Array<O | E>): Promise<E | Array<E>> {
     const result = await (this.inner.save as any)(input);
     await this.invalidate();
     return result;
   }
 
-  public update(entity: E): Promise<E>;
-  public update(entities: Array<E>): Promise<Array<E>>;
-  public async update(input: E | Array<E>): Promise<E | Array<E>> {
+  update(entity: E): Promise<E>;
+  update(entities: Array<E>): Promise<Array<E>>;
+  async update(input: E | Array<E>): Promise<E | Array<E>> {
     const result = await (this.inner.update as any)(input);
     await this.invalidate();
     return result;
   }
 
-  public clone(entity: E): Promise<E>;
-  public clone(entities: Array<E>): Promise<Array<E>>;
-  public async clone(input: E | Array<E>): Promise<E | Array<E>> {
+  clone(entity: E): Promise<E>;
+  clone(entities: Array<E>): Promise<Array<E>>;
+  async clone(input: E | Array<E>): Promise<E | Array<E>> {
     const result = await (this.inner.clone as any)(input);
     await this.invalidate();
     return result;
   }
 
-  public destroy(entity: E): Promise<void>;
-  public destroy(entities: Array<E>): Promise<void>;
-  public async destroy(input: E | Array<E>): Promise<void> {
+  destroy(entity: E): Promise<void>;
+  destroy(entities: Array<E>): Promise<void>;
+  async destroy(input: E | Array<E>): Promise<void> {
     await (this.inner.destroy as any)(input);
     await this.invalidate();
   }
 
-  public softDestroy(entity: E): Promise<void>;
-  public softDestroy(entities: Array<E>): Promise<void>;
-  public async softDestroy(input: E | Array<E>): Promise<void> {
+  softDestroy(entity: E): Promise<void>;
+  softDestroy(entities: Array<E>): Promise<void>;
+  async softDestroy(input: E | Array<E>): Promise<void> {
     await (this.inner.softDestroy as any)(input);
     await this.invalidate();
   }
 
-  public upsert(entity: E, options?: UpsertOptions<E>): Promise<E>;
-  public upsert(entities: Array<E>, options?: UpsertOptions<E>): Promise<Array<E>>;
-  public async upsert(
-    input: E | Array<E>,
-    options?: UpsertOptions<E>,
-  ): Promise<E | Array<E>> {
+  upsert(entity: E, options?: UpsertOptions<E>): Promise<E>;
+  upsert(entities: Array<E>, options?: UpsertOptions<E>): Promise<Array<E>>;
+  async upsert(input: E | Array<E>, options?: UpsertOptions<E>): Promise<E | Array<E>> {
     const result = await (this.inner.upsert as any)(input, options);
     await this.invalidate();
     return result;
   }
 
-  public async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     await this.inner.delete(criteria, options);
     await this.invalidate();
   }
 
-  public async softDelete(
-    criteria: Predicate<E>,
-    options?: DeleteOptions,
-  ): Promise<void> {
+  async softDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     await this.inner.softDelete(criteria, options);
     await this.invalidate();
   }
 
-  public async restore(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async restore(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     await this.inner.restore(criteria, options);
     await this.invalidate();
   }
 
-  public async updateMany(criteria: Predicate<E>, update: DeepPartial<E>): Promise<void> {
+  async updateMany(criteria: Predicate<E>, update: DeepPartial<E>): Promise<void> {
     await this.inner.updateMany(criteria, update);
     await this.invalidate();
   }
 
-  public async increment(
+  async increment(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -368,7 +347,7 @@ export class CachingRepository<
     await this.invalidate();
   }
 
-  public async decrement(
+  async decrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -377,12 +356,12 @@ export class CachingRepository<
     await this.invalidate();
   }
 
-  public async deleteExpired(): Promise<void> {
+  async deleteExpired(): Promise<void> {
     await this.inner.deleteExpired();
     await this.invalidate();
   }
 
-  public async clear(options?: ClearOptions): Promise<void> {
+  async clear(options?: ClearOptions): Promise<void> {
     await this.inner.clear(options);
     await this.invalidate();
   }

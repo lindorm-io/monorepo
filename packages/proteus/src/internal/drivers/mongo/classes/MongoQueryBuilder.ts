@@ -60,7 +60,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly amphora: IAmphora | undefined;
   private aggregateSelections: Array<AggregateSelection> = [];
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     db: Db,
     namespace: string | null,
@@ -80,7 +80,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // ─── Lock mode ──────────────────────────────────────────────────────
 
-  public lock(_mode: LockMode): this {
+  lock(_mode: LockMode): this {
     throw new NotSupportedError("Lock mode is not supported by the MongoDB driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -91,7 +91,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // ─── Override raw SQL methods to throw ─────────────────────────────
 
-  public override whereRaw(): this {
+  override whereRaw(): this {
     throw new NotSupportedError("whereRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -100,7 +100,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override andWhereRaw(): this {
+  override andWhereRaw(): this {
     throw new NotSupportedError("andWhereRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -109,7 +109,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override orWhereRaw(): this {
+  override orWhereRaw(): this {
     throw new NotSupportedError("orWhereRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -118,7 +118,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override selectRaw(): this {
+  override selectRaw(): this {
     throw new NotSupportedError("selectRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -127,7 +127,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override havingRaw(): this {
+  override havingRaw(): this {
     throw new NotSupportedError("havingRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -136,7 +136,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override andHavingRaw(): this {
+  override andHavingRaw(): this {
     throw new NotSupportedError("andHavingRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -145,7 +145,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override orHavingRaw(): this {
+  override orHavingRaw(): this {
     throw new NotSupportedError("orHavingRaw is not supported by the MongoDB driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -154,7 +154,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
-  public override window(): this {
+  override window(): this {
     throw new NotSupportedError("window is not supported by the MongoDB driver", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -165,7 +165,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // ─── Terminal methods ─────────────────────────────────────────────
 
-  public clone(): IProteusQueryBuilder<E> {
+  clone(): IProteusQueryBuilder<E> {
     const cloned = new MongoQueryBuilder<E>(
       this.metadata,
       this.db,
@@ -180,7 +180,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return cloned;
   }
 
-  public toQuery(): unknown {
+  toQuery(): unknown {
     if (this.isAggregationQuery()) {
       return {
         driver: "mongo",
@@ -206,7 +206,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     };
   }
 
-  public async getOne(): Promise<E | null> {
+  async getOne(): Promise<E | null> {
     if (this.isAggregationQuery()) {
       const results = await this.executeAggregation();
       return results.length > 0 ? results[0] : null;
@@ -229,7 +229,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return hydrateEntity<E>(docs[0], this.metadata, this.amphora);
   }
 
-  public async getOneOrFail(): Promise<E> {
+  async getOneOrFail(): Promise<E> {
     const entity = await this.getOne();
     if (!entity) {
       throw new ProteusRepositoryError(
@@ -245,7 +245,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return entity;
   }
 
-  public async getMany(): Promise<Array<E>> {
+  async getMany(): Promise<Array<E>> {
     if (this.isAggregationQuery()) {
       return this.executeAggregation();
     }
@@ -274,7 +274,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return hydrateEntities<E>(docs, this.metadata, this.amphora);
   }
 
-  public async getManyAndCount(): Promise<[Array<E>, number]> {
+  async getManyAndCount(): Promise<[Array<E>, number]> {
     if (this.isAggregationQuery()) {
       const results = await this.executeAggregation();
       const totalCount = await this.countAggregation();
@@ -308,7 +308,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return [entities, totalCount];
   }
 
-  public async count(): Promise<number> {
+  async count(): Promise<number> {
     if (this.isAggregationQuery()) {
       return this.countAggregation();
     }
@@ -318,7 +318,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return collection.countDocuments(filter, this.sessionOpts());
   }
 
-  public async exists(): Promise<boolean> {
+  async exists(): Promise<boolean> {
     const collection = this.db.collection(this.resolveCollectionName());
     const filter = this.buildFilter();
     const count = await collection.countDocuments(filter, {
@@ -328,7 +328,7 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return count > 0;
   }
 
-  public async getRawRows<
+  async getRawRows<
     T extends Record<string, unknown> = Record<string, unknown>,
   >(): Promise<Array<T>> {
     if (this.isAggregationQuery()) {
@@ -358,39 +358,39 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // ─── Aggregates ───────────────────────────────────────────────────
 
-  public async sum(field: keyof E): Promise<number | null> {
+  async sum(field: keyof E): Promise<number | null> {
     return this.computeAggregate("$sum", field);
   }
 
-  public async average(field: keyof E): Promise<number | null> {
+  async average(field: keyof E): Promise<number | null> {
     return this.computeAggregate("$avg", field);
   }
 
-  public async minimum(field: keyof E): Promise<number | null> {
+  async minimum(field: keyof E): Promise<number | null> {
     return this.computeAggregate("$min", field);
   }
 
-  public async maximum(field: keyof E): Promise<number | null> {
+  async maximum(field: keyof E): Promise<number | null> {
     return this.computeAggregate("$max", field);
   }
 
   // ─── Write builders ───────────────────────────────────────────────
 
-  public insert(): IInsertQueryBuilder<E> {
+  insert(): IInsertQueryBuilder<E> {
     return new MongoInsertQueryBuilder<E>(this.db, this.metadata, this.session);
   }
 
-  public update(): IUpdateQueryBuilder<E> {
+  update(): IUpdateQueryBuilder<E> {
     this.guardAppendOnlyWrite("update");
     return new MongoUpdateQueryBuilder<E>(this.db, this.metadata, this.session);
   }
 
-  public delete(): IDeleteQueryBuilder<E> {
+  delete(): IDeleteQueryBuilder<E> {
     this.guardAppendOnlyWrite("delete");
     return new MongoDeleteQueryBuilder<E>(this.db, this.metadata, false, this.session);
   }
 
-  public softDelete(): IDeleteQueryBuilder<E> {
+  softDelete(): IDeleteQueryBuilder<E> {
     this.guardAppendOnlyWrite("softDelete");
     return new MongoDeleteQueryBuilder<E>(this.db, this.metadata, true, this.session);
   }

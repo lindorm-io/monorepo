@@ -33,7 +33,7 @@ export abstract class DriverStreamProcessorBase<
   protected readonly inputClass: Constructor<IMessage> | undefined;
   protected readonly inputTopic: string | undefined;
 
-  public constructor(options: DriverStreamProcessorBaseOptions<State>) {
+  constructor(options: DriverStreamProcessorBaseOptions<State>) {
     this.state = options.state;
     this.logger = options.logger;
     this.stages = options.stages ?? [];
@@ -59,7 +59,7 @@ export abstract class DriverStreamProcessorBase<
     amphora?: unknown;
   }): Pipeline;
 
-  public from<T extends IMessage>(
+  from<T extends IMessage>(
     inputClass: Constructor<T>,
     options?: { topic?: string },
   ): IIrisStreamProcessor<T, Out> {
@@ -74,7 +74,7 @@ export abstract class DriverStreamProcessorBase<
     }) as unknown as IIrisStreamProcessor<T, Out>;
   }
 
-  public filter(predicate: (message: In) => boolean): IIrisStreamProcessor<In, Out> {
+  filter(predicate: (message: In) => boolean): IIrisStreamProcessor<In, Out> {
     return this.createSelf({
       state: this.state,
       logger: this.logger,
@@ -86,9 +86,7 @@ export abstract class DriverStreamProcessorBase<
     }) as unknown as IIrisStreamProcessor<In, Out>;
   }
 
-  public map<T extends IMessage>(
-    transform: (message: In) => T,
-  ): IIrisStreamProcessor<T, Out> {
+  map<T extends IMessage>(transform: (message: In) => T): IIrisStreamProcessor<T, Out> {
     return this.createSelf({
       state: this.state,
       logger: this.logger,
@@ -100,7 +98,7 @@ export abstract class DriverStreamProcessorBase<
     }) as unknown as IIrisStreamProcessor<T, Out>;
   }
 
-  public flatMap<T extends IMessage>(
+  flatMap<T extends IMessage>(
     transform: (message: In) => Array<T>,
   ): IIrisStreamProcessor<T, Out> {
     return this.createSelf({
@@ -114,7 +112,7 @@ export abstract class DriverStreamProcessorBase<
     }) as unknown as IIrisStreamProcessor<T, Out>;
   }
 
-  public batch(
+  batch(
     size: number,
     options?: { timeout?: number },
   ): IIrisStreamProcessor<Array<In>, Out> {
@@ -140,10 +138,7 @@ export abstract class DriverStreamProcessorBase<
     }) as unknown as IIrisStreamProcessor<Array<In>, Out>;
   }
 
-  public to(
-    outputClass: new (...args: any[]) => Out,
-    options?: { topic?: string },
-  ): Pipeline {
+  to(outputClass: new (...args: any[]) => Out, options?: { topic?: string }): Pipeline {
     return this.createPipeline({
       state: this.state,
       logger: this.logger,

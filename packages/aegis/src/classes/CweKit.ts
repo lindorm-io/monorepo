@@ -61,13 +61,13 @@ export class CweKit {
   private readonly logger: ILogger;
   private readonly encryption: KryptosEncryption | undefined;
 
-  public constructor(options: CweKitOptions) {
+  constructor(options: CweKitOptions) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CweKit"]);
     this.encryption = options.encryption ?? options.kryptos.encryption ?? undefined;
   }
 
-  public encrypt(payload: Buffer, options: CweEncryptOptions = {}): Tag {
+  encrypt(payload: Buffer, options: CweEncryptOptions = {}): Tag {
     this.logger.debug("Encrypting COSE_Encrypt0", { options });
 
     const protectedMap = new Map<number, unknown>();
@@ -92,7 +92,7 @@ export class CweKit {
     ]);
   }
 
-  public decrypt(encrypt0: unknown): CweDecryptResult {
+  decrypt(encrypt0: unknown): CweDecryptResult {
     const [protectedHeader, unprotected, coseCiphertext] = unwrapEncrypt0(encrypt0) as [
       Uint8Array,
       Map<number, unknown>,

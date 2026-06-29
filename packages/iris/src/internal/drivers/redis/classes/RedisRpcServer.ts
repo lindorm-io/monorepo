@@ -29,7 +29,7 @@ export class RedisRpcServer<
   private readonly state: RedisSharedState;
   private readonly ownedConsumerTags: Map<string, string> = new Map();
 
-  public constructor(options: RedisRpcServerOptions<Req, Res>) {
+  constructor(options: RedisRpcServerOptions<Req, Res>) {
     super(options, "RedisRpcServer");
     this.state = options.state;
   }
@@ -107,7 +107,7 @@ export class RedisRpcServer<
     this.ownedConsumerTags.set(queue, loop.consumerTag);
   }
 
-  public async unserve(options?: { queue?: string }): Promise<void> {
+  async unserve(options?: { queue?: string }): Promise<void> {
     const queue = options?.queue ?? this.getDefaultQueue();
     const consumerTag = this.ownedConsumerTags.get(queue);
 
@@ -126,7 +126,7 @@ export class RedisRpcServer<
     this.logger.debug("RPC handler unregistered", { queue });
   }
 
-  public async unserveAll(): Promise<void> {
+  async unserveAll(): Promise<void> {
     for (const [queue, consumerTag] of this.ownedConsumerTags) {
       await stopConsumerLoop(this.state, consumerTag);
 

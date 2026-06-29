@@ -57,12 +57,12 @@ export class CwtKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
 
-  public constructor(options: CwtKitOptions) {
+  constructor(options: CwtKitOptions) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwtKit"]);
   }
 
-  public sign(common: Dict, options: CwtSignOptions = {}): Buffer {
+  sign(common: Dict, options: CwtSignOptions = {}): Buffer {
     const mac = this.kryptos.type === "oct";
     this.logger.debug(`Minting CWT (${mac ? "COSE_Mac0" : "COSE_Sign1"})`, { options });
 
@@ -79,7 +79,7 @@ export class CwtKit {
     return encodeCbor(new Tag(COSE_TAG.cwt, cose));
   }
 
-  public verify(token: Buffer): CwtVerifyResult {
+  verify(token: Buffer): CwtVerifyResult {
     const cose = unwrapCwt(decodeCbor(token));
 
     const kit = { kryptos: this.kryptos, logger: this.logger };
@@ -107,7 +107,7 @@ export class CwtKit {
    * Decode a CWT WITHOUT verifying — exposes the kid/alg/typ from the headers so
    * the caller can resolve the verification key before checking the signature.
    */
-  public static decode(token: Buffer): CwtDecoded {
+  static decode(token: Buffer): CwtDecoded {
     const cose = unwrapCwt(decodeCbor(token));
     const contents = cose instanceof Tag ? cose.contents : cose;
 

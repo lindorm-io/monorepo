@@ -44,7 +44,7 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
   private reading = false;
   private exhausted = false;
 
-  public constructor(options: MySqlCursorOptions) {
+  constructor(options: MySqlCursorOptions) {
     this.baseSql = options.sql;
     this.params = options.params;
     this.metadata = options.metadata;
@@ -54,7 +54,7 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
     this.namespace = options.namespace;
   }
 
-  public async next(): Promise<E | null> {
+  async next(): Promise<E | null> {
     this.guardClosed();
     this.guardReading();
     this.reading = true;
@@ -81,7 +81,7 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
     }
   }
 
-  public async nextBatch(size?: number): Promise<Array<E>> {
+  async nextBatch(size?: number): Promise<Array<E>> {
     this.guardClosed();
     this.guardReading();
     this.reading = true;
@@ -116,13 +116,13 @@ export class MySqlCursor<E extends IEntity> implements IProteusCursor<E> {
     }
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     if (this.closed) return;
     this.closed = true;
     this.buffer = [];
   }
 
-  public async *[Symbol.asyncIterator](): AsyncIterableIterator<E> {
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<E> {
     try {
       while (!this.closed) {
         const batch = await this.nextBatch();

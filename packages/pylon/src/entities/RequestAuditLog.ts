@@ -14,54 +14,54 @@ import {
 export class RequestAuditLog {
   @PrimaryKeyField()
   @Generated("lindorm_id", { namespace: "aud" })
-  public id!: string;
+  id!: string;
 
   @CreateDateField()
-  public createdAt!: Date;
+  createdAt!: Date;
 
   @Index()
   @Field("string")
-  public requestId!: string;
+  requestId!: string;
 
   @Index()
   @Field("string")
-  public correlationId!: string;
+  correlationId!: string;
 
   @Index()
   @Field("string")
-  public actor!: string;
+  actor!: string;
 
   @Field("string")
-  public appName!: string;
+  appName!: string;
 
   @Index()
   @Field("string")
-  public endpoint!: string;
+  endpoint!: string;
 
   @Field("string")
-  public method!: string;
+  method!: string;
 
   @Field("string")
-  public transport!: string;
+  transport!: string;
 
   @Field("integer")
-  public statusCode!: number;
+  statusCode!: number;
 
   @Field("integer")
-  public duration!: number;
+  duration!: number;
 
   @Field("string")
-  public sourceIp!: string;
+  sourceIp!: string;
 
   @Nullable()
   @Field("json")
-  public requestBody!: Record<string, unknown> | null;
+  requestBody!: Record<string, unknown> | null;
 
   @Nullable()
   @Field("string")
-  public sessionId!: string | null;
+  sessionId!: string | null;
 
   @Nullable()
   @Field("string")
-  public userAgent!: string | null;
+  userAgent!: string | null;
 }

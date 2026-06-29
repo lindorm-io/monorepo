@@ -35,7 +35,7 @@ export class KafkaRpcServer<
   private readonly state: KafkaSharedState;
   private readonly ownedConsumers: Map<string, OwnedRpcConsumer> = new Map();
 
-  public constructor(options: KafkaRpcServerOptions<Req, Res>) {
+  constructor(options: KafkaRpcServerOptions<Req, Res>) {
     super(options, "KafkaRpcServer");
     this.state = options.state;
   }
@@ -126,7 +126,7 @@ export class KafkaRpcServer<
     });
   }
 
-  public async unserve(options?: { queue?: string }): Promise<void> {
+  async unserve(options?: { queue?: string }): Promise<void> {
     const queue = options?.queue ?? this.getDefaultQueue();
     const owned = this.ownedConsumers.get(queue);
 
@@ -150,7 +150,7 @@ export class KafkaRpcServer<
     this.logger.debug("RPC handler unregistered", { queue });
   }
 
-  public async unserveAll(): Promise<void> {
+  async unserveAll(): Promise<void> {
     for (const [queue, owned] of this.ownedConsumers) {
       await releasePooledConsumer({
         state: this.state,

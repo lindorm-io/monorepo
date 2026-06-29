@@ -12,12 +12,12 @@ export type RabbitPublisherOptions<M extends IMessage> = DriverBaseOptions<M> & 
 export class RabbitPublisher<M extends IMessage> extends DriverPublisherBase<M> {
   private readonly state: RabbitSharedState;
 
-  public constructor(options: RabbitPublisherOptions<M>) {
+  constructor(options: RabbitPublisherOptions<M>) {
     super(options);
     this.state = options.state;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishRabbitMessages(
       message,
       options,

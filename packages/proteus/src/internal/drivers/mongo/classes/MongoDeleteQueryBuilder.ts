@@ -28,39 +28,34 @@ export class MongoDeleteQueryBuilder<
   private readonly session: ClientSession | undefined;
   private predicates: Array<{ predicate: Predicate<E>; conjunction: "and" | "or" }> = [];
 
-  public constructor(
-    db: Db,
-    metadata: EntityMetadata,
-    soft: boolean,
-    session?: ClientSession,
-  ) {
+  constructor(db: Db, metadata: EntityMetadata, soft: boolean, session?: ClientSession) {
     this.db = db;
     this.metadata = metadata;
     this.soft = soft;
     this.session = session;
   }
 
-  public where(criteria: Predicate<E>): this {
+  where(criteria: Predicate<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  public andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  public orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
 
-  public returning(): this {
+  returning(): this {
     // No-op for MongoDB — RETURNING is not supported
     return this;
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     // Reject joined inheritance children
     if (
       this.metadata.inheritance?.strategy === "joined" &&

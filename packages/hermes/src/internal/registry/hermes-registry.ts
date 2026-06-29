@@ -51,7 +51,7 @@ export class HermesRegistry {
   // eventName -> Map<fromVersion, RegisteredUpcaster>
   private readonly upcastersByEvent: Map<string, Map<number, RegisteredUpcaster>>;
 
-  public constructor(modules: ScannedModules) {
+  constructor(modules: ScannedModules) {
     this.aggregatesByName = new Map();
     this.aggregatesByTarget = new Map();
     this.sagasByName = new Map();
@@ -77,7 +77,7 @@ export class HermesRegistry {
 
   // -- DTO getters --
 
-  public getCommand(target: Constructor): RegisteredDto {
+  getCommand(target: Constructor): RegisteredDto {
     const dto = this.commandsByTarget.get(target);
     if (!dto)
       throw new HandlerNotRegisteredError(`Command not registered: ${target.name}`, {
@@ -89,7 +89,7 @@ export class HermesRegistry {
     return dto;
   }
 
-  public getCommandByName(name: string, version?: number): RegisteredDto {
+  getCommandByName(name: string, version?: number): RegisteredDto {
     if (version !== undefined) {
       const dto = this.commandsByName.get(HermesRegistry.dtoKey(name, version));
       if (!dto)
@@ -113,7 +113,7 @@ export class HermesRegistry {
     });
   }
 
-  public getEvent(target: Constructor): RegisteredDto {
+  getEvent(target: Constructor): RegisteredDto {
     const dto = this.eventsByTarget.get(target);
     if (!dto)
       throw new HandlerNotRegisteredError(`Event not registered: ${target.name}`, {
@@ -125,7 +125,7 @@ export class HermesRegistry {
     return dto;
   }
 
-  public getEventByName(name: string, version?: number): RegisteredDto {
+  getEventByName(name: string, version?: number): RegisteredDto {
     if (version !== undefined) {
       const dto = this.eventsByName.get(HermesRegistry.dtoKey(name, version));
       if (!dto)
@@ -149,7 +149,7 @@ export class HermesRegistry {
     });
   }
 
-  public getQuery(target: Constructor): RegisteredDto {
+  getQuery(target: Constructor): RegisteredDto {
     const dto = this.queriesByTarget.get(target);
     if (!dto)
       throw new HandlerNotRegisteredError(`Query not registered: ${target.name}`, {
@@ -161,7 +161,7 @@ export class HermesRegistry {
     return dto;
   }
 
-  public getTimeout(target: Constructor): RegisteredDto {
+  getTimeout(target: Constructor): RegisteredDto {
     const dto = this.timeoutsByTarget.get(target);
     if (!dto)
       throw new HandlerNotRegisteredError(`Timeout not registered: ${target.name}`, {
@@ -173,25 +173,25 @@ export class HermesRegistry {
     return dto;
   }
 
-  public isCommand(target: Constructor): boolean {
+  isCommand(target: Constructor): boolean {
     return this.commandsByTarget.has(target);
   }
 
-  public isEvent(target: Constructor): boolean {
+  isEvent(target: Constructor): boolean {
     return this.eventsByTarget.has(target);
   }
 
-  public isQuery(target: Constructor): boolean {
+  isQuery(target: Constructor): boolean {
     return this.queriesByTarget.has(target);
   }
 
-  public isTimeout(target: Constructor): boolean {
+  isTimeout(target: Constructor): boolean {
     return this.timeoutsByTarget.has(target);
   }
 
   // -- Domain getters --
 
-  public getAggregate(namespace: string, name: string): RegisteredAggregate {
+  getAggregate(namespace: string, name: string): RegisteredAggregate {
     const aggregate = this.aggregatesByName.get(
       HermesRegistry.domainKey(namespace, name),
     );
@@ -205,7 +205,7 @@ export class HermesRegistry {
     return aggregate;
   }
 
-  public getAggregateByTarget(target: Constructor): RegisteredAggregate {
+  getAggregateByTarget(target: Constructor): RegisteredAggregate {
     const aggregate = this.aggregatesByTarget.get(target);
     if (!aggregate)
       throw new HandlerNotRegisteredError(`Aggregate not registered: ${target.name}`, {
@@ -217,7 +217,7 @@ export class HermesRegistry {
     return aggregate;
   }
 
-  public getSaga(namespace: string, name: string): RegisteredSaga {
+  getSaga(namespace: string, name: string): RegisteredSaga {
     const saga = this.sagasByName.get(HermesRegistry.domainKey(namespace, name));
     if (!saga)
       throw new HandlerNotRegisteredError(`Saga not found: ${namespace}.${name}`, {
@@ -229,7 +229,7 @@ export class HermesRegistry {
     return saga;
   }
 
-  public getSagaByTarget(target: Constructor): RegisteredSaga {
+  getSagaByTarget(target: Constructor): RegisteredSaga {
     const saga = this.sagasByTarget.get(target);
     if (!saga)
       throw new HandlerNotRegisteredError(`Saga not registered: ${target.name}`, {
@@ -241,7 +241,7 @@ export class HermesRegistry {
     return saga;
   }
 
-  public getView(namespace: string, name: string): RegisteredView {
+  getView(namespace: string, name: string): RegisteredView {
     const view = this.viewsByName.get(HermesRegistry.domainKey(namespace, name));
     if (!view)
       throw new HandlerNotRegisteredError(`View not found: ${namespace}.${name}`, {
@@ -253,7 +253,7 @@ export class HermesRegistry {
     return view;
   }
 
-  public getViewByTarget(target: Constructor): RegisteredView {
+  getViewByTarget(target: Constructor): RegisteredView {
     const view = this.viewsByTarget.get(target);
     if (!view)
       throw new HandlerNotRegisteredError(`View not registered: ${target.name}`, {
@@ -265,7 +265,7 @@ export class HermesRegistry {
     return view;
   }
 
-  public getViewByEntity(entity: Constructor): RegisteredView {
+  getViewByEntity(entity: Constructor): RegisteredView {
     for (const view of this.viewsByTarget.values()) {
       if (view.entity === entity) {
         return view;
@@ -281,13 +281,13 @@ export class HermesRegistry {
 
   // -- Handler lookup --
 
-  public getCommandHandler(
+  getCommandHandler(
     commandTarget: Constructor,
   ): (HandlerRegistration & { aggregate: RegisteredAggregate }) | undefined {
     return this.commandHandlersByTrigger.get(commandTarget);
   }
 
-  public getAggregateEventHandlers(
+  getAggregateEventHandlers(
     namespace: string,
     name: string,
   ): Array<HandlerRegistration & { aggregate: RegisteredAggregate }> {
@@ -296,7 +296,7 @@ export class HermesRegistry {
     );
   }
 
-  public getAggregateForEvent(
+  getAggregateForEvent(
     eventTarget: Constructor,
     scope: Array<{ name: string; namespace: string }>,
   ): RegisteredAggregate {
@@ -319,47 +319,47 @@ export class HermesRegistry {
     );
   }
 
-  public getViewsForEvent(eventTarget: Constructor): Array<RegisteredView> {
+  getViewsForEvent(eventTarget: Constructor): Array<RegisteredView> {
     return this.viewsForEvent.get(eventTarget) ?? [];
   }
 
-  public getSagasForEvent(eventTarget: Constructor): Array<RegisteredSaga> {
+  getSagasForEvent(eventTarget: Constructor): Array<RegisteredSaga> {
     return this.sagasForEvent.get(eventTarget) ?? [];
   }
 
   // -- Collection getters --
 
-  public get allAggregates(): Array<RegisteredAggregate> {
+  get allAggregates(): Array<RegisteredAggregate> {
     return [...this.aggregatesByName.values()];
   }
 
-  public get allSagas(): Array<RegisteredSaga> {
+  get allSagas(): Array<RegisteredSaga> {
     return [...this.sagasByName.values()];
   }
 
-  public get allViews(): Array<RegisteredView> {
+  get allViews(): Array<RegisteredView> {
     return [...this.viewsByName.values()];
   }
 
-  public get allCommands(): Array<RegisteredDto> {
+  get allCommands(): Array<RegisteredDto> {
     return [...this.commandsByName.values()];
   }
 
-  public get allEvents(): Array<RegisteredDto> {
+  get allEvents(): Array<RegisteredDto> {
     return [...this.eventsByName.values()];
   }
 
-  public get allQueries(): Array<RegisteredDto> {
+  get allQueries(): Array<RegisteredDto> {
     return [...this.queriesByName.values()];
   }
 
-  public get allTimeouts(): Array<RegisteredDto> {
+  get allTimeouts(): Array<RegisteredDto> {
     return [...this.timeoutsByName.values()];
   }
 
   // -- Upcaster lookup --
 
-  public getUpcasterChain(
+  getUpcasterChain(
     eventName: string,
     fromVersion: number,
     toVersion: number,
@@ -394,7 +394,7 @@ export class HermesRegistry {
 
   // -- Startup validation (L4) --
 
-  public validate(logger: ILogger): void {
+  validate(logger: ILogger): void {
     for (const event of this.eventsByName.values()) {
       const hasAggregateHandler = this.allAggregates.some((agg) =>
         agg.eventHandlers.some((h) => h.trigger === event.target),

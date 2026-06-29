@@ -107,7 +107,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
   private readonly amphora: IAmphora | undefined;
   private readonly namespace: string | null;
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     getTable: () => MemoryTable,
     getStore: () => MemoryStore,
@@ -126,7 +126,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     this.namespace = namespace;
   }
 
-  public async executeInsert(entity: E): Promise<E> {
+  async executeInsert(entity: E): Promise<E> {
     const table = this.getTable();
     const row = dehydrateToRow(entity, this.metadata, this.amphora);
 
@@ -155,7 +155,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return hydrateFromRow<E>(structuredClone(row), this.metadata, this.amphora);
   }
 
-  public async executeUpdate(entity: E): Promise<E> {
+  async executeUpdate(entity: E): Promise<E> {
     const table = this.getTable();
     const row = dehydrateToRow(entity, this.metadata, this.amphora);
 
@@ -234,10 +234,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return hydrateFromRow<E>(structuredClone(merged), this.metadata, this.amphora);
   }
 
-  public async executeDelete(
-    criteria: Predicate<E>,
-    options?: DeleteOptions,
-  ): Promise<void> {
+  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     guardEmptyCriteria(criteria, "delete", MemoryDriverError);
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -292,7 +289,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
   }
 
-  public async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
     guardEmptyCriteria(criteria, "soft delete", MemoryDriverError);
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -310,7 +307,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
   }
 
-  public async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Predicate<E>): Promise<void> {
     guardEmptyCriteria(criteria, "restore", MemoryDriverError);
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -328,7 +325,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
   }
 
-  public async executeDeleteExpired(): Promise<void> {
+  async executeDeleteExpired(): Promise<void> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return;
 
@@ -370,7 +367,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
   }
 
-  public async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
     const expiryField = this.metadata.fields.find((f) => f.decorator === "ExpiryDate");
     if (!expiryField) return null;
     const flatCriteria = flattenEmbeddedCriteria(criteria, this.metadata);
@@ -391,7 +388,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return null;
   }
 
-  public async executeFind(
+  async executeFind(
     criteria: Predicate<E>,
     options: FindOptions<E>,
     _operationScope?: QueryScope,
@@ -482,10 +479,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     );
   }
 
-  public async executeCount(
-    criteria: Predicate<E>,
-    options: FindOptions<E>,
-  ): Promise<number> {
+  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
     const table = this.getTable();
     let rows = [...table.values()];
 
@@ -522,7 +516,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return rows.length;
   }
 
-  public async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Predicate<E>): Promise<boolean> {
     const table = this.getTable();
     let rows = [...table.values()];
 
@@ -549,7 +543,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return false;
   }
 
-  public async executeIncrement(
+  async executeIncrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -567,7 +561,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
   }
 
-  public async executeDecrement(
+  async executeDecrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -585,7 +579,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     }
   }
 
-  public async executeInsertBulk(entities: Array<E>): Promise<Array<E>> {
+  async executeInsertBulk(entities: Array<E>): Promise<Array<E>> {
     if (entities.length === 0) return [];
 
     const results: Array<E> = [];
@@ -595,7 +589,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return results;
   }
 
-  public async executeUpdateMany(
+  async executeUpdateMany(
     criteria: Predicate<E>,
     update: DeepPartial<E>,
     options?: { systemFilters?: boolean },

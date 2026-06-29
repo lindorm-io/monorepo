@@ -18,7 +18,7 @@ export const LAZY_COLLECTION = Symbol.for("proteus.lazy-collection");
  * Pre-resolution, `toJSON()` returns `undefined`.
  */
 export class LazyCollection<T = unknown> {
-  public readonly [LAZY_COLLECTION] = true;
+  readonly [LAZY_COLLECTION] = true;
 
   private readonly _owner: IEntity;
   private readonly _key: string;
@@ -27,7 +27,7 @@ export class LazyCollection<T = unknown> {
   private _value: Array<T>;
   private _pending: Promise<Array<T>> | null;
 
-  public constructor(owner: IEntity, key: string, loader: () => Promise<Array<T>>) {
+  constructor(owner: IEntity, key: string, loader: () => Promise<Array<T>>) {
     this._owner = owner;
     this._key = key;
     this._loader = loader;
@@ -36,7 +36,7 @@ export class LazyCollection<T = unknown> {
     this._pending = null;
   }
 
-  public then<TResult1 = Array<T>, TResult2 = never>(
+  then<TResult1 = Array<T>, TResult2 = never>(
     onfulfilled?: ((value: Array<T>) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
   ): Promise<TResult1 | TResult2> {
@@ -65,7 +65,7 @@ export class LazyCollection<T = unknown> {
     return this._pending.then(onfulfilled, onrejected);
   }
 
-  public toJSON(): Array<T> | undefined {
+  toJSON(): Array<T> | undefined {
     return this._resolved ? this._value : undefined;
   }
 }

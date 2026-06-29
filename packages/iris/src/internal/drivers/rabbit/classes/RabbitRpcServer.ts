@@ -28,7 +28,7 @@ export class RabbitRpcServer<
   private readonly state: RabbitSharedState;
   private readonly ownedConsumerTags: Map<string, string> = new Map();
 
-  public constructor(options: RabbitRpcServerOptions<Req, Res>) {
+  constructor(options: RabbitRpcServerOptions<Req, Res>) {
     super(options, "RabbitRpcServer");
     this.state = options.state;
   }
@@ -133,7 +133,7 @@ export class RabbitRpcServer<
     });
   }
 
-  public async unserve(options?: { queue?: string }): Promise<void> {
+  async unserve(options?: { queue?: string }): Promise<void> {
     const queue = options?.queue ?? this.getDefaultQueue();
     const consumerTag = this.ownedConsumerTags.get(queue);
 
@@ -153,7 +153,7 @@ export class RabbitRpcServer<
     this.logger.debug("RPC handler unregistered", { queue });
   }
 
-  public async unserveAll(): Promise<void> {
+  async unserveAll(): Promise<void> {
     const channel = this.state.consumeChannel;
 
     for (const [queue, consumerTag] of this.ownedConsumerTags) {

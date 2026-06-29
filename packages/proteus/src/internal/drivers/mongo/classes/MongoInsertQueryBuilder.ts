@@ -29,23 +29,23 @@ export class MongoInsertQueryBuilder<
   private readonly session: ClientSession | undefined;
   private data: Array<DeepPartial<E>> = [];
 
-  public constructor(db: Db, metadata: EntityMetadata, session?: ClientSession) {
+  constructor(db: Db, metadata: EntityMetadata, session?: ClientSession) {
     this.db = db;
     this.metadata = metadata;
     this.session = session;
   }
 
-  public values(data: Array<DeepPartial<E>>): this {
+  values(data: Array<DeepPartial<E>>): this {
     this.data = data;
     return this;
   }
 
-  public returning(): this {
+  returning(): this {
     // No-op for MongoDB — all fields are always returned after insert
     return this;
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     // Reject joined inheritance children
     if (
       this.metadata.inheritance?.strategy === "joined" &&

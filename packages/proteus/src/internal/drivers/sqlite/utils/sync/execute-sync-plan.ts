@@ -12,11 +12,11 @@ import { quoteIdentifier } from "../quote-identifier.js";
 export class SyncPlanExecutor {
   private readonly logger: ILogger | undefined;
 
-  public constructor(logger?: ILogger) {
+  constructor(logger?: ILogger) {
     this.logger = logger?.child(["SyncPlanExecutor"]);
   }
 
-  public execute = (
+  execute = (
     client: SqliteQueryClient,
     plan: SqliteSyncPlan,
     options: SqliteSyncOptions = {},

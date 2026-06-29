@@ -13,13 +13,13 @@ export class DelayManager {
   private callback: ((entry: DelayedEntry) => Promise<void>) | null = null;
   private polling = false;
 
-  public constructor(options: DelayManagerOptions) {
+  constructor(options: DelayManagerOptions) {
     this.store = options.store;
     this.logger = options.logger.child(["DelayManager"]);
     this.pollIntervalMs = options.pollIntervalMs ?? 100;
   }
 
-  public async schedule(
+  async schedule(
     envelope: IrisEnvelope,
     topic: string,
     delayMs: number,
@@ -34,11 +34,11 @@ export class DelayManager {
     return id;
   }
 
-  public async cancel(id: string): Promise<boolean> {
+  async cancel(id: string): Promise<boolean> {
     return this.store.cancel(id);
   }
 
-  public start(callback: (entry: DelayedEntry) => Promise<void>): void {
+  start(callback: (entry: DelayedEntry) => Promise<void>): void {
     if (this.timer) return;
 
     this.callback = callback;
@@ -49,7 +49,7 @@ export class DelayManager {
     });
   }
 
-  public stop(): void {
+  stop(): void {
     if (this.timer) {
       clearInterval(this.timer);
       this.timer = null;
@@ -58,11 +58,11 @@ export class DelayManager {
     this.logger.debug("Delay polling stopped");
   }
 
-  public async size(): Promise<number> {
+  async size(): Promise<number> {
     return this.store.size();
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     this.stop();
     await this.store.close();
   }

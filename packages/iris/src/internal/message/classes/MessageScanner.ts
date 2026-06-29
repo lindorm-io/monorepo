@@ -5,7 +5,7 @@ import type { MessageScannerInput } from "../../../types/source-options.js";
 import { IrisScannerError } from "../errors/IrisScannerError.js";
 
 export class MessageScanner {
-  public static async scan<T extends Dict = Dict>(
+  static async scan<T extends Dict = Dict>(
     input: MessageScannerInput,
   ): Promise<Array<Constructor<T>>> {
     const messages = input.filter(

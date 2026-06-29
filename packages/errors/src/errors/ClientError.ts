@@ -69,7 +69,7 @@ const TITLE: Record<Status, string> = {
 type Options = Omit<LindormErrorOptions, "status"> & { status?: Status };
 
 export class ClientError extends LindormError {
-  public constructor(message: string, options: Options = {}) {
+  constructor(message: string, options: Options = {}) {
     const status = options.status ?? Status.BadRequest;
 
     super(message, {
@@ -79,7 +79,7 @@ export class ClientError extends LindormError {
     });
   }
 
-  public static get Status(): typeof Status {
+  static get Status(): typeof Status {
     return Status;
   }
 }

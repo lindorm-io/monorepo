@@ -11,12 +11,12 @@ import {
 @Entity()
 export class RateLimitSliding {
   @PrimaryKeyField()
-  public id!: string;
+  id!: string;
 
   @Default([])
   @Field("array", { arrayType: "timestamp" })
-  public timestamps!: Array<Date>;
+  timestamps!: Array<Date>;
 
   @ExpiryDateField()
-  public expiresAt!: Date | null;
+  expiresAt!: Date | null;
 }

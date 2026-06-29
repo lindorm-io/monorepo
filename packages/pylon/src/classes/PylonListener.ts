@@ -23,7 +23,7 @@ export class PylonListener<C extends PylonSocketContext = PylonSocketContext> {
   private _namespace: string | null;
   private _prefix: string | null;
 
-  public constructor(options: Options = {}) {
+  constructor(options: Options = {}) {
     this._listeners = [];
     this._middleware = [];
     this._namespace = this.parseNamespace(options.namespace);
@@ -32,72 +32,66 @@ export class PylonListener<C extends PylonSocketContext = PylonSocketContext> {
 
   // public getters
 
-  public get listeners(): Array<Listener<C>> {
+  get listeners(): Array<Listener<C>> {
     return this._listeners;
   }
 
-  public get middleware(): Array<PylonSocketMiddleware<C>> {
+  get middleware(): Array<PylonSocketMiddleware<C>> {
     return this._middleware;
   }
 
-  public get namespace(): string | null {
+  get namespace(): string | null {
     return this._namespace;
   }
 
-  public set namespace(value: string | null) {
+  set namespace(value: string | null) {
     this._namespace = this.parseNamespace(value);
   }
 
-  public get prefix(): string | null {
+  get prefix(): string | null {
     return this._prefix;
   }
 
-  public set prefix(value: string | null) {
+  set prefix(value: string | null) {
     this._prefix = value;
   }
 
   // public
 
-  public parent(listener: PylonListener<C>): void {
+  parent(listener: PylonListener<C>): void {
     this._middleware = [...listener.middleware, ...this._middleware];
   }
 
-  public use(...middleware: Array<PylonSocketMiddleware<C>>): void {
+  use(...middleware: Array<PylonSocketMiddleware<C>>): void {
     this._middleware.push(...middleware);
   }
 
-  public on(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
+  on(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "on", listeners });
   }
 
-  public onAny(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
+  onAny(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "onAny", listeners });
   }
 
-  public onAnyOutgoing(
-    event: string,
-    ...listeners: Array<PylonSocketMiddleware<C>>
-  ): void {
+  onAnyOutgoing(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "onAnyOutgoing", listeners });
   }
 
-  public once(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
+  once(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "once", listeners });
   }
 
-  public prependAny(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
+  prependAny(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "prependAny", listeners });
   }
 
-  public prependAnyOutgoing(
-    event: string,
-    ...listeners: Array<PylonSocketMiddleware<C>>
-  ): void {
+  prependAnyOutgoing(event: string, ...listeners: Array<PylonSocketMiddleware<C>>): void {
     this._listeners.push({ event, method: "prependAnyOutgoing", listeners });
   }
 
   /** @internal — used by PylonListenerScanner to register listeners with segment metadata */
-  public _addScannedListener(
+  _addScannedListener(
     event: string,
     method: PylonListenerMethod,
     segments: Array<EventSegment>,

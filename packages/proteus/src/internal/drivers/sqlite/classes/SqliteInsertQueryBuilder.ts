@@ -21,7 +21,7 @@ export class SqliteInsertQueryBuilder<
   private data: Array<Dict> = [];
   private returningFields: Array<string> | "*" | null = null;
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     client: SqliteQueryClient,
     _namespace?: string | null,
@@ -30,12 +30,12 @@ export class SqliteInsertQueryBuilder<
     this.client = client;
   }
 
-  public values(data: Array<DeepPartial<E>>): this {
+  values(data: Array<DeepPartial<E>>): this {
     this.data = data as Array<Dict>;
     return this;
   }
 
-  public returning(...fields: Array<keyof E | "*">): this {
+  returning(...fields: Array<keyof E | "*">): this {
     if (fields.includes("*" as any)) {
       this.returningFields = "*";
     } else {
@@ -47,7 +47,7 @@ export class SqliteInsertQueryBuilder<
     return this;
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     if (this.data.length === 0) {
       return { rows: [], rowCount: 0 };
     }

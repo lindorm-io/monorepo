@@ -66,7 +66,7 @@ export class MySqlDriver implements IProteusDriver {
   private connectingPromise: Promise<void> | null = null;
   private signal: AbortSignal | undefined;
 
-  public constructor(
+  constructor(
     options: ProteusMysqlOptions,
     logger: ILogger,
     namespace: string | null,
@@ -86,7 +86,7 @@ export class MySqlDriver implements IProteusDriver {
     this.breaker = breaker ?? null;
   }
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     if (this.pool) return;
     if (this.connectingPromise) return this.connectingPromise;
 
@@ -170,7 +170,7 @@ export class MySqlDriver implements IProteusDriver {
     this.logger.debug("MySQL connection pool created");
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     try {
       const pool = this.getPool();
       await pool.query("SELECT 1");
@@ -180,7 +180,7 @@ export class MySqlDriver implements IProteusDriver {
     }
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (!this.pool) return;
 
     const p = this.pool;
@@ -194,7 +194,7 @@ export class MySqlDriver implements IProteusDriver {
     this.logger.debug("MySQL connection pool closed");
   }
 
-  public async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
+  async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
     if (this.options.synchronize && this.options.runMigrations) {
       throw new MySqlMigrationError(
         "synchronize and runMigrations are mutually exclusive — use one or the other",
@@ -219,7 +219,7 @@ export class MySqlDriver implements IProteusDriver {
     }
   }
 
-  public async query<R = unknown>(
+  async query<R = unknown>(
     sql: string,
     values?: Array<unknown>,
   ): Promise<ProteusResult<R>> {
@@ -236,7 +236,7 @@ export class MySqlDriver implements IProteusDriver {
     };
   }
 
-  public createRepository<E extends IEntity>(
+  createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
     meta?: ProteusHookMeta,
@@ -327,7 +327,7 @@ export class MySqlDriver implements IProteusDriver {
     });
   }
 
-  public createTransactionalRepository<E extends IEntity>(
+  createTransactionalRepository<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
@@ -374,9 +374,7 @@ export class MySqlDriver implements IProteusDriver {
     });
   }
 
-  public createExecutor<E extends IEntity>(
-    target: Constructor<E>,
-  ): IRepositoryExecutor<E> {
+  createExecutor<E extends IEntity>(target: Constructor<E>): IRepositoryExecutor<E> {
     this.checkSignal();
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
@@ -394,7 +392,7 @@ export class MySqlDriver implements IProteusDriver {
     );
   }
 
-  public createTransactionalExecutor<E extends IEntity>(
+  createTransactionalExecutor<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
@@ -412,9 +410,7 @@ export class MySqlDriver implements IProteusDriver {
     );
   }
 
-  public createQueryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  createQueryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     this.checkSignal();
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
@@ -424,7 +420,7 @@ export class MySqlDriver implements IProteusDriver {
     return new MySqlQueryBuilder<E>(metadata, client, this.namespace, this.logger);
   }
 
-  public createTransactionalQueryBuilder<E extends IEntity>(
+  createTransactionalQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
@@ -439,11 +435,11 @@ export class MySqlDriver implements IProteusDriver {
     );
   }
 
-  public async acquireClient(): Promise<PoolConnection> {
+  async acquireClient(): Promise<PoolConnection> {
     return this.getPool().getConnection();
   }
 
-  public cloneWithGetters(
+  cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
     signal?: AbortSignal,
@@ -471,9 +467,7 @@ export class MySqlDriver implements IProteusDriver {
     return cloned;
   }
 
-  public async beginTransaction(
-    options?: TransactionOptions,
-  ): Promise<TransactionHandle> {
+  async beginTransaction(options?: TransactionOptions): Promise<TransactionHandle> {
     const pool = this.getPool();
     const signal = this.signal;
     if (signal?.aborted) {
@@ -489,11 +483,11 @@ export class MySqlDriver implements IProteusDriver {
     );
   }
 
-  public async commitTransaction(handle: TransactionHandle): Promise<void> {
+  async commitTransaction(handle: TransactionHandle): Promise<void> {
     await commitTransaction(handle as MysqlTransactionHandle);
   }
 
-  public async rollbackTransaction(handle: TransactionHandle): Promise<void> {
+  async rollbackTransaction(handle: TransactionHandle): Promise<void> {
     await rollbackTransaction(handle as MysqlTransactionHandle);
   }
 
@@ -505,7 +499,7 @@ export class MySqlDriver implements IProteusDriver {
    * could be temporarily exhausted. The pool's `connectionLimit` and `waitForConnections`
    * handle this gracefully.
    */
-  public async withTransaction<T>(
+  async withTransaction<T>(
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {

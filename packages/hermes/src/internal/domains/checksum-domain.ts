@@ -31,7 +31,7 @@ export class ChecksumDomain {
   private readonly eventBus: IIrisMessageBus<HermesEventMessage>;
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
 
-  public constructor(options: ChecksumDomainOptions) {
+  constructor(options: ChecksumDomainOptions) {
     this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["ChecksumDomain"]);
     this.registry = options.registry;
@@ -40,25 +40,25 @@ export class ChecksumDomain {
     this.errorQueue = options.iris.errorQueue;
   }
 
-  public on<D extends Dict = Dict>(
+  on<D extends Dict = Dict>(
     evt: string,
     listener: ChecksumEventEmitterListener<D>,
   ): void {
     this.eventEmitter.on(evt, listener);
   }
 
-  public off<D extends Dict = Dict>(
+  off<D extends Dict = Dict>(
     evt: string,
     listener: ChecksumEventEmitterListener<D>,
   ): void {
     this.eventEmitter.off(evt, listener);
   }
 
-  public removeAllListeners(): void {
+  removeAllListeners(): void {
     this.eventEmitter.removeAllListeners();
   }
 
-  public async registerHandlers(): Promise<void> {
+  async registerHandlers(): Promise<void> {
     for (const aggregate of this.registry.allAggregates) {
       // Only subscribe to events that this aggregate can produce
       for (const handler of aggregate.eventHandlers) {

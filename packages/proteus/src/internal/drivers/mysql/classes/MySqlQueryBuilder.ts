@@ -40,7 +40,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly namespace: string | null;
   private readonly logger: ILogger | null;
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     client: MysqlQueryClient,
     namespace?: string | null,
@@ -54,42 +54,42 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // --- MySQL-specific methods ---
 
-  public lock(mode: LockMode): this {
+  lock(mode: LockMode): this {
     this.state.lock = mode;
     return this;
   }
 
-  public forUpdate(): this {
+  forUpdate(): this {
     return this.lock("pessimistic_write");
   }
 
-  public forShare(): this {
+  forShare(): this {
     return this.lock("pessimistic_read");
   }
 
-  public forUpdateSkipLocked(): this {
+  forUpdateSkipLocked(): this {
     return this.lock("pessimistic_write_skip");
   }
 
-  public forUpdateNoWait(): this {
+  forUpdateNoWait(): this {
     return this.lock("pessimistic_write_fail");
   }
 
-  public forShareSkipLocked(): this {
+  forShareSkipLocked(): this {
     return this.lock("pessimistic_read_skip");
   }
 
-  public forShareNoWait(): this {
+  forShareNoWait(): this {
     return this.lock("pessimistic_read_fail");
   }
 
-  public toSQL(): CompiledQuery {
+  toSQL(): CompiledQuery {
     return this.buildQuery();
   }
 
   // --- Subquery predicates ---
 
-  public whereInQuery<F extends IEntity>(
+  whereInQuery<F extends IEntity>(
     field: keyof E,
     subqueryBuilder: MySqlQueryBuilder<F>,
     subqueryField: keyof F,
@@ -99,7 +99,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public andWhereInQuery<F extends IEntity>(
+  andWhereInQuery<F extends IEntity>(
     field: keyof E,
     subqueryBuilder: MySqlQueryBuilder<F>,
     subqueryField: keyof F,
@@ -108,7 +108,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public whereNotInQuery<F extends IEntity>(
+  whereNotInQuery<F extends IEntity>(
     field: keyof E,
     subqueryBuilder: MySqlQueryBuilder<F>,
     subqueryField: keyof F,
@@ -118,7 +118,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public whereExists(subqueryBuilder: MySqlQueryBuilder<any>): this {
+  whereExists(subqueryBuilder: MySqlQueryBuilder<any>): this {
     this.state.subqueryPredicates = [];
     const compiled = this.compileStrippedSubquery(subqueryBuilder);
     this.state.subqueryPredicates.push({
@@ -130,7 +130,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public whereNotExists(subqueryBuilder: MySqlQueryBuilder<any>): this {
+  whereNotExists(subqueryBuilder: MySqlQueryBuilder<any>): this {
     this.state.subqueryPredicates = [];
     const compiled = this.compileStrippedSubquery(subqueryBuilder);
     this.state.subqueryPredicates.push({
@@ -144,7 +144,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // --- CTEs ---
 
-  public withCte(
+  withCte(
     name: string,
     input: MySqlQueryBuilder<any> | SqlFragment,
     options?: { materialized?: boolean },
@@ -179,7 +179,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public fromCte(name: string): this {
+  fromCte(name: string): this {
     if (!this.state.ctes.some((c) => c.name === name)) {
       throw new ProteusError(
         `CTE "${name}" not defined. Define it with .withCte("${name}", ...) first.`,
@@ -198,37 +198,37 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // --- Set operations ---
 
-  public union(other: MySqlQueryBuilder<E>): this {
+  union(other: MySqlQueryBuilder<E>): this {
     return this.addSetOperation("UNION", other);
   }
 
-  public unionAll(other: MySqlQueryBuilder<E>): this {
+  unionAll(other: MySqlQueryBuilder<E>): this {
     return this.addSetOperation("UNION ALL", other);
   }
 
-  public intersect(other: MySqlQueryBuilder<E>): this {
+  intersect(other: MySqlQueryBuilder<E>): this {
     return this.addSetOperation("INTERSECT", other);
   }
 
-  public intersectAll(other: MySqlQueryBuilder<E>): this {
+  intersectAll(other: MySqlQueryBuilder<E>): this {
     return this.addSetOperation("INTERSECT ALL", other);
   }
 
-  public except(other: MySqlQueryBuilder<E>): this {
+  except(other: MySqlQueryBuilder<E>): this {
     return this.addSetOperation("EXCEPT", other);
   }
 
-  public exceptAll(other: MySqlQueryBuilder<E>): this {
+  exceptAll(other: MySqlQueryBuilder<E>): this {
     return this.addSetOperation("EXCEPT ALL", other);
   }
 
   // --- IProteusQueryBuilder overrides ---
 
-  public toQuery(): unknown {
+  toQuery(): unknown {
     return this.toSQL();
   }
 
-  public clone(): IProteusQueryBuilder<E> {
+  clone(): IProteusQueryBuilder<E> {
     const cloned = new MySqlQueryBuilder<E>(
       this.metadata,
       this.client,
@@ -239,7 +239,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return cloned;
   }
 
-  public async getOne(): Promise<E | null> {
+  async getOne(): Promise<E | null> {
     const { joinIncludes, queryIncludes } = partitionIncludes(this.state.includes);
 
     if (this.logger) warnCartesianIncludes(joinIncludes, this.metadata, this.logger);
@@ -283,7 +283,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return entities[0];
   }
 
-  public async getOneOrFail(): Promise<E> {
+  async getOneOrFail(): Promise<E> {
     const entity = await this.getOne();
     if (!entity) {
       throw new ProteusRepositoryError(
@@ -299,7 +299,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return entity;
   }
 
-  public async getMany(): Promise<Array<E>> {
+  async getMany(): Promise<Array<E>> {
     const { joinIncludes, queryIncludes } = partitionIncludes(this.state.includes);
 
     if (this.logger) warnCartesianIncludes(joinIncludes, this.metadata, this.logger);
@@ -337,7 +337,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return entities;
   }
 
-  public async getManyAndCount(): Promise<[Array<E>, number]> {
+  async getManyAndCount(): Promise<[Array<E>, number]> {
     const [entities, countResult] = (await fanout<unknown>(this.client, [
       () => this.getMany(),
       () => this.executeCount(),
@@ -345,18 +345,18 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return [entities, countResult];
   }
 
-  public async count(): Promise<number> {
+  async count(): Promise<number> {
     return this.executeCount();
   }
 
-  public async exists(): Promise<boolean> {
+  async exists(): Promise<boolean> {
     const count = await this.executeCount();
     return count > 0;
   }
 
   // --- Raw result terminal ---
 
-  public async getRawRows<
+  async getRawRows<
     T extends Record<string, unknown> = Record<string, unknown>,
   >(): Promise<Array<T>> {
     const query = this.buildQuery();
@@ -366,34 +366,34 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // --- Aggregate terminal methods ---
 
-  public async sum(field: keyof E): Promise<number | null> {
+  async sum(field: keyof E): Promise<number | null> {
     return this.executeAggregate("SUM", field);
   }
 
-  public async average(field: keyof E): Promise<number | null> {
+  async average(field: keyof E): Promise<number | null> {
     return this.executeAggregate("AVG", field);
   }
 
-  public async minimum(field: keyof E): Promise<number | null> {
+  async minimum(field: keyof E): Promise<number | null> {
     return this.executeAggregate("MIN", field);
   }
 
-  public async maximum(field: keyof E): Promise<number | null> {
+  async maximum(field: keyof E): Promise<number | null> {
     return this.executeAggregate("MAX", field);
   }
 
   // --- Write builders ---
 
-  public insert(): IInsertQueryBuilder<E> {
+  insert(): IInsertQueryBuilder<E> {
     return new MySqlInsertQueryBuilder<E>(this.metadata, this.client, this.namespace);
   }
 
-  public update(): IUpdateQueryBuilder<E> {
+  update(): IUpdateQueryBuilder<E> {
     this.guardAppendOnlyWrite("update");
     return new MySqlUpdateQueryBuilder<E>(this.metadata, this.client, this.namespace);
   }
 
-  public delete(): IDeleteQueryBuilder<E> {
+  delete(): IDeleteQueryBuilder<E> {
     this.guardAppendOnlyWrite("delete");
     return new MySqlDeleteQueryBuilder<E>(
       this.metadata,
@@ -403,7 +403,7 @@ export class MySqlQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     );
   }
 
-  public softDelete(): IDeleteQueryBuilder<E> {
+  softDelete(): IDeleteQueryBuilder<E> {
     this.guardAppendOnlyWrite("softDelete");
     return new MySqlDeleteQueryBuilder<E>(
       this.metadata,

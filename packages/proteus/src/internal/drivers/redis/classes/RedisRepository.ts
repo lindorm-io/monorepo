@@ -73,7 +73,7 @@ export class RedisRepository<
   private readonly client: Redis;
   private readonly hasEagerRelations: boolean;
 
-  public constructor(options: RedisRepositoryOptions<E>) {
+  constructor(options: RedisRepositoryOptions<E>) {
     super({
       target: options.target,
       executor: options.executor,
@@ -97,7 +97,7 @@ export class RedisRepository<
 
   // ─── Abstract: find / versions ────────────────────────────────────
 
-  public async find(
+  async find(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
     _scope: QueryScope = "multiple",
@@ -140,10 +140,7 @@ export class RedisRepository<
     return entities;
   }
 
-  public async versions(
-    _criteria: Predicate<E>,
-    _options?: FindOptions<E>,
-  ): Promise<Array<E>> {
+  async versions(_criteria: Predicate<E>, _options?: FindOptions<E>): Promise<Array<E>> {
     throw new NotSupportedError(
       "Redis driver does not support versioned entities. Use a SQL or Memory driver for version history.",
       {
@@ -200,7 +197,7 @@ export class RedisRepository<
    *
    * Use find() for full lifecycle processing.
    */
-  public async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
+  async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
       ["multiple"],
@@ -229,7 +226,7 @@ export class RedisRepository<
     return new RedisCursor<E>(entities);
   }
 
-  public async clear(_options?: ClearOptions): Promise<void> {
+  async clear(_options?: ClearOptions): Promise<void> {
     guardAppendOnly(this.metadata, "clear");
 
     // NOTE: Auto-increment counter keys ({ns:}seq:*) are NOT deleted by clear() —

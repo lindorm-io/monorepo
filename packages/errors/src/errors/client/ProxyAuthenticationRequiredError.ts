@@ -3,9 +3,9 @@ import type { HttpErrorOptions } from "../../types/HttpErrorOptions.js";
 import { ClientError } from "../ClientError.js";
 
 export class ProxyAuthenticationRequiredError extends ClientError {
-  public static readonly status = 407;
+  static readonly status = 407;
 
-  public constructor(message: string, options: HttpErrorOptions = {}) {
+  constructor(message: string, options: HttpErrorOptions = {}) {
     super(message, { ...options, status: ProxyAuthenticationRequiredError.status });
   }
 }

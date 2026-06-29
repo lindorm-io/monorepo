@@ -57,7 +57,7 @@ export class MigrationManager implements IMigrationManager {
   private readonly tableOptions: MigrationTableOptions | undefined;
   private readonly lockKey2: number;
 
-  public constructor(options: MigrationManagerOptions) {
+  constructor(options: MigrationManagerOptions) {
     this.client = options.client;
     this.directory = options.directory;
     this.logger = options.logger;
@@ -66,7 +66,7 @@ export class MigrationManager implements IMigrationManager {
     this.lockKey2 = 0x4d494752 ^ hashNamespaceToInt32(options.namespace ?? null);
   }
 
-  public async status(): Promise<MigrationStatusResult> {
+  async status(): Promise<MigrationStatusResult> {
     const loaded = await loadMigrations(this.directory, this.logger);
 
     await ensureMigrationTable(this.client, this.tableOptions);
@@ -77,7 +77,7 @@ export class MigrationManager implements IMigrationManager {
     return { resolved, ghosts };
   }
 
-  public async apply(): Promise<MigrationApplyResult> {
+  async apply(): Promise<MigrationApplyResult> {
     const result = await withAdvisoryLock(
       this.client,
       MIGRATION_LOCK_KEY1,
@@ -176,7 +176,7 @@ export class MigrationManager implements IMigrationManager {
     return result;
   }
 
-  public async rollback(count: number = 1): Promise<MigrationApplyResult> {
+  async rollback(count: number = 1): Promise<MigrationApplyResult> {
     const result = await withAdvisoryLock(
       this.client,
       MIGRATION_LOCK_KEY1,
@@ -280,7 +280,7 @@ export class MigrationManager implements IMigrationManager {
     return result;
   }
 
-  public async generateBaseline(
+  async generateBaseline(
     metadataList: Array<EntityMetadata>,
     namespaceOptions: NamespaceOptions,
     options?: Partial<
@@ -312,7 +312,7 @@ export class MigrationManager implements IMigrationManager {
     return result;
   }
 
-  public async generateMigration(
+  async generateMigration(
     metadataList: Array<EntityMetadata>,
     namespaceOptions: NamespaceOptions,
     options?: Partial<Pick<GenerateMigrationOptions, "name" | "timestamp" | "writeFile">>,
@@ -340,7 +340,7 @@ export class MigrationManager implements IMigrationManager {
     return result;
   }
 
-  public async resolveApplied(name: string, directory: string): Promise<void> {
+  async resolveApplied(name: string, directory: string): Promise<void> {
     const logger = this.logger.child(["resolveApplied"]);
     const loaded = await loadMigrations(directory, logger);
     const match = loaded.find((l) => l.name === name);
@@ -402,7 +402,7 @@ export class MigrationManager implements IMigrationManager {
     }
   }
 
-  public async resolveRolledBack(name: string): Promise<void> {
+  async resolveRolledBack(name: string): Promise<void> {
     await ensureMigrationTable(this.client, this.tableOptions);
     const applied = await getAppliedMigrations(this.client, this.tableOptions);
     const match = applied.find((r) => r.name === name);
@@ -423,7 +423,7 @@ export class MigrationManager implements IMigrationManager {
     await markMigrationRolledBack(this.client, match.id, this.tableOptions);
   }
 
-  public async getRecords(): Promise<Array<MigrationRecord>> {
+  async getRecords(): Promise<Array<MigrationRecord>> {
     await ensureMigrationTable(this.client, this.tableOptions);
     return getAllMigrationRecords(this.client, this.tableOptions);
   }

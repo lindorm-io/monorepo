@@ -43,7 +43,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
   private readonly authExpiredHandlers: Set<AuthExpiredHandler>;
   private readonly refreshDedup: () => Promise<void>;
 
-  public constructor(options: ZephyrOptions) {
+  constructor(options: ZephyrOptions) {
     this.app = {
       alias: options.alias ?? null,
       url: options.url,
@@ -73,15 +73,15 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     }
   }
 
-  public get id(): string | undefined {
+  get id(): string | undefined {
     return this.socket?.id;
   }
 
-  public get connected(): boolean {
+  get connected(): boolean {
     return this.socket?.connected ?? false;
   }
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     if (this.socket?.connected) return;
 
     const url = `${this.app.url}${this.namespace}`;
@@ -115,7 +115,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     });
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (!this.socket) return;
 
     if (!this.socket.connected) {
@@ -132,7 +132,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     });
   }
 
-  public async refresh(): Promise<void> {
+  async refresh(): Promise<void> {
     if (!this.auth) {
       throw new ZephyrError("No auth strategy configured", {
         code: "no_auth_strategy_configured",
@@ -145,7 +145,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     await this.refreshDedup();
   }
 
-  public async emit<K extends string & keyof E>(
+  async emit<K extends string & keyof E>(
     event: K,
     data?: EventOutgoing<E, K>,
   ): Promise<void> {
@@ -166,7 +166,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     ]);
   }
 
-  public async request<K extends string & keyof E>(
+  async request<K extends string & keyof E>(
     event: K,
     data?: EventOutgoing<E, K>,
     options?: { timeout?: number },
@@ -197,21 +197,21 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     return result.incoming.data as EventIncoming<E, K>;
   }
 
-  public on<K extends string & keyof E>(
+  on<K extends string & keyof E>(
     event: K,
     handler: (data: EventIncoming<E, K>) => void,
   ): void {
     this.addListener(event, handler, false);
   }
 
-  public once<K extends string & keyof E>(
+  once<K extends string & keyof E>(
     event: K,
     handler: (data: EventIncoming<E, K>) => void,
   ): void {
     this.addListener(event, handler, true);
   }
 
-  public off<K extends string & keyof E>(
+  off<K extends string & keyof E>(
     event: K,
     handler?: (data: EventIncoming<E, K>) => void,
   ): void {
@@ -239,27 +239,27 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
     }
   }
 
-  public room(name: string): IZephyrRoom {
+  room(name: string): IZephyrRoom {
     return new ZephyrRoom(this, name);
   }
 
-  public onConnect(handler: () => void): void {
+  onConnect(handler: () => void): void {
     this.connectHandlers.push(handler);
   }
 
-  public onDisconnect(handler: (reason: string) => void): void {
+  onDisconnect(handler: (reason: string) => void): void {
     this.disconnectHandlers.push(handler);
   }
 
-  public onError(handler: (error: ZephyrError) => void): void {
+  onError(handler: (error: ZephyrError) => void): void {
     this.errorHandlers.push(handler);
   }
 
-  public onReconnect(handler: (attempt: number) => void): void {
+  onReconnect(handler: (attempt: number) => void): void {
     this.reconnectHandlers.push(handler);
   }
 
-  public onAuthExpired(handler: AuthExpiredHandler): () => void {
+  onAuthExpired(handler: AuthExpiredHandler): () => void {
     this.authExpiredHandlers.add(handler);
     return () => {
       this.authExpiredHandlers.delete(handler);

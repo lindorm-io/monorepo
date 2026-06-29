@@ -26,11 +26,11 @@ export class MemoryCacheAdapter implements ICacheAdapter {
   private readonly map = new Map<string, CacheEntry>();
   private readonly maxEntries: number;
 
-  public constructor(options: MemoryCacheAdapterOptions = {}) {
+  constructor(options: MemoryCacheAdapterOptions = {}) {
     this.maxEntries = options.maxEntries ?? 1000;
   }
 
-  public get = async (key: string): Promise<string | null> => {
+  get = async (key: string): Promise<string | null> => {
     const entry = this.map.get(key);
     if (!entry) return null;
 
@@ -45,7 +45,7 @@ export class MemoryCacheAdapter implements ICacheAdapter {
     return entry.value;
   };
 
-  public set = async (key: string, value: string, ttlMs: number): Promise<void> => {
+  set = async (key: string, value: string, ttlMs: number): Promise<void> => {
     if (ttlMs < 0) {
       throw new ProteusError(`Invalid ttlMs: ${ttlMs}`, {
         code: "invalid_ttl",
@@ -72,11 +72,11 @@ export class MemoryCacheAdapter implements ICacheAdapter {
     }
   };
 
-  public del = async (key: string): Promise<void> => {
+  del = async (key: string): Promise<void> => {
     this.map.delete(key);
   };
 
-  public delByPrefix = async (prefix: string): Promise<void> => {
+  delByPrefix = async (prefix: string): Promise<void> => {
     for (const key of [...this.map.keys()]) {
       if (key.startsWith(prefix)) {
         this.map.delete(key);

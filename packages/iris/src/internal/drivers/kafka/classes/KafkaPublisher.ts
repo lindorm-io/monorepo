@@ -15,13 +15,13 @@ export class KafkaPublisher<M extends IMessage> extends DriverPublisherBase<M> {
   private readonly state: KafkaSharedState;
   private readonly delayManager: DelayManager | undefined;
 
-  public constructor(options: KafkaPublisherOptions<M>) {
+  constructor(options: KafkaPublisherOptions<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishKafkaMessages(
       message,
       options,

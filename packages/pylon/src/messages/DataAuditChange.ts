@@ -18,31 +18,31 @@ import {
 @DeadLetter()
 export class DataAuditChange {
   @IdentifierField()
-  public readonly id!: string;
+  readonly id!: string;
 
   @CorrelationField()
-  public readonly correlationId!: string;
+  readonly correlationId!: string;
 
   @TimestampField()
-  public readonly timestamp!: Date;
+  readonly timestamp!: Date;
 
   @Field("string")
-  public readonly actor!: string;
+  readonly actor!: string;
 
   @Field("string")
-  public readonly entityName!: string;
+  readonly entityName!: string;
 
   @Nullable()
   @Field("string")
-  public readonly entityNamespace!: string | null;
+  readonly entityNamespace!: string | null;
 
   @Field("string")
-  public readonly entityId!: string;
+  readonly entityId!: string;
 
   @Field("string")
-  public readonly action!: string;
+  readonly action!: string;
 
   @Nullable()
   @Field("object")
-  public readonly changes!: Record<string, { from: unknown; to: unknown }> | null;
+  readonly changes!: Record<string, { from: unknown; to: unknown }> | null;
 }

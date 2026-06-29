@@ -40,7 +40,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   private readonly namespace: string | null;
   private readonly logger: ILogger | null;
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     client: PostgresQueryClient,
     namespace?: string | null,
@@ -54,42 +54,42 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // --- PG-specific methods ---
 
-  public lock(mode: LockMode): this {
+  lock(mode: LockMode): this {
     this.state.lock = mode;
     return this;
   }
 
-  public forUpdate(): this {
+  forUpdate(): this {
     return this.lock("pessimistic_write");
   }
 
-  public forShare(): this {
+  forShare(): this {
     return this.lock("pessimistic_read");
   }
 
-  public forUpdateSkipLocked(): this {
+  forUpdateSkipLocked(): this {
     return this.lock("pessimistic_write_skip");
   }
 
-  public forUpdateNoWait(): this {
+  forUpdateNoWait(): this {
     return this.lock("pessimistic_write_fail");
   }
 
-  public forShareSkipLocked(): this {
+  forShareSkipLocked(): this {
     return this.lock("pessimistic_read_skip");
   }
 
-  public forShareNoWait(): this {
+  forShareNoWait(): this {
     return this.lock("pessimistic_read_fail");
   }
 
-  public toSQL(): CompiledQuery {
+  toSQL(): CompiledQuery {
     return this.buildQuery();
   }
 
   // --- Subquery predicates (S3) ---
 
-  public whereInQuery<F extends IEntity>(
+  whereInQuery<F extends IEntity>(
     field: keyof E,
     subqueryBuilder: PostgresQueryBuilder<F>,
     subqueryField: keyof F,
@@ -100,7 +100,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public andWhereInQuery<F extends IEntity>(
+  andWhereInQuery<F extends IEntity>(
     field: keyof E,
     subqueryBuilder: PostgresQueryBuilder<F>,
     subqueryField: keyof F,
@@ -109,7 +109,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public whereNotInQuery<F extends IEntity>(
+  whereNotInQuery<F extends IEntity>(
     field: keyof E,
     subqueryBuilder: PostgresQueryBuilder<F>,
     subqueryField: keyof F,
@@ -120,7 +120,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public whereExists(subqueryBuilder: PostgresQueryBuilder<any>): this {
+  whereExists(subqueryBuilder: PostgresQueryBuilder<any>): this {
     // Reset semantics (like .where() resets predicates)
     this.state.subqueryPredicates = [];
     const compiled = this.compileStrippedSubquery(subqueryBuilder);
@@ -133,7 +133,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public whereNotExists(subqueryBuilder: PostgresQueryBuilder<any>): this {
+  whereNotExists(subqueryBuilder: PostgresQueryBuilder<any>): this {
     // Reset semantics (like .where() resets predicates)
     this.state.subqueryPredicates = [];
     const compiled = this.compileStrippedSubquery(subqueryBuilder);
@@ -148,7 +148,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // --- CTEs (S4) ---
 
-  public withCte(
+  withCte(
     name: string,
     input: PostgresQueryBuilder<any> | SqlFragment,
     options?: { materialized?: boolean },
@@ -183,7 +183,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return this;
   }
 
-  public fromCte(name: string): this {
+  fromCte(name: string): this {
     if (!this.state.ctes.some((c) => c.name === name)) {
       throw new ProteusError(
         `CTE "${name}" not defined. Define it with .withCte("${name}", ...) first.`,
@@ -201,37 +201,37 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // --- Set operations (S6) ---
 
-  public union(other: PostgresQueryBuilder<E>): this {
+  union(other: PostgresQueryBuilder<E>): this {
     return this.addSetOperation("UNION", other);
   }
 
-  public unionAll(other: PostgresQueryBuilder<E>): this {
+  unionAll(other: PostgresQueryBuilder<E>): this {
     return this.addSetOperation("UNION ALL", other);
   }
 
-  public intersect(other: PostgresQueryBuilder<E>): this {
+  intersect(other: PostgresQueryBuilder<E>): this {
     return this.addSetOperation("INTERSECT", other);
   }
 
-  public intersectAll(other: PostgresQueryBuilder<E>): this {
+  intersectAll(other: PostgresQueryBuilder<E>): this {
     return this.addSetOperation("INTERSECT ALL", other);
   }
 
-  public except(other: PostgresQueryBuilder<E>): this {
+  except(other: PostgresQueryBuilder<E>): this {
     return this.addSetOperation("EXCEPT", other);
   }
 
-  public exceptAll(other: PostgresQueryBuilder<E>): this {
+  exceptAll(other: PostgresQueryBuilder<E>): this {
     return this.addSetOperation("EXCEPT ALL", other);
   }
 
   // --- IProteusQueryBuilder overrides ---
 
-  public toQuery(): unknown {
+  toQuery(): unknown {
     return this.toSQL();
   }
 
-  public clone(): IProteusQueryBuilder<E> {
+  clone(): IProteusQueryBuilder<E> {
     const cloned = new PostgresQueryBuilder<E>(
       this.metadata,
       this.client,
@@ -242,7 +242,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return cloned;
   }
 
-  public async getOne(): Promise<E | null> {
+  async getOne(): Promise<E | null> {
     const { joinIncludes, queryIncludes } = partitionIncludes(this.state.includes);
 
     if (this.logger) warnCartesianIncludes(joinIncludes, this.metadata, this.logger);
@@ -288,7 +288,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return entities[0];
   }
 
-  public async getOneOrFail(): Promise<E> {
+  async getOneOrFail(): Promise<E> {
     const entity = await this.getOne();
     if (!entity) {
       throw new ProteusRepositoryError(
@@ -304,7 +304,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return entity;
   }
 
-  public async getMany(): Promise<Array<E>> {
+  async getMany(): Promise<Array<E>> {
     const { joinIncludes, queryIncludes } = partitionIncludes(this.state.includes);
 
     if (this.logger) warnCartesianIncludes(joinIncludes, this.metadata, this.logger);
@@ -342,7 +342,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return entities;
   }
 
-  public async getManyAndCount(): Promise<[Array<E>, number]> {
+  async getManyAndCount(): Promise<[Array<E>, number]> {
     const [entities, countResult] = (await fanout<unknown>(this.client, [
       () => this.getMany(),
       () => this.executeCount(),
@@ -350,18 +350,18 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     return [entities, countResult];
   }
 
-  public async count(): Promise<number> {
+  async count(): Promise<number> {
     return this.executeCount();
   }
 
-  public async exists(): Promise<boolean> {
+  async exists(): Promise<boolean> {
     const count = await this.executeCount();
     return count > 0;
   }
 
   // --- Raw result terminal (S5: window functions) ---
 
-  public async getRawRows<
+  async getRawRows<
     T extends Record<string, unknown> = Record<string, unknown>,
   >(): Promise<Array<T>> {
     const query = this.buildQuery();
@@ -371,19 +371,19 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // --- Aggregate terminal methods ---
 
-  public async sum(field: keyof E): Promise<number | null> {
+  async sum(field: keyof E): Promise<number | null> {
     return this.executeAggregate("SUM", field);
   }
 
-  public async average(field: keyof E): Promise<number | null> {
+  async average(field: keyof E): Promise<number | null> {
     return this.executeAggregate("AVG", field);
   }
 
-  public async minimum(field: keyof E): Promise<number | null> {
+  async minimum(field: keyof E): Promise<number | null> {
     return this.executeAggregate("MIN", field);
   }
 
-  public async maximum(field: keyof E): Promise<number | null> {
+  async maximum(field: keyof E): Promise<number | null> {
     return this.executeAggregate("MAX", field);
   }
 
@@ -504,16 +504,16 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 
   // --- Write builders ---
 
-  public insert(): IInsertQueryBuilder<E> {
+  insert(): IInsertQueryBuilder<E> {
     return new PostgresInsertQueryBuilder<E>(this.metadata, this.client, this.namespace);
   }
 
-  public update(): IUpdateQueryBuilder<E> {
+  update(): IUpdateQueryBuilder<E> {
     this.guardAppendOnlyWrite("update");
     return new PostgresUpdateQueryBuilder<E>(this.metadata, this.client, this.namespace);
   }
 
-  public delete(): IDeleteQueryBuilder<E> {
+  delete(): IDeleteQueryBuilder<E> {
     this.guardAppendOnlyWrite("delete");
     return new PostgresDeleteQueryBuilder<E>(
       this.metadata,
@@ -523,7 +523,7 @@ export class PostgresQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     );
   }
 
-  public softDelete(): IDeleteQueryBuilder<E> {
+  softDelete(): IDeleteQueryBuilder<E> {
     this.guardAppendOnlyWrite("softDelete");
     return new PostgresDeleteQueryBuilder<E>(
       this.metadata,

@@ -4,20 +4,20 @@ import { EntityManagerError } from "../errors/EntityManagerError.js";
 import type { EntityMetadata, MetaField } from "../types/metadata.js";
 
 export class VersionManager<E extends IEntity = IEntity> {
-  public static readonly INITIAL_VERSION = 0;
-  public static readonly FIRST_PERSISTED_VERSION = 1;
+  static readonly INITIAL_VERSION = 0;
+  static readonly FIRST_PERSISTED_VERSION = 1;
 
   private readonly versionField: MetaField | undefined;
 
-  public constructor(metadata: EntityMetadata) {
+  constructor(metadata: EntityMetadata) {
     this.versionField = metadata.fields.find((f) => f.decorator === "Version");
   }
 
-  public isVersioned(): boolean {
+  isVersioned(): boolean {
     return this.versionField !== undefined;
   }
 
-  public getVersion(entity: E): number {
+  getVersion(entity: E): number {
     if (!this.versionField) {
       return VersionManager.INITIAL_VERSION;
     }
@@ -25,7 +25,7 @@ export class VersionManager<E extends IEntity = IEntity> {
     return isNumber(version) ? version : VersionManager.INITIAL_VERSION;
   }
 
-  public setVersion(entity: E, version: number): void {
+  setVersion(entity: E, version: number): void {
     if (!this.versionField) {
       return;
     }
@@ -44,18 +44,18 @@ export class VersionManager<E extends IEntity = IEntity> {
     (entity as any)[this.versionField.key] = version;
   }
 
-  public incrementVersion(entity: E): number {
+  incrementVersion(entity: E): number {
     const currentVersion = this.getVersion(entity);
     const newVersion = currentVersion + 1;
     this.setVersion(entity, newVersion);
     return newVersion;
   }
 
-  public prepareForInsert(entity: E): void {
+  prepareForInsert(entity: E): void {
     this.setVersion(entity, VersionManager.FIRST_PERSISTED_VERSION);
   }
 
-  public prepareForUpdate(entity: E): void {
+  prepareForUpdate(entity: E): void {
     this.incrementVersion(entity);
   }
 }

@@ -3,9 +3,9 @@ import type { HttpErrorOptions } from "../../types/HttpErrorOptions.js";
 import { ClientError } from "../ClientError.js";
 
 export class UnauthorizedError extends ClientError {
-  public static readonly status = 401;
+  static readonly status = 401;
 
-  public constructor(message: string, options: HttpErrorOptions = {}) {
+  constructor(message: string, options: HttpErrorOptions = {}) {
     super(message, { ...options, status: UnauthorizedError.status });
   }
 }

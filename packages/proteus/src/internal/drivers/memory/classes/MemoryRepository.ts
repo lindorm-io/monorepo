@@ -84,7 +84,7 @@ export class MemoryRepository<
   private readonly hasEagerRelations: boolean;
   private readonly hasEmbeddedLists: boolean;
 
-  public constructor(options: MemoryRepositoryOptions<E>) {
+  constructor(options: MemoryRepositoryOptions<E>) {
     super({
       target: options.target,
       executor: options.executor,
@@ -110,7 +110,7 @@ export class MemoryRepository<
 
   // ─── Abstract: find / versions ────────────────────────────────────
 
-  public async find(
+  async find(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
     _scope: QueryScope = "multiple",
@@ -157,10 +157,7 @@ export class MemoryRepository<
     return entities;
   }
 
-  public async versions(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<Array<E>> {
+  async versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
     guardVersionFields(this.metadata, "versions");
 
     const entities = await this.executor.executeFind(criteria, {
@@ -223,7 +220,7 @@ export class MemoryRepository<
 
   // ─── Abstract: cursor / clear ─────────────────────────────────────
 
-  public async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
+  async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
       ["multiple"],
@@ -260,7 +257,7 @@ export class MemoryRepository<
     return new MemoryCursor<E>(entities);
   }
 
-  public async clear(_options?: ClearOptions): Promise<void> {
+  async clear(_options?: ClearOptions): Promise<void> {
     guardAppendOnly(this.metadata, "clear");
 
     // For inheritance children, the store table is always keyed by the ROOT entity name.

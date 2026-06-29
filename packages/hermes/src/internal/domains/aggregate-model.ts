@@ -34,9 +34,9 @@ export class AggregateModel<S extends Dict = Dict> {
   private readonly logger: ILogger;
   private readonly registry: HermesRegistry;
 
-  public readonly id: string;
-  public readonly name: string;
-  public readonly namespace: string;
+  readonly id: string;
+  readonly name: string;
+  readonly namespace: string;
 
   private readonly _events: Array<HermesEventMessage>;
   private _destroyed: boolean;
@@ -44,7 +44,7 @@ export class AggregateModel<S extends Dict = Dict> {
   private _numberOfLoadedEvents: number;
   private _state: S;
 
-  public constructor(options: AggregateModelOptions) {
+  constructor(options: AggregateModelOptions) {
     this.logger = options.logger.child(["AggregateModel"]);
     this.registry = options.registry;
 
@@ -59,23 +59,23 @@ export class AggregateModel<S extends Dict = Dict> {
     this._state = {} as S;
   }
 
-  public get destroyed(): boolean {
+  get destroyed(): boolean {
     return this._destroyed;
   }
 
-  public get events(): Array<HermesEventMessage> {
+  get events(): Array<HermesEventMessage> {
     return this._events;
   }
 
-  public get numberOfLoadedEvents(): number {
+  get numberOfLoadedEvents(): number {
     return this._numberOfLoadedEvents;
   }
 
-  public get state(): S {
+  get state(): S {
     return this._state;
   }
 
-  public async apply(
+  async apply(
     causation:
       | HermesEventMessage
       | { id: string; correlationId: string | null; meta: Dict },
@@ -103,7 +103,7 @@ export class AggregateModel<S extends Dict = Dict> {
     await this.handleEvent(eventMessage);
   }
 
-  public async load(event: HermesEventMessage): Promise<void> {
+  async load(event: HermesEventMessage): Promise<void> {
     this.logger.debug("Loading event for replay", { event: event.name });
 
     await this.handleEvent(event);
@@ -111,7 +111,7 @@ export class AggregateModel<S extends Dict = Dict> {
     this._numberOfLoadedEvents += 1;
   }
 
-  public toJSON(): AggregateModelData {
+  toJSON(): AggregateModelData {
     return {
       id: this.id,
       name: this.name,

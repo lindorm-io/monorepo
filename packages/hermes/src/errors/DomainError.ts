@@ -5,11 +5,11 @@ export type DomainErrorOptions = LindormErrorOptions & {
 };
 
 export class DomainError extends LindormError {
-  public static readonly namespace = "hermes";
+  static readonly namespace = "hermes";
 
-  public readonly permanent: boolean;
+  readonly permanent: boolean;
 
-  public constructor(message: string, options: DomainErrorOptions = {}) {
+  constructor(message: string, options: DomainErrorOptions = {}) {
     const { permanent = false, ...rest } = options;
     super(message, rest);
     this.permanent = permanent;

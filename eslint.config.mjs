@@ -65,7 +65,10 @@ export default defineConfig(
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
       "@typescript-eslint/explicit-function-return-type": "off",
-      "@typescript-eslint/explicit-member-accessibility": "error",
+      "@typescript-eslint/explicit-member-accessibility": [
+        "error",
+        { accessibility: "no-public" },
+      ],
       "@typescript-eslint/no-base-to-string": "off",
       "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-unsafe-function-type": "off",

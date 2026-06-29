@@ -34,14 +34,14 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
   private readonly ownedSubscriptions: Map<string, OwnedSubscription> = new Map();
   private readonly ephemeralTags: Set<string> = new Set();
 
-  public constructor(options: NatsMessageBusOptions<M>) {
+  constructor(options: NatsMessageBusOptions<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishNatsMessages(
       message,
       options,
@@ -56,7 +56,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     );
   }
 
-  public async subscribe(
+  async subscribe(
     options: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void> {
     if (Array.isArray(options)) {
@@ -148,7 +148,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     await loop.ready;
   }
 
-  public async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
+  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
     const tagKey = `${options.topic}:${options.queue ?? ""}`;
     const sub = this.ownedSubscriptions.get(tagKey);
 
@@ -176,7 +176,7 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     this.ownedSubscriptions.delete(tagKey);
   }
 
-  public async unsubscribeAll(): Promise<void> {
+  async unsubscribeAll(): Promise<void> {
     for (const [tagKey, sub] of this.ownedSubscriptions) {
       await stopNatsConsumer(this.state, sub.consumerTag);
 

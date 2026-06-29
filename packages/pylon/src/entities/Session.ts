@@ -13,28 +13,28 @@ import type { IPylonSession } from "../interfaces/index.js";
 @Entity()
 export class Session implements IPylonSession {
   @PrimaryKeyField()
-  public id!: string;
+  id!: string;
 
   @Field("string")
-  public accessToken!: string;
+  accessToken!: string;
 
   @ExpiryDateField()
-  public expiresAt!: Date | null;
+  expiresAt!: Date | null;
 
   @Nullable()
   @Field("string")
-  public idToken?: string;
+  idToken?: string;
 
   @Field("timestamp")
-  public issuedAt!: Date;
+  issuedAt!: Date;
 
   @Nullable()
   @Field("string")
-  public refreshToken?: string;
+  refreshToken?: string;
 
   @Field("array", { arrayType: "string" })
-  public scope!: Array<OpenIdScope | string>;
+  scope!: Array<OpenIdScope | string>;
 
   @Field("string")
-  public subject!: string;
+  subject!: string;
 }

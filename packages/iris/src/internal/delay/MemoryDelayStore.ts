@@ -4,11 +4,11 @@ import type { DelayedEntry } from "../../types/delay.js";
 export class MemoryDelayStore implements IDelayStore {
   private readonly entries = new Map<string, DelayedEntry>();
 
-  public async schedule(entry: DelayedEntry): Promise<void> {
+  async schedule(entry: DelayedEntry): Promise<void> {
     this.entries.set(entry.id, entry);
   }
 
-  public async poll(now: number): Promise<Array<DelayedEntry>> {
+  async poll(now: number): Promise<Array<DelayedEntry>> {
     const ready: Array<DelayedEntry> = [];
 
     for (const [id, entry] of this.entries) {
@@ -23,19 +23,19 @@ export class MemoryDelayStore implements IDelayStore {
     return ready;
   }
 
-  public async cancel(id: string): Promise<boolean> {
+  async cancel(id: string): Promise<boolean> {
     return this.entries.delete(id);
   }
 
-  public async size(): Promise<number> {
+  async size(): Promise<number> {
     return this.entries.size;
   }
 
-  public async clear(): Promise<void> {
+  async clear(): Promise<void> {
     this.entries.clear();
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     this.entries.clear();
   }
 }
