@@ -244,6 +244,16 @@ describe("scaffold", () => {
         readFileSync(join(projectDir, "src/pylon/config.ts"), "utf-8"),
       ).toMatchSnapshot();
     });
+
+    test("uses zod-4 .prefault({}) for the logger object default (not .default({}))", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writeConfigFile(baseAnswers({ projectDir }));
+      const content = readFileSync(join(projectDir, "src/pylon/config.ts"), "utf-8");
+      // zod 4: object input-side defaults use .prefault(); .default({}) on an
+      // object whose fields have their own defaults fails to type-check.
+      expect(content).toContain(".prefault({})");
+      expect(content).not.toContain(".default({})");
+    });
   });
 
   describe("writeConfigYaml", () => {

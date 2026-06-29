@@ -88,7 +88,10 @@ export const buildConfigFile = (answers: Answers): string => {
     `        .default("info"),`,
     `      readable: z.boolean().default(false),`,
     `    })`,
-    `    .default({}),`,
+    // zod 4 split input-side object defaults into `.prefault()`; `.default({})`
+    // here would require the full output shape ({ level, readable }), so an
+    // empty input object no longer type-checks.
+    `    .prefault({}),`,
   ];
 
   const emittedKeys = new Set<string>();
