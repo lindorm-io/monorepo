@@ -5,11 +5,11 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 describe("createHttpAbortSignalMiddleware", () => {
   let ctx: any;
   let req: EventEmitter;
-  let res: { writableEnded: boolean };
+  let res: EventEmitter & { writableEnded: boolean };
 
   beforeEach(() => {
     req = new EventEmitter();
-    res = { writableEnded: false };
+    res = Object.assign(new EventEmitter(), { writableEnded: false });
 
     ctx = {
       req,
@@ -32,12 +32,12 @@ describe("createHttpAbortSignalMiddleware", () => {
     });
   });
 
-  test("should abort with client-disconnect reason when close fires before writableEnded", async () => {
+  test("should abort with client-disconnect reason when the response closes before writableEnded", async () => {
     const middleware = createHttpAbortSignalMiddleware();
 
     await middleware(ctx as any, async () => {
       res.writableEnded = false;
-      req.emit("close");
+      res.emit("close");
 
       expect(ctx.signal.aborted).toBe(true);
       expect(ctx.signal.reason).toEqual({
@@ -48,11 +48,25 @@ describe("createHttpAbortSignalMiddleware", () => {
     });
   });
 
-  test("should NOT abort when close fires after writableEnded is true", async () => {
+  test("should NOT abort when the response closes after writableEnded is true", async () => {
     const middleware = createHttpAbortSignalMiddleware();
 
     await middleware(ctx as any, async () => {
       res.writableEnded = true;
+      res.emit("close");
+
+      expect(ctx.signal.aborted).toBe(false);
+    });
+  });
+
+  // Regression (F13): on a POST, the request stream emits "close" the moment the
+  // body is fully consumed — before the handler writes a response. The signal
+  // must NOT abort then, or in-flight work (e.g. DB queries) is cancelled.
+  test("should NOT abort when the request stream closes (POST body read) before the response ends", async () => {
+    const middleware = createHttpAbortSignalMiddleware();
+
+    await middleware(ctx as any, async () => {
+      res.writableEnded = false;
       req.emit("close");
 
       expect(ctx.signal.aborted).toBe(false);
@@ -70,13 +84,13 @@ describe("createHttpAbortSignalMiddleware", () => {
   test("should remove the close listener after next() resolves", async () => {
     const middleware = createHttpAbortSignalMiddleware();
 
-    expect(req.listenerCount("close")).toBe(0);
+    expect(res.listenerCount("close")).toBe(0);
 
     await middleware(ctx as any, async () => {
-      expect(req.listenerCount("close")).toBe(1);
+      expect(res.listenerCount("close")).toBe(1);
     });
 
-    expect(req.listenerCount("close")).toBe(0);
+    expect(res.listenerCount("close")).toBe(0);
   });
 
   test("should remove the close listener even when next() throws", async () => {
@@ -87,7 +101,7 @@ describe("createHttpAbortSignalMiddleware", () => {
     });
 
     await expect(middleware(ctx as any, failingNext)).rejects.toThrow("boom");
-    expect(req.listenerCount("close")).toBe(0);
+    expect(res.listenerCount("close")).toBe(0);
   });
 
   test("should not throw when ctx.state.metadata is missing", async () => {
@@ -96,7 +110,7 @@ describe("createHttpAbortSignalMiddleware", () => {
     ctx.state = undefined;
 
     await middleware(ctx as any, async () => {
-      req.emit("close");
+      res.emit("close");
 
       expect(ctx.signal.aborted).toBe(true);
       expect(ctx.signal.reason).toEqual({
