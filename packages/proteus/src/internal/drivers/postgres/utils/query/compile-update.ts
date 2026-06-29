@@ -100,7 +100,7 @@ export const compileUpdateMany = <E extends IEntity>(
     if (!field) continue;
     if (discriminatorColName && field.name === discriminatorColName) continue;
 
-    let coerced = coerceWriteValue(value);
+    let coerced = coerceWriteValue(value, field);
     if (coerced != null && field.encrypted && amphora) {
       coerced = encryptFieldValue(
         coerced,
@@ -197,7 +197,7 @@ const compileJoinedUpdateMany = <E extends IEntity>(
     if (!field) continue;
     if (discriminatorColName && field.name === discriminatorColName) continue;
 
-    let coerced = coerceWriteValue(value);
+    let coerced = coerceWriteValue(value, field);
     if (coerced != null && field.encrypted && amphora) {
       coerced = encryptFieldValue(
         coerced,

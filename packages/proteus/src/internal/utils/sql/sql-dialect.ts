@@ -43,7 +43,12 @@ export type SqlDialect = {
     arr: Array<unknown>,
     field: MetaField | null,
   ) => string;
-  compileLength: (col: string, params: Array<unknown>, value: unknown) => string;
+  compileLength: (
+    col: string,
+    params: Array<unknown>,
+    value: unknown,
+    field: MetaField | null,
+  ) => string;
 
   // Joined inheritance syntax
   joinedDeleteSyntax: "using" | "multi-table" | "subquery";

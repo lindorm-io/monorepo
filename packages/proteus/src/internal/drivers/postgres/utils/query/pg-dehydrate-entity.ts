@@ -20,10 +20,15 @@ export const pgDehydrateEntity = <E extends IEntity>(
 ): Array<DehydratedColumn> => {
   const dict = defaultDehydrateEntity(entity, metadata, mode, amphora);
 
+  const fieldByColumn = new Map(metadata.fields.map((f) => [f.name, f]));
+
   const columns: Array<DehydratedColumn> = [];
 
   for (const [column, value] of Object.entries(dict)) {
-    columns.push({ column, value: coerceWriteValue(value) });
+    columns.push({
+      column,
+      value: coerceWriteValue(value, fieldByColumn.get(column) ?? null),
+    });
   }
 
   return columns;

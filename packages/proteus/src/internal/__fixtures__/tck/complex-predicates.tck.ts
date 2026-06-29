@@ -191,6 +191,93 @@ export const complexPredicatesSuite = (
       });
     });
 
+    // ─── JSONB-backed array operators on TckJsonbArray ─────────────────
+    // tags is `@Field("array")` with NO arrayType → stored as JSON/JSONB,
+    // NOT a native PG array. Exercises the jsonb branch of the dialect
+    // ($overlap/$all/$contained/$length). Asserts VALUES, not SQL.
+
+    describe("JSONB-backed array operators", () => {
+      const { TckJsonbArray } = entities;
+
+      beforeEach(async () => {
+        await getHandle().clear();
+        const repo = getHandle().repository(TckJsonbArray);
+        await repo.insert({ name: "ab", tags: ["a", "b"] });
+        await repo.insert({ name: "abc", tags: ["a", "b", "c"] });
+        await repo.insert({ name: "cd", tags: ["c", "d"] });
+        await repo.insert({ name: "xy", tags: ["x", "y", "z"] });
+      });
+
+      test("$overlap matches rows sharing any element", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ tags: { $overlap: ["a", "x"] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc", "xy"]);
+      });
+
+      test("$overlap returns empty when nothing matches", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await (repo.find as any)({ tags: { $overlap: ["nope"] } });
+        expect(results).toHaveLength(0);
+      });
+
+      test("$all matches rows containing all elements", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ tags: { $all: ["a", "b"] } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc"]);
+      });
+
+      test("$contained matches rows whose elements are a subset", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find(
+          { tags: { $contained: ["a", "b", "c"] } } as any,
+          {
+            order: { name: "ASC" },
+          },
+        );
+        expect(results.map((r) => r.name)).toEqual(["ab", "abc"]);
+      });
+
+      test("$length matches rows with the given element count", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ tags: { $length: 2 } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["ab", "cd"]);
+      });
+
+      test("$length: 3 matches the three-element rows", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const results = await repo.find({ tags: { $length: 3 } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(results.map((r) => r.name)).toEqual(["abc", "xy"]);
+      });
+
+      test("update path persists a new jsonb array value", async () => {
+        const repo = getHandle().repository(TckJsonbArray);
+        const row = await repo.findOneOrFail({ name: "cd" } as any);
+
+        row.tags = ["e", "f", "g"];
+        await repo.update(row);
+
+        const reloaded = await repo.findOneOrFail({ name: "cd" } as any);
+        expect(reloaded.tags).toEqual(["e", "f", "g"]);
+
+        // The new value is queryable through the jsonb operators
+        const byLength = await repo.find({ tags: { $length: 3 } } as any, {
+          order: { name: "ASC" },
+        });
+        expect(byLength.map((r) => r.name)).toEqual(["abc", "cd", "xy"]);
+
+        const byOverlap = await repo.find({ tags: { $overlap: ["f"] } } as any);
+        expect(byOverlap.map((r) => r.name)).toEqual(["cd"]);
+      });
+    });
+
     // ─── JSON containment ($has) on TckJsonHolder ──────────────────────
 
     describe("JSON containment ($has)", () => {

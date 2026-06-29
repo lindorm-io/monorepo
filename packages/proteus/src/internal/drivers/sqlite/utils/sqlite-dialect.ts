@@ -101,7 +101,7 @@ export const sqliteDialect: SqlDialect = {
     return `NOT EXISTS (SELECT 1 FROM json_each(${col}) WHERE value NOT IN (${placeholders}))`;
   },
 
-  compileLength: (col, params, value) => {
+  compileLength: (col, params, value, _field) => {
     params.push(value);
     return `(${col} IS NOT NULL AND COALESCE(json_array_length(${col}), 0) = ?)`;
   },

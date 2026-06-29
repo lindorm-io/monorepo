@@ -115,7 +115,7 @@ export class PostgresUpdateQueryBuilder<
       if (field?.transform) {
         transformed = field.transform.to(transformed);
       }
-      params.push(coerceWriteValue(transformed));
+      params.push(coerceWriteValue(transformed, field ?? null));
       setClauses.push(`${quoteIdentifier(colName)} = $${params.length}`);
     }
 

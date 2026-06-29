@@ -826,6 +826,30 @@ export const createTckEntities = (hookCallback: Mock) => {
     labels!: string[];
   }
 
+  // JSONB-backed array (no arrayType) — stored as JSON, NOT a native PG array.
+  // Exercises the jsonb branch of the array operators ($overlap/$all/$contained/$length).
+  @Entity({ name: "TckJsonbArray" })
+  class TckJsonbArray {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @Field("array")
+    tags!: string[];
+  }
+
   @Entity({ name: "TckJsonHolder" })
   class TckJsonHolder {
     @PrimaryKeyField()
@@ -1214,6 +1238,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckDog,
     TckCat,
     TckArrayHolder,
+    TckJsonbArray,
     TckJsonHolder,
     TckAddress,
     TckWithAddress,
