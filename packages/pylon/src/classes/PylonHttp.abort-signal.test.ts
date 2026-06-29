@@ -17,8 +17,26 @@ describe("PylonHttp abort-signal integration", () => {
     aborted?: boolean;
   } = {};
 
+  const capturedPost: { aborted?: boolean } = {};
+
   beforeAll(async () => {
     const router = new PylonRouter();
+
+    // Regression (F13): a POST handler that awaits AFTER the body is read must
+    // not have its signal aborted by the request stream's "close" (which fires
+    // on body completion). The client stays connected the whole time.
+    router.post("/post-await", async (ctx) => {
+      capturedPost.aborted = false;
+      ctx.signal.addEventListener("abort", () => {
+        capturedPost.aborted = true;
+      });
+
+      // Simulate awaiting work (e.g. a DB query) after the body is consumed.
+      await new Promise<void>((resolve) => setTimeout(resolve, 100));
+
+      ctx.status = 200;
+      ctx.body = { ok: true, aborted: ctx.signal.aborted };
+    });
 
     router.get("/slow", async (ctx) => {
       captured.signal = ctx.signal;
@@ -100,5 +118,18 @@ describe("PylonHttp abort-signal integration", () => {
         requestId: expect.any(String),
       }),
     );
+  });
+
+  test("does NOT abort a POST handler that awaits after the body (client stays connected)", async () => {
+    const response = await fetch(`${baseUrl}/abort/post-await`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ hello: "world" }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ ok: true, aborted: false });
+    // The request-stream close (body fully read) must not have aborted the signal.
+    expect(capturedPost.aborted).toBe(false);
   });
 });
