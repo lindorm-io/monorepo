@@ -16,7 +16,11 @@ import type {
 } from "../../../../types/index.js";
 import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
-import type { MetaRelation, QueryScope } from "../../../entity/types/metadata.js";
+import type {
+  EntityMetadata,
+  MetaRelation,
+  QueryScope,
+} from "../../../entity/types/metadata.js";
 import type { QueryState } from "../../../types/query.js";
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
 import type { AggregateFunction } from "../../../types/aggregate.js";
@@ -78,6 +82,7 @@ export type WithImplicitTransaction<E extends IEntity> = <T>(
 
 export type SqliteRepositoryOptions<E extends IEntity> = {
   target: Constructor<E>;
+  metadata?: EntityMetadata;
   executor: IRepositoryExecutor<E>;
   queryBuilderFactory: () => IProteusQueryBuilder<E>;
   client: SqliteQueryClient;
@@ -110,6 +115,7 @@ export class SqliteRepository<
   public constructor(options: SqliteRepositoryOptions<E>) {
     super({
       target: options.target,
+      metadata: options.metadata,
       executor: options.executor,
       queryBuilderFactory: options.queryBuilderFactory,
       namespace: options.namespace,

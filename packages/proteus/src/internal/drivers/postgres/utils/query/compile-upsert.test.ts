@@ -559,6 +559,32 @@ describe("compileUpsert", () => {
       expect(result.text).not.toContain('ON CONFLICT ("emailAddress")');
     });
 
+    test("resolves a composite of multi-word property keys in the conflict target", () => {
+      // Both conflict columns are multi-word and map to snake_case DB columns.
+      // The repository passes raw property keys; compileUpsert must resolve each.
+      const meta = {
+        ...baseMetadata,
+        entity: { ...baseMetadata.entity, name: "memberships", namespace: "org" },
+        fields: [
+          makeField("id", { type: "uuid" }),
+          makeField("tenantId", { type: "string", name: "tenant_id" }),
+          makeField("groupKey", { type: "string", name: "group_key" }),
+          makeField("role", { type: "string" }),
+        ],
+        primaryKeys: ["id"],
+      } as unknown as EntityMetadata;
+
+      const entity = { id: "m-1", tenantId: "t1", groupKey: "g1", role: "admin" };
+      const result = compileUpsert(entity, meta, undefined, {
+        conflictColumns: ["tenantId", "groupKey"],
+      });
+      expect(result).toMatchSnapshot();
+      expect(result.text).toContain('ON CONFLICT ("tenant_id", "group_key")');
+      // The unresolved property keys must NOT leak into the SQL
+      expect(result.text).not.toContain('"tenantId"');
+      expect(result.text).not.toContain('"groupKey"');
+    });
+
     test("resolves PK property keys to their DB column names in the default conflict target", () => {
       const meta = {
         ...baseMetadata,

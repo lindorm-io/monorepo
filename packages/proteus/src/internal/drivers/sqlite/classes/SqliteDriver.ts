@@ -220,6 +220,7 @@ export class SqliteDriver implements IProteusDriver {
 
     return new SqliteRepository<E>({
       target,
+      metadata,
       executor: this.createExecutor(target),
       queryBuilderFactory: () => this.createQueryBuilder(target),
       client,
@@ -264,6 +265,7 @@ export class SqliteDriver implements IProteusDriver {
 
     return new SqliteRepository<E>({
       target,
+      metadata,
       executor: txExecutor,
       queryBuilderFactory: () => this.createTransactionalQueryBuilder(target, handle),
       client: txClient,

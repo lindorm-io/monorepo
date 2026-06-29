@@ -58,6 +58,14 @@ import { extractCursorValues } from "../utils/pagination/extract-cursor-values.j
 
 export type DriverRepositoryBaseOptions<E extends IEntity> = {
   target: Constructor<E>;
+  /**
+   * Naming-strategy-resolved metadata for the target (column names already mapped
+   * to the configured naming strategy). When omitted, falls back to raw metadata
+   * derived from the target — kept for back-compat, but SQL drivers must pass the
+   * resolved metadata so repository-compiled SQL (e.g. upsert) uses real column
+   * names rather than property keys.
+   */
+  metadata?: EntityMetadata;
   executor: IRepositoryExecutor<E>;
   queryBuilderFactory: () => IProteusQueryBuilder<E>;
   namespace: string | null;
@@ -97,7 +105,7 @@ export abstract class DriverRepositoryBase<
     this.repositoryFactory = options.repositoryFactory;
     this.emitEntity = options.emitEntity ?? (async (): Promise<void> => {});
     this._meta = options.meta;
-    this.metadata = getEntityMetadata(options.target);
+    this.metadata = options.metadata ?? getEntityMetadata(options.target);
     this.hasRelations = this.metadata.relations.length > 0;
     this.hasAsyncRelationIds = (this.metadata.relationIds ?? []).some((ri) => {
       const rel = this.metadata.relations.find((r) => r.key === ri.relationKey);

@@ -83,6 +83,18 @@ exports[`compileUpsert > conflictColumns option — custom conflict target > res
 }
 `;
 
+exports[`compileUpsert > conflictColumns option — custom conflict target > resolves a composite of multi-word property keys in the conflict target 1`] = `
+{
+  "params": [
+    "m-1",
+    "t1",
+    "g1",
+    "admin",
+  ],
+  "text": "INSERT INTO "org"."memberships" ("id", "tenant_id", "group_key", "role") VALUES ($1, $2, $3, $4) ON CONFLICT ("tenant_id", "group_key") DO UPDATE SET "tenant_id" = EXCLUDED."tenant_id", "group_key" = EXCLUDED."group_key", "role" = EXCLUDED."role" RETURNING *",
+}
+`;
+
 exports[`compileUpsert > conflictColumns option — custom conflict target > resolves conflictColumns property keys to their DB column names 1`] = `
 {
   "params": [

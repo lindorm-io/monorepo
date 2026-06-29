@@ -11,7 +11,7 @@ export const upsertSuite = (
   entities: TckEntities,
   caps: TckCapabilities,
 ) => {
-  const { TckSimpleUser, TckUniqueConstrained } = entities;
+  const { TckSimpleUser, TckUniqueConstrained, TckUniqueComposite } = entities;
 
   beforeEach(async () => {
     await getHandle().clear();
@@ -113,6 +113,25 @@ export const upsertSuite = (
 
       const found = await repo.findOne({ email: "test@test.com" });
       expect(found!.name).toBe("Updated");
+    });
+
+    test("upsert with conflictOn on a composite (multi-word) unique resolves column names", async () => {
+      // tenantId is a multi-word property; under a snake naming strategy it maps
+      // to "tenant_id". conflictOn must be passed as property keys and resolved
+      // once to the DB column names — regression for the double-resolution bug.
+      const repo = getHandle().repository(TckUniqueComposite);
+      await repo.insert({ tenantId: "t1", key: "k1", value: 1 });
+
+      const options: UpsertOptions<{ tenantId: string; key: string; value: number }> = {
+        conflictOn: ["tenantId", "key"],
+      };
+      await repo.upsert(repo.create({ tenantId: "t1", key: "k1", value: 2 }), options);
+
+      const count = await repo.count({ tenantId: "t1", key: "k1" });
+      expect(count).toBe(1);
+
+      const found = await repo.findOne({ tenantId: "t1", key: "k1" });
+      expect(found!.value).toBe(2);
     });
   }
 };
