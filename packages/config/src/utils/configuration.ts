@@ -10,6 +10,15 @@ import {
 } from "../internal/index.js";
 import type { NpmInformation } from "../types/index.js";
 
+/**
+ * The validated configuration value returned by {@link configuration}: the
+ * parsed schema output augmented with resolved npm package identity. Named and
+ * exported so consumers can re-export a `config` value with `declaration: true`
+ * without TS2883 ("inferred type cannot be named …").
+ */
+export type Configuration<T extends Record<string, z.ZodType>> = NpmInformation &
+  z.infer<z.ZodObject<T>>;
+
 export type ConfigurationOptions = {
   /**
    * A file path or `file://` URL (typically `import.meta.url` at the
@@ -48,7 +57,7 @@ export type ConfigurationOptions = {
 export const configuration = <T extends Record<string, z.ZodType>>(
   schema: T,
   options: ConfigurationOptions = {},
-): NpmInformation & z.infer<z.ZodObject<T>> => {
+): Configuration<T> => {
   dotenvx.config({
     path: process.env.NODE_ENV ? [`.env.${process.env.NODE_ENV}`, ".env"] : ".env",
     quiet: true,
