@@ -5,7 +5,7 @@ if (typeof Symbol.metadata === "undefined") {
 }
 
 import { readFileSync, realpathSync } from "fs";
-import { dirname, resolve } from "path";
+import { basename, dirname, resolve } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { Command } from "commander";
 import {
@@ -38,7 +38,7 @@ const pkg = JSON.parse(readFileSync(resolve(here, "..", "package.json"), "utf-8"
 
 const printNextSteps = (answers: Answers): void => {
   process.stdout.write("\nDone. Next:\n");
-  process.stdout.write(`  cd ${answers.projectName}\n`);
+  process.stdout.write(`  cd ${basename(answers.projectDir)}\n`);
   if (needsDockerCompose(answers)) {
     process.stdout.write(`  npm run docker:up\n`);
   }

@@ -145,6 +145,13 @@ describe("scaffold", () => {
       expect(readFileSync(join(projectDir, "package.json"), "utf-8")).toMatchSnapshot();
     });
 
+    test("preserves an npm scope in the package name (F9)", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writePackageJson(baseAnswers({ projectDir, projectName: "@acme/proxy" }));
+      const pkg = JSON.parse(readFileSync(join(projectDir, "package.json"), "utf-8"));
+      expect(pkg.name).toBe("@acme/proxy");
+    });
+
     test("test script passes --passWithNoTests so a fresh scaffold doesn't exit 1 (F6)", () => {
       mkdirSync(projectDir, { recursive: true });
       writePackageJson(baseAnswers({ projectDir }));

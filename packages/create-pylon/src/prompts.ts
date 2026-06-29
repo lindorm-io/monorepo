@@ -1,6 +1,7 @@
 import { checkbox, confirm, input, select } from "@inquirer/prompts";
 import { existsSync, readdirSync, rmSync } from "fs";
 import { resolve } from "path";
+import { isValidProjectName, parseProjectName } from "./project-name.js";
 import type { Answers, Features, IrisDriver, ProteusDriver, WorkerKey } from "./types.js";
 import { PROTEUS_PRIMARY_PRIORITY } from "./types.js";
 
@@ -9,13 +10,21 @@ type RunPromptsInput = {
   cwd?: string;
 };
 
+const NAME_HINT =
+  "Use a plain name (my-app) or an npm scope (@acme/my-app); lowercase, no spaces";
+
 const promptProjectName = async (initial?: string): Promise<string> => {
-  if (initial && initial.trim().length > 0) return initial.trim();
+  if (initial && initial.trim().length > 0) {
+    if (!isValidProjectName(initial)) {
+      throw new Error(`Invalid project name "${initial.trim()}". ${NAME_HINT}.`);
+    }
+    return initial.trim();
+  }
 
   return input({
-    message: "Project name:",
+    message: "Project name (plain or @scope/name):",
     default: "my-app",
-    validate: (value) => (value.trim().length > 0 ? true : "Name cannot be empty"),
+    validate: (value) => (isValidProjectName(value) ? true : NAME_HINT),
   });
 };
 
@@ -108,7 +117,10 @@ export const runPrompts = async ({
   cwd = process.cwd(),
 }: RunPromptsInput): Promise<Answers> => {
   const projectName = await promptProjectName(positionalName);
-  const projectDir = resolve(cwd, projectName);
+  // For a scoped name (@acme/app) the package.json keeps the full name but the
+  // directory is the unscoped basename, so scoped monorepos need no rename.
+  const { dirName } = parseProjectName(projectName);
+  const projectDir = resolve(cwd, dirName);
 
   await resolveExistingCollision(projectDir);
 
