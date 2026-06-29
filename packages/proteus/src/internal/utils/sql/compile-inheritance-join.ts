@@ -1,5 +1,5 @@
 import type { EntityMetadata } from "../../entity/types/metadata.js";
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../entity/metadata/foreign-metadata.js";
 import type { SqlDialect } from "./sql-dialect.js";
 import type { InheritanceAliasMap } from "./types.js";
 
@@ -35,7 +35,7 @@ export const buildInheritanceAliases = (
     counter++;
   } else if (inh.children.size > 0) {
     for (const [, childConstructor] of inh.children) {
-      const childMeta = getEntityMetadata(childConstructor);
+      const childMeta = getForeignMetadata(metadata, childConstructor);
       const childFields = getChildOnlyFields(childMeta);
 
       aliases.push({
@@ -62,7 +62,7 @@ export const compileInheritanceJoin = (
   if (inheritanceAliases.length === 0) return "";
 
   const inh = metadata.inheritance!;
-  const rootMeta = getEntityMetadata(inh.root);
+  const rootMeta = getForeignMetadata(metadata, inh.root);
   const isChild = inh.discriminatorValue != null;
   const joinType = isChild ? "INNER JOIN" : "LEFT JOIN";
 
@@ -96,7 +96,7 @@ export const compileInheritanceFrom = (
   if (inheritanceAliases.length === 0) return { fromClause: "", joinConditions: [] };
 
   const inh = metadata.inheritance!;
-  const rootMeta = getEntityMetadata(inh.root);
+  const rootMeta = getForeignMetadata(metadata, inh.root);
 
   const tables: Array<string> = [];
   const conditions: Array<string> = [];
@@ -127,7 +127,7 @@ const getChildOnlyFields = (childMeta: EntityMetadata): EntityMetadata["fields"]
   const inh = childMeta.inheritance;
   if (!inh) return [];
 
-  const rootMeta = getEntityMetadata(inh.root);
+  const rootMeta = getForeignMetadata(childMeta, inh.root);
   const rootFieldKeys = new Set(rootMeta.fields.map((f) => f.key));
 
   return childMeta.fields.filter(

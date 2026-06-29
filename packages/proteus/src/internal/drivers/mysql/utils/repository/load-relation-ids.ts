@@ -5,7 +5,7 @@ import type {
   MetaRelationId,
 } from "../../../../entity/types/metadata.js";
 import type { MysqlQueryClient } from "../../types/mysql-query-client.js";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { getJoinName } from "../../../../entity/utils/get-join-name.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
@@ -37,7 +37,7 @@ export const loadRelationIds = async <E extends IEntity>(
     if (relation.joinKeys && relation.type !== "ManyToMany") continue;
 
     const foreignTarget = relation.foreignConstructor();
-    const foreignMeta = getEntityMetadata(foreignTarget);
+    const foreignMeta = getForeignMetadata(relation, foreignTarget);
     const schema = foreignMeta.entity.namespace ?? ctx.namespace;
 
     if (relation.type === "OneToMany") {

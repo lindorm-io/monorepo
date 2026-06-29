@@ -14,7 +14,7 @@ import type {
   FindOptions,
   UpsertOptions,
 } from "../../../../types/index.js";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type {
   EntityMetadata,
@@ -1304,7 +1304,7 @@ export class PostgresRepository<
     relation: MetaRelation,
   ): Promise<Array<IEntity>> {
     const foreignTarget = relation.foreignConstructor();
-    const foreignMeta = getEntityMetadata(foreignTarget);
+    const foreignMeta = getForeignMetadata(this.metadata, foreignTarget);
 
     const inverseRelation = foreignMeta.relations.find(
       (r) =>

@@ -1,6 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import type { EntityMetadata } from "../types/metadata.js";
-import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../metadata/foreign-metadata.js";
 
 /**
  * For a single-table inheritance root entity, resolve the correct child
@@ -39,5 +39,5 @@ export const resolvePolymorphicMetadata = (
     return metadata;
   }
 
-  return getEntityMetadata(childConstructor);
+  return getForeignMetadata(metadata, childConstructor);
 };

@@ -9,6 +9,7 @@ import type { IEntity } from "../../../interfaces/index.js";
 import type { TckCapabilities, TckDriverFactory, TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 import type { ProteusSource } from "../../../classes/ProteusSource.js";
+import type { NamingStrategy } from "../../../types/source-options.js";
 import { createTckEntities } from "./create-tck-entities.js";
 
 import { crudSuite } from "./crud.tck.js";
@@ -55,7 +56,30 @@ const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {
   }
 };
 
-export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource) => {
+/**
+ * Run the full conformance suite for a driver. When `namings` has more than one
+ * entry, the entire suite is replayed under each naming strategy in its own
+ * `describe` block — turning the behavioural assertions into a free key→column
+ * resolution fuzzer. Each naming gets a fresh set of entity classes + hook spy
+ * so the runs are fully isolated.
+ */
+export const runTck = (
+  factory: TckDriverFactory,
+  getSource: () => ProteusSource,
+  namings: ReadonlyArray<NamingStrategy> = ["none"],
+) => {
+  for (const naming of namings) {
+    describe(`naming: ${naming}`, () => {
+      runTckForNaming(factory, getSource, naming);
+    });
+  }
+};
+
+const runTckForNaming = (
+  factory: TckDriverFactory,
+  getSource: () => ProteusSource,
+  naming: NamingStrategy,
+) => {
   const hookCallback = vi.fn();
   const entities = createTckEntities(hookCallback);
   const caps = factory.capabilities;
@@ -133,7 +157,7 @@ export const runTck = (factory: TckDriverFactory, getSource: () => ProteusSource
   const allTargets = baseTargets;
 
   beforeAll(async () => {
-    handle = await factory.setup(allTargets);
+    handle = await factory.setup(allTargets, naming);
   });
 
   afterAll(async () => {

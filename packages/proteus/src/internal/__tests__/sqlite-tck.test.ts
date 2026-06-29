@@ -12,6 +12,7 @@ import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import type { NamingStrategy } from "../../types/source-options.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
@@ -42,9 +43,12 @@ const factory: TckDriverFactory = {
     transactions: { rollback: true, savepoints: true },
     migrations: { lifecycle: true, generation: true },
   },
-  async setup(entities: Array<Constructor<IEntity>>): Promise<TckDriverHandle> {
+  async setup(
+    entities: Array<Constructor<IEntity>>,
+    naming: NamingStrategy = "none",
+  ): Promise<TckDriverHandle> {
     const logger = createMockLogger();
-    const filename = join(tmpdir(), `proteus-tck-${randomUUID()}.db`);
+    const filename = join(tmpdir(), `proteus-tck-${naming}-${randomUUID()}.db`);
 
     source = new ProteusSource({
       driver: "sqlite",
@@ -52,6 +56,7 @@ const factory: TckDriverFactory = {
       entities,
       logger,
       synchronize: true,
+      naming,
       amphora,
     });
 
@@ -80,6 +85,7 @@ const factory: TckDriverFactory = {
           entities,
           logger,
           synchronize: true,
+          naming,
           amphora,
         });
 
@@ -102,5 +108,5 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: SQLite", () => {
-  runTck(factory, () => source);
+  runTck(factory, () => source, ["none", "snake", "camel"]);
 });

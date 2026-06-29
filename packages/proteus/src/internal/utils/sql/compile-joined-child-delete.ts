@@ -2,7 +2,7 @@ import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../types/query.js";
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../entity/metadata/foreign-metadata.js";
 import { getEntityName } from "../../entity/utils/get-entity-name.js";
 import type { CompiledSql } from "./compiled-sql.js";
 import { compileWhere } from "./compile-where.js";
@@ -33,7 +33,7 @@ export const compileJoinedChildDelete = <E extends IEntity>(
   // (with skipJoinedContext) would fail because those columns don't exist
   // on the root table. In either case, fall back to the standard JOIN-based
   // DELETE which handles both tables correctly.
-  const rootMeta = getEntityMetadata(inh.root);
+  const rootMeta = getForeignMetadata(metadata, inh.root);
   const rootFieldKeys = new Set(rootMeta.fields.map((f) => f.key));
   const rootOnlyKeys = new Set(
     rootMeta.fields

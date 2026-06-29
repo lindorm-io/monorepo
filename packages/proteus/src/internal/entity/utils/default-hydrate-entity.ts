@@ -5,6 +5,7 @@ import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
 import type { EntityMetadata } from "../types/metadata.js";
 import { decryptFieldValue } from "./decrypt-field-value.js";
 import { deserialise } from "./deserialise.js";
+import { resolvePropertyKey } from "./resolve-property-key.js";
 import { runHooksSync } from "./run-hooks-sync.js";
 import { storeSnapshot } from "./snapshot-store.js";
 
@@ -106,12 +107,19 @@ export const defaultHydrateEntity = <E extends IEntity>(
     if (!relation.joinKeys || relation.type === "ManyToMany") continue;
 
     for (const [localKey] of Object.entries(relation.joinKeys)) {
+      // joinKeys keys are column names; map back to the entity property key
+      // (diverges from the column under the snake strategy).
+      const propertyKey = resolvePropertyKey(metadata, localKey);
+
       // Skip if already handled in the field loop (user-declared FK field)
-      if (localKey in snapshotDict) continue;
+      if (propertyKey in snapshotDict) continue;
 
       if (localKey in data) {
-        entity[localKey] = data[localKey] ?? null;
-        snapshotDict[localKey] = entity[localKey];
+        entity[propertyKey] = data[localKey] ?? null;
+        snapshotDict[propertyKey] = entity[propertyKey];
+      } else if (propertyKey in data) {
+        entity[propertyKey] = data[propertyKey] ?? null;
+        snapshotDict[propertyKey] = entity[propertyKey];
       }
     }
   }
@@ -132,7 +140,8 @@ export const defaultHydrateEntity = <E extends IEntity>(
     } else if (entries.length === 1) {
       // Auto-detect single FK
       const [localKey] = entries[0];
-      entity[ri.key] = entity[localKey] ?? data[localKey] ?? null;
+      const propertyKey = resolvePropertyKey(metadata, localKey);
+      entity[ri.key] = entity[propertyKey] ?? data[localKey] ?? data[propertyKey] ?? null;
     }
     // Composite FK without explicit column — skip (user must specify column)
   }

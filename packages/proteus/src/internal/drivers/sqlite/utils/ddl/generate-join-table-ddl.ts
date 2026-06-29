@@ -4,7 +4,7 @@ import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { NamespaceOptions } from "../../../../types/types.js";
 import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
 import { getJoinName } from "../../../../entity/utils/get-join-name.js";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { hashIdentifier } from "../hash-identifier.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 import { resolveColumnNameSafe } from "../resolve-column-name.js";
@@ -47,7 +47,7 @@ export const generateJoinTableDDL = (
     const foreignTableQuoted = quoteIdentifier(foreignName.name);
 
     // Get the inverse relation's joinKeys from the foreign entity
-    const foreignMeta = getEntityMetadata(relation.foreignConstructor());
+    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
     const inverseRelation = foreignMeta.relations.find(
       (r) =>
         r.foreignKey === relation.key &&

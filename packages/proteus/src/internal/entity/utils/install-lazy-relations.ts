@@ -2,6 +2,7 @@ import type { IEntity } from "../../../interfaces/index.js";
 import type { EntityMetadata, MetaRelation, QueryScope } from "../types/metadata.js";
 import { LazyRelation } from "./lazy-relation.js";
 import { LazyCollection } from "./lazy-collection.js";
+import { resolvePropertyKey } from "./resolve-property-key.js";
 
 export type LazyRelationLoader = (
   entity: IEntity,
@@ -54,7 +55,7 @@ export const installLazyRelations = <E extends IEntity>(
         () => ctx.loadRelation(entity, relation) as Promise<Array<IEntity>>,
       );
     } else {
-      if (isFkNull(entity, relation)) {
+      if (isFkNull(entity, relation, metadata)) {
         (entity as any)[relation.key] = null;
       } else {
         (entity as any)[relation.key] = new LazyRelation(
@@ -72,11 +73,16 @@ export const installLazyRelations = <E extends IEntity>(
  * For inverse-side relations (no joinKeys on this entity), we cannot
  * know without querying, so return false (install thenable).
  */
-const isFkNull = (entity: IEntity, relation: MetaRelation): boolean => {
+const isFkNull = (
+  entity: IEntity,
+  relation: MetaRelation,
+  metadata: EntityMetadata,
+): boolean => {
   if (!relation.joinKeys) return false;
 
   for (const localKey of Object.keys(relation.joinKeys)) {
-    if ((entity as any)[localKey] != null) return false;
+    const propertyKey = resolvePropertyKey(metadata, localKey);
+    if ((entity as any)[propertyKey] != null) return false;
   }
 
   return true;

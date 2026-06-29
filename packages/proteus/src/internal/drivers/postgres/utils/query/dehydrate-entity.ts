@@ -47,7 +47,7 @@ export const dehydrateEntity = <E extends IEntity>(
       value = encryptFieldValue(value, field.encrypted.predicate, amphora);
     }
     columns.push({ column: field.name, value: coerceWriteValue(value) });
-    handledKeys.add(field.key);
+    handledKeys.add(field.name);
   }
 
   for (const relation of metadata.relations) {
@@ -58,7 +58,7 @@ export const dehydrateEntity = <E extends IEntity>(
     for (const [localKey, foreignKey] of Object.entries(relation.joinKeys)) {
       if (handledKeys.has(localKey)) continue;
 
-      const value = resolveJoinKeyValue(entity, relation, localKey, foreignKey);
+      const value = resolveJoinKeyValue(entity, relation, localKey, foreignKey, metadata);
 
       columns.push({ column: localKey, value: coerceWriteValue(value ?? null) });
       handledKeys.add(localKey);

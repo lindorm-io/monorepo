@@ -11,6 +11,7 @@ import type { IEntity } from "../../interfaces/index.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import { PostgresDriver } from "../drivers/postgres/classes/PostgresDriver.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import type { NamingStrategy } from "../../types/source-options.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
@@ -19,7 +20,7 @@ vi.setConfig({ testTimeout: 120_000 });
 
 const PG_CONNECTION = "postgres://root:example@localhost:5432/default";
 
-const namespace = `tck_${randomBytes(6).toString("hex")}`;
+let namespace = `tck_${randomBytes(6).toString("hex")}`;
 
 let source: ProteusSource;
 let clearClient: Client | null = null;
@@ -46,8 +47,14 @@ const factory: TckDriverFactory = {
     transactions: { rollback: true, savepoints: true },
     migrations: { lifecycle: true, generation: true },
   },
-  async setup(entities: Array<Constructor<IEntity>>): Promise<TckDriverHandle> {
+  async setup(
+    entities: Array<Constructor<IEntity>>,
+    naming: NamingStrategy = "none",
+  ): Promise<TckDriverHandle> {
     const logger = createMockLogger();
+
+    // Per-naming schema so each strategy's run is isolated.
+    namespace = `tck_${naming}_${randomBytes(6).toString("hex")}`;
 
     // Create the schema first via raw client
     const raw = new Client({ connectionString: PG_CONNECTION });
@@ -61,6 +68,7 @@ const factory: TckDriverFactory = {
       url: PG_CONNECTION,
       namespace,
       synchronize: true,
+      naming,
       entities,
       logger,
       amphora,
@@ -123,5 +131,5 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: PostgreSQL", () => {
-  runTck(factory, () => source);
+  runTck(factory, () => source, ["none", "snake", "camel"]);
 });

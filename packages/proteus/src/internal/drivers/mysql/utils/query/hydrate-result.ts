@@ -4,7 +4,7 @@ import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { IncludeSpec } from "../../../../types/query.js";
 import { defaultHydrateEntity } from "../../../../entity/utils/default-hydrate-entity.js";
 import type { HydrateOptions } from "../../../../entity/utils/default-hydrate-entity.js";
-import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import type { AliasMap } from "./compile-select.js";
 import { extractFieldDictFromAliased } from "./extract-field-dict.js";
 import { getRelationMetadata } from "./get-relation-metadata.js";
@@ -37,7 +37,7 @@ const resolvePolymorphicMetadataFromAliased = (
   const childConstructor = inh.children.get(discValue);
   if (!childConstructor) return rootMetadata;
 
-  return getEntityMetadata(childConstructor);
+  return getForeignMetadata(rootMetadata, childConstructor);
 };
 
 export const hydrateRows = <E extends IEntity>(

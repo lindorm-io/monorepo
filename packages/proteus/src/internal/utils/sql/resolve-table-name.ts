@@ -1,5 +1,5 @@
 import type { EntityMetadata } from "../../entity/types/metadata.js";
-import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../entity/metadata/foreign-metadata.js";
 import type { SqlDialect } from "./sql-dialect.js";
 
 export type ResolvedTable = {
@@ -16,7 +16,7 @@ export const resolveTableName = (
     dialect.supportsNamespace ? (meta.entity.namespace ?? namespace ?? null) : null;
 
   if (metadata.inheritance && metadata.inheritance.discriminatorValue != null) {
-    const rootMeta = getEntityMetadata(metadata.inheritance.root);
+    const rootMeta = getForeignMetadata(metadata, metadata.inheritance.root);
     return {
       schema: resolveSchema(rootMeta),
       name: rootMeta.entity.name,

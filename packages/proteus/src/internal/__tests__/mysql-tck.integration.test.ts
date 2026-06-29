@@ -10,6 +10,7 @@ import type { Constructor } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
+import type { NamingStrategy } from "../../types/source-options.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
@@ -18,7 +19,7 @@ vi.setConfig({ testTimeout: 120_000 });
 
 const MYSQL_HOST = process.env["MYSQL_HOST"] ?? "127.0.0.1";
 const MYSQL_PORT = Number(process.env["MYSQL_PORT"] ?? 3306);
-const MYSQL_DATABASE = `tck_${randomBytes(6).toString("hex")}`;
+let MYSQL_DATABASE = `tck_${randomBytes(6).toString("hex")}`;
 const MYSQL_USER = "root";
 const MYSQL_PASSWORD = "example";
 
@@ -47,8 +48,14 @@ const factory: TckDriverFactory = {
     transactions: { rollback: true, savepoints: true },
     migrations: { lifecycle: true, generation: true },
   },
-  async setup(entities: Array<Constructor<IEntity>>): Promise<TckDriverHandle> {
+  async setup(
+    entities: Array<Constructor<IEntity>>,
+    naming: NamingStrategy = "none",
+  ): Promise<TckDriverHandle> {
     const logger = createMockLogger();
+
+    // Per-naming database so each strategy's run is isolated.
+    MYSQL_DATABASE = `tck_${naming}_${randomBytes(6).toString("hex")}`;
 
     // Wait for MySQL to be ready (container may still be initializing)
     for (let attempt = 0; attempt < 30; attempt++) {
@@ -86,6 +93,7 @@ const factory: TckDriverFactory = {
       user: MYSQL_USER,
       password: MYSQL_PASSWORD,
       synchronize: true,
+      naming,
       entities,
       logger,
       amphora,
@@ -156,5 +164,5 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: MySQL", () => {
-  runTck(factory, () => source);
+  runTck(factory, () => source, ["none", "snake", "camel"]);
 });
