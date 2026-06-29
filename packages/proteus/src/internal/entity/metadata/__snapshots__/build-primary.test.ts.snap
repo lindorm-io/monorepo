@@ -46,6 +46,7 @@ exports[`buildPrimaryMetadata — full metadata snapshot > snapshot of complete 
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -70,6 +71,7 @@ exports[`buildPrimaryMetadata — full metadata snapshot > snapshot of complete 
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -94,6 +96,7 @@ exports[`buildPrimaryMetadata — full metadata snapshot > snapshot of complete 
       "schema": null,
       "transform": null,
       "type": "integer",
+      "typedJson": null,
     },
   ],
   "primaryKeys": [

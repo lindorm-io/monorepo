@@ -80,6 +80,7 @@ exports[`MySqlQueryBuilder > set operations > except should compile EXCEPT set o
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -104,6 +105,7 @@ exports[`MySqlQueryBuilder > set operations > except should compile EXCEPT set o
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -128,6 +130,7 @@ exports[`MySqlQueryBuilder > set operations > except should compile EXCEPT set o
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -152,6 +155,7 @@ exports[`MySqlQueryBuilder > set operations > except should compile EXCEPT set o
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -228,6 +232,7 @@ exports[`MySqlQueryBuilder > set operations > intersect should compile INTERSECT
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -252,6 +257,7 @@ exports[`MySqlQueryBuilder > set operations > intersect should compile INTERSECT
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -276,6 +282,7 @@ exports[`MySqlQueryBuilder > set operations > intersect should compile INTERSECT
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -300,6 +307,7 @@ exports[`MySqlQueryBuilder > set operations > intersect should compile INTERSECT
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -376,6 +384,7 @@ exports[`MySqlQueryBuilder > set operations > union should compile set operation
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -400,6 +409,7 @@ exports[`MySqlQueryBuilder > set operations > union should compile set operation
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -424,6 +434,7 @@ exports[`MySqlQueryBuilder > set operations > union should compile set operation
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -448,6 +459,7 @@ exports[`MySqlQueryBuilder > set operations > union should compile set operation
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -524,6 +536,7 @@ exports[`MySqlQueryBuilder > toSQL > should return compiled query 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -548,6 +561,7 @@ exports[`MySqlQueryBuilder > toSQL > should return compiled query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -572,6 +586,7 @@ exports[`MySqlQueryBuilder > toSQL > should return compiled query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -596,6 +611,7 @@ exports[`MySqlQueryBuilder > toSQL > should return compiled query 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -671,6 +687,7 @@ exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereInQuery shoul
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -695,6 +712,7 @@ exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereInQuery shoul
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -719,6 +737,7 @@ exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereInQuery shoul
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -743,6 +762,7 @@ exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereInQuery shoul
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -818,6 +838,7 @@ exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereNotInQuery sh
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -842,6 +863,7 @@ exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereNotInQuery sh
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -866,6 +888,7 @@ exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereNotInQuery sh
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -890,6 +913,7 @@ exports[`MySqlQueryBuilder > whereInQuery / whereNotInQuery > whereNotInQuery sh
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],

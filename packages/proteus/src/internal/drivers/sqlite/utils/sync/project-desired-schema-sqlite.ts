@@ -218,6 +218,16 @@ export const projectDesiredSchemaSqlite = (
     const columns: Array<SqliteDesiredColumn> = [];
     for (const field of effectiveFields) {
       columns.push(projectFieldColumn(field, metadata.generated));
+      if (field.typedJson) {
+        columns.push({
+          name: field.typedJson.column,
+          sqliteType: "TEXT",
+          nullable: true,
+          defaultExpr: null,
+          isAutoincrement: false,
+          checkExpr: null,
+        });
+      }
     }
 
     // FK columns from owning-side relations
@@ -598,6 +608,7 @@ export const projectDesiredSchemaSqlite = (
           scale: null,
           schema: null,
           transform: null,
+          typedJson: null,
           type: embeddedList.elementType,
         };
         const sqliteType = mapFieldTypeSqlite(primitiveField);

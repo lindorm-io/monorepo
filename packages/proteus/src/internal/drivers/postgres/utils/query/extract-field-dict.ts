@@ -1,5 +1,9 @@
 import type { Dict } from "@lindorm/types";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import {
+  typedJsonMetaAlias,
+  typedJsonMetaDictKey,
+} from "../../../../entity/utils/typed-json.js";
 
 /**
  * Extract a flat Dict keyed by field key from a raw RETURNING row.
@@ -18,6 +22,11 @@ export const extractFieldDictFromReturning = (
     const rawValue = row[field.name];
     // RETURNING * always includes all columns; treat absent as null
     dict[field.key] = rawValue === undefined ? null : rawValue;
+
+    if (field.typedJson) {
+      const meta = row[field.typedJson.column];
+      dict[typedJsonMetaDictKey(field.key)] = meta === undefined ? null : meta;
+    }
   }
 
   // FK columns from owning-side relations
@@ -54,6 +63,11 @@ export const extractFieldDictFromAliased = (
     const rawValue = row[alias];
     // Always include all fields; default absent aliases to null (matches old hydrateEntity behaviour)
     dict[field.key] = rawValue === undefined ? null : rawValue;
+
+    if (field.typedJson) {
+      const meta = row[typedJsonMetaAlias(tableAlias, field.key)];
+      dict[typedJsonMetaDictKey(field.key)] = meta === undefined ? null : meta;
+    }
   }
 
   // FK columns from owning-side relations

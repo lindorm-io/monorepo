@@ -38,6 +38,7 @@ exports[`Enum > should match snapshot for TypeScript enum 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -66,6 +67,7 @@ exports[`Enum > should match snapshot for TypeScript enum 1`] = `
       "schema": null,
       "transform": null,
       "type": "enum",
+      "typedJson": null,
     },
   ],
   "filters": [],

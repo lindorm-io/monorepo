@@ -38,6 +38,7 @@ exports[`Field > should register integer field 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -62,6 +63,7 @@ exports[`Field > should register integer field 1`] = `
       "schema": null,
       "transform": null,
       "type": "integer",
+      "typedJson": null,
     },
   ],
   "filters": [],

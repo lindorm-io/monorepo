@@ -33,6 +33,7 @@ export const ExpiryDateField =
       scale: null,
       schema: null,
       transform: null,
+      typedJson: null,
       type: "timestamp",
     });
   };

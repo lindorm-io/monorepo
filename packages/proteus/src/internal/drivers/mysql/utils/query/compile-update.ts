@@ -3,6 +3,7 @@ import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
+import { typedJsonChangedColumns } from "../../../../entity/utils/typed-json.js";
 import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 import { coerceWriteValue } from "./coerce-value.js";
@@ -118,6 +119,16 @@ export const compileUpdateMany = <E extends IEntity>(
     if (!field) continue;
     if (discriminatorColName && field.name === discriminatorColName) continue;
 
+    if (field.typedJson) {
+      for (const pair of typedJsonChangedColumns(field, value, (d) =>
+        coerceWriteValue(d, field.type),
+      )) {
+        params.push(pair.value);
+        setClauses.push(`${quoteIdentifier(pair.column)} = ?`);
+      }
+      continue;
+    }
+
     let coerced = coerceWriteValue(value, field.type);
     if (coerced != null && field.encrypted && amphora) {
       coerced = encryptFieldValue(
@@ -199,6 +210,17 @@ const compileJoinedUpdateMany = <E extends IEntity>(
     const field = metadata.fields.find((f) => f.key === key);
     if (!field) continue;
     if (discriminatorColName && field.name === discriminatorColName) continue;
+
+    if (field.typedJson) {
+      const alias = ctx.childFieldNames.has(field.name) ? "t1" : "t0";
+      for (const pair of typedJsonChangedColumns(field, value, (d) =>
+        coerceWriteValue(d, field.type),
+      )) {
+        params.push(pair.value);
+        setClauses.push(`${quoteIdentifier(alias)}.${quoteIdentifier(pair.column)} = ?`);
+      }
+      continue;
+    }
 
     let coerced = coerceWriteValue(value, field.type);
     if (coerced != null && field.encrypted && amphora) {

@@ -4,6 +4,7 @@ import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
 import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { typedJsonChangedColumns } from "../../../../entity/utils/typed-json.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 import { coerceWriteValue } from "./coerce-value.js";
 import type { CompiledSql } from "./compiled-sql.js";
@@ -53,6 +54,15 @@ export const compilePartialUpdate = <E extends IEntity>(
     if (discriminatorColName && colName === discriminatorColName) continue;
 
     const field = metadata.fields.find((f) => f.name === colName);
+    if (field?.typedJson) {
+      for (const pair of typedJsonChangedColumns(field, value, (d) =>
+        coerceWriteValue(d, field),
+      )) {
+        params.push(pair.value);
+        setClauses.push(`${quoteIdentifier(pair.column)} = $${params.length}`);
+      }
+      continue;
+    }
     let transformed = field?.transform ? field.transform.to(value) : value;
     if (transformed != null && field?.encrypted && amphora) {
       transformed = encryptFieldValue(
@@ -160,6 +170,15 @@ export const compileJoinedPartialUpdate = <E extends IEntity>(
   // Add root changed columns (apply transform.to() for fields with transforms)
   for (const [colName, value] of Object.entries(rootChanged)) {
     const field = metadata.fields.find((f) => f.name === colName);
+    if (field?.typedJson) {
+      for (const pair of typedJsonChangedColumns(field, value, (d) =>
+        coerceWriteValue(d, field),
+      )) {
+        rootParams.push(pair.value);
+        rootSetClauses.push(`${quoteIdentifier(pair.column)} = $${rootParams.length}`);
+      }
+      continue;
+    }
     let transformed = field?.transform ? field.transform.to(value) : value;
     if (transformed != null && field?.encrypted && amphora) {
       transformed = encryptFieldValue(
@@ -258,6 +277,17 @@ export const compileJoinedPartialUpdate = <E extends IEntity>(
 
     for (const [colName, value] of Object.entries(childChanged)) {
       const field = metadata.fields.find((f) => f.name === colName);
+      if (field?.typedJson) {
+        for (const pair of typedJsonChangedColumns(field, value, (d) =>
+          coerceWriteValue(d, field),
+        )) {
+          childParams.push(pair.value);
+          childSetClauses.push(
+            `${quoteIdentifier(pair.column)} = $${childParams.length}`,
+          );
+        }
+        continue;
+      }
       let transformed = field?.transform ? field.transform.to(value) : value;
       if (transformed != null && field?.encrypted && amphora) {
         transformed = encryptFieldValue(

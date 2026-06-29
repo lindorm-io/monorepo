@@ -69,6 +69,7 @@ exports[`PostgresQueryBuilder > toSQL > should return compiled query 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -93,6 +94,7 @@ exports[`PostgresQueryBuilder > toSQL > should return compiled query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -117,6 +119,7 @@ exports[`PostgresQueryBuilder > toSQL > should return compiled query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -141,6 +144,7 @@ exports[`PostgresQueryBuilder > toSQL > should return compiled query 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],

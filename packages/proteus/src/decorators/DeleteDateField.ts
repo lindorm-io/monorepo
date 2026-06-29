@@ -34,6 +34,7 @@ export const DeleteDateField =
       scale: null,
       schema: null,
       transform: null,
+      typedJson: null,
       type: "timestamp",
     });
   };

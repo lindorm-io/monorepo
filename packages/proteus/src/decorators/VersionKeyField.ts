@@ -44,6 +44,7 @@ export const VersionKeyField =
       scale: null,
       schema: null,
       transform: null,
+      typedJson: null,
       type: type ?? null,
     });
     stagePrimaryKey(context.metadata, { key });

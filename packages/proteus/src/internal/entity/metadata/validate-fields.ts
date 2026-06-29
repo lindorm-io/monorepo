@@ -13,6 +13,8 @@ const UNIQUE_FIELDS: Array<MetaFieldDecorator> = [
 
 const PRECISION_TYPES: Array<MetaFieldType> = ["decimal", "float", "real"];
 
+const TYPED_JSON_TYPES: Array<MetaFieldType> = ["array", "json", "object"];
+
 const validateModifierFieldTypes = (targetName: string, field: MetaField): void => {
   const type = field.type;
 
@@ -35,6 +37,18 @@ const validateModifierFieldTypes = (targetName: string, field: MetaField): void 
       details: `@Enum on "${field.key}" requires the @Field type to be "enum", but it is "${type ?? "unset"}" — set the field type to "enum" or remove @Enum.`,
       debug: { target: targetName, field: field.key, actualType: type },
     });
+  }
+
+  if (field.typedJson && (!type || !TYPED_JSON_TYPES.includes(type))) {
+    throw new EntityMetadataError(
+      `@TypedJson on "${field.key}" requires a "json", "object", or "array" field`,
+      {
+        code: "invalid_typed_json_type",
+        title: "Invalid TypedJson Type",
+        details: `@TypedJson on "${field.key}" requires the @Field type to be "json", "object", or "array", but it is "${type ?? "unset"}" — change the field type or remove @TypedJson.`,
+        debug: { target: targetName, field: field.key, actualType: type },
+      },
+    );
   }
 
   if (type === "enum" && !field.enum) {

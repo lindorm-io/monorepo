@@ -38,6 +38,7 @@ exports[`compileCount > should compile COUNT with WHERE 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -62,6 +63,7 @@ exports[`compileCount > should compile COUNT with WHERE 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -86,6 +88,7 @@ exports[`compileCount > should compile COUNT with WHERE 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -110,6 +113,7 @@ exports[`compileCount > should compile COUNT with WHERE 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -170,6 +174,7 @@ exports[`compileCount > should compile COUNT(*) query 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -194,6 +199,7 @@ exports[`compileCount > should compile COUNT(*) query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -218,6 +224,7 @@ exports[`compileCount > should compile COUNT(*) query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -242,6 +249,7 @@ exports[`compileCount > should compile COUNT(*) query 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -300,6 +308,7 @@ exports[`compileQuery > should compile SELECT with CTE (WITH clause) 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -324,6 +333,7 @@ exports[`compileQuery > should compile SELECT with CTE (WITH clause) 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -348,6 +358,7 @@ exports[`compileQuery > should compile SELECT with CTE (WITH clause) 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -372,6 +383,7 @@ exports[`compileQuery > should compile SELECT with CTE (WITH clause) 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -432,6 +444,7 @@ exports[`compileQuery > should compile SELECT with GROUP BY 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -456,6 +469,7 @@ exports[`compileQuery > should compile SELECT with GROUP BY 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -480,6 +494,7 @@ exports[`compileQuery > should compile SELECT with GROUP BY 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -504,6 +519,7 @@ exports[`compileQuery > should compile SELECT with GROUP BY 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -562,6 +578,7 @@ exports[`compileQuery > should compile SELECT with GROUP BY and HAVING 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -586,6 +603,7 @@ exports[`compileQuery > should compile SELECT with GROUP BY and HAVING 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -610,6 +628,7 @@ exports[`compileQuery > should compile SELECT with GROUP BY and HAVING 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -634,6 +653,7 @@ exports[`compileQuery > should compile SELECT with GROUP BY and HAVING 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -694,6 +714,7 @@ exports[`compileQuery > should compile SELECT with LIMIT and OFFSET 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -718,6 +739,7 @@ exports[`compileQuery > should compile SELECT with LIMIT and OFFSET 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -742,6 +764,7 @@ exports[`compileQuery > should compile SELECT with LIMIT and OFFSET 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -766,6 +789,7 @@ exports[`compileQuery > should compile SELECT with LIMIT and OFFSET 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -827,6 +851,7 @@ exports[`compileQuery > should compile SELECT with ORDER BY (NULLS LAST emulatio
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -851,6 +876,7 @@ exports[`compileQuery > should compile SELECT with ORDER BY (NULLS LAST emulatio
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -875,6 +901,7 @@ exports[`compileQuery > should compile SELECT with ORDER BY (NULLS LAST emulatio
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -899,6 +926,7 @@ exports[`compileQuery > should compile SELECT with ORDER BY (NULLS LAST emulatio
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -957,6 +985,7 @@ exports[`compileQuery > should compile SELECT with WHERE 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -981,6 +1010,7 @@ exports[`compileQuery > should compile SELECT with WHERE 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1005,6 +1035,7 @@ exports[`compileQuery > should compile SELECT with WHERE 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1029,6 +1060,7 @@ exports[`compileQuery > should compile SELECT with WHERE 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -1089,6 +1121,7 @@ exports[`compileQuery > should compile SELECT with multiple CTEs 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1113,6 +1146,7 @@ exports[`compileQuery > should compile SELECT with multiple CTEs 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1137,6 +1171,7 @@ exports[`compileQuery > should compile SELECT with multiple CTEs 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1161,6 +1196,7 @@ exports[`compileQuery > should compile SELECT with multiple CTEs 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],
@@ -1222,6 +1258,7 @@ exports[`compileQuery > should compile a basic SELECT query 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1246,6 +1283,7 @@ exports[`compileQuery > should compile a basic SELECT query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1270,6 +1308,7 @@ exports[`compileQuery > should compile a basic SELECT query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1294,6 +1333,7 @@ exports[`compileQuery > should compile a basic SELECT query 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "filters": [],

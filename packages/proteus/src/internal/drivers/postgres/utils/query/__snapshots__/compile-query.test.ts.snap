@@ -37,6 +37,7 @@ exports[`combined soft-delete + version filtering > should AND both conditions o
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -61,6 +62,7 @@ exports[`combined soft-delete + version filtering > should AND both conditions o
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -85,6 +87,7 @@ exports[`combined soft-delete + version filtering > should AND both conditions o
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -109,6 +112,7 @@ exports[`combined soft-delete + version filtering > should AND both conditions o
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -133,6 +137,7 @@ exports[`combined soft-delete + version filtering > should AND both conditions o
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -188,6 +193,7 @@ exports[`combined soft-delete + version filtering > should AND user WHERE with b
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -212,6 +218,7 @@ exports[`combined soft-delete + version filtering > should AND user WHERE with b
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -236,6 +243,7 @@ exports[`combined soft-delete + version filtering > should AND user WHERE with b
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -260,6 +268,7 @@ exports[`combined soft-delete + version filtering > should AND user WHERE with b
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -284,6 +293,7 @@ exports[`combined soft-delete + version filtering > should AND user WHERE with b
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -341,6 +351,7 @@ exports[`combined soft-delete + version filtering > should emit only version con
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -365,6 +376,7 @@ exports[`combined soft-delete + version filtering > should emit only version con
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -389,6 +401,7 @@ exports[`combined soft-delete + version filtering > should emit only version con
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -413,6 +426,7 @@ exports[`combined soft-delete + version filtering > should emit only version con
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -437,6 +451,7 @@ exports[`combined soft-delete + version filtering > should emit only version con
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -492,6 +507,7 @@ exports[`combined soft-delete + version filtering > should emit point-in-time ve
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -516,6 +532,7 @@ exports[`combined soft-delete + version filtering > should emit point-in-time ve
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -540,6 +557,7 @@ exports[`combined soft-delete + version filtering > should emit point-in-time ve
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -564,6 +582,7 @@ exports[`combined soft-delete + version filtering > should emit point-in-time ve
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -588,6 +607,7 @@ exports[`combined soft-delete + version filtering > should emit point-in-time ve
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -647,6 +667,7 @@ exports[`compileCount > should compile count query 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -671,6 +692,7 @@ exports[`compileCount > should compile count query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -695,6 +717,7 @@ exports[`compileCount > should compile count query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -719,6 +742,7 @@ exports[`compileCount > should compile count query 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -774,6 +798,7 @@ exports[`compileCount > should compile count with where clause 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -798,6 +823,7 @@ exports[`compileCount > should compile count with where clause 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -822,6 +848,7 @@ exports[`compileCount > should compile count with where clause 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -846,6 +873,7 @@ exports[`compileCount > should compile count with where clause 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -903,6 +931,7 @@ exports[`compileCount with version filtering > should apply point-in-time versio
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -927,6 +956,7 @@ exports[`compileCount with version filtering > should apply point-in-time versio
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -951,6 +981,7 @@ exports[`compileCount with version filtering > should apply point-in-time versio
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -975,6 +1006,7 @@ exports[`compileCount with version filtering > should apply point-in-time versio
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -1032,6 +1064,7 @@ exports[`compileCount with version filtering > should apply version filtering to
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1056,6 +1089,7 @@ exports[`compileCount with version filtering > should apply version filtering to
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1080,6 +1114,7 @@ exports[`compileCount with version filtering > should apply version filtering to
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1104,6 +1139,7 @@ exports[`compileCount with version filtering > should apply version filtering to
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -1159,6 +1195,7 @@ exports[`compileCount — GROUP BY subquery wrap > should wrap in subquery when 
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1183,6 +1220,7 @@ exports[`compileCount — GROUP BY subquery wrap > should wrap in subquery when 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1207,6 +1245,7 @@ exports[`compileCount — GROUP BY subquery wrap > should wrap in subquery when 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1231,6 +1270,7 @@ exports[`compileCount — GROUP BY subquery wrap > should wrap in subquery when 
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -1286,6 +1326,7 @@ exports[`compileCount — set operations subquery wrap > should wrap in subquery
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1310,6 +1351,7 @@ exports[`compileCount — set operations subquery wrap > should wrap in subquery
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1334,6 +1376,7 @@ exports[`compileCount — set operations subquery wrap > should wrap in subquery
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1358,6 +1401,7 @@ exports[`compileCount — set operations subquery wrap > should wrap in subquery
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -1413,6 +1457,7 @@ exports[`compileQuery > should compile basic select all 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1437,6 +1482,7 @@ exports[`compileQuery > should compile basic select all 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1461,6 +1507,7 @@ exports[`compileQuery > should compile basic select all 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1485,6 +1532,7 @@ exports[`compileQuery > should compile basic select all 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -1540,6 +1588,7 @@ exports[`compileQuery > should compile full query with all clauses 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1564,6 +1613,7 @@ exports[`compileQuery > should compile full query with all clauses 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1588,6 +1638,7 @@ exports[`compileQuery > should compile full query with all clauses 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1612,6 +1663,7 @@ exports[`compileQuery > should compile full query with all clauses 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -1672,6 +1724,7 @@ exports[`compileQuery > should compile with limit and offset 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1696,6 +1749,7 @@ exports[`compileQuery > should compile with limit and offset 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1720,6 +1774,7 @@ exports[`compileQuery > should compile with limit and offset 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1744,6 +1799,7 @@ exports[`compileQuery > should compile with limit and offset 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -1802,6 +1858,7 @@ exports[`compileQuery > should compile with order by 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1826,6 +1883,7 @@ exports[`compileQuery > should compile with order by 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1850,6 +1908,7 @@ exports[`compileQuery > should compile with order by 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1874,6 +1933,7 @@ exports[`compileQuery > should compile with order by 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -1929,6 +1989,7 @@ exports[`compileQuery > should compile with selections 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1953,6 +2014,7 @@ exports[`compileQuery > should compile with selections 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -1977,6 +2039,7 @@ exports[`compileQuery > should compile with selections 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2001,6 +2064,7 @@ exports[`compileQuery > should compile with selections 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -2056,6 +2120,7 @@ exports[`compileQuery > should compile with where clause 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2080,6 +2145,7 @@ exports[`compileQuery > should compile with where clause 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2104,6 +2170,7 @@ exports[`compileQuery > should compile with where clause 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2128,6 +2195,7 @@ exports[`compileQuery > should compile with where clause 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -2185,6 +2253,7 @@ exports[`compileQuery — CTE > should compile CTE with MATERIALIZED hint 1`] = 
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2209,6 +2278,7 @@ exports[`compileQuery — CTE > should compile CTE with MATERIALIZED hint 1`] = 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2233,6 +2303,7 @@ exports[`compileQuery — CTE > should compile CTE with MATERIALIZED hint 1`] = 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2257,6 +2328,7 @@ exports[`compileQuery — CTE > should compile CTE with MATERIALIZED hint 1`] = 
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -2312,6 +2384,7 @@ exports[`compileQuery — CTE > should compile WITH clause before SELECT 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2336,6 +2409,7 @@ exports[`compileQuery — CTE > should compile WITH clause before SELECT 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2360,6 +2434,7 @@ exports[`compileQuery — CTE > should compile WITH clause before SELECT 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2384,6 +2459,7 @@ exports[`compileQuery — CTE > should compile WITH clause before SELECT 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -2441,6 +2517,7 @@ exports[`compileQuery — CTE > should compile cteFrom — SELECT FROM CTE 1`] =
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2465,6 +2542,7 @@ exports[`compileQuery — CTE > should compile cteFrom — SELECT FROM CTE 1`] =
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2489,6 +2567,7 @@ exports[`compileQuery — CTE > should compile cteFrom — SELECT FROM CTE 1`] =
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2513,6 +2592,7 @@ exports[`compileQuery — CTE > should compile cteFrom — SELECT FROM CTE 1`] =
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -2570,6 +2650,7 @@ exports[`compileQuery — CTE > should compile multiple CTEs with correct param 
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2594,6 +2675,7 @@ exports[`compileQuery — CTE > should compile multiple CTEs with correct param 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2618,6 +2700,7 @@ exports[`compileQuery — CTE > should compile multiple CTEs with correct param 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2642,6 +2725,7 @@ exports[`compileQuery — CTE > should compile multiple CTEs with correct param 
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -2701,6 +2785,7 @@ exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY + HAVING w
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2725,6 +2810,7 @@ exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY + HAVING w
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2749,6 +2835,7 @@ exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY + HAVING w
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2773,6 +2860,7 @@ exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY + HAVING w
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -2830,6 +2918,7 @@ exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2854,6 +2943,7 @@ exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2878,6 +2968,7 @@ exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2902,6 +2993,7 @@ exports[`compileQuery — GROUP BY + HAVING > should compile GROUP BY 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -2957,6 +3049,7 @@ exports[`compileQuery — raw WHERE > should include raw WHERE conditions alongs
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -2981,6 +3074,7 @@ exports[`compileQuery — raw WHERE > should include raw WHERE conditions alongs
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3005,6 +3099,7 @@ exports[`compileQuery — raw WHERE > should include raw WHERE conditions alongs
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3029,6 +3124,7 @@ exports[`compileQuery — raw WHERE > should include raw WHERE conditions alongs
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -3087,6 +3183,7 @@ exports[`compileQuery — raw WHERE > should wrap in parens when raw WHERE uses 
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3111,6 +3208,7 @@ exports[`compileQuery — raw WHERE > should wrap in parens when raw WHERE uses 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3135,6 +3233,7 @@ exports[`compileQuery — raw WHERE > should wrap in parens when raw WHERE uses 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3159,6 +3258,7 @@ exports[`compileQuery — raw WHERE > should wrap in parens when raw WHERE uses 
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -3217,6 +3317,7 @@ exports[`compileQuery — set operations > should compile UNION query 1`] = `
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3241,6 +3342,7 @@ exports[`compileQuery — set operations > should compile UNION query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3265,6 +3367,7 @@ exports[`compileQuery — set operations > should compile UNION query 1`] = `
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3289,6 +3392,7 @@ exports[`compileQuery — set operations > should compile UNION query 1`] = `
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -3347,6 +3451,7 @@ exports[`compileQuery — subquery predicates > should compile EXISTS subquery p
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3371,6 +3476,7 @@ exports[`compileQuery — subquery predicates > should compile EXISTS subquery p
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3395,6 +3501,7 @@ exports[`compileQuery — subquery predicates > should compile EXISTS subquery p
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3419,6 +3526,7 @@ exports[`compileQuery — subquery predicates > should compile EXISTS subquery p
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -3476,6 +3584,7 @@ exports[`compileQuery — subquery predicates > should compile IN subquery predi
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3500,6 +3609,7 @@ exports[`compileQuery — subquery predicates > should compile IN subquery predi
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3524,6 +3634,7 @@ exports[`compileQuery — subquery predicates > should compile IN subquery predi
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3548,6 +3659,7 @@ exports[`compileQuery — subquery predicates > should compile IN subquery predi
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -3605,6 +3717,7 @@ exports[`compileQuery — subquery predicates > should compile NOT EXISTS subque
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3629,6 +3742,7 @@ exports[`compileQuery — subquery predicates > should compile NOT EXISTS subque
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3653,6 +3767,7 @@ exports[`compileQuery — subquery predicates > should compile NOT EXISTS subque
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3677,6 +3792,7 @@ exports[`compileQuery — subquery predicates > should compile NOT EXISTS subque
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -3734,6 +3850,7 @@ exports[`compileQuery — window functions > should include window functions in 
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3758,6 +3875,7 @@ exports[`compileQuery — window functions > should include window functions in 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3782,6 +3900,7 @@ exports[`compileQuery — window functions > should include window functions in 
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3806,6 +3925,7 @@ exports[`compileQuery — window functions > should include window functions in 
             "schema": null,
             "transform": null,
             "type": "integer",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -3861,6 +3981,7 @@ exports[`soft-delete filtering > should emit DeleteDate IS NULL by default on so
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3885,6 +4006,7 @@ exports[`soft-delete filtering > should emit DeleteDate IS NULL by default on so
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3909,6 +4031,7 @@ exports[`soft-delete filtering > should emit DeleteDate IS NULL by default on so
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -3964,6 +4087,7 @@ exports[`version filtering > should emit VersionEndDate IS NULL by default on ve
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -3988,6 +4112,7 @@ exports[`version filtering > should emit VersionEndDate IS NULL by default on ve
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -4012,6 +4137,7 @@ exports[`version filtering > should emit VersionEndDate IS NULL by default on ve
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -4036,6 +4162,7 @@ exports[`version filtering > should emit VersionEndDate IS NULL by default on ve
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [
@@ -4091,6 +4218,7 @@ exports[`version filtering > should emit parameterized range condition with vers
             "schema": null,
             "transform": null,
             "type": "uuid",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -4115,6 +4243,7 @@ exports[`version filtering > should emit parameterized range condition with vers
             "schema": null,
             "transform": null,
             "type": "string",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -4139,6 +4268,7 @@ exports[`version filtering > should emit parameterized range condition with vers
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
           {
             "arrayType": null,
@@ -4163,6 +4293,7 @@ exports[`version filtering > should emit parameterized range condition with vers
             "schema": null,
             "transform": null,
             "type": "timestamp",
+            "typedJson": null,
           },
         ],
         "primaryKeys": [

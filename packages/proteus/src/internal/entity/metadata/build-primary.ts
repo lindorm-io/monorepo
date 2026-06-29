@@ -111,6 +111,10 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
     if (modifier.transform != null) field.transform = modifier.transform;
     if (modifier.encrypted != null)
       field.encrypted = { predicate: modifier.encrypted.predicate };
+    if (modifier.typedJson != null) {
+      const name = modifier.typedJson.name;
+      field.typedJson = { name, column: name ?? `${field.name}__typemeta` };
+    }
     if (modifier.hideOn != null) {
       // Hide is additive — merge arrays
       field.hideOn = uniq([...field.hideOn, ...modifier.hideOn]);

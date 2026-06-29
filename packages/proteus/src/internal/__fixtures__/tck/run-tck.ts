@@ -45,6 +45,7 @@ import {
   inheritanceJoinedSuite,
 } from "./inheritance.tck.js";
 import { complexPredicatesSuite } from "./complex-predicates.tck.js";
+import { typedJsonSuite } from "./typed-json.tck.js";
 import { encryptionSuite } from "./encryption.tck.js";
 import { typeCoercionSuite } from "./type-coercion.tck.js";
 import { renamedColumnsSuite } from "./renamed-columns.tck.js";
@@ -121,6 +122,7 @@ const runTckForNaming = (
     entities.TckArrayHolder,
     entities.TckJsonbArray,
     entities.TckJsonHolder,
+    entities.TckTypedJson,
     entities.TckWithAddress,
     entities.TckTypeHolder,
     entities.TckRenamedColumns,
@@ -215,6 +217,9 @@ const runTckForNaming = (
   );
   maybeDescribe(caps.richColumnTypes, "typeCoercion", () =>
     typeCoercionSuite(getHandle, entities),
+  );
+  maybeDescribe(caps.richColumnTypes, "typedJson", () =>
+    typedJsonSuite(getHandle, entities),
   );
   maybeDescribe(caps.inheritance.singleTable, "inheritance:single-table", () =>
     inheritanceSingleTableSuite(getHandle, entities),

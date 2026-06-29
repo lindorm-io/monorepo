@@ -48,6 +48,7 @@ const makeField = (key: string, name: string) => ({
   scale: null,
   schema: null,
   transform: null,
+  typedJson: null,
   type: "string" as const,
 });
 

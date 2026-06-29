@@ -228,6 +228,16 @@ export const projectDesiredSchemaMysql = (
     const columns: Array<MysqlDesiredColumn> = [];
     for (const field of effectiveFields) {
       columns.push(projectFieldColumn(field, metadata.generated));
+      if (field.typedJson) {
+        columns.push({
+          name: field.typedJson.column,
+          mysqlType: "JSON",
+          nullable: true,
+          defaultExpr: null,
+          isAutoIncrement: false,
+          enumValues: null,
+        });
+      }
     }
 
     // FK columns from owning-side relations
@@ -651,6 +661,7 @@ export const projectDesiredSchemaMysql = (
           scale: null,
           schema: null,
           transform: null,
+          typedJson: null,
           type: embeddedList.elementType,
         };
         const mysqlType = mapFieldTypeMysql(primitiveField).toLowerCase();

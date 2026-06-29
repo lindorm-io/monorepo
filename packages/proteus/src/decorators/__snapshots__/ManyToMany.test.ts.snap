@@ -38,6 +38,7 @@ exports[`ManyToMany > should register inverse side metadata 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -62,6 +63,7 @@ exports[`ManyToMany > should register inverse side metadata 1`] = `
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
   ],
   "filters": [],
@@ -161,6 +163,7 @@ exports[`ManyToMany > should register owning side metadata 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -185,6 +188,7 @@ exports[`ManyToMany > should register owning side metadata 1`] = `
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
   ],
   "filters": [],

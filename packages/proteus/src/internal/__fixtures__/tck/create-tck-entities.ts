@@ -47,6 +47,7 @@ import {
   PrimaryKeyField,
   ScopeField,
   Transform,
+  TypedJson,
   Unique,
   UpdateDateField,
   VersionField,
@@ -875,6 +876,39 @@ export const createTckEntities = (hookCallback: Mock) => {
     payload!: { items: string[]; count: number };
   }
 
+  // @TypedJson — lossless type fidelity via a sidecar type-metadata column.
+  @Entity({ name: "TckTypedJson" })
+  class TckTypedJson {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    @TypedJson()
+    @Field("json")
+    payload!: Record<string, unknown>;
+
+    @TypedJson({ name: "meta_types" })
+    @Field("object")
+    meta!: Record<string, unknown>;
+
+    @Nullable()
+    @TypedJson()
+    @Field("json")
+    optional!: Record<string, unknown> | null;
+  }
+
   @Embeddable()
   class TckAddress {
     @Field("string") street!: string;
@@ -1240,6 +1274,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckArrayHolder,
     TckJsonbArray,
     TckJsonHolder,
+    TckTypedJson,
     TckAddress,
     TckWithAddress,
     TckEncrypted,

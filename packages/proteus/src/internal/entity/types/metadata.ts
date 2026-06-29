@@ -84,6 +84,13 @@ export type MetaEncrypted = {
   predicate: Dict | null;
 };
 
+export type MetaTypedJson = {
+  /** Authored sidecar column name (verbatim, preserved through naming strategy), or null. */
+  name: string | null;
+  /** Resolved sidecar column name (default `<dataColumn>__typemeta`). */
+  column: string;
+};
+
 export type QueryScope = "single" | "multiple";
 
 export type MetaFieldEmbedded = {
@@ -114,6 +121,7 @@ export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
   schema: z.ZodType | null;
   transform: MetaTransform | null;
   type: MetaFieldType | null;
+  typedJson: MetaTypedJson | null;
 };
 
 export type MetaEntity = {

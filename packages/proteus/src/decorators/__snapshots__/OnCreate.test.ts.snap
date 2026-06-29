@@ -38,6 +38,7 @@ exports[`OnCreate > should match snapshot 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
   ],
   "filters": [],
