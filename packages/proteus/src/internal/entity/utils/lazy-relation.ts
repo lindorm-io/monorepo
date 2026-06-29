@@ -20,7 +20,7 @@ export const LAZY_RELATION = Symbol.for("proteus.lazy-relation");
  * the actual resolved value. Subsequent property access returns the plain value.
  */
 export class LazyRelation<T extends IEntity> {
-  public readonly [LAZY_RELATION] = true;
+  readonly [LAZY_RELATION] = true;
 
   private readonly _owner: IEntity;
   private readonly _key: string;
@@ -29,7 +29,7 @@ export class LazyRelation<T extends IEntity> {
   private _value: T | null;
   private _pending: Promise<T | null> | null;
 
-  public constructor(owner: IEntity, key: string, loader: () => Promise<T | null>) {
+  constructor(owner: IEntity, key: string, loader: () => Promise<T | null>) {
     this._owner = owner;
     this._key = key;
     this._loader = loader;
@@ -38,7 +38,7 @@ export class LazyRelation<T extends IEntity> {
     this._pending = null;
   }
 
-  public then<TResult1 = T | null, TResult2 = never>(
+  then<TResult1 = T | null, TResult2 = never>(
     onfulfilled?: ((value: T | null) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | null,
   ): Promise<TResult1 | TResult2> {
@@ -67,7 +67,7 @@ export class LazyRelation<T extends IEntity> {
     return this._pending.then(onfulfilled, onrejected);
   }
 
-  public toJSON(): T | null | undefined {
+  toJSON(): T | null | undefined {
     return this._resolved ? this._value : undefined;
   }
 }

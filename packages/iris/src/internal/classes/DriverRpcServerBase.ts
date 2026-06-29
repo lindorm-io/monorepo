@@ -53,7 +53,7 @@ export abstract class DriverRpcServerBase<
     this.amphora = options.amphora;
   }
 
-  public async serve(
+  async serve(
     handler: (request: Req) => Promise<Res>,
     options?: { queue?: string },
   ): Promise<void> {
@@ -76,8 +76,8 @@ export abstract class DriverRpcServerBase<
     this.logger.debug("RPC handler registered", { queue });
   }
 
-  public abstract unserve(options?: { queue?: string }): Promise<void>;
-  public abstract unserveAll(): Promise<void>;
+  abstract unserve(options?: { queue?: string }): Promise<void>;
+  abstract unserveAll(): Promise<void>;
 
   protected getDefaultQueue(): string {
     return resolveDefaultTopic(this.requestMetadata);

@@ -28,7 +28,7 @@ const createNode = <T>(): TrieNode<T> => ({
 export class EventMatcher<T> {
   private readonly root: TrieNode<T> = createNode();
 
-  public add(segments: Array<EventSegment>, data: T): void {
+  add(segments: Array<EventSegment>, data: T): void {
     let node = this.root;
 
     for (let i = 0; i < segments.length; i++) {
@@ -66,20 +66,18 @@ export class EventMatcher<T> {
     node.data.push(data);
   }
 
-  public match(event: string): MatchedRoute<T> | null {
+  match(event: string): MatchedRoute<T> | null {
     if (!event) return null;
 
     const parts = event.split(":");
     return this.walk(this.root, parts, 0, {});
   }
 
-  public hasParams(segments: Array<EventSegment>): boolean {
+  hasParams(segments: Array<EventSegment>): boolean {
     return segments.some((s) => s.type === "param" || s.type === "catchAll");
   }
 
-  public static parseSegments(
-    scannerSegments: Array<ParsedSegment>,
-  ): Array<EventSegment> {
+  static parseSegments(scannerSegments: Array<ParsedSegment>): Array<EventSegment> {
     return scannerSegments.map((s) => {
       if (s.isCatchAll || s.isOptionalCatchAll) {
         return { type: "catchAll" as const, value: s.paramName! };

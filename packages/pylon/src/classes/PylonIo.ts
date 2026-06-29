@@ -44,9 +44,9 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
   private readonly options: PylonOptions<any, any, T>;
   private readonly middleware: Array<PylonSocketMiddleware<T>>;
 
-  public readonly server: IoServer;
+  readonly server: IoServer;
 
-  public constructor(http: Server, options: PylonOptions<any, any, T>) {
+  constructor(http: Server, options: PylonOptions<any, any, T>) {
     assertSessionCookieSafeForSockets(options);
     assertSameSiteForSockets(options.session);
 
@@ -105,11 +105,11 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
 
   // public
 
-  public use(middleware: Array<PylonSocketMiddleware<T>>): void {
+  use(middleware: Array<PylonSocketMiddleware<T>>): void {
     this.addMiddleware(middleware);
   }
 
-  public async load(): Promise<void> {
+  async load(): Promise<void> {
     if (this._loaded) return this._loaded;
     this._loaded = this.loadOnce();
     return this._loaded;

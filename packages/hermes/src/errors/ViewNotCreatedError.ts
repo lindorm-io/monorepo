@@ -1,7 +1,7 @@
 import { DomainError, type DomainErrorOptions } from "./DomainError.js";
 
 export class ViewNotCreatedError extends DomainError {
-  public constructor(options: DomainErrorOptions = {}) {
+  constructor(options: DomainErrorOptions = {}) {
     super("View has not been created", {
       code: "view_not_created",
       title: "View Not Created",

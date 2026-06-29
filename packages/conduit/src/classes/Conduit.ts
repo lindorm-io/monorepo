@@ -42,7 +42,7 @@ export class Conduit implements IConduit {
   private readonly retryCallback: RetryCallback;
   private readonly retryConfig: RetryConfig;
 
-  public constructor(options: ConduitOptions = {}) {
+  constructor(options: ConduitOptions = {}) {
     this.baseURL = options.baseURL ? getPlainUrl(options.baseURL) : undefined;
 
     this.config = {
@@ -71,7 +71,7 @@ export class Conduit implements IConduit {
     };
   }
 
-  public async delete<
+  async delete<
     ResponseData = any,
     RequestBody = Dict,
     RequestParams = Dict,
@@ -87,7 +87,7 @@ export class Conduit implements IConduit {
     );
   }
 
-  public async get<
+  async get<
     ResponseData = any,
     RequestBody = Dict,
     RequestParams = Dict,
@@ -103,7 +103,7 @@ export class Conduit implements IConduit {
     );
   }
 
-  public async head<
+  async head<
     ResponseData = any,
     RequestBody = Dict,
     RequestParams = Dict,
@@ -119,7 +119,7 @@ export class Conduit implements IConduit {
     );
   }
 
-  public async options<
+  async options<
     ResponseData = any,
     RequestBody = Dict,
     RequestParams = Dict,
@@ -135,7 +135,7 @@ export class Conduit implements IConduit {
     );
   }
 
-  public async patch<
+  async patch<
     ResponseData = any,
     RequestBody = Dict,
     RequestParams = Dict,
@@ -151,7 +151,7 @@ export class Conduit implements IConduit {
     );
   }
 
-  public async post<
+  async post<
     ResponseData = any,
     RequestBody = Dict,
     RequestParams = Dict,
@@ -167,7 +167,7 @@ export class Conduit implements IConduit {
     );
   }
 
-  public async put<
+  async put<
     ResponseData = any,
     RequestBody = Dict,
     RequestParams = Dict,
@@ -183,7 +183,7 @@ export class Conduit implements IConduit {
     );
   }
 
-  public async request<
+  async request<
     ResponseData = any,
     RequestBody = Dict,
     RequestParams = Dict,

@@ -19,7 +19,7 @@ import type {
 } from "../types/index.js";
 
 export class LindormWorker implements ILindormWorker {
-  public readonly alias: string;
+  readonly alias: string;
 
   private readonly callback: LindormWorkerCallback;
   private readonly callbackTimeout: number;
@@ -43,7 +43,7 @@ export class LindormWorker implements ILindormWorker {
   private _started: boolean;
   private _timeout: NodeJS.Timeout | null;
 
-  public constructor(options: LindormWorkerOptions) {
+  constructor(options: LindormWorkerOptions) {
     this.emitter = new EventEmitter();
     this.logger = options.logger.child(["LindormWorker", options.alias]);
 
@@ -110,69 +110,69 @@ export class LindormWorker implements ILindormWorker {
     }
   }
 
-  public get latestError(): Date | null {
+  get latestError(): Date | null {
     return this._latestError;
   }
 
-  public get latestStart(): Date | null {
+  get latestStart(): Date | null {
     return this._latestStart;
   }
 
-  public get latestStop(): Date | null {
+  get latestStop(): Date | null {
     return this._latestStop;
   }
 
-  public get latestSuccess(): Date | null {
+  get latestSuccess(): Date | null {
     return this._latestSuccess;
   }
 
-  public get latestTry(): Date | null {
+  get latestTry(): Date | null {
     return this._latestTry;
   }
 
-  public get running(): boolean {
+  get running(): boolean {
     return this._running;
   }
 
-  public get seq(): number {
+  get seq(): number {
     return this._seq;
   }
 
-  public get started(): boolean {
+  get started(): boolean {
     return this._started;
   }
 
-  public on(evt: "start", listener: LindormWorkerListener): void;
-  public on(evt: "stop", listener: LindormWorkerListener): void;
-  public on(evt: "success", listener: LindormWorkerListener): void;
-  public on(evt: "error", listener: LindormWorkerErrorListener): void;
-  public on(evt: "warning", listener: LindormWorkerErrorListener): void;
-  public on(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
+  on(evt: "start", listener: LindormWorkerListener): void;
+  on(evt: "stop", listener: LindormWorkerListener): void;
+  on(evt: "success", listener: LindormWorkerListener): void;
+  on(evt: "error", listener: LindormWorkerErrorListener): void;
+  on(evt: "warning", listener: LindormWorkerErrorListener): void;
+  on(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
     this.assertNotDestroyed();
     this.emitter.on(evt, listener);
   }
 
-  public off(evt: "start", listener: LindormWorkerListener): void;
-  public off(evt: "stop", listener: LindormWorkerListener): void;
-  public off(evt: "success", listener: LindormWorkerListener): void;
-  public off(evt: "error", listener: LindormWorkerErrorListener): void;
-  public off(evt: "warning", listener: LindormWorkerErrorListener): void;
-  public off(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
+  off(evt: "start", listener: LindormWorkerListener): void;
+  off(evt: "stop", listener: LindormWorkerListener): void;
+  off(evt: "success", listener: LindormWorkerListener): void;
+  off(evt: "error", listener: LindormWorkerErrorListener): void;
+  off(evt: "warning", listener: LindormWorkerErrorListener): void;
+  off(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
     this.assertNotDestroyed();
     this.emitter.off(evt, listener);
   }
 
-  public once(evt: "start", listener: LindormWorkerListener): void;
-  public once(evt: "stop", listener: LindormWorkerListener): void;
-  public once(evt: "success", listener: LindormWorkerListener): void;
-  public once(evt: "error", listener: LindormWorkerErrorListener): void;
-  public once(evt: "warning", listener: LindormWorkerErrorListener): void;
-  public once(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
+  once(evt: "start", listener: LindormWorkerListener): void;
+  once(evt: "stop", listener: LindormWorkerListener): void;
+  once(evt: "success", listener: LindormWorkerListener): void;
+  once(evt: "error", listener: LindormWorkerErrorListener): void;
+  once(evt: "warning", listener: LindormWorkerErrorListener): void;
+  once(evt: LindormWorkerEvent, listener: (...args: any[]) => void): void {
     this.assertNotDestroyed();
     this.emitter.once(evt, listener);
   }
 
-  public health(): LindormWorkerHealth {
+  health(): LindormWorkerHealth {
     return {
       alias: this.alias,
       started: this._started,
@@ -185,7 +185,7 @@ export class LindormWorker implements ILindormWorker {
     };
   }
 
-  public start(): void {
+  start(): void {
     this.assertNotDestroyed();
 
     if (this._started) return;
@@ -200,7 +200,7 @@ export class LindormWorker implements ILindormWorker {
     void this.run();
   }
 
-  public async stop(): Promise<void> {
+  async stop(): Promise<void> {
     if (!this._timeout && !this._running) return;
 
     this.logger.debug("Stopping worker");
@@ -221,7 +221,7 @@ export class LindormWorker implements ILindormWorker {
     this._latestStop = new Date();
   }
 
-  public async destroy(): Promise<void> {
+  async destroy(): Promise<void> {
     this.assertNotDestroyed();
 
     await this.stop();
@@ -229,7 +229,7 @@ export class LindormWorker implements ILindormWorker {
     this._destroyed = true;
   }
 
-  public async trigger(): Promise<void> {
+  async trigger(): Promise<void> {
     this.assertNotDestroyed();
 
     return this.run();

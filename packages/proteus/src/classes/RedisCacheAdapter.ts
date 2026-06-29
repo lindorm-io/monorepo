@@ -111,7 +111,7 @@ export class RedisCacheAdapter implements ICacheAdapter {
   private readonly keyPrefix: string;
   private readonly scanCount: number;
 
-  public constructor(options: RedisCacheAdapterOptions) {
+  constructor(options: RedisCacheAdapterOptions) {
     this.keyPrefix = options.keyPrefix ?? "";
     this.scanCount = options.scanCount ?? 500;
 
@@ -148,12 +148,12 @@ export class RedisCacheAdapter implements ICacheAdapter {
     return this._ownedClientPromise;
   }
 
-  public get = async (key: string): Promise<string | null> => {
+  get = async (key: string): Promise<string | null> => {
     const client = await this.resolveClient();
     return client.get(this.keyPrefix + key);
   };
 
-  public set = async (key: string, value: string, ttlMs: number): Promise<void> => {
+  set = async (key: string, value: string, ttlMs: number): Promise<void> => {
     if (ttlMs < 0) {
       throw new ProteusError(`Invalid ttlMs: ${ttlMs}`, {
         code: "invalid_ttl",
@@ -168,12 +168,12 @@ export class RedisCacheAdapter implements ICacheAdapter {
     await client.set(this.keyPrefix + key, value, "PX", ttlMs);
   };
 
-  public del = async (key: string): Promise<void> => {
+  del = async (key: string): Promise<void> => {
     const client = await this.resolveClient();
     await client.del(this.keyPrefix + key);
   };
 
-  public delByPrefix = async (prefix: string): Promise<void> => {
+  delByPrefix = async (prefix: string): Promise<void> => {
     const client = await this.resolveClient();
     await client.eval(
       LUA_DEL_BY_PREFIX,
@@ -184,13 +184,13 @@ export class RedisCacheAdapter implements ICacheAdapter {
   };
 
   /** Eagerly establish the owned Redis connection. No-op when a client was provided externally. */
-  public connect = async (): Promise<void> => {
+  connect = async (): Promise<void> => {
     if (this._connectionOptions) {
       await this.resolveClient();
     }
   };
 
-  public disconnect = async (): Promise<void> => {
+  disconnect = async (): Promise<void> => {
     if (this._ownedClientPromise) {
       const client = await this._ownedClientPromise;
       await client.quit();

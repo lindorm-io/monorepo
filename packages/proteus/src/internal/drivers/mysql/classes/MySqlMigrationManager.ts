@@ -51,7 +51,7 @@ export class MySqlMigrationManager implements IMigrationManager {
   private readonly tableOptions: MysqlMigrationTableOptions | undefined;
   private readonly lockName: string;
 
-  public constructor(options: MySqlMigrationManagerOptions) {
+  constructor(options: MySqlMigrationManagerOptions) {
     this.client = options.client;
     this.directory = options.directory;
     this.logger = options.logger;
@@ -76,7 +76,7 @@ export class MySqlMigrationManager implements IMigrationManager {
     }
   }
 
-  public async status(): Promise<MigrationStatusResult> {
+  async status(): Promise<MigrationStatusResult> {
     const loaded = await loadMigrations(this.directory, this.logger);
 
     await ensureMigrationTable(this.client, this.tableOptions);
@@ -87,7 +87,7 @@ export class MySqlMigrationManager implements IMigrationManager {
     return { resolved, ghosts };
   }
 
-  public async apply(): Promise<MigrationApplyResult> {
+  async apply(): Promise<MigrationApplyResult> {
     const lockAcquired = await this.acquireLock();
     if (!lockAcquired) {
       throw new MySqlMigrationError(
@@ -188,7 +188,7 @@ export class MySqlMigrationManager implements IMigrationManager {
     }
   }
 
-  public async rollback(count: number = 1): Promise<MigrationApplyResult> {
+  async rollback(count: number = 1): Promise<MigrationApplyResult> {
     const lockAcquired = await this.acquireLock();
     if (!lockAcquired) {
       throw new MySqlMigrationError(
@@ -294,7 +294,7 @@ export class MySqlMigrationManager implements IMigrationManager {
     }
   }
 
-  public async generateMigration(
+  async generateMigration(
     metadataList: Array<EntityMetadata>,
     namespaceOptions: NamespaceOptions,
     options?: { name?: string; timestamp?: Date; writeFile?: boolean },
@@ -319,7 +319,7 @@ export class MySqlMigrationManager implements IMigrationManager {
     }
   }
 
-  public async generateBaseline(
+  async generateBaseline(
     metadataList: Array<EntityMetadata>,
     namespaceOptions: NamespaceOptions,
     options?: { name?: string; timestamp?: Date },
@@ -351,7 +351,7 @@ export class MySqlMigrationManager implements IMigrationManager {
     }
   }
 
-  public async resolveApplied(name: string, directory: string): Promise<void> {
+  async resolveApplied(name: string, directory: string): Promise<void> {
     const logger = this.logger.child(["resolveApplied"]);
     const loaded = await loadMigrations(directory, logger);
     const match = loaded.find((l) => l.name === name);
@@ -411,7 +411,7 @@ export class MySqlMigrationManager implements IMigrationManager {
     }
   }
 
-  public async resolveRolledBack(name: string): Promise<void> {
+  async resolveRolledBack(name: string): Promise<void> {
     await ensureMigrationTable(this.client, this.tableOptions);
     const applied = await getAppliedMigrations(this.client, this.tableOptions);
     const match = applied.find((r) => r.name === name);
@@ -433,7 +433,7 @@ export class MySqlMigrationManager implements IMigrationManager {
     await markMigrationRolledBack(this.client, match.id, this.tableOptions);
   }
 
-  public async getRecords(): Promise<Array<MigrationRecord>> {
+  async getRecords(): Promise<Array<MigrationRecord>> {
     await ensureMigrationTable(this.client, this.tableOptions);
     return getAllMigrationRecords(this.client, this.tableOptions);
   }

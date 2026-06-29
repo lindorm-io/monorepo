@@ -54,7 +54,7 @@ export class JwtKit implements IJwtKit {
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
-  public constructor(options: JwtKitOptions) {
+  constructor(options: JwtKitOptions) {
     this.logger = options.logger.child(["JwtKit"]);
     this.kryptos = options.kryptos;
 
@@ -63,7 +63,7 @@ export class JwtKit implements IJwtKit {
     this.dpopMaxSkew = options.dpopMaxSkew ?? DEFAULT_DPOP_MAX_SKEW;
   }
 
-  public get algorithm(): IKryptos["algorithm"] {
+  get algorithm(): IKryptos["algorithm"] {
     return this.kryptos.algorithm;
   }
 
@@ -73,7 +73,7 @@ export class JwtKit implements IJwtKit {
    * requires nothing, and throws nothing for a missing `iss`/`sub`/`exp`. Use
    * `aegis.mint("default", content)` for the historical auto-injecting floor.
    */
-  public sign<C extends Dict = Dict>(
+  sign<C extends Dict = Dict>(
     content: SignJwtContent<C>,
     options: SignJwtOptions = {},
   ): SignedJwt {
@@ -103,7 +103,7 @@ export class JwtKit implements IJwtKit {
    * already been applied by `buildProfileClaims`. The profile/sensitive-
    * identity/custom-claims envelope is spread here.
    */
-  public signClaims<C extends Dict = Dict>(
+  signClaims<C extends Dict = Dict>(
     claims: Dict,
     content: SignJwtContent<C>,
     options: SignJwtOptions = {},
@@ -187,7 +187,7 @@ export class JwtKit implements IJwtKit {
     };
   }
 
-  public verify<C extends Dict = Dict>(
+  verify<C extends Dict = Dict>(
     token: string,
     verify: VerifyJwtOptions = {},
   ): ParsedJwt<C> {
@@ -337,7 +337,7 @@ export class JwtKit implements IJwtKit {
 
   // public static
 
-  public static isJwt(jwt: string): boolean {
+  static isJwt(jwt: string): boolean {
     if (typeof jwt !== "string") return false;
     const parts = jwt.split(".");
     if (parts.length !== 3) return false;
@@ -351,7 +351,7 @@ export class JwtKit implements IJwtKit {
     }
   }
 
-  public static decode<C extends Dict = Dict>(jwt: string): DecodedJwt<C> {
+  static decode<C extends Dict = Dict>(jwt: string): DecodedJwt<C> {
     const [header, payload, signature] = jwt.split(".");
 
     return {
@@ -361,7 +361,7 @@ export class JwtKit implements IJwtKit {
     };
   }
 
-  public static parse<C extends Dict = Dict>(token: string): ParsedJwt<C> {
+  static parse<C extends Dict = Dict>(token: string): ParsedJwt<C> {
     const decoded = JwtKit.decode<C>(token);
 
     const typ = decoded.header.typ;
@@ -405,7 +405,7 @@ export class JwtKit implements IJwtKit {
     return { decoded, delegation, header, payload, token };
   }
 
-  public static validate<C extends Dict = Dict>(
+  static validate<C extends Dict = Dict>(
     payload: ParsedJwtPayload<C>,
     options: ValidateJwtOptions,
   ): void {

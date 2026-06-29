@@ -79,7 +79,7 @@ export class MemoryDriver implements IProteusDriver {
   private store: MemoryStore;
   private signal: AbortSignal | undefined;
 
-  public constructor(
+  constructor(
     _options: ProteusMemoryOptions,
     logger: ILogger,
     namespace: string | null,
@@ -97,15 +97,15 @@ export class MemoryDriver implements IProteusDriver {
     this.store = createEmptyStore();
   }
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     this.logger.debug("Memory driver connected");
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     return true;
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     this.store.tables.clear();
     this.store.joinTables.clear();
     this.store.collectionTables.clear();
@@ -113,7 +113,7 @@ export class MemoryDriver implements IProteusDriver {
     this.logger.debug("Memory driver disconnected");
   }
 
-  public async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
+  async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
     for (const target of entities) {
       const metadata = this.resolveMetadata(target);
       const rootTarget = resolveInheritanceRoot(target, metadata);
@@ -155,18 +155,18 @@ export class MemoryDriver implements IProteusDriver {
     });
   }
 
-  public getStore(): MemoryStore {
+  getStore(): MemoryStore {
     return this.store;
   }
 
-  public getTableKey<E extends IEntity>(target: Constructor<E>): string {
+  getTableKey<E extends IEntity>(target: Constructor<E>): string {
     const metadata = this.resolveMetadata(target);
     const rootTarget = resolveInheritanceRoot(target, metadata);
     const entityName = getEntityName(rootTarget, { namespace: this.namespace });
     return resolveTableKey(entityName.namespace, entityName.name);
   }
 
-  public createRepository<E extends IEntity>(
+  createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
     meta?: ProteusHookMeta,
@@ -215,7 +215,7 @@ export class MemoryDriver implements IProteusDriver {
     });
   }
 
-  public createTransactionalRepository<E extends IEntity>(
+  createTransactionalRepository<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
@@ -255,14 +255,12 @@ export class MemoryDriver implements IProteusDriver {
     });
   }
 
-  public createExecutor<E extends IEntity>(
-    target: Constructor<E>,
-  ): IRepositoryExecutor<E> {
+  createExecutor<E extends IEntity>(target: Constructor<E>): IRepositoryExecutor<E> {
     this.checkSignal();
     return this.createExecutorForStore(target, this.store);
   }
 
-  public createTransactionalExecutor<E extends IEntity>(
+  createTransactionalExecutor<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
@@ -271,9 +269,7 @@ export class MemoryDriver implements IProteusDriver {
     return this.createExecutorForStore(target, txHandle.store);
   }
 
-  public createQueryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  createQueryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const tableKey = this.getTableKey(target);
@@ -295,7 +291,7 @@ export class MemoryDriver implements IProteusDriver {
     );
   }
 
-  public createTransactionalQueryBuilder<E extends IEntity>(
+  createTransactionalQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
@@ -320,7 +316,7 @@ export class MemoryDriver implements IProteusDriver {
     );
   }
 
-  public async acquireClient(): Promise<never> {
+  async acquireClient(): Promise<never> {
     throw new MemoryDriverError("Memory driver does not expose a client", {
       code: "unsupported_operation",
       title: "Unsupported Operation",
@@ -329,9 +325,7 @@ export class MemoryDriver implements IProteusDriver {
     });
   }
 
-  public async beginTransaction(
-    _options?: TransactionOptions,
-  ): Promise<TransactionHandle> {
+  async beginTransaction(_options?: TransactionOptions): Promise<TransactionHandle> {
     this.checkSignal();
     const handle: MemoryTransactionHandle = {
       store: cloneStore(this.store),
@@ -341,7 +335,7 @@ export class MemoryDriver implements IProteusDriver {
     return handle;
   }
 
-  public async commitTransaction(handle: TransactionHandle): Promise<void> {
+  async commitTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as MemoryTransactionHandle;
     if (txHandle.state !== "active") {
       throw new MemoryDriverError(`Cannot commit: transaction is ${txHandle.state}`, {
@@ -360,7 +354,7 @@ export class MemoryDriver implements IProteusDriver {
     txHandle.state = "committed";
   }
 
-  public async rollbackTransaction(handle: TransactionHandle): Promise<void> {
+  async rollbackTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as MemoryTransactionHandle;
     if (txHandle.state !== "active") {
       throw new MemoryDriverError(`Cannot rollback: transaction is ${txHandle.state}`, {
@@ -375,7 +369,7 @@ export class MemoryDriver implements IProteusDriver {
     txHandle.state = "rolledBack";
   }
 
-  public async withTransaction<T>(
+  async withTransaction<T>(
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
@@ -413,7 +407,7 @@ export class MemoryDriver implements IProteusDriver {
     }
   }
 
-  public cloneWithGetters(
+  cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
     signal?: AbortSignal,

@@ -11,18 +11,18 @@ import {
 @AbstractEntity()
 export abstract class HermesViewEntity {
   @PrimaryKeyField()
-  public id: string = "";
+  id: string = "";
 
   @Field("boolean")
   @Default(false)
-  public destroyed: boolean = false;
+  destroyed: boolean = false;
 
   @VersionField()
-  public revision: number = 0;
+  revision: number = 0;
 
   @CreateDateField()
-  public createdAt: Date = new Date();
+  createdAt: Date = new Date();
 
   @UpdateDateField()
-  public updatedAt: Date = new Date();
+  updatedAt: Date = new Date();
 }

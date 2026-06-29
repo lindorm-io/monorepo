@@ -10,20 +10,20 @@ import {
 @Entity()
 export class Presence {
   @PrimaryKeyField()
-  public id!: string;
+  id!: string;
 
   @Field("string")
-  public room!: string;
+  room!: string;
 
   @Field("string")
-  public socketId!: string;
+  socketId!: string;
 
   @Field("string")
-  public userId!: string;
+  userId!: string;
 
   @Field("timestamp")
-  public joinedAt!: Date;
+  joinedAt!: Date;
 
   @ExpiryDateField()
-  public expiresAt!: Date | null;
+  expiresAt!: Date | null;
 }

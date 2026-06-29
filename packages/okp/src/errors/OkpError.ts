@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm/errors";
 
 export class OkpError extends LindormError {
-  public static readonly namespace = "okp";
+  static readonly namespace = "okp";
 }

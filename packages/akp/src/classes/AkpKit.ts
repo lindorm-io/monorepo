@@ -12,7 +12,7 @@ export class AkpKit implements IKeyKit {
   private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosAkp;
 
-  public constructor(options: AkpKitOptions) {
+  constructor(options: AkpKitOptions) {
     this.encoding = options.encoding ?? "base64";
 
     if (!KryptosKit.isAkp(options.kryptos)) {
@@ -28,11 +28,11 @@ export class AkpKit implements IKeyKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: KeyData): Buffer {
+  sign(data: KeyData): Buffer {
     return createAkpSignature({ data, kryptos: this.kryptos });
   }
 
-  public verify(data: KeyData, signature: KeyData): boolean {
+  verify(data: KeyData, signature: KeyData): boolean {
     return verifyAkpSignature({
       data,
       encoding: this.encoding,
@@ -41,7 +41,7 @@ export class AkpKit implements IKeyKit {
     });
   }
 
-  public assert(data: KeyData, signature: KeyData): void {
+  assert(data: KeyData, signature: KeyData): void {
     return assertAkpSignature({
       data,
       encoding: this.encoding,
@@ -50,7 +50,7 @@ export class AkpKit implements IKeyKit {
     });
   }
 
-  public format(data: Buffer): string {
+  format(data: Buffer): string {
     return data.toString(this.encoding);
   }
 }

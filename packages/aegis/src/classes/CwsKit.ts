@@ -56,12 +56,12 @@ export class CwsKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
 
-  public constructor(options: CwsKitOptions) {
+  constructor(options: CwsKitOptions) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwsKit"]);
   }
 
-  public sign(payload: Buffer, options: CwsSignOptions = {}): Tag {
+  sign(payload: Buffer, options: CwsSignOptions = {}): Tag {
     this.logger.debug("Signing COSE_Sign1", { options });
 
     const protectedMap = new Map<number, unknown>();
@@ -82,7 +82,7 @@ export class CwsKit {
     return new Tag(COSE_TAG.sign1, [protectedHeader, unprotected, payload, signature]);
   }
 
-  public verify(sign1: unknown): CwsVerifyResult {
+  verify(sign1: unknown): CwsVerifyResult {
     const [protectedHeader, unprotected, payload, signature] = unwrapSign1(sign1) as [
       Uint8Array,
       Map<number, unknown>,
@@ -118,7 +118,7 @@ export class CwsKit {
    * Read the `kid` (unprotected, label 4) from a COSE_Sign1 structure WITHOUT
    * verifying — so the caller can resolve the verification key first.
    */
-  public static peekKid(sign1: unknown): string | undefined {
+  static peekKid(sign1: unknown): string | undefined {
     const [, unprotected] = unwrapSign1(sign1) as [unknown, Map<number, unknown>];
     const kid = unprotected.get(COSE_HEADER.kid);
     return kid instanceof Uint8Array ? Buffer.from(kid).toString("utf8") : undefined;

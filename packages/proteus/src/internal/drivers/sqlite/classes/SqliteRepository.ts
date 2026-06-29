@@ -112,7 +112,7 @@ export class SqliteRepository<
   private readonly hasEmbeddedLists: boolean;
   private readonly amphora: IAmphora | undefined;
 
-  public constructor(options: SqliteRepositoryOptions<E>) {
+  constructor(options: SqliteRepositoryOptions<E>) {
     super({
       target: options.target,
       metadata: options.metadata,
@@ -136,7 +136,7 @@ export class SqliteRepository<
 
   // ─── Abstract: find / versions ────────────────────────────────────
 
-  public async find(
+  async find(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
     _scope: QueryScope = "multiple",
@@ -186,10 +186,7 @@ export class SqliteRepository<
     return entities;
   }
 
-  public async versions(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<Array<E>> {
+  async versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
     guardVersionFields(this.metadata, "versions");
 
     const entities = await this.executor.executeFind(
@@ -230,10 +227,7 @@ export class SqliteRepository<
 
   // ─── Override: SQLite error wrapping ──────────────────────────────
 
-  public override async delete(
-    criteria: Predicate<E>,
-    options?: DeleteOptions,
-  ): Promise<void> {
+  override async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     try {
       if (options?.limit) {
         await this.executor.executeDelete(criteria, options);
@@ -247,7 +241,7 @@ export class SqliteRepository<
     }
   }
 
-  public override async updateMany(
+  override async updateMany(
     criteria: Predicate<E>,
     update: DeepPartial<E>,
   ): Promise<void> {
@@ -277,7 +271,7 @@ export class SqliteRepository<
     }
   }
 
-  public override async softDelete(
+  override async softDelete(
     criteria: Predicate<E>,
     _options?: DeleteOptions,
   ): Promise<void> {
@@ -294,7 +288,7 @@ export class SqliteRepository<
     }
   }
 
-  public override async restore(
+  override async restore(
     criteria: Predicate<E>,
     _options?: DeleteOptions,
   ): Promise<void> {
@@ -311,7 +305,7 @@ export class SqliteRepository<
 
   // ─── Abstract: cursor / clear ─────────────────────────────────────
 
-  public async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
+  async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
       ["multiple"],
@@ -335,7 +329,7 @@ export class SqliteRepository<
     });
   }
 
-  public async clear(_options?: ClearOptions): Promise<void> {
+  async clear(_options?: ClearOptions): Promise<void> {
     guardAppendOnly(this.metadata, "clear");
 
     // For inheritance children, always use the ROOT entity's table.

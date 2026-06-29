@@ -21,14 +21,14 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M
   private readonly deadLetterManager: DeadLetterManager | undefined;
   private readonly ownedConsumerTags: Set<string> = new Set();
 
-  public constructor(options: MemoryMessageBusOptions<M>) {
+  constructor(options: MemoryMessageBusOptions<M>) {
     super(options);
     this.store = options.store;
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishMessages(
       message,
       options,
@@ -42,7 +42,7 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     );
   }
 
-  public async subscribe(
+  async subscribe(
     options: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void> {
     if (Array.isArray(options)) {
@@ -76,7 +76,7 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     });
   }
 
-  public async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
+  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
     const toRemove: Array<number> = [];
 
     for (let i = 0; i < this.store.subscriptions.length; i++) {
@@ -94,7 +94,7 @@ export class MemoryMessageBus<M extends IMessage> extends DriverMessageBusBase<M
     }
   }
 
-  public async unsubscribeAll(): Promise<void> {
+  async unsubscribeAll(): Promise<void> {
     this.store.subscriptions = this.store.subscriptions.filter(
       (sub) => !this.ownedConsumerTags.has(sub.consumerTag),
     );

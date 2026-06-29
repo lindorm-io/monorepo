@@ -21,7 +21,7 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
   private readonly store: MemorySharedState;
   private consumerTag: string | null = null;
 
-  public constructor(options: MemoryStreamPipelineOptions) {
+  constructor(options: MemoryStreamPipelineOptions) {
     super({
       ...options,
       logger: options.logger.child(["MemoryStreamPipeline"]),
@@ -29,7 +29,7 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
     this.store = options.store;
   }
 
-  public async start(): Promise<void> {
+  async start(): Promise<void> {
     if (this.running) {
       const subscriptionExists =
         this.consumerTag != null &&
@@ -75,7 +75,7 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  public async stop(): Promise<void> {
+  async stop(): Promise<void> {
     if (!this.running) return;
 
     this.paused = false;
@@ -100,12 +100,12 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline stopped");
   }
 
-  public async pause(): Promise<void> {
+  async pause(): Promise<void> {
     this.paused = true;
     this.logger.debug("Stream pipeline paused");
   }
 
-  public async resume(): Promise<void> {
+  async resume(): Promise<void> {
     this.paused = false;
     this.logger.debug("Stream pipeline resumed");
   }

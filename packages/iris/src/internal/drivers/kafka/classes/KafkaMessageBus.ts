@@ -36,14 +36,14 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
   private readonly deadLetterManager: DeadLetterManager | undefined;
   private readonly ownedSubscriptions: Map<string, OwnedSubscription> = new Map();
 
-  public constructor(options: KafkaMessageBusOptions<M>) {
+  constructor(options: KafkaMessageBusOptions<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishKafkaMessages(
       message,
       options,
@@ -58,7 +58,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     );
   }
 
-  public async subscribe(
+  async subscribe(
     options: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void> {
     if (Array.isArray(options)) {
@@ -205,7 +205,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     });
   }
 
-  public async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
+  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
     const tagKey = `${options.topic}:${options.queue ?? ""}`;
     const sub = this.ownedSubscriptions.get(tagKey);
 
@@ -235,7 +235,7 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     this.ownedSubscriptions.delete(tagKey);
   }
 
-  public async unsubscribeAll(): Promise<void> {
+  async unsubscribeAll(): Promise<void> {
     for (const [, sub] of this.ownedSubscriptions) {
       await releasePooledConsumer({
         state: this.state,

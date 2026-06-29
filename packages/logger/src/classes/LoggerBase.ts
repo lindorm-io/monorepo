@@ -28,7 +28,7 @@ import { LoggerTimer } from "./LoggerTimer.js";
 // Spawning children is delegated via the abstract `spawnChild` hook so
 // LoggerBase doesn't need to import LoggerChild directly.
 export abstract class LoggerBase implements ILogger {
-  public readonly __instanceof = "Logger";
+  readonly __instanceof = "Logger";
 
   protected readonly filters: LogFilters;
   protected readonly filterRef: FilterEntriesRef;
@@ -54,17 +54,17 @@ export abstract class LoggerBase implements ILogger {
 
   // level
 
-  public get level(): LogLevel {
+  get level(): LogLevel {
     return this.winston.level as LogLevel;
   }
 
   // utility
 
-  public child(): ILogger;
-  public child(scope: LogScope): ILogger;
-  public child(correlation: LogCorrelation): ILogger;
-  public child(scope: LogScope, correlation: LogCorrelation): ILogger;
-  public child(arg1?: LogScope | LogCorrelation, arg2?: LogCorrelation): ILogger {
+  child(): ILogger;
+  child(scope: LogScope): ILogger;
+  child(correlation: LogCorrelation): ILogger;
+  child(scope: LogScope, correlation: LogCorrelation): ILogger;
+  child(arg1?: LogScope | LogCorrelation, arg2?: LogCorrelation): ILogger {
     const scope = isArray(arg1) ? arg1 : [];
     const correlation = isObject(arg1) ? arg1 : isObject(arg2) ? arg2 : {};
 
@@ -79,36 +79,36 @@ export abstract class LoggerBase implements ILogger {
     });
   }
 
-  public correlation(correlation: LogCorrelation): void {
+  correlation(correlation: LogCorrelation): void {
     this._correlation = this.getCorrelation(correlation);
   }
 
-  public isLevelEnabled(level: LogLevel): boolean {
+  isLevelEnabled(level: LogLevel): boolean {
     return this.winston.isLevelEnabled(level);
   }
 
-  public scope(scope: LogScope): void {
+  scope(scope: LogScope): void {
     this._scope = this.getScope(scope);
   }
 
-  public time(label: string): void {
+  time(label: string): void {
     this.timers.set(label, performance.now());
   }
 
-  public timer(): ILoggerTimer {
+  timer(): ILoggerTimer {
     return new LoggerTimer((level, message, context, extra, duration) => {
       this.logToWinston({ context: context ?? {}, duration, extra, level, message });
     });
   }
 
-  public timeEnd(label: string, context?: LogContent, extra?: Array<LogContent>): void;
-  public timeEnd(
+  timeEnd(label: string, context?: LogContent, extra?: Array<LogContent>): void;
+  timeEnd(
     label: string,
     level: LogLevel,
     context?: LogContent,
     extra?: Array<LogContent>,
   ): void;
-  public timeEnd(
+  timeEnd(
     label: string,
     levelOrContext?: LogLevel | LogContent,
     contextOrExtra?: LogContent | Array<LogContent>,
@@ -143,9 +143,9 @@ export abstract class LoggerBase implements ILogger {
 
   // logging
 
-  public error(error: Error): void;
-  public error(message: string, context?: LogContent, extra?: Array<LogContent>): void;
-  public error(arg1: Error | string, arg2?: Error | Dict, extra?: Array<Dict>): void {
+  error(error: Error): void;
+  error(message: string, context?: LogContent, extra?: Array<LogContent>): void;
+  error(arg1: Error | string, arg2?: Error | Dict, extra?: Array<Dict>): void {
     const isArg1Error = isError(arg1);
     const isArg2Error = isError(arg2);
 
@@ -157,7 +157,7 @@ export abstract class LoggerBase implements ILogger {
     });
   }
 
-  public warn(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  warn(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
@@ -166,7 +166,7 @@ export abstract class LoggerBase implements ILogger {
     });
   }
 
-  public info(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  info(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
@@ -175,7 +175,7 @@ export abstract class LoggerBase implements ILogger {
     });
   }
 
-  public verbose(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  verbose(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
@@ -184,7 +184,7 @@ export abstract class LoggerBase implements ILogger {
     });
   }
 
-  public debug(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  debug(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
@@ -193,7 +193,7 @@ export abstract class LoggerBase implements ILogger {
     });
   }
 
-  public silly(message: string, context?: LogContent, extra?: Array<LogContent>): void {
+  silly(message: string, context?: LogContent, extra?: Array<LogContent>): void {
     this.logToWinston({
       context: context ?? {},
       extra: extra ?? [],
@@ -202,7 +202,7 @@ export abstract class LoggerBase implements ILogger {
     });
   }
 
-  public log(log: Log): void {
+  log(log: Log): void {
     this.logToWinston({
       context: log.context ?? {},
       extra: log.extra ?? [],

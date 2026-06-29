@@ -130,17 +130,14 @@ export abstract class DriverRepositoryBase<
   protected abstract destroyOne(entity: E): Promise<void>;
   protected abstract softDestroyOne(entity: E): Promise<void>;
   protected abstract upsertOne(entity: E, options?: UpsertOptions<E>): Promise<E>;
-  public abstract find(
+  abstract find(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
     _scope?: QueryScope,
   ): Promise<Array<E>>;
-  public abstract versions(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<Array<E>>;
-  public abstract cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>>;
-  public abstract clear(options?: ClearOptions): Promise<void>;
+  abstract versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>>;
+  abstract cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>>;
+  abstract clear(options?: ClearOptions): Promise<void>;
   protected abstract buildLazyLoader(): LazyRelationLoader;
   /**
    * Driver hook that loads the rows for a single entity's `@EmbeddedList`
@@ -187,38 +184,32 @@ export abstract class DriverRepositoryBase<
 
   // ─── Entity Handlers ──────────────────────────────────────────────
 
-  public create(options?: O | E): E {
+  create(options?: O | E): E {
     return this.entityManager.create(options);
   }
 
-  public copy(entity: E): E {
+  copy(entity: E): E {
     return this.entityManager.copy(entity);
   }
 
-  public validate(entity: E): void {
+  validate(entity: E): void {
     this.entityManager.validate(entity);
   }
 
   // ─── Queries ──────────────────────────────────────────────────────
 
-  public async count(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<number> {
+  async count(criteria?: Predicate<E>, options?: FindOptions<E>): Promise<number> {
     return this.executor.executeCount(criteria ?? ({} as Predicate<E>), options ?? {});
   }
 
-  public async exists(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<boolean> {
+  async exists(criteria: Predicate<E>, options?: FindOptions<E>): Promise<boolean> {
     if (options && Object.keys(options).length > 0) {
       return (await this.executor.executeCount(criteria, options)) > 0;
     }
     return this.executor.executeExists(criteria);
   }
 
-  public async findOne(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<E | null> {
+  async findOne(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E | null> {
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
       ["single"],
@@ -236,10 +227,7 @@ export abstract class DriverRepositoryBase<
     return results[0] ?? null;
   }
 
-  public async findOneOrFail(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<E> {
+  async findOneOrFail(criteria: Predicate<E>, options?: FindOptions<E>): Promise<E> {
     const entity = await this.findOne(criteria, options);
     if (!entity) {
       throw new ProteusRepositoryError(
@@ -256,7 +244,7 @@ export abstract class DriverRepositoryBase<
     return entity;
   }
 
-  public async findAndCount(
+  async findAndCount(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
   ): Promise<[Array<E>, number]> {
@@ -273,7 +261,7 @@ export abstract class DriverRepositoryBase<
     return [entities, count];
   }
 
-  public async findOneOrSave(
+  async findOneOrSave(
     criteria: Predicate<E>,
     entity: O | E,
     options?: Omit<FindOptions<E>, "snapshot">,
@@ -286,7 +274,7 @@ export abstract class DriverRepositoryBase<
     return this.save(entity);
   }
 
-  public async findPaginated(
+  async findPaginated(
     criteria?: Predicate<E>,
     options?: FindPaginatedOptions<E>,
   ): Promise<FindPaginatedResult<E>> {
@@ -334,7 +322,7 @@ export abstract class DriverRepositoryBase<
    * Cursors are opaque but NOT integrity-protected. Multi-tenant deployments
    * must enforce scope independently via @ScopeField auto-filter.
    */
-  public async paginate(
+  async paginate(
     criteria?: Predicate<E>,
     options?: PaginateOptions<E>,
   ): Promise<PaginateResult<E>> {
@@ -472,18 +460,18 @@ export abstract class DriverRepositoryBase<
    * per-entity lifecycle hooks, subscribers, and relation cascades for throughput.
    * Use `save(entities)` if lifecycle and cascade behavior is required.
    */
-  public insert(entity: O | E): Promise<E>;
-  public insert(entities: Array<O | E>): Promise<Array<E>>;
-  public async insert(input: O | E | Array<O | E>): Promise<E | Array<E>> {
+  insert(entity: O | E): Promise<E>;
+  insert(entities: Array<O | E>): Promise<Array<E>>;
+  async insert(input: O | E | Array<O | E>): Promise<E | Array<E>> {
     if (Array.isArray(input)) {
       return this.insertBulk(input);
     }
     return this.insertOne(input, "insert");
   }
 
-  public save(entity: O | E): Promise<E>;
-  public save(entities: Array<O | E>): Promise<Array<E>>;
-  public async save(input: O | E | Array<O | E>): Promise<E | Array<E>> {
+  save(entity: O | E): Promise<E>;
+  save(entities: Array<O | E>): Promise<Array<E>>;
+  async save(input: O | E | Array<O | E>): Promise<E | Array<E>> {
     if (this.metadata.appendOnly) {
       throw new ProteusRepositoryError(
         `Cannot save an append-only entity "${this.metadata.entity.name}" — use insert() instead`,
@@ -506,9 +494,9 @@ export abstract class DriverRepositoryBase<
     return this.saveOne(input);
   }
 
-  public update(entity: E): Promise<E>;
-  public update(entities: Array<E>): Promise<Array<E>>;
-  public async update(input: E | Array<E>): Promise<E | Array<E>> {
+  update(entity: E): Promise<E>;
+  update(entities: Array<E>): Promise<Array<E>>;
+  async update(input: E | Array<E>): Promise<E | Array<E>> {
     guardAppendOnly(this.metadata, "update");
 
     if (Array.isArray(input)) {
@@ -521,9 +509,9 @@ export abstract class DriverRepositoryBase<
     return this.updateOne(input, "update");
   }
 
-  public clone(entity: E): Promise<E>;
-  public clone(entities: Array<E>): Promise<Array<E>>;
-  public async clone(input: E | Array<E>): Promise<E | Array<E>> {
+  clone(entity: E): Promise<E>;
+  clone(entities: Array<E>): Promise<Array<E>>;
+  async clone(input: E | Array<E>): Promise<E | Array<E>> {
     if (Array.isArray(input)) {
       const results: Array<E> = [];
       for (const item of input) {
@@ -534,9 +522,9 @@ export abstract class DriverRepositoryBase<
     return this.cloneOne(input);
   }
 
-  public destroy(entity: E): Promise<void>;
-  public destroy(entities: Array<E>): Promise<void>;
-  public async destroy(input: E | Array<E>): Promise<void> {
+  destroy(entity: E): Promise<void>;
+  destroy(entities: Array<E>): Promise<void>;
+  async destroy(input: E | Array<E>): Promise<void> {
     guardAppendOnly(this.metadata, "destroy");
 
     if (Array.isArray(input)) {
@@ -550,7 +538,7 @@ export abstract class DriverRepositoryBase<
 
   // ─── Increments / Decrements ──────────────────────────────────────
 
-  public async increment(
+  async increment(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -560,7 +548,7 @@ export abstract class DriverRepositoryBase<
     await this.executor.executeIncrement(criteria, property, value);
   }
 
-  public async decrement(
+  async decrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -572,13 +560,13 @@ export abstract class DriverRepositoryBase<
 
   // ─── With Criteria ────────────────────────────────────────────────
 
-  public async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
+  async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "delete");
 
     await this.executor.executeDelete(criteria, options);
   }
 
-  public async updateMany(criteria: Predicate<E>, update: DeepPartial<E>): Promise<void> {
+  async updateMany(criteria: Predicate<E>, update: DeepPartial<E>): Promise<void> {
     guardAppendOnly(this.metadata, "updateMany");
 
     if (this.entityManager.updateStrategy === "version") {
@@ -599,9 +587,9 @@ export abstract class DriverRepositoryBase<
 
   // ─── Soft Deletes ─────────────────────────────────────────────────
 
-  public softDestroy(entity: E): Promise<void>;
-  public softDestroy(entities: Array<E>): Promise<void>;
-  public async softDestroy(input: E | Array<E>): Promise<void> {
+  softDestroy(entity: E): Promise<void>;
+  softDestroy(entities: Array<E>): Promise<void>;
+  async softDestroy(input: E | Array<E>): Promise<void> {
     guardAppendOnly(this.metadata, "softDestroy");
     guardDeleteDateField(this.metadata, "softDestroy");
 
@@ -622,10 +610,7 @@ export abstract class DriverRepositoryBase<
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeSoftDestroy, etc.)
    * or subscriber events. Use softDestroy() for per-entity lifecycle support.
    */
-  public async softDelete(
-    criteria: Predicate<E>,
-    _options?: DeleteOptions,
-  ): Promise<void> {
+  async softDelete(criteria: Predicate<E>, _options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "softDelete");
     guardDeleteDateField(this.metadata, "softDelete");
     await this.executor.executeSoftDelete(criteria);
@@ -638,7 +623,7 @@ export abstract class DriverRepositoryBase<
    * and therefore does NOT fire per-entity lifecycle hooks (@BeforeRestore, etc.)
    * or subscriber events. Use individual entity restore workflows for per-entity lifecycle support.
    */
-  public async restore(criteria: Predicate<E>, _options?: DeleteOptions): Promise<void> {
+  async restore(criteria: Predicate<E>, _options?: DeleteOptions): Promise<void> {
     guardAppendOnly(this.metadata, "restore");
     guardDeleteDateField(this.metadata, "restore");
     await this.executor.executeRestore(criteria);
@@ -646,7 +631,7 @@ export abstract class DriverRepositoryBase<
 
   // ─── TTL / Expiry ─────────────────────────────────────────────────
 
-  public async ttl(criteria: Predicate<E>, _options?: FindOptions<E>): Promise<number> {
+  async ttl(criteria: Predicate<E>, _options?: FindOptions<E>): Promise<number> {
     guardExpiryDateField(this.metadata, "ttl");
 
     const seconds = await this.executor.executeTtl(criteria);
@@ -667,7 +652,7 @@ export abstract class DriverRepositoryBase<
     return seconds;
   }
 
-  public async deleteExpired(): Promise<void> {
+  async deleteExpired(): Promise<void> {
     guardAppendOnly(this.metadata, "deleteExpired");
     guardExpiryDateField(this.metadata, "deleteExpired");
     await this.executor.executeDeleteExpired();
@@ -675,12 +660,9 @@ export abstract class DriverRepositoryBase<
 
   // ─── Upsert ───────────────────────────────────────────────────────
 
-  public upsert(entity: E, options?: UpsertOptions<E>): Promise<E>;
-  public upsert(entities: Array<E>, options?: UpsertOptions<E>): Promise<Array<E>>;
-  public async upsert(
-    input: E | Array<E>,
-    options?: UpsertOptions<E>,
-  ): Promise<E | Array<E>> {
+  upsert(entity: E, options?: UpsertOptions<E>): Promise<E>;
+  upsert(entities: Array<E>, options?: UpsertOptions<E>): Promise<Array<E>>;
+  async upsert(input: E | Array<E>, options?: UpsertOptions<E>): Promise<E | Array<E>> {
     guardAppendOnly(this.metadata, "upsert");
     guardUpsertBlocked(this.metadata);
 
@@ -697,25 +679,25 @@ export abstract class DriverRepositoryBase<
 
   // ─── Aggregates ───────────────────────────────────────────────────
 
-  public async sum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async sum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
     return this.executeAggregate("sum", field, criteria);
   }
 
-  public async average(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async average(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
     return this.executeAggregate("avg", field, criteria);
   }
 
-  public async minimum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async minimum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
     return this.executeAggregate("min", field, criteria);
   }
 
-  public async maximum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
+  async maximum(field: keyof E, criteria?: Predicate<E>): Promise<number | null> {
     return this.executeAggregate("max", field, criteria);
   }
 
   // ─── Stream ───────────────────────────────────────────────────────
 
-  public stream(options?: CursorOptions<E>): AsyncIterable<E> {
+  stream(options?: CursorOptions<E>): AsyncIterable<E> {
     const createCursor = (): Promise<IProteusCursor<E>> => this.cursor(options);
     return {
       [Symbol.asyncIterator]: (): AsyncIterator<E> => {
@@ -755,11 +737,11 @@ export abstract class DriverRepositoryBase<
 
   // ─── Global ───────────────────────────────────────────────────────
 
-  public queryBuilder(): IProteusQueryBuilder<E> {
+  queryBuilder(): IProteusQueryBuilder<E> {
     return this.queryBuilderFactory();
   }
 
-  public async setup(): Promise<void> {
+  async setup(): Promise<void> {
     // No-op — ProteusSource.setup() handles it
   }
 

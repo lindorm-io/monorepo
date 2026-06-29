@@ -8,11 +8,11 @@ import type {
 export class MemoryDeadLetterStore implements IDeadLetterStore {
   private readonly entries = new Map<string, DeadLetterEntry>();
 
-  public async add(entry: DeadLetterEntry): Promise<void> {
+  async add(entry: DeadLetterEntry): Promise<void> {
     this.entries.set(entry.id, entry);
   }
 
-  public async list(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
+  async list(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
     let result = Array.from(this.entries.values());
 
     if (options?.topic) {
@@ -27,15 +27,15 @@ export class MemoryDeadLetterStore implements IDeadLetterStore {
     return result.slice(offset, offset + limit);
   }
 
-  public async get(id: string): Promise<DeadLetterEntry | null> {
+  async get(id: string): Promise<DeadLetterEntry | null> {
     return this.entries.get(id) ?? null;
   }
 
-  public async remove(id: string): Promise<boolean> {
+  async remove(id: string): Promise<boolean> {
     return this.entries.delete(id);
   }
 
-  public async purge(options?: DeadLetterFilterOptions): Promise<number> {
+  async purge(options?: DeadLetterFilterOptions): Promise<number> {
     if (!options?.topic) {
       const count = this.entries.size;
       this.entries.clear();
@@ -54,7 +54,7 @@ export class MemoryDeadLetterStore implements IDeadLetterStore {
     return count;
   }
 
-  public async count(options?: DeadLetterFilterOptions): Promise<number> {
+  async count(options?: DeadLetterFilterOptions): Promise<number> {
     if (!options?.topic) {
       return this.entries.size;
     }
@@ -70,7 +70,7 @@ export class MemoryDeadLetterStore implements IDeadLetterStore {
     return count;
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     this.entries.clear();
   }
 }

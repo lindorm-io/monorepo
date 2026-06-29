@@ -13,16 +13,12 @@ export class DeadLetterManager {
   private readonly store: IDeadLetterStore;
   private readonly logger: ILogger;
 
-  public constructor(options: DeadLetterManagerOptions) {
+  constructor(options: DeadLetterManagerOptions) {
     this.store = options.store;
     this.logger = options.logger.child(["DeadLetterManager"]);
   }
 
-  public async send(
-    envelope: IrisEnvelope,
-    topic: string,
-    error: Error,
-  ): Promise<string> {
+  async send(envelope: IrisEnvelope, topic: string, error: Error): Promise<string> {
     const id = randomId({ namespace: "dlq", length: 16 });
 
     const entry: DeadLetterEntry = {
@@ -47,19 +43,19 @@ export class DeadLetterManager {
     return id;
   }
 
-  public async list(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
+  async list(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
     return this.store.list(options);
   }
 
-  public async get(id: string): Promise<DeadLetterEntry | null> {
+  async get(id: string): Promise<DeadLetterEntry | null> {
     return this.store.get(id);
   }
 
-  public async remove(id: string): Promise<boolean> {
+  async remove(id: string): Promise<boolean> {
     return this.store.remove(id);
   }
 
-  public async purge(options?: DeadLetterFilterOptions): Promise<number> {
+  async purge(options?: DeadLetterFilterOptions): Promise<number> {
     const count = await this.store.purge(options);
 
     this.logger.info("Dead letter purged", {
@@ -70,11 +66,11 @@ export class DeadLetterManager {
     return count;
   }
 
-  public async count(options?: DeadLetterFilterOptions): Promise<number> {
+  async count(options?: DeadLetterFilterOptions): Promise<number> {
     return this.store.count(options);
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     await this.store.close();
   }
 }

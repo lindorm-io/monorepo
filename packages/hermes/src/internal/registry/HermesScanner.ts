@@ -28,7 +28,7 @@ import type {
 const DEFAULT_NAMESPACE = "hermes";
 
 export class HermesScanner {
-  public static async scan(input: HermesScannerInput): Promise<ScannedModules> {
+  static async scan(input: HermesScannerInput): Promise<ScannedModules> {
     const classes = await HermesScanner.discoverClasses(input);
 
     const commands: Array<RegisteredDto> = [];

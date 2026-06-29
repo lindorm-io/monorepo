@@ -7,7 +7,7 @@ export class ShaKit {
   private readonly algorithm: ShaAlgorithm | undefined;
   private readonly encoding: BinaryToTextEncoding | undefined;
 
-  public constructor(options: ShaKitOptions = {}) {
+  constructor(options: ShaKitOptions = {}) {
     this.algorithm = options.algorithm ?? "SHA256";
     this.encoding = options.encoding ?? "base64";
   }
@@ -17,7 +17,7 @@ export class ShaKit {
   // SHA-1 is cryptographically broken. The ONLY legitimate use of this method is
   // computing the legacy X.509 `x5t` thumbprint per RFC 7515 §4.1.7.
   // Do NOT use S1 for authentication, integrity, or any security-sensitive purpose.
-  public static S1(data: string | Buffer): string {
+  static S1(data: string | Buffer): string {
     return createShaHash({
       algorithm: "SHA1",
       data,
@@ -25,7 +25,7 @@ export class ShaKit {
     });
   }
 
-  public static S256(data: string | Buffer): string {
+  static S256(data: string | Buffer): string {
     return createShaHash({
       algorithm: "SHA256",
       data,
@@ -33,7 +33,7 @@ export class ShaKit {
     });
   }
 
-  public static S384(data: string | Buffer): string {
+  static S384(data: string | Buffer): string {
     return createShaHash({
       algorithm: "SHA384",
       data,
@@ -41,7 +41,7 @@ export class ShaKit {
     });
   }
 
-  public static S512(data: string | Buffer): string {
+  static S512(data: string | Buffer): string {
     return createShaHash({
       algorithm: "SHA512",
       data,
@@ -51,7 +51,7 @@ export class ShaKit {
 
   // public
 
-  public hash(data: string): string {
+  hash(data: string): string {
     return createShaHash({
       algorithm: this.algorithm,
       data,
@@ -59,7 +59,7 @@ export class ShaKit {
     });
   }
 
-  public verify(data: string, hash: string): boolean {
+  verify(data: string, hash: string): boolean {
     return verifyShaHash({
       algorithm: this.algorithm,
       data,
@@ -68,7 +68,7 @@ export class ShaKit {
     });
   }
 
-  public assert(data: string, hash: string): void {
+  assert(data: string, hash: string): void {
     return assertShaHash({
       algorithm: this.algorithm,
       data,

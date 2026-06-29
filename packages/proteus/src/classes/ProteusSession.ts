@@ -59,7 +59,7 @@ export class ProteusSession implements IProteusSession {
   private readonly parentEmitEntity: EntityEmitFn;
   private readonly _signal: AbortSignal | undefined;
 
-  public constructor(options: ProteusSessionOptions) {
+  constructor(options: ProteusSessionOptions) {
     this.source = options.source;
     this._driver = options.driver;
     this.logger = options.logger;
@@ -74,15 +74,15 @@ export class ProteusSession implements IProteusSession {
 
   // ─── Getters (delegated to source for immutable properties) ─────────
 
-  public get namespace(): string | null {
+  get namespace(): string | null {
     return this.source.namespace;
   }
 
-  public get driverType(): string {
+  get driverType(): string {
     return this.source.driverType;
   }
 
-  public get log(): ILogger {
+  get log(): ILogger {
     return this.logger;
   }
 
@@ -90,17 +90,17 @@ export class ProteusSession implements IProteusSession {
    * The AbortSignal scoped to this session, or `undefined` when the session
    * was created without one (workers, CLI, migrations, socket contexts).
    */
-  public get signal(): AbortSignal | undefined {
+  get signal(): AbortSignal | undefined {
     return this._signal;
   }
 
   // ─── Data-access methods ────────────────────────────────────────────
 
-  public hasEntity<E extends IEntity>(target: Constructor<E>): boolean {
+  hasEntity<E extends IEntity>(target: Constructor<E>): boolean {
     return this.source.hasEntity(target);
   }
 
-  public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
+  repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
     const inner = this._driver.createRepository(target, undefined, this.meta);
     if (!this.cacheAdapter) return inner;
 
@@ -115,42 +115,40 @@ export class ProteusSession implements IProteusSession {
     });
   }
 
-  public queryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  queryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     return this._driver.createQueryBuilder(target);
   }
 
-  public async client<T>(): Promise<T> {
+  async client<T>(): Promise<T> {
     return this._driver.acquireClient() as Promise<T>;
   }
 
-  public async transaction<T>(
+  async transaction<T>(
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
     return this._driver.withTransaction(callback, options);
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     return this._driver.ping();
   }
 
   // ─── Filter methods ─────────────────────────────────────────────────
 
-  public setFilterParams(name: string, params: Dict<unknown>): void {
+  setFilterParams(name: string, params: Dict<unknown>): void {
     setFilterParamsUtil(this._registryRef.current, name, params);
   }
 
-  public enableFilter(name: string): void {
+  enableFilter(name: string): void {
     enableFilterUtil(this._registryRef.current, name);
   }
 
-  public disableFilter(name: string): void {
+  disableFilter(name: string): void {
     disableFilterUtil(this._registryRef.current, name);
   }
 
-  public getFilterRegistry(): FilterRegistry {
+  getFilterRegistry(): FilterRegistry {
     return this._registryRef.current;
   }
 
@@ -160,7 +158,7 @@ export class ProteusSession implements IProteusSession {
    * Returns the emit function for this session. Used when creating
    * the cloned driver so entity events bubble to the parent source.
    */
-  public getEmitEntity(): EntityEmitFn {
+  getEmitEntity(): EntityEmitFn {
     return this.emitEntity;
   }
 

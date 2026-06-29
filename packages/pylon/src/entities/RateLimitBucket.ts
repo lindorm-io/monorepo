@@ -10,14 +10,14 @@ import {
 @Entity()
 export class RateLimitBucket {
   @PrimaryKeyField()
-  public id!: string;
+  id!: string;
 
   @Field("integer")
-  public tokens!: number;
+  tokens!: number;
 
   @Field("timestamp")
-  public lastRefill!: Date;
+  lastRefill!: Date;
 
   @ExpiryDateField()
-  public expiresAt!: Date | null;
+  expiresAt!: Date | null;
 }

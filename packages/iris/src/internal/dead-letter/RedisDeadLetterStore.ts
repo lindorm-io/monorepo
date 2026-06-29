@@ -16,10 +16,7 @@ export class RedisDeadLetterStore implements IDeadLetterStore {
   private readonly zsetKey: string;
   private readonly hashKey: string;
 
-  public constructor(
-    client: any,
-    options?: { keyPrefix?: string; ownedClient?: boolean },
-  ) {
+  constructor(client: any, options?: { keyPrefix?: string; ownedClient?: boolean }) {
     this.client = client;
     this.ownedClient = options?.ownedClient ?? false;
     const prefix = options?.keyPrefix ?? "iris:dlq";
@@ -27,14 +24,14 @@ export class RedisDeadLetterStore implements IDeadLetterStore {
     this.hashKey = `${prefix}:data`;
   }
 
-  public async add(entry: DeadLetterEntry): Promise<void> {
+  async add(entry: DeadLetterEntry): Promise<void> {
     const pipeline = this.client.pipeline();
     pipeline.zadd(this.zsetKey, entry.timestamp, entry.id);
     pipeline.hset(this.hashKey, entry.id, serializeDeadLetterEntry(entry));
     checkPipelineResults(await pipeline.exec());
   }
 
-  public async list(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
+  async list(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
     // Get all IDs newest first
     const ids: Array<string> = await this.client.zrevrange(this.zsetKey, 0, -1);
 
@@ -59,13 +56,13 @@ export class RedisDeadLetterStore implements IDeadLetterStore {
     return entries.slice(offset, offset + limit);
   }
 
-  public async get(id: string): Promise<DeadLetterEntry | null> {
+  async get(id: string): Promise<DeadLetterEntry | null> {
     const data = await this.client.hget(this.hashKey, id);
     if (!data) return null;
     return deserializeDeadLetterEntry(data);
   }
 
-  public async remove(id: string): Promise<boolean> {
+  async remove(id: string): Promise<boolean> {
     const pipeline = this.client.pipeline();
     pipeline.zrem(this.zsetKey, id);
     pipeline.hdel(this.hashKey, id);
@@ -74,7 +71,7 @@ export class RedisDeadLetterStore implements IDeadLetterStore {
     return results![0][1] === 1;
   }
 
-  public async purge(options?: DeadLetterFilterOptions): Promise<number> {
+  async purge(options?: DeadLetterFilterOptions): Promise<number> {
     if (!options?.topic) {
       const count = await this.client.zcard(this.zsetKey);
       const pipeline = this.client.pipeline();
@@ -112,7 +109,7 @@ export class RedisDeadLetterStore implements IDeadLetterStore {
     return toRemove.length;
   }
 
-  public async count(options?: DeadLetterFilterOptions): Promise<number> {
+  async count(options?: DeadLetterFilterOptions): Promise<number> {
     if (!options?.topic) {
       return this.client.zcard(this.zsetKey);
     }
@@ -135,7 +132,7 @@ export class RedisDeadLetterStore implements IDeadLetterStore {
     return count;
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     if (this.ownedClient) {
       await this.client.quit();
     }

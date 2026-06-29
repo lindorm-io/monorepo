@@ -15,13 +15,13 @@ export class RedisPublisher<M extends IMessage> extends DriverPublisherBase<M> {
   private readonly state: RedisSharedState;
   private readonly delayManager: DelayManager | undefined;
 
-  public constructor(options: RedisPublisherOptions<M>) {
+  constructor(options: RedisPublisherOptions<M>) {
     super(options);
     this.state = options.state;
     this.delayManager = options.delayManager;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishRedisMessages(
       message,
       options,

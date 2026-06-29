@@ -19,7 +19,7 @@ export class EcKit implements IKeyKit {
   private readonly kryptos: IKryptosEc;
   private readonly raw: boolean;
 
-  public constructor(options: EcKitOptions) {
+  constructor(options: EcKitOptions) {
     this.dsa = options.dsa ?? "der";
     this.encoding = options.encoding ?? "base64";
     this.raw = options.raw ?? false;
@@ -45,7 +45,7 @@ export class EcKit implements IKeyKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: KeyData): Buffer {
+  sign(data: KeyData): Buffer {
     return createEcSignature({
       data,
       dsaEncoding: this.dsa,
@@ -54,7 +54,7 @@ export class EcKit implements IKeyKit {
     });
   }
 
-  public verify(data: KeyData, signature: KeyData): boolean {
+  verify(data: KeyData, signature: KeyData): boolean {
     return verifyEcSignature({
       data,
       dsaEncoding: this.dsa,
@@ -65,7 +65,7 @@ export class EcKit implements IKeyKit {
     });
   }
 
-  public assert(data: KeyData, signature: KeyData): void {
+  assert(data: KeyData, signature: KeyData): void {
     return assertEcSignature({
       data,
       dsaEncoding: this.dsa,
@@ -76,7 +76,7 @@ export class EcKit implements IKeyKit {
     });
   }
 
-  public format(data: Buffer): string {
+  format(data: Buffer): string {
     return data.toString(this.encoding);
   }
 }

@@ -29,12 +29,12 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
   private readonly state: RabbitSharedState;
   private readonly ownedConsumers: Map<string, Array<OwnedConsumer>> = new Map();
 
-  public constructor(options: RabbitWorkerQueueOptions<M>) {
+  constructor(options: RabbitWorkerQueueOptions<M>) {
     super(options);
     this.state = options.state;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishRabbitMessages(
       message,
       options,
@@ -48,7 +48,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     );
   }
 
-  public async consume(
+  async consume(
     queueOrOptions: string | ConsumeOptions<M> | Array<ConsumeOptions<M>>,
     callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
   ): Promise<void> {
@@ -151,7 +151,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     });
   }
 
-  public async unconsume(queue: string): Promise<void> {
+  async unconsume(queue: string): Promise<void> {
     const consumers = this.ownedConsumers.get(queue);
     if (!consumers || consumers.length === 0) return;
 
@@ -183,7 +183,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     this.ownedConsumers.delete(queue);
   }
 
-  public async unconsumeAll(): Promise<void> {
+  async unconsumeAll(): Promise<void> {
     const channel = this.state.consumeChannel;
 
     for (const [, consumers] of this.ownedConsumers) {

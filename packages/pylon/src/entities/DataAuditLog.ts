@@ -14,35 +14,35 @@ import {
 export class DataAuditLog {
   @PrimaryKeyField()
   @Generated("lindorm_id", { namespace: "dau" })
-  public id!: string;
+  id!: string;
 
   @CreateDateField()
-  public createdAt!: Date;
+  createdAt!: Date;
 
   @Index()
   @Field("string")
-  public correlationId!: string;
+  correlationId!: string;
 
   @Index()
   @Field("string")
-  public actor!: string;
+  actor!: string;
 
   @Index()
   @Field("string")
-  public entityName!: string;
+  entityName!: string;
 
   @Nullable()
   @Field("string")
-  public entityNamespace!: string | null;
+  entityNamespace!: string | null;
 
   @Index()
   @Field("string")
-  public entityId!: string;
+  entityId!: string;
 
   @Field("string")
-  public action!: string;
+  action!: string;
 
   @Nullable()
   @Field("json")
-  public changes!: Record<string, { from: unknown; to: unknown }> | null;
+  changes!: Record<string, { from: unknown; to: unknown }> | null;
 }

@@ -76,7 +76,7 @@ export class Hermes implements IHermes {
 
   private readonly _statusRef: StatusRef;
 
-  public constructor(options: HermesOptions) {
+  constructor(options: HermesOptions) {
     this.logger = options.logger.child(["Hermes"]);
     this.namespace = options.namespace ?? DEFAULT_NAMESPACE;
     this.checksumMode = options.checksumMode ?? "warn";
@@ -101,11 +101,11 @@ export class Hermes implements IHermes {
 
   // -- Public getters --
 
-  public get status(): HermesStatus {
+  get status(): HermesStatus {
     return this._statusRef.current;
   }
 
-  public get admin(): IHermes["admin"] {
+  get admin(): IHermes["admin"] {
     return {
       inspect: {
         aggregate: this.inspectAggregate.bind(this),
@@ -122,7 +122,7 @@ export class Hermes implements IHermes {
 
   // -- Lifecycle --
 
-  public async setup(): Promise<void> {
+  async setup(): Promise<void> {
     if (this._statusRef.current !== "created") {
       throw new LindormError("Hermes.setup() can only be called once", {
         code: "setup_already_called",
@@ -173,7 +173,7 @@ export class Hermes implements IHermes {
     }
   }
 
-  public async teardown(): Promise<void> {
+  async teardown(): Promise<void> {
     this.assertReady();
 
     this._statusRef.current = "stopping";
@@ -194,7 +194,7 @@ export class Hermes implements IHermes {
     this.logger.verbose("Hermes stopped");
   }
 
-  public session(options: { logger?: ILogger } = {}): HermesSession {
+  session(options: { logger?: ILogger } = {}): HermesSession {
     return new HermesSession({
       logger: options.logger ?? this.logger,
       statusRef: this._statusRef,
@@ -206,7 +206,7 @@ export class Hermes implements IHermes {
 
   // -- Command --
 
-  public async command(
+  async command(
     command: ClassLike,
     options: { id?: string; correlationId?: string; delay?: number; meta?: Dict } = {},
   ): Promise<AggregateIdentifier> {
@@ -261,7 +261,7 @@ export class Hermes implements IHermes {
 
   // -- Query --
 
-  public async query<R>(query: ClassLike): Promise<R> {
+  async query<R>(query: ClassLike): Promise<R> {
     this.assertReady();
 
     return this.viewDomain.query<R>(query);
@@ -269,7 +269,7 @@ export class Hermes implements IHermes {
 
   // -- Event emitter delegation --
 
-  public on(evt: HermesEventName, callback: (data: unknown) => void): void {
+  on(evt: HermesEventName, callback: (data: unknown) => void): void {
     if (evt.startsWith("saga")) {
       this.sagaDomain.on(evt, callback as any);
     } else if (evt.startsWith("view")) {
@@ -290,7 +290,7 @@ export class Hermes implements IHermes {
     }
   }
 
-  public off(evt: HermesEventName, callback: (data: unknown) => void): void {
+  off(evt: HermesEventName, callback: (data: unknown) => void): void {
     if (evt.startsWith("saga")) {
       this.sagaDomain.off(evt, callback as any);
     } else if (evt.startsWith("view")) {

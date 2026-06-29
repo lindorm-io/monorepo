@@ -31,16 +31,16 @@ export class SagaModel<S extends Dict = Dict> {
   private readonly logger: ILogger;
   private readonly registry: HermesRegistry;
 
-  public readonly id: string;
-  public readonly name: string;
-  public readonly namespace: string;
+  readonly id: string;
+  readonly name: string;
+  readonly namespace: string;
 
   private _destroyed: boolean;
   private _messagesToDispatch: Array<SagaPendingMessage>;
   private _revision: number;
   private _state: S;
 
-  public constructor(options: SagaModelOptions<S>, deps: SagaModelDeps) {
+  constructor(options: SagaModelOptions<S>, deps: SagaModelDeps) {
     this.logger = deps.logger.child(["SagaModel"]);
     this.registry = deps.registry;
 
@@ -54,23 +54,23 @@ export class SagaModel<S extends Dict = Dict> {
     this._state = options.state ?? ({} as S);
   }
 
-  public get destroyed(): boolean {
+  get destroyed(): boolean {
     return this._destroyed;
   }
 
-  public get messagesToDispatch(): Array<SagaPendingMessage> {
+  get messagesToDispatch(): Array<SagaPendingMessage> {
     return this._messagesToDispatch;
   }
 
-  public get revision(): number {
+  get revision(): number {
     return this._revision;
   }
 
-  public get state(): S {
+  get state(): S {
     return this._state;
   }
 
-  public destroy(): void {
+  destroy(): void {
     this.logger.debug("Destroy");
 
     if (this._destroyed) {
@@ -80,7 +80,7 @@ export class SagaModel<S extends Dict = Dict> {
     this._destroyed = true;
   }
 
-  public dispatch(
+  dispatch(
     causationId: string,
     correlationId: string | null,
     causationMeta: Dict,
@@ -138,7 +138,7 @@ export class SagaModel<S extends Dict = Dict> {
     this._messagesToDispatch.push(pending);
   }
 
-  public timeout(
+  timeout(
     causationId: string,
     correlationId: string | null,
     causationMeta: Dict,
@@ -178,7 +178,7 @@ export class SagaModel<S extends Dict = Dict> {
     this._messagesToDispatch.push(pending);
   }
 
-  public mergeState(state: Partial<S>): void {
+  mergeState(state: Partial<S>): void {
     this.logger.debug("Merge state", { state });
 
     z.record(z.string(), z.any()).parse(state);
@@ -190,7 +190,7 @@ export class SagaModel<S extends Dict = Dict> {
     this._state = merge(this._state, state as S) as S;
   }
 
-  public setState(state: S): void {
+  setState(state: S): void {
     this.logger.debug("Set state", { state });
 
     z.record(z.string(), z.any()).parse(state);
@@ -202,7 +202,7 @@ export class SagaModel<S extends Dict = Dict> {
     this._state = state;
   }
 
-  public clearMessages(): void {
+  clearMessages(): void {
     this._messagesToDispatch = [];
   }
 
@@ -226,7 +226,7 @@ export class SagaModel<S extends Dict = Dict> {
     };
   }
 
-  public toJSON(): Record<string, unknown> {
+  toJSON(): Record<string, unknown> {
     return {
       id: this.id,
       name: this.name,

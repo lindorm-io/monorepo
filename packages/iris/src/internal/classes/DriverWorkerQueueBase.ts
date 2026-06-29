@@ -17,14 +17,14 @@ export abstract class DriverWorkerQueueBase<M extends IMessage>
     super(options, "WorkerQueue");
   }
 
-  public abstract publish(message: M | Array<M>, options?: PublishOptions): Promise<void>;
+  abstract publish(message: M | Array<M>, options?: PublishOptions): Promise<void>;
 
-  public abstract consume(
+  abstract consume(
     queueOrOptions: string | ConsumeOptions<M> | Array<ConsumeOptions<M>>,
     callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
   ): Promise<void>;
 
-  public abstract unconsume(queue: string): Promise<void>;
+  abstract unconsume(queue: string): Promise<void>;
 
-  public abstract unconsumeAll(): Promise<void>;
+  abstract unconsumeAll(): Promise<void>;
 }

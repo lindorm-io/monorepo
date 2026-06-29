@@ -1,19 +1,19 @@
 import type { IScanData } from "../interfaces/index.js";
 
 export class ScanData implements IScanData {
-  public readonly baseName: string;
-  public readonly basePath: string;
-  public readonly children: Array<IScanData>;
-  public readonly extension: string | null;
-  public readonly fullName: string;
-  public readonly fullPath: string;
-  public readonly isDirectory: boolean;
-  public readonly isFile: boolean;
-  public readonly parents: Array<string>;
-  public readonly relativePath: string;
-  public readonly types: Array<string>;
+  readonly baseName: string;
+  readonly basePath: string;
+  readonly children: Array<IScanData>;
+  readonly extension: string | null;
+  readonly fullName: string;
+  readonly fullPath: string;
+  readonly isDirectory: boolean;
+  readonly isFile: boolean;
+  readonly parents: Array<string>;
+  readonly relativePath: string;
+  readonly types: Array<string>;
 
-  public constructor(options: IScanData) {
+  constructor(options: IScanData) {
     this.baseName = options.baseName;
     this.basePath = options.basePath;
     this.children = options.children;

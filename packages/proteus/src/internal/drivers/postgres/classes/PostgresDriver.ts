@@ -65,7 +65,7 @@ export class PostgresDriver implements IProteusDriver {
   private pool: Pool | null = null;
   private connectingPromise: Promise<void> | null = null;
 
-  public constructor(
+  constructor(
     options: ProteusPostgresOptions,
     logger: ILogger,
     namespace: string | null,
@@ -86,7 +86,7 @@ export class PostgresDriver implements IProteusDriver {
     this.signal = undefined;
   }
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     if (this.pool) return;
     if (this.connectingPromise) return this.connectingPromise;
 
@@ -133,7 +133,7 @@ export class PostgresDriver implements IProteusDriver {
     this.logger.debug("PostgreSQL connection pool created");
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     try {
       const pool = this.getPool();
       await pool.query("SELECT 1");
@@ -143,7 +143,7 @@ export class PostgresDriver implements IProteusDriver {
     }
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (!this.pool) return;
 
     const p = this.pool;
@@ -157,7 +157,7 @@ export class PostgresDriver implements IProteusDriver {
     this.logger.debug("PostgreSQL connection pool closed");
   }
 
-  public async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
+  async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
     if (this.options.synchronize && this.options.runMigrations) {
       throw new PostgresMigrationError(
         "synchronize and runMigrations are mutually exclusive — use one or the other",
@@ -182,7 +182,7 @@ export class PostgresDriver implements IProteusDriver {
     }
   }
 
-  public async query<R = unknown>(
+  async query<R = unknown>(
     sql: string,
     values?: Array<unknown>,
   ): Promise<ProteusResult<R>> {
@@ -194,7 +194,7 @@ export class PostgresDriver implements IProteusDriver {
     };
   }
 
-  public createRepository<E extends IEntity>(
+  createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
     meta?: ProteusHookMeta,
@@ -307,7 +307,7 @@ export class PostgresDriver implements IProteusDriver {
     });
   }
 
-  public createTransactionalRepository<E extends IEntity>(
+  createTransactionalRepository<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
@@ -353,9 +353,7 @@ export class PostgresDriver implements IProteusDriver {
     });
   }
 
-  public createExecutor<E extends IEntity>(
-    target: Constructor<E>,
-  ): IRepositoryExecutor<E> {
+  createExecutor<E extends IEntity>(target: Constructor<E>): IRepositoryExecutor<E> {
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
     const client = this.signal
@@ -372,7 +370,7 @@ export class PostgresDriver implements IProteusDriver {
     );
   }
 
-  public createTransactionalExecutor<E extends IEntity>(
+  createTransactionalExecutor<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
@@ -389,9 +387,7 @@ export class PostgresDriver implements IProteusDriver {
     );
   }
 
-  public createQueryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  createQueryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     const pool = this.getPool();
     const metadata = this.resolveMetadata(target);
     const client = this.signal
@@ -400,7 +396,7 @@ export class PostgresDriver implements IProteusDriver {
     return new PostgresQueryBuilder<E>(metadata, client, this.namespace, this.logger);
   }
 
-  public createTransactionalQueryBuilder<E extends IEntity>(
+  createTransactionalQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
@@ -414,11 +410,11 @@ export class PostgresDriver implements IProteusDriver {
     );
   }
 
-  public async acquireClient(): Promise<PoolClient> {
+  async acquireClient(): Promise<PoolClient> {
     return this.getPool().connect();
   }
 
-  public cloneWithGetters(
+  cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
     signal?: AbortSignal,
@@ -438,9 +434,7 @@ export class PostgresDriver implements IProteusDriver {
     return cloned;
   }
 
-  public async beginTransaction(
-    options?: TransactionOptions,
-  ): Promise<TransactionHandle> {
+  async beginTransaction(options?: TransactionOptions): Promise<TransactionHandle> {
     const pool = this.getPool();
     const signal = this.signal;
     if (signal?.aborted) {
@@ -456,11 +450,11 @@ export class PostgresDriver implements IProteusDriver {
     );
   }
 
-  public async commitTransaction(handle: TransactionHandle): Promise<void> {
+  async commitTransaction(handle: TransactionHandle): Promise<void> {
     await commitTransaction(handle as PostgresTransactionHandle);
   }
 
-  public async rollbackTransaction(handle: TransactionHandle): Promise<void> {
+  async rollbackTransaction(handle: TransactionHandle): Promise<void> {
     await rollbackTransaction(handle as PostgresTransactionHandle);
   }
 
@@ -472,7 +466,7 @@ export class PostgresDriver implements IProteusDriver {
    * could be temporarily exhausted. The pool's `connectionTimeoutMillis` handles
    * this gracefully by failing with a timeout rather than hanging indefinitely.
    */
-  public async withTransaction<T>(
+  async withTransaction<T>(
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {

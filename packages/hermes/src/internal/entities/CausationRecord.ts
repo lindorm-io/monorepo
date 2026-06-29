@@ -14,21 +14,21 @@ export class CausationRecord {
   @PrimaryKey()
   @Field("string")
   @Max(128)
-  public ownerId: string = "";
+  ownerId: string = "";
 
   @PrimaryKey()
   @Field("string")
   @Max(128)
-  public ownerName: string = "";
+  ownerName: string = "";
 
   @PrimaryKey()
   @Field("string")
   @Max(64)
-  public causationId: string = "";
+  causationId: string = "";
 
   @ExpiryDateField()
-  public expiresAt: Date | null = null;
+  expiresAt: Date | null = null;
 
   @CreateDateField()
-  public createdAt: Date = new Date();
+  createdAt: Date = new Date();
 }

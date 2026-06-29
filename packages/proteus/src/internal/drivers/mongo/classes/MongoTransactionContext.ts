@@ -21,7 +21,7 @@ export class MongoTransactionContext implements ITransactionContext {
   private readonly driver: MongoDriver;
   private readonly repoFactory: RepositoryFactory | undefined;
 
-  public constructor(
+  constructor(
     handle: MongoTransactionHandle,
     driver: MongoDriver,
     repositoryFactory?: RepositoryFactory,
@@ -31,7 +31,7 @@ export class MongoTransactionContext implements ITransactionContext {
     this.repoFactory = repositoryFactory;
   }
 
-  public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
+  repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
     if (!this.repoFactory) {
       throw new MongoDriverError("Transactional repositories are not configured", {
         code: "unsupported_operation",
@@ -43,30 +43,26 @@ export class MongoTransactionContext implements ITransactionContext {
     return this.repoFactory(target);
   }
 
-  public queryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  queryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     return this.driver.createTransactionalQueryBuilder(target, this.handle);
   }
 
-  public async client<T>(): Promise<T> {
+  async client<T>(): Promise<T> {
     // The transaction-scoped client for MongoDB is the ClientSession — any
     // driver calls made with `{ session }` participate in the open tx.
     return this.handle.session as unknown as T;
   }
 
-  public async transaction<T>(
-    fn: (ctx: MongoTransactionContext) => Promise<T>,
-  ): Promise<T> {
+  async transaction<T>(fn: (ctx: MongoTransactionContext) => Promise<T>): Promise<T> {
     // MongoDB has no savepoints — nested transactions share the session
     return fn(this);
   }
 
-  public async commit(): Promise<void> {
+  async commit(): Promise<void> {
     await this.driver.commitTransaction(this.handle);
   }
 
-  public async rollback(): Promise<void> {
+  async rollback(): Promise<void> {
     await this.driver.rollbackTransaction(this.handle);
   }
 }

@@ -34,16 +34,13 @@ export class JwsKit implements IJwsKit {
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
-  public constructor(options: JwsKitOptions) {
+  constructor(options: JwsKitOptions) {
     this.logger = options.logger.child(["JwsKit"]);
     this.kryptos = options.kryptos;
     this.certBindingMode = options.certBindingMode ?? "strict";
   }
 
-  public sign<T extends Buffer | string>(
-    data: T,
-    options: SignJwsOptions = {},
-  ): SignedJws {
+  sign<T extends Buffer | string>(data: T, options: SignJwsOptions = {}): SignedJws {
     this.logger.debug("Signing token", { options });
 
     const objectId = options.objectId;
@@ -81,7 +78,7 @@ export class JwsKit implements IJwsKit {
     return { objectId, token };
   }
 
-  public verify<T extends Buffer | string>(token: string): ParsedJws<T> {
+  verify<T extends Buffer | string>(token: string): ParsedJws<T> {
     this.logger.debug("Verifying token", { token });
 
     const parsed = JwsKit.parse<T>(token);
@@ -142,7 +139,7 @@ export class JwsKit implements IJwsKit {
 
   // public static
 
-  public static isJws(jws: string): boolean {
+  static isJws(jws: string): boolean {
     if (typeof jws !== "string") return false;
     const parts = jws.split(".");
     if (parts.length !== 3) return false;
@@ -160,7 +157,7 @@ export class JwsKit implements IJwsKit {
     }
   }
 
-  public static decode(jws: string): DecodedJws {
+  static decode(jws: string): DecodedJws {
     const [header, payload, signature] = jws.split(".");
     const decodedHeader = decodeJoseHeader(header);
 
@@ -174,7 +171,7 @@ export class JwsKit implements IJwsKit {
     };
   }
 
-  public static parse<T extends Buffer | string>(token: string): ParsedJws<T> {
+  static parse<T extends Buffer | string>(token: string): ParsedJws<T> {
     const decoded = JwsKit.decode(token);
 
     const typ = decoded.header.typ;

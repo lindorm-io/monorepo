@@ -22,12 +22,12 @@ export class SyncPlanExecutor {
   private readonly logger: ILogger | undefined;
   private readonly lockName: string;
 
-  public constructor(logger?: ILogger, namespace?: string | null) {
+  constructor(logger?: ILogger, namespace?: string | null) {
     this.logger = logger?.child(["SyncPlanExecutor"]);
     this.lockName = buildMysqlLockName("proteus_sync", namespace ?? null);
   }
 
-  public execute = async (
+  execute = async (
     client: MysqlQueryClient,
     plan: MysqlSyncPlan,
     options: MysqlSyncOptions = {},

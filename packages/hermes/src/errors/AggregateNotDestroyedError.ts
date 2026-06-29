@@ -1,7 +1,7 @@
 import { DomainError, type DomainErrorOptions } from "./DomainError.js";
 
 export class AggregateNotDestroyedError extends DomainError {
-  public constructor(options: Omit<DomainErrorOptions, "permanent"> = {}) {
+  constructor(options: Omit<DomainErrorOptions, "permanent"> = {}) {
     super("Aggregate has not been destroyed", {
       code: "aggregate_not_destroyed",
       title: "Aggregate Not Destroyed",

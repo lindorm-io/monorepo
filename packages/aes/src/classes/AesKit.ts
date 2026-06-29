@@ -34,34 +34,26 @@ import { encryptTokenised } from "../internal/utils/encrypt-tokenised.js";
 
 export class AesKit implements IAesKit {
   private readonly encryption: KryptosEncryption;
-  public readonly kryptos: IKryptos;
+  readonly kryptos: IKryptos;
 
-  public constructor(options: AesKitOptions) {
+  constructor(options: AesKitOptions) {
     this.kryptos = options.kryptos;
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
   }
 
-  public encrypt(
-    data: AesContent,
-    mode?: "encoded",
-    options?: AesOperationOptions,
-  ): string;
-  public encrypt(
+  encrypt(data: AesContent, mode?: "encoded", options?: AesOperationOptions): string;
+  encrypt(
     data: AesContent,
     mode: "record",
     options?: AesOperationOptions,
   ): AesEncryptionRecord;
-  public encrypt(
+  encrypt(
     data: AesContent,
     mode: "serialised",
     options?: AesOperationOptions,
   ): SerialisedAesEncryption;
-  public encrypt(
-    data: AesContent,
-    mode: "tokenised",
-    options?: AesOperationOptions,
-  ): string;
-  public encrypt(
+  encrypt(data: AesContent, mode: "tokenised", options?: AesOperationOptions): string;
+  encrypt(
     data: AesContent,
     mode: AesEncryptionMode = "encoded",
     _options?: AesOperationOptions,
@@ -116,7 +108,7 @@ export class AesKit implements IAesKit {
     }
   }
 
-  public decrypt<T extends AesContent = string>(
+  decrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
     options?: AesOperationOptions,
   ): T {
@@ -146,7 +138,7 @@ export class AesKit implements IAesKit {
     }
   }
 
-  public verify(
+  verify(
     input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
     options?: AesOperationOptions,
@@ -158,7 +150,7 @@ export class AesKit implements IAesKit {
     }
   }
 
-  public assert(
+  assert(
     input: AesContent,
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
     options?: AesOperationOptions,
@@ -172,10 +164,7 @@ export class AesKit implements IAesKit {
     });
   }
 
-  public encryptContent(
-    content: Buffer,
-    options?: AesContentOptions,
-  ): AesContentEncryption {
+  encryptContent(content: Buffer, options?: AesContentOptions): AesContentEncryption {
     try {
       return encryptContentDirect({
         aad: options?.aad,
@@ -196,7 +185,7 @@ export class AesKit implements IAesKit {
     }
   }
 
-  public decryptContent(input: AesContentDecryption): Buffer {
+  decryptContent(input: AesContentDecryption): Buffer {
     try {
       return decryptContentDirect({
         aad: input.aad,
@@ -218,7 +207,7 @@ export class AesKit implements IAesKit {
     }
   }
 
-  public prepareEncryption(): PreparedEncryption {
+  prepareEncryption(): PreparedEncryption {
     try {
       return prepareAesEncryption({ encryption: this.encryption, kryptos: this.kryptos });
     } catch (error) {
@@ -235,21 +224,21 @@ export class AesKit implements IAesKit {
 
   // public static
 
-  public static contentType(input: any): AesContentType {
+  static contentType(input: any): AesContentType {
     return calculateContentType(input);
   }
 
-  public static isAesTokenised(input: any): input is string {
+  static isAesTokenised(input: any): input is string {
     return isAesTokenised(input);
   }
 
-  public static parse(data: string): ParsedAesDecryptionRecord;
-  public static parse(data: SerialisedAesDecryption): ParsedAesDecryptionRecord;
-  public static parse(data: AesDecryptionRecord): AesDecryptionRecord;
-  public static parse(
+  static parse(data: string): ParsedAesDecryptionRecord;
+  static parse(data: SerialisedAesDecryption): ParsedAesDecryptionRecord;
+  static parse(data: AesDecryptionRecord): AesDecryptionRecord;
+  static parse(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
   ): AesDecryptionRecord;
-  public static parse(
+  static parse(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
   ): AesDecryptionRecord {
     return parseAes(data);

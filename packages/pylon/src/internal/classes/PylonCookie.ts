@@ -26,9 +26,9 @@ export class PylonCookie {
   private readonly secure: boolean;
   private readonly value: string;
 
-  public readonly name: string;
+  readonly name: string;
 
-  public constructor(name: string, value: string | null, options: PylonCookieOptions) {
+  constructor(name: string, value: string | null, options: PylonCookieOptions) {
     PylonCookie.verifyDomain(options.domain);
     PylonCookie.verifyExpiry(options.expiry);
     PylonCookie.verifyName(name);
@@ -51,11 +51,11 @@ export class PylonCookie {
 
   // public
 
-  public toString(): string {
+  toString(): string {
     return `${this.name}=${this.value}`;
   }
 
-  public toHeader(): string {
+  toHeader(): string {
     let header = this.toString();
 
     const expires = isDate(this.expiry)

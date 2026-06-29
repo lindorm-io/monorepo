@@ -68,7 +68,7 @@ export class KafkaDriver implements IIrisDriver {
   private _deliberateDisconnect: boolean = false;
   private readonly _producerUnsubscribers: Array<() => void> = [];
 
-  public constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
+  constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
     this.logger = options.logger.child(["KafkaDriver"]);
     this.meta = options.meta;
     this.amphora = options.amphora;
@@ -96,7 +96,7 @@ export class KafkaDriver implements IIrisDriver {
     };
   }
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     this._deliberateDisconnect = false;
     this.setConnectionState("connecting");
 
@@ -152,7 +152,7 @@ export class KafkaDriver implements IIrisDriver {
     }
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     this._deliberateDisconnect = true;
 
     for (const unsub of this._producerUnsubscribers) {
@@ -193,7 +193,7 @@ export class KafkaDriver implements IIrisDriver {
     this.logger.debug("Disconnected");
   }
 
-  public async drain(_timeout?: number): Promise<void> {
+  async drain(_timeout?: number): Promise<void> {
     this.setConnectionState("draining");
 
     // Pause all pooled consumers (all topics at once)
@@ -267,7 +267,7 @@ export class KafkaDriver implements IIrisDriver {
     this.logger.debug("Drained");
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     if (!this.state.admin) return false;
 
     try {
@@ -280,7 +280,7 @@ export class KafkaDriver implements IIrisDriver {
     }
   }
 
-  public async setup(messages: Array<Constructor<IMessage>>): Promise<void> {
+  async setup(messages: Array<Constructor<IMessage>>): Promise<void> {
     if (!this.state.kafka) {
       this.logger.warn("Cannot setup: Kafka client is not connected");
       return;
@@ -325,7 +325,7 @@ export class KafkaDriver implements IIrisDriver {
     }
   }
 
-  public async reset(): Promise<void> {
+  async reset(): Promise<void> {
     this.state.abortController.abort();
     this.state.abortController = new AbortController();
 
@@ -353,32 +353,32 @@ export class KafkaDriver implements IIrisDriver {
     this.logger.debug("Reset");
   }
 
-  public getConnectionState(): IrisConnectionState {
+  getConnectionState(): IrisConnectionState {
     return this._connectionState;
   }
 
-  public on<K extends keyof IrisEvents>(
+  on<K extends keyof IrisEvents>(
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void {
     this._emitter.on(event, listener);
   }
 
-  public off<K extends keyof IrisEvents>(
+  off<K extends keyof IrisEvents>(
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void {
     this._emitter.off(event, listener);
   }
 
-  public once<K extends keyof IrisEvents>(
+  once<K extends keyof IrisEvents>(
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void {
     this._emitter.once(event, listener);
   }
 
-  public createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
+  createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
     return new KafkaPublisher<M>({
       target,
       logger: this.logger,
@@ -390,9 +390,7 @@ export class KafkaDriver implements IIrisDriver {
     });
   }
 
-  public createMessageBus<M extends IMessage>(
-    target: Constructor<M>,
-  ): IIrisMessageBus<M> {
+  createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
     return new KafkaMessageBus<M>({
       target,
       logger: this.logger,
@@ -405,9 +403,7 @@ export class KafkaDriver implements IIrisDriver {
     });
   }
 
-  public createWorkerQueue<M extends IMessage>(
-    target: Constructor<M>,
-  ): IIrisWorkerQueue<M> {
+  createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
     return new KafkaWorkerQueue<M>({
       target,
       logger: this.logger,
@@ -420,7 +416,7 @@ export class KafkaDriver implements IIrisDriver {
     });
   }
 
-  public createStreamProcessor(): IIrisStreamProcessor {
+  createStreamProcessor(): IIrisStreamProcessor {
     return new KafkaStreamProcessor({
       state: this.state,
       logger: this.logger,
@@ -429,7 +425,7 @@ export class KafkaDriver implements IIrisDriver {
     });
   }
 
-  public createRpcClient<Req extends IMessage, Res extends IMessage>(
+  createRpcClient<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): KafkaRpcClient<Req, Res> {
@@ -443,7 +439,7 @@ export class KafkaDriver implements IIrisDriver {
     });
   }
 
-  public createRpcServer<Req extends IMessage, Res extends IMessage>(
+  createRpcServer<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): KafkaRpcServer<Req, Res> {
@@ -457,17 +453,17 @@ export class KafkaDriver implements IIrisDriver {
     });
   }
 
-  public async setupReplyQueue(): Promise<void> {
+  async setupReplyQueue(): Promise<void> {
     this._replyQueueActive = true;
     this.logger.debug("Reply queue active");
   }
 
-  public async teardownReplyQueue(): Promise<void> {
+  async teardownReplyQueue(): Promise<void> {
     this._replyQueueActive = false;
     this.logger.debug("Reply queue inactive");
   }
 
-  public cloneWithGetters(getSubscribers: () => Array<IMessageSubscriber>): IIrisDriver {
+  cloneWithGetters(getSubscribers: () => Array<IMessageSubscriber>): IIrisDriver {
     return new KafkaDriver(
       {
         logger: this.logger,
@@ -487,11 +483,11 @@ export class KafkaDriver implements IIrisDriver {
     );
   }
 
-  public get connected(): boolean {
+  get connected(): boolean {
     return this._connectionState === "connected" || this._connectionState === "draining";
   }
 
-  public get replyQueueActive(): boolean {
+  get replyQueueActive(): boolean {
     return this._replyQueueActive;
   }
 

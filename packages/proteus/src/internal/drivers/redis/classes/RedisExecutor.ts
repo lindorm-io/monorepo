@@ -81,7 +81,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   private readonly logger: ILogger | null;
   private readonly amphora: IAmphora | undefined;
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     client: Redis,
     namespace: string | null,
@@ -109,7 +109,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Insert ───────────────────────────────────────────────────────────
 
-  public async executeInsert(entity: E): Promise<E> {
+  async executeInsert(entity: E): Promise<E> {
     const row = dehydrateToRow(entity, this.metadata, this.amphora);
 
     await applyRedisAutoIncrement(this.client, row, this.metadata, this.namespace);
@@ -163,7 +163,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Update ───────────────────────────────────────────────────────────
 
-  public async executeUpdate(entity: E): Promise<E> {
+  async executeUpdate(entity: E): Promise<E> {
     const row = dehydrateToRow(entity, this.metadata, this.amphora);
     const redisKey = buildEntityKeyFromRow(
       this.storageTarget,
@@ -196,10 +196,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Delete ───────────────────────────────────────────────────────────
 
-  public async executeDelete(
-    criteria: Predicate<E>,
-    options?: DeleteOptions,
-  ): Promise<void> {
+  async executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     guardEmptyCriteria(criteria, "delete", RedisDriverError);
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
 
@@ -235,7 +232,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Soft Delete ──────────────────────────────────────────────────────
 
-  public async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
+  async executeSoftDelete(criteria: Predicate<E>): Promise<void> {
     // F-001: Guard against soft-deleting an entity that has no @DeleteDate field
     if (!this.deleteFieldKey) {
       throw new RedisDriverError(
@@ -271,7 +268,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Restore ──────────────────────────────────────────────────────────
 
-  public async executeRestore(criteria: Predicate<E>): Promise<void> {
+  async executeRestore(criteria: Predicate<E>): Promise<void> {
     // F-001: Guard against restoring an entity that has no @DeleteDate field
     if (!this.deleteFieldKey) {
       throw new RedisDriverError(
@@ -306,7 +303,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Delete Expired ───────────────────────────────────────────────────
 
-  public async executeDeleteExpired(): Promise<void> {
+  async executeDeleteExpired(): Promise<void> {
     if (!this.expiryFieldKey) return;
 
     const pattern = buildScanPattern(this.storageTarget, this.namespace);
@@ -346,7 +343,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── TTL ──────────────────────────────────────────────────────────────
 
-  public async executeTtl(criteria: Predicate<E>): Promise<number | null> {
+  async executeTtl(criteria: Predicate<E>): Promise<number | null> {
     if (!this.expiryFieldKey) return null;
 
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
@@ -383,7 +380,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Find ─────────────────────────────────────────────────────────────
 
-  public async executeFind(
+  async executeFind(
     criteria: Predicate<E>,
     options: FindOptions<E>,
     _operationScope?: QueryScope,
@@ -450,10 +447,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Count ────────────────────────────────────────────────────────────
 
-  public async executeCount(
-    criteria: Predicate<E>,
-    options: FindOptions<E>,
-  ): Promise<number> {
+  async executeCount(criteria: Predicate<E>, options: FindOptions<E>): Promise<number> {
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
     // F-028: PK-exact optimization — avoid full SCAN when counting by PK
     const pkValues = extractExactPk(criteria, this.metadata.primaryKeys);
@@ -500,7 +494,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Exists ───────────────────────────────────────────────────────────
 
-  public async executeExists(criteria: Predicate<E>): Promise<boolean> {
+  async executeExists(criteria: Predicate<E>): Promise<boolean> {
     criteria = flattenEmbeddedCriteria(criteria, this.metadata);
     const pkValues = extractExactPk(criteria, this.metadata.primaryKeys);
 
@@ -555,7 +549,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Increment ────────────────────────────────────────────────────────
 
-  public async executeIncrement(
+  async executeIncrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -609,7 +603,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Decrement ────────────────────────────────────────────────────────
 
-  public async executeDecrement(
+  async executeDecrement(
     criteria: Predicate<E>,
     property: keyof E,
     value: number,
@@ -669,7 +663,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
    * Redis has no real multi-key transactions, so partial inserts are
    * an accepted limitation.
    */
-  public async executeInsertBulk(entities: Array<E>): Promise<Array<E>> {
+  async executeInsertBulk(entities: Array<E>): Promise<Array<E>> {
     if (entities.length === 0) return [];
 
     const results: Array<E> = [];
@@ -681,7 +675,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
   // ─── Update Many ──────────────────────────────────────────────────────
 
-  public async executeUpdateMany(
+  async executeUpdateMany(
     criteria: Predicate<E>,
     update: DeepPartial<E>,
     options?: { systemFilters?: boolean },

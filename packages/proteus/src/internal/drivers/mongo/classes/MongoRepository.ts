@@ -77,7 +77,7 @@ export class MongoRepository<
   private readonly joinTableOps: JoinTableOps;
   private readonly session: ClientSession | undefined;
 
-  public constructor(options: MongoRepositoryOptions<E>) {
+  constructor(options: MongoRepositoryOptions<E>) {
     super({
       target: options.target,
       executor: options.executor,
@@ -104,7 +104,7 @@ export class MongoRepository<
 
   // ─── Abstract: find / versions ────────────────────────────────────
 
-  public async find(
+  async find(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
     _scope: QueryScope = "multiple",
@@ -156,10 +156,7 @@ export class MongoRepository<
    * Version-keyed entities store all versions as separate rows in the
    * main collection (differentiated by composite PK: id + versionId).
    */
-  public async versions(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<Array<E>> {
+  async versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
     guardVersionFields(this.metadata, "versions");
 
     const entities = await this.executor.executeFind(criteria, {
@@ -217,7 +214,7 @@ export class MongoRepository<
 
   // ─── Abstract: cursor / clear ─────────────────────────────────────
 
-  public async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
+  async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
     const hiddenSelect = filterHiddenSelections(
       this.metadata,
       ["multiple"],
@@ -256,7 +253,7 @@ export class MongoRepository<
     return new MongoCursor<E>(mongoCursor, this.metadata);
   }
 
-  public async clear(_options?: ClearOptions): Promise<void> {
+  async clear(_options?: ClearOptions): Promise<void> {
     guardAppendOnly(this.metadata, "clear");
 
     const collectionName = resolveCollectionName(this.metadata);

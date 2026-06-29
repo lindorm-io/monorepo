@@ -12,7 +12,7 @@ import type {
 import { LindormWorker } from "./LindormWorker.js";
 
 export class LindormWorkerScanner {
-  public static async scan(
+  static async scan(
     input: LindormWorkerScannerInput,
     logger: ILogger,
   ): Promise<LindormWorkerScannerOutput> {

@@ -77,7 +77,7 @@ export class AggregateDomain {
   private readonly encryptionEncryption: KryptosEncryption;
   private readonly checksumMode: ChecksumMode;
 
-  public constructor(options: AggregateDomainOptions) {
+  constructor(options: AggregateDomainOptions) {
     this.logger = options.logger.child(["AggregateDomain"]);
     this.registry = options.registry;
     this.proteus = options.proteus;
@@ -89,7 +89,7 @@ export class AggregateDomain {
     this.checksumMode = options.checksumMode ?? "warn";
   }
 
-  public async registerHandlers(): Promise<void> {
+  async registerHandlers(): Promise<void> {
     for (const aggregate of this.registry.allAggregates) {
       for (const handler of aggregate.commandHandlers) {
         const dto = this.registry.getCommand(handler.trigger);
@@ -133,7 +133,7 @@ export class AggregateDomain {
     }
   }
 
-  public async inspect<S extends Dict = Dict>(
+  async inspect<S extends Dict = Dict>(
     aggregateIdentifier: AggregateIdentifier,
   ): Promise<AggregateModel<S>> {
     return (await this.loadAggregate(aggregateIdentifier)) as AggregateModel<S>;

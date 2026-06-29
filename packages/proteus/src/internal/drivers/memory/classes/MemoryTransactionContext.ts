@@ -15,7 +15,7 @@ export class MemoryTransactionContext implements ITransactionContext {
   private readonly driver: MemoryDriver;
   private readonly repoFactory: RepositoryFactory | undefined;
 
-  public constructor(
+  constructor(
     handle: MemoryTransactionHandle,
     driver: MemoryDriver,
     repositoryFactory?: RepositoryFactory,
@@ -25,7 +25,7 @@ export class MemoryTransactionContext implements ITransactionContext {
     this.repoFactory = repositoryFactory;
   }
 
-  public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
+  repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
     if (!this.repoFactory) {
       throw new MemoryDriverError("Transactional repositories are not configured", {
         code: "transactional_repositories_not_configured",
@@ -37,22 +37,18 @@ export class MemoryTransactionContext implements ITransactionContext {
     return this.repoFactory(target);
   }
 
-  public queryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  queryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     return this.driver.createTransactionalQueryBuilder(target, this.handle);
   }
 
-  public async client<T>(): Promise<T> {
+  async client<T>(): Promise<T> {
     // The memory driver's effective tx-scoped "client" is the transaction's
     // in-memory store. Returning it lets tests / advanced callers peek or
     // mutate raw table state within the active transaction.
     return this.handle.store as unknown as T;
   }
 
-  public async transaction<T>(
-    fn: (ctx: MemoryTransactionContext) => Promise<T>,
-  ): Promise<T> {
+  async transaction<T>(fn: (ctx: MemoryTransactionContext) => Promise<T>): Promise<T> {
     // Push savepoint
     const savepoint = {
       tables: new Map(
@@ -94,11 +90,11 @@ export class MemoryTransactionContext implements ITransactionContext {
     }
   }
 
-  public async commit(): Promise<void> {
+  async commit(): Promise<void> {
     await this.driver.commitTransaction(this.handle);
   }
 
-  public async rollback(): Promise<void> {
+  async rollback(): Promise<void> {
     await this.driver.rollbackTransaction(this.handle);
   }
 }

@@ -23,7 +23,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
   private subscribedRoutingKey: string | null = null;
   private wrappedOnMessage: ((msg: ConsumeMessage | null) => Promise<void>) | null = null;
 
-  public constructor(options: RabbitStreamPipelineOptions) {
+  constructor(options: RabbitStreamPipelineOptions) {
     super({
       ...options,
       logger: options.logger.child(["RabbitStreamPipeline"]),
@@ -31,7 +31,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     this.state = options.state;
   }
 
-  public async start(): Promise<void> {
+  async start(): Promise<void> {
     if (this.running) {
       const subscriptionExists =
         this.consumerTag != null &&
@@ -130,7 +130,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  public async stop(): Promise<void> {
+  async stop(): Promise<void> {
     if (!this.running) return;
 
     this.paused = false;
@@ -164,7 +164,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline stopped");
   }
 
-  public async pause(): Promise<void> {
+  async pause(): Promise<void> {
     if (this.paused) return;
     this.paused = true;
 
@@ -198,7 +198,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline paused");
   }
 
-  public async resume(): Promise<void> {
+  async resume(): Promise<void> {
     if (!this.paused) return;
     this.paused = false;
 

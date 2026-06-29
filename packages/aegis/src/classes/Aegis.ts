@@ -101,7 +101,7 @@ type SigOptions = PredicateOptions & {
 };
 
 export class Aegis implements IAegis {
-  public readonly issuer: string | null;
+  readonly issuer: string | null;
 
   private readonly amphora: IAmphora;
   private readonly certBindingMode: CertBindingMode;
@@ -114,7 +114,7 @@ export class Aegis implements IAegis {
   private readonly logger: ILogger;
   private readonly sigAlgorithm: KryptosSigAlgorithm | undefined;
 
-  public constructor(options: AegisOptions) {
+  constructor(options: AegisOptions) {
     this.logger = options.logger.child(["AegisKit"]);
     this.amphora = options.amphora;
     this.issuer = options.issuer ?? this.amphora.domain;
@@ -137,53 +137,53 @@ export class Aegis implements IAegis {
     });
   }
 
-  public get aes(): IAegisAes {
+  get aes(): IAegisAes {
     return {
       encrypt: this.aesEncrypt.bind(this) as IAegisAes["encrypt"],
       decrypt: this.aesDecrypt.bind(this),
     };
   }
 
-  public get jwe(): IAegisJwe {
+  get jwe(): IAegisJwe {
     return {
       encrypt: this.jweEncrypt.bind(this),
       decrypt: this.jweDecrypt.bind(this),
     };
   }
 
-  public get jws(): IAegisJws {
+  get jws(): IAegisJws {
     return {
       sign: this.jwsSign.bind(this),
       verify: this.jwsVerify.bind(this),
     };
   }
 
-  public get jwt(): IAegisJwt {
+  get jwt(): IAegisJwt {
     return {
       sign: this.jwtSign.bind(this),
       verify: this.jwtVerify.bind(this),
     };
   }
 
-  public registerProfile(profile: TokenProfile): void {
+  registerProfile(profile: TokenProfile): void {
     registerProfileFn(profile);
   }
 
-  public sign(input: RawSignInput): Promise<SignedJws> {
+  sign(input: RawSignInput): Promise<SignedJws> {
     return this.signRaw(input);
   }
 
-  public mint<P extends keyof ProfileContent>(
+  mint<P extends keyof ProfileContent>(
     profile: P,
     content: ProfileContent[P],
     options?: ProfileSignOptions,
   ): Promise<SignedJwt>;
-  public mint(
+  mint(
     profile: string & {},
     content: SignContent,
     options?: ProfileSignOptions,
   ): Promise<SignedJwt>;
-  public mint(
+  mint(
     profile: string,
     content: SignContent,
     options: ProfileSignOptions = {},
@@ -191,18 +191,15 @@ export class Aegis implements IAegis {
     return this.mintProfile(profile, content, options);
   }
 
-  public verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
-  public verify<T extends ParsedJws<any>>(token: string): Promise<T>;
-  public verify<T extends ParsedJwt>(
-    token: string,
-    options?: VerifyJwtOptions,
-  ): Promise<T>;
-  public verify<T extends ParsedJwt>(
+  verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
+  verify<T extends ParsedJws<any>>(token: string): Promise<T>;
+  verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
+  verify<T extends ParsedJwt>(
     profile: string,
     token: string,
     options: ProfileVerifyOptions,
   ): Promise<T>;
-  public async verify<T extends ParsedJwt | ParsedJws<any>>(
+  async verify<T extends ParsedJwt | ParsedJws<any>>(
     tokenOrProfile: string,
     optionsOrToken?: VerifyJwtOptions | string,
     profileOptions?: ProfileVerifyOptions,
@@ -255,24 +252,24 @@ export class Aegis implements IAegis {
 
   // public static
 
-  public static header(token: string): TokenHeaderClaims {
+  static header(token: string): TokenHeaderClaims {
     const [header] = token.split(".");
     return decodeJoseHeader(header);
   }
 
-  public static isJwe(jwe: string): boolean {
+  static isJwe(jwe: string): boolean {
     return JweKit.isJwe(jwe);
   }
 
-  public static isJws(jws: string): boolean {
+  static isJws(jws: string): boolean {
     return JwsKit.isJws(jws);
   }
 
-  public static isJwt(jwt: string): boolean {
+  static isJwt(jwt: string): boolean {
     return JwtKit.isJwt(jwt);
   }
 
-  public static decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T {
+  static decode<T extends DecodedJwe | DecodedJws | DecodedJwt>(token: string): T {
     if (Aegis.isJwe(token)) {
       return JweKit.decode(token) as T;
     }
@@ -291,7 +288,7 @@ export class Aegis implements IAegis {
     });
   }
 
-  public static parse<T extends ParsedJwt | ParsedJws<any>>(token: string): T {
+  static parse<T extends ParsedJwt | ParsedJws<any>>(token: string): T {
     if (Aegis.isJwt(token)) {
       return JwtKit.parse(token) as T;
     }
@@ -307,11 +304,11 @@ export class Aegis implements IAegis {
     });
   }
 
-  public static parseUserinfo(data: UserinfoClaimsInput): AegisUserinfo {
+  static parseUserinfo(data: UserinfoClaimsInput): AegisUserinfo {
     return parseUserinfo(data);
   }
 
-  public static parseIntrospection(data: IntrospectClaimsInput): AegisIntrospection {
+  static parseIntrospection(data: IntrospectClaimsInput): AegisIntrospection {
     return parseIntrospection(data);
   }
 
@@ -323,7 +320,7 @@ export class Aegis implements IAegis {
    * Works on any flat claim source — ParsedJwtPayload, AegisIntrospection,
    * AegisUserinfo, or any structurally-compatible dict.
    */
-  public static validateClaims(claims: Dict, matchers: ValidateJwtOptions): void {
+  static validateClaims(claims: Dict, matchers: ValidateJwtOptions): void {
     const predicate = createJwtValidate(matchers);
     validateClaims(claims, predicate);
   }

@@ -10,7 +10,7 @@ export class ArgonKit {
   private readonly kryptos: IKryptosOct | undefined;
   private readonly timeCost: number | undefined;
 
-  public constructor(options: ArgonKitOptions = {}) {
+  constructor(options: ArgonKitOptions = {}) {
     this.hashLength = options?.hashLength;
     this.memoryCost = options?.memoryCost;
     this.parallelism = options?.parallelism;
@@ -28,7 +28,7 @@ export class ArgonKit {
     this.kryptos = options.kryptos;
   }
 
-  public async hash(data: string): Promise<string> {
+  async hash(data: string): Promise<string> {
     return await createArgonHash({
       data,
       hashLength: this.hashLength,
@@ -39,11 +39,11 @@ export class ArgonKit {
     });
   }
 
-  public async verify(data: string, hash: string): Promise<boolean> {
+  async verify(data: string, hash: string): Promise<boolean> {
     return await verifyArgonHash({ data, hash, kryptos: this.kryptos });
   }
 
-  public async assert(data: string, hash: string): Promise<void> {
+  async assert(data: string, hash: string): Promise<void> {
     return await assertArgonHash({ data, hash, kryptos: this.kryptos });
   }
 }

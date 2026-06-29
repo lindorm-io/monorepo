@@ -42,21 +42,21 @@ export type LindormErrorOptions = {
 };
 
 export class LindormError extends Error {
-  public static readonly namespace: string | null = null;
+  static readonly namespace: string | null = null;
 
-  public readonly id: string;
-  public readonly code: string | number | null;
-  public readonly data: Dict;
-  public readonly debug: Dict;
-  public readonly details: string | null;
-  public readonly errors: Array<string>;
-  public readonly status: number;
-  public readonly support: string | null;
-  public readonly title: string | null;
-  public readonly type: string;
-  public readonly timestamp: Date;
+  readonly id: string;
+  readonly code: string | number | null;
+  readonly data: Dict;
+  readonly debug: Dict;
+  readonly details: string | null;
+  readonly errors: Array<string>;
+  readonly status: number;
+  readonly support: string | null;
+  readonly title: string | null;
+  readonly type: string;
+  readonly timestamp: Date;
 
-  public constructor(message: string, options: LindormErrorOptions = {}) {
+  constructor(message: string, options: LindormErrorOptions = {}) {
     super(message);
 
     this.name = this.constructor.name;
@@ -98,7 +98,7 @@ export class LindormError extends Error {
 
   // public
 
-  public toJSON(): LindormErrorAttributes {
+  toJSON(): LindormErrorAttributes {
     return {
       id: this.id,
       code: this.code,

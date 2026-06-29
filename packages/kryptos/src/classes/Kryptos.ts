@@ -67,7 +67,7 @@ export class Kryptos implements IKryptos {
   private _cache: ExportCache = {};
   private _disposed: boolean = false;
 
-  public constructor(options: KryptosOptions) {
+  constructor(options: KryptosOptions) {
     this._id = options.id || randomId({ namespace: "key", length: 16 });
     this._algorithm = options.algorithm;
     this._createdAt = options.createdAt ?? new Date();
@@ -152,112 +152,112 @@ export class Kryptos implements IKryptos {
 
   // getters and setters
 
-  public get id(): string {
+  get id(): string {
     return this._id;
   }
 
-  public get algorithm(): KryptosAlgorithm {
+  get algorithm(): KryptosAlgorithm {
     return this._algorithm;
   }
 
-  public get createdAt(): Date {
+  get createdAt(): Date {
     return this._createdAt;
   }
 
-  public get curve(): KryptosCurve | null {
+  get curve(): KryptosCurve | null {
     return this._curve;
   }
 
-  public get encryption(): KryptosEncryption | null {
+  get encryption(): KryptosEncryption | null {
     return this._encryption;
   }
 
-  public get expiresAt(): Date {
+  get expiresAt(): Date {
     return this._expiresAt;
   }
 
-  public get hidden(): boolean {
+  get hidden(): boolean {
     return this._hidden;
   }
 
-  public get isExternal(): boolean {
+  get isExternal(): boolean {
     return this._isExternal;
   }
 
-  public get issuer(): string | null {
+  get issuer(): string | null {
     return this._issuer;
   }
 
-  public get jwksUri(): string | null {
+  get jwksUri(): string | null {
     return this._jwksUri;
   }
 
-  public get notBefore(): Date {
+  get notBefore(): Date {
     return this._notBefore;
   }
 
-  public get operations(): Array<KryptosOperation> {
+  get operations(): Array<KryptosOperation> {
     return [...this._operations];
   }
 
-  public get ownerId(): string | null {
+  get ownerId(): string | null {
     return this._ownerId;
   }
 
-  public get purpose(): string | null {
+  get purpose(): string | null {
     return this._purpose;
   }
 
-  public get type(): KryptosType {
+  get type(): KryptosType {
     return this._type;
   }
 
-  public get use(): KryptosUse {
+  get use(): KryptosUse {
     return this._use;
   }
 
   // metadata
 
-  public get expiresIn(): number {
+  get expiresIn(): number {
     if (this.isExpired) return 0;
     return getUnixTime(this._expiresAt) - getUnixTime(new Date());
   }
 
-  public get hasPrivateKey(): boolean {
+  get hasPrivateKey(): boolean {
     return isBuffer(this._privateKey) && this._privateKey.length > 0;
   }
 
-  public get hasPublicKey(): boolean {
+  get hasPublicKey(): boolean {
     return isBuffer(this._publicKey) && this._publicKey.length > 0;
   }
 
-  public get isActive(): boolean {
+  get isActive(): boolean {
     return (
       (isEqual(new Date(), this._notBefore) || isAfter(new Date(), this._notBefore)) &&
       !this.isExpired
     );
   }
 
-  public get isExpired(): boolean {
+  get isExpired(): boolean {
     return isEqual(new Date(), this._expiresAt) || isAfter(new Date(), this._expiresAt);
   }
 
-  public get modulus(): RsaModulus | null {
+  get modulus(): RsaModulus | null {
     return this._modulus;
   }
 
-  public get thumbprint(): string {
+  get thumbprint(): string {
     this.assertNotDisposed();
     return computeThumbprint(this.export("jwk"));
   }
 
   // x509
 
-  public get hasCertificate(): boolean {
+  get hasCertificate(): boolean {
     return this._certificateChain !== undefined && this._certificateChain.length > 0;
   }
 
-  public get certificate(): ParsedX509Certificate | null {
+  get certificate(): ParsedX509Certificate | null {
     if (!this._certificateChain || this._certificateChain.length === 0) return null;
     if (!this._cache.parsedLeaf) {
       this._cache.parsedLeaf = parseX509Certificate(this._certificateChain[0]);
@@ -265,17 +265,17 @@ export class Kryptos implements IKryptos {
     return this._cache.parsedLeaf;
   }
 
-  public get certificateChain(): Array<string> {
+  get certificateChain(): Array<string> {
     if (!this._certificateChain) return [];
     return this._certificateChain.map((der) => der.toString("base64"));
   }
 
-  public get certificateThumbprint(): string | null {
+  get certificateThumbprint(): string | null {
     if (!this._certificateChain || this._certificateChain.length === 0) return null;
     return x5tS256Thumbprint(this._certificateChain[0]);
   }
 
-  public verifyCertificate(options: { trustAnchors: string | Array<string> }): void {
+  verifyCertificate(options: { trustAnchors: string | Array<string> }): void {
     this.assertNotDisposed();
 
     if (!this._certificateChain) {
@@ -291,7 +291,7 @@ export class Kryptos implements IKryptos {
 
   // dispose
 
-  public dispose(): void {
+  dispose(): void {
     if (this._disposed) return;
 
     if (this._privateKey) this._privateKey.fill(0);
@@ -301,17 +301,17 @@ export class Kryptos implements IKryptos {
     this._disposed = true;
   }
 
-  public [Symbol.dispose](): void {
+  [Symbol.dispose](): void {
     this.dispose();
   }
 
   // public methods
 
-  public export<K extends KryptosString>(format: "b64"): K;
-  public export<K extends KryptosBuffer>(format: "der"): K;
-  public export<K extends KryptosJwk>(format: "jwk"): K;
-  public export<K extends KryptosString>(format: "pem"): K;
-  public export(format: KryptosFormat): KryptosKey {
+  export<K extends KryptosString>(format: "b64"): K;
+  export<K extends KryptosBuffer>(format: "der"): K;
+  export<K extends KryptosJwk>(format: "jwk"): K;
+  export<K extends KryptosString>(format: "pem"): K;
+  export(format: KryptosFormat): KryptosKey {
     this.assertNotDisposed();
 
     const exportOptions = {
@@ -402,7 +402,7 @@ export class Kryptos implements IKryptos {
 
   // to types
 
-  public toDB(): KryptosDB {
+  toDB(): KryptosDB {
     this.assertNotDisposed();
 
     const { privateKey, publicKey } = this.export("b64");
@@ -429,13 +429,13 @@ export class Kryptos implements IKryptos {
     });
   }
 
-  public toEnvString(): string {
+  toEnvString(): string {
     this.assertNotDisposed();
 
     return "kryptos:" + B64.encode(JSON.stringify(this.toJWK("private")), "b64u");
   }
 
-  public toJSON(): KryptosJSON {
+  toJSON(): KryptosJSON {
     return removeUndefined<KryptosJSON>({
       id: this.id,
       algorithm: this.algorithm,
@@ -466,7 +466,7 @@ export class Kryptos implements IKryptos {
     });
   }
 
-  public toJWK(mode: KryptosExportMode = "public"): LindormJwk {
+  toJWK(mode: KryptosExportMode = "public"): LindormJwk {
     this.assertNotDisposed();
 
     const cacheKey = mode === "private" ? "jwkPrivate" : "jwkPublic";
@@ -504,7 +504,7 @@ export class Kryptos implements IKryptos {
     });
   }
 
-  public toString(): string {
+  toString(): string {
     return `Kryptos<${this._type}:${this._algorithm}:${this._id}>`;
   }
 

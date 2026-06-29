@@ -100,7 +100,7 @@ export class ProteusSource implements IProteusSource {
   private _settingUpPromise: Promise<void> | null = null;
   private isSetUp = false;
 
-  public constructor(options: ProteusSourceOptions) {
+  constructor(options: ProteusSourceOptions) {
     this._options = options;
     this._amphora = options.amphora;
     this.logger = options.logger.child(["ProteusSource"]);
@@ -171,23 +171,23 @@ export class ProteusSource implements IProteusSource {
     return this._driver;
   }
 
-  public get namespace(): string | null {
+  get namespace(): string | null {
     return this._namespace;
   }
-  public get driverType(): string {
+  get driverType(): string {
     return this._driverType;
   }
-  public get migrationsTable(): string | undefined {
+  get migrationsTable(): string | undefined {
     return this._migrationsTable;
   }
-  public get log(): ILogger {
+  get log(): ILogger {
     return this.logger;
   }
 
   // ─── Typed EventEmitter (composition) ──────────────────────────────
 
   /** Subscribe to a source event. */
-  public on<K extends keyof ProteusSourceEventMap>(
+  on<K extends keyof ProteusSourceEventMap>(
     event: K,
     listener: (payload: ProteusSourceEventMap[K]) => void,
   ): void {
@@ -195,7 +195,7 @@ export class ProteusSource implements IProteusSource {
   }
 
   /** Unsubscribe from a source event. */
-  public off<K extends keyof ProteusSourceEventMap>(
+  off<K extends keyof ProteusSourceEventMap>(
     event: K,
     listener: (payload: ProteusSourceEventMap[K]) => void,
   ): void {
@@ -203,7 +203,7 @@ export class ProteusSource implements IProteusSource {
   }
 
   /** Subscribe to a source event, firing only once. */
-  public once<K extends keyof ProteusSourceEventMap>(
+  once<K extends keyof ProteusSourceEventMap>(
     event: K,
     listener: (payload: ProteusSourceEventMap[K]) => void,
   ): void {
@@ -226,7 +226,7 @@ export class ProteusSource implements IProteusSource {
   };
 
   /** Create a lightweight, request-scoped session sharing the same connection pool but with a new logger and/or context. */
-  public session(options?: SessionOptions): ProteusSession {
+  session(options?: SessionOptions): ProteusSession {
     // Reference cell pattern: new ref cell for filter registry isolation.
     const registryRef = { current: cloneFilterRegistry(this._registryRef.current) };
 
@@ -259,17 +259,17 @@ export class ProteusSource implements IProteusSource {
   }
 
   /** Register parameter values for a named filter. Creates the filter entry if it does not exist. */
-  public setFilterParams(name: string, params: Dict<unknown>): void {
+  setFilterParams(name: string, params: Dict<unknown>): void {
     setFilterParamsUtil(this._registryRef.current, name, params);
   }
 
   /** Enable a named filter so it is applied to queries. */
-  public enableFilter(name: string): void {
+  enableFilter(name: string): void {
     enableFilterUtil(this._registryRef.current, name);
   }
 
   /** Disable a named filter so it is no longer applied to queries. */
-  public disableFilter(name: string): void {
+  disableFilter(name: string): void {
     disableFilterUtil(this._registryRef.current, name);
   }
 
@@ -277,12 +277,12 @@ export class ProteusSource implements IProteusSource {
    * Returns the live filter registry. Callers should treat it as read-only;
    * direct mutation will affect subsequent queries.
    */
-  public getFilterRegistry(): FilterRegistry {
+  getFilterRegistry(): FilterRegistry {
     return this._registryRef.current;
   }
 
   /** Register additional entity classes or glob patterns after construction. */
-  public async addEntities(entities: EntityScannerInput): Promise<void> {
+  async addEntities(entities: EntityScannerInput): Promise<void> {
     if (this.isSetUp) {
       throw new ProteusError(
         "Cannot add entities after setup() has been called. Create a new ProteusSource instance instead.",
@@ -299,17 +299,17 @@ export class ProteusSource implements IProteusSource {
   }
 
   /** Return resolved metadata for all registered entities. */
-  public getEntityMetadata(): Array<EntityMetadata> {
+  getEntityMetadata(): Array<EntityMetadata> {
     return this._entities.map((target) => this.resolveMetadata(target));
   }
 
   /** Check whether an entity class was registered with this source. */
-  public hasEntity<E extends IEntity>(target: Constructor<E>): boolean {
+  hasEntity<E extends IEntity>(target: Constructor<E>): boolean {
     return this._entities.includes(target as Constructor<IEntity>);
   }
 
   /** Open the database connection (or connection pool). */
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     if (this._driver) return; // idempotent
 
     const getFilterRegistry = (): FilterRegistry => this._registryRef.current;
@@ -425,7 +425,7 @@ export class ProteusSource implements IProteusSource {
   }
 
   /** Close the database connection and drain the pool. */
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (!this._driver) return;
 
     try {
@@ -443,12 +443,12 @@ export class ProteusSource implements IProteusSource {
   }
 
   /** Check whether the database is reachable. Returns `true` on success. */
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     return this.requireDriver().ping();
   }
 
   /** Run schema synchronization, migrations, and index creation for all registered entities. Idempotent. */
-  public async setup(): Promise<void> {
+  async setup(): Promise<void> {
     if (this.isSetUp) return;
     if (this._settingUpPromise) return this._settingUpPromise;
 
@@ -504,7 +504,7 @@ export class ProteusSource implements IProteusSource {
   }
 
   /** Obtain a repository for the given entity class. Wraps with caching if a cache adapter is configured. */
-  public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
+  repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
     const inner = this.requireDriver().createRepository(target, undefined, this.meta);
     if (!this.cacheAdapter) return inner;
 
@@ -520,19 +520,17 @@ export class ProteusSource implements IProteusSource {
   }
 
   /** Create a query builder for the given entity class. */
-  public queryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  queryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     return this.requireDriver().createQueryBuilder(target);
   }
 
   /** Acquire the underlying driver client (e.g. a pg PoolClient) for advanced use cases. */
-  public async client<T>(): Promise<T> {
+  async client<T>(): Promise<T> {
     return this.requireDriver().acquireClient() as Promise<T>;
   }
 
   /** Execute a callback within a database transaction. Commits on success, rolls back on error. */
-  public async transaction<T>(
+  async transaction<T>(
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
@@ -540,7 +538,7 @@ export class ProteusSource implements IProteusSource {
   }
 
   /** The circuit breaker protecting this source's database operations, or `null` if disabled. */
-  public get breaker(): ICircuitBreaker | null {
+  get breaker(): ICircuitBreaker | null {
     return this._breaker;
   }
 

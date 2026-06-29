@@ -13,13 +13,13 @@ export abstract class DriverMessageBusBase<M extends IMessage>
     super(options, "MessageBus");
   }
 
-  public abstract publish(message: M | Array<M>, options?: PublishOptions): Promise<void>;
+  abstract publish(message: M | Array<M>, options?: PublishOptions): Promise<void>;
 
-  public abstract subscribe(
+  abstract subscribe(
     options: SubscribeOptions<M> | Array<SubscribeOptions<M>>,
   ): Promise<void>;
 
-  public abstract unsubscribe(options: { topic: string; queue?: string }): Promise<void>;
+  abstract unsubscribe(options: { topic: string; queue?: string }): Promise<void>;
 
-  public abstract unsubscribeAll(): Promise<void>;
+  abstract unsubscribeAll(): Promise<void>;
 }

@@ -18,7 +18,7 @@ export class OkpKit implements IKeyKit {
   private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosOkp;
 
-  public constructor(options: OkpKitOptions) {
+  constructor(options: OkpKitOptions) {
     this.dsa = options.dsa ?? "der";
     this.encoding = options.encoding ?? "base64";
 
@@ -43,7 +43,7 @@ export class OkpKit implements IKeyKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: KeyData): Buffer {
+  sign(data: KeyData): Buffer {
     return createOkpSignature({
       data,
       dsaEncoding: this.dsa,
@@ -51,7 +51,7 @@ export class OkpKit implements IKeyKit {
     });
   }
 
-  public verify(data: KeyData, signature: KeyData): boolean {
+  verify(data: KeyData, signature: KeyData): boolean {
     return verifyOkpSignature({
       data,
       dsaEncoding: this.dsa,
@@ -61,7 +61,7 @@ export class OkpKit implements IKeyKit {
     });
   }
 
-  public assert(data: KeyData, signature: KeyData): void {
+  assert(data: KeyData, signature: KeyData): void {
     return assertOkpSignature({
       data,
       dsaEncoding: this.dsa,
@@ -71,7 +71,7 @@ export class OkpKit implements IKeyKit {
     });
   }
 
-  public format(data: Buffer): string {
+  format(data: Buffer): string {
     return data.toString(this.encoding);
   }
 }

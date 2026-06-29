@@ -14,40 +14,40 @@ export class EncryptionRecord {
   @PrimaryKey()
   @Field("string")
   @Max(128)
-  public aggregateId: string = "";
+  aggregateId: string = "";
 
   @PrimaryKey()
   @Field("string")
   @Max(128)
-  public aggregateName: string = "";
+  aggregateName: string = "";
 
   @PrimaryKey()
   @Field("string")
   @Max(64)
-  public aggregateNamespace: string = "";
+  aggregateNamespace: string = "";
 
   @Field("string")
-  public keyId: string = "";
+  keyId: string = "";
 
   @Field("string")
-  public keyAlgorithm: string = "";
+  keyAlgorithm: string = "";
 
   @Field("string")
   @Nullable()
-  public keyCurve: string | null = null;
+  keyCurve: string | null = null;
 
   @Field("string")
-  public keyEncryption: string = "";
+  keyEncryption: string = "";
 
   @Field("string")
-  public keyType: string = "";
+  keyType: string = "";
 
   @Field("text")
-  public privateKey: string = "";
+  privateKey: string = "";
 
   @Field("text")
-  public publicKey: string = "";
+  publicKey: string = "";
 
   @CreateDateField()
-  public createdAt: Date = new Date();
+  createdAt: Date = new Date();
 }

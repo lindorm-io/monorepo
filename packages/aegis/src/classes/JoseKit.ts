@@ -44,7 +44,7 @@ export class JoseKit {
   private readonly issuer: string | undefined;
   private readonly logger: ILogger;
 
-  public constructor(options: JoseKitOptions) {
+  constructor(options: JoseKitOptions) {
     this.certBindingMode = options.certBindingMode;
     this.clockTolerance = options.clockTolerance;
     this.dpopMaxSkew = options.dpopMaxSkew;
@@ -53,7 +53,7 @@ export class JoseKit {
     this.logger = options.logger;
   }
 
-  public signJws<T extends JwsContent>(
+  signJws<T extends JwsContent>(
     kryptos: IKryptos,
     data: T,
     options: SignJwsOptions = {},
@@ -61,11 +61,11 @@ export class JoseKit {
     return this.jws(kryptos).sign(data, options);
   }
 
-  public verifyJws<T extends JwsContent>(kryptos: IKryptos, jws: string): ParsedJws<T> {
+  verifyJws<T extends JwsContent>(kryptos: IKryptos, jws: string): ParsedJws<T> {
     return this.jws(kryptos).verify(jws);
   }
 
-  public encryptJwe(
+  encryptJwe(
     kryptos: IKryptos,
     data: string,
     options: JweEncryptOptions = {},
@@ -73,11 +73,11 @@ export class JoseKit {
     return this.jwe(kryptos).encrypt(data, options);
   }
 
-  public decryptJwe(kryptos: IKryptos, jwe: string): DecryptedJwe {
+  decryptJwe(kryptos: IKryptos, jwe: string): DecryptedJwe {
     return this.jwe(kryptos).decrypt(jwe);
   }
 
-  public signJwt<T extends Dict = Dict>(
+  signJwt<T extends Dict = Dict>(
     kryptos: IKryptos,
     content: SignJwtContent<T>,
     options: SignJwtOptions = {},
@@ -85,7 +85,7 @@ export class JoseKit {
     return this.jwt(kryptos).sign(content, options);
   }
 
-  public verifyJwt<T extends Dict = Dict>(
+  verifyJwt<T extends Dict = Dict>(
     kryptos: IKryptos,
     jwt: string,
     options: VerifyJwtOptions = {},
@@ -93,7 +93,7 @@ export class JoseKit {
     return this.jwt(kryptos).verify(jwt, options);
   }
 
-  public signClaims<C extends Dict = Dict>(
+  signClaims<C extends Dict = Dict>(
     kryptos: IKryptos,
     claims: Dict,
     content: SignJwtContent<C>,

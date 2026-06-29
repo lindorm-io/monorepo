@@ -7,13 +7,13 @@ type Options = LindormErrorOptions & {
 };
 
 export class RedirectError extends LindormError {
-  public static readonly namespace = "pylon";
+  static readonly namespace = "pylon";
 
-  public readonly redirect: string;
-  public readonly state: string | undefined;
-  public readonly uri: string | undefined;
+  readonly redirect: string;
+  readonly state: string | undefined;
+  readonly uri: string | undefined;
 
-  public constructor(message: string, options: Options) {
+  constructor(message: string, options: Options) {
     super(message, options);
 
     this.redirect = options.redirect;

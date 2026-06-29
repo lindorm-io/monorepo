@@ -1,5 +1,5 @@
 import { LindormError } from "@lindorm/errors";
 
 export class PylonError extends LindormError {
-  public static readonly namespace = "pylon";
+  static readonly namespace = "pylon";
 }

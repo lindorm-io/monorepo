@@ -17,7 +17,7 @@ export class OctKit implements IKeyKit {
   private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosOct;
 
-  public constructor(options: OctKitOptions) {
+  constructor(options: OctKitOptions) {
     this.encoding = options.encoding ?? "base64";
 
     if (!KryptosKit.isOct(options.kryptos)) {
@@ -44,14 +44,14 @@ export class OctKit implements IKeyKit {
     this.kryptos = options.kryptos;
   }
 
-  public sign(data: KeyData): Buffer {
+  sign(data: KeyData): Buffer {
     return createOctSignature({
       data,
       kryptos: this.kryptos,
     });
   }
 
-  public verify(data: KeyData, signature: KeyData): boolean {
+  verify(data: KeyData, signature: KeyData): boolean {
     return verifyOctSignature({
       data,
       encoding: this.encoding,
@@ -60,7 +60,7 @@ export class OctKit implements IKeyKit {
     });
   }
 
-  public assert(data: KeyData, signature: KeyData): void {
+  assert(data: KeyData, signature: KeyData): void {
     return assertOctSignature({
       data,
       encoding: this.encoding,
@@ -69,7 +69,7 @@ export class OctKit implements IKeyKit {
     });
   }
 
-  public format(data: Buffer): string {
+  format(data: Buffer): string {
     return data.toString(this.encoding);
   }
 }

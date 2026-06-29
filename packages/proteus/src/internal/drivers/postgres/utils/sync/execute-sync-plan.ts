@@ -16,13 +16,13 @@ export class SyncPlanExecutor {
   private readonly logger: ILogger | undefined;
   private readonly lockKey2: number;
 
-  public constructor(logger?: ILogger, namespace?: string | null) {
+  constructor(logger?: ILogger, namespace?: string | null) {
     this.logger = logger?.child(["SyncPlanExecutor"]);
     // XOR the fixed "SYNC" marker with a namespace hash to isolate per-namespace
     this.lockKey2 = 0x53594e43 ^ hashNamespaceToInt32(namespace ?? null);
   }
 
-  public execute = async (
+  execute = async (
     client: PostgresQueryClient,
     plan: SyncPlan,
     options: SyncOptions = {},

@@ -25,7 +25,7 @@ export class NatsRpcServer<
   private readonly state: NatsSharedState;
   private readonly ownedSubscriptions: Map<string, NatsSubscription> = new Map();
 
-  public constructor(options: NatsRpcServerOptions<Req, Res>) {
+  constructor(options: NatsRpcServerOptions<Req, Res>) {
     super(options, "NatsRpcServer");
     this.state = options.state;
   }
@@ -85,7 +85,7 @@ export class NatsRpcServer<
     this.ownedSubscriptions.set(queue, subscription);
   }
 
-  public async unserve(options?: { queue?: string }): Promise<void> {
+  async unserve(options?: { queue?: string }): Promise<void> {
     const queue = options?.queue ?? this.getDefaultQueue();
     const subscription = this.ownedSubscriptions.get(queue);
 
@@ -98,7 +98,7 @@ export class NatsRpcServer<
     this.logger.debug("RPC handler unregistered", { queue });
   }
 
-  public async unserveAll(): Promise<void> {
+  async unserveAll(): Promise<void> {
     for (const [queue, subscription] of this.ownedSubscriptions) {
       subscription.unsubscribe();
       this.ownedSubscriptions.delete(queue);

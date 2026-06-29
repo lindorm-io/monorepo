@@ -27,14 +27,14 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
   private readonly deadLetterManager: DeadLetterManager | undefined;
   private readonly ownedConsumerTags: Set<string> = new Set();
 
-  public constructor(options: MemoryWorkerQueueOptions<M>) {
+  constructor(options: MemoryWorkerQueueOptions<M>) {
     super(options);
     this.store = options.store;
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishMessages(
       message,
       options,
@@ -48,7 +48,7 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     );
   }
 
-  public async consume(
+  async consume(
     queueOrOptions: string | ConsumeOptions<M> | Array<ConsumeOptions<M>>,
     callback?: (message: M, envelope: ConsumeEnvelope) => Promise<void>,
   ): Promise<void> {
@@ -96,7 +96,7 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     });
   }
 
-  public async unconsume(queue: string): Promise<void> {
+  async unconsume(queue: string): Promise<void> {
     const toRemove: Array<number> = [];
 
     for (let i = 0; i < this.store.consumers.length; i++) {
@@ -113,7 +113,7 @@ export class MemoryWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
     }
   }
 
-  public async unconsumeAll(): Promise<void> {
+  async unconsumeAll(): Promise<void> {
     this.store.consumers = this.store.consumers.filter(
       (consumer) => !this.ownedConsumerTags.has(consumer.consumerTag),
     );

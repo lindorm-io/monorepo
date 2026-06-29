@@ -1,7 +1,7 @@
 import { DomainError, type DomainErrorOptions } from "./DomainError.js";
 
 export class SagaAlreadyCreatedError extends DomainError {
-  public constructor(options: DomainErrorOptions = {}) {
+  constructor(options: DomainErrorOptions = {}) {
     super("Saga has already been created", {
       code: "saga_already_created",
       title: "Saga Already Created",

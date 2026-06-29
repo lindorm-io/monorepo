@@ -107,13 +107,13 @@ type GenerateAsync = {
 export class KryptosKit {
   // clone
 
-  public static clone(kryptos: IKryptos, overwrite: KryptosLike = {}): IKryptos {
+  static clone(kryptos: IKryptos, overwrite: KryptosLike = {}): IKryptos {
     return new Kryptos({ ...kryptos.toJSON(), ...overwrite, ...kryptos.export("der") });
   }
 
   // env
 
-  public static get env(): Env {
+  static get env(): Env {
     return {
       import: KryptosKit.envImport,
       export: KryptosKit.envExport,
@@ -122,7 +122,7 @@ export class KryptosKit {
 
   // from
 
-  public static get from(): From {
+  static get from(): From {
     return {
       auto: KryptosKit.fromAuto,
       b64: KryptosKit.fromB64,
@@ -137,35 +137,35 @@ export class KryptosKit {
 
   // is
 
-  public static isAkp(kryptos: KryptosLike): kryptos is IKryptosAkp {
+  static isAkp(kryptos: KryptosLike): kryptos is IKryptosAkp {
     return kryptos instanceof Kryptos && kryptos.type === "AKP";
   }
 
-  public static isEc(kryptos: KryptosLike): kryptos is IKryptosEc {
+  static isEc(kryptos: KryptosLike): kryptos is IKryptosEc {
     return kryptos instanceof Kryptos && kryptos.type === "EC" && Boolean(kryptos.curve);
   }
 
-  public static isOct(kryptos: KryptosLike): kryptos is IKryptosOct {
+  static isOct(kryptos: KryptosLike): kryptos is IKryptosOct {
     return kryptos instanceof Kryptos && kryptos.type === "oct" && !kryptos.curve;
   }
 
-  public static isOkp(kryptos: KryptosLike): kryptos is IKryptosOkp {
+  static isOkp(kryptos: KryptosLike): kryptos is IKryptosOkp {
     return kryptos instanceof Kryptos && kryptos.type === "OKP" && Boolean(kryptos.curve);
   }
 
-  public static isRsa(kryptos: KryptosLike): kryptos is IKryptosRsa {
+  static isRsa(kryptos: KryptosLike): kryptos is IKryptosRsa {
     return kryptos instanceof Kryptos && kryptos.type === "RSA" && !kryptos.curve;
   }
 
   // resolve
 
-  public static getTypeForAlgorithm(algorithm: KryptosAlgorithm): KryptosType {
+  static getTypeForAlgorithm(algorithm: KryptosAlgorithm): KryptosType {
     return autoGenerateConfig(algorithm).type;
   }
 
   // generate
 
-  public static get generate(): Generate {
+  static get generate(): Generate {
     return {
       auto: this.generateAuto,
       enc: this.encryption,
@@ -175,7 +175,7 @@ export class KryptosKit {
 
   // generateAsync
 
-  public static get generateAsync(): GenerateAsync {
+  static get generateAsync(): GenerateAsync {
     return {
       auto: this.generateAutoAsync,
       enc: this.encryptionAsync,

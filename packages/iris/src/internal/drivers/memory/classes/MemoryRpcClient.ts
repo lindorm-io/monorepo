@@ -23,12 +23,12 @@ export class MemoryRpcClient<
 > extends DriverRpcClientBase<Req, Res> {
   private readonly store: MemorySharedState;
 
-  public constructor(options: MemoryRpcClientOptions<Req, Res>) {
+  constructor(options: MemoryRpcClientOptions<Req, Res>) {
     super(options, "MemoryRpcClient");
     this.store = options.store;
   }
 
-  public async request(message: Req, options?: { timeout?: number }): Promise<Res> {
+  async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
     const correlationId = randomId({ namespace: "cor", length: 16 });
 
@@ -100,7 +100,7 @@ export class MemoryRpcClient<
     return promise;
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     for (const [, pending] of this.pendingRequests) {
       this.store.timers.delete(pending.timer);
     }

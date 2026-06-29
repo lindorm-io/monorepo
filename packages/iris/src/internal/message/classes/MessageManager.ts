@@ -23,14 +23,14 @@ export type MessageManagerOptions<M extends IMessage> = {
 };
 
 export class MessageManager<M extends IMessage> {
-  public readonly target: Constructor<M>;
-  public readonly metadata: MessageMetadata;
+  readonly target: Constructor<M>;
+  readonly metadata: MessageMetadata;
 
   private readonly meta: IrisHookMeta;
   private readonly logger: ILogger | undefined;
   private _schemaCache: z.ZodType | undefined;
 
-  public constructor(options: MessageManagerOptions<M>) {
+  constructor(options: MessageManagerOptions<M>) {
     if (!options.target) {
       throw new IrisError("MessageManager requires a target constructor", {
         code: "missing_target_constructor",
@@ -62,7 +62,7 @@ export class MessageManager<M extends IMessage> {
     }
   }
 
-  public create(options: Partial<M> = {} as Partial<M>): M {
+  create(options: Partial<M> = {} as Partial<M>): M {
     const message = new this.target() as any;
 
     for (const field of this.metadata.fields) {
@@ -86,7 +86,7 @@ export class MessageManager<M extends IMessage> {
     return message;
   }
 
-  public hydrate(data: Record<string, unknown>): M {
+  hydrate(data: Record<string, unknown>): M {
     const message = new this.target() as any;
 
     for (const field of this.metadata.fields) {
@@ -131,7 +131,7 @@ export class MessageManager<M extends IMessage> {
     return message;
   }
 
-  public copy(source: M): M {
+  copy(source: M): M {
     const data: Record<string, unknown> = {};
     for (const field of this.metadata.fields) {
       if (IDENTITY_DECORATORS.has(field.decorator)) continue;
@@ -146,7 +146,7 @@ export class MessageManager<M extends IMessage> {
     return this.create(data as Partial<M>);
   }
 
-  public validate(message: M): void {
+  validate(message: M): void {
     if (!this._schemaCache) {
       this._schemaCache = buildSchema(this.metadata);
     }
@@ -160,23 +160,23 @@ export class MessageManager<M extends IMessage> {
 
   // hooks — async lifecycle
 
-  public async beforePublish(message: M): Promise<void> {
+  async beforePublish(message: M): Promise<void> {
     await runHooksAsync("BeforePublish", this.metadata.hooks, message, this.meta);
   }
 
-  public async afterPublish(message: M): Promise<void> {
+  async afterPublish(message: M): Promise<void> {
     await runHooksAsync("AfterPublish", this.metadata.hooks, message, this.meta);
   }
 
-  public async beforeConsume(message: M): Promise<void> {
+  async beforeConsume(message: M): Promise<void> {
     await runHooksAsync("BeforeConsume", this.metadata.hooks, message, this.meta);
   }
 
-  public async afterConsume(message: M): Promise<void> {
+  async afterConsume(message: M): Promise<void> {
     await runHooksAsync("AfterConsume", this.metadata.hooks, message, this.meta);
   }
 
-  public async onConsumeError(error: Error, message: M): Promise<void> {
+  async onConsumeError(error: Error, message: M): Promise<void> {
     await runHooksAsync("OnConsumeError", this.metadata.hooks, message, this.meta, error);
   }
 }

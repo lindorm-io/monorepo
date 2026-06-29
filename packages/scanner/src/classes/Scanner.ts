@@ -14,7 +14,7 @@ export class Scanner implements IScanner {
   private readonly deniedFilenames: Array<RegExp>;
   private readonly deniedTypes: Array<RegExp>;
 
-  public constructor(options: StructureScannerOptions = {}) {
+  constructor(options: StructureScannerOptions = {}) {
     this.deniedDirectories = options.deniedDirectories || [];
     this.deniedExtensions = options.deniedExtensions || [];
     this.deniedFilenames = options.deniedFilenames || [];
@@ -23,7 +23,7 @@ export class Scanner implements IScanner {
 
   // public
 
-  public scan(path: string): IScanData {
+  scan(path: string): IScanData {
     const root = path.split(sep).slice(0, -1).join(sep);
     const result = this.performScan(path, root);
 
@@ -32,7 +32,7 @@ export class Scanner implements IScanner {
     throw new ScannerError("No files found");
   }
 
-  public async import<T>(fileOrPath: IScanData | string): Promise<T> {
+  async import<T>(fileOrPath: IScanData | string): Promise<T> {
     const filePath = isString(fileOrPath) ? fileOrPath : fileOrPath.fullPath;
     const { pathToFileURL } = await import("url");
     const href = pathToFileURL(filePath).href;
@@ -99,7 +99,7 @@ export class Scanner implements IScanner {
 
   // public static
 
-  public static flatten(scan: Array<IScanData> | IScanData): Array<IScanData> {
+  static flatten(scan: Array<IScanData> | IScanData): Array<IScanData> {
     const array = isArray(scan) ? scan : [scan];
     const result: Array<IScanData | Array<IScanData>> = [];
 
@@ -116,7 +116,7 @@ export class Scanner implements IScanner {
     return result.flat();
   }
 
-  public static hasFiles(directory: string): boolean {
+  static hasFiles(directory: string): boolean {
     try {
       return readdirSync(directory).length > 0;
     } catch {

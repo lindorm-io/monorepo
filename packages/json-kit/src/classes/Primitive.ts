@@ -13,7 +13,7 @@ export class Primitive<T extends Array<any> | Dict = Dict> {
   private readonly _data: T;
   private readonly _meta: Array<any> | Dict;
 
-  public constructor(input: any) {
+  constructor(input: any) {
     if (isBuffer(input)) {
       const { __meta__, __array__, __record__ } = JSON.parse(input.toString());
       this._data = __array__ ? __array__ : __record__;
@@ -48,25 +48,25 @@ export class Primitive<T extends Array<any> | Dict = Dict> {
 
   // getters
 
-  public get data(): T {
+  get data(): T {
     return this._data;
   }
 
-  public get meta(): Array<any> | Dict {
+  get meta(): Array<any> | Dict {
     return this._meta;
   }
 
   // public
 
-  public toBuffer(): Buffer {
+  toBuffer(): Buffer {
     return Buffer.from(this.toString());
   }
 
-  public toJSON(): T {
+  toJSON(): T {
     return Primitive.parse(this._data, this._meta) as T;
   }
 
-  public toString(): string {
+  toString(): string {
     const key = isArray(this._data) ? "__array__" : "__record__";
     return JSON.stringify({ __meta__: this._meta, [key]: this._data });
   }

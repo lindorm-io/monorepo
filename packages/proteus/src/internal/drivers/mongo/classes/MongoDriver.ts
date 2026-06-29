@@ -82,7 +82,7 @@ export class MongoDriver implements IProteusDriver {
   private connectingPromise: Promise<void> | null;
   private signal: AbortSignal | undefined;
 
-  public constructor(
+  constructor(
     options: ProteusMongoOptions,
     logger: ILogger,
     namespace: string | null,
@@ -120,7 +120,7 @@ export class MongoDriver implements IProteusDriver {
 
   // ─── Connection Lifecycle ─────────────────────────────────────────────
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     if (this.client) {
       this.logger.debug("MongoDB driver already connected");
       return;
@@ -139,7 +139,7 @@ export class MongoDriver implements IProteusDriver {
     }
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (!this.client) {
       this.logger.debug("MongoDB driver already disconnected");
       return;
@@ -156,7 +156,7 @@ export class MongoDriver implements IProteusDriver {
     this.logger.debug("MongoDB driver disconnected");
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     const db = this.requireDb();
     const result = await db.command({ ping: 1 });
     return result.ok === 1;
@@ -164,7 +164,7 @@ export class MongoDriver implements IProteusDriver {
 
   // ─── Setup ────────────────────────────────────────────────────────────
 
-  public async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
+  async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
     if (this.options.synchronize && this.options.runMigrations) {
       throw new MongoMigrationError(
         "synchronize and runMigrations are mutually exclusive — use one or the other",
@@ -341,7 +341,7 @@ export class MongoDriver implements IProteusDriver {
 
   // ─── Repository ───────────────────────────────────────────────────────
 
-  public createRepository<E extends IEntity>(
+  createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
     meta?: ProteusHookMeta,
@@ -380,7 +380,7 @@ export class MongoDriver implements IProteusDriver {
     });
   }
 
-  public createTransactionalRepository<E extends IEntity>(
+  createTransactionalRepository<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
@@ -422,9 +422,7 @@ export class MongoDriver implements IProteusDriver {
 
   // ─── Executor ─────────────────────────────────────────────────────────
 
-  public createExecutor<E extends IEntity>(
-    target: Constructor<E>,
-  ): IRepositoryExecutor<E> {
+  createExecutor<E extends IEntity>(target: Constructor<E>): IRepositoryExecutor<E> {
     this.checkSignal();
     const metadata = this.resolveMetadata(target);
 
@@ -441,7 +439,7 @@ export class MongoDriver implements IProteusDriver {
     );
   }
 
-  public createTransactionalExecutor<E extends IEntity>(
+  createTransactionalExecutor<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
@@ -462,9 +460,7 @@ export class MongoDriver implements IProteusDriver {
 
   // ─── Query Builder ────────────────────────────────────────────────────
 
-  public createQueryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  createQueryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     this.checkSignal();
     const metadata = this.resolveMetadata(target);
     const db = this.requireDb();
@@ -480,7 +476,7 @@ export class MongoDriver implements IProteusDriver {
     );
   }
 
-  public createTransactionalQueryBuilder<E extends IEntity>(
+  createTransactionalQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
@@ -502,15 +498,13 @@ export class MongoDriver implements IProteusDriver {
 
   // ─── Client Access ────────────────────────────────────────────────────
 
-  public async acquireClient(): Promise<Db> {
+  async acquireClient(): Promise<Db> {
     return this.requireDb();
   }
 
   // ─── Transactions ─────────────────────────────────────────────────────
 
-  public async beginTransaction(
-    options?: TransactionOptions,
-  ): Promise<TransactionHandle> {
+  async beginTransaction(options?: TransactionOptions): Promise<TransactionHandle> {
     this.checkSignal();
     if (!this.isReplicaSet) {
       throw new NotSupportedError(
@@ -541,7 +535,7 @@ export class MongoDriver implements IProteusDriver {
     return handle;
   }
 
-  public async commitTransaction(handle: TransactionHandle): Promise<void> {
+  async commitTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as MongoTransactionHandle;
     if (txHandle.state !== "active") {
       throw new MongoDriverError(`Cannot commit: transaction is ${txHandle.state}`, {
@@ -570,7 +564,7 @@ export class MongoDriver implements IProteusDriver {
     }
   }
 
-  public async rollbackTransaction(handle: TransactionHandle): Promise<void> {
+  async rollbackTransaction(handle: TransactionHandle): Promise<void> {
     const txHandle = handle as MongoTransactionHandle;
     if (txHandle.state !== "active") {
       throw new MongoDriverError(`Cannot rollback: transaction is ${txHandle.state}`, {
@@ -596,7 +590,7 @@ export class MongoDriver implements IProteusDriver {
     }
   }
 
-  public async withTransaction<T>(
+  async withTransaction<T>(
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {
@@ -694,7 +688,7 @@ export class MongoDriver implements IProteusDriver {
 
   // ─── Clone ────────────────────────────────────────────────────────────
 
-  public cloneWithGetters(
+  cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
     signal?: AbortSignal,

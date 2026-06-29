@@ -57,7 +57,7 @@ export class ViewDomain {
   private readonly errorQueue: IIrisWorkerQueue<HermesErrorMessage>;
   private readonly causationExpiryMs: number;
 
-  public constructor(options: ViewDomainOptions) {
+  constructor(options: ViewDomainOptions) {
     this.eventEmitter = new EventEmitter();
     this.logger = options.logger.child(["ViewDomain"]);
     this.registry = options.registry;
@@ -69,25 +69,25 @@ export class ViewDomain {
     this.causationExpiryMs = options.causationExpiryMs;
   }
 
-  public on(evt: string, listener: (data: EventEmitterViewData) => void): void {
+  on(evt: string, listener: (data: EventEmitterViewData) => void): void {
     this.eventEmitter.on(evt, listener);
   }
 
-  public off(evt: string, listener: (data: EventEmitterViewData) => void): void {
+  off(evt: string, listener: (data: EventEmitterViewData) => void): void {
     this.eventEmitter.off(evt, listener);
   }
 
-  public removeAllListeners(): void {
+  removeAllListeners(): void {
     this.eventEmitter.removeAllListeners();
   }
 
-  public async registerHandlers(): Promise<void> {
+  async registerHandlers(): Promise<void> {
     for (const view of this.registry.allViews) {
       await this.registerViewEventHandlers(view);
     }
   }
 
-  public async inspect<V extends HermesViewEntity>(
+  async inspect<V extends HermesViewEntity>(
     id: string,
     entity: Constructor<V>,
   ): Promise<V | null> {
@@ -97,7 +97,7 @@ export class ViewDomain {
     return repo.findOne({ id } as any);
   }
 
-  public async query<R>(queryDto: ClassLike): Promise<R> {
+  async query<R>(queryDto: ClassLike): Promise<R> {
     this.logger.debug("Handling query", { query: queryDto });
 
     const meta = this.registry.getQuery(queryDto.constructor);
@@ -155,10 +155,7 @@ export class ViewDomain {
 
   // -- Replay support --
 
-  public async replayEvent(
-    message: HermesEventMessage,
-    view: RegisteredView,
-  ): Promise<void> {
+  async replayEvent(message: HermesEventMessage, view: RegisteredView): Promise<void> {
     let handler = this.findHandlerForEvent(message, view);
     let eventData = message.data;
 
@@ -255,7 +252,7 @@ export class ViewDomain {
     }
   }
 
-  public getSubscriptionTopicsForView(
+  getSubscriptionTopicsForView(
     view: RegisteredView,
   ): Array<{ topic: string; queue: string }> {
     const topics: Array<{ topic: string; queue: string }> = [];

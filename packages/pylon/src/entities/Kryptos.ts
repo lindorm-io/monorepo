@@ -28,75 +28,75 @@ import {
 export class Kryptos implements KryptosDB {
   @PrimaryKeyField()
   @Generated("lindorm_id", { namespace: "key", length: 16 })
-  public id!: string;
+  id!: string;
 
   @CreateDateField()
-  public createdAt!: Date;
+  createdAt!: Date;
 
   @Field("timestamp")
-  public notBefore!: Date;
+  notBefore!: Date;
 
   @Field("timestamp")
-  public expiresAt!: Date;
+  expiresAt!: Date;
 
   @Field("string")
-  public algorithm!: KryptosAlgorithm;
+  algorithm!: KryptosAlgorithm;
 
   @Field("string")
-  public type!: KryptosType;
+  type!: KryptosType;
 
   @Field("string")
-  public use!: KryptosUse;
+  use!: KryptosUse;
 
   @Nullable()
   @Field("string")
-  public curve!: KryptosCurve | null;
+  curve!: KryptosCurve | null;
 
   @Nullable()
   @Field("string")
-  public encryption!: KryptosEncryption | null;
+  encryption!: KryptosEncryption | null;
 
   @Eager()
   @EmbeddedList("string")
-  public operations!: Array<KryptosOperation>;
+  operations!: Array<KryptosOperation>;
 
   @Encrypted({ purpose: "pylon:kek" })
   @Nullable()
   @Field("text")
-  public privateKey!: string | null;
+  privateKey!: string | null;
 
   @Nullable()
   @Field("text")
-  public publicKey!: string | null;
+  publicKey!: string | null;
 
   @Eager()
   @EmbeddedList("string")
-  public certificateChain!: Array<string>;
+  certificateChain!: Array<string>;
 
   @Index()
   @Nullable()
   @Field("string")
-  public issuer!: string | null;
+  issuer!: string | null;
 
   @Index()
   @Nullable()
   @Field("url")
-  public jwksUri!: string | null;
+  jwksUri!: string | null;
 
   @Index()
   @Field("boolean")
-  public isExternal!: boolean;
+  isExternal!: boolean;
 
   @Index()
   @Nullable()
   @Field("string")
-  public ownerId!: string | null;
+  ownerId!: string | null;
 
   @Index()
   @Nullable()
   @Field("string")
-  public purpose!: string | null;
+  purpose!: string | null;
 
   @Field("boolean")
-  public hidden!: boolean;
+  hidden!: boolean;
 }

@@ -52,7 +52,7 @@ export class SqliteDriver implements IProteusDriver {
   private db: SqliteQueryClient | null = null;
   private signal: AbortSignal | undefined;
 
-  public constructor(
+  constructor(
     options: ProteusSqliteOptions,
     logger: ILogger,
     namespace: string | null,
@@ -70,7 +70,7 @@ export class SqliteDriver implements IProteusDriver {
     this.amphora = amphora;
   }
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     if (this.db) return;
 
     const BetterSqlite3 = await import("better-sqlite3");
@@ -117,7 +117,7 @@ export class SqliteDriver implements IProteusDriver {
     this.logger.debug("SQLite database opened", { filename: this.options.filename });
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     try {
       const client = this.getClient();
       const row = client.get("SELECT 1 AS ok");
@@ -127,7 +127,7 @@ export class SqliteDriver implements IProteusDriver {
     }
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     if (!this.db) return;
 
     // better-sqlite3 close() is synchronous
@@ -141,7 +141,7 @@ export class SqliteDriver implements IProteusDriver {
     this.logger.debug("SQLite database closed");
   }
 
-  public async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
+  async setup(entities: Array<Constructor<IEntity>>): Promise<void> {
     if (this.options.synchronize && this.options.runMigrations) {
       throw new SqliteMigrationError(
         "synchronize and runMigrations are mutually exclusive — use one or the other",
@@ -165,7 +165,7 @@ export class SqliteDriver implements IProteusDriver {
     }
   }
 
-  public async query<R = unknown>(
+  async query<R = unknown>(
     sql: string,
     values?: Array<unknown>,
   ): Promise<ProteusResult<R>> {
@@ -183,7 +183,7 @@ export class SqliteDriver implements IProteusDriver {
     return { rows: [] as Array<R>, rowCount: result.changes };
   }
 
-  public createRepository<E extends IEntity>(
+  createRepository<E extends IEntity>(
     target: Constructor<E>,
     parent?: Constructor<IEntity>,
     meta?: ProteusHookMeta,
@@ -235,7 +235,7 @@ export class SqliteDriver implements IProteusDriver {
     });
   }
 
-  public createTransactionalRepository<E extends IEntity>(
+  createTransactionalRepository<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
     parent?: Constructor<IEntity>,
@@ -280,9 +280,7 @@ export class SqliteDriver implements IProteusDriver {
     });
   }
 
-  public createExecutor<E extends IEntity>(
-    target: Constructor<E>,
-  ): IRepositoryExecutor<E> {
+  createExecutor<E extends IEntity>(target: Constructor<E>): IRepositoryExecutor<E> {
     this.checkSignal();
     const client = this.getClient();
     const metadata = this.resolveMetadata(target);
@@ -295,7 +293,7 @@ export class SqliteDriver implements IProteusDriver {
     );
   }
 
-  public createTransactionalExecutor<E extends IEntity>(
+  createTransactionalExecutor<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IRepositoryExecutor<E> {
@@ -311,16 +309,14 @@ export class SqliteDriver implements IProteusDriver {
     );
   }
 
-  public createQueryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  createQueryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     this.checkSignal();
     const client = this.getClient();
     const metadata = this.resolveMetadata(target);
     return new SqliteQueryBuilder<E>(metadata, client, this.namespace, this.logger);
   }
 
-  public createTransactionalQueryBuilder<E extends IEntity>(
+  createTransactionalQueryBuilder<E extends IEntity>(
     target: Constructor<E>,
     handle: TransactionHandle,
   ): IProteusQueryBuilder<E> {
@@ -335,11 +331,11 @@ export class SqliteDriver implements IProteusDriver {
     );
   }
 
-  public async acquireClient(): Promise<SqliteQueryClient> {
+  async acquireClient(): Promise<SqliteQueryClient> {
     return this.getClient();
   }
 
-  public cloneWithGetters(
+  cloneWithGetters(
     getFilterRegistry: FilterRegistryGetter,
     emitEntity: EntityEmitFn,
     signal?: AbortSignal,
@@ -361,9 +357,7 @@ export class SqliteDriver implements IProteusDriver {
     return cloned;
   }
 
-  public async beginTransaction(
-    options?: TransactionOptions,
-  ): Promise<TransactionHandle> {
+  async beginTransaction(options?: TransactionOptions): Promise<TransactionHandle> {
     this.checkSignal();
     if (options?.isolation) {
       this.logger.warn(
@@ -376,15 +370,15 @@ export class SqliteDriver implements IProteusDriver {
     return beginTransaction(client);
   }
 
-  public async commitTransaction(handle: TransactionHandle): Promise<void> {
+  async commitTransaction(handle: TransactionHandle): Promise<void> {
     commitTransaction(handle as SqliteTransactionHandle);
   }
 
-  public async rollbackTransaction(handle: TransactionHandle): Promise<void> {
+  async rollbackTransaction(handle: TransactionHandle): Promise<void> {
     rollbackTransaction(handle as SqliteTransactionHandle);
   }
 
-  public async withTransaction<T>(
+  async withTransaction<T>(
     callback: TransactionCallback<T>,
     options?: TransactionOptions,
   ): Promise<T> {

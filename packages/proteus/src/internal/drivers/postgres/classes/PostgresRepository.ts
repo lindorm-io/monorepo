@@ -120,7 +120,7 @@ export class PostgresRepository<
   private readonly hasEmbeddedLists: boolean;
   private readonly amphora: IAmphora | undefined;
 
-  public constructor(options: PostgresRepositoryOptions<E>) {
+  constructor(options: PostgresRepositoryOptions<E>) {
     super({
       target: options.target,
       metadata: options.metadata,
@@ -145,7 +145,7 @@ export class PostgresRepository<
 
   // ─── Abstract: find / versions ────────────────────────────────────
 
-  public async find(
+  async find(
     criteria?: Predicate<E>,
     options?: FindOptions<E>,
     _scope: QueryScope = "multiple",
@@ -203,10 +203,7 @@ export class PostgresRepository<
     return entities;
   }
 
-  public async versions(
-    criteria: Predicate<E>,
-    options?: FindOptions<E>,
-  ): Promise<Array<E>> {
+  async versions(criteria: Predicate<E>, options?: FindOptions<E>): Promise<Array<E>> {
     guardVersionFields(this.metadata, "versions");
 
     const entities = await this.executor.executeFind(
@@ -255,10 +252,7 @@ export class PostgresRepository<
 
   // ─── Override: PG error wrapping ──────────────────────────────────
 
-  public override async delete(
-    criteria: Predicate<E>,
-    options?: DeleteOptions,
-  ): Promise<void> {
+  override async delete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void> {
     try {
       if (options?.limit) {
         await this.executor.executeDelete(criteria, options);
@@ -272,7 +266,7 @@ export class PostgresRepository<
     }
   }
 
-  public override async updateMany(
+  override async updateMany(
     criteria: Predicate<E>,
     update: DeepPartial<E>,
   ): Promise<void> {
@@ -299,7 +293,7 @@ export class PostgresRepository<
     }
   }
 
-  public override async softDelete(
+  override async softDelete(
     criteria: Predicate<E>,
     _options?: DeleteOptions,
   ): Promise<void> {
@@ -314,7 +308,7 @@ export class PostgresRepository<
     }
   }
 
-  public override async restore(
+  override async restore(
     criteria: Predicate<E>,
     _options?: DeleteOptions,
   ): Promise<void> {
@@ -331,7 +325,7 @@ export class PostgresRepository<
 
   // ─── Abstract: cursor / clear ─────────────────────────────────────
 
-  public async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
+  async cursor(options?: CursorOptions<E>): Promise<IProteusCursor<E>> {
     if (!this.createCursorClient) {
       throw new ProteusRepositoryError(
         `cursor() is not available on transactional repositories`,
@@ -370,7 +364,7 @@ export class PostgresRepository<
     });
   }
 
-  public async clear(options?: ClearOptions): Promise<void> {
+  async clear(options?: ClearOptions): Promise<void> {
     guardAppendOnly(this.metadata, "clear");
 
     // For inheritance children, always use the ROOT entity's table.

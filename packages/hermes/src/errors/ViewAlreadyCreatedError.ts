@@ -1,7 +1,7 @@
 import { DomainError, type DomainErrorOptions } from "./DomainError.js";
 
 export class ViewAlreadyCreatedError extends DomainError {
-  public constructor(options: DomainErrorOptions = {}) {
+  constructor(options: DomainErrorOptions = {}) {
     super("View has already been created", {
       code: "view_already_created",
       title: "View Already Created",

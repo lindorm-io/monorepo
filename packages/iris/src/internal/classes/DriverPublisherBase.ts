@@ -13,5 +13,5 @@ export abstract class DriverPublisherBase<M extends IMessage>
     super(options, "Publisher");
   }
 
-  public abstract publish(message: M | Array<M>, options?: PublishOptions): Promise<void>;
+  abstract publish(message: M | Array<M>, options?: PublishOptions): Promise<void>;
 }

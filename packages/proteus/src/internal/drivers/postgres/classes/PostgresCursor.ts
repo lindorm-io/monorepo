@@ -34,7 +34,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
   private closed = false;
   private reading = false;
 
-  public constructor(options: PostgresCursorOptions) {
+  constructor(options: PostgresCursorOptions) {
     this.cursor = options.poolClient.query(new Cursor(options.sql, options.params));
     this.metadata = options.metadata;
     this.aliasMap = options.aliasMap;
@@ -44,7 +44,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
     this.namespace = options.namespace;
   }
 
-  public async next(): Promise<E | null> {
+  async next(): Promise<E | null> {
     this.guardClosed();
     this.guardReading();
     this.reading = true;
@@ -78,7 +78,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
     }
   }
 
-  public async nextBatch(size?: number): Promise<Array<E>> {
+  async nextBatch(size?: number): Promise<Array<E>> {
     this.guardClosed();
     this.guardReading();
     this.reading = true;
@@ -110,7 +110,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
     }
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     if (this.closed) return;
     this.closed = true;
 
@@ -123,7 +123,7 @@ export class PostgresCursor<E extends IEntity> implements IProteusCursor<E> {
     }
   }
 
-  public async *[Symbol.asyncIterator](): AsyncIterableIterator<E> {
+  async *[Symbol.asyncIterator](): AsyncIterableIterator<E> {
     try {
       while (!this.closed) {
         const batch = await this.nextBatch();

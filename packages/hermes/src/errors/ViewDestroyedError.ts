@@ -1,7 +1,7 @@
 import { DomainError, type DomainErrorOptions } from "./DomainError.js";
 
 export class ViewDestroyedError extends DomainError {
-  public constructor(options: Omit<DomainErrorOptions, "permanent"> = {}) {
+  constructor(options: Omit<DomainErrorOptions, "permanent"> = {}) {
     super("View is destroyed", {
       code: "view_destroyed",
       title: "View Destroyed",

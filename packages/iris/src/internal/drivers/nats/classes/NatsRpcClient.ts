@@ -27,12 +27,12 @@ export class NatsRpcClient<
 > extends DriverRpcClientBase<Req, Res> {
   private readonly state: NatsSharedState;
 
-  public constructor(options: NatsRpcClientOptions<Req, Res>) {
+  constructor(options: NatsRpcClientOptions<Req, Res>) {
     super(options, "NatsRpcClient");
     this.state = options.state;
   }
 
-  public async request(message: Req, options?: { timeout?: number }): Promise<Res> {
+  async request(message: Req, options?: { timeout?: number }): Promise<Res> {
     const timeoutMs = this.getDefaultTimeout(options);
 
     if (!this.state.nc || !this.state.headersInit) {
@@ -107,7 +107,7 @@ export class NatsRpcClient<
     }
   }
 
-  public async close(): Promise<void> {
+  async close(): Promise<void> {
     this.rejectAllPending();
     this.logger.debug("RPC client closed");
   }

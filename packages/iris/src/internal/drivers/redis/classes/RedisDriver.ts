@@ -67,7 +67,7 @@ export class RedisDriver implements IIrisDriver {
   private _deliberateDisconnect: boolean = false;
   private _reconnecting: Promise<void> | null = null;
 
-  public constructor(options: RedisDriverOptions, state?: RedisSharedState) {
+  constructor(options: RedisDriverOptions, state?: RedisSharedState) {
     this.logger = options.logger.child(["RedisDriver"]);
     this.meta = options.meta;
     this.amphora = options.amphora;
@@ -91,7 +91,7 @@ export class RedisDriver implements IIrisDriver {
     };
   }
 
-  public async connect(): Promise<void> {
+  async connect(): Promise<void> {
     this._deliberateDisconnect = false;
     this.setConnectionState("connecting");
 
@@ -215,7 +215,7 @@ export class RedisDriver implements IIrisDriver {
     }
   }
 
-  public async disconnect(): Promise<void> {
+  async disconnect(): Promise<void> {
     this._deliberateDisconnect = true;
 
     if (this.delayManager) {
@@ -238,7 +238,7 @@ export class RedisDriver implements IIrisDriver {
     this.logger.debug("Disconnected");
   }
 
-  public async drain(_timeout?: number): Promise<void> {
+  async drain(_timeout?: number): Promise<void> {
     this.setConnectionState("draining");
 
     await stopAllConsumerLoops(this.state);
@@ -268,7 +268,7 @@ export class RedisDriver implements IIrisDriver {
     this.logger.debug("Drained");
   }
 
-  public async ping(): Promise<boolean> {
+  async ping(): Promise<boolean> {
     if (!this.state.publishConnection) return false;
 
     try {
@@ -279,11 +279,11 @@ export class RedisDriver implements IIrisDriver {
     }
   }
 
-  public async setup(_messages: Array<Constructor<IMessage>>): Promise<void> {
+  async setup(_messages: Array<Constructor<IMessage>>): Promise<void> {
     this.logger.debug("Setup complete (Redis streams auto-create on write)");
   }
 
-  public async reset(): Promise<void> {
+  async reset(): Promise<void> {
     await stopAllConsumerLoops(this.state);
 
     // Delete all known streams from Redis to prevent stale messages
@@ -321,32 +321,32 @@ export class RedisDriver implements IIrisDriver {
     this.logger.debug("Reset");
   }
 
-  public getConnectionState(): IrisConnectionState {
+  getConnectionState(): IrisConnectionState {
     return this._connectionState;
   }
 
-  public on<K extends keyof IrisEvents>(
+  on<K extends keyof IrisEvents>(
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void {
     this._emitter.on(event, listener);
   }
 
-  public off<K extends keyof IrisEvents>(
+  off<K extends keyof IrisEvents>(
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void {
     this._emitter.off(event, listener);
   }
 
-  public once<K extends keyof IrisEvents>(
+  once<K extends keyof IrisEvents>(
     event: K,
     listener: (...args: IrisEvents[K]) => void,
   ): void {
     this._emitter.once(event, listener);
   }
 
-  public createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
+  createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
     return new RedisPublisher<M>({
       target,
       logger: this.logger,
@@ -358,9 +358,7 @@ export class RedisDriver implements IIrisDriver {
     });
   }
 
-  public createMessageBus<M extends IMessage>(
-    target: Constructor<M>,
-  ): IIrisMessageBus<M> {
+  createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
     return new RedisMessageBus<M>({
       target,
       logger: this.logger,
@@ -373,9 +371,7 @@ export class RedisDriver implements IIrisDriver {
     });
   }
 
-  public createWorkerQueue<M extends IMessage>(
-    target: Constructor<M>,
-  ): IIrisWorkerQueue<M> {
+  createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
     return new RedisWorkerQueue<M>({
       target,
       logger: this.logger,
@@ -388,7 +384,7 @@ export class RedisDriver implements IIrisDriver {
     });
   }
 
-  public createStreamProcessor(): IIrisStreamProcessor {
+  createStreamProcessor(): IIrisStreamProcessor {
     return new RedisStreamProcessor({
       state: this.state,
       logger: this.logger,
@@ -397,7 +393,7 @@ export class RedisDriver implements IIrisDriver {
     });
   }
 
-  public createRpcClient<Req extends IMessage, Res extends IMessage>(
+  createRpcClient<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): RedisRpcClient<Req, Res> {
@@ -411,7 +407,7 @@ export class RedisDriver implements IIrisDriver {
     });
   }
 
-  public createRpcServer<Req extends IMessage, Res extends IMessage>(
+  createRpcServer<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): RedisRpcServer<Req, Res> {
@@ -425,17 +421,17 @@ export class RedisDriver implements IIrisDriver {
     });
   }
 
-  public async setupReplyQueue(): Promise<void> {
+  async setupReplyQueue(): Promise<void> {
     this._replyQueueActive = true;
     this.logger.debug("Reply queue active");
   }
 
-  public async teardownReplyQueue(): Promise<void> {
+  async teardownReplyQueue(): Promise<void> {
     this._replyQueueActive = false;
     this.logger.debug("Reply queue inactive");
   }
 
-  public cloneWithGetters(getSubscribers: () => Array<IMessageSubscriber>): IIrisDriver {
+  cloneWithGetters(getSubscribers: () => Array<IMessageSubscriber>): IIrisDriver {
     return new RedisDriver(
       {
         logger: this.logger,
@@ -455,11 +451,11 @@ export class RedisDriver implements IIrisDriver {
     );
   }
 
-  public get connected(): boolean {
+  get connected(): boolean {
     return this._connectionState === "connected" || this._connectionState === "draining";
   }
 
-  public get replyQueueActive(): boolean {
+  get replyQueueActive(): boolean {
     return this._replyQueueActive;
   }
 

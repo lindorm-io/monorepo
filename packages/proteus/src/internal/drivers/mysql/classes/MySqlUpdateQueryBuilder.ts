@@ -30,7 +30,7 @@ export class MySqlUpdateQueryBuilder<
   private data: Dict | null = null;
   private predicates: Array<PredicateEntry<E>> = [];
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     client: MysqlQueryClient,
     namespace?: string | null,
@@ -40,27 +40,27 @@ export class MySqlUpdateQueryBuilder<
     this.namespace = namespace ?? null;
   }
 
-  public set(data: DeepPartial<E>): this {
+  set(data: DeepPartial<E>): this {
     this.data = data as Dict;
     return this;
   }
 
-  public where(criteria: Predicate<E>): this {
+  where(criteria: Predicate<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  public andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  public orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
 
-  public returning(..._fields: Array<keyof E | "*">): this {
+  returning(..._fields: Array<keyof E | "*">): this {
     throw new ProteusRepositoryError(
       "MySQL does not support RETURNING clauses. Use save()/insert()/update() repository methods instead, which automatically SELECT-back after write.",
       {
@@ -73,7 +73,7 @@ export class MySqlUpdateQueryBuilder<
     );
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     if (!this.data || Object.keys(this.data).length === 0) {
       return { rows: [], rowCount: 0 };
     }

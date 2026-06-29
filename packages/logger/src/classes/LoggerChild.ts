@@ -7,7 +7,7 @@ import { LoggerBase } from "./LoggerBase.js";
 // parent and carries its own merged scope/correlation. Not exported from
 // the package — consumers always see an `ILogger`.
 export class LoggerChild extends LoggerBase {
-  public constructor(options: LoggerBaseOptions) {
+  constructor(options: LoggerBaseOptions) {
     super(options);
   }
 

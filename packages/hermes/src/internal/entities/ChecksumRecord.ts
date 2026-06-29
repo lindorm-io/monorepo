@@ -16,21 +16,21 @@ export class ChecksumRecord {
   @PrimaryKey()
   @Field("string")
   @Max(64)
-  public eventId: string = "";
+  eventId: string = "";
 
   @Field("string")
   @Index()
-  public aggregateId: string = "";
+  aggregateId: string = "";
 
   @Field("string")
-  public aggregateName: string = "";
+  aggregateName: string = "";
 
   @Field("string")
-  public aggregateNamespace: string = "";
+  aggregateNamespace: string = "";
 
   @Field("string")
-  public checksum: string = "";
+  checksum: string = "";
 
   @CreateDateField()
-  public createdAt: Date = new Date();
+  createdAt: Date = new Date();
 }

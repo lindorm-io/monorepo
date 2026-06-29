@@ -15,13 +15,13 @@ export class MemoryPublisher<M extends IMessage> extends DriverPublisherBase<M> 
   private readonly store: MemorySharedState;
   private readonly delayManager: DelayManager | undefined;
 
-  public constructor(options: MemoryPublisherOptions<M>) {
+  constructor(options: MemoryPublisherOptions<M>) {
     super(options);
     this.store = options.store;
     this.delayManager = options.delayManager;
   }
 
-  public async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
+  async publish(message: M | Array<M>, options?: PublishOptions): Promise<void> {
     await publishMessages(
       message,
       options,

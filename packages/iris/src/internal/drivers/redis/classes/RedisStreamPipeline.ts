@@ -23,7 +23,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
   private consumerTag: string | null = null;
   private groupName: string | null = null;
 
-  public constructor(options: RedisStreamPipelineOptions) {
+  constructor(options: RedisStreamPipelineOptions) {
     super({
       ...options,
       logger: options.logger.child(["RedisStreamPipeline"]),
@@ -31,7 +31,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
     this.state = options.state;
   }
 
-  public async start(): Promise<void> {
+  async start(): Promise<void> {
     if (this.running) {
       const loopExists =
         this.consumerTag != null &&
@@ -85,7 +85,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  public async stop(): Promise<void> {
+  async stop(): Promise<void> {
     if (!this.running) return;
 
     this.paused = false;
@@ -109,7 +109,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline stopped");
   }
 
-  public async pause(): Promise<void> {
+  async pause(): Promise<void> {
     if (this.paused) return;
 
     if (this.batchTimer) {
@@ -129,7 +129,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline paused");
   }
 
-  public async resume(): Promise<void> {
+  async resume(): Promise<void> {
     if (!this.paused) return;
     this.paused = false;
 

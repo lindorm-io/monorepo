@@ -31,7 +31,7 @@ export class MySqlDeleteQueryBuilder<
   private readonly isSoft: boolean;
   private predicates: Array<PredicateEntry<E>> = [];
 
-  public constructor(
+  constructor(
     metadata: EntityMetadata,
     client: MysqlQueryClient,
     namespace?: string | null,
@@ -43,22 +43,22 @@ export class MySqlDeleteQueryBuilder<
     this.isSoft = soft ?? false;
   }
 
-  public where(criteria: Predicate<E>): this {
+  where(criteria: Predicate<E>): this {
     this.predicates = [{ predicate: criteria, conjunction: "and" }];
     return this;
   }
 
-  public andWhere(criteria: Predicate<E>): this {
+  andWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "and" });
     return this;
   }
 
-  public orWhere(criteria: Predicate<E>): this {
+  orWhere(criteria: Predicate<E>): this {
     this.predicates.push({ predicate: criteria, conjunction: "or" });
     return this;
   }
 
-  public returning(..._fields: Array<keyof E | "*">): this {
+  returning(..._fields: Array<keyof E | "*">): this {
     throw new ProteusRepositoryError(
       "MySQL does not support RETURNING clauses. Use save()/insert()/update() repository methods instead, which automatically SELECT-back after write.",
       {
@@ -71,7 +71,7 @@ export class MySqlDeleteQueryBuilder<
     );
   }
 
-  public async execute(): Promise<WriteResult<E>> {
+  async execute(): Promise<WriteResult<E>> {
     if (this.predicates.length === 0) {
       throw new ProteusError(
         `DELETE on "${this.metadata.entity.name}" requires at least one .where() predicate`,

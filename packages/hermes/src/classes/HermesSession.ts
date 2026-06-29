@@ -35,7 +35,7 @@ export class HermesSession implements IHermesSession {
   private readonly viewDomain: ViewDomain;
   private readonly commandQueue: IIrisWorkerQueue<HermesCommandMessage>;
 
-  public constructor(options: HermesSessionOptions) {
+  constructor(options: HermesSessionOptions) {
     this.logger = options.logger.child(["HermesSession"]);
     this._statusRef = options.statusRef;
     this.registry = options.registry;
@@ -45,11 +45,11 @@ export class HermesSession implements IHermesSession {
 
   // -- Data access --
 
-  public get status(): HermesStatus {
+  get status(): HermesStatus {
     return this._statusRef.current;
   }
 
-  public async command(
+  async command(
     command: ClassLike,
     options: { id?: string; correlationId?: string; delay?: number; meta?: Dict } = {},
   ): Promise<AggregateIdentifier> {
@@ -102,7 +102,7 @@ export class HermesSession implements IHermesSession {
     return aggregate;
   }
 
-  public async query<R>(query: ClassLike): Promise<R> {
+  async query<R>(query: ClassLike): Promise<R> {
     this.assertReady();
 
     return this.viewDomain.query<R>(query);

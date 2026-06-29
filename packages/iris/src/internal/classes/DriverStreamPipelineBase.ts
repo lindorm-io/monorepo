@@ -40,7 +40,7 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
   protected batchTimer: ReturnType<typeof setTimeout> | null = null;
   protected _processingQueue: Promise<void> = Promise.resolve();
 
-  public constructor(options: DriverStreamPipelineBaseOptions) {
+  constructor(options: DriverStreamPipelineBaseOptions) {
     this.logger = options.logger;
     this.stages = options.stages;
     this.inputClass = options.inputClass;
@@ -56,12 +56,12 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
     });
   }
 
-  public abstract start(): Promise<void>;
-  public abstract stop(): Promise<void>;
-  public abstract pause(): Promise<void>;
-  public abstract resume(): Promise<void>;
+  abstract start(): Promise<void>;
+  abstract stop(): Promise<void>;
+  abstract pause(): Promise<void>;
+  abstract resume(): Promise<void>;
 
-  public isRunning(): boolean {
+  isRunning(): boolean {
     return this.running && !this.paused;
   }
 

@@ -3,9 +3,9 @@ import type { HttpErrorOptions } from "../../types/HttpErrorOptions.js";
 import { ClientError } from "../ClientError.js";
 
 export class RequestUriTooLongError extends ClientError {
-  public static readonly status = 414;
+  static readonly status = 414;
 
-  public constructor(message: string, options: HttpErrorOptions = {}) {
+  constructor(message: string, options: HttpErrorOptions = {}) {
     super(message, { ...options, status: RequestUriTooLongError.status });
   }
 }

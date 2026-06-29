@@ -43,19 +43,19 @@ export abstract class DriverBase<M extends IMessage> {
     this.getSubscribers = options.getSubscribers;
   }
 
-  public create(options?: Partial<M>): M {
+  create(options?: Partial<M>): M {
     return this.manager.create(options);
   }
 
-  public hydrate(data: Record<string, unknown>): M {
+  hydrate(data: Record<string, unknown>): M {
     return this.manager.hydrate(data);
   }
 
-  public copy(message: M): M {
+  copy(message: M): M {
     return this.manager.copy(message);
   }
 
-  public validate(message: M): void {
+  validate(message: M): void {
     this.manager.validate(message);
   }
 

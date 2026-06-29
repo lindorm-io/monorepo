@@ -22,7 +22,7 @@ export class RedisTransactionContext implements ITransactionContext {
   private readonly driver: RedisDriver;
   private readonly repoFactory: RepositoryFactory | undefined;
 
-  public constructor(
+  constructor(
     handle: RedisTransactionHandle,
     driver: RedisDriver,
     repositoryFactory?: RepositoryFactory,
@@ -32,7 +32,7 @@ export class RedisTransactionContext implements ITransactionContext {
     this.repoFactory = repositoryFactory;
   }
 
-  public repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
+  repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E> {
     if (!this.repoFactory) {
       throw new RedisDriverError("Transactional repositories are not configured", {
         code: "transactional_repositories_not_configured",
@@ -44,31 +44,27 @@ export class RedisTransactionContext implements ITransactionContext {
     return this.repoFactory(target);
   }
 
-  public queryBuilder<E extends IEntity>(
-    target: Constructor<E>,
-  ): IProteusQueryBuilder<E> {
+  queryBuilder<E extends IEntity>(target: Constructor<E>): IProteusQueryBuilder<E> {
     return this.driver.createTransactionalQueryBuilder(target, this.handle);
   }
 
-  public async client<T>(): Promise<T> {
+  async client<T>(): Promise<T> {
     // Redis has no transactional isolation — the "tx-scoped" client is the
     // same ioredis instance the driver uses for non-transactional operations.
     // Callers can construct MULTI/EXEC pipelines from it when needed.
     return this.driver.acquireClient() as Promise<T>;
   }
 
-  public async transaction<T>(
-    fn: (ctx: RedisTransactionContext) => Promise<T>,
-  ): Promise<T> {
+  async transaction<T>(fn: (ctx: RedisTransactionContext) => Promise<T>): Promise<T> {
     // Redis has no savepoints -- nested transactions are passthrough
     return fn(this);
   }
 
-  public async commit(): Promise<void> {
+  async commit(): Promise<void> {
     await this.driver.commitTransaction(this.handle);
   }
 
-  public async rollback(): Promise<void> {
+  async rollback(): Promise<void> {
     await this.driver.rollbackTransaction(this.handle);
   }
 }

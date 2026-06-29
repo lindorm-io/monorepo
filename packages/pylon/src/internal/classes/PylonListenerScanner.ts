@@ -17,11 +17,11 @@ export type ListenerScanResult<S extends PylonSocketContext> = {
 export class PylonListenerScanner<
   S extends PylonSocketContext = PylonSocketContext,
 > extends PylonScannerBase {
-  public constructor(logger: ILogger) {
+  constructor(logger: ILogger) {
     super(logger.child(["PylonListenerScanner"]));
   }
 
-  public async scan(directory: string): Promise<ListenerScanResult<S>> {
+  async scan(directory: string): Promise<ListenerScanResult<S>> {
     const start = Date.now();
 
     this.logger.debug("Scanning listeners", { directory });
