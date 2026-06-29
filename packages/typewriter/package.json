@@ -41,7 +41,7 @@
     "quicktype-core": "^23.2.6"
   },
   "devDependencies": {
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "exports": {
     ".": {

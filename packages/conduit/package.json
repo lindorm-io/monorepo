@@ -54,7 +54,7 @@
   },
   "devDependencies": {
     "@lindorm/logger": "^0.6.5",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "exports": {
     ".": {

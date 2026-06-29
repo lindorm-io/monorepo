@@ -52,7 +52,7 @@
   "devDependencies": {
     "@types/config": "^3.3.5",
     "@types/js-yaml": "^4.0.9",
-    "zod": "^4.3.6"
+    "zod": "^4.4.3"
   },
   "peerDependencies": {
     "zod": ">=4.3.6"
