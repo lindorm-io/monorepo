@@ -87,7 +87,8 @@
     "@lindorm/hermes": ">=0.6.0",
     "@lindorm/iris": ">=0.2.0",
     "@lindorm/logger": ">=0.5.0",
-    "@lindorm/proteus": ">=0.5.0"
+    "@lindorm/proteus": ">=0.5.0",
+    "zod": ">=4.3.6"
   },
   "peerDependenciesMeta": {
     "@lindorm/hermes": {
