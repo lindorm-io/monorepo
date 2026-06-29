@@ -119,6 +119,7 @@ const runTckForNaming = (
     entities.TckCascadeParent,
     entities.TckCascadeChild,
     entities.TckArrayHolder,
+    entities.TckJsonbArray,
     entities.TckJsonHolder,
     entities.TckWithAddress,
     entities.TckTypeHolder,

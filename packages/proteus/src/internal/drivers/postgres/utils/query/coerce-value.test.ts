@@ -1,3 +1,4 @@
+import { makeField } from "../../../../__fixtures__/make-field.js";
 import { coerceReadValue, coerceWriteValue } from "./coerce-value.js";
 import { describe, expect, test } from "vitest";
 
@@ -81,5 +82,21 @@ describe("coerceWriteValue", () => {
   test("should pass through Date", () => {
     const date = new Date();
     expect(coerceWriteValue(date)).toBe(date);
+  });
+
+  test("should JSON-stringify a jsonb-backed array (array field, no arrayType)", () => {
+    const field = makeField("tags", { type: "array", arrayType: null });
+    expect(coerceWriteValue(["a", "b"], field)).toBe('["a","b"]');
+  });
+
+  test("should pass through a native array (array field with arrayType)", () => {
+    const field = makeField("tags", { type: "array", arrayType: "string" });
+    const value = ["a", "b"];
+    expect(coerceWriteValue(value, field)).toBe(value);
+  });
+
+  test("should pass through array when no field is provided", () => {
+    const value = ["a", "b"];
+    expect(coerceWriteValue(value)).toBe(value);
   });
 });

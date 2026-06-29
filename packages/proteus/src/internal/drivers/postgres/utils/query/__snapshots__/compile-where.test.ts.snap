@@ -40,7 +40,7 @@ exports[`compileWhere > should compile $ilike 1`] = `"WHERE "t0"."name" ILIKE $1
 
 exports[`compileWhere > should compile $in with values 1`] = `"WHERE "t0"."name" IN ($1, $2, $3)"`;
 
-exports[`compileWhere > should compile $length 1`] = `"WHERE ("t0"."tags" IS NOT NULL AND COALESCE(array_length("t0"."tags", 1), 0) = $1)"`;
+exports[`compileWhere > should compile $length 1`] = `"WHERE ("t0"."tags" IS NOT NULL AND COALESCE(jsonb_array_length("t0"."tags"), 0) = $1)"`;
 
 exports[`compileWhere > should compile $like 1`] = `"WHERE "t0"."name" LIKE $1"`;
 
@@ -54,7 +54,7 @@ exports[`compileWhere > should compile $not at root level 1`] = `"WHERE NOT ("t0
 
 exports[`compileWhere > should compile $or at root level 1`] = `"WHERE ("t0"."name" = $1 OR "t0"."name" = $2)"`;
 
-exports[`compileWhere > should compile $overlap (array overlap) 1`] = `"WHERE "t0"."tags" && $1::jsonb"`;
+exports[`compileWhere > should compile $overlap (array overlap) 1`] = `"WHERE EXISTS (SELECT 1 FROM jsonb_array_elements("t0"."tags") AS _elem(value) WHERE _elem.value IN (SELECT jsonb_array_elements($1::jsonb)))"`;
 
 exports[`compileWhere > should compile $regex (case-insensitive) 1`] = `"WHERE "t0"."name" ~* $1"`;
 

@@ -89,23 +89,42 @@ export const postgresDialect: SqlDialect = {
   },
 
   compileAll: (col, params, arr, field) => {
+    // `@>` (contains) is valid for both jsonb and native arrays.
+    if (!field?.arrayType) {
+      params.push(JSON.stringify(arr));
+      return `${col} @> $${params.length}::jsonb`;
+    }
     params.push(arr);
     return `${col} @> $${params.length}${pgArrayCast(field)}`;
   },
 
   compileOverlap: (col, params, arr, field) => {
+    // jsonb has no `&&` overlap operator — emit a membership EXISTS subquery.
+    if (!field?.arrayType) {
+      params.push(JSON.stringify(arr));
+      return `EXISTS (SELECT 1 FROM jsonb_array_elements(${col}) AS _elem(value) WHERE _elem.value IN (SELECT jsonb_array_elements($${params.length}::jsonb)))`;
+    }
     params.push(arr);
     return `${col} && $${params.length}${pgArrayCast(field)}`;
   },
 
   compileContained: (col, params, arr, field) => {
+    // `<@` (contained by) is valid for both jsonb and native arrays.
+    if (!field?.arrayType) {
+      params.push(JSON.stringify(arr));
+      return `${col} <@ $${params.length}::jsonb`;
+    }
     params.push(arr);
     return `${col} <@ $${params.length}${pgArrayCast(field)}`;
   },
 
-  compileLength: (col, params, value) => {
+  compileLength: (col, params, value, field) => {
+    // `array_length` rejects jsonb — use `jsonb_array_length` for jsonb-backed arrays.
+    const lengthExpr = field?.arrayType
+      ? `array_length(${col}, 1)`
+      : `jsonb_array_length(${col})`;
     params.push(value);
-    return `(${col} IS NOT NULL AND COALESCE(array_length(${col}, 1), 0) = $${params.length})`;
+    return `(${col} IS NOT NULL AND COALESCE(${lengthExpr}, 0) = $${params.length})`;
   },
 
   joinedDeleteSyntax: "using",

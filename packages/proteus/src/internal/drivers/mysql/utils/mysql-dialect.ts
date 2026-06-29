@@ -74,7 +74,7 @@ export const mysqlDialect: SqlDialect = {
     return `JSON_CONTAINS(?, ${col})`;
   },
 
-  compileLength: (col, params, value) => {
+  compileLength: (col, params, value, _field) => {
     params.push(value);
     return `(${col} IS NOT NULL AND COALESCE(JSON_LENGTH(${col}), 0) = ?)`;
   },

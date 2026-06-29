@@ -166,7 +166,7 @@ describe("compileWhere", () => {
     const params: Array<unknown> = [];
     const result = compileWhere(entries, metadata, "t0", params);
     expect(result).toMatchSnapshot();
-    expect(params).toEqual([["js", "ts"]]);
+    expect(params).toEqual([JSON.stringify(["js", "ts"])]);
   });
 
   test("should compile $length", () => {
@@ -311,7 +311,7 @@ describe("compileWhere", () => {
     const params: Array<unknown> = [];
     const result = compileWhere(entries, metadata, "t0", params);
     expect(result).toMatchSnapshot();
-    expect(params).toEqual([["js", "rust"]]);
+    expect(params).toEqual([JSON.stringify(["js", "rust"])]);
   });
 
   test("should compile $contained (array contained-by)", () => {
@@ -324,7 +324,7 @@ describe("compileWhere", () => {
     const params: Array<unknown> = [];
     const result = compileWhere(entries, metadata, "t0", params);
     expect(result).toMatchSnapshot();
-    expect(params).toEqual([["js", "ts", "rust", "go"]]);
+    expect(params).toEqual([JSON.stringify(["js", "ts", "rust", "go"])]);
   });
 
   describe("array operator type guard", () => {

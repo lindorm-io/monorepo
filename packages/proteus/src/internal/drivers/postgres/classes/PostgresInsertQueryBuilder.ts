@@ -126,7 +126,7 @@ export class PostgresInsertQueryBuilder<
         if (field?.transform) {
           value = field.transform.to(value);
         }
-        params.push(coerceWriteValue(value));
+        params.push(coerceWriteValue(value, field ?? null));
         return `$${params.length}`;
       });
       rowPlaceholders.push(`(${placeholders.join(", ")})`);

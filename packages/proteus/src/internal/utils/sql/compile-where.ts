@@ -375,7 +375,7 @@ const compileOperator = (
   }
 
   if ("$length" in ops) {
-    clauses.push(dialect.compileLength(qualifiedCol, params, ops.$length));
+    clauses.push(dialect.compileLength(qualifiedCol, params, ops.$length, field));
   }
 
   if ("$has" in ops) {

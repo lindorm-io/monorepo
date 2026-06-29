@@ -63,21 +63,21 @@ export const compilePartialUpdate = <E extends IEntity>(
         metadata.entity.name,
       );
     }
-    params.push(coerceWriteValue(transformed));
+    params.push(coerceWriteValue(transformed, field ?? null));
     setClauses.push(`${quoteIdentifier(colName)} = $${params.length}`);
   }
 
   // Always add Version (bumped) — unless already in changed dict
   const versionField = metadata.fields.find((f) => f.decorator === "Version");
   if (versionField && !(versionField.name in changed)) {
-    params.push(coerceWriteValue((entity as any)[versionField.key]));
+    params.push(coerceWriteValue((entity as any)[versionField.key], null));
     setClauses.push(`${quoteIdentifier(versionField.name)} = $${params.length}`);
   }
 
   // Always add UpdateDate — unless already in changed dict
   const updateDateField = metadata.fields.find((f) => f.decorator === "UpdateDate");
   if (updateDateField && !(updateDateField.name in changed)) {
-    params.push(coerceWriteValue((entity as any)[updateDateField.key]));
+    params.push(coerceWriteValue((entity as any)[updateDateField.key], null));
     setClauses.push(`${quoteIdentifier(updateDateField.name)} = $${params.length}`);
   }
 
@@ -170,21 +170,21 @@ export const compileJoinedPartialUpdate = <E extends IEntity>(
         metadata.entity.name,
       );
     }
-    rootParams.push(coerceWriteValue(transformed));
+    rootParams.push(coerceWriteValue(transformed, field ?? null));
     rootSetClauses.push(`${quoteIdentifier(colName)} = $${rootParams.length}`);
   }
 
   // Always add Version (bumped) — unless already in changed dict
   const versionField = metadata.fields.find((f) => f.decorator === "Version");
   if (versionField && !(versionField.name in rootChanged)) {
-    rootParams.push(coerceWriteValue((entity as any)[versionField.key]));
+    rootParams.push(coerceWriteValue((entity as any)[versionField.key], null));
     rootSetClauses.push(`${quoteIdentifier(versionField.name)} = $${rootParams.length}`);
   }
 
   // Always add UpdateDate — unless already in changed dict
   const updateDateField = metadata.fields.find((f) => f.decorator === "UpdateDate");
   if (updateDateField && !(updateDateField.name in rootChanged)) {
-    rootParams.push(coerceWriteValue((entity as any)[updateDateField.key]));
+    rootParams.push(coerceWriteValue((entity as any)[updateDateField.key], null));
     rootSetClauses.push(
       `${quoteIdentifier(updateDateField.name)} = $${rootParams.length}`,
     );
@@ -268,7 +268,7 @@ export const compileJoinedPartialUpdate = <E extends IEntity>(
           metadata.entity.name,
         );
       }
-      childParams.push(coerceWriteValue(transformed));
+      childParams.push(coerceWriteValue(transformed, field ?? null));
       childSetClauses.push(`${quoteIdentifier(colName)} = $${childParams.length}`);
     }
 
