@@ -819,7 +819,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   postgres: z.object({
     url: z.string(),
     synchronize: z.boolean().default(false),
@@ -1003,7 +1003,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   auth: z.object({
     clientId: z.string(),
     clientSecret: z.string(),
@@ -1434,7 +1434,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   auth: z.object({
     clientId: z.string(),
     clientSecret: z.string(),
@@ -1470,7 +1470,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   kafka: z.object({
     brokers: z.array(z.string()),
   }),
@@ -1504,7 +1504,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
 }, { scope: import.meta.url });
 "
 `;
@@ -1535,7 +1535,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   mongo: z.object({
     url: z.string(),
     synchronize: z.boolean().default(false),
@@ -1574,7 +1574,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   nats: z.object({
     servers: z.string(),
   }),
@@ -1608,7 +1608,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
 }, { scope: import.meta.url });
 "
 `;
@@ -1639,7 +1639,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   postgres: z.object({
     url: z.string(),
     synchronize: z.boolean().default(false),
@@ -1680,7 +1680,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   postgres: z.object({
     url: z.string(),
     synchronize: z.boolean().default(false),
@@ -1719,7 +1719,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   postgres: z.object({
     url: z.string(),
     synchronize: z.boolean().default(false),
@@ -1755,7 +1755,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   rabbit: z.object({
     url: z.string(),
   }),
@@ -1789,7 +1789,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   redis: z.object({
     url: z.string(),
   }),
@@ -1823,7 +1823,7 @@ export const config = configuration({
         .default("info"),
       readable: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   sqlite: z.object({
     path: z.string(),
     synchronize: z.boolean().default(false),
