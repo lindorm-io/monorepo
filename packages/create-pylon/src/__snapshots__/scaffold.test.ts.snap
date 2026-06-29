@@ -776,37 +776,40 @@ import { z } from "zod";
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
-export const config = configuration({
-  nodeEnv: z
-    .enum(["production", "staging", "development", "test", "unknown"])
-    .default("development"),
-  pylon: z.object({ kek: z.string() }),
-  server: z.object({ port: z.number() }),
-  logger: z
-    .object({
-      level: z
-        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-        .default("info"),
-      readable: z.boolean().default(false),
-    })
-    .prefault({}),
-  postgres: z.object({
-    url: z.string(),
-    synchronize: z.boolean().default(false),
-    migrations: z.boolean().default(false),
-  }),
-  redis: z.object({
-    url: z.string(),
-  }),
-  rabbit: z.object({
-    url: z.string(),
-  }),
-  auth: z.object({
-    clientId: z.string(),
-    clientSecret: z.string(),
-    issuer: z.string(),
-  }),
-}, { scope: import.meta.url });
+export const config = configuration(
+  {
+    nodeEnv: z
+      .enum(["production", "staging", "development", "test", "unknown"])
+      .default("development"),
+    pylon: z.object({ kek: z.string() }),
+    server: z.object({ port: z.number() }),
+    logger: z
+      .object({
+        level: z
+          .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+          .default("info"),
+        readable: z.boolean().default(false),
+      })
+      .prefault({}),
+    postgres: z.object({
+      url: z.string(),
+      synchronize: z.boolean().default(false),
+      migrations: z.boolean().default(false),
+    }),
+    redis: z.object({
+      url: z.string(),
+    }),
+    rabbit: z.object({
+      url: z.string(),
+    }),
+    auth: z.object({
+      clientId: z.string(),
+      clientSecret: z.string(),
+      issuer: z.string(),
+    }),
+  },
+  { scope: import.meta.url },
+);
 "
 `;
 
@@ -960,26 +963,29 @@ import { z } from "zod";
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
-export const config = configuration({
-  nodeEnv: z
-    .enum(["production", "staging", "development", "test", "unknown"])
-    .default("development"),
-  pylon: z.object({ kek: z.string() }),
-  server: z.object({ port: z.number() }),
-  logger: z
-    .object({
-      level: z
-        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
-        .default("info"),
-      readable: z.boolean().default(false),
-    })
-    .prefault({}),
-  auth: z.object({
-    clientId: z.string(),
-    clientSecret: z.string(),
-    issuer: z.string(),
-  }),
-}, { scope: import.meta.url });
+export const config = configuration(
+  {
+    nodeEnv: z
+      .enum(["production", "staging", "development", "test", "unknown"])
+      .default("development"),
+    pylon: z.object({ kek: z.string() }),
+    server: z.object({ port: z.number() }),
+    logger: z
+      .object({
+        level: z
+          .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+          .default("info"),
+        readable: z.boolean().default(false),
+      })
+      .prefault({}),
+    auth: z.object({
+      clientId: z.string(),
+      clientSecret: z.string(),
+      issuer: z.string(),
+    }),
+  },
+  { scope: import.meta.url },
+);
 "
 `;
 
@@ -1019,8 +1025,7 @@ export const pylon = new Pylon({
       },
     },
   },
-  setup: async () => {
-  },
+  setup: async () => {},
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
   },
@@ -1066,15 +1071,19 @@ type ExtraSources = {
   memory?: IProteusSession;
 };
 
-export type ServerHttpContext<Data = any> = PylonHttpContext<Data> & ExtraSources;
+export type ServerHttpContext<Data = any> = PylonHttpContext<Data> &
+  ExtraSources;
 
-export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload> & ExtraSources;
+export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload> &
+  ExtraSources;
 
-export type ServerHttpMiddleware<C extends ServerHttpContext = ServerHttpContext> =
-  PylonHttpMiddleware<C>;
+export type ServerHttpMiddleware<
+  C extends ServerHttpContext = ServerHttpContext,
+> = PylonHttpMiddleware<C>;
 
-export type ServerSocketMiddleware<C extends ServerSocketContext = ServerSocketContext> =
-  PylonSocketMiddleware<C>;
+export type ServerSocketMiddleware<
+  C extends ServerSocketContext = ServerSocketContext,
+> = PylonSocketMiddleware<C>;
 
 // TODO: extend Data / State / Payload here to match your application's shape.
 export type ServerHandler<

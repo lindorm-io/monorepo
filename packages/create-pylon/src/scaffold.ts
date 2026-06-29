@@ -18,6 +18,7 @@ import { buildIrisSamples } from "./build-iris-samples.js";
 import { buildPylonFile } from "./build-pylon-file.js";
 import { buildVitestConfig } from "./build-vitest-config.js";
 import { buildWorkerFile } from "./build-worker-file.js";
+import { formatProject } from "./format-project.js";
 import { runProteusInit } from "./drivers.js";
 import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
 import { IRIS_DRIVER_PACKAGES, PROTEUS_DRIVER_PACKAGES } from "./types.js";
@@ -423,4 +424,7 @@ export const scaffold = async (
   writeIrisSamples(answers);
   writeAttachSourcesFile(answers);
   await runProteusInit(answers.projectDir, answers);
+
+  // Format last so every generated + driver-scaffolded file is prettier-stable.
+  await formatProject(answers.projectDir);
 };
