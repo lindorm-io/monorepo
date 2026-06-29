@@ -4,6 +4,7 @@ import type { FindOptions } from "../../../types/index.js";
 import type { EntityMetadata, QueryScope } from "../../entity/types/metadata.js";
 import type { IncludeSpec, PredicateEntry, QueryState } from "../../types/query.js";
 import type { FilterRegistry } from "./filter-registry.js";
+import { guardFindSortKey } from "./guard-find-sort-key.js";
 import { mergeSystemFilterOverrides } from "./merge-system-filter-overrides.js";
 import { resolveFilters } from "./resolve-filters.js";
 import { resolveIncludeStrategy } from "./resolve-include-strategy.js";
@@ -15,6 +16,10 @@ export const findOptionsToQueryState = <E extends IEntity>(
   operationScope: QueryScope = "multiple",
   filterRegistry?: FilterRegistry,
 ): QueryState<E> => {
+  // `orderBy` is the keyset-pagination key; offset finds use `order`. Reject the
+  // swapped key instead of silently dropping the sort.
+  guardFindSortKey(options);
+
   const predicates: Array<PredicateEntry<E>> = [];
 
   if (Object.keys(criteria).length > 0) {

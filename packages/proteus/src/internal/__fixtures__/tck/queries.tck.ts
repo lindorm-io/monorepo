@@ -272,6 +272,27 @@ export const queriesSuite = (getHandle: () => TckDriverHandle, entities: TckEnti
       ).rejects.toThrow();
     });
 
+    // ─── F12: offset finds use `order`; passing keyset `orderBy` must throw ─────
+    test("findPaginated rejects the keyset `orderBy` key (use `order`)", async () => {
+      const repo = getHandle().repository(TckSimpleUser);
+
+      await expect(
+        repo.findPaginated(undefined, {
+          pageSize: 2,
+          // wrong key for offset pagination — must not be silently ignored
+          orderBy: { name: "ASC" },
+        } as any),
+      ).rejects.toThrow(/orderBy/);
+    });
+
+    test("find rejects the keyset `orderBy` key (use `order`)", async () => {
+      const repo = getHandle().repository(TckSimpleUser);
+
+      await expect(
+        repo.find(undefined, { orderBy: { name: "ASC" } } as any),
+      ).rejects.toThrow(/orderBy/);
+    });
+
     // ─── P2-F06: NULL ordering consistency ─────────────────────────────────────
     test("find ordered ASC by nullable field places NULLs last", async () => {
       await getHandle().clear();
