@@ -82,9 +82,15 @@ export type TckDriverFactory = {
    * strategy. `naming` defaults to "none"; SQL driver harnesses run the suite
    * under every strategy so key→column resolution is exercised, not just the
    * "none" case where keys and columns coincide.
+   *
+   * When `cache` is true the source is built with a query cache adapter, so the
+   * full behavioural suite also exercises the CachingRepository layer (read
+   * caching + write invalidation + entity serialisation round-trip), not just
+   * the uncached inner repository.
    */
   setup(
     entities: Array<Constructor<IEntity>>,
     naming?: NamingStrategy,
+    cache?: boolean,
   ): Promise<TckDriverHandle>;
 };
