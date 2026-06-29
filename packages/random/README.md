@@ -12,7 +12,7 @@ This package is **ESM-only**. Use `import`, not `require`. It has no runtime dep
 
 ## Features
 
-- `randomId` — base64url id with an optional namespace prefix and configurable byte length
+- `randomId` — base62 id with an optional namespace prefix and configurable length
 - `randomNumber` — uniform random integer with up to `length` digits, generated via rejection sampling against a 64-bit space
 - `randomString` — random string with an exact count of digits and symbols, the rest filled with letters
 - `randomUUID` — thin wrapper over `crypto.randomUUID()` returning a v4 UUID
@@ -24,7 +24,7 @@ import { randomId, randomNumber, randomString, randomUUID } from "@lindorm/rando
 
 const id = randomId();
 const namespaced = randomId("usr");
-const long = randomId({ namespace: "usr", bytes: 32 });
+const long = randomId({ namespace: "usr", length: 32 });
 
 const code = randomNumber(6);
 
@@ -38,15 +38,15 @@ const uuid = randomUUID();
 
 ### `randomId`
 
-Returns a base64url-encoded random id, optionally prefixed by `<namespace>~`.
+Returns a base62 random id, optionally prefixed by `<namespace>_`.
 
 ```ts
 randomId(): string;
-randomId(namespace: string, options?: { bytes?: Bytes }): string;
-randomId(options: { namespace?: string; bytes?: Bytes }): string;
+randomId(namespace: string, options?: { length?: RandomIdLength }): string;
+randomId(options: { namespace?: string; length?: RandomIdLength }): string;
 ```
 
-`Bytes` is one of `8 | 16 | 24 | 32 | 40 | 48 | 56 | 64`. The default is `16`, which produces a 22-character base64url id. Output characters are restricted to `[A-Za-z0-9\-_]`, making the id safe for URLs, filenames, and headers. When a `namespace` is supplied, the result is `${namespace}~${id}`.
+`RandomIdLength` is one of `16 | 20 | 24 | 28 | 32 | 36 | 40 | 44 | 48 | 52 | 56 | 60 | 64`. The default is `24`. The id body is exactly `length` characters drawn from `[A-Za-z0-9]` (base62, generated via rejection sampling to avoid modulo bias), making it safe for URLs, filenames, and headers. When a `namespace` is supplied, the result is `${namespace}_${id}`; the namespace must be non-empty and match `[A-Za-z0-9]+`, otherwise an error is thrown (a symbol in the namespace would make `namespace_id` ambiguous to split).
 
 ### `randomNumber`
 
