@@ -116,7 +116,9 @@ export const writePackageJson = (answers: Answers): void => {
       build: "tsc -p tsconfig.build.json",
       start: "node dist/index.js",
       typecheck: "tsc --noEmit",
-      test: "vitest run",
+      // --passWithNoTests so a fresh scaffold (which ships no tests yet) does
+      // not exit 1 under `vitest run` / `turbo run test`.
+      test: "vitest run --passWithNoTests",
     },
     dependencies: {},
     devDependencies: {},

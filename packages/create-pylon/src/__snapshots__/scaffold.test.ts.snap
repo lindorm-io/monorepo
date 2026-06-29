@@ -2414,7 +2414,7 @@ exports[`scaffold > writePackageJson > adds docker scripts when driver needs com
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run --passWithNoTests",
     "docker:up": "docker compose up -d",
     "docker:down": "docker compose down"
   },
@@ -2438,7 +2438,7 @@ exports[`scaffold > writePackageJson > default answers produce minimal package.j
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run --passWithNoTests"
   },
   "dependencies": {},
   "devDependencies": {}
