@@ -312,6 +312,7 @@ export class MySqlDriver implements IProteusDriver {
 
     return new MySqlRepository<E>({
       target,
+      metadata,
       executor: this.createExecutor(target),
       queryBuilderFactory: () => this.createQueryBuilder(target),
       client,
@@ -358,6 +359,7 @@ export class MySqlDriver implements IProteusDriver {
 
     return new MySqlRepository<E>({
       target,
+      metadata,
       executor: txExecutor,
       queryBuilderFactory: () => this.createTransactionalQueryBuilder(target, handle),
       client: txClient,

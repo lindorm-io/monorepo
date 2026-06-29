@@ -291,6 +291,7 @@ export class PostgresDriver implements IProteusDriver {
 
     return new PostgresRepository<E>({
       target,
+      metadata,
       executor: this.createExecutor(target),
       queryBuilderFactory: () => this.createQueryBuilder(target),
       client,
@@ -337,6 +338,7 @@ export class PostgresDriver implements IProteusDriver {
 
     return new PostgresRepository<E>({
       target,
+      metadata,
       executor: txExecutor,
       queryBuilderFactory: () => this.createTransactionalQueryBuilder(target, handle),
       client: txClient,
