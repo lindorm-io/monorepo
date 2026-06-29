@@ -77,7 +77,11 @@ export const buildDependencyList = (answers: Answers): Array<string> => {
   const deps: Array<string> = [];
 
   if (answers.proteusDrivers.length > 0) {
-    deps.push("@lindorm/proteus");
+    // @lindorm/aes is proteus's encryption peer (used by @Encrypted fields via
+    // the amphora wired into the generated proteus source). It's an optional
+    // peerDependency, so it must be installed explicitly or encrypted fields
+    // fail at runtime with a missing-module error.
+    deps.push("@lindorm/proteus", "@lindorm/aes");
     for (const driver of answers.proteusDrivers) {
       deps.push(...PROTEUS_DRIVER_PACKAGES[driver]);
     }
