@@ -18,6 +18,12 @@ describe("findOptionsToQueryState", () => {
     expect(result).toMatchSnapshot();
   });
 
+  test("throws on the keyset `orderBy` key (offset finds use `order`) — F12", () => {
+    expect(() =>
+      findOptionsToQueryState({}, { orderBy: { name: "ASC" } } as any),
+    ).toThrow(/orderBy/);
+  });
+
   test("should add criteria as predicate", () => {
     const result = findOptionsToQueryState({ name: "Alice" }, {});
     expect(result).toMatchSnapshot();

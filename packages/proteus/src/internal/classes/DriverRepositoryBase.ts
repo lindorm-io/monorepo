@@ -46,6 +46,7 @@ import { isLazyRelation } from "../entity/utils/lazy-relation.js";
 import { isLazyCollection } from "../entity/utils/lazy-collection.js";
 import { filterHiddenSelections } from "../utils/query/filter-hidden-selections.js";
 import { validatePaginateOptions } from "../utils/pagination/validate-paginate-options.js";
+import { guardFindSortKey } from "../utils/query/guard-find-sort-key.js";
 import {
   buildKeysetOrder,
   keysetOrderToRecord,
@@ -278,6 +279,10 @@ export abstract class DriverRepositoryBase<
     criteria?: Predicate<E>,
     options?: FindPaginatedOptions<E>,
   ): Promise<FindPaginatedResult<E>> {
+    // Offset pagination sorts with `order`, not `orderBy` (the keyset key).
+    // Reject the swapped key rather than silently returning unsorted results.
+    guardFindSortKey(options);
+
     const page = options?.page ?? 1;
     const pageSize = options?.pageSize ?? 10;
 
