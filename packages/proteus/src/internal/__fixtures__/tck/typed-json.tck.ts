@@ -13,7 +13,7 @@ export const typedJsonSuite = (
   entities: TckEntities,
 ) => {
   describe("TypedJson", () => {
-    const { TckTypedJson } = entities;
+    const { TckTypedJson, TckJsonHolder } = entities;
 
     beforeEach(async () => {
       await getHandle().clear();
@@ -150,6 +150,51 @@ export const typedJsonSuite = (
       const found = await repo.findOneOrFail({ id: inserted.id });
       expect(found.optional).toBeNull();
       expect(typeof (found.payload as any).x).toBe("bigint");
+    });
+
+    // ─── Phase 3: a PLAIN (non-@TypedJson) json field rejects complex types ────
+    describe("plain json fields reject unserialisable types", () => {
+      test("inserting a Date into a plain @Field(json) throws, naming @TypedJson", async () => {
+        const repo = getHandle().repository(TckJsonHolder);
+
+        await expect(
+          repo.insert({
+            metadata: { when: new Date("2021-01-01T00:00:00.000Z") },
+            settings: { theme: "dark", count: 1 },
+            payload: { items: [], count: 0 },
+          }),
+        ).rejects.toThrow(/json field "metadata"/);
+      });
+
+      test.each([
+        ["a Buffer", { blob: Buffer.from("x") }],
+        ["a BigInt", { big: 1n }],
+        ["a Map", { m: new Map([["k", 1]]) }],
+        ["a Set", { s: new Set([1]) }],
+      ])("inserting %s into a plain json field throws", async (_label, metadata) => {
+        const repo = getHandle().repository(TckJsonHolder);
+
+        await expect(
+          repo.insert({
+            metadata: metadata as Record<string, unknown>,
+            settings: { theme: "dark", count: 1 },
+            payload: { items: [], count: 0 },
+          }),
+        ).rejects.toThrow();
+      });
+
+      test("plain JSON-native values are accepted on a plain json field", async () => {
+        const repo = getHandle().repository(TckJsonHolder);
+
+        const inserted = await repo.insert({
+          metadata: { a: 1, b: "x", c: [true, null, { d: 2 }] },
+          settings: { theme: "light", count: 3 },
+          payload: { items: ["one", "two"], count: 2 },
+        });
+
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.metadata).toEqual({ a: 1, b: "x", c: [true, null, { d: 2 }] });
+      });
     });
   });
 };
