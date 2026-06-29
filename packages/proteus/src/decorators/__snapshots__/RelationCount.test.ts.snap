@@ -69,7 +69,7 @@ exports[`RelationCount > should match snapshot 1`] = `
       "comment": null,
       "computed": null,
       "decorator": "Field",
-      "default": null,
+      "default": 0,
       "embedded": null,
       "encrypted": null,
       "enum": null,
