@@ -1,6 +1,10 @@
 import { camelCase, snakeCase } from "@lindorm/case";
 import type { Dict } from "@lindorm/types";
-import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
+import type {
+  EntityMetadata,
+  MetaField,
+  MetaTypedJson,
+} from "../../entity/types/metadata.js";
 import type { NamingStrategy } from "../../../types/source-options.js";
 
 const transformName = (name: string, strategy: NamingStrategy): string => {
@@ -18,6 +22,17 @@ const resolveFieldName = (field: MetaField, strategy: NamingStrategy): string =>
   // If user explicitly set a column name (name !== key), preserve it
   if (field.name !== field.key) return field.name;
   return transformName(field.key, strategy);
+};
+
+// Resolve the sidecar column for a @TypedJson field after the data column is resolved.
+// An explicit @TypedJson({ name }) is preserved verbatim; otherwise default to
+// `<resolvedDataColumn>__typemeta`.
+const resolveTypedJson = (
+  typedJson: MetaTypedJson | null,
+  resolvedDataColumn: string,
+): MetaTypedJson | null => {
+  if (!typedJson) return null;
+  return { ...typedJson, column: typedJson.name ?? `${resolvedDataColumn}__typemeta` };
 };
 
 const resolveJoinKeys = (
@@ -46,10 +61,10 @@ export const applyNamingStrategy = (
 
   return {
     ...metadata,
-    fields: metadata.fields.map((field) => ({
-      ...field,
-      name: resolveFieldName(field, strategy),
-    })),
+    fields: metadata.fields.map((field) => {
+      const name = resolveFieldName(field, strategy);
+      return { ...field, name, typedJson: resolveTypedJson(field.typedJson, name) };
+    }),
     relations: metadata.relations.map((relation) => ({
       ...relation,
       findKeys: resolveJoinKeys(relation.findKeys, strategy),
@@ -59,10 +74,10 @@ export const applyNamingStrategy = (
       ...el,
       parentFkColumn: transformName(el.parentFkColumn, strategy),
       elementFields: el.elementFields
-        ? el.elementFields.map((field) => ({
-            ...field,
-            name: resolveFieldName(field, strategy),
-          }))
+        ? el.elementFields.map((field) => {
+            const name = resolveFieldName(field, strategy);
+            return { ...field, name, typedJson: resolveTypedJson(field.typedJson, name) };
+          })
         : null,
     })),
   };

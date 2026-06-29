@@ -38,6 +38,7 @@ exports[`Embedded > should flatten embeddable fields into parent entity metadata
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -62,6 +63,7 @@ exports[`Embedded > should flatten embeddable fields into parent entity metadata
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -89,6 +91,7 @@ exports[`Embedded > should flatten embeddable fields into parent entity metadata
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -116,6 +119,7 @@ exports[`Embedded > should flatten embeddable fields into parent entity metadata
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -143,6 +147,7 @@ exports[`Embedded > should flatten embeddable fields into parent entity metadata
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
   ],
   "filters": [],

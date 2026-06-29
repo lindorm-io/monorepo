@@ -6,6 +6,7 @@ import type { EntityMetadata } from "../types/metadata.js";
 import { decryptFieldValue } from "./decrypt-field-value.js";
 import { deserialise } from "./deserialise.js";
 import { resolvePropertyKey } from "./resolve-property-key.js";
+import { joinTypedJson, typedJsonMetaDictKey } from "./typed-json.js";
 import { runHooksSync } from "./run-hooks-sync.js";
 import { storeSnapshot } from "./snapshot-store.js";
 
@@ -42,6 +43,15 @@ export const defaultHydrateEntity = <E extends IEntity>(
     if (!(field.key in data)) continue;
 
     let raw = data[field.key];
+
+    // @TypedJson: reconstruct from data column + sidecar meta (lenient — never throws).
+    if (field.typedJson) {
+      const metaRaw = data[typedJsonMetaDictKey(field.key)];
+      const value = joinTypedJson(raw, metaRaw);
+      entity[field.key] = value;
+      snapshotDict[field.key] = value;
+      continue;
+    }
 
     if (raw != null && field.encrypted && amphora) {
       raw = decryptFieldValue(raw as string, amphora, field.key, metadata.entity.name);

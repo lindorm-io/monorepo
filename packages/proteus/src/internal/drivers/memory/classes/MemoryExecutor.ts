@@ -9,6 +9,10 @@ import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
 import { Predicated } from "@lindorm/utils";
 import { defaultHydrateEntity } from "../../../entity/utils/default-hydrate-entity.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import {
+  splitTypedJson,
+  typedJsonMetaDictKey,
+} from "../../../entity/utils/typed-json.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
 import { generateAutoFilters } from "../../../entity/metadata/auto-filters.js";
 import {
@@ -62,7 +66,17 @@ const dehydrateToRow = (
     if (value != null && field.encrypted && amphora) {
       value = encryptFieldValue(value, field.encrypted.predicate, amphora);
     }
-    row[field.key] = value;
+
+    // @TypedJson: store JSON-safe data + sidecar meta so structuredClone is lossless
+    // (e.g. nested Buffer would otherwise downgrade to Uint8Array) and the shared
+    // hydrate path reconstructs the original types — mirrors the SQL sidecar.
+    if (field.typedJson) {
+      const { data, meta } = splitTypedJson(value);
+      row[field.key] = data;
+      row[typedJsonMetaDictKey(field.key)] = meta;
+    } else {
+      row[field.key] = value;
+    }
   }
 
   // Extract FK columns from owning relations
@@ -212,6 +226,9 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
 
       if (field.key in row) {
         merged[field.key] = row[field.key];
+        if (field.typedJson) {
+          merged[typedJsonMetaDictKey(field.key)] = row[typedJsonMetaDictKey(field.key)];
+        }
       }
     }
 

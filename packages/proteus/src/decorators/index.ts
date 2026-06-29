@@ -64,6 +64,7 @@ export * from "./RelationId.js";
 export * from "./Schema.js";
 export * from "./ScopeField.js";
 export * from "./Transform.js";
+export * from "./TypedJson.js";
 export * from "./Unique.js";
 export * from "./UpdateDateField.js";
 export * from "./VersionEndDateField.js";

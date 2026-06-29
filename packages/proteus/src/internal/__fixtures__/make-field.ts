@@ -25,6 +25,7 @@ export const makeField = (
   scale: null,
   schema: null,
   transform: null,
+  typedJson: null,
   type: "string",
   ...overrides,
 });

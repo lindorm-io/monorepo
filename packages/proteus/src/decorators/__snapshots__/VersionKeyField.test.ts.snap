@@ -38,6 +38,7 @@ exports[`VersionKeyField > should register uuid version key field (default) 1`] 
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -62,6 +63,7 @@ exports[`VersionKeyField > should register uuid version key field (default) 1`] 
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
   ],
   "filters": [],

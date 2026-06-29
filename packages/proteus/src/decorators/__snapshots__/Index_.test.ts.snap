@@ -38,6 +38,7 @@ exports[`Index > should register class-level array index 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -62,6 +63,7 @@ exports[`Index > should register class-level array index 1`] = `
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -86,6 +88,7 @@ exports[`Index > should register class-level array index 1`] = `
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
   ],
   "filters": [],
@@ -178,6 +181,7 @@ exports[`Index > should register field-level index with custom direction and nam
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -202,6 +206,7 @@ exports[`Index > should register field-level index with custom direction and nam
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
   ],
   "filters": [],

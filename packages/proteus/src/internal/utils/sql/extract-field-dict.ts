@@ -1,10 +1,17 @@
 import type { Dict } from "@lindorm/types";
 import type { EntityMetadata } from "../../entity/types/metadata.js";
+import {
+  typedJsonMetaAlias,
+  typedJsonMetaDictKey,
+} from "../../entity/utils/typed-json.js";
 
 /**
  * Extract a flat Dict keyed by field key from a raw RETURNING row.
  * Maps DB column names (field.name) -> entity property names (field.key).
  * Raw values are passed through — type coercion is handled by defaultHydrateEntity's deserialise.
+ *
+ * For @TypedJson fields the sidecar column is also carried under a reserved key so
+ * defaultHydrateEntity can reconstruct the original value losslessly.
  *
  * Also handles FK columns from owning relations.
  */
@@ -18,6 +25,11 @@ export const extractFieldDictFromReturning = (
     const rawValue = row[field.name];
     // RETURNING * always includes all columns; treat absent as null
     dict[field.key] = rawValue === undefined ? null : rawValue;
+
+    if (field.typedJson) {
+      const meta = row[field.typedJson.column];
+      dict[typedJsonMetaDictKey(field.key)] = meta === undefined ? null : meta;
+    }
   }
 
   // FK columns from owning-side relations
@@ -40,6 +52,8 @@ export const extractFieldDictFromReturning = (
  * Maps aliased column names (e.g., "t0_userId") -> entity property names ("userId").
  * Raw values are passed through — type coercion is handled by defaultHydrateEntity's deserialise.
  *
+ * For @TypedJson fields the aliased sidecar column is also carried under a reserved key.
+ *
  * Also handles FK columns from owning relations.
  */
 export const extractFieldDictFromAliased = (
@@ -54,6 +68,11 @@ export const extractFieldDictFromAliased = (
     const rawValue = row[alias];
     // Always include all fields; default absent aliases to null (matches old hydrateEntity behaviour)
     dict[field.key] = rawValue === undefined ? null : rawValue;
+
+    if (field.typedJson) {
+      const meta = row[typedJsonMetaAlias(tableAlias, field.key)];
+      dict[typedJsonMetaDictKey(field.key)] = meta === undefined ? null : meta;
+    }
   }
 
   // FK columns from owning-side relations

@@ -245,6 +245,19 @@ export const projectDesiredSchema = (
     const columns: Array<DesiredColumn> = [];
     for (const field of effectiveFields) {
       columns.push(projectFieldColumn(field, metadata.generated, tableName, namespace));
+      if (field.typedJson) {
+        columns.push({
+          name: field.typedJson.column,
+          pgType: "JSONB",
+          nullable: true,
+          defaultExpr: null,
+          isIdentity: false,
+          identityGeneration: null,
+          isGenerated: false,
+          generationExpr: null,
+          collation: null,
+        });
+      }
     }
 
     // FK columns from owning-side relations
@@ -810,6 +823,7 @@ export const projectDesiredSchema = (
           scale: null,
           schema: null,
           transform: null,
+          typedJson: null,
           type: embeddedList.elementType,
         };
         const pgType = mapFieldType(primitiveField, collTableName, collNamespace);

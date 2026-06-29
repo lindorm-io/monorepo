@@ -4,6 +4,7 @@ import type { IEntity } from "../../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
 import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
+import { typedJsonChangedColumns } from "../../../../entity/utils/typed-json.js";
 import { ProteusRepositoryError } from "../../../../../errors/ProteusRepositoryError.js";
 import { quoteIdentifier, quoteQualifiedName } from "../quote-identifier.js";
 import { coerceWriteValue } from "./coerce-value.js";
@@ -99,6 +100,16 @@ export const compileUpdateMany = <E extends IEntity>(
     const field = metadata.fields.find((f) => f.key === key);
     if (!field) continue;
     if (discriminatorColName && field.name === discriminatorColName) continue;
+
+    if (field.typedJson) {
+      for (const pair of typedJsonChangedColumns(field, value, (d) =>
+        coerceWriteValue(d, field),
+      )) {
+        params.push(pair.value);
+        setClauses.push(`${quoteIdentifier(pair.column)} = $${params.length}`);
+      }
+      continue;
+    }
 
     let coerced = coerceWriteValue(value, field);
     if (coerced != null && field.encrypted && amphora) {
@@ -196,6 +207,19 @@ const compileJoinedUpdateMany = <E extends IEntity>(
     const field = metadata.fields.find((f) => f.key === key);
     if (!field) continue;
     if (discriminatorColName && field.name === discriminatorColName) continue;
+
+    if (field.typedJson) {
+      const target = ctx.childFieldNames.has(field.name)
+        ? childSetClauses
+        : rootSetClauses;
+      for (const pair of typedJsonChangedColumns(field, value, (d) =>
+        coerceWriteValue(d, field),
+      )) {
+        params.push(pair.value);
+        target.push(`${quoteIdentifier(pair.column)} = $${params.length}`);
+      }
+      continue;
+    }
 
     let coerced = coerceWriteValue(value, field);
     if (coerced != null && field.encrypted && amphora) {

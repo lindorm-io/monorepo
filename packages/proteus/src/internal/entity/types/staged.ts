@@ -52,6 +52,7 @@ export type StagedFieldModifier = {
   computed?: string;
   transform?: { to: (value: unknown) => unknown; from: (raw: unknown) => unknown };
   encrypted?: { predicate: Dict | null };
+  typedJson?: { name: string | null };
   hideOn?: Array<QueryScope>;
   schema?: z.ZodType;
 };

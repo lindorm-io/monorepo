@@ -25,6 +25,7 @@ exports[`AbstractEntity > should produce full metadata snapshot for concrete ent
     "schema": null,
     "transform": null,
     "type": "uuid",
+    "typedJson": null,
   },
   {
     "arrayType": null,
@@ -49,6 +50,7 @@ exports[`AbstractEntity > should produce full metadata snapshot for concrete ent
     "schema": null,
     "transform": null,
     "type": "string",
+    "typedJson": null,
   },
   {
     "arrayType": null,
@@ -73,6 +75,7 @@ exports[`AbstractEntity > should produce full metadata snapshot for concrete ent
     "schema": null,
     "transform": null,
     "type": "timestamp",
+    "typedJson": null,
   },
   {
     "arrayType": null,
@@ -97,6 +100,7 @@ exports[`AbstractEntity > should produce full metadata snapshot for concrete ent
     "schema": null,
     "transform": null,
     "type": "timestamp",
+    "typedJson": null,
   },
 ]
 `;

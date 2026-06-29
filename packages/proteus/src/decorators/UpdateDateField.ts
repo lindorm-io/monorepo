@@ -31,6 +31,7 @@ export const UpdateDateField =
       scale: null,
       schema: null,
       transform: null,
+      typedJson: null,
       type: "timestamp",
     });
   };

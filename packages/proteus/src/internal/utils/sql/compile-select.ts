@@ -1,11 +1,27 @@
 import { isNumber } from "@lindorm/is";
 import { ProteusError } from "../../../errors/index.js";
 import type { IEntity } from "../../../interfaces/index.js";
-import type { EntityMetadata } from "../../entity/types/metadata.js";
+import type { EntityMetadata, MetaField } from "../../entity/types/metadata.js";
+import { typedJsonMetaAlias } from "../../entity/utils/typed-json.js";
 import type { IncludeSpec, RawSelectEntry, WindowSpec } from "../../types/query.js";
 import { resolveColumnName } from "./resolve-column-name.js";
 import type { SqlDialect } from "./sql-dialect.js";
 import type { AliasMap, BuiltAliasResult, InheritanceAliasMap } from "./types.js";
+
+// Select a typed-json field's sidecar column alongside its data column, so the
+// row carries the type metadata for lossless reconstruction in hydration.
+const pushTypedJsonMetaColumn = (
+  columns: Array<string>,
+  field: MetaField,
+  tableQualifier: string,
+  aliasPrefix: string,
+  dialect: SqlDialect,
+): void => {
+  if (!field.typedJson) return;
+  const metaCol = dialect.quoteIdentifier(field.typedJson.column);
+  const metaAlias = dialect.quoteIdentifier(typedJsonMetaAlias(aliasPrefix, field.key));
+  columns.push(`${dialect.quoteIdentifier(tableQualifier)}.${metaCol} AS ${metaAlias}`);
+};
 
 export type CompileSelectDeps = {
   buildInheritanceAliases: (
@@ -132,6 +148,7 @@ export const compileSelect = <E extends IEntity>(
     columns.push(
       `${dialect.quoteIdentifier(rootAlias.tableAlias)}.${col} AS ${dialect.quoteIdentifier(alias)}`,
     );
+    pushTypedJsonMetaColumn(columns, field, rootAlias.tableAlias, "t0", dialect);
   }
 
   // Child-only columns from joined inheritance aliases
@@ -149,6 +166,7 @@ export const compileSelect = <E extends IEntity>(
         columns.push(
           `${dialect.quoteIdentifier(inhAlias.tableAlias)}.${col} AS ${dialect.quoteIdentifier(alias)}`,
         );
+        pushTypedJsonMetaColumn(columns, field, inhAlias.tableAlias, "t0", dialect);
       }
     }
   }
@@ -188,6 +206,13 @@ export const compileSelect = <E extends IEntity>(
       const alias = `${targetAlias.tableAlias}_${field.key}`;
       columns.push(
         `${dialect.quoteIdentifier(targetAlias.tableAlias)}.${col} AS ${dialect.quoteIdentifier(alias)}`,
+      );
+      pushTypedJsonMetaColumn(
+        columns,
+        field,
+        targetAlias.tableAlias,
+        targetAlias.tableAlias,
+        dialect,
       );
     }
   }

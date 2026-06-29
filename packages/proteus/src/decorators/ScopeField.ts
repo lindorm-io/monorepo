@@ -53,6 +53,7 @@ export const ScopeField =
       scale: null,
       schema: null,
       transform: null,
+      typedJson: null,
       type: "string",
     });
   };

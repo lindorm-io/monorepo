@@ -206,6 +206,7 @@ const makeField = (
     readonly: false,
     order: null,
     transform: null,
+    typedJson: null,
     ...opts,
   }) as MetaField;
 

@@ -45,6 +45,7 @@ export const PrimaryKeyField =
       scale: null,
       schema: null,
       transform: null,
+      typedJson: null,
       type: type ?? null,
     });
     stagePrimaryKey(context.metadata, { key });

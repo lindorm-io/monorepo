@@ -38,6 +38,7 @@ exports[`VersionKey > should register class-level version keys 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -62,6 +63,7 @@ exports[`VersionKey > should register class-level version keys 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
   ],
   "filters": [],
@@ -145,6 +147,7 @@ exports[`VersionKey > should register field-level version key 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -169,6 +172,7 @@ exports[`VersionKey > should register field-level version key 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
   ],
   "filters": [],

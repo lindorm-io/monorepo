@@ -47,6 +47,7 @@ exports[`Check > should register multiple check constraints 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -71,6 +72,7 @@ exports[`Check > should register multiple check constraints 1`] = `
       "schema": null,
       "transform": null,
       "type": "integer",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -95,6 +97,7 @@ exports[`Check > should register multiple check constraints 1`] = `
       "schema": null,
       "transform": null,
       "type": "float",
+      "typedJson": null,
     },
   ],
   "filters": [],

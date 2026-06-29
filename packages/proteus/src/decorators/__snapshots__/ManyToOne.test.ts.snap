@@ -38,6 +38,7 @@ exports[`ManyToOne > should register ManyToOne metadata on child entity 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -62,6 +63,7 @@ exports[`ManyToOne > should register ManyToOne metadata on child entity 1`] = `
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -86,6 +88,7 @@ exports[`ManyToOne > should register ManyToOne metadata on child entity 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
   ],
   "filters": [],
@@ -185,6 +188,7 @@ exports[`ManyToOne > should register with explicit joinKeys 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -209,6 +213,7 @@ exports[`ManyToOne > should register with explicit joinKeys 1`] = `
       "schema": null,
       "transform": null,
       "type": "string",
+      "typedJson": null,
     },
     {
       "arrayType": null,
@@ -233,6 +238,7 @@ exports[`ManyToOne > should register with explicit joinKeys 1`] = `
       "schema": null,
       "transform": null,
       "type": "uuid",
+      "typedJson": null,
     },
   ],
   "filters": [],

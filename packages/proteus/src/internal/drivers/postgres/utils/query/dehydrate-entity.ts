@@ -4,6 +4,7 @@ import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import type { DehydrateMode } from "../../../../entity/utils/default-dehydrate-entity.js";
 import { encryptFieldValue } from "../../../../entity/utils/encrypt-field-value.js";
 import { resolveJoinKeyValue } from "../../../../entity/utils/resolve-join-key-value.js";
+import { splitTypedJson } from "../../../../entity/utils/typed-json.js";
 import { coerceWriteValue } from "./coerce-value.js";
 
 export type DehydratedColumn = {
@@ -46,8 +47,16 @@ export const dehydrateEntity = <E extends IEntity>(
     if (value != null && field.encrypted && amphora) {
       value = encryptFieldValue(value, field.encrypted.predicate, amphora);
     }
-    columns.push({ column: field.name, value: coerceWriteValue(value, field) });
-    handledKeys.add(field.name);
+    if (field.typedJson) {
+      const { data, meta } = splitTypedJson(value);
+      columns.push({ column: field.name, value: coerceWriteValue(data, field) });
+      columns.push({ column: field.typedJson.column, value: meta });
+      handledKeys.add(field.name);
+      handledKeys.add(field.typedJson.column);
+    } else {
+      columns.push({ column: field.name, value: coerceWriteValue(value, field) });
+      handledKeys.add(field.name);
+    }
   }
 
   for (const relation of metadata.relations) {

@@ -33,6 +33,7 @@ exports[`compileRelationQuery — ManyToMany > applies orderBy with table alias 
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -57,6 +58,7 @@ exports[`compileRelationQuery — ManyToMany > applies orderBy with table alias 
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -141,6 +143,7 @@ exports[`compileRelationQuery — ManyToMany > compiles a basic ManyToMany query
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -165,6 +168,7 @@ exports[`compileRelationQuery — ManyToMany > compiles a basic ManyToMany query
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -247,6 +251,7 @@ exports[`compileRelationQuery — ManyToMany > includes join table root pk alias
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -271,6 +276,7 @@ exports[`compileRelationQuery — ManyToMany > includes join table root pk alias
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -353,6 +359,7 @@ exports[`compileRelationQuery — ManyToMany > uses findKeys when no inverse rel
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -377,6 +384,7 @@ exports[`compileRelationQuery — ManyToMany > uses findKeys when no inverse rel
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -447,6 +455,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > adds orderBy clause when
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -471,6 +480,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > adds orderBy clause when
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -495,6 +505,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > adds orderBy clause when
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -565,6 +576,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > applies select filter wh
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -589,6 +601,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > applies select filter wh
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -613,6 +626,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > applies select filter wh
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -684,6 +698,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > compiles a basic inverse
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -708,6 +723,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > compiles a basic inverse
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -732,6 +748,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > compiles a basic inverse
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -802,6 +819,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > does not add extra FK co
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -826,6 +844,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > does not add extra FK co
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -850,6 +869,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > does not add extra FK co
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -918,6 +938,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > includes extra FK column
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -942,6 +963,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > includes extra FK column
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -1010,6 +1032,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > includes withDeleted fil
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1034,6 +1057,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > includes withDeleted fil
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1058,6 +1082,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > includes withDeleted fil
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1082,6 +1107,7 @@ exports[`compileRelationQuery — inverse (OneToMany) > includes withDeleted fil
         "schema": null,
         "transform": null,
         "type": "timestamp",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -1150,6 +1176,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > compiles owning-s
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1174,6 +1201,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > compiles owning-s
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1198,6 +1226,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > compiles owning-s
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -1266,6 +1295,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > falls back to ctx
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1290,6 +1320,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > falls back to ctx
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1314,6 +1345,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > falls back to ctx
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -1382,6 +1414,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > handles composite
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1406,6 +1439,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > handles composite
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -1478,6 +1512,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > uses namespace fr
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1502,6 +1537,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > uses namespace fr
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1526,6 +1562,7 @@ exports[`compileRelationQuery — owning side (has joinKeys) > uses namespace fr
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -1594,6 +1631,7 @@ exports[`compileRelationQuery — user-provided WHERE > appends compiled user WH
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1618,6 +1656,7 @@ exports[`compileRelationQuery — user-provided WHERE > appends compiled user WH
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1642,6 +1681,7 @@ exports[`compileRelationQuery — user-provided WHERE > appends compiled user WH
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -1713,6 +1753,7 @@ exports[`compileRelationQuery — version filtering > adds point-in-time version
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1737,6 +1778,7 @@ exports[`compileRelationQuery — version filtering > adds point-in-time version
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1761,6 +1803,7 @@ exports[`compileRelationQuery — version filtering > adds point-in-time version
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1785,6 +1828,7 @@ exports[`compileRelationQuery — version filtering > adds point-in-time version
         "schema": null,
         "transform": null,
         "type": "timestamp",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1809,6 +1853,7 @@ exports[`compileRelationQuery — version filtering > adds point-in-time version
         "schema": null,
         "transform": null,
         "type": "timestamp",
+        "typedJson": null,
       },
     ],
     "filters": [],
@@ -1878,6 +1923,7 @@ exports[`compileRelationQuery — version filtering > adds versionEndDate IS NUL
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1902,6 +1948,7 @@ exports[`compileRelationQuery — version filtering > adds versionEndDate IS NUL
         "schema": null,
         "transform": null,
         "type": "string",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1926,6 +1973,7 @@ exports[`compileRelationQuery — version filtering > adds versionEndDate IS NUL
         "schema": null,
         "transform": null,
         "type": "uuid",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1950,6 +1998,7 @@ exports[`compileRelationQuery — version filtering > adds versionEndDate IS NUL
         "schema": null,
         "transform": null,
         "type": "timestamp",
+        "typedJson": null,
       },
       {
         "arrayType": null,
@@ -1974,6 +2023,7 @@ exports[`compileRelationQuery — version filtering > adds versionEndDate IS NUL
         "schema": null,
         "transform": null,
         "type": "timestamp",
+        "typedJson": null,
       },
     ],
     "filters": [],

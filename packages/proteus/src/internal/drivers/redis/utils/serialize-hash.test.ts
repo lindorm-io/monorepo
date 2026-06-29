@@ -14,6 +14,7 @@ const makeField = (overrides: Partial<MetaField> = {}): MetaField =>
     embedded: null,
     encrypted: null,
     transform: null,
+    typedJson: null,
     nullable: false,
     readonly: false,
     ...overrides,

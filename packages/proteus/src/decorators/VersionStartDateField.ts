@@ -37,6 +37,7 @@ export const VersionStartDateField =
       scale: null,
       schema: null,
       transform: null,
+      typedJson: null,
       type: "timestamp",
     });
 

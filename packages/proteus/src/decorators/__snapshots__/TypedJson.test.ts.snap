@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Eager > should match snapshot for eager on both scopes 1`] = `
+exports[`TypedJson > should match full metadata snapshot for a typed-json entity 1`] = `
 {
   "appendOnly": false,
   "cache": null,
@@ -10,7 +10,7 @@ exports[`Eager > should match snapshot for eager on both scopes 1`] = `
   "entity": {
     "comment": null,
     "decorator": "Entity",
-    "name": "EagerPost",
+    "name": "TypedJsonDefault",
     "namespace": null,
   },
   "extras": [],
@@ -51,10 +51,10 @@ exports[`Eager > should match snapshot for eager on both scopes 1`] = `
       "encrypted": null,
       "enum": null,
       "hideOn": [],
-      "key": "title",
+      "key": "payload",
       "max": null,
       "min": null,
-      "name": "title",
+      "name": "payload",
       "nullable": false,
       "order": null,
       "precision": null,
@@ -62,8 +62,11 @@ exports[`Eager > should match snapshot for eager on both scopes 1`] = `
       "scale": null,
       "schema": null,
       "transform": null,
-      "type": "string",
-      "typedJson": null,
+      "type": "json",
+      "typedJson": {
+        "column": "payload__typemeta",
+        "name": null,
+      },
     },
   ],
   "filters": [],
@@ -86,37 +89,7 @@ exports[`Eager > should match snapshot for eager on both scopes 1`] = `
   ],
   "relationCounts": [],
   "relationIds": [],
-  "relations": [
-    {
-      "findKeys": {
-        "id": "authorId",
-      },
-      "foreignConstructor": [Function],
-      "foreignKey": "posts",
-      "joinKeys": {
-        "authorId": "id",
-      },
-      "joinTable": null,
-      "key": "author",
-      "options": {
-        "deferrable": false,
-        "initiallyDeferred": false,
-        "loading": {
-          "multiple": "eager",
-          "single": "eager",
-        },
-        "nullable": false,
-        "onDestroy": "ignore",
-        "onInsert": "ignore",
-        "onOrphan": "ignore",
-        "onSoftDestroy": "ignore",
-        "onUpdate": "ignore",
-        "strategy": null,
-      },
-      "orderBy": null,
-      "type": "ManyToOne",
-    },
-  ],
+  "relations": [],
   "schemas": [],
   "scopeKeys": [],
   "target": [Function],

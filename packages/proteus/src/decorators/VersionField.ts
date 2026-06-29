@@ -33,6 +33,7 @@ export const VersionField =
       scale: null,
       schema: null,
       transform: null,
+      typedJson: null,
       type: "integer",
     });
   };
