@@ -61,17 +61,18 @@
     "@lindorm/types": "^0.8.0",
     "@lindorm/utils": "^0.8.3",
     "commander": "^14.0.3",
-    "deepmerge": "^4.3.1",
-    "zod": "^4.3.6"
+    "deepmerge": "^4.3.1"
   },
   "peerDependencies": {
     "@lindorm/iris": ">=0.2.0",
     "@lindorm/logger": ">=0.5.0",
-    "@lindorm/proteus": ">=0.5.0"
+    "@lindorm/proteus": ">=0.5.0",
+    "zod": ">=4.3.6"
   },
   "devDependencies": {
     "@lindorm/iris": "^0.6.0",
     "@lindorm/logger": "^0.6.5",
-    "@lindorm/proteus": "^0.9.0"
+    "@lindorm/proteus": "^0.9.0",
+    "zod": "^4.3.6"
   }
 }
