@@ -125,6 +125,10 @@ export class Pylon<
       await this.options.proteus.setup();
     }
 
+    if (this.options.keyValue) {
+      await this.options.keyValue.setup();
+    }
+
     if (this.options.iris) {
       await this.options.iris.setup();
     }
@@ -192,6 +196,10 @@ export class Pylon<
       await this.options.proteus.disconnect();
     }
 
+    if (this.options.keyValue) {
+      await this.options.keyValue.disconnect();
+    }
+
     this.isSetup = false;
     this.isTeardown = true;
   }
@@ -238,7 +246,7 @@ export class Pylon<
 
   private async loadSources(): Promise<void> {
     if (this.options.session?.enabled) {
-      const source = this.options.session.proteus ?? this.options.proteus;
+      const source = this.options.session.keyValue ?? this.options.keyValue;
       if (source) {
         const { Session } = await import("../entities/Session.js");
         source.addEntities([Session]);
@@ -278,7 +286,7 @@ export class Pylon<
     }
 
     if (this.options.rateLimit?.enabled) {
-      const source = this.options.rateLimit.proteus ?? this.options.proteus;
+      const source = this.options.rateLimit.keyValue ?? this.options.keyValue;
       if (source) {
         const { RateLimitFixed } = await import("../entities/RateLimitFixed.js");
         const { RateLimitSliding } = await import("../entities/RateLimitSliding.js");
@@ -288,7 +296,7 @@ export class Pylon<
     }
 
     if (this.options.rooms?.presence) {
-      const source = this.options.rooms.proteus ?? this.options.proteus;
+      const source = this.options.rooms.keyValue ?? this.options.keyValue;
       if (source) {
         const { Presence } = await import("../entities/Presence.js");
         source.addEntities([Presence]);

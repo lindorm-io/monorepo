@@ -22,7 +22,7 @@ describe("createSessionStore", () => {
     ctx = {
       aegis: createMockAegis(),
       amphora: createMockAmphora(),
-      proteus: mockProteus,
+      keyValue: mockProteus,
     };
 
     session = {
@@ -49,7 +49,7 @@ describe("createSessionStore", () => {
     expect(createSessionStore()).toBeUndefined();
   });
 
-  test("should resolve store when enabled with proteus on context", async () => {
+  test("should resolve store when enabled with keyValue on context", async () => {
     const store = createSessionStore({ enabled: true });
 
     expect(store).toBeDefined();
@@ -69,8 +69,8 @@ describe("createSessionStore", () => {
     await expect(store!.logout(ctx, session.subject)).resolves.toBeUndefined();
   });
 
-  test("should fall back to cookie when no proteus available", async () => {
-    ctx.proteus = undefined;
+  test("should fall back to cookie when no keyValue available", async () => {
+    ctx.keyValue = undefined;
 
     const store = createSessionStore({ enabled: true });
 

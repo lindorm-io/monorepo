@@ -116,9 +116,10 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
             : undefined,
         hermes: this.options.hermes,
         iris: this.options.iris,
+        keyValue: this.options.keyValue,
         proteus: this.options.proteus,
-        rateLimitProteus: this.options.rateLimit?.enabled
-          ? (this.options.rateLimit.proteus ?? this.options.proteus)
+        rateLimitKeyValue: this.options.rateLimit?.enabled
+          ? (this.options.rateLimit.keyValue ?? this.options.keyValue)
           : undefined,
       }),
       createQueueMiddleware(this.options.queue),

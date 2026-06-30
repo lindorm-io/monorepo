@@ -33,7 +33,7 @@ describe("httpSessionMiddleware", () => {
 
     ctx = {
       logger: createMockLogger(),
-      proteus: mockProteus,
+      keyValue: mockProteus,
       cookies: {
         set: vi.fn(),
         get: vi.fn().mockReturnValue("cad4002a-bd04-52f1-9733-58866f421686"),
@@ -67,7 +67,7 @@ describe("httpSessionMiddleware", () => {
     next = () => Promise.resolve();
   });
 
-  test("should set session with proteus store", async () => {
+  test("should set session with keyValue store", async () => {
     await createHttpSessionMiddleware(options)(ctx, next);
 
     await ctx.session.set({
@@ -80,7 +80,7 @@ describe("httpSessionMiddleware", () => {
     expect(ctx.cookies.set).toHaveBeenCalled();
   });
 
-  test("should get session from proteus store", async () => {
+  test("should get session from keyValue store", async () => {
     await createHttpSessionMiddleware(options)(ctx, next);
 
     expect(ctx.state.session).toEqual({
@@ -91,8 +91,8 @@ describe("httpSessionMiddleware", () => {
     });
   });
 
-  test("should return null session when no proteus source", async () => {
-    ctx.proteus = undefined;
+  test("should return null session when no keyValue source", async () => {
+    ctx.keyValue = undefined;
 
     await createHttpSessionMiddleware(options)(ctx, next);
 

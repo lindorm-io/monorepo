@@ -93,6 +93,7 @@ const app = new Pylon({
   },
 
   proteus: proteusSource,
+  keyValue: keyValueSource,
   iris: irisSource,
 
   setup: async () => {
@@ -109,6 +110,11 @@ await app.start();
 // later…
 await app.stop();
 ```
+
+Pylon distinguishes two storage roles, both `IProteusSource`:
+
+- **`proteus`** — the durable source (exposed per-request as `ctx.proteus`). Backs durable features (`audit`, `webhook`, `kryptos`), which may each override it with their own `proteus`.
+- **`keyValue`** — the ephemeral source (redis in production, a proteus memory-driver source in dev/test), exposed per-request as `ctx.keyValue`. Backs ephemeral features (`rateLimit`, `session`, `rooms`), which may each override it with their own `keyValue`.
 
 | Method / property | Description                                                              |
 | ----------------- | ------------------------------------------------------------------------ |
@@ -182,7 +188,8 @@ ctx.conduits;    // map of named HTTP clients
 ctx.entities;    // entity registry
 ctx.logger;      // per-request scoped ILogger
 
-ctx.proteus?;    // IProteusSession when configured
+ctx.proteus?;    // IProteusSession — durable source, when configured
+ctx.keyValue?;   // IProteusSession — ephemeral source, when configured
 ctx.iris?;       // IIrisSession when configured
 ctx.hermes?;     // IHermesSession when configured
 
@@ -454,7 +461,7 @@ Enable with the `rooms` option on the constructor:
 ```typescript
 const app = new Pylon({
   rooms: { presence: true },
-  proteus: proteusSource,
+  keyValue: keyValueSource,
   // …
 });
 ```
@@ -488,7 +495,7 @@ router.post(
 | `emit(target, event, data?)`      | yes  | yes    | Emit a Pylon envelope to the target                            |
 | `broadcast(target, event, data?)` | —    | yes    | Like `emit` but excludes the calling socket                    |
 
-`presence` requires `rooms.presence: true` and a Proteus source — Pylon registers a `Presence` entity at startup and writes a record on each `join`.
+`presence` requires `rooms.presence: true` and an ephemeral source (`rooms.keyValue ?? keyValue`) — Pylon registers a `Presence` entity at startup and writes a record on each `join`.
 
 ### Redis adapter
 
@@ -626,7 +633,7 @@ router.use(
 );
 ```
 
-`useRateLimit` requires `rateLimit: { enabled: true }` on the constructor (which also wires the entities into the Proteus source). HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
+`useRateLimit` requires `rateLimit: { enabled: true }` on the constructor (which also wires the entities into the ephemeral source, `rateLimit.keyValue ?? keyValue`). HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
 
 When `rateLimit.window` and `rateLimit.max` are set on the constructor, Pylon installs a global rate-limit middleware automatically.
 
@@ -762,7 +769,7 @@ await ctx.session.del();
 await ctx.session.logout(subject);
 ```
 
-When `session.enabled` is true, Pylon registers the `Session` entity on the configured Proteus source.
+When `session.enabled` is true, Pylon registers the `Session` entity on the configured ephemeral source (`session.keyValue ?? keyValue`).
 
 ## Webhooks
 

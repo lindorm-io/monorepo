@@ -124,7 +124,7 @@ describe("socket auth (session / cookie) e2e", () => {
         httpOnly: true,
         sameSite: "lax",
         signed: false,
-        proteus: inMemory.source as any,
+        keyValue: inMemory.source as any,
       },
       routes: join(__dirname, "..", "__fixtures__", "socket-auth", "routes"),
       socket: {

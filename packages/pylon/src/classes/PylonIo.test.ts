@@ -281,7 +281,7 @@ describe("PylonIo (handshake chain)", () => {
 
       const io = createPylonIo({
         cors: validCors,
-        session: { ...validSession, proteus: mockProteus },
+        session: { ...validSession, keyValue: mockProteus },
       });
 
       await io.load();

@@ -20,7 +20,7 @@ const buildSession = (overrides: Partial<any> = {}) => ({
   ...overrides,
 });
 
-const buildCtx = (cookieHeader: string | undefined, proteus?: any): any => {
+const buildCtx = (cookieHeader: string | undefined, keyValue?: any): any => {
   const socket: any = {
     handshake: {
       headers: cookieHeader === undefined ? {} : { cookie: cookieHeader },
@@ -36,7 +36,7 @@ const buildCtx = (cookieHeader: string | undefined, proteus?: any): any => {
     handshakeId: "handshake-1",
     io: { app: {}, socket },
     logger: createMockLogger(),
-    proteus,
+    keyValue,
     amphora: {
       canEncrypt: vi.fn().mockReturnValue(false),
       canDecrypt: vi.fn().mockReturnValue(false),
