@@ -17,6 +17,7 @@ export type PredicateOperator<T> = {
   $like?: T;
   $ilike?: T;
   $regex?: RegExp;
+  $similar?: string | { value: string; threshold: number };
 
   // arrays
   $in?: T extends Array<infer U> ? Array<U> : Array<T>;
