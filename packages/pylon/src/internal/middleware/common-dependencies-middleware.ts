@@ -43,11 +43,12 @@ type Options = {
   auditConfig?: AuditConfig;
   hermes?: IHermes;
   iris?: IIrisSource;
+  keyValue?: IProteusSource;
   proteus?: IProteusSource;
-  rateLimitProteus?: IProteusSource;
+  rateLimitKeyValue?: IProteusSource;
   roomsEnabled?: boolean;
   roomsPresence?: boolean;
-  roomsProteus?: IProteusSource;
+  roomsKeyValue?: IProteusSource;
 };
 
 export const createDependenciesMiddleware = <C extends PylonCommonContext>(
@@ -70,6 +71,12 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
       if (options.proteus) {
         lazyFactory(ctx, "proteus", () =>
           options.proteus!.session(buildProteusSessionOptions(ctx, actor)),
+        );
+      }
+
+      if (options.keyValue) {
+        lazyFactory(ctx, "keyValue", () =>
+          options.keyValue!.session(buildProteusSessionOptions(ctx, actor)),
         );
       }
 
@@ -97,8 +104,8 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         (ctx as any)[AUDIT_SOURCE] = options.auditConfig;
       }
 
-      if (options.rateLimitProteus) {
-        (ctx as any)[RATE_LIMIT_SOURCE] = options.rateLimitProteus;
+      if (options.rateLimitKeyValue) {
+        (ctx as any)[RATE_LIMIT_SOURCE] = options.rateLimitKeyValue;
       }
 
       // Socket emitter (available whenever io is present)
@@ -128,7 +135,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
             socket: (ctx as any).io.socket,
             io: (ctx as any).io.app,
             logger: ctx.logger,
-            proteusSource: options.roomsProteus,
+            proteusSource: options.roomsKeyValue,
             presence: options.roomsPresence,
           }),
         );
@@ -137,7 +144,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
           createHttpRoomContext({
             io: (ctx as any).io.app,
             logger: ctx.logger,
-            proteusSource: options.roomsProteus,
+            proteusSource: options.roomsKeyValue,
             presence: options.roomsPresence,
           }),
         );
@@ -152,7 +159,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         title: "Dependency Resolution Failed",
         type: "urn:lindorm:pylon:error:dependency_resolution_failed",
         details:
-          "One of the per-request dependencies (actor, hermes, proteus, iris, auth, socket, or rooms) could not be resolved",
+          "One of the per-request dependencies (actor, hermes, proteus, keyValue, iris, auth, socket, or rooms) could not be resolved",
         debug: { error },
       });
     }

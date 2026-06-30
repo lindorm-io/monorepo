@@ -67,14 +67,15 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
             : undefined,
         hermes: options.hermes,
         iris: options.iris,
+        keyValue: options.keyValue,
         proteus: options.proteus,
-        rateLimitProteus: options.rateLimit?.enabled
-          ? (options.rateLimit.proteus ?? options.proteus)
+        rateLimitKeyValue: options.rateLimit?.enabled
+          ? (options.rateLimit.keyValue ?? options.keyValue)
           : undefined,
         roomsEnabled: !!options.rooms,
         roomsPresence: options.rooms?.presence,
-        roomsProteus: options.rooms?.presence
-          ? (options.rooms.proteus ?? options.proteus)
+        roomsKeyValue: options.rooms?.presence
+          ? (options.rooms.keyValue ?? options.keyValue)
           : undefined,
       }),
       createQueueMiddleware(options.queue),

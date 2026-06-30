@@ -217,20 +217,20 @@ describe("createDependenciesMiddleware", () => {
     expect(ctx.hermes).toBeUndefined();
   });
 
-  test("should store raw rateLimitProteus on context via symbol (lazy session)", async () => {
-    const rateLimitProteus = createMockProteusSource();
+  test("should store raw rateLimitKeyValue on context via symbol (lazy session)", async () => {
+    const rateLimitKeyValue = createMockProteusSource();
 
     const middleware = createDependenciesMiddleware({
-      rateLimitProteus: rateLimitProteus as any,
+      rateLimitKeyValue: rateLimitKeyValue as any,
     });
 
     await middleware(ctx, vi.fn());
 
-    expect(rateLimitProteus.session).not.toHaveBeenCalled();
-    expect(ctx[RATE_LIMIT_SOURCE]).toBe(rateLimitProteus);
+    expect(rateLimitKeyValue.session).not.toHaveBeenCalled();
+    expect(ctx[RATE_LIMIT_SOURCE]).toBe(rateLimitKeyValue);
   });
 
-  test("should not set rate limit symbol when rateLimitProteus not provided", async () => {
+  test("should not set rate limit symbol when rateLimitKeyValue not provided", async () => {
     const middleware = createDependenciesMiddleware({});
 
     await middleware(ctx, vi.fn());
@@ -312,8 +312,8 @@ describe("createDependenciesMiddleware", () => {
       expect(socketCtx.rooms).toBeUndefined();
     });
 
-    test("should pass roomsProteus and roomsPresence to room context factory", async () => {
-      const roomsProteus = createMockProteusSource();
+    test("should pass roomsKeyValue and roomsPresence to room context factory", async () => {
+      const roomsKeyValue = createMockProteusSource();
 
       const socketCtx: any = {
         logger: createMockLogger(),
@@ -336,7 +336,7 @@ describe("createDependenciesMiddleware", () => {
       const middleware = createDependenciesMiddleware({
         roomsEnabled: true,
         roomsPresence: true,
-        roomsProteus: roomsProteus as any,
+        roomsKeyValue: roomsKeyValue as any,
       });
 
       await middleware(socketCtx, vi.fn());

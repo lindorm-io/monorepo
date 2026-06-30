@@ -16,7 +16,7 @@ const getSource = (
       meta: buildHookMeta(ctx, resolveActor(ctx)),
     });
   }
-  return ctx.proteus ?? null;
+  return ctx.keyValue ?? null;
 };
 
 let cachedSession: typeof import("../../entities/Session.js").Session | undefined;
@@ -36,7 +36,7 @@ export const createSessionStore = (
 
   return {
     set: async (ctx, session): Promise<string> => {
-      const source = getSource(ctx, options.proteus);
+      const source = getSource(ctx, options.keyValue);
       if (!source) return session.id;
 
       if (ctx.amphora.canEncrypt()) {
@@ -61,7 +61,7 @@ export const createSessionStore = (
     },
 
     get: async (ctx, id): Promise<IPylonSession | null> => {
-      const source = getSource(ctx, options.proteus);
+      const source = getSource(ctx, options.keyValue);
       if (!source) return null;
 
       const Session = await getSessionEntity();
@@ -85,7 +85,7 @@ export const createSessionStore = (
     },
 
     del: async (ctx, id): Promise<void> => {
-      const source = getSource(ctx, options.proteus);
+      const source = getSource(ctx, options.keyValue);
       if (!source) return;
 
       const Session = await getSessionEntity();
@@ -93,7 +93,7 @@ export const createSessionStore = (
     },
 
     logout: async (ctx, subject): Promise<void> => {
-      const source = getSource(ctx, options.proteus);
+      const source = getSource(ctx, options.keyValue);
       if (!source) return;
 
       const Session = await getSessionEntity();

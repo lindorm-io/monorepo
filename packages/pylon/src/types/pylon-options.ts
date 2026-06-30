@@ -50,6 +50,12 @@ type CommonOptions = {
   environment?: Environment;
   hermes?: IHermes;
   iris?: IIrisSource;
+  /**
+   * Ephemeral / in-memory storage source (redis in production, a proteus
+   * memory-driver source in dev/test). Backs ephemeral features (rate limit,
+   * session, rooms) and is exposed per-request as `ctx.keyValue`.
+   */
+  keyValue?: IProteusSource;
   logger: ILogger;
   name?: string;
   proteus?: IProteusSource;
