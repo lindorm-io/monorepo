@@ -285,6 +285,14 @@ export class Pylon<
       }
     }
 
+    if (this.options.cache?.enabled) {
+      const source = this.options.cache.keyValue ?? this.options.keyValue;
+      if (source) {
+        const { CachedResponse } = await import("../entities/CachedResponse.js");
+        source.addEntities([CachedResponse]);
+      }
+    }
+
     if (this.options.rateLimit?.enabled) {
       const source = this.options.rateLimit.keyValue ?? this.options.keyValue;
       if (source) {

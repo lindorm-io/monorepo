@@ -114,6 +114,9 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
                 skip: this.options.audit.skip,
               }
             : undefined,
+        cacheKeyValue: this.options.cache?.enabled
+          ? (this.options.cache.keyValue ?? this.options.keyValue)
+          : undefined,
         hermes: this.options.hermes,
         iris: this.options.iris,
         keyValue: this.options.keyValue,

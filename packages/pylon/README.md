@@ -637,6 +637,76 @@ router.use(
 
 When `rateLimit.window` and `rateLimit.max` are set on the constructor, Pylon installs a global rate-limit middleware automatically.
 
+### Response cache
+
+```typescript
+import { useCache } from "@lindorm/pylon";
+
+// Cache a public response for 60 seconds (shared across all callers).
+router.get("/articles", useCache("60s", "public"), useHandler(listArticles));
+
+// Cache a per-user response (the resolved actor is folded into the cache key).
+router.get("/me/feed", useCache("30s", "private"), useHandler(myFeed));
+
+// Vary by request headers, skip selected requests, or key on a custom identity.
+router.get(
+  "/products",
+  useCache("5m", "public", {
+    vary: ["Accept-Language"],
+    skip: (ctx) => ctx.query.fresh === "true",
+  }),
+  useHandler(listProducts),
+);
+
+// Scope a private cache by tenant instead of the request actor.
+router.get(
+  "/dashboard",
+  useCache("30s", "private", { actor: (ctx) => ctx.state.tokens.accessToken.claims.tid }),
+  useHandler(dashboard),
+);
+```
+
+`useCache(ttl, scope, options?)` slots after `useSchema` (it folds `ctx.data` into the
+key) and before `useHandler`. It requires `cache: { enabled: true }` on the constructor,
+which wires the `CachedResponse` entity into the ephemeral source (`cache.keyValue ??
+keyValue`).
+
+- `ttl` accepts a `ReadableTime` (e.g. `"60s"`) or a number of milliseconds.
+- `scope`:
+  - `"public"` — one shared entry per request shape; the actor is ignored.
+  - `"private"` — the resolved actor is folded into the key, so each actor gets its own
+    entry. The actor defaults to pylon's `resolveActor` (access-token sub → id-token sub →
+    basic-auth user) and can be overridden per route with `options.actor`. A private request
+    with no resolvable actor is **never cached** (it would leak under a global key) — it is
+    served straight from the handler and logs a warning so the misconfiguration is visible.
+- The cache key is a SHA-256 of the method, path, the key-sorted `ctx.data`, the actor
+  (private scope only), and the configured `vary` header values, so reordered request data
+  collapses to a single entry.
+
+Request `Cache-Control` directives are honored: `no-store` bypasses the cache entirely;
+`no-cache` (or `max-age=0`, or `Pragma: no-cache`) skips the read and refreshes the stored
+entry; `If-None-Match` (exact or `*`) yields a `304 Not Modified` on a hit. Only successful
+(`2xx`), non-streaming, non-redirect responses within a 1 MiB body cap are stored.
+
+Emitted headers (the proprietary status headers are namespaced `X-Pylon-Cache*` so they don't
+collide with a CDN/proxy's own `X-Cache` in the response chain):
+
+- `X-Pylon-Cache` (always) — `HIT` (served from cache, incl. a coalesced single-flight
+  replay), `MISS` (computed fresh and stored), `DYNAMIC` (computed but not eligible to store —
+  `3xx`/stream/`>=400`/over the size cap/`private` with no actor), or `BYPASS` (caching
+  skipped by request `no-store` or `skip()`).
+- `ETag` (strong, on cacheable responses), `Cache-Control: <public|private>, max-age=<seconds>`,
+  `Age` (seconds since the stored representation was captured), `Vary` (when configured).
+- `X-Pylon-Cache-Source: <driverType>` — outside `production` only (so the backend isn't
+  advertised publicly).
+
+Concurrent misses for the same key are coalesced in-process via single-flight: only one
+handler runs and its result is replayed to the waiters. This is per-Pylon-process and **not**
+distributed — across multiple containers each process may run the handler once, which is
+acceptable by design (the shared `keyValue` source still de-duplicates the stored entry). A
+cache backend outage degrades gracefully: read/write failures are logged and the handler is
+served, never failing the request.
+
 ### Audit logging
 
 ```typescript

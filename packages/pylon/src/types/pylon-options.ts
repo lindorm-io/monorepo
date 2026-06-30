@@ -24,6 +24,7 @@ import type { OpenIdConfigurationOptions } from "./open-id-configuration.js";
 import type { ParseBodyOptions } from "./parse-body.js";
 import type {
   PylonAuditOptions,
+  PylonCacheOptions,
   PylonHttpCallback,
   PylonKryptosOptions,
   PylonQueueOptions,
@@ -46,6 +47,7 @@ type CommonOptions = {
   actor?: (ctx: PylonCommonContext) => string;
   amphora: IAmphora;
   audit?: PylonAuditOptions;
+  cache?: PylonCacheOptions;
   domain?: string;
   environment?: Environment;
   hermes?: IHermes;

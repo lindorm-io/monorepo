@@ -51,6 +51,11 @@ export type PylonWebhookOptions = {
   maxErrors?: number;
 };
 
+export type PylonCacheOptions = {
+  enabled: boolean;
+  keyValue?: IProteusSource;
+};
+
 export type PylonRateLimitOptions = {
   enabled: boolean;
   keyValue?: IProteusSource;
