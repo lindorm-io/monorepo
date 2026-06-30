@@ -19,7 +19,7 @@ import type { PylonIoContextHttp } from "./pylon-io-context.js";
 import type { PylonSessionOnContext } from "./session.js";
 import type { PylonSocketEmitter } from "./pylon-socket-emitter.js";
 
-type KoaContext = Omit<RouterContext, "cookies" | "state">;
+type KoaContext = Omit<RouterContext, "cookies" | "state" | "throw">;
 
 type Request = BaseRequest & {
   body?: any;
