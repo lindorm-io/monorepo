@@ -224,4 +224,35 @@ describe("defaultCreateEntity", () => {
 
     expect(article.tags[0]).toBe(existingTag);
   });
+
+  // F15 regression: a *ToOne relation object must derive the owning-side FK
+  // column when the caller did not pass the FK explicitly. Previously the FK
+  // was hard-set to null, so insert/upsert wrote NULL despite the relation
+  // being present.
+  test("should derive owning FK from the relation object", () => {
+    const comment = defaultCreateEntity(CreateEntityComment, {
+      body: "Nice",
+      post: { id: "post-42" } as any,
+    });
+
+    expect((comment as any).post).toBeTruthy();
+    expect(comment.postId).toBe("post-42");
+  });
+
+  test("should honour an explicit null FK even when the relation object is set", () => {
+    const comment = defaultCreateEntity(CreateEntityComment, {
+      body: "Detached",
+      post: { id: "post-42" } as any,
+      postId: null,
+    });
+
+    // Explicit FK (even null) wins — this is how a caller detaches by FK.
+    expect(comment.postId).toBeNull();
+  });
+
+  test("should leave FK null when neither FK nor relation object is set", () => {
+    const comment = defaultCreateEntity(CreateEntityComment, { body: "Orphan" });
+
+    expect(comment.postId).toBeNull();
+  });
 });
