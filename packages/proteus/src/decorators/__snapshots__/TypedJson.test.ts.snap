@@ -54,6 +54,7 @@ exports[`TypedJson > should match full metadata snapshot for a typed-json entity
       "key": "payload",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "payload",
       "nullable": false,
       "order": null,

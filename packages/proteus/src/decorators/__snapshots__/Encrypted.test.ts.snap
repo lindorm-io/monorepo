@@ -58,6 +58,7 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
       "key": "ssn",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "ssn",
       "nullable": false,
       "order": null,

@@ -23,7 +23,8 @@ export const typeCoercionSuite = (
       const repo = getHandle().repository(TckTypeHolder);
       const inserted = await repo.insert({
         bigValue: 9007199254740993n,
-        decimalValue: "1.0000",
+        decimalValue: 1,
+        decimalStringValue: "1.0000000000",
         binaryValue: Buffer.from([0]),
       });
 
@@ -35,18 +36,37 @@ export const typeCoercionSuite = (
       expect(inserted.bigValue).toBe(9007199254740993n);
     });
 
-    test("decimal round-trips as a precision-preserving string", async () => {
+    test("default decimal round-trips as a JS number with the same value", async () => {
       const repo = getHandle().repository(TckTypeHolder);
       const inserted = await repo.insert({
         bigValue: 1n,
-        decimalValue: "12345.6789",
+        decimalValue: 12345.6789,
+        decimalStringValue: "0.0000000000",
         binaryValue: Buffer.from([0]),
       });
 
       const found = await repo.findOneOrFail({ id: inserted.id });
 
-      expect(typeof found.decimalValue).toBe("string");
-      expect(found.decimalValue).toBe("12345.6789");
+      expect(typeof inserted.decimalValue).toBe("number");
+      expect(inserted.decimalValue).toBe(12345.6789);
+      expect(typeof found.decimalValue).toBe("number");
+      expect(found.decimalValue).toBe(12345.6789);
+    });
+
+    test("decimal { mode: string } round-trips as a precision-preserving string", async () => {
+      const repo = getHandle().repository(TckTypeHolder);
+      // 20 significant digits — beyond a JS double, exact in NUMERIC(38,10).
+      const inserted = await repo.insert({
+        bigValue: 1n,
+        decimalValue: 0,
+        decimalStringValue: "1234567890.1234567890",
+        binaryValue: Buffer.from([0]),
+      });
+
+      const found = await repo.findOneOrFail({ id: inserted.id });
+
+      expect(typeof inserted.decimalStringValue).toBe("string");
+      expect(found.decimalStringValue).toBe("1234567890.1234567890");
     });
 
     test("binary round-trips as a Node Buffer with byte equality", async () => {
@@ -54,7 +74,8 @@ export const typeCoercionSuite = (
       const bytes = Buffer.from([0xde, 0xad, 0xbe, 0xef]);
       const inserted = await repo.insert({
         bigValue: 1n,
-        decimalValue: "0.0000",
+        decimalValue: 0,
+        decimalStringValue: "0.0000000000",
         binaryValue: bytes,
       });
 

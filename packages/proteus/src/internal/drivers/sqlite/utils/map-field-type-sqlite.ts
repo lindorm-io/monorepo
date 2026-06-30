@@ -40,9 +40,12 @@ export const mapFieldTypeSqlite = (field: MetaField): string => {
     case "float":
       return "REAL";
 
-    // NUMERIC affinity (stores exactly, no precision/scale in SQLite)
+    // decimal: number mode uses NUMERIC affinity (stored as REAL/INTEGER, which
+    // is lossless within JS-number range). String mode needs TEXT affinity —
+    // NUMERIC affinity would coerce a high-precision string to a lossy REAL,
+    // defeating the exact arbitrary-precision contract.
     case "decimal":
-      return "NUMERIC";
+      return field.mode === "string" ? "TEXT" : "NUMERIC";
 
     // TEXT affinity — strings, identifiers, temporal values stored as ISO strings
     case "string":

@@ -54,6 +54,7 @@ exports[`Precision > should match snapshot 1`] = `
       "key": "price",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "price",
       "nullable": false,
       "order": null,

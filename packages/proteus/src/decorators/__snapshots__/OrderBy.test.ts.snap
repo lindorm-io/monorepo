@@ -54,6 +54,7 @@ exports[`OrderBy > should match snapshot 1`] = `
       "key": "name",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "name",
       "nullable": false,
       "order": null,

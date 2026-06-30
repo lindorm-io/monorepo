@@ -79,6 +79,7 @@ exports[`getEntityMetadata > should return full entity metadata snapshot 1`] = `
       "key": "name",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "name",
       "nullable": false,
       "order": null,

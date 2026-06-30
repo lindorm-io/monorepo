@@ -53,6 +53,14 @@ export type MetaFieldType =
 
 export type MetaFieldPrimaryType = "integer" | "string" | "uuid";
 
+/**
+ * Optional JS-representation override for a field. Currently only meaningful for
+ * `decimal`: by default a `decimal` hydrates as a `number` (proteus throws rather
+ * than silently lose precision); `{ mode: "string" }` opts into an exact,
+ * arbitrary-precision `string` representation instead.
+ */
+export type MetaFieldMode = "string";
+
 export type MetaFieldDecorator =
   // default
   | "Field"
@@ -112,6 +120,7 @@ export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
   hideOn: Array<QueryScope>;
   max: number | null;
   min: number | null;
+  mode?: MetaFieldMode | null;
   name: string;
   nullable: boolean;
   order: number | null;

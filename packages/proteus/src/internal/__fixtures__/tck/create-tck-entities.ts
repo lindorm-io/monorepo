@@ -1080,10 +1080,11 @@ export const createTckEntities = (hookCallback: Mock) => {
 
   // ─── Divergent Column-Type Round-Trip Entity ──────────────────────
   // Exercises types that hydrate differently across drivers:
-  //   bigint  → JS bigint (both drivers)
-  //   decimal → string, precision-preserving (both drivers)
-  //   binary  → Node Buffer (memory stores Uint8Array via structuredClone,
-  //             Postgres BYTEA returns Buffer; deserialise normalises both)
+  //   bigint           → JS bigint (all drivers)
+  //   decimal          → JS number (default mode; throws on precision loss)
+  //   decimal {string} → exact, arbitrary-precision string
+  //   binary           → Node Buffer (memory stores Uint8Array via structuredClone,
+  //                      Postgres BYTEA returns Buffer; deserialise normalises both)
 
   @Entity({ name: "TckTypeHolder" })
   class TckTypeHolder {
@@ -1105,7 +1106,11 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Precision(18, 4)
     @Field("decimal")
-    decimalValue!: string;
+    decimalValue!: number;
+
+    @Precision(38, 10)
+    @Field("decimal", { mode: "string" })
+    decimalStringValue!: string;
 
     @Field("binary")
     binaryValue!: Buffer;

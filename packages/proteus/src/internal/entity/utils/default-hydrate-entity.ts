@@ -60,7 +60,7 @@ export const defaultHydrateEntity = <E extends IEntity>(
     if (raw === null || raw === undefined) {
       entity[field.key] = raw;
     } else {
-      let value = deserialise(raw, field.type);
+      let value = deserialise(raw, field.type, field.mode);
       if (field.transform) {
         value = field.transform.from(value);
       }

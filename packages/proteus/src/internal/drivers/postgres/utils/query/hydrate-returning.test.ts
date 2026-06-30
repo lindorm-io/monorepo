@@ -64,7 +64,7 @@ describe("hydrateReturning", () => {
     expect((result as any).counter).toBe(BigInt("9007199254740993"));
   });
 
-  test("should preserve decimal as string (precision-safe)", () => {
+  test("should coerce decimal to a number in default mode", () => {
     const row = {
       id: "abc-123",
       name: "Alice",
@@ -75,7 +75,7 @@ describe("hydrateReturning", () => {
     };
 
     const result = hydrateReturning(row, metadata);
-    expect((result as any).balance).toBe("3.14");
+    expect((result as any).balance).toBe(3.14);
   });
 
   test("should default missing columns to null", () => {

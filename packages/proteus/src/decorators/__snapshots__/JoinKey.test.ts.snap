@@ -154,6 +154,7 @@ exports[`JoinKey > should match snapshot for explicit join key 1`] = `
       "key": "departmentId",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "departmentId",
       "nullable": true,
       "order": null,

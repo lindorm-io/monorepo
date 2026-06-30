@@ -54,6 +54,7 @@ exports[`ReadOnly > should match snapshot 1`] = `
       "key": "createdBy",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "createdBy",
       "nullable": false,
       "order": null,
