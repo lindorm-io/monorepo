@@ -2,6 +2,7 @@ export * from "./diff.js";
 export * from "./filter.js";
 export * from "./find.js";
 export * from "./find-last.js";
+export * from "./group-by.js";
 export * from "./lazy-factory.js";
 export * from "./merge.js";
 export * from "./noop.js";
