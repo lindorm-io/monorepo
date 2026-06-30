@@ -225,6 +225,13 @@ export const projectDesiredSchema = (
     if (effectiveFields.some((f) => f.type === "vector")) {
       extensionSet.add("vector");
     }
+    if (
+      metadata.indexes.some((index) =>
+        index.keys.some((k) => k.opclass?.endsWith("_trgm_ops")),
+      )
+    ) {
+      extensionSet.add("pg_trgm");
+    }
 
     // Enums (deduplicated by schema + name)
     for (const field of effectiveFields) {
@@ -472,6 +479,7 @@ export const projectDesiredSchema = (
         columns: validKeys.map((k) => ({
           name: resolveColumnNameSafe(metadata.fields, k.key),
           direction: k.direction,
+          opclass: k.opclass ?? null,
         })),
         method,
         where,

@@ -24,6 +24,7 @@ export type SqlDialect = {
   // Operator rendering — each returns a SQL fragment string
   compileIlike: (col: string, params: Array<unknown>, value: unknown) => string;
   compileRegex: (col: string, params: Array<unknown>, regex: RegExp) => string | null;
+  compileSimilar: (col: string, params: Array<unknown>, value: unknown) => string;
   compileHas: (col: string, params: Array<unknown>, value: unknown) => string;
   compileAll: (
     col: string,

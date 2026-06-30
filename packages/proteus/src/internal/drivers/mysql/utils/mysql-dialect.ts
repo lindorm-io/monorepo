@@ -1,5 +1,5 @@
 import type { SqlDialect } from "../../../utils/sql/sql-dialect.js";
-import { ProteusError } from "../../../../errors/index.js";
+import { NotSupportedError, ProteusError } from "../../../../errors/index.js";
 import type { LockMode } from "../../../../types/find-options.js";
 
 const quoteIdentifier = (name: string): string => {
@@ -43,6 +43,19 @@ export const mysqlDialect: SqlDialect = {
     const pattern = flags.includes("i") ? `(?i)${source}` : source;
     params.push(pattern);
     return `${col} REGEXP ?`;
+  },
+
+  compileSimilar: () => {
+    throw new NotSupportedError(
+      "The $similar trigram search operator is only supported by the PostgreSQL driver",
+      {
+        code: "unsupported_operator",
+        title: "Unsupported Operator",
+        details:
+          "Trigram fuzzy search ($similar) relies on PostgreSQL's pg_trgm extension and is not available on MySQL.",
+        data: { operator: "$similar" },
+      },
+    );
   },
 
   compileHas: (col, params, value) => {

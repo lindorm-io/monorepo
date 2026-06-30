@@ -110,6 +110,33 @@ describe("generateIndexDDL", () => {
     expect(generateIndexDDL(indexes, TABLE, NS, [])).toMatchSnapshot();
   });
 
+  test("gin + gin_trgm_ops renders opclass with no direction or NULLS", () => {
+    const indexes = [
+      idx({
+        keys: [{ key: "name", direction: "asc", nulls: null, opclass: "gin_trgm_ops" }],
+        using: "gin",
+      }),
+    ];
+    const result = generateIndexDDL(indexes, TABLE, NS, []);
+    expect(result[0]).toContain('USING gin ("name" gin_trgm_ops)');
+    expect(result[0]).not.toContain("ASC");
+    expect(result[0]).not.toContain("NULLS");
+    expect(result).toMatchSnapshot();
+  });
+
+  test("btree + opclass renders opclass before direction", () => {
+    const indexes = [
+      idx({
+        keys: [
+          { key: "name", direction: "asc", nulls: null, opclass: "text_pattern_ops" },
+        ],
+      }),
+    ];
+    const result = generateIndexDDL(indexes, TABLE, NS, []);
+    expect(result[0]).toContain('("name" text_pattern_ops ASC)');
+    expect(result).toMatchSnapshot();
+  });
+
   test("generates index with explicit WHERE clause", () => {
     const indexes = [
       idx({

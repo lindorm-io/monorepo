@@ -27,6 +27,29 @@ exports[`generateEntityDDL > check constraints > check constraints appear inside
 }
 `;
 
+exports[`generateEntityDDL > extensions auto-detection > adds pg_trgm extension when entity has a trigram index 1`] = `
+{
+  "comments": [],
+  "constraints": [],
+  "extensions": [
+    "CREATE EXTENSION IF NOT EXISTS pg_trgm;",
+  ],
+  "indexes": [
+    "CREATE INDEX IF NOT EXISTS "idx_ZgzSxx-LlPq" ON "DdlTrigramEntity" USING gin ("name" gin_trgm_ops);",
+  ],
+  "schemas": [],
+  "tables": [
+    "CREATE TABLE IF NOT EXISTS "DdlTrigramEntity" (
+  "id" UUID DEFAULT gen_random_uuid() NOT NULL,
+  "name" TEXT NOT NULL,
+  PRIMARY KEY ("id")
+);",
+  ],
+  "triggers": [],
+  "types": [],
+}
+`;
+
 exports[`generateEntityDDL > extensions auto-detection > adds pgvector extension when entity has a vector field 1`] = `
 {
   "comments": [],

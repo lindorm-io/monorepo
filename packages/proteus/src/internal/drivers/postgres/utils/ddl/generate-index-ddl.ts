@@ -30,10 +30,18 @@ export const generateIndexDDL = (
     const validKeys = index.keys.filter((k) => VALID_DIRECTIONS.has(k.direction));
     if (validKeys.length === 0) continue;
 
+    // ASC/DESC and NULLS FIRST/LAST are btree-only — PG rejects them on
+    // GIN/GiST/BRIN/Hash/SP-GiST. Only emit `column [opclass]` for non-btree methods.
+    const btreeLike = !index.using || index.using.toLowerCase() === "btree";
+
     const cols = validKeys
       .map((k) => {
-        let col = `${quoteIdentifier(resolveColumnNameSafe(fields, k.key))} ${k.direction.toUpperCase()}`;
-        if (k.nulls) col += ` NULLS ${k.nulls.toUpperCase()}`;
+        let col = quoteIdentifier(resolveColumnNameSafe(fields, k.key));
+        if (k.opclass) col += ` ${k.opclass}`;
+        if (btreeLike) {
+          col += ` ${k.direction.toUpperCase()}`;
+          if (k.nulls) col += ` NULLS ${k.nulls.toUpperCase()}`;
+        }
         return col;
       })
       .join(", ");

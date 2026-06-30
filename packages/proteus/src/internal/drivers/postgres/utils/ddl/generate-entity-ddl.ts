@@ -50,6 +50,14 @@ export const generateEntityDDL = (
     output.extensions.push("CREATE EXTENSION IF NOT EXISTS vector;");
   }
 
+  // Extensions — auto-detect pg_trgm from trigram index operator classes
+  const hasTrgm = metadata.indexes.some((index) =>
+    index.keys.some((k) => k.opclass?.endsWith("_trgm_ops")),
+  );
+  if (hasTrgm) {
+    output.extensions.push("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
+  }
+
   // Schema
   if (namespace) {
     output.schemas.push(`CREATE SCHEMA IF NOT EXISTS ${quoteIdentifier(namespace)};`);

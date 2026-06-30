@@ -14,6 +14,7 @@ import {
 } from "../../../../__fixtures__/test-entities.js";
 import { Entity } from "../../../../../decorators/Entity.js";
 import { Field } from "../../../../../decorators/Field.js";
+import { Index } from "../../../../../decorators/Index_.js";
 import { Max } from "../../../../../decorators/Max.js";
 import { Namespace } from "../../../../../decorators/Namespace.js";
 import { Generated } from "../../../../../decorators/Generated.js";
@@ -33,6 +34,16 @@ class DdlVectorEntity {
   @Max(1536)
   @Field("vector")
   embedding!: number[];
+}
+
+/** Entity with a trigram index — should auto-detect and add pg_trgm extension */
+@Entity({ name: "DdlTrigramEntity" })
+class DdlTrigramEntity {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Index({ using: "gin", opclass: "gin_trgm_ops" })
+  @Field("text")
+  name!: string;
 }
 
 /** Entity with a namespace — should emit CREATE SCHEMA */
@@ -103,6 +114,13 @@ describe("generateEntityDDL", () => {
       const meta = getEntityMetadata(DdlVectorEntity);
       const result = generateEntityDDL(meta, OPTS);
       expect(result.extensions).toContain("CREATE EXTENSION IF NOT EXISTS vector;");
+      expect(result).toMatchSnapshot();
+    });
+
+    test("adds pg_trgm extension when entity has a trigram index", () => {
+      const meta = getEntityMetadata(DdlTrigramEntity);
+      const result = generateEntityDDL(meta, OPTS);
+      expect(result.extensions).toContain("CREATE EXTENSION IF NOT EXISTS pg_trgm;");
       expect(result).toMatchSnapshot();
     });
 

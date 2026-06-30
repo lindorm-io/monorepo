@@ -40,6 +40,19 @@ export const sqliteDialect: SqlDialect = {
 
   compileRegex: () => null,
 
+  compileSimilar: () => {
+    throw new NotSupportedError(
+      "The $similar trigram search operator is only supported by the PostgreSQL driver",
+      {
+        code: "unsupported_operator",
+        title: "Unsupported Operator",
+        details:
+          "Trigram fuzzy search ($similar) relies on PostgreSQL's pg_trgm extension and is not available on SQLite.",
+        data: { operator: "$similar" },
+      },
+    );
+  },
+
   compileHas: (col, params, value) => {
     if (isObject(value) && Object.keys(value as Record<string, unknown>).length > 0) {
       // Object containment: check each key/value pair via json_extract

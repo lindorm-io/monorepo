@@ -27,7 +27,7 @@ export type DesiredConstraint = {
 export type DesiredIndex = {
   name: string;
   unique: boolean;
-  columns: Array<{ name: string; direction: "asc" | "desc" }>;
+  columns: Array<{ name: string; direction: "asc" | "desc"; opclass?: string | null }>;
   method: string;
   where: string | null;
   include: Array<string> | null;

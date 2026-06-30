@@ -38,7 +38,14 @@ export function Index(arg1?: any, arg2?: any): any {
         : ((arg2 ?? {}) as IndexDecoratorOptions);
       const direction = isObject(arg1) ? arg1.direction : (arg1 as IndexDirection);
       stageIndex(context.metadata, {
-        keys: [{ key: String(context.name), direction: direction ?? "asc", nulls: null }],
+        keys: [
+          {
+            key: String(context.name),
+            direction: direction ?? "asc",
+            nulls: null,
+            opclass: options.opclass ?? null,
+          },
+        ],
         include: null,
         name: options.name ?? null,
         unique: options.unique ?? false,
@@ -57,12 +64,14 @@ export function Index(arg1?: any, arg2?: any): any {
               key,
               direction,
               nulls: null,
+              opclass: options.opclass ?? null,
             }))
           : isArray(index)
             ? index.map((key) => ({
                 key,
                 direction: options.direction ?? "asc",
                 nulls: null,
+                opclass: options.opclass ?? null,
               }))
             : [],
         include: null,

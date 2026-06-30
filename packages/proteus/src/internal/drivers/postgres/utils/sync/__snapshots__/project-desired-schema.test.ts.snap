@@ -124,10 +124,12 @@ exports[`projectDesiredSchema > should project a simple entity 1`] = `
             {
               "direction": "asc",
               "name": "id",
+              "opclass": null,
             },
             {
               "direction": "asc",
               "name": "version",
+              "opclass": null,
             },
           ],
           "concurrent": false,

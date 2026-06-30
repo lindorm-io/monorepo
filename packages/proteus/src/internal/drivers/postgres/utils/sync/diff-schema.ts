@@ -232,8 +232,15 @@ export const diffSchema = (snapshot: DbSnapshot, desired: DesiredSchema): SyncPl
       for (const idx of desiredTable.indexes) {
         const unique = idx.unique ? "UNIQUE " : "";
         const concurrent = idx.concurrent ? "CONCURRENTLY " : "";
+        // ASC/DESC is btree-only — PG rejects it on GIN/GiST/BRIN/Hash/SP-GiST.
+        const btreeLike = !idx.method || idx.method === "btree";
         const cols = idx.columns
-          .map((c) => `${quoteIdentifier(c.name)} ${c.direction.toUpperCase()}`)
+          .map((c) => {
+            let col = quoteIdentifier(c.name);
+            if (c.opclass) col += ` ${c.opclass}`;
+            if (btreeLike) col += ` ${c.direction.toUpperCase()}`;
+            return col;
+          })
           .join(", ");
         let using = "";
         if (idx.method && idx.method !== "btree") using = ` USING ${idx.method}`;

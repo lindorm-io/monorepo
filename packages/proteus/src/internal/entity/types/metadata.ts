@@ -194,6 +194,7 @@ export type MetaIndexItem = {
   key: string;
   direction: IndexDirection;
   nulls: "first" | "last" | null;
+  opclass?: string | null;
 };
 
 export type MetaIndex = {

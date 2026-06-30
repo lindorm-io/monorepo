@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileOrderBy > should compile single field ASC with NULLS LAST 1`] = `"ORDER BY "t0"."name" ASC NULLS LAST"`;
+
+exports[`compileOrderBy > should compile single field DESC with NULLS FIRST 1`] = `"ORDER BY "t0"."age" DESC NULLS FIRST"`;

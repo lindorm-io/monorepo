@@ -1,6 +1,6 @@
 import type { Dict, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../interfaces/index.js";
-import type { LockMode } from "../../types/find-options.js";
+import type { LockMode, OrderValue } from "../../types/find-options.js";
 import type { RelationStrategy } from "../entity/types/metadata.js";
 import type { ResolvedFilter } from "../utils/query/resolve-filters.js";
 
@@ -122,7 +122,7 @@ export type SetOperationEntry = {
 
 export type QueryState<E extends IEntity> = {
   predicates: Array<PredicateEntry<E>>;
-  orderBy: Partial<Record<keyof E, "ASC" | "DESC">> | null;
+  orderBy: Partial<Record<keyof E, OrderValue>> | null;
   skip: number | null;
   take: number | null;
   includes: Array<IncludeSpec>;

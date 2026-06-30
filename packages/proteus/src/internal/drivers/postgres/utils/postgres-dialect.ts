@@ -1,3 +1,4 @@
+import { isObject } from "@lindorm/is";
 import type { MetaField } from "../../../entity/types/metadata.js";
 import type { SqlDialect } from "../../../utils/sql/sql-dialect.js";
 import { ProteusError } from "../../../../errors/index.js";
@@ -81,6 +82,19 @@ export const postgresDialect: SqlDialect = {
       return `${col} ~* $${params.length}`;
     }
     return `${col} ~ $${params.length}`;
+  },
+
+  compileSimilar: (col, params, value) => {
+    // Threshold form: similarity(col, $value) > $threshold
+    if (isObject<{ value: string; threshold: number }>(value)) {
+      params.push(value.value);
+      const valuePlaceholder = `$${params.length}`;
+      params.push(value.threshold);
+      return `similarity(${col}, ${valuePlaceholder}) > $${params.length}`;
+    }
+    // Boolean form: col % $value (uses pg_trgm.similarity_threshold GUC)
+    params.push(value);
+    return `${col} % $${params.length}`;
   },
 
   compileHas: (col, params, value) => {

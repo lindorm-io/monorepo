@@ -45,10 +45,18 @@ const normalizePredicateExpr = (expr: string | null): string | null => {
   return s;
 };
 
+// Compare columns on name + direction only. opclass is a desired-side hint used
+// when rendering CREATE INDEX; the DB snapshot does not introspect it, so including
+// it here would force perpetual drop/recreate on re-sync.
+const stripOpclass = (
+  columns: Array<{ name: string; direction: "asc" | "desc"; opclass?: string | null }>,
+): Array<{ name: string; direction: "asc" | "desc" }> =>
+  columns.map((c) => ({ name: c.name, direction: c.direction }));
+
 const indexMatches = (db: DbIndex, desired: DesiredIndex): boolean => {
   if (db.unique !== desired.unique) return false;
   if (db.method !== desired.method) return false;
-  if (!isEqual(db.columns, desired.columns)) return false;
+  if (!isEqual(stripOpclass(db.columns), stripOpclass(desired.columns))) return false;
   if (!isEqual(db.include, desired.include ?? [])) return false;
   if (normalizePredicateExpr(db.where) !== normalizePredicateExpr(desired.where))
     return false;
@@ -97,8 +105,16 @@ export const diffIndexes = (
 
     const unique = desired.unique ? "UNIQUE " : "";
     const concurrent = desired.concurrent ? "CONCURRENTLY " : "";
+
+    // ASC/DESC is btree-only — PG rejects it on GIN/GiST/BRIN/Hash/SP-GiST.
+    const btreeLike = !desired.method || desired.method === "btree";
     const cols = desired.columns
-      .map((c) => `${quoteIdentifier(c.name)} ${c.direction.toUpperCase()}`)
+      .map((c) => {
+        let col = quoteIdentifier(c.name);
+        if (c.opclass) col += ` ${c.opclass}`;
+        if (btreeLike) col += ` ${c.direction.toUpperCase()}`;
+        return col;
+      })
       .join(", ");
 
     let using = "";
