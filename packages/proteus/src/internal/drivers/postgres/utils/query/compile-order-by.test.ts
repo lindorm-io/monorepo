@@ -15,41 +15,77 @@ const metadata = {
 
 describe("compileOrderBy", () => {
   test("should return empty string for null", () => {
-    expect(compileOrderBy(null, metadata, "t0")).toBe("");
+    expect(compileOrderBy(null, metadata, "t0", [])).toBe("");
   });
 
   test("should return empty string for empty object", () => {
-    expect(compileOrderBy({}, metadata, "t0")).toBe("");
+    expect(compileOrderBy({}, metadata, "t0", [])).toBe("");
   });
 
   test("should compile single field ASC", () => {
-    expect(compileOrderBy({ name: "ASC" }, metadata, "t0")).toMatchSnapshot();
+    expect(compileOrderBy({ name: "ASC" }, metadata, "t0", [])).toMatchSnapshot();
   });
 
   test("should compile single field DESC", () => {
-    expect(compileOrderBy({ age: "DESC" }, metadata, "t0")).toMatchSnapshot();
+    expect(compileOrderBy({ age: "DESC" }, metadata, "t0", [])).toMatchSnapshot();
   });
 
   test("should compile multiple fields", () => {
     expect(
-      compileOrderBy({ name: "ASC", age: "DESC" }, metadata, "t0"),
+      compileOrderBy({ name: "ASC", age: "DESC" }, metadata, "t0", []),
     ).toMatchSnapshot();
   });
 
   test("should use column name mapping", () => {
-    expect(compileOrderBy({ email: "ASC" }, metadata, "t0")).toMatchSnapshot();
+    expect(compileOrderBy({ email: "ASC" }, metadata, "t0", [])).toMatchSnapshot();
   });
 
   test("should throw ProteusError for unknown field key", () => {
     // resolveColumnName throws ProteusError when the key is not found in metadata fields
-    expect(() => compileOrderBy({ nonexistent: "ASC" } as any, metadata, "t0")).toThrow(
-      ProteusError,
-    );
+    expect(() =>
+      compileOrderBy({ nonexistent: "ASC" } as any, metadata, "t0", []),
+    ).toThrow(ProteusError);
   });
 
   test("should include unknown field key in error message", () => {
-    expect(() => compileOrderBy({ nonexistent: "ASC" } as any, metadata, "t0")).toThrow(
-      /"nonexistent" not found/,
+    expect(() =>
+      compileOrderBy({ nonexistent: "ASC" } as any, metadata, "t0", []),
+    ).toThrow(/"nonexistent" not found/);
+  });
+
+  test("should compile $similarity order (default DESC) and push the value", () => {
+    const params: Array<unknown> = [];
+    const result = compileOrderBy(
+      { name: { $similarity: "beatles" } },
+      metadata,
+      "t0",
+      params,
     );
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["beatles"]);
+  });
+
+  test("should compile $similarity order with explicit dir ASC", () => {
+    const params: Array<unknown> = [];
+    const result = compileOrderBy(
+      { name: { $similarity: "beatles", dir: "ASC" } },
+      metadata,
+      "t0",
+      params,
+    );
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["beatles"]);
+  });
+
+  test("should mix $similarity and plain column order, preserving param positions", () => {
+    const params: Array<unknown> = ["pre-existing"];
+    const result = compileOrderBy(
+      { name: { $similarity: "beatles", dir: "DESC" }, age: "ASC" },
+      metadata,
+      "t0",
+      params,
+    );
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["pre-existing", "beatles"]);
   });
 });

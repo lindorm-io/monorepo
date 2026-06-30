@@ -30,13 +30,24 @@ export type LockMode =
   | "pessimistic_write_fail";
 
 /**
+ * A column sort direction, or a PostgreSQL trigram relevance ordering.
+ *
+ * - `"ASC" | "DESC"` -- plain column sort.
+ * - `{ $similarity, dir }` -- rank rows by `similarity(column, $similarity)`
+ *   (PostgreSQL pg_trgm only). `dir` defaults to `"DESC"` (closest match first).
+ */
+export type OrderDirection = "ASC" | "DESC";
+export type SimilarityOrder = { $similarity: string; dir?: OrderDirection };
+export type OrderValue = OrderDirection | SimilarityOrder;
+
+/**
  * Shared fields for all find operations (no pagination).
  */
 export type FindOptionsBase<E extends IEntity = IEntity> = {
   /** Return only these fields from each entity. */
   select?: Array<keyof E>;
   /** Sort results by one or more fields. */
-  order?: Partial<Record<keyof E, "ASC" | "DESC">>;
+  order?: Partial<Record<keyof E, OrderValue>>;
   /** Return only distinct rows. */
   distinct?: boolean;
   /** Query the entity table as of this point in time (temporal/versioned tables). */

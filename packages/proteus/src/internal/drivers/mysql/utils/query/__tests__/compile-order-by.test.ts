@@ -1,6 +1,6 @@
 import { makeField } from "../../../../../__fixtures__/make-field.js";
 import type { EntityMetadata } from "../../../../../entity/types/metadata.js";
-import { ProteusError } from "../../../../../../errors/index.js";
+import { NotSupportedError, ProteusError } from "../../../../../../errors/index.js";
 import { compileOrderBy } from "../compile-order-by.js";
 import { describe, expect, test } from "vitest";
 
@@ -16,22 +16,22 @@ const metadata = {
 
 describe("compileOrderBy", () => {
   test("should return empty string for null", () => {
-    expect(compileOrderBy(null, metadata, "t0")).toBe("");
+    expect(compileOrderBy(null, metadata, "t0", [])).toBe("");
   });
 
   test("should return empty string for empty object", () => {
-    expect(compileOrderBy({}, metadata, "t0")).toBe("");
+    expect(compileOrderBy({}, metadata, "t0", [])).toBe("");
   });
 
   test("should compile single field ASC with NULLS LAST emulation", () => {
-    const result = compileOrderBy({ name: "ASC" }, metadata, "t0");
+    const result = compileOrderBy({ name: "ASC" }, metadata, "t0", []);
     expect(result).toMatchSnapshot();
     // Should use IS NULL trick for NULLS LAST
     expect(result).toContain("IS NULL");
   });
 
   test("should compile single field DESC with NULLS FIRST emulation", () => {
-    const result = compileOrderBy({ age: "DESC" }, metadata, "t0");
+    const result = compileOrderBy({ age: "DESC" }, metadata, "t0", []);
     expect(result).toMatchSnapshot();
     // Should use IS NOT NULL trick for NULLS FIRST
     expect(result).toContain("IS NOT NULL");
@@ -39,17 +39,23 @@ describe("compileOrderBy", () => {
 
   test("should compile multiple fields", () => {
     expect(
-      compileOrderBy({ name: "ASC", age: "DESC" }, metadata, "t0"),
+      compileOrderBy({ name: "ASC", age: "DESC" }, metadata, "t0", []),
     ).toMatchSnapshot();
   });
 
   test("should use column name mapping", () => {
-    expect(compileOrderBy({ email: "ASC" }, metadata, "t0")).toMatchSnapshot();
+    expect(compileOrderBy({ email: "ASC" }, metadata, "t0", [])).toMatchSnapshot();
   });
 
   test("should throw ProteusError for unknown field key", () => {
-    expect(() => compileOrderBy({ nonexistent: "ASC" } as any, metadata, "t0")).toThrow(
-      ProteusError,
-    );
+    expect(() =>
+      compileOrderBy({ nonexistent: "ASC" } as any, metadata, "t0", []),
+    ).toThrow(ProteusError);
+  });
+
+  test("should throw NotSupportedError for $similarity ordering", () => {
+    expect(() =>
+      compileOrderBy({ name: { $similarity: "beatles" } }, metadata, "t0", []),
+    ).toThrow(NotSupportedError);
   });
 });

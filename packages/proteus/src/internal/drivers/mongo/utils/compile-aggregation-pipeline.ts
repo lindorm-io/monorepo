@@ -1,5 +1,8 @@
+import { isObject } from "@lindorm/is";
 import type { Document } from "mongodb";
 import type { IEntity } from "../../../../interfaces/index.js";
+import type { OrderValue } from "../../../../types/find-options.js";
+import { NotSupportedError } from "../../../../errors/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { PredicateEntry } from "../../../types/query.js";
 import { compileFilter } from "./compile-filter.js";
@@ -89,7 +92,7 @@ export const compileAggregationPipeline = <E extends IEntity>(options: {
   groupByFields: Array<keyof E>;
   aggregateSelections: Array<AggregateSelection>;
   having: Array<PredicateEntry<E>>;
-  orderBy: Partial<Record<keyof E, "ASC" | "DESC">> | null;
+  orderBy: Partial<Record<keyof E, OrderValue>> | null;
   skip: number | null;
   take: number | null;
   metadata: EntityMetadata;
@@ -145,6 +148,20 @@ export const compileAggregationPipeline = <E extends IEntity>(options: {
 
   // Stage 4: $sort
   if (orderBy) {
+    for (const value of Object.values(orderBy)) {
+      if (isObject<{ $similarity: string }>(value)) {
+        throw new NotSupportedError(
+          "Ordering by trigram $similarity is only supported by the PostgreSQL driver",
+          {
+            code: "unsupported_operation",
+            title: "Unsupported Operation",
+            details:
+              "Relevance ordering via $similarity relies on PostgreSQL's pg_trgm extension and is not available on MongoDB.",
+            data: { operator: "$similarity" },
+          },
+        );
+      }
+    }
     const sort = compileSort(orderBy as Record<string, "ASC" | "DESC">, metadata);
     if (sort) {
       pipeline.push({ $sort: sort });

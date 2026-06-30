@@ -1,5 +1,8 @@
+import { isObject } from "@lindorm/is";
 import type { IEntity } from "../../../../../interfaces/index.js";
+import type { OrderValue } from "../../../../../types/find-options.js";
 import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { NotSupportedError } from "../../../../../errors/index.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 import { resolveColumnName } from "../resolve-column-name.js";
 
@@ -14,16 +17,30 @@ import { resolveColumnName } from "../resolve-column-name.js";
  * This matches the PostgreSQL convention expected by the TCK.
  */
 export const compileOrderBy = <E extends IEntity>(
-  orderBy: Partial<Record<keyof E, "ASC" | "DESC">> | null,
+  orderBy: Partial<Record<keyof E, OrderValue>> | null,
   metadata: EntityMetadata,
   tableAlias: string,
+  _params: Array<unknown>,
 ): string => {
   if (!orderBy) return "";
 
-  const entries = Object.entries(orderBy) as Array<[string, "ASC" | "DESC"]>;
+  const entries = Object.entries(orderBy) as Array<[string, OrderValue]>;
   if (entries.length === 0) return "";
 
-  const clauses = entries.flatMap(([key, direction]) => {
+  const clauses = entries.flatMap(([key, value]) => {
+    if (isObject<{ $similarity: string }>(value)) {
+      throw new NotSupportedError(
+        "Ordering by trigram $similarity is only supported by the PostgreSQL driver",
+        {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "Relevance ordering via $similarity relies on PostgreSQL's pg_trgm extension and is not available on MySQL.",
+          data: { operator: "$similarity" },
+        },
+      );
+    }
+    const direction = value;
     const columnName = resolveColumnName(metadata.fields, key, metadata.relations);
     const qualifiedCol = `${quoteIdentifier(tableAlias)}.${quoteIdentifier(columnName)}`;
 

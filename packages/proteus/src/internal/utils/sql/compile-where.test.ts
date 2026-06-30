@@ -443,6 +443,49 @@ describe("compileWhere dialect-specific: $regex", () => {
   });
 });
 
+describe("compileWhere dialect-specific: $similar", () => {
+  test("postgres: string form uses % trigram match operator", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $similar: "beatles" } }, conjunction: "and" },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, postgresDialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["beatles"]);
+  });
+
+  test("postgres: threshold form uses similarity() with explicit threshold", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      {
+        predicate: { name: { $similar: { value: "beatles", threshold: 0.3 } } },
+        conjunction: "and",
+      },
+    ];
+    const params: Array<unknown> = [];
+    const result = compileWhere(entries, metadata, "t0", params, postgresDialect);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["beatles", 0.3]);
+  });
+
+  test("mysql: $similar throws NotSupportedError", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $similar: "beatles" } }, conjunction: "and" },
+    ];
+    expect(() => compileWhere(entries, metadata, "t0", [], mysqlDialect)).toThrow(
+      /only supported by the PostgreSQL driver/i,
+    );
+  });
+
+  test("sqlite: $similar throws NotSupportedError", () => {
+    const entries: Array<PredicateEntry<any>> = [
+      { predicate: { name: { $similar: "beatles" } }, conjunction: "and" },
+    ];
+    expect(() => compileWhere(entries, metadata, "t0", [], sqliteDialect)).toThrow(
+      /only supported by the PostgreSQL driver/i,
+    );
+  });
+});
+
 describe("compileWhere dialect-specific: placeholder style", () => {
   test("postgres: uses $1, $2, $3 indexed placeholders", () => {
     const entries: Array<PredicateEntry<any>> = [

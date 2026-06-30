@@ -20,6 +20,7 @@ const PREDICATE_OP_PREFIXES = [
   "$nin",
   "$like",
   "$ilike",
+  "$similar",
   "$between",
   "$all",
   "$overlap",
@@ -334,6 +335,10 @@ const compileOperator = (
 
   if ("$ilike" in ops) {
     clauses.push(dialect.compileIlike(qualifiedCol, params, ops.$ilike));
+  }
+
+  if ("$similar" in ops) {
+    clauses.push(dialect.compileSimilar(qualifiedCol, params, ops.$similar));
   }
 
   if ("$regex" in ops) {

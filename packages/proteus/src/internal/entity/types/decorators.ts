@@ -27,6 +27,7 @@ export type GeneratedDecoratorOptions = {
 export type IndexDecoratorOptions = NamedDecoratorOptions & {
   concurrent?: boolean;
   direction?: IndexDirection;
+  opclass?: string;
   sparse?: boolean;
   unique?: boolean;
   using?: string;

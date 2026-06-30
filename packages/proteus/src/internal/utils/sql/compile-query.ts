@@ -11,6 +11,7 @@ import type {
   WindowSpec,
 } from "../../types/query.js";
 import type { QueryState } from "../../types/query.js";
+import type { OrderValue } from "../../../types/find-options.js";
 import type { SqlDialect } from "./sql-dialect.js";
 import type { AliasMap, InheritanceAliasMap } from "./types.js";
 
@@ -71,9 +72,10 @@ export type CompileQueryDeps<E extends IEntity> = {
     params: Array<unknown>,
   ) => string;
   compileOrderBy: (
-    orderBy: Partial<Record<keyof E, "ASC" | "DESC">> | null,
+    orderBy: Partial<Record<keyof E, OrderValue>> | null,
     metadata: EntityMetadata,
     tableAlias: string,
+    params: Array<unknown>,
   ) => string;
   compileLimitOffset: (
     skip: number | null,
@@ -140,7 +142,8 @@ export const compileQuery = <E extends IEntity>(
   // 4. Relation JOIN condition params (compileJoin)
   // 5. WHERE + system filter params (compileWhereWithFilters)
   // 6. HAVING params (compileHaving)
-  // 7. LIMIT/OFFSET params (compileLimitOffset)
+  // 7. ORDER BY params (compileOrderBy — e.g. trigram $similarity values)
+  // 8. LIMIT/OFFSET params (compileLimitOffset)
   // Reordering these calls will silently corrupt parameter indices.
 
   const cteClause = deps.compileCtes(state.ctes, params);
@@ -192,9 +195,9 @@ export const compileQuery = <E extends IEntity>(
   // Resolve @DefaultOrder fallback: state.orderBy is null when not explicitly set
   // (QB path), but an empty object {} when explicitly suppressed (find path with order: null).
   const effectiveOrderBy = (state.orderBy ?? metadata.defaultOrder ?? null) as Partial<
-    Record<keyof E, "ASC" | "DESC">
+    Record<keyof E, OrderValue>
   > | null;
-  const orderByClause = deps.compileOrderBy(effectiveOrderBy, metadata, "t0");
+  const orderByClause = deps.compileOrderBy(effectiveOrderBy, metadata, "t0", params);
   const limitOffsetClause = deps.compileLimitOffset(state.skip, state.take, params);
 
   // When set operations are present, ORDER BY / LIMIT apply to the combined result

@@ -6,6 +6,12 @@ exports[`generateIndexDDL > accepts a named index of exactly 63 characters 1`] =
 ]
 `;
 
+exports[`generateIndexDDL > btree + opclass renders opclass before direction 1`] = `
+[
+  "CREATE INDEX IF NOT EXISTS "idx_r1oMfXBoB7B" ON "products" ("name" text_pattern_ops ASC);",
+]
+`;
+
 exports[`generateIndexDDL > explicit WHERE takes precedence over sparse flag 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_o8ppodgftp1" ON "products" ("phone" ASC) WHERE phone IS NOT NULL AND verified = true;",
@@ -68,7 +74,7 @@ exports[`generateIndexDDL > generates index with NULLS LAST 1`] = `
 
 exports[`generateIndexDDL > generates index with USING gin 1`] = `
 [
-  "CREATE INDEX IF NOT EXISTS "idx_vf24-KY9qgv" ON "products" USING gin ("tags" ASC);",
+  "CREATE INDEX IF NOT EXISTS "idx_vf24-KY9qgv" ON "products" USING gin ("tags");",
 ]
 `;
 
@@ -93,6 +99,12 @@ exports[`generateIndexDDL > generates index with explicit WHERE clause 1`] = `
 exports[`generateIndexDDL > generates sparse index with auto WHERE IS NOT NULL 1`] = `
 [
   "CREATE INDEX IF NOT EXISTS "idx_o8ppodgftp1" ON "products" ("phone" ASC) WHERE "phone" IS NOT NULL;",
+]
+`;
+
+exports[`generateIndexDDL > gin + gin_trgm_ops renders opclass with no direction or NULLS 1`] = `
+[
+  "CREATE INDEX IF NOT EXISTS "idx_r1oMfXBoB7B" ON "products" USING gin ("name" gin_trgm_ops);",
 ]
 `;
 

@@ -1,5 +1,8 @@
+import { isObject } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
+import type { OrderValue } from "../../../types/find-options.js";
+import { NotSupportedError } from "../../../errors/index.js";
 
 /**
  * Sort rows by one or more field keys with ASC/DESC direction.
@@ -12,12 +15,27 @@ import type { IEntity } from "../../../interfaces/index.js";
  */
 export const applyOrdering = <E extends IEntity>(
   rows: Array<Dict>,
-  order: Partial<Record<keyof E, "ASC" | "DESC">> | null | undefined,
+  order: Partial<Record<keyof E, OrderValue>> | null | undefined,
 ): Array<Dict> => {
   if (!order) return rows;
 
-  const entries = Object.entries(order) as Array<[string, "ASC" | "DESC"]>;
+  const entries = Object.entries(order) as Array<[string, OrderValue]>;
   if (entries.length === 0) return rows;
+
+  for (const [, value] of entries) {
+    if (isObject<{ $similarity: string }>(value)) {
+      throw new NotSupportedError(
+        "Ordering by trigram $similarity is only supported by the PostgreSQL driver",
+        {
+          code: "unsupported_operation",
+          title: "Unsupported Operation",
+          details:
+            "Relevance ordering via $similarity relies on PostgreSQL's pg_trgm extension and is not available on in-memory or Redis drivers.",
+          data: { operator: "$similarity" },
+        },
+      );
+    }
+  }
 
   return [...rows].sort((a, b) => {
     for (const [key, direction] of entries) {

@@ -1,6 +1,6 @@
 import type { Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
-import type { FindOptions } from "../../../types/index.js";
+import type { FindOptions, OrderValue } from "../../../types/index.js";
 import type { EntityMetadata, QueryScope } from "../../entity/types/metadata.js";
 import type { IncludeSpec, PredicateEntry, QueryState } from "../../types/query.js";
 import type { FilterRegistry } from "./filter-registry.js";
@@ -60,11 +60,11 @@ export const findOptionsToQueryState = <E extends IEntity>(
   // Resolve ordering: explicit FindOptions.order > @DefaultOrder > null.
   // When user explicitly passes order: null to suppress ordering, we use {}
   // (empty object) as a sentinel so compileQuery's ?? fallback doesn't re-apply defaultOrder.
-  const orderBy: Partial<Record<keyof E, "ASC" | "DESC">> | null =
+  const orderBy: Partial<Record<keyof E, OrderValue>> | null =
     options.order !== undefined
-      ? (options.order ?? ({} as Partial<Record<keyof E, "ASC" | "DESC">>))
+      ? (options.order ?? ({} as Partial<Record<keyof E, OrderValue>>))
       : metadata?.defaultOrder
-        ? (metadata.defaultOrder as Partial<Record<keyof E, "ASC" | "DESC">>)
+        ? (metadata.defaultOrder as Partial<Record<keyof E, OrderValue>>)
         : null;
 
   return {

@@ -1,9 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`compileOrderBy > should compile $similarity order (default DESC) and push the value 1`] = `"ORDER BY similarity("t0"."name", $1) DESC"`;
+
+exports[`compileOrderBy > should compile $similarity order with explicit dir ASC 1`] = `"ORDER BY similarity("t0"."name", $1) ASC"`;
+
 exports[`compileOrderBy > should compile multiple fields 1`] = `"ORDER BY "t0"."name" ASC, "t0"."age" DESC"`;
 
 exports[`compileOrderBy > should compile single field ASC 1`] = `"ORDER BY "t0"."name" ASC"`;
 
 exports[`compileOrderBy > should compile single field DESC 1`] = `"ORDER BY "t0"."age" DESC"`;
+
+exports[`compileOrderBy > should mix $similarity and plain column order, preserving param positions 1`] = `"ORDER BY similarity("t0"."name", $2) DESC, "t0"."age" ASC"`;
 
 exports[`compileOrderBy > should use column name mapping 1`] = `"ORDER BY "t0"."email_address" ASC"`;

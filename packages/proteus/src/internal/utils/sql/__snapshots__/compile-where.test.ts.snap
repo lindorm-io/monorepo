@@ -181,3 +181,7 @@ exports[`compileWhere dialect-specific: $regex > mysql: uses REGEXP with inline 
 exports[`compileWhere dialect-specific: $regex > postgres: case-insensitive regex uses ~* operator 1`] = `"WHERE "t0"."name" ~* $1"`;
 
 exports[`compileWhere dialect-specific: $regex > postgres: case-sensitive regex uses ~ operator 1`] = `"WHERE "t0"."name" ~ $1"`;
+
+exports[`compileWhere dialect-specific: $similar > postgres: string form uses % trigram match operator 1`] = `"WHERE "t0"."name" % $1"`;
+
+exports[`compileWhere dialect-specific: $similar > postgres: threshold form uses similarity() with explicit threshold 1`] = `"WHERE similarity("t0"."name", $1) > $2"`;
