@@ -1,5 +1,5 @@
 import type { IndexDirection } from "../../types/types.js";
-import type { MetaFieldType, RelationStrategy } from "./metadata.js";
+import type { MetaFieldMode, MetaFieldType, RelationStrategy } from "./metadata.js";
 
 export type NamedDecoratorOptions = {
   name?: string;
@@ -9,6 +9,9 @@ export type EntityDecoratorOptions = NamedDecoratorOptions;
 
 export type FieldDecoratorOptions = NamedDecoratorOptions & {
   arrayType?: MetaFieldType;
+  // JS-representation override. Currently only `decimal` honours `mode: "string"`
+  // (exact, arbitrary-precision string instead of the default `number`).
+  mode?: MetaFieldMode;
 };
 
 export type UniqueDecoratorOptions = NamedDecoratorOptions;

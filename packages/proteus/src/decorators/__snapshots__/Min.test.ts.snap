@@ -54,6 +54,7 @@ exports[`Min > should match snapshot 1`] = `
       "key": "age",
       "max": null,
       "min": 0,
+      "mode": null,
       "name": "age",
       "nullable": false,
       "order": null,

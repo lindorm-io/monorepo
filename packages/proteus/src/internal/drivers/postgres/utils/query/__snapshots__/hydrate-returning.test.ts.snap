@@ -3,7 +3,7 @@
 exports[`hydrateReturning > should map column names to property keys 1`] = `
 UserEntity {
   "age": 30,
-  "balance": "99.99",
+  "balance": 99.99,
   "counter": 12345678901234n,
   "email": "alice@example.com",
   "id": "abc-123",

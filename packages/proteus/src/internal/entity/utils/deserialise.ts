@@ -1,9 +1,14 @@
 import { isBoolean, isNumber, isString } from "@lindorm/is";
 import { Primitive } from "@lindorm/json-kit";
 import { ProteusError } from "../../../errors/index.js";
-import type { MetaFieldType } from "../types/metadata.js";
+import type { MetaFieldMode, MetaFieldType } from "../types/metadata.js";
+import { decimalFitsDouble } from "./decimal-fidelity.js";
 
-export const deserialise = (value: any, type: MetaFieldType | null): any => {
+export const deserialise = (
+  value: any,
+  type: MetaFieldType | null,
+  mode?: MetaFieldMode | null,
+): any => {
   switch (type) {
     case "bigint": {
       if (typeof value === "bigint") return value;
@@ -83,9 +88,37 @@ export const deserialise = (value: any, type: MetaFieldType | null): any => {
     }
 
     case "decimal": {
-      if (isString(value)) return value;
       if (value == null) return null;
-      return String(value);
+
+      // Exact, arbitrary-precision mode: the canonical JS type is `string`
+      // (e.g. money). node-postgres/mysql already return NUMERIC as a string.
+      if (mode === "string") {
+        return isString(value) ? value : String(value);
+      }
+
+      // Default mode: the canonical JS type is `number`. A JS number is always a
+      // valid double, so it passes straight through. A string (the driver's raw
+      // NUMERIC, or caller-supplied input) is accepted only when it round-trips
+      // through a double without precision loss — otherwise we throw rather than
+      // silently truncate. Use `@Field("decimal", { mode: "string" })` for values
+      // that exceed JS number precision.
+      if (isNumber(value)) return value;
+
+      const str = String(value);
+      const num = Number(str);
+      if (!Number.isFinite(num) || !decimalFitsDouble(str)) {
+        throw new ProteusError(
+          "Decimal value exceeds JS number precision during deserialisation",
+          {
+            code: "deserialise_failed",
+            title: "Deserialise Failed",
+            details: `The decimal value "${str}" cannot be represented as a JS number without precision loss. Declare the field with \`@Field("decimal", { mode: "string" })\` to read it as an exact string.`,
+            data: { type },
+            debug: { value: str },
+          },
+        );
+      }
+      return num;
     }
 
     case "binary": {

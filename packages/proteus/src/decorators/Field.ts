@@ -25,6 +25,7 @@ export const Field =
       hideOn: [],
       max: null,
       min: null,
+      mode: options?.mode ?? null,
       name: options?.name ?? String(context.name),
       nullable: false,
       order: null,

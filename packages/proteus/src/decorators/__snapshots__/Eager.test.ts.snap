@@ -54,6 +54,7 @@ exports[`Eager > should match snapshot for eager on both scopes 1`] = `
       "key": "title",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "title",
       "nullable": false,
       "order": null,

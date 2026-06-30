@@ -54,6 +54,7 @@ exports[`Field > should register integer field 1`] = `
       "key": "count",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "count",
       "nullable": false,
       "order": null,

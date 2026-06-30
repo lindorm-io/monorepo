@@ -54,6 +54,7 @@ exports[`OneToMany > should register parent entity with OneToMany metadata 1`] =
       "key": "title",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "title",
       "nullable": false,
       "order": null,

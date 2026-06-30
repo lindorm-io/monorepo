@@ -41,6 +41,7 @@ exports[`AbstractEntity > should produce full metadata snapshot for concrete ent
     "key": "name",
     "max": null,
     "min": null,
+    "mode": null,
     "name": "name",
     "nullable": false,
     "order": null,

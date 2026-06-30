@@ -93,7 +93,7 @@ export const loadMemoryEmbeddedListRows = (
         if (raw === null || raw === undefined) {
           instance[field.key] = raw;
         } else {
-          let value = deserialise(raw, field.type);
+          let value = deserialise(raw, field.type, field.mode);
           if (field.transform) {
             value = field.transform.from(value);
           }

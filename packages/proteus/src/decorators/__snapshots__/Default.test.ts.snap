@@ -54,6 +54,7 @@ exports[`Default > should match snapshot 1`] = `
       "key": "status",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "status",
       "nullable": false,
       "order": null,

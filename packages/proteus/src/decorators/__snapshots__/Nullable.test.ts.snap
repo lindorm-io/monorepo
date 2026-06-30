@@ -54,6 +54,7 @@ exports[`Nullable > should match snapshot 1`] = `
       "key": "description",
       "max": null,
       "min": null,
+      "mode": null,
       "name": "description",
       "nullable": true,
       "order": null,

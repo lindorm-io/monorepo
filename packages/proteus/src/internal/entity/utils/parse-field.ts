@@ -28,7 +28,7 @@ export const parseField = <E extends IEntity, O extends DeepPartial<E> = DeepPar
     }
   }
   try {
-    return deserialise(value, field.type);
+    return deserialise(value, field.type, field.mode);
   } catch (error) {
     throw new EntityManagerError(
       `Failed to parse field "${field.key}" of type ${field.type}`,

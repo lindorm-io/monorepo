@@ -165,17 +165,43 @@ describe("deserialise", () => {
     });
   });
 
-  describe("decimal", () => {
-    test("should return string as-is", () => {
-      expect(deserialise("123.456", "decimal")).toBe("123.456");
+  describe("decimal (default number mode)", () => {
+    test("should parse a NUMERIC string to a number", () => {
+      expect(deserialise("123.456", "decimal")).toBe(123.456);
+    });
+
+    test("should pass a JS number through", () => {
+      expect(deserialise(42, "decimal")).toBe(42);
     });
 
     test("should return null for null", () => {
       expect(deserialise(null, "decimal")).toBeNull();
     });
 
-    test("should convert number to string", () => {
-      expect(deserialise(42, "decimal")).toBe("42");
+    test("should throw when the value exceeds JS number precision", () => {
+      expect(() => deserialise("0.123456789012345678", "decimal")).toThrow(
+        /exceeds JS number precision/,
+      );
+    });
+
+    test("should accept large round numbers that round-trip by value", () => {
+      expect(deserialise("1000000000000000000000000000000", "decimal")).toBe(1e30);
+    });
+  });
+
+  describe("decimal (string mode)", () => {
+    test("should return the exact string as-is", () => {
+      expect(deserialise("123.45678901234567890", "decimal", "string")).toBe(
+        "123.45678901234567890",
+      );
+    });
+
+    test("should stringify a number in string mode", () => {
+      expect(deserialise(42, "decimal", "string")).toBe("42");
+    });
+
+    test("should return null for null", () => {
+      expect(deserialise(null, "decimal", "string")).toBeNull();
     });
   });
 

@@ -34,7 +34,9 @@ const getValidator = (field: MetaField): z.ZodType | undefined => {
       return z.number();
 
     case "decimal":
-      return z.string();
+      // Default decimal mode hydrates to a number; `{ mode: "string" }` keeps it
+      // an exact arbitrary-precision string.
+      return field.mode === "string" ? z.string() : z.number();
 
     case "string":
     case "text":
@@ -80,6 +82,31 @@ const getValidator = (field: MetaField): z.ZodType | undefined => {
   }
 };
 
+// Apply min/max to a decimal validator. String-mode decimals validate the
+// numeric value of the string (parseFloat); number-mode decimals use native
+// number bounds.
+const applyDecimalMinMax = (validator: z.ZodType, field: MetaField): z.ZodType => {
+  if (field.mode === "string") {
+    if (field.min != null) {
+      const min = field.min;
+      validator = (validator as z.ZodString).refine((val) => parseFloat(val) >= min, {
+        error: `Value must be >= ${min}`,
+      });
+    }
+    if (field.max != null) {
+      const max = field.max;
+      validator = (validator as z.ZodString).refine((val) => parseFloat(val) <= max, {
+        error: `Value must be <= ${max}`,
+      });
+    }
+    return validator;
+  }
+
+  if (field.min != null) validator = (validator as z.ZodNumber).min(field.min);
+  if (field.max != null) validator = (validator as z.ZodNumber).max(field.max);
+  return validator;
+};
+
 const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
   const metadata = getEntityMetadata(target);
   const validators: Record<string, z.ZodType> = {};
@@ -113,18 +140,7 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
     let validator = getValidator(field);
     if (!validator) continue;
     if (field.type === "decimal") {
-      if (field.min != null) {
-        const min = field.min;
-        validator = (validator as z.ZodString).refine((val) => parseFloat(val) >= min, {
-          error: `Value must be >= ${min}`,
-        });
-      }
-      if (field.max != null) {
-        const max = field.max;
-        validator = (validator as z.ZodString).refine((val) => parseFloat(val) <= max, {
-          error: `Value must be <= ${max}`,
-        });
-      }
+      validator = applyDecimalMinMax(validator, field);
     }
     if (field.type && fieldWithMinMax.includes(field.type) && field.min != null) {
       validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).min(
@@ -150,18 +166,7 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
       let validator = getValidator(field);
       if (!validator) continue;
       if (field.type === "decimal") {
-        if (field.min != null) {
-          const min = field.min;
-          validator = (validator as z.ZodString).refine((val) => parseFloat(val) >= min, {
-            error: `Value must be >= ${min}`,
-          });
-        }
-        if (field.max != null) {
-          const max = field.max;
-          validator = (validator as z.ZodString).refine((val) => parseFloat(val) <= max, {
-            error: `Value must be <= ${max}`,
-          });
-        }
+        validator = applyDecimalMinMax(validator, field);
       }
       if (field.type && fieldWithMinMax.includes(field.type) && field.min != null) {
         validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).min(

@@ -54,6 +54,7 @@ exports[`Max > should match snapshot 1`] = `
       "key": "score",
       "max": 100,
       "min": null,
+      "mode": null,
       "name": "score",
       "nullable": false,
       "order": null,
