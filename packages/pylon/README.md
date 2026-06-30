@@ -871,7 +871,30 @@ const app2 = new Pylon({
 
 ## Error handling
 
-Throw any `LindormError` (or subclass — `ClientError`, `ServerError`, `PylonError`, …) from a handler or middleware. Pylon converts it into a JSON response:
+Raise errors with `@lindorm/errors` — not koa's `ctx.throw`, which is intentionally removed from the typed HTTP context. Throw any `LindormError` (or subclass — `ClientError`, `ServerError`, `PylonError`, the status-coded HTTP classes `BadRequestError` / `NotFoundError` / `ConflictError` / …) from a handler or middleware. Pass `code`, `data`, `details`, and `title` to enrich the response.
+
+```typescript
+import { NotFoundError } from "@lindorm/errors";
+import { useHandler } from "@lindorm/pylon";
+
+router.get(
+  "/songs/:id",
+  useHandler(async (ctx) => {
+    const song = await ctx.proteus.repository(Song).findOne({ id: ctx.params.id });
+
+    if (!song) {
+      throw new NotFoundError(`No song "${ctx.params.id}"`, {
+        code: "song_not_found",
+        data: { id: ctx.params.id },
+      });
+    }
+
+    return { body: song };
+  }),
+);
+```
+
+Pylon catches the throw in the built-in `httpErrorHandlerMiddleware`, derives the HTTP status from the error (`status` → `statusCode` → `500`), and converts it into a JSON response:
 
 ```json
 {
