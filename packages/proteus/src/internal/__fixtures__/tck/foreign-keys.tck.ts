@@ -42,6 +42,22 @@ export const foreignKeysSuite = (
       ).rejects.toThrow(ProteusRepositoryError);
     });
 
+    // F15 regression: setting the *ToOne relation object (without the FK column)
+    // must derive and persist the owning-side FK. Previously the FK was written
+    // NULL, violating the NOT NULL constraint on a required relation.
+    test("insert child deriving FK from the relation object succeeds", async () => {
+      const parentRepo = getHandle().repository(TckFkParent);
+      const childRepo = getHandle().repository(TckFkCascadeChild);
+
+      const parent = await parentRepo.insert({ name: "RelObjParent" });
+      const child = await childRepo.insert({ value: "rel-child", parent });
+
+      expect(child.parentId).toBe(parent.id);
+
+      const reloaded = await childRepo.findOne({ id: child.id });
+      expect(reloaded?.parentId).toBe(parent.id);
+    });
+
     test("insert child with null FK on nullable relation succeeds", async () => {
       const childRepo = getHandle().repository(TckFkNullifyChild);
 

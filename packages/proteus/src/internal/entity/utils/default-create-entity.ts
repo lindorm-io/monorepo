@@ -1,4 +1,4 @@
-import { isFunction, isObject } from "@lindorm/is";
+import { isFunction, isObject, isObjectLike } from "@lindorm/is";
 import type { Constructor, DeepPartial, Dict } from "@lindorm/types";
 import type { IEntity } from "../../../interfaces/index.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
@@ -91,8 +91,21 @@ export const createEntity = <
       case "ManyToOne":
       case "OneToOne":
         if (isObject(relation.joinKeys)) {
-          for (const key of Object.keys(relation.joinKeys)) {
-            entity[key] = options[key] ?? null;
+          const relObj = options[relation.key];
+          const hasRelObj = isObjectLike(relObj) && !isLazyRelation(relObj);
+          for (const [fkKey, foreignKey] of Object.entries(relation.joinKeys)) {
+            // An explicitly-provided FK (even null) wins, so detaching by
+            // nulling the FK is honoured. Otherwise derive the FK from the
+            // relation object when one is set — the relation object is the
+            // authoritative handle, and create() must not leave the FK null
+            // when the caller passed the related entity.
+            if (fkKey in (options as Dict)) {
+              entity[fkKey] = options[fkKey] ?? null;
+            } else if (hasRelObj && relObj[foreignKey] != null) {
+              entity[fkKey] = relObj[foreignKey];
+            } else {
+              entity[fkKey] = null;
+            }
           }
         }
         break;
