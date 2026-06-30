@@ -10,7 +10,7 @@ import type {
   PylonContext,
   PylonHttpContext,
 } from "../../types/index.js";
-import { AUDIT_SOURCE, RATE_LIMIT_SOURCE } from "../constants/symbols.js";
+import { AUDIT_SOURCE, CACHE_SOURCE, RATE_LIMIT_SOURCE } from "../constants/symbols.js";
 import {
   createAuthClient,
   createSocketClaimsClient,
@@ -41,6 +41,7 @@ type Options = {
   actor?: ActorResolver;
   authConfig?: PylonAuthConfig;
   auditConfig?: AuditConfig;
+  cacheKeyValue?: IProteusSource;
   hermes?: IHermes;
   iris?: IIrisSource;
   keyValue?: IProteusSource;
@@ -106,6 +107,10 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
 
       if (options.rateLimitKeyValue) {
         (ctx as any)[RATE_LIMIT_SOURCE] = options.rateLimitKeyValue;
+      }
+
+      if (options.cacheKeyValue) {
+        (ctx as any)[CACHE_SOURCE] = options.cacheKeyValue;
       }
 
       // Socket emitter (available whenever io is present)

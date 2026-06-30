@@ -8,6 +8,7 @@ export * from "./create-publisher-middleware.js";
 export * from "./create-token-middleware.js";
 export * from "./create-worker-queue-middleware.js";
 export * from "./use-access.js";
+export * from "./use-cache.js";
 export * from "./use-audit-log.js";
 export * from "./use-permissions.js";
 export * from "./use-rate-limit.js";
