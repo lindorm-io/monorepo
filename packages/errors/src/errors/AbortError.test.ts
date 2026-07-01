@@ -76,6 +76,7 @@ describe("AbortError", () => {
         }).toJSON(),
       ).toMatchSnapshot({
         stack: expect.stringContaining("AbortError: message"),
+        support: expect.any(String),
       });
     });
 

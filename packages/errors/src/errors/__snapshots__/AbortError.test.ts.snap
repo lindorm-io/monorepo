@@ -35,7 +35,7 @@ exports[`AbortError > serialisation > should serialise to json with default valu
   "name": "AbortError",
   "stack": StringContaining "AbortError: message",
   "status": 499,
-  "support": null,
+  "support": Any<String>,
   "timestamp": 2024-01-01T08:00:00.000Z,
   "title": "Client Closed Request",
   "type": "urn:lindorm:error:abort",

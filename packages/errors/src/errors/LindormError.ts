@@ -9,7 +9,11 @@ import {
 } from "@lindorm/is";
 import { randomId } from "@lindorm/random";
 import type { Dict } from "@lindorm/types";
-import { assertValidErrorType, createErrorTypeUrn } from "../utils/index.js";
+import {
+  assertValidErrorType,
+  createErrorTypeUrn,
+  generateSupport,
+} from "../utils/index.js";
 
 export type LindormErrorAttributes = {
   id: string;
@@ -79,7 +83,10 @@ export class LindormError extends Error {
     this.details = options.details ?? destruct.details ?? null;
     this.errors = destruct.errors ?? [];
     this.status = status ?? destruct?.status ?? -1;
-    this.support = support ?? destruct?.support ?? null;
+    // Auto-generate a readable support code (like `id`) when none is provided,
+    // so the same code is logged with the error AND shown to the user — making
+    // it actually correlatable when quoted back.
+    this.support = support ?? destruct?.support ?? generateSupport();
     this.title = title ?? destruct?.title ?? null;
     this.timestamp = destruct?.timestamp ?? new Date();
 
