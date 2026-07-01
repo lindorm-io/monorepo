@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`conduitUserAgentMiddleware > should only set headers for provided fields and omit null/undefined 1`] = `
+{
+  "existing": "header",
+  "x-user-agent-app": "wallet",
+  "x-user-agent-device-type": "mobile",
+}
+`;
+
+exports[`conduitUserAgentMiddleware > should set every x-user-agent-* header for a full client declaration 1`] = `
+{
+  "existing": "header",
+  "x-user-agent-app": "wallet",
+  "x-user-agent-app-version": "1.2.3",
+  "x-user-agent-build": "4567",
+  "x-user-agent-channel": "ios-app-store",
+  "x-user-agent-device-model": "iPhone15,2",
+  "x-user-agent-device-name": "Jonn's iPhone",
+  "x-user-agent-device-type": "mobile",
+  "x-user-agent-platform": "ios",
+  "x-user-agent-timezone": "Europe/Stockholm",
+}
+`;
