@@ -1,7 +1,6 @@
-import { ServerError } from "@lindorm/errors";
+import { ServerError, generateSupport } from "@lindorm/errors";
 import { isNumber, isString } from "@lindorm/is";
 import { randomId } from "@lindorm/random";
-import { randomBytes } from "crypto";
 import { RedirectError } from "../../errors/index.js";
 import type { PylonHttpMiddleware } from "../../types/index.js";
 
@@ -46,7 +45,7 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
             message: err.message,
             code: err.code ?? "unknown_error",
             type: err.type ?? "urn:lindorm:error:unknown_error",
-            support: err.support ?? randomBytes(8).toString("base64url"),
+            support: err.support ?? generateSupport(),
             data: err.data ?? {},
           },
         };
@@ -67,7 +66,7 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
           message: "An unexpected exception occurred while handling thrown error",
           code: "unexpected_exception",
           type: "urn:lindorm:error:unexpected_exception",
-          support: randomBytes(8).toString("base64url"),
+          support: generateSupport(),
           data: {},
         },
       };

@@ -35,6 +35,7 @@ describe("assertSameSiteForSockets", () => {
     } catch (err: any) {
       expect(err).toMatchSnapshot({
         id: expect.any(String),
+        support: expect.any(String),
         timestamp: expect.any(Date),
       });
     }
