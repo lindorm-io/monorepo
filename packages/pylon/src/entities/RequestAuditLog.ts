@@ -8,6 +8,7 @@ import {
   Nullable,
   PrimaryKeyField,
 } from "@lindorm/proteus";
+import type { PylonClientContext } from "../types/index.js";
 
 @Namespace("pylon")
 @Entity()
@@ -62,6 +63,6 @@ export class RequestAuditLog {
   sessionId!: string | null;
 
   @Nullable()
-  @Field("string")
-  userAgent!: string | null;
+  @Field("json")
+  client!: PylonClientContext | null;
 }

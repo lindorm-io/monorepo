@@ -44,7 +44,20 @@ describe("setupAuditConsumer", () => {
       sourceIp: "127.0.0.1",
       requestBody: { foo: "bar" },
       sessionId: "sess-id-1",
-      userAgent: "TestAgent/1.0",
+      client: {
+        userAgent: {
+          raw: "TestAgent/1.0",
+          browser: null,
+          os: null,
+          deviceType: "unknown",
+        },
+        app: null,
+        build: null,
+        channel: null,
+        device: null,
+        platform: null,
+        timezone: null,
+      },
     });
 
     expect(mockRepository).toHaveBeenCalledTimes(1);
@@ -61,7 +74,20 @@ describe("setupAuditConsumer", () => {
       sourceIp: "127.0.0.1",
       requestBody: { foo: "bar" },
       sessionId: "sess-id-1",
-      userAgent: "TestAgent/1.0",
+      client: {
+        userAgent: {
+          raw: "TestAgent/1.0",
+          browser: null,
+          os: null,
+          deviceType: "unknown",
+        },
+        app: null,
+        build: null,
+        channel: null,
+        device: null,
+        platform: null,
+        timezone: null,
+      },
     });
   });
 
@@ -84,14 +110,14 @@ describe("setupAuditConsumer", () => {
       sourceIp: "10.0.0.1",
       requestBody: null,
       sessionId: null,
-      userAgent: null,
+      client: null,
     });
 
     expect(mockInsert).toHaveBeenCalledWith(
       expect.objectContaining({
         requestBody: null,
         sessionId: null,
-        userAgent: null,
+        client: null,
       }),
     );
   });

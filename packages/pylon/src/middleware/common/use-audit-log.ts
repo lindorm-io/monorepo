@@ -52,7 +52,6 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
       let statusCode: number;
       let sourceIp: string;
       let sessionId: string | null = null;
-      let userAgent: string | null = null;
 
       if (isHttpContext(ctx)) {
         endpoint = ctx.request.path;
@@ -61,14 +60,12 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
         statusCode = ctx.status;
         sourceIp = ctx.request.ip ?? "unknown";
         sessionId = ctx.state.metadata?.sessionId ?? null;
-        userAgent = ctx.get("user-agent") ?? null;
       } else if (isSocketContext(ctx)) {
         endpoint = ctx.event;
         method = "event";
         transport = "socket";
         statusCode = 200;
         sourceIp = ctx.io.socket.handshake?.address ?? "unknown";
-        userAgent = null;
       } else {
         endpoint = "unknown";
         method = "unknown";
@@ -90,7 +87,7 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
         sourceIp,
         requestBody: body as Record<string, unknown> | null,
         sessionId,
-        userAgent,
+        client: ctx.state?.client ?? null,
       });
 
       void publisher.publish(message).catch((err) => {
