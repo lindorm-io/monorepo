@@ -15,3 +15,4 @@ export * from "./conduit-headers-middleware.js";
 export * from "./conduit-rate-limit-middleware.js";
 export * from "./conduit-schema-middleware.js";
 export * from "./conduit-session-middleware.js";
+export * from "./conduit-user-agent-middleware.js";
