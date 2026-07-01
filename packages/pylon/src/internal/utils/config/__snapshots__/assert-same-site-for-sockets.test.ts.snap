@@ -10,7 +10,7 @@ exports[`assertSameSiteForSockets > should throw with descriptive error when Sam
   "id": Any<String>,
   "name": "PylonError",
   "status": -1,
-  "support": null,
+  "support": Any<String>,
   "timestamp": Any<Date>,
   "title": "Invalid SameSite for Session",
   "type": "urn:lindorm:pylon:error:invalid_same_site_for_session",

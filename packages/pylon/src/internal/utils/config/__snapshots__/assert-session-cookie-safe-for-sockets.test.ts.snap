@@ -10,7 +10,7 @@ exports[`assertSessionCookieSafeForSockets > should throw with actionable error 
   "id": Any<String>,
   "name": "PylonError",
   "status": -1,
-  "support": null,
+  "support": Any<String>,
   "timestamp": Any<Date>,
   "title": "Wildcard CORS Allowlist for Session",
   "type": "urn:lindorm:pylon:error:wildcard_cors_allowlist_for_session",
