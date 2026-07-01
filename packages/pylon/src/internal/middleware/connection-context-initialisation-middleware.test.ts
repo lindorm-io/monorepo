@@ -41,6 +41,20 @@ describe("createConnectionContextInitialisationMiddleware", () => {
       actor: "unknown",
       app: ctx.io.socket.data.app,
       authorization: { type: "none", value: null },
+      client: {
+        userAgent: {
+          raw: null,
+          browser: null,
+          os: null,
+          deviceType: "unknown",
+        },
+        app: null,
+        build: null,
+        channel: null,
+        device: null,
+        platform: null,
+        timezone: null,
+      },
       metadata: {
         id: "aa9a627d-8296-598c-9589-4ec91d27d056",
         correlationId: expect.any(String),
@@ -61,6 +75,19 @@ describe("createConnectionContextInitialisationMiddleware", () => {
     await createConnectionContextInitialisationMiddleware(logger)(ctx, vi.fn());
 
     expect(ctx.state.metadata.correlationId).toBe("given-correlation-id");
+  });
+
+  test("should build client context from handshake user-agent and stash it on socket data", async () => {
+    ctx.io.socket.handshake.headers["user-agent"] =
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36";
+
+    await createConnectionContextInitialisationMiddleware(logger)(ctx, vi.fn());
+
+    expect(ctx.state.client.userAgent.browser).toEqual({
+      name: "Chrome",
+      version: "114",
+    });
+    expect(ctx.io.socket.data.client).toBe(ctx.state.client);
   });
 
   test("should pick up bearer token as authorization", async () => {
