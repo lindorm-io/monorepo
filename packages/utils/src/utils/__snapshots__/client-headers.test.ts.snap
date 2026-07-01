@@ -1,0 +1,65 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parseClientHeaders > should parse a full header set 1`] = `
+{
+  "app": "Acme",
+  "appVersion": "1.2.3",
+  "build": "4567",
+  "channel": "beta",
+  "deviceModel": "iPhone15,2",
+  "deviceName": "Jonn's iPhone",
+  "deviceType": "mobile",
+  "platform": "ios",
+  "timezone": "Europe/Oslo",
+}
+`;
+
+exports[`parseClientHeaders > should parse a partial header set with nulls for absent headers 1`] = `
+{
+  "app": "Acme",
+  "appVersion": null,
+  "build": null,
+  "channel": null,
+  "deviceModel": null,
+  "deviceName": null,
+  "deviceType": null,
+  "platform": "web",
+  "timezone": null,
+}
+`;
+
+exports[`parseClientHeaders > should treat empty strings as null 1`] = `
+{
+  "app": null,
+  "appVersion": null,
+  "build": null,
+  "channel": null,
+  "deviceModel": null,
+  "deviceName": null,
+  "deviceType": null,
+  "platform": null,
+  "timezone": null,
+}
+`;
+
+exports[`parseClientHeaders > should trim and cap values at 256 chars 1`] = `
+{
+  "app": null,
+  "appVersion": null,
+  "build": null,
+  "channel": null,
+  "deviceModel": null,
+  "deviceName": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+  "deviceType": null,
+  "platform": null,
+  "timezone": null,
+}
+`;
+
+exports[`toClientHeaders > should emit headers for non-null fields only 1`] = `
+{
+  "x-user-agent-app": "Acme",
+  "x-user-agent-app-version": "1.2.3",
+  "x-user-agent-device-type": "mobile",
+}
+`;
