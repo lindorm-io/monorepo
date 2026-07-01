@@ -35,7 +35,7 @@ exports[`NetworkError > serialisation > should serialise to json with default va
   "name": "NetworkError",
   "stack": StringContaining "NetworkError: message",
   "status": -1,
-  "support": null,
+  "support": Any<String>,
   "timestamp": 2024-01-01T08:00:00.000Z,
   "title": null,
   "type": "urn:lindorm:error:network",

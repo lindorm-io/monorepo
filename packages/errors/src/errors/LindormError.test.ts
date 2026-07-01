@@ -90,6 +90,20 @@ describe("LindormError", () => {
         }),
       );
     });
+
+    test("should auto-generate a readable support code when none is provided", () => {
+      // MockDate is frozen to 2024-01-01 (UTC) → "A01-" prefix; the two groups
+      // are random from the unambiguous alphabet.
+      expect(new LindormError("message").support).toMatch(
+        /^A01-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}-[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{4}$/,
+      );
+    });
+
+    test("should keep an explicitly provided support code", () => {
+      expect(new LindormError("message", { support: "CUSTOM-01" }).support).toBe(
+        "CUSTOM-01",
+      );
+    });
   });
 
   describe("inheritance", () => {

@@ -55,6 +55,7 @@ describe("NetworkError", () => {
         }).toJSON(),
       ).toMatchSnapshot({
         stack: expect.stringContaining("NetworkError: message"),
+        support: expect.any(String),
       });
     });
 
