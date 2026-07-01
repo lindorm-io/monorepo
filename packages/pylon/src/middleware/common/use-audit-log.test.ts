@@ -8,6 +8,21 @@ vi.mock("../../internal/utils/is-context.js");
 
 import { isHttpContext, isSocketContext } from "../../internal/utils/is-context.js";
 
+const CLIENT_CONTEXT = {
+  userAgent: {
+    raw: "Mozilla/5.0",
+    browser: null,
+    os: null,
+    deviceType: "unknown" as const,
+  },
+  app: { name: "MyApp", version: "1.2.3" },
+  build: null,
+  channel: null,
+  device: null,
+  platform: null,
+  timezone: null,
+};
+
 describe("useAuditLog", () => {
   let ctx: any;
   let next: Mock;
@@ -46,6 +61,7 @@ describe("useAuditLog", () => {
         actor: "user-123",
         app: { name: "test-app" },
         authorization: { type: "none", value: null },
+        client: CLIENT_CONTEXT,
         metadata: {
           id: "req-1",
           correlationId: "cor-1",
@@ -89,7 +105,7 @@ describe("useAuditLog", () => {
         sourceIp: "10.0.0.1",
         requestBody: { foo: "bar" },
         sessionId: "sess-1",
-        userAgent: "Mozilla/5.0",
+        client: CLIENT_CONTEXT,
       }),
     );
     expect(mockPublisher.publish).toHaveBeenCalledWith({ id: "msg-1" });
@@ -117,7 +133,7 @@ describe("useAuditLog", () => {
         transport: "socket",
         statusCode: 200,
         sourceIp: "192.168.1.1",
-        userAgent: null,
+        client: CLIENT_CONTEXT,
       }),
     );
   });

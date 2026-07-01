@@ -10,6 +10,7 @@ import {
   TimestampField,
   Topic,
 } from "@lindorm/iris";
+import type { PylonClientContext } from "../types/index.js";
 
 @Namespace("pylon")
 @Message()
@@ -62,6 +63,6 @@ export class RequestAudit {
   readonly sessionId!: string | null;
 
   @Nullable()
-  @Field("string")
-  readonly userAgent!: string | null;
+  @Field("object")
+  readonly client!: PylonClientContext | null;
 }
