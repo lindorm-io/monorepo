@@ -1,3 +1,4 @@
+export * from "./client-headers.js";
 export * from "./diff.js";
 export * from "./filter.js";
 export * from "./find.js";
@@ -7,6 +8,7 @@ export * from "./lazy-factory.js";
 export * from "./merge.js";
 export * from "./noop.js";
 export * from "./parse-string-record.js";
+export * from "./parse-user-agent.js";
 export * from "./remove.js";
 export * from "./remove-empty.js";
 export * from "./remove-undefined.js";

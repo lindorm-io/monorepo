@@ -1,0 +1,202 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parseUserAgent > should degrade gracefully for an empty string 1`] = `
+{
+  "browser": null,
+  "deviceType": "unknown",
+  "os": null,
+  "raw": "",
+}
+`;
+
+exports[`parseUserAgent > should degrade gracefully for garbage input 1`] = `
+{
+  "browser": null,
+  "deviceType": "unknown",
+  "os": null,
+  "raw": "!!! not a user agent !!!",
+}
+`;
+
+exports[`parseUserAgent > should degrade gracefully for null 1`] = `
+{
+  "browser": null,
+  "deviceType": "unknown",
+  "os": null,
+  "raw": null,
+}
+`;
+
+exports[`parseUserAgent > should parse Chrome on Android as mobile 1`] = `
+{
+  "browser": {
+    "name": "Chrome",
+    "version": "119",
+  },
+  "deviceType": "mobile",
+  "os": {
+    "name": "Android",
+    "version": "13",
+  },
+  "raw": "Mozilla/5.0 (Linux; Android 13; Pixel 7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36",
+}
+`;
+
+exports[`parseUserAgent > should parse Chrome on Android tablet without Mobile token 1`] = `
+{
+  "browser": {
+    "name": "Chrome",
+    "version": "118",
+  },
+  "deviceType": "tablet",
+  "os": {
+    "name": "Android",
+    "version": "12",
+  },
+  "raw": "Mozilla/5.0 (Linux; Android 12; SM-X906C) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+}
+`;
+
+exports[`parseUserAgent > should parse Chrome on Windows 1`] = `
+{
+  "browser": {
+    "name": "Chrome",
+    "version": "120",
+  },
+  "deviceType": "desktop",
+  "os": {
+    "name": "Windows",
+    "version": "10",
+  },
+  "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.6099.109 Safari/537.36",
+}
+`;
+
+exports[`parseUserAgent > should parse Edge on Windows 1`] = `
+{
+  "browser": {
+    "name": "Edge",
+    "version": "120",
+  },
+  "deviceType": "desktop",
+  "os": {
+    "name": "Windows",
+    "version": "10",
+  },
+  "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.2210.61",
+}
+`;
+
+exports[`parseUserAgent > should parse Firefox on Linux 1`] = `
+{
+  "browser": {
+    "name": "Firefox",
+    "version": "121",
+  },
+  "deviceType": "desktop",
+  "os": {
+    "name": "Linux",
+    "version": null,
+  },
+  "raw": "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:121.0) Gecko/20100101 Firefox/121.0",
+}
+`;
+
+exports[`parseUserAgent > should parse Opera on Windows 1`] = `
+{
+  "browser": {
+    "name": "Opera",
+    "version": "105",
+  },
+  "deviceType": "desktop",
+  "os": {
+    "name": "Windows",
+    "version": "10",
+  },
+  "raw": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 OPR/105.0.0.0",
+}
+`;
+
+exports[`parseUserAgent > should parse Safari on iPad as tablet iOS 1`] = `
+{
+  "browser": {
+    "name": "Safari",
+    "version": "16",
+  },
+  "deviceType": "tablet",
+  "os": {
+    "name": "iOS",
+    "version": "16.5",
+  },
+  "raw": "Mozilla/5.0 (iPad; CPU OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/604.1",
+}
+`;
+
+exports[`parseUserAgent > should parse Safari on iPhone as mobile iOS 1`] = `
+{
+  "browser": {
+    "name": "Safari",
+    "version": "17",
+  },
+  "deviceType": "mobile",
+  "os": {
+    "name": "iOS",
+    "version": "17.1",
+  },
+  "raw": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Mobile/15E148 Safari/604.1",
+}
+`;
+
+exports[`parseUserAgent > should parse Safari on macOS 1`] = `
+{
+  "browser": {
+    "name": "Safari",
+    "version": "17",
+  },
+  "deviceType": "desktop",
+  "os": {
+    "name": "macOS",
+    "version": "10.15.7",
+  },
+  "raw": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+}
+`;
+
+exports[`parseUserAgent > should parse Samsung Internet on Android 1`] = `
+{
+  "browser": {
+    "name": "Samsung Internet",
+    "version": "23",
+  },
+  "deviceType": "mobile",
+  "os": {
+    "name": "Android",
+    "version": "13",
+  },
+  "raw": "Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/23.0 Chrome/115.0.0.0 Mobile Safari/537.36",
+}
+`;
+
+exports[`parseUserAgent > should parse a googlebot UA as bot 1`] = `
+{
+  "browser": null,
+  "deviceType": "bot",
+  "os": null,
+  "raw": "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)",
+}
+`;
+
+exports[`parseUserAgent > should parse an Electron app UA 1`] = `
+{
+  "browser": {
+    "name": "Electron",
+    "version": "25",
+  },
+  "deviceType": "desktop",
+  "os": {
+    "name": "macOS",
+    "version": "10.15.7",
+  },
+  "raw": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) MyApp/1.2.3 Chrome/114.0.5735.289 Electron/25.8.4 Safari/537.36",
+}
+`;
