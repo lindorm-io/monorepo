@@ -39,9 +39,9 @@ describe("buildEnvOverrides", () => {
         MY_SERVICE__ACCESS_KEY: "abc",
       }),
     ).toEqual({
-      // safelyParse turns "5" into the JSON number 5; coerceAll on the
-      // schema would equally accept the string and coerce it.
-      database: { maxRetries: 5 },
+      // Number leaf stays a raw string here; coerceAll (z.coerce.number) types
+      // it downstream. Only structured leaves are JSON-parsed at this stage.
+      database: { maxRetries: "5" },
       myService: { accessKey: "abc" },
     });
   });
@@ -86,6 +86,40 @@ describe("buildEnvOverrides", () => {
       auth: { clientId: "client" },
       logger: { level: "debug" },
     });
+  });
+
+  test("keeps a numeric-looking string id as an intact string (no JSON.parse)", () => {
+    // 19-digit snowflake would JSON-parse to a lossy float; the string leaf must
+    // preserve it verbatim.
+    const schema = z.object({ auth: z.object({ clientId: z.string() }) });
+    expect(buildEnvOverrides(schema, { AUTH__CLIENT_ID: "1521764590667698297" })).toEqual(
+      { auth: { clientId: "1521764590667698297" } },
+    );
+  });
+
+  test("keeps number and bigint leaves as raw strings (coerceAll types them)", () => {
+    const schema = z.object({ count: z.number(), big: z.bigint() });
+    expect(buildEnvOverrides(schema, { COUNT: "5", BIG: "1521764590667698297" })).toEqual(
+      { count: "5", big: "1521764590667698297" },
+    );
+  });
+
+  test("keeps union leaves raw (ambiguous — not parsed)", () => {
+    const schema = z.object({ value: z.union([z.string(), z.number()]) });
+    expect(buildEnvOverrides(schema, { VALUE: "1521764590667698297" })).toEqual({
+      value: "1521764590667698297",
+    });
+  });
+
+  test("descends into a prefault-wrapped nested object", () => {
+    const schema = z.object({
+      auth: z
+        .object({ discord: z.object({ clientId: z.string() }).optional() })
+        .prefault({}),
+    });
+    expect(
+      buildEnvOverrides(schema, { AUTH__DISCORD__CLIENT_ID: "1521764590667698297" }),
+    ).toEqual({ auth: { discord: { clientId: "1521764590667698297" } } });
   });
 
   test("ignores env vars that don't correspond to a schema leaf", () => {
