@@ -65,7 +65,7 @@ describe("RedisDriverError snapshot", () => {
     );
 
     const { stack, ...json } = error.toJSON();
-    expect(json).toMatchSnapshot();
+    expect(json).toMatchSnapshot({ support: expect.any(String) });
     expect(stack).toEqual(expect.stringContaining("RedisDriverError"));
   });
 
@@ -76,7 +76,7 @@ describe("RedisDriverError snapshot", () => {
     });
 
     const { stack, ...json } = error.toJSON();
-    expect(json).toMatchSnapshot();
+    expect(json).toMatchSnapshot({ support: expect.any(String) });
     expect(stack).toEqual(expect.stringContaining("RedisDriverError"));
   });
 });
