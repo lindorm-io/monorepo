@@ -1,6 +1,24 @@
 import type { Dict } from "@lindorm/types";
 import { z } from "zod";
 
+const TRUTHY = new Set(["true", "1", "yes", "on"]);
+const FALSY = new Set(["false", "0", "no", "off", ""]);
+
+// z.coerce.boolean() is `Boolean(value)`, so any non-empty string ("false"!)
+// becomes true. Env values arrive as raw strings, so coerce them explicitly:
+// recognised truthy/falsy words map; a real boolean passes through; anything
+// else is left for z.boolean() to reject.
+const coerceBoolean = (): z.ZodType =>
+  z.preprocess((value) => {
+    if (typeof value === "boolean") return value;
+    if (typeof value === "string") {
+      const token = value.trim().toLowerCase();
+      if (TRUTHY.has(token)) return true;
+      if (FALSY.has(token)) return false;
+    }
+    return value;
+  }, z.boolean());
+
 export const coerceAll = <T extends z.ZodType>(schema: T): T => {
   const def = (schema as any)._zod?.def ?? (schema as any)._def;
 
@@ -12,7 +30,7 @@ export const coerceAll = <T extends z.ZodType>(schema: T): T => {
       return z.coerce.number() as any;
 
     case "boolean":
-      return z.coerce.boolean() as any;
+      return coerceBoolean() as any;
 
     case "date":
       return z.coerce.date() as any;
@@ -40,6 +58,15 @@ export const coerceAll = <T extends z.ZodType>(schema: T): T => {
 
     case "default":
       return coerceAll(def.innerType).default(def.defaultValue);
+
+    case "prefault":
+      return coerceAll(def.innerType).prefault(def.defaultValue);
+
+    case "readonly":
+      return coerceAll(def.innerType).readonly();
+
+    case "nonoptional":
+      return coerceAll(def.innerType).nonoptional();
 
     default:
       return schema;

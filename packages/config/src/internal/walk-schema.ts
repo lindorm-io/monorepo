@@ -5,7 +5,7 @@ export type SchemaLeaf = {
   schema: z.ZodType;
 };
 
-const getDef = (schema: z.ZodType): { type?: string; [k: string]: any } =>
+export const getDef = (schema: z.ZodType): { type?: string; [k: string]: any } =>
   (schema as any)._zod?.def ?? (schema as any)._def ?? {};
 
 /**
@@ -41,6 +41,7 @@ export const walkSchemaLeaves = (
     case "optional":
     case "nullable":
     case "default":
+    case "prefault":
     case "readonly":
     case "nonoptional":
       return walkSchemaLeaves(def.innerType as z.ZodType, path);

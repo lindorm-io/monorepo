@@ -47,6 +47,16 @@ describe("walkSchemaLeaves", () => {
     ]);
   });
 
+  test("recurses through a prefault-wrapped object (zod 4)", () => {
+    const schema = z.object({
+      auth: z
+        .object({ discord: z.object({ clientId: z.string() }).optional() })
+        .prefault({}),
+    });
+
+    expect(paths(schema)).toEqual([["auth", "discord", "clientId"]]);
+  });
+
   test("preserves leaf-level defaults", () => {
     const schema = z.object({
       logger: z.object({

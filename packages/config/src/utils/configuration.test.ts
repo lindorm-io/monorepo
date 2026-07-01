@@ -129,4 +129,36 @@ describe("configuration", () => {
     expect(config.pylon.kek).toBe("kek-from-env");
     expect(config.database.postgres.url).toBe("postgres://localhost:5432/app");
   });
+
+  test("maps a prefaulted nested path and preserves a 19-digit string id (E6)", () => {
+    process.env = {
+      NODE_ENV: "test",
+      AUTH__DISCORD__CLIENT_ID: "1521764590667698297",
+      AUTH__DISCORD__ENABLED: "false",
+      SNOWFLAKE: "1521764590667698297",
+    };
+
+    const config = configuration(
+      {
+        auth: z
+          .object({
+            discord: z
+              .object({
+                clientId: z.string(),
+                enabled: z.boolean(),
+              })
+              .optional(),
+          })
+          .prefault({}),
+        snowflake: z.bigint(),
+      },
+      { scope: import.meta.url },
+    );
+
+    // prefault subtree mapped from env, string id intact (not a lossy float),
+    // "false" not coerced to true, bigint lossless.
+    expect(config.auth.discord!.clientId).toBe("1521764590667698297");
+    expect(config.auth.discord!.enabled).toBe(false);
+    expect(config.snowflake).toBe(1521764590667698297n);
+  });
 });
