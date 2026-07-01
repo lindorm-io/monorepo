@@ -4,6 +4,7 @@ export * from "./open-id/index.js";
 export * from "./abort.js";
 export * from "./aes-encryption.js";
 export * from "./aes-key-length.js";
+export * from "./client-headers.js";
 export * from "./crypto.js";
 export * from "./dpop-signer.js";
 export * from "./environment.js";
