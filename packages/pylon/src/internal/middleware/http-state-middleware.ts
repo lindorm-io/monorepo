@@ -1,6 +1,7 @@
 import { randomId } from "@lindorm/random";
 import type { Environment } from "@lindorm/types";
 import type { PylonHttpMiddleware } from "../../types/index.js";
+import { buildClientContext } from "../utils/build-client-context.js";
 import { getAuthorization } from "../utils/get-authorization.js";
 
 type Options = {
@@ -24,6 +25,10 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
         actor: "unknown",
         app: { domain, environment, name, version },
         authorization: getAuthorization(ctx),
+        client: buildClientContext(
+          ctx.get("user-agent") || null,
+          (name) => ctx.get(name) || undefined,
+        ),
         metadata: {
           id: ctx.get("x-request-id") || randomId({ namespace: "req", length: 16 }),
           correlationId:

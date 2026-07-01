@@ -46,6 +46,20 @@ describe("createSocketContextInitialisationMiddleware", () => {
         version: "1.0.0",
       },
       authorization: { type: "none", value: null },
+      client: {
+        userAgent: {
+          raw: null,
+          browser: null,
+          os: null,
+          deviceType: "unknown",
+        },
+        app: null,
+        build: null,
+        channel: null,
+        device: null,
+        platform: null,
+        timezone: null,
+      },
       metadata: {
         id: "aa9a627d-8296-598c-9589-4ec91d27d056",
         correlationId: expect.any(String),
@@ -54,6 +68,27 @@ describe("createSocketContextInitialisationMiddleware", () => {
       },
       tokens: { accessToken: { type: "jwt", payload: {} } },
     });
+  });
+
+  test("should reuse client context stashed on socket data", async () => {
+    ctx.io.socket.data.client = {
+      userAgent: {
+        raw: "StashedAgent/1.0",
+        browser: null,
+        os: null,
+        deviceType: "mobile",
+      },
+      app: { name: "StashedApp", version: "9.9.9" },
+      build: null,
+      channel: null,
+      device: null,
+      platform: null,
+      timezone: null,
+    };
+
+    await createSocketContextInitialisationMiddleware(logger)(ctx, vi.fn());
+
+    expect(ctx.state.client).toBe(ctx.io.socket.data.client);
   });
 
   test("should create child logger with event metadata", async () => {

@@ -1,0 +1,116 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildClientContext > should build device with null name when only deviceModel declared 1`] = `
+{
+  "app": null,
+  "build": null,
+  "channel": null,
+  "device": {
+    "model": "SM-G991B",
+    "name": null,
+  },
+  "platform": null,
+  "timezone": null,
+  "userAgent": {
+    "browser": null,
+    "deviceType": "unknown",
+    "os": null,
+    "raw": null,
+  },
+}
+`;
+
+exports[`buildClientContext > should build from full declared header set 1`] = `
+{
+  "app": {
+    "name": "MyApp",
+    "version": "2.3.4",
+  },
+  "build": "1042",
+  "channel": "beta",
+  "device": {
+    "model": "iPhone15,2",
+    "name": "Jonn's Phone",
+  },
+  "platform": "ios",
+  "timezone": "Europe/Oslo",
+  "userAgent": {
+    "browser": {
+      "name": "Chrome",
+      "version": "114",
+    },
+    "deviceType": "mobile",
+    "os": {
+      "name": "macOS",
+      "version": "10.15.7",
+    },
+    "raw": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+  },
+}
+`;
+
+exports[`buildClientContext > should build pure user-agent context when no declared headers present 1`] = `
+{
+  "app": null,
+  "build": null,
+  "channel": null,
+  "device": null,
+  "platform": null,
+  "timezone": null,
+  "userAgent": {
+    "browser": {
+      "name": "Chrome",
+      "version": "114",
+    },
+    "deviceType": "desktop",
+    "os": {
+      "name": "macOS",
+      "version": "10.15.7",
+    },
+    "raw": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+  },
+}
+`;
+
+exports[`buildClientContext > should override user-agent deviceType with declared deviceType 1`] = `
+{
+  "app": null,
+  "build": null,
+  "channel": null,
+  "device": null,
+  "platform": null,
+  "timezone": null,
+  "userAgent": {
+    "browser": {
+      "name": "Chrome",
+      "version": "114",
+    },
+    "deviceType": "tv",
+    "os": {
+      "name": "macOS",
+      "version": "10.15.7",
+    },
+    "raw": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+  },
+}
+`;
+
+exports[`buildClientContext > should surface app with 'unknown' name when only appVersion declared 1`] = `
+{
+  "app": {
+    "name": "unknown",
+    "version": "9.9.9",
+  },
+  "build": null,
+  "channel": null,
+  "device": null,
+  "platform": null,
+  "timezone": null,
+  "userAgent": {
+    "browser": null,
+    "deviceType": "unknown",
+    "os": null,
+    "raw": null,
+  },
+}
+`;

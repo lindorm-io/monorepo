@@ -16,6 +16,7 @@ export * from "./pylon-http-handler.js";
 export * from "./pylon-event-map.js";
 export * from "./pylon-io-context.js";
 export * from "./pylon-auth-client.js";
+export * from "./pylon-client-context.js";
 export * from "./pylon-options.js";
 export * from "./pylon-socket.js";
 export * from "./pylon-socket-emitter.js";

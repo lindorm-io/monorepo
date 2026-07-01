@@ -9,6 +9,7 @@ import type { IEntity, IProteusSession } from "@lindorm/proteus";
 import type { Dict, Environment, Priority } from "@lindorm/types";
 import type { AuthorizationState } from "./authorization.js";
 import type { PylonAuthClaimsClient } from "./pylon-auth-client.js";
+import type { PylonClientContext } from "./pylon-client-context.js";
 import type { PylonIoContextHttp } from "./pylon-io-context.js";
 import type { PylonSocketEmitter } from "./pylon-socket-emitter.js";
 
@@ -36,6 +37,7 @@ export type PylonState = {
   actor: string;
   app: AppState;
   authorization: AuthorizationState;
+  client: PylonClientContext;
   metadata: PylonMetadata;
   tenant?: string | null;
   tokens: Dict<ParsedJwt | ParsedJws<any>>;

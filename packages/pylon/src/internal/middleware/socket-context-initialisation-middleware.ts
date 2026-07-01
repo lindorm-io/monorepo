@@ -3,6 +3,8 @@ import type { ILogger } from "@lindorm/logger";
 import { randomId } from "@lindorm/random";
 import type { Environment } from "@lindorm/types";
 import type { PylonSocketMiddleware } from "../../types/index.js";
+import { buildClientContext } from "../utils/build-client-context.js";
+import { getHandshakeHeader } from "../utils/get-handshake-header.js";
 import { getSocketAuthorization } from "../utils/get-socket-authorization.js";
 
 const extractCorrelationId = (ctx: any): string => {
@@ -25,10 +27,16 @@ export const createSocketContextInitialisationMiddleware = (
   return async function socketContextInitialisationMiddleware(ctx, next) {
     const correlationId = extractCorrelationId(ctx);
 
+    const getHeader = getHandshakeHeader(ctx.io.socket.handshake?.headers);
+    const client =
+      ctx.io.socket.data.client ??
+      buildClientContext(getHeader("user-agent") ?? null, getHeader);
+
     ctx.state = {
       actor: "unknown",
       app: ctx.io.socket.data.app,
       authorization: getSocketAuthorization(ctx.io.socket),
+      client,
       metadata: {
         id: ctx.eventId,
         correlationId,
