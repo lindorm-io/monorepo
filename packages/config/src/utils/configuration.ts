@@ -61,6 +61,11 @@ export const configuration = <T extends Record<string, z.ZodType>>(
   dotenvx.config({
     path: process.env.NODE_ENV ? [`.env.${process.env.NODE_ENV}`, ".env"] : ".env",
     quiet: true,
+    // `.env` files are optional — config also reads real process env, YAML and
+    // node-config. In a container (real env vars, no .env) dotenvx would log a
+    // noisy `[MISSING_ENV_FILE]` for each absent path; `quiet` only silences its
+    // success logs, so ignore the missing-file code explicitly.
+    ignore: ["MISSING_ENV_FILE"],
   });
 
   const wrapped = z.object(schema);
