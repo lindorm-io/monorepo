@@ -41,6 +41,7 @@ import {
   generateKeyAsync,
 } from "../internal/utils/generate.js";
 import { calculateKeyOps } from "../internal/utils/key-ops.js";
+import { KRYPTOS_BRAND } from "../internal/constants/brand.js";
 import { fromOptions } from "../internal/utils/from-options.js";
 import { isB64, isDer, isJwk, isPem } from "../internal/utils/is.js";
 import { stampCertificate } from "../internal/utils/stamp-certificate.js";
@@ -137,24 +138,41 @@ export class KryptosKit {
 
   // is
 
+  // Recognises a Kryptos instance by its global-registry brand instead of
+  // `instanceof`, so a key created by one copy of @lindorm/kryptos is still
+  // recognised by guards running in a duplicate copy (dual-install resilience).
+  static isKryptos(value: unknown): value is IKryptos {
+    return (
+      value != null &&
+      typeof value === "object" &&
+      (value as { constructor?: Record<symbol, unknown> }).constructor?.[
+        KRYPTOS_BRAND
+      ] === true
+    );
+  }
+
   static isAkp(kryptos: KryptosLike): kryptos is IKryptosAkp {
-    return kryptos instanceof Kryptos && kryptos.type === "AKP";
+    return KryptosKit.isKryptos(kryptos) && kryptos.type === "AKP";
   }
 
   static isEc(kryptos: KryptosLike): kryptos is IKryptosEc {
-    return kryptos instanceof Kryptos && kryptos.type === "EC" && Boolean(kryptos.curve);
+    return (
+      KryptosKit.isKryptos(kryptos) && kryptos.type === "EC" && Boolean(kryptos.curve)
+    );
   }
 
   static isOct(kryptos: KryptosLike): kryptos is IKryptosOct {
-    return kryptos instanceof Kryptos && kryptos.type === "oct" && !kryptos.curve;
+    return KryptosKit.isKryptos(kryptos) && kryptos.type === "oct" && !kryptos.curve;
   }
 
   static isOkp(kryptos: KryptosLike): kryptos is IKryptosOkp {
-    return kryptos instanceof Kryptos && kryptos.type === "OKP" && Boolean(kryptos.curve);
+    return (
+      KryptosKit.isKryptos(kryptos) && kryptos.type === "OKP" && Boolean(kryptos.curve)
+    );
   }
 
   static isRsa(kryptos: KryptosLike): kryptos is IKryptosRsa {
-    return kryptos instanceof Kryptos && kryptos.type === "RSA" && !kryptos.curve;
+    return KryptosKit.isKryptos(kryptos) && kryptos.type === "RSA" && !kryptos.curve;
   }
 
   // resolve
