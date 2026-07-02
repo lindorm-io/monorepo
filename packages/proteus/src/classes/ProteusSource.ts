@@ -56,6 +56,7 @@ import {
   disableFilter as disableFilterUtil,
 } from "../internal/utils/query/filter-registry.js";
 import type { EntityMetadata } from "../internal/entity/types/metadata.js";
+import { PROTEUS_SOURCE_BRAND } from "../internal/constants/brand.js";
 
 /**
  * Options for creating a session from a ProteusSource.
@@ -596,7 +597,7 @@ export class ProteusSource implements IProteusSource {
   }
 }
 
-Object.defineProperty(ProteusSource, Symbol.for("ProteusSource"), { value: true });
+Object.defineProperty(ProteusSource, PROTEUS_SOURCE_BRAND, { value: true });
 
 const driverClassifiers: Record<string, CircuitBreakerOptions["classifier"]> = {
   postgres: classifyPostgresError,
