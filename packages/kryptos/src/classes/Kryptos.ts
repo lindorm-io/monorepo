@@ -33,6 +33,7 @@ import { exportToB64 } from "../internal/utils/export/export-b64.js";
 import { exportToDer } from "../internal/utils/export/export-der.js";
 import { exportToJwk } from "../internal/utils/export/export-jwk.js";
 import { exportToPem } from "../internal/utils/export/export-pem.js";
+import { KRYPTOS_BRAND } from "../internal/constants/brand.js";
 import { isOctDer } from "../internal/utils/oct/is.js";
 import { modulusSize } from "../internal/utils/rsa/modulus-size.js";
 import { extractLeafSpki } from "../internal/utils/x509/extract-leaf-spki.js";
@@ -531,3 +532,8 @@ export class Kryptos implements IKryptos {
     }
   }
 }
+
+// Brand the class so `KryptosKit` can recognise instances by a global-registry
+// symbol rather than `instanceof`, which breaks across duplicate installs. See
+// KRYPTOS_BRAND for why this survives multiple copies of @lindorm/kryptos.
+Object.defineProperty(Kryptos, KRYPTOS_BRAND, { value: true });
