@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/iris",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -51,15 +51,15 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^8.3.0",
-    "@lindorm/aes": "^0.8.1",
-    "@lindorm/errors": "^0.4.0",
-    "@lindorm/is": "^0.2.3",
-    "@lindorm/json-kit": "^0.6.3",
+    "@lindorm/aes": "^0.8.2",
+    "@lindorm/errors": "^0.5.0",
+    "@lindorm/is": "^0.2.4",
+    "@lindorm/json-kit": "^0.7.0",
     "@lindorm/random": "^0.4.0",
-    "@lindorm/retry": "^0.3.3",
-    "@lindorm/scanner": "^0.5.5",
-    "@lindorm/types": "^0.8.0",
-    "@lindorm/utils": "^0.8.3",
+    "@lindorm/retry": "^0.3.4",
+    "@lindorm/scanner": "^0.5.6",
+    "@lindorm/types": "^0.9.0",
+    "@lindorm/utils": "^0.9.0",
     "commander": "^14.0.3"
   },
   "peerDependencies": {
@@ -89,9 +89,9 @@
     }
   },
   "devDependencies": {
-    "@lindorm/amphora": "^0.6.1",
-    "@lindorm/kryptos": "^0.10.0",
-    "@lindorm/logger": "^0.6.5",
+    "@lindorm/amphora": "^0.6.2",
+    "@lindorm/kryptos": "^0.10.1",
+    "@lindorm/logger": "^0.6.6",
     "@types/amqplib": "^0.10.8",
     "amqplib": "^0.10.9",
     "ioredis": "^5.10.0",

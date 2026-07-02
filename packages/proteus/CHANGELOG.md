@@ -3,6 +3,27 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.9.0...@lindorm/proteus@0.10.0) (2026-07-02)
+
+### Bug Fixes
+
+- declare zod as a peerDependency on packages with zod-typed public APIs ([eb46f80](https://github.com/lindorm-io/monorepo/commit/eb46f802ccaacf92a06250440edd7df97b57e5e6))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([0ca0e95](https://github.com/lindorm-io/monorepo/commit/0ca0e953509d6d28baabcbc5233c1a17e6e6efa0))
+- **proteus:** decimal hydrates as a number with round-trip fidelity ([ec8fe37](https://github.com/lindorm-io/monorepo/commit/ec8fe37ceccd9a72f710caeb8fde14fad3f9ab04))
+- **proteus:** default @RelationCount columns to 0 ([bcfe3ba](https://github.com/lindorm-io/monorepo/commit/bcfe3ba1f1b86e3f7a4c002c02f6239e47c2b01b))
+- **proteus:** derive owning FK from the relation object in create() ([eb69552](https://github.com/lindorm-io/monorepo/commit/eb695527c0fdc60a2ea6116b47def44f301c7251))
+- **proteus:** extend the orderBy guard to memory/redis/mongo find ([2efbcfd](https://github.com/lindorm-io/monorepo/commit/2efbcfdce895b1aa6d9379dac269d715566e6b9c))
+- **proteus:** make postgres jsonb-backed array fields work end-to-end ([5bc049c](https://github.com/lindorm-io/monorepo/commit/5bc049c095894eea2c52bd2bd214f7d914cae15f))
+- **proteus:** reject the keyset `orderBy` key on offset finds (was a silent no-op) ([2cc24f2](https://github.com/lindorm-io/monorepo/commit/2cc24f29107589df53d4ba9d955764bbe8ac3801))
+- **proteus:** resolve naming strategy across relation/inheritance metadata ([9984f18](https://github.com/lindorm-io/monorepo/commit/9984f18bd57d7a7234325dfc32276e7dcf4e28ec))
+- **proteus:** use naming-resolved metadata in repository upsert ([b9fa3d4](https://github.com/lindorm-io/monorepo/commit/b9fa3d436b0c75c97991b1a6bb0a6729fa652bc3))
+
+### Features
+
+- **proteus:** @TypedJson — lossless json/jsonb via a sidecar type-meta column ([30eb89b](https://github.com/lindorm-io/monorepo/commit/30eb89b1827574cc0293541ea076f74cd6f814ae))
+- **proteus:** first-class pg_trgm fuzzy text search (PostgreSQL) ([6f8356c](https://github.com/lindorm-io/monorepo/commit/6f8356ccd5cbf26475792c07785bbb61573c5a65))
+- **proteus:** reject unserialisable types in plain json fields (Phase 3) ([632df25](https://github.com/lindorm-io/monorepo/commit/632df25d404f5cd2cf48d9ccb3d623763b200219))
+
 # [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.8.0...@lindorm/proteus@0.9.0) (2026-06-19)
 
 ### Bug Fixes

@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.4.3...@lindorm/config@0.4.4) (2026-07-02)
+
+### Bug Fixes
+
+- **config:** export NpmInformation and a named Configuration return type ([4523d6c](https://github.com/lindorm-io/monorepo/commit/4523d6c3f71297138d0521f502e103e7daab58e5))
+- **config:** schema-directed env coercion, prefault support, safe booleans ([8d4ef28](https://github.com/lindorm-io/monorepo/commit/8d4ef284be23b2225182e7b45bbf7919d7000ca1))
+- declare zod as a peerDependency on packages with zod-typed public APIs ([eb46f80](https://github.com/lindorm-io/monorepo/commit/eb46f802ccaacf92a06250440edd7df97b57e5e6))
+
 ## [0.4.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.4.2...@lindorm/config@0.4.3) (2026-06-15)
 
 **Note:** Version bump only for package @lindorm/config

@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.8.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.8.1...@lindorm/aes@0.8.2) (2026-07-02)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([0ca0e95](https://github.com/lindorm-io/monorepo/commit/0ca0e953509d6d28baabcbc5233c1a17e6e6efa0))
+
 ## [0.8.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/aes@0.8.0...@lindorm/aes@0.8.1) (2026-06-19)
 
 **Note:** Version bump only for package @lindorm/aes
