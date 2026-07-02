@@ -68,9 +68,24 @@ jobs:
         run: npm run typecheck
 
   test-unit:
-    name: Test (unit)
+    name: Test (unit) — ${{ matrix.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    # Shard the unit suite across runners. The GitHub runner has ~2 cores, so a
+    # single job runs the 39-package suite mostly serially; splitting the heavy
+    # packages onto their own runners parallelises the wall time. Build is cheap
+    # (~seconds) so each shard rebuilds rather than passing a dist artifact.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: proteus
+            args: --scope @lindorm/proteus
+          - name: iris-pylon
+            args: --scope @lindorm/iris --scope @lindorm/pylon
+          - name: rest
+            args: --ignore @lindorm/proteus --ignore @lindorm/iris --ignore @lindorm/pylon
 
     steps:
       - name: Checkout
@@ -91,7 +106,7 @@ jobs:
         run: npm run build
 
       - name: Test (unit)
-        run: npm run test:unit
+        run: npx lerna run test:unit ${{ matrix.args }}
 
   test-integration:
     name: Test (integration)
