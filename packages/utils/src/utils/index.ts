@@ -5,6 +5,7 @@ export * from "./find.js";
 export * from "./find-last.js";
 export * from "./group-by.js";
 export * from "./lazy-factory.js";
+export * from "./lindorm-symbol.js";
 export * from "./merge.js";
 export * from "./noop.js";
 export * from "./parse-string-record.js";
