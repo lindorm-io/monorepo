@@ -31,6 +31,7 @@ import { MessageScanner } from "../internal/message/classes/MessageScanner.js";
 import { isAbstractMessage } from "../internal/message/metadata/abstract-message.js";
 import { clearMetadataCache } from "../internal/message/metadata/registry.js";
 import type { IAmphora } from "@lindorm/amphora";
+import { lindormSymbol } from "@lindorm/utils";
 import { validateEncryptedMessages } from "../internal/utils/validate-encrypted-messages.js";
 import { IrisSession } from "./IrisSession.js";
 
@@ -533,4 +534,6 @@ export class IrisSource implements IIrisSource {
   }
 }
 
-Object.defineProperty(IrisSource, Symbol.for("IrisSource"), { value: true });
+Object.defineProperty(IrisSource, lindormSymbol("iris", "brand", "source"), {
+  value: true,
+});
