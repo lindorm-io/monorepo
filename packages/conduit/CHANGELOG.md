@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.8.0...@lindorm/conduit@0.9.0) (2026-07-02)
+
+### Bug Fixes
+
+- declare zod as a peerDependency on packages with zod-typed public APIs ([eb46f80](https://github.com/lindorm-io/monorepo/commit/eb46f802ccaacf92a06250440edd7df97b57e5e6))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([0ca0e95](https://github.com/lindorm-io/monorepo/commit/0ca0e953509d6d28baabcbc5233c1a17e6e6efa0))
+
+### Features
+
+- **conduit:** add conduitUserAgentMiddleware for x-user-agent-\* headers ([34ccab6](https://github.com/lindorm-io/monorepo/commit/34ccab688237d5dbaa30251b4ceb000c15752952))
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.7.0...@lindorm/conduit@0.8.0) (2026-06-19)
 
 ### Features

@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.5.3...@lindorm/create-pylon@0.5.4) (2026-07-02)
+
+### Bug Fixes
+
+- **create-pylon:** accept an npm-scoped project name ([b79f6f4](https://github.com/lindorm-io/monorepo/commit/b79f6f4bbec10950ae9d00ec170914ac7512bbc0))
+- **create-pylon:** add --passWithNoTests to generated test script ([23e6816](https://github.com/lindorm-io/monorepo/commit/23e6816f3e37f1473182464b74f34d1617ed657e))
+- **create-pylon:** format generated project with prettier ([3ae8ad7](https://github.com/lindorm-io/monorepo/commit/3ae8ad7d68082b718849a75924742e2de0d7cf14))
+- **create-pylon:** generate vitest config with swc decorator transform ([21c9d89](https://github.com/lindorm-io/monorepo/commit/21c9d89a68ccd14f401d7a2fc4a2949ec6095f1a))
+- **create-pylon:** install proteus's @lindorm/aes encryption peer ([561f43f](https://github.com/lindorm-io/monorepo/commit/561f43fe3b28a01596dd60c14ef0f0252cf03aa2))
+- **create-pylon:** use zod-4 .prefault({}) in generated config ([085ec65](https://github.com/lindorm-io/monorepo/commit/085ec650a9bfaf3d4264ca1fd71abed469f53794))
+
 ## [0.5.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.5.2...@lindorm/create-pylon@0.5.3) (2026-06-19)
 
 **Note:** Version bump only for package @lindorm/create-pylon

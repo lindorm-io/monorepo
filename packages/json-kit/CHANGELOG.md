@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.6.3...@lindorm/json-kit@0.7.0) (2026-07-02)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([0ca0e95](https://github.com/lindorm-io/monorepo/commit/0ca0e953509d6d28baabcbc5233c1a17e6e6efa0))
+
+### Features
+
+- **json-kit:** add split/join for separated data + type metadata ([7a6e177](https://github.com/lindorm-io/monorepo/commit/7a6e17774b6c86272303d346c91657e47e884a58))
+
 ## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.6.2...@lindorm/json-kit@0.6.3) (2026-06-15)
 
 **Note:** Version bump only for package @lindorm/json-kit

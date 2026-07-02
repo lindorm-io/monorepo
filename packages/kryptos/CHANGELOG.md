@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.10.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.10.0...@lindorm/kryptos@0.10.1) (2026-07-02)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([0ca0e95](https://github.com/lindorm-io/monorepo/commit/0ca0e953509d6d28baabcbc5233c1a17e6e6efa0))
+- **kryptos:** identify Kryptos by global-registry brand, not instanceof ([7f979a9](https://github.com/lindorm-io/monorepo/commit/7f979a95f79b526cabd02ebb7c1005c2499954ee))
+
 # [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.9.0...@lindorm/kryptos@0.10.0) (2026-06-19)
 
 ### Features

@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.15.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.14.0...@lindorm/pylon@0.15.0) (2026-07-02)
+
+### Bug Fixes
+
+- declare zod as a peerDependency on packages with zod-typed public APIs ([eb46f80](https://github.com/lindorm-io/monorepo/commit/eb46f802ccaacf92a06250440edd7df97b57e5e6))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([0ca0e95](https://github.com/lindorm-io/monorepo/commit/0ca0e953509d6d28baabcbc5233c1a17e6e6efa0))
+- **pylon:** abort the request signal on response close, not request close ([93f7caf](https://github.com/lindorm-io/monorepo/commit/93f7caf5938e06c24230b66edda625af3f6c0fd7))
+- **pylon:** declare params on PylonHttpContext ([db51fcf](https://github.com/lindorm-io/monorepo/commit/db51fcf2ee61ba53d1c87c5a8f8f29e7b6922cc1))
+- **pylon:** drop koa's ctx.throw from the http context type ([f5f11f4](https://github.com/lindorm-io/monorepo/commit/f5f11f49d9460ae62b90c396362e006c0d778e7d))
+
+### Features
+
+- **pylon:** add keyValue ephemeral proteus source ([d653945](https://github.com/lindorm-io/monorepo/commit/d653945d4e5e57368126441b08c89b6982bc6ff6))
+- **pylon:** add useCache response-cache middleware ([842090e](https://github.com/lindorm-io/monorepo/commit/842090e664851cb1cbe45d6695e7d96242aba2f9))
+- **pylon:** mint readable error support codes via @lindorm/errors ([8b61afb](https://github.com/lindorm-io/monorepo/commit/8b61afb3a90e517a53056b7d56d14e85fd6d9db9))
+- **pylon:** parse client/device context onto ctx.state.client ([4c9719f](https://github.com/lindorm-io/monorepo/commit/4c9719f0123cdea6149badd5f67ed4bc93982f4a))
+- **pylon:** store parsed client context in the request audit log ([5c912eb](https://github.com/lindorm-io/monorepo/commit/5c912ebb0e8e45f42268373243c2f350ebdc0e94))
+
 # [0.14.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pylon@0.13.0...@lindorm/pylon@0.14.0) (2026-06-19)
 
 ### Features

@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.8.0...@lindorm/types@0.9.0) (2026-07-02)
+
+### Features
+
+- **types:** add $similar trigram predicate operator ([5b22ab3](https://github.com/lindorm-io/monorepo/commit/5b22ab32991c59bf841cfde9f8aad932b765ad10))
+- **types:** add client-context types and x-user-agent-\* header map ([0a458b0](https://github.com/lindorm-io/monorepo/commit/0a458b0d505a1a5a1fb8f5abd32aaed52a51e4b0))
+
 # [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.7.0...@lindorm/types@0.8.0) (2026-06-15)
 
 ### Features

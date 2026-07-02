@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/worker",
-  "version": "0.6.1",
+  "version": "0.6.2",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -44,16 +44,16 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
-    "@lindorm/date": "^0.5.3",
-    "@lindorm/is": "^0.2.3",
-    "@lindorm/retry": "^0.3.3",
-    "@lindorm/scanner": "^0.5.5",
-    "@lindorm/utils": "^0.8.3"
+    "@lindorm/date": "^0.5.4",
+    "@lindorm/is": "^0.2.4",
+    "@lindorm/retry": "^0.3.4",
+    "@lindorm/scanner": "^0.5.6",
+    "@lindorm/utils": "^0.9.0"
   },
   "peerDependencies": {
     "@lindorm/logger": ">=0.5.0"
   },
   "devDependencies": {
-    "@lindorm/logger": "^0.6.5"
+    "@lindorm/logger": "^0.6.6"
   }
 }

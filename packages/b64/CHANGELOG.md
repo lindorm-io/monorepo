@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.2.1...@lindorm/b64@0.2.2) (2026-07-02)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([0ca0e95](https://github.com/lindorm-io/monorepo/commit/0ca0e953509d6d28baabcbc5233c1a17e6e6efa0))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.2.0...@lindorm/b64@0.2.1) (2026-05-05)
 
 ### Bug Fixes

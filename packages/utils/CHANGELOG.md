@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.8.3...@lindorm/utils@0.9.0) (2026-07-02)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([0ca0e95](https://github.com/lindorm-io/monorepo/commit/0ca0e953509d6d28baabcbc5233c1a17e6e6efa0))
+
+### Features
+
+- **utils:** add groupBy and keyBy ([f5f1b57](https://github.com/lindorm-io/monorepo/commit/f5f1b5766e49093a72fedada62a93875cb750c98))
+- **utils:** add lindormSymbol urn builder for Symbol.for keys ([4310dcb](https://github.com/lindorm-io/monorepo/commit/4310dcbec47deb0b5b5e2fd644a999107b96b0a9))
+- **utils:** add parseUserAgent and x-user-agent-\* header (de)serialisers ([c917f3e](https://github.com/lindorm-io/monorepo/commit/c917f3e6761537571ef57789a553897b0e8ccf89))
+
 ## [0.8.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.8.2...@lindorm/utils@0.8.3) (2026-06-15)
 
 **Note:** Version bump only for package @lindorm/utils
