@@ -8,6 +8,15 @@ import { ScanData } from "./ScanData.js";
 
 const TS_EXTENSIONS = new Set([".ts", ".tsx", ".mts", ".cts"]);
 
+// Non-importable build artifacts every module scanner should skip by default.
+// When scanning a compiled `dist/` tree (production) each source file also emits
+// a sourcemap and, with `declaration: true`, a `.d.ts` — none are importable,
+// and importing a sourcemap throws `ERR_UNKNOWN_FILE_EXTENSION`. In dev (tsx over
+// `src/`) only `.ts` files exist, so this never surfaced. Merged with, not
+// replaced by, caller-supplied denies.
+const DEFAULT_DENIED_EXTENSIONS = [/^map$/i]; // .js.map, .css.map, .d.ts.map
+const DEFAULT_DENIED_TYPES = [/^d$/i]; // .d.ts / .d.mts / .d.cts declaration files
+
 export class Scanner implements IScanner {
   private readonly deniedDirectories: Array<RegExp>;
   private readonly deniedExtensions: Array<RegExp>;
@@ -16,9 +25,12 @@ export class Scanner implements IScanner {
 
   constructor(options: StructureScannerOptions = {}) {
     this.deniedDirectories = options.deniedDirectories || [];
-    this.deniedExtensions = options.deniedExtensions || [];
+    this.deniedExtensions = [
+      ...DEFAULT_DENIED_EXTENSIONS,
+      ...(options.deniedExtensions || []),
+    ];
     this.deniedFilenames = options.deniedFilenames || [];
-    this.deniedTypes = options.deniedTypes || [];
+    this.deniedTypes = [...DEFAULT_DENIED_TYPES, ...(options.deniedTypes || [])];
   }
 
   // public

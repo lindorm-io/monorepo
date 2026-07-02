@@ -1,6 +1,8 @@
+import { mkdtempSync, rmSync, writeFileSync } from "fs";
+import { tmpdir } from "os";
 import { join } from "path";
 import { Scanner } from "./Scanner.js";
-import { describe, expect, test } from "vitest";
+import { afterAll, beforeAll, describe, expect, test } from "vitest";
 
 describe("Scanner", () => {
   const path = join(__dirname, "..", "..", "example");
@@ -419,5 +421,52 @@ describe("Scanner", () => {
         types: [],
       },
     ]);
+  });
+
+  // Regression: scanning a compiled dist/ tree must skip the non-importable
+  // build artifacts (sourcemaps + .d.ts declarations) by default, so consumers
+  // never try to import a .js.map (which throws ERR_UNKNOWN_FILE_EXTENSION).
+  describe("default build-artifact filtering", () => {
+    let dir: string;
+
+    beforeAll(() => {
+      dir = mkdtempSync(join(tmpdir(), "scanner-dist-"));
+      for (const f of [
+        "route.js",
+        "route.js.map",
+        "route.d.ts",
+        "route.d.ts.map",
+        "index.js",
+        "index.d.ts",
+      ]) {
+        writeFileSync(join(dir, f), "export const GET = [];\n");
+      }
+    });
+
+    afterAll(() => rmSync(dir, { recursive: true, force: true }));
+
+    test("skips .js.map, .d.ts and .d.ts.map, keeping only importable .js", () => {
+      const scanner = new Scanner();
+
+      const files = Scanner.flatten(scanner.scan(dir))
+        .filter((f) => f.isFile)
+        .map((f) => f.fullName)
+        .sort();
+
+      expect(files).toEqual(["index.js", "route.js"]);
+    });
+
+    test("caller deny-lists are merged with the defaults, not replaced", () => {
+      // A caller that denies its own types still gets the built-in .map/.d.ts
+      // filtering on top.
+      const scanner = new Scanner({ deniedTypes: [/^test$/] });
+
+      const files = Scanner.flatten(scanner.scan(dir))
+        .filter((f) => f.isFile)
+        .map((f) => f.fullName)
+        .sort();
+
+      expect(files).toEqual(["index.js", "route.js"]);
+    });
   });
 });
