@@ -42,9 +42,9 @@ describe("KryptosKit brand (dual-install resilience)", () => {
     expect(KryptosKit.isKryptos(42)).toBe(false);
   });
 
-  test("the brand uses the global symbol registry", () => {
-    // The same string key must resolve to the same symbol across module copies;
+  test("the brand uses the global symbol registry under the lindorm urn", () => {
+    // The same urn key must resolve to the same symbol across module copies;
     // this is what makes the brand survive duplicate installs.
-    expect(KRYPTOS_BRAND).toBe(Symbol.for("Kryptos"));
+    expect(KRYPTOS_BRAND).toBe(Symbol.for("urn:lindorm:kryptos:brand:kryptos"));
   });
 });
