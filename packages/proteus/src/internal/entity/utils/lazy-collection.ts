@@ -1,10 +1,11 @@
 import { isObjectLike } from "@lindorm/is";
+import { lindormSymbol } from "@lindorm/utils";
 import type { IEntity } from "../../../interfaces/index.js";
 
 /**
  * Brand symbol for lazy collection proxies.
  */
-export const LAZY_COLLECTION = Symbol.for("proteus.lazy-collection");
+export const LAZY_COLLECTION = lindormSymbol("proteus", "marker", "lazy-collection");
 
 /**
  * A thenable that lazily loads a collection of values.

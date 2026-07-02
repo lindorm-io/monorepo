@@ -3,8 +3,7 @@ import { isAbsolute, resolve } from "path";
 import { Scanner } from "@lindorm/scanner";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import { ProteusError } from "../../errors/ProteusError.js";
-
-const PROTEUS_SOURCE_BRAND = Symbol.for("ProteusSource");
+import { PROTEUS_SOURCE_BRAND } from "../constants/brand.js";
 
 const isProteusSource = (val: unknown): val is ProteusSource =>
   val != null &&

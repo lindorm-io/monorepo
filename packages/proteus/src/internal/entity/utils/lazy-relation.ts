@@ -1,11 +1,12 @@
 import { isObjectLike } from "@lindorm/is";
+import { lindormSymbol } from "@lindorm/utils";
 import type { IEntity } from "../../../interfaces/index.js";
 
 /**
  * Brand symbol — used by the save pipeline to identify unresolved lazy
  * relation proxies without triggering the load.
  */
-export const LAZY_RELATION = Symbol.for("proteus.lazy-relation");
+export const LAZY_RELATION = lindormSymbol("proteus", "marker", "lazy-relation");
 
 /**
  * A thenable that triggers a lazy database load when `await`-ed.

@@ -20,7 +20,7 @@ vi.mock("fs", async () => ({
 
 vi.mock("@lindorm/scanner");
 
-const PROTEUS_SOURCE_BRAND = Symbol.for("ProteusSource");
+const PROTEUS_SOURCE_BRAND = Symbol.for("urn:lindorm:proteus:brand:source");
 
 const makeSource = () => {
   const source = { connect: vi.fn(), ping: vi.fn(), disconnect: vi.fn() };
