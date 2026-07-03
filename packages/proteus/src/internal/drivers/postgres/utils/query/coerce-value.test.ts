@@ -89,10 +89,29 @@ describe("coerceWriteValue", () => {
     expect(coerceWriteValue(["a", "b"], field)).toBe('["a","b"]');
   });
 
-  test("should pass through a native array (array field with arrayType)", () => {
+  test("should keep a native array as an array (not JSON) for arrayType fields", () => {
     const field = makeField("tags", { type: "array", arrayType: "string" });
     const value = ["a", "b"];
-    expect(coerceWriteValue(value, field)).toBe(value);
+    // Native ::text[] column — stays a raw array (never JSON-stringified), so
+    // node-postgres binds it as a Postgres array literal.
+    expect(coerceWriteValue(value, field)).toEqual(["a", "b"]);
+  });
+
+  test("should serialise bigint elements of a native array to decimal strings", () => {
+    const field = makeField("nums", { type: "array", arrayType: "bigint" });
+    // The ::bigint[] cast parses the decimal strings back to int8 on the server;
+    // deserialise restores the exact BigInt on read.
+    expect(coerceWriteValue([1n, 9007199254740993n], field)).toEqual([
+      "1",
+      "9007199254740993",
+    ]);
+  });
+
+  test("should serialise Date elements of a native array to ISO strings", () => {
+    const field = makeField("ts", { type: "array", arrayType: "timestamp" });
+    expect(coerceWriteValue([new Date("2024-01-15T12:00:00.000Z")], field)).toEqual([
+      "2024-01-15T12:00:00.000Z",
+    ]);
   });
 
   test("should pass through array when no field is provided", () => {

@@ -1,5 +1,6 @@
 import { isString } from "@lindorm/is";
 import type { MetaFieldType } from "../../../../entity/types/metadata.js";
+import { stringifyForStorage } from "../../../../entity/utils/stringify-for-storage.js";
 
 /**
  * Coerce a value read from SQLite into the JavaScript type expected by the entity field.
@@ -83,8 +84,10 @@ export const coerceWriteValue = (
   // Buffer/Uint8Array → pass through as BLOB (better-sqlite3 handles natively)
   if (Buffer.isBuffer(value) || value instanceof Uint8Array) return value;
 
-  // Objects and arrays → JSON string
-  if (typeof value === "object") return JSON.stringify(value);
+  // Objects and arrays → JSON string. Use the bigint-hardened stringify so a
+  // typed bigint array (@Field("array", { arrayType: "bigint" })) stores each
+  // element as a decimal string instead of throwing; deserialise restores it.
+  if (typeof value === "object") return stringifyForStorage(value);
 
   // bigint stays as bigint — better-sqlite3 handles it natively
   return value;

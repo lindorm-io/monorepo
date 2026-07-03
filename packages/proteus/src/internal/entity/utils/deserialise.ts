@@ -8,6 +8,7 @@ export const deserialise = (
   value: any,
   type: MetaFieldType | null,
   mode?: MetaFieldMode | null,
+  arrayType?: MetaFieldType | null,
 ): any => {
   switch (type) {
     case "bigint": {
@@ -129,14 +130,26 @@ export const deserialise = (
     case "array":
     case "object":
     case "json": {
+      let parsed = value;
+
       if (isString(value)) {
         try {
-          return new Primitive(value).toJSON();
+          parsed = new Primitive(value).toJSON();
         } catch {
-          return JSON.parse(value);
+          parsed = JSON.parse(value);
         }
       }
-      return value;
+
+      // Array elements are stored as JSON, so a typed array (e.g.
+      // `@Field("array", { arrayType: "timestamp" })`) round-trips as raw
+      // strings/numbers. Coerce each element to its declared type so it hydrates
+      // to the same JS type as a scalar field would (timestamp -> Date, etc.).
+      // An untyped array (`arrayType` null) passes through unchanged.
+      if (type === "array" && arrayType && Array.isArray(parsed)) {
+        return parsed.map((element) => deserialise(element, arrayType, mode));
+      }
+
+      return parsed;
     }
 
     default:

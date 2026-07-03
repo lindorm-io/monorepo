@@ -238,6 +238,28 @@ describe("deserialise", () => {
     test("should parse JSON string to array", () => {
       expect(deserialise('["a","b"]', "array")).toEqual(["a", "b"]);
     });
+
+    test("should leave elements untouched when arrayType is null", () => {
+      expect(deserialise(["a", "b"], "array", null, null)).toEqual(["a", "b"]);
+    });
+
+    test("should coerce arrayType:timestamp elements to Date (from strings)", () => {
+      const iso = ["2024-01-15T12:00:00.000Z", "2024-02-20T08:30:00.000Z"];
+
+      const result = deserialise(JSON.stringify(iso), "array", null, "timestamp");
+
+      expect(result).toEqual([new Date(iso[0]), new Date(iso[1])]);
+      expect(result.every((d: unknown) => d instanceof Date)).toBe(true);
+    });
+
+    test("should coerce arrayType:bigint elements to BigInt", () => {
+      expect(deserialise(["1", "2"], "array", null, "bigint")).toEqual([1n, 2n]);
+    });
+
+    test("should not coerce elements for object/json even with arrayType set", () => {
+      // Only the `array` field type carries an arrayType; object/json pass through.
+      expect(deserialise({ a: 1 }, "object", null, "timestamp")).toEqual({ a: 1 });
+    });
   });
 
   describe("object", () => {

@@ -35,6 +35,9 @@ const pgArrayCast = (field: MetaField | null): string => {
     real: "real",
     boolean: "boolean",
     uuid: "uuid",
+    decimal: "numeric",
+    timestamp: "timestamptz",
+    date: "date",
   };
   const pgType = typeMap[field.arrayType] ?? "text";
   return `::${pgType}[]`;
