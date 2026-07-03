@@ -456,6 +456,17 @@ describe("Scanner", () => {
       expect(files).toEqual(["index.js", "route.js"]);
     });
 
+    test("a missing directory scans as empty rather than throwing ENOENT", () => {
+      const scanner = new Scanner();
+      const missing = join(dir, "does-not-exist");
+
+      const result = scanner.scan(missing);
+
+      expect(result.isDirectory).toBe(true);
+      expect(result.children).toEqual([]);
+      expect(result.fullPath).toBe(missing);
+    });
+
     test("caller deny-lists are merged with the defaults, not replaced", () => {
       // A caller that denies its own types still gets the built-in .map/.d.ts
       // filtering on top.

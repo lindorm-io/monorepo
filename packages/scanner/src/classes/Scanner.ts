@@ -1,5 +1,5 @@
 import { isArray, isObjectLike, isString } from "@lindorm/is";
-import { readdirSync, statSync } from "fs";
+import { existsSync, readdirSync, statSync } from "fs";
 import { basename, extname, join, relative, sep } from "path";
 import { ScannerError } from "../errors/index.js";
 import type { IScanData, IScanner } from "../interfaces/index.js";
@@ -37,6 +37,29 @@ export class Scanner implements IScanner {
 
   scan(path: string): IScanData {
     const root = path.split(sep).slice(0, -1).join(sep);
+
+    // A scanned directory that doesn't exist is treated as an empty scan rather
+    // than a raw `statSync` ENOENT. tsc emits nothing for a source folder that
+    // holds only a `.gitkeep` (e.g. an empty entities/migrations dir), so the
+    // dir is absent under dist/ — a consumer scanning it should just get zero
+    // results, not crash at boot.
+    if (!existsSync(path)) {
+      const fullName = basename(path);
+      return new ScanData({
+        baseName: fullName,
+        basePath: fullName,
+        children: [],
+        extension: null,
+        fullName,
+        fullPath: path,
+        isDirectory: true,
+        isFile: false,
+        parents: [],
+        relativePath: fullName,
+        types: [],
+      });
+    }
+
     const result = this.performScan(path, root);
 
     if (result) return result;
