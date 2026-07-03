@@ -1,5 +1,6 @@
 import type { Dict } from "@lindorm/types";
 import type { MetaField, MetaRelation } from "../../../entity/types/metadata.js";
+import { stringifyForStorage } from "../../../entity/utils/stringify-for-storage.js";
 
 /**
  * Serialize an entity row Dict into Redis HASH fields (Record<string, string>).
@@ -62,12 +63,15 @@ const coerceToString = (value: unknown, type: string | null): string => {
   if (typeof value === "bigint") return String(value);
   if (typeof value === "number") return String(value);
 
+  // Bigint-hardened stringify: a typed bigint array (@Field("array", { arrayType:
+  // "bigint" })) stores each element as a decimal string rather than throwing;
+  // deserialise restores the exact BigInt on read.
   if (type === "array" || type === "json" || type === "object") {
-    return JSON.stringify(value);
+    return stringifyForStorage(value);
   }
 
   if (Array.isArray(value) || (typeof value === "object" && value !== null)) {
-    return JSON.stringify(value);
+    return stringifyForStorage(value);
   }
 
   return String(value);

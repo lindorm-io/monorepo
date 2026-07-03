@@ -1116,6 +1116,64 @@ export const createTckEntities = (hookCallback: Mock) => {
     binaryValue!: Buffer;
   }
 
+  // ─── Typed Array Round-Trip Entity ────────────────────────────────
+  // One `@Field("array", { arrayType: X })` per supported scalar element type.
+  // Storage diverges sharply per driver — Postgres native `type[]` columns,
+  // SQLite/MySQL/Redis JSON strings, Mongo BSON arrays, Memory structuredClone —
+  // yet every element must hydrate back to the SAME JS type + value it went in
+  // as (Date instanceof Date, bigint typeof bigint, …). Compatible with ALL
+  // drivers (no @Unique/@Check/@EmbeddedList/@Computed), so the round-trip suite
+  // runs ungated on memory/sqlite/mysql/postgres/mongo/redis.
+
+  @Entity({ name: "TckArrayTypes" })
+  class TckArrayTypes {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("array", { arrayType: "timestamp" })
+    timestamps!: Array<Date>;
+
+    @Field("array", { arrayType: "date" })
+    dates!: Array<Date>;
+
+    @Field("array", { arrayType: "integer" })
+    integers!: Array<number>;
+
+    @Field("array", { arrayType: "smallint" })
+    smallints!: Array<number>;
+
+    @Field("array", { arrayType: "float" })
+    floats!: Array<number>;
+
+    @Field("array", { arrayType: "real" })
+    reals!: Array<number>;
+
+    @Field("array", { arrayType: "boolean" })
+    booleans!: Array<boolean>;
+
+    @Field("array", { arrayType: "string" })
+    strings!: Array<string>;
+
+    @Field("array", { arrayType: "uuid" })
+    uuids!: Array<string>;
+
+    @Field("array", { arrayType: "decimal" })
+    decimals!: Array<number>;
+
+    @Field("array", { arrayType: "bigint" })
+    bigints!: Array<bigint>;
+  }
+
   // ─── Renamed Scalar Column Entity ─────────────────────────────────
   // Every scalar column uses an explicit @Field({ name }) override so the
   // physical column name differs from the entity property key. Memory keys
@@ -1288,6 +1346,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckElLazySingle,
     TckElEager,
     TckTypeHolder,
+    TckArrayTypes,
     TckRenamedColumns,
     TckChecked,
     TckPkString,

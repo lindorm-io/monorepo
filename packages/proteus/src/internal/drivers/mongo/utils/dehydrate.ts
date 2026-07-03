@@ -5,6 +5,7 @@ import type { IEntity } from "../../../../interfaces/index.js";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
 import { resolveJoinKeyValue } from "../../../entity/utils/resolve-join-key-value.js";
+import { serialiseArray } from "../../../entity/utils/serialise.js";
 import { buildCompoundId } from "./build-compound-id.js";
 
 /**
@@ -47,6 +48,13 @@ export const dehydrateEntity = <E extends IEntity>(
     // Apply transform.to() for custom transformations
     if (value != null && field.transform) {
       value = field.transform.to(value);
+    }
+
+    // Typed array (@Field("array", { arrayType })): serialise each element to a
+    // storage-safe primitive so BSON does not demote bigint to a lossy Long —
+    // bigint → decimal string, Date → ISO string; deserialise restores both.
+    if (value != null && field.type === "array" && field.arrayType) {
+      value = serialiseArray(value, field.arrayType, field.mode);
     }
 
     if (value != null && field.encrypted && amphora) {

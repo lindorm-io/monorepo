@@ -55,6 +55,11 @@ export const assertSerialisableJsonFields = <E>(
     if (field.typedJson) continue;
     if (field.embedded) continue;
     if (!field.type || !JSON_FIELD_TYPES.has(field.type)) continue;
+    // A typed array (e.g. `@Field("array", { arrayType: "timestamp" })`) declares
+    // its element type, so serialise/deserialise handle round-trip fidelity
+    // (Date <-> ISO string, bigint, etc.). It is not "plain json", so the
+    // complex-type guard below does not apply.
+    if (field.type === "array" && field.arrayType) continue;
 
     const value = (entity as any)[field.key];
     if (value == null) continue;

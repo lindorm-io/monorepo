@@ -125,7 +125,7 @@ export const loadEmbeddedListRows = async (
         if (raw === null || raw === undefined) {
           instance[field.key] = raw;
         } else {
-          let value = deserialise(raw, field.type, field.mode);
+          let value = deserialise(raw, field.type, field.mode, field.arrayType);
           if (field.transform) {
             value = field.transform.from(value);
           }
@@ -199,7 +199,7 @@ export const loadEmbeddedListRowsBatch = async (
           if (raw === null || raw === undefined) {
             instance[field.key] = raw;
           } else {
-            let value = deserialise(raw, field.type, field.mode);
+            let value = deserialise(raw, field.type, field.mode, field.arrayType);
             if (field.transform) {
               value = field.transform.from(value);
             }
