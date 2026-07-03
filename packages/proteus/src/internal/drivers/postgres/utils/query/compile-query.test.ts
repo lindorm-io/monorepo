@@ -26,6 +26,7 @@ const metadata = {
 const createEmptyState = (): QueryState<any> => ({
   predicates: [],
   orderBy: null,
+  rawOrderBy: [],
   skip: null,
   take: null,
   includes: [],

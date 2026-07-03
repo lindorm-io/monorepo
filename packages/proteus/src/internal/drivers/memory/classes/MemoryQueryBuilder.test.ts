@@ -105,6 +105,7 @@ describe("MemoryQueryBuilder — unsupported methods", () => {
     "havingRaw",
     "andHavingRaw",
     "orHavingRaw",
+    "orderByRaw",
     "window",
   ] as const;
 

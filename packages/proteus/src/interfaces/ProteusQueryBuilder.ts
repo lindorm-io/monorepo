@@ -70,6 +70,12 @@ export interface IProteusQueryBuilder<E extends IEntity> {
 
   /** Set the sort order for results. */
   orderBy(order: Partial<Record<keyof E, "ASC" | "DESC">>): this;
+  /**
+   * Append a raw SQL fragment to the ORDER BY clause. Raw terms are applied
+   * after any `orderBy` field terms, in the order the raw calls were made. Use
+   * this to sort by a `selectRaw` aggregate alias or other unmapped expression.
+   */
+  orderByRaw(fragment: SqlFragment): this;
   /** Skip the first N results (offset). */
   skip(offset: number): this;
   /** Limit the result set to N rows. */

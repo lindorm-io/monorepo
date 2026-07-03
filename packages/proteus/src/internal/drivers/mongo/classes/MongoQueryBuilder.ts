@@ -163,6 +163,15 @@ export class MongoQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
+  override orderByRaw(): this {
+    throw new NotSupportedError("orderByRaw is not supported by the MongoDB driver", {
+      code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The MongoDB driver has no raw SQL surface; orderByRaw cannot be used.",
+      data: { operation: "orderByRaw" },
+    });
+  }
+
   // ─── Terminal methods ─────────────────────────────────────────────
 
   clone(): IProteusQueryBuilder<E> {

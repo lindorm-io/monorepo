@@ -238,6 +238,14 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     return this;
   }
 
+  orderByRaw(fragment: SqlFragment): this {
+    this.state.rawOrderBy.push({
+      sql: fragment.sql,
+      params: [...fragment.params],
+    });
+    return this;
+  }
+
   skip(offset: number): this {
     this.state.skip = offset;
     return this;
@@ -347,6 +355,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
     return {
       predicates: [...this.state.predicates],
       orderBy: this.state.orderBy ? { ...this.state.orderBy } : null,
+      rawOrderBy: this.state.rawOrderBy.map((r) => ({ ...r, params: [...r.params] })),
       skip: this.state.skip,
       take: this.state.take,
       includes: this.state.includes.map((i) => ({ ...i })),
@@ -407,6 +416,7 @@ export abstract class QueryBuilder<E extends IEntity> implements IProteusQueryBu
 export const createEmptyState = <E extends IEntity>(): QueryState<E> => ({
   predicates: [],
   orderBy: null,
+  rawOrderBy: [],
   skip: null,
   take: null,
   includes: [],

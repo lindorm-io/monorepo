@@ -7,6 +7,10 @@ import { describe, test, it, expect, beforeEach } from "vitest";
 import type { TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
 import type { ProteusSource } from "../../../classes/ProteusSource.js";
+import { NotSupportedError } from "../../../errors/index.js";
+import { sql } from "../../../types/sql.js";
+
+const SQL_DRIVERS = ["postgres", "mysql", "sqlite"];
 export const queryBuilderSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,
@@ -295,6 +299,34 @@ export const queryBuilderSuite = (
     const qb = source.queryBuilder(TckSimpleUser) as any;
     qb.withoutScope();
     expect(qb.state.withoutScope).toBe(true);
+  });
+
+  // ─── orderByRaw ────────────────────────────────────────────────────
+
+  describe("orderByRaw", () => {
+    test("orders grouped rows by a selectRaw aggregate alias", async () => {
+      const source = getSource();
+
+      if (!SQL_DRIVERS.includes(source.driverType)) {
+        // Non-SQL drivers reject raw ORDER BY at build time.
+        const qb = source.queryBuilder(TckSimpleUser);
+        expect(() => qb.orderByRaw(sql`n DESC`)).toThrow(NotSupportedError);
+        return;
+      }
+
+      // Seeded ages: 30, 20, 40, 20 → group counts {20:2, 30:1, 40:1}.
+      // orderByRaw on the COUNT(*) alias must return them in descending count order.
+      const rows = await source
+        .queryBuilder(TckSimpleUser)
+        .select("age")
+        .selectRaw(sql`COUNT(*)`, "n")
+        .groupBy("age")
+        .orderByRaw(sql`n DESC`)
+        .getRawRows<{ n: number | string }>();
+
+      const counts = rows.map((r) => Number(r.n));
+      expect(counts).toEqual([2, 1, 1]);
+    });
   });
 
   // ─── Inheritance: QB write operations ─────────────────────────────

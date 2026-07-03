@@ -5,6 +5,7 @@ import type {
   CteSpec,
   IncludeSpec,
   PredicateEntry,
+  RawOrderByEntry,
   RawSelectEntry,
   RawWhereEntry,
   SetOperationEntry,
@@ -76,6 +77,7 @@ export type CompileQueryDeps<E extends IEntity> = {
     metadata: EntityMetadata,
     tableAlias: string,
     params: Array<unknown>,
+    rawOrderBy: Array<RawOrderByEntry>,
   ) => string;
   compileLimitOffset: (
     skip: number | null,
@@ -142,7 +144,7 @@ export const compileQuery = <E extends IEntity>(
   // 4. Relation JOIN condition params (compileJoin)
   // 5. WHERE + system filter params (compileWhereWithFilters)
   // 6. HAVING params (compileHaving)
-  // 7. ORDER BY params (compileOrderBy — e.g. trigram $similarity values)
+  // 7. ORDER BY params (compileOrderBy — $similarity values, then rawOrderBy fragments)
   // 8. LIMIT/OFFSET params (compileLimitOffset)
   // Reordering these calls will silently corrupt parameter indices.
 
@@ -197,7 +199,13 @@ export const compileQuery = <E extends IEntity>(
   const effectiveOrderBy = (state.orderBy ?? metadata.defaultOrder ?? null) as Partial<
     Record<keyof E, OrderValue>
   > | null;
-  const orderByClause = deps.compileOrderBy(effectiveOrderBy, metadata, "t0", params);
+  const orderByClause = deps.compileOrderBy(
+    effectiveOrderBy,
+    metadata,
+    "t0",
+    params,
+    state.rawOrderBy,
+  );
   const limitOffsetClause = deps.compileLimitOffset(state.skip, state.take, params);
 
   // When set operations are present, ORDER BY / LIMIT apply to the combined result

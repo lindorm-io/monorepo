@@ -254,6 +254,40 @@ describe("QueryBuilder", () => {
     });
   });
 
+  describe("orderByRaw", () => {
+    test("should append a raw order-by entry", () => {
+      const fragment = { __brand: "SqlFragment" as const, sql: "n DESC", params: [] };
+      qb.orderByRaw(fragment);
+      expect(qb.getState().rawOrderBy).toMatchSnapshot();
+    });
+
+    test("should append (not replace) on subsequent calls, preserving order", () => {
+      const frag1 = { __brand: "SqlFragment" as const, sql: "n DESC", params: [] };
+      const frag2 = { __brand: "SqlFragment" as const, sql: "name ASC", params: [] };
+      qb.orderByRaw(frag1);
+      qb.orderByRaw(frag2);
+      expect(qb.getState().rawOrderBy).toHaveLength(2);
+      expect(qb.getState().rawOrderBy.map((r) => r.sql)).toEqual(["n DESC", "name ASC"]);
+    });
+
+    test("should copy fragment params rather than share the reference", () => {
+      const params = [5];
+      const fragment = {
+        __brand: "SqlFragment" as const,
+        sql: "score > $1 DESC",
+        params,
+      };
+      qb.orderByRaw(fragment);
+      params.push(99);
+      expect(qb.getState().rawOrderBy[0].params).toEqual([5]);
+    });
+
+    test("should be chainable", () => {
+      const fragment = { __brand: "SqlFragment" as const, sql: "n DESC", params: [] };
+      expect(qb.orderByRaw(fragment)).toBe(qb);
+    });
+  });
+
   describe("skip and take", () => {
     test("should set skip", () => {
       qb.skip(10);
@@ -633,6 +667,21 @@ describe("QueryBuilder", () => {
       // Mutate original params
       qb.getState().rawWhere[0].params.push(2);
       expect(cloned.getState().rawWhere[0].params).toEqual([1]);
+    });
+
+    test("should deep copy rawOrderBy", () => {
+      const fragment = {
+        __brand: "SqlFragment" as const,
+        sql: "score > $1 DESC",
+        params: [5],
+      };
+      qb.orderByRaw(fragment);
+      const cloned = qb.clone() as TestQueryBuilder<any>;
+      // Mutate original entry + append another
+      qb.getState().rawOrderBy[0].params.push(2);
+      qb.orderByRaw({ __brand: "SqlFragment" as const, sql: "name ASC", params: [] });
+      expect(cloned.getState().rawOrderBy).toHaveLength(1);
+      expect(cloned.getState().rawOrderBy[0].params).toEqual([5]);
     });
 
     test("should deep copy groupBy", () => {
