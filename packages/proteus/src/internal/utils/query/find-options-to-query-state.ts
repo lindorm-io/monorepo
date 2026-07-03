@@ -83,6 +83,7 @@ export const findOptionsToQueryState = <E extends IEntity>(
     // Phase 12 fields
     rawSelections: [],
     rawWhere: [],
+    rawOrderBy: [],
     groupBy: null,
     having: [],
     rawHaving: [],

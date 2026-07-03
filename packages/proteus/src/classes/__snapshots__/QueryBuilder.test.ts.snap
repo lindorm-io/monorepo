@@ -57,6 +57,7 @@ exports[`QueryBuilder > chaining > should support fluent chaining 1`] = `
     },
   ],
   "rawHaving": [],
+  "rawOrderBy": [],
   "rawSelections": [],
   "rawWhere": [],
   "resolvedFilters": [],
@@ -178,6 +179,15 @@ exports[`QueryBuilder > orWhere > should append with OR conjunction 1`] = `
         "$exists": true,
       },
     },
+  },
+]
+`;
+
+exports[`QueryBuilder > orderByRaw > should append a raw order-by entry 1`] = `
+[
+  {
+    "params": [],
+    "sql": "n DESC",
   },
 ]
 `;

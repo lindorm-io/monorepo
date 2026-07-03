@@ -234,6 +234,15 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
+  override orderByRaw(): this {
+    throw new NotSupportedError("orderByRaw is not supported by the Redis driver", {
+      code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details:
+        "orderByRaw() injects raw SQL into the ORDER BY clause, which the Redis driver cannot execute; sort in application code instead.",
+    });
+  }
+
   // ─── Terminal methods ─────────────────────────────────────────────
 
   clone(): IProteusQueryBuilder<E> {

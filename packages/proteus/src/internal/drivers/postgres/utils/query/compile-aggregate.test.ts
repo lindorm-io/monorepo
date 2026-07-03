@@ -151,6 +151,7 @@ const noNamespaceMetadata = {
 const createEmptyState = (): QueryState<any> => ({
   predicates: [],
   orderBy: null,
+  rawOrderBy: [],
   skip: null,
   take: null,
   includes: [],

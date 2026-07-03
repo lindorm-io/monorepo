@@ -58,4 +58,50 @@ describe("compileOrderBy", () => {
       compileOrderBy({ name: { $similarity: "beatles" } }, metadata, "t0", []),
     ).toThrow(NotSupportedError);
   });
+
+  // --- Raw ORDER BY ---
+
+  test("should emit ORDER BY for a raw-only fragment with no field terms", () => {
+    const params: Array<unknown> = [];
+    const result = compileOrderBy(null, metadata, "t0", params, [
+      { sql: "n DESC", params: [] },
+    ]);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual([]);
+  });
+
+  test("should append multiple raw fragments in insertion order", () => {
+    const result = compileOrderBy(
+      null,
+      metadata,
+      "t0",
+      [],
+      [
+        { sql: "n DESC", params: [] },
+        { sql: "name ASC", params: [] },
+      ],
+    );
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should emit field terms (with NULLS emulation) first, then raw terms", () => {
+    const result = compileOrderBy(
+      { name: "ASC" },
+      metadata,
+      "t0",
+      [],
+      [{ sql: "n DESC", params: [] }],
+    );
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should append raw fragment params positionally after existing params", () => {
+    const params: Array<unknown> = ["pre-existing"];
+    const result = compileOrderBy({ name: "ASC" }, metadata, "t0", params, [
+      { sql: "score > ? DESC", params: [10] },
+    ]);
+    // MySQL uses positional `?`; params are appended in order, text unchanged
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["pre-existing", 10]);
+  });
 });

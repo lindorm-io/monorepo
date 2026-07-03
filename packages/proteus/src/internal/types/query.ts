@@ -51,6 +51,11 @@ export type RawWhereEntry = {
   conjunction: "and" | "or";
 };
 
+export type RawOrderByEntry = {
+  sql: string;
+  params: Array<unknown>;
+};
+
 // --- Window Functions ---
 
 export type WindowFunction =
@@ -123,6 +128,7 @@ export type SetOperationEntry = {
 export type QueryState<E extends IEntity> = {
   predicates: Array<PredicateEntry<E>>;
   orderBy: Partial<Record<keyof E, OrderValue>> | null;
+  rawOrderBy: Array<RawOrderByEntry>;
   skip: number | null;
   take: number | null;
   includes: Array<IncludeSpec>;

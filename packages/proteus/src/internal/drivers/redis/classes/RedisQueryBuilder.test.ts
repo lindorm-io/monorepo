@@ -311,6 +311,7 @@ describe("RedisQueryBuilder", () => {
       "havingRaw",
       "andHavingRaw",
       "orHavingRaw",
+      "orderByRaw",
       "window",
     ] as const;
 

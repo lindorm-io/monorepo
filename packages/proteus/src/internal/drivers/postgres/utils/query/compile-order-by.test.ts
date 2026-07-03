@@ -88,4 +88,64 @@ describe("compileOrderBy", () => {
     expect(result).toMatchSnapshot();
     expect(params).toEqual(["pre-existing", "beatles"]);
   });
+
+  // --- Raw ORDER BY ---
+
+  test("should emit ORDER BY for a raw-only fragment with no field terms", () => {
+    const params: Array<unknown> = [];
+    const result = compileOrderBy(null, metadata, "t0", params, [
+      { sql: "n DESC", params: [] },
+    ]);
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual([]);
+  });
+
+  test("should append multiple raw fragments in insertion order", () => {
+    const result = compileOrderBy(
+      null,
+      metadata,
+      "t0",
+      [],
+      [
+        { sql: "n DESC", params: [] },
+        { sql: "name ASC", params: [] },
+      ],
+    );
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should emit field terms first, then raw terms", () => {
+    const result = compileOrderBy(
+      { name: "ASC" },
+      metadata,
+      "t0",
+      [],
+      [{ sql: "n DESC", params: [] }],
+    );
+    expect(result).toMatchSnapshot();
+  });
+
+  test("should reindex raw fragment $N placeholders past existing params", () => {
+    const params: Array<unknown> = ["pre-existing"];
+    const result = compileOrderBy({ name: "ASC" }, metadata, "t0", params, [
+      { sql: "score > $1 DESC", params: [10] },
+    ]);
+    // $1 in the fragment must become $2 because one param already precedes it
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["pre-existing", 10]);
+  });
+
+  test("should order $similarity params before raw fragment params", () => {
+    const params: Array<unknown> = [];
+    const result = compileOrderBy(
+      { name: { $similarity: "beatles" } },
+      metadata,
+      "t0",
+      params,
+      [{ sql: "score > $1 DESC", params: [10] }],
+    );
+    // similarity pushes "beatles" as $1, so the raw fragment's $1 reindexes to $2
+    expect(result).toMatchSnapshot();
+    expect(params).toEqual(["beatles", 10]);
+  });
 });

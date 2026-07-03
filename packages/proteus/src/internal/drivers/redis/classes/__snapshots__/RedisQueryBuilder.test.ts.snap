@@ -42,6 +42,7 @@ exports[`RedisQueryBuilder > toQuery / clone > toQuery returns state and driver 
     "orderBy": null,
     "predicates": [],
     "rawHaving": [],
+    "rawOrderBy": [],
     "rawSelections": [],
     "rawWhere": [],
     "resolvedFilters": [],

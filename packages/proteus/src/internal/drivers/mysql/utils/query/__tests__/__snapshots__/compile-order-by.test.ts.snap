@@ -1,9 +1,17 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`compileOrderBy > should append multiple raw fragments in insertion order 1`] = `"ORDER BY n DESC, name ASC"`;
+
+exports[`compileOrderBy > should append raw fragment params positionally after existing params 1`] = `"ORDER BY (\`t0\`.\`name\` IS NULL), \`t0\`.\`name\` ASC, score > ? DESC"`;
+
 exports[`compileOrderBy > should compile multiple fields 1`] = `"ORDER BY (\`t0\`.\`name\` IS NULL), \`t0\`.\`name\` ASC, (\`t0\`.\`age\` IS NOT NULL), \`t0\`.\`age\` DESC"`;
 
 exports[`compileOrderBy > should compile single field ASC with NULLS LAST emulation 1`] = `"ORDER BY (\`t0\`.\`name\` IS NULL), \`t0\`.\`name\` ASC"`;
 
 exports[`compileOrderBy > should compile single field DESC with NULLS FIRST emulation 1`] = `"ORDER BY (\`t0\`.\`age\` IS NOT NULL), \`t0\`.\`age\` DESC"`;
+
+exports[`compileOrderBy > should emit ORDER BY for a raw-only fragment with no field terms 1`] = `"ORDER BY n DESC"`;
+
+exports[`compileOrderBy > should emit field terms (with NULLS emulation) first, then raw terms 1`] = `"ORDER BY (\`t0\`.\`name\` IS NULL), \`t0\`.\`name\` ASC, n DESC"`;
 
 exports[`compileOrderBy > should use column name mapping 1`] = `"ORDER BY (\`t0\`.\`email_address\` IS NULL), \`t0\`.\`email_address\` ASC"`;

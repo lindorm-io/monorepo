@@ -173,6 +173,15 @@ export class MemoryQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     });
   }
 
+  override orderByRaw(): this {
+    throw new NotSupportedError("orderByRaw is not supported by the memory driver", {
+      code: "unsupported_operation",
+      title: "Unsupported Operation",
+      details: "The memory driver cannot execute raw SQL passed to orderByRaw.",
+      data: { operation: "orderByRaw" },
+    });
+  }
+
   // ─── Terminal methods ─────────────────────────────────────────────
 
   clone(): IProteusQueryBuilder<E> {
