@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.4.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.4.4...@lindorm/config@0.4.5) (2026-07-04)
+
+### Bug Fixes
+
+- **config:** silence dotenvx MISSING_ENV_FILE noise for optional .env ([7210b6e](https://github.com/lindorm-io/monorepo/commit/7210b6ee9944039cd0f8abb02bb1c65a791b3fff))
+
 ## [0.4.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.4.3...@lindorm/config@0.4.4) (2026-07-02)
 
 ### Bug Fixes
