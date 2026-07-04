@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [0.5.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.5.6...@lindorm/scanner@0.5.7) (2026-07-04)
+
+### Bug Fixes
+
+- **scanner:** skip sourcemaps and .d.ts declarations by default ([0286036](https://github.com/lindorm-io/monorepo/commit/0286036f69c8c4d9ab1e2c940a17ab4969e6e5c6))
+- **scanner:** treat a missing scan directory as empty, not ENOENT ([0e960b9](https://github.com/lindorm-io/monorepo/commit/0e960b9cacd1418ac57eebd3f8149daa76a572ea))
+
 ## [0.5.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.5.5...@lindorm/scanner@0.5.6) (2026-07-02)
 
 ### Bug Fixes

@@ -1,6 +1,6 @@
 {
   "name": "@lindorm/proteus",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "license": "AGPL-3.0-or-later",
   "author": "Jonn Nilsson",
   "repository": {
@@ -58,7 +58,7 @@
     "@lindorm/json-kit": "^0.7.0",
     "@lindorm/random": "^0.4.0",
     "@lindorm/retry": "^0.3.4",
-    "@lindorm/scanner": "^0.5.6",
+    "@lindorm/scanner": "^0.5.7",
     "@lindorm/sha": "^0.6.2",
     "@lindorm/types": "^0.9.0",
     "@lindorm/utils": "^0.9.0",

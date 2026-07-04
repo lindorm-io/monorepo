@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.10.0...@lindorm/proteus@0.11.0) (2026-07-04)
+
+### Features
+
+- **proteus:** add queryBuilder.orderByRaw for raw ORDER BY expressions ([0d0b5ab](https://github.com/lindorm-io/monorepo/commit/0d0b5abf48b8e25951faba1c57e42a0a0c51ae8d))
+- **proteus:** round-trip typed arrays symmetrically across all drivers ([d4b25c6](https://github.com/lindorm-io/monorepo/commit/d4b25c6098ff594d07bf833682ee25583d6ba0e1))
+
 # [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/proteus@0.9.0...@lindorm/proteus@0.10.0) (2026-07-02)
 
 ### Bug Fixes
