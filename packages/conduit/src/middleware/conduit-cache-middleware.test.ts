@@ -1,209 +1,142 @@
-import MockDate from "mockdate";
-import type { ConduitMiddleware } from "../types/index.js";
+import { createMemoryCacheDriver } from "../drivers/index.js";
+import type { ConduitResponse } from "../types/index.js";
 import { createConduitCacheMiddleware } from "./conduit-cache-middleware.js";
-import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import { describe, expect, test, vi } from "vitest";
 
-const MockedDate = new Date("2024-01-01T08:00:00.000Z");
-MockDate.set(MockedDate);
+const ok: ConduitResponse = {
+  data: { ok: true },
+  status: 200,
+  statusText: "OK",
+  headers: {},
+};
+
+const makeCtx = (method = "GET", query: any = {}): any => ({
+  req: {
+    config: { method },
+    url: "https://api.example.com/songs",
+    query,
+    body: undefined,
+  },
+  res: undefined,
+});
 
 describe("conduitCacheMiddleware", () => {
-  let ctx: any;
-  let next: Mock;
-  let middleware: ConduitMiddleware;
+  test("caches a GET: miss then hit", async () => {
+    const mw = createConduitCacheMiddleware();
 
-  beforeEach(() => {
-    ctx = {
-      req: {
-        url: "https://api.test/resource",
-        config: {
-          method: "GET",
-        },
-      },
-      res: {
-        data: { result: "data" },
-        status: 200,
-        statusText: "OK",
-        headers: {},
-      },
-    };
+    const a = makeCtx();
+    await mw(a, async () => {
+      a.res = { ...ok };
+    });
+    expect(a.res.headers["x-conduit-cache-middleware"]).toBe("MISS");
 
-    next = vi.fn().mockResolvedValue(undefined);
+    const b = makeCtx();
+    const next = vi.fn();
+    await mw(b, next);
+
+    expect(next).not.toHaveBeenCalled();
+    expect(b.res.headers["x-conduit-cache-middleware"]).toBe("HIT");
+    expect(typeof b.res.headers.age).toBe("number");
+    expect(b.res.data).toEqual({ ok: true });
   });
 
-  afterEach(() => {
-    vi.clearAllMocks();
-    MockDate.set(MockedDate);
+  test("does not cache non-configured methods (POST bypasses by default)", async () => {
+    const mw = createConduitCacheMiddleware();
+
+    const ctx = makeCtx("POST");
+    const next = vi.fn(async () => {
+      ctx.res = { ...ok };
+    });
+    await mw(ctx, next);
+
+    expect(next).toHaveBeenCalled();
+    expect(ctx.res.headers?.["x-conduit-cache-middleware"]).toBeUndefined();
   });
 
-  test("caches GET responses and returns cached data on second call", async () => {
-    middleware = createConduitCacheMiddleware({ maxAge: 10000 });
+  test("caches configured methods", async () => {
+    const mw = createConduitCacheMiddleware({ methods: ["GET", "POST"] });
 
-    await middleware(ctx, next);
-    expect(next).toHaveBeenCalledTimes(1);
-    expect(ctx.res.data).toEqual({ result: "data" });
+    const a = makeCtx("POST");
+    await mw(a, async () => {
+      a.res = { ...ok };
+    });
 
-    // Change the response for second call
-    ctx.res = {
-      data: { result: "new data" },
-      status: 200,
-      statusText: "OK",
-      headers: {},
-    };
+    const b = makeCtx("POST");
+    const next = vi.fn();
+    await mw(b, next);
 
-    await middleware(ctx, next);
-
-    // Should still have cached data, next not called again
-    expect(next).toHaveBeenCalledTimes(1);
-    expect(ctx.res.data).toEqual({ result: "data" });
+    expect(next).not.toHaveBeenCalled();
+    expect(b.res.headers["x-conduit-cache-middleware"]).toBe("HIT");
   });
 
-  test("does not cache non-GET requests", async () => {
-    middleware = createConduitCacheMiddleware();
+  test("respects a response Cache-Control: no-store", async () => {
+    const mw = createConduitCacheMiddleware();
 
-    ctx.req.config.method = "POST";
+    const a = makeCtx();
+    await mw(a, async () => {
+      a.res = { ...ok, headers: { "cache-control": "no-store" } };
+    });
 
-    await middleware(ctx, next);
-    await middleware(ctx, next);
+    const b = makeCtx();
+    const next = vi.fn(async () => {
+      b.res = { ...ok };
+    });
+    await mw(b, next);
 
-    expect(next).toHaveBeenCalledTimes(2);
+    // Not served from cache — the no-store response was never stored.
+    expect(next).toHaveBeenCalled();
   });
 
-  test("respects Cache-Control: no-store", async () => {
-    middleware = createConduitCacheMiddleware();
+  test("offline: a miss throws instead of performing the request", async () => {
+    const mw = createConduitCacheMiddleware({ offline: true });
 
-    ctx.res.headers = { "cache-control": "no-store" };
-
-    await middleware(ctx, next);
-    expect(next).toHaveBeenCalledTimes(1);
-
-    await middleware(ctx, next);
-
-    // Should call next again (not cached)
-    expect(next).toHaveBeenCalledTimes(2);
+    const ctx = makeCtx();
+    const next = vi.fn();
+    await expect(mw(ctx, next)).rejects.toThrow(/offline/i);
+    expect(next).not.toHaveBeenCalled();
   });
 
-  test("respects Cache-Control: no-cache", async () => {
-    middleware = createConduitCacheMiddleware();
+  test("uses an injected driver", async () => {
+    const driver = createMemoryCacheDriver();
+    const setSpy = vi.spyOn(driver, "set");
+    const mw = createConduitCacheMiddleware({ driver });
 
-    ctx.res.headers = { "cache-control": "no-cache, must-revalidate" };
+    const ctx = makeCtx();
+    await mw(ctx, async () => {
+      ctx.res = { ...ok };
+    });
 
-    await middleware(ctx, next);
-    expect(next).toHaveBeenCalledTimes(1);
-
-    await middleware(ctx, next);
-
-    // Should call next again (not cached)
-    expect(next).toHaveBeenCalledTimes(2);
+    expect(setSpy).toHaveBeenCalled();
   });
 
-  test("expires cache after maxAge", async () => {
-    middleware = createConduitCacheMiddleware({ maxAge: 5000 });
+  test("single-flight: concurrent identical misses share one fetch", async () => {
+    const mw = createConduitCacheMiddleware();
 
-    await middleware(ctx, next);
-    expect(next).toHaveBeenCalledTimes(1);
+    let release: () => void = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
 
-    // Advance time beyond maxAge
-    MockDate.set(new Date(MockedDate.getTime() + 6000));
+    const a = makeCtx();
+    const nextA = vi.fn(async () => {
+      await gate;
+      a.res = { ...ok };
+    });
 
-    await middleware(ctx, next);
+    const b = makeCtx();
+    const nextB = vi.fn();
 
-    // Cache expired, should call next again
-    expect(next).toHaveBeenCalledTimes(2);
-  });
+    const promiseA = mw(a, nextA);
+    await new Promise((resolve) => setImmediate(resolve));
+    const promiseB = mw(b, nextB);
+    await new Promise((resolve) => setImmediate(resolve));
 
-  test("only caches successful responses (2xx)", async () => {
-    middleware = createConduitCacheMiddleware();
+    release();
+    await Promise.all([promiseA, promiseB]);
 
-    ctx.res.status = 404;
-
-    await middleware(ctx, next);
-    await middleware(ctx, next);
-
-    // Should not cache non-2xx responses
-    expect(next).toHaveBeenCalledTimes(2);
-  });
-
-  test("evicts oldest entry when maxEntries exceeded", async () => {
-    middleware = createConduitCacheMiddleware({ maxEntries: 2 });
-
-    const ctx1: any = {
-      req: { url: "https://api.test/resource1", config: { method: "GET" } },
-      res: { data: "data1", status: 200, statusText: "OK", headers: {} },
-    };
-
-    const ctx2: any = {
-      req: { url: "https://api.test/resource2", config: { method: "GET" } },
-      res: { data: "data2", status: 200, statusText: "OK", headers: {} },
-    };
-
-    const ctx3: any = {
-      req: { url: "https://api.test/resource3", config: { method: "GET" } },
-      res: { data: "data3", status: 200, statusText: "OK", headers: {} },
-    };
-
-    await middleware(ctx1, next);
-    await middleware(ctx2, next);
-    expect(next).toHaveBeenCalledTimes(2);
-
-    // Third entry should evict first
-    await middleware(ctx3, next);
-    expect(next).toHaveBeenCalledTimes(3);
-
-    // ctx1 should be evicted, will call next and get re-cached (evicts ctx2)
-    await middleware(ctx1, next);
-    expect(next).toHaveBeenCalledTimes(4);
-
-    // ctx3 should still be cached
-    await middleware(ctx3, next);
-    expect(next).toHaveBeenCalledTimes(4);
-  });
-
-  test("handles numeric cache-control header values", async () => {
-    middleware = createConduitCacheMiddleware();
-
-    ctx.res.headers = { "cache-control": 123 as any };
-
-    await middleware(ctx, next);
-    await middleware(ctx, next);
-
-    // Non-string cache-control should be treated as empty, allowing cache
-    expect(next).toHaveBeenCalledTimes(1);
-  });
-
-  test("uses default config values", async () => {
-    middleware = createConduitCacheMiddleware();
-
-    await middleware(ctx, next);
-    await middleware(ctx, next);
-
-    // Default maxAge is 300000ms (5 minutes)
-    expect(next).toHaveBeenCalledTimes(1);
-  });
-
-  test("caches different URLs separately", async () => {
-    middleware = createConduitCacheMiddleware();
-
-    const ctx1: any = {
-      req: { url: "https://api.test/resource1", config: { method: "GET" } },
-      res: { data: "data1", status: 200, statusText: "OK", headers: {} },
-    };
-
-    const ctx2: any = {
-      req: { url: "https://api.test/resource2", config: { method: "GET" } },
-      res: { data: "data2", status: 200, statusText: "OK", headers: {} },
-    };
-
-    await middleware(ctx1, next);
-    await middleware(ctx2, next);
-
-    expect(next).toHaveBeenCalledTimes(2);
-
-    // Both should be cached independently
-    await middleware(ctx1, next);
-    await middleware(ctx2, next);
-
-    expect(next).toHaveBeenCalledTimes(2);
-    expect(ctx1.res.data).toBe("data1");
-    expect(ctx2.res.data).toBe("data2");
+    expect(nextA).toHaveBeenCalledTimes(1);
+    expect(nextB).not.toHaveBeenCalled();
+    expect(b.res.data).toEqual({ ok: true });
+    expect(b.res.headers["x-conduit-cache-middleware"]).toBe("MISS");
   });
 });

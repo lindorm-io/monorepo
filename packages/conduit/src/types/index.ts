@@ -1,4 +1,5 @@
 export * from "./adapter.js";
+export * from "./cache.js";
 export * from "./circuit-breaker.js";
 export * from "./conduit.js";
 export * from "./context.js";

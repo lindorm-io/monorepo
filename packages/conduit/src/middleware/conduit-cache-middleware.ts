@@ -1,58 +1,107 @@
-import type { ConduitMiddleware, ConduitResponse } from "../types/index.js";
+import type { HttpMethod } from "@lindorm/types";
+import { createMemoryCacheDriver } from "../drivers/index.js";
+import { canonicalCacheKey } from "../internal/utils/canonical-cache-key.js";
+import type { IConduitCacheDriver } from "../interfaces/index.js";
+import type {
+  ConduitCacheKey,
+  ConduitMiddleware,
+  ConduitResponse,
+} from "../types/index.js";
 
 type Config = {
+  /** Cache driver; defaults to an in-memory LRU driver. */
+  driver?: IConduitCacheDriver;
+  /** Entry TTL in milliseconds. Omit for no expiry. */
   maxAge?: number;
-  maxEntries?: number;
-};
-
-type CacheEntry = {
-  response: ConduitResponse;
-  timestamp: number;
+  /** Methods to cache. Defaults to GET only. */
+  methods?: Array<HttpMethod>;
+  /** Honour a response `Cache-Control: no-store`/`no-cache`. Default true. */
+  respectCacheControl?: boolean;
+  /** When true, a miss throws instead of performing the request. */
+  offline?: boolean;
 };
 
 export const createConduitCacheMiddleware = (config: Config = {}): ConduitMiddleware => {
-  const maxAge = config.maxAge ?? 300000;
-  const maxEntries = config.maxEntries ?? 1000;
+  const driver = config.driver ?? createMemoryCacheDriver();
+  const maxAge = config.maxAge;
+  const methods = (config.methods ?? ["GET"]).map((m) => m.toUpperCase());
+  const respectCacheControl = config.respectCacheControl ?? true;
+  const offline = config.offline ?? false;
 
-  const cache = new Map<string, CacheEntry>();
+  // Coalesces concurrent identical misses: one request fetches, the rest await.
+  const inflight = new Map<string, Promise<ConduitResponse>>();
 
   return async function conduitCacheMiddleware(ctx, next) {
     const method = ctx.req.config.method;
 
-    if (method !== "GET") {
+    if (!methods.includes(method.toUpperCase())) {
       await next();
       return;
     }
 
-    const key = `${method}:${ctx.req.url}:${JSON.stringify(ctx.req.query)}`;
+    const key: ConduitCacheKey = {
+      method,
+      url: ctx.req.url,
+      query: ctx.req.query,
+      body: ctx.req.body,
+    };
 
-    const existing = cache.get(key);
-    if (existing && Date.now() - existing.timestamp < maxAge) {
-      ctx.res = { ...existing.response };
+    const hit = await driver.get(key);
+
+    if (hit) {
+      ctx.res = {
+        ...hit.response,
+        headers: {
+          ...hit.response.headers,
+          "x-conduit-cache-middleware": "HIT",
+          age: Math.floor((Date.now() - hit.storedAt) / 1000),
+        },
+      };
+
       return;
     }
 
-    await next();
+    if (offline) {
+      throw new Error(`Conduit cache miss in offline mode: ${method} ${ctx.req.url}`);
+    }
 
-    const cacheControl = ctx.res.headers?.["cache-control"];
-    const ccValue = typeof cacheControl === "string" ? cacheControl : "";
+    const id = canonicalCacheKey(key);
+    const pending = inflight.get(id);
 
-    if (ccValue.includes("no-cache") || ccValue.includes("no-store")) {
+    if (pending) {
+      const shared = await pending;
+      ctx.res = {
+        ...shared,
+        headers: { ...shared.headers, "x-conduit-cache-middleware": "MISS" },
+      };
+
       return;
     }
 
-    if (ctx.res.status >= 200 && ctx.res.status < 300) {
-      if (cache.size >= maxEntries) {
-        const oldest = cache.keys().next().value;
-        if (oldest !== undefined) {
-          cache.delete(oldest);
-        }
+    const run = (async (): Promise<ConduitResponse> => {
+      await next();
+
+      const cacheControl = ctx.res.headers?.["cache-control"];
+      const ccValue = typeof cacheControl === "string" ? cacheControl : "";
+      const blocked =
+        respectCacheControl &&
+        (ccValue.includes("no-store") || ccValue.includes("no-cache"));
+
+      if (!blocked && ctx.res.status >= 200 && ctx.res.status < 300) {
+        await driver.set(key, ctx.res, maxAge);
       }
 
-      cache.set(key, {
-        response: { ...ctx.res },
-        timestamp: Date.now(),
-      });
+      return ctx.res;
+    })();
+
+    inflight.set(id, run);
+
+    try {
+      await run;
+    } finally {
+      inflight.delete(id);
     }
+
+    ctx.res.headers = { ...ctx.res.headers, "x-conduit-cache-middleware": "MISS" };
   };
 };
