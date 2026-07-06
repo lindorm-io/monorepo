@@ -1,5 +1,5 @@
 import { Logger } from "@lindorm/logger";
-import { ProteusSource } from "../../classes/ProteusSource.js";
+import type { ProteusSource } from "../../classes/ProteusSource.js";
 import { loadSource } from "./load-source.js";
 
 export type GlobalOptions = {

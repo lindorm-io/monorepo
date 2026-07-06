@@ -1,4 +1,4 @@
-import { z } from "zod";
+import type { z } from "zod";
 import type { IEntity } from "../interfaces/index.js";
 import { stageSchema } from "../internal/entity/metadata/stage-metadata.js";
 

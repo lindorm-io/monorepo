@@ -8,7 +8,7 @@ import type { SqliteQueryClient } from "../drivers/sqlite/types/sqlite-query-cli
 import type { IMigrationManager } from "../interfaces/MigrationManager.js";
 import type { MigrationTableOptions } from "../types/migration.js";
 import type { PoolClient } from "pg";
-import { ProteusSource } from "../../classes/ProteusSource.js";
+import type { ProteusSource } from "../../classes/ProteusSource.js";
 import { ProteusError } from "../../errors/ProteusError.js";
 
 export type MigrationManagerContext = {
