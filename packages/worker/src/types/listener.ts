@@ -1,4 +1,4 @@
-import { LindormWorkerError } from "../errors/index.js";
+import type { LindormWorkerError } from "../errors/index.js";
 
 export type LindormWorkerListener = () => void;
 
