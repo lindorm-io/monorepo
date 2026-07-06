@@ -26,7 +26,7 @@ import type { ILogger } from "@lindorm/logger";
 import { uniq } from "@lindorm/utils";
 import { useRateLimit } from "../middleware/common/use-rate-limit.js";
 import { createAdapter } from "@socket.io/redis-adapter";
-import { Server } from "http";
+import type { Server } from "http";
 import { Server as SocketIoServer } from "socket.io";
 import type {
   IoServer,

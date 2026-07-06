@@ -1,4 +1,4 @@
-import { Readable } from "stream";
+import type { Readable } from "stream";
 import type { PylonHttpContext } from "./context-http.js";
 
 export type PylonHandlerFileDownloadOptions = {

@@ -2,7 +2,8 @@ import { isHttpContext } from "../../internal/utils/is-context.js";
 import { ClientError, ServerError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
 import objectPath from "object-path";
-import { ZodObject, type ZodRawShape } from "zod";
+import type { ZodObject } from "zod";
+import { type ZodRawShape } from "zod";
 import type { PylonHttpContext, PylonMiddleware } from "../../types/index.js";
 
 type Path = "data" | "body" | "headers" | "params" | "query" | string;

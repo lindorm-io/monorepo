@@ -3,7 +3,7 @@ import type {
   ClientCredentialsContentType,
 } from "@lindorm/conduit";
 import type { Dict } from "@lindorm/types";
-import { WebhookAuth, WebhookMethod } from "../enums/index.js";
+import type { WebhookAuth, WebhookMethod } from "../enums/index.js";
 
 export interface IWebhookSubscription {
   id: string;

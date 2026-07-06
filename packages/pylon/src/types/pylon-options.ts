@@ -8,7 +8,7 @@ import type { Environment } from "@lindorm/types";
 import type { ILindormWorker } from "@lindorm/worker";
 import type { Redis } from "ioredis";
 import type { ServerOptions as SocketOptions } from "socket.io";
-import { PylonListener, PylonRouter } from "../classes/index.js";
+import type { PylonListener, PylonRouter } from "../classes/index.js";
 import type { PylonAuthOptions } from "./auth.js";
 import type { PylonCommonContext } from "./context-common.js";
 import type {

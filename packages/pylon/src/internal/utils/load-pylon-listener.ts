@@ -1,5 +1,5 @@
 import { composeMiddleware } from "@lindorm/middleware";
-import { PylonListener } from "../../classes/index.js";
+import type { PylonListener } from "../../classes/index.js";
 import type {
   IoServer,
   PylonListenerMethod,

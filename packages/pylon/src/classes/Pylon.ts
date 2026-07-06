@@ -1,7 +1,8 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
 import type { ILindormWorker } from "@lindorm/worker";
-import { Server as HttpServer, createServer } from "http";
+import type { Server as HttpServer } from "http";
+import { createServer } from "http";
 import { httpSocketIoMiddleware } from "../internal/middleware/http-socket-io-middleware.js";
 import type {
   HttpCallback,

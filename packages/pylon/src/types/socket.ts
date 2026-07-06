@@ -1,5 +1,5 @@
 import type { Dict } from "@lindorm/types";
-import { Server, Socket } from "socket.io";
+import type { Server, Socket } from "socket.io";
 
 // socket.io's DefaultEventsMap lives on a private subpath that bundler
 // moduleResolution refuses to traverse. Inline the same shape here.
