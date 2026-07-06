@@ -1,4 +1,4 @@
-import { Logger as WinstonLogger } from "winston";
+import type { Logger as WinstonLogger } from "winston";
 import type {
   FilterCallback,
   LogCorrelation,

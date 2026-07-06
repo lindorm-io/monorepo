@@ -3,7 +3,7 @@ import { isArray, isError, isObject } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
 import fastSafeStringify from "fast-safe-stringify";
 import objectPath from "object-path";
-import { Logger as WinstonLogger } from "winston";
+import type { Logger as WinstonLogger } from "winston";
 import type { ILogger, ILoggerTimer } from "../interfaces/index.js";
 import type {
   FilterCallback,
