@@ -64,6 +64,13 @@ export default defineConfig(
     },
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
+      // Enforce `import type` for type-only imports (prevents value imports of
+      // Node builtins used only as types from shipping to the browser). Inline
+      // `import("x").Y` type annotations are erased anyway, so leave them be.
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        { disallowTypeAnnotations: false },
+      ],
       "@typescript-eslint/explicit-function-return-type": "off",
       "@typescript-eslint/explicit-member-accessibility": [
         "error",
