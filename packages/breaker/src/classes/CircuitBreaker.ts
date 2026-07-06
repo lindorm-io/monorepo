@@ -1,4 +1,4 @@
-import { EventEmitter } from "events";
+import { EventEmitter } from "eventemitter3";
 import { CircuitOpenError } from "../errors/CircuitOpenError.js";
 import type { ICircuitBreaker } from "../interfaces/CircuitBreaker.js";
 import { calculateBackoff, SlidingWindow } from "../internal/index.js";
