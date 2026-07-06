@@ -6,11 +6,11 @@ import {
   isEqual,
   isNumber,
   isObject,
+  isRegExp,
   isString,
   isUndefined,
 } from "@lindorm/is";
 import type { Dict, Predicate, PredicateOperator } from "@lindorm/types";
-import { isRegExp } from "util/types";
 
 const PREDICATE_OPERATORS = [
   // existence
