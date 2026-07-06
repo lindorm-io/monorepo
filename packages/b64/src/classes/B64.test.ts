@@ -59,6 +59,19 @@ describe("B64", () => {
         Buffer.from("hello there - general kenobi"),
       );
     });
+
+    test("should throw a clear error when Buffer is unavailable (browser)", () => {
+      const original = globalThis.Buffer;
+      // Simulate a browser where Buffer does not exist.
+      // @ts-expect-error - deleting a global for the test
+      delete globalThis.Buffer;
+
+      try {
+        expect(() => B64.toBuffer("aGVsbG8=")).toThrow("use B64.toBytes()");
+      } finally {
+        globalThis.Buffer = original;
+      }
+    });
   });
 
   describe("decode to bytes", () => {

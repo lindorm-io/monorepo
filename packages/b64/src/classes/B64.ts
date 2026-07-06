@@ -11,6 +11,14 @@ export class B64 {
   }
 
   static toBuffer(input: string, encoding?: Base64Encoding): Buffer {
+    // Buffer is Node-only. A plain Error (not a @lindorm/errors type) avoids a
+    // b64 → errors → is → b64 dependency cycle.
+    if (typeof Buffer === "undefined") {
+      throw new Error(
+        "B64.toBuffer is not available in the browser (requires Node's Buffer); use B64.toBytes() for a Uint8Array instead.",
+      );
+    }
+
     return Buffer.from(decode(input, encoding));
   }
 
