@@ -1,4 +1,5 @@
-import { createPrivateKey, createSign, sign as cryptoSign, KeyObject } from "crypto";
+import type { KeyObject } from "crypto";
+import { createPrivateKey, createSign, sign as cryptoSign } from "crypto";
 import { KryptosError } from "../../../errors/index.js";
 import type { KryptosType } from "../../../types/index.js";
 import type { X509SignatureDescriptor } from "./encode-algorithm-identifier.js";
