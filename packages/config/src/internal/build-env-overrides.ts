@@ -1,7 +1,7 @@
 import { changeCase } from "@lindorm/case";
 import type { Dict } from "@lindorm/types";
 import { safelyParse } from "@lindorm/utils";
-import { z } from "zod";
+import type { z } from "zod";
 import type { ProcessEnv } from "../types/index.js";
 import { getDef, walkSchemaLeaves } from "./walk-schema.js";
 
