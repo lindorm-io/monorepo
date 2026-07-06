@@ -75,7 +75,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   loadMiddleware(): void {
     this.logger.debug("Loading middleware");
 
-    this.server.use(createHttpCorsMiddleware(this.options.cors));
+    this.server.use(createHttpCorsMiddleware(this.options.cors, this.logger));
 
     // middleware
 

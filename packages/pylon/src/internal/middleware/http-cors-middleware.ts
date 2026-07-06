@@ -1,7 +1,9 @@
 import { isArray } from "@lindorm/is";
+import type { ILogger } from "@lindorm/logger";
 import type { HttpMethod } from "@lindorm/types";
 import { CorsError } from "../../errors/index.js";
 import type { CorsOptions, PylonHttpMiddleware } from "../../types/index.js";
+import { normaliseAllowHeaders } from "../utils/cors/normalise-allow-headers.js";
 import { validateCorsOptions } from "../utils/cors/validate-cors-options.js";
 import {
   handleAccessControlCredentials,
@@ -17,6 +19,7 @@ import {
 
 export const createHttpCorsMiddleware = (
   options: CorsOptions = {},
+  logger?: ILogger,
 ): PylonHttpMiddleware => {
   validateCorsOptions(options);
 
@@ -25,7 +28,10 @@ export const createHttpCorsMiddleware = (
     : options.allowMethods;
 
   options.allowHeaders = isArray(options.allowHeaders)
-    ? options.allowHeaders.map((h) => h.toLowerCase())
+    ? normaliseAllowHeaders(
+        options.allowHeaders.map((h) => h.toLowerCase()),
+        logger,
+      )
     : options.allowHeaders;
 
   options.allowOrigins = isArray(options.allowOrigins)
@@ -39,22 +45,28 @@ export const createHttpCorsMiddleware = (
     : options.exposeHeaders;
 
   return async function httpCorsMiddleware(ctx, next) {
-    if (ctx.method.toLowerCase() !== "options") {
-      return await next();
-    }
-
     ctx.vary("Origin");
 
-    try {
-      const originHeader = handleAccessControlOrigin(ctx, options);
+    const preflight = ctx.method.toUpperCase() === "OPTIONS";
 
-      if (originHeader) {
+    try {
+      const originAllowed = handleAccessControlOrigin(ctx, options);
+
+      // Access-Control-Allow-Origin (+ credentials + exposed headers) must ride
+      // on the ACTUAL response too — not just the preflight — or the browser
+      // discards every real cross-origin response.
+      if (originAllowed) {
         handleAccessControlCredentials(ctx, options);
         handleAccessControlExposeHeaders(ctx, options);
-        handleAccessControlHeaders(ctx, options);
-        handleAccessControlMaxAge(ctx, options);
-        handleAccessControlMethods(ctx, options);
-        handleAccessControlPrivateNetwork(ctx, options);
+
+        // allow-methods / allow-headers / max-age / private-network only mean
+        // anything on the OPTIONS preflight — reserve them for it.
+        if (preflight) {
+          handleAccessControlHeaders(ctx, options);
+          handleAccessControlMaxAge(ctx, options);
+          handleAccessControlMethods(ctx, options);
+          handleAccessControlPrivateNetwork(ctx, options);
+        }
       }
 
       handleCrossOriginEmbedderPolicy(ctx, options);
@@ -70,6 +82,12 @@ export const createHttpCorsMiddleware = (
       throw error;
     }
 
-    ctx.status = 204;
+    if (preflight) {
+      ctx.status = 204;
+
+      return;
+    }
+
+    return await next();
   };
 };

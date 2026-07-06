@@ -70,11 +70,22 @@ describe("handleAccessControlOrigin", () => {
     ).toThrow(CorsError);
   });
 
-  test("should throw CorsError when no origin header and list is configured", () => {
+  test("should return false when no origin header and list is configured", () => {
+    // No Origin header is not a CORS request — it must pass through (not 403),
+    // so this handler is safe to run on every request.
     const ctx = createCtx();
-    expect(() =>
+    expect(
       handleAccessControlOrigin(ctx, { allowOrigins: ["https://test.lindorm.io"] }),
-    ).toThrow(CorsError);
+    ).toBe(false);
+    expect(ctx.set).not.toHaveBeenCalled();
+  });
+
+  test("should return false when origin header is empty (real Koa returns '')", () => {
+    const ctx = createCtx({ origin: "" });
+    expect(
+      handleAccessControlOrigin(ctx, { allowOrigins: ["https://test.lindorm.io"] }),
+    ).toBe(false);
+    expect(ctx.set).not.toHaveBeenCalled();
   });
 });
 
@@ -142,6 +153,29 @@ describe("handleAccessControlHeaders", () => {
     expect(() =>
       handleAccessControlHeaders(ctx, { allowHeaders: ["content-type"] }),
     ).toThrow(CorsError);
+  });
+
+  test("should not throw when request headers header is empty (real Koa returns '')", () => {
+    // The bug: "".split(",") is [""], which failed the allowlist and 403'd a
+    // valid preflight. An empty/missing header means "no requested headers".
+    const ctx = createCtx({ "access-control-request-headers": "" });
+    expect(() =>
+      handleAccessControlHeaders(ctx, { allowHeaders: ["content-type"] }),
+    ).not.toThrow();
+    expect(ctx.set).toHaveBeenCalledWith("access-control-allow-headers", "content-type");
+  });
+
+  test("should trim whitespace around comma-separated request headers", () => {
+    const ctx = createCtx({
+      "access-control-request-headers": "content-type, authorization",
+    });
+    handleAccessControlHeaders(ctx, {
+      allowHeaders: ["content-type", "authorization"],
+    });
+    expect(ctx.set).toHaveBeenCalledWith(
+      "access-control-allow-headers",
+      "content-type,authorization",
+    );
   });
 });
 

@@ -21,9 +21,14 @@ export const handleAccessControlOrigin = (
   const origin =
     ctx.get("origin")?.toLowerCase() || ctx.get("x-origin")?.toLowerCase() || null;
 
-  const request = origin?.endsWith("/") ? origin.slice(0, -1) : origin;
+  // No Origin header → not a cross-origin request. Return false (don't set a
+  // header, don't reject) so this handler is safe to run on every request —
+  // same-origin and non-browser callers never send Origin.
+  if (!origin) return false;
 
-  if (request && config.includes(request)) {
+  const request = origin.endsWith("/") ? origin.slice(0, -1) : origin;
+
+  if (config.includes(request)) {
     ctx.set("access-control-allow-origin", request);
 
     return true;
@@ -62,15 +67,23 @@ export const handleAccessControlHeaders = (
 
   const config = isArray(options.allowHeaders) ? options.allowHeaders : [];
 
-  const request =
-    ctx.get("access-control-request-headers")?.toLowerCase()?.split(",") || [];
+  // ctx.get returns "" for a missing header, so guard before splitting —
+  // "".split(",") is [""], a phantom header that would fail the allowlist.
+  const requested = ctx.get("access-control-request-headers")?.toLowerCase().trim();
 
-  if (request.length && request.every((h) => config.includes(h))) {
-    return ctx.set("access-control-allow-headers", request.join(","));
-  }
+  const request = requested
+    ? requested
+        .split(",")
+        .map((h) => h.trim())
+        .filter(Boolean)
+    : [];
 
   if (!request.length) {
     return ctx.set("access-control-allow-headers", config.join(","));
+  }
+
+  if (request.every((h) => config.includes(h))) {
+    return ctx.set("access-control-allow-headers", request.join(","));
   }
 
   // allowHeaders is already public via the Access-Control-Allow-Headers preflight

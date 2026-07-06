@@ -1,3 +1,4 @@
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { CorsOptions } from "../../types/index.js";
 import { createHttpCorsMiddleware } from "./http-cors-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
@@ -53,12 +54,44 @@ describe("httpCorsMiddleware", () => {
 
   afterEach(vi.clearAllMocks);
 
-  test("should resolve next on a normal request", async () => {
+  test("should set origin headers and call next on a normal request", async () => {
     ctx.method = "POST";
 
     await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
 
-    expect(ctx.set).not.toHaveBeenCalled();
+    // The actual response must carry the origin + credentials + exposed headers
+    // (F17 symptom 1) — but NOT the preflight-only allow-methods/-headers/max-age.
+    expect(ctx.set).toHaveBeenCalledWith(
+      "access-control-allow-origin",
+      "http://localhost:3000",
+    );
+    expect(ctx.set).toHaveBeenCalledWith("access-control-allow-credentials", "true");
+    expect(ctx.set).toHaveBeenCalledWith(
+      "access-control-expose-headers",
+      "exposed-header-1,exposed-header-2",
+    );
+    expect(ctx.set).not.toHaveBeenCalledWith(
+      "access-control-allow-methods",
+      expect.anything(),
+    );
+    expect(ctx.set).not.toHaveBeenCalledWith(
+      "access-control-allow-headers",
+      expect.anything(),
+    );
+    expect(ctx.set).not.toHaveBeenCalledWith("access-control-max-age", expect.anything());
+    expect(next).toHaveBeenCalled();
+  });
+
+  test("should call next without origin headers when origin is not allowed on a normal request", async () => {
+    ctx.method = "GET";
+    options.allowOrigins = ["http://localhost:9999"];
+
+    await expect(createHttpCorsMiddleware(options)(ctx, next)).resolves.not.toThrow();
+
+    // A disallowed origin on an actual request is rejected (403), consistent
+    // with the preflight — the response never carries an allow-origin header.
+    expect(ctx.status).toEqual(403);
+    expect(next).not.toHaveBeenCalled();
   });
 
   test("should resolve options with arrays", async () => {
@@ -102,6 +135,24 @@ describe("httpCorsMiddleware", () => {
 
     expect(ctx.status).toEqual(204);
     expect(next).not.toHaveBeenCalled();
+  });
+
+  test("should canonicalise an array allowHeaders and warn via the logger (E9)", () => {
+    const logger = createMockLogger();
+    const opts: CorsOptions = {
+      allowOrigins: "*",
+      allowHeaders: ["accept", "content-type", "x-foo"],
+    };
+
+    // Normalisation runs at construction: strip safelisted `accept`, strip the
+    // listed `content-type`, then auto-inject it once — leaving `x-foo` + a
+    // single `content-type`.
+    createHttpCorsMiddleware(opts, logger);
+
+    expect(opts.allowHeaders).toEqual(["x-foo", "content-type"]);
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('"accept" is already CORS-safelisted'),
+    );
   });
 
   test("should throw on invalid options", async () => {
