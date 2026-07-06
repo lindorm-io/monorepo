@@ -6,7 +6,7 @@ import EventEmitter from "events";
 import { ms } from "@lindorm/date";
 import { LindormError } from "@lindorm/errors";
 import { randomId } from "@lindorm/random";
-import { HermesViewEntity } from "../entities/HermesViewEntity.js";
+import type { HermesViewEntity } from "../entities/HermesViewEntity.js";
 import { ChecksumError, HandlerNotRegisteredError } from "../errors/index.js";
 import type { IHermes } from "../interfaces/IHermes.js";
 import type { HermesEventName } from "../types/hermes-event-name.js";

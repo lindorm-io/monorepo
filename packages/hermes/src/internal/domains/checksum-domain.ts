@@ -7,7 +7,8 @@ import { sortKeys } from "@lindorm/utils";
 import EventEmitter from "events";
 import { ChecksumError } from "../../errors/index.js";
 import { ChecksumRecord } from "../entities/index.js";
-import { HermesErrorMessage, HermesEventMessage } from "../messages/index.js";
+import type { HermesEventMessage } from "../messages/index.js";
+import { HermesErrorMessage } from "../messages/index.js";
 import type { HermesRegistry } from "../registry/index.js";
 import { findChecksum, insertChecksum } from "../stores/index.js";
 

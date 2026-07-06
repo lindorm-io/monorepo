@@ -33,11 +33,8 @@ import type {
 } from "../../types/index.js";
 import { ChecksumError } from "../../errors/index.js";
 import { EventRecord, EncryptionRecord } from "../entities/index.js";
-import {
-  HermesCommandMessage,
-  HermesErrorMessage,
-  HermesEventMessage,
-} from "../messages/index.js";
+import type { HermesCommandMessage, HermesErrorMessage } from "../messages/index.js";
+import { HermesEventMessage } from "../messages/index.js";
 import type { HermesRegistry } from "../registry/index.js";
 import type { RegisteredAggregate, HandlerRegistration } from "../registry/index.js";
 import { findEvents } from "../stores/index.js";

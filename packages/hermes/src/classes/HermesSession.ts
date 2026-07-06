@@ -7,8 +7,8 @@ import { HandlerNotRegisteredError } from "../errors/index.js";
 import type { IHermesSession } from "../interfaces/IHermesSession.js";
 import type { AggregateIdentifier } from "../types/aggregate-identifier.js";
 import type { HermesStatus } from "../types/hermes-status.js";
-import { ViewDomain } from "../internal/domains/index.js";
-import { HermesCommandMessage } from "../internal/messages/index.js";
+import type { ViewDomain } from "../internal/domains/index.js";
+import type { HermesCommandMessage } from "../internal/messages/index.js";
 import type { HermesRegistry } from "../internal/registry/index.js";
 import { extractDto } from "../internal/utils/index.js";
 
