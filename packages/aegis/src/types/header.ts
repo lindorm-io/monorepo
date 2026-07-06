@@ -1,6 +1,6 @@
 import type { PublicEncryptionJwk } from "@lindorm/aes";
 import type { KryptosEncryption, KryptosJwk } from "@lindorm/kryptos";
-import {
+import type {
   TOKEN_HEADER_ALGORITHMS,
   TOKEN_HEADER_TYPES,
 } from "../internal/constants/header.js";
