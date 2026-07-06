@@ -1,5 +1,6 @@
 import { BadGatewayError, ServerError } from "@lindorm/errors";
-import { z, ZodArray, ZodObject, type ZodRawShape } from "zod";
+import type { z } from "zod";
+import { ZodArray, ZodObject, type ZodRawShape } from "zod";
 import type { ConduitMiddleware } from "../types/index.js";
 
 export const conduitSchemaMiddleware = <T extends ZodRawShape>(

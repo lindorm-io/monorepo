@@ -1,3 +1,4 @@
+import { B64 } from "@lindorm/b64";
 import type { ConduitMiddleware } from "../types/index.js";
 
 export const conduitBasicAuthMiddleware = (
@@ -7,7 +8,7 @@ export const conduitBasicAuthMiddleware = (
   async function conduitBasicAuthMiddleware(ctx, next) {
     ctx.req.headers = {
       ...ctx.req.headers,
-      Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
+      Authorization: `Basic ${B64.encode(`${username}:${password}`)}`,
     };
 
     await next();

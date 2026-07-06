@@ -7,7 +7,9 @@ export const useAxios = async (
 ): Promise<ConduitResponse> => {
   const response = await axios.request({ ...config, adapter: config.adapter ?? "http" });
 
-  if (config.responseType === "arraybuffer") {
+  // Buffer normalisation is Node-only; in the browser (fetch adapter) the
+  // native ArrayBuffer is returned as-is.
+  if (config.responseType === "arraybuffer" && typeof Buffer !== "undefined") {
     response.data = Buffer.from(response.data);
   }
 

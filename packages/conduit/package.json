@@ -30,6 +30,7 @@
     "verify": "npm run typecheck && npm run build && npm test"
   },
   "dependencies": {
+    "@lindorm/b64": "^0.2.2",
     "@lindorm/breaker": "^0.4.2",
     "@lindorm/case": "^0.2.4",
     "@lindorm/enums": "^0.2.1",
