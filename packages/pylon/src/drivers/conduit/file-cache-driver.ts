@@ -8,11 +8,6 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { cacheId } from "./canonical.js";
 
-type Options = {
-  /** Root directory for the browsable request/response capture tree. */
-  dir: string;
-};
-
 type Captured = {
   fetchedAt: string;
   expiresAt: string | null;
@@ -45,9 +40,7 @@ const fileFor = (dir: string, key: ConduitCacheKey): string => {
  * directory doubles as an inspectable record of what was fetched. Expiry is
  * enforced on read against a stored `expiresAt`.
  */
-export const createFileCacheDriver = (options: Options): IConduitCacheDriver => {
-  const { dir } = options;
-
+export const createFileCacheDriver = (dir: string): IConduitCacheDriver => {
   return {
     async get(key) {
       const file = fileFor(dir, key);

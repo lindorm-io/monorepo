@@ -35,13 +35,13 @@ describe("createFileCacheDriver", () => {
   });
 
   test("miss: returns null for an unknown request", async () => {
-    const driver = createFileCacheDriver({ dir });
+    const driver = createFileCacheDriver(dir);
 
     expect(await driver.get(key)).toBeNull();
   });
 
   test("set: writes a browsable capture and leaves no temp files", async () => {
-    const driver = createFileCacheDriver({ dir });
+    const driver = createFileCacheDriver(dir);
 
     await driver.set(key, response);
 
@@ -68,7 +68,7 @@ describe("createFileCacheDriver", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
 
-    const driver = createFileCacheDriver({ dir });
+    const driver = createFileCacheDriver(dir);
     await driver.set(key, response);
 
     const hit = await driver.get(key);
@@ -80,7 +80,7 @@ describe("createFileCacheDriver", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-01-01T00:00:00.000Z"));
 
-    const driver = createFileCacheDriver({ dir });
+    const driver = createFileCacheDriver(dir);
     await driver.set(key, response, 1000);
 
     // Still fresh just before expiry.
@@ -93,7 +93,7 @@ describe("createFileCacheDriver", () => {
   });
 
   test("get: corrupt capture is treated as a miss, not an error", async () => {
-    const driver = createFileCacheDriver({ dir });
+    const driver = createFileCacheDriver(dir);
     await driver.set(key, response);
 
     const files = await readdir(captureDir());

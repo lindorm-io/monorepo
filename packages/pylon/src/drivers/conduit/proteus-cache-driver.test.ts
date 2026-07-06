@@ -52,7 +52,7 @@ describe("createProteusCacheDriver", () => {
 
     test("upserts the canonical id, payload, and no expiry when ttl is omitted", async () => {
       const { source, repository } = createFakeSource();
-      const driver = createProteusCacheDriver({ source });
+      const driver = createProteusCacheDriver(source);
 
       await driver.set(key, response);
 
@@ -65,7 +65,7 @@ describe("createProteusCacheDriver", () => {
 
     test("derives expiresAt from the ttl when provided", async () => {
       const { source, repository } = createFakeSource();
-      const driver = createProteusCacheDriver({ source });
+      const driver = createProteusCacheDriver(source);
 
       await driver.set(key, response, 60_000);
 
@@ -80,7 +80,7 @@ describe("createProteusCacheDriver", () => {
   describe("get", () => {
     test("returns null when the entry is absent", async () => {
       const { source, repository } = createFakeSource();
-      const driver = createProteusCacheDriver({ source });
+      const driver = createProteusCacheDriver(source);
 
       const result = await driver.get(key);
 
@@ -90,7 +90,7 @@ describe("createProteusCacheDriver", () => {
 
     test("maps a stored entity to { response, storedAt }", async () => {
       const { source, store } = createFakeSource();
-      const driver = createProteusCacheDriver({ source });
+      const driver = createProteusCacheDriver(source);
 
       const createdAt = new Date("2026-01-01T00:00:00.000Z");
       store.set(cacheId(key), { id: cacheId(key), payload: response, createdAt });

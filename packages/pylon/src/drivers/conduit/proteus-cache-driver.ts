@@ -4,22 +4,16 @@ import type { IProteusSource } from "@lindorm/proteus";
 import type { ConduitCachedResponse } from "../../entities/ConduitCachedResponse.js";
 import { cacheId } from "./canonical.js";
 
-type Options = {
-  /** A redis-backed proteus source; the entity's expiry field drives native TTL. */
-  source: IProteusSource;
-  /** Optional logger threaded onto the proteus session for tracing. */
-  logger?: ILogger;
-};
-
 /**
- * Node-only conduit cache driver backed by a proteus (redis) source. Storage and
+ * Node-only conduit cache driver backed by a proteus (redis) `source`. Storage and
  * expiry are delegated to proteus: the `@ExpiryDateField` sets a native redis TTL
  * on `set`, so expired entries are dropped by the store and a `get` on an expired
- * key simply misses.
+ * key simply misses. An optional `logger` is threaded onto the proteus session.
  */
-export const createProteusCacheDriver = (options: Options): IConduitCacheDriver => {
-  const { source, logger } = options;
-
+export const createProteusCacheDriver = (
+  source: IProteusSource,
+  logger?: ILogger,
+): IConduitCacheDriver => {
   // Dynamically import the entity so the static module graph from index.js stays
   // free of @lindorm/proteus (iris/proteus optionality) — mirrors use-cache.ts.
   const getRepository = async () => {
