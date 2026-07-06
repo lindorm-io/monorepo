@@ -54,6 +54,8 @@ exports[`isNaN > should resolve TEST_OBJECT 1`] = `false`;
 
 exports[`isNaN > should resolve TEST_PROMISE 1`] = `false`;
 
+exports[`isNaN > should resolve TEST_REGEXP 1`] = `false`;
+
 exports[`isNaN > should resolve TEST_STRING 1`] = `false`;
 
 exports[`isNaN > should resolve TEST_UNDEFINED 1`] = `false`;

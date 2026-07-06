@@ -32,6 +32,7 @@ export const TEST_NUMBER_STRING: any = "123456";
 export const TEST_NUMBER: any = 123456;
 export const TEST_OBJECT: any = { object: true };
 export const TEST_PROMISE: any = Promise.resolve();
+export const TEST_REGEXP: any = /test/i;
 export const TEST_STRING: any = "string";
 export const TEST_UNDEFINED: any = undefined;
 export const TEST_URL_STRING: any = "https://test.osprey.no";
@@ -65,6 +66,7 @@ export const TEST_FIXTURES = {
   TEST_NUMBER,
   TEST_OBJECT,
   TEST_PROMISE,
+  TEST_REGEXP,
   TEST_STRING,
   TEST_UNDEFINED,
   TEST_URL_STRING,

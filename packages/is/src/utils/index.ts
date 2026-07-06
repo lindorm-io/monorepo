@@ -21,6 +21,7 @@ export * from "./is-number-string.js";
 export * from "./is-object.js";
 export * from "./is-object-like.js";
 export * from "./is-promise.js";
+export * from "./is-reg-exp.js";
 export * from "./is-string.js";
 export * from "./is-undefined.js";
 export * from "./is-url.js";

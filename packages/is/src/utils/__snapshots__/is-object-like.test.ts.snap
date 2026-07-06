@@ -54,6 +54,8 @@ exports[`isObjectLike > should resolve TEST_OBJECT 1`] = `true`;
 
 exports[`isObjectLike > should resolve TEST_PROMISE 1`] = `true`;
 
+exports[`isObjectLike > should resolve TEST_REGEXP 1`] = `true`;
+
 exports[`isObjectLike > should resolve TEST_STRING 1`] = `false`;
 
 exports[`isObjectLike > should resolve TEST_UNDEFINED 1`] = `false`;

@@ -54,6 +54,8 @@ exports[`isString > should resolve TEST_OBJECT 1`] = `false`;
 
 exports[`isString > should resolve TEST_PROMISE 1`] = `false`;
 
+exports[`isString > should resolve TEST_REGEXP 1`] = `false`;
+
 exports[`isString > should resolve TEST_STRING 1`] = `true`;
 
 exports[`isString > should resolve TEST_UNDEFINED 1`] = `false`;

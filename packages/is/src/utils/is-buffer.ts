@@ -1,1 +1,2 @@
-export const isBuffer = (input?: any): input is Buffer => Buffer.isBuffer(input);
+export const isBuffer = (input?: any): input is Buffer =>
+  typeof Buffer !== "undefined" && Buffer.isBuffer(input);

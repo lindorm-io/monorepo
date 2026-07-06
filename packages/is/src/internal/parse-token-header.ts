@@ -1,9 +1,10 @@
+import { B64 } from "@lindorm/b64";
 import type { Dict } from "@lindorm/types";
 
 export const parseTokenHeader = (input: string): Dict | null => {
   try {
     const [encodedHeader] = input.split(".");
-    return JSON.parse(Buffer.from(encodedHeader, "base64url").toString("utf8")) as Dict;
+    return JSON.parse(B64.decode(encodedHeader, "base64url")) as Dict;
   } catch {
     return null;
   }
