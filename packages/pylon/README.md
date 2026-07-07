@@ -313,7 +313,7 @@ const create = async (ctx) => {
 export const POST = [validate, create];
 ```
 
-Recognised exports: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`. Alternatively, default-export or name-export a `PylonRouter` instance for full control.
+Recognised exports: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `HEAD`, `OPTIONS`, `STATIC` (see [Static assets](#static-assets)). Alternatively, default-export or name-export a `PylonRouter` instance for full control.
 
 ### Middleware inheritance
 
@@ -326,6 +326,41 @@ export const MIDDLEWARE = [corsMiddleware, requestLoggingMiddleware];
 // routes/v1/_middleware.ts
 export const MIDDLEWARE = [bearerAuth];
 ```
+
+### Static assets
+
+A route file may export `STATIC` (exclusively — no other route exports in the same file) to serve a
+directory at that route's subtree with CDN-correct semantics: `Content-Type` by extension, `ETag` +
+`Last-Modified` with `304` revalidation, single-range `206`/`416`, `GET`/`HEAD` only (`405`
+otherwise), and path-traversal/dotfile protection. Misses are uniform `404`s that never reveal what
+exists on disk.
+
+```typescript
+// routes/assets.ts → GET/HEAD /assets/<path>
+export const STATIC = useStatic({ root: "./assets", maxAge: "7d" });
+
+// guards run first, like any route middleware
+export const STATIC = [
+  useAccess({ subject: "..." }),
+  useStatic({ root: "/mnt/private", visibility: "private" }),
+];
+```
+
+Options (`UseStaticOptions`):
+
+- `root` — directory to serve; relative paths resolve against `process.cwd()`.
+- `maxAge` — `ReadableTime` or milliseconds; default `0` (always revalidate).
+- `immutable` — add `immutable` for content-hashed filenames; default `false`.
+- `visibility` — `"public"` (default) or `"private"`. Guarded mounts must set `"private"` so shared
+  caches never store authenticated assets.
+- `precompressed` — serve `.br`/`.gz` siblings by `Accept-Encoding` (brotli preferred); adds
+  `Vary: Accept-Encoding` and per-encoding `ETag`s; default `false`.
+- `directoryListing` — serve directory hits as a JSON array (`name`, `type`, `size`,
+  `last_modified`, dotfiles excluded, `Cache-Control: no-store`) instead of `404`; default `false`.
+
+`_middleware.ts` inheritance applies as usual. Programmatic routers use the same pieces:
+`router.static("/assets", useStatic({ root: "./assets" }))`. Symlinks are followed — keep the root
+deploy-controlled.
 
 ### Handler responses
 

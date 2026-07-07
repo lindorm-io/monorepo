@@ -125,4 +125,16 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
     }
     return this;
   }
+
+  // Static-asset subtree: GET + HEAD over `<path>` and everything below it. The
+  // `{/*path}` wildcard matches the bare mount (empty `params` → directory
+  // branch) and yields `params.path` as a decoded joined string. No
+  // httpParamsParserMiddleware — the serving middleware reads `ctx.params`
+  // directly. Other methods get 405 + `Allow: GET, HEAD` via allowedMethods().
+  static(path: string, ...middleware: Array<PylonHttpMiddleware<C>>): PylonRouter<C> {
+    const pattern = `${path === "/" ? "" : path}{/*path}`;
+    this._router.get(pattern, ...middleware);
+    this._router.head(pattern, ...middleware);
+    return this;
+  }
 }

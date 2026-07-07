@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`useStatic — safety and method handling > every miss is an identical 404 that leaks nothing > the 404 error body has a stable shape 1`] = `
+{
+  "code": "static_file_not_found",
+  "data": {},
+  "message": "Static file not found",
+  "name": "ClientError",
+  "title": "Static File Not Found",
+  "type": "urn:lindorm:pylon:error:static_file_not_found",
+}
+`;

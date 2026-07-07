@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`listStaticDirectory > lists entries sorted by name with type and size, excluding dotfiles 1`] = `
+[
+  {
+    "name": "image.jpg",
+    "size": 22,
+    "type": "file",
+  },
+  {
+    "name": "nested",
+    "size": 96,
+    "type": "directory",
+  },
+  {
+    "name": "sample.txt",
+    "size": 100,
+    "type": "file",
+  },
+  {
+    "name": "sample.txt.br",
+    "size": 19,
+    "type": "file",
+  },
+  {
+    "name": "sample.txt.gz",
+    "size": 33,
+    "type": "file",
+  },
+]
+`;

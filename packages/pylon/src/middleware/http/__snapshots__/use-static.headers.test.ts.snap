@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`useStatic — content-type and cache headers > validators and range advertisement > stable header subset for a plain 200 1`] = `
+{
+  "accept-ranges": "bytes",
+  "cache-control": "public, max-age=0",
+  "content-length": "100",
+  "content-type": "text/plain; charset=utf-8",
+}
+`;
