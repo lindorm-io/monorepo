@@ -362,6 +362,45 @@ Options (`UseStaticOptions`):
 `router.static("/assets", useStatic({ root: "./assets" }))`. Symlinks are followed — keep the root
 deploy-controlled.
 
+### Upload mounts
+
+The write side of static assets. A route file may export `UPLOAD` (exclusively, like `STATIC`) to
+accept multipart uploads into a directory — typically the same volume a `STATIC` mount serves.
+Requires multipart parsing: `parseBody: { multipart: true, formidable: true }`.
+
+```typescript
+// routes/admin/assets.ts → POST/PUT /admin/assets/<subdir…>
+export const UPLOAD = [
+  useAccess({ ... }),
+  useUpload({ root: "/mnt/assets", prefix: "/assets", extensions: [".jpg", ".png"] }),
+];
+```
+
+- `POST /admin/assets/gallery` — uploads any number of files into `gallery/` (subdirectories are
+  created recursively; guard middleware authorizes them); the server names each file per `naming`.
+  Responds `201` with `{ files: [{ name, path, size, mime_type, original_name }] }`, where `path`
+  is the serving URL when `prefix` is set (`/assets/gallery/f_….jpg`).
+- `PUT /admin/assets/gallery/f_….jpg` — create-or-replace at the exact URL path, one file per
+  request. `201` created, `200` replaced; replacing requires `overwrite: true`, else `409`.
+- Writes are atomic (temp file + same-dir rename/link), so a co-located `STATIC` mount never
+  serves a half-written file. Path rules match `STATIC`: no traversal, no dotfiles.
+
+Options (`UseUploadOptions`):
+
+- `root` — target directory; relative paths resolve against `process.cwd()`.
+- `prefix` — serving URL prefix used to build response `path`s; unset → root-relative paths.
+- `naming` — `"random"` (default, `f_<base62×32>` + original extension), `"uuid"`, `"hash"`
+  (content sha-256, re-uploading identical content dedupes idempotently — pairs with `immutable`
+  static mounts), `"original"` (client filename, validated — never sanitized). PUT ignores
+  `naming`; the URL is the name.
+- `extensions` / `mimeTypes` — allowlists; `maxSize` (bytes) / `maxFiles` — per-file / per-request
+  limits. All files are validated before any file is persisted.
+- `overwrite` — allow replacing existing files (default `false`).
+
+Uploaded files are also exposed on `ctx.files` (`IPylonFileUpload`). Programmatic form:
+`router.upload("/admin/assets", guard, useUpload({ root: "/mnt/assets" }))`. In multi-replica
+deployments the root must be a shared volume.
+
 ### Handler responses
 
 `useHandler` lets a route return a plain object describing the response. It supports body, redirect, location header, file, and stream responses.

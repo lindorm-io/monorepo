@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`useUpload response > 201 body is { files: [...] } with snake_cased keys on the wire 1`] = `
+{
+  "mime_type": "text/plain",
+  "name": "<name>",
+  "original_name": "upload.txt",
+  "path": "gallery/<name>",
+  "size": 9,
+}
+`;

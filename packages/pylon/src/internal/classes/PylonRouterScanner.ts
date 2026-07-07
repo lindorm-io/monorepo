@@ -45,19 +45,22 @@ export class PylonRouterScanner<
 
   private processFile(root: PylonRouter<C>, file: ScannedFile): void {
     const staticExport = file.module.STATIC;
+    const uploadExport = file.module.UPLOAD;
     const routerInstance = this.findRouterInstance(file);
 
     if (staticExport) {
       const methods = this.findHttpMethods(file);
 
-      if (routerInstance || methods.length) {
+      // One file = one mount kind: STATIC may not share a file with HTTP
+      // methods, a PylonRouter, or an UPLOAD mount.
+      if (routerInstance || methods.length || uploadExport) {
         throw new PylonError(
-          `File [ ${file.scan.relativePath} ] exports STATIC alongside HTTP method or PylonRouter exports`,
+          `File [ ${file.scan.relativePath} ] exports STATIC alongside HTTP method, PylonRouter, or UPLOAD exports`,
           {
             code: "conflicting_static_export",
             title: "Conflicting Static Export",
             details:
-              "A static mount (STATIC export) must be the only route export in its file; remove the conflicting HTTP method handlers or PylonRouter instance",
+              "A static mount (STATIC export) must be the only route export in its file; remove the conflicting HTTP method handlers, PylonRouter instance, or UPLOAD mount",
             data: { file: file.scan.relativePath },
           },
         );
@@ -78,6 +81,45 @@ export class PylonRouterScanner<
       root.use(router.routes(), router.allowedMethods());
 
       this.logger.debug("Registered static mount", {
+        path,
+        file: file.scan.relativePath,
+      });
+      return;
+    }
+
+    if (uploadExport) {
+      const methods = this.findHttpMethods(file);
+
+      // STATIC is already excluded above; guard against HTTP methods and a
+      // PylonRouter sharing the file.
+      if (routerInstance || methods.length) {
+        throw new PylonError(
+          `File [ ${file.scan.relativePath} ] exports UPLOAD alongside HTTP method or PylonRouter exports`,
+          {
+            code: "conflicting_upload_export",
+            title: "Conflicting Upload Export",
+            details:
+              "An upload mount (UPLOAD export) must be the only route export in its file; remove the conflicting HTTP method handlers or PylonRouter instance",
+            data: { file: file.scan.relativePath },
+          },
+        );
+      }
+
+      const path = this.buildRoutePath(file);
+      const handlers = Array.isArray(uploadExport)
+        ? (uploadExport as Array<PylonHttpMiddleware<C>>)
+        : [uploadExport as PylonHttpMiddleware<C>];
+
+      const router = new PylonRouter<C>();
+      router.upload(
+        path,
+        ...(file.middleware as Array<PylonHttpMiddleware<C>>),
+        ...handlers,
+      );
+
+      root.use(router.routes(), router.allowedMethods());
+
+      this.logger.debug("Registered upload mount", {
         path,
         file: file.scan.relativePath,
       });
@@ -145,17 +187,18 @@ export class PylonRouterScanner<
     }
 
     throw new PylonError(
-      `File [ ${file.scan.relativePath} ] has no valid exports (expected PylonRouter instance, STATIC mount, or HTTP method exports: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)`,
+      `File [ ${file.scan.relativePath} ] has no valid exports (expected PylonRouter instance, STATIC mount, UPLOAD mount, or HTTP method exports: GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)`,
       {
         code: "invalid_router_exports",
         title: "Invalid Router Exports",
         details:
-          "A scanned route file must export either a PylonRouter instance, a STATIC mount, or one or more HTTP method handlers (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)",
+          "A scanned route file must export either a PylonRouter instance, a STATIC mount, an UPLOAD mount, or one or more HTTP method handlers (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS)",
         data: {
           file: file.scan.relativePath,
           expected: [
             "PylonRouter",
             "STATIC",
+            "UPLOAD",
             "GET",
             "POST",
             "PUT",

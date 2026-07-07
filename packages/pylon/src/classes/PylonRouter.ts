@@ -137,4 +137,16 @@ export class PylonRouter<C extends PylonHttpContext = PylonHttpContext> {
     this._router.head(pattern, ...middleware);
     return this;
   }
+
+  // Upload subtree: POST + PUT over `<path>` and everything below it — the
+  // write-side twin of `static()`. The `{/*path}` wildcard yields the target
+  // subdirectory (POST) or full target path (PUT) as decoded `params.path`. No
+  // httpParamsParserMiddleware — the upload middleware reads `ctx.params`
+  // directly. Other methods get 405 + `Allow: POST, PUT` via allowedMethods().
+  upload(path: string, ...middleware: Array<PylonHttpMiddleware<C>>): PylonRouter<C> {
+    const pattern = `${path === "/" ? "" : path}{/*path}`;
+    this._router.post(pattern, ...middleware);
+    this._router.put(pattern, ...middleware);
+    return this;
+  }
 }
