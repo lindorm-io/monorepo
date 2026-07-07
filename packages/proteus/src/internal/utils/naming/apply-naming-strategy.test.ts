@@ -34,7 +34,10 @@ const baseMetadata = {
     makeField("id", { type: "uuid" }),
     makeField("firstName", { type: "string" }),
     makeField("lastName", { type: "string" }),
-    makeField("customName", { type: "string", name: "custom_col" }),
+    makeField("customName", { type: "string", name: "custom_col", named: true }),
+    // Explicit column name that happens to EQUAL the property key. Must survive a
+    // snake/camel strategy verbatim — the `named` flag proves intent, not name !== key.
+    makeField("createdAt", { type: "timestamp", name: "createdAt", named: true }),
   ],
   relations: [],
   primaryKeys: ["id"],
@@ -63,6 +66,24 @@ describe("applyNamingStrategy", () => {
   test("should preserve explicit column names", () => {
     const result = applyNamingStrategy(baseMetadata, "snake");
     expect(result.fields[3].name).toBe("custom_col");
+  });
+
+  test("should preserve an explicit name equal to the property key under snake", () => {
+    const result = applyNamingStrategy(baseMetadata, "snake");
+    // Without the `named` flag this would be transformed to "created_at".
+    expect(result.fields[4].name).toBe("createdAt");
+  });
+
+  test("should preserve an explicit name equal to the property key under camel", () => {
+    // A field with no explicit name is still camelised; the explicitly-named one is not.
+    const result = applyNamingStrategy(baseMetadata, "camel");
+    expect(result.fields[4].name).toBe("createdAt");
+  });
+
+  test("should transform field names to camelCase when name is not explicit", () => {
+    const result = applyNamingStrategy(baseMetadata, "camel");
+    expect(result.fields[1].name).toBe("firstName");
+    expect(result.fields[3].name).toBe("custom_col"); // explicit — untouched
   });
 
   test("should not mutate original metadata", () => {
@@ -153,7 +174,7 @@ describe("applyNamingStrategy", () => {
             makeField("streetName", { type: "string" }),
             makeField("cityName", { type: "string" }),
             // explicit column name must be preserved
-            makeField("zipCode", { type: "string", name: "zip_col" }),
+            makeField("zipCode", { type: "string", name: "zip_col", named: true }),
           ],
         },
       ],

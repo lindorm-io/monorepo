@@ -38,6 +38,7 @@ export const PrimaryKeyField =
       max: null,
       min: null,
       name: options.name ?? key,
+      named: options.name != null,
       nullable: false,
       order: null,
       precision: null,

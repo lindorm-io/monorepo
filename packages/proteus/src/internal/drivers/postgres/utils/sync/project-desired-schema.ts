@@ -824,6 +824,7 @@ export const projectDesiredSchema = (
           max: null,
           min: null,
           name: "value",
+          named: false,
           nullable: false,
           order: null,
           precision: null,

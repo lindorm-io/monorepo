@@ -30,6 +30,7 @@ exports[`AppendOnly > should match snapshot 1`] = `
       "max": null,
       "min": null,
       "name": "id",
+      "named": false,
       "nullable": false,
       "order": null,
       "precision": null,

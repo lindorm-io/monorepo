@@ -46,6 +46,7 @@ export const ScopeField =
       max: null,
       min: 1,
       name: options.name ?? String(context.name),
+      named: options.name != null,
       nullable: false,
       order: options.order ?? null,
       precision: null,

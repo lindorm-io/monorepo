@@ -30,6 +30,7 @@ exports[`Entity > should register all entity options 1`] = `
       "max": null,
       "min": null,
       "name": "id",
+      "named": false,
       "nullable": false,
       "order": null,
       "precision": null,

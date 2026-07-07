@@ -51,6 +51,7 @@ export type StagedFieldModifier = {
   comment?: string;
   enum?: Record<string, string | number>;
   computed?: string;
+  named?: boolean;
   transform?: { to: (value: unknown) => unknown; from: (raw: unknown) => unknown };
   encrypted?: { predicate: Dict | null };
   typedJson?: { name: string | null };

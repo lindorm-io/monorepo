@@ -19,8 +19,9 @@ const transformName = (name: string, strategy: NamingStrategy): string => {
 };
 
 const resolveFieldName = (field: MetaField, strategy: NamingStrategy): string => {
-  // If user explicitly set a column name (name !== key), preserve it
-  if (field.name !== field.key) return field.name;
+  // If the user explicitly set a column name, preserve it verbatim — even when it
+  // happens to equal the property key (`@Field("string", { name: "createdAt" })`).
+  if (field.named) return field.name;
   return transformName(field.key, strategy);
 };
 

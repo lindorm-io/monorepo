@@ -30,6 +30,7 @@ exports[`PrimaryKeyField > should register uuid primary key field (default) 1`] 
       "max": null,
       "min": null,
       "name": "id",
+      "named": false,
       "nullable": false,
       "order": null,
       "precision": null,

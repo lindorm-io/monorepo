@@ -27,6 +27,7 @@ export const DeleteDateField =
       max: null,
       min: null,
       name: options.name ?? String(context.name),
+      named: options.name != null,
       nullable: true,
       order: null,
       precision: null,

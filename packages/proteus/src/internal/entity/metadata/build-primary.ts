@@ -97,6 +97,10 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
     }
 
     // Apply modifier values
+    // `named` is OR-merged (never cleared): a field-declaring decorator that
+    // received an explicit column name sets `named: true`, and stacking further
+    // modifiers must not clobber that intent.
+    if (modifier.named) field.named = true;
     if (modifier.nullable != null) field.nullable = modifier.nullable;
     if (modifier.default !== undefined) field.default = modifier.default;
     if (modifier.readonly != null) field.readonly = modifier.readonly;
@@ -197,6 +201,10 @@ const flattenEmbeddedFields = <TDecorator extends MetaFieldDecorator>(
         ...ef,
         key: `${embedded.key}.${ef.key}`,
         name: `${embedded.prefix}${ef.name}`,
+        // The flattened column name is a fully-resolved composite (prefix + child
+        // name); it is authoritative and must not be re-derived from the dotted key
+        // by a naming strategy.
+        named: true,
         embedded: {
           parentKey: embedded.key,
           constructor: embedded.embeddableConstructor,

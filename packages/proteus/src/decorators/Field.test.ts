@@ -2,6 +2,7 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Generated } from "./Generated.js";
+import { Nullable } from "./Nullable.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
 
@@ -27,6 +28,23 @@ class FieldIntegerType {
 
   @Field("integer")
   count!: number;
+}
+
+@Entity({ name: "FieldNamedFlag" })
+class FieldNamedFlag {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  plain!: string;
+
+  // Explicit column name that happens to equal the property key.
+  @Field("string", { name: "createdAt" })
+  createdAt!: string;
+
+  // Explicit name stacked with a field modifier — `named` must survive the merge.
+  @Field("string", { name: "display_name" })
+  @Nullable()
+  displayName!: string;
 }
 
 describe("Field", () => {
@@ -60,6 +78,27 @@ describe("Field", () => {
     const meta = getEntityMetadata(FieldStringType);
     const field = meta.fields.find((f) => f.key === "name");
     expect(field!.readonly).toEqual([]);
+  });
+
+  test("should set named:false when no explicit column name is given", () => {
+    const meta = getEntityMetadata(FieldNamedFlag);
+    const field = meta.fields.find((f) => f.key === "plain")!;
+    expect(field.named).toBe(false);
+  });
+
+  test("should set named:true for an explicit name equal to the property key", () => {
+    const meta = getEntityMetadata(FieldNamedFlag);
+    const field = meta.fields.find((f) => f.key === "createdAt")!;
+    expect(field.name).toBe("createdAt");
+    expect(field.named).toBe(true);
+  });
+
+  test("should preserve named:true when stacked with a field modifier", () => {
+    const meta = getEntityMetadata(FieldNamedFlag);
+    const field = meta.fields.find((f) => f.key === "displayName")!;
+    expect(field.name).toBe("display_name");
+    expect(field.named).toBe(true);
+    expect(field.nullable).toBe(true); // @Nullable applied, named not clobbered
   });
 
   test("should default all modifier fields to zero-values", () => {

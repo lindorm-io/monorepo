@@ -18,6 +18,7 @@ export const makeField = (
   max: null,
   min: null,
   name: key,
+  named: false,
   nullable: false,
   order: null,
   precision: null,

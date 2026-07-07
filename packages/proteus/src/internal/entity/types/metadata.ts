@@ -131,6 +131,7 @@ export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
   min: number | null;
   mode?: MetaFieldMode | null;
   name: string;
+  named: boolean;
   nullable: boolean;
   order: number | null;
   precision: number | null;

@@ -27,6 +27,7 @@ export const Field =
       min: null,
       mode: options?.mode ?? null,
       name: options?.name ?? String(context.name),
+      named: options?.name != null,
       nullable: false,
       order: null,
       precision: null,
