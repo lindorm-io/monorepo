@@ -228,3 +228,80 @@ describe("applyNamingStrategy", () => {
     expect(result.embeddedLists).toEqual([]);
   });
 });
+
+// ─── Flattened @Embedded fields follow the naming strategy ───────────────────
+//
+// A flattened @Embedded child has a DOTTED key (`homeAddress.street`) but a
+// composite name (`homeAddress_street`). Under a strategy the COMPOSITE is
+// transformed — not the dotted key (which would mangle) and not verbatim
+// (which is only for explicitly-named children).
+
+const embeddedConstructor = () => class {};
+
+const embeddedMetadata = (namedChild = false) =>
+  ({
+    ...baseMetadata,
+    fields: [
+      makeField("id", { type: "uuid" }),
+      // default @Embedded(() => Address) on property `homeAddress`, child `street`
+      makeField("homeAddress.street", {
+        type: "string",
+        name: "homeAddress_street",
+        embedded: { parentKey: "homeAddress", constructor: embeddedConstructor },
+      }),
+      // explicit @Embedded(() => Address, { prefix: "work_" }) on `workAddress`,
+      // child `streetName` → composite `work_streetName`
+      makeField("workAddress.streetName", {
+        type: "string",
+        name: "work_streetName",
+        embedded: { parentKey: "workAddress", constructor: embeddedConstructor },
+      }),
+      // child declared with an explicit @Field({ name: "postcode" }) → named: true,
+      // composite is `homeAddress_postcode` and must survive verbatim
+      makeField("homeAddress.zip", {
+        type: "string",
+        name: namedChild ? "homeAddress_postcode" : "homeAddress_zip",
+        named: namedChild,
+        embedded: { parentKey: "homeAddress", constructor: embeddedConstructor },
+      }),
+    ],
+  }) as unknown as EntityMetadata;
+
+describe("applyNamingStrategy — flattened @Embedded fields", () => {
+  test("should keep composite verbatim under 'none'", () => {
+    const result = applyNamingStrategy(embeddedMetadata(), "none");
+    // 'none' short-circuits and returns the original metadata untouched
+    expect(result.fields[1].name).toBe("homeAddress_street");
+    expect(result.fields[2].name).toBe("work_streetName");
+  });
+
+  test("should transform the composite under 'snake'", () => {
+    const result = applyNamingStrategy(embeddedMetadata(), "snake");
+    expect(result.fields[1].name).toBe("home_address_street");
+    // explicit prefix feeds into the composite and is transformed too
+    expect(result.fields[2].name).toBe("work_street_name");
+  });
+
+  test("should transform the composite under 'camel'", () => {
+    const result = applyNamingStrategy(embeddedMetadata(), "camel");
+    expect(result.fields[1].name).toBe("homeAddressStreet");
+    expect(result.fields[2].name).toBe("workStreetName");
+  });
+
+  test("should preserve an explicitly-named embedded child under 'snake'", () => {
+    const result = applyNamingStrategy(embeddedMetadata(true), "snake");
+    // named child: verbatim, not transformed to home_address_postcode
+    expect(result.fields[3].name).toBe("homeAddress_postcode");
+  });
+
+  test("should preserve an explicitly-named embedded child under 'camel'", () => {
+    const result = applyNamingStrategy(embeddedMetadata(true), "camel");
+    expect(result.fields[3].name).toBe("homeAddress_postcode");
+  });
+
+  test("should transform a default embedded child under 'snake' (not named)", () => {
+    const result = applyNamingStrategy(embeddedMetadata(false), "snake");
+    // default child (named: false) follows the strategy
+    expect(result.fields[3].name).toBe("home_address_zip");
+  });
+});

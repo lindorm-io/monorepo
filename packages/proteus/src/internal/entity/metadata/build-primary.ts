@@ -200,11 +200,11 @@ const flattenEmbeddedFields = <TDecorator extends MetaFieldDecorator>(
       fields.push({
         ...ef,
         key: `${embedded.key}.${ef.key}`,
+        // The flattened column name is a composite (prefix + child name). The
+        // child's own `named` flag is preserved: an explicitly-named child column
+        // stays verbatim, a default child is left for the naming strategy to
+        // transform the composite (it cannot re-derive from the dotted key).
         name: `${embedded.prefix}${ef.name}`,
-        // The flattened column name is a fully-resolved composite (prefix + child
-        // name); it is authoritative and must not be re-derived from the dotted key
-        // by a naming strategy.
-        named: true,
         embedded: {
           parentKey: embedded.key,
           constructor: embedded.embeddableConstructor,

@@ -22,6 +22,10 @@ const resolveFieldName = (field: MetaField, strategy: NamingStrategy): string =>
   // If the user explicitly set a column name, preserve it verbatim — even when it
   // happens to equal the property key (`@Field("string", { name: "createdAt" })`).
   if (field.named) return field.name;
+  // A flattened @Embedded field has a DOTTED key (`homeAddress.street`) but its
+  // `name` is the resolved composite (`homeAddress_street`). Transform the
+  // composite, not the key, so it follows the strategy (`home_address_street`).
+  if (field.embedded) return transformName(field.name, strategy);
   return transformName(field.key, strategy);
 };
 
