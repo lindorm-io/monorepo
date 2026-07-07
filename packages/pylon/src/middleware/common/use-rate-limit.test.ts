@@ -41,6 +41,7 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
+      state: { app: { config: { audit: false, cache: false, rateLimit: true } } },
       request: { ip: "192.168.1.1" },
       set: vi.fn(),
       [RATE_LIMIT_SOURCE]: mockSource,
@@ -100,6 +101,7 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
+      state: { app: { config: { audit: false, cache: false, rateLimit: true } } },
       event: "test:event",
       io: { socket: { id: "socket-123" } },
       set: vi.fn(),
@@ -177,6 +179,18 @@ describe("useRateLimit", () => {
     expect(next).not.toHaveBeenCalled();
   });
 
+  test("should pass through silently (no throw) when rate limiting is disabled by config", async () => {
+    ctx.state.app.config.rateLimit = false;
+    delete ctx[RATE_LIMIT_SOURCE]; // disabled AND no source — must not throw
+
+    await expect(
+      useRateLimit({ window: "1m", max: 10 })(ctx, next),
+    ).resolves.not.toThrow();
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(fixedWindowStrategy).not.toHaveBeenCalled();
+  });
+
   test("should default key to request.ip for HTTP", async () => {
     ctx.request.ip = "10.0.0.1";
 
@@ -196,6 +210,7 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
+      state: { app: { config: { audit: false, cache: false, rateLimit: true } } },
       event: "test:event",
       io: { socket: { id: "sock-abc" } },
       set: vi.fn(),
@@ -232,6 +247,7 @@ describe("useRateLimit", () => {
 
     ctx = {
       logger: createMockLogger(),
+      state: { app: { config: { audit: false, cache: false, rateLimit: true } } },
       event: "test:event",
       io: { socket: { id: "socket-123" } },
       set: vi.fn(),

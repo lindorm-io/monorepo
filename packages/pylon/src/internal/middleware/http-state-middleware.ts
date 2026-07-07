@@ -1,10 +1,11 @@
 import { randomId } from "@lindorm/random";
 import type { Environment } from "@lindorm/types";
-import type { PylonHttpMiddleware } from "../../types/index.js";
+import type { AppConfig, PylonHttpMiddleware } from "../../types/index.js";
 import { buildClientContext } from "../utils/build-client-context.js";
 import { getAuthorization } from "../utils/get-authorization.js";
 
 type Options = {
+  config?: Partial<AppConfig>;
   environment?: Environment;
   name?: string;
   domain?: string;
@@ -17,13 +18,19 @@ export const createHttpStateMiddleware = (options: Options): PylonHttpMiddleware
   const name = options.name ?? "unknown";
   const version = options.version ?? "0.0.0";
 
+  const config: AppConfig = {
+    audit: options.config?.audit ?? false,
+    cache: options.config?.cache ?? false,
+    rateLimit: options.config?.rateLimit ?? false,
+  };
+
   return async function httpStateMiddleware(ctx, next) {
     try {
       const requestDate = ctx.get("date");
 
       ctx.state = {
         actor: "unknown",
-        app: { domain, environment, name, version },
+        app: { config, domain, environment, name, version },
         authorization: getAuthorization(ctx),
         client: buildClientContext(
           ctx.get("user-agent") || null,

@@ -58,20 +58,18 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       createDependenciesMiddleware({
         actor: options.actor,
         auditConfig:
-          options.audit?.enabled && (options.audit.iris ?? options.iris)
+          (options.audit?.iris ?? options.iris)
             ? {
-                iris: options.audit.iris ?? options.iris!,
-                sanitise: options.audit.sanitise,
-                skip: options.audit.skip,
+                iris: options.audit?.iris ?? options.iris!,
+                sanitise: options.audit?.sanitise,
+                skip: options.audit?.skip,
               }
             : undefined,
         hermes: options.hermes,
         iris: options.iris,
         keyValue: options.keyValue,
         proteus: options.proteus,
-        rateLimitKeyValue: options.rateLimit?.enabled
-          ? (options.rateLimit.keyValue ?? options.keyValue)
-          : undefined,
+        rateLimitKeyValue: options.rateLimit?.keyValue ?? options.keyValue,
         roomsEnabled: !!options.rooms,
         roomsPresence: options.rooms?.presence,
         roomsKeyValue: options.rooms?.presence

@@ -59,7 +59,10 @@ describe("useAuditLog", () => {
       get: vi.fn().mockReturnValue("Mozilla/5.0"),
       state: {
         actor: "user-123",
-        app: { name: "test-app" },
+        app: {
+          name: "test-app",
+          config: { audit: true, cache: false, rateLimit: false },
+        },
         authorization: { type: "none", value: null },
         client: CLIENT_CONTEXT,
         metadata: {
@@ -202,6 +205,16 @@ describe("useAuditLog", () => {
 
     await expect(useAuditLog()(ctx, next)).rejects.toThrow(ServerError);
     expect(next).not.toHaveBeenCalled();
+  });
+
+  test("should pass through silently (no throw) when audit is disabled by config", async () => {
+    ctx.state.app.config.audit = false;
+    delete ctx[AUDIT_SOURCE]; // disabled AND no source — must not throw
+
+    await expect(useAuditLog()(ctx, next)).resolves.not.toThrow();
+
+    expect(next).toHaveBeenCalledTimes(1);
+    expect(mockPublisher.create).not.toHaveBeenCalled();
   });
 
   test("should call next even when audit creation fails", async () => {

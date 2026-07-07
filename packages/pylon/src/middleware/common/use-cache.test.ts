@@ -52,6 +52,7 @@ type CtxConfig = {
   headers?: Record<string, string>;
   actor?: string;
   environment?: string;
+  cacheEnabled?: boolean;
 };
 
 const createCtx = (config: CtxConfig = {}): any => {
@@ -68,7 +69,10 @@ const createCtx = (config: CtxConfig = {}): any => {
     logger: createMockLogger(),
     state: {
       actor: config.actor ?? "unknown",
-      app: { environment: config.environment ?? "test" },
+      app: {
+        environment: config.environment ?? "test",
+        config: { audit: false, cache: config.cacheEnabled ?? true, rateLimit: false },
+      },
     },
     get: (name: string) => headers[name.toLowerCase()],
     set: (name: string, value: string) => {
@@ -111,6 +115,28 @@ describe("useCache", () => {
     expect(ctx.responseHeaders["X-Pylon-Cache"]).toBe("MISS");
     expect(fake.repository.upsert).toHaveBeenCalledTimes(1);
     expect(fake.store.size).toBe(1);
+  });
+
+  test("should pass through with DISABLED and never throw when cache is disabled by config", async () => {
+    const mw = useCache("60s", "public");
+    // Disabled AND no source configured — must NOT throw, just pass through.
+    const ctx = createCtx({ cacheEnabled: false });
+    const handler = handlerFor(ctx, 200, { hello: "world" });
+
+    await expect(mw(ctx, handler)).resolves.not.toThrow();
+
+    expect(ctx.responseHeaders["X-Pylon-Cache"]).toBe("DISABLED");
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(fake.repository.upsert).not.toHaveBeenCalled();
+  });
+
+  test("should throw when cache is enabled by config but no source is configured", async () => {
+    const mw = useCache("60s", "public");
+    const ctx = createCtx({ cacheEnabled: true }); // no source
+
+    await expect(mw(ctx, handlerFor(ctx, 200, {}))).rejects.toThrow(
+      /cache is not configured/i,
+    );
   });
 
   test("should HIT and replay status and body on a second request", async () => {

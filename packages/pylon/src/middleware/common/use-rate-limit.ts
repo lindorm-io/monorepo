@@ -63,6 +63,13 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
     typeof options.window === "number" ? options.window : ms(options.window);
 
   return async function useRateLimitMiddleware(ctx: PylonContext, next) {
+    // Disabled by app config: silently pass through, never throw. The
+    // source-missing throw below only fires when rate limiting IS enabled.
+    if (ctx.state.app.config.rateLimit === false) {
+      await next();
+      return;
+    }
+
     if (options.skip?.(ctx)) {
       await next();
       return;

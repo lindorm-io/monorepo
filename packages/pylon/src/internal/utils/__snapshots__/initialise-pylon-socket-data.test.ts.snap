@@ -3,6 +3,11 @@
 exports[`initialisePylonSocketData > should initialize with all options provided 1`] = `
 {
   "app": {
+    "config": {
+      "audit": false,
+      "cache": false,
+      "rateLimit": false,
+    },
     "domain": "test.lindorm.io",
     "environment": "development",
     "name": "test-service",
@@ -16,6 +21,11 @@ exports[`initialisePylonSocketData > should initialize with all options provided
 exports[`initialisePylonSocketData > should use defaults for missing options 1`] = `
 {
   "app": {
+    "config": {
+      "audit": false,
+      "cache": false,
+      "rateLimit": false,
+    },
     "domain": "unknown",
     "environment": "unknown",
     "name": "unknown",
@@ -29,6 +39,11 @@ exports[`initialisePylonSocketData > should use defaults for missing options 1`]
 exports[`initialisePylonSocketData > should use defaults for undefined values 1`] = `
 {
   "app": {
+    "config": {
+      "audit": false,
+      "cache": false,
+      "rateLimit": false,
+    },
     "domain": "unknown",
     "environment": "unknown",
     "name": "unknown",

@@ -84,6 +84,11 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
       httpResponseLoggerMiddleware,
       httpErrorHandlerMiddleware,
       createHttpStateMiddleware({
+        config: {
+          audit: this.options.audit?.enabled ?? false,
+          cache: this.options.cache?.enabled ?? false,
+          rateLimit: this.options.rateLimit?.enabled ?? false,
+        },
         environment: this.options.environment,
         name: this.options.name,
         version: this.options.version,
@@ -107,23 +112,22 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         actor: this.options.actor,
         authConfig: this.authConfig,
         auditConfig:
-          this.options.audit?.enabled && (this.options.audit.iris ?? this.options.iris)
+          (this.options.audit?.iris ?? this.options.iris)
             ? {
-                iris: this.options.audit.iris ?? this.options.iris!,
-                sanitise: this.options.audit.sanitise,
-                skip: this.options.audit.skip,
+                iris: this.options.audit?.iris ?? this.options.iris!,
+                sanitise: this.options.audit?.sanitise,
+                skip: this.options.audit?.skip,
               }
             : undefined,
-        cacheKeyValue: this.options.cache?.enabled
-          ? (this.options.cache.keyValue ?? this.options.keyValue)
-          : undefined,
+        // Always register the cache source when one is provided (independent of
+        // cache.enabled). useCache reads ctx.state.app.config.cache to decide
+        // whether to run, and throws only if enabled but no source is present.
+        cacheKeyValue: this.options.cache?.keyValue ?? this.options.keyValue,
         hermes: this.options.hermes,
         iris: this.options.iris,
         keyValue: this.options.keyValue,
         proteus: this.options.proteus,
-        rateLimitKeyValue: this.options.rateLimit?.enabled
-          ? (this.options.rateLimit.keyValue ?? this.options.keyValue)
-          : undefined,
+        rateLimitKeyValue: this.options.rateLimit?.keyValue ?? this.options.keyValue,
       }),
       createQueueMiddleware(this.options.queue),
       createWebhookMiddleware(this.options.webhook),

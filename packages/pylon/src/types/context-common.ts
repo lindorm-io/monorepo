@@ -13,7 +13,14 @@ import type { PylonClientContext } from "./pylon-client-context.js";
 import type { PylonIoContextHttp } from "./pylon-io-context.js";
 import type { PylonSocketEmitter } from "./pylon-socket-emitter.js";
 
+export type AppConfig = {
+  audit: boolean;
+  cache: boolean;
+  rateLimit: boolean;
+};
+
 export type AppState = {
+  config: AppConfig;
   domain: string;
   environment: Environment;
   name: string;

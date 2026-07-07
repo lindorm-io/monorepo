@@ -18,6 +18,13 @@ type UseAuditLogOptions = {
 
 export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware => {
   return async function useAuditLogMiddleware(ctx: PylonContext, next) {
+    // Disabled by app config: silently pass through, never throw. The
+    // source-missing throw below only fires when audit IS enabled.
+    if (ctx.state.app.config.audit === false) {
+      await next();
+      return;
+    }
+
     const config = (ctx as any)[AUDIT_SOURCE] as AuditConfig | undefined;
     if (!config) {
       throw new ServerError(

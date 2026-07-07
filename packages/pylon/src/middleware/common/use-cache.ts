@@ -122,6 +122,15 @@ export const useCache = (
       await next();
       return;
     }
+
+    // Disabled by app config (e.g. off outside production): silently pass through,
+    // never throw. The source-missing throw below only fires when cache IS enabled.
+    if (ctx.state.app.config.cache === false) {
+      ctx.set("X-Pylon-Cache", "DISABLED");
+      await next();
+      return;
+    }
+
     if (options.skip?.(ctx)) {
       ctx.set("X-Pylon-Cache", "BYPASS");
       await next();
