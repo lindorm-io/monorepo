@@ -97,10 +97,11 @@ export const upsertSuite = (
     expect(byId[i2.id].name).toBe("BatchUpdated2");
   });
 
-  // Operation-scoped @ReadOnly on the upsert conflict path.
-  // These assert only behaviours that hold on every driver: preservation of
-  // upsert-readonly fields on conflict, and writability of update-only-readonly
-  // fields by upsert. (Update()-side immutability is covered by driver tests.)
+  // Operation-scoped @ReadOnly across the upsert-conflict AND update() paths.
+  // These assert behaviours that hold on every driver: preservation of
+  // upsert-readonly fields on conflict, writability of update-only-readonly
+  // fields by upsert, and — on the update() path — preservation of
+  // update-readonly fields while plain and upsert-readonly fields still write.
 
   test("@ReadOnly('upsert') is preserved on an upsert conflict but writable via update()", async () => {
     const repo = getHandle().repository(TckReadonlyScoped);
@@ -155,6 +156,31 @@ export const upsertSuite = (
 
     const refetched = await repo.findOneOrFail({ id: inserted.id });
     expect(refetched.updateReadonly).toBe("viaUpsert");
+  });
+
+  test("update() ignores @ReadOnly()/@ReadOnly('update') fields but writes the rest", async () => {
+    const repo = getHandle().repository(TckReadonlyScoped);
+    const inserted = await repo.insert({
+      name: "n1",
+      immutable: "locked",
+      updateReadonly: "locked",
+      upsertReadonly: "u1",
+    });
+
+    // Re-fetch so a snapshot is present (the realistic find → mutate → update
+    // flow); mutate a plain field alongside the readonly ones so a write lands.
+    const found = await repo.findOneOrFail({ id: inserted.id });
+    found.name = "n2"; // plain field — must be written
+    found.immutable = "hacked"; // @ReadOnly() — must be preserved
+    found.updateReadonly = "hacked"; // @ReadOnly("update") — must be preserved
+    found.upsertReadonly = "viaUpdate"; // @ReadOnly("upsert") — writable by update()
+    await repo.update(found);
+
+    const refetched = await repo.findOneOrFail({ id: inserted.id });
+    expect(refetched.name).toBe("n2");
+    expect(refetched.immutable).toBe("locked");
+    expect(refetched.updateReadonly).toBe("locked");
+    expect(refetched.upsertReadonly).toBe("viaUpdate");
   });
 
   // A31: upsert with conflictOn

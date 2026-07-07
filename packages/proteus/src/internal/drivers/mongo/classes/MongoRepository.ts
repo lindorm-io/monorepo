@@ -37,7 +37,7 @@ import { guardFindSortKey } from "../../../utils/query/guard-find-sort-key.js";
 import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory.js";
 import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store.js";
 import { diffColumns } from "../../../entity/utils/diff-columns.js";
-import { retainUpsertReadonlyFields } from "../../../entity/utils/retain-upsert-readonly-fields.js";
+import { retainReadonlyFields } from "../../../entity/utils/retain-readonly-fields.js";
 import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
 import { MongoDuplicateKeyError } from "../errors/MongoDuplicateKeyError.js";
 import {
@@ -76,6 +76,7 @@ export class MongoRepository<
   private readonly db: Db;
   private readonly hasEagerRelations: boolean;
   private readonly hasEmbeddedLists: boolean;
+  private readonly hasReadonlyUpdateFields: boolean;
   private readonly joinTableOps: JoinTableOps;
   private readonly session: ClientSession | undefined;
 
@@ -102,6 +103,12 @@ export class MongoRepository<
         r.options.loading.single === "eager" || r.options.loading.multiple === "eager",
     );
     this.hasEmbeddedLists = (this.metadata.embeddedLists ?? []).length > 0;
+    // Only user @Field columns marked read-only on "update" require the pre-write
+    // read to retain their stored value; framework-managed readonly fields (Scope,
+    // CreateDate, …) already carry the correct value on the in-memory entity.
+    this.hasReadonlyUpdateFields = this.metadata.fields.some(
+      (f) => f.decorator === "Field" && f.readonly.includes("update"),
+    );
   }
 
   // ─── Abstract: find / versions ────────────────────────────────────
@@ -380,6 +387,24 @@ export class MongoRepository<
     return this.updateStandard(entity, hookKind);
   }
 
+  /**
+   * Mongo overwrites the whole document on update, so a `@ReadOnly("update")`
+   * user field would be clobbered by the wholesale write. Read the stored row
+   * and pin those columns back onto `prepared` — a no-op write for them. The
+   * read is skipped entirely unless the entity declares readonly-on-update
+   * fields.
+   */
+  private async retainReadonlyOnUpdate(prepared: E): Promise<void> {
+    if (!this.hasReadonlyUpdateFields) return;
+
+    const pk = buildPrimaryKeyPredicate(prepared, this.metadata);
+    const stored = await this.executor.executeFind(pk, { limit: 1 });
+    const existingRow = stored[0] as Record<string, unknown> | undefined;
+    if (existingRow) {
+      retainReadonlyFields(prepared, existingRow, this.metadata, "update");
+    }
+  }
+
   private async updateStandard(
     entity: E,
     hookKind: "update" | "save" = "update",
@@ -404,6 +429,7 @@ export class MongoRepository<
 
     const prepared = this.entityManager.update(entity);
     this.entityManager.validate(prepared);
+    await this.retainReadonlyOnUpdate(prepared);
     const oldEntity = snapshot ? entity : undefined;
     const updateEvent = { ...this.buildSubscriberEvent(prepared), oldEntity };
 
@@ -625,7 +651,7 @@ export class MongoRepository<
         const stored = await this.executor.executeFind(pk, { limit: 1 });
         const existingRow = stored[0] as Record<string, unknown> | undefined;
         if (existingRow) {
-          retainUpsertReadonlyFields(prepared, existingRow, this.metadata);
+          retainReadonlyFields(prepared, existingRow, this.metadata, "upsert");
         }
         const versionField = this.metadata.fields.find((f) => f.decorator === "Version");
         if (versionField && existingRow) {
@@ -668,7 +694,7 @@ export class MongoRepository<
       const stored = await this.executor.executeFind(pk, { limit: 1 });
       const existingRow = stored[0] as Record<string, unknown> | undefined;
       if (existingRow) {
-        retainUpsertReadonlyFields(prepared, existingRow, this.metadata);
+        retainReadonlyFields(prepared, existingRow, this.metadata, "upsert");
       }
       const versionField = this.metadata.fields.find((f) => f.decorator === "Version");
       if (versionField && existingRow) {
