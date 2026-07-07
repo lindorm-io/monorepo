@@ -9,12 +9,19 @@ export const getUpsertSetSkipColumns = (metadata: EntityMetadata): Set<string> =
     if (field) skip.add(field.name);
   }
 
-  // Skip CreateDate — immutable; skip computed — DB-generated
+  // Skip CreateDate — immutable; skip computed — DB-generated;
+  // skip user fields read-only on "upsert" — written on INSERT, preserved on
+  // conflict. The `decorator === "Field"` guard keeps framework columns (Version,
+  // UpdateDate) out of the skip set so their SET special-cases still fire, even
+  // though they carry readonly on both operations.
   for (const field of metadata.fields) {
     if (field.decorator === "CreateDate") {
       skip.add(field.name);
     }
     if (field.computed) {
+      skip.add(field.name);
+    }
+    if (field.decorator === "Field" && field.readonly.includes("upsert")) {
       skip.add(field.name);
     }
   }

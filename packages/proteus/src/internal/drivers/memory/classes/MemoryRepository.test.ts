@@ -10,6 +10,7 @@ import {
   Nullable,
   OneToMany,
   PrimaryKeyField,
+  ReadOnly,
   UpdateDateField,
   VersionField,
 } from "../../../../decorators/index.js";
@@ -84,17 +85,47 @@ class RepoSoftItem {
   name!: string;
 }
 
+@Entity({ name: "RepoReadonlyScoped" })
+class RepoReadonlyScoped {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @VersionField()
+  version!: number;
+
+  @CreateDateField()
+  createdAt!: Date;
+
+  @UpdateDateField()
+  updatedAt!: Date;
+
+  @Field("string")
+  name!: string;
+
+  @ReadOnly()
+  @Field("string")
+  immutable!: string;
+
+  @ReadOnly("update")
+  @Field("string")
+  updateReadonly!: string;
+
+  @ReadOnly("upsert")
+  @Field("string")
+  upsertReadonly!: string;
+}
+
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
 let source: ProteusSource;
 let categoryRepo: IProteusRepository<RepoTestCategory>;
 let itemRepo: IProteusRepository<RepoTestItem>;
 let softRepo: IProteusRepository<RepoSoftItem>;
+let readonlyRepo: IProteusRepository<RepoReadonlyScoped>;
 
 beforeAll(async () => {
   source = new ProteusSource({
     driver: "memory",
-    entities: [RepoTestCategory, RepoTestItem, RepoSoftItem],
+    entities: [RepoTestCategory, RepoTestItem, RepoSoftItem, RepoReadonlyScoped],
     logger: createMockLogger(),
   });
   await source.connect();
@@ -103,6 +134,7 @@ beforeAll(async () => {
   categoryRepo = source.repository(RepoTestCategory);
   itemRepo = source.repository(RepoTestItem);
   softRepo = source.repository(RepoSoftItem);
+  readonlyRepo = source.repository(RepoReadonlyScoped);
 });
 
 afterAll(async () => {
@@ -113,6 +145,7 @@ beforeEach(async () => {
   await categoryRepo.clear();
   await itemRepo.clear();
   await softRepo.clear();
+  await readonlyRepo.clear();
 });
 
 // ─── create ───────────────────────────────────────────────────────────────────
@@ -347,6 +380,87 @@ describe("MemoryRepository.upsert", () => {
 
     const all = await itemRepo.find({ id: item.id });
     expect(all).toHaveLength(1);
+  });
+});
+
+// ─── @ReadOnly operation scopes ─────────────────────────────────────────────────
+
+describe("MemoryRepository @ReadOnly operation scopes", () => {
+  test("@ReadOnly('upsert') is preserved on upsert conflict but writable via update()", async () => {
+    const inserted = await readonlyRepo.insert(
+      readonlyRepo.create({
+        name: "n1",
+        immutable: "imm",
+        updateReadonly: "u1",
+        upsertReadonly: "keep",
+      }),
+    );
+
+    // Upsert conflict must NOT overwrite an upsert-readonly field.
+    inserted.name = "n2";
+    inserted.upsertReadonly = "changed";
+    const upserted = await readonlyRepo.upsert(inserted);
+    expect(upserted.name).toBe("n2");
+    expect(upserted.upsertReadonly).toBe("keep");
+
+    // update() may still write it.
+    const found = await readonlyRepo.findOneOrFail({ id: inserted.id });
+    found.upsertReadonly = "viaUpdate";
+    await readonlyRepo.update(found);
+    const refetched = await readonlyRepo.findOneOrFail({ id: inserted.id });
+    expect(refetched.upsertReadonly).toBe("viaUpdate");
+  });
+
+  test("@ReadOnly() is immutable on both update and upsert", async () => {
+    const inserted = await readonlyRepo.insert(
+      readonlyRepo.create({
+        name: "n1",
+        immutable: "locked",
+        updateReadonly: "u1",
+        upsertReadonly: "p1",
+      }),
+    );
+
+    // upsert conflict keeps the stored value
+    inserted.name = "n2";
+    inserted.immutable = "hacked";
+    const upserted = await readonlyRepo.upsert(inserted);
+    expect(upserted.immutable).toBe("locked");
+    expect(upserted.name).toBe("n2");
+
+    // update() ignores the change to the readonly field
+    const found = await readonlyRepo.findOneOrFail({ id: inserted.id });
+    found.immutable = "hacked-again";
+    found.name = "n3";
+    await readonlyRepo.update(found);
+    const refetched = await readonlyRepo.findOneOrFail({ id: inserted.id });
+    expect(refetched.immutable).toBe("locked");
+    expect(refetched.name).toBe("n3");
+  });
+
+  test("@ReadOnly('update') is writable by upsert but ignored by update()", async () => {
+    const inserted = await readonlyRepo.insert(
+      readonlyRepo.create({
+        name: "n1",
+        immutable: "i",
+        updateReadonly: "orig",
+        upsertReadonly: "p",
+      }),
+    );
+
+    // upsert conflict writes the update-only readonly field
+    inserted.updateReadonly = "viaUpsert";
+    const upserted = await readonlyRepo.upsert(inserted);
+    expect(upserted.updateReadonly).toBe("viaUpsert");
+
+    // update() leaves it untouched
+    const found = await readonlyRepo.findOneOrFail({ id: inserted.id });
+    found.updateReadonly = "viaUpdate";
+    found.name = "n2";
+    await readonlyRepo.update(found);
+    const refetched = await readonlyRepo.findOneOrFail({ id: inserted.id });
+    expect(refetched.updateReadonly).toBe("viaUpsert");
+    expect(refetched.name).toBe("n2");
   });
 });
 

@@ -172,7 +172,7 @@ const makeField = (
     embedded: null,
     encrypted: null,
     nullable: false,
-    readonly: false,
+    readonly: [],
     order: null,
     transform: null,
     typedJson: null,

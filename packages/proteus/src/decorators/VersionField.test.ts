@@ -23,6 +23,6 @@ describe("VersionField", () => {
     const field = meta.fields.find((f) => f.key === "version");
     expect(field!.type).toBe("integer");
     expect(field!.decorator).toBe("Version");
-    expect(field!.readonly).toBe(true);
+    expect(field!.readonly).toEqual(["update", "upsert"]);
   });
 });

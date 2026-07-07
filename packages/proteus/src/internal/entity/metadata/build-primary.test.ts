@@ -274,7 +274,7 @@ describe("buildPrimaryMetadata — @Computed auto-sets readonly", () => {
     const meta = buildPrimaryMetadata(BpComputedReadonlyEntity);
     const field = meta.fields.find((f) => f.key === "upperName")!;
     expect(field.computed).toBe("UPPER(name)");
-    expect(field.readonly).toBe(true);
+    expect(field.readonly).toEqual(["update", "upsert"]);
   });
 });
 

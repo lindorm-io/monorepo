@@ -31,6 +31,7 @@ import { validateEmbeddedListInitializers } from "./validate-embedded-list-initi
 import { validateFields } from "./validate-fields.js";
 import { validateIndexes } from "./validate-indexes.js";
 import { validatePrimaryKeys, validateVersionKeys } from "./validate-primary-keys.js";
+import { validateReadonlyOperations } from "./validate-readonly.js";
 import { validateFilters } from "./validate-filters.js";
 import { validateUniques } from "./validate-uniques.js";
 
@@ -106,7 +107,7 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
     if (modifier.enum != null) field.enum = modifier.enum;
     if (modifier.computed != null) {
       field.computed = modifier.computed;
-      field.readonly = true; // @Computed auto-sets ReadOnly
+      field.readonly = ["update", "upsert"]; // @Computed auto-sets ReadOnly on both ops
     }
     if (modifier.transform != null) field.transform = modifier.transform;
     if (modifier.encrypted != null)
@@ -645,6 +646,7 @@ export const buildPrimaryMetadata = <
 
   const primaryKeys = primaryK.map((pk) => pk.key);
   validatePrimaryKeys(target.name, primaryKeys, fields);
+  validateReadonlyOperations(target.name, fields, fieldModifiers, primaryKeys);
 
   // Guard: embedded fields cannot be primary keys
   for (const pk of primaryKeys) {

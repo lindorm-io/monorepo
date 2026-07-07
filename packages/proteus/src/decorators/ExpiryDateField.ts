@@ -29,7 +29,7 @@ export const ExpiryDateField =
       nullable: true,
       order: null,
       precision: null,
-      readonly: false,
+      readonly: [],
       scale: null,
       schema: null,
       transform: null,

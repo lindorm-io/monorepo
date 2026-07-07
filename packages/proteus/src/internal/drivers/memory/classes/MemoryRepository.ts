@@ -683,7 +683,9 @@ export class MemoryRepository<
           const storedVersion = existingRow[versionField.key] as number;
           (prepared as any)[versionField.key] = storedVersion + 1;
         }
-        return this.executor.executeUpdate(prepared);
+        // "upsert" scope: executeUpdate preserves upsert-readonly fields (keeps the
+        // stored value on conflict) while still writing update-only readonly fields.
+        return this.executor.executeUpdate(prepared, "upsert");
       }
 
       return this.executor.executeInsert(prepared);
@@ -705,7 +707,8 @@ export class MemoryRepository<
 
           const relPersister = this.buildRelationPersister(store, repositoryFactory);
           await relPersister.saveOwning(prepared, "update");
-          const hydrated = await executor.executeUpdate(prepared);
+          // "upsert" scope preserves upsert-readonly fields on conflict.
+          const hydrated = await executor.executeUpdate(prepared, "upsert");
           this.transferRelations(prepared, hydrated);
           this.transferEmbeddedLists(prepared, hydrated);
           await relPersister.saveInverse(hydrated, "update");

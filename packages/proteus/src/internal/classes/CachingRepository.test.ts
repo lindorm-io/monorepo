@@ -118,7 +118,7 @@ const makeBaseMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetada
         nullable: false,
 
         precision: null,
-        readonly: true,
+        readonly: ["update", "upsert"],
         scale: null,
         schema: null,
         transform: null,
@@ -141,7 +141,7 @@ const makeBaseMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetada
         nullable: false,
 
         precision: null,
-        readonly: false,
+        readonly: [],
         scale: null,
         schema: null,
         transform: null,
@@ -467,7 +467,7 @@ describe("CachingRepository", () => {
             nullable: false,
 
             precision: null,
-            readonly: false,
+            readonly: [],
             scale: null,
             schema: null,
             transform: null,
@@ -1053,7 +1053,7 @@ describe("CachingRepository", () => {
             nullable: false,
 
             precision: null,
-            readonly: false,
+            readonly: [],
             scale: null,
             schema: null,
             transform: { to: transformTo, from: vi.fn() },
@@ -1118,7 +1118,7 @@ describe("CachingRepository", () => {
             nullable: false,
 
             precision: null,
-            readonly: true,
+            readonly: ["update", "upsert"],
             scale: null,
             schema: null,
             transform: null,
@@ -1141,7 +1141,7 @@ describe("CachingRepository", () => {
             nullable: false,
 
             precision: null,
-            readonly: false,
+            readonly: [],
             scale: null,
             schema: null,
             transform: null,
@@ -1186,7 +1186,7 @@ describe("CachingRepository", () => {
             nullable: false,
 
             precision: null,
-            readonly: true,
+            readonly: ["update", "upsert"],
             scale: null,
             schema: null,
             transform: null,
@@ -1209,7 +1209,7 @@ describe("CachingRepository", () => {
             nullable: false,
 
             precision: null,
-            readonly: false,
+            readonly: [],
             scale: null,
             schema: null,
             transform: null,

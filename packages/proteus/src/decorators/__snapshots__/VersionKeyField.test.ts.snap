@@ -33,7 +33,10 @@ exports[`VersionKeyField > should register uuid version key field (default) 1`] 
       "nullable": false,
       "order": null,
       "precision": null,
-      "readonly": true,
+      "readonly": [
+        "update",
+        "upsert",
+      ],
       "scale": null,
       "schema": null,
       "transform": null,
@@ -58,7 +61,10 @@ exports[`VersionKeyField > should register uuid version key field (default) 1`] 
       "nullable": false,
       "order": null,
       "precision": null,
-      "readonly": true,
+      "readonly": [
+        "update",
+        "upsert",
+      ],
       "scale": null,
       "schema": null,
       "transform": null,

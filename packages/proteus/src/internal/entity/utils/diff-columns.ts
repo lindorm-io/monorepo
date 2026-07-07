@@ -110,7 +110,7 @@ const getExcludeKeys = (metadata: EntityMetadata): Set<string> => {
         break;
 
       case "Field":
-        if (field.readonly) exclude.add(field.key);
+        if (field.readonly.includes("update")) exclude.add(field.key);
         if (field.computed) exclude.add(field.key);
         break;
     }

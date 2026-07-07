@@ -5,7 +5,7 @@ import type { DeepPartial, Predicate } from "@lindorm/types";
 import { CircuitOpenError } from "../../errors/CircuitOpenError.js";
 import type { IEntity } from "../../interfaces/Entity.js";
 import type { DeleteOptions, FindOptions } from "../../types/index.js";
-import type { QueryScope } from "../entity/types/metadata.js";
+import type { QueryScope, ReadOnlyOperation } from "../entity/types/metadata.js";
 import type { IRepositoryExecutor } from "../interfaces/RepositoryExecutor.js";
 
 /**
@@ -26,8 +26,8 @@ export class BreakerExecutor<E extends IEntity> implements IRepositoryExecutor<E
   executeInsert = (entity: E): Promise<E> =>
     this.run(() => this.inner.executeInsert(entity));
 
-  executeUpdate = (entity: E): Promise<E> =>
-    this.run(() => this.inner.executeUpdate(entity));
+  executeUpdate = (entity: E, operation?: ReadOnlyOperation): Promise<E> =>
+    this.run(() => this.inner.executeUpdate(entity, operation));
 
   executeDelete = (criteria: Predicate<E>, options?: DeleteOptions): Promise<void> =>
     this.run(() => this.inner.executeDelete(criteria, options));

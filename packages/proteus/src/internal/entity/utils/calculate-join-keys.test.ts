@@ -29,7 +29,7 @@ const makePrimaryMeta = (
       min: null,
       nullable: false,
 
-      readonly: false,
+      readonly: [],
       schema: null,
       type: "uuid",
     })),

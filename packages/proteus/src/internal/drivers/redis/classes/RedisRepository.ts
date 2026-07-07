@@ -39,6 +39,7 @@ import {
 import { executePaginateFindInMemory } from "../../../utils/pagination/execute-paginate-find-in-memory.js";
 import { getSnapshot, clearSnapshot } from "../../../entity/utils/snapshot-store.js";
 import { diffColumns } from "../../../entity/utils/diff-columns.js";
+import { retainUpsertReadonlyFields } from "../../../entity/utils/retain-upsert-readonly-fields.js";
 import { NotSupportedError } from "../../../../errors/NotSupportedError.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
 import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
@@ -685,13 +686,15 @@ export class RedisRepository<
     // Fast path: no relations
     if (!this.hasRelations) {
       if (entityExists) {
+        const stored = await this.executor.executeFind(pk, { limit: 1 });
+        const existingRow = stored[0] as Record<string, unknown> | undefined;
+        if (existingRow) {
+          retainUpsertReadonlyFields(prepared, existingRow, this.metadata);
+        }
         const versionField = this.metadata.fields.find((f) => f.decorator === "Version");
-        if (versionField) {
-          const stored = await this.executor.executeFind(pk, { limit: 1 });
-          if (stored.length > 0) {
-            const storedVersion = (stored[0] as any)[versionField.key] as number;
-            (prepared as any)[versionField.key] = storedVersion + 1;
-          }
+        if (versionField && existingRow) {
+          (prepared as any)[versionField.key] =
+            ((existingRow as any)[versionField.key] as number) + 1;
         }
         await this.fireBeforeHook("update", prepared);
         await this.fireSubscriber("beforeUpdate", this.buildSubscriberEvent(prepared));
@@ -712,13 +715,15 @@ export class RedisRepository<
     const relPersister = this.buildRelationPersister();
 
     if (entityExists) {
+      const stored = await this.executor.executeFind(pk, { limit: 1 });
+      const existingRow = stored[0] as Record<string, unknown> | undefined;
+      if (existingRow) {
+        retainUpsertReadonlyFields(prepared, existingRow, this.metadata);
+      }
       const versionField = this.metadata.fields.find((f) => f.decorator === "Version");
-      if (versionField) {
-        const stored = await this.executor.executeFind(pk, { limit: 1 });
-        if (stored.length > 0) {
-          const storedVersion = (stored[0] as any)[versionField.key] as number;
-          (prepared as any)[versionField.key] = storedVersion + 1;
-        }
+      if (versionField && existingRow) {
+        (prepared as any)[versionField.key] =
+          ((existingRow as any)[versionField.key] as number) + 1;
       }
 
       await relPersister.saveOwning(prepared, "update");

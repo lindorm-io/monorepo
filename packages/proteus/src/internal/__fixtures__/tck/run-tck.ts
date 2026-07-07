@@ -114,6 +114,7 @@ const runTckForNaming = (
     entities.TckUnversioned,
     entities.TckUniqueConstrained,
     entities.TckUniqueComposite,
+    entities.TckReadonlyScoped,
     entities.TckFkParent,
     entities.TckFkCascadeChild,
     entities.TckFkRestrictChild,

@@ -19,7 +19,7 @@ describe("UpdateDateField", () => {
     const field = meta.fields.find((f) => f.decorator === "UpdateDate");
     expect(field).toBeDefined();
     expect(field!.type).toBe("timestamp");
-    expect(field!.readonly).toBe(true);
+    expect(field!.readonly).toEqual(["update", "upsert"]);
   });
 
   test("should match snapshot", () => {

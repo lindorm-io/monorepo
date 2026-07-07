@@ -657,7 +657,7 @@ export const projectDesiredSchemaMysql = (
           nullable: false,
           order: null,
           precision: null,
-          readonly: false,
+          readonly: [],
           scale: null,
           schema: null,
           transform: null,

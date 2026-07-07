@@ -80,7 +80,7 @@ describe("PrimaryKeyField", () => {
   test("should set readonly on the field", () => {
     const meta = getEntityMetadata(PrimaryKeyFieldUuid);
     const field = meta.fields.find((f) => f.key === "id");
-    expect(field!.readonly).toBe(true);
+    expect(field!.readonly).toEqual(["update", "upsert"]);
   });
 
   test('integer marker with explicit @Generated("increment")', () => {

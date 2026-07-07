@@ -55,7 +55,7 @@ describe("ScopeField", () => {
   test("should be readonly with min 1", () => {
     const meta = getEntityMetadata(ScopeFieldDecorated);
     const field = meta.fields.find((f) => f.key === "scope");
-    expect(field!.readonly).toBe(true);
+    expect(field!.readonly).toEqual(["update", "upsert"]);
     expect(field!.min).toBe(1);
   });
 

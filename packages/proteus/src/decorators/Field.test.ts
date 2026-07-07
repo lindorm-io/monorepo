@@ -59,7 +59,7 @@ describe("Field", () => {
   test("should default readonly to false", () => {
     const meta = getEntityMetadata(FieldStringType);
     const field = meta.fields.find((f) => f.key === "name");
-    expect(field!.readonly).toBe(false);
+    expect(field!.readonly).toEqual([]);
   });
 
   test("should default all modifier fields to zero-values", () => {

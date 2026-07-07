@@ -59,7 +59,7 @@ const createBaseMetadata = (): EntityMetadata => ({
       nullable: false,
       order: null,
       precision: null,
-      readonly: false,
+      readonly: [],
       scale: null,
       schema: null,
       transform: null,

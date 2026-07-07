@@ -33,7 +33,10 @@ exports[`VersionField > should register version field metadata 1`] = `
       "nullable": false,
       "order": null,
       "precision": null,
-      "readonly": true,
+      "readonly": [
+        "update",
+        "upsert",
+      ],
       "scale": null,
       "schema": null,
       "transform": null,
@@ -58,7 +61,10 @@ exports[`VersionField > should register version field metadata 1`] = `
       "nullable": false,
       "order": null,
       "precision": null,
-      "readonly": true,
+      "readonly": [
+        "update",
+        "upsert",
+      ],
       "scale": null,
       "schema": null,
       "transform": null,

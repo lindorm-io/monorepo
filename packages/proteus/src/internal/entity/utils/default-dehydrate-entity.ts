@@ -102,7 +102,7 @@ const getSkipKeys = (metadata: EntityMetadata, mode: DehydrateMode): Set<string>
       if (field.decorator === "CreateDate") {
         skip.add(field.key);
       }
-      if (field.decorator === "Field" && field.readonly) {
+      if (field.decorator === "Field" && field.readonly.includes("update")) {
         skip.add(field.key);
       }
     }

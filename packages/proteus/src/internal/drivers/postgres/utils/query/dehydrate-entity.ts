@@ -113,7 +113,7 @@ const getSkipKeys = (metadata: EntityMetadata, mode: DehydrateMode): Set<string>
       // Only skip decorator === "Field" with readonly: true
       // Framework fields (Version, UpdateDate, etc.) have different decorators
       // and must still be written on update
-      if (field.decorator === "Field" && field.readonly) {
+      if (field.decorator === "Field" && field.readonly.includes("update")) {
         skip.add(field.key);
       }
     }

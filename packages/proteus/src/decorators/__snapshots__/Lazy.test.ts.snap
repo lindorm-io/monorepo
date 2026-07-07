@@ -33,7 +33,10 @@ exports[`Lazy > should match snapshot for lazy on both scopes 1`] = `
       "nullable": false,
       "order": null,
       "precision": null,
-      "readonly": true,
+      "readonly": [
+        "update",
+        "upsert",
+      ],
       "scale": null,
       "schema": null,
       "transform": null,

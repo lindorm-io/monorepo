@@ -89,7 +89,7 @@ const makeMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetadata =
     },
     extras: [],
     fields: [
-      makeField("id", { type: "uuid", readonly: true }),
+      makeField("id", { type: "uuid", readonly: ["update", "upsert"] }),
       makeField("name", { type: "string" }),
       makeField("email", { type: "string", nullable: true }),
       makeField("age", { type: "integer" }),

@@ -19,7 +19,7 @@ describe("VersionStartDateField", () => {
     const field = meta.fields.find((f) => f.decorator === "VersionStartDate");
     expect(field).toBeDefined();
     expect(field!.type).toBe("timestamp");
-    expect(field!.readonly).toBe(true);
+    expect(field!.readonly).toEqual(["update", "upsert"]);
     expect(field!.nullable).toBe(false);
   });
 

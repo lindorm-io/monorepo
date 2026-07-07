@@ -49,7 +49,7 @@ export const ScopeField =
       nullable: false,
       order: options.order ?? null,
       precision: null,
-      readonly: true,
+      readonly: ["update", "upsert"],
       scale: null,
       schema: null,
       transform: null,

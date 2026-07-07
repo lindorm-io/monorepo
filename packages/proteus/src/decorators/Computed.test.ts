@@ -39,7 +39,7 @@ describe("Computed", () => {
   test("should auto-set readonly when computed is applied", () => {
     const meta = getEntityMetadata(ComputedDecorated);
     const field = meta.fields.find((f) => f.key === "fullName")!;
-    expect(field.readonly).toBe(true);
+    expect(field.readonly).toEqual(["update", "upsert"]);
   });
 
   test("should default computed to null when not decorated", () => {

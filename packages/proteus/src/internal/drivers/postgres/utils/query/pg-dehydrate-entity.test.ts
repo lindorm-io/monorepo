@@ -99,12 +99,12 @@ describe("pgDehydrateEntity — embedded fields", () => {
 });
 
 describe("pgDehydrateEntity — readonly fields", () => {
-  // readonly: true + decorator: "Field" causes the field to be skipped in update mode.
+  // readonly includes "update" + decorator: "Field" causes the field to be skipped in update mode.
   // In insert mode the field is included normally.
   const readonlyMetadata = {
     fields: [
       makeField("id", { type: "uuid" }),
-      makeField("slug", { type: "string", readonly: true }),
+      makeField("slug", { type: "string", readonly: ["update", "upsert"] }),
       makeField("name", { type: "string" }),
     ],
     primaryKeys: ["id"],

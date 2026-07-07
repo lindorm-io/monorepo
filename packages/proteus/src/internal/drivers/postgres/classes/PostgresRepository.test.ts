@@ -139,7 +139,7 @@ const mockMetadata = {
   },
   extras: [],
   fields: [
-    makeField("id", { decorator: "Field", readonly: true }),
+    makeField("id", { decorator: "Field", readonly: ["update", "upsert"] }),
     makeField("version", { decorator: "Version", type: "integer" }),
     makeField("createdAt", { decorator: "CreateDate", type: "timestamp" }),
     makeField("updatedAt", { decorator: "UpdateDate", type: "timestamp" }),

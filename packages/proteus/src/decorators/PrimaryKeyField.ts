@@ -41,7 +41,7 @@ export const PrimaryKeyField =
       nullable: false,
       order: null,
       precision: null,
-      readonly: true,
+      readonly: ["update", "upsert"],
       scale: null,
       schema: null,
       transform: null,

@@ -54,6 +54,15 @@ export type MetaFieldType =
 export type MetaFieldPrimaryType = "integer" | "string" | "uuid";
 
 /**
+ * Operations on which a field is read-only:
+ * - `"update"`: excluded from UPDATE statements (immutable via `update()` / `save()`).
+ * - `"upsert"`: written on INSERT but preserved on an upsert conflict `DO UPDATE`.
+ *
+ * `@ReadOnly()` (no argument) stages both; a field with no `@ReadOnly` has `[]`.
+ */
+export type ReadOnlyOperation = "update" | "upsert";
+
+/**
  * Optional JS-representation override for a field. Currently only meaningful for
  * `decimal`: by default a `decimal` hydrates as a `number` (proteus throws rather
  * than silently lose precision); `{ mode: "string" }` opts into an exact,
@@ -125,7 +134,7 @@ export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
   nullable: boolean;
   order: number | null;
   precision: number | null;
-  readonly: boolean;
+  readonly: Array<ReadOnlyOperation>;
   scale: number | null;
   schema: z.ZodType | null;
   transform: MetaTransform | null;

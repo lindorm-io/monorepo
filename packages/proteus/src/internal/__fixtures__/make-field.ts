@@ -21,7 +21,7 @@ export const makeField = (
   nullable: false,
   order: null,
   precision: null,
-  readonly: false,
+  readonly: [],
   scale: null,
   schema: null,
   transform: null,

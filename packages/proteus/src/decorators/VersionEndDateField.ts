@@ -28,7 +28,7 @@ export const VersionEndDateField =
       nullable: true,
       order: null,
       precision: null,
-      readonly: false,
+      readonly: [],
       scale: null,
       schema: null,
       transform: null,

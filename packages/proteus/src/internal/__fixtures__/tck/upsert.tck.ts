@@ -11,7 +11,8 @@ export const upsertSuite = (
   entities: TckEntities,
   caps: TckCapabilities,
 ) => {
-  const { TckSimpleUser, TckUniqueConstrained, TckUniqueComposite } = entities;
+  const { TckSimpleUser, TckUniqueConstrained, TckUniqueComposite, TckReadonlyScoped } =
+    entities;
 
   beforeEach(async () => {
     await getHandle().clear();
@@ -94,6 +95,66 @@ export const upsertSuite = (
     const byId = Object.fromEntries(results.map((r) => [r.id, r]));
     expect(byId[i1.id].name).toBe("BatchUpdated1");
     expect(byId[i2.id].name).toBe("BatchUpdated2");
+  });
+
+  // Operation-scoped @ReadOnly on the upsert conflict path.
+  // These assert only behaviours that hold on every driver: preservation of
+  // upsert-readonly fields on conflict, and writability of update-only-readonly
+  // fields by upsert. (Update()-side immutability is covered by driver tests.)
+
+  test("@ReadOnly('upsert') is preserved on an upsert conflict but writable via update()", async () => {
+    const repo = getHandle().repository(TckReadonlyScoped);
+    const inserted = await repo.insert({
+      name: "n1",
+      immutable: "imm",
+      updateReadonly: "u1",
+      upsertReadonly: "keep",
+    });
+
+    inserted.name = "n2";
+    inserted.upsertReadonly = "changed";
+    const upserted = await repo.upsert(inserted);
+    expect(upserted.name).toBe("n2");
+    expect(upserted.upsertReadonly).toBe("keep");
+
+    const found = await repo.findOneOrFail({ id: inserted.id });
+    found.upsertReadonly = "viaUpdate";
+    await repo.update(found);
+    const refetched = await repo.findOneOrFail({ id: inserted.id });
+    expect(refetched.upsertReadonly).toBe("viaUpdate");
+  });
+
+  test("@ReadOnly() is preserved on an upsert conflict", async () => {
+    const repo = getHandle().repository(TckReadonlyScoped);
+    const inserted = await repo.insert({
+      name: "n1",
+      immutable: "locked",
+      updateReadonly: "u1",
+      upsertReadonly: "p1",
+    });
+
+    inserted.name = "n2";
+    inserted.immutable = "hacked";
+    const upserted = await repo.upsert(inserted);
+    expect(upserted.immutable).toBe("locked");
+    expect(upserted.name).toBe("n2");
+  });
+
+  test("@ReadOnly('update') is writable by upsert", async () => {
+    const repo = getHandle().repository(TckReadonlyScoped);
+    const inserted = await repo.insert({
+      name: "n1",
+      immutable: "imm",
+      updateReadonly: "orig",
+      upsertReadonly: "p1",
+    });
+
+    inserted.updateReadonly = "viaUpsert";
+    const upserted = await repo.upsert(inserted);
+    expect(upserted.updateReadonly).toBe("viaUpsert");
+
+    const refetched = await repo.findOneOrFail({ id: inserted.id });
+    expect(refetched.updateReadonly).toBe("viaUpsert");
   });
 
   // A31: upsert with conflictOn

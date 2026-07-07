@@ -23,7 +23,7 @@ const metadata = {
     makeField("readonlyField", {
       type: "string",
       decorator: "Field",
-      readonly: true,
+      readonly: ["update", "upsert"],
       name: "readonly_field",
     }),
   ],

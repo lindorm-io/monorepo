@@ -109,7 +109,7 @@ const getSkipKeys = (metadata: EntityMetadata, mode: DehydrateMode): Set<string>
         skip.add(field.key);
       }
       // Skip user-facing readonly fields (BF5)
-      if (field.decorator === "Field" && field.readonly) {
+      if (field.decorator === "Field" && field.readonly.includes("update")) {
         skip.add(field.key);
       }
     }

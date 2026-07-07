@@ -19,6 +19,7 @@ import type {
   MetaUnique,
   MetaVersionKey,
   QueryScope,
+  ReadOnlyOperation,
   RelationChange,
   RelationDestroy,
   RelationLoading,
@@ -42,7 +43,7 @@ export type StagedFieldModifier = {
   decorator: string;
   nullable?: boolean;
   default?: MetaFieldDefault;
-  readonly?: boolean;
+  readonly?: Array<ReadOnlyOperation>;
   min?: number;
   max?: number;
   precision?: number;

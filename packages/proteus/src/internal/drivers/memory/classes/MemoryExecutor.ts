@@ -3,7 +3,11 @@ import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
 import type { IEntity } from "../../../../interfaces/index.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
-import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
+import type {
+  EntityMetadata,
+  QueryScope,
+  ReadOnlyOperation,
+} from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
 import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
 import { Predicated } from "@lindorm/utils";
@@ -169,7 +173,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
     return hydrateFromRow<E>(structuredClone(row), this.metadata, this.amphora);
   }
 
-  async executeUpdate(entity: E): Promise<E> {
+  async executeUpdate(entity: E, operation: ReadOnlyOperation = "update"): Promise<E> {
     const table = this.getTable();
     const row = dehydrateToRow(entity, this.metadata, this.amphora);
 
@@ -216,13 +220,15 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
       }
     }
 
-    // Merge: start from existing, apply updates (skip PKs, CreateDate, readonly on update)
+    // Merge: start from existing, apply updates. Skip PKs and CreateDate always;
+    // skip user fields read-only on the current operation ("update" for update(),
+    // "upsert" for the upsert-conflict path) so their stored value is preserved.
     const merged = { ...existing };
     for (const field of this.metadata.fields) {
       if (field.computed) continue;
       if (this.metadata.primaryKeys.includes(field.key)) continue;
       if (field.decorator === "CreateDate") continue;
-      if (field.decorator === "Field" && field.readonly) continue;
+      if (field.decorator === "Field" && field.readonly.includes(operation)) continue;
 
       if (field.key in row) {
         merged[field.key] = row[field.key];

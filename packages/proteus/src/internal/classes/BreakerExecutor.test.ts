@@ -53,7 +53,7 @@ describe("BreakerExecutor", () => {
       const result = await executor.executeUpdate(entity);
 
       expect(breaker.execute).toHaveBeenCalledTimes(1);
-      expect(inner.executeUpdate).toHaveBeenCalledWith(entity);
+      expect(inner.executeUpdate).toHaveBeenCalledWith(entity, undefined);
       expect(result).toMatchSnapshot();
     });
 

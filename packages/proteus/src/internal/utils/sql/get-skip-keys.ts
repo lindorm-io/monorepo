@@ -37,10 +37,10 @@ export const getSkipKeys = (
         skip.add(field.key);
       }
       // Skip user-facing readonly fields (BF5)
-      // Only skip decorator === "Field" with readonly: true
+      // Only skip decorator === "Field" with "update" in the readonly scope.
       // Framework fields (Version, UpdateDate, etc.) have different decorators
       // and must still be written on update
-      if (field.decorator === "Field" && field.readonly) {
+      if (field.decorator === "Field" && field.readonly.includes("update")) {
         skip.add(field.key);
       }
     }

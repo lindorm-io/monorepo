@@ -4,11 +4,14 @@ import type { IEntity } from "../../../interfaces/index.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
 /**
- * Blocks ALL readonly fields regardless of decorator type.
+ * Blocks all update-readonly fields regardless of decorator type.
  *
- * Used to enforce that users haven't manually changed any readonly field
+ * Used to enforce that users haven't manually changed an update-readonly field
  * in an update payload. This is stricter than `removeReadonlyDataFields`,
  * which only strips user-facing readonly fields (decorator === "Field").
+ *
+ * Fields that are readonly on "upsert" only remain writable via update(), so
+ * they are not blocked here.
  */
 export const verifyReadonly = <E extends IEntity>(
   target: Constructor<E>,
@@ -18,7 +21,7 @@ export const verifyReadonly = <E extends IEntity>(
   for (const key of Object.keys(entity)) {
     const field = metadata.fields.find((f) => f.key === key);
     if (!field) continue;
-    if (field.readonly) {
+    if (field.readonly.includes("update")) {
       throw new EntityMetadataError("Field is readonly", {
         code: "readonly_field",
         title: "Readonly Field",

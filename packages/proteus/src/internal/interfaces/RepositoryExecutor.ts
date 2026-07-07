@@ -1,11 +1,18 @@
 import type { DeepPartial, Predicate } from "@lindorm/types";
 import type { DeleteOptions, FindOptions } from "../../types/index.js";
 import type { IEntity } from "../../interfaces/Entity.js";
-import type { QueryScope } from "../entity/types/metadata.js";
+import type { QueryScope, ReadOnlyOperation } from "../entity/types/metadata.js";
 
 export interface IRepositoryExecutor<E extends IEntity> {
   executeInsert(entity: E): Promise<E>;
-  executeUpdate(entity: E): Promise<E>;
+  /**
+   * Persist an existing row. `operation` selects the read-only scope to honour:
+   * `"update"` (default) skips fields read-only on update; `"upsert"` skips fields
+   * read-only on upsert (preserving their stored value on a conflict). Executors
+   * that overwrite wholesale (e.g. redis) ignore this and rely on the repository
+   * pre-merging the retained values instead.
+   */
+  executeUpdate(entity: E, operation?: ReadOnlyOperation): Promise<E>;
   executeDelete(criteria: Predicate<E>, options?: DeleteOptions): Promise<void>;
   executeSoftDelete(criteria: Predicate<E>): Promise<void>;
   executeRestore(criteria: Predicate<E>): Promise<void>;

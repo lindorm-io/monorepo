@@ -33,7 +33,10 @@ exports[`Deferrable > should match snapshot for DEFERRABLE INITIALLY DEFERRED 1`
       "nullable": false,
       "order": null,
       "precision": null,
-      "readonly": true,
+      "readonly": [
+        "update",
+        "upsert",
+      ],
       "scale": null,
       "schema": null,
       "transform": null,
@@ -133,7 +136,10 @@ exports[`Deferrable > should match snapshot for DEFERRABLE INITIALLY IMMEDIATE 1
       "nullable": false,
       "order": null,
       "precision": null,
-      "readonly": true,
+      "readonly": [
+        "update",
+        "upsert",
+      ],
       "scale": null,
       "schema": null,
       "transform": null,

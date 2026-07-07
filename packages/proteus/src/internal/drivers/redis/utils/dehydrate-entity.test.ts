@@ -31,7 +31,7 @@ const makeField = (overrides: Partial<MetaField> = {}): MetaField =>
     transform: null,
     typedJson: null,
     nullable: false,
-    readonly: false,
+    readonly: [],
     name: "name",
     ...overrides,
   }) as unknown as MetaField;

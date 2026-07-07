@@ -6,7 +6,7 @@ import { describe, expect, test } from "vitest";
 const makeVersionField = (key = "version"): MetaField<"Version"> =>
   makeField(key, {
     decorator: "Version",
-    readonly: true,
+    readonly: ["update", "upsert"],
     type: "integer",
   }) as MetaField<"Version">;
 

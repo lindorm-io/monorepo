@@ -45,6 +45,7 @@ import {
   OnValidate,
   PrimaryKey,
   PrimaryKeyField,
+  ReadOnly,
   ScopeField,
   Transform,
   TypedJson,
@@ -551,6 +552,44 @@ export const createTckEntities = (hookCallback: Mock) => {
 
     @Field("string")
     name!: string;
+  }
+
+  // ─── Operation-Scoped ReadOnly Entity ───────────────────────────────
+  // Exercises @ReadOnly() / @ReadOnly("update") / @ReadOnly("upsert") across
+  // drivers. PK-based upsert (no @Unique), so it runs ungated on every driver.
+
+  @Entity({ name: "TckReadonlyScoped" })
+  class TckReadonlyScoped {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Field("string")
+    name!: string;
+
+    // Immutable after insert: excluded from update AND preserved on upsert conflict.
+    @ReadOnly()
+    @Field("string")
+    immutable!: string;
+
+    // Excluded from update() only; still writable by upsert().
+    @ReadOnly("update")
+    @Field("string")
+    updateReadonly!: string;
+
+    // Preserved on upsert conflict only; still writable via update().
+    @ReadOnly("upsert")
+    @Field("string")
+    upsertReadonly!: string;
   }
 
   // ─── Foreign Key Constraint Entities ────────────────────────────────
@@ -1322,6 +1361,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckUnversioned,
     TckUniqueConstrained,
     TckUniqueComposite,
+    TckReadonlyScoped,
     TckFkParent,
     TckFkCascadeChild,
     TckFkRestrictChild,

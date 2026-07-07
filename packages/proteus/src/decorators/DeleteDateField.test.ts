@@ -20,7 +20,7 @@ describe("DeleteDateField", () => {
     expect(field).toBeDefined();
     expect(field!.type).toBe("timestamp");
     expect(field!.nullable).toBe(true);
-    expect(field!.readonly).toBe(false);
+    expect(field!.readonly).toEqual([]);
   });
 
   test("should match snapshot", () => {
