@@ -29,7 +29,7 @@ describe("httpResponseLoggerMiddleware", () => {
   test("should log response information", async () => {
     await expect(httpResponseLoggerMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
-    expect(ctx.logger.debug).toHaveBeenCalledWith("Service response", {
+    expect(ctx.logger.info).toHaveBeenCalledWith("Service response", {
       metadata: "metadata",
       request: {
         body: "request.body",
