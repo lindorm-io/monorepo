@@ -3,6 +3,7 @@ import { createMemoryCacheDriver } from "./memory-cache-driver.js";
 import { afterEach, describe, expect, test, vi } from "vitest";
 
 const response: ConduitResponse = {
+  cached: null,
   data: { ok: true },
   status: 200,
   statusText: "OK",

@@ -14,6 +14,7 @@ export const useAxios = async (
   }
 
   return {
+    cached: null,
     data: response.data,
     headers: response.headers as any,
     status: response.status,

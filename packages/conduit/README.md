@@ -128,6 +128,10 @@ All methods return a `ConduitResponse<D>`:
 
 ```typescript
 type ConduitResponse<D> = {
+  // "client" = served by conduit's cache middleware; "upstream" = served by a
+  // cache further out (pylon useCache, a CDN/proxy, or a positive Age header);
+  // null = not cached. Inferred from response headers.
+  cached: "upstream" | "client" | null;
   data: D;
   status: number;
   statusText: string;

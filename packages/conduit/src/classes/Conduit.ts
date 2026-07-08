@@ -11,6 +11,7 @@ import { responseLogger } from "../internal/middleware/response-logger.js";
 import { defaultRetryCallback } from "../internal/utils/default-retry-callback.js";
 import { defaultValidateStatus } from "../internal/utils/default-validate-status.js";
 import { getOrigin } from "../internal/utils/get-origin.js";
+import { resolveCached } from "../internal/utils/resolve-cached.js";
 import { ClientError } from "@lindorm/errors";
 import type { ILogger } from "@lindorm/logger";
 import { composeMiddleware } from "@lindorm/middleware";
@@ -303,6 +304,8 @@ export class Conduit implements IConduit {
       ...(this.logger ? [requestLogger] : []),
       axiosRequestHandler,
     ]);
+
+    result.res.cached = resolveCached(result.res.headers ?? {});
 
     return result.res;
   }

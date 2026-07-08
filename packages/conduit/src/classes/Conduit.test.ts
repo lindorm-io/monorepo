@@ -4,6 +4,7 @@ import { join } from "path";
 import {
   conduitBasicAuthMiddleware,
   conduitChangeRequestQueryMiddleware,
+  createConduitCacheMiddleware,
 } from "../middleware/index.js";
 import type { ConduitMiddleware } from "../types/index.js";
 import { Conduit } from "./Conduit.js";
@@ -293,6 +294,52 @@ describe("Conduit", () => {
 
       expect(capturedContexts).toHaveLength(2);
       expect(capturedContexts[0].res).not.toBe(capturedContexts[1].res);
+    });
+  });
+
+  describe("cached", () => {
+    let conduit: Conduit;
+    let scope: nock.Scope;
+
+    beforeEach(() => {
+      conduit = new Conduit({ baseURL: "http://test.lindorm.io" });
+    });
+
+    afterEach(() => {
+      vi.resetAllMocks();
+      scope.done();
+    });
+
+    test("should mark a plain response as not cached", async () => {
+      scope = nock("http://test.lindorm.io").get("/test/path").times(1).reply(200, {});
+
+      await expect(conduit.get("/test/path")).resolves.toEqual(
+        expect.objectContaining({ cached: null }),
+      );
+    });
+
+    test("should mark an upstream cache hit from response headers", async () => {
+      scope = nock("http://test.lindorm.io")
+        .get("/test/path")
+        .times(1)
+        .reply(200, {}, { "x-pylon-cache": "HIT" });
+
+      await expect(conduit.get("/test/path")).resolves.toEqual(
+        expect.objectContaining({ cached: "upstream" }),
+      );
+    });
+
+    test("should mark a client cache hit from the conduit cache middleware", async () => {
+      scope = nock("http://test.lindorm.io").get("/test/path").times(1).reply(200, {});
+
+      const cache = createConduitCacheMiddleware();
+
+      const first = await conduit.get("/test/path", { middleware: [cache] });
+      expect(first.cached).toBeNull();
+
+      // Second request is served from the client cache — nock is only hit once.
+      const second = await conduit.get("/test/path", { middleware: [cache] });
+      expect(second.cached).toBe("client");
     });
   });
 });

@@ -2,6 +2,7 @@ import type { RetryConfig } from "@lindorm/retry";
 import type { ConduitResponse } from "../../types/index.js";
 
 export const CONDUIT_RESPONSE: ConduitResponse = {
+  cached: null,
   data: {},
   headers: {},
   status: -1,

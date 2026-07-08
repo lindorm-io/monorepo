@@ -4,6 +4,7 @@ import { createConduitCacheMiddleware } from "./conduit-cache-middleware.js";
 import { describe, expect, test, vi } from "vitest";
 
 const ok: ConduitResponse = {
+  cached: null,
   data: { ok: true },
   status: 200,
   statusText: "OK",
