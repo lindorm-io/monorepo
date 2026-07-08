@@ -145,7 +145,7 @@ export class KafkaDriver implements IIrisDriver {
       }
 
       this.setConnectionState("connected");
-      this.logger.debug("Connected");
+      this.logger.info("Connected");
     } catch (error) {
       this.setConnectionState("disconnected");
       throw error;
@@ -190,7 +190,7 @@ export class KafkaDriver implements IIrisDriver {
     this.state.kafka = null;
     this._replyQueueActive = false;
     this.setConnectionState("disconnected");
-    this.logger.debug("Disconnected");
+    this.logger.info("Disconnected");
   }
 
   async drain(_timeout?: number): Promise<void> {
@@ -315,7 +315,7 @@ export class KafkaDriver implements IIrisDriver {
           waitForLeaders: true,
         });
 
-        this.logger.debug("Topics created", {
+        this.logger.info("Topics created", {
           count: topicsToCreate.length,
           topics: topicsToCreate.map((t) => t.topic),
         });
@@ -503,7 +503,7 @@ export class KafkaDriver implements IIrisDriver {
     const unsubConnect = producer.on(producer.events.CONNECT, () => {
       if (this._deliberateDisconnect) return;
       if (this._connectionState === "reconnecting") {
-        this.logger.debug("Kafka producer reconnected");
+        this.logger.info("Kafka producer reconnected");
         this.setConnectionState("connected");
       }
     });

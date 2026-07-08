@@ -173,7 +173,7 @@ export class RedisDriver implements IIrisDriver {
 
         // Only handle re-ready (reconnection). Initial ready is handled below.
         if (this._connectionState === "reconnecting") {
-          this.logger.debug("Redis reconnected");
+          this.logger.info("Redis reconnected");
           this.setConnectionState("connected");
 
           // Consumer loops use dedicated connections with retryStrategy: null,
@@ -208,7 +208,7 @@ export class RedisDriver implements IIrisDriver {
       }
 
       this.setConnectionState("connected");
-      this.logger.debug("Connected");
+      this.logger.info("Connected");
     } catch (error) {
       this.setConnectionState("disconnected");
       throw error;
@@ -235,7 +235,7 @@ export class RedisDriver implements IIrisDriver {
 
     this._replyQueueActive = false;
     this.setConnectionState("disconnected");
-    this.logger.debug("Disconnected");
+    this.logger.info("Disconnected");
   }
 
   async drain(_timeout?: number): Promise<void> {

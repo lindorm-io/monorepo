@@ -73,7 +73,7 @@ export class MemoryDriver implements IIrisDriver {
     }
 
     this.setConnectionState("connected");
-    this.logger.debug("Connected");
+    this.logger.info("Connected");
   }
 
   async disconnect(): Promise<void> {
@@ -101,7 +101,7 @@ export class MemoryDriver implements IIrisDriver {
     this.store.roundRobinIndexes.clear();
     this._replyQueueActive = false;
     this.setConnectionState("disconnected");
-    this.logger.debug("Disconnected");
+    this.logger.info("Disconnected");
   }
 
   async drain(_timeout?: number): Promise<void> {

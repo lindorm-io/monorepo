@@ -138,7 +138,7 @@ export class NatsDriver implements IIrisDriver {
       }
 
       this.setConnectionState("connected");
-      this.logger.debug("Connected");
+      this.logger.info("Connected");
     } catch (error) {
       this.setConnectionState("disconnected");
       throw error;
@@ -173,7 +173,7 @@ export class NatsDriver implements IIrisDriver {
 
     this._replyQueueActive = false;
     this.setConnectionState("disconnected");
-    this.logger.debug("Disconnected");
+    this.logger.info("Disconnected");
   }
 
   async drain(_timeout?: number): Promise<void> {
@@ -497,7 +497,7 @@ export class NatsDriver implements IIrisDriver {
 
             case "reconnect":
               if (!this._deliberateDisconnect) {
-                this.logger.debug("NATS reconnected");
+                this.logger.info("NATS reconnected");
                 this.setConnectionState("connected");
 
                 if (!this._reconnecting) {

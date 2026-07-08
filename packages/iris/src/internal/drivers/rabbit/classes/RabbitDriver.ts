@@ -116,7 +116,7 @@ export class RabbitDriver implements IIrisDriver {
       this._reconnectAttempt = 0;
       this.state.reconnecting = false;
       this.setConnectionState("connected");
-      this.logger.debug("Connected");
+      this.logger.info("Connected");
     } catch (error) {
       this.setConnectionState("disconnected");
       throw error;
@@ -165,7 +165,7 @@ export class RabbitDriver implements IIrisDriver {
     this._publishChannelOpen = false;
     this._consumeChannelOpen = false;
     this.setConnectionState("disconnected");
-    this.logger.debug("Disconnected");
+    this.logger.info("Disconnected");
   }
 
   async drain(_timeout?: number): Promise<void> {
@@ -253,7 +253,7 @@ export class RabbitDriver implements IIrisDriver {
     await channel.assertQueue(this.state.dlqQueue, { durable: true });
     await channel.bindQueue(this.state.dlqQueue, this.state.dlxExchange, "#");
 
-    this.logger.debug("Setup complete", {
+    this.logger.info("Setup complete", {
       exchange: this.state.exchange,
       dlxExchange: this.state.dlxExchange,
       dlqQueue: this.state.dlqQueue,
