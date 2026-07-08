@@ -119,6 +119,20 @@ npx kryptos generate
 
 Answer the prompts (type, use, algorithm, encryption, purpose) and the CLI prints a `kryptos:...` blob ready to paste into a `.env` file. Re-import it at runtime with `KryptosKit.env.import(process.env.MY_KEY!)`.
 
+For an asymmetric key it then asks whether to stamp an **X.509 certificate** — answer yes and pick a mode (`self-signed` / `root-ca` / `ca-signed`) plus subject, organization, SANs, and (for `root-ca`) a path-length constraint; a `ca-signed` cert prompts for the issuing CA's `kryptos:…` env string. The certificate is embedded in the exported blob (see [X.509 certificates](#x509-certificates)). Symmetric `oct` keys skip this step.
+
+**Every prompt has a matching flag**, so `generate` is fully scriptable — pass `--type` to skip interaction entirely (anything omitted takes its default, nothing is prompted); pass only some flags to pre-fill those answers and be prompted for the rest. Run `kryptos generate --help` for the full list.
+
+```bash
+# A Lindorm root CA, no prompts:
+kryptos generate --type EC --use sig --algorithm ES384 \
+  --certificate root-ca --subject "Lindorm Root CA" --organization Lindorm --path-length 1
+
+# A leaf cert signed by that CA (paste its kryptos:… env string):
+kryptos generate --type EC --use sig --algorithm ES256 \
+  --certificate ca-signed --ca "$LINDORM_ROOT_CA" --subject tyr.lindorm.io
+```
+
 ## X.509 certificates
 
 Any asymmetric key (`EC`, `OKP`, `RSA`, `AKP`) can be stamped with an X.509 certificate at generation time. Symmetric `oct` keys cannot — attempting it throws `KryptosError("symmetric keys cannot have certificates")`. Three modes are supported.
