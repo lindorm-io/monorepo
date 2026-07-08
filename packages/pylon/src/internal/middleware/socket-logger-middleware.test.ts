@@ -16,12 +16,12 @@ describe("socketLoggerMiddleware", () => {
   test("should log event received and resolved", async () => {
     await expect(socketLoggerMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
-    expect(ctx.logger.info).toHaveBeenCalledWith("Socket event received", {
+    expect(ctx.logger.debug).toHaveBeenCalledWith("Socket event received", {
       event: "event",
       args: "args",
     });
 
-    expect(ctx.logger.info).toHaveBeenCalledWith("Socket event resolved", {
+    expect(ctx.logger.debug).toHaveBeenCalledWith("Socket event resolved", {
       event: "event",
       args: "args",
       time: expect.any(Number),

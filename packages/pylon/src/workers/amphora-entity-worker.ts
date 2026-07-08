@@ -37,6 +37,6 @@ export const createAmphoraEntityWorker = (options: Options): LindormWorker =>
 
       options.amphora.add(keys);
 
-      ctx.logger.info("Amphora entity sync complete", { keys: keys.length });
+      ctx.logger.verbose("Amphora entity sync complete", { keys: keys.length });
     },
   });

@@ -18,7 +18,7 @@ const workerTemplate = (): string => {
     `import type { LindormWorkerCallback } from "@lindorm/worker";`,
     ``,
     `export const CALLBACK: LindormWorkerCallback = async (ctx) => {`,
-    `  ctx.logger.info("Worker executed");`,
+    `  ctx.logger.verbose("Worker executed");`,
     `};`,
     ``,
     `export const INTERVAL = "5m";`,

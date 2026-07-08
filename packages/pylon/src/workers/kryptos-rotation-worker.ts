@@ -160,7 +160,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
         options.amphora.add(minted);
       }
 
-      ctx.logger.info("Kryptos rotation complete", {
+      ctx.logger.verbose("Kryptos rotation complete", {
         checked: keys.length,
         existing: existing.length,
         generated,

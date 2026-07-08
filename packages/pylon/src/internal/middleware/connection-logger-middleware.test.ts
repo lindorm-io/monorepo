@@ -3,18 +3,18 @@ import { describe, expect, test, vi } from "vitest";
 
 describe("connectionLoggerMiddleware", () => {
   test("should log handshake received and resolved", async () => {
-    const info = vi.fn();
+    const debug = vi.fn();
     const ctx: any = {
       io: { socket: { id: "socket-123" } },
-      logger: { info },
+      logger: { debug },
     };
 
     await connectionLoggerMiddleware(ctx, vi.fn().mockResolvedValue(undefined));
 
-    expect(info).toHaveBeenCalledWith("Socket handshake received", {
+    expect(debug).toHaveBeenCalledWith("Socket handshake received", {
       socketId: "socket-123",
     });
-    expect(info).toHaveBeenCalledWith(
+    expect(debug).toHaveBeenCalledWith(
       "Socket handshake resolved",
       expect.objectContaining({ socketId: "socket-123", time: expect.any(Number) }),
     );

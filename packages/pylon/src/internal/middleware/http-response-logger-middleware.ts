@@ -5,7 +5,7 @@ export const httpResponseLoggerMiddleware: PylonHttpMiddleware = async (ctx, nex
   try {
     await next();
   } finally {
-    ctx.logger.info("Service response", {
+    ctx.logger.debug("Service response", {
       metadata: ctx.state.metadata,
       request: {
         body: ctx.request.body,

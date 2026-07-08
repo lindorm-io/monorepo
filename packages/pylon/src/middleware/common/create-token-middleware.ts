@@ -38,7 +38,7 @@ export const createTokenMiddleware =
 
           timer.debug("Token verified", { verified });
 
-          ctx.logger.info("Token verification successful", {
+          ctx.logger.debug("Token verification successful", {
             subject: verified.payload.subject,
             subjectHint: verified.payload.subjectHint,
             tokenType: verified.header.tokenType,

@@ -43,7 +43,9 @@ export const createExpiryCleanupWorker = (options: Options): LindormWorker =>
           failed: errors.length,
         });
       } else {
-        ctx.logger.info("Expiry cleanup complete", { targets: options.targets.length });
+        ctx.logger.verbose("Expiry cleanup complete", {
+          targets: options.targets.length,
+        });
       }
     },
   });

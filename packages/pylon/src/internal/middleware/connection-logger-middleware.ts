@@ -6,13 +6,13 @@ export const connectionLoggerMiddleware: PylonConnectionMiddleware = async (
 ) => {
   const start = Date.now();
 
-  ctx.logger?.info("Socket handshake received", {
+  ctx.logger?.debug("Socket handshake received", {
     socketId: ctx.io.socket.id,
   });
 
   await next();
 
-  ctx.logger?.info("Socket handshake resolved", {
+  ctx.logger?.debug("Socket handshake resolved", {
     socketId: ctx.io.socket.id,
     time: Date.now() - start,
   });

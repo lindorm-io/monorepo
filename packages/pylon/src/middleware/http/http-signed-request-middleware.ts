@@ -151,7 +151,7 @@ export const createHttpSignedRequestMiddleware = <
       verifyDigest(ctx, decodedDigest);
       verifySignature(ctx, kryptos, decodedSignature);
 
-      ctx.logger.info("Signed request verified");
+      ctx.logger.debug("Signed request verified");
     }
 
     await next();
