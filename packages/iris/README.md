@@ -1078,6 +1078,20 @@ npx iris generate message OrderPlaced --directory ./src/iris/messages
 
 `iris init` (alias `i`) writes a `source.ts` plus an empty `messages/` directory. `iris generate message` (alias `g m`) writes a single PascalCase-named message file. Both commands accept `--dry-run`.
 
+The generators behind the CLI are available on a dedicated `@lindorm/iris/scaffold` subpath, kept off the runtime surface so scaffold tooling never pulls the broker runtime into scope:
+
+```typescript
+import {
+  generateSource,
+  generateMessageSource,
+  writeSource,
+  writeMessage,
+} from "@lindorm/iris/scaffold";
+
+await writeSource({ directory: "./src/iris", driver: "rabbit" });
+await writeMessage({ directory: "./src/iris/messages", name: "OrderPlaced" });
+```
+
 ## Error Classes
 
 Every error extends `IrisError`, which extends `LindormError` from `@lindorm/errors`.
