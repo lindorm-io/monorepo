@@ -62,6 +62,14 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./mocks/jest": {
+      "types": "./dist/mocks/jest.d.ts",
+      "default": "./dist/mocks/jest.js"
+    },
+    "./mocks/vitest": {
+      "types": "./dist/mocks/vitest.d.ts",
+      "default": "./dist/mocks/vitest.js"
     }
   }
 }
