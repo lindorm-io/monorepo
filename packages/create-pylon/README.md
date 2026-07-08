@@ -67,7 +67,7 @@ Generated layout (some files only appear depending on the answers):
 - `src/routes/webhooks/` + `src/features/webhooks/` — CRUD routes and handlers for `WebhookSubscription` (only when webhooks are selected)
 - `src/workers/<worker>.ts` — one file per selected worker (`amphora-entity-sync`, `expiry-cleanup`, `kryptos-rotation`) plus an `alive.ts` example
 - `src/proteus/source.ts` (the primary db/kv store) — plus `src/proteus/kv/source.ts` when both a db and a kv store are picked — and a sample `SampleEntity`, written by `@lindorm/proteus/scaffold`'s code generator
-- `src/__fixtures__/test-ctx.ts` — a project-bound `createTestCtx` helper (only when a db or kv store is picked) wrapping `@lindorm/pylon/mocks/vitest`'s `createTestPylonCtx`; `ctx.db`/`ctx.kv` are backed by a real in-memory Proteus source so repository round-trips work in tests
+- `src/__fixtures__/test-ctx.ts` — a project-bound `createTestCtx` helper (only when a db or kv store is picked) wrapping `@lindorm/pylon/mocks/vitest`'s `createTestPylonCtx`; `ctx.db`/`ctx.kv` are stateful in-memory Proteus mocks (writes persist, reads reflect them) so repository round-trips work in tests
 - `src/iris/source.ts`, a sample `SampleMessage`, plus a sample publisher and subscriber — written by `@lindorm/iris`'s code generator
 - `docker-compose.yml` — only emitted when a selected driver is `postgres`, `mysql`, `mongo`, `redis`, `kafka`, `nats`, or `rabbit`
 - `config/{default,development,test,production}.yml` — base config files

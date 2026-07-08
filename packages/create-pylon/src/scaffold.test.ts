@@ -485,7 +485,7 @@ describe("scaffold", () => {
       ).toMatchSnapshot();
     });
 
-    test("resolves the entity dir by path and re-exports a ServerHttpContext factory", () => {
+    test("re-exports a thin ServerHttpContext factory over the mock ctx", () => {
       mkdirSync(projectDir, { recursive: true });
       writeTestCtxFile(baseAnswers({ projectDir, db: "postgres" }));
       const content = readFileSync(
@@ -495,14 +495,13 @@ describe("scaffold", () => {
       expect(content).toContain(`createTestPylonCtx`);
       expect(content).toContain(`type CreateTestPylonCtxOptions`);
       expect(content).toContain(`from "@lindorm/pylon/mocks/vitest";`);
-      // Entities are resolved as a directory PATH — the same way the generated
-      // ProteusSource registers them — not as a hand-maintained class list.
-      expect(content).toContain(
-        `const ENTITY_DIRS = [join(import.meta.dirname, "..", "proteus", "entities")];`,
-      );
       expect(content).toContain(
         `import type { ServerHttpContext } from "../types/context.js";`,
       );
+      expect(content).toContain(`createTestPylonCtx(options) as ServerHttpContext;`);
+      // No entity dir wiring — ctx.db / ctx.kv are stateful proteus mocks.
+      expect(content).not.toContain(`ENTITY_DIRS`);
+      expect(content).not.toContain(`join`);
       expect(content).not.toContain(`SampleEntity`);
     });
 

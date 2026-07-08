@@ -3342,22 +3342,13 @@ exports[`scaffold > writeTestCtxFile > snapshot: db + kv 1`] = `
   createTestPylonCtx,
   type CreateTestPylonCtxOptions,
 } from "@lindorm/pylon/mocks/vitest";
-import { join } from "path";
 import type { ServerHttpContext } from "../types/context.js";
 
-// The project's entity directory — resolved as a path the same way the
-// ProteusSource registers entities (see src/proteus/source.ts), so entities
-// added to the folder are picked up automatically, no list to maintain.
-const ENTITY_DIRS = [join(import.meta.dirname, "..", "proteus", "entities")];
-
-// Assembles a working ServerHttpContext for tests: mocked infrastructure,
-// but ctx.db / ctx.kv backed by a real in-memory Proteus source so
-// repository round-trips genuinely work.
-export const createTestCtx = (options?: CreateTestPylonCtxOptions) =>
-  createTestPylonCtx({
-    ...options,
-    entities: [...ENTITY_DIRS, ...(options?.entities ?? [])],
-  }) as Promise<ServerHttpContext>;
+// A ready-made ServerHttpContext for tests: infrastructure is mocked, and
+// ctx.db / ctx.kv are stateful in-memory Proteus mocks (writes persist, reads
+// reflect them) — seed or override per call via the options.
+export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpContext =>
+  createTestPylonCtx(options) as ServerHttpContext;
 "
 `;
 
@@ -3366,22 +3357,13 @@ exports[`scaffold > writeTestCtxFile > snapshot: db only 1`] = `
   createTestPylonCtx,
   type CreateTestPylonCtxOptions,
 } from "@lindorm/pylon/mocks/vitest";
-import { join } from "path";
 import type { ServerHttpContext } from "../types/context.js";
 
-// The project's entity directory — resolved as a path the same way the
-// ProteusSource registers entities (see src/proteus/source.ts), so entities
-// added to the folder are picked up automatically, no list to maintain.
-const ENTITY_DIRS = [join(import.meta.dirname, "..", "proteus", "entities")];
-
-// Assembles a working ServerHttpContext for tests: mocked infrastructure,
-// but ctx.db / ctx.kv backed by a real in-memory Proteus source so
-// repository round-trips genuinely work.
-export const createTestCtx = (options?: CreateTestPylonCtxOptions) =>
-  createTestPylonCtx({
-    ...options,
-    entities: [...ENTITY_DIRS, ...(options?.entities ?? [])],
-  }) as Promise<ServerHttpContext>;
+// A ready-made ServerHttpContext for tests: infrastructure is mocked, and
+// ctx.db / ctx.kv are stateful in-memory Proteus mocks (writes persist, reads
+// reflect them) — seed or override per call via the options.
+export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpContext =>
+  createTestPylonCtx(options) as ServerHttpContext;
 "
 `;
 
@@ -3390,22 +3372,13 @@ exports[`scaffold > writeTestCtxFile > snapshot: kv only 1`] = `
   createTestPylonCtx,
   type CreateTestPylonCtxOptions,
 } from "@lindorm/pylon/mocks/vitest";
-import { join } from "path";
 import type { ServerHttpContext } from "../types/context.js";
 
-// The project's entity directory — resolved as a path the same way the
-// ProteusSource registers entities (see src/proteus/source.ts), so entities
-// added to the folder are picked up automatically, no list to maintain.
-const ENTITY_DIRS = [join(import.meta.dirname, "..", "proteus", "entities")];
-
-// Assembles a working ServerHttpContext for tests: mocked infrastructure,
-// but ctx.db / ctx.kv backed by a real in-memory Proteus source so
-// repository round-trips genuinely work.
-export const createTestCtx = (options?: CreateTestPylonCtxOptions) =>
-  createTestPylonCtx({
-    ...options,
-    entities: [...ENTITY_DIRS, ...(options?.entities ?? [])],
-  }) as Promise<ServerHttpContext>;
+// A ready-made ServerHttpContext for tests: infrastructure is mocked, and
+// ctx.db / ctx.kv are stateful in-memory Proteus mocks (writes persist, reads
+// reflect them) — seed or override per call via the options.
+export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpContext =>
+  createTestPylonCtx(options) as ServerHttpContext;
 "
 `;
 
@@ -3414,22 +3387,13 @@ exports[`scaffold > writeTestCtxFile > snapshot: memory db 1`] = `
   createTestPylonCtx,
   type CreateTestPylonCtxOptions,
 } from "@lindorm/pylon/mocks/vitest";
-import { join } from "path";
 import type { ServerHttpContext } from "../types/context.js";
 
-// The project's entity directory — resolved as a path the same way the
-// ProteusSource registers entities (see src/proteus/source.ts), so entities
-// added to the folder are picked up automatically, no list to maintain.
-const ENTITY_DIRS = [join(import.meta.dirname, "..", "proteus", "entities")];
-
-// Assembles a working ServerHttpContext for tests: mocked infrastructure,
-// but ctx.db / ctx.kv backed by a real in-memory Proteus source so
-// repository round-trips genuinely work.
-export const createTestCtx = (options?: CreateTestPylonCtxOptions) =>
-  createTestPylonCtx({
-    ...options,
-    entities: [...ENTITY_DIRS, ...(options?.entities ?? [])],
-  }) as Promise<ServerHttpContext>;
+// A ready-made ServerHttpContext for tests: infrastructure is mocked, and
+// ctx.db / ctx.kv are stateful in-memory Proteus mocks (writes persist, reads
+// reflect them) — seed or override per call via the options.
+export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpContext =>
+  createTestPylonCtx(options) as ServerHttpContext;
 "
 `;
 
