@@ -39,7 +39,7 @@ export const createQueueMiddleware = <C extends PylonContext>(
       optional = false,
     ): Promise<void> => {
       try {
-        const iris = resolveIris(ctx, options.iris);
+        const iris = resolveIris(ctx, options.bus);
         const { Job } = await import("../../messages/Job.js");
         const wq = iris.workerQueue(Job);
         const job = wq.create({

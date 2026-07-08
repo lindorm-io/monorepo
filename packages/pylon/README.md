@@ -94,7 +94,7 @@ const app = new Pylon({
 
   db: proteusSource,
   kv: keyValueSource,
-  iris: irisSource,
+  bus: irisSource,
 
   setup: async () => {
     /* runs before the server listens */
@@ -190,7 +190,7 @@ ctx.logger;      // per-request scoped ILogger
 
 ctx.db?;         // IProteusSession — durable source, when configured
 ctx.kv?;         // IProteusSession — ephemeral source, when configured
-ctx.iris?;       // IIrisSession when configured
+ctx.bus?;        // IIrisSession when configured
 ctx.hermes?;     // IHermesSession when configured
 
 ctx.publishers?;    // populated by createPublisherMiddleware
@@ -793,7 +793,7 @@ router.use(
 );
 ```
 
-`useAuditLog` requires `audit: { enabled: true }` on the constructor and an Iris source (either `audit.iris` or `iris`). Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
+`useAuditLog` requires `audit: { enabled: true }` on the constructor and an Iris source (either `audit.bus` or `bus`). Each request publishes a `RequestAudit` message containing the endpoint, method, transport, status, duration, source IP, session id, user agent, request id, correlation id, actor, and the (optionally sanitised) body. Set `audit.entities` to a list of entity classes for entity-level change tracking — Pylon installs Proteus listeners on those entities and persists field-level diffs into `DataAuditLog`.
 
 ### Conduits (HTTP clients)
 
@@ -916,7 +916,7 @@ When `session.enabled` is true, Pylon registers the `Session` entity on the conf
 
 ## Webhooks
 
-Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ctx.webhook(event, data)` helper. Enable with `webhook: { enabled: true }` and provide either inline `db` / `iris` or rely on the top-level integrations.
+Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ctx.webhook(event, data)` helper. Enable with `webhook: { enabled: true }` and provide either inline `db` / `bus` or rely on the top-level integrations.
 
 ```typescript
 const app = new Pylon({
@@ -1001,7 +1001,7 @@ import {
 
 Two probes are always auto-mounted:
 
-- **`GET /health` — liveness.** Verifies I/O (`db`/`iris`) **once**, then latches success and returns `204` on every later call **without re-pinging**. The process proves it came up (I/O reachable once), but a later DB/broker blip never flips liveness — restarting the container can't fix the DB, it only thrashes. Until the first successful check it returns `503`.
+- **`GET /health` — liveness.** Verifies I/O (`db`/`bus`) **once**, then latches success and returns `204` on every later call **without re-pinging**. The process proves it came up (I/O reachable once), but a later DB/broker blip never flips liveness — restarting the container can't fix the DB, it only thrashes. Until the first successful check it returns `503`.
 - **`GET /ready` — readiness.** Pings live I/O on **every** call, reflecting current state — for load-balancer / readiness probes. Returns `204` when healthy (or when there's no I/O to check) and `503 Service Unavailable` with `code: "health_check_failed"` + `data.failures` when a source is down.
 
 Override or disable either via `callbacks` (`null` = a pure `204` probe, no check):

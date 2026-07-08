@@ -14,7 +14,7 @@ describe("createAttachIrisSourceMiddleware", () => {
     const source = createMockIrisSource();
     const ctx: any = { logger: createMockLogger() };
 
-    await createAttachIrisSourceMiddleware({ key: "iris", source: source as any })(
+    await createAttachIrisSourceMiddleware({ key: "bus", source: source as any })(
       ctx,
       next,
     );
@@ -56,12 +56,12 @@ describe("createAttachIrisSourceMiddleware", () => {
       signal: controller.signal,
     };
 
-    await createAttachIrisSourceMiddleware({ key: "iris", source: source as any })(
+    await createAttachIrisSourceMiddleware({ key: "bus", source: source as any })(
       ctx,
       next,
     );
 
-    ctx.iris;
+    ctx.bus;
 
     const call = source.session.mock.calls[0][0];
 
@@ -72,13 +72,13 @@ describe("createAttachIrisSourceMiddleware", () => {
     const source = createMockIrisSource();
     const ctx: any = { logger: createMockLogger() };
 
-    await createAttachIrisSourceMiddleware({ key: "iris", source: source as any })(
+    await createAttachIrisSourceMiddleware({ key: "bus", source: source as any })(
       ctx,
       next,
     );
 
-    const first = ctx.iris;
-    const second = ctx.iris;
+    const first = ctx.bus;
+    const second = ctx.bus;
 
     expect(source.session).toHaveBeenCalledTimes(1);
     expect(first).toBe(second);
@@ -99,12 +99,12 @@ describe("createAttachIrisSourceMiddleware", () => {
     };
 
     await createAttachIrisSourceMiddleware({
-      key: "iris",
+      key: "bus",
       source: source as any,
       actor,
     })(ctx, next);
 
-    ctx.iris;
+    ctx.bus;
 
     expect(actor).toHaveBeenCalledWith(ctx);
     expect(source.session).toHaveBeenCalledWith({
@@ -122,12 +122,12 @@ describe("createAttachIrisSourceMiddleware", () => {
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachIrisSourceMiddleware({
-      key: "iris",
+      key: "bus",
       source: source as any,
       actor: () => "unknown",
     })(ctx, next);
 
-    ctx.iris;
+    ctx.bus;
 
     expect(source.session).toHaveBeenCalledWith(
       expect.objectContaining({

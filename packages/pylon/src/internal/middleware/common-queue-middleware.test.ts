@@ -13,7 +13,7 @@ describe("createQueueMiddleware", () => {
 
     ctx = {
       logger: createMockLogger(),
-      iris: {
+      bus: {
         workerQueue: vi.fn().mockReturnValue({
           create: mockCreate,
           publish: mockPublish,
@@ -101,7 +101,7 @@ describe("createQueueMiddleware", () => {
 
     const middleware = createQueueMiddleware({
       enabled: true,
-      iris: overrideIris as any,
+      bus: overrideIris as any,
     });
 
     await middleware(ctx, vi.fn());

@@ -14,8 +14,8 @@ export const resolveIris = (
       meta: buildHookMeta(ctx, resolveActor(ctx)),
     });
   }
-  if (ctx.iris) {
-    return ctx.iris;
+  if (ctx.bus) {
+    return ctx.bus;
   }
   throw new ServerError("IrisSource is not configured", {
     code: "iris_source_not_configured",

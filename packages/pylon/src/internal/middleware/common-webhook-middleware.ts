@@ -29,7 +29,7 @@ export const createWebhookMiddleware = <C extends PylonContext>(
       optional = false,
     ): Promise<void> => {
       try {
-        const iris = resolveIris(ctx, options.iris);
+        const iris = resolveIris(ctx, options.bus);
         const { WebhookRequest } = await import("../../messages/WebhookRequest.js");
         const wq = iris.workerQueue(WebhookRequest);
         const msg = wq.create({

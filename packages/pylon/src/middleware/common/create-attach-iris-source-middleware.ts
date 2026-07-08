@@ -5,7 +5,7 @@ import { resolveActor, type ActorResolver } from "../../internal/utils/resolve-a
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 export type AttachIrisSourceOptions = {
-  /** ctx key where the session will be exposed (e.g. "iris", "analyticsIris"). */
+  /** ctx key where the session will be exposed (e.g. "bus", "analyticsIris"). */
   key: string;
   /** The IrisSource instance whose `session()` will be bound. */
   source: IIrisSource;

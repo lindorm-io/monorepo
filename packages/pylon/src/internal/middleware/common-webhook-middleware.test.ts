@@ -13,7 +13,7 @@ describe("createWebhookMiddleware", () => {
 
     ctx = {
       logger: createMockLogger(),
-      iris: {
+      bus: {
         workerQueue: vi.fn().mockReturnValue({
           create: mockCreate,
           publish: mockPublish,
@@ -122,7 +122,7 @@ describe("createWebhookMiddleware", () => {
 
     const middleware = createWebhookMiddleware({
       enabled: true,
-      iris: overrideIris as any,
+      bus: overrideIris as any,
     });
 
     await middleware(ctx, vi.fn());

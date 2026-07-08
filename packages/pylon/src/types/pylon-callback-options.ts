@@ -40,13 +40,13 @@ export type PylonKryptosOptions = {
 
 export type PylonQueueOptions = {
   enabled: boolean;
-  iris?: IIrisSource;
+  bus?: IIrisSource;
 };
 
 export type PylonWebhookOptions = {
   enabled: boolean;
   db?: IProteusSource;
-  iris?: IIrisSource;
+  bus?: IIrisSource;
   encryptionKey?: IKryptos;
   maxErrors?: number;
 };
@@ -69,7 +69,7 @@ export type PylonRateLimitOptions = {
 export type PylonAuditOptions = {
   enabled: boolean;
   db?: IProteusSource;
-  iris?: IIrisSource;
+  bus?: IIrisSource;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
   entities?: Array<Constructor<IEntity>>;

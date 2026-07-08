@@ -51,7 +51,7 @@ type CommonOptions = {
   domain?: string;
   environment?: Environment;
   hermes?: IHermes;
-  iris?: IIrisSource;
+  bus?: IIrisSource;
   /**
    * Ephemeral / in-memory storage source (redis in production, a proteus
    * memory-driver source in dev/test). Backs ephemeral features (rate limit,

@@ -24,26 +24,26 @@ describe("resolveIris", () => {
     });
   });
 
-  test("should return ctx.iris when no override and ctx.iris exists", () => {
+  test("should return ctx.bus when no override and ctx.bus exists", () => {
     const iris = { fake: "iris" };
-    const ctx: any = { logger: {}, iris };
+    const ctx: any = { logger: {}, bus: iris };
 
     const result = resolveIris(ctx);
 
     expect(result).toBe(iris);
   });
 
-  test("should throw ServerError when no override and no ctx.iris", () => {
+  test("should throw ServerError when no override and no ctx.bus", () => {
     const ctx: any = { logger: {} };
 
     expect(() => resolveIris(ctx)).toThrow(ServerError);
     expect(() => resolveIris(ctx)).toThrow("IrisSource is not configured");
   });
 
-  test("should prefer override over ctx.iris", () => {
+  test("should prefer override over ctx.bus", () => {
     const session = { fake: "session" };
     const override: any = { session: vi.fn().mockReturnValue(session) };
-    const ctx: any = { logger: {}, iris: { fake: "existing" } };
+    const ctx: any = { logger: {}, bus: { fake: "existing" } };
 
     const result = resolveIris(ctx, override);
 

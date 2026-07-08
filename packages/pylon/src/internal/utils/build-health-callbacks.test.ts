@@ -15,7 +15,7 @@ describe("buildReadinessCallback", () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
 
-    const callback = buildReadinessCallback({ db: proteus, iris })!;
+    const callback = buildReadinessCallback({ db: proteus, bus: iris })!;
 
     await callback({} as any);
     await callback({} as any);
@@ -40,11 +40,11 @@ describe("buildReadinessCallback", () => {
     const iris = createMockIrisSource();
     iris.ping.mockRejectedValue(new Error("broker down"));
 
-    const callback = buildReadinessCallback({ iris })!;
+    const callback = buildReadinessCallback({ bus: iris })!;
 
     await expect(callback({} as any)).rejects.toMatchObject({
       code: "health_check_failed",
-      data: { failures: ["iris"] },
+      data: { failures: ["bus"] },
     });
   });
 });
@@ -58,7 +58,7 @@ describe("buildLivenessCallback", () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
 
-    const callback = buildLivenessCallback({ db: proteus, iris })!;
+    const callback = buildLivenessCallback({ db: proteus, bus: iris })!;
 
     await callback({} as any);
     await callback({} as any);

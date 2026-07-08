@@ -115,9 +115,9 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         actor: this.options.actor,
         authConfig: this.authConfig,
         auditConfig:
-          (this.options.audit?.iris ?? this.options.iris)
+          (this.options.audit?.bus ?? this.options.bus)
             ? {
-                iris: this.options.audit?.iris ?? this.options.iris!,
+                iris: this.options.audit?.bus ?? this.options.bus!,
                 sanitise: this.options.audit?.sanitise,
                 skip: this.options.audit?.skip,
               }
@@ -127,7 +127,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         // whether to run, and throws only if enabled but no source is present.
         cacheKeyValue: this.options.cache?.kv ?? this.options.kv,
         hermes: this.options.hermes,
-        iris: this.options.iris,
+        bus: this.options.bus,
         kv: this.options.kv,
         db: this.options.db,
         rateLimitKeyValue: this.options.rateLimit?.kv ?? this.options.kv,
@@ -214,7 +214,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
     // `/health` is liveness: check I/O once, then latch success.
     return buildLivenessCallback<T>({
-      iris: this.options.iris,
+      bus: this.options.bus,
       db: this.options.db,
     });
   }
@@ -227,7 +227,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
 
     // `/ready` is readiness: check live I/O on every call.
     return buildReadinessCallback<T>({
-      iris: this.options.iris,
+      bus: this.options.bus,
       db: this.options.db,
     });
   }

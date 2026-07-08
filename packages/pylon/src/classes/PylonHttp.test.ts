@@ -58,7 +58,7 @@ describe("PylonHttp /health (liveness)", () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
 
-    const pylonHttp = await createPylonHttp({ db: proteus, iris });
+    const pylonHttp = await createPylonHttp({ db: proteus, bus: iris });
 
     await request(pylonHttp.callback).get("/health").expect(204);
     await request(pylonHttp.callback).get("/health").expect(204);
@@ -100,7 +100,7 @@ describe("PylonHttp /ready (readiness)", () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
 
-    const pylonHttp = await createPylonHttp({ db: proteus, iris });
+    const pylonHttp = await createPylonHttp({ db: proteus, bus: iris });
 
     await request(pylonHttp.callback).get("/ready").expect(204);
     await request(pylonHttp.callback).get("/ready").expect(204);
@@ -127,13 +127,13 @@ describe("PylonHttp /ready (readiness)", () => {
     const iris = createMockIrisSource();
     iris.ping.mockRejectedValue(new Error("broker down"));
 
-    const pylonHttp = await createPylonHttp({ iris });
+    const pylonHttp = await createPylonHttp({ bus: iris });
 
     const response = await request(pylonHttp.callback).get("/ready").expect(503);
 
     expect(response.body.error).toMatchObject({
       code: "health_check_failed",
-      data: { failures: ["iris"] },
+      data: { failures: ["bus"] },
     });
   });
 

@@ -43,7 +43,7 @@ type Options = {
   auditConfig?: AuditConfig;
   cacheKeyValue?: IProteusSource;
   hermes?: IHermes;
-  iris?: IIrisSource;
+  bus?: IIrisSource;
   kv?: IProteusSource;
   db?: IProteusSource;
   rateLimitKeyValue?: IProteusSource;
@@ -81,9 +81,9 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         );
       }
 
-      if (options.iris) {
-        lazyFactory(ctx, "iris", () =>
-          options.iris!.session(buildIrisSessionOptions(ctx, actor)),
+      if (options.bus) {
+        lazyFactory(ctx, "bus", () =>
+          options.bus!.session(buildIrisSessionOptions(ctx, actor)),
         );
       }
 
@@ -164,7 +164,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         title: "Dependency Resolution Failed",
         type: "urn:lindorm:pylon:error:dependency_resolution_failed",
         details:
-          "One of the per-request dependencies (actor, hermes, db, kv, iris, auth, socket, or rooms) could not be resolved",
+          "One of the per-request dependencies (actor, hermes, db, kv, bus, auth, socket, or rooms) could not be resolved",
         debug: { error },
       });
     }

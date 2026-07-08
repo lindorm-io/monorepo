@@ -35,8 +35,8 @@ export type CreateTestPylonCtxOptions = {
   db?: IProteusSession | null;
   /** Override ctx.kv: pass a session, or `null` to omit the mock session. */
   kv?: IProteusSession | null;
-  /** ctx.iris — omitted unless provided. */
-  iris?: IIrisSession | null;
+  /** ctx.bus — omitted unless provided. */
+  bus?: IIrisSession | null;
   /** ctx.hermes — omitted unless provided. */
   hermes?: IHermesSession | null;
 };
@@ -111,7 +111,7 @@ export const _createTestPylonCtx = (
   const kv = options.kv === undefined ? deps.kv : options.kv;
   if (kv != null) ctx.kv = kv;
 
-  if (options.iris) ctx.iris = options.iris;
+  if (options.bus) ctx.bus = options.bus;
   if (options.hermes) ctx.hermes = options.hermes;
 
   return ctx;

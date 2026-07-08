@@ -58,15 +58,15 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       createDependenciesMiddleware({
         actor: options.actor,
         auditConfig:
-          (options.audit?.iris ?? options.iris)
+          (options.audit?.bus ?? options.bus)
             ? {
-                iris: options.audit?.iris ?? options.iris!,
+                iris: options.audit?.bus ?? options.bus!,
                 sanitise: options.audit?.sanitise,
                 skip: options.audit?.skip,
               }
             : undefined,
         hermes: options.hermes,
-        iris: options.iris,
+        bus: options.bus,
         kv: options.kv,
         db: options.db,
         rateLimitKeyValue: options.rateLimit?.kv ?? options.kv,

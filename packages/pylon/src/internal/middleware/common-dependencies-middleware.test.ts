@@ -96,13 +96,13 @@ describe("createDependenciesMiddleware", () => {
   test("should lazily create iris session on first access", async () => {
     const iris = createMockIrisSource();
 
-    const middleware = createDependenciesMiddleware({ iris: iris as any });
+    const middleware = createDependenciesMiddleware({ bus: iris as any });
 
     await middleware(ctx, vi.fn());
 
     expect(iris.session).not.toHaveBeenCalled();
 
-    const session = ctx.iris;
+    const session = ctx.bus;
 
     expect(session).toBeDefined();
     expect(iris.session).toHaveBeenCalledTimes(1);
@@ -150,7 +150,7 @@ describe("createDependenciesMiddleware", () => {
 
     const middleware = createDependenciesMiddleware({
       db: proteus as any,
-      iris: iris as any,
+      bus: iris as any,
       actor,
     });
 
@@ -160,7 +160,7 @@ describe("createDependenciesMiddleware", () => {
 
     // Trigger both sessions
     ctxWithState.db;
-    ctxWithState.iris;
+    ctxWithState.bus;
 
     const expectedMeta = {
       correlationId: "corr-abc",
@@ -194,14 +194,14 @@ describe("createDependenciesMiddleware", () => {
 
     const middleware = createDependenciesMiddleware({
       db: proteus as any,
-      iris: iris as any,
+      bus: iris as any,
       actor,
     });
 
     await middleware(ctxWithState, vi.fn());
 
     ctxWithState.db;
-    ctxWithState.iris;
+    ctxWithState.bus;
 
     expect(actor).toHaveBeenCalledTimes(1);
     expect(ctxWithState.state.actor).toBe("alice@test.com");
@@ -213,7 +213,7 @@ describe("createDependenciesMiddleware", () => {
     await expect(middleware(ctx, vi.fn())).resolves.toBeUndefined();
 
     expect(ctx.db).toBeUndefined();
-    expect(ctx.iris).toBeUndefined();
+    expect(ctx.bus).toBeUndefined();
     expect(ctx.hermes).toBeUndefined();
   });
 

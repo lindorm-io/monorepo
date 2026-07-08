@@ -68,7 +68,7 @@ export type PylonCommonContext = {
   workerQueues?: Dict;
 
   hermes?: IHermesSession;
-  iris?: IIrisSession;
+  bus?: IIrisSession;
   kv?: IProteusSession;
   db?: IProteusSession;
 

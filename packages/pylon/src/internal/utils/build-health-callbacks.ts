@@ -4,11 +4,11 @@ import type { IProteusSource } from "@lindorm/proteus";
 import type { PylonHttpCallback, PylonHttpContext } from "../../types/index.js";
 
 type Sources = {
-  iris?: IIrisSource;
+  bus?: IIrisSource;
   db?: IProteusSource;
 };
 
-const pingSources = async ({ iris, db }: Sources): Promise<Array<string>> => {
+const pingSources = async ({ bus, db }: Sources): Promise<Array<string>> => {
   const failures: Array<string> = [];
 
   if (db) {
@@ -19,11 +19,11 @@ const pingSources = async ({ iris, db }: Sources): Promise<Array<string>> => {
     }
   }
 
-  if (iris) {
+  if (bus) {
     try {
-      if (!(await iris.ping())) failures.push("iris");
+      if (!(await bus.ping())) failures.push("bus");
     } catch {
-      failures.push("iris");
+      failures.push("bus");
     }
   }
 
@@ -52,7 +52,7 @@ const assertHealthy = (failures: Array<string>): void => {
 export const buildReadinessCallback = <C extends PylonHttpContext>(
   sources: Sources,
 ): PylonHttpCallback<C> | undefined => {
-  if (!sources.iris && !sources.db) return undefined;
+  if (!sources.bus && !sources.db) return undefined;
 
   return async () => {
     assertHealthy(await pingSources(sources));
@@ -71,7 +71,7 @@ export const buildReadinessCallback = <C extends PylonHttpContext>(
 export const buildLivenessCallback = <C extends PylonHttpContext>(
   sources: Sources,
 ): PylonHttpCallback<C> | undefined => {
-  if (!sources.iris && !sources.db) return undefined;
+  if (!sources.bus && !sources.db) return undefined;
 
   let healthy = false;
 

@@ -130,8 +130,8 @@ export class Pylon<
       await this.options.kv.setup();
     }
 
-    if (this.options.iris) {
-      await this.options.iris.setup();
+    if (this.options.bus) {
+      await this.options.bus.setup();
     }
 
     await this.subscribe();
@@ -189,8 +189,8 @@ export class Pylon<
       this.logger.verbose("Pylon teardown", { result });
     }
 
-    if (this.options.iris) {
-      await this.options.iris.disconnect();
+    if (this.options.bus) {
+      await this.options.bus.disconnect();
     }
 
     if (this.options.db) {
@@ -263,7 +263,7 @@ export class Pylon<
     }
 
     if (this.options.queue?.enabled) {
-      const source = this.options.queue.iris ?? this.options.iris;
+      const source = this.options.queue.bus ?? this.options.bus;
       if (source) {
         const { Job } = await import("../messages/Job.js");
         source.addMessages([Job]);
@@ -278,7 +278,7 @@ export class Pylon<
         proteusSource.addEntities([WebhookSubscription]);
       }
 
-      const irisSource = this.options.webhook.iris ?? this.options.iris;
+      const irisSource = this.options.webhook.bus ?? this.options.bus;
       if (irisSource) {
         const { WebhookRequest } = await import("../messages/WebhookRequest.js");
         const { WebhookDispatch } = await import("../messages/WebhookDispatch.js");
@@ -324,7 +324,7 @@ export class Pylon<
         }
       }
 
-      const irisSource = this.options.audit.iris ?? this.options.iris;
+      const irisSource = this.options.audit.bus ?? this.options.bus;
       if (irisSource) {
         const { RequestAudit } = await import("../messages/RequestAudit.js");
         irisSource.addMessages([RequestAudit]);
@@ -339,7 +339,7 @@ export class Pylon<
 
   private async subscribe(): Promise<void> {
     if (this.options.audit?.enabled) {
-      const iris = this.options.audit.iris ?? this.options.iris;
+      const iris = this.options.audit.bus ?? this.options.bus;
       const proteus = this.options.audit.db ?? this.options.db;
 
       if (iris && proteus) {
@@ -358,7 +358,7 @@ export class Pylon<
     }
 
     if (this.options.webhook?.enabled) {
-      const iris = this.options.webhook.iris ?? this.options.iris;
+      const iris = this.options.webhook.bus ?? this.options.bus;
       const proteus = this.options.webhook.db ?? this.options.db;
 
       if (iris && proteus) {
