@@ -1,0 +1,24 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`buildConfigFile > matches snapshot 1`] = `
+"import { defineConfig } from "@lindorm/scaffold";
+
+export default defineConfig({
+  proteus: {
+    sourceDir: "./src/proteus",
+    entitiesDir: "./src/proteus/entities",
+  },
+  iris: {
+    sourceDir: "./src/iris",
+    messagesDir: "./src/iris/messages",
+  },
+  pylon: {
+    routesDir: "./src/routes",
+    handlersDir: "./src/handlers",
+    listenersDir: "./src/listeners",
+    workersDir: "./src/workers",
+    featureDir: "./src/features",
+  },
+});
+"
+`;
