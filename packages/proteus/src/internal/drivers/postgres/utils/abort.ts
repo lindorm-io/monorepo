@@ -9,6 +9,21 @@ import { toAbortError as toSharedAbortError } from "../../../utils/abort.js";
 export const PG_QUERY_CANCELLED_SQLSTATE = "57014";
 
 /**
+ * Postgres sqlstate for `canceling statement due to lock timeout` — raised when
+ * a statement exceeds `lock_timeout` waiting to acquire a lock. Distinct from
+ * `57014` (which covers statement_timeout and user cancel).
+ */
+export const PG_LOCK_TIMEOUT_SQLSTATE = "55P03";
+
+/**
+ * Duck-type check for pg driver errors that indicate a `lock_timeout` abort.
+ */
+export const isPgLockTimeoutError = (err: unknown): boolean =>
+  typeof err === "object" &&
+  err !== null &&
+  (err as { code?: unknown }).code === PG_LOCK_TIMEOUT_SQLSTATE;
+
+/**
  * Build an AbortError carrying the signal's reason and (optionally) wrapping
  * the underlying pg error that caused the cancel. The resulting error has
  * `status === 499` via the `AbortError` base.

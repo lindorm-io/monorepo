@@ -46,6 +46,13 @@ export type SyncPlan = {
 
 export type SyncOptions = {
   dryRun?: boolean;
+  /**
+   * Milliseconds to wait to acquire a lock before a sync statement aborts.
+   * `0`/undefined waits indefinitely. Applied via `SET LOCAL lock_timeout` in
+   * the transactional phase and session-scoped (reset afterwards) for the
+   * autocommit phase.
+   */
+  lockTimeout?: number;
 };
 
 export type SyncResult = {

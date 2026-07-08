@@ -148,12 +148,19 @@ new ProteusSource({
   statementTimeout: 30000,
   slowQueryThresholdMs: 200,
   synchronize: true,
+  syncLockTimeout: 10000, // abort a sync that waits >10s for a table lock (default)
   entities: [User],
   logger,
 });
 ```
 
 Full ACID transactions with savepoints. Connection pooling via `pg.Pool`. DDL synchronization and migrations.
+
+`synchronize` runs its DDL in a transaction that takes an `ACCESS EXCLUSIVE` lock on each altered
+table. If another session holds a conflicting lock (commonly an idle-in-transaction connection), that
+wait is bounded by `syncLockTimeout` (default `10000` ms): the sync aborts with an actionable error
+naming the blocking session instead of hanging indefinitely. Set `0` to wait forever. Per-operation
+progress is logged at `info`, so a slow sync is distinguishable from a hang.
 
 ### MySQL
 

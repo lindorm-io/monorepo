@@ -169,6 +169,14 @@ export type PostgresConfig = {
   ssl?: boolean | ConnectionOptions;
   /** Maximum time in milliseconds a statement may run before being cancelled. */
   statementTimeout?: number;
+  /**
+   * Maximum time in milliseconds `synchronize` will wait to acquire a table
+   * lock before aborting a schema-sync statement. Guards against an indefinite
+   * hang when another session holds a conflicting lock on a table being altered
+   * (e.g. an idle-in-transaction peer). Defaults to 10000 (10s); set `0` to wait
+   * indefinitely (the pre-fix behaviour). Only applies to `synchronize`.
+   */
+  syncLockTimeout?: number;
   /** Time in milliseconds before an idle-in-transaction session is terminated. */
   idleTimeout?: number;
   /** Application name visible in `pg_stat_activity`. Useful for monitoring. */

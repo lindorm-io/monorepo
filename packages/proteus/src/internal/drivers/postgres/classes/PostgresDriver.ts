@@ -52,6 +52,13 @@ import {
 } from "./PostgresRepository.js";
 import { TransactionContext } from "./TransactionContext.js";
 
+/**
+ * Default cap on how long `synchronize` waits to acquire a table lock before
+ * aborting — turns an indefinite hang (another session holding a lock) into a
+ * fast, actionable error. Override via `syncLockTimeout`; `0` waits forever.
+ */
+const DEFAULT_SYNC_LOCK_TIMEOUT_MS = 10_000;
+
 export class PostgresDriver implements IProteusDriver {
   private readonly options: ProteusPostgresOptions;
   private readonly logger: ILogger;
@@ -779,7 +786,10 @@ export class PostgresDriver implements IProteusDriver {
       const result = await new SyncPlanExecutor(this.logger, this.namespace).execute(
         client,
         plan,
-        { dryRun },
+        {
+          dryRun,
+          lockTimeout: this.options.syncLockTimeout ?? DEFAULT_SYNC_LOCK_TIMEOUT_MS,
+        },
       );
 
       if (dryRun) {
