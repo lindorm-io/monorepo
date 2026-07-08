@@ -62,7 +62,7 @@
     "@lindorm/json-kit": "^0.7.0",
     "@lindorm/random": "^0.4.0",
     "@lindorm/retry": "^0.3.4",
-    "@lindorm/scaffold": "^0.1.0",
+    "@lindorm/scaffold": "^0.0.0",
     "@lindorm/scanner": "^0.5.7",
     "@lindorm/sha": "^0.6.2",
     "@lindorm/types": "^0.9.0",
