@@ -1,0 +1,12 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ScaffoldError > builds a urn:lindorm:scaffold error type from the code 1`] = `
+{
+  "code": "target_unresolved",
+  "details": "No target directory was resolved.",
+  "message": "Something failed",
+  "name": "ScaffoldError",
+  "title": "Target directory unresolved",
+  "type": "urn:lindorm:scaffold:error:target_unresolved",
+}
+`;
