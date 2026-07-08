@@ -485,7 +485,7 @@ describe("scaffold", () => {
       ).toMatchSnapshot();
     });
 
-    test("imports the project entities and the ServerHttpContext", () => {
+    test("resolves the entity dir by path and re-exports a ServerHttpContext factory", () => {
       mkdirSync(projectDir, { recursive: true });
       writeTestCtxFile(baseAnswers({ projectDir, db: "postgres" }));
       const content = readFileSync(
@@ -495,13 +495,15 @@ describe("scaffold", () => {
       expect(content).toContain(`createTestPylonCtx`);
       expect(content).toContain(`type CreateTestPylonCtxOptions`);
       expect(content).toContain(`from "@lindorm/pylon/mocks/vitest";`);
+      // Entities are resolved as a directory PATH — the same way the generated
+      // ProteusSource registers them — not as a hand-maintained class list.
       expect(content).toContain(
-        `import { SampleEntity } from "../proteus/entities/SampleEntity.js";`,
+        `const ENTITY_DIRS = [join(import.meta.dirname, "..", "proteus", "entities")];`,
       );
       expect(content).toContain(
         `import type { ServerHttpContext } from "../types/context.js";`,
       );
-      expect(content).toContain(`const ENTITIES = [SampleEntity];`);
+      expect(content).not.toContain(`SampleEntity`);
     });
 
     test("skipped when no proteus store is selected", () => {
