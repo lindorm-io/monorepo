@@ -1,49 +1,35 @@
-import type { Answers, ProteusDriver, WorkerKey } from "./types.js";
-import { PROTEUS_PRIMARY_PRIORITY } from "./types.js";
+import type { WorkerKey } from "./types.js";
 
-const pickPrimary = (drivers: ReadonlyArray<ProteusDriver>): ProteusDriver | null => {
-  for (const d of PROTEUS_PRIMARY_PRIORITY) {
-    if (drivers.includes(d)) return d;
-  }
-  return null;
-};
+const SOURCE_IMPORT = "../proteus/source.js";
 
-const sourceImportPath = (drivers: ReadonlyArray<ProteusDriver>): string => {
-  const nested = drivers.length > 1;
-  if (!nested) return `../proteus/source.js`;
-  const primary = pickPrimary(drivers);
-  if (!primary) return `../proteus/source.js`;
-  return `../proteus/${primary}/source.js`;
-};
-
-const amphoraEntitySync = (importPath: string): string =>
+const amphoraEntitySync = (): string =>
   [
     `import { createAmphoraEntityWorker } from "@lindorm/pylon";`,
     `import { amphora } from "../pylon/amphora.js";`,
     `import { logger } from "../logger/index.js";`,
-    `import { source as proteusSource } from "${importPath}";`,
+    `import { source as proteusSource } from "${SOURCE_IMPORT}";`,
     ``,
     `export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });`,
     ``,
   ].join("\n");
 
-const expiryCleanup = (importPath: string): string =>
+const expiryCleanup = (): string =>
   [
     `import { createExpiryCleanupWorker } from "@lindorm/pylon";`,
     `import { logger } from "../logger/index.js";`,
-    `import { source as proteusSource } from "${importPath}";`,
+    `import { source as proteusSource } from "${SOURCE_IMPORT}";`,
     ``,
     `// TODO: add your entities with expiry fields to this array`,
     `export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targets: [] });`,
     ``,
   ].join("\n");
 
-const kryptosRotation = (importPath: string): string =>
+const kryptosRotation = (): string =>
   [
     `import { createKryptosRotationWorker } from "@lindorm/pylon";`,
     `import { amphora } from "../pylon/amphora.js";`,
     `import { logger } from "../logger/index.js";`,
-    `import { source as proteusSource } from "${importPath}";`,
+    `import { source as proteusSource } from "${SOURCE_IMPORT}";`,
     ``,
     // Pass the amphora so freshly-minted keys land in the vault immediately
     // (JWKS is populated on first boot, not after the next entity-sync tick).
@@ -51,17 +37,13 @@ const kryptosRotation = (importPath: string): string =>
     ``,
   ].join("\n");
 
-export const buildWorkerFile = (
-  key: WorkerKey,
-  answers: Pick<Answers, "proteusDrivers">,
-): string => {
-  const importPath = sourceImportPath(answers.proteusDrivers);
+export const buildWorkerFile = (key: WorkerKey): string => {
   switch (key) {
     case "amphora-entity-sync":
-      return amphoraEntitySync(importPath);
+      return amphoraEntitySync();
     case "expiry-cleanup":
-      return expiryCleanup(importPath);
+      return expiryCleanup();
     case "kryptos-rotation":
-      return kryptosRotation(importPath);
+      return kryptosRotation();
   }
 };

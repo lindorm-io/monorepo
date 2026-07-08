@@ -11,6 +11,17 @@ exports[`scaffold > buildDependencyList > snapshot: memory-nats 1`] = `
 
 exports[`scaffold > buildDependencyList > snapshot: none-none 1`] = `[]`;
 
+exports[`scaffold > buildDependencyList > snapshot: postgres+redis-rabbit 1`] = `
+[
+  "@lindorm/proteus",
+  "@lindorm/aes",
+  "pg",
+  "ioredis",
+  "@lindorm/iris",
+  "amqplib",
+]
+`;
+
 exports[`scaffold > buildDependencyList > snapshot: postgres-rabbit 1`] = `
 [
   "@lindorm/proteus",
@@ -129,6 +140,29 @@ exports[`scaffold > buildEnvExampleLines > snapshot: postgres + kafka 1`] = `
   "# POSTGRES__SYNCHRONIZE=false",
   "# POSTGRES__MIGRATIONS=false",
   "# KAFKA__BROKERS=["localhost:9092"]",
+]
+`;
+
+exports[`scaffold > buildEnvExampleLines > snapshot: postgres + redis 1`] = `
+[
+  "# Reference for every env var the service's schema responds to.",
+  "# Copy to .env (gitignored) and fill in the secrets, or just keep using",
+  "# the defaults from config/default.yml + config/development.yml.",
+  "#",
+  "# Naming convention: each schema-path segment in CONSTANT_CASE, joined by",
+  "# __ (double underscore). e.g. database.maxRetries -> DATABASE__MAX_RETRIES.",
+  "",
+  "# --- Required secrets ---",
+  "PYLON__KEK=kryptos:GENERATE_VIA_create-pylon_OR_KryptosKit",
+  "",
+  "# --- Optional overrides (defaults already in config/*.yml) ---",
+  "# NODE_ENV=development",
+  "# SERVER__PORT=3000",
+  "# LOGGER__LEVEL=info",
+  "# POSTGRES__URL=postgresql://postgres:postgres@localhost:5432/app",
+  "# POSTGRES__SYNCHRONIZE=false",
+  "# POSTGRES__MIGRATIONS=false",
+  "# REDIS__URL=redis://localhost:6379",
 ]
 `;
 
@@ -871,9 +905,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/postgres/source.js";
-import { source as rateLimitSource } from "../proteus/redis/source.js";
-import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
+import { source as proteusSource } from "../proteus/source.js";
+import { source as kvSource } from "../proteus/kv/source.js";
 import { source as irisSource } from "../iris/source.js";
 
 export const pylon = new Pylon({
@@ -884,11 +917,9 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [...attachSourcesMiddlewares],
   socket: {
     enabled: true,
     listeners: join(import.meta.dirname, "..", "listeners"),
-    middleware: [...attachSourcesMiddlewares],
   },
   rooms: { presence: true },
   proteus: proteusSource,
@@ -904,7 +935,7 @@ export const pylon = new Pylon({
   },
   session: {
     enabled: true,
-    keyValue: rateLimitSource,
+    keyValue: kvSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -926,7 +957,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    keyValue: rateLimitSource,
+    keyValue: kvSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -935,7 +966,7 @@ export const pylon = new Pylon({
   workers: join(import.meta.dirname, "..", "workers"),
   setup: async () => {
     await proteusSource.connect();
-    await rateLimitSource.connect();
+    await kvSource.connect();
     await irisSource.connect();
   },
   teardown: async () => {
@@ -969,14 +1000,13 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit +
   "src/listeners/_middleware.ts",
   "src/listeners/ping.ts",
   "src/logger/index.ts",
-  "src/middleware/attach-sources.ts",
   "src/middleware/http-example.ts",
   "src/middleware/socket-example.ts",
-  "src/proteus/postgres/entities/.gitkeep",
-  "src/proteus/postgres/migrations/.gitkeep",
-  "src/proteus/postgres/source.ts",
-  "src/proteus/redis/entities/.gitkeep",
-  "src/proteus/redis/source.ts",
+  "src/proteus/entities/.gitkeep",
+  "src/proteus/kv/entities/.gitkeep",
+  "src/proteus/kv/source.ts",
+  "src/proteus/migrations/.gitkeep",
+  "src/proteus/source.ts",
   "src/pylon/amphora.ts",
   "src/pylon/config.ts",
   "src/pylon/pylon.ts",
@@ -1090,114 +1120,14 @@ export const pylon = new Pylon({
 "
 `;
 
-exports[`scaffold > scaffold orchestration > multi-driver ctx extension > emits ExtraSources type and attach-sources middleware when 2+ drivers > attach-sources.ts 1`] = `
-"import { createAttachProteusSourceMiddleware } from "@lindorm/pylon";
-import type { ServerHttpMiddleware } from "../types/context.js";
-import { source as redisSource } from "../proteus/redis/source.js";
-import { source as memorySource } from "../proteus/memory/source.js";
-
-/**
- * Pylon middleware instances that mount the non-primary Proteus sources on
- * the request context as \`ctx.<driver>\`. Each entry is produced by the
- * public \`createAttachProteusSourceMiddleware\` factory from \`@lindorm/pylon\`.
- *
- * Use via pylon options:
- *
- *     new Pylon({ httpMiddleware: [...attachSourcesMiddlewares] })
- */
-export const attachSourcesMiddlewares: Array<ServerHttpMiddleware> = [
-  createAttachProteusSourceMiddleware({ key: "redis", source: redisSource }),
-  createAttachProteusSourceMiddleware({ key: "memory", source: memorySource }),
-];
-"
-`;
-
-exports[`scaffold > scaffold orchestration > multi-driver ctx extension > emits ExtraSources type and attach-sources middleware when 2+ drivers > context.ts 1`] = `
-"import type {
-  PylonHandler,
-  PylonHttpContext,
-  PylonHttpMiddleware,
-  PylonSocketContext,
-  PylonSocketMiddleware,
-} from "@lindorm/pylon";
-import type { IProteusSession } from "@lindorm/proteus";
-import type { z, ZodType } from "zod";
-
-type ExtraSources = {
-  redis?: IProteusSession;
-  memory?: IProteusSession;
-};
-
-export type ServerHttpContext<Data = any> = PylonHttpContext<Data> &
-  ExtraSources;
-
-export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload> &
-  ExtraSources;
-
-export type ServerHttpMiddleware<
-  C extends ServerHttpContext = ServerHttpContext,
-> = PylonHttpMiddleware<C>;
-
-export type ServerSocketMiddleware<
-  C extends ServerSocketContext = ServerSocketContext,
-> = PylonSocketMiddleware<C>;
-
-// TODO: extend Data / State / Payload here to match your application's shape.
-export type ServerHandler<
-  Schema extends ZodType = ZodType<any>,
-  Body = any,
-> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
-
-export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
-  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
-"
-`;
-
-exports[`scaffold > scaffold orchestration > multi-driver ctx extension > emits ExtraSources type and attach-sources middleware when 2+ drivers > pylon.ts 1`] = `
-"import { Pylon } from "@lindorm/pylon";
-import { join } from "path";
-import { logger } from "../logger/index.js";
-import { amphora } from "./amphora.js";
-import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/postgres/source.js";
-import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
-
-export const pylon = new Pylon({
-  logger,
-  amphora,
-  name: config.npm.package.name,
-  version: config.npm.package.version,
-  environment: config.nodeEnv,
-  port: config.server.port,
-  routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [...attachSourcesMiddlewares],
-  socket: {
-    enabled: true,
-    listeners: join(import.meta.dirname, "..", "listeners"),
-    middleware: [...attachSourcesMiddlewares],
-  },
-  rooms: { presence: true },
-  proteus: proteusSource,
-  kryptos: { enabled: true },
-  setup: async () => {
-    await proteusSource.connect();
-  },
-  teardown: async () => {
-    // pylon handles proteus/iris disconnect automatically
-  },
-});
-"
-`;
-
 exports[`scaffold > scaffold orchestration > rateLimit-only combo (with postgres + redis) > pylon.ts 1`] = `
 "import { Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/postgres/source.js";
-import { source as rateLimitSource } from "../proteus/redis/source.js";
-import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
+import { source as proteusSource } from "../proteus/source.js";
+import { source as kvSource } from "../proteus/kv/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -1207,12 +1137,11 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [...attachSourcesMiddlewares],
   proteus: proteusSource,
   kryptos: { enabled: true },
   rateLimit: {
     enabled: true,
-    keyValue: rateLimitSource,
+    keyValue: kvSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -1220,7 +1149,7 @@ export const pylon = new Pylon({
   },
   setup: async () => {
     await proteusSource.connect();
-    await rateLimitSource.connect();
+    await kvSource.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -1298,6 +1227,39 @@ exports[`scaffold > scaffold orchestration > session-only combo 1`] = `
   "tsconfig.json",
   "vitest.config.mjs",
 ]
+`;
+
+exports[`scaffold > scaffold orchestration > two-role sources (db + kv) > context.ts is the plain base — no ExtraSources / IProteusSession > context.ts 1`] = `
+"import type {
+  PylonHandler,
+  PylonHttpContext,
+  PylonHttpMiddleware,
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "@lindorm/pylon";
+import type { z, ZodType } from "zod";
+
+export type ServerHttpContext<Data = any> = PylonHttpContext<Data>;
+
+export type ServerSocketContext<Payload = any> = PylonSocketContext<Payload>;
+
+export type ServerHttpMiddleware<
+  C extends ServerHttpContext = ServerHttpContext,
+> = PylonHttpMiddleware<C>;
+
+export type ServerSocketMiddleware<
+  C extends ServerSocketContext = ServerSocketContext,
+> = PylonSocketMiddleware<C>;
+
+// TODO: extend Data / State / Payload here to match your application's shape.
+export type ServerHandler<
+  Schema extends ZodType = ZodType<any>,
+  Body = any,
+> = PylonHandler<ServerHttpContext<z.infer<Schema>>, Body>;
+
+export type ServerSocketHandler<Schema extends ZodType = ZodType<any>> =
+  PylonSocketMiddleware<ServerSocketContext<z.infer<Schema>>>;
+"
 `;
 
 exports[`scaffold > writeConfigDevelopmentYaml > snapshot: mongo + rabbit 1`] = `
@@ -1408,7 +1370,7 @@ postgres:
 "
 `;
 
-exports[`scaffold > writeConfigDevelopmentYaml > snapshot: redis proteus + redis iris (deduped) 1`] = `
+exports[`scaffold > writeConfigDevelopmentYaml > snapshot: redis kv + redis iris (deduped) 1`] = `
 "# Overrides applied when NODE_ENV=development.
 # Merged on top of default.yml — only list the keys you want to change.
 #
@@ -1524,7 +1486,7 @@ export const config = configuration({
 "
 `;
 
-exports[`scaffold > writeConfigFile > snapshot: memory proteus only 1`] = `
+exports[`scaffold > writeConfigFile > snapshot: memory db only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
@@ -1769,6 +1731,50 @@ export const config = configuration({
 "
 `;
 
+exports[`scaffold > writeConfigFile > snapshot: postgres + redis 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
+export const config = configuration({
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+      readable: z.boolean().default(false),
+    })
+    .prefault({}),
+  postgres: z.object({
+    url: z.string(),
+    synchronize: z.boolean().default(false),
+    migrations: z.boolean().default(false),
+  }),
+  redis: z.object({
+    url: z.string(),
+  }),
+}, { scope: import.meta.url });
+"
+`;
+
 exports[`scaffold > writeConfigFile > snapshot: postgres only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
@@ -1849,7 +1855,46 @@ export const config = configuration({
 "
 `;
 
-exports[`scaffold > writeConfigFile > snapshot: redis only 1`] = `
+exports[`scaffold > writeConfigFile > snapshot: redis iris only 1`] = `
+"import { configuration } from "@lindorm/config";
+import { z } from "zod";
+
+// Each leaf is overridable from the environment. The env-var name is
+// the schema path with each segment converted to CONSTANT_CASE and
+// joined with "__":
+//
+//   pylon.kek           → PYLON__KEK
+//   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
+//   nodeEnv             → NODE_ENV (single segment, no separator)
+//
+// See config/default.yml for non-secret defaults you can edit.
+export const config = configuration({
+  nodeEnv: z
+    .enum(["production", "staging", "development", "test", "unknown"])
+    .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
+  pylon: z.object({ kek: z.string() }),
+  server: z.object({ port: z.number() }),
+  logger: z
+    .object({
+      level: z
+        .enum(["error", "warn", "info", "verbose", "debug", "silly"])
+        .default("info"),
+      readable: z.boolean().default(false),
+    })
+    .prefault({}),
+  redis: z.object({
+    url: z.string(),
+  }),
+}, { scope: import.meta.url });
+"
+`;
+
+exports[`scaffold > writeConfigFile > snapshot: redis kv only 1`] = `
 "import { configuration } from "@lindorm/config";
 import { z } from "zod";
 
@@ -2179,7 +2224,7 @@ postgres:
 "
 `;
 
-exports[`scaffold > writeConfigYaml > snapshot: redis proteus + redis iris (deduped) 1`] = `
+exports[`scaffold > writeConfigYaml > snapshot: redis kv + redis iris (deduped) 1`] = `
 "# Default configuration loaded by @lindorm/config.
 #
 # Resolution order (later wins):
@@ -2377,6 +2422,25 @@ exports[`scaffold > writeDockerCompose > snapshot: postgres + rabbit 1`] = `
 "
 `;
 
+exports[`scaffold > writeDockerCompose > snapshot: postgres + redis 1`] = `
+"services:
+  postgres:
+    image: postgres:18
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: app
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis:8
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+"
+`;
+
 exports[`scaffold > writeDockerCompose > snapshot: postgres 1`] = `
 "services:
   postgres:
@@ -2388,16 +2452,6 @@ exports[`scaffold > writeDockerCompose > snapshot: postgres 1`] = `
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
-"
-`;
-
-exports[`scaffold > writeDockerCompose > snapshot: proteus redis 1`] = `
-"services:
-  redis:
-    image: redis:8
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
 "
 `;
 
@@ -2413,6 +2467,16 @@ exports[`scaffold > writeDockerCompose > snapshot: rabbit 1`] = `
 `;
 
 exports[`scaffold > writeDockerCompose > snapshot: redis dedup 1`] = `
+"services:
+  redis:
+    image: redis:8
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+"
+`;
+
+exports[`scaffold > writeDockerCompose > snapshot: redis kv 1`] = `
 "services:
   redis:
     image: redis:8
@@ -2619,6 +2683,7 @@ import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
 import { source as proteusSource } from "../proteus/source.js";
+import { source as kvSource } from "../proteus/kv/source.js";
 import { source as irisSource } from "../iris/source.js";
 
 export const pylon = new Pylon({
@@ -2648,6 +2713,7 @@ export const pylon = new Pylon({
   workers: join(import.meta.dirname, "..", "workers"),
   setup: async () => {
     await proteusSource.connect();
+    await kvSource.connect();
     await irisSource.connect();
   },
   teardown: async () => {
@@ -2694,6 +2760,125 @@ export const pylon = new Pylon({
     },
   },
   setup: async () => {
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: db=memory + kv=memory 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger/index.js";
+import { amphora } from "./amphora.js";
+import { config } from "./config.js";
+import { source as proteusSource } from "../proteus/source.js";
+import { source as kvSource } from "../proteus/kv/source.js";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
+  environment: config.nodeEnv,
+  port: config.server.port,
+  routes: join(import.meta.dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  setup: async () => {
+    await proteusSource.connect();
+    await kvSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: db=none + kv=redis 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger/index.js";
+import { amphora } from "./amphora.js";
+import { config } from "./config.js";
+import { source as proteusSource } from "../proteus/source.js";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
+  environment: config.nodeEnv,
+  port: config.server.port,
+  routes: join(import.meta.dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  setup: async () => {
+    await proteusSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: db=postgres + kv=redis + auth + rateLimit + all workers 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger/index.js";
+import { amphora } from "./amphora.js";
+import { config } from "./config.js";
+import { source as proteusSource } from "../proteus/source.js";
+import { source as kvSource } from "../proteus/kv/source.js";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
+  environment: config.nodeEnv,
+  port: config.server.port,
+  routes: join(import.meta.dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  session: {
+    enabled: true,
+    keyValue: kvSource,
+    name: "sid",
+    encrypted: true,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false, // TODO: flip to true in production (behind HTTPS)
+    expiry: "7d",
+  },
+  auth: {
+    clientId: config.auth.clientId,
+    clientSecret: config.auth.clientSecret,
+    issuer: config.auth.issuer,
+    router: {
+      pathPrefix: "/auth",
+      authorize: {
+        scope: ["openid", "profile", "email"],
+        responseType: "code",
+      },
+    },
+  },
+  rateLimit: {
+    enabled: true,
+    keyValue: kvSource,
+    strategy: "fixed",
+    window: "1m",
+    max: 60,
+    // TODO: tune strategy/window/max for your traffic
+  },
+  workers: join(import.meta.dirname, "..", "workers"),
+  setup: async () => {
+    await proteusSource.connect();
+    await kvSource.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -2829,6 +3014,34 @@ export const pylon = new Pylon({
 "
 `;
 
+exports[`scaffold > writePylonFile > snapshot: http + redis kv only 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger/index.js";
+import { amphora } from "./amphora.js";
+import { config } from "./config.js";
+import { source as proteusSource } from "../proteus/source.js";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
+  environment: config.nodeEnv,
+  port: config.server.port,
+  routes: join(import.meta.dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  setup: async () => {
+    await proteusSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
 exports[`scaffold > writePylonFile > snapshot: http + socket, no drivers 1`] = `
 "import { Pylon } from "@lindorm/pylon";
 import { join } from "path";
@@ -2882,15 +3095,14 @@ export const pylon = new Pylon({
 "
 `;
 
-exports[`scaffold > writePylonFile > snapshot: rate limit with proteus 1`] = `
+exports[`scaffold > writePylonFile > snapshot: rate limit with postgres + redis 1`] = `
 "import { Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/postgres/source.js";
-import { source as rateLimitSource } from "../proteus/redis/source.js";
-import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
+import { source as proteusSource } from "../proteus/source.js";
+import { source as kvSource } from "../proteus/kv/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2900,12 +3112,11 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [...attachSourcesMiddlewares],
   proteus: proteusSource,
   kryptos: { enabled: true },
   rateLimit: {
     enabled: true,
-    keyValue: rateLimitSource,
+    keyValue: kvSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -2913,7 +3124,43 @@ export const pylon = new Pylon({
   },
   setup: async () => {
     await proteusSource.connect();
-    await rateLimitSource.connect();
+    await kvSource.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: rate limit with redis kv only 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger/index.js";
+import { amphora } from "./amphora.js";
+import { config } from "./config.js";
+import { source as proteusSource } from "../proteus/source.js";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
+  environment: config.nodeEnv,
+  port: config.server.port,
+  routes: join(import.meta.dirname, "..", "routes"),
+  proteus: proteusSource,
+  kryptos: { enabled: true },
+  rateLimit: {
+    enabled: true,
+    keyValue: proteusSource,
+    strategy: "fixed",
+    window: "1m",
+    max: 60,
+    // TODO: tune strategy/window/max for your traffic
+  },
+  setup: async () => {
+    await proteusSource.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -2928,9 +3175,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/postgres/source.js";
-import { source as rateLimitSource } from "../proteus/redis/source.js";
-import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";
+import { source as proteusSource } from "../proteus/source.js";
+import { source as kvSource } from "../proteus/kv/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2940,12 +3186,11 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  httpMiddleware: [...attachSourcesMiddlewares],
   proteus: proteusSource,
   kryptos: { enabled: true },
   session: {
     enabled: true,
-    keyValue: rateLimitSource,
+    keyValue: kvSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -2967,7 +3212,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    keyValue: rateLimitSource,
+    keyValue: kvSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -2975,7 +3220,7 @@ export const pylon = new Pylon({
   },
   setup: async () => {
     await proteusSource.connect();
-    await rateLimitSource.connect();
+    await kvSource.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -3017,7 +3262,7 @@ export const pylon = new Pylon({
 "
 `;
 
-exports[`scaffold > writePylonFile > snapshot: session with proteus (persistent) 1`] = `
+exports[`scaffold > writePylonFile > snapshot: session with db (persistent) 1`] = `
 "import { Pylon } from "@lindorm/pylon";
 import { join } from "path";
 import { logger } from "../logger/index.js";

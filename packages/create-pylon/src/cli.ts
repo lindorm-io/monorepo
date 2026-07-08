@@ -28,6 +28,7 @@ import {
   BASE_RUNTIME_DEPENDENCIES,
   IRIS_DRIVER_DEV_PACKAGES,
   PROTEUS_DRIVER_DEV_PACKAGES,
+  selectedDrivers,
 } from "./types.js";
 import type { Answers } from "./types.js";
 
@@ -67,7 +68,7 @@ const resolveDevDependencies = (answers: Answers): Array<string> => {
     ...BASE_DEV_DEPENDENCIES,
     ...buildDevDependencyList(answers),
   ];
-  for (const driver of answers.proteusDrivers) {
+  for (const driver of selectedDrivers(answers)) {
     deps.push(...PROTEUS_DRIVER_DEV_PACKAGES[driver]);
   }
   deps.push(...IRIS_DRIVER_DEV_PACKAGES[answers.irisDriver]);
@@ -93,12 +94,11 @@ export const run = async (positionalName?: string): Promise<void> => {
   await installDependencies(answers.projectDir, resolveRuntimeDependencies(answers));
   await installDevDependencies(answers.projectDir, resolveDevDependencies(answers));
 
-  if (answers.proteusDrivers.length > 0) {
+  const hasProteus = answers.db !== "none" || answers.kv !== "none";
+  if (hasProteus) {
     process.stdout.write(`\nGenerating proteus scaffolding …\n`);
     await runProteusInit(answers.projectDir, answers);
-    const firstDbDriver =
-      answers.proteusDrivers.length > 1 ? answers.proteusDrivers[0] : undefined;
-    await runProteusGenerateSampleEntity(answers.projectDir, firstDbDriver);
+    await runProteusGenerateSampleEntity(answers.projectDir);
   }
 
   if (answers.irisDriver !== "none") {

@@ -28,8 +28,10 @@ export {
 } from "./drivers.js";
 export type {
   Answers,
+  DbDriver,
   Features,
   IrisDriver,
+  KvDriver,
   ProteusDriver,
   WorkerKey,
   EnvEntry,

@@ -1,38 +1,4 @@
-import type { Answers, ProteusDriver } from "./types.js";
-import { PROTEUS_PRIMARY_PRIORITY } from "./types.js";
-
-const RATE_LIMIT_PRIORITY: ReadonlyArray<ProteusDriver> = ["redis", "memory"];
-const SESSION_PRIORITY: ReadonlyArray<ProteusDriver> = ["redis", "memory"];
-
-const pickPrimary = (drivers: ReadonlyArray<ProteusDriver>): ProteusDriver | null => {
-  for (const d of PROTEUS_PRIMARY_PRIORITY) {
-    if (drivers.includes(d)) return d;
-  }
-  return null;
-};
-
-const pickRateLimitDriver = (
-  drivers: ReadonlyArray<ProteusDriver>,
-): ProteusDriver | null => {
-  for (const d of RATE_LIMIT_PRIORITY) {
-    if (drivers.includes(d)) return d;
-  }
-  return null;
-};
-
-// Session source preference: a fast key-value store (redis > memory) first,
-// then fall back to the primary if the user didn't pick one.
-const pickSessionDriver = (
-  drivers: ReadonlyArray<ProteusDriver>,
-): ProteusDriver | null => {
-  for (const d of SESSION_PRIORITY) {
-    if (drivers.includes(d)) return d;
-  }
-  return pickPrimary(drivers);
-};
-
-const sourceImportPath = (driver: ProteusDriver, nested: boolean): string =>
-  nested ? `../proteus/${driver}/source.js` : `../proteus/source.js`;
+import type { Answers } from "./types.js";
 
 const buildImports = (answers: Answers): Array<string> => {
   const lines: Array<string> = [`import { Pylon } from "@lindorm/pylon";`];
@@ -47,37 +13,15 @@ const buildImports = (answers: Answers): Array<string> => {
     `import { config } from "./config.js";`,
   );
 
-  const drivers = answers.proteusDrivers;
-  const nested = drivers.length > 1;
-  const primary = pickPrimary(drivers);
-  const rateLimitDriver = answers.features.rateLimit
-    ? pickRateLimitDriver(drivers)
-    : null;
+  const primaryExists = answers.db !== "none" || answers.kv !== "none";
+  const kvIsSecondary = answers.db !== "none" && answers.kv !== "none";
 
-  if (primary) {
-    lines.push(
-      `import { source as proteusSource } from "${sourceImportPath(primary, nested)}";`,
-    );
+  if (primaryExists) {
+    lines.push(`import { source as proteusSource } from "../proteus/source.js";`);
   }
 
-  if (rateLimitDriver && rateLimitDriver !== primary) {
-    lines.push(
-      `import { source as rateLimitSource } from "${sourceImportPath(rateLimitDriver, nested)}";`,
-    );
-  }
-
-  const sessionDriver = answers.features.session ? pickSessionDriver(drivers) : null;
-
-  if (sessionDriver && sessionDriver !== primary && sessionDriver !== rateLimitDriver) {
-    lines.push(
-      `import { source as sessionSource } from "${sourceImportPath(sessionDriver, nested)}";`,
-    );
-  }
-
-  if (nested && primary) {
-    lines.push(
-      `import { attachSourcesMiddlewares } from "../middleware/attach-sources.js";`,
-    );
+  if (kvIsSecondary) {
+    lines.push(`import { source as kvSource } from "../proteus/kv/source.js";`);
   }
 
   if (answers.irisDriver !== "none") {
@@ -102,47 +46,32 @@ const buildOptions = (answers: Answers): string => {
     `  environment: config.nodeEnv,`,
     `  port: config.server.port,`,
   ];
-  const drivers = answers.proteusDrivers;
-  const nested = drivers.length > 1;
-  const primary = pickPrimary(drivers);
-  const rateLimitDriver = answers.features.rateLimit
-    ? pickRateLimitDriver(drivers)
-    : null;
-  const rateLimitSourceRef =
-    rateLimitDriver && rateLimitDriver !== primary ? "rateLimitSource" : "proteusSource";
 
-  const sessionDriver = answers.features.session ? pickSessionDriver(drivers) : null;
-  // Prefer reusing the rateLimit import alias when both features settle on
-  // the same driver (typical when Redis is in the selection) — avoids
-  // two imports of the same module under different aliases.
-  const sessionSourceRef = !sessionDriver
-    ? "proteusSource"
-    : sessionDriver === primary
-      ? "proteusSource"
-      : sessionDriver === rateLimitDriver
-        ? "rateLimitSource"
-        : "sessionSource";
+  const primaryExists = answers.db !== "none" || answers.kv !== "none";
+  const kvIsSecondary = answers.db !== "none" && answers.kv !== "none";
+
+  // When a kv store is picked, the kv source is either the distinct secondary
+  // (`kvSource`) or, when kv is the sole primary, the flat `proteusSource`.
+  const kvRef = kvIsSecondary ? "kvSource" : "proteusSource";
+
+  // session falls back to the db primary as its keyValue store when no kv
+  // store was picked (preserves old behaviour).
+  const sessionRef =
+    answers.kv !== "none" ? kvRef : answers.db !== "none" ? "proteusSource" : null;
 
   if (answers.features.http) {
     lines.push(`  routes: join(import.meta.dirname, "..", "routes"),`);
-  }
-
-  if (nested && primary) {
-    lines.push(`  httpMiddleware: [...attachSourcesMiddlewares],`);
   }
 
   if (answers.features.socket) {
     lines.push(`  socket: {`);
     lines.push(`    enabled: true,`);
     lines.push(`    listeners: join(import.meta.dirname, "..", "listeners"),`);
-    if (nested && primary) {
-      lines.push(`    middleware: [...attachSourcesMiddlewares],`);
-    }
     lines.push(`  },`);
     lines.push(`  rooms: { presence: true },`);
   }
 
-  if (primary) {
+  if (primaryExists) {
     lines.push(`  proteus: proteusSource,`);
     lines.push(`  kryptos: { enabled: true },`);
   }
@@ -168,8 +97,8 @@ const buildOptions = (answers: Answers): string => {
   if (answers.features.session) {
     lines.push(`  session: {`);
     lines.push(`    enabled: true,`);
-    if (sessionDriver) {
-      lines.push(`    keyValue: ${sessionSourceRef},`);
+    if (sessionRef) {
+      lines.push(`    keyValue: ${sessionRef},`);
     }
     lines.push(`    name: "sid",`);
     lines.push(`    encrypted: true,`);
@@ -195,10 +124,10 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`  },`);
   }
 
-  if (answers.features.rateLimit && rateLimitDriver) {
+  if (answers.features.rateLimit) {
     lines.push(`  rateLimit: {`);
     lines.push(`    enabled: true,`);
-    lines.push(`    keyValue: ${rateLimitSourceRef},`);
+    lines.push(`    keyValue: ${kvRef},`);
     lines.push(`    strategy: "fixed",`);
     lines.push(`    window: "1m",`);
     lines.push(`    max: 60,`);
@@ -212,14 +141,11 @@ const buildOptions = (answers: Answers): string => {
   }
 
   lines.push(`  setup: async () => {`);
-  if (primary) {
+  if (primaryExists) {
     lines.push(`    await proteusSource.connect();`);
   }
-  if (rateLimitDriver && rateLimitDriver !== primary) {
-    lines.push(`    await rateLimitSource.connect();`);
-  }
-  if (sessionDriver && sessionDriver !== primary && sessionDriver !== rateLimitDriver) {
-    lines.push(`    await sessionSource.connect();`);
+  if (kvIsSecondary) {
+    lines.push(`    await kvSource.connect();`);
   }
   if (answers.irisDriver !== "none") {
     lines.push(`    await irisSource.connect();`);

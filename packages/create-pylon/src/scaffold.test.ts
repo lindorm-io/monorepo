@@ -43,7 +43,8 @@ const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   projectDir: "",
   issuer: "http://localhost:3000",
   features: baseFeatures(),
-  proteusDrivers: [],
+  db: "none",
+  kv: "none",
   irisDriver: "none",
   workers: [],
   ...overrides,
@@ -141,7 +142,7 @@ describe("scaffold", () => {
 
     test("adds docker scripts when driver needs compose", () => {
       mkdirSync(projectDir, { recursive: true });
-      const answers = baseAnswers({ projectDir, proteusDrivers: ["postgres"] });
+      const answers = baseAnswers({ projectDir, db: "postgres" });
       writePackageJson(answers);
       expect(readFileSync(join(projectDir, "package.json"), "utf-8")).toMatchSnapshot();
     });
@@ -173,7 +174,7 @@ describe("scaffold", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
         projectDir,
-        proteusDrivers: ["postgres"],
+        db: "postgres",
         irisDriver: "kafka",
       });
       writeEnvFile(answers, FIXED_KEK);
@@ -201,7 +202,8 @@ describe("scaffold", () => {
       [
         "drivers don't add anything to .env",
         baseAnswers({
-          proteusDrivers: ["postgres", "redis"],
+          db: "postgres",
+          kv: "redis",
           irisDriver: "kafka",
         }),
       ],
@@ -213,57 +215,73 @@ describe("scaffold", () => {
   describe("buildDependencyList", () => {
     test.each([
       ["none-none", baseAnswers()],
+      ["postgres-rabbit", baseAnswers({ db: "postgres", irisDriver: "rabbit" })],
+      ["sqlite-kafka", baseAnswers({ db: "sqlite", irisDriver: "kafka" })],
+      ["redis-redis", baseAnswers({ kv: "redis", irisDriver: "redis" })],
+      ["memory-nats", baseAnswers({ db: "memory", irisDriver: "nats" })],
       [
-        "postgres-rabbit",
-        baseAnswers({ proteusDrivers: ["postgres"], irisDriver: "rabbit" }),
+        "postgres+redis-rabbit",
+        baseAnswers({ db: "postgres", kv: "redis", irisDriver: "rabbit" }),
       ],
-      ["sqlite-kafka", baseAnswers({ proteusDrivers: ["sqlite"], irisDriver: "kafka" })],
-      ["redis-redis", baseAnswers({ proteusDrivers: ["redis"], irisDriver: "redis" })],
-      ["memory-nats", baseAnswers({ proteusDrivers: ["memory"], irisDriver: "nats" })],
     ])("snapshot: %s", (_name, answers) => {
       expect(buildDependencyList(answers)).toMatchSnapshot();
     });
 
-    test("includes @lindorm/proteus and its @lindorm/aes encryption peer when a proteus driver is selected", () => {
-      const deps = buildDependencyList(baseAnswers({ proteusDrivers: ["postgres"] }));
+    test("includes @lindorm/proteus and its @lindorm/aes encryption peer when a driver is selected", () => {
+      const deps = buildDependencyList(baseAnswers({ db: "postgres" }));
       expect(deps).toContain("@lindorm/proteus");
       expect(deps).toContain("@lindorm/aes");
       expect(deps).toContain("pg");
     });
 
-    test("omits proteus deps (incl. @lindorm/aes) when no proteus driver is selected", () => {
-      const deps = buildDependencyList(baseAnswers({ proteusDrivers: [] }));
+    test("only the picked driver packages are added — never all six", () => {
+      const deps = buildDependencyList(baseAnswers({ db: "postgres", kv: "redis" }));
+      expect(deps).toContain("pg");
+      expect(deps).toContain("ioredis");
+      expect(deps).not.toContain("mysql2");
+      expect(deps).not.toContain("mongodb");
+      expect(deps).not.toContain("better-sqlite3");
+    });
+
+    test("omits proteus deps (incl. @lindorm/aes) when no driver is selected", () => {
+      const deps = buildDependencyList(baseAnswers());
       expect(deps).not.toContain("@lindorm/proteus");
       expect(deps).not.toContain("@lindorm/aes");
     });
   });
 
   describe("buildVitestConfig / writeVitestConfig (F5)", () => {
-    test("wires the swc decorator transform when a proteus driver is selected", () => {
-      const content = buildVitestConfig(baseAnswers({ proteusDrivers: ["postgres"] }));
+    test("wires the swc decorator transform when a driver is selected", () => {
+      const content = buildVitestConfig(baseAnswers({ db: "postgres" }));
       expect(content).toContain('import swc from "unplugin-swc"');
       expect(content).toContain("decorators: true");
       expect(content).toContain('decoratorVersion: "2022-03"');
       expect(content).toContain("oxc: false");
     });
 
-    test("emits a bare config (no swc) when no proteus driver is selected", () => {
-      const content = buildVitestConfig(baseAnswers({ proteusDrivers: [] }));
+    test("wires the swc decorator transform when only a kv driver is selected", () => {
+      const content = buildVitestConfig(baseAnswers({ kv: "redis" }));
+      expect(content).toContain('import swc from "unplugin-swc"');
+    });
+
+    test("emits a bare config (no swc) when no driver is selected", () => {
+      const content = buildVitestConfig(baseAnswers());
       expect(content).not.toContain("unplugin-swc");
       expect(content).not.toContain("decorators");
       expect(content).toContain("vitest/config");
     });
 
-    test("adds unplugin-swc + @swc/core dev deps only when proteus is selected", () => {
-      expect(buildDevDependencyList(baseAnswers({ proteusDrivers: ["sqlite"] }))).toEqual(
-        ["unplugin-swc", "@swc/core"],
-      );
-      expect(buildDevDependencyList(baseAnswers({ proteusDrivers: [] }))).toEqual([]);
+    test("adds unplugin-swc + @swc/core dev deps only when a driver is selected", () => {
+      expect(buildDevDependencyList(baseAnswers({ db: "sqlite" }))).toEqual([
+        "unplugin-swc",
+        "@swc/core",
+      ]);
+      expect(buildDevDependencyList(baseAnswers())).toEqual([]);
     });
 
     test("writeVitestConfig writes vitest.config.mjs to the project root", () => {
       mkdirSync(projectDir, { recursive: true });
-      writeVitestConfig(baseAnswers({ projectDir, proteusDrivers: ["postgres"] }));
+      writeVitestConfig(baseAnswers({ projectDir, db: "postgres" }));
       const content = readFileSync(join(projectDir, "vitest.config.mjs"), "utf-8");
       expect(content).toContain("unplugin-swc");
     });
@@ -272,20 +290,19 @@ describe("scaffold", () => {
   describe("writeConfigFile", () => {
     test.each<[string, Partial<Answers>]>([
       ["no drivers", {}],
-      ["memory proteus only", { proteusDrivers: ["memory"] }],
-      ["postgres only", { proteusDrivers: ["postgres"] }],
-      ["sqlite only", { proteusDrivers: ["sqlite"] }],
+      ["memory db only", { db: "memory" }],
+      ["postgres only", { db: "postgres" }],
+      ["sqlite only", { db: "sqlite" }],
+      ["redis kv only", { kv: "redis" }],
+      ["postgres + redis", { db: "postgres", kv: "redis" }],
       ["kafka only", { irisDriver: "kafka" }],
       ["nats only", { irisDriver: "nats" }],
       ["rabbit only", { irisDriver: "rabbit" }],
-      ["redis only", { irisDriver: "redis" }],
-      ["postgres + kafka", { proteusDrivers: ["postgres"], irisDriver: "kafka" }],
-      ["mongo + nats", { proteusDrivers: ["mongo"], irisDriver: "nats" }],
+      ["redis iris only", { irisDriver: "redis" }],
+      ["postgres + kafka", { db: "postgres", irisDriver: "kafka" }],
+      ["mongo + nats", { db: "mongo", irisDriver: "nats" }],
       ["auth only", { features: baseFeatures({ auth: true }) }],
-      [
-        "postgres + auth",
-        { proteusDrivers: ["postgres"], features: baseFeatures({ auth: true }) },
-      ],
+      ["postgres + auth", { db: "postgres", features: baseFeatures({ auth: true }) }],
     ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir, ...overrides });
@@ -309,22 +326,13 @@ describe("scaffold", () => {
   describe("writeConfigYaml", () => {
     test.each<[string, Partial<Answers>]>([
       ["no drivers", {}],
-      ["postgres only", { proteusDrivers: ["postgres"] }],
-      ["sqlite only", { proteusDrivers: ["sqlite"] }],
-      ["postgres + redis", { proteusDrivers: ["postgres", "redis"] }],
-      [
-        "redis proteus + redis iris (deduped)",
-        {
-          proteusDrivers: ["redis"],
-          irisDriver: "redis",
-        },
-      ],
-      ["postgres + kafka", { proteusDrivers: ["postgres"], irisDriver: "kafka" }],
+      ["postgres only", { db: "postgres" }],
+      ["sqlite only", { db: "sqlite" }],
+      ["postgres + redis", { db: "postgres", kv: "redis" }],
+      ["redis kv + redis iris (deduped)", { kv: "redis", irisDriver: "redis" }],
+      ["postgres + kafka", { db: "postgres", irisDriver: "kafka" }],
       ["nats only", { irisDriver: "nats" }],
-      [
-        "postgres + auth",
-        { proteusDrivers: ["postgres"], features: baseFeatures({ auth: true }) },
-      ],
+      ["postgres + auth", { db: "postgres", features: baseFeatures({ auth: true }) }],
     ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir, ...overrides });
@@ -338,16 +346,13 @@ describe("scaffold", () => {
   describe("writeConfigDevelopmentYaml", () => {
     test.each<[string, Partial<Answers>]>([
       ["no drivers", {}],
-      ["postgres only", { proteusDrivers: ["postgres"] }],
-      ["mysql only", { proteusDrivers: ["mysql"] }],
-      ["postgres + redis", { proteusDrivers: ["postgres", "redis"] }],
-      ["postgres + kafka", { proteusDrivers: ["postgres"], irisDriver: "kafka" }],
-      ["mongo + rabbit", { proteusDrivers: ["mongo"], irisDriver: "rabbit" }],
-      ["sqlite + nats", { proteusDrivers: ["sqlite"], irisDriver: "nats" }],
-      [
-        "redis proteus + redis iris (deduped)",
-        { proteusDrivers: ["redis"], irisDriver: "redis" },
-      ],
+      ["postgres only", { db: "postgres" }],
+      ["mysql only", { db: "mysql" }],
+      ["postgres + redis", { db: "postgres", kv: "redis" }],
+      ["postgres + kafka", { db: "postgres", irisDriver: "kafka" }],
+      ["mongo + rabbit", { db: "mongo", irisDriver: "rabbit" }],
+      ["sqlite + nats", { db: "sqlite", irisDriver: "nats" }],
+      ["redis kv + redis iris (deduped)", { kv: "redis", irisDriver: "redis" }],
     ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir, ...overrides });
@@ -361,12 +366,10 @@ describe("scaffold", () => {
   describe("buildEnvExampleLines", () => {
     test.each<[string, Partial<Answers>]>([
       ["no drivers", {}],
-      ["postgres + kafka", { proteusDrivers: ["postgres"], irisDriver: "kafka" }],
-      ["mysql + rabbit", { proteusDrivers: ["mysql"], irisDriver: "rabbit" }],
-      [
-        "postgres + auth",
-        { proteusDrivers: ["postgres"], features: baseFeatures({ auth: true }) },
-      ],
+      ["postgres + kafka", { db: "postgres", irisDriver: "kafka" }],
+      ["mysql + rabbit", { db: "mysql", irisDriver: "rabbit" }],
+      ["postgres + redis", { db: "postgres", kv: "redis" }],
+      ["postgres + auth", { db: "postgres", features: baseFeatures({ auth: true }) }],
     ])("snapshot: %s", (_name, overrides) => {
       const answers = baseAnswers({ ...overrides });
       expect(buildEnvExampleLines(answers)).toMatchSnapshot();
@@ -378,7 +381,7 @@ describe("scaffold", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
         projectDir,
-        proteusDrivers: ["postgres"],
+        db: "postgres",
         irisDriver: "kafka",
       });
       writeEnvExampleFile(answers);
@@ -394,26 +397,14 @@ describe("scaffold", () => {
         { features: baseFeatures({ http: false, socket: true }) },
       ],
       ["http + socket, no drivers", { features: baseFeatures({ socket: true }) }],
-      [
-        "http + postgres",
-        {
-          proteusDrivers: ["postgres"],
-        },
-      ],
-      [
-        "http + rabbit",
-        {
-          irisDriver: "rabbit",
-        },
-      ],
-      [
-        "http + postgres + rabbit",
-        { proteusDrivers: ["postgres"], irisDriver: "rabbit" },
-      ],
+      ["http + postgres", { db: "postgres" }],
+      ["http + redis kv only", { kv: "redis" }],
+      ["http + rabbit", { irisDriver: "rabbit" }],
+      ["http + postgres + rabbit", { db: "postgres", irisDriver: "rabbit" }],
       [
         "http + postgres + rabbit + webhooks + audit",
         {
-          proteusDrivers: ["postgres"],
+          db: "postgres",
           irisDriver: "rabbit" as const,
           features: baseFeatures({ webhooks: true, audit: true }),
         },
@@ -421,7 +412,8 @@ describe("scaffold", () => {
       [
         "all features + all proteus workers",
         {
-          proteusDrivers: ["postgres"],
+          db: "postgres",
+          kv: "redis",
           irisDriver: "kafka" as const,
           features: baseFeatures({ socket: true, webhooks: true, audit: true }),
           workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"] as Array<
@@ -431,28 +423,40 @@ describe("scaffold", () => {
       ],
       ["session only, no proteus", { features: baseFeatures({ session: true }) }],
       [
-        "session with proteus (persistent)",
-        {
-          proteusDrivers: ["postgres"],
-          features: baseFeatures({ session: true }),
-        },
+        "session with db (persistent)",
+        { db: "postgres", features: baseFeatures({ session: true }) },
       ],
       [
         "auth only (session auto-forced)",
         { features: baseFeatures({ session: true, auth: true }) },
       ],
       [
-        "rate limit with proteus",
-        {
-          proteusDrivers: ["postgres" as const, "redis" as const],
-          features: baseFeatures({ rateLimit: true }),
-        },
+        "rate limit with postgres + redis",
+        { db: "postgres", kv: "redis", features: baseFeatures({ rateLimit: true }) },
+      ],
+      [
+        "rate limit with redis kv only",
+        { kv: "redis", features: baseFeatures({ rateLimit: true }) },
       ],
       [
         "session + auth + rate limit + postgres + redis",
         {
-          proteusDrivers: ["postgres" as const, "redis" as const],
+          db: "postgres",
+          kv: "redis",
           features: baseFeatures({ session: true, auth: true, rateLimit: true }),
+        },
+      ],
+      ["db=none + kv=redis", { kv: "redis" }],
+      ["db=memory + kv=memory", { db: "memory", kv: "memory" }],
+      [
+        "db=postgres + kv=redis + auth + rateLimit + all workers",
+        {
+          db: "postgres",
+          kv: "redis",
+          features: baseFeatures({ session: true, auth: true, rateLimit: true }),
+          workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"] as Array<
+            Answers["workers"][number]
+          >,
         },
       ],
     ])("snapshot: %s", (_name, overrides) => {
@@ -467,17 +471,18 @@ describe("scaffold", () => {
 
   describe("writeDockerCompose", () => {
     test.each<[string, Partial<Answers>]>([
-      ["postgres", { proteusDrivers: ["postgres"] }],
-      ["mysql", { proteusDrivers: ["mysql"] }],
-      ["mongo", { proteusDrivers: ["mongo"] }],
-      ["proteus redis", { proteusDrivers: ["redis"] }],
+      ["postgres", { db: "postgres" }],
+      ["mysql", { db: "mysql" }],
+      ["mongo", { db: "mongo" }],
+      ["redis kv", { kv: "redis" }],
       ["rabbit", { irisDriver: "rabbit" }],
       ["kafka + zookeeper", { irisDriver: "kafka" }],
       ["nats", { irisDriver: "nats" }],
       ["iris redis", { irisDriver: "redis" }],
-      ["postgres + rabbit", { proteusDrivers: ["postgres"], irisDriver: "rabbit" }],
-      ["redis dedup", { proteusDrivers: ["redis"], irisDriver: "redis" }],
-      ["mongo + kafka", { proteusDrivers: ["mongo"], irisDriver: "kafka" }],
+      ["postgres + rabbit", { db: "postgres", irisDriver: "rabbit" }],
+      ["postgres + redis", { db: "postgres", kv: "redis" }],
+      ["redis dedup", { kv: "redis", irisDriver: "redis" }],
+      ["mongo + kafka", { db: "mongo", irisDriver: "kafka" }],
     ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir, ...overrides });
@@ -489,14 +494,14 @@ describe("scaffold", () => {
 
     test("skipped when no driver needs it", () => {
       mkdirSync(projectDir, { recursive: true });
-      const answers = baseAnswers({ projectDir, proteusDrivers: ["sqlite"] });
+      const answers = baseAnswers({ projectDir, db: "sqlite" });
       writeDockerCompose(answers);
       expect(existsSync(join(projectDir, "docker-compose.yml"))).toBe(false);
     });
 
     test("skipped when only memory selected", () => {
       mkdirSync(projectDir, { recursive: true });
-      const answers = baseAnswers({ projectDir, proteusDrivers: ["memory"] });
+      const answers = baseAnswers({ projectDir, db: "memory", kv: "memory" });
       writeDockerCompose(answers);
       expect(existsSync(join(projectDir, "docker-compose.yml"))).toBe(false);
     });
@@ -512,7 +517,7 @@ describe("scaffold", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
         projectDir,
-        proteusDrivers: ["postgres"],
+        db: "postgres",
         workers,
       });
       writeWorkerFiles(answers);
@@ -523,11 +528,12 @@ describe("scaffold", () => {
       }
     });
 
-    test("multi-driver: imports primary nested source (postgres + redis)", () => {
+    test("workers import the flat primary source (db + kv)", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
         projectDir,
-        proteusDrivers: ["postgres", "redis"],
+        db: "postgres",
+        kv: "redis",
         workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"],
       });
       writeWorkerFiles(answers);
@@ -536,16 +542,16 @@ describe("scaffold", () => {
           join(projectDir, "src/workers", `${key}.ts`),
           "utf-8",
         );
-        expect(content).toContain(`from "../proteus/postgres/source.js"`);
-        expect(content).not.toContain(`from "../proteus/source.js"`);
+        expect(content).toContain(`from "../proteus/source.js"`);
+        expect(content).not.toContain(`from "../proteus/kv/source.js"`);
       }
     });
 
-    test("multi-driver: redis-only fallback picks redis as primary", () => {
+    test("workers import the flat primary source when kv is the sole driver", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
         projectDir,
-        proteusDrivers: ["redis", "memory"],
+        kv: "redis",
         workers: ["kryptos-rotation"],
       });
       writeWorkerFiles(answers);
@@ -553,7 +559,7 @@ describe("scaffold", () => {
         join(projectDir, "src/workers/kryptos-rotation.ts"),
         "utf-8",
       );
-      expect(content).toContain(`from "../proteus/redis/source.js"`);
+      expect(content).toContain(`from "../proteus/source.js"`);
     });
 
     test("skipped when no workers selected", () => {
@@ -600,7 +606,7 @@ describe("scaffold", () => {
     test("runs all write functions in sequence", async () => {
       const answers = baseAnswers({
         projectDir,
-        proteusDrivers: ["postgres"],
+        db: "postgres",
         irisDriver: "rabbit",
         features: baseFeatures({ socket: true, webhooks: true, audit: true }),
         workers: ["expiry-cleanup"],
@@ -612,7 +618,8 @@ describe("scaffold", () => {
     test("generated output is prettier-stable under default config (F8)", async () => {
       const answers = baseAnswers({
         projectDir,
-        proteusDrivers: ["postgres", "redis"],
+        db: "postgres",
+        kv: "redis",
         irisDriver: "kafka",
         features: baseFeatures({ socket: true, webhooks: true, audit: true }),
         workers: ["expiry-cleanup"],
@@ -659,7 +666,8 @@ describe("scaffold", () => {
     test("rateLimit-only combo (with postgres + redis)", async () => {
       const answers = baseAnswers({
         projectDir,
-        proteusDrivers: ["postgres", "redis"],
+        db: "postgres",
+        kv: "redis",
         features: baseFeatures({ rateLimit: true }),
       });
       await scaffold(answers, FIXED_KEK);
@@ -671,7 +679,8 @@ describe("scaffold", () => {
     test("all-on: postgres + redis + rabbit + sessions + auth + rateLimit + workers", async () => {
       const answers = baseAnswers({
         projectDir,
-        proteusDrivers: ["postgres", "redis"],
+        db: "postgres",
+        kv: "redis",
         irisDriver: "rabbit",
         features: baseFeatures({
           socket: true,
@@ -694,121 +703,107 @@ describe("scaffold", () => {
       expect(readFileSync(join(projectDir, ".env"), "utf-8")).toMatchSnapshot(".env");
     });
 
-    describe("multi-driver ctx extension", () => {
-      test("emits ExtraSources type and attach-sources middleware when 2+ drivers", async () => {
+    describe("two-role sources (db + kv)", () => {
+      test("context.ts is the plain base — no ExtraSources / IProteusSession", async () => {
         const answers = baseAnswers({
           projectDir,
-          proteusDrivers: ["postgres", "redis", "memory"],
+          db: "postgres",
+          kv: "redis",
           features: baseFeatures({ socket: true }),
         });
         await scaffold(answers, FIXED_KEK);
 
-        expect(
-          readFileSync(join(projectDir, "src/types/context.ts"), "utf-8"),
-        ).toMatchSnapshot("context.ts");
-        expect(
-          readFileSync(join(projectDir, "src/middleware/attach-sources.ts"), "utf-8"),
-        ).toMatchSnapshot("attach-sources.ts");
-        expect(
-          readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
-        ).toMatchSnapshot("pylon.ts");
-      });
-
-      test("omits ExtraSources and attach-sources file when single driver", async () => {
-        const answers = baseAnswers({
-          projectDir,
-          proteusDrivers: ["postgres"],
-        });
-        await scaffold(answers, FIXED_KEK);
-
-        expect(
-          readFileSync(join(projectDir, "src/types/context.ts"), "utf-8"),
-        ).not.toContain("ExtraSources");
-        expect(existsSync(join(projectDir, "src/middleware/attach-sources.ts"))).toBe(
-          false,
-        );
-      });
-
-      test("omits ExtraSources and attach-sources file when no drivers", async () => {
-        const answers = baseAnswers({ projectDir });
-        await scaffold(answers, FIXED_KEK);
-
-        expect(
-          readFileSync(join(projectDir, "src/types/context.ts"), "utf-8"),
-        ).not.toContain("ExtraSources");
-        expect(existsSync(join(projectDir, "src/middleware/attach-sources.ts"))).toBe(
-          false,
-        );
-      });
-
-      test("session prefers redis over primary when both are selected", async () => {
-        const answers = baseAnswers({
-          projectDir,
-          proteusDrivers: ["postgres", "redis"],
-          features: baseFeatures({ session: true, auth: true }),
-        });
-        await scaffold(answers, FIXED_KEK);
-
-        const pylonFile = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        // session should bind to the redis source, not the postgres primary
-        expect(pylonFile).toMatch(
-          /session: \{[^}]*keyValue: (sessionSource|rateLimitSource)/,
-        );
-        expect(pylonFile).toContain(
-          `import { source as sessionSource } from "../proteus/redis/source.js";`,
-        );
-      });
-
-      test("session reuses rateLimitSource when both land on the same driver", async () => {
-        const answers = baseAnswers({
-          projectDir,
-          proteusDrivers: ["postgres", "redis"],
-          features: baseFeatures({ session: true, auth: true, rateLimit: true }),
-        });
-        await scaffold(answers, FIXED_KEK);
-
-        const pylonFile = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylonFile).toMatch(/session: \{[^}]*keyValue: rateLimitSource/);
-        expect(pylonFile).not.toContain(`import { source as sessionSource }`);
-      });
-
-      test("session falls back to primary when no fast store is selected", async () => {
-        const answers = baseAnswers({
-          projectDir,
-          proteusDrivers: ["postgres"],
-          features: baseFeatures({ session: true, auth: true }),
-        });
-        await scaffold(answers, FIXED_KEK);
-
-        const pylonFile = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylonFile).toMatch(/session: \{[^}]*keyValue: proteusSource/);
-        expect(pylonFile).not.toContain(`import { source as sessionSource }`);
-      });
-
-      test("attaches every non-primary driver: postgres primary + mysql, mongo, redis, memory", async () => {
-        const answers = baseAnswers({
-          projectDir,
-          proteusDrivers: ["postgres", "mysql", "mongo", "redis", "memory"],
-        });
-        await scaffold(answers, FIXED_KEK);
-
         const context = readFileSync(join(projectDir, "src/types/context.ts"), "utf-8");
-        const middleware = readFileSync(
-          join(projectDir, "src/middleware/attach-sources.ts"),
-          "utf-8",
+        expect(context).not.toContain("ExtraSources");
+        expect(context).not.toContain("IProteusSession");
+        expect(context).toMatchSnapshot("context.ts");
+      });
+
+      test("no attach-sources middleware file is ever written", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          db: "postgres",
+          kv: "redis",
+          features: baseFeatures({ socket: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        expect(existsSync(join(projectDir, "src/middleware/attach-sources.ts"))).toBe(
+          false,
         );
+      });
 
-        expect(context).not.toContain("postgres?: IProteusSession");
-        expect(context).toContain("mysql?: IProteusSession");
-        expect(context).toContain("mongo?: IProteusSession");
-        expect(context).toContain("redis?: IProteusSession");
-        expect(context).toContain("memory?: IProteusSession");
+      test("db + kv writes a distinct kv/source.ts secondary", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          db: "postgres",
+          kv: "redis",
+        });
+        await scaffold(answers, FIXED_KEK);
 
-        expect(middleware).not.toContain("postgresSource");
-        expect(middleware).toContain("mysqlSource");
-        expect(middleware).toContain("mongoSource");
-        expect(middleware).toContain("redisSource");
-        expect(middleware).toContain("memorySource");
+        expect(existsSync(join(projectDir, "src/proteus/source.ts"))).toBe(true);
+        expect(existsSync(join(projectDir, "src/proteus/kv/source.ts"))).toBe(true);
+
+        const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        expect(pylon).toContain(
+          `import { source as proteusSource } from "../proteus/source.js";`,
+        );
+        expect(pylon).toContain(
+          `import { source as kvSource } from "../proteus/kv/source.js";`,
+        );
+      });
+
+      test("kv-only writes a single flat primary — no kv subdir", async () => {
+        const answers = baseAnswers({ projectDir, kv: "redis" });
+        await scaffold(answers, FIXED_KEK);
+
+        expect(existsSync(join(projectDir, "src/proteus/source.ts"))).toBe(true);
+        expect(existsSync(join(projectDir, "src/proteus/kv"))).toBe(false);
+
+        const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        expect(pylon).toContain(
+          `import { source as proteusSource } from "../proteus/source.js";`,
+        );
+        expect(pylon).not.toContain(`kvSource`);
+      });
+
+      test("session binds to the kv secondary when both db and kv are selected", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          db: "postgres",
+          kv: "redis",
+          features: baseFeatures({ session: true, auth: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        expect(pylon).toMatch(/session: \{[^}]*keyValue: kvSource/);
+      });
+
+      test("session falls back to the flat proteus source when only db is selected", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          db: "postgres",
+          features: baseFeatures({ session: true, auth: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        expect(pylon).toMatch(/session: \{[^}]*keyValue: proteusSource/);
+        expect(pylon).not.toContain(`kvSource`);
+      });
+
+      test("session binds to the flat primary when only kv is selected", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          kv: "redis",
+          features: baseFeatures({ session: true, auth: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        expect(pylon).toMatch(/session: \{[^}]*keyValue: proteusSource/);
+        expect(pylon).not.toContain(`kvSource`);
       });
     });
   });

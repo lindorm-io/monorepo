@@ -12,7 +12,7 @@ exports[`runPrompts > prompts for name when positional missing 1`] = `
 }
 `;
 
-exports[`runPrompts > prompts webhooks and audit only when both drivers selected 1`] = `
+exports[`runPrompts > prompts webhooks and audit only when both proteus and iris selected 1`] = `
 [
   "expiry-cleanup",
 ]
@@ -20,6 +20,7 @@ exports[`runPrompts > prompts webhooks and audit only when both drivers selected
 
 exports[`runPrompts > returns answers with positional name and defaults 1`] = `
 {
+  "db": "none",
   "features": {
     "audit": false,
     "auth": false,
@@ -31,9 +32,9 @@ exports[`runPrompts > returns answers with positional name and defaults 1`] = `
   },
   "irisDriver": "none",
   "issuer": "http://localhost:3000",
+  "kv": "none",
   "projectDir": "<cwd>/my-app",
   "projectName": "my-app",
-  "proteusDrivers": [],
   "workers": [],
 }
 `;

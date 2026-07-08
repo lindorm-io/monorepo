@@ -1,4 +1,5 @@
 import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
+import { selectedDrivers } from "./types.js";
 
 type EnvHint = { path: string; envVar: string };
 
@@ -70,7 +71,7 @@ const collectHints = (answers: Answers): Array<EnvHint> => {
     { path: "logger.level", envVar: "LOGGER__LEVEL" },
     { path: "logger.readable", envVar: "LOGGER__READABLE" },
   ];
-  for (const driver of answers.proteusDrivers) {
+  for (const driver of selectedDrivers(answers)) {
     hints.push(...proteusEnvHints(driver));
   }
   if (answers.irisDriver !== "none") {
@@ -142,7 +143,7 @@ export const buildConfigYaml = (answers: Answers): string => {
   ];
 
   const seenDefaultKeys = new Set<string>();
-  for (const driver of answers.proteusDrivers) {
+  for (const driver of selectedDrivers(answers)) {
     const block = proteusDefaultsBlock(driver);
     if (block.length === 0) continue;
     const key = block[0];
@@ -221,7 +222,7 @@ export const buildConfigDevelopmentYaml = (answers: Answers): string => {
     blocks.push(block);
   };
 
-  for (const driver of answers.proteusDrivers) {
+  for (const driver of selectedDrivers(answers)) {
     pushBlock(proteusDevYaml(driver));
   }
   if (answers.irisDriver !== "none") {

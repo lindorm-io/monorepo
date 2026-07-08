@@ -1,4 +1,5 @@
 import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
+import { selectedDrivers } from "./types.js";
 
 type Group = {
   key: string;
@@ -107,7 +108,7 @@ export const buildConfigFile = (answers: Answers): string => {
     lines.push(...renderGroup(group));
   };
 
-  for (const driver of answers.proteusDrivers) {
+  for (const driver of selectedDrivers(answers)) {
     emitGroup(proteusGroup(driver));
   }
 

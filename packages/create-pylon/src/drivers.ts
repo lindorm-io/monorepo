@@ -7,48 +7,45 @@ import {
   writeSource as writeIrisSource,
 } from "@lindorm/iris/scaffold";
 import { join } from "path";
-import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
+import type { Answers, IrisDriver } from "./types.js";
 import { PROTEUS_DB_DRIVERS } from "./types.js";
-
-/**
- * Number of `..` segments needed to reach `src/` from the directory a source
- * file is written into. Flat layout (`src/proteus/source.ts`) is two levels
- * below `src/`; per-driver layout (`src/proteus/<driver>/source.ts`) is three.
- */
-const computeRelativeDepth = (nested: boolean): string => (nested ? "../../" : "../");
-
-const resolveCache = (
-  driver: ProteusDriver,
-  selected: ReadonlyArray<ProteusDriver>,
-): "redis" | "memory" | null => {
-  if (!PROTEUS_DB_DRIVERS.includes(driver)) return null;
-  if (selected.includes("redis")) return "redis";
-  if (selected.includes("memory")) return "memory";
-  return null;
-};
 
 export const runProteusInit = async (
   projectDir: string,
-  answers: Pick<Answers, "proteusDrivers">,
+  answers: Pick<Answers, "db" | "kv">,
 ): Promise<void> => {
-  const drivers = answers.proteusDrivers;
-  if (drivers.length === 0) return;
+  const { db, kv } = answers;
 
-  const nested = drivers.length > 1;
-  const relative = computeRelativeDepth(nested);
+  const primaryDriver = db !== "none" ? db : kv !== "none" ? kv : null;
+  if (!primaryDriver) return;
 
-  for (const driver of drivers) {
-    const directory = nested
-      ? join(projectDir, "src/proteus", driver)
-      : join(projectDir, "src/proteus");
+  const kvIsSecondary = db !== "none" && kv !== "none";
 
+  // Cache the primary only when it's a real DB driver AND a kv store was
+  // picked; the cache adapter is the kv driver (redis or memory).
+  const cache =
+    db !== "none" && PROTEUS_DB_DRIVERS.includes(db) && kv !== "none" ? kv : null;
+
+  await writeProteusSource({
+    driver: primaryDriver,
+    directory: join(projectDir, "src/proteus"),
+    loggerImport: "../logger/index.js",
+    configImport: "../pylon/config.js",
+    amphoraImport: "../pylon/amphora.js",
+    cache,
+    naming: "snake",
+    synchronizeFromConfig: true,
+    runMigrationsFromConfig: true,
+  });
+
+  if (kvIsSecondary) {
     await writeProteusSource({
-      driver,
-      directory,
-      loggerImport: `${relative}logger/index.js`,
-      configImport: `${relative}pylon/config.js`,
-      amphoraImport: `${relative}pylon/amphora.js`,
-      cache: resolveCache(driver, drivers),
+      driver: kv,
+      directory: join(projectDir, "src/proteus/kv"),
+      loggerImport: "../../logger/index.js",
+      configImport: "../../pylon/config.js",
+      amphoraImport: "../../pylon/amphora.js",
+      cache: null,
       naming: "snake",
       synchronizeFromConfig: true,
       runMigrationsFromConfig: true,
@@ -58,12 +55,10 @@ export const runProteusInit = async (
 
 export const runProteusGenerateSampleEntity = async (
   projectDir: string,
-  driver?: ProteusDriver,
 ): Promise<void> => {
-  const subdir = driver ? `src/proteus/${driver}/entities` : "src/proteus/entities";
   await writeProteusEntity({
     name: "SampleEntity",
-    directory: join(projectDir, subdir),
+    directory: join(projectDir, "src/proteus/entities"),
   });
 };
 

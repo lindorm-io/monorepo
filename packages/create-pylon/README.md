@@ -36,16 +36,21 @@ The scaffolder asks for features and drivers, copies templates into the target d
 ? Project name: my-app
 ? Issuer URL:                     (this service's identity — becomes the Amphora domain for JWKS; default http://localhost:3000)
 ? Select features:                (HTTP routes / Socket.IO listeners)
-? Persistence drivers (Proteus):  (memory / mongo / mysql / postgres / redis / sqlite — pick any)
+? Persistence store (Proteus DB): (postgres / mysql / mongo / sqlite / memory / none)
+? Key-value store (Proteus KV):   (redis / memory / none — rate-limit / session / cache)
 ? Message bus driver (Iris):      (none / kafka / nats / rabbit / redis)
-? Webhooks?                       (only when both a Proteus driver and an Iris driver are selected)
-? Audit logging?                  (only when both a Proteus driver and an Iris driver are selected)
+? Webhooks?                       (only when both a Proteus store and an Iris driver are selected)
+? Audit logging?                  (only when both a Proteus store and an Iris driver are selected)
 ? OIDC authentication?            (selecting "yes" also enables session)
-? Rate limiting?                  (only when "redis" or "memory" is among the selected Proteus drivers)
-? Workers:                        (only when at least one Proteus driver is selected)
+? Rate limiting?                  (only when a key-value store is selected)
+? Workers:                        (only when a Proteus store is selected)
 ```
 
-When multiple Proteus drivers are selected, a primary is chosen by the priority `postgres > mysql > mongo > redis > sqlite > memory`. The remaining drivers are wired in as additional sources under per-driver subdirectories.
+You pick at most one **db** store and one **kv** store. The db store is the primary Proteus source
+(`src/proteus/source.ts`) — schema-managed, holds your entities, and backs the kryptos/worker layer. The kv
+store (`src/proteus/kv/source.ts` when a db is also picked, otherwise the primary) backs rate limiting,
+sessions, and the db query cache. When only one store is picked it is the primary at `src/proteus/source.ts`;
+`none` is valid for either.
 
 ## What gets scaffolded
 
@@ -57,12 +62,11 @@ Generated layout (some files only appear depending on the answers):
 - `src/pylon/config.ts` — typed config loaded with `@lindorm/config`, validated with a `zod` schema generated from the selected drivers
 - `src/pylon/pylon.ts` — the `Pylon` instance, wired with the selected features, sources, and workers
 - `src/types/context.ts` — typed `ServerHttpContext`, `ServerSocketContext`, `ServerHttpMiddleware`, `ServerSocketMiddleware`, `ServerHandler`, and `ServerSocketHandler` aliases
-- `src/middleware/attach-sources.ts` — middleware that attaches secondary Proteus sessions onto the request context (only when more than one Proteus driver is selected)
 - `src/routes/v1/example.ts` + `src/features/example/example-handler.ts` — example HTTP route (only when HTTP is selected)
 - `src/listeners/ping.ts` + `src/features/ping/ping-handler.ts` — example Socket.IO listener (only when Socket.IO is selected)
 - `src/routes/webhooks/` + `src/features/webhooks/` — CRUD routes and handlers for `WebhookSubscription` (only when webhooks are selected)
 - `src/workers/<worker>.ts` — one file per selected worker (`amphora-entity-sync`, `expiry-cleanup`, `kryptos-rotation`) plus an `alive.ts` example
-- `src/proteus/source.ts` (or `src/proteus/<driver>/source.ts` when multiple drivers) and a sample `SampleEntity` — written by `@lindorm/proteus`'s code generator
+- `src/proteus/source.ts` (the primary db/kv store) — plus `src/proteus/kv/source.ts` when both a db and a kv store are picked — and a sample `SampleEntity`, written by `@lindorm/proteus/scaffold`'s code generator
 - `src/iris/source.ts`, a sample `SampleMessage`, plus a sample publisher and subscriber — written by `@lindorm/iris`'s code generator
 - `docker-compose.yml` — only emitted when a selected driver is `postgres`, `mysql`, `mongo`, `redis`, `kafka`, `nats`, or `rabbit`
 - `config/{default,development,test,production}.yml` — base config files
@@ -127,12 +131,12 @@ await initGit(answers.projectDir);
 
 ### Driver code generation
 
-| Export                           | Signature                                                                         | Description                                                                       |
-| -------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `runProteusInit`                 | `(projectDir: string, answers: Pick<Answers, "proteusDrivers">) => Promise<void>` | Calls `@lindorm/proteus`'s `writeSource` for each selected Proteus driver.        |
-| `runProteusGenerateSampleEntity` | `(projectDir: string, driver?: ProteusDriver) => Promise<void>`                   | Writes a `SampleEntity` under the appropriate `entities/` directory.              |
-| `runIrisInit`                    | `(projectDir: string, driver: IrisDriver) => Promise<void>`                       | Calls `@lindorm/iris`'s `writeSource` with the chosen driver. No-op for `"none"`. |
-| `runIrisGenerateSampleMessage`   | `(projectDir: string) => Promise<void>`                                           | Writes a `SampleMessage` under `src/iris/messages/`.                              |
+| Export                           | Signature                                                                     | Description                                                                                                                            |
+| -------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `runProteusInit`                 | `(projectDir: string, answers: Pick<Answers, "db" \| "kv">) => Promise<void>` | Calls `@lindorm/proteus/scaffold`'s `writeSource` for the db + kv stores (primary at `src/proteus`, kv secondary at `src/proteus/kv`). |
+| `runProteusGenerateSampleEntity` | `(projectDir: string) => Promise<void>`                                       | Writes a `SampleEntity` under `src/proteus/entities/`.                                                                                 |
+| `runIrisInit`                    | `(projectDir: string, driver: IrisDriver) => Promise<void>`                   | Calls `@lindorm/iris`'s `writeSource` with the chosen driver. No-op for `"none"`.                                                      |
+| `runIrisGenerateSampleMessage`   | `(projectDir: string) => Promise<void>`                                       | Writes a `SampleMessage` under `src/iris/messages/`.                                                                                   |
 
 ### Types and constants
 

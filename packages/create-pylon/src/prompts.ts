@@ -2,8 +2,14 @@ import { checkbox, confirm, input, select } from "@inquirer/prompts";
 import { existsSync, readdirSync, rmSync } from "fs";
 import { resolve } from "path";
 import { isValidProjectName, parseProjectName } from "./project-name.js";
-import type { Answers, Features, IrisDriver, ProteusDriver, WorkerKey } from "./types.js";
-import { PROTEUS_PRIMARY_PRIORITY } from "./types.js";
+import type {
+  Answers,
+  DbDriver,
+  Features,
+  IrisDriver,
+  KvDriver,
+  WorkerKey,
+} from "./types.js";
 
 type RunPromptsInput = {
   positionalName?: string;
@@ -54,10 +60,29 @@ const promptFeatures = async (): Promise<Pick<Features, "http" | "socket">> => {
   };
 };
 
-const promptProteusDrivers = async (): Promise<Array<ProteusDriver>> =>
-  checkbox<ProteusDriver>({
-    message: "Persistence drivers (Proteus) — pick any, primary chosen by priority:",
-    choices: PROTEUS_PRIMARY_PRIORITY.map((value) => ({ name: value, value })),
+const promptDb = async (): Promise<DbDriver> =>
+  select<DbDriver>({
+    message: "Persistence store (Proteus DB source):",
+    default: "none",
+    choices: [
+      { name: "postgres", value: "postgres" },
+      { name: "mysql", value: "mysql" },
+      { name: "mongo", value: "mongo" },
+      { name: "sqlite", value: "sqlite" },
+      { name: "memory", value: "memory" },
+      { name: "none", value: "none" },
+    ],
+  });
+
+const promptKv = async (): Promise<KvDriver> =>
+  select<KvDriver>({
+    message: "Key-value store (Proteus KV source — rate-limit / session / cache):",
+    default: "none",
+    choices: [
+      { name: "redis", value: "redis" },
+      { name: "memory", value: "memory" },
+      { name: "none", value: "none" },
+    ],
   });
 
 const promptIrisDriver = async (): Promise<IrisDriver> =>
@@ -137,10 +162,11 @@ export const runPrompts = async ({
 
   const issuer = await promptIssuer();
   const featureFlags = await promptFeatures();
-  const proteusDrivers = await promptProteusDrivers();
+  const db = await promptDb();
+  const kv = await promptKv();
   const irisDriver = await promptIrisDriver();
 
-  const hasProteus = proteusDrivers.length > 0;
+  const hasProteus = db !== "none" || kv !== "none";
   const hasIris = irisDriver !== "none";
   const bothSelected = hasProteus && hasIris;
   const webhooks = bothSelected ? await promptWebhooks() : false;
@@ -148,8 +174,7 @@ export const runPrompts = async ({
 
   const auth = await promptAuth();
   const session = auth;
-  const canRateLimit =
-    proteusDrivers.includes("redis") || proteusDrivers.includes("memory");
+  const canRateLimit = kv !== "none";
   const rateLimit = canRateLimit ? await promptRateLimit() : false;
 
   const workers = hasProteus ? await promptWorkers() : [];
@@ -167,7 +192,8 @@ export const runPrompts = async ({
       auth,
       rateLimit,
     },
-    proteusDrivers,
+    db,
+    kv,
     irisDriver,
     workers,
   };

@@ -64,7 +64,8 @@ const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
     auth: false,
     rateLimit: false,
   },
-  proteusDrivers: [],
+  db: "none",
+  kv: "none",
   irisDriver: "none",
   workers: [],
   ...overrides,
@@ -118,14 +119,14 @@ describe("cli run orchestration", () => {
   });
 
   test("runs proteus init + generate when driver selected", async () => {
-    mockedRunPrompts.mockResolvedValue(baseAnswers({ proteusDrivers: ["postgres"] }));
+    mockedRunPrompts.mockResolvedValue(baseAnswers({ db: "postgres" }));
     await run();
 
     expect(mockedProteusInit).toHaveBeenCalledWith(
       "/tmp/demo",
-      expect.objectContaining({ proteusDrivers: ["postgres"] }),
+      expect.objectContaining({ db: "postgres" }),
     );
-    expect(mockedProteusSampleEntity).toHaveBeenCalledWith("/tmp/demo", undefined);
+    expect(mockedProteusSampleEntity).toHaveBeenCalledWith("/tmp/demo");
     expect(mockedIrisInit).not.toHaveBeenCalled();
   });
 
@@ -140,7 +141,7 @@ describe("cli run orchestration", () => {
 
   test("orchestration order: scaffold → install → drivers → git", async () => {
     mockedRunPrompts.mockResolvedValue(
-      baseAnswers({ proteusDrivers: ["postgres"], irisDriver: "rabbit" }),
+      baseAnswers({ db: "postgres", irisDriver: "rabbit" }),
     );
 
     const calls: Array<string> = [];
@@ -190,7 +191,7 @@ describe("cli run orchestration", () => {
   });
 
   test("next steps include docker:up when a compose file is generated", async () => {
-    mockedRunPrompts.mockResolvedValue(baseAnswers({ proteusDrivers: ["postgres"] }));
+    mockedRunPrompts.mockResolvedValue(baseAnswers({ db: "postgres" }));
     mockedNeedsDockerCompose.mockReturnValue(true);
 
     await run();

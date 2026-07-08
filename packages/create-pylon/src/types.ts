@@ -6,6 +6,10 @@ export type ProteusDriver =
   | "redis"
   | "sqlite";
 
+export type DbDriver = "postgres" | "mysql" | "mongo" | "sqlite" | "memory" | "none";
+
+export type KvDriver = "redis" | "memory" | "none";
+
 export type IrisDriver = "none" | "kafka" | "nats" | "rabbit" | "redis";
 
 export type WorkerKey = "amphora-entity-sync" | "expiry-cleanup" | "kryptos-rotation";
@@ -25,23 +29,18 @@ export type Answers = {
   projectDir: string;
   issuer: string;
   features: Features;
-  proteusDrivers: Array<ProteusDriver>;
+  db: DbDriver;
+  kv: KvDriver;
   irisDriver: IrisDriver;
   workers: Array<WorkerKey>;
 };
 
 /**
- * Order in which a primary ProteusSource is picked for pylon wiring when
- * multiple drivers are selected. First match wins.
+ * The real Proteus drivers behind the two selects — the db source (if any)
+ * followed by the kv source (if any). `none` picks contribute nothing.
  */
-export const PROTEUS_PRIMARY_PRIORITY: ReadonlyArray<ProteusDriver> = [
-  "postgres",
-  "mysql",
-  "mongo",
-  "redis",
-  "sqlite",
-  "memory",
-];
+export const selectedDrivers = (a: Pick<Answers, "db" | "kv">): Array<ProteusDriver> =>
+  [a.db, a.kv].filter((d): d is ProteusDriver => d !== "none");
 
 /**
  * Drivers that represent a DB-style store and therefore benefit from a

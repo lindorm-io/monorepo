@@ -9,7 +9,6 @@ import {
   writeFileSync,
 } from "fs";
 import { dirname, join, resolve } from "path";
-import { buildAttachSourcesFile } from "./build-attach-sources-file.js";
 import { buildConfigFile } from "./build-config-file.js";
 import { buildConfigDevelopmentYaml, buildConfigYaml } from "./build-config-yaml.js";
 import { buildContextFile } from "./build-context-file.js";
@@ -21,7 +20,11 @@ import { buildWorkerFile } from "./build-worker-file.js";
 import { formatProject } from "./format-project.js";
 import { runProteusInit } from "./drivers.js";
 import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
-import { IRIS_DRIVER_PACKAGES, PROTEUS_DRIVER_PACKAGES } from "./types.js";
+import {
+  IRIS_DRIVER_PACKAGES,
+  PROTEUS_DRIVER_PACKAGES,
+  selectedDrivers,
+} from "./types.js";
 
 // Far-future expiry — the KEK protects every @Encrypted field in the DB;
 // rotating it is a re-encryption migration, not a routine rotation, so a
@@ -78,13 +81,15 @@ export const copyTemplates = (answers: Answers): void => {
 export const buildDependencyList = (answers: Answers): Array<string> => {
   const deps: Array<string> = [];
 
-  if (answers.proteusDrivers.length > 0) {
+  const primaryExists = answers.db !== "none" || answers.kv !== "none";
+
+  if (primaryExists) {
     // @lindorm/aes is proteus's encryption peer (used by @Encrypted fields via
     // the amphora wired into the generated proteus source). It's an optional
     // peerDependency, so it must be installed explicitly or encrypted fields
     // fail at runtime with a missing-module error.
     deps.push("@lindorm/proteus", "@lindorm/aes");
-    for (const driver of answers.proteusDrivers) {
+    for (const driver of selectedDrivers(answers)) {
       deps.push(...PROTEUS_DRIVER_PACKAGES[driver]);
     }
   }
@@ -99,7 +104,7 @@ export const buildDependencyList = (answers: Answers): Array<string> => {
 export const buildDevDependencyList = (answers: Answers): Array<string> => {
   // Proteus entities use stage-3 decorators that the generated vitest config
   // lowers via unplugin-swc (see buildVitestConfig); ship the transform deps.
-  if (answers.proteusDrivers.length > 0) {
+  if (answers.db !== "none" || answers.kv !== "none") {
     return ["unplugin-swc", "@swc/core"];
   }
   return [];
@@ -125,7 +130,7 @@ export const writePackageJson = (answers: Answers): void => {
     devDependencies: {},
   };
 
-  const proteusNeedsCompose = answers.proteusDrivers.some((d) =>
+  const proteusNeedsCompose = selectedDrivers(answers).some((d) =>
     ["postgres", "mysql", "mongo", "redis"].includes(d),
   );
   const irisNeedsCompose = ["kafka", "nats", "rabbit", "redis"].includes(
@@ -284,7 +289,7 @@ export const buildEnvExampleLines = (answers: Answers): Array<string> => {
     }
   };
 
-  for (const driver of answers.proteusDrivers) {
+  for (const driver of selectedDrivers(answers)) {
     pushEntries(proteusExampleEntries(driver));
   }
   pushEntries(irisExampleEntries(answers.irisDriver));
@@ -348,15 +353,6 @@ export const writeContextFile = (answers: Answers): void => {
   writeFileSync(target, buildContextFile(answers), "utf-8");
 };
 
-export const writeAttachSourcesFile = (answers: Answers): void => {
-  const content = buildAttachSourcesFile(answers);
-  if (!content) return;
-
-  const target = join(answers.projectDir, "src/middleware/attach-sources.ts");
-  ensureDir(target);
-  writeFileSync(target, content, "utf-8");
-};
-
 export const writePylonFile = (answers: Answers): void => {
   const target = join(answers.projectDir, "src/pylon/pylon.ts");
   ensureDir(target);
@@ -364,7 +360,7 @@ export const writePylonFile = (answers: Answers): void => {
 };
 
 export const needsDockerCompose = (answers: Answers): boolean =>
-  answers.proteusDrivers.some((d) =>
+  selectedDrivers(answers).some((d) =>
     ["postgres", "mysql", "mongo", "redis"].includes(d),
   ) || ["kafka", "nats", "rabbit", "redis"].includes(answers.irisDriver);
 
@@ -384,7 +380,7 @@ export const writeWorkerFiles = (answers: Answers): void => {
   for (const key of answers.workers) {
     const target = join(answers.projectDir, "src/workers", `${key}.ts`);
     ensureDir(target);
-    writeFileSync(target, buildWorkerFile(key, answers), "utf-8");
+    writeFileSync(target, buildWorkerFile(key), "utf-8");
   }
 };
 
@@ -422,7 +418,6 @@ export const scaffold = async (
   writeDockerCompose(answers);
   writeWorkerFiles(answers);
   writeIrisSamples(answers);
-  writeAttachSourcesFile(answers);
   await runProteusInit(answers.projectDir, answers);
 
   // Format last so every generated + driver-scaffolded file is prettier-stable.

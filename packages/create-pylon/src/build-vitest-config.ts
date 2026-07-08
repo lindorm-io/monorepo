@@ -10,7 +10,7 @@ import type { Answers } from "./types.js";
  * same shape the lindorm-monorepo's own vitest base uses.
  */
 export const buildVitestConfig = (answers: Answers): string => {
-  const needsDecorators = answers.proteusDrivers.length > 0;
+  const needsDecorators = answers.db !== "none" || answers.kv !== "none";
 
   if (!needsDecorators) {
     return [

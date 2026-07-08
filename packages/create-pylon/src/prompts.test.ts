@@ -26,13 +26,14 @@ const queueSequence = (mock: Mock, values: Array<unknown>): void => {
 //   0. input    — project name (only when no positional name)
 //   1. input    — issuer URL
 //   2. checkbox — features (http/socket)
-//   3. checkbox — proteus drivers
-//   4. select   — iris driver
-//   5. confirm  — webhooks (if both proteus+iris)
-//   6. confirm  — audit    (if both proteus+iris)
-//   7. confirm  — auth
-//   8. confirm  — rate limit (if redis or memory in proteus)
-//   9. checkbox — workers (if proteus)
+//   3. select   — db driver (Proteus DB source)
+//   4. select   — kv driver (Proteus KV source)
+//   5. select   — iris driver
+//   6. confirm  — webhooks (if both proteus+iris)
+//   7. confirm  — audit    (if both proteus+iris)
+//   8. confirm  — auth
+//   9. confirm  — rate limit (if kv !== none)
+//  10. checkbox — workers (if proteus)
 
 describe("runPrompts", () => {
   let sandboxDir: string;
@@ -54,8 +55,8 @@ describe("runPrompts", () => {
   });
 
   test("returns answers with positional name and defaults", async () => {
-    queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["none"]);
+    queueSequence(mockedCheckbox, [["http"]]);
+    queueSequence(mockedSelect, ["none", "none", "none"]);
     queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({ positionalName: "my-app", cwd: sandboxDir });
@@ -69,8 +70,8 @@ describe("runPrompts", () => {
   });
 
   test("scoped positional name keeps the scope but scaffolds into the basename dir (F9)", async () => {
-    queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["none"]);
+    queueSequence(mockedCheckbox, [["http"]]);
+    queueSequence(mockedSelect, ["none", "none", "none"]);
     queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({ positionalName: "@acme/proxy", cwd: sandboxDir });
@@ -82,8 +83,8 @@ describe("runPrompts", () => {
 
   test("prompts for name when positional missing", async () => {
     mockedInput.mockResolvedValueOnce("prompted-name");
-    queueSequence(mockedCheckbox, [["http", "socket"], []]);
-    queueSequence(mockedSelect, ["none"]);
+    queueSequence(mockedCheckbox, [["http", "socket"]]);
+    queueSequence(mockedSelect, ["none", "none", "none"]);
     queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({ cwd: sandboxDir });
@@ -93,9 +94,9 @@ describe("runPrompts", () => {
     expect(answers.features).toMatchSnapshot();
   });
 
-  test("prompts webhooks and audit only when both drivers selected", async () => {
-    queueSequence(mockedCheckbox, [["http"], ["postgres", "redis"], ["expiry-cleanup"]]);
-    queueSequence(mockedSelect, ["rabbit"]);
+  test("prompts webhooks and audit only when both proteus and iris selected", async () => {
+    queueSequence(mockedCheckbox, [["http"], ["expiry-cleanup"]]);
+    queueSequence(mockedSelect, ["postgres", "redis", "rabbit"]);
     // webhooks, audit, auth, rateLimit
     queueSequence(mockedConfirm, [true, true, false, false]);
 
@@ -104,15 +105,16 @@ describe("runPrompts", () => {
     expect(mockedConfirm).toHaveBeenCalledTimes(4);
     expect(answers.features.webhooks).toBe(true);
     expect(answers.features.audit).toBe(true);
-    expect(answers.proteusDrivers).toEqual(["postgres", "redis"]);
+    expect(answers.db).toBe("postgres");
+    expect(answers.kv).toBe("redis");
     expect(answers.irisDriver).toBe("rabbit");
     expect(answers.workers).toMatchSnapshot();
   });
 
   test("skips webhooks and audit prompts when iris is none", async () => {
-    queueSequence(mockedCheckbox, [["http"], ["postgres"], ["expiry-cleanup"]]);
-    queueSequence(mockedSelect, ["none"]);
-    // auth only (no webhooks/audit, no rateLimit — postgres alone doesn't qualify)
+    queueSequence(mockedCheckbox, [["http"], ["expiry-cleanup"]]);
+    queueSequence(mockedSelect, ["postgres", "none", "none"]);
+    // auth only (no webhooks/audit, no rateLimit — kv is none)
     queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({ positionalName: "partial-app", cwd: sandboxDir });
@@ -122,9 +124,9 @@ describe("runPrompts", () => {
     expect(answers.features.audit).toBe(false);
   });
 
-  test("skips workers prompt entirely when proteus drivers is empty", async () => {
-    queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["none"]);
+  test("skips workers prompt entirely when neither db nor kv is selected", async () => {
+    queueSequence(mockedCheckbox, [["http"]]);
+    queueSequence(mockedSelect, ["none", "none", "none"]);
     queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({
@@ -132,14 +134,14 @@ describe("runPrompts", () => {
       cwd: sandboxDir,
     });
 
-    expect(mockedCheckbox).toHaveBeenCalledTimes(2);
+    expect(mockedCheckbox).toHaveBeenCalledTimes(1);
     expect(answers.workers).toEqual([]);
   });
 
   test("auth prompt implies session — picking auth sets both", async () => {
-    queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["none"]);
-    // auth=true (rateLimit skipped — no proteus)
+    queueSequence(mockedCheckbox, [["http"]]);
+    queueSequence(mockedSelect, ["none", "none", "none"]);
+    // auth=true (rateLimit skipped — kv is none)
     queueSequence(mockedConfirm, [true]);
 
     const answers = await runPrompts({ positionalName: "a-app", cwd: sandboxDir });
@@ -150,9 +152,9 @@ describe("runPrompts", () => {
   });
 
   test("declining auth leaves both session and auth off", async () => {
-    queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["none"]);
-    // auth=false (rateLimit skipped — no proteus)
+    queueSequence(mockedCheckbox, [["http"]]);
+    queueSequence(mockedSelect, ["none", "none", "none"]);
+    // auth=false (rateLimit skipped — kv is none)
     queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({ positionalName: "no-a-app", cwd: sandboxDir });
@@ -162,9 +164,9 @@ describe("runPrompts", () => {
     expect(answers.features.session).toBe(false);
   });
 
-  test("rate limit prompt shown when redis is selected", async () => {
-    queueSequence(mockedCheckbox, [["http"], ["redis"], []]);
-    queueSequence(mockedSelect, ["none"]);
+  test("rate limit prompt shown when kv is redis", async () => {
+    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedSelect, ["none", "redis", "none"]);
     // auth, rateLimit
     queueSequence(mockedConfirm, [false, true]);
 
@@ -174,9 +176,9 @@ describe("runPrompts", () => {
     expect(answers.features.rateLimit).toBe(true);
   });
 
-  test("rate limit prompt shown when memory is selected", async () => {
-    queueSequence(mockedCheckbox, [["http"], ["memory"], []]);
-    queueSequence(mockedSelect, ["none"]);
+  test("rate limit prompt shown when kv is memory", async () => {
+    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedSelect, ["none", "memory", "none"]);
     // auth, rateLimit
     queueSequence(mockedConfirm, [false, true]);
 
@@ -186,10 +188,10 @@ describe("runPrompts", () => {
     expect(answers.features.rateLimit).toBe(true);
   });
 
-  test("rate limit prompt skipped when postgres is the only proteus driver", async () => {
-    queueSequence(mockedCheckbox, [["http"], ["postgres"], []]);
-    queueSequence(mockedSelect, ["none"]);
-    // auth only — postgres alone doesn't qualify for rate limiting
+  test("rate limit prompt skipped when only a db driver is selected", async () => {
+    queueSequence(mockedCheckbox, [["http"], []]);
+    queueSequence(mockedSelect, ["postgres", "none", "none"]);
+    // auth only — no kv store, so no rate limiting
     queueSequence(mockedConfirm, [false]);
 
     const answers = await runPrompts({ positionalName: "no-rl-pg-app", cwd: sandboxDir });
@@ -198,9 +200,9 @@ describe("runPrompts", () => {
     expect(answers.features.rateLimit).toBe(false);
   });
 
-  test("rate limit prompt skipped when no proteus driver is selected", async () => {
-    queueSequence(mockedCheckbox, [["http"], []]);
-    queueSequence(mockedSelect, ["none"]);
+  test("rate limit prompt skipped when neither db nor kv is selected", async () => {
+    queueSequence(mockedCheckbox, [["http"]]);
+    queueSequence(mockedSelect, ["none", "none", "none"]);
     // auth only
     queueSequence(mockedConfirm, [false]);
 

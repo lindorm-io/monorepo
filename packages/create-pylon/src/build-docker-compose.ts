@@ -1,4 +1,5 @@
 import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
+import { selectedDrivers } from "./types.js";
 
 type ServiceBlock = { name: string; lines: Array<string> };
 
@@ -153,7 +154,7 @@ const dedupeByName = (blocks: Array<ServiceBlock>): Array<ServiceBlock> => {
 };
 
 export const buildDockerCompose = (answers: Answers): string | null => {
-  const proteus = answers.proteusDrivers.flatMap((d) => proteusBlocks(d));
+  const proteus = selectedDrivers(answers).flatMap((d) => proteusBlocks(d));
   const blocks = dedupeByName([...proteus, ...irisBlocks(answers.irisDriver)]);
 
   if (blocks.length === 0) return null;
