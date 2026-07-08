@@ -58,7 +58,7 @@ export const _createMockProteusSource = (
     getFilterRegistry: returns(new Map()),
 
     repository: impl((entity: any) =>
-      _createMockRepository(mockFn, rows ? (rows[entity?.name] ?? []) : undefined),
+      _createMockRepository(mockFn, rows ? (rows[entity?.name] ??= []) : undefined),
     ),
     queryBuilder: mockFn(),
     client: mockFn(),

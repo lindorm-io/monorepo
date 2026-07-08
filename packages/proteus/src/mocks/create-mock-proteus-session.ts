@@ -43,7 +43,7 @@ export const _createMockProteusSession = (
     hasEntity: returns(true),
 
     repository: impl((entity: any) =>
-      _createMockRepository(mockFn, rows ? (rows[entity?.name] ?? []) : undefined),
+      _createMockRepository(mockFn, rows ? (rows[entity?.name] ??= []) : undefined),
     ),
     queryBuilder: mockFn(),
     client: mockFn(),

@@ -138,4 +138,131 @@ describe("createMockRepository", () => {
       expect(await repo.findOne({ id: "alb_1" } as any)).toEqual({ id: "override" });
     });
   });
+
+  describe("when seeded — writes persist", () => {
+    type Row = { id?: string; name?: string; count?: number };
+
+    test("insert persists and findOne round-trips (generated id)", async () => {
+      const repo = createMockRepository<Row>([]);
+
+      const inserted = await repo.insert({ name: "hello" } as any);
+      expect(inserted.id).toEqual(expect.any(String));
+
+      const found = await repo.findOne({ id: inserted.id } as any);
+      expect(found).toEqual({ id: inserted.id, name: "hello" });
+    });
+
+    test("insert honours a provided id and does not mutate the caller's input", async () => {
+      const repo = createMockRepository<Row>([]);
+      const input = { id: "row_1", name: "kept" };
+
+      const inserted = await repo.insert(input as any);
+      expect(inserted).not.toBe(input);
+      expect(await repo.findOne({ id: "row_1" } as any)).toEqual(input);
+    });
+
+    test("insert accepts an array and returns each stored row", async () => {
+      const repo = createMockRepository<Row>([]);
+
+      const result = await repo.insert([{ name: "a" }, { name: "b" }] as any);
+      expect(result).toHaveLength(2);
+      expect(await repo.count()).toBe(2);
+    });
+
+    test("save / upsert update in place by id, else insert", async () => {
+      const repo = createMockRepository<Row>([{ id: "row_1", name: "old" }]);
+
+      expect(await repo.save({ id: "row_1", name: "new" } as any)).toEqual({
+        id: "row_1",
+        name: "new",
+      });
+      expect(await repo.count()).toBe(1);
+
+      const created = await repo.upsert({ name: "fresh" } as any);
+      expect(created.id).toEqual(expect.any(String));
+      expect(await repo.count()).toBe(2);
+    });
+
+    test("update merges onto the stored row", async () => {
+      const repo = createMockRepository<Row>([{ id: "row_1", name: "old", count: 1 }]);
+
+      const updated = await repo.update({ id: "row_1", name: "new" } as any);
+      expect(updated).toEqual({ id: "row_1", name: "new", count: 1 });
+    });
+
+    test("destroy / delete remove matching rows", async () => {
+      const repo = createMockRepository<Row>([
+        { id: "row_1", name: "a" },
+        { id: "row_2", name: "b" },
+        { id: "row_3", name: "b" },
+      ]);
+
+      await repo.destroy({ id: "row_1" } as any);
+      expect(await repo.findOne({ id: "row_1" } as any)).toBeNull();
+
+      await repo.delete({ name: "b" } as any);
+      expect(await repo.count()).toBe(0);
+    });
+
+    test("increment / decrement adjust matched rows", async () => {
+      const repo = createMockRepository<Row>([{ id: "row_1", count: 5 }]);
+
+      await repo.increment({ id: "row_1" } as any, "count" as any, 3);
+      expect((await repo.findOne({ id: "row_1" } as any))?.count).toBe(8);
+
+      await repo.decrement({ id: "row_1" } as any, "count" as any, 2);
+      expect((await repo.findOne({ id: "row_1" } as any))?.count).toBe(6);
+    });
+
+    test("updateMany assigns to all matched rows", async () => {
+      const repo = createMockRepository<Row>([
+        { id: "row_1", name: "a" },
+        { id: "row_2", name: "a" },
+      ]);
+
+      await repo.updateMany({ name: "a" } as any, { name: "z" } as any);
+      expect(await repo.count({ name: "z" } as any)).toBe(2);
+    });
+
+    test("findOneOrSave returns the existing match, else inserts", async () => {
+      const repo = createMockRepository<Row>([{ id: "row_1", name: "existing" }]);
+
+      expect(
+        await repo.findOneOrSave({ id: "row_1" } as any, { name: "x" } as any),
+      ).toEqual({ id: "row_1", name: "existing" });
+
+      const saved = await repo.findOneOrSave(
+        { id: "row_2" } as any,
+        {
+          name: "new",
+        } as any,
+      );
+      expect(saved.name).toBe("new");
+      expect(await repo.count()).toBe(2);
+    });
+
+    test("findOneOrFail throws when nothing matches", async () => {
+      const repo = createMockRepository<Row>([{ id: "row_1" }]);
+
+      expect(await repo.findOneOrFail({ id: "row_1" } as any)).toEqual({ id: "row_1" });
+      await expect(repo.findOneOrFail({ id: "nope" } as any)).rejects.toThrow(
+        "Entity not found",
+      );
+    });
+
+    test("clear empties the store", async () => {
+      const repo = createMockRepository<Row>([{ id: "row_1" }, { id: "row_2" }]);
+
+      await repo.clear();
+      expect(await repo.count()).toBe(0);
+    });
+
+    test("write methods remain spies", async () => {
+      const repo = createMockRepository<Row>([]);
+
+      await repo.insert({ name: "a" } as any);
+      expect(repo.insert).toHaveBeenCalledTimes(1);
+      expect(vi.isMockFunction(repo.insert)).toBe(true);
+    });
+  });
 });

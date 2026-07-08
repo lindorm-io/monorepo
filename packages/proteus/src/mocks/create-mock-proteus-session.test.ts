@@ -91,4 +91,28 @@ describe("createMockProteusSession", () => {
     expect(await repo.find()).toEqual([]);
     expect(await repo.findOne({ id: "x" } as any)).toBeNull();
   });
+
+  it("should persist writes across repository() calls within a seeded session", async () => {
+    const session = createMockProteusSession({});
+
+    const inserted = await session.repository(TestEntity).insert({ id: "te_1" } as any);
+    expect(inserted).toEqual({ id: "te_1" });
+
+    const found = await session.repository(TestEntity).findOne({ id: "te_1" } as any);
+    expect(found).toEqual({ id: "te_1" });
+  });
+
+  it("should give an empty seed dict a stateful store per entity", async () => {
+    class Other {
+      id!: string;
+    }
+
+    const session = createMockProteusSession({});
+
+    await session.repository(TestEntity).insert({ id: "te_1" } as any);
+
+    // A different entity keeps its own fresh, empty store.
+    expect(await session.repository(Other).count()).toBe(0);
+    expect(await session.repository(TestEntity).count()).toBe(1);
+  });
 });
