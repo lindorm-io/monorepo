@@ -1,37 +1,30 @@
 import { ServerError } from "@lindorm/errors";
-import { useScope } from "./use-scope.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import { createTestPylonCtx } from "../../mocks/vitest.js";
+import { useScope } from "./use-scope.js";
 
 describe("useScope", () => {
-  let ctx: any;
+  let ctx: ReturnType<typeof createTestPylonCtx>;
   let next: Mock;
 
   beforeEach(() => {
     next = vi.fn();
-
-    ctx = {
-      db: {
-        setFilterParams: vi.fn(),
-      },
-      state: {
-        tenant: "tenant-abc",
-      },
-    };
+    ctx = createTestPylonCtx({ state: { tenant: "tenant-abc" } });
   });
 
-  test("should call proteus.setFilterParams with params from function", async () => {
+  test("should call db.setFilterParams with params from function", async () => {
     await useScope({ params: (c) => ({ tenantId: c.state.tenant }) })(ctx, next);
 
-    expect(ctx.db.setFilterParams).toHaveBeenCalledWith("__scope", {
+    expect(ctx.db!.setFilterParams).toHaveBeenCalledWith("__scope", {
       tenantId: "tenant-abc",
     });
   });
 
-  test("should throw ServerError when proteus not on context", async () => {
-    delete ctx.db;
+  test("should throw ServerError when no db on context", async () => {
+    const noDbCtx = createTestPylonCtx({ db: null });
 
     try {
-      await useScope({ params: () => ({}) })(ctx, next);
+      await useScope({ params: () => ({}) })(noDbCtx, next);
       expect.fail("expected error");
     } catch (err: any) {
       expect(err).toBeInstanceOf(ServerError);
@@ -48,7 +41,7 @@ describe("useScope", () => {
       }),
     })(ctx, next);
 
-    expect(ctx.db.setFilterParams).toHaveBeenCalledWith("__scope", {
+    expect(ctx.db!.setFilterParams).toHaveBeenCalledWith("__scope", {
       tenantId: "tenant-abc",
       regionId: "eu-west-1",
       orgUnit: "engineering",

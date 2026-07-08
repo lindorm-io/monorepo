@@ -1,54 +1,46 @@
 import { ClientError } from "@lindorm/errors";
-import { useTenant } from "./use-tenant.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import { createTestPylonCtx } from "../../mocks/vitest.js";
+import { useTenant } from "./use-tenant.js";
 
 describe("useTenant", () => {
-  let ctx: any;
+  let ctx: ReturnType<typeof createTestPylonCtx>;
+  let introspect: Mock;
+  let setFilterParams: Mock;
   let next: Mock;
 
   beforeEach(() => {
     next = vi.fn();
 
-    ctx = {
-      auth: {
-        introspect: vi.fn().mockResolvedValue({
-          active: true,
-          tenantId: "tenant-abc",
-        }),
-      },
+    ctx = createTestPylonCtx({
       state: {
-        tokens: {
-          accessToken: {
-            payload: {
-              tenantId: "tenant-abc",
-            },
-          },
-        },
+        tokens: { accessToken: { payload: { tenantId: "tenant-abc" } } as any },
       },
-      db: {
-        setFilterParams: vi.fn(),
-      },
-    };
+    });
+
+    introspect = ctx.auth.introspect as unknown as Mock;
+    introspect.mockResolvedValue({ active: true, tenantId: "tenant-abc" });
+    setFilterParams = ctx.db!.setFilterParams as unknown as Mock;
   });
 
   describe("default (no path, ctx.auth available)", () => {
     test("should extract tenantId from introspection", async () => {
       await useTenant()(ctx, next);
 
-      expect(ctx.auth.introspect).toHaveBeenCalledTimes(1);
+      expect(introspect).toHaveBeenCalledTimes(1);
       expect(ctx.state.tenant).toBe("tenant-abc");
     });
 
-    test("should call proteus.setFilterParams with tenantId", async () => {
+    test("should call db.setFilterParams with tenantId", async () => {
       await useTenant()(ctx, next);
 
-      expect(ctx.db.setFilterParams).toHaveBeenCalledWith("__scope", {
+      expect(setFilterParams).toHaveBeenCalledWith("__scope", {
         tenantId: "tenant-abc",
       });
     });
 
     test("should throw 403 when required and introspection has no tenantId", async () => {
-      ctx.auth.introspect.mockResolvedValue({ active: true });
+      introspect.mockResolvedValue({ active: true });
 
       await expect(useTenant()(ctx, next)).rejects.toThrow(ClientError);
 
@@ -61,7 +53,7 @@ describe("useTenant", () => {
     });
 
     test("should allow missing tenant when required is false", async () => {
-      ctx.auth.introspect.mockResolvedValue({ active: true });
+      introspect.mockResolvedValue({ active: true });
 
       await useTenant(undefined, { required: false })(ctx, next);
 
@@ -82,15 +74,15 @@ describe("useTenant", () => {
 
       await useTenant("params.tenantId")(ctx, next);
 
-      expect(ctx.auth.introspect).not.toHaveBeenCalled();
+      expect(introspect).not.toHaveBeenCalled();
       expect(ctx.state.tenant).toBe("tenant-from-params");
-      expect(ctx.db.setFilterParams).toHaveBeenCalledWith("__scope", {
+      expect(setFilterParams).toHaveBeenCalledWith("__scope", {
         tenantId: "tenant-from-params",
       });
     });
 
     test("should read from header path", async () => {
-      ctx.headers = { "x-tenant-id": "tenant-from-header" };
+      (ctx as any).headers = { "x-tenant-id": "tenant-from-header" };
 
       await useTenant("headers.x-tenant-id")(ctx, next);
 
@@ -106,7 +98,7 @@ describe("useTenant", () => {
     });
 
     test("should read from custom token path", async () => {
-      ctx.state.tokens.idToken = { payload: { tenantId: "tenant-from-id" } };
+      (ctx.state.tokens as any).idToken = { payload: { tenantId: "tenant-from-id" } };
 
       await useTenant("state.tokens.idToken.payload.tenantId")(ctx, next);
 
@@ -125,19 +117,28 @@ describe("useTenant", () => {
     });
   });
 
-  test("should not call setFilterParams when proteus not on context", async () => {
-    delete ctx.db;
+  test("should not call setFilterParams when no db on context", async () => {
+    const noDbCtx = createTestPylonCtx({
+      state: {
+        tokens: { accessToken: { payload: { tenantId: "tenant-abc" } } as any },
+      },
+      db: null,
+    });
+    (noDbCtx.auth.introspect as unknown as Mock).mockResolvedValue({
+      active: true,
+      tenantId: "tenant-abc",
+    });
 
-    await useTenant()(ctx, next);
+    await useTenant()(noDbCtx, next);
 
-    expect(ctx.state.tenant).toBe("tenant-abc");
+    expect(noDbCtx.state.tenant).toBe("tenant-abc");
   });
 
   test("should not call setFilterParams when tenantId not found and not required", async () => {
-    ctx.auth.introspect.mockResolvedValue({ active: true });
+    introspect.mockResolvedValue({ active: true });
 
     await useTenant(undefined, { required: false })(ctx, next);
 
-    expect(ctx.db.setFilterParams).not.toHaveBeenCalled();
+    expect(setFilterParams).not.toHaveBeenCalled();
   });
 });
