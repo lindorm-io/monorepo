@@ -112,7 +112,7 @@ export const buildConfigFile = (answers: Answers): string => {
     emitGroup(proteusGroup(driver));
   }
 
-  emitGroup(irisGroup(answers.irisDriver));
+  emitGroup(irisGroup(answers.bus));
 
   if (answers.features.auth) {
     lines.push(

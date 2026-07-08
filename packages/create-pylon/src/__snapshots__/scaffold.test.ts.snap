@@ -925,7 +925,7 @@ export const pylon = new Pylon({
   db: proteusSource,
   kryptos: { enabled: true },
   kv: kvSource,
-  iris: irisSource,
+  bus: irisSource,
   queue: { enabled: true },
   webhook: { enabled: true },
   audit: {
@@ -2717,7 +2717,7 @@ export const pylon = new Pylon({
   db: proteusSource,
   kryptos: { enabled: true },
   kv: kvSource,
-  iris: irisSource,
+  bus: irisSource,
   queue: { enabled: true },
   webhook: { enabled: true },
   audit: {
@@ -2924,7 +2924,7 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: proteusSource,
   kryptos: { enabled: true },
-  iris: irisSource,
+  bus: irisSource,
   queue: { enabled: true },
   webhook: { enabled: true },
   audit: {
@@ -2963,7 +2963,7 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: proteusSource,
   kryptos: { enabled: true },
-  iris: irisSource,
+  bus: irisSource,
   queue: { enabled: true },
   setup: async () => {
     await proteusSource.connect();
@@ -3020,7 +3020,7 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  iris: irisSource,
+  bus: irisSource,
   queue: { enabled: true },
   setup: async () => {
     await irisSource.connect();

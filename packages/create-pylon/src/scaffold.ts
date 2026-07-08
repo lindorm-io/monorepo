@@ -101,8 +101,8 @@ export const buildDependencyList = (answers: Answers): Array<string> => {
     }
   }
 
-  if (answers.irisDriver !== "none") {
-    deps.push("@lindorm/iris", ...IRIS_DRIVER_PACKAGES[answers.irisDriver]);
+  if (answers.bus !== "none") {
+    deps.push("@lindorm/iris", ...IRIS_DRIVER_PACKAGES[answers.bus]);
   }
 
   return Array.from(new Set(deps));
@@ -140,9 +140,7 @@ export const writePackageJson = (answers: Answers): void => {
   const proteusNeedsCompose = selectedDrivers(answers).some((d) =>
     ["postgres", "mysql", "mongo", "redis"].includes(d),
   );
-  const irisNeedsCompose = ["kafka", "nats", "rabbit", "redis"].includes(
-    answers.irisDriver,
-  );
+  const irisNeedsCompose = ["kafka", "nats", "rabbit", "redis"].includes(answers.bus);
   const driverNeedsCompose = proteusNeedsCompose || irisNeedsCompose;
 
   if (driverNeedsCompose) {
@@ -299,7 +297,7 @@ export const buildEnvExampleLines = (answers: Answers): Array<string> => {
   for (const driver of selectedDrivers(answers)) {
     pushEntries(proteusExampleEntries(driver));
   }
-  pushEntries(irisExampleEntries(answers.irisDriver));
+  pushEntries(irisExampleEntries(answers.bus));
 
   if (overrideEntries.length > 0) {
     lines.push(
@@ -384,7 +382,7 @@ export const writeTestCtxFile = (answers: Answers): void => {
 export const needsDockerCompose = (answers: Answers): boolean =>
   selectedDrivers(answers).some((d) =>
     ["postgres", "mysql", "mongo", "redis"].includes(d),
-  ) || ["kafka", "nats", "rabbit", "redis"].includes(answers.irisDriver);
+  ) || ["kafka", "nats", "rabbit", "redis"].includes(answers.bus);
 
 export const writeDockerCompose = (answers: Answers): void => {
   if (!needsDockerCompose(answers)) return;
@@ -407,7 +405,7 @@ export const writeWorkerFiles = (answers: Answers): void => {
 };
 
 export const writeIrisSamples = (answers: Answers): void => {
-  if (answers.irisDriver === "none") return;
+  if (answers.bus === "none") return;
 
   const files = buildIrisSamples();
 
@@ -449,8 +447,8 @@ export const scaffold = async (
   if (answers.db !== "none" || answers.kv !== "none") {
     await runProteusGenerateSampleEntity(answers.projectDir);
   }
-  if (answers.irisDriver !== "none") {
-    await runIrisInit(answers.projectDir, answers.irisDriver);
+  if (answers.bus !== "none") {
+    await runIrisInit(answers.projectDir, answers.bus);
     await runIrisGenerateSampleMessage(answers.projectDir);
   }
 

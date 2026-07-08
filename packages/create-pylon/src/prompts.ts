@@ -164,10 +164,10 @@ export const runPrompts = async ({
   const featureFlags = await promptFeatures();
   const db = await promptDb();
   const kv = await promptKv();
-  const irisDriver = await promptIrisDriver();
+  const bus = await promptIrisDriver();
 
   const hasProteus = db !== "none" || kv !== "none";
-  const hasIris = irisDriver !== "none";
+  const hasIris = bus !== "none";
   const bothSelected = hasProteus && hasIris;
   const webhooks = bothSelected ? await promptWebhooks() : false;
   const audit = bothSelected ? await promptAudit() : false;
@@ -194,7 +194,7 @@ export const runPrompts = async ({
     },
     db,
     kv,
-    irisDriver,
+    bus,
     workers,
   };
 };

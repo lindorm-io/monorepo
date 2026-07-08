@@ -155,7 +155,7 @@ const dedupeByName = (blocks: Array<ServiceBlock>): Array<ServiceBlock> => {
 
 export const buildDockerCompose = (answers: Answers): string | null => {
   const proteus = selectedDrivers(answers).flatMap((d) => proteusBlocks(d));
-  const blocks = dedupeByName([...proteus, ...irisBlocks(answers.irisDriver)]);
+  const blocks = dedupeByName([...proteus, ...irisBlocks(answers.bus)]);
 
   if (blocks.length === 0) return null;
 

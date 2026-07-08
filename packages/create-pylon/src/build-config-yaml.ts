@@ -74,8 +74,8 @@ const collectHints = (answers: Answers): Array<EnvHint> => {
   for (const driver of selectedDrivers(answers)) {
     hints.push(...proteusEnvHints(driver));
   }
-  if (answers.irisDriver !== "none") {
-    hints.push(...irisEnvHints(answers.irisDriver));
+  if (answers.bus !== "none") {
+    hints.push(...irisEnvHints(answers.bus));
   }
   if (answers.features.auth) {
     hints.push(
@@ -225,8 +225,8 @@ export const buildConfigDevelopmentYaml = (answers: Answers): string => {
   for (const driver of selectedDrivers(answers)) {
     pushBlock(proteusDevYaml(driver));
   }
-  if (answers.irisDriver !== "none") {
-    pushBlock(irisDevYaml(answers.irisDriver));
+  if (answers.bus !== "none") {
+    pushBlock(irisDevYaml(answers.bus));
   }
 
   const lines: Array<string> = [

@@ -66,7 +66,7 @@ const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   },
   db: "none",
   kv: "none",
-  irisDriver: "none",
+  bus: "none",
   workers: [],
   ...overrides,
 });
@@ -122,9 +122,7 @@ describe("cli run orchestration", () => {
   // now — run() just orchestrates scaffold → install → git. See scaffold.test.ts
   // for the driver-scaffolding coverage.
   test("orchestration order: scaffold → install → git", async () => {
-    mockedRunPrompts.mockResolvedValue(
-      baseAnswers({ db: "postgres", irisDriver: "rabbit" }),
-    );
+    mockedRunPrompts.mockResolvedValue(baseAnswers({ db: "postgres", bus: "rabbit" }));
 
     const calls: Array<string> = [];
     mockedScaffold.mockImplementation(async () => {

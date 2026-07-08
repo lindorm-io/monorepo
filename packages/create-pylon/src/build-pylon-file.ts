@@ -24,7 +24,7 @@ const buildImports = (answers: Answers): Array<string> => {
     lines.push(`import { source as kvSource } from "../proteus/kv/source.js";`);
   }
 
-  if (answers.irisDriver !== "none") {
+  if (answers.bus !== "none") {
     lines.push(`import { source as irisSource } from "../iris/source.js";`);
   }
 
@@ -80,8 +80,8 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`  kv: kvSource,`);
   }
 
-  if (answers.irisDriver !== "none") {
-    lines.push(`  iris: irisSource,`);
+  if (answers.bus !== "none") {
+    lines.push(`  bus: irisSource,`);
     lines.push(`  queue: { enabled: true },`);
   }
 
@@ -151,7 +151,7 @@ const buildOptions = (answers: Answers): string => {
   if (kvIsSecondary) {
     lines.push(`    await kvSource.connect();`);
   }
-  if (answers.irisDriver !== "none") {
+  if (answers.bus !== "none") {
     lines.push(`    await irisSource.connect();`);
   }
   lines.push(`  },`);

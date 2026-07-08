@@ -46,7 +46,7 @@ const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   features: baseFeatures(),
   db: "none",
   kv: "none",
-  irisDriver: "none",
+  bus: "none",
   workers: [],
   ...overrides,
 });
@@ -176,7 +176,7 @@ describe("scaffold", () => {
       const answers = baseAnswers({
         projectDir,
         db: "postgres",
-        irisDriver: "kafka",
+        bus: "kafka",
       });
       writeEnvFile(answers, FIXED_KEK);
       expect(readFileSync(join(projectDir, ".env"), "utf-8")).toMatchSnapshot();
@@ -205,7 +205,7 @@ describe("scaffold", () => {
         baseAnswers({
           db: "postgres",
           kv: "redis",
-          irisDriver: "kafka",
+          bus: "kafka",
         }),
       ],
     ])("snapshot: %s", (_name, answers) => {
@@ -216,13 +216,13 @@ describe("scaffold", () => {
   describe("buildDependencyList", () => {
     test.each([
       ["none-none", baseAnswers()],
-      ["postgres-rabbit", baseAnswers({ db: "postgres", irisDriver: "rabbit" })],
-      ["sqlite-kafka", baseAnswers({ db: "sqlite", irisDriver: "kafka" })],
-      ["redis-redis", baseAnswers({ kv: "redis", irisDriver: "redis" })],
-      ["memory-nats", baseAnswers({ db: "memory", irisDriver: "nats" })],
+      ["postgres-rabbit", baseAnswers({ db: "postgres", bus: "rabbit" })],
+      ["sqlite-kafka", baseAnswers({ db: "sqlite", bus: "kafka" })],
+      ["redis-redis", baseAnswers({ kv: "redis", bus: "redis" })],
+      ["memory-nats", baseAnswers({ db: "memory", bus: "nats" })],
       [
         "postgres+redis-rabbit",
-        baseAnswers({ db: "postgres", kv: "redis", irisDriver: "rabbit" }),
+        baseAnswers({ db: "postgres", kv: "redis", bus: "rabbit" }),
       ],
     ])("snapshot: %s", (_name, answers) => {
       expect(buildDependencyList(answers)).toMatchSnapshot();
@@ -296,12 +296,12 @@ describe("scaffold", () => {
       ["sqlite only", { db: "sqlite" }],
       ["redis kv only", { kv: "redis" }],
       ["postgres + redis", { db: "postgres", kv: "redis" }],
-      ["kafka only", { irisDriver: "kafka" }],
-      ["nats only", { irisDriver: "nats" }],
-      ["rabbit only", { irisDriver: "rabbit" }],
-      ["redis iris only", { irisDriver: "redis" }],
-      ["postgres + kafka", { db: "postgres", irisDriver: "kafka" }],
-      ["mongo + nats", { db: "mongo", irisDriver: "nats" }],
+      ["kafka only", { bus: "kafka" }],
+      ["nats only", { bus: "nats" }],
+      ["rabbit only", { bus: "rabbit" }],
+      ["redis iris only", { bus: "redis" }],
+      ["postgres + kafka", { db: "postgres", bus: "kafka" }],
+      ["mongo + nats", { db: "mongo", bus: "nats" }],
       ["auth only", { features: baseFeatures({ auth: true }) }],
       ["postgres + auth", { db: "postgres", features: baseFeatures({ auth: true }) }],
     ])("snapshot: %s", (_name, overrides) => {
@@ -330,9 +330,9 @@ describe("scaffold", () => {
       ["postgres only", { db: "postgres" }],
       ["sqlite only", { db: "sqlite" }],
       ["postgres + redis", { db: "postgres", kv: "redis" }],
-      ["redis kv + redis iris (deduped)", { kv: "redis", irisDriver: "redis" }],
-      ["postgres + kafka", { db: "postgres", irisDriver: "kafka" }],
-      ["nats only", { irisDriver: "nats" }],
+      ["redis kv + redis iris (deduped)", { kv: "redis", bus: "redis" }],
+      ["postgres + kafka", { db: "postgres", bus: "kafka" }],
+      ["nats only", { bus: "nats" }],
       ["postgres + auth", { db: "postgres", features: baseFeatures({ auth: true }) }],
     ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
@@ -350,10 +350,10 @@ describe("scaffold", () => {
       ["postgres only", { db: "postgres" }],
       ["mysql only", { db: "mysql" }],
       ["postgres + redis", { db: "postgres", kv: "redis" }],
-      ["postgres + kafka", { db: "postgres", irisDriver: "kafka" }],
-      ["mongo + rabbit", { db: "mongo", irisDriver: "rabbit" }],
-      ["sqlite + nats", { db: "sqlite", irisDriver: "nats" }],
-      ["redis kv + redis iris (deduped)", { kv: "redis", irisDriver: "redis" }],
+      ["postgres + kafka", { db: "postgres", bus: "kafka" }],
+      ["mongo + rabbit", { db: "mongo", bus: "rabbit" }],
+      ["sqlite + nats", { db: "sqlite", bus: "nats" }],
+      ["redis kv + redis iris (deduped)", { kv: "redis", bus: "redis" }],
     ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir, ...overrides });
@@ -367,8 +367,8 @@ describe("scaffold", () => {
   describe("buildEnvExampleLines", () => {
     test.each<[string, Partial<Answers>]>([
       ["no drivers", {}],
-      ["postgres + kafka", { db: "postgres", irisDriver: "kafka" }],
-      ["mysql + rabbit", { db: "mysql", irisDriver: "rabbit" }],
+      ["postgres + kafka", { db: "postgres", bus: "kafka" }],
+      ["mysql + rabbit", { db: "mysql", bus: "rabbit" }],
       ["postgres + redis", { db: "postgres", kv: "redis" }],
       ["postgres + auth", { db: "postgres", features: baseFeatures({ auth: true }) }],
     ])("snapshot: %s", (_name, overrides) => {
@@ -383,7 +383,7 @@ describe("scaffold", () => {
       const answers = baseAnswers({
         projectDir,
         db: "postgres",
-        irisDriver: "kafka",
+        bus: "kafka",
       });
       writeEnvExampleFile(answers);
       expect(existsSync(join(projectDir, ".env.example"))).toBe(true);
@@ -400,13 +400,13 @@ describe("scaffold", () => {
       ["http + socket, no drivers", { features: baseFeatures({ socket: true }) }],
       ["http + postgres", { db: "postgres" }],
       ["http + redis kv only", { kv: "redis" }],
-      ["http + rabbit", { irisDriver: "rabbit" }],
-      ["http + postgres + rabbit", { db: "postgres", irisDriver: "rabbit" }],
+      ["http + rabbit", { bus: "rabbit" }],
+      ["http + postgres + rabbit", { db: "postgres", bus: "rabbit" }],
       [
         "http + postgres + rabbit + webhooks + audit",
         {
           db: "postgres",
-          irisDriver: "rabbit" as const,
+          bus: "rabbit" as const,
           features: baseFeatures({ webhooks: true, audit: true }),
         },
       ],
@@ -415,7 +415,7 @@ describe("scaffold", () => {
         {
           db: "postgres",
           kv: "redis",
-          irisDriver: "kafka" as const,
+          bus: "kafka" as const,
           features: baseFeatures({ socket: true, webhooks: true, audit: true }),
           workers: ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"] as Array<
             Answers["workers"][number]
@@ -518,14 +518,14 @@ describe("scaffold", () => {
       ["mysql", { db: "mysql" }],
       ["mongo", { db: "mongo" }],
       ["redis kv", { kv: "redis" }],
-      ["rabbit", { irisDriver: "rabbit" }],
-      ["kafka + zookeeper", { irisDriver: "kafka" }],
-      ["nats", { irisDriver: "nats" }],
-      ["iris redis", { irisDriver: "redis" }],
-      ["postgres + rabbit", { db: "postgres", irisDriver: "rabbit" }],
+      ["rabbit", { bus: "rabbit" }],
+      ["kafka + zookeeper", { bus: "kafka" }],
+      ["nats", { bus: "nats" }],
+      ["iris redis", { bus: "redis" }],
+      ["postgres + rabbit", { db: "postgres", bus: "rabbit" }],
       ["postgres + redis", { db: "postgres", kv: "redis" }],
-      ["redis dedup", { kv: "redis", irisDriver: "redis" }],
-      ["mongo + kafka", { db: "mongo", irisDriver: "kafka" }],
+      ["redis dedup", { kv: "redis", bus: "redis" }],
+      ["mongo + kafka", { db: "mongo", bus: "kafka" }],
     ])("snapshot: %s", (_name, overrides) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir, ...overrides });
@@ -614,14 +614,14 @@ describe("scaffold", () => {
   });
 
   describe("writeIrisSamples", () => {
-    test.each<[string, Answers["irisDriver"]]>([
+    test.each<[string, Answers["bus"]]>([
       ["rabbit", "rabbit"],
       ["kafka", "kafka"],
       ["nats", "nats"],
       ["redis", "redis"],
-    ])("snapshot: %s publisher + subscriber", (_name, irisDriver) => {
+    ])("snapshot: %s publisher + subscriber", (_name, bus) => {
       mkdirSync(projectDir, { recursive: true });
-      const answers = baseAnswers({ projectDir, irisDriver });
+      const answers = baseAnswers({ projectDir, bus });
       writeIrisSamples(answers);
       expect(
         readFileSync(
@@ -650,7 +650,7 @@ describe("scaffold", () => {
       const answers = baseAnswers({
         projectDir,
         db: "postgres",
-        irisDriver: "rabbit",
+        bus: "rabbit",
         features: baseFeatures({ socket: true, webhooks: true, audit: true }),
         workers: ["expiry-cleanup"],
       });
@@ -663,7 +663,7 @@ describe("scaffold", () => {
         projectDir,
         db: "postgres",
         kv: "redis",
-        irisDriver: "kafka",
+        bus: "kafka",
         features: baseFeatures({ socket: true, webhooks: true, audit: true }),
         workers: ["expiry-cleanup"],
       });
@@ -724,7 +724,7 @@ describe("scaffold", () => {
         projectDir,
         db: "postgres",
         kv: "redis",
-        irisDriver: "rabbit",
+        bus: "rabbit",
         features: baseFeatures({
           socket: true,
           webhooks: true,

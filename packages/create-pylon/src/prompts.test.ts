@@ -107,7 +107,7 @@ describe("runPrompts", () => {
     expect(answers.features.audit).toBe(true);
     expect(answers.db).toBe("postgres");
     expect(answers.kv).toBe("redis");
-    expect(answers.irisDriver).toBe("rabbit");
+    expect(answers.bus).toBe("rabbit");
     expect(answers.workers).toMatchSnapshot();
   });
 

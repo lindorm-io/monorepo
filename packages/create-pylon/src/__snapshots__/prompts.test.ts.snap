@@ -20,6 +20,7 @@ exports[`runPrompts > prompts webhooks and audit only when both proteus and iris
 
 exports[`runPrompts > returns answers with positional name and defaults 1`] = `
 {
+  "bus": "none",
   "db": "none",
   "features": {
     "audit": false,
@@ -30,7 +31,6 @@ exports[`runPrompts > returns answers with positional name and defaults 1`] = `
     "socket": false,
     "webhooks": false,
   },
-  "irisDriver": "none",
   "issuer": "http://localhost:3000",
   "kv": "none",
   "projectDir": "<cwd>/my-app",

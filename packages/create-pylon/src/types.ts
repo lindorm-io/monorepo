@@ -31,7 +31,7 @@ export type Answers = {
   features: Features;
   db: DbDriver;
   kv: KvDriver;
-  irisDriver: IrisDriver;
+  bus: IrisDriver;
   workers: Array<WorkerKey>;
 };
 

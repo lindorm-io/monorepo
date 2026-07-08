@@ -65,7 +65,7 @@ const resolveDevDependencies = (answers: Answers): Array<string> => {
   for (const driver of selectedDrivers(answers)) {
     deps.push(...PROTEUS_DRIVER_DEV_PACKAGES[driver]);
   }
-  deps.push(...IRIS_DRIVER_DEV_PACKAGES[answers.irisDriver]);
+  deps.push(...IRIS_DRIVER_DEV_PACKAGES[answers.bus]);
   return Array.from(new Set(deps));
 };
 
