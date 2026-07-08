@@ -10,7 +10,7 @@ export const deleteWebhookSchema = z.object({
 export const deleteWebhookHandler: ServerHandler<typeof deleteWebhookSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const existing = await repository.findOne({ id: ctx.data.id });
 
   if (!existing) {

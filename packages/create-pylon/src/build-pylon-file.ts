@@ -72,8 +72,12 @@ const buildOptions = (answers: Answers): string => {
   }
 
   if (primaryExists) {
-    lines.push(`  proteus: proteusSource,`);
+    lines.push(`  db: proteusSource,`);
     lines.push(`  kryptos: { enabled: true },`);
+  }
+
+  if (kvIsSecondary) {
+    lines.push(`  kv: kvSource,`);
   }
 
   if (answers.irisDriver !== "none") {
@@ -98,7 +102,7 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`  session: {`);
     lines.push(`    enabled: true,`);
     if (sessionRef) {
-      lines.push(`    keyValue: ${sessionRef},`);
+      lines.push(`    kv: ${sessionRef},`);
     }
     lines.push(`    name: "sid",`);
     lines.push(`    encrypted: true,`);
@@ -127,7 +131,7 @@ const buildOptions = (answers: Answers): string => {
   if (answers.features.rateLimit) {
     lines.push(`  rateLimit: {`);
     lines.push(`    enabled: true,`);
-    lines.push(`    keyValue: ${kvRef},`);
+    lines.push(`    kv: ${kvRef},`);
     lines.push(`    strategy: "fixed",`);
     lines.push(`    window: "1m",`);
     lines.push(`    max: 60,`);

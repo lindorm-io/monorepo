@@ -33,7 +33,7 @@ export const createWebhookSchema = z.object({
 export const createWebhookHandler: ServerHandler<typeof createWebhookSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const subscription = await repository.save(ctx.data);
 
   return { body: subscription, status: 201 };

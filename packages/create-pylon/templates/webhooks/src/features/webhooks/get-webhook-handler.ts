@@ -8,7 +8,7 @@ export const getWebhookSchema = z.object({
 });
 
 export const getWebhookHandler: ServerHandler<typeof getWebhookSchema> = async (ctx) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const subscription = await repository.findOne({ id: ctx.data.id });
 
   if (!subscription) {

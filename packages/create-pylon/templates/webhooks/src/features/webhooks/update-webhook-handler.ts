@@ -34,7 +34,7 @@ export const updateWebhookSchema = z.object({
 export const updateWebhookHandler: ServerHandler<typeof updateWebhookSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const existing = await repository.findOne({ id: ctx.data.id });
 
   if (!existing) {

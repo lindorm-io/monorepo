@@ -297,7 +297,7 @@ export const createWebhookSchema = z.object({
 export const createWebhookHandler: ServerHandler<typeof createWebhookSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const subscription = await repository.save(ctx.data);
 
   return { body: subscription, status: 201 };
@@ -315,7 +315,7 @@ export const deleteWebhookSchema = z.object({
 export const deleteWebhookHandler: ServerHandler<typeof deleteWebhookSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const existing = await repository.findOne({ id: ctx.data.id });
 
   if (!existing) {
@@ -339,7 +339,7 @@ export const getWebhookSchema = z.object({
 });
 
 export const getWebhookHandler: ServerHandler<typeof getWebhookSchema> = async (ctx) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const subscription = await repository.findOne({ id: ctx.data.id });
 
   if (!subscription) {
@@ -363,7 +363,7 @@ export const listWebhooksSchema = z.object({
 export const listWebhooksHandler: ServerHandler<typeof listWebhooksSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const query: { ownerId: string; tenantId?: string | null } = {
     ownerId: ctx.data.ownerId,
   };
@@ -413,7 +413,7 @@ export const updateWebhookSchema = z.object({
 export const updateWebhookHandler: ServerHandler<typeof updateWebhookSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const existing = await repository.findOne({ id: ctx.data.id });
 
   if (!existing) {
@@ -922,8 +922,9 @@ export const pylon = new Pylon({
     listeners: join(import.meta.dirname, "..", "listeners"),
   },
   rooms: { presence: true },
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
+  kv: kvSource,
   iris: irisSource,
   queue: { enabled: true },
   webhook: { enabled: true },
@@ -935,7 +936,7 @@ export const pylon = new Pylon({
   },
   session: {
     enabled: true,
-    keyValue: kvSource,
+    kv: kvSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -957,7 +958,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    keyValue: kvSource,
+    kv: kvSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -1137,11 +1138,12 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
+  kv: kvSource,
   rateLimit: {
     enabled: true,
-    keyValue: kvSource,
+    kv: kvSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -2699,8 +2701,9 @@ export const pylon = new Pylon({
     listeners: join(import.meta.dirname, "..", "listeners"),
   },
   rooms: { presence: true },
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
+  kv: kvSource,
   iris: irisSource,
   queue: { enabled: true },
   webhook: { enabled: true },
@@ -2785,8 +2788,9 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
+  kv: kvSource,
   setup: async () => {
     await proteusSource.connect();
     await kvSource.connect();
@@ -2814,7 +2818,7 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
   setup: async () => {
     await proteusSource.connect();
@@ -2843,11 +2847,12 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
+  kv: kvSource,
   session: {
     enabled: true,
-    keyValue: kvSource,
+    kv: kvSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -2869,7 +2874,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    keyValue: kvSource,
+    kv: kvSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -2904,7 +2909,7 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
   iris: irisSource,
   queue: { enabled: true },
@@ -2943,7 +2948,7 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
   iris: irisSource,
   queue: { enabled: true },
@@ -2974,7 +2979,7 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
   setup: async () => {
     await proteusSource.connect();
@@ -3030,7 +3035,7 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
   setup: async () => {
     await proteusSource.connect();
@@ -3112,11 +3117,12 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
+  kv: kvSource,
   rateLimit: {
     enabled: true,
-    keyValue: kvSource,
+    kv: kvSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3149,11 +3155,11 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
   rateLimit: {
     enabled: true,
-    keyValue: proteusSource,
+    kv: proteusSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3186,11 +3192,12 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
+  kv: kvSource,
   session: {
     enabled: true,
-    keyValue: kvSource,
+    kv: kvSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -3212,7 +3219,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    keyValue: kvSource,
+    kv: kvSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -3278,11 +3285,11 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  proteus: proteusSource,
+  db: proteusSource,
   kryptos: { enabled: true },
   session: {
     enabled: true,
-    keyValue: proteusSource,
+    kv: proteusSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,

@@ -777,7 +777,21 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/session: \{[^}]*keyValue: kvSource/);
+        expect(pylon).toMatch(/session: \{[^}]*kv: kvSource/);
+      });
+
+      test("wires the kv secondary as the top-level kv option", async () => {
+        const answers = baseAnswers({
+          projectDir,
+          db: "postgres",
+          kv: "redis",
+          features: baseFeatures({ session: true, rateLimit: true }),
+        });
+        await scaffold(answers, FIXED_KEK);
+
+        const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
+        expect(pylon).toMatch(/^ {2}db: proteusSource,$/m);
+        expect(pylon).toMatch(/^ {2}kv: kvSource,$/m);
       });
 
       test("session falls back to the flat proteus source when only db is selected", async () => {
@@ -789,7 +803,7 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/session: \{[^}]*keyValue: proteusSource/);
+        expect(pylon).toMatch(/session: \{[^}]*kv: proteusSource/);
         expect(pylon).not.toContain(`kvSource`);
       });
 
@@ -802,7 +816,7 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/session: \{[^}]*keyValue: proteusSource/);
+        expect(pylon).toMatch(/session: \{[^}]*kv: proteusSource/);
         expect(pylon).not.toContain(`kvSource`);
       });
     });

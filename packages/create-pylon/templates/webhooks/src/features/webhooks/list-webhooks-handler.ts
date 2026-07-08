@@ -10,7 +10,7 @@ export const listWebhooksSchema = z.object({
 export const listWebhooksHandler: ServerHandler<typeof listWebhooksSchema> = async (
   ctx,
 ) => {
-  const repository = ctx.proteus!.repository(WebhookSubscription);
+  const repository = ctx.db!.repository(WebhookSubscription);
   const query: { ownerId: string; tenantId?: string | null } = {
     ownerId: ctx.data.ownerId,
   };
