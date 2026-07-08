@@ -73,7 +73,7 @@ const seedInternalKeys = () => [
 ];
 
 describe("createKryptosRotationWorker", () => {
-  const proteus: any = { repository: mockRepository };
+  const db: any = { repository: mockRepository };
 
   class FakeKryptosDB {}
 
@@ -95,7 +95,7 @@ describe("createKryptosRotationWorker", () => {
   });
 
   test("should return a LindormWorker instance with correct alias", () => {
-    const worker = createKryptosRotationWorker({ logger: mockLogger, proteus });
+    const worker = createKryptosRotationWorker({ logger: mockLogger, db });
 
     expect(worker).toBeInstanceOf(LindormWorker);
     expect(worker.alias).toBe("KryptosRotationWorker");
@@ -103,7 +103,7 @@ describe("createKryptosRotationWorker", () => {
 
   test("should accept interval override without throwing", () => {
     expect(() =>
-      createKryptosRotationWorker({ logger: mockLogger, proteus, interval: "12h" }),
+      createKryptosRotationWorker({ logger: mockLogger, db, interval: "12h" }),
     ).not.toThrow();
   });
 
@@ -111,7 +111,7 @@ describe("createKryptosRotationWorker", () => {
     test("should default repository target to Kryptos entity when target not provided", async () => {
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -123,7 +123,7 @@ describe("createKryptosRotationWorker", () => {
     test("should use provided target override when supplied", async () => {
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         target: FakeKryptosDB as any,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
@@ -134,7 +134,7 @@ describe("createKryptosRotationWorker", () => {
     });
 
     test("should use default keys when none provided", async () => {
-      const worker = createKryptosRotationWorker({ logger: mockLogger, proteus });
+      const worker = createKryptosRotationWorker({ logger: mockLogger, db });
 
       await worker.trigger();
 
@@ -147,7 +147,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: keys as any,
       });
 
@@ -164,7 +164,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -191,7 +191,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -215,7 +215,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -234,7 +234,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: [
           { algorithm: "ES512", purpose: "token" },
           { algorithm: "HS256", purpose: "mytoken" },
@@ -261,7 +261,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -283,7 +283,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -301,7 +301,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -327,7 +327,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         amphora,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
@@ -344,7 +344,7 @@ describe("createKryptosRotationWorker", () => {
 
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
-        proteus,
+        db,
         keys: [{ algorithm: "ES512", purpose: "token" }],
       });
 
@@ -354,7 +354,7 @@ describe("createKryptosRotationWorker", () => {
     test("stamps hidden onto generated keys (cookie/session hidden, token public)", async () => {
       mockFind.mockResolvedValueOnce([]); // fresh — default key set is minted
 
-      const worker = createKryptosRotationWorker({ logger: mockLogger, proteus });
+      const worker = createKryptosRotationWorker({ logger: mockLogger, db });
 
       await worker.trigger();
 
@@ -377,7 +377,7 @@ describe("createKryptosRotationWorker", () => {
 
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
-          proteus,
+          db,
           keys: [{ algorithm: "ES512", purpose: "token" }],
         });
 
@@ -393,7 +393,7 @@ describe("createKryptosRotationWorker", () => {
 
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
-          proteus,
+          db,
           rootCaKey,
           keys: [{ algorithm: "ES512", purpose: "token" }],
         });
@@ -413,7 +413,7 @@ describe("createKryptosRotationWorker", () => {
 
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
-          proteus,
+          db,
           rootCaKey,
           keys: [{ algorithm: "ES512", hidden: true, purpose: "my:hidden" }],
         });
@@ -434,7 +434,7 @@ describe("createKryptosRotationWorker", () => {
 
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
-          proteus,
+          db,
           rootCaKey,
           keys: [{ algorithm: "HS256", purpose: "mytoken" }],
         });
@@ -458,7 +458,7 @@ describe("createKryptosRotationWorker", () => {
 
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
-          proteus,
+          db,
           rootCaKey,
           keys: [{ algorithm: "ES512", purpose: "token" }],
         });

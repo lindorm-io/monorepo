@@ -26,7 +26,7 @@ type Options = CreateLindormWorkerOptions & {
   keys?: Array<KeyOption>;
   rootCaKey?: IKryptos;
   logger: ILogger;
-  proteus: IProteusSource;
+  db: IProteusSource;
   target?: Constructor<KryptosDB>;
   // When provided, freshly-minted keys are added to the vault immediately — so
   // the rotating instance serves them (JWKS, cookie/session) without waiting for
@@ -75,7 +75,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
     logger: options.logger,
     callback: async (ctx): Promise<void> => {
       const target = options.target ?? (await import("../entities/Kryptos.js")).Kryptos;
-      const repository = options.proteus.repository(target);
+      const repository = options.db.repository(target);
       const existing = await repository.find();
 
       const notBefore = new Date();

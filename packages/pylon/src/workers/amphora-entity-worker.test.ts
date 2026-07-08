@@ -19,7 +19,7 @@ vi.mock("@lindorm/kryptos", async () => ({
 
 describe("createAmphoraEntityWorker", () => {
   const amphora: any = { refresh: mockRefresh, add: mockAdd };
-  const proteus: any = { repository: mockRepository };
+  const db: any = { repository: mockRepository };
   const logger = createMockLogger();
 
   class FakeKryptosDB {}
@@ -30,7 +30,7 @@ describe("createAmphoraEntityWorker", () => {
   });
 
   test("should return a LindormWorker instance with correct alias", () => {
-    const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
+    const worker = createAmphoraEntityWorker({ amphora, logger, db });
 
     expect(worker).toBeInstanceOf(LindormWorker);
     expect(worker.alias).toBe("AmphoraEntityWorker");
@@ -41,7 +41,7 @@ describe("createAmphoraEntityWorker", () => {
       createAmphoraEntityWorker({
         amphora,
         logger,
-        proteus,
+        db,
         interval: "10m",
         listeners: [{ event: "start", listener: () => {} }],
         jitter: "1s",
@@ -52,7 +52,7 @@ describe("createAmphoraEntityWorker", () => {
 
   describe("callback", () => {
     test("should default repository target to Kryptos entity when target not provided", async () => {
-      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
+      const worker = createAmphoraEntityWorker({ amphora, logger, db });
 
       await worker.trigger();
 
@@ -63,7 +63,7 @@ describe("createAmphoraEntityWorker", () => {
       const worker = createAmphoraEntityWorker({
         amphora,
         logger,
-        proteus,
+        db,
         target: FakeKryptosDB as any,
       });
 
@@ -73,7 +73,7 @@ describe("createAmphoraEntityWorker", () => {
     });
 
     test("should load keys from repository and add to amphora", async () => {
-      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
+      const worker = createAmphoraEntityWorker({ amphora, logger, db });
 
       await worker.trigger();
 
@@ -82,7 +82,7 @@ describe("createAmphoraEntityWorker", () => {
     });
 
     test("should not refresh amphora (handled by internal AmphoraWorker)", async () => {
-      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
+      const worker = createAmphoraEntityWorker({ amphora, logger, db });
 
       await worker.trigger();
 
@@ -93,7 +93,7 @@ describe("createAmphoraEntityWorker", () => {
       const entity = { id: "key-1", algorithm: "ES512", privateKey: null };
       mockFind.mockResolvedValueOnce([entity]);
 
-      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
+      const worker = createAmphoraEntityWorker({ amphora, logger, db });
 
       await worker.trigger();
 
@@ -109,7 +109,7 @@ describe("createAmphoraEntityWorker", () => {
       ];
       mockFind.mockResolvedValueOnce(entities);
 
-      const worker = createAmphoraEntityWorker({ amphora, logger, proteus });
+      const worker = createAmphoraEntityWorker({ amphora, logger, db });
 
       await worker.trigger();
 

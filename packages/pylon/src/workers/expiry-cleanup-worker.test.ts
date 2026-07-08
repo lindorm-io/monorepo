@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 describe("createExpiryCleanupWorker", () => {
   const mockDeleteExpired = vi.fn().mockResolvedValue(undefined);
   const mockRepository = vi.fn().mockReturnValue({ deleteExpired: mockDeleteExpired });
-  const proteus: any = { repository: mockRepository };
+  const db: any = { repository: mockRepository };
   const logger = createMockLogger();
 
   class EntityA {}
@@ -17,7 +17,7 @@ describe("createExpiryCleanupWorker", () => {
   });
 
   test("should return a LindormWorker instance with correct alias", () => {
-    const worker = createExpiryCleanupWorker({ logger, proteus, targets: [] });
+    const worker = createExpiryCleanupWorker({ logger, db, targets: [] });
 
     expect(worker).toBeInstanceOf(LindormWorker);
     expect(worker.alias).toBe("ExpiryCleanupWorker");
@@ -27,7 +27,7 @@ describe("createExpiryCleanupWorker", () => {
     expect(() =>
       createExpiryCleanupWorker({
         logger,
-        proteus,
+        db,
         targets: [],
         interval: "30m",
         listeners: [{ event: "start", listener: () => {} }],
@@ -39,7 +39,7 @@ describe("createExpiryCleanupWorker", () => {
     test("should delete expired entities for each target", async () => {
       const worker = createExpiryCleanupWorker({
         logger,
-        proteus,
+        db,
         targets: [EntityA as any, EntityB as any],
       });
 
@@ -52,7 +52,7 @@ describe("createExpiryCleanupWorker", () => {
     });
 
     test("should handle empty targets array", async () => {
-      const worker = createExpiryCleanupWorker({ logger, proteus, targets: [] });
+      const worker = createExpiryCleanupWorker({ logger, db, targets: [] });
 
       await worker.trigger();
 
@@ -63,7 +63,7 @@ describe("createExpiryCleanupWorker", () => {
     test("should handle single target", async () => {
       const worker = createExpiryCleanupWorker({
         logger,
-        proteus,
+        db,
         targets: [EntityA as any],
       });
 
@@ -90,7 +90,7 @@ describe("createExpiryCleanupWorker", () => {
 
       const worker = createExpiryCleanupWorker({
         logger,
-        proteus: failProteus,
+        db: failProteus,
         targets: [EntityA as any, EntityB as any],
       });
 

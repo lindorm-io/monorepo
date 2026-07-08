@@ -8,7 +8,7 @@ import { type CreateLindormWorkerOptions, LindormWorker } from "@lindorm/worker"
 type Options = CreateLindormWorkerOptions & {
   amphora: IAmphora;
   logger: ILogger;
-  proteus: IProteusSource;
+  db: IProteusSource;
   target?: Constructor<KryptosDB>;
 };
 
@@ -22,7 +22,7 @@ export const createAmphoraEntityWorker = (options: Options): LindormWorker =>
     logger: options.logger,
     callback: async (ctx): Promise<void> => {
       const target = options.target ?? (await import("../entities/Kryptos.js")).Kryptos;
-      const repository = options.proteus.repository(target);
+      const repository = options.db.repository(target);
       const existing = await repository.find();
 
       ctx.logger.debug("Loaded kryptos entities from database", {

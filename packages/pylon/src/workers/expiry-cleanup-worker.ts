@@ -5,7 +5,7 @@ import { type CreateLindormWorkerOptions, LindormWorker } from "@lindorm/worker"
 
 type Options = CreateLindormWorkerOptions & {
   logger: ILogger;
-  proteus: IProteusSource;
+  db: IProteusSource;
   targets: Array<Constructor<IEntity>>;
 };
 
@@ -24,7 +24,7 @@ export const createExpiryCleanupWorker = (options: Options): LindormWorker =>
         try {
           ctx.logger.debug("Deleting expired entities", { target: target.name });
 
-          const repository = options.proteus.repository(target);
+          const repository = options.db.repository(target);
           await repository.deleteExpired();
 
           ctx.logger.debug("Expired entities deleted", { target: target.name });
