@@ -16,10 +16,21 @@ export const registerGenerateCommands = (program: Command): void => {
   generate
     .command("route")
     .alias("r")
-    .description("Generate a route file with HTTP method exports")
+    .description(
+      "Generate a route file with HTTP method exports (or, with --feature, a full slice: per-method schema+handler files + a wired route)",
+    )
     .argument("[methods]", "HTTP methods, comma-separated (e.g. GET,POST)")
     .argument("[path]", "URL path (e.g. /v1/users/:id)")
     .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
+    .option(
+      "-f, --feature <name>",
+      "Feature name; scaffolds per-method schema+handler files + a wired route",
+    )
+    .option(
+      "--methods <list>",
+      "HTTP methods, comma-separated (alt to the positional arg)",
+    )
+    .option("--path <path>", "URL path (alt to the positional arg)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateRoute);
 

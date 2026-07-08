@@ -6,11 +6,15 @@ import {
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, resolve } from "path";
 import { Logger } from "@lindorm/logger";
+import { generateRouteFeature } from "./generate-route-feature.js";
 import { resolveRouteFile } from "./resolve-route-file.js";
 
 type GenerateRouteOptions = {
   directory?: string;
   dryRun?: boolean;
+  feature?: string;
+  methods?: string;
+  path?: string;
 };
 
 const relativePrefix = (depth: number): string => "../".repeat(depth);
@@ -37,10 +41,13 @@ const routeTemplate = (methods: Array<string>, depth: number): string => {
 };
 
 export const generateRoute = async (
-  methods: string | undefined,
-  path: string | undefined,
+  methodsArg: string | undefined,
+  pathArg: string | undefined,
   options: GenerateRouteOptions,
 ): Promise<void> => {
+  let methods = options.methods ?? methodsArg;
+  let path = options.path ?? pathArg;
+
   if (!methods || !path) {
     const { input } = await import("@inquirer/prompts");
 
@@ -77,6 +84,29 @@ export const generateRoute = async (
       default: LINDORM_CONFIG_DEFAULTS.pylon.routesDir,
     }),
   );
+
+  if (options.feature) {
+    const featureDir = resolve(
+      process.cwd(),
+      resolveTarget({
+        arg: undefined,
+        config: config?.pylon?.featureDir,
+        default: LINDORM_CONFIG_DEFAULTS.pylon.featureDir,
+      }),
+    );
+
+    await generateRouteFeature({
+      feature: options.feature,
+      methodList,
+      path,
+      routesDir: directory,
+      featureDir,
+      dryRun: options.dryRun,
+    });
+
+    return;
+  }
+
   const { filepath, depth } = resolveRouteFile(path, directory);
   const content = routeTemplate(methodList, depth);
 

@@ -1,0 +1,46 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateRouteFeature > should snapshot the generated handler file 1`] = `
+"import { z } from "zod";
+import type { ServerHandler } from "../../types/context.js";
+
+export const getUserSchema = z.object({
+  // TODO: define the request schema
+});
+
+export const getUser: ServerHandler<typeof getUserSchema> = async (ctx) => {
+  // TODO: implement
+  return { body: {} };
+};
+"
+`;
+
+exports[`generateRouteFeature > should snapshot the generated route file 1`] = `
+"import { useHandler, useSchema } from "@lindorm/pylon";
+import type { ServerHttpMiddleware } from "../../../types/context.js";
+import { getUser, getUserSchema } from "../../../features/user/get-user.js";
+import { createUser, createUserSchema } from "../../../features/user/create-user.js";
+import { updateUser, updateUserSchema } from "../../../features/user/update-user.js";
+import { deleteUser, deleteUserSchema } from "../../../features/user/delete-user.js";
+
+export const GET: Array<ServerHttpMiddleware> = [
+  useSchema(getUserSchema),
+  useHandler(getUser),
+];
+
+export const POST: Array<ServerHttpMiddleware> = [
+  useSchema(createUserSchema),
+  useHandler(createUser),
+];
+
+export const PUT: Array<ServerHttpMiddleware> = [
+  useSchema(updateUserSchema),
+  useHandler(updateUser),
+];
+
+export const DELETE: Array<ServerHttpMiddleware> = [
+  useSchema(deleteUserSchema),
+  useHandler(deleteUser),
+];
+"
+`;

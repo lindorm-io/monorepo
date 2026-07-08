@@ -1,4 +1,5 @@
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
+import { loadLindormConfig as _loadLindormConfig } from "@lindorm/scaffold";
 import { Logger as _Logger } from "@lindorm/logger";
 import { resolve, join } from "path";
 import { generateRoute } from "./generate-route.js";
@@ -8,6 +9,14 @@ vi.mock("fs/promises", async () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));
+
+// Keep resolveTarget + LINDORM_CONFIG_DEFAULTS real; only stub the config read.
+vi.mock("@lindorm/scaffold", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@lindorm/scaffold")>()),
+  loadLindormConfig: vi.fn().mockResolvedValue(null),
+}));
+
+const loadLindormConfig = _loadLindormConfig as unknown as Mock;
 
 vi.mock("@lindorm/logger", () => ({
   Logger: {
@@ -183,5 +192,107 @@ describe("generateRoute", () => {
         message: expect.stringContaining("HTTP methods"),
       }),
     );
+  });
+});
+
+const defaultFeatureDir = resolve(process.cwd(), "./src/features");
+
+describe("generateRoute --feature", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("should scaffold a per-method handler file + a wired route via the positional-less flags", async () => {
+    await generateRoute(undefined, undefined, {
+      feature: "user",
+      methods: "get,post,put,delete",
+      path: "/v1/users/[id]",
+    });
+
+    for (const name of ["get", "create", "update", "delete"]) {
+      expect(writeFile).toHaveBeenCalledWith(
+        join(defaultFeatureDir, "user", `${name}-user.ts`),
+        expect.any(String),
+        "utf-8",
+      );
+    }
+
+    expect(writeFile).toHaveBeenCalledWith(
+      join(defaultDir, "v1", "users", "[id].ts"),
+      expect.any(String),
+      "utf-8",
+    );
+  });
+
+  it("should wire the route with the correct handler → route relative import", async () => {
+    await generateRoute(undefined, undefined, {
+      feature: "user",
+      methods: "get,post,put,delete",
+      path: "/v1/users/[id]",
+    });
+
+    const routeCall = writeFile.mock.calls.find(
+      (c) => c[0] === join(defaultDir, "v1", "users", "[id].ts"),
+    );
+    const content = routeCall![1] as string;
+
+    expect(content).toContain(
+      'import type { ServerHttpMiddleware } from "../../../types/context.js";',
+    );
+    expect(content).toContain(
+      'import { getUser, getUserSchema } from "../../../features/user/get-user.js";',
+    );
+    expect(content).toContain("export const DELETE: Array<ServerHttpMiddleware>");
+  });
+
+  it("should honour a lindorm.config featureDir", async () => {
+    loadLindormConfig.mockResolvedValueOnce({
+      pylon: { featureDir: "./from/config/features" },
+    });
+
+    await generateRoute(undefined, undefined, {
+      feature: "user",
+      methods: "get",
+      path: "/v1/users/[id]",
+    });
+
+    const configFeatureDir = resolve(process.cwd(), "./from/config/features");
+
+    expect(writeFile).toHaveBeenCalledWith(
+      join(configFeatureDir, "user", "get-user.ts"),
+      expect.any(String),
+      "utf-8",
+    );
+  });
+
+  it("should let the positional method arg feed feature mode when the flag is absent", async () => {
+    await generateRoute("get", "/v1/users/[id]", { feature: "user" });
+
+    expect(writeFile).toHaveBeenCalledWith(
+      join(defaultFeatureDir, "user", "get-user.ts"),
+      expect.any(String),
+      "utf-8",
+    );
+  });
+
+  it("should not write files in feature dry-run mode", async () => {
+    await generateRoute(undefined, undefined, {
+      feature: "user",
+      methods: "get,post,put,delete",
+      path: "/v1/users/[id]",
+      dryRun: true,
+    });
+
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it("should throw on an unsupported method in feature mode", async () => {
+    await expect(
+      generateRoute(undefined, undefined, {
+        feature: "user",
+        methods: "options",
+        path: "/v1/users/[id]",
+      }),
+    ).rejects.toThrow('Unsupported HTTP method "OPTIONS"');
   });
 });

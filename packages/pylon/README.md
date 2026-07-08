@@ -1175,24 +1175,28 @@ pylon --help
 pylon generate --help
 ```
 
-| Command                                       | Output                                 |
-| --------------------------------------------- | -------------------------------------- |
-| `pylon generate route GET,POST /v1/users/:id` | `./src/routes/v1/users/[id].ts`        |
-| `pylon generate listener ON chat:message`     | `./src/listeners/chat/message.ts`      |
-| `pylon generate middleware /v1/admin`         | `./src/routes/v1/admin/_middleware.ts` |
-| `pylon generate middleware -S chat`           | `./src/listeners/chat/_middleware.ts`  |
-| `pylon generate handler getUser`              | `./src/handlers/getUser.ts`            |
-| `pylon generate worker HeartbeatWorker`       | `./src/workers/heartbeat-worker.ts`    |
-| `pylon generate static /assets`               | `./src/routes/assets.ts` (STATIC)      |
-| `pylon generate upload /assets`               | `./src/routes/assets.ts` (UPLOAD)      |
+| Command                                                                                   | Output                                                                        |
+| ----------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| `pylon generate route GET,POST /v1/users/:id`                                             | `./src/routes/v1/users/[id].ts`                                               |
+| `pylon generate route --feature user --methods get,post,put,delete --path /v1/users/[id]` | per-method `./src/features/user/*.ts` + wired `./src/routes/v1/users/[id].ts` |
+| `pylon generate listener ON chat:message`                                                 | `./src/listeners/chat/message.ts`                                             |
+| `pylon generate middleware /v1/admin`                                                     | `./src/routes/v1/admin/_middleware.ts`                                        |
+| `pylon generate middleware -S chat`                                                       | `./src/listeners/chat/_middleware.ts`                                         |
+| `pylon generate handler getUser`                                                          | `./src/handlers/getUser.ts`                                                   |
+| `pylon generate worker HeartbeatWorker`                                                   | `./src/workers/heartbeat-worker.ts`                                           |
+| `pylon generate static /assets`                                                           | `./src/routes/assets.ts` (STATIC)                                             |
+| `pylon generate upload /assets`                                                           | `./src/routes/assets.ts` (UPLOAD)                                             |
 
 Each command accepts `-d, --directory <path>` to override the output directory and `--dry-run` to skip writing. When `--directory` is omitted, the output directory resolves from `lindorm.config.{ts,mjs}` (`pylon.routesDir` / `handlersDir` / `listenersDir` / `workersDir`) and falls back to the built-in default — see `@lindorm/scaffold`.
+
+`generate route --feature <name>` scaffolds a full slice instead of a bare route: one schema+handler file per HTTP method in the feature dir (`getUser`/`getUserSchema`, `createUser`/…, `updateUser`/…, `deleteUser`/…) plus a route file that wires each method as `[useSchema(...), useHandler(...)]`. The feature dir resolves from `pylon.featureDir` (default `./src/features`), the route dir from `pylon.routesDir`; both context-type and handler imports are computed relative to the standard `src/{routes,features,types}` layout. Use `--methods` / `--path` as flag alternatives to the positional args.
 
 The generators behind the CLI are also available programmatically on the `@lindorm/pylon/scaffold` subpath, kept off the runtime surface so scaffold tooling never pulls the server runtime into scope:
 
 ```typescript
 import {
   generateRoute,
+  generateRouteFeature,
   generateHandler,
   generateListener,
   generateMiddleware,
