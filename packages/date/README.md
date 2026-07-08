@@ -17,6 +17,7 @@ This package is **ESM-only**. It cannot be `require()`'d from CommonJS.
 - Estimation helpers (`ms`, `sec`, `duration`) that convert in either direction without a reference date, using a Gregorian-year average for year and month units.
 - `TtlMap<K, V>` and `TtlSet<T>` — lazy-expiring container types with per-entry TTL overrides.
 - `isReadableTime` type guard.
+- `cronNext` / `isCron` — resolve the next fire time for a cron expression (timezone-aware, via [croner](https://github.com/hexagon/croner)), and guard a cron string.
 - Re-exports the entire `date-fns` API from the same module entry point.
 
 ## Quick start
@@ -159,6 +160,25 @@ Returns `true` for an integer `ReadableTime` token, `false` otherwise.
 isReadableTime("10 minutes");
 isReadableTime("2h");
 isReadableTime("invalid");
+```
+
+#### `isCron(value)`
+
+Returns `true` when `value` is a valid cron expression, `false` otherwise.
+
+```ts
+isCron("0 0 * * *"); // true
+isCron("not a cron"); // false
+```
+
+### Cron
+
+#### `cronNext(expression, from, timezone?)`
+
+Resolves the next fire time strictly after `from`, evaluated in `timezone` (IANA name, defaults to `"UTC"`). Returns `null` when the expression has no future match. Guard with `isCron` first — an invalid expression throws. Standard 5-field expressions plus optional seconds (6 fields) and year (7 fields).
+
+```ts
+cronNext("0 0 * * *", new Date(), "Europe/Stockholm");
 ```
 
 ### Containers

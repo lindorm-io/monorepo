@@ -30,6 +30,7 @@
   },
   "dependencies": {
     "@lindorm/is": "^0.2.4",
+    "croner": "^10.0.1",
     "date-fns": "^4.1.0"
   },
   "exports": {
