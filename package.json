@@ -7,7 +7,7 @@
   "bugs": "https://github.com/lindorm-io/monorepo/issues",
   "scripts": {
     "build": "lerna run build",
-    "init": "ts-node ./.scripts/initialise-package.ts && npm i",
+    "init": "tsx ./.scripts/initialise-package.ts && npm i",
     "lint": "eslint packages/*/src/ && node scripts/audit/cadence-script-guard.mjs",
     "prepare": "husky",
     "prettier": "prettier --write packages/*/src/",
@@ -50,7 +50,7 @@
     "rimraf": "^6.1.3",
     "supertest": "^7.2.2",
     "syncpack": "^14.3.0",
-    "ts-node": "^10.9.2",
+    "tsx": "^4.22.4",
     "typescript": "^6.0.2",
     "typescript-eslint": "^8.58.0",
     "unplugin-swc": "^1.5.9",

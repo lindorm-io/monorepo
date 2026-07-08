@@ -39,9 +39,9 @@
   },
   "scripts": {
     "build": "rimraf dist && tsc -b ./tsconfig.build.json && chmod +x dist/cli.js",
-    "example": "ts-node example/index.ts",
-    "example:jwks": "ts-node example/jwks",
-    "example:socket": "ts-node example/socket",
+    "example": "tsx example/index.ts",
+    "example:jwks": "tsx example/jwks",
+    "example:socket": "tsx example/socket",
     "prettier": "prettier --write ./src/*",
     "test": "vitest run",
     "test:unit": "vitest run --exclude '**/*.integration.test.ts'",
