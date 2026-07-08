@@ -69,7 +69,16 @@ type CommonOptions = {
 };
 
 export type PylonHttpCallbacksOptions<C extends PylonHttpContext = PylonHttpContext> = {
+  /**
+   * Liveness (`/health`). Default: check I/O once then latch success. Provide a
+   * custom callback to add a lightweight liveness check, or `null` for a pure 204.
+   */
   health?: PylonHttpCallback<C> | null;
+  /**
+   * Readiness (`/ready`). Default: ping live I/O (proteus/iris) on every call.
+   * Provide a custom callback, or `null` for a pure 204.
+   */
+  ready?: PylonHttpCallback<C> | null;
   rightToBeForgotten?: PylonHttpCallback<C>;
 };
 

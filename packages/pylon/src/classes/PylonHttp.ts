@@ -18,7 +18,10 @@ import { httpResponseTimeMiddleware } from "../internal/middleware/http-response
 import { createHttpSessionMiddleware } from "../internal/middleware/http-session-middleware.js";
 import { createHttpStateMiddleware } from "../internal/middleware/http-state-middleware.js";
 import { parseAuthConfig } from "../internal/utils/auth/parse-auth-config.js";
-import { buildDefaultHealthCallback } from "../internal/utils/build-default-health-callback.js";
+import {
+  buildLivenessCallback,
+  buildReadinessCallback,
+} from "../internal/utils/build-health-callbacks.js";
 import { createAuthRouter } from "../internal/utils/create-auth-router.js";
 import { createHealthRouter } from "../internal/utils/create-health-router.js";
 import { createWellKnownRouter } from "../internal/utils/create-well-known-router.js";
@@ -155,6 +158,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     this.router.use(...this.middleware);
 
     this.addRouter("/health", createHealthRouter(this.resolveHealthCallback()));
+    this.addRouter("/ready", createHealthRouter(this.resolveReadyCallback()));
     this.addRouter("/.well-known", createWellKnownRouter(this.options));
 
     if (this.authConfig?.router) {
@@ -208,7 +212,21 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     if (configured === null) return undefined;
     if (configured) return configured;
 
-    return buildDefaultHealthCallback<T>({
+    // `/health` is liveness: check I/O once, then latch success.
+    return buildLivenessCallback<T>({
+      iris: this.options.iris,
+      proteus: this.options.proteus,
+    });
+  }
+
+  private resolveReadyCallback(): PylonHttpCallback<T> | undefined {
+    const configured = this.options.callbacks?.ready;
+
+    if (configured === null) return undefined;
+    if (configured) return configured;
+
+    // `/ready` is readiness: check live I/O on every call.
+    return buildReadinessCallback<T>({
       iris: this.options.iris,
       proteus: this.options.proteus,
     });

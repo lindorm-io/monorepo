@@ -65,7 +65,7 @@ For scaffolding a new project, see `@lindorm/create-pylon` (`npm create @lindorm
 - Audit logging — request-level via Iris, optional entity-change tracking via Proteus listeners
 - Webhook subscriptions with `none` / `auth_headers` / `basic` / `client_credentials` auth and automatic suspension on repeated failures
 - Built-in workers for Kryptos key rotation, Amphora key sync, and expiry cleanup, plus a `pylon` CLI to generate routes, listeners, middleware, handlers, and workers
-- Auto-mounted endpoints for `/health`, `/.well-known/jwks.json`, `/.well-known/openid-configuration`, `/.well-known/oauth-authorization-server`, `/.well-known/oauth-protected-resource`, `/.well-known/right-to-be-forgotten`, `/.well-known/change-password`, and (opt-in) `/.well-known/security.txt`
+- Auto-mounted endpoints for `/health` (liveness), `/ready` (readiness), `/.well-known/jwks.json`, `/.well-known/openid-configuration`, `/.well-known/oauth-authorization-server`, `/.well-known/oauth-protected-resource`, `/.well-known/right-to-be-forgotten`, `/.well-known/change-password`, and (opt-in) `/.well-known/security.txt`
 
 ## Core concepts
 
@@ -979,43 +979,52 @@ import {
 | ----------------------------- | ---------------- | ---------------------------------------------------------------------- |
 | `createAmphoraEntityWorker`   | `3m`             | Loads `KryptosDB` entities from Proteus and feeds them into Amphora    |
 | `createExpiryCleanupWorker`   | `15m`            | Calls `repository.deleteExpired()` for each entity in `targets`        |
-| `createKryptosRotationWorker` | `1d`             | Generates and rotates cryptographic keys with a default 6-month expiry |
+| `createKryptosRotationWorker` | `1d`             | Generates + rotates keys, publishing fresh ones to Amphora immediately |
 
 `createKryptosRotationWorker` defaults to the following key set (override `keys` to change the token set):
 
-| Algorithm           | Curve     | Purpose | Hidden |
-| ------------------- | --------- | ------- | ------ |
-| `dir`               | —         | cookie  | yes    |
-| `HS256`             | —         | cookie  | yes    |
-| `EdDSA`             | `Ed448`   | session | yes    |
-| `ECDH-ES`           | `X448`    | session | yes    |
-| `EdDSA`             | `Ed25519` | token   | no     |
-| `ECDH-ES+A256GCMKW` | `X448`    | token   | no     |
+| Algorithm           | Curve     | Purpose | Hidden | Expiry |
+| ------------------- | --------- | ------- | ------ | ------ |
+| `dir`               | —         | cookie  | yes    | `1y`   |
+| `HS256`             | —         | cookie  | yes    | `1y`   |
+| `EdDSA`             | `Ed448`   | session | yes    | `1y`   |
+| `ECDH-ES`           | `X448`    | session | yes    | `1y`   |
+| `EdDSA`             | `Ed25519` | token   | no     | `6mo`  |
+| `ECDH-ES+A256GCMKW` | `X448`    | token   | no     | `6mo`  |
+
+- **`hidden`** keys stay in the vault for internal use (cookie/session crypto) and are **excluded from JWKS**; only the non-hidden `token` keys are published.
+- **Per-key `expiry`** — rotation overlap is half each key's own expiry. The unit for months is `mo`/`month`; `m` means **minutes**. Unset keys fall back to the worker-level `expiry` (default `6mo`).
+- Pass **`amphora`** so freshly-minted keys are added to the vault at rotation time — JWKS is populated on first boot instead of after the next `createAmphoraEntityWorker` tick (that worker is for picking up _other_ instances' keys). Pass **`rootCaKey`** to CA-sign the published (non-hidden, asymmetric) keys.
 
 `createKryptosRotationWorker` and `createAmphoraEntityWorker` use Pylon's built-in `Kryptos` entity by default; pass `target` to override with a custom `KryptosDB` implementation.
 
-## Health check
+## Health & readiness
 
-`GET /health` is auto-mounted. With no `callbacks.health`, Pylon builds a default callback based on the integrations you configured:
+Two probes are always auto-mounted:
 
-- If `proteus` is configured, the callback pings it.
-- If `iris` is configured, the callback pings it.
-- On failure, the response is `503 Service Unavailable` with `code: "health_check_failed"` and `data.failures` listing which integrations failed.
-- Otherwise (or when neither integration is configured) the endpoint returns `204 No Content`.
+- **`GET /health` — liveness.** Verifies I/O (`proteus`/`iris`) **once**, then latches success and returns `204` on every later call **without re-pinging**. The process proves it came up (I/O reachable once), but a later DB/broker blip never flips liveness — restarting the container can't fix the DB, it only thrashes. Until the first successful check it returns `503`.
+- **`GET /ready` — readiness.** Pings live I/O on **every** call, reflecting current state — for load-balancer / readiness probes. Returns `204` when healthy (or when there's no I/O to check) and `503 Service Unavailable` with `code: "health_check_failed"` + `data.failures` when a source is down.
+
+Override or disable either via `callbacks` (`null` = a pure `204` probe, no check):
 
 ```typescript
 const app = new Pylon({
   callbacks: {
+    // custom liveness check (rarely needed — keep it dependency-free)
     health: async (ctx) => {
+      await checkSelf();
+    },
+    // custom readiness check
+    ready: async (ctx) => {
       await checkDownstream();
     },
   },
   // …
 });
 
-// Disable the default — /health returns 204 unconditionally
+// Pure 204 probes, no checks at all
 const app2 = new Pylon({
-  callbacks: { health: null },
+  callbacks: { health: null, ready: null },
   // …
 });
 ```

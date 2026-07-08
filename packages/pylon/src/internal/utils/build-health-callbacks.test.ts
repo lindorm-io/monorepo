@@ -1,0 +1,88 @@
+import { createMockIrisSource } from "@lindorm/iris/mocks/vitest";
+import { createMockProteusSource } from "@lindorm/proteus/mocks/vitest";
+import { describe, expect, test } from "vitest";
+import {
+  buildLivenessCallback,
+  buildReadinessCallback,
+} from "./build-health-callbacks.js";
+
+describe("buildReadinessCallback", () => {
+  test("returns undefined when there is no I/O to check", () => {
+    expect(buildReadinessCallback({})).toBeUndefined();
+  });
+
+  test("pings proteus + iris on every call", async () => {
+    const proteus = createMockProteusSource();
+    const iris = createMockIrisSource();
+
+    const callback = buildReadinessCallback({ proteus, iris })!;
+
+    await callback({} as any);
+    await callback({} as any);
+
+    expect(proteus.ping).toHaveBeenCalledTimes(2);
+    expect(iris.ping).toHaveBeenCalledTimes(2);
+  });
+
+  test("throws a 503 health_check_failed when a source ping returns false", async () => {
+    const proteus = createMockProteusSource();
+    proteus.ping.mockResolvedValue(false);
+
+    const callback = buildReadinessCallback({ proteus })!;
+
+    await expect(callback({} as any)).rejects.toMatchObject({
+      code: "health_check_failed",
+      data: { failures: ["proteus"] },
+    });
+  });
+
+  test("throws when a source ping rejects", async () => {
+    const iris = createMockIrisSource();
+    iris.ping.mockRejectedValue(new Error("broker down"));
+
+    const callback = buildReadinessCallback({ iris })!;
+
+    await expect(callback({} as any)).rejects.toMatchObject({
+      code: "health_check_failed",
+      data: { failures: ["iris"] },
+    });
+  });
+});
+
+describe("buildLivenessCallback", () => {
+  test("returns undefined when there is no I/O to check", () => {
+    expect(buildLivenessCallback({})).toBeUndefined();
+  });
+
+  test("checks I/O once, then latches success and stops pinging", async () => {
+    const proteus = createMockProteusSource();
+    const iris = createMockIrisSource();
+
+    const callback = buildLivenessCallback({ proteus, iris })!;
+
+    await callback({} as any);
+    await callback({} as any);
+    await callback({} as any);
+
+    expect(proteus.ping).toHaveBeenCalledTimes(1);
+    expect(iris.ping).toHaveBeenCalledTimes(1);
+  });
+
+  test("keeps checking until the first success, then latches", async () => {
+    const proteus = createMockProteusSource();
+    proteus.ping.mockResolvedValueOnce(false);
+
+    const callback = buildLivenessCallback({ proteus })!;
+
+    // First check fails — not latched yet.
+    await expect(callback({} as any)).rejects.toMatchObject({
+      code: "health_check_failed",
+    });
+
+    // Recovers → latches → no further pings.
+    await callback({} as any);
+    await callback({} as any);
+
+    expect(proteus.ping).toHaveBeenCalledTimes(2);
+  });
+});

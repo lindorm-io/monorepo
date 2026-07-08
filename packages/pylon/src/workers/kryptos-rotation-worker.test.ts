@@ -296,7 +296,7 @@ describe("createKryptosRotationWorker", () => {
       expect(mockGenerate).toHaveBeenCalledTimes(1);
     });
 
-    test("should use default expiry of 6m", async () => {
+    test("should default token keys to a 6mo expiry (months, not minutes)", async () => {
       mockFind.mockResolvedValueOnce(seedInternalKeys());
 
       const worker = createKryptosRotationWorker({
@@ -312,6 +312,61 @@ describe("createKryptosRotationWorker", () => {
       expect(call.purpose).toBe("token");
       expect(call.notBefore).toBeInstanceOf(Date);
       expect(call.expiresAt).toBeInstanceOf(Date);
+
+      // Guard the "6m" (6 minutes) vs "6mo" (6 months) unit trap: the default
+      // must be ~6 months out, not a few minutes.
+      const days = (call.expiresAt.getTime() - call.notBefore.getTime()) / 86_400_000;
+      expect(days).toBeGreaterThan(150);
+      expect(days).toBeLessThan(200);
+    });
+
+    test("adds freshly-minted keys to the amphora in one batch when provided", async () => {
+      mockFind.mockResolvedValueOnce([]); // fresh — everything gets minted
+
+      const amphora = { add: vi.fn() } as any;
+
+      const worker = createKryptosRotationWorker({
+        logger: mockLogger,
+        proteus,
+        amphora,
+        keys: [{ algorithm: "ES512", purpose: "token" }],
+      });
+
+      await worker.trigger();
+
+      expect(amphora.add).toHaveBeenCalledTimes(1);
+      expect(Array.isArray(amphora.add.mock.calls[0][0])).toBe(true);
+      expect(amphora.add.mock.calls[0][0].length).toBeGreaterThan(0);
+    });
+
+    test("works without an amphora (it is optional)", async () => {
+      mockFind.mockResolvedValueOnce([]);
+
+      const worker = createKryptosRotationWorker({
+        logger: mockLogger,
+        proteus,
+        keys: [{ algorithm: "ES512", purpose: "token" }],
+      });
+
+      await expect(worker.trigger()).resolves.not.toThrow();
+    });
+
+    test("stamps hidden onto generated keys (cookie/session hidden, token public)", async () => {
+      mockFind.mockResolvedValueOnce([]); // fresh — default key set is minted
+
+      const worker = createKryptosRotationWorker({ logger: mockLogger, proteus });
+
+      await worker.trigger();
+
+      const calls = mockGenerate.mock.calls.map((c) => c[0]);
+      const cookie = calls.find((c) => c.purpose === "cookie");
+      const session = calls.find((c) => c.purpose === "session");
+      const token = calls.find((c) => c.purpose === "token");
+
+      // hidden keys must not surface in JWKS; token keys are published.
+      expect(cookie.hidden).toBe(true);
+      expect(session.hidden).toBe(true);
+      expect(token.hidden).toBeFalsy();
     });
 
     describe("rootCaKey", () => {

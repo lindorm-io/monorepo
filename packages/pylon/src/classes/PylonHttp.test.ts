@@ -23,23 +23,19 @@ const createPylonHttp = async (
   return pylonHttp;
 };
 
-describe("PylonHttp health endpoint", () => {
-  test("should respond 204 when no proteus, iris, or callback is configured", async () => {
+describe("PylonHttp /health (liveness)", () => {
+  test("responds 204 when no proteus, iris, or callback is configured", async () => {
     const pylonHttp = await createPylonHttp();
 
     await request(pylonHttp.callback).get("/health").expect(204);
   });
 
-  test("should prefer the user-provided callback over auto-built one", async () => {
+  test("prefers a user-provided health callback over the auto-built one", async () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
     const health = vi.fn();
 
-    const pylonHttp = await createPylonHttp({
-      proteus,
-      iris,
-      callbacks: { health },
-    });
+    const pylonHttp = await createPylonHttp({ proteus, iris, callbacks: { health } });
 
     await request(pylonHttp.callback).get("/health").expect(204);
 
@@ -48,61 +44,78 @@ describe("PylonHttp health endpoint", () => {
     expect(iris.ping).not.toHaveBeenCalled();
   });
 
-  test("should skip auto-check when callbacks.health is explicitly null", async () => {
+  test("skips the auto-check when callbacks.health is explicitly null", async () => {
     const proteus = createMockProteusSource();
-    const iris = createMockIrisSource();
 
-    const pylonHttp = await createPylonHttp({
-      proteus,
-      iris,
-      callbacks: { health: null },
-    });
+    const pylonHttp = await createPylonHttp({ proteus, callbacks: { health: null } });
 
     await request(pylonHttp.callback).get("/health").expect(204);
 
     expect(proteus.ping).not.toHaveBeenCalled();
-    expect(iris.ping).not.toHaveBeenCalled();
   });
 
-  test("should auto-ping proteus when provided without a callback", async () => {
-    const proteus = createMockProteusSource();
-
-    const pylonHttp = await createPylonHttp({ proteus });
-
-    await request(pylonHttp.callback).get("/health").expect(204);
-
-    expect(proteus.ping).toHaveBeenCalledTimes(1);
-  });
-
-  test("should auto-ping iris when provided without a callback", async () => {
-    const iris = createMockIrisSource();
-
-    const pylonHttp = await createPylonHttp({ iris });
-
-    await request(pylonHttp.callback).get("/health").expect(204);
-
-    expect(iris.ping).toHaveBeenCalledTimes(1);
-  });
-
-  test("should auto-ping both proteus and iris when both are provided", async () => {
+  test("checks I/O once then latches — no re-ping on subsequent calls", async () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
 
     const pylonHttp = await createPylonHttp({ proteus, iris });
 
     await request(pylonHttp.callback).get("/health").expect(204);
+    await request(pylonHttp.callback).get("/health").expect(204);
+    await request(pylonHttp.callback).get("/health").expect(204);
 
     expect(proteus.ping).toHaveBeenCalledTimes(1);
     expect(iris.ping).toHaveBeenCalledTimes(1);
   });
 
-  test("should return 503 when proteus ping returns false", async () => {
+  test("stays 503 until the first successful check, then latches healthy", async () => {
     const proteus = createMockProteusSource();
     proteus.ping.mockResolvedValueOnce(false);
 
     const pylonHttp = await createPylonHttp({ proteus });
 
-    const response = await request(pylonHttp.callback).get("/health").expect(503);
+    // Not latched yet: the failing check surfaces as 503.
+    const failed = await request(pylonHttp.callback).get("/health").expect(503);
+    expect(failed.body.error).toMatchObject({
+      code: "health_check_failed",
+      data: { failures: ["proteus"] },
+    });
+
+    // Recovers → latches healthy → never pings again.
+    await request(pylonHttp.callback).get("/health").expect(204);
+    await request(pylonHttp.callback).get("/health").expect(204);
+
+    expect(proteus.ping).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("PylonHttp /ready (readiness)", () => {
+  test("responds 204 when no proteus or iris is configured", async () => {
+    const pylonHttp = await createPylonHttp();
+
+    await request(pylonHttp.callback).get("/ready").expect(204);
+  });
+
+  test("pings proteus + iris on every call (reflects live state)", async () => {
+    const proteus = createMockProteusSource();
+    const iris = createMockIrisSource();
+
+    const pylonHttp = await createPylonHttp({ proteus, iris });
+
+    await request(pylonHttp.callback).get("/ready").expect(204);
+    await request(pylonHttp.callback).get("/ready").expect(204);
+
+    expect(proteus.ping).toHaveBeenCalledTimes(2);
+    expect(iris.ping).toHaveBeenCalledTimes(2);
+  });
+
+  test("returns 503 when proteus ping returns false", async () => {
+    const proteus = createMockProteusSource();
+    proteus.ping.mockResolvedValue(false);
+
+    const pylonHttp = await createPylonHttp({ proteus });
+
+    const response = await request(pylonHttp.callback).get("/ready").expect(503);
 
     expect(response.body.error).toMatchObject({
       code: "health_check_failed",
@@ -110,13 +123,13 @@ describe("PylonHttp health endpoint", () => {
     });
   });
 
-  test("should return 503 when iris ping rejects", async () => {
+  test("returns 503 when iris ping rejects", async () => {
     const iris = createMockIrisSource();
-    iris.ping.mockRejectedValueOnce(new Error("broker down"));
+    iris.ping.mockRejectedValue(new Error("broker down"));
 
     const pylonHttp = await createPylonHttp({ iris });
 
-    const response = await request(pylonHttp.callback).get("/health").expect(503);
+    const response = await request(pylonHttp.callback).get("/ready").expect(503);
 
     expect(response.body.error).toMatchObject({
       code: "health_check_failed",
@@ -124,20 +137,26 @@ describe("PylonHttp health endpoint", () => {
     });
   });
 
-  test("should return 503 listing both failures when proteus and iris are both down", async () => {
+  test("prefers a user-provided ready callback", async () => {
     const proteus = createMockProteusSource();
-    const iris = createMockIrisSource();
-    proteus.ping.mockResolvedValueOnce(false);
-    iris.ping.mockRejectedValueOnce(new Error("broker down"));
+    const ready = vi.fn();
 
-    const pylonHttp = await createPylonHttp({ proteus, iris });
+    const pylonHttp = await createPylonHttp({ proteus, callbacks: { ready } });
 
-    const response = await request(pylonHttp.callback).get("/health").expect(503);
+    await request(pylonHttp.callback).get("/ready").expect(204);
 
-    expect(response.body.error).toMatchObject({
-      code: "health_check_failed",
-      data: { failures: ["proteus", "iris"] },
-    });
+    expect(ready).toHaveBeenCalledTimes(1);
+    expect(proteus.ping).not.toHaveBeenCalled();
+  });
+
+  test("skips the check when callbacks.ready is explicitly null", async () => {
+    const proteus = createMockProteusSource();
+
+    const pylonHttp = await createPylonHttp({ proteus, callbacks: { ready: null } });
+
+    await request(pylonHttp.callback).get("/ready").expect(204);
+
+    expect(proteus.ping).not.toHaveBeenCalled();
   });
 });
 
