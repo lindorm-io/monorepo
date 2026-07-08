@@ -25,8 +25,13 @@ export type TestPylonCtxDeps = {
 };
 
 export type CreateTestPylonCtxOptions = {
-  /** Caller's entities — registered on the memory source alongside Pylon's built-ins. */
-  entities?: Array<Constructor<IEntity>>;
+  /**
+   * Caller's entities — registered on the memory source alongside Pylon's
+   * built-ins. Accepts entity classes AND directory/glob path strings (resolved
+   * via the scanner at setup), so a generated fixture can point at the same
+   * entity dir the ProteusSource uses (e.g. `join(import.meta.dirname, "entities")`).
+   */
+  entities?: Array<Constructor<IEntity> | string>;
   /** ctx.data (default {}). */
   data?: any;
   /** ctx.params (default {}). */
