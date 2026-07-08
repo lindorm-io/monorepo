@@ -1,3 +1,8 @@
+import {
+  LINDORM_CONFIG_DEFAULTS,
+  loadLindormConfig,
+  resolveTarget,
+} from "@lindorm/scaffold";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
@@ -73,7 +78,15 @@ export const generateListener = async (
     }
   }
 
-  const directory = resolve(process.cwd(), options.directory ?? "./src/listeners");
+  const config = await loadLindormConfig();
+  const directory = resolve(
+    process.cwd(),
+    resolveTarget({
+      arg: options.directory,
+      config: config?.pylon?.listenersDir,
+      default: LINDORM_CONFIG_DEFAULTS.pylon.listenersDir,
+    }),
+  );
   const filePath = eventToFilePath(event);
   const segments = filePath.split("/");
   const depth = segments.length; // listeners/ is 1 level from src/

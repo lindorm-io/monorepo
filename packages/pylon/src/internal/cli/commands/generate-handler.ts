@@ -1,5 +1,10 @@
 import { camelCase } from "@lindorm/case";
 import { Logger } from "@lindorm/logger";
+import {
+  LINDORM_CONFIG_DEFAULTS,
+  loadLindormConfig,
+  resolveTarget,
+} from "@lindorm/scaffold";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 
@@ -39,7 +44,15 @@ export const generateHandler = async (
     });
   }
 
-  const directory = resolve(process.cwd(), options.directory ?? "./src/handlers");
+  const config = await loadLindormConfig();
+  const directory = resolve(
+    process.cwd(),
+    resolveTarget({
+      arg: options.directory,
+      config: config?.pylon?.handlersDir,
+      default: LINDORM_CONFIG_DEFAULTS.pylon.handlersDir,
+    }),
+  );
   const camel = name.charAt(0).toLowerCase() + name.slice(1);
   const filename = `${camel}.ts`;
   const filepath = join(directory, filename);

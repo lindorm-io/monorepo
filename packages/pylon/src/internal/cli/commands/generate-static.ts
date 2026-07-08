@@ -1,3 +1,8 @@
+import {
+  LINDORM_CONFIG_DEFAULTS,
+  loadLindormConfig,
+  resolveTarget,
+} from "@lindorm/scaffold";
 import { Logger } from "@lindorm/logger";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, resolve } from "path";
@@ -33,7 +38,15 @@ export const generateStatic = async (
     });
   }
 
-  const directory = resolve(process.cwd(), options.directory ?? "./src/routes");
+  const config = await loadLindormConfig();
+  const directory = resolve(
+    process.cwd(),
+    resolveTarget({
+      arg: options.directory,
+      config: config?.pylon?.routesDir,
+      default: LINDORM_CONFIG_DEFAULTS.pylon.routesDir,
+    }),
+  );
   const { filepath } = resolveRouteFile(path, directory);
   const content = staticTemplate();
 

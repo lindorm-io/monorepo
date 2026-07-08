@@ -1,4 +1,5 @@
 import { resolve, join } from "path";
+import { loadLindormConfig as _loadLindormConfig } from "@lindorm/scaffold";
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
 import { Logger as _Logger } from "@lindorm/logger";
 import { generateHandler } from "./generate-handler.js";
@@ -8,6 +9,14 @@ vi.mock("fs/promises", async () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));
+
+// Keep resolveTarget + LINDORM_CONFIG_DEFAULTS real; only stub the config read.
+vi.mock("@lindorm/scaffold", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@lindorm/scaffold")>()),
+  loadLindormConfig: vi.fn().mockResolvedValue(null),
+}));
+
+const loadLindormConfig = _loadLindormConfig as unknown as Mock;
 
 vi.mock("@lindorm/logger", () => ({
   Logger: {
@@ -92,6 +101,38 @@ describe("generateHandler", () => {
 
     expect(writeFile).toHaveBeenCalledWith(
       join(customDir, "getUser.ts"),
+      expect.any(String),
+      "utf-8",
+    );
+  });
+
+  it("should use lindorm.config handlersDir when no directory arg is given", async () => {
+    loadLindormConfig.mockResolvedValueOnce({
+      pylon: { handlersDir: "./from/config/handlers" },
+    });
+
+    await generateHandler("GetUser", {});
+
+    const configDir = resolve(process.cwd(), "./from/config/handlers");
+
+    expect(writeFile).toHaveBeenCalledWith(
+      join(configDir, "getUser.ts"),
+      expect.any(String),
+      "utf-8",
+    );
+  });
+
+  it("should let the --directory arg win over lindorm.config", async () => {
+    loadLindormConfig.mockResolvedValueOnce({
+      pylon: { handlersDir: "./from/config/handlers" },
+    });
+
+    await generateHandler("GetUser", { directory: "./from/arg" });
+
+    const argDir = resolve(process.cwd(), "./from/arg");
+
+    expect(writeFile).toHaveBeenCalledWith(
+      join(argDir, "getUser.ts"),
       expect.any(String),
       "utf-8",
     );

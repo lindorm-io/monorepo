@@ -1,5 +1,10 @@
 import { kebabCase } from "@lindorm/case";
 import { Logger } from "@lindorm/logger";
+import {
+  LINDORM_CONFIG_DEFAULTS,
+  loadLindormConfig,
+  resolveTarget,
+} from "@lindorm/scaffold";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 
@@ -34,7 +39,15 @@ export const generateWorker = async (
     });
   }
 
-  const directory = resolve(process.cwd(), options.directory ?? "./src/workers");
+  const config = await loadLindormConfig();
+  const directory = resolve(
+    process.cwd(),
+    resolveTarget({
+      arg: options.directory,
+      config: config?.pylon?.workersDir,
+      default: LINDORM_CONFIG_DEFAULTS.pylon.workersDir,
+    }),
+  );
   const filename = `${kebabCase(name)}.ts`;
   const filepath = join(directory, filename);
   const content = workerTemplate();

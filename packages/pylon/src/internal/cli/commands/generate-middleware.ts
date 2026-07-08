@@ -1,3 +1,8 @@
+import {
+  LINDORM_CONFIG_DEFAULTS,
+  loadLindormConfig,
+  resolveTarget,
+} from "@lindorm/scaffold";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, resolve } from "path";
 import { Logger } from "@lindorm/logger";
@@ -41,8 +46,17 @@ export const generateMiddleware = async (
   }
 
   const isSocket = !!options.socket;
-  const defaultDir = isSocket ? "./src/listeners" : "./src/routes";
-  const directory = resolve(process.cwd(), options.directory ?? defaultDir);
+  const config = await loadLindormConfig();
+  const directory = resolve(
+    process.cwd(),
+    resolveTarget({
+      arg: options.directory,
+      config: isSocket ? config?.pylon?.listenersDir : config?.pylon?.routesDir,
+      default: isSocket
+        ? LINDORM_CONFIG_DEFAULTS.pylon.listenersDir
+        : LINDORM_CONFIG_DEFAULTS.pylon.routesDir,
+    }),
+  );
   const cleanPath = path.replace(/^\//, "");
   const segments = cleanPath.split("/").filter(Boolean);
   const depth = segments.length + 1; // +1 for the routes/ or listeners/ dir

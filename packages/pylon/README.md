@@ -1186,7 +1186,7 @@ pylon generate --help
 | `pylon generate static /assets`               | `./src/routes/assets.ts` (STATIC)      |
 | `pylon generate upload /assets`               | `./src/routes/assets.ts` (UPLOAD)      |
 
-Each command accepts `-d, --directory <path>` to override the output directory and `--dry-run` to skip writing.
+Each command accepts `-d, --directory <path>` to override the output directory and `--dry-run` to skip writing. When `--directory` is omitted, the output directory resolves from `lindorm.config.{ts,mjs}` (`pylon.routesDir` / `handlersDir` / `listenersDir` / `workersDir`) and falls back to the built-in default — see `@lindorm/scaffold`.
 
 The generators behind the CLI are also available programmatically on the `@lindorm/pylon/scaffold` subpath, kept off the runtime surface so scaffold tooling never pulls the server runtime into scope:
 

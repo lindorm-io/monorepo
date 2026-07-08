@@ -19,7 +19,7 @@ export const registerGenerateCommands = (program: Command): void => {
     .description("Generate a route file with HTTP method exports")
     .argument("[methods]", "HTTP methods, comma-separated (e.g. GET,POST)")
     .argument("[path]", "URL path (e.g. /v1/users/:id)")
-    .option("-d, --directory <path>", "Output directory", "./src/routes")
+    .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateRoute);
 
@@ -29,7 +29,7 @@ export const registerGenerateCommands = (program: Command): void => {
     .description("Generate a socket listener file")
     .argument("[bindings]", "Bindings, comma-separated (e.g. ON or ON,ONCE)")
     .argument("[event]", "Event name, colon-separated (e.g. chat:message)")
-    .option("-d, --directory <path>", "Output directory", "./src/listeners")
+    .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateListener);
 
@@ -48,7 +48,7 @@ export const registerGenerateCommands = (program: Command): void => {
     .alias("h")
     .description("Generate a handler file with schema")
     .argument("[name]", "Handler name (e.g. getUser)")
-    .option("-d, --directory <path>", "Output directory", "./src/handlers")
+    .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateHandler);
 
@@ -57,7 +57,7 @@ export const registerGenerateCommands = (program: Command): void => {
     .alias("w")
     .description("Generate a worker file")
     .argument("[name]", "Worker name (e.g. HeartbeatWorker)")
-    .option("-d, --directory <path>", "Output directory", "./src/workers")
+    .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateWorker);
 
@@ -66,7 +66,7 @@ export const registerGenerateCommands = (program: Command): void => {
     .alias("s")
     .description("Generate a STATIC route file (useStatic mount)")
     .argument("[path]", "URL path (e.g. /assets)")
-    .option("-d, --directory <path>", "Output directory", "./src/routes")
+    .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateStatic);
 
@@ -75,7 +75,7 @@ export const registerGenerateCommands = (program: Command): void => {
     .alias("u")
     .description("Generate an UPLOAD route file (useUpload mount)")
     .argument("[path]", "URL path (e.g. /assets)")
-    .option("-d, --directory <path>", "Output directory", "./src/routes")
+    .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateUpload);
 };
