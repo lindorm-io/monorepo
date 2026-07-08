@@ -3,6 +3,7 @@ import { createMockAegis } from "@lindorm/aegis/mocks/jest";
 import { createMockAmphora } from "@lindorm/amphora/mocks/jest";
 import { createMockConduit } from "@lindorm/conduit/mocks/jest";
 import { createMockLogger } from "@lindorm/logger/mocks/jest";
+import { createMockProteusSession } from "@lindorm/proteus/mocks/jest";
 import {
   _createTestPylonCtx,
   type CreateTestPylonCtxOptions,
@@ -18,6 +19,8 @@ export const createTestPylonCtx = (options?: CreateTestPylonCtxOptions) =>
       amphora: createMockAmphora(),
       logger: createMockLogger(),
       conduit: createMockConduit(),
+      db: createMockProteusSession({}),
+      kv: createMockProteusSession({}),
     },
     options,
   );

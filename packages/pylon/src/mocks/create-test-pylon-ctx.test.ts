@@ -1,18 +1,15 @@
-import { Entity, Field, Generated, PrimaryKeyField } from "@lindorm/proteus";
 import { describe, expect, test, vi } from "vitest";
 import { createTestPylonCtx } from "./vitest.js";
 
-@Entity()
+// A plain local class — no decorators. The mock store keys by `entity.name`.
 class TestEntity {
-  @PrimaryKeyField() @Generated("uuid") id!: string;
-
-  @Field("string")
+  id!: string;
   value!: string;
 }
 
 describe("createTestPylonCtx", () => {
-  test("should round-trip through the real memory db session", async () => {
-    const ctx = await createTestPylonCtx({ entities: [TestEntity] });
+  test("should round-trip through the stateful mock db session", async () => {
+    const ctx = createTestPylonCtx();
 
     const repository = ctx.db!.repository(TestEntity);
 
@@ -25,26 +22,33 @@ describe("createTestPylonCtx", () => {
     expect(found?.value).toBe("hello");
   });
 
-  test("should back ctx.kv with a real session on the same source", async () => {
-    const ctx = await createTestPylonCtx({ entities: [TestEntity] });
+  test("should back db and kv with distinct stateful sessions", async () => {
+    const ctx = createTestPylonCtx();
 
-    const inserted = await ctx.db!.repository(TestEntity).insert({ value: "shared" });
+    expect(ctx.db).not.toBe(ctx.kv);
 
-    const found = await ctx.kv!.repository(TestEntity).findOne({ id: inserted.id });
-    expect(found?.value).toBe("shared");
+    const inserted = await ctx.db!.repository(TestEntity).insert({ value: "in-db" });
+
+    // The kv session is a separate store — it does not see the db write.
+    expect(await ctx.kv!.repository(TestEntity).findOne({ id: inserted.id })).toBeNull();
+    // The db session persists across repository() calls.
+    expect(
+      await ctx.db!.repository(TestEntity).findOne({ id: inserted.id }),
+    ).not.toBeNull();
   });
 
-  test("should expose the ecosystem mocks", async () => {
-    const ctx = await createTestPylonCtx();
+  test("should expose the ecosystem mocks", () => {
+    const ctx = createTestPylonCtx();
 
     expect(vi.isMockFunction(ctx.aegis.jwt.sign)).toBe(true);
     expect(vi.isMockFunction(ctx.amphora.setup)).toBe(true);
     expect(vi.isMockFunction(ctx.logger.info)).toBe(true);
     expect(vi.isMockFunction(ctx.conduits.conduit.get)).toBe(true);
+    expect(vi.isMockFunction(ctx.db!.repository(TestEntity).insert)).toBe(true);
   });
 
-  test("should apply rich state defaults", async () => {
-    const ctx = await createTestPylonCtx();
+  test("should apply rich state defaults", () => {
+    const ctx = createTestPylonCtx();
 
     expect(ctx.state.actor).toBe("test-actor");
     expect(ctx.state.app.environment).toBe("test");
@@ -53,8 +57,8 @@ describe("createTestPylonCtx", () => {
     expect(ctx.state.metadata.id).toBe("test-id");
   });
 
-  test("should deep-merge state overrides", async () => {
-    const ctx = await createTestPylonCtx({
+  test("should deep-merge state overrides", () => {
+    const ctx = createTestPylonCtx({
       state: { actor: "custom-actor", tenant: "tenant-1" },
     });
 
@@ -63,15 +67,22 @@ describe("createTestPylonCtx", () => {
     expect(ctx.state.app.environment).toBe("test");
   });
 
-  test("should omit ctx.db when db is null", async () => {
-    const ctx = await createTestPylonCtx({ db: null });
+  test("should omit ctx.db when db is null", () => {
+    const ctx = createTestPylonCtx({ db: null });
 
     expect(ctx.db).toBeUndefined();
     expect(ctx.kv).toBeDefined();
   });
 
-  test("should flow data and params through", async () => {
-    const ctx = await createTestPylonCtx({
+  test("should use a provided session override", () => {
+    const kv = createTestPylonCtx().kv!;
+    const ctx = createTestPylonCtx({ kv });
+
+    expect(ctx.kv).toBe(kv);
+  });
+
+  test("should flow data and params through", () => {
+    const ctx = createTestPylonCtx({
       data: { foo: "bar" },
       params: { id: "123" },
     });

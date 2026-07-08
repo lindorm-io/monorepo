@@ -2,6 +2,7 @@ import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { createMockConduit } from "@lindorm/conduit/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { createMockProteusSession } from "@lindorm/proteus/mocks/vitest";
 import { vi } from "vitest";
 import {
   _createTestPylonCtx,
@@ -18,6 +19,8 @@ export const createTestPylonCtx = (options?: CreateTestPylonCtxOptions) =>
       amphora: createMockAmphora(),
       logger: createMockLogger(),
       conduit: createMockConduit(),
+      db: createMockProteusSession({}),
+      kv: createMockProteusSession({}),
     },
     options,
   );
