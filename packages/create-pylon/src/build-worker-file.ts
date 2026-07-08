@@ -41,10 +41,13 @@ const expiryCleanup = (importPath: string): string =>
 const kryptosRotation = (importPath: string): string =>
   [
     `import { createKryptosRotationWorker } from "@lindorm/pylon";`,
+    `import { amphora } from "../pylon/amphora.js";`,
     `import { logger } from "../logger/index.js";`,
     `import { source as proteusSource } from "${importPath}";`,
     ``,
-    `export default createKryptosRotationWorker({ logger, proteus: proteusSource });`,
+    // Pass the amphora so freshly-minted keys land in the vault immediately
+    // (JWKS is populated on first boot, not after the next entity-sync tick).
+    `export default createKryptosRotationWorker({ amphora, logger, proteus: proteusSource });`,
     ``,
   ].join("\n");
 

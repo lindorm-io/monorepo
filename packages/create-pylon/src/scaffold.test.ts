@@ -41,6 +41,7 @@ const baseFeatures = (
 const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   projectName: "test-app",
   projectDir: "",
+  issuer: "http://localhost:3000",
   features: baseFeatures(),
   proteusDrivers: [],
   irisDriver: "none",
@@ -751,7 +752,7 @@ describe("scaffold", () => {
         const pylonFile = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
         // session should bind to the redis source, not the postgres primary
         expect(pylonFile).toMatch(
-          /session: \{[^}]*proteus: (sessionSource|rateLimitSource)/,
+          /session: \{[^}]*keyValue: (sessionSource|rateLimitSource)/,
         );
         expect(pylonFile).toContain(
           `import { source as sessionSource } from "../proteus/redis/source.js";`,
@@ -767,7 +768,7 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylonFile = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylonFile).toMatch(/session: \{[^}]*proteus: rateLimitSource/);
+        expect(pylonFile).toMatch(/session: \{[^}]*keyValue: rateLimitSource/);
         expect(pylonFile).not.toContain(`import { source as sessionSource }`);
       });
 
@@ -780,7 +781,7 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylonFile = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylonFile).toMatch(/session: \{[^}]*proteus: proteusSource/);
+        expect(pylonFile).toMatch(/session: \{[^}]*keyValue: proteusSource/);
         expect(pylonFile).not.toContain(`import { source as sessionSource }`);
       });
 

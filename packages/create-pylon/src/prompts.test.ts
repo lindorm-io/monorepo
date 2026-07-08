@@ -23,20 +23,25 @@ const queueSequence = (mock: Mock, values: Array<unknown>): void => {
 };
 
 // Prompt order:
-//   1. checkbox — features (http/socket)
-//   2. checkbox — proteus drivers
-//   3. select   — iris driver
-//   4. confirm  — webhooks (if both proteus+iris)
-//   5. confirm  — audit    (if both proteus+iris)
-//   6. confirm  — auth
-//   7. confirm  — rate limit (if redis or memory in proteus)
-//   8. checkbox — workers (if proteus)
+//   0. input    — project name (only when no positional name)
+//   1. input    — issuer URL
+//   2. checkbox — features (http/socket)
+//   3. checkbox — proteus drivers
+//   4. select   — iris driver
+//   5. confirm  — webhooks (if both proteus+iris)
+//   6. confirm  — audit    (if both proteus+iris)
+//   7. confirm  — auth
+//   8. confirm  — rate limit (if redis or memory in proteus)
+//   9. checkbox — workers (if proteus)
 
 describe("runPrompts", () => {
   let sandboxDir: string;
 
   beforeEach(() => {
     mockedInput.mockReset();
+    // Base return for the issuer prompt (and any input not queued explicitly);
+    // per-call `mockResolvedValueOnce` (e.g. the name prompt) still takes priority.
+    mockedInput.mockResolvedValue("http://localhost:3000");
     mockedCheckbox.mockReset();
     mockedSelect.mockReset();
     mockedConfirm.mockReset();

@@ -169,7 +169,7 @@ const buildOptions = (answers: Answers): string => {
     lines.push(`  session: {`);
     lines.push(`    enabled: true,`);
     if (sessionDriver) {
-      lines.push(`    proteus: ${sessionSourceRef},`);
+      lines.push(`    keyValue: ${sessionSourceRef},`);
     }
     lines.push(`    name: "sid",`);
     lines.push(`    encrypted: true,`);
@@ -198,7 +198,7 @@ const buildOptions = (answers: Answers): string => {
   if (answers.features.rateLimit && rateLimitDriver) {
     lines.push(`  rateLimit: {`);
     lines.push(`    enabled: true,`);
-    lines.push(`    proteus: ${rateLimitSourceRef},`);
+    lines.push(`    keyValue: ${rateLimitSourceRef},`);
     lines.push(`    strategy: "fixed",`);
     lines.push(`    window: "1m",`);
     lines.push(`    max: 60,`);

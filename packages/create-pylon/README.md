@@ -20,7 +20,7 @@ The scaffolder asks for features and drivers, copies templates into the target d
 
 ## Features
 
-- Interactive prompts for project name, HTTP / Socket.IO features, persistence drivers, message bus driver, OIDC authentication, rate limiting, and workers
+- Interactive prompts for project name, issuer URL, HTTP / Socket.IO features, persistence drivers, message bus driver, OIDC authentication, rate limiting, and workers
 - Template overlay system that composes a `base` layer with optional `http`, `socket`, `webhooks`, and `workers` overlays
 - Generates `@lindorm/proteus` sources and a sample entity when one or more persistence drivers are selected
 - Generates an `@lindorm/iris` source, sample message, sample publisher, and sample subscriber when a message bus driver is selected
@@ -34,6 +34,7 @@ The scaffolder asks for features and drivers, copies templates into the target d
 
 ```
 ? Project name: my-app
+? Issuer URL:                     (this service's identity — becomes the Amphora domain for JWKS; default http://localhost:3000)
 ? Select features:                (HTTP routes / Socket.IO listeners)
 ? Persistence drivers (Proteus):  (memory / mongo / mysql / postgres / redis / sqlite — pick any)
 ? Message bus driver (Iris):      (none / kafka / nats / rabbit / redis)

@@ -30,6 +30,7 @@ exports[`runPrompts > returns answers with positional name and defaults 1`] = `
     "webhooks": false,
   },
   "irisDriver": "none",
+  "issuer": "http://localhost:3000",
   "projectDir": "<cwd>/my-app",
   "projectName": "my-app",
   "proteusDrivers": [],

@@ -54,6 +54,7 @@ const mockedIrisSampleMessage = runIrisGenerateSampleMessage as Mock;
 const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
   projectName: "demo",
   projectDir: "/tmp/demo",
+  issuer: "http://localhost:3000",
   features: {
     http: true,
     socket: false,

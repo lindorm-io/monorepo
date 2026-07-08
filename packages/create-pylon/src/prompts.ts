@@ -28,6 +28,17 @@ const promptProjectName = async (initial?: string): Promise<string> => {
   });
 };
 
+const promptIssuer = async (): Promise<string> =>
+  input({
+    message:
+      "Issuer URL (this service's identity — becomes the Amphora domain for JWKS):",
+    default: "http://localhost:3000",
+    validate: (value) =>
+      /^https?:\/\/.+/.test(value.trim())
+        ? true
+        : "Enter a fully-qualified URL, e.g. https://auth.example.com",
+  });
+
 const promptFeatures = async (): Promise<Pick<Features, "http" | "socket">> => {
   const selected = await checkbox<"http" | "socket">({
     message: "Select features:",
@@ -124,6 +135,7 @@ export const runPrompts = async ({
 
   await resolveExistingCollision(projectDir);
 
+  const issuer = await promptIssuer();
   const featureFlags = await promptFeatures();
   const proteusDrivers = await promptProteusDrivers();
   const irisDriver = await promptIrisDriver();
@@ -145,6 +157,7 @@ export const runPrompts = async ({
   return {
     projectName,
     projectDir,
+    issuer,
     features: {
       http: featureFlags.http,
       socket: featureFlags.socket,

@@ -23,6 +23,7 @@ export type Features = {
 export type Answers = {
   projectName: string;
   projectDir: string;
+  issuer: string;
   features: Features;
   proteusDrivers: Array<ProteusDriver>;
   irisDriver: IrisDriver;

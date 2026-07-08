@@ -449,7 +449,10 @@ export const socketExampleMiddleware: ServerSocketMiddleware = async (ctx, next)
 import { logger } from "../logger/index.js";
 import { config } from "./config.js";
 
-export const amphora = new Amphora({ logger });
+// \`domain\` is this service's issuer: every key added to the vault (the KEK
+// below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it, and
+// it's what /.well-known/jwks.json publishes under.
+export const amphora = new Amphora({ logger, domain: config.issuer });
 
 amphora.env(config.pylon.kek);
 ",
@@ -649,7 +652,10 @@ export const httpExampleMiddleware: ServerHttpMiddleware = async (ctx, next) => 
 import { logger } from "../logger/index.js";
 import { config } from "./config.js";
 
-export const amphora = new Amphora({ logger });
+// \`domain\` is this service's issuer: every key added to the vault (the KEK
+// below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it, and
+// it's what /.well-known/jwks.json publishes under.
+export const amphora = new Amphora({ logger, domain: config.issuer });
 
 amphora.env(config.pylon.kek);
 ",
@@ -749,7 +755,10 @@ export const logger = new Logger({
 import { logger } from "../logger/index.js";
 import { config } from "./config.js";
 
-export const amphora = new Amphora({ logger });
+// \`domain\` is this service's issuer: every key added to the vault (the KEK
+// below, plus rotated Kryptos keys) derives its issuer + jwks_uri from it, and
+// it's what /.well-known/jwks.json publishes under.
+export const amphora = new Amphora({ logger, domain: config.issuer });
 
 amphora.env(config.pylon.kek);
 ",
@@ -811,6 +820,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -819,6 +829,10 @@ export const config = configuration(
     nodeEnv: z
       .enum(["production", "staging", "development", "test", "unknown"])
       .default("development"),
+    // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+    // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+    // (ISSUER) — never ship localhost to production.
+    issuer: z.string(),
     pylon: z.object({ kek: z.string() }),
     server: z.object({ port: z.number() }),
     logger: z
@@ -890,7 +904,7 @@ export const pylon = new Pylon({
   },
   session: {
     enabled: true,
-    proteus: rateLimitSource,
+    keyValue: rateLimitSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -912,7 +926,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    proteus: rateLimitSource,
+    keyValue: rateLimitSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -998,6 +1012,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1006,6 +1021,10 @@ export const config = configuration(
     nodeEnv: z
       .enum(["production", "staging", "development", "test", "unknown"])
       .default("development"),
+    // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+    // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+    // (ISSUER) — never ship localhost to production.
+    issuer: z.string(),
     pylon: z.object({ kek: z.string() }),
     server: z.object({ port: z.number() }),
     logger: z
@@ -1193,7 +1212,7 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   rateLimit: {
     enabled: true,
-    proteus: rateLimitSource,
+    keyValue: rateLimitSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -1435,6 +1454,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1442,6 +1462,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1471,6 +1495,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1478,6 +1503,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1505,6 +1534,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1512,6 +1542,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1536,6 +1570,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1543,6 +1578,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1575,6 +1614,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1582,6 +1622,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1609,6 +1653,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1616,6 +1661,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1640,6 +1689,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1647,6 +1697,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1681,6 +1735,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1688,6 +1743,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1720,6 +1779,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1727,6 +1787,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1756,6 +1820,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1763,6 +1828,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1790,6 +1859,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1797,6 +1867,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1824,6 +1898,7 @@ import { z } from "zod";
 //
 //   pylon.kek           → PYLON__KEK
 //   server.port         → SERVER__PORT
+//   issuer              → ISSUER (single segment, no separator)
 //   nodeEnv             → NODE_ENV (single segment, no separator)
 //
 // See config/default.yml for non-secret defaults you can edit.
@@ -1831,6 +1906,10 @@ export const config = configuration({
   nodeEnv: z
     .enum(["production", "staging", "development", "test", "unknown"])
     .default("development"),
+  // This service's own issuer URL. Becomes the Amphora \`domain\`, from which
+  // every minted Kryptos key derives its issuer + jwks_uri. Override per-env
+  // (ISSUER) — never ship localhost to production.
+  issuer: z.string(),
   pylon: z.object({ kek: z.string() }),
   server: z.object({ port: z.number() }),
   logger: z
@@ -1867,11 +1946,16 @@ exports[`scaffold > writeConfigYaml > snapshot: nats only 1`] = `
 #
 # Env-var override reference for this service:
 #   nodeEnv          NODE_ENV
+#   issuer           ISSUER
 #   pylon.kek        PYLON__KEK
 #   server.port      SERVER__PORT
 #   logger.level     LOGGER__LEVEL
 #   logger.readable  LOGGER__READABLE
 #   nats.servers     NATS__SERVERS
+
+# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# Override per-environment via ISSUER; never ship localhost to production.
+issuer: http://localhost:3000
 
 server:
   port: 3000
@@ -1899,10 +1983,15 @@ exports[`scaffold > writeConfigYaml > snapshot: no drivers 1`] = `
 #
 # Env-var override reference for this service:
 #   nodeEnv          NODE_ENV
+#   issuer           ISSUER
 #   pylon.kek        PYLON__KEK
 #   server.port      SERVER__PORT
 #   logger.level     LOGGER__LEVEL
 #   logger.readable  LOGGER__READABLE
+
+# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# Override per-environment via ISSUER; never ship localhost to production.
+issuer: http://localhost:3000
 
 server:
   port: 3000
@@ -1930,6 +2019,7 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + auth 1`] = `
 #
 # Env-var override reference for this service:
 #   nodeEnv               NODE_ENV
+#   issuer                ISSUER
 #   pylon.kek             PYLON__KEK
 #   server.port           SERVER__PORT
 #   logger.level          LOGGER__LEVEL
@@ -1940,6 +2030,10 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + auth 1`] = `
 #   auth.clientId         AUTH__CLIENT_ID
 #   auth.clientSecret     AUTH__CLIENT_SECRET
 #   auth.issuer           AUTH__ISSUER
+
+# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# Override per-environment via ISSUER; never ship localhost to production.
+issuer: http://localhost:3000
 
 server:
   port: 3000
@@ -1971,6 +2065,7 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + kafka 1`] = `
 #
 # Env-var override reference for this service:
 #   nodeEnv               NODE_ENV
+#   issuer                ISSUER
 #   pylon.kek             PYLON__KEK
 #   server.port           SERVER__PORT
 #   logger.level          LOGGER__LEVEL
@@ -1979,6 +2074,10 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + kafka 1`] = `
 #   postgres.synchronize  POSTGRES__SYNCHRONIZE
 #   postgres.migrations   POSTGRES__MIGRATIONS
 #   kafka.brokers         KAFKA__BROKERS
+
+# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# Override per-environment via ISSUER; never ship localhost to production.
+issuer: http://localhost:3000
 
 server:
   port: 3000
@@ -2010,6 +2109,7 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + redis 1`] = `
 #
 # Env-var override reference for this service:
 #   nodeEnv               NODE_ENV
+#   issuer                ISSUER
 #   pylon.kek             PYLON__KEK
 #   server.port           SERVER__PORT
 #   logger.level          LOGGER__LEVEL
@@ -2018,6 +2118,10 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres + redis 1`] = `
 #   postgres.synchronize  POSTGRES__SYNCHRONIZE
 #   postgres.migrations   POSTGRES__MIGRATIONS
 #   redis.url             REDIS__URL
+
+# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# Override per-environment via ISSUER; never ship localhost to production.
+issuer: http://localhost:3000
 
 server:
   port: 3000
@@ -2049,6 +2153,7 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres only 1`] = `
 #
 # Env-var override reference for this service:
 #   nodeEnv               NODE_ENV
+#   issuer                ISSUER
 #   pylon.kek             PYLON__KEK
 #   server.port           SERVER__PORT
 #   logger.level          LOGGER__LEVEL
@@ -2056,6 +2161,10 @@ exports[`scaffold > writeConfigYaml > snapshot: postgres only 1`] = `
 #   postgres.url          POSTGRES__URL
 #   postgres.synchronize  POSTGRES__SYNCHRONIZE
 #   postgres.migrations   POSTGRES__MIGRATIONS
+
+# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# Override per-environment via ISSUER; never ship localhost to production.
+issuer: http://localhost:3000
 
 server:
   port: 3000
@@ -2087,11 +2196,16 @@ exports[`scaffold > writeConfigYaml > snapshot: redis proteus + redis iris (dedu
 #
 # Env-var override reference for this service:
 #   nodeEnv          NODE_ENV
+#   issuer           ISSUER
 #   pylon.kek        PYLON__KEK
 #   server.port      SERVER__PORT
 #   logger.level     LOGGER__LEVEL
 #   logger.readable  LOGGER__READABLE
 #   redis.url        REDIS__URL
+
+# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# Override per-environment via ISSUER; never ship localhost to production.
+issuer: http://localhost:3000
 
 server:
   port: 3000
@@ -2119,6 +2233,7 @@ exports[`scaffold > writeConfigYaml > snapshot: sqlite only 1`] = `
 #
 # Env-var override reference for this service:
 #   nodeEnv             NODE_ENV
+#   issuer              ISSUER
 #   pylon.kek           PYLON__KEK
 #   server.port         SERVER__PORT
 #   logger.level        LOGGER__LEVEL
@@ -2126,6 +2241,10 @@ exports[`scaffold > writeConfigYaml > snapshot: sqlite only 1`] = `
 #   sqlite.path         SQLITE__PATH
 #   sqlite.synchronize  SQLITE__SYNCHRONIZE
 #   sqlite.migrations   SQLITE__MIGRATIONS
+
+# This service's own issuer URL (Amphora domain → key issuer + jwks_uri).
+# Override per-environment via ISSUER; never ship localhost to production.
+issuer: http://localhost:3000
 
 server:
   port: 3000
@@ -2786,7 +2905,7 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   rateLimit: {
     enabled: true,
-    proteus: rateLimitSource,
+    keyValue: rateLimitSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -2826,7 +2945,7 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   session: {
     enabled: true,
-    proteus: rateLimitSource,
+    keyValue: rateLimitSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -2848,7 +2967,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    proteus: rateLimitSource,
+    keyValue: rateLimitSource,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -2918,7 +3037,7 @@ export const pylon = new Pylon({
   kryptos: { enabled: true },
   session: {
     enabled: true,
-    proteus: proteusSource,
+    keyValue: proteusSource,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -2986,10 +3105,11 @@ export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targe
 
 exports[`scaffold > writeWorkerFiles > snapshot: all three > kryptos-rotation content 1`] = `
 "import { createKryptosRotationWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
 import { source as proteusSource } from "../proteus/source.js";
 
-export default createKryptosRotationWorker({ logger, proteus: proteusSource });
+export default createKryptosRotationWorker({ amphora, logger, proteus: proteusSource });
 "
 `;
 
@@ -3015,9 +3135,10 @@ export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targe
 
 exports[`scaffold > writeWorkerFiles > snapshot: kryptos-rotation only > kryptos-rotation content 1`] = `
 "import { createKryptosRotationWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
 import { source as proteusSource } from "../proteus/source.js";
 
-export default createKryptosRotationWorker({ logger, proteus: proteusSource });
+export default createKryptosRotationWorker({ amphora, logger, proteus: proteusSource });
 "
 `;
