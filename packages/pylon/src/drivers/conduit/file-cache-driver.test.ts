@@ -16,6 +16,7 @@ describe("createFileCacheDriver", () => {
   };
 
   const response: ConduitResponse = {
+    cached: null,
     data: { ok: true },
     status: 200,
     statusText: "OK",
