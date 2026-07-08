@@ -66,4 +66,39 @@ describe("createMockProteusSource", () => {
 
     expect(source.hasEntity(TestEntity)).toBe(true);
   });
+
+  it("should serve seeded rows through both source and session repositories", async () => {
+    class Album {
+      id!: string;
+      artistId!: string;
+    }
+
+    const rows = {
+      Album: [
+        { id: "alb_1", artistId: "art_1" },
+        { id: "alb_2", artistId: "art_1" },
+        { id: "alb_3", artistId: "art_2" },
+      ],
+    };
+    const source = createMockProteusSource(rows);
+
+    // Directly off the source.
+    expect(
+      await source.repository(Album).findPaginated(
+        { artistId: "art_1" } as any,
+        {
+          page: 1,
+          pageSize: 1,
+        } as any,
+      ),
+    ).toMatchObject({
+      total: 2,
+      data: [{ id: "alb_1", artistId: "art_1" }],
+      hasMore: true,
+    });
+
+    // And through a session — the seed flows down.
+    const repo = source.session().repository(Album);
+    expect(await repo.count({ artistId: "art_2" } as any)).toBe(1);
+  });
 });

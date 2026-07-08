@@ -53,4 +53,42 @@ describe("createMockProteusSession", () => {
 
     expect(session.hasEntity(TestEntity)).toBe(true);
   });
+
+  it("should serve seeded rows keyed by entity name through its repositories", async () => {
+    class Album {
+      id!: string;
+      artistId!: string;
+    }
+
+    const session = createMockProteusSession({
+      Album: [
+        { id: "alb_1", artistId: "art_1" },
+        { id: "alb_2", artistId: "art_2" },
+      ],
+      TestEntity: [{ id: "te_1" }],
+    });
+
+    const albums = session.repository(Album);
+    expect(await albums.findOne({ id: "alb_2" } as any)).toEqual({
+      id: "alb_2",
+      artistId: "art_2",
+    });
+    expect(await albums.find({ artistId: "art_1" } as any)).toEqual([
+      { id: "alb_1", artistId: "art_1" },
+    ]);
+
+    const test = session.repository(TestEntity);
+    expect(await test.findPaginated()).toMatchObject({
+      total: 1,
+      data: [{ id: "te_1" }],
+    });
+  });
+
+  it("should serve an empty page for an entity without seeded rows", async () => {
+    const session = createMockProteusSession({ Album: [{ id: "alb_1" }] });
+    const repo = session.repository(TestEntity);
+
+    expect(await repo.find()).toEqual([]);
+    expect(await repo.findOne({ id: "x" } as any)).toBeNull();
+  });
 });

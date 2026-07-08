@@ -1,8 +1,12 @@
 import type { IProteusSource } from "../interfaces/ProteusSource.js";
 import { _createMockProteusSession } from "./create-mock-proteus-session.js";
 import { _createMockRepository } from "./create-mock-repository.js";
+import type { MockProteusRows } from "./mock-proteus-rows.js";
 
-export const _createMockProteusSource = (mockFn: () => any): IProteusSource => {
+export const _createMockProteusSource = (
+  mockFn: () => any,
+  rows?: MockProteusRows,
+): IProteusSource => {
   const impl = (fn: any) => {
     const m = mockFn();
     m.mockImplementation(fn);
@@ -38,7 +42,7 @@ export const _createMockProteusSource = (mockFn: () => any): IProteusSource => {
     off: mockFn(),
     once: mockFn(),
 
-    session: impl(() => _createMockProteusSession(mockFn)),
+    session: impl(() => _createMockProteusSession(mockFn, rows)),
     connect: mockFn(),
     disconnect: mockFn(),
     ping: resolves(true),
@@ -53,7 +57,9 @@ export const _createMockProteusSource = (mockFn: () => any): IProteusSource => {
     disableFilter: mockFn(),
     getFilterRegistry: returns(new Map()),
 
-    repository: impl(() => _createMockRepository(mockFn)),
+    repository: impl((entity: any) =>
+      _createMockRepository(mockFn, rows ? (rows[entity?.name] ?? []) : undefined),
+    ),
     queryBuilder: mockFn(),
     client: mockFn(),
     transaction: impl(async (cb: Function) => cb({})),

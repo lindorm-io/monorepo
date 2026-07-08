@@ -1,7 +1,11 @@
 import type { IProteusSession } from "../interfaces/ProteusSession.js";
 import { _createMockRepository } from "./create-mock-repository.js";
+import type { MockProteusRows } from "./mock-proteus-rows.js";
 
-export const _createMockProteusSession = (mockFn: () => any): IProteusSession => {
+export const _createMockProteusSession = (
+  mockFn: () => any,
+  rows?: MockProteusRows,
+): IProteusSession => {
   const impl = (fn: any) => {
     const m = mockFn();
     m.mockImplementation(fn);
@@ -38,7 +42,9 @@ export const _createMockProteusSession = (mockFn: () => any): IProteusSession =>
 
     hasEntity: returns(true),
 
-    repository: impl(() => _createMockRepository(mockFn)),
+    repository: impl((entity: any) =>
+      _createMockRepository(mockFn, rows ? (rows[entity?.name] ?? []) : undefined),
+    ),
     queryBuilder: mockFn(),
     client: mockFn(),
     transaction: impl(async (cb: Function) => cb({})),

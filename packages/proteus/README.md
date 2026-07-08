@@ -2348,6 +2348,32 @@ import {
 
 Each factory returns a `Mocked<...>` (vitest) or `jest.Mocked<...>` (jest) implementation of the corresponding interface — every method is a typed mock function that you can configure per test.
 
+### Seeding rows
+
+Pass canned rows and the read queries serve them instead of returning empty stubs — with the same predicate matcher (`$eq`, `$in`, `$gt`, …) the memory driver uses and the real offset/page `findPaginated` contract (defaults page 1, pageSize 10). This removes per-test `mockResolvedValue` wiring; every method is still a spy, so any default stays overridable.
+
+```typescript
+// A repository seeded with an array — find / findOne / find­AndCount / count /
+// exists / findPaginated operate over it.
+const repo = createMockRepository<Album>([
+  { id: "alb_1", artistId: "art_1" },
+  { id: "alb_2", artistId: "art_2" },
+]);
+
+await repo.findOne({ id: "alb_1" }); // → { id: "alb_1", artistId: "art_1" }
+await repo.find({ artistId: "art_2" }); // → [{ id: "alb_2", artistId: "art_2" }]
+await repo.findPaginated({}, { page: 1, pageSize: 1 }); // → { data: [...], total: 2, hasMore: true, ... }
+
+// A source/session seeded with a per-entity map (keyed by `Entity.name`);
+// `repository(Entity)` serves that entity's rows.
+const source = createMockProteusSource({
+  Artist: [{ id: "art_1", name: "Metallica" }],
+  Album: [{ id: "alb_1", artistId: "art_1" }],
+});
+```
+
+Rows are paged in insertion order — ordering is the DB's job and is not emulated. Keyset `paginate`, aggregates, and write methods keep their non-seeded stubs; reach for a live memory-driver source when you need those.
+
 ## License
 
 AGPL-3.0-or-later
