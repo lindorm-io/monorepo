@@ -166,7 +166,7 @@ export class Hermes implements IHermes {
 
       this._statusRef.current = "ready";
 
-      this.logger.verbose("Hermes ready");
+      this.logger.info("Hermes ready");
     } catch (err) {
       this._statusRef.current = "created";
       throw err;
@@ -191,7 +191,7 @@ export class Hermes implements IHermes {
 
     this._statusRef.current = "stopped";
 
-    this.logger.verbose("Hermes stopped");
+    this.logger.info("Hermes stopped");
   }
 
   session(options: { logger?: ILogger } = {}): HermesSession {
@@ -418,7 +418,7 @@ export class Hermes implements IHermes {
       const view = this.registry.getViewByEntity(entity as unknown as Constructor);
       const viewSource = this.resolveSourceForView(view);
 
-      this.logger.verbose("Starting view replay", {
+      this.logger.info("Starting view replay", {
         view: { name: view.name, namespace: view.namespace },
       });
 
@@ -600,7 +600,7 @@ export class Hermes implements IHermes {
 
       emitter.emit("complete");
 
-      this.logger.verbose("View replay complete", {
+      this.logger.info("View replay complete", {
         view: { name: view.name, namespace: view.namespace },
         processed,
         total,

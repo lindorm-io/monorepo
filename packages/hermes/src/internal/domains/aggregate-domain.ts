@@ -546,7 +546,7 @@ export class AggregateDomain {
         const parsed = parseAes(record.data as SerialisedAesDecryption);
 
         if (parsed.keyId !== aes.kryptos.id) {
-          this.logger.info("Encryption key mismatch", {
+          this.logger.warn("Encryption key mismatch", {
             expect: parsed.keyId,
             actual: aes.kryptos.id,
           });
