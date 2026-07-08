@@ -1189,6 +1189,23 @@ pylon generate --help
 
 Each command accepts `-d, --directory <path>` to override the output directory and `--dry-run` to skip writing.
 
+The generators behind the CLI are also available programmatically on the `@lindorm/pylon/scaffold` subpath, kept off the runtime surface so scaffold tooling never pulls the server runtime into scope:
+
+```typescript
+import {
+  generateRoute,
+  generateHandler,
+  generateListener,
+  generateMiddleware,
+  generateWorker,
+  generateStatic,
+  generateUpload,
+} from "@lindorm/pylon/scaffold";
+
+await generateRoute("GET,POST", "/v1/users/:id", { directory: "./src/routes" });
+await generateHandler("getUser", { directory: "./src/handlers" });
+```
+
 ## License
 
 AGPL-3.0-or-later.

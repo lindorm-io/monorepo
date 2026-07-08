@@ -35,6 +35,10 @@
     "./mocks": {
       "types": "./dist/mocks/index.d.ts",
       "default": "./dist/mocks/index.js"
+    },
+    "./scaffold": {
+      "types": "./dist/scaffold.d.ts",
+      "default": "./dist/scaffold.js"
     }
   },
   "scripts": {
