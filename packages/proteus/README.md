@@ -2270,6 +2270,23 @@ proteus migrate resolve --rolled-back 20240101_add_users
 proteus db ping
 ```
 
+### Programmatic Scaffolding (`@lindorm/proteus/scaffold`)
+
+The generators behind the CLI are available on a dedicated subpath, kept off the
+runtime surface so scaffold tooling never pulls the driver runtime into scope:
+
+```typescript
+import {
+  generateSource,
+  generateEntitySource,
+  writeSource,
+  writeEntity,
+} from "@lindorm/proteus/scaffold";
+
+await writeSource({ directory: "./src/proteus", driver: "postgres" });
+await writeEntity({ directory: "./src/proteus/entities", name: "User" });
+```
+
 ### Shared Options
 
 | Flag                     | Description                                                 |
