@@ -1,12 +1,12 @@
 import { join } from "path";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
-vi.mock("@lindorm/proteus", async () => ({
+vi.mock("@lindorm/proteus/scaffold", async () => ({
   writeSource: vi.fn().mockResolvedValue(undefined),
   writeEntity: vi.fn().mockResolvedValue(undefined),
 }));
 
-vi.mock("@lindorm/iris", () => ({
+vi.mock("@lindorm/iris/scaffold", () => ({
   writeSource: vi.fn().mockResolvedValue(undefined),
   writeMessage: vi.fn().mockResolvedValue(undefined),
 }));
@@ -14,11 +14,11 @@ vi.mock("@lindorm/iris", () => ({
 import {
   writeEntity as proteusWriteEntity,
   writeSource as proteusWriteSource,
-} from "@lindorm/proteus";
+} from "@lindorm/proteus/scaffold";
 import {
   writeMessage as irisWriteMessage,
   writeSource as irisWriteSource,
-} from "@lindorm/iris";
+} from "@lindorm/iris/scaffold";
 import {
   runIrisGenerateSampleMessage,
   runIrisInit,

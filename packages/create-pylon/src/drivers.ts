@@ -1,11 +1,11 @@
 import {
   writeEntity as writeProteusEntity,
   writeSource as writeProteusSource,
-} from "@lindorm/proteus";
+} from "@lindorm/proteus/scaffold";
 import {
   writeMessage as writeIrisMessage,
   writeSource as writeIrisSource,
-} from "@lindorm/iris";
+} from "@lindorm/iris/scaffold";
 import { join } from "path";
 import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
 import { PROTEUS_DB_DRIVERS } from "./types.js";
