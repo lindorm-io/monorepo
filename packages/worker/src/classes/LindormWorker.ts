@@ -247,7 +247,7 @@ export class LindormWorker implements ILindormWorker {
     if (this._started) return;
     if (this._timeout) return;
 
-    this.logger.debug("Starting worker");
+    this.logger.info("Starting worker");
     this.emitter.emit("start");
 
     this._started = true;
@@ -263,7 +263,7 @@ export class LindormWorker implements ILindormWorker {
   async stop(): Promise<void> {
     if (!this._timeout && !this._running) return;
 
-    this.logger.debug("Stopping worker");
+    this.logger.info("Stopping worker");
     this.emitter.emit("stop");
 
     if (this._timeout) {
@@ -308,7 +308,7 @@ export class LindormWorker implements ILindormWorker {
       this._seq++;
       this.logger.debug("Running worker callback");
     } else {
-      this.logger.debug("Retrying worker callback", { attempt });
+      this.logger.warn("Retrying worker callback", { attempt });
     }
 
     this._runPromise = this.executeRun(attempt);
@@ -318,7 +318,7 @@ export class LindormWorker implements ILindormWorker {
   private async executeRun(attempt: number): Promise<void> {
     return this.invokeCallback()
       .then(() => {
-        this.logger.debug("Worker callback success");
+        this.logger.verbose("Worker callback success");
         this.emitter.emit("success");
 
         this._latestSuccess = new Date();
@@ -344,10 +344,11 @@ export class LindormWorker implements ILindormWorker {
 
           this._latestError = new Date();
 
-          this.logger.debug("Will not attempt any further retries for this interval", {
-            attempt,
-            maxAttempts: this.retry.maxAttempts,
-          });
+          this.logger.error(
+            "Will not attempt any further retries for this interval",
+            err,
+            [{ attempt, maxAttempts: this.retry.maxAttempts }],
+          );
 
           return this.errorCallback(this.ctx(), err)
             .catch((err) => {
