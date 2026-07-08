@@ -6,7 +6,7 @@ import { resolveActor } from "../../internal/utils/resolve-actor.js";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 type AuditConfig = {
-  iris: IIrisSource;
+  bus: IIrisSource;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
 };
@@ -49,9 +49,9 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
       const body = ctx.data ? (sanitise ? sanitise(ctx.data) : ctx.data) : null;
 
       const actor = resolveActor(ctx);
-      const iris = config.iris.session({ logger: ctx.logger });
+      const bus = config.bus.session({ logger: ctx.logger });
       const { RequestAudit } = await import("../../messages/RequestAudit.js");
-      const publisher = iris.publisher(RequestAudit);
+      const publisher = bus.publisher(RequestAudit);
 
       let endpoint: string;
       let method: string;

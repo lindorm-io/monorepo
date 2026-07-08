@@ -117,7 +117,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         auditConfig:
           (this.options.audit?.bus ?? this.options.bus)
             ? {
-                iris: this.options.audit?.bus ?? this.options.bus!,
+                bus: this.options.audit?.bus ?? this.options.bus!,
                 sanitise: this.options.audit?.sanitise,
                 skip: this.options.audit?.skip,
               }

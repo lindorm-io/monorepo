@@ -60,7 +60,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
         auditConfig:
           (options.audit?.bus ?? options.bus)
             ? {
-                iris: options.audit?.bus ?? options.bus!,
+                bus: options.audit?.bus ?? options.bus!,
                 sanitise: options.audit?.sanitise,
                 skip: options.audit?.skip,
               }

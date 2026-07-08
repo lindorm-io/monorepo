@@ -339,31 +339,31 @@ export class Pylon<
 
   private async subscribe(): Promise<void> {
     if (this.options.audit?.enabled) {
-      const iris = this.options.audit.bus ?? this.options.bus;
-      const proteus = this.options.audit.db ?? this.options.db;
+      const bus = this.options.audit.bus ?? this.options.bus;
+      const db = this.options.audit.db ?? this.options.db;
 
-      if (iris && proteus) {
-        await setupAuditConsumer(iris, proteus, this.logger);
+      if (bus && db) {
+        await setupAuditConsumer(bus, db, this.logger);
 
         if (this.options.audit.entities?.length) {
           await setupDataAuditListeners(
-            proteus,
-            iris,
+            db,
+            bus,
             this.options.audit.entities,
             this.logger,
           );
-          await setupDataAuditConsumer(iris, proteus, this.logger);
+          await setupDataAuditConsumer(bus, db, this.logger);
         }
       }
     }
 
     if (this.options.webhook?.enabled) {
-      const iris = this.options.webhook.bus ?? this.options.bus;
-      const proteus = this.options.webhook.db ?? this.options.db;
+      const bus = this.options.webhook.bus ?? this.options.bus;
+      const db = this.options.webhook.db ?? this.options.db;
 
-      if (iris && proteus) {
-        await setupWebhookRequestConsumer(iris, proteus, this.logger);
-        await setupWebhookDispatchConsumer(iris, proteus, this.logger, {
+      if (bus && db) {
+        await setupWebhookRequestConsumer(bus, db, this.logger);
+        await setupWebhookDispatchConsumer(bus, db, this.logger, {
           encryptionKey: this.options.webhook.encryptionKey,
           maxErrors: this.options.webhook.maxErrors,
         });

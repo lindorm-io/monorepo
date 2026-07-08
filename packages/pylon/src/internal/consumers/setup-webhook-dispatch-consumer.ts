@@ -16,8 +16,8 @@ export type SetupWebhookDispatchOptions = {
 };
 
 export const setupWebhookDispatchConsumer = async (
-  iris: IIrisSource,
-  proteus: IProteusSource,
+  bus: IIrisSource,
+  db: IProteusSource,
   logger: ILogger,
   options: SetupWebhookDispatchOptions = {},
 ): Promise<void> => {
@@ -32,7 +32,7 @@ export const setupWebhookDispatchConsumer = async (
   const { WebhookDispatch } = await import("../../messages/WebhookDispatch.js");
   const { WebhookSubscription } = await import("../../entities/WebhookSubscription.js");
 
-  const wq = iris.workerQueue(WebhookDispatch);
+  const wq = bus.workerQueue(WebhookDispatch);
 
   await wq.consume(WEBHOOK_DISPATCH_QUEUE, async (message) => {
     try {
@@ -55,7 +55,7 @@ export const setupWebhookDispatchConsumer = async (
         },
       ]);
 
-      const repo = proteus.repository(WebhookSubscription);
+      const repo = db.repository(WebhookSubscription);
       const subscription = await repo.findOne({ id: message.subscription.id });
 
       if (!subscription) return;

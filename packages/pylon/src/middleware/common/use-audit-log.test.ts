@@ -45,7 +45,7 @@ describe("useAuditLog", () => {
     };
 
     auditConfig = {
-      iris: mockIris,
+      bus: mockIris,
     };
 
     (isHttpContext as unknown as Mock).mockReturnValue(true);

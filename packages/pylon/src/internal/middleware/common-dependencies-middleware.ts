@@ -32,7 +32,7 @@ import {
 import { resolveActor, type ActorResolver } from "../utils/resolve-actor.js";
 
 type AuditConfig = {
-  iris: IIrisSource;
+  bus: IIrisSource;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
 };

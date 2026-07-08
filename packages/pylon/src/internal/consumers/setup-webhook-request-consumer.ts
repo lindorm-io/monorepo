@@ -5,18 +5,18 @@ import type { IProteusSource } from "@lindorm/proteus";
 export const WEBHOOK_REQUEST_QUEUE = "pylon.webhook.request.fanout";
 
 export const setupWebhookRequestConsumer = async (
-  iris: IIrisSource,
-  proteus: IProteusSource,
+  bus: IIrisSource,
+  db: IProteusSource,
   logger: ILogger,
 ): Promise<void> => {
   const { WebhookRequest } = await import("../../messages/WebhookRequest.js");
   const { WebhookDispatch } = await import("../../messages/WebhookDispatch.js");
   const { WebhookSubscription } = await import("../../entities/WebhookSubscription.js");
 
-  const wq = iris.workerQueue(WebhookRequest);
+  const wq = bus.workerQueue(WebhookRequest);
 
   await wq.consume(WEBHOOK_REQUEST_QUEUE, async (message) => {
-    const repo = proteus.repository(WebhookSubscription);
+    const repo = db.repository(WebhookSubscription);
     const subscriptions = await repo.find({ event: message.event });
 
     if (!subscriptions.length) {
@@ -40,7 +40,7 @@ export const setupWebhookRequestConsumer = async (
       return;
     }
 
-    const dispatchQueue = iris.workerQueue(WebhookDispatch);
+    const dispatchQueue = bus.workerQueue(WebhookDispatch);
 
     for (const subscription of matched) {
       const dispatch = dispatchQueue.create({

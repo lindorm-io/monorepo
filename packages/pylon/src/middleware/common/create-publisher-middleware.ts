@@ -7,10 +7,10 @@ import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 export const createPublisherMiddleware = <C extends PylonContext = PylonContext>(
   messages: Array<Constructor<IMessage>>,
-  iris?: IIrisSource,
+  bus?: IIrisSource,
 ): PylonMiddleware<C> =>
   async function publisherMiddleware(ctx, next) {
-    const source = resolveIris(ctx, iris);
+    const source = resolveIris(ctx, bus);
     const obj: Dict = {};
 
     for (const message of messages) {
