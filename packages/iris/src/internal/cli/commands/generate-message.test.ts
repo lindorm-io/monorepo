@@ -1,4 +1,5 @@
 import { resolve, join } from "path";
+import { loadLindormConfig as _loadLindormConfig } from "@lindorm/scaffold";
 import { mkdir as _mkdir, writeFile as _writeFile } from "fs/promises";
 import { Logger as _Logger } from "@lindorm/logger";
 import { generateMessage } from "./generate-message.js";
@@ -8,6 +9,15 @@ vi.mock("fs/promises", async () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   writeFile: vi.fn().mockResolvedValue(undefined),
 }));
+
+// Keep resolveTarget + LINDORM_CONFIG_DEFAULTS real; only stub the config read
+// so tests don't depend on a lindorm.config file in the package cwd.
+vi.mock("@lindorm/scaffold", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@lindorm/scaffold")>()),
+  loadLindormConfig: vi.fn().mockResolvedValue(null),
+}));
+
+const loadLindormConfig = _loadLindormConfig as unknown as Mock;
 
 vi.mock("@lindorm/logger", () => ({
   Logger: {
@@ -83,6 +93,38 @@ describe("generateMessage", () => {
 
     expect(writeFile).toHaveBeenCalledWith(
       join(customDir, "OrderCreated.ts"),
+      expect.any(String),
+      "utf-8",
+    );
+  });
+
+  it("should use lindorm.config messagesDir when no directory arg is given", async () => {
+    loadLindormConfig.mockResolvedValueOnce({
+      iris: { messagesDir: "./from/config/messages" },
+    });
+
+    await generateMessage("OrderCreated", {});
+
+    const configDir = resolve(process.cwd(), "./from/config/messages");
+
+    expect(writeFile).toHaveBeenCalledWith(
+      join(configDir, "OrderCreated.ts"),
+      expect.any(String),
+      "utf-8",
+    );
+  });
+
+  it("should let the --directory arg win over lindorm.config", async () => {
+    loadLindormConfig.mockResolvedValueOnce({
+      iris: { messagesDir: "./from/config/messages" },
+    });
+
+    await generateMessage("OrderCreated", { directory: "./from/arg" });
+
+    const argDir = resolve(process.cwd(), "./from/arg");
+
+    expect(writeFile).toHaveBeenCalledWith(
+      join(argDir, "OrderCreated.ts"),
       expect.any(String),
       "utf-8",
     );

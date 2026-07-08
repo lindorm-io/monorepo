@@ -12,7 +12,7 @@ export const registerGenerateCommands = (program: Command): void => {
     .alias("m")
     .description("Generate a message file with Iris decorators")
     .argument("[name]", "Message name in PascalCase")
-    .option("-d, --directory <path>", "Output directory", "./src/iris/messages")
+    .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateMessage);
 };

@@ -1,3 +1,8 @@
+import {
+  LINDORM_CONFIG_DEFAULTS,
+  loadLindormConfig,
+  resolveTarget,
+} from "@lindorm/scaffold";
 import { writeMessage } from "../../../utils/write-message.js";
 
 type GenerateMessageOptions = {
@@ -18,9 +23,16 @@ export const generateMessage = async (
     });
   }
 
+  const config = await loadLindormConfig();
+  const directory = resolveTarget({
+    arg: options.directory,
+    config: config?.iris?.messagesDir,
+    default: LINDORM_CONFIG_DEFAULTS.iris.messagesDir,
+  });
+
   await writeMessage({
     name,
-    directory: options.directory ?? "./src/iris/messages",
+    directory,
     dryRun: options.dryRun,
   });
 };
