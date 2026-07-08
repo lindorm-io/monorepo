@@ -1175,6 +1175,8 @@ pylon generate --help
 | `pylon generate middleware -S chat`           | `./src/listeners/chat/_middleware.ts`  |
 | `pylon generate handler getUser`              | `./src/handlers/getUser.ts`            |
 | `pylon generate worker HeartbeatWorker`       | `./src/workers/heartbeat-worker.ts`    |
+| `pylon generate static /assets`               | `./src/routes/assets.ts` (STATIC)      |
+| `pylon generate upload /assets`               | `./src/routes/assets.ts` (UPLOAD)      |
 
 Each command accepts `-d, --directory <path>` to override the output directory and `--dry-run` to skip writing.
 

@@ -4,6 +4,8 @@ import { generateListener } from "./generate-listener.js";
 import { generateMiddleware } from "./generate-middleware.js";
 import { generateHandler } from "./generate-handler.js";
 import { generateWorker } from "./generate-worker.js";
+import { generateStatic } from "./generate-static.js";
+import { generateUpload } from "./generate-upload.js";
 
 export const registerGenerateCommands = (program: Command): void => {
   const generate = program
@@ -58,4 +60,22 @@ export const registerGenerateCommands = (program: Command): void => {
     .option("-d, --directory <path>", "Output directory", "./src/workers")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateWorker);
+
+  generate
+    .command("static")
+    .alias("s")
+    .description("Generate a STATIC route file (useStatic mount)")
+    .argument("[path]", "URL path (e.g. /assets)")
+    .option("-d, --directory <path>", "Output directory", "./src/routes")
+    .option("--dry-run", "Show what would be created without writing files")
+    .action(generateStatic);
+
+  generate
+    .command("upload")
+    .alias("u")
+    .description("Generate an UPLOAD route file (useUpload mount)")
+    .argument("[path]", "URL path (e.g. /assets)")
+    .option("-d, --directory <path>", "Output directory", "./src/routes")
+    .option("--dry-run", "Show what would be created without writing files")
+    .action(generateUpload);
 };

@@ -1,17 +1,12 @@
 import { mkdir, writeFile } from "fs/promises";
-import { dirname, join, resolve } from "path";
+import { dirname, resolve } from "path";
 import { Logger } from "@lindorm/logger";
+import { resolveRouteFile } from "./resolve-route-file.js";
 
 type GenerateRouteOptions = {
   directory?: string;
   dryRun?: boolean;
 };
-
-const urlToFilePath = (urlPath: string): string =>
-  urlPath
-    .replace(/^\//, "")
-    .replace(/:([a-zA-Z]+)/g, "[$1]")
-    .replace(/\*([a-zA-Z]+)/g, "[...$1]");
 
 const relativePrefix = (depth: number): string => "../".repeat(depth);
 
@@ -69,13 +64,7 @@ export const generateRoute = async (
   }
 
   const directory = resolve(process.cwd(), options.directory ?? "./src/routes");
-  const filePath = urlToFilePath(path);
-  const segments = filePath.split("/");
-  const lastSegment = segments.pop()!;
-
-  const filename = lastSegment === "" ? "index.ts" : `${lastSegment}.ts`;
-  const filepath = join(directory, ...segments, filename);
-  const depth = segments.length + 1; // +1 for the routes/ dir itself
+  const { filepath, depth } = resolveRouteFile(path, directory);
   const content = routeTemplate(methodList, depth);
 
   if (options.dryRun) {

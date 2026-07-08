@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateStatic > should generate file content matching snapshot 1`] = `
+"import { useStatic } from "@lindorm/pylon";
+import { join } from "path";
+
+const root = join(__dirname, "..", "static-assets");
+
+export const STATIC = useStatic({ root, maxAge: "7d" });
+"
+`;

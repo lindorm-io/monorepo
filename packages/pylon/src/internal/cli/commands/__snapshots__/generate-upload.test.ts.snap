@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`generateUpload > should generate file content matching snapshot 1`] = `
+"import { useUpload } from "@lindorm/pylon";
+import { join } from "path";
+
+const root = join(__dirname, "..", "uploads");
+
+export const UPLOAD = useUpload({ root });
+"
+`;

@@ -5,6 +5,8 @@ import { generateListener } from "./generate-listener.js";
 import { generateMiddleware } from "./generate-middleware.js";
 import { generateHandler } from "./generate-handler.js";
 import { generateWorker } from "./generate-worker.js";
+import { generateStatic } from "./generate-static.js";
+import { generateUpload } from "./generate-upload.js";
 import { beforeEach, describe, expect, it, vi, type MockedFunction } from "vitest";
 
 vi.mock("./generate-route.js", async () => ({
@@ -27,6 +29,14 @@ vi.mock("./generate-worker.js", () => ({
   generateWorker: vi.fn(),
 }));
 
+vi.mock("./generate-static.js", () => ({
+  generateStatic: vi.fn(),
+}));
+
+vi.mock("./generate-upload.js", () => ({
+  generateUpload: vi.fn(),
+}));
+
 const mockGenerateRoute = generateRoute as MockedFunction<typeof generateRoute>;
 const mockGenerateListener = generateListener as MockedFunction<typeof generateListener>;
 const mockGenerateMiddleware = generateMiddleware as MockedFunction<
@@ -34,6 +44,8 @@ const mockGenerateMiddleware = generateMiddleware as MockedFunction<
 >;
 const mockGenerateHandler = generateHandler as MockedFunction<typeof generateHandler>;
 const mockGenerateWorker = generateWorker as MockedFunction<typeof generateWorker>;
+const mockGenerateStatic = generateStatic as MockedFunction<typeof generateStatic>;
+const mockGenerateUpload = generateUpload as MockedFunction<typeof generateUpload>;
 
 describe("registerGenerateCommands", () => {
   let program: Command;
@@ -343,6 +355,108 @@ describe("registerGenerateCommands", () => {
 
       expect(mockGenerateWorker).toHaveBeenCalledTimes(1);
       expect(mockGenerateWorker.mock.calls[0][0]).toBe("CleanupWorker");
+    });
+  });
+
+  describe("static subcommand", () => {
+    it("should register a 'static' subcommand", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "static");
+      expect(cmd).toBeDefined();
+    });
+
+    it("should register 's' as alias for static", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "static")!;
+      expect(cmd.alias()).toBe("s");
+    });
+
+    it("should register --directory option on static", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "static")!;
+      const opt = cmd.options.find((o) => o.long === "--directory");
+      expect(opt).toBeDefined();
+      expect(opt!.short).toBe("-d");
+    });
+
+    it("should register --dry-run option on static", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "static")!;
+      const opt = cmd.options.find((o) => o.long === "--dry-run");
+      expect(opt).toBeDefined();
+    });
+
+    it("should wire generateStatic as the action", async () => {
+      mockGenerateStatic.mockResolvedValue(undefined);
+
+      await program.parseAsync(["node", "pylon", "generate", "static", "/assets"]);
+
+      expect(mockGenerateStatic).toHaveBeenCalledTimes(1);
+    });
+
+    it("should pass path argument through", async () => {
+      mockGenerateStatic.mockResolvedValue(undefined);
+
+      await program.parseAsync(["node", "pylon", "generate", "static", "/assets"]);
+
+      const [path] = mockGenerateStatic.mock.calls[0];
+      expect(path).toBe("/assets");
+    });
+
+    it("should work with aliases", async () => {
+      mockGenerateStatic.mockResolvedValue(undefined);
+
+      await program.parseAsync(["node", "pylon", "g", "s", "/public"]);
+
+      expect(mockGenerateStatic).toHaveBeenCalledTimes(1);
+      expect(mockGenerateStatic.mock.calls[0][0]).toBe("/public");
+    });
+  });
+
+  describe("upload subcommand", () => {
+    it("should register an 'upload' subcommand", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "upload");
+      expect(cmd).toBeDefined();
+    });
+
+    it("should register 'u' as alias for upload", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "upload")!;
+      expect(cmd.alias()).toBe("u");
+    });
+
+    it("should register --directory option on upload", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "upload")!;
+      const opt = cmd.options.find((o) => o.long === "--directory");
+      expect(opt).toBeDefined();
+      expect(opt!.short).toBe("-d");
+    });
+
+    it("should register --dry-run option on upload", () => {
+      const cmd = generateCmd.commands.find((c) => c.name() === "upload")!;
+      const opt = cmd.options.find((o) => o.long === "--dry-run");
+      expect(opt).toBeDefined();
+    });
+
+    it("should wire generateUpload as the action", async () => {
+      mockGenerateUpload.mockResolvedValue(undefined);
+
+      await program.parseAsync(["node", "pylon", "generate", "upload", "/assets"]);
+
+      expect(mockGenerateUpload).toHaveBeenCalledTimes(1);
+    });
+
+    it("should pass path argument through", async () => {
+      mockGenerateUpload.mockResolvedValue(undefined);
+
+      await program.parseAsync(["node", "pylon", "generate", "upload", "/assets"]);
+
+      const [path] = mockGenerateUpload.mock.calls[0];
+      expect(path).toBe("/assets");
+    });
+
+    it("should work with aliases", async () => {
+      mockGenerateUpload.mockResolvedValue(undefined);
+
+      await program.parseAsync(["node", "pylon", "g", "u", "/admin/assets"]);
+
+      expect(mockGenerateUpload).toHaveBeenCalledTimes(1);
+      expect(mockGenerateUpload.mock.calls[0][0]).toBe("/admin/assets");
     });
   });
 });
