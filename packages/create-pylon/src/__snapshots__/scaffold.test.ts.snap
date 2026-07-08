@@ -988,6 +988,7 @@ exports[`scaffold > scaffold orchestration > all-on: postgres + redis + rabbit +
   "config/test.yml",
   "docker-compose.yml",
   "package.json",
+  "src/__fixtures__/test-ctx.ts",
   "src/features/example/example-handler.ts",
   "src/features/ping/ping-handler.ts",
   "src/features/webhooks/create-webhook-handler.ts",
@@ -1171,6 +1172,7 @@ exports[`scaffold > scaffold orchestration > runs all write functions in sequenc
   "config/test.yml",
   "docker-compose.yml",
   "package.json",
+  "src/__fixtures__/test-ctx.ts",
   "src/features/example/example-handler.ts",
   "src/features/ping/ping-handler.ts",
   "src/features/webhooks/create-webhook-handler.ts",
@@ -3332,6 +3334,94 @@ export const pylon = new Pylon({
     // pylon handles proteus/iris disconnect automatically
   },
 });
+"
+`;
+
+exports[`scaffold > writeTestCtxFile > snapshot: db + kv 1`] = `
+"import {
+  createTestPylonCtx,
+  type CreateTestPylonCtxOptions,
+} from "@lindorm/pylon/mocks/vitest";
+import { SampleEntity } from "../proteus/entities/SampleEntity.js";
+import type { ServerHttpContext } from "../types/context.js";
+
+// Extend this list as you add entities to the project.
+const ENTITIES = [SampleEntity];
+
+// Assembles a working ServerHttpContext for tests: mocked infrastructure,
+// but ctx.db / ctx.kv backed by a real in-memory Proteus source so
+// repository round-trips genuinely work.
+export const createTestCtx = (options?: CreateTestPylonCtxOptions) =>
+  createTestPylonCtx({
+    ...options,
+    entities: [...ENTITIES, ...(options?.entities ?? [])],
+  }) as Promise<ServerHttpContext>;
+"
+`;
+
+exports[`scaffold > writeTestCtxFile > snapshot: db only 1`] = `
+"import {
+  createTestPylonCtx,
+  type CreateTestPylonCtxOptions,
+} from "@lindorm/pylon/mocks/vitest";
+import { SampleEntity } from "../proteus/entities/SampleEntity.js";
+import type { ServerHttpContext } from "../types/context.js";
+
+// Extend this list as you add entities to the project.
+const ENTITIES = [SampleEntity];
+
+// Assembles a working ServerHttpContext for tests: mocked infrastructure,
+// but ctx.db / ctx.kv backed by a real in-memory Proteus source so
+// repository round-trips genuinely work.
+export const createTestCtx = (options?: CreateTestPylonCtxOptions) =>
+  createTestPylonCtx({
+    ...options,
+    entities: [...ENTITIES, ...(options?.entities ?? [])],
+  }) as Promise<ServerHttpContext>;
+"
+`;
+
+exports[`scaffold > writeTestCtxFile > snapshot: kv only 1`] = `
+"import {
+  createTestPylonCtx,
+  type CreateTestPylonCtxOptions,
+} from "@lindorm/pylon/mocks/vitest";
+import { SampleEntity } from "../proteus/entities/SampleEntity.js";
+import type { ServerHttpContext } from "../types/context.js";
+
+// Extend this list as you add entities to the project.
+const ENTITIES = [SampleEntity];
+
+// Assembles a working ServerHttpContext for tests: mocked infrastructure,
+// but ctx.db / ctx.kv backed by a real in-memory Proteus source so
+// repository round-trips genuinely work.
+export const createTestCtx = (options?: CreateTestPylonCtxOptions) =>
+  createTestPylonCtx({
+    ...options,
+    entities: [...ENTITIES, ...(options?.entities ?? [])],
+  }) as Promise<ServerHttpContext>;
+"
+`;
+
+exports[`scaffold > writeTestCtxFile > snapshot: memory db 1`] = `
+"import {
+  createTestPylonCtx,
+  type CreateTestPylonCtxOptions,
+} from "@lindorm/pylon/mocks/vitest";
+import { SampleEntity } from "../proteus/entities/SampleEntity.js";
+import type { ServerHttpContext } from "../types/context.js";
+
+// Extend this list as you add entities to the project.
+const ENTITIES = [SampleEntity];
+
+// Assembles a working ServerHttpContext for tests: mocked infrastructure,
+// but ctx.db / ctx.kv backed by a real in-memory Proteus source so
+// repository round-trips genuinely work.
+export const createTestCtx = (options?: CreateTestPylonCtxOptions) =>
+  createTestPylonCtx({
+    ...options,
+    entities: [...ENTITIES, ...(options?.entities ?? [])],
+  }) as Promise<ServerHttpContext>;
 "
 `;
 

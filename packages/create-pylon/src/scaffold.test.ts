@@ -20,6 +20,7 @@ import {
   writeIrisSamples,
   writePackageJson,
   writePylonFile,
+  writeTestCtxFile,
   writeWorkerFiles,
 } from "./scaffold.js";
 import type { Answers } from "./types.js";
@@ -466,6 +467,47 @@ describe("scaffold", () => {
       expect(
         readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8"),
       ).toMatchSnapshot();
+    });
+  });
+
+  describe("writeTestCtxFile", () => {
+    test.each<[string, Partial<Answers>]>([
+      ["db only", { db: "postgres" }],
+      ["kv only", { kv: "redis" }],
+      ["db + kv", { db: "postgres", kv: "redis" }],
+      ["memory db", { db: "memory" }],
+    ])("snapshot: %s", (_name, overrides) => {
+      mkdirSync(projectDir, { recursive: true });
+      const answers = baseAnswers({ projectDir, ...overrides });
+      writeTestCtxFile(answers);
+      expect(
+        readFileSync(join(projectDir, "src/__fixtures__/test-ctx.ts"), "utf-8"),
+      ).toMatchSnapshot();
+    });
+
+    test("imports the project entities and the ServerHttpContext", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writeTestCtxFile(baseAnswers({ projectDir, db: "postgres" }));
+      const content = readFileSync(
+        join(projectDir, "src/__fixtures__/test-ctx.ts"),
+        "utf-8",
+      );
+      expect(content).toContain(`createTestPylonCtx`);
+      expect(content).toContain(`type CreateTestPylonCtxOptions`);
+      expect(content).toContain(`from "@lindorm/pylon/mocks/vitest";`);
+      expect(content).toContain(
+        `import { SampleEntity } from "../proteus/entities/SampleEntity.js";`,
+      );
+      expect(content).toContain(
+        `import type { ServerHttpContext } from "../types/context.js";`,
+      );
+      expect(content).toContain(`const ENTITIES = [SampleEntity];`);
+    });
+
+    test("skipped when no proteus store is selected", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writeTestCtxFile(baseAnswers({ projectDir }));
+      expect(existsSync(join(projectDir, "src/__fixtures__/test-ctx.ts"))).toBe(false);
     });
   });
 

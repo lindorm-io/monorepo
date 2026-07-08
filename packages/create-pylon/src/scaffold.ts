@@ -15,6 +15,7 @@ import { buildContextFile } from "./build-context-file.js";
 import { buildDockerCompose } from "./build-docker-compose.js";
 import { buildIrisSamples } from "./build-iris-samples.js";
 import { buildPylonFile } from "./build-pylon-file.js";
+import { buildTestCtxFile } from "./build-test-ctx-file.js";
 import { buildVitestConfig } from "./build-vitest-config.js";
 import { buildWorkerFile } from "./build-worker-file.js";
 import { formatProject } from "./format-project.js";
@@ -359,6 +360,14 @@ export const writePylonFile = (answers: Answers): void => {
   writeFileSync(target, buildPylonFile(answers), "utf-8");
 };
 
+export const writeTestCtxFile = (answers: Answers): void => {
+  if (answers.db === "none" && answers.kv === "none") return;
+
+  const target = join(answers.projectDir, "src/__fixtures__/test-ctx.ts");
+  ensureDir(target);
+  writeFileSync(target, buildTestCtxFile(answers), "utf-8");
+};
+
 export const needsDockerCompose = (answers: Answers): boolean =>
   selectedDrivers(answers).some((d) =>
     ["postgres", "mysql", "mongo", "redis"].includes(d),
@@ -415,6 +424,7 @@ export const scaffold = async (
   writeConfigDevelopmentYaml(answers);
   writeContextFile(answers);
   writePylonFile(answers);
+  writeTestCtxFile(answers);
   writeDockerCompose(answers);
   writeWorkerFiles(answers);
   writeIrisSamples(answers);
