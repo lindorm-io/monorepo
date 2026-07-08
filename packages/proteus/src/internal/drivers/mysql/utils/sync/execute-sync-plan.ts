@@ -84,7 +84,7 @@ export class SyncPlanExecutor {
         executedSql.push(op.sql);
       }
 
-      this.logger?.info(`Sync complete: ${executedSql.length} statements executed`);
+      this.logger?.verbose(`Sync complete: ${executedSql.length} statements executed`);
     } finally {
       try {
         await client.query("SET FOREIGN_KEY_CHECKS = 1");
@@ -157,7 +157,7 @@ export class SyncPlanExecutor {
   private logPlan = (plan: MysqlSyncPlan): void => {
     if (!this.logger) return;
 
-    this.logger.info(`Dry-run sync plan: ${plan.operations.length} operation(s)`);
+    this.logger.verbose(`Dry-run sync plan: ${plan.operations.length} operation(s)`);
 
     for (const op of plan.operations) {
       this.logger.debug(this.describeOperation(op));

@@ -91,15 +91,19 @@ const makeLogger = (): {
 } => {
   const calls: Record<string, Array<Array<unknown>>> = {
     debug: [],
+    verbose: [],
     info: [],
     warn: [],
     error: [],
+    silly: [],
   };
   const logger: ILogger = {
     debug: vi.fn((...args: Array<unknown>) => calls.debug.push(args)),
+    verbose: vi.fn((...args: Array<unknown>) => calls.verbose.push(args)),
     info: vi.fn((...args: Array<unknown>) => calls.info.push(args)),
     warn: vi.fn((...args: Array<unknown>) => calls.warn.push(args)),
     error: vi.fn((...args: Array<unknown>) => calls.error.push(args)),
+    silly: vi.fn((...args: Array<unknown>) => calls.silly.push(args)),
     child: vi.fn(() => logger),
   } as unknown as ILogger;
   return { logger, calls };
@@ -137,7 +141,7 @@ describe("SyncPlanExecutor — dry run", () => {
     const { logger, calls } = makeLogger();
     const plan = makePlan([makeTxOp()]);
     await executeSyncPlan(client, plan, { dryRun: true, logger });
-    expect(calls.info.length).toBeGreaterThan(0);
+    expect(calls.verbose.length).toBeGreaterThan(0);
   });
 });
 

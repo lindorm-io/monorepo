@@ -793,11 +793,11 @@ export class PostgresDriver implements IProteusDriver {
       );
 
       if (dryRun) {
-        this.logger.info(
+        this.logger.verbose(
           `Dry-run sync complete: ${plan.operations.length} operations planned`,
         );
       } else {
-        this.logger.info(
+        this.logger.verbose(
           `Sync complete: ${result.statementsExecuted} statements executed`,
         );
       }

@@ -521,11 +521,13 @@ export class SqliteDriver implements IProteusDriver {
     const result = new SyncPlanExecutor(this.logger).execute(client, plan, { dryRun });
 
     if (dryRun) {
-      this.logger.info(
+      this.logger.verbose(
         `Dry-run sync complete: ${plan.operations.length} operations planned`,
       );
     } else {
-      this.logger.info(`Sync complete: ${result.statementsExecuted} statements executed`);
+      this.logger.verbose(
+        `Sync complete: ${result.statementsExecuted} statements executed`,
+      );
     }
 
     // Post-sync: apply or remove append-only triggers

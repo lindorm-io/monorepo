@@ -86,7 +86,7 @@ export class SyncPlanExecutor {
       this.executeRecreateTable(client, op, executedSql);
     }
 
-    this.logger?.info(`Sync complete: ${executedSql.length} statements executed`);
+    this.logger?.verbose(`Sync complete: ${executedSql.length} statements executed`);
 
     return {
       plan,
@@ -346,7 +346,7 @@ export class SyncPlanExecutor {
   private logPlan = (plan: SqliteSyncPlan): void => {
     if (!this.logger) return;
 
-    this.logger.info(`Dry-run sync plan: ${plan.operations.length} operation(s)`);
+    this.logger.verbose(`Dry-run sync plan: ${plan.operations.length} operation(s)`);
 
     for (const op of plan.operations) {
       this.logger.debug(this.describeOperation(op));

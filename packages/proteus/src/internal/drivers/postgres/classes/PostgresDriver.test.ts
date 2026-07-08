@@ -182,6 +182,7 @@ const createMockLogger = (): ILogger =>
     child: vi.fn().mockReturnThis(),
     silly: vi.fn(),
     debug: vi.fn(),
+    verbose: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
     error: vi.fn(),

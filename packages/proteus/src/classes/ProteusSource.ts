@@ -587,7 +587,7 @@ export class ProteusSource implements IProteusSource {
     });
 
     breaker.on("half-open", (event) => {
-      this.logger.info("Circuit breaker half-open — probing", {
+      this.logger.verbose("Circuit breaker half-open — probing", {
         name: event.name,
       });
       forwardBreakerEvent(event);

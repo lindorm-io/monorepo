@@ -85,10 +85,10 @@ export class SyncPlanExecutor {
         const txOps = executableOps.filter((op) => !op.autocommit);
         const autocommitOps = executableOps.filter((op) => op.autocommit);
 
-        // Announce the run at info so a real sync is visibly making progress
-        // (individual ops also log at info) — a long sync is then distinguishable
-        // from a hang.
-        this.logger?.info(
+        // Announce the run at verbose so a real sync is visibly making progress
+        // when investigating (individual ops log at debug) — a long sync is then
+        // distinguishable from a hang without adding noise at the prod default.
+        this.logger?.verbose(
           `Executing ${executableOps.length} sync operation(s)` +
             ` (${plan.summary.safe} safe, ${plan.summary.warning} warning,` +
             ` ${plan.summary.destructive} destructive)` +
@@ -165,7 +165,7 @@ export class SyncPlanExecutor {
           }
         }
 
-        this.logger?.info(`Sync complete: ${executedSql.length} statements executed`, {
+        this.logger?.verbose(`Sync complete: ${executedSql.length} statements executed`, {
           summary: plan.summary,
         });
 
@@ -279,7 +279,7 @@ export class SyncPlanExecutor {
   private logPlan = (plan: SyncPlan): void => {
     if (!this.logger) return;
 
-    this.logger.info("Dry-run sync plan", { summary: plan.summary });
+    this.logger.verbose("Dry-run sync plan", { summary: plan.summary });
 
     for (const op of plan.operations) {
       this.logOperation(op.severity, op.description, op.sql);
@@ -297,9 +297,9 @@ export class SyncPlanExecutor {
         this.logger.warn(description, { sql });
         break;
       default:
-        // Info (not debug) so a real sync's progress is visible at the default
-        // log level — the difference between "slow" and "hung".
-        this.logger.info(description, { sql });
+        // Per-statement DDL — debug: fine-grained internal flow, too chatty for
+        // the prod default. Visible when investigating a slow/hung sync.
+        this.logger.debug(description, { sql });
         break;
     }
   };

@@ -46,7 +46,7 @@ export const executeSync = async (
     return;
   }
 
-  logger.info(`MongoDB sync: ${totalOps} operations planned`, {
+  logger.verbose(`MongoDB sync: ${totalOps} operations planned`, {
     collections: plan.collectionsToCreate.length,
     drop: plan.indexesToDrop.length,
     create: plan.indexesToCreate.length,
@@ -56,7 +56,7 @@ export const executeSync = async (
   // Create collections
   for (const collName of plan.collectionsToCreate) {
     if (dryRun) {
-      logger.info(`[DRY RUN] Create collection: ${collName}`);
+      logger.verbose(`[DRY RUN] Create collection: ${collName}`);
       continue;
     }
 
@@ -76,7 +76,7 @@ export const executeSync = async (
   // Drop indexes
   for (const { collection, name } of plan.indexesToDrop) {
     if (dryRun) {
-      logger.info(`[DRY RUN] Drop index: ${name} from ${collection}`);
+      logger.verbose(`[DRY RUN] Drop index: ${name} from ${collection}`);
       continue;
     }
 
@@ -96,7 +96,7 @@ export const executeSync = async (
   // Create indexes
   for (const idx of plan.indexesToCreate) {
     if (dryRun) {
-      logger.info(`[DRY RUN] Create index: ${idx.name} on ${idx.collection}`, {
+      logger.verbose(`[DRY RUN] Create index: ${idx.name} on ${idx.collection}`, {
         keys: idx.keys,
         unique: idx.unique,
         sparse: idx.sparse,

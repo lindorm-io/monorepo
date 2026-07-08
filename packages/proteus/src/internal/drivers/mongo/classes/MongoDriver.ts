@@ -777,7 +777,7 @@ export class MongoDriver implements IProteusDriver {
         plan.collectionsToCreate.length +
         plan.indexesToDrop.length +
         plan.indexesToCreate.length;
-      this.logger.info(`Dry-run sync complete: ${totalOps} operations planned`);
+      this.logger.verbose(`Dry-run sync complete: ${totalOps} operations planned`);
     }
   }
 
