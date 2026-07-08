@@ -36,6 +36,14 @@
       "types": "./dist/mocks/index.d.ts",
       "default": "./dist/mocks/index.js"
     },
+    "./mocks/jest": {
+      "types": "./dist/mocks/jest.d.ts",
+      "default": "./dist/mocks/jest.js"
+    },
+    "./mocks/vitest": {
+      "types": "./dist/mocks/vitest.d.ts",
+      "default": "./dist/mocks/vitest.js"
+    },
     "./scaffold": {
       "types": "./dist/scaffold.d.ts",
       "default": "./dist/scaffold.js"
