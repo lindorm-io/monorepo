@@ -9,7 +9,7 @@ const amphoraEntitySync = (): string =>
     `import { logger } from "../logger/index.js";`,
     `import { source as proteusSource } from "${SOURCE_IMPORT}";`,
     ``,
-    `export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });`,
+    `export default createAmphoraEntityWorker({ amphora, logger, db: proteusSource });`,
     ``,
   ].join("\n");
 
@@ -20,7 +20,7 @@ const expiryCleanup = (): string =>
     `import { source as proteusSource } from "${SOURCE_IMPORT}";`,
     ``,
     `// TODO: add your entities with expiry fields to this array`,
-    `export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targets: [] });`,
+    `export default createExpiryCleanupWorker({ logger, db: proteusSource, targets: [] });`,
     ``,
   ].join("\n");
 
@@ -33,7 +33,7 @@ const kryptosRotation = (): string =>
     ``,
     // Pass the amphora so freshly-minted keys land in the vault immediately
     // (JWKS is populated on first boot, not after the next entity-sync tick).
-    `export default createKryptosRotationWorker({ amphora, logger, proteus: proteusSource });`,
+    `export default createKryptosRotationWorker({ amphora, logger, db: proteusSource });`,
     ``,
   ].join("\n");
 

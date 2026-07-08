@@ -3414,7 +3414,7 @@ import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
 import { source as proteusSource } from "../proteus/source.js";
 
-export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });
+export default createAmphoraEntityWorker({ amphora, logger, db: proteusSource });
 "
 `;
 
@@ -3424,7 +3424,7 @@ import { logger } from "../logger/index.js";
 import { source as proteusSource } from "../proteus/source.js";
 
 // TODO: add your entities with expiry fields to this array
-export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targets: [] });
+export default createExpiryCleanupWorker({ logger, db: proteusSource, targets: [] });
 "
 `;
 
@@ -3434,7 +3434,7 @@ import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
 import { source as proteusSource } from "../proteus/source.js";
 
-export default createKryptosRotationWorker({ amphora, logger, proteus: proteusSource });
+export default createKryptosRotationWorker({ amphora, logger, db: proteusSource });
 "
 `;
 
@@ -3444,7 +3444,7 @@ import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
 import { source as proteusSource } from "../proteus/source.js";
 
-export default createAmphoraEntityWorker({ amphora, logger, proteus: proteusSource });
+export default createAmphoraEntityWorker({ amphora, logger, db: proteusSource });
 "
 `;
 
@@ -3454,7 +3454,7 @@ import { logger } from "../logger/index.js";
 import { source as proteusSource } from "../proteus/source.js";
 
 // TODO: add your entities with expiry fields to this array
-export default createExpiryCleanupWorker({ logger, proteus: proteusSource, targets: [] });
+export default createExpiryCleanupWorker({ logger, db: proteusSource, targets: [] });
 "
 `;
 
@@ -3464,6 +3464,6 @@ import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
 import { source as proteusSource } from "../proteus/source.js";
 
-export default createKryptosRotationWorker({ amphora, logger, proteus: proteusSource });
+export default createKryptosRotationWorker({ amphora, logger, db: proteusSource });
 "
 `;
