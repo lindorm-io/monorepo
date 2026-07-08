@@ -8,6 +8,7 @@ if (typeof Symbol.metadata === "undefined") {
 import { readFileSync } from "fs";
 import { resolve } from "path";
 import { Command } from "commander";
+import { registerConfigCommand } from "./internal/cli/commands/register-config.js";
 import { registerGenerateCommands } from "./internal/cli/commands/register-generate.js";
 
 const pkg = JSON.parse(
@@ -22,6 +23,7 @@ program
   .version(pkg.version);
 
 registerGenerateCommands(program);
+registerConfigCommand(program);
 
 // Graceful shutdown: clean exit on first signal, force exit on second
 let shuttingDown = false;

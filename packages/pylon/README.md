@@ -1191,6 +1191,8 @@ Each command accepts `-d, --directory <path>` to override the output directory a
 
 `generate route --feature <name>` scaffolds a full slice instead of a bare route: one schema+handler file per HTTP method in the feature dir (`getUser`/`getUserSchema`, `createUser`/…, `updateUser`/…, `deleteUser`/…) plus a route file that wires each method as `[useSchema(...), useHandler(...)]`. The feature dir resolves from `pylon.featureDir` (default `./src/features`), the route dir from `pylon.routesDir`; both context-type and handler imports are computed relative to the standard `src/{routes,features,types}` layout. Use `--methods` / `--path` as flag alternatives to the positional args.
 
+`pylon config init` writes a default `lindorm.config.ts` (built from `@lindorm/scaffold`'s `defineConfig`) into the current directory. It refuses to overwrite an existing file unless `-f, --force` is passed, and `--dry-run` prints the path and content without writing.
+
 The generators behind the CLI are also available programmatically on the `@lindorm/pylon/scaffold` subpath, kept off the runtime surface so scaffold tooling never pulls the server runtime into scope:
 
 ```typescript
