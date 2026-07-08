@@ -496,7 +496,7 @@ export class Amphora implements IAmphora {
             continue;
           }
 
-          this.logger.silly(
+          this.logger.debug(
             "External JWK accepted without cert validation (lax trust mode)",
             { issuer: config.issuer, kid: jwk.kid },
           );
@@ -630,7 +630,7 @@ export class Amphora implements IAmphora {
         await this.addExternalConfig(options);
       } catch (error) {
         failures++;
-        this.logger.error("Failed to load external config", {
+        this.logger.warn("Failed to load external config", {
           error,
           issuer: options.issuer ?? options.openIdConfigurationUri,
         });
@@ -667,7 +667,7 @@ export class Amphora implements IAmphora {
           .concat(keys);
       } else {
         failures++;
-        this.logger.error("Failed to refresh external JWKS", {
+        this.logger.warn("Failed to refresh external JWKS", {
           error: result.reason,
         });
       }
