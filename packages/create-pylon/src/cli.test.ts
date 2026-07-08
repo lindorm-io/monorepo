@@ -118,28 +118,10 @@ describe("cli run orchestration", () => {
     expect(mockedInitGit).toHaveBeenCalledTimes(1);
   });
 
-  test("runs proteus init + generate when driver selected", async () => {
-    mockedRunPrompts.mockResolvedValue(baseAnswers({ db: "postgres" }));
-    await run();
-
-    expect(mockedProteusInit).toHaveBeenCalledWith(
-      "/tmp/demo",
-      expect.objectContaining({ db: "postgres" }),
-    );
-    expect(mockedProteusSampleEntity).toHaveBeenCalledWith("/tmp/demo");
-    expect(mockedIrisInit).not.toHaveBeenCalled();
-  });
-
-  test("runs iris init + generate when driver selected", async () => {
-    mockedRunPrompts.mockResolvedValue(baseAnswers({ irisDriver: "rabbit" }));
-    await run();
-
-    expect(mockedIrisInit).toHaveBeenCalledWith("/tmp/demo", "rabbit");
-    expect(mockedIrisSampleMessage).toHaveBeenCalledWith("/tmp/demo");
-    expect(mockedProteusInit).not.toHaveBeenCalled();
-  });
-
-  test("orchestration order: scaffold → install → drivers → git", async () => {
+  // Driver init (proteus/iris source + samples) is scaffold()'s responsibility
+  // now — run() just orchestrates scaffold → install → git. See scaffold.test.ts
+  // for the driver-scaffolding coverage.
+  test("orchestration order: scaffold → install → git", async () => {
     mockedRunPrompts.mockResolvedValue(
       baseAnswers({ db: "postgres", irisDriver: "rabbit" }),
     );
@@ -154,34 +136,13 @@ describe("cli run orchestration", () => {
     mockedInstallDev.mockImplementation(async () => {
       calls.push("install-dev");
     });
-    mockedProteusInit.mockImplementation(async () => {
-      calls.push("proteus-init");
-    });
-    mockedProteusSampleEntity.mockImplementation(async () => {
-      calls.push("proteus-entity");
-    });
-    mockedIrisInit.mockImplementation(async () => {
-      calls.push("iris-init");
-    });
-    mockedIrisSampleMessage.mockImplementation(async () => {
-      calls.push("iris-msg");
-    });
     mockedInitGit.mockImplementation(async () => {
       calls.push("git");
     });
 
     await run();
 
-    expect(calls).toEqual([
-      "scaffold",
-      "install",
-      "install-dev",
-      "proteus-init",
-      "proteus-entity",
-      "iris-init",
-      "iris-msg",
-      "git",
-    ]);
+    expect(calls).toEqual(["scaffold", "install", "install-dev", "git"]);
   });
 
   test("forwards positional name into prompts", async () => {

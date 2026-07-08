@@ -1,4 +1,5 @@
 import { KryptosKit } from "@lindorm/kryptos";
+import { buildConfigFile as buildLindormConfigFile } from "@lindorm/scaffold";
 import {
   cpSync,
   existsSync,
@@ -19,7 +20,12 @@ import { buildTestCtxFile } from "./build-test-ctx-file.js";
 import { buildVitestConfig } from "./build-vitest-config.js";
 import { buildWorkerFile } from "./build-worker-file.js";
 import { formatProject } from "./format-project.js";
-import { runProteusInit } from "./drivers.js";
+import {
+  runIrisGenerateSampleMessage,
+  runIrisInit,
+  runProteusGenerateSampleEntity,
+  runProteusInit,
+} from "./drivers.js";
 import type { Answers, IrisDriver, ProteusDriver } from "./types.js";
 import {
   IRIS_DRIVER_PACKAGES,
@@ -336,6 +342,13 @@ export const writeConfigFile = (answers: Answers): void => {
   writeFileSync(target, buildConfigFile(answers), "utf-8");
 };
 
+// The CLI/scaffold-only lindorm.config.ts — drives the proteus/iris/pylon
+// generator commands' target directories. Never imported by the runtime.
+export const writeLindormConfigFile = (answers: Answers): void => {
+  const target = join(answers.projectDir, "lindorm.config.ts");
+  writeFileSync(target, buildLindormConfigFile(), "utf-8");
+};
+
 export const writeConfigYaml = (answers: Answers): void => {
   const target = join(answers.projectDir, "config/default.yml");
   ensureDir(target);
@@ -425,10 +438,21 @@ export const scaffold = async (
   writeContextFile(answers);
   writePylonFile(answers);
   writeTestCtxFile(answers);
+  writeLindormConfigFile(answers);
   writeDockerCompose(answers);
   writeWorkerFiles(answers);
   writeIrisSamples(answers);
+
+  // Driver scaffolding — self-contained here (not split across cli.ts) so a
+  // programmatic scaffold() call produces a complete project.
   await runProteusInit(answers.projectDir, answers);
+  if (answers.db !== "none" || answers.kv !== "none") {
+    await runProteusGenerateSampleEntity(answers.projectDir);
+  }
+  if (answers.irisDriver !== "none") {
+    await runIrisInit(answers.projectDir, answers.irisDriver);
+    await runIrisGenerateSampleMessage(answers.projectDir);
+  }
 
   // Format last so every generated + driver-scaffolded file is prettier-stable.
   await formatProject(answers.projectDir);

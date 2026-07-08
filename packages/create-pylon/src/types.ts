@@ -145,6 +145,9 @@ export const BASE_RUNTIME_DEPENDENCIES: ReadonlyArray<string> = [
 ];
 
 export const BASE_DEV_DEPENDENCIES: ReadonlyArray<string> = [
+  // Scaffold-only: the generated lindorm.config.ts imports defineConfig from it,
+  // and the pylon CLI loads that config (via tsx) at generate-time.
+  "@lindorm/scaffold",
   "@types/node",
   "@types/supertest",
   "globals",

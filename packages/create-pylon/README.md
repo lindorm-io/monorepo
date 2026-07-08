@@ -72,6 +72,8 @@ Generated layout (some files only appear depending on the answers):
 - `docker-compose.yml` — only emitted when a selected driver is `postgres`, `mysql`, `mongo`, `redis`, `kafka`, `nats`, or `rabbit`
 - `config/{default,development,test,production}.yml` — base config files
 - `.env` — environment variables seeded with driver defaults and a freshly generated `PYLON_KEK`
+- `lindorm.config.ts` — CLI/scaffold-only config (via `@lindorm/scaffold`'s `defineConfig`) that drives the
+  `proteus` / `iris` / `pylon generate` commands' target directories; never imported by the runtime
 - `package.json`, `tsconfig.json`, `tsconfig.build.json`, `vitest.config.mjs`, `.gitignore`
 
 ## Programmatic API

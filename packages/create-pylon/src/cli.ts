@@ -8,12 +8,6 @@ import { readFileSync, realpathSync } from "fs";
 import { basename, dirname, resolve } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { Command } from "commander";
-import {
-  runIrisGenerateSampleMessage,
-  runIrisInit,
-  runProteusGenerateSampleEntity,
-  runProteusInit,
-} from "./drivers.js";
 import { initGit } from "./git.js";
 import { installDependencies, installDevDependencies } from "./install.js";
 import { runPrompts } from "./prompts.js";
@@ -93,19 +87,6 @@ export const run = async (positionalName?: string): Promise<void> => {
   process.stdout.write(`\nInstalling dependencies …\n`);
   await installDependencies(answers.projectDir, resolveRuntimeDependencies(answers));
   await installDevDependencies(answers.projectDir, resolveDevDependencies(answers));
-
-  const hasProteus = answers.db !== "none" || answers.kv !== "none";
-  if (hasProteus) {
-    process.stdout.write(`\nGenerating proteus scaffolding …\n`);
-    await runProteusInit(answers.projectDir, answers);
-    await runProteusGenerateSampleEntity(answers.projectDir);
-  }
-
-  if (answers.irisDriver !== "none") {
-    process.stdout.write(`\nGenerating iris scaffolding …\n`);
-    await runIrisInit(answers.projectDir, answers.irisDriver);
-    await runIrisGenerateSampleMessage(answers.projectDir);
-  }
 
   process.stdout.write(`\nInitialising git …\n`);
   await initGit(answers.projectDir);
