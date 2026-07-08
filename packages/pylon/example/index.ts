@@ -1,14 +1,14 @@
 import { Conduit, conduitBearerAuthMiddleware } from "@lindorm/conduit";
-import { LogLevel, Logger } from "@lindorm/logger";
+import { Logger } from "@lindorm/logger";
 import { EXAMPLE_PYLON } from "./_example.js";
 
-const logger = new Logger({ level: LogLevel.Silly, readable: true });
+const logger = new Logger({ level: "silly", readable: true });
 
 const main = async (): Promise<void> => {
   await EXAMPLE_PYLON.start();
 
   const conduit = new Conduit({
-    baseUrl: "http://127.0.0.1:3000",
+    baseURL: "http://127.0.0.1:3000",
     logger,
   });
 
@@ -33,6 +33,8 @@ const main = async (): Promise<void> => {
   });
 
   logger.info("If we're here the token should be authorized", two.data);
+
+  await EXAMPLE_PYLON.stop();
 };
 
 main().catch(console.error);

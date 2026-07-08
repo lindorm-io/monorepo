@@ -1,10 +1,11 @@
-import { PylonRouter, createHttpBearerTokenMiddleware } from "../../../src/index.js";
+import { PylonRouter, createAccessTokenMiddleware } from "../../../src/index.js";
 
 export const router = new PylonRouter();
 
-const httpBearerTokenMiddleware = createHttpBearerTokenMiddleware({
+// Verifies the bearer access token and stores it on `ctx.state.tokens.accessToken`
+// for the handlers under this router (see ./route.ts).
+const accessTokenMiddleware = createAccessTokenMiddleware({
   issuer: "http://test.lindorm.io",
-  tokenType: "access_token",
 });
 
-router.use(httpBearerTokenMiddleware);
+router.use(accessTokenMiddleware);

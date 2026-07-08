@@ -3,11 +3,11 @@ import { PylonListener } from "../../src/index.js";
 
 export const listener = new PylonListener();
 
-listener.on("names", async (ctx) => {
-  ctx.socket.emit("events/list", { events: ctx.socket.eventNames() });
+listener.on("events/names", async (ctx) => {
+  ctx.io.socket.emit("events/list", { events: ["events/names", "events/jedi"] });
 });
 
-listener.on("jedi", async (ctx) => {
+listener.on("events/jedi", async (ctx) => {
   ctx.logger.debug(
     "Anakin, I told you it would come to this. I was right. The Jedi are taking over!",
   );

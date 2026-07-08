@@ -1,11 +1,11 @@
 import { Amphora } from "@lindorm/amphora";
 import { Conduit } from "@lindorm/conduit";
 import { KryptosKit } from "@lindorm/kryptos";
-import { Logger, LogLevel } from "@lindorm/logger";
+import { Logger } from "@lindorm/logger";
 import { sleep } from "@lindorm/utils";
-import { AmphoraWorker, Environment, Pylon } from "../src/index.js";
+import { Pylon } from "../src/index.js";
 
-const logger = new Logger({ level: LogLevel.Silly, readable: true });
+const logger = new Logger({ level: "silly", readable: true });
 
 const amphora = new Amphora({
   domain: "http://test.lindorm.io",
@@ -25,21 +25,14 @@ amphora.add(
   }),
 );
 
-const worker = new AmphoraWorker({
-  amphora,
-  logger,
-  interval: "1m",
-});
-
 const pylon = new Pylon({
   amphora,
   logger,
 
-  environment: Environment.Test,
+  environment: "test",
   name: "@lindorm/pylon",
   port: 3000,
   version: "0.0.0",
-  workers: [worker],
 });
 
 // creating what's needed for the pretend external server
@@ -61,7 +54,7 @@ const externalPylon = new Pylon({
   amphora: externalAmphora,
   logger,
 
-  environment: Environment.Test,
+  environment: "test",
   name: "pretend-external-server",
   openIdConfiguration: {
     jwksUri: "http://localhost:3001/.well-known/jwks.json",
@@ -83,6 +76,9 @@ const main = async (): Promise<void> => {
   await sleep(1000);
 
   logger.info("Amphora vault", { vault: amphora.vault });
+
+  await pylon.stop();
+  await externalPylon.stop();
 };
 
 main().catch(console.error);

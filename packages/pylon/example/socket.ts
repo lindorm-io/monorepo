@@ -1,21 +1,23 @@
 import { Conduit } from "@lindorm/conduit";
-import { Logger, LogLevel } from "@lindorm/logger";
+import { Logger } from "@lindorm/logger";
+import { sleep } from "@lindorm/utils";
 import io from "socket.io-client";
 import { EXAMPLE_PYLON } from "./_example.js";
 
-const logger = new Logger({ level: LogLevel.Silly, readable: true });
+const logger = new Logger({ level: "silly", readable: true });
 
 const main = async (): Promise<void> => {
   await EXAMPLE_PYLON.start();
 
   const conduit = new Conduit({
-    baseUrl: "http://127.0.0.1:3000",
+    baseURL: "http://127.0.0.1:3000",
     logger,
   });
 
   const token = await conduit.get("/test/authorize");
 
   const socket = io("http://127.0.0.1:3000", {
+    transports: ["websocket"],
     extraHeaders: {
       "x-correlation-id": "test-correlation-id",
     },
@@ -45,6 +47,7 @@ const main = async (): Promise<void> => {
   socket.connect();
 
   const authorizedSocket = io("http://127.0.0.1:3000/authorized", {
+    transports: ["websocket"],
     auth: { bearer: token.data.token.token },
   });
 
@@ -64,7 +67,9 @@ const main = async (): Promise<void> => {
 
   authorizedSocket.connect();
 
-  const otherSocket = io("http://127.0.0.1:3000/other");
+  const otherSocket = io("http://127.0.0.1:3000/other", {
+    transports: ["websocket"],
+  });
 
   otherSocket.on("connect", () => {
     logger.info("Client is connected to server", {
@@ -81,6 +86,15 @@ const main = async (): Promise<void> => {
   });
 
   otherSocket.connect();
+
+  // Give the emits/acks a moment to round-trip, then tear everything down.
+  await sleep(1500);
+
+  socket.disconnect();
+  authorizedSocket.disconnect();
+  otherSocket.disconnect();
+
+  await EXAMPLE_PYLON.stop();
 };
 
 main().catch(console.error);

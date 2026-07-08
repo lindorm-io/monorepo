@@ -1,11 +1,12 @@
 import { Amphora } from "@lindorm/amphora";
 import { KryptosKit } from "@lindorm/kryptos";
-import { Logger, LogLevel } from "@lindorm/logger";
+import { Logger } from "@lindorm/logger";
 import { join } from "path";
-import { Environment, Pylon } from "../src/index.js";
+import { Pylon, createHandshakeTokenMiddleware } from "../src/index.js";
+import type { PylonConnectionMiddleware } from "../src/index.js";
 
 const logger = new Logger({
-  level: LogLevel.Silly,
+  level: "silly",
   readable: true,
 });
 
@@ -21,15 +22,35 @@ amphora.add(
   }),
 );
 
+// Handshake auth runs on every namespace connection and rejects anonymous
+// sockets, so scope it to the `/authorized` namespace — the default and
+// `/other` namespaces stay open. It populates `socket.data.tokens.bearer`,
+// which the `/authorized` listener reads.
+const handshakeToken = createHandshakeTokenMiddleware({
+  issuer: "http://test.lindorm.io",
+});
+
+const authorizedNamespaceOnly: PylonConnectionMiddleware = async (ctx, next) => {
+  if (ctx.io.socket.nsp.name === "/authorized") {
+    await handshakeToken(ctx, next);
+    return;
+  }
+  await next();
+};
+
 export const EXAMPLE_PYLON = new Pylon({
   amphora,
   logger,
 
-  environment: Environment.Test,
-  httpRouters: join(__dirname, "routers"),
+  environment: "test",
   name: "@lindorm/pylon",
   port: 3000,
-  socketListeners: join(__dirname, "listeners"),
+  routes: join(import.meta.dirname, "routers"),
+  socket: {
+    enabled: true,
+    listeners: join(import.meta.dirname, "listeners"),
+    connectionMiddleware: [authorizedNamespaceOnly],
+  },
   setup: async (): Promise<void> => {
     await amphora.setup();
   },
