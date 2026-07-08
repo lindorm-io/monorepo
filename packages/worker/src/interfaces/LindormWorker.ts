@@ -11,6 +11,7 @@ export interface ILindormWorker {
   latestStop: Date | null;
   latestSuccess: Date | null;
   latestTry: Date | null;
+  nextRun: Date | null;
   running: boolean;
   seq: number;
   started: boolean;

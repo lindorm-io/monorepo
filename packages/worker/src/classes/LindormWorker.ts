@@ -1,4 +1,4 @@
-import { isReadableTime, ms } from "@lindorm/date";
+import { cronNext, isCron, isReadableTime, ms } from "@lindorm/date";
 import { isNumber } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
 import { calculateRetry, type RetryConfig } from "@lindorm/retry";
@@ -25,11 +25,13 @@ export class LindormWorker implements ILindormWorker {
   private readonly callbackTimeout: number;
   private readonly errorCallback: LindormWorkerErrorCallback;
 
+  private readonly cron: string | null;
   private readonly emitter: EventEmitter;
-  private readonly interval: number;
+  private readonly interval: number | null;
   private readonly logger: ILogger;
   private readonly jitter: number;
   private readonly retry: RetryConfig;
+  private readonly timezone: string;
 
   private _destroyed: boolean;
   private _latestError: Date | null;
@@ -37,6 +39,7 @@ export class LindormWorker implements ILindormWorker {
   private _latestStop: Date | null;
   private _latestSuccess: Date | null;
   private _latestTry: Date | null;
+  private _nextRun: Date | null;
   private _running: boolean;
   private _runPromise: Promise<void> | null;
   private _seq: number;
@@ -52,27 +55,74 @@ export class LindormWorker implements ILindormWorker {
 
     this.alias = options.alias;
     this.retry = { ...RETRY_CONFIG, ...(options.retry ?? {}) };
+    this.timezone = options.timezone ?? "UTC";
     this.jitter = isReadableTime(options.jitter)
       ? ms(options.jitter)
       : isNumber(options.jitter)
         ? options.jitter
         : 0;
-    this.interval = isReadableTime(options.interval)
-      ? ms(options.interval)
-      : options.interval;
     this.callbackTimeout = isReadableTime(options.callbackTimeout)
       ? ms(options.callbackTimeout)
       : isNumber(options.callbackTimeout)
         ? options.callbackTimeout
         : 0;
 
-    if (this.interval <= 0) {
-      throw new LindormWorkerError("Interval must be a positive number", {
-        code: "invalid_interval",
-        title: "Invalid Interval",
-        details: "The worker interval must resolve to a positive number of milliseconds.",
-        data: { interval: this.interval },
+    const hasInterval = options.interval !== undefined;
+    const hasCron = options.cron !== undefined;
+
+    if (hasInterval === hasCron) {
+      throw new LindormWorkerError("Worker requires exactly one of interval or cron", {
+        code: "invalid_schedule",
+        title: "Invalid Schedule",
+        details:
+          "A worker must be configured with either an interval or a cron expression, but not both.",
+        data: { cron: options.cron ?? null, interval: options.interval ?? null },
       });
+    }
+
+    if (hasCron) {
+      const cron = options.cron as string;
+
+      if (!isCron(cron)) {
+        throw new LindormWorkerError("Cron expression is invalid", {
+          code: "invalid_cron",
+          title: "Invalid Cron Expression",
+          details:
+            "The worker cron expression could not be parsed as a valid cron schedule.",
+          data: { cron },
+        });
+      }
+
+      try {
+        cronNext(cron, new Date(), this.timezone);
+      } catch (error: any) {
+        throw new LindormWorkerError("Cron schedule could not be resolved", {
+          code: "invalid_cron_schedule",
+          title: "Invalid Cron Schedule",
+          details:
+            "The worker cron expression could not be resolved for the configured timezone.",
+          data: { cron, timezone: this.timezone },
+          error,
+        });
+      }
+
+      this.cron = cron;
+      this.interval = null;
+    } else {
+      this.cron = null;
+      this.interval = isReadableTime(options.interval)
+        ? ms(options.interval)
+        : (options.interval as number);
+
+      if (this.interval <= 0) {
+        throw new LindormWorkerError("Interval must be a positive number", {
+          code: "invalid_interval",
+          title: "Invalid Interval",
+          details:
+            "The worker interval must resolve to a positive number of milliseconds.",
+          data: { interval: this.interval },
+        });
+      }
     }
     if (this.jitter < 0) {
       throw new LindormWorkerError("Jitter must be a non-negative number", {
@@ -99,6 +149,7 @@ export class LindormWorker implements ILindormWorker {
     this._latestStop = null;
     this._latestSuccess = null;
     this._latestTry = null;
+    this._nextRun = null;
     this._running = false;
     this._runPromise = null;
     this._seq = 0;
@@ -128,6 +179,10 @@ export class LindormWorker implements ILindormWorker {
 
   get latestTry(): Date | null {
     return this._latestTry;
+  }
+
+  get nextRun(): Date | null {
+    return this._nextRun;
   }
 
   get running(): boolean {
@@ -179,6 +234,7 @@ export class LindormWorker implements ILindormWorker {
       running: this._running,
       destroyed: this._destroyed,
       seq: this._seq,
+      nextRun: this._nextRun,
       latestSuccess: this._latestSuccess,
       latestError: this._latestError,
       latestTry: this._latestTry,
@@ -197,7 +253,11 @@ export class LindormWorker implements ILindormWorker {
     this._started = true;
     this._latestStart = new Date();
 
-    void this.run();
+    if (this.cron) {
+      this.scheduleNext();
+    } else {
+      void this.run();
+    }
   }
 
   async stop(): Promise<void> {
@@ -211,6 +271,7 @@ export class LindormWorker implements ILindormWorker {
       this._timeout = null;
     }
 
+    this._nextRun = null;
     this._started = false;
 
     if (this._runPromise) {
@@ -320,8 +381,50 @@ export class LindormWorker implements ILindormWorker {
     this._running = false;
     this._runPromise = null;
 
-    if (this._started) {
-      this._timeout = setTimeout(() => this.run(), this.jitterInterval());
+    this.scheduleNext();
+  }
+
+  private scheduleNext(): void {
+    if (this._timeout) {
+      clearTimeout(this._timeout);
+      this._timeout = null;
+    }
+
+    if (!this._started) {
+      this._nextRun = null;
+      return;
+    }
+
+    if (this.cron) {
+      const now = new Date();
+      const next = cronNext(this.cron, now, this.timezone);
+
+      if (!next) {
+        this._nextRun = null;
+
+        const error = new LindormWorkerError("Cron expression has no future match", {
+          code: "cron_no_future_match",
+          title: "Cron Has No Future Match",
+          details:
+            "The worker cron expression resolved no future fire time, so the worker will not reschedule.",
+          data: { cron: this.cron, timezone: this.timezone },
+        });
+
+        this.logger.warn("Cron expression has no future match", error);
+        this.emitter.emit("warning", error);
+
+        return;
+      }
+
+      const delay = Math.max(0, next.getTime() - now.getTime()) + this.positiveJitter();
+
+      this._nextRun = new Date(now.getTime() + delay);
+      this._timeout = setTimeout(() => this.run(), delay);
+    } else {
+      const delay = this.jitterInterval();
+
+      this._nextRun = new Date(new Date().getTime() + delay);
+      this._timeout = setTimeout(() => this.run(), delay);
     }
   }
 
@@ -336,7 +439,11 @@ export class LindormWorker implements ILindormWorker {
   }
 
   private jitterInterval(): number {
-    return this.interval + Math.floor((Math.random() - 0.5) * 2 * this.jitter);
+    return this.interval! + Math.floor((Math.random() - 0.5) * 2 * this.jitter);
+  }
+
+  private positiveJitter(): number {
+    return Math.floor(Math.random() * this.jitter);
   }
 
   private assertNotDestroyed(): void {

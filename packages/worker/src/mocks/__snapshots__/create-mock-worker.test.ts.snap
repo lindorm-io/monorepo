@@ -10,6 +10,7 @@ exports[`createMockWorker > should create mock with expected shape 1`] = `
   "latestStop": null,
   "latestSuccess": null,
   "latestTry": null,
+  "nextRun": null,
   "off": [MockFunction],
   "on": [MockFunction],
   "once": [MockFunction],

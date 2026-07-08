@@ -86,14 +86,17 @@ export class LindormWorkerScanner {
 
     const alias: string = isString(module.ALIAS) ? module.ALIAS : data.baseName;
 
-    if (!isReadableTime(module.INTERVAL) && !isNumber(module.INTERVAL)) {
+    const hasInterval = isReadableTime(module.INTERVAL) || isNumber(module.INTERVAL);
+    const hasCron = isString(module.CRON);
+
+    if (hasInterval === hasCron) {
       throw new LindormWorkerScannerError(
-        `Missing INTERVAL export in file: ${data.fullPath}`,
+        `File must export exactly one of INTERVAL or CRON: ${data.fullPath}`,
         {
-          code: "missing_interval_export",
-          title: "Missing Interval Export",
+          code: "invalid_schedule_export",
+          title: "Invalid Schedule Export",
           details:
-            "The scanned file does not export an INTERVAL value as a readable time string or number.",
+            "The scanned file must export either an INTERVAL (readable time or number) or a CRON expression string, but not both.",
           data: { fullPath: data.fullPath },
         },
       );
@@ -102,9 +105,18 @@ export class LindormWorkerScanner {
     const options: LindormWorkerOptions = {
       alias,
       callback: module.CALLBACK,
-      interval: module.INTERVAL,
       logger,
     };
+
+    if (hasCron) {
+      options.cron = module.CRON;
+
+      if (isString(module.TIMEZONE)) {
+        options.timezone = module.TIMEZONE;
+      }
+    } else {
+      options.interval = module.INTERVAL;
+    }
 
     if (isArray(module.LISTENERS)) {
       options.listeners = module.LISTENERS;

@@ -20,6 +20,26 @@ describe("LindormWorkerScanner", () => {
     expect(result.map((r) => r.alias)).toMatchSnapshot();
   });
 
+  test("should construct workers from a directory of CRON files", async () => {
+    const result = await LindormWorkerScanner.scan(
+      [join(__dirname, "..", "__fixtures__", "workers-cron")],
+      logger,
+    );
+
+    expect(result).toHaveLength(1);
+    expect(result[0]).toBeInstanceOf(LindormWorker);
+    expect(result[0].alias).toBe("CronWorker");
+  });
+
+  test("should throw when a file exports both INTERVAL and CRON", async () => {
+    await expect(
+      LindormWorkerScanner.scan(
+        [join(__dirname, "..", "__fixtures__", "workers-invalid-schedule")],
+        logger,
+      ),
+    ).rejects.toThrow(LindormWorkerScannerError);
+  });
+
   test("should pass an ILindormWorker instance through untouched", async () => {
     const instance: ILindormWorker = new LindormWorker({
       alias: "PassThrough",

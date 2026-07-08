@@ -1,6 +1,6 @@
 # @lindorm/worker
 
-Interval-based background worker with retry, jitter, lifecycle events, graceful shutdown, and structured logging.
+Interval- or cron-scheduled background worker with retry, jitter, lifecycle events, graceful shutdown, and structured logging.
 
 This package is **ESM-only**. All examples use `import` syntax — `require` is not supported.
 
@@ -32,6 +32,25 @@ const worker = new LindormWorker({
 worker.start();
 ```
 
+## Scheduling: interval vs cron
+
+A worker runs on **exactly one** schedule — either an `interval` or a `cron` expression. The two differ:
+
+- **`interval`** — relative timing. The next run is scheduled `interval` (± jitter) after the previous one **finishes**, so runs never overlap and `start()` fires the callback immediately.
+- **`cron`** — wall-clock timing in a timezone. The next run is the next time the expression matches. `start()` does **not** run immediately — it waits for the first matching time. Jitter, when set, only ever delays a run (never advances it past the scheduled instant). A run that outlives its slot simply skips missed ticks — the next fire is computed from "now".
+
+```ts
+const worker = new LindormWorker({
+  alias: "nightly-report",
+  cron: "0 2 * * *", // 02:00 every day
+  timezone: "Europe/Stockholm", // IANA name; defaults to "UTC"
+  logger,
+  callback: async () => generateReport(),
+});
+```
+
+Cron uses [croner](https://github.com/hexagon/croner) — standard 5-field expressions, plus optional seconds (6 fields) and year (7 fields).
+
 ## Subpath Exports
 
 | Export                         | Purpose                             |
@@ -46,14 +65,18 @@ worker.start();
 const worker = new LindormWorker({
   // Required
   alias: "my-worker", // identifier used in logs
-  interval: "5m", // execution interval (ms or readable time)
   callback: async (ctx) => {
     /* ... */
   }, // main work
   logger, // ILogger from @lindorm/logger
 
+  // Schedule — provide exactly one of interval or cron
+  interval: "5m", // execution interval (ms or readable time)
+  cron: "0 2 * * *", // OR a cron expression (mutually exclusive with interval)
+  timezone: "UTC", // cron timezone, IANA name (default: "UTC"; ignored for interval)
+
   // Optional
-  jitter: "30s", // +/- spread around interval (default: 0)
+  jitter: "30s", // +/- spread around interval, or forward-only delay for cron (default: 0)
   callbackTimeout: "2m", // abort callback after this duration (default: disabled)
   errorCallback: async (ctx, err) => {
     /* ... */
@@ -74,7 +97,7 @@ const worker = new LindormWorker({
 
 All time values accept milliseconds or human-readable strings (`"30s"`, `"5m"`, `"1h"`, `"1d"`, `"1w"`).
 
-The constructor throws `LindormWorkerError` when `interval <= 0`, `jitter < 0`, or `callbackTimeout < 0`.
+The constructor throws `LindormWorkerError` when neither or both of `interval`/`cron` are given, `interval <= 0`, the `cron` expression is invalid, the `timezone` is unknown, `jitter < 0`, or `callbackTimeout < 0`.
 
 ## Lifecycle
 
@@ -96,9 +119,11 @@ start() ──> callback ──> [success] ──> wait(interval +/- jitter) ─
                                                               wait(interval +/- jitter)
 ```
 
+In cron mode the loop is the same, except the wait between runs is `nextCronMatch - now` (plus optional jitter) instead of a fixed interval, and there is no immediate run on `start()`.
+
 ### Jitter
 
-Jitter is centred around the base interval: `interval + random(-jitter, +jitter)`. With `interval: "10m"` and `jitter: "30s"`, the actual wait is between 9m30s and 10m30s.
+For `interval`, jitter is centred on the base interval: `interval + random(-jitter, +jitter)`. With `interval: "10m"` and `jitter: "30s"`, the actual wait is between 9m30s and 10m30s. For `cron`, jitter is forward-only — `random(0, +jitter)` added after the matched time — so a run never fires early.
 
 ### Retry
 
@@ -166,6 +191,7 @@ const h = worker.health();
 //   running: false,
 //   destroyed: false,
 //   seq: 42,
+//   nextRun: Date,     // next scheduled fire time (null when stopped or a cron has no future match)
 //   latestSuccess: Date,
 //   latestError: null,
 //   latestTry: Date,
@@ -179,6 +205,7 @@ worker.alias; // string
 worker.started; // boolean
 worker.running; // boolean — true while the callback is executing
 worker.seq; // number — incremented at the start of each interval
+worker.nextRun; // Date | null — next scheduled fire time
 worker.latestStart; // Date | null
 worker.latestStop; // Date | null
 worker.latestSuccess; // Date | null
@@ -223,14 +250,26 @@ export const JITTER: ReadableTime = "1m";
 export const RETRY: RetryOptions = { maxAttempts: 3, strategy: "linear" };
 ```
 
-`INTERVAL` is required for CALLBACK-style files. The file's basename is used as the worker `alias` unless an `ALIAS` export is provided.
+Each CALLBACK-style file must export **exactly one** of `INTERVAL` or `CRON` (with optional `TIMEZONE`). The file's basename is used as the worker `alias` unless an `ALIAS` export is provided.
+
+```ts
+// workers/NightlyWorker.ts — cron variant
+export const CALLBACK: LindormWorkerCallback = async (ctx) => {
+  ctx.logger.info("running nightly report");
+};
+
+export const CRON = "0 2 * * *";
+export const TIMEZONE = "Europe/Stockholm";
+```
 
 ### Recognised Exports
 
 | Export             | Type                            | Required                               |
 | ------------------ | ------------------------------- | -------------------------------------- |
 | `CALLBACK`         | `LindormWorkerCallback`         | Yes (when no `LindormWorker` instance) |
-| `INTERVAL`         | `ReadableTime \| number`        | Yes (when using `CALLBACK`)            |
+| `INTERVAL`         | `ReadableTime \| number`        | Exactly one of `INTERVAL` / `CRON`     |
+| `CRON`             | `string`                        | Exactly one of `INTERVAL` / `CRON`     |
+| `TIMEZONE`         | `string`                        | No (cron only; defaults to `"UTC"`)    |
 | `ALIAS`            | `string`                        | No (defaults to file basename)         |
 | `JITTER`           | `ReadableTime \| number`        | No                                     |
 | `CALLBACK_TIMEOUT` | `ReadableTime \| number`        | No                                     |
@@ -258,10 +297,10 @@ Either default or named `LindormWorker` exports are picked up. The first instanc
 
 ## Errors
 
-| Error                       | Thrown when                                                                                                                 |
-| --------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `LindormWorkerError`        | Validation failure, callback timeout, or method called after destroy                                                        |
-| `LindormWorkerScannerError` | Scanner finds a file with neither a `LindormWorker` instance nor a `CALLBACK` export, or a CALLBACK file missing `INTERVAL` |
+| Error                       | Thrown when                                                                                                                                                  |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `LindormWorkerError`        | Validation failure, callback timeout, or method called after destroy                                                                                         |
+| `LindormWorkerScannerError` | Scanner finds a file with neither a `LindormWorker` instance nor a `CALLBACK` export, or a CALLBACK file that exports neither or both of `INTERVAL` / `CRON` |
 
 Both extend `LindormError` from `@lindorm/errors`.
 

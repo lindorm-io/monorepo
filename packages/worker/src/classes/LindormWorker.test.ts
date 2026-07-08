@@ -367,6 +367,141 @@ describe("LindormWorker", () => {
         }),
       );
     });
+
+    test("should throw when neither interval nor cron is provided", () => {
+      expect(
+        () =>
+          new LindormWorker({
+            alias: "Test",
+            callback,
+            logger: createMockLogger(),
+          }),
+      ).toThrow(
+        expect.objectContaining({
+          message: "Worker requires exactly one of interval or cron",
+        }),
+      );
+    });
+
+    test("should throw when both interval and cron are provided", () => {
+      expect(
+        () =>
+          new LindormWorker({
+            alias: "Test",
+            callback,
+            cron: "0 0 * * *",
+            interval: 1000,
+            logger: createMockLogger(),
+          }),
+      ).toThrow(
+        expect.objectContaining({
+          message: "Worker requires exactly one of interval or cron",
+        }),
+      );
+    });
+
+    test("should throw on an invalid cron expression", () => {
+      expect(
+        () =>
+          new LindormWorker({
+            alias: "Test",
+            callback,
+            cron: "not a cron",
+            logger: createMockLogger(),
+          }),
+      ).toThrow(expect.objectContaining({ message: "Cron expression is invalid" }));
+    });
+
+    test("should throw on an invalid timezone", () => {
+      expect(
+        () =>
+          new LindormWorker({
+            alias: "Test",
+            callback,
+            cron: "0 0 * * *",
+            timezone: "Not/AZone",
+            logger: createMockLogger(),
+          }),
+      ).toThrow(
+        expect.objectContaining({ message: "Cron schedule could not be resolved" }),
+      );
+    });
+  });
+
+  describe("cron scheduling", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    test("should not run immediately on start and fire at the next cron time", async () => {
+      vi.setSystemTime(new Date("2026-07-08T12:30:00.000Z"));
+
+      const cb = vi.fn().mockResolvedValue(undefined);
+      const cronWorker = new LindormWorker({
+        alias: "Cron",
+        callback: cb,
+        cron: "0 * * * *",
+        logger: createMockLogger(),
+      });
+
+      cronWorker.start();
+
+      expect(cb).not.toHaveBeenCalled();
+      expect(cronWorker.started).toEqual(true);
+      expect(cronWorker.nextRun).toEqual(new Date("2026-07-08T13:00:00.000Z"));
+
+      await vi.advanceTimersByTimeAsync(30 * 60 * 1000);
+
+      expect(cb).toHaveBeenCalledTimes(1);
+
+      await cronWorker.stop();
+    });
+
+    test("should reschedule for the following cron time after a run", async () => {
+      vi.setSystemTime(new Date("2026-07-08T12:30:00.000Z"));
+
+      const cb = vi.fn().mockResolvedValue(undefined);
+      const cronWorker = new LindormWorker({
+        alias: "Cron",
+        callback: cb,
+        cron: "0 * * * *",
+        logger: createMockLogger(),
+      });
+
+      cronWorker.start();
+
+      await vi.advanceTimersByTimeAsync(30 * 60 * 1000);
+      expect(cb).toHaveBeenCalledTimes(1);
+      expect(cronWorker.nextRun).toEqual(new Date("2026-07-08T14:00:00.000Z"));
+
+      await vi.advanceTimersByTimeAsync(60 * 60 * 1000);
+      expect(cb).toHaveBeenCalledTimes(2);
+
+      await cronWorker.stop();
+    });
+
+    test("should evaluate the cron expression in the configured timezone", async () => {
+      vi.setSystemTime(new Date("2026-07-08T12:30:00.000Z"));
+
+      const cronWorker = new LindormWorker({
+        alias: "Cron",
+        callback,
+        cron: "0 0 * * *",
+        timezone: "Europe/Stockholm",
+        logger: createMockLogger(),
+      });
+
+      cronWorker.start();
+
+      // Midnight in Stockholm (UTC+2 in July) is 22:00 UTC.
+      expect(cronWorker.nextRun).toEqual(new Date("2026-07-08T22:00:00.000Z"));
+
+      await cronWorker.stop();
+    });
   });
 
   describe("off", () => {
