@@ -30,7 +30,7 @@ describe("PylonIo (handshake chain)", () => {
     overrides: {
       cors?: any;
       session?: any;
-      proteus?: any;
+      db?: any;
       connectionMiddleware?: Array<any>;
     } = {},
   ): PylonIo => {
@@ -40,7 +40,7 @@ describe("PylonIo (handshake chain)", () => {
       environment: "test",
       cors: overrides.cors,
       session: overrides.session,
-      proteus: overrides.proteus,
+      db: overrides.db,
       socket: {
         enabled: true,
         listeners: [],
@@ -281,7 +281,7 @@ describe("PylonIo (handshake chain)", () => {
 
       const io = createPylonIo({
         cors: validCors,
-        session: { ...validSession, keyValue: mockProteus },
+        session: { ...validSession, kv: mockProteus },
       });
 
       await io.load();

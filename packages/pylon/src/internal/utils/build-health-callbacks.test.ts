@@ -15,7 +15,7 @@ describe("buildReadinessCallback", () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
 
-    const callback = buildReadinessCallback({ proteus, iris })!;
+    const callback = buildReadinessCallback({ db: proteus, iris })!;
 
     await callback({} as any);
     await callback({} as any);
@@ -28,11 +28,11 @@ describe("buildReadinessCallback", () => {
     const proteus = createMockProteusSource();
     proteus.ping.mockResolvedValue(false);
 
-    const callback = buildReadinessCallback({ proteus })!;
+    const callback = buildReadinessCallback({ db: proteus })!;
 
     await expect(callback({} as any)).rejects.toMatchObject({
       code: "health_check_failed",
-      data: { failures: ["proteus"] },
+      data: { failures: ["db"] },
     });
   });
 
@@ -58,7 +58,7 @@ describe("buildLivenessCallback", () => {
     const proteus = createMockProteusSource();
     const iris = createMockIrisSource();
 
-    const callback = buildLivenessCallback({ proteus, iris })!;
+    const callback = buildLivenessCallback({ db: proteus, iris })!;
 
     await callback({} as any);
     await callback({} as any);
@@ -72,7 +72,7 @@ describe("buildLivenessCallback", () => {
     const proteus = createMockProteusSource();
     proteus.ping.mockResolvedValueOnce(false);
 
-    const callback = buildLivenessCallback({ proteus })!;
+    const callback = buildLivenessCallback({ db: proteus })!;
 
     // First check fails — not latched yet.
     await expect(callback({} as any)).rejects.toMatchObject({

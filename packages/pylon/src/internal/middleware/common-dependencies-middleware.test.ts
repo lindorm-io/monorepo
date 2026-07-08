@@ -18,13 +18,13 @@ describe("createDependenciesMiddleware", () => {
   test("should lazily create proteus session on first access", async () => {
     const proteus = createMockProteusSource();
 
-    const middleware = createDependenciesMiddleware({ proteus: proteus as any });
+    const middleware = createDependenciesMiddleware({ db: proteus as any });
 
     await middleware(ctx, vi.fn());
 
     expect(proteus.session).not.toHaveBeenCalled();
 
-    const session = ctx.proteus;
+    const session = ctx.db;
 
     expect(session).toBeDefined();
     expect(proteus.session).toHaveBeenCalledTimes(1);
@@ -49,11 +49,11 @@ describe("createDependenciesMiddleware", () => {
       signal: controller.signal,
     };
 
-    const middleware = createDependenciesMiddleware({ proteus: proteus as any });
+    const middleware = createDependenciesMiddleware({ db: proteus as any });
 
     await middleware(httpCtx, vi.fn());
 
-    const session = httpCtx.proteus;
+    const session = httpCtx.db;
 
     expect(session).toBeDefined();
     expect(proteus.session).toHaveBeenCalledWith({
@@ -75,11 +75,11 @@ describe("createDependenciesMiddleware", () => {
       event: "test:event",
     };
 
-    const middleware = createDependenciesMiddleware({ proteus: proteus as any });
+    const middleware = createDependenciesMiddleware({ db: proteus as any });
 
     await middleware(socketCtx, vi.fn());
 
-    const session = socketCtx.proteus;
+    const session = socketCtx.db;
 
     expect(session).toBeDefined();
     expect(proteus.session).toHaveBeenCalledWith({
@@ -149,7 +149,7 @@ describe("createDependenciesMiddleware", () => {
     };
 
     const middleware = createDependenciesMiddleware({
-      proteus: proteus as any,
+      db: proteus as any,
       iris: iris as any,
       actor,
     });
@@ -159,7 +159,7 @@ describe("createDependenciesMiddleware", () => {
     expect(actor).toHaveBeenCalledWith(ctxWithState);
 
     // Trigger both sessions
-    ctxWithState.proteus;
+    ctxWithState.db;
     ctxWithState.iris;
 
     const expectedMeta = {
@@ -193,14 +193,14 @@ describe("createDependenciesMiddleware", () => {
     };
 
     const middleware = createDependenciesMiddleware({
-      proteus: proteus as any,
+      db: proteus as any,
       iris: iris as any,
       actor,
     });
 
     await middleware(ctxWithState, vi.fn());
 
-    ctxWithState.proteus;
+    ctxWithState.db;
     ctxWithState.iris;
 
     expect(actor).toHaveBeenCalledTimes(1);
@@ -212,7 +212,7 @@ describe("createDependenciesMiddleware", () => {
 
     await expect(middleware(ctx, vi.fn())).resolves.toBeUndefined();
 
-    expect(ctx.proteus).toBeUndefined();
+    expect(ctx.db).toBeUndefined();
     expect(ctx.iris).toBeUndefined();
     expect(ctx.hermes).toBeUndefined();
   });

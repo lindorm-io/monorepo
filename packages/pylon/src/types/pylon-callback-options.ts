@@ -30,12 +30,12 @@ export type PylonWebhookCallback<C extends PylonCommonContext = PylonCommonConte
 
 export type PylonSessionOptions = PylonSessionConfig & {
   enabled: boolean;
-  keyValue?: IProteusSource;
+  kv?: IProteusSource;
 };
 
 export type PylonKryptosOptions = {
   enabled: boolean;
-  proteus?: IProteusSource;
+  db?: IProteusSource;
 };
 
 export type PylonQueueOptions = {
@@ -45,7 +45,7 @@ export type PylonQueueOptions = {
 
 export type PylonWebhookOptions = {
   enabled: boolean;
-  proteus?: IProteusSource;
+  db?: IProteusSource;
   iris?: IIrisSource;
   encryptionKey?: IKryptos;
   maxErrors?: number;
@@ -53,12 +53,12 @@ export type PylonWebhookOptions = {
 
 export type PylonCacheOptions = {
   enabled: boolean;
-  keyValue?: IProteusSource;
+  kv?: IProteusSource;
 };
 
 export type PylonRateLimitOptions = {
   enabled: boolean;
-  keyValue?: IProteusSource;
+  kv?: IProteusSource;
   strategy?: "fixed" | "sliding" | "token-bucket";
   window?: ReadableTime | number;
   max?: number;
@@ -68,7 +68,7 @@ export type PylonRateLimitOptions = {
 
 export type PylonAuditOptions = {
   enabled: boolean;
-  proteus?: IProteusSource;
+  db?: IProteusSource;
   iris?: IIrisSource;
   sanitise?: (body: unknown) => unknown;
   skip?: (ctx: any) => boolean;
@@ -77,5 +77,5 @@ export type PylonAuditOptions = {
 
 export type PylonRoomsOptions = {
   presence?: boolean;
-  keyValue?: IProteusSource;
+  kv?: IProteusSource;
 };

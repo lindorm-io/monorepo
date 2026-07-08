@@ -33,7 +33,7 @@ describe("httpSessionMiddleware", () => {
 
     ctx = {
       logger: createMockLogger(),
-      keyValue: mockProteus,
+      kv: mockProteus,
       cookies: {
         set: vi.fn(),
         get: vi.fn().mockReturnValue("cad4002a-bd04-52f1-9733-58866f421686"),
@@ -92,7 +92,7 @@ describe("httpSessionMiddleware", () => {
   });
 
   test("should return null session when no keyValue source", async () => {
-    ctx.keyValue = undefined;
+    ctx.kv = undefined;
 
     await createHttpSessionMiddleware(options)(ctx, next);
 

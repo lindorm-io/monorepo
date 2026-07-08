@@ -14,7 +14,7 @@ describe("createAttachProteusSourceMiddleware", () => {
     const source = createMockProteusSource();
     const ctx: any = { logger: createMockLogger() };
 
-    await createAttachProteusSourceMiddleware({ key: "proteus", source: source as any })(
+    await createAttachProteusSourceMiddleware({ key: "db", source: source as any })(
       ctx,
       next,
     );
@@ -52,13 +52,13 @@ describe("createAttachProteusSourceMiddleware", () => {
     const source = createMockProteusSource();
     const ctx: any = { logger: createMockLogger() };
 
-    await createAttachProteusSourceMiddleware({ key: "proteus", source: source as any })(
+    await createAttachProteusSourceMiddleware({ key: "db", source: source as any })(
       ctx,
       next,
     );
 
-    const first = ctx.proteus;
-    const second = ctx.proteus;
+    const first = ctx.db;
+    const second = ctx.db;
 
     expect(source.session).toHaveBeenCalledTimes(1);
     expect(first).toBe(second);
@@ -73,12 +73,12 @@ describe("createAttachProteusSourceMiddleware", () => {
       signal: controller.signal,
     };
 
-    await createAttachProteusSourceMiddleware({ key: "proteus", source: source as any })(
+    await createAttachProteusSourceMiddleware({ key: "db", source: source as any })(
       ctx,
       next,
     );
 
-    ctx.proteus;
+    ctx.db;
 
     expect(source.session).toHaveBeenCalledWith(
       expect.objectContaining({ signal: controller.signal }),
@@ -89,12 +89,12 @@ describe("createAttachProteusSourceMiddleware", () => {
     const source = createMockProteusSource();
     const ctx: any = { logger: createMockLogger(), event: "test:event" };
 
-    await createAttachProteusSourceMiddleware({ key: "proteus", source: source as any })(
+    await createAttachProteusSourceMiddleware({ key: "db", source: source as any })(
       ctx,
       next,
     );
 
-    ctx.proteus;
+    ctx.db;
 
     expect(source.session).toHaveBeenCalledWith(
       expect.objectContaining({ signal: undefined }),
@@ -116,12 +116,12 @@ describe("createAttachProteusSourceMiddleware", () => {
     };
 
     await createAttachProteusSourceMiddleware({
-      key: "proteus",
+      key: "db",
       source: source as any,
       actor,
     })(ctx, next);
 
-    ctx.proteus;
+    ctx.db;
 
     expect(actor).toHaveBeenCalledWith(ctx);
     expect(source.session).toHaveBeenCalledWith({
@@ -140,12 +140,12 @@ describe("createAttachProteusSourceMiddleware", () => {
     const ctx: any = { logger: createMockLogger() };
 
     await createAttachProteusSourceMiddleware({
-      key: "proteus",
+      key: "db",
       source: source as any,
       actor: () => "unknown",
     })(ctx, next);
 
-    ctx.proteus;
+    ctx.db;
 
     expect(source.session).toHaveBeenCalledWith(
       expect.objectContaining({

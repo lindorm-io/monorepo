@@ -25,7 +25,7 @@ describe("useTenant", () => {
           },
         },
       },
-      proteus: {
+      db: {
         setFilterParams: vi.fn(),
       },
     };
@@ -42,7 +42,7 @@ describe("useTenant", () => {
     test("should call proteus.setFilterParams with tenantId", async () => {
       await useTenant()(ctx, next);
 
-      expect(ctx.proteus.setFilterParams).toHaveBeenCalledWith("__scope", {
+      expect(ctx.db.setFilterParams).toHaveBeenCalledWith("__scope", {
         tenantId: "tenant-abc",
       });
     });
@@ -84,7 +84,7 @@ describe("useTenant", () => {
 
       expect(ctx.auth.introspect).not.toHaveBeenCalled();
       expect(ctx.state.tenant).toBe("tenant-from-params");
-      expect(ctx.proteus.setFilterParams).toHaveBeenCalledWith("__scope", {
+      expect(ctx.db.setFilterParams).toHaveBeenCalledWith("__scope", {
         tenantId: "tenant-from-params",
       });
     });
@@ -126,7 +126,7 @@ describe("useTenant", () => {
   });
 
   test("should not call setFilterParams when proteus not on context", async () => {
-    delete ctx.proteus;
+    delete ctx.db;
 
     await useTenant()(ctx, next);
 
@@ -138,6 +138,6 @@ describe("useTenant", () => {
 
     await useTenant(undefined, { required: false })(ctx, next);
 
-    expect(ctx.proteus.setFilterParams).not.toHaveBeenCalled();
+    expect(ctx.db.setFilterParams).not.toHaveBeenCalled();
   });
 });

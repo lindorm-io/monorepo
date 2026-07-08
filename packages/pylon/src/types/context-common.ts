@@ -69,8 +69,8 @@ export type PylonCommonContext = {
 
   hermes?: IHermesSession;
   iris?: IIrisSession;
-  keyValue?: IProteusSession;
-  proteus?: IProteusSession;
+  kv?: IProteusSession;
+  db?: IProteusSession;
 
   queue: (
     event: string,

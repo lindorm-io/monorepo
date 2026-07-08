@@ -92,8 +92,8 @@ const app = new Pylon({
     listeners: [chatListener],
   },
 
-  proteus: proteusSource,
-  keyValue: keyValueSource,
+  db: proteusSource,
+  kv: keyValueSource,
   iris: irisSource,
 
   setup: async () => {
@@ -113,8 +113,8 @@ await app.stop();
 
 Pylon distinguishes two storage roles, both `IProteusSource`:
 
-- **`proteus`** — the durable source (exposed per-request as `ctx.proteus`). Backs durable features (`audit`, `webhook`, `kryptos`), which may each override it with their own `proteus`.
-- **`keyValue`** — the ephemeral source (redis in production, a proteus memory-driver source in dev/test), exposed per-request as `ctx.keyValue`. Backs ephemeral features (`rateLimit`, `session`, `rooms`), which may each override it with their own `keyValue`.
+- **`db`** — the durable source (exposed per-request as `ctx.db`). Backs durable features (`audit`, `webhook`, `kryptos`), which may each override it with their own `db`.
+- **`kv`** — the ephemeral source (redis in production, a proteus memory-driver source in dev/test), exposed per-request as `ctx.kv`. Backs ephemeral features (`rateLimit`, `session`, `rooms`), which may each override it with their own `kv`.
 
 | Method / property | Description                                                              |
 | ----------------- | ------------------------------------------------------------------------ |
@@ -188,8 +188,8 @@ ctx.conduits;    // map of named HTTP clients
 ctx.entities;    // entity registry
 ctx.logger;      // per-request scoped ILogger
 
-ctx.proteus?;    // IProteusSession — durable source, when configured
-ctx.keyValue?;   // IProteusSession — ephemeral source, when configured
+ctx.db?;         // IProteusSession — durable source, when configured
+ctx.kv?;         // IProteusSession — ephemeral source, when configured
 ctx.iris?;       // IIrisSession when configured
 ctx.hermes?;     // IHermesSession when configured
 
@@ -535,7 +535,7 @@ Enable with the `rooms` option on the constructor:
 ```typescript
 const app = new Pylon({
   rooms: { presence: true },
-  keyValue: keyValueSource,
+  kv: keyValueSource,
   // …
 });
 ```
@@ -569,7 +569,7 @@ router.post(
 | `emit(target, event, data?)`      | yes  | yes    | Emit a Pylon envelope to the target                            |
 | `broadcast(target, event, data?)` | —    | yes    | Like `emit` but excludes the calling socket                    |
 
-`presence` requires `rooms.presence: true` and an ephemeral source (`rooms.keyValue ?? keyValue`) — Pylon registers a `Presence` entity at startup and writes a record on each `join`.
+`presence` requires `rooms.presence: true` and an ephemeral source (`rooms.kv ?? kv`) — Pylon registers a `Presence` entity at startup and writes a record on each `join`.
 
 ### Redis adapter
 
@@ -707,7 +707,7 @@ router.use(
 );
 ```
 
-`useRateLimit` requires `rateLimit: { enabled: true }` on the constructor (which also wires the entities into the ephemeral source, `rateLimit.keyValue ?? keyValue`). HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
+`useRateLimit` requires `rateLimit: { enabled: true }` on the constructor (which also wires the entities into the ephemeral source, `rateLimit.kv ?? kv`). HTTP responses include `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and `X-RateLimit-Strategy`; rejected requests also include `Retry-After`.
 
 When `rateLimit.window` and `rateLimit.max` are set on the constructor, Pylon installs a global rate-limit middleware automatically.
 
@@ -742,8 +742,7 @@ router.get(
 
 `useCache(ttl, scope, options?)` slots after `useSchema` (it folds `ctx.data` into the
 key) and before `useHandler`. It requires `cache: { enabled: true }` on the constructor,
-which wires the `CachedResponse` entity into the ephemeral source (`cache.keyValue ??
-keyValue`).
+which wires the `CachedResponse` entity into the ephemeral source (`cache.kv ?? kv`).
 
 - `ttl` accepts a `ReadableTime` (e.g. `"60s"`) or a number of milliseconds.
 - `scope`:
@@ -777,7 +776,7 @@ collide with a CDN/proxy's own `X-Cache` in the response chain):
 Concurrent misses for the same key are coalesced in-process via single-flight: only one
 handler runs and its result is replayed to the waiters. This is per-Pylon-process and **not**
 distributed — across multiple containers each process may run the handler once, which is
-acceptable by design (the shared `keyValue` source still de-duplicates the stored entry). A
+acceptable by design (the shared `kv` source still de-duplicates the stored entry). A
 cache backend outage degrades gracefully: read/write failures are logged and the handler is
 served, never failing the request.
 
@@ -913,11 +912,11 @@ await ctx.session.del();
 await ctx.session.logout(subject);
 ```
 
-When `session.enabled` is true, Pylon registers the `Session` entity on the configured ephemeral source (`session.keyValue ?? keyValue`).
+When `session.enabled` is true, Pylon registers the `Session` entity on the configured ephemeral source (`session.kv ?? kv`).
 
 ## Webhooks
 
-Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ctx.webhook(event, data)` helper. Enable with `webhook: { enabled: true }` and provide either inline `proteus` / `iris` or rely on the top-level integrations.
+Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ctx.webhook(event, data)` helper. Enable with `webhook: { enabled: true }` and provide either inline `db` / `iris` or rely on the top-level integrations.
 
 ```typescript
 const app = new Pylon({
@@ -1002,7 +1001,7 @@ import {
 
 Two probes are always auto-mounted:
 
-- **`GET /health` — liveness.** Verifies I/O (`proteus`/`iris`) **once**, then latches success and returns `204` on every later call **without re-pinging**. The process proves it came up (I/O reachable once), but a later DB/broker blip never flips liveness — restarting the container can't fix the DB, it only thrashes. Until the first successful check it returns `503`.
+- **`GET /health` — liveness.** Verifies I/O (`db`/`iris`) **once**, then latches success and returns `204` on every later call **without re-pinging**. The process proves it came up (I/O reachable once), but a later DB/broker blip never flips liveness — restarting the container can't fix the DB, it only thrashes. Until the first successful check it returns `503`.
 - **`GET /ready` — readiness.** Pings live I/O on **every** call, reflecting current state — for load-balancer / readiness probes. Returns `204` when healthy (or when there's no I/O to check) and `503 Service Unavailable` with `code: "health_check_failed"` + `data.failures` when a source is down.
 
 Override or disable either via `callbacks` (`null` = a pure `204` probe, no check):
@@ -1040,7 +1039,7 @@ import { useHandler } from "@lindorm/pylon";
 router.get(
   "/songs/:id",
   useHandler(async (ctx) => {
-    const song = await ctx.proteus.repository(Song).findOne({ id: ctx.params.id });
+    const song = await ctx.db.repository(Song).findOne({ id: ctx.params.id });
 
     if (!song) {
       throw new NotFoundError(`No song "${ctx.params.id}"`, {

@@ -125,12 +125,12 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         // Always register the cache source when one is provided (independent of
         // cache.enabled). useCache reads ctx.state.app.config.cache to decide
         // whether to run, and throws only if enabled but no source is present.
-        cacheKeyValue: this.options.cache?.keyValue ?? this.options.keyValue,
+        cacheKeyValue: this.options.cache?.kv ?? this.options.kv,
         hermes: this.options.hermes,
         iris: this.options.iris,
-        keyValue: this.options.keyValue,
-        proteus: this.options.proteus,
-        rateLimitKeyValue: this.options.rateLimit?.keyValue ?? this.options.keyValue,
+        kv: this.options.kv,
+        db: this.options.db,
+        rateLimitKeyValue: this.options.rateLimit?.kv ?? this.options.kv,
       }),
       createQueueMiddleware(this.options.queue),
       createWebhookMiddleware(this.options.webhook),
@@ -215,7 +215,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     // `/health` is liveness: check I/O once, then latch success.
     return buildLivenessCallback<T>({
       iris: this.options.iris,
-      proteus: this.options.proteus,
+      db: this.options.db,
     });
   }
 
@@ -228,7 +228,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
     // `/ready` is readiness: check live I/O on every call.
     return buildReadinessCallback<T>({
       iris: this.options.iris,
-      proteus: this.options.proteus,
+      db: this.options.db,
     });
   }
 }

@@ -22,7 +22,7 @@ describe("createSessionStore", () => {
     ctx = {
       aegis: createMockAegis(),
       amphora: createMockAmphora(),
-      keyValue: mockProteus,
+      kv: mockProteus,
     };
 
     session = {
@@ -70,7 +70,7 @@ describe("createSessionStore", () => {
   });
 
   test("should fall back to cookie when no keyValue available", async () => {
-    ctx.keyValue = undefined;
+    ctx.kv = undefined;
 
     const store = createSessionStore({ enabled: true });
 

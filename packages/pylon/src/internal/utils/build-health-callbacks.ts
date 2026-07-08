@@ -5,17 +5,17 @@ import type { PylonHttpCallback, PylonHttpContext } from "../../types/index.js";
 
 type Sources = {
   iris?: IIrisSource;
-  proteus?: IProteusSource;
+  db?: IProteusSource;
 };
 
-const pingSources = async ({ iris, proteus }: Sources): Promise<Array<string>> => {
+const pingSources = async ({ iris, db }: Sources): Promise<Array<string>> => {
   const failures: Array<string> = [];
 
-  if (proteus) {
+  if (db) {
     try {
-      if (!(await proteus.ping())) failures.push("proteus");
+      if (!(await db.ping())) failures.push("db");
     } catch {
-      failures.push("proteus");
+      failures.push("db");
     }
   }
 
@@ -52,7 +52,7 @@ const assertHealthy = (failures: Array<string>): void => {
 export const buildReadinessCallback = <C extends PylonHttpContext>(
   sources: Sources,
 ): PylonHttpCallback<C> | undefined => {
-  if (!sources.iris && !sources.proteus) return undefined;
+  if (!sources.iris && !sources.db) return undefined;
 
   return async () => {
     assertHealthy(await pingSources(sources));
@@ -71,7 +71,7 @@ export const buildReadinessCallback = <C extends PylonHttpContext>(
 export const buildLivenessCallback = <C extends PylonHttpContext>(
   sources: Sources,
 ): PylonHttpCallback<C> | undefined => {
-  if (!sources.iris && !sources.proteus) return undefined;
+  if (!sources.iris && !sources.db) return undefined;
 
   let healthy = false;
 

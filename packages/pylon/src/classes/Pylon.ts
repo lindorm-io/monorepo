@@ -122,12 +122,12 @@ export class Pylon<
       }
     }
 
-    if (this.options.proteus) {
-      await this.options.proteus.setup();
+    if (this.options.db) {
+      await this.options.db.setup();
     }
 
-    if (this.options.keyValue) {
-      await this.options.keyValue.setup();
+    if (this.options.kv) {
+      await this.options.kv.setup();
     }
 
     if (this.options.iris) {
@@ -193,12 +193,12 @@ export class Pylon<
       await this.options.iris.disconnect();
     }
 
-    if (this.options.proteus) {
-      await this.options.proteus.disconnect();
+    if (this.options.db) {
+      await this.options.db.disconnect();
     }
 
-    if (this.options.keyValue) {
-      await this.options.keyValue.disconnect();
+    if (this.options.kv) {
+      await this.options.kv.disconnect();
     }
 
     this.isSetup = false;
@@ -247,7 +247,7 @@ export class Pylon<
 
   private async loadSources(): Promise<void> {
     if (this.options.session?.enabled) {
-      const source = this.options.session.keyValue ?? this.options.keyValue;
+      const source = this.options.session.kv ?? this.options.kv;
       if (source) {
         const { Session } = await import("../entities/Session.js");
         source.addEntities([Session]);
@@ -255,7 +255,7 @@ export class Pylon<
     }
 
     if (this.options.kryptos?.enabled) {
-      const source = this.options.kryptos.proteus ?? this.options.proteus;
+      const source = this.options.kryptos.db ?? this.options.db;
       if (source) {
         const { Kryptos } = await import("../entities/Kryptos.js");
         source.addEntities([Kryptos]);
@@ -271,7 +271,7 @@ export class Pylon<
     }
 
     if (this.options.webhook?.enabled) {
-      const proteusSource = this.options.webhook.proteus ?? this.options.proteus;
+      const proteusSource = this.options.webhook.db ?? this.options.db;
       if (proteusSource) {
         const { WebhookSubscription } =
           await import("../entities/WebhookSubscription.js");
@@ -287,7 +287,7 @@ export class Pylon<
     }
 
     if (this.options.cache?.enabled) {
-      const source = this.options.cache.keyValue ?? this.options.keyValue;
+      const source = this.options.cache.kv ?? this.options.kv;
       if (source) {
         const { CachedResponse } = await import("../entities/CachedResponse.js");
         source.addEntities([CachedResponse]);
@@ -295,7 +295,7 @@ export class Pylon<
     }
 
     if (this.options.rateLimit?.enabled) {
-      const source = this.options.rateLimit.keyValue ?? this.options.keyValue;
+      const source = this.options.rateLimit.kv ?? this.options.kv;
       if (source) {
         const { RateLimitFixed } = await import("../entities/RateLimitFixed.js");
         const { RateLimitSliding } = await import("../entities/RateLimitSliding.js");
@@ -305,7 +305,7 @@ export class Pylon<
     }
 
     if (this.options.rooms?.presence) {
-      const source = this.options.rooms.keyValue ?? this.options.keyValue;
+      const source = this.options.rooms.kv ?? this.options.kv;
       if (source) {
         const { Presence } = await import("../entities/Presence.js");
         source.addEntities([Presence]);
@@ -313,7 +313,7 @@ export class Pylon<
     }
 
     if (this.options.audit?.enabled) {
-      const proteusSource = this.options.audit.proteus ?? this.options.proteus;
+      const proteusSource = this.options.audit.db ?? this.options.db;
       if (proteusSource) {
         const { RequestAuditLog } = await import("../entities/RequestAuditLog.js");
         proteusSource.addEntities([RequestAuditLog]);
@@ -340,7 +340,7 @@ export class Pylon<
   private async subscribe(): Promise<void> {
     if (this.options.audit?.enabled) {
       const iris = this.options.audit.iris ?? this.options.iris;
-      const proteus = this.options.audit.proteus ?? this.options.proteus;
+      const proteus = this.options.audit.db ?? this.options.db;
 
       if (iris && proteus) {
         await setupAuditConsumer(iris, proteus, this.logger);
@@ -359,7 +359,7 @@ export class Pylon<
 
     if (this.options.webhook?.enabled) {
       const iris = this.options.webhook.iris ?? this.options.iris;
-      const proteus = this.options.webhook.proteus ?? this.options.proteus;
+      const proteus = this.options.webhook.db ?? this.options.db;
 
       if (iris && proteus) {
         await setupWebhookRequestConsumer(iris, proteus, this.logger);

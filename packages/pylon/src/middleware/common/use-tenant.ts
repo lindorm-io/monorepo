@@ -39,8 +39,8 @@ export const useTenant = (
 
     ctx.state.tenant = tenantId ?? null;
 
-    if (tenantId && ctx.proteus) {
-      ctx.proteus.setFilterParams("__scope", { tenantId });
+    if (tenantId && ctx.db) {
+      ctx.db.setFilterParams("__scope", { tenantId });
     }
 
     await next();

@@ -5,7 +5,7 @@ import { resolveActor, type ActorResolver } from "../../internal/utils/resolve-a
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
 export type AttachProteusSourceOptions = {
-  /** ctx key where the session will be exposed (e.g. "proteus", "analyticsProteus"). */
+  /** ctx key where the session will be exposed (e.g. "db", "analyticsProteus"). */
   key: string;
   /** The ProteusSource instance whose `session()` will be bound. */
   source: IProteusSource;

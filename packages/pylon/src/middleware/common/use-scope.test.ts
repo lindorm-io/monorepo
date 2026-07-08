@@ -10,7 +10,7 @@ describe("useScope", () => {
     next = vi.fn();
 
     ctx = {
-      proteus: {
+      db: {
         setFilterParams: vi.fn(),
       },
       state: {
@@ -22,13 +22,13 @@ describe("useScope", () => {
   test("should call proteus.setFilterParams with params from function", async () => {
     await useScope({ params: (c) => ({ tenantId: c.state.tenant }) })(ctx, next);
 
-    expect(ctx.proteus.setFilterParams).toHaveBeenCalledWith("__scope", {
+    expect(ctx.db.setFilterParams).toHaveBeenCalledWith("__scope", {
       tenantId: "tenant-abc",
     });
   });
 
   test("should throw ServerError when proteus not on context", async () => {
-    delete ctx.proteus;
+    delete ctx.db;
 
     try {
       await useScope({ params: () => ({}) })(ctx, next);
@@ -48,7 +48,7 @@ describe("useScope", () => {
       }),
     })(ctx, next);
 
-    expect(ctx.proteus.setFilterParams).toHaveBeenCalledWith("__scope", {
+    expect(ctx.db.setFilterParams).toHaveBeenCalledWith("__scope", {
       tenantId: "tenant-abc",
       regionId: "eu-west-1",
       orgUnit: "engineering",

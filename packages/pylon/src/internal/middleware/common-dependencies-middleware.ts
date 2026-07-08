@@ -44,8 +44,8 @@ type Options = {
   cacheKeyValue?: IProteusSource;
   hermes?: IHermes;
   iris?: IIrisSource;
-  keyValue?: IProteusSource;
-  proteus?: IProteusSource;
+  kv?: IProteusSource;
+  db?: IProteusSource;
   rateLimitKeyValue?: IProteusSource;
   roomsEnabled?: boolean;
   roomsPresence?: boolean;
@@ -69,15 +69,15 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         lazyFactory(ctx, "hermes", () => options.hermes!.session({ logger: ctx.logger }));
       }
 
-      if (options.proteus) {
-        lazyFactory(ctx, "proteus", () =>
-          options.proteus!.session(buildProteusSessionOptions(ctx, actor)),
+      if (options.db) {
+        lazyFactory(ctx, "db", () =>
+          options.db!.session(buildProteusSessionOptions(ctx, actor)),
         );
       }
 
-      if (options.keyValue) {
-        lazyFactory(ctx, "keyValue", () =>
-          options.keyValue!.session(buildProteusSessionOptions(ctx, actor)),
+      if (options.kv) {
+        lazyFactory(ctx, "kv", () =>
+          options.kv!.session(buildProteusSessionOptions(ctx, actor)),
         );
       }
 
@@ -164,7 +164,7 @@ export const createDependenciesMiddleware = <C extends PylonCommonContext>(
         title: "Dependency Resolution Failed",
         type: "urn:lindorm:pylon:error:dependency_resolution_failed",
         details:
-          "One of the per-request dependencies (actor, hermes, proteus, keyValue, iris, auth, socket, or rooms) could not be resolved",
+          "One of the per-request dependencies (actor, hermes, db, kv, iris, auth, socket, or rooms) could not be resolved",
         debug: { error },
       });
     }
