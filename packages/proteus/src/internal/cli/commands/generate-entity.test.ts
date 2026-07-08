@@ -1,14 +1,23 @@
 import { resolve, join } from "path";
 import { Logger } from "@lindorm/logger";
+import { loadLindormConfig as _loadLindormConfig } from "@lindorm/scaffold";
 import { mkdir, writeFile as _writeFile } from "fs/promises";
 import { generateEntity } from "./generate-entity.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 const writeFile = _writeFile as unknown as Mock;
+const loadLindormConfig = _loadLindormConfig as unknown as Mock;
 
 vi.mock("fs/promises", async () => ({
   mkdir: vi.fn().mockResolvedValue(undefined),
   writeFile: vi.fn().mockResolvedValue(undefined),
+}));
+
+// Keep resolveTarget + LINDORM_CONFIG_DEFAULTS real; only stub the config read
+// so tests don't depend on a lindorm.config file in the package cwd.
+vi.mock("@lindorm/scaffold", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@lindorm/scaffold")>()),
+  loadLindormConfig: vi.fn().mockResolvedValue(null),
 }));
 
 vi.mock("@lindorm/logger", () => ({
@@ -100,6 +109,38 @@ describe("generateEntity", () => {
 
     expect(writeFile).toHaveBeenCalledWith(
       join(customDir, "User.ts"),
+      expect.any(String),
+      "utf-8",
+    );
+  });
+
+  it("should use lindorm.config entitiesDir when no directory arg is given", async () => {
+    loadLindormConfig.mockResolvedValueOnce({
+      proteus: { entitiesDir: "./from/config/entities" },
+    });
+
+    await generateEntity("User", {});
+
+    const configDir = resolve(process.cwd(), "./from/config/entities");
+
+    expect(writeFile).toHaveBeenCalledWith(
+      join(configDir, "User.ts"),
+      expect.any(String),
+      "utf-8",
+    );
+  });
+
+  it("should let the --directory arg win over lindorm.config", async () => {
+    loadLindormConfig.mockResolvedValueOnce({
+      proteus: { entitiesDir: "./from/config/entities" },
+    });
+
+    await generateEntity("User", { directory: "./from/arg" });
+
+    const argDir = resolve(process.cwd(), "./from/arg");
+
+    expect(writeFile).toHaveBeenCalledWith(
+      join(argDir, "User.ts"),
       expect.any(String),
       "utf-8",
     );

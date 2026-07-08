@@ -1,3 +1,8 @@
+import {
+  LINDORM_CONFIG_DEFAULTS,
+  loadLindormConfig,
+  resolveTarget,
+} from "@lindorm/scaffold";
 import { writeEntity } from "../../../utils/write-entity.js";
 
 type GenerateEntityOptions = {
@@ -18,9 +23,16 @@ export const generateEntity = async (
     });
   }
 
+  const config = await loadLindormConfig();
+  const directory = resolveTarget({
+    arg: options.directory,
+    config: config?.proteus?.entitiesDir,
+    default: LINDORM_CONFIG_DEFAULTS.proteus.entitiesDir,
+  });
+
   await writeEntity({
     name,
-    directory: options.directory ?? "./src/proteus/entities",
+    directory,
     dryRun: options.dryRun,
   });
 };

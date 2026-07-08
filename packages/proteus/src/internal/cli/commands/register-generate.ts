@@ -12,7 +12,7 @@ export const registerGenerateCommands = (program: Command): void => {
     .alias("e")
     .description("Generate an entity file with Proteus decorators")
     .argument("[name]", "Entity name in PascalCase")
-    .option("-d, --directory <path>", "Output directory", "./src/proteus/entities")
+    .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateEntity);
 };

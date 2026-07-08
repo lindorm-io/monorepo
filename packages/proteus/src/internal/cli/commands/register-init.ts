@@ -10,7 +10,7 @@ export const registerInitCommand = (program: Command): void => {
       "-D, --driver <driver>",
       "Database driver (postgres, mysql, sqlite, redis, mongo, memory)",
     )
-    .option("-d, --directory <path>", "Output directory", "./src/proteus")
+    .option("-d, --directory <path>", "Output directory (defaults from lindorm.config)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(init);
 };

@@ -1,3 +1,8 @@
+import {
+  LINDORM_CONFIG_DEFAULTS,
+  loadLindormConfig,
+  resolveTarget,
+} from "@lindorm/scaffold";
 import { PROTEUS_ALL_DRIVERS } from "../../../utils/generate-source.js";
 import { writeSource } from "../../../utils/write-source.js";
 
@@ -19,9 +24,16 @@ export const init = async (options: InitOptions): Promise<void> => {
     });
   }
 
+  const config = await loadLindormConfig();
+  const directory = resolveTarget({
+    arg: options.directory,
+    config: config?.proteus?.sourceDir,
+    default: LINDORM_CONFIG_DEFAULTS.proteus.sourceDir,
+  });
+
   await writeSource({
     driver,
-    directory: options.directory ?? "./src/proteus",
+    directory,
     dryRun: options.dryRun,
   });
 };

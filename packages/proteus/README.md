@@ -2296,6 +2296,10 @@ await writeEntity({ directory: "./src/proteus/entities", name: "User" });
 | `-v, --verbose`          | Debug-level logging                                         |
 | `-d, --directory <path>` | Output directory (where applicable)                         |
 
+`init` and `generate entity` resolve their output directory as **`--directory` > `lindorm.config.{ts,mjs}`
+(`proteus.sourceDir` / `proteus.entitiesDir`) > built-in default** (`./src/proteus` / `./src/proteus/entities`).
+See `@lindorm/scaffold` for the config contract.
+
 ## Errors
 
 Proteus provides typed error classes for precise error handling. All Proteus errors extend `ProteusError`.
