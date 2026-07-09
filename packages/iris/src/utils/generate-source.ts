@@ -68,7 +68,7 @@ export const generateSource = (options: GenerateSourceOptions): string => {
   lines.push(`import { join } from "path";`);
   lines.push(`import { IrisSource } from "@lindorm/iris";`);
   lines.push(``);
-  lines.push(`export const source = new IrisSource({`);
+  lines.push(`export const ${driver} = new IrisSource({`);
   lines.push(`  driver: "${driver}",`);
 
   if (loggerImport) {

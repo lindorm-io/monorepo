@@ -4,7 +4,7 @@ exports[`generateSource > emits TODO comment for rabbit when loggerImport is nul
 "import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const rabbit = new IrisSource({
   driver: "rabbit",
   logger: logger, // TODO: import or create a Logger instance
   messages: [join(import.meta.dirname, "messages")],
@@ -17,7 +17,7 @@ exports[`generateSource > emits TODO comment for rabbit when loggerImport is omi
 "import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const rabbit = new IrisSource({
   driver: "rabbit",
   logger: logger, // TODO: import or create a Logger instance
   messages: [join(import.meta.dirname, "messages")],
@@ -31,7 +31,7 @@ exports[`generateSource > emits logger import for kafka driver 1`] = `
 import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const kafka = new IrisSource({
   driver: "kafka",
   logger: logger,
   messages: [join(import.meta.dirname, "messages")],
@@ -45,7 +45,7 @@ exports[`generateSource > emits logger import for nats driver 1`] = `
 import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const nats = new IrisSource({
   driver: "nats",
   logger: logger,
   messages: [join(import.meta.dirname, "messages")],
@@ -59,7 +59,7 @@ exports[`generateSource > emits logger import for redis driver 1`] = `
 import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const redis = new IrisSource({
   driver: "redis",
   logger: logger,
   messages: [join(import.meta.dirname, "messages")],
@@ -73,7 +73,7 @@ exports[`generateSource > emits logger import when loggerImport is provided 1`] 
 import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const rabbit = new IrisSource({
   driver: "rabbit",
   logger: logger,
   messages: [join(import.meta.dirname, "messages")],
@@ -88,7 +88,7 @@ import { config } from "../pylon/config.js";
 import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const kafka = new IrisSource({
   driver: "kafka",
   logger: logger,
   messages: [join(import.meta.dirname, "messages")],
@@ -103,7 +103,7 @@ import { config } from "../pylon/config.js";
 import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const nats = new IrisSource({
   driver: "nats",
   logger: logger,
   messages: [join(import.meta.dirname, "messages")],
@@ -118,7 +118,7 @@ import { config } from "../pylon/config.js";
 import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const rabbit = new IrisSource({
   driver: "rabbit",
   logger: logger,
   messages: [join(import.meta.dirname, "messages")],
@@ -133,7 +133,7 @@ import { config } from "../pylon/config.js";
 import { join } from "path";
 import { IrisSource } from "@lindorm/iris";
 
-export const source = new IrisSource({
+export const redis = new IrisSource({
   driver: "redis",
   logger: logger,
   messages: [join(import.meta.dirname, "messages")],
