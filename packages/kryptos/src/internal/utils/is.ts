@@ -6,6 +6,7 @@ import type {
   KryptosFromJwk,
   KryptosFromString,
 } from "../../types/index.js";
+import { isKryptos } from "./is-kryptos.js";
 import { isAkpB64, isAkpDer, isAkpJwk, isAkpPem } from "./akp/is.js";
 import { isEcB64, isEcDer, isEcJwk, isEcPem } from "./ec/is.js";
 import { isOctB64, isOctDer, isOctJwk, isOctPem, isOctUtf } from "./oct/is.js";
@@ -66,7 +67,7 @@ export const isDerive = (options: KryptosFrom): options is KryptosFromDerive => 
   if (typed.type !== "oct") return false;
   if (typed.curve) return false;
 
-  return isString(typed.deriveFrom);
+  return isString(typed.deriveFrom) || isKryptos(typed.deriveFrom);
 };
 
 export const isJwk = (options: KryptosFrom): options is KryptosFromJwk => {

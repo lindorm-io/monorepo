@@ -1,3 +1,4 @@
+import type { IKryptos } from "../interfaces/index.js";
 import type { KryptosAttributes } from "./attributes.js";
 import type { UnknownJwk } from "./jwk.js";
 import type { KryptosBuffer, KryptosJwk, KryptosString } from "./kryptos.js";
@@ -18,8 +19,17 @@ export type KryptosFromString = Std & KryptosString;
 export type KryptosFromBuffer = Std & KryptosBuffer;
 
 export type KryptosFromDerive = Std &
-  Omit<KryptosString, "privateKey" | "publicKey"> & {
-    deriveFrom: string;
+  // `id` comes from `Std` (optional): with a `path` and no explicit `id`, the id
+  // is derived deterministically from the same HKDF stream so a re-derived key
+  // reproduces its id too (ciphertexts embed the key id).
+  Omit<KryptosString, "id" | "privateKey" | "publicKey"> & {
+    // A UTF-8 passphrase (legacy: IKM = utf8 bytes) or an oct seed key (IKM =
+    // its raw private key bytes). HKDF-SHA256, empty salt — deterministic.
+    deriveFrom: string | IKryptos;
+    // Optional derivation path (e.g. `urn:lindorm:tyr:kek:v1`). When set, the
+    // HKDF `info` becomes `<path>:<algorithm>`; otherwise the legacy
+    // `lindorm:oct:<algorithm>`. Bumping the version in the path rotates the key.
+    path?: string;
   };
 
 export type KryptosFromJwk = UnknownJwk & Partial<KryptosJwk>;

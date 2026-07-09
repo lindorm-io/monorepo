@@ -41,9 +41,9 @@ import {
   generateKeyAsync,
 } from "../internal/utils/generate.js";
 import { calculateKeyOps } from "../internal/utils/key-ops.js";
-import { KRYPTOS_BRAND } from "../internal/constants/brand.js";
 import { fromOptions } from "../internal/utils/from-options.js";
 import { isB64, isDer, isJwk, isPem } from "../internal/utils/is.js";
+import { isKryptos } from "../internal/utils/is-kryptos.js";
 import { stampCertificate } from "../internal/utils/stamp-certificate.js";
 import { Kryptos } from "./Kryptos.js";
 
@@ -142,13 +142,7 @@ export class KryptosKit {
   // `instanceof`, so a key created by one copy of @lindorm/kryptos is still
   // recognised by guards running in a duplicate copy (dual-install resilience).
   static isKryptos(value: unknown): value is IKryptos {
-    return (
-      value != null &&
-      typeof value === "object" &&
-      (value as { constructor?: Record<symbol, unknown> }).constructor?.[
-        KRYPTOS_BRAND
-      ] === true
-    );
+    return isKryptos(value);
   }
 
   static isAkp(kryptos: KryptosLike): kryptos is IKryptosAkp {

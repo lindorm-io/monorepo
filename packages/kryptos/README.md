@@ -111,6 +111,27 @@ await db.collection("keys").insertOne(key.toDB());
 const restored = KryptosKit.from.db(row);
 ```
 
+### Derive a deterministic key
+
+`from.derive` runs HKDF-SHA256 (empty salt) to produce an oct key. `deriveFrom` is either a UTF-8 passphrase or an oct **seed key** (its raw private bytes are the input). An optional `path` is bound into the derivation together with the algorithm, so the same seed + path + algorithm always yields byte-identical material — the basis of a root-of-trust key hierarchy.
+
+```ts
+const seed = KryptosKit.env.import(process.env.ROOT_SEED!); // an oct key
+
+const kek = KryptosKit.from.derive({
+  id: "key_tyr_kek_v1",
+  type: "oct",
+  use: "enc",
+  algorithm: "A256KW",
+  deriveFrom: seed,
+  path: "urn:lindorm:tyr:kek:v1",
+});
+```
+
+Path convention: `urn:lindorm:<service>:<purpose>:<version>`. Rotate by bumping the version segment. Omitting `path` keeps the legacy passphrase behaviour (`info = lindorm:oct:<algorithm>`).
+
+With a `path` and no explicit `id`, the key id is derived from the same HKDF stream — so re-deriving with the same seed + path reproduces the key **including its id**, and existing ciphertexts (which embed the key id) remain decryptable. Pass an explicit `id` to override.
+
 ### Use the CLI
 
 ```bash
@@ -131,6 +152,12 @@ kryptos generate --type EC --use sig --algorithm ES384 \
 # A leaf cert signed by that CA (paste its kryptos:… env string):
 kryptos generate --type EC --use sig --algorithm ES256 \
   --certificate ca-signed --ca "$LINDORM_ROOT_CA" --subject tyr.lindorm.io
+```
+
+`--curve` picks the curve when the algorithm supports more than one (`EdDSA` → `Ed25519`/`Ed448`, the `ECDH-ES` family → `X25519`/`X448`); interactively you are prompted only in that case. `--expiry` sets the validity window as a `@lindorm/date` duration (`20y`, `6mo`, `90d`); omit it for the 25-year default.
+
+```bash
+kryptos generate --type OKP --use sig --algorithm EdDSA --curve Ed448 --expiry 20y
 ```
 
 ## X.509 certificates
@@ -328,15 +355,16 @@ A static-only facade. Every method below is `KryptosKit.<member>`.
 
 #### Import
 
-| Member             | Description                                                                     |
-| ------------------ | ------------------------------------------------------------------------------- |
-| `from.auto(input)` | Auto-detect b64 / der / jwk / pem.                                              |
-| `from.b64(opts)`   | Construct from base64-encoded DER.                                              |
-| `from.db(row)`     | Construct from a `toDB()` row.                                                  |
-| `from.der(opts)`   | Construct from DER `Buffer`s.                                                   |
-| `from.jwk(opts)`   | Construct from an RFC 7517 JWK (validates `x5t#S256` against `x5c` if present). |
-| `from.pem(opts)`   | Construct from PEM strings.                                                     |
-| `from.utf(opts)`   | Construct an oct key from a UTF-8 string.                                       |
+| Member              | Description                                                                     |
+| ------------------- | ------------------------------------------------------------------------------- |
+| `from.auto(input)`  | Auto-detect b64 / der / jwk / pem.                                              |
+| `from.b64(opts)`    | Construct from base64-encoded DER.                                              |
+| `from.db(row)`      | Construct from a `toDB()` row.                                                  |
+| `from.der(opts)`    | Construct from DER `Buffer`s.                                                   |
+| `from.derive(opts)` | Derive a deterministic oct key from a passphrase or oct seed key (HKDF-SHA256). |
+| `from.jwk(opts)`    | Construct from an RFC 7517 JWK (validates `x5t#S256` against `x5c` if present). |
+| `from.pem(opts)`    | Construct from PEM strings.                                                     |
+| `from.utf(opts)`    | Construct an oct key from a UTF-8 string.                                       |
 
 #### Env strings
 
@@ -401,7 +429,20 @@ The package installs a `kryptos` bin (`@lindorm/kryptos` exposes it as `dist/cli
 kryptos generate
 ```
 
-Prompts for type, use, algorithm, encryption (for `enc` keys), and an optional purpose, then prints both the `kryptos:` env blob and a one-liner showing how to import it.
+Prompts for type, use, algorithm, curve (only when the algorithm allows more than one), encryption (for `enc` keys), an optional purpose, and an optional expiry, then prints both the `kryptos:` env blob and a one-liner showing how to import it. Every prompt has a matching flag — pass `--type` to run fully scripted.
+
+### `kryptos derive`
+
+Derives a **deterministic** oct key from a seed key and a derivation path — the root of a key hierarchy (KEKs, HMAC keys). Same seed + same path + same algorithm always yields byte-identical key material **and the same key id**, so the derived key never has to be stored: keep the seed, re-derive on demand, and existing ciphertexts (which embed the key id) still decrypt.
+
+```bash
+kryptos derive --type oct --use enc --algorithm A256KW \
+  --seed "$ROOT_SEED" --path urn:lindorm:tyr:kek:v1
+```
+
+`--seed` is a `kryptos:` env string for an oct key (its private bytes are the HKDF input); `--path` is bound into the derivation. Only `oct` keys can be derived. Without `--type` the command is interactive and prompts for anything missing.
+
+Use the path convention `urn:lindorm:<service>:<purpose>:<version>`. The version segment is the rotation lever: bump `v1` → `v2` to derive a fresh, unrelated key from the same seed.
 
 ## Testing helpers
 
