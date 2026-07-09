@@ -26,6 +26,7 @@ const {
   ]);
   return {
     mockGenerate: vi.fn().mockReturnValue({
+      use: "sig",
       toDB: () => ({
         id: "new-key-id",
         algorithm: "ES512",
@@ -82,6 +83,7 @@ describe("createKryptosRotationWorker", () => {
     (mockLogger.child as Mock).mockImplementation(() => mockLogger);
     mockFind.mockResolvedValue([]);
     mockGenerate.mockReturnValue({
+      use: "sig",
       toDB: () => ({
         id: "new-key-id",
         algorithm: "ES512",
@@ -175,6 +177,7 @@ describe("createKryptosRotationWorker", () => {
         {
           algorithm: "ES512",
           purpose: "token",
+          use: "sig",
         },
       );
       expect(mockCreate).toHaveBeenCalled();
@@ -202,6 +205,7 @@ describe("createKryptosRotationWorker", () => {
         {
           algorithm: "ES512",
           purpose: "token",
+          use: "sig",
         },
       );
     });

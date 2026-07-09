@@ -104,12 +104,6 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
             : undefined;
 
         if (existingKeys.length === 0) {
-          ctx.logger.debug("No existing keys found, generating initial key", {
-            algorithm: opts.algorithm,
-            curve: opts.curve,
-            purpose: opts.purpose,
-          });
-
           const kryptos = KryptosKit.generate.auto({
             algorithm: opts.algorithm,
             certificate,
@@ -118,6 +112,15 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
             expiresAt,
             notBefore,
             purpose: opts.purpose,
+          });
+
+          // Log `use` too — a purpose has both a sig and an enc key, so
+          // { algorithm, purpose } alone reads ambiguously across the pair.
+          ctx.logger.debug("No existing keys found, generating initial key", {
+            algorithm: opts.algorithm,
+            curve: opts.curve,
+            purpose: opts.purpose,
+            use: kryptos.use,
           });
 
           const entity = repository.create(kryptos.toDB());
@@ -129,12 +132,6 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
         }
 
         if (existingKeys.length === 1) {
-          ctx.logger.debug("Only one key found, generating rotation key", {
-            algorithm: opts.algorithm,
-            curve: opts.curve,
-            purpose: opts.purpose,
-          });
-
           const [existingKey] = existingKeys;
 
           const kryptos = KryptosKit.generate.auto({
@@ -145,6 +142,15 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
             expiresAt: add(existingKey.expiresAt, duration(rotation)),
             notBefore: sub(existingKey.expiresAt, duration(rotation)),
             purpose: opts.purpose,
+          });
+
+          // Log `use` too — a purpose has both a sig and an enc key, so
+          // { algorithm, purpose } alone reads ambiguously across the pair.
+          ctx.logger.debug("Only one key found, generating rotation key", {
+            algorithm: opts.algorithm,
+            curve: opts.curve,
+            purpose: opts.purpose,
+            use: kryptos.use,
           });
 
           const entity = repository.create(kryptos.toDB());
