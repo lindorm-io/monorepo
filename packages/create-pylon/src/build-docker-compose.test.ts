@@ -11,6 +11,7 @@ const baseAnswers = (overrides: Partial<Answers> = {}): Answers => ({
     socket: false,
     webhooks: false,
     audit: false,
+    session: false,
     auth: false,
     rateLimit: false,
   },
