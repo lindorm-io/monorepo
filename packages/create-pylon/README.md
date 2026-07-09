@@ -109,21 +109,21 @@ await initGit(answers.projectDir);
 
 ### Scaffold
 
-| Export                   | Signature                                           | Description                                                                                                                                            |
-| ------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `scaffold`               | `(answers: Answers, kek?: string) => Promise<void>` | Runs the full file-emit pipeline: templates, package.json, env, config, pylon, test-ctx fixture, docker-compose, iris, workers, plus `runProteusInit`. |
-| `copyTemplates`          | `(answers: Answers) => void`                        | Copies the `base`, `http`, `socket`, `webhooks`, and `workers` template overlays based on `answers`.                                                   |
-| `writePackageJson`       | `(answers: Answers) => void`                        | Writes `package.json` with the project name, scripts, and (when relevant) `docker:up` / `docker:down`.                                                 |
-| `writeEnvFile`           | `(answers: Answers, kek?: string) => void`          | Writes `.env` with `NODE_ENV`, `PYLON_KEK`, and per-driver entries.                                                                                    |
-| `buildEnvLines`          | `(answers: Answers, kek?: string) => Array<string>` | Same content as `writeEnvFile` but returned as an array of lines.                                                                                      |
-| `writeConfigFile`        | `(answers: Answers) => void`                        | Writes `src/pylon/config.ts`.                                                                                                                          |
-| `writePylonFile`         | `(answers: Answers) => void`                        | Writes `src/pylon/pylon.ts`.                                                                                                                           |
-| `writeTestCtxFile`       | `(answers: Answers) => void`                        | Writes `src/__fixtures__/test-ctx.ts` (a project-bound `createTestCtx`) when a db or kv store is selected.                                             |
-| `writeDockerCompose`     | `(answers: Answers) => void`                        | Writes `docker-compose.yml` when a selected driver requires container infrastructure.                                                                  |
-| `writeWorkerFiles`       | `(answers: Answers) => void`                        | Writes one `src/workers/<key>.ts` per selected worker.                                                                                                 |
-| `writeIrisSamples`       | `(answers: Answers) => void`                        | Writes a sample publisher and subscriber under `src/iris/`.                                                                                            |
-| `buildDependencyList`    | `(answers: Answers) => Array<string>`               | Returns the runtime npm packages required by the selected drivers, on top of `BASE_RUNTIME_DEPENDENCIES`.                                              |
-| `buildDevDependencyList` | `(answers: Answers) => Array<string>`               | Returns the additional dev dependencies required by the selected drivers.                                                                              |
+| Export                   | Signature                                           | Description                                                                                                                                                        |
+| ------------------------ | --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `scaffold`               | `(answers: Answers, kek?: string) => Promise<void>` | Runs the full file-emit pipeline: templates, package.json, env, config, pylon, test-ctx fixture, docker-compose, iris, workers, plus `runProteusInit`.             |
+| `copyTemplates`          | `(answers: Answers) => void`                        | Copies the `base`, `http`, `socket`, `webhooks`, and `workers` template overlays based on `answers`.                                                               |
+| `writePackageJson`       | `(answers: Answers) => void`                        | Writes `package.json` with the project name and scripts; when the stack needs docker-compose services, `dev` runs through `composed` (up/down around `tsx watch`). |
+| `writeEnvFile`           | `(answers: Answers, kek?: string) => void`          | Writes `.env` with `NODE_ENV`, `PYLON_KEK`, and per-driver entries.                                                                                                |
+| `buildEnvLines`          | `(answers: Answers, kek?: string) => Array<string>` | Same content as `writeEnvFile` but returned as an array of lines.                                                                                                  |
+| `writeConfigFile`        | `(answers: Answers) => void`                        | Writes `src/pylon/config.ts`.                                                                                                                                      |
+| `writePylonFile`         | `(answers: Answers) => void`                        | Writes `src/pylon/pylon.ts`.                                                                                                                                       |
+| `writeTestCtxFile`       | `(answers: Answers) => void`                        | Writes `src/__fixtures__/test-ctx.ts` (a project-bound `createTestCtx`) when a db or kv store is selected.                                                         |
+| `writeDockerCompose`     | `(answers: Answers) => void`                        | Writes `docker-compose.yml` when a selected driver requires container infrastructure.                                                                              |
+| `writeWorkerFiles`       | `(answers: Answers) => void`                        | Writes one `src/workers/<key>.ts` per selected worker.                                                                                                             |
+| `writeIrisSamples`       | `(answers: Answers) => void`                        | Writes a sample publisher and subscriber under `src/iris/`.                                                                                                        |
+| `buildDependencyList`    | `(answers: Answers) => Array<string>`               | Returns the runtime npm packages required by the selected drivers, on top of `BASE_RUNTIME_DEPENDENCIES`.                                                          |
+| `buildDevDependencyList` | `(answers: Answers) => Array<string>`               | Returns the additional dev dependencies required by the selected drivers.                                                                                          |
 
 ### Install / Git
 

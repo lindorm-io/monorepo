@@ -201,8 +201,9 @@ const irisDevYaml = (driver: IrisDriver): YamlBlock => {
  * Generates `config/development.yml` for a freshly scaffolded service.
  *
  * Role: dev-only defaults that line up with `docker-compose.yml`, so
- * `npm run docker:up && npm run dev` works without anyone manually
- * filling in URLs. This file is committed — secrets that are *not*
+ * `npm run dev` (which starts those services via `composed`) works
+ * without anyone manually filling in URLs. This file is committed —
+ * secrets that are *not*
  * dev-only (KEK, OIDC client secret) stay out of it.
  *
  * Driver URLs duplicate the credentials baked into the docker-compose

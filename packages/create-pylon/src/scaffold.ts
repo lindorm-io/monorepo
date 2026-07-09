@@ -20,6 +20,7 @@ import { buildTestCtxFile } from "./build-test-ctx-file.js";
 import { buildVitestConfig } from "./build-vitest-config.js";
 import { buildWorkerFile } from "./build-worker-file.js";
 import { formatProject } from "./format-project.js";
+import { parseProjectName } from "./project-name.js";
 import {
   runIrisGenerateSampleMessage,
   runIrisInit,
@@ -109,15 +110,46 @@ export const buildDependencyList = (answers: Answers): Array<string> => {
 };
 
 export const buildDevDependencyList = (answers: Answers): Array<string> => {
+  const deps: Array<string> = [];
+  // `composed` wraps `npm run dev` to bring the docker-compose services up
+  // (up -d --wait) before the dev server and tear them down on exit — so the
+  // generated package ships no separate docker:up/docker:down scripts.
+  if (needsDockerCompose(answers)) {
+    deps.push("@lindorm/composed");
+  }
   // Proteus entities use stage-3 decorators that the generated vitest config
   // lowers via unplugin-swc (see buildVitestConfig); ship the transform deps.
   if (answers.db !== "none" || answers.kv !== "none") {
-    return ["unplugin-swc", "@swc/core"];
+    deps.push("unplugin-swc", "@swc/core");
   }
-  return [];
+  return deps;
 };
 
 export const writePackageJson = (answers: Answers): void => {
+  // `composed` wraps dev/test so a single `npm run` brings the docker-compose
+  // services up (up -d --wait) and tears them down on exit. No `--file`: it
+  // auto-discovers `docker-compose.yml` in the cwd (the project root, where the
+  // scaffold writes it).
+  const needsCompose = needsDockerCompose(answers);
+
+  // Unscoped name (`@lindorm/tyr` → `tyr`) — Compose project names can't contain
+  // `@` or `/`. Dev uses Compose's default project (this basename); tests run
+  // under `<name>-test`, an isolated namespace so their volume-wiping teardown
+  // never touches the dev stack's data.
+  const projectName = parseProjectName(answers.projectName).dirName;
+
+  // Dev keeps volumes so the dev database survives Ctrl-C restarts. Tests keep
+  // the default (volume-wiping) teardown for a clean slate each run.
+  const dev = needsCompose
+    ? "composed -k tsx watch src/index.ts"
+    : "tsx watch src/index.ts";
+
+  // --passWithNoTests so a fresh scaffold (which ships no tests yet) does not
+  // exit 1 under `vitest run` / `turbo run test`.
+  const test = needsCompose
+    ? `composed -p ${projectName}-test vitest run --passWithNoTests`
+    : "vitest run --passWithNoTests";
+
   const pkg: Record<string, unknown> = {
     name: answers.projectName,
     version: "0.0.0",
@@ -125,29 +157,15 @@ export const writePackageJson = (answers: Answers): void => {
     type: "module",
     engines: { node: ">=24.13.0" },
     scripts: {
-      dev: "tsx watch src/index.ts",
+      dev,
       build: "tsc -p tsconfig.build.json",
       start: "node dist/index.js",
       typecheck: "tsc --noEmit",
-      // --passWithNoTests so a fresh scaffold (which ships no tests yet) does
-      // not exit 1 under `vitest run` / `turbo run test`.
-      test: "vitest run --passWithNoTests",
+      test,
     },
     dependencies: {},
     devDependencies: {},
   };
-
-  const proteusNeedsCompose = selectedDrivers(answers).some((d) =>
-    ["postgres", "mysql", "mongo", "redis"].includes(d),
-  );
-  const irisNeedsCompose = ["kafka", "nats", "rabbit", "redis"].includes(answers.bus);
-  const driverNeedsCompose = proteusNeedsCompose || irisNeedsCompose;
-
-  if (driverNeedsCompose) {
-    const scripts = pkg.scripts as Record<string, string>;
-    scripts["docker:up"] = "docker compose up -d";
-    scripts["docker:down"] = "docker compose down";
-  }
 
   const target = join(answers.projectDir, "package.json");
   writeFileSync(target, JSON.stringify(pkg, null, 2) + "\n", "utf-8");

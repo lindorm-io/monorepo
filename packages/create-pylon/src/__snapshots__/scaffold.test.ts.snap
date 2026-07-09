@@ -2326,6 +2326,16 @@ exports[`scaffold > writeDockerCompose > snapshot: iris redis 1`] = `
     restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  redis_data:
 "
 `;
 
@@ -2339,6 +2349,14 @@ exports[`scaffold > writeDockerCompose > snapshot: kafka + zookeeper 1`] = `
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 2181"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
   kafka:
     image: confluentinc/cp-kafka:latest
     restart: unless-stopped
@@ -2351,6 +2369,18 @@ exports[`scaffold > writeDockerCompose > snapshot: kafka + zookeeper 1`] = `
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  zookeeper_data:
+  kafka_data:
 "
 `;
 
@@ -2361,6 +2391,14 @@ exports[`scaffold > writeDockerCompose > snapshot: mongo + kafka 1`] = `
     restart: unless-stopped
     ports:
       - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 })'"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     restart: unless-stopped
@@ -2369,6 +2407,14 @@ exports[`scaffold > writeDockerCompose > snapshot: mongo + kafka 1`] = `
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    volumes:
+      - zookeeper_data:/var/lib/zookeeper/data
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 2181"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 10s
   kafka:
     image: confluentinc/cp-kafka:latest
     restart: unless-stopped
@@ -2381,6 +2427,19 @@ exports[`scaffold > writeDockerCompose > snapshot: mongo + kafka 1`] = `
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     ports:
       - "9092:9092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list"]
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 30s
+
+volumes:
+  mongo_data:
+  zookeeper_data:
+  kafka_data:
 "
 `;
 
@@ -2391,6 +2450,17 @@ exports[`scaffold > writeDockerCompose > snapshot: mongo 1`] = `
     restart: unless-stopped
     ports:
       - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "mongosh --quiet --eval 'db.adminCommand({ ping: 1 })'"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+
+volumes:
+  mongo_data:
 "
 `;
 
@@ -2404,6 +2474,17 @@ exports[`scaffold > writeDockerCompose > snapshot: mysql 1`] = `
       MYSQL_ROOT_PASSWORD: root
     ports:
       - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -proot --silent"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 15s
+
+volumes:
+  mysql_data:
 "
 `;
 
@@ -2428,12 +2509,32 @@ exports[`scaffold > writeDockerCompose > snapshot: postgres + rabbit 1`] = `
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
   rabbitmq:
     image: rabbitmq:4-management
     restart: unless-stopped
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+volumes:
+  postgres_data:
+  rabbit_data:
 "
 `;
 
@@ -2448,11 +2549,30 @@ exports[`scaffold > writeDockerCompose > snapshot: postgres + redis 1`] = `
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
   redis:
     image: redis:8
     restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  postgres_data:
+  redis_data:
 "
 `;
 
@@ -2467,6 +2587,17 @@ exports[`scaffold > writeDockerCompose > snapshot: postgres 1`] = `
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d app"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 10s
+
+volumes:
+  postgres_data:
 "
 `;
 
@@ -2478,6 +2609,17 @@ exports[`scaffold > writeDockerCompose > snapshot: rabbit 1`] = `
     ports:
       - "5672:5672"
       - "15672:15672"
+    volumes:
+      - rabbit_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+volumes:
+  rabbit_data:
 "
 `;
 
@@ -2488,6 +2630,16 @@ exports[`scaffold > writeDockerCompose > snapshot: redis dedup 1`] = `
     restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  redis_data:
 "
 `;
 
@@ -2498,6 +2650,16 @@ exports[`scaffold > writeDockerCompose > snapshot: redis kv 1`] = `
     restart: unless-stopped
     ports:
       - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  redis_data:
 "
 `;
 
@@ -2645,27 +2807,26 @@ export const subscribeSample = async (): Promise<void> => {
 "
 `;
 
-exports[`scaffold > writePackageJson > adds docker scripts when driver needs compose 1`] = `
-"{
-  "name": "test-app",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "engines": {
-    "node": ">=24.13.0"
+exports[`scaffold > writeLindormConfigFile > generates a lindorm.config.ts that uses defineConfig from @lindorm/scaffold 1`] = `
+"import { defineConfig } from "@lindorm/scaffold";
+
+export default defineConfig({
+  proteus: {
+    sourceDir: "./src/proteus",
+    entitiesDir: "./src/proteus/entities",
   },
-  "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "build": "tsc -p tsconfig.build.json",
-    "start": "node dist/index.js",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
-    "docker:up": "docker compose up -d",
-    "docker:down": "docker compose down"
+  iris: {
+    sourceDir: "./src/iris",
+    messagesDir: "./src/iris/messages",
   },
-  "dependencies": {},
-  "devDependencies": {}
-}
+  pylon: {
+    routesDir: "./src/routes",
+    handlersDir: "./src/handlers",
+    listenersDir: "./src/listeners",
+    workersDir: "./src/workers",
+    featureDir: "./src/features",
+  },
+});
 "
 `;
 
@@ -2684,6 +2845,28 @@ exports[`scaffold > writePackageJson > default answers produce minimal package.j
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
+"
+`;
+
+exports[`scaffold > writePackageJson > wraps dev/test in composed when the driver needs compose 1`] = `
+"{
+  "name": "test-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.13.0"
+  },
+  "scripts": {
+    "dev": "composed -k tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.build.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "test": "composed -p test-app-test vitest run --passWithNoTests"
   },
   "dependencies": {},
   "devDependencies": {}

@@ -8,6 +8,7 @@ import { readFileSync, realpathSync } from "fs";
 import { basename, dirname, resolve } from "path";
 import { fileURLToPath, pathToFileURL } from "url";
 import { Command } from "commander";
+import pc from "picocolors";
 import { initGit } from "./git.js";
 import { installDependencies, installDevDependencies } from "./install.js";
 import { runPrompts } from "./prompts.js";
@@ -34,10 +35,15 @@ const pkg = JSON.parse(readFileSync(resolve(here, "..", "package.json"), "utf-8"
 const printNextSteps = (answers: Answers): void => {
   process.stdout.write("\nDone. Next:\n");
   process.stdout.write(`  cd ${basename(answers.projectDir)}\n`);
+  process.stdout.write(`  npm run dev\n`);
   if (needsDockerCompose(answers)) {
-    process.stdout.write(`  npm run docker:up\n`);
+    // `dev` runs through `composed`, which starts the docker-compose services
+    // and stops them on exit — so Docker must be running, but nothing else.
+    process.stdout.write(
+      `  ${pc.dim("(starts docker-compose services via composed)")}\n`,
+    );
   }
-  process.stdout.write(`  npm run dev\n\n`);
+  process.stdout.write("\n");
 };
 
 const registerShutdownHandlers = (getProjectDir: () => string | null): void => {

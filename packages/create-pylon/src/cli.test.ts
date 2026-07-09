@@ -149,20 +149,20 @@ describe("cli run orchestration", () => {
     expect(mockedRunPrompts).toHaveBeenCalledWith({ positionalName: "my-app" });
   });
 
-  test("next steps include docker:up when a compose file is generated", async () => {
+  test("next steps note the composed-managed services when a compose file is generated", async () => {
     mockedRunPrompts.mockResolvedValue(baseAnswers({ db: "postgres" }));
     mockedNeedsDockerCompose.mockReturnValue(true);
 
     await run();
 
     const written = stdout.mock.calls.map(([s]) => String(s)).join("");
-    expect(written).toContain("npm run docker:up");
-    expect(written.indexOf("npm run docker:up")).toBeLessThan(
-      written.indexOf("npm run dev"),
-    );
+    // `dev` runs through composed, so there is no separate docker:up step.
+    expect(written).not.toContain("docker:up");
+    expect(written).toContain("npm run dev");
+    expect(written).toContain("composed");
   });
 
-  test("next steps omit docker:up when no compose file is generated", async () => {
+  test("next steps omit the compose note when no compose file is generated", async () => {
     mockedRunPrompts.mockResolvedValue(baseAnswers());
     mockedNeedsDockerCompose.mockReturnValue(false);
 
@@ -170,5 +170,7 @@ describe("cli run orchestration", () => {
 
     const written = stdout.mock.calls.map(([s]) => String(s)).join("");
     expect(written).not.toContain("docker:up");
+    expect(written).not.toContain("composed");
+    expect(written).toContain("npm run dev");
   });
 });

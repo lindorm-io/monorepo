@@ -18,6 +18,7 @@ import {
   writeEnvExampleFile,
   writeEnvFile,
   writeIrisSamples,
+  writeLindormConfigFile,
   writePackageJson,
   writePylonFile,
   writeTestCtxFile,
@@ -141,11 +142,34 @@ describe("scaffold", () => {
       expect(readFileSync(join(projectDir, "package.json"), "utf-8")).toMatchSnapshot();
     });
 
-    test("adds docker scripts when driver needs compose", () => {
+    test("wraps dev/test in composed when the driver needs compose", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({ projectDir, db: "postgres" });
       writePackageJson(answers);
       expect(readFileSync(join(projectDir, "package.json"), "utf-8")).toMatchSnapshot();
+    });
+
+    test("dev keeps volumes; test isolates + wipes them, when compose is needed", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writePackageJson(
+        baseAnswers({ projectDir, projectName: "@lindorm/tyr", db: "postgres" }),
+      );
+      const pkg = JSON.parse(readFileSync(join(projectDir, "package.json"), "utf-8"));
+      // Dev persists data across restarts.
+      expect(pkg.scripts.dev).toBe("composed -k tsx watch src/index.ts");
+      // Test runs under an unscoped, isolated project (scope stripped) with the
+      // default volume-wiping teardown — never touches the dev stack's volumes.
+      expect(pkg.scripts.test).toBe("composed -p tyr-test vitest run --passWithNoTests");
+      expect(pkg.scripts.test).not.toContain("@lindorm");
+    });
+
+    test("leaves dev/test unwrapped when no compose is needed", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writePackageJson(baseAnswers({ projectDir }));
+      const pkg = JSON.parse(readFileSync(join(projectDir, "package.json"), "utf-8"));
+      expect(pkg.scripts.dev).toBe("tsx watch src/index.ts");
+      expect(pkg.scripts.test).toBe("vitest run --passWithNoTests");
+      expect(pkg.scripts).not.toHaveProperty("docker:up");
     });
 
     test("preserves an npm scope in the package name (F9)", () => {
@@ -160,6 +184,17 @@ describe("scaffold", () => {
       writePackageJson(baseAnswers({ projectDir }));
       const pkg = JSON.parse(readFileSync(join(projectDir, "package.json"), "utf-8"));
       expect(pkg.scripts.test).toBe("vitest run --passWithNoTests");
+    });
+  });
+
+  describe("writeLindormConfigFile", () => {
+    test("generates a lindorm.config.ts that uses defineConfig from @lindorm/scaffold", () => {
+      mkdirSync(projectDir, { recursive: true });
+      writeLindormConfigFile(baseAnswers({ projectDir }));
+      const content = readFileSync(join(projectDir, "lindorm.config.ts"), "utf-8");
+      expect(content).toContain('import { defineConfig } from "@lindorm/scaffold"');
+      expect(content).toContain("export default defineConfig({");
+      expect(content).toMatchSnapshot();
     });
   });
 
@@ -278,6 +313,23 @@ describe("scaffold", () => {
         "@swc/core",
       ]);
       expect(buildDevDependencyList(baseAnswers())).toEqual([]);
+    });
+
+    test("adds @lindorm/composed dev dep only when the stack needs docker-compose", () => {
+      // sqlite is a file DB — no compose, so no composed.
+      expect(buildDevDependencyList(baseAnswers({ db: "sqlite" }))).not.toContain(
+        "@lindorm/composed",
+      );
+      // postgres needs compose — composed is added ahead of the swc transform deps.
+      expect(buildDevDependencyList(baseAnswers({ db: "postgres" }))).toEqual([
+        "@lindorm/composed",
+        "unplugin-swc",
+        "@swc/core",
+      ]);
+      // a bus alone (no db/kv) still needs compose, but no swc transform deps.
+      expect(buildDevDependencyList(baseAnswers({ bus: "rabbit" }))).toEqual([
+        "@lindorm/composed",
+      ]);
     });
 
     test("writeVitestConfig writes vitest.config.mjs to the project root", () => {
