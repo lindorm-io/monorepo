@@ -69,7 +69,6 @@ const promptDb = async (): Promise<DbDriver> =>
       { name: "mysql", value: "mysql" },
       { name: "mongo", value: "mongo" },
       { name: "sqlite", value: "sqlite" },
-      { name: "memory", value: "memory" },
       { name: "none", value: "none" },
     ],
   });
@@ -90,11 +89,11 @@ const promptIrisDriver = async (): Promise<IrisDriver> =>
     message: "Message bus driver (Iris):",
     default: "none",
     choices: [
-      { name: "none", value: "none" },
       { name: "kafka", value: "kafka" },
       { name: "nats", value: "nats" },
       { name: "rabbit", value: "rabbit" },
       { name: "redis", value: "redis" },
+      { name: "none", value: "none" },
     ],
   });
 
