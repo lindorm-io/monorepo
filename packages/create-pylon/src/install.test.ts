@@ -1,5 +1,14 @@
 import { EventEmitter } from "events";
-import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+  type Mock,
+  type MockInstance,
+} from "vitest";
 
 vi.mock("cross-spawn", async () => ({
   __esModule: true,
@@ -21,9 +30,28 @@ const emitError = (child: EventEmitter, error: Error): void => {
   setImmediate(() => child.emit("error", error));
 };
 
+let stdoutSpy: MockInstance;
+
+beforeEach(() => {
+  stdoutSpy = vi.spyOn(process.stdout, "write").mockReturnValue(true);
+});
+
+afterEach(() => stdoutSpy.mockRestore());
+
 describe("installDependencies", () => {
   beforeEach(() => {
     mockedSpawn.mockReset();
+  });
+
+  test("echoes the exact npm command before running", async () => {
+    const child = createChild();
+    mockedSpawn.mockReturnValue(child);
+    emitClose(child, 0);
+
+    await installDependencies("/tmp/project", ["foo", "bar"]);
+
+    const printed = stdoutSpy.mock.calls.map(([s]) => String(s)).join("");
+    expect(printed).toContain("npm install --save foo bar");
   });
 
   test("invokes npm install --save with packages", async () => {
@@ -83,5 +111,16 @@ describe("installDevDependencies", () => {
   test("no-op when packages empty", async () => {
     await installDevDependencies("/tmp/project", []);
     expect(mockedSpawn).not.toHaveBeenCalled();
+  });
+
+  test("echoes the exact npm command before running", async () => {
+    const child = createChild();
+    mockedSpawn.mockReturnValue(child);
+    emitClose(child, 0);
+
+    await installDevDependencies("/tmp/project", ["tsx", "typescript"]);
+
+    const printed = stdoutSpy.mock.calls.map(([s]) => String(s)).join("");
+    expect(printed).toContain("npm install --save-dev tsx typescript");
   });
 });

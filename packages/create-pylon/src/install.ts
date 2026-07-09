@@ -24,12 +24,21 @@ const runSpawn = (
     });
   });
 
+// Echo the exact npm command (dimmed) before running it, so the command is
+// visible and copy-pasteable — e.g. to re-run it by hand after tweaking the
+// package list (dropping an unpublished local dep, etc.).
+const echoCommand = (args: Array<string>): void => {
+  process.stdout.write(`\x1b[2mnpm ${args.join(" ")}\x1b[0m\n`);
+};
+
 export const installDependencies = async (
   projectDir: string,
   packages: Array<string>,
 ): Promise<void> => {
   if (packages.length === 0) return;
-  await runSpawn("npm", ["install", "--save", ...packages], { cwd: projectDir });
+  const args = ["install", "--save", ...packages];
+  echoCommand(args);
+  await runSpawn("npm", args, { cwd: projectDir });
 };
 
 export const installDevDependencies = async (
@@ -37,5 +46,7 @@ export const installDevDependencies = async (
   packages: Array<string>,
 ): Promise<void> => {
   if (packages.length === 0) return;
-  await runSpawn("npm", ["install", "--save-dev", ...packages], { cwd: projectDir });
+  const args = ["install", "--save-dev", ...packages];
+  echoCommand(args);
+  await runSpawn("npm", args, { cwd: projectDir });
 };

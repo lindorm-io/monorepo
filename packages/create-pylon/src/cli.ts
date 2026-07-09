@@ -86,6 +86,8 @@ export const run = async (positionalName?: string): Promise<void> => {
 
   process.stdout.write(`\nInstalling dependencies …\n`);
   await installDependencies(answers.projectDir, resolveRuntimeDependencies(answers));
+
+  process.stdout.write(`\nInstalling dev dependencies …\n`);
   await installDevDependencies(answers.projectDir, resolveDevDependencies(answers));
 
   process.stdout.write(`\nInitialising git …\n`);
