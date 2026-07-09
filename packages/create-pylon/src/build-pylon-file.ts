@@ -1,6 +1,84 @@
 import type { Answers } from "./types.js";
 
-const buildImports = (answers: Answers): Array<string> => {
+type SourceRole = "db" | "kv" | "bus";
+
+type SourceSlot = {
+  role: SourceRole;
+  driver: string;
+  path: string;
+  binding: string;
+};
+
+const ROLE_SUFFIX: Record<SourceRole, string> = {
+  db: "Db",
+  kv: "Kv",
+  bus: "Bus",
+};
+
+// One import binding per wired source. Each generated source file exports its
+// value under its driver name (`export const postgres = …`), so the import name
+// IS the driver name — unless two roles share a driver (the real case: kv=redis
+// alongside bus=redis, or db=none→primary=redis alongside bus=redis), in which
+// case we alias to `${driver}${Role}` to keep the imports unambiguous.
+const computeSlots = (answers: Answers): Array<SourceSlot> => {
+  const primaryExists = answers.db !== "none" || answers.kv !== "none";
+  const kvIsSecondary = answers.db !== "none" && answers.kv !== "none";
+  const primaryDriver = answers.db !== "none" ? answers.db : answers.kv;
+  const busExists = answers.bus !== "none";
+
+  const slots: Array<SourceSlot> = [];
+
+  if (primaryExists) {
+    slots.push({
+      role: "db",
+      driver: primaryDriver,
+      path: "../proteus/source.js",
+      binding: primaryDriver,
+    });
+  }
+
+  if (kvIsSecondary) {
+    slots.push({
+      role: "kv",
+      driver: answers.kv,
+      path: "../proteus/kv/source.js",
+      binding: answers.kv,
+    });
+  }
+
+  if (busExists) {
+    slots.push({
+      role: "bus",
+      driver: answers.bus,
+      path: "../iris/source.js",
+      binding: answers.bus,
+    });
+  }
+
+  const counts = slots.reduce<Record<string, number>>((acc, slot) => {
+    acc[slot.driver] = (acc[slot.driver] ?? 0) + 1;
+    return acc;
+  }, {});
+
+  for (const slot of slots) {
+    if (counts[slot.driver] > 1) {
+      slot.binding = `${slot.driver}${ROLE_SUFFIX[slot.role]}`;
+    }
+  }
+
+  return slots;
+};
+
+const slotByRole = (slots: Array<SourceSlot>, role: SourceRole): SourceSlot | null =>
+  slots.find((slot) => slot.role === role) ?? null;
+
+const importStatement = (slot: SourceSlot): string => {
+  const named =
+    slot.binding === slot.driver ? slot.driver : `${slot.driver} as ${slot.binding}`;
+  return `import { ${named} } from "${slot.path}";`;
+};
+
+const buildImports = (answers: Answers, slots: Array<SourceSlot>): Array<string> => {
   const lines: Array<string> = [`import { Pylon } from "@lindorm/pylon";`];
 
   if (answers.features.http || answers.features.socket || answers.workers.length > 0) {
@@ -13,19 +91,8 @@ const buildImports = (answers: Answers): Array<string> => {
     `import { config } from "./config.js";`,
   );
 
-  const primaryExists = answers.db !== "none" || answers.kv !== "none";
-  const kvIsSecondary = answers.db !== "none" && answers.kv !== "none";
-
-  if (primaryExists) {
-    lines.push(`import { source as proteusSource } from "../proteus/source.js";`);
-  }
-
-  if (kvIsSecondary) {
-    lines.push(`import { source as kvSource } from "../proteus/kv/source.js";`);
-  }
-
-  if (answers.bus !== "none") {
-    lines.push(`import { source as irisSource } from "../iris/source.js";`);
+  for (const slot of slots) {
+    lines.push(importStatement(slot));
   }
 
   return lines;
@@ -37,7 +104,7 @@ const buildWorkersPath = (answers: Answers): string | null => {
   return `  workers: join(import.meta.dirname, "..", "workers"),`;
 };
 
-const buildOptions = (answers: Answers): string => {
+const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
   const lines: Array<string> = [
     `  logger,`,
     `  amphora,`,
@@ -47,17 +114,21 @@ const buildOptions = (answers: Answers): string => {
     `  port: config.server.port,`,
   ];
 
+  const dbSlot = slotByRole(slots, "db");
+  const kvSlot = slotByRole(slots, "kv");
+  const busSlot = slotByRole(slots, "bus");
+
   const primaryExists = answers.db !== "none" || answers.kv !== "none";
   const kvIsSecondary = answers.db !== "none" && answers.kv !== "none";
 
   // When a kv store is picked, the kv source is either the distinct secondary
-  // (`kvSource`) or, when kv is the sole primary, the flat `proteusSource`.
-  const kvRef = kvIsSecondary ? "kvSource" : "proteusSource";
+  // (kvSlot) or, when kv is the sole primary, the flat primary (dbSlot).
+  const kvRef = kvIsSecondary ? kvSlot!.binding : (dbSlot?.binding ?? null);
 
   // session falls back to the db primary as its keyValue store when no kv
   // store was picked (preserves old behaviour).
   const sessionRef =
-    answers.kv !== "none" ? kvRef : answers.db !== "none" ? "proteusSource" : null;
+    answers.kv !== "none" ? kvRef : answers.db !== "none" ? dbSlot!.binding : null;
 
   if (answers.features.http) {
     lines.push(`  routes: join(import.meta.dirname, "..", "routes"),`);
@@ -72,16 +143,16 @@ const buildOptions = (answers: Answers): string => {
   }
 
   if (primaryExists) {
-    lines.push(`  db: proteusSource,`);
+    lines.push(`  db: ${dbSlot!.binding},`);
     lines.push(`  kryptos: { enabled: true },`);
   }
 
   if (kvIsSecondary) {
-    lines.push(`  kv: kvSource,`);
+    lines.push(`  kv: ${kvSlot!.binding},`);
   }
 
   if (answers.bus !== "none") {
-    lines.push(`  bus: irisSource,`);
+    lines.push(`  bus: ${busSlot!.binding},`);
     lines.push(`  queue: { enabled: true },`);
   }
 
@@ -145,14 +216,8 @@ const buildOptions = (answers: Answers): string => {
   }
 
   lines.push(`  setup: async () => {`);
-  if (primaryExists) {
-    lines.push(`    await proteusSource.connect();`);
-  }
-  if (kvIsSecondary) {
-    lines.push(`    await kvSource.connect();`);
-  }
-  if (answers.bus !== "none") {
-    lines.push(`    await irisSource.connect();`);
+  for (const slot of slots) {
+    lines.push(`    await ${slot.binding}.connect();`);
   }
   lines.push(`  },`);
 
@@ -164,8 +229,9 @@ const buildOptions = (answers: Answers): string => {
 };
 
 export const buildPylonFile = (answers: Answers): string => {
-  const imports = buildImports(answers);
-  const options = buildOptions(answers);
+  const slots = computeSlots(answers);
+  const imports = buildImports(answers, slots);
+  const options = buildOptions(answers, slots);
 
   const lines: Array<string> = [
     ...imports,

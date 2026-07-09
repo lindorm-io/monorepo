@@ -3,12 +3,12 @@ export type IrisSampleFiles = {
   subscriber: string;
 };
 
-const publisherContent = (): string =>
+const publisherContent = (busDriver: string): string =>
   [
-    `import { source as irisSource } from "../source.js";`,
+    `import { ${busDriver} } from "../source.js";`,
     `import { SampleMessage } from "../messages/SampleMessage.js";`,
     ``,
-    `const publisher = irisSource.publisher(SampleMessage);`,
+    `const publisher = ${busDriver}.publisher(SampleMessage);`,
     ``,
     `export const publishSample = async (`,
     `  payload: Partial<SampleMessage> = {},`,
@@ -18,13 +18,13 @@ const publisherContent = (): string =>
     ``,
   ].join("\n");
 
-const subscriberContent = (): string =>
+const subscriberContent = (busDriver: string): string =>
   [
     `import { logger } from "../../logger/index.js";`,
-    `import { source as irisSource } from "../source.js";`,
+    `import { ${busDriver} } from "../source.js";`,
     `import { SampleMessage } from "../messages/SampleMessage.js";`,
     ``,
-    `const bus = irisSource.messageBus(SampleMessage);`,
+    `const bus = ${busDriver}.messageBus(SampleMessage);`,
     ``,
     `export const subscribeSample = async (): Promise<void> => {`,
     `  await bus.subscribe({`,
@@ -38,7 +38,7 @@ const subscriberContent = (): string =>
     ``,
   ].join("\n");
 
-export const buildIrisSamples = (): IrisSampleFiles => ({
-  publisher: publisherContent(),
-  subscriber: subscriberContent(),
+export const buildIrisSamples = (busDriver: string): IrisSampleFiles => ({
+  publisher: publisherContent(busDriver),
+  subscriber: subscriberContent(busDriver),
 });

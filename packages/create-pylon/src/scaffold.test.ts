@@ -450,6 +450,18 @@ describe("scaffold", () => {
       ["db=none + kv=redis", { kv: "redis" }],
       ["db=memory + kv=memory", { db: "memory", kv: "memory" }],
       [
+        "db=postgres + kv=redis + bus=rabbit (plain, no collision)",
+        { db: "postgres", kv: "redis", bus: "rabbit" },
+      ],
+      [
+        "db=postgres + kv=redis + bus=redis (redis collision → redisKv/redisBus)",
+        { db: "postgres", kv: "redis", bus: "redis" },
+      ],
+      [
+        "db=none + kv=redis + bus=redis (redis collision → redisDb/redisBus)",
+        { kv: "redis", bus: "redis" },
+      ],
+      [
         "db=postgres + kv=redis + auth + rateLimit + all workers",
         {
           db: "postgres",
@@ -788,12 +800,8 @@ describe("scaffold", () => {
         expect(existsSync(join(projectDir, "src/proteus/kv/source.ts"))).toBe(true);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toContain(
-          `import { source as proteusSource } from "../proteus/source.js";`,
-        );
-        expect(pylon).toContain(
-          `import { source as kvSource } from "../proteus/kv/source.js";`,
-        );
+        expect(pylon).toContain(`import { postgres } from "../proteus/source.js";`);
+        expect(pylon).toContain(`import { redis } from "../proteus/kv/source.js";`);
       });
 
       test("kv-only writes a single flat primary — no kv subdir", async () => {
@@ -804,10 +812,8 @@ describe("scaffold", () => {
         expect(existsSync(join(projectDir, "src/proteus/kv"))).toBe(false);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toContain(
-          `import { source as proteusSource } from "../proteus/source.js";`,
-        );
-        expect(pylon).not.toContain(`kvSource`);
+        expect(pylon).toContain(`import { redis } from "../proteus/source.js";`);
+        expect(pylon).not.toContain(`../proteus/kv/source.js`);
       });
 
       test("session binds to the kv secondary when both db and kv are selected", async () => {
@@ -820,7 +826,7 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/session: \{[^}]*kv: kvSource/);
+        expect(pylon).toMatch(/session: \{[^}]*kv: redis/);
       });
 
       test("wires the kv secondary as the top-level kv option", async () => {
@@ -833,8 +839,8 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/^ {2}db: proteusSource,$/m);
-        expect(pylon).toMatch(/^ {2}kv: kvSource,$/m);
+        expect(pylon).toMatch(/^ {2}db: postgres,$/m);
+        expect(pylon).toMatch(/^ {2}kv: redis,$/m);
       });
 
       test("session falls back to the flat proteus source when only db is selected", async () => {
@@ -846,8 +852,8 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/session: \{[^}]*kv: proteusSource/);
-        expect(pylon).not.toContain(`kvSource`);
+        expect(pylon).toMatch(/session: \{[^}]*kv: postgres/);
+        expect(pylon).not.toContain(`../proteus/kv/source.js`);
       });
 
       test("session binds to the flat primary when only kv is selected", async () => {
@@ -859,8 +865,8 @@ describe("scaffold", () => {
         await scaffold(answers, FIXED_KEK);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toMatch(/session: \{[^}]*kv: proteusSource/);
-        expect(pylon).not.toContain(`kvSource`);
+        expect(pylon).toMatch(/session: \{[^}]*kv: redis/);
+        expect(pylon).not.toContain(`../proteus/kv/source.js`);
       });
     });
   });

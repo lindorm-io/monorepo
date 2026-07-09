@@ -397,17 +397,20 @@ export const writeDockerCompose = (answers: Answers): void => {
 export const writeWorkerFiles = (answers: Answers): void => {
   if (answers.workers.length === 0) return;
 
+  // Workers wire the durable primary source (db when present, else kv).
+  const dbDriver = answers.db !== "none" ? answers.db : answers.kv;
+
   for (const key of answers.workers) {
     const target = join(answers.projectDir, "src/workers", `${key}.ts`);
     ensureDir(target);
-    writeFileSync(target, buildWorkerFile(key), "utf-8");
+    writeFileSync(target, buildWorkerFile(key, dbDriver), "utf-8");
   }
 };
 
 export const writeIrisSamples = (answers: Answers): void => {
   if (answers.bus === "none") return;
 
-  const files = buildIrisSamples();
+  const files = buildIrisSamples(answers.bus);
 
   const publisher = join(answers.projectDir, "src/iris/publishers/sample-publisher.ts");
   ensureDir(publisher);

@@ -905,9 +905,9 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
-import { source as kvSource } from "../proteus/kv/source.js";
-import { source as irisSource } from "../iris/source.js";
+import { postgres } from "../proteus/source.js";
+import { redis } from "../proteus/kv/source.js";
+import { rabbit } from "../iris/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -922,10 +922,10 @@ export const pylon = new Pylon({
     listeners: join(import.meta.dirname, "..", "listeners"),
   },
   rooms: { presence: true },
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
-  kv: kvSource,
-  bus: irisSource,
+  kv: redis,
+  bus: rabbit,
   queue: { enabled: true },
   webhook: { enabled: true },
   audit: {
@@ -936,7 +936,7 @@ export const pylon = new Pylon({
   },
   session: {
     enabled: true,
-    kv: kvSource,
+    kv: redis,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -958,7 +958,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    kv: kvSource,
+    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -966,9 +966,9 @@ export const pylon = new Pylon({
   },
   workers: join(import.meta.dirname, "..", "workers"),
   setup: async () => {
-    await proteusSource.connect();
-    await kvSource.connect();
-    await irisSource.connect();
+    await postgres.connect();
+    await redis.connect();
+    await rabbit.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -1133,8 +1133,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
-import { source as kvSource } from "../proteus/kv/source.js";
+import { postgres } from "../proteus/source.js";
+import { redis } from "../proteus/kv/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -1144,20 +1144,20 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
-  kv: kvSource,
+  kv: redis,
   rateLimit: {
     enabled: true,
-    kv: kvSource,
+    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
     // TODO: tune strategy/window/max for your traffic
   },
   setup: async () => {
-    await proteusSource.connect();
-    await kvSource.connect();
+    await postgres.connect();
+    await redis.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -2514,10 +2514,10 @@ PYLON__KEK=kryptos:test-fixed-kek-placeholder
 `;
 
 exports[`scaffold > writeIrisSamples > snapshot: kafka publisher + subscriber > publisher 1`] = `
-"import { source as irisSource } from "../source.js";
+"import { kafka } from "../source.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const publisher = irisSource.publisher(SampleMessage);
+const publisher = kafka.publisher(SampleMessage);
 
 export const publishSample = async (
   payload: Partial<SampleMessage> = {},
@@ -2529,10 +2529,10 @@ export const publishSample = async (
 
 exports[`scaffold > writeIrisSamples > snapshot: kafka publisher + subscriber > subscriber 1`] = `
 "import { logger } from "../../logger/index.js";
-import { source as irisSource } from "../source.js";
+import { kafka } from "../source.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const bus = irisSource.messageBus(SampleMessage);
+const bus = kafka.messageBus(SampleMessage);
 
 export const subscribeSample = async (): Promise<void> => {
   await bus.subscribe({
@@ -2547,10 +2547,10 @@ export const subscribeSample = async (): Promise<void> => {
 `;
 
 exports[`scaffold > writeIrisSamples > snapshot: nats publisher + subscriber > publisher 1`] = `
-"import { source as irisSource } from "../source.js";
+"import { nats } from "../source.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const publisher = irisSource.publisher(SampleMessage);
+const publisher = nats.publisher(SampleMessage);
 
 export const publishSample = async (
   payload: Partial<SampleMessage> = {},
@@ -2562,10 +2562,10 @@ export const publishSample = async (
 
 exports[`scaffold > writeIrisSamples > snapshot: nats publisher + subscriber > subscriber 1`] = `
 "import { logger } from "../../logger/index.js";
-import { source as irisSource } from "../source.js";
+import { nats } from "../source.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const bus = irisSource.messageBus(SampleMessage);
+const bus = nats.messageBus(SampleMessage);
 
 export const subscribeSample = async (): Promise<void> => {
   await bus.subscribe({
@@ -2580,10 +2580,10 @@ export const subscribeSample = async (): Promise<void> => {
 `;
 
 exports[`scaffold > writeIrisSamples > snapshot: rabbit publisher + subscriber > publisher 1`] = `
-"import { source as irisSource } from "../source.js";
+"import { rabbit } from "../source.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const publisher = irisSource.publisher(SampleMessage);
+const publisher = rabbit.publisher(SampleMessage);
 
 export const publishSample = async (
   payload: Partial<SampleMessage> = {},
@@ -2595,10 +2595,10 @@ export const publishSample = async (
 
 exports[`scaffold > writeIrisSamples > snapshot: rabbit publisher + subscriber > subscriber 1`] = `
 "import { logger } from "../../logger/index.js";
-import { source as irisSource } from "../source.js";
+import { rabbit } from "../source.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const bus = irisSource.messageBus(SampleMessage);
+const bus = rabbit.messageBus(SampleMessage);
 
 export const subscribeSample = async (): Promise<void> => {
   await bus.subscribe({
@@ -2613,10 +2613,10 @@ export const subscribeSample = async (): Promise<void> => {
 `;
 
 exports[`scaffold > writeIrisSamples > snapshot: redis publisher + subscriber > publisher 1`] = `
-"import { source as irisSource } from "../source.js";
+"import { redis } from "../source.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const publisher = irisSource.publisher(SampleMessage);
+const publisher = redis.publisher(SampleMessage);
 
 export const publishSample = async (
   payload: Partial<SampleMessage> = {},
@@ -2628,10 +2628,10 @@ export const publishSample = async (
 
 exports[`scaffold > writeIrisSamples > snapshot: redis publisher + subscriber > subscriber 1`] = `
 "import { logger } from "../../logger/index.js";
-import { source as irisSource } from "../source.js";
+import { redis } from "../source.js";
 import { SampleMessage } from "../messages/SampleMessage.js";
 
-const bus = irisSource.messageBus(SampleMessage);
+const bus = redis.messageBus(SampleMessage);
 
 export const subscribeSample = async (): Promise<void> => {
   await bus.subscribe({
@@ -2697,9 +2697,9 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
-import { source as kvSource } from "../proteus/kv/source.js";
-import { source as irisSource } from "../iris/source.js";
+import { postgres } from "../proteus/source.js";
+import { redis } from "../proteus/kv/source.js";
+import { kafka } from "../iris/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2714,10 +2714,10 @@ export const pylon = new Pylon({
     listeners: join(import.meta.dirname, "..", "listeners"),
   },
   rooms: { presence: true },
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
-  kv: kvSource,
-  bus: irisSource,
+  kv: redis,
+  bus: kafka,
   queue: { enabled: true },
   webhook: { enabled: true },
   audit: {
@@ -2728,9 +2728,9 @@ export const pylon = new Pylon({
   },
   workers: join(import.meta.dirname, "..", "workers"),
   setup: async () => {
-    await proteusSource.connect();
-    await kvSource.connect();
-    await irisSource.connect();
+    await postgres.connect();
+    await redis.connect();
+    await kafka.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -2790,8 +2790,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
-import { source as kvSource } from "../proteus/kv/source.js";
+import { memory as memoryDb } from "../proteus/source.js";
+import { memory as memoryKv } from "../proteus/kv/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2801,12 +2801,44 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: memoryDb,
   kryptos: { enabled: true },
-  kv: kvSource,
+  kv: memoryKv,
   setup: async () => {
-    await proteusSource.connect();
-    await kvSource.connect();
+    await memoryDb.connect();
+    await memoryKv.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: db=none + kv=redis + bus=redis (redis collision → redisDb/redisBus) 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger/index.js";
+import { amphora } from "./amphora.js";
+import { config } from "./config.js";
+import { redis as redisDb } from "../proteus/source.js";
+import { redis as redisBus } from "../iris/source.js";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
+  environment: config.nodeEnv,
+  port: config.server.port,
+  routes: join(import.meta.dirname, "..", "routes"),
+  db: redisDb,
+  kryptos: { enabled: true },
+  bus: redisBus,
+  queue: { enabled: true },
+  setup: async () => {
+    await redisDb.connect();
+    await redisBus.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -2821,7 +2853,7 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { redis } from "../proteus/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2831,10 +2863,10 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: redis,
   kryptos: { enabled: true },
   setup: async () => {
-    await proteusSource.connect();
+    await redis.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -2849,8 +2881,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
-import { source as kvSource } from "../proteus/kv/source.js";
+import { postgres } from "../proteus/source.js";
+import { redis } from "../proteus/kv/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2860,12 +2892,12 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
-  kv: kvSource,
+  kv: redis,
   session: {
     enabled: true,
-    kv: kvSource,
+    kv: redis,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -2887,7 +2919,7 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    kv: kvSource,
+    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
@@ -2895,8 +2927,78 @@ export const pylon = new Pylon({
   },
   workers: join(import.meta.dirname, "..", "workers"),
   setup: async () => {
-    await proteusSource.connect();
-    await kvSource.connect();
+    await postgres.connect();
+    await redis.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: db=postgres + kv=redis + bus=rabbit (plain, no collision) 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger/index.js";
+import { amphora } from "./amphora.js";
+import { config } from "./config.js";
+import { postgres } from "../proteus/source.js";
+import { redis } from "../proteus/kv/source.js";
+import { rabbit } from "../iris/source.js";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
+  environment: config.nodeEnv,
+  port: config.server.port,
+  routes: join(import.meta.dirname, "..", "routes"),
+  db: postgres,
+  kryptos: { enabled: true },
+  kv: redis,
+  bus: rabbit,
+  queue: { enabled: true },
+  setup: async () => {
+    await postgres.connect();
+    await redis.connect();
+    await rabbit.connect();
+  },
+  teardown: async () => {
+    // pylon handles proteus/iris disconnect automatically
+  },
+});
+"
+`;
+
+exports[`scaffold > writePylonFile > snapshot: db=postgres + kv=redis + bus=redis (redis collision → redisKv/redisBus) 1`] = `
+"import { Pylon } from "@lindorm/pylon";
+import { join } from "path";
+import { logger } from "../logger/index.js";
+import { amphora } from "./amphora.js";
+import { config } from "./config.js";
+import { postgres } from "../proteus/source.js";
+import { redis as redisKv } from "../proteus/kv/source.js";
+import { redis as redisBus } from "../iris/source.js";
+
+export const pylon = new Pylon({
+  logger,
+  amphora,
+  name: config.npm.package.name,
+  version: config.npm.package.version,
+  environment: config.nodeEnv,
+  port: config.server.port,
+  routes: join(import.meta.dirname, "..", "routes"),
+  db: postgres,
+  kryptos: { enabled: true },
+  kv: redisKv,
+  bus: redisBus,
+  queue: { enabled: true },
+  setup: async () => {
+    await postgres.connect();
+    await redisKv.connect();
+    await redisBus.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -2911,8 +3013,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
-import { source as irisSource } from "../iris/source.js";
+import { postgres } from "../proteus/source.js";
+import { rabbit } from "../iris/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2922,9 +3024,9 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
-  bus: irisSource,
+  bus: rabbit,
   queue: { enabled: true },
   webhook: { enabled: true },
   audit: {
@@ -2934,8 +3036,8 @@ export const pylon = new Pylon({
     // entities: [],
   },
   setup: async () => {
-    await proteusSource.connect();
-    await irisSource.connect();
+    await postgres.connect();
+    await rabbit.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -2950,8 +3052,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
-import { source as irisSource } from "../iris/source.js";
+import { postgres } from "../proteus/source.js";
+import { rabbit } from "../iris/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2961,13 +3063,13 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
-  bus: irisSource,
+  bus: rabbit,
   queue: { enabled: true },
   setup: async () => {
-    await proteusSource.connect();
-    await irisSource.connect();
+    await postgres.connect();
+    await rabbit.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -2982,7 +3084,7 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { postgres } from "../proteus/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -2992,10 +3094,10 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
   setup: async () => {
-    await proteusSource.connect();
+    await postgres.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -3010,7 +3112,7 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as irisSource } from "../iris/source.js";
+import { rabbit } from "../iris/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3020,10 +3122,10 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  bus: irisSource,
+  bus: rabbit,
   queue: { enabled: true },
   setup: async () => {
-    await irisSource.connect();
+    await rabbit.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -3038,7 +3140,7 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { redis } from "../proteus/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3048,10 +3150,10 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: redis,
   kryptos: { enabled: true },
   setup: async () => {
-    await proteusSource.connect();
+    await redis.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -3119,8 +3221,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
-import { source as kvSource } from "../proteus/kv/source.js";
+import { postgres } from "../proteus/source.js";
+import { redis } from "../proteus/kv/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3130,20 +3232,20 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
-  kv: kvSource,
+  kv: redis,
   rateLimit: {
     enabled: true,
-    kv: kvSource,
+    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
     // TODO: tune strategy/window/max for your traffic
   },
   setup: async () => {
-    await proteusSource.connect();
-    await kvSource.connect();
+    await postgres.connect();
+    await redis.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -3158,7 +3260,7 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { redis } from "../proteus/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3168,18 +3270,18 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: redis,
   kryptos: { enabled: true },
   rateLimit: {
     enabled: true,
-    kv: proteusSource,
+    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
     // TODO: tune strategy/window/max for your traffic
   },
   setup: async () => {
-    await proteusSource.connect();
+    await redis.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -3194,8 +3296,8 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
-import { source as kvSource } from "../proteus/kv/source.js";
+import { postgres } from "../proteus/source.js";
+import { redis } from "../proteus/kv/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3205,12 +3307,12 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
-  kv: kvSource,
+  kv: redis,
   session: {
     enabled: true,
-    kv: kvSource,
+    kv: redis,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -3232,15 +3334,15 @@ export const pylon = new Pylon({
   },
   rateLimit: {
     enabled: true,
-    kv: kvSource,
+    kv: redis,
     strategy: "fixed",
     window: "1m",
     max: 60,
     // TODO: tune strategy/window/max for your traffic
   },
   setup: async () => {
-    await proteusSource.connect();
-    await kvSource.connect();
+    await postgres.connect();
+    await redis.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -3288,7 +3390,7 @@ import { join } from "path";
 import { logger } from "../logger/index.js";
 import { amphora } from "./amphora.js";
 import { config } from "./config.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { postgres } from "../proteus/source.js";
 
 export const pylon = new Pylon({
   logger,
@@ -3298,11 +3400,11 @@ export const pylon = new Pylon({
   environment: config.nodeEnv,
   port: config.server.port,
   routes: join(import.meta.dirname, "..", "routes"),
-  db: proteusSource,
+  db: postgres,
   kryptos: { enabled: true },
   session: {
     enabled: true,
-    kv: proteusSource,
+    kv: postgres,
     name: "sid",
     encrypted: true,
     httpOnly: true,
@@ -3311,7 +3413,7 @@ export const pylon = new Pylon({
     expiry: "7d",
   },
   setup: async () => {
-    await proteusSource.connect();
+    await postgres.connect();
   },
   teardown: async () => {
     // pylon handles proteus/iris disconnect automatically
@@ -3412,19 +3514,19 @@ exports[`scaffold > writeWorkerFiles > snapshot: all three > amphora-entity-sync
 "import { createAmphoraEntityWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { postgres } from "../proteus/source.js";
 
-export default createAmphoraEntityWorker({ amphora, logger, db: proteusSource });
+export default createAmphoraEntityWorker({ amphora, logger, db: postgres });
 "
 `;
 
 exports[`scaffold > writeWorkerFiles > snapshot: all three > expiry-cleanup content 1`] = `
 "import { createExpiryCleanupWorker } from "@lindorm/pylon";
 import { logger } from "../logger/index.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { postgres } from "../proteus/source.js";
 
 // TODO: add your entities with expiry fields to this array
-export default createExpiryCleanupWorker({ logger, db: proteusSource, targets: [] });
+export default createExpiryCleanupWorker({ logger, db: postgres, targets: [] });
 "
 `;
 
@@ -3432,9 +3534,9 @@ exports[`scaffold > writeWorkerFiles > snapshot: all three > kryptos-rotation co
 "import { createKryptosRotationWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { postgres } from "../proteus/source.js";
 
-export default createKryptosRotationWorker({ amphora, logger, db: proteusSource });
+export default createKryptosRotationWorker({ amphora, logger, db: postgres });
 "
 `;
 
@@ -3442,19 +3544,19 @@ exports[`scaffold > writeWorkerFiles > snapshot: amphora-entity-sync only > amph
 "import { createAmphoraEntityWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { postgres } from "../proteus/source.js";
 
-export default createAmphoraEntityWorker({ amphora, logger, db: proteusSource });
+export default createAmphoraEntityWorker({ amphora, logger, db: postgres });
 "
 `;
 
 exports[`scaffold > writeWorkerFiles > snapshot: expiry-cleanup only > expiry-cleanup content 1`] = `
 "import { createExpiryCleanupWorker } from "@lindorm/pylon";
 import { logger } from "../logger/index.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { postgres } from "../proteus/source.js";
 
 // TODO: add your entities with expiry fields to this array
-export default createExpiryCleanupWorker({ logger, db: proteusSource, targets: [] });
+export default createExpiryCleanupWorker({ logger, db: postgres, targets: [] });
 "
 `;
 
@@ -3462,8 +3564,8 @@ exports[`scaffold > writeWorkerFiles > snapshot: kryptos-rotation only > kryptos
 "import { createKryptosRotationWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
-import { source as proteusSource } from "../proteus/source.js";
+import { postgres } from "../proteus/source.js";
 
-export default createKryptosRotationWorker({ amphora, logger, db: proteusSource });
+export default createKryptosRotationWorker({ amphora, logger, db: postgres });
 "
 `;
