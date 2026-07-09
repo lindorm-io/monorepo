@@ -23,10 +23,15 @@ export const listStaticDirectory = async (
     try {
       const stats = await stat(join(directory, dirent.name));
 
+      const isDirectory = stats.isDirectory();
+
       entries.push({
         name: dirent.name,
-        type: stats.isDirectory() ? "directory" : "file",
-        size: stats.size,
+        type: isDirectory ? "directory" : "file",
+        // A directory's `stats.size` is the inode size, which is
+        // filesystem-dependent (e.g. 4096 on ext4, ~96 on APFS) and
+        // meaningless in a listing — report 0 so the response is deterministic.
+        size: isDirectory ? 0 : stats.size,
         lastModified: new Date(stats.mtime),
       });
     } catch {

@@ -9,7 +9,7 @@ exports[`listStaticDirectory > lists entries sorted by name with type and size, 
   },
   {
     "name": "nested",
-    "size": 96,
+    "size": 0,
     "type": "directory",
   },
   {

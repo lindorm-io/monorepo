@@ -43,7 +43,7 @@ describe("useStatic — directory listing", () => {
       entries.map((e: any) => ({ name: e.name, type: e.type, size: e.size })),
     ).toEqual([
       { name: "image.jpg", type: "file", size: 22 },
-      { name: "nested", type: "directory", size: 96 },
+      { name: "nested", type: "directory", size: 0 },
       { name: "sample.txt", type: "file", size: 100 },
       { name: "sample.txt.br", type: "file", size: 19 },
       { name: "sample.txt.gz", type: "file", size: 33 },
