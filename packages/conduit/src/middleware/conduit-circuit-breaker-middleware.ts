@@ -33,7 +33,10 @@ export const createConduitCircuitBreakerMiddleware = (
           logger.warn("Circuit breaker opened", { origin, failures: event.failures });
         });
         breaker.on("half-open", (event) => {
-          logger.debug("Circuit breaker half-open", { origin, failures: event.failures });
+          logger.verbose("Circuit breaker half-open", {
+            origin,
+            failures: event.failures,
+          });
         });
         breaker.on("closed", () => {
           logger.info("Circuit breaker closed", { origin });
