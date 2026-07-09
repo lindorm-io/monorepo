@@ -11,9 +11,14 @@ program
   .passThroughOptions()
   .allowUnknownOption()
   .option("-f, --file <path>", "compose file path")
+  .option(
+    "-p, --project <name>",
+    "docker compose project name (isolates volumes/containers)",
+  )
   .option("-v, --verbose", "verbose output", false)
   .option("--build", "pass --build to docker compose up", false)
   .option("--no-teardown", "skip docker compose down after command")
+  .option("-k, --keep-volumes", "keep named volumes on teardown (skip --volumes)", false)
   .option(
     "-w, --wait-timeout <seconds>",
     "timeout for --wait in seconds",
@@ -32,9 +37,11 @@ program
 
     const exitCode = await composed({
       file: options.file ?? "",
+      project: options.project ?? "",
       verbose: options.verbose,
       build: options.build,
       teardown,
+      keepVolumes: options.keepVolumes,
       waitTimeout: options.waitTimeout,
       command,
       commandArgs: args,

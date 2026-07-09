@@ -4,13 +4,14 @@ import type { ComposedOptions } from "../../types/index.js";
 type ComposeUpOptions = Pick<
   ComposedOptions,
   "file" | "verbose" | "build" | "waitTimeout"
->;
+> & { project?: ComposedOptions["project"] };
 
 export const composeUp = (options: ComposeUpOptions): Promise<void> =>
   new Promise((resolve, reject) => {
     const args = ["compose"];
 
     if (options.file) args.push("-f", options.file);
+    if (options.project) args.push("-p", options.project);
 
     args.push("up", "-d", "--wait", "--wait-timeout", String(options.waitTimeout));
 

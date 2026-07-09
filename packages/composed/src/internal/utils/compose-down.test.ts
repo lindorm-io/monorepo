@@ -58,6 +58,40 @@ describe("composeDown", () => {
     await promise;
   });
 
+  test("should append --volumes by default (clean slate)", async () => {
+    const child = createMockChild();
+    mockSpawn.mockReturnValue(child as any);
+
+    const promise = composeDown("/path/compose.yml", false);
+
+    const args = mockSpawn.mock.calls[0]![1] as Array<string>;
+    expect(args).toContain("--volumes");
+
+    child.emit("close", 0);
+    await promise;
+  });
+
+  test("should omit --volumes when keepVolumes is set", async () => {
+    const child = createMockChild();
+    mockSpawn.mockReturnValue(child as any);
+
+    const promise = composeDown("/path/compose.yml", false, true);
+
+    const args = mockSpawn.mock.calls[0]![1] as Array<string>;
+    expect(args).not.toContain("--volumes");
+    // down still tears containers down and clears orphans — only volumes survive.
+    expect(args).toEqual([
+      "compose",
+      "-f",
+      "/path/compose.yml",
+      "down",
+      "--remove-orphans",
+    ]);
+
+    child.emit("close", 0);
+    await promise;
+  });
+
   test("should resolve even on non-zero exit code", async () => {
     const child = createMockChild();
     mockSpawn.mockReturnValue(child as any);

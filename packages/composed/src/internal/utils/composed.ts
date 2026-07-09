@@ -20,7 +20,8 @@ export const composed = async (options: ComposedOptions): Promise<number> => {
     process.stderr.write(
       `Failed to start services: ${err instanceof Error ? err.message : String(err)}\n`,
     );
-    if (options.teardown) await composeDown(file, options.verbose);
+    if (options.teardown)
+      await composeDown(file, options.verbose, options.keepVolumes, options.project);
     return 1;
   }
 
@@ -36,7 +37,7 @@ export const composed = async (options: ComposedOptions): Promise<number> => {
     if (options.teardown) {
       if (quiet) process.stdout.write("Tearing down services...\n");
       const downStart = Date.now();
-      await composeDown(file, options.verbose);
+      await composeDown(file, options.verbose, options.keepVolumes, options.project);
       if (quiet) {
         process.stdout.write(`Teardown complete (${elapsedSeconds(downStart)}s)\n`);
       }

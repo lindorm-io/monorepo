@@ -29,9 +29,11 @@ const mockSpawnCommand = spawnCommand as MockedFunction<typeof spawnCommand>;
 
 const defaultOptions: ComposedOptions = {
   file: "docker-compose.yml",
+  project: "",
   verbose: false,
   build: false,
   teardown: true,
+  keepVolumes: false,
   waitTimeout: 60,
   command: "jest",
   commandArgs: ["--runInBand"],
@@ -89,7 +91,37 @@ describe("composed", () => {
   test("should call composeDown after spawnCommand", async () => {
     await composed(defaultOptions);
 
-    expect(mockComposeDown).toHaveBeenCalledWith("/resolved/docker-compose.yml", false);
+    expect(mockComposeDown).toHaveBeenCalledWith(
+      "/resolved/docker-compose.yml",
+      false,
+      false,
+      "",
+    );
+  });
+
+  test("should forward keepVolumes to composeDown", async () => {
+    await composed({ ...defaultOptions, keepVolumes: true });
+
+    expect(mockComposeDown).toHaveBeenCalledWith(
+      "/resolved/docker-compose.yml",
+      false,
+      true,
+      "",
+    );
+  });
+
+  test("should forward project to composeUp and composeDown", async () => {
+    await composed({ ...defaultOptions, project: "tyr-test" });
+
+    expect(mockComposeUp).toHaveBeenCalledWith(
+      expect.objectContaining({ project: "tyr-test" }),
+    );
+    expect(mockComposeDown).toHaveBeenCalledWith(
+      "/resolved/docker-compose.yml",
+      false,
+      false,
+      "tyr-test",
+    );
   });
 
   test("should return exit code from spawnCommand", async () => {
@@ -144,7 +176,12 @@ describe("composed", () => {
   test("should pass verbose flag to composeDown", async () => {
     await composed({ ...defaultOptions, verbose: true });
 
-    expect(mockComposeDown).toHaveBeenCalledWith("/resolved/docker-compose.yml", true);
+    expect(mockComposeDown).toHaveBeenCalledWith(
+      "/resolved/docker-compose.yml",
+      true,
+      false,
+      "",
+    );
   });
 
   test("should print status lines in quiet mode", async () => {

@@ -56,6 +56,45 @@ describe("composeUp", () => {
     await promise;
   });
 
+  test("should include -p when project is set", async () => {
+    const child = createMockChild();
+    mockSpawn.mockReturnValue(child as any);
+
+    const promise = composeUp({
+      file: "/path/compose.yml",
+      project: "tyr-test",
+      verbose: false,
+      build: false,
+      waitTimeout: 60,
+    });
+
+    const args = mockSpawn.mock.calls[0]![1] as Array<string>;
+    expect(args.slice(0, 4)).toEqual(["compose", "-f", "/path/compose.yml", "-p"]);
+    expect(args).toContain("tyr-test");
+
+    child.emit("close", 0);
+    await promise;
+  });
+
+  test("should omit -p when project is empty", async () => {
+    const child = createMockChild();
+    mockSpawn.mockReturnValue(child as any);
+
+    const promise = composeUp({
+      file: "/path/compose.yml",
+      project: "",
+      verbose: false,
+      build: false,
+      waitTimeout: 60,
+    });
+
+    const args = mockSpawn.mock.calls[0]![1] as Array<string>;
+    expect(args).not.toContain("-p");
+
+    child.emit("close", 0);
+    await promise;
+  });
+
   test("should use custom wait timeout", async () => {
     const child = createMockChild();
     mockSpawn.mockReturnValue(child as any);
