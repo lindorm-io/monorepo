@@ -6,7 +6,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource, MemoryCacheAdapter } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -26,7 +26,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource, RedisCacheAdapter } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -44,7 +44,7 @@ exports[`generateSource > emits TODO comment for postgres when loggerImport is n
 "import { join } from "path";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger, // TODO: import or create a Logger instance
   entities: [join(import.meta.dirname, "entities")],
@@ -60,7 +60,7 @@ exports[`generateSource > emits TODO comment for postgres when loggerImport is o
 "import { join } from "path";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger, // TODO: import or create a Logger instance
   entities: [join(import.meta.dirname, "entities")],
@@ -79,7 +79,7 @@ import { amphora } from "../../pylon/amphora.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   amphora: amphora,
@@ -100,7 +100,7 @@ import { amphora } from "../../pylon/amphora.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   amphora: amphora,
@@ -116,7 +116,7 @@ exports[`generateSource > emits logger import for memory driver 1`] = `
 import { logger } from "../logger";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const memory = new ProteusSource({
   driver: "memory",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -129,7 +129,7 @@ exports[`generateSource > emits logger import for mongo driver 1`] = `
 import { logger } from "../logger";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const mongo = new ProteusSource({
   driver: "mongo",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -145,7 +145,7 @@ exports[`generateSource > emits logger import for mysql driver 1`] = `
 import { logger } from "../logger";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const mysql = new ProteusSource({
   driver: "mysql",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -162,7 +162,7 @@ exports[`generateSource > emits logger import for redis driver 1`] = `
 import { logger } from "../logger";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const redis = new ProteusSource({
   driver: "redis",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -177,7 +177,7 @@ exports[`generateSource > emits logger import for sqlite driver 1`] = `
 import { logger } from "../logger";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const sqlite = new ProteusSource({
   driver: "sqlite",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -192,7 +192,7 @@ exports[`generateSource > emits logger import when loggerImport is provided 1`] 
 import { logger } from "../logger";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -210,7 +210,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   naming: "snake",
@@ -227,7 +227,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -244,7 +244,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const mongo = new ProteusSource({
   driver: "mongo",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -261,7 +261,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const sqlite = new ProteusSource({
   driver: "sqlite",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -279,7 +279,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -295,7 +295,7 @@ exports[`generateSource > falls back to hardcoded redis connection when configIm
 import { logger } from "../logger";
 import { ProteusSource, RedisCacheAdapter } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -317,7 +317,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource, RedisCacheAdapter } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const mysql = new ProteusSource({
   driver: "mysql",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -337,7 +337,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const redis = new ProteusSource({
   driver: "redis",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -352,7 +352,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const sqlite = new ProteusSource({
   driver: "sqlite",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -366,7 +366,7 @@ exports[`generateSource > omits migrations for non-sql drivers when loggerImport
 "import { join } from "path";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const redis = new ProteusSource({
   driver: "redis",
   logger: logger, // TODO: import or create a Logger instance
   entities: [join(import.meta.dirname, "entities")],
@@ -382,7 +382,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const sqlite = new ProteusSource({
   driver: "sqlite",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -398,7 +398,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],
@@ -414,7 +414,7 @@ import { logger } from "../../logger/index.js";
 import { config } from "../../pylon/config.js";
 import { ProteusSource, RedisCacheAdapter } from "@lindorm/proteus";
 
-export const source = new ProteusSource({
+export const mongo = new ProteusSource({
   driver: "mongo",
   logger: logger,
   entities: [join(import.meta.dirname, "entities")],

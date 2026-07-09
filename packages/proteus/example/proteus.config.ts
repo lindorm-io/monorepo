@@ -4,7 +4,7 @@ import { User } from "./entities/User.js";
 import { Post } from "./entities/Post.js";
 import { Tag } from "./entities/Tag.js";
 
-export const source = new ProteusSource({
+export const postgres = new ProteusSource({
   driver: "postgres",
   url: "postgres://root:example@localhost:5432/default",
   entities: [User, Post, Tag],

@@ -176,7 +176,7 @@ export const generateSource = (options: GenerateSourceOptions): string => {
 
   lines.push(`import { ${proteusNamedImports.join(", ")} } from "@lindorm/proteus";`);
   lines.push(``);
-  lines.push(`export const source = new ProteusSource({`);
+  lines.push(`export const ${driver} = new ProteusSource({`);
   lines.push(`  driver: "${driver}",`);
 
   if (loggerImport) {
