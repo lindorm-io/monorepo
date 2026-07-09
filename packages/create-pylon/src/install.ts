@@ -1,4 +1,5 @@
 import spawn from "cross-spawn";
+import pc from "picocolors";
 import type { StdioOptions } from "child_process";
 
 type SpawnOptions = {
@@ -28,7 +29,7 @@ const runSpawn = (
 // visible and copy-pasteable — e.g. to re-run it by hand after tweaking the
 // package list (dropping an unpublished local dep, etc.).
 const echoCommand = (args: Array<string>): void => {
-  process.stdout.write(`\x1b[2mnpm ${args.join(" ")}\x1b[0m\n`);
+  process.stdout.write(pc.dim(`npm ${args.join(" ")}`) + "\n");
 };
 
 export const installDependencies = async (
