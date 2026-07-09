@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.2.6...@lindorm/worker@0.7.0) (2026-07-09)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **lint:** resolve eslint warnings and errors ([2727420](https://github.com/lindorm-io/monorepo/commit/2727420afd268e6cb8271cd235144fb636a02715))
+- mock tsx/cjs/api in remaining tests and stabilise error snapshots ([678e210](https://github.com/lindorm-io/monorepo/commit/678e2101c6f6b00be632b49f2de90a8b061f9c9e))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+- widen @lindorm/\* peer ranges to unbounded >= ([9655dec](https://github.com/lindorm-io/monorepo/commit/9655dec5ce8d66b4691faa98352980bef11a466e))
+
+### Features
+
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+- **test:** alias @lindorm/\* to src so Scanner.import() works in tests ([ff35b8d](https://github.com/lindorm-io/monorepo/commit/ff35b8db89ab2208788650602071a3e1aafa54d4))
+- **worker:** add cron scheduling alongside interval ([a348aea](https://github.com/lindorm-io/monorepo/commit/a348aeadddf5fea57b36df2f9798e40897611c8a))
+- **worker:** add graceful shutdown, destroy, callback timeout, health, validation ([c45884f](https://github.com/lindorm-io/monorepo/commit/c45884f7a3653646eda07e5aee0df362ec7c2a7d))
+- **worker:** add titles and details to thrown errors ([abed5b0](https://github.com/lindorm-io/monorepo/commit/abed5b0adc68074d21af342dfd839487301102a2))
+- **worker:** namespace and enrich thrown errors ([a97668a](https://github.com/lindorm-io/monorepo/commit/a97668ac459da820a9e4f7edb673e936313a7d18))
+- **worker:** scanner supports LindormWorker instance exports ([fbbf9b0](https://github.com/lindorm-io/monorepo/commit/fbbf9b04fb5e2027beadb18eb95656dc590a6791))
+
 ## [0.6.3](https://github.com/lindorm-io/monorepo/compare/@lindorm/worker@0.6.2...@lindorm/worker@0.6.3) (2026-07-04)
 
 **Note:** Version bump only for package @lindorm/worker

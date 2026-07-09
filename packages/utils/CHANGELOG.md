@@ -3,6 +3,26 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.5.4...@lindorm/utils@0.10.0) (2026-07-09)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **lint:** remove unnecessary type assertions ([3c6fe80](https://github.com/lindorm-io/monorepo/commit/3c6fe800fbbc6ce1c1c2e3260054d16163124e12))
+- **lint:** restore type assertions needed for build ([b85bbeb](https://github.com/lindorm-io/monorepo/commit/b85bbebedd27c13f16c7b57116f74b0adc264f6a))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+- **utils:** use @lindorm/is isRegExp instead of Node util/types ([0d53b79](https://github.com/lindorm-io/monorepo/commit/0d53b79a12a75de5aaf8a395dcad79ab75ed7741))
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+- **utils:** add combineSignals and isAbortReason helpers ([6a3a255](https://github.com/lindorm-io/monorepo/commit/6a3a25551fac45d7c4330971633105efdc4e6846))
+- **utils:** add groupBy and keyBy ([1cc5936](https://github.com/lindorm-io/monorepo/commit/1cc59367f4021df756f3298da2dcc951b0ec381a))
+- **utils:** add lazyFactory utility for deferred property initialization ([266f174](https://github.com/lindorm-io/monorepo/commit/266f174a4ecccf3ceba4415f3728390e73fb7edd))
+- **utils:** add lindormSymbol urn builder for Symbol.for keys ([1ae4969](https://github.com/lindorm-io/monorepo/commit/1ae496902c30b3118142f878f6d88d047b11c65e))
+- **utils:** add parseUserAgent and x-user-agent-\* header (de)serialisers ([15446de](https://github.com/lindorm-io/monorepo/commit/15446de000108bbeebd6dc35d595395c4e5a5a04))
+- **utils:** improve Predicated matching and uniq ([d1067d8](https://github.com/lindorm-io/monorepo/commit/d1067d892dba3c879fbc95249ce9ebe4746014f5))
+
 # [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/utils@0.8.3...@lindorm/utils@0.9.0) (2026-07-02)
 
 ### Bug Fixes

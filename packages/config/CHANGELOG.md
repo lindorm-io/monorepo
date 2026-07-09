@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.2.4...@lindorm/config@0.5.0) (2026-07-09)
+
+### Bug Fixes
+
+- **config:** export NpmInformation and a named Configuration return type ([957f470](https://github.com/lindorm-io/monorepo/commit/957f4702aa15cc1d849a6fc3f9488bfd04fe2d19))
+- **config:** schema-directed env coercion, prefault support, safe booleans ([ee22471](https://github.com/lindorm-io/monorepo/commit/ee224717a60b8d0be68d75147b7df9bcea39f942))
+- **config:** silence dotenvx MISSING_ENV_FILE noise for optional .env ([64da180](https://github.com/lindorm-io/monorepo/commit/64da180ec0607221a6f79b5529a2de0dc15f263b))
+- declare zod as a peerDependency on packages with zod-typed public APIs ([790bc68](https://github.com/lindorm-io/monorepo/commit/790bc689aa8e9450f74c3e880cbe3825a0d680ae))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- **config:** resolve npm.package via explicit scope, not cwd ([68abc1b](https://github.com/lindorm-io/monorepo/commit/68abc1bf50c477d9421d0e64fa8c85533f9b090d))
+- **config:** schema-driven env binding with \_\_ separator ([bf761a0](https://github.com/lindorm-io/monorepo/commit/bf761a06f7c645220ad15288c963bc185d800832))
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+
 ## [0.4.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/config@0.4.4...@lindorm/config@0.4.5) (2026-07-04)
 
 ### Bug Fixes

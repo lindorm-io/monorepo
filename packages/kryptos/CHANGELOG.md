@@ -3,6 +3,54 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.11.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.4.5...@lindorm/kryptos@0.11.0) (2026-07-09)
+
+### Bug Fixes
+
+- **aes:** make CBC HMAC auth tag compliant with RFC 7518 ([04eafc4](https://github.com/lindorm-io/monorepo/commit/04eafc491347c24b20fb295361a88902823e993a))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **kryptos:** add thumbprint to mock kryptos ([0d7b296](https://github.com/lindorm-io/monorepo/commit/0d7b2968e8379f1156365e75017d7b54c82a7d4c))
+- **kryptos:** decode SAN IP bytes to human-readable strings per RFC 5952 ([700834b](https://github.com/lindorm-io/monorepo/commit/700834b3d862612156cf1e00052c500cbbf7f960))
+- **kryptos:** enforce byte-equal sigAlg between outer and inner TBS per RFC 5280 §4.1.1.2 ([850485f](https://github.com/lindorm-io/monorepo/commit/850485f210a163c94c662281ce4a86a9c9a6972b))
+- **kryptos:** identify Kryptos by global-registry brand, not instanceof ([bbce0ae](https://github.com/lindorm-io/monorepo/commit/bbce0ae412b4feee3ce36e3074583f0c2de41dc9))
+- **kryptos:** reject non-URL issuer in SAN derivation fallback ([5dfc8cc](https://github.com/lindorm-io/monorepo/commit/5dfc8cc2e8ebf0068915786a5ff3f2a41ba58bbb))
+- **kryptos:** reject pathLengthConstraint > 255 in basicConstraintsExt ([0bfd315](https://github.com/lindorm-io/monorepo/commit/0bfd315e319957ceedaf38e45016920c2af5d139))
+- **kryptos:** reject zero-duration certificates in generateX509Certificate ([572bd15](https://github.com/lindorm-io/monorepo/commit/572bd154c21d06887345dc5d9e16b6576524596e))
+- **kryptos:** rewrite RSA modulus detection and add encryption to autoGenerateConfig ([e94ba6b](https://github.com/lindorm-io/monorepo/commit/e94ba6be6a3f29bbf62a938eb56143af5aa87e0d))
+- **kryptos:** support RSA public keys in x509PublicKeyMatches ([4134b62](https://github.com/lindorm-io/monorepo/commit/4134b620ee257be2f61e59a7e56b8ef87b1081df)), closes [PKCS#1](https://github.com/PKCS/issues/1)
+- **kryptos:** update CBC-HS key size test expectations ([2380c65](https://github.com/lindorm-io/monorepo/commit/2380c6548811a225656e9c60b2c9e0ec96d0c793))
+- **kryptos:** use @lindorm/date for validity defaults and inherit CA window for ca-signed children ([c123718](https://github.com/lindorm-io/monorepo/commit/c123718312ef4db8f9edeae2479c4859422a3e5c))
+- **kryptos:** widen createMockKryptos overrides to Partial<MockKryptos> ([ceb8d62](https://github.com/lindorm-io/monorepo/commit/ceb8d62642a35be941a8e69b3d2dd5ac82adbaef))
+- **lint:** resolve eslint warnings and errors ([2727420](https://github.com/lindorm-io/monorepo/commit/2727420afd268e6cb8271cd235144fb636a02715))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+- resolve bugs and weaknesses in kryptos ([a078855](https://github.com/lindorm-io/monorepo/commit/a078855cdf367c84c0187416f8ed2b9d626a21a4))
+
+### Features
+
+- **kryptos:** add AKP key type with ML-DSA-44/65/87 signatures ([c085ea0](https://github.com/lindorm-io/monorepo/commit/c085ea0001e189cccb797b5faedbaa77b44d1fdd))
+- **kryptos:** add certificateChain/certificateThumbprint and drop x5t/updatedAt ([0b3df2f](https://github.com/lindorm-io/monorepo/commit/0b3df2ff6f8458c672c2b25cc2e01b53dc61ed92)), closes [x5t#S256](https://github.com/x5t/issues/S256) [x5t#S256](https://github.com/x5t/issues/S256)
+- **kryptos:** add minimal ASN.1 DER encoder + decoder primitives ([9b50604](https://github.com/lindorm-io/monorepo/commit/9b50604108faa067cffc3f3cd7eecf2ec01bfbdb))
+- **kryptos:** add RFC 7638 JWK thumbprint getter ([a8846b9](https://github.com/lindorm-io/monorepo/commit/a8846b9594557ef5d40034c15a85f0fc6d44c128))
+- **kryptos:** add self-signed and ca-signed cert generation to KryptosKit.generate ([f190f8d](https://github.com/lindorm-io/monorepo/commit/f190f8d1787519cd64ca2ec937df374227b84ffe))
+- **kryptos:** add static mock key fixtures for all key types ([a53769e](https://github.com/lindorm-io/monorepo/commit/a53769e1278ab30e64db36454e63941da3f814c2))
+- **kryptos:** add titles and details to thrown errors ([7a804e0](https://github.com/lindorm-io/monorepo/commit/7a804e05b4f1f0ac093b5ab9d94e917fe97c9742))
+- **kryptos:** add X.509 certificate builder using DIY ASN.1 encoder ([de3bec6](https://github.com/lindorm-io/monorepo/commit/de3bec600b2da1c2e7d96432521faab1cead7f79))
+- **kryptos:** add X.509 certificate chain support with pragmatic chain validation ([e3ff720](https://github.com/lindorm-io/monorepo/commit/e3ff720ca307e2ada36c072ec8fca1535a705ec5))
+- **kryptos:** add X.509 parser and replace Node X509Certificate usage internally ([f6f5577](https://github.com/lindorm-io/monorepo/commit/f6f5577e4dc88fbdf6db6c486c80f6bebdbae326))
+- **kryptos:** default ECDH-ES key-wrap variants to OKP X-curves ([be79e67](https://github.com/lindorm-io/monorepo/commit/be79e673810a4a4671b98d820a9b88c886b8fd06))
+- **kryptos:** enable X.509 certificates for AKP (ML-DSA) keys ([b9e0221](https://github.com/lindorm-io/monorepo/commit/b9e022164e50c5cd05f3f36d7d6efc3ee36c7a42))
+- **kryptos:** enforce RFC 9964 AKP JWK seed and public-key sizes ([7939e42](https://github.com/lindorm-io/monorepo/commit/7939e422c24111e1842251bd1a9d2ed2fe5785cd))
+- **kryptos:** expose KryptosKit.getTypeForAlgorithm ([00bb7b0](https://github.com/lindorm-io/monorepo/commit/00bb7b0ee81e80debc0582e3fe7804104f0bc732))
+- **kryptos:** finish enriching thrown errors with codes ([da5d486](https://github.com/lindorm-io/monorepo/commit/da5d486f17996fc733eb6c5069ab1bfabfd9f279))
+- **kryptos:** generate key ids as namespaced lindorm ids ([a98172f](https://github.com/lindorm-io/monorepo/commit/a98172f6a69f29e6803edfea6aa7f2bf34de5d6c))
+- **kryptos:** generate X.509 certs from the CLI, scriptable via flags ([6658b5b](https://github.com/lindorm-io/monorepo/commit/6658b5b920f48b1f77bee0265af93e5482a6adfa))
+- **kryptos:** namespace errors, begin throw enrichment ([d2a0b68](https://github.com/lindorm-io/monorepo/commit/d2a0b688ceeb688d05966ae5a97ca04e36d598f8))
+- **kryptos:** round-trip certificateChain through toJSON/toDB/fromJWK ([0cf75e3](https://github.com/lindorm-io/monorepo/commit/0cf75e302791969e2e9589e99e2ca9f252bb8a61))
+- **kryptos:** safe user-supplied oct secrets (validate raw + deriveFrom HKDF) ([5f3dcb1](https://github.com/lindorm-io/monorepo/commit/5f3dcb1b51e76220dd68b070cdfa9203be16c728))
+- **kryptos:** size AES-CCM dir keys ([df6c635](https://github.com/lindorm-io/monorepo/commit/df6c635106d0bc4b1c96db597935fe40a9b467f4))
+- **kryptos:** support dns/email/ip subject alternative names in cert generation ([4186bea](https://github.com/lindorm-io/monorepo/commit/4186bea3cc55c0d57cdd01b1c2e2ac913c2ce84b))
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+
 ## [0.10.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/kryptos@0.10.0...@lindorm/kryptos@0.10.1) (2026-07-02)
 
 ### Bug Fixes

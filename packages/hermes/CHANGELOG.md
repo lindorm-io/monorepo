@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.3.4...@lindorm/hermes@0.10.0) (2026-07-09)
+
+### Bug Fixes
+
+- add missing MySQL service, fix MongoDB replica set and auth config ([70da3d6](https://github.com/lindorm-io/monorepo/commit/70da3d6ca50f4df6e5efc8f0df331c7289362234))
+- declare zod as a peerDependency on packages with zod-typed public APIs ([790bc68](https://github.com/lindorm-io/monorepo/commit/790bc689aa8e9450f74c3e880cbe3825a0d680ae))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **hermes:** add explicit return types to inline arrow functions ([c3098ab](https://github.com/lindorm-io/monorepo/commit/c3098ab905a645d102d522334d043c8aae15ecfd))
+- **hermes:** correct invalid "jsonb" entity field types ([fad7030](https://github.com/lindorm-io/monorepo/commit/fad703044eb290215a1703443cdb46fff7bcc045))
+- **hermes:** correct invalid "jsonb" message field types ([8056d97](https://github.com/lindorm-io/monorepo/commit/8056d97b41123a1485ba36787c8b8a7a7c774d97))
+- **hermes:** typecheck cleanup ([27b10c7](https://github.com/lindorm-io/monorepo/commit/27b10c71e401241c0b4711092b85ea8057598bcd))
+- **hermes:** update decryptAttributes for AES v1.0 format and fix integration test race condition ([8b4d99d](https://github.com/lindorm-io/monorepo/commit/8b4d99dd7dfae34dec91e09f751649bb46a9092b))
+- **hermes:** widen @lindorm/\* peer ranges to current workspace versions ([d3c0731](https://github.com/lindorm-io/monorepo/commit/d3c0731a508909102dbb2138cfdc7584b6a9982b))
+- mock tsx/cjs/api in remaining tests and stabilise error snapshots ([678e210](https://github.com/lindorm-io/monorepo/commit/678e2101c6f6b00be632b49f2de90a8b061f9c9e))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+- **proteus,iris,hermes:** simplify logger in init templates ([79df6d8](https://github.com/lindorm-io/monorepo/commit/79df6d889f945c3731a83974d2ba96e6565cd26b))
+- resolve all eslint warnings across entity, message, hermes, and proteus ([587e717](https://github.com/lindorm-io/monorepo/commit/587e7171d2d628ca3d731236f5bb711c2b14afbf))
+- widen @lindorm/\* peer ranges to unbounded >= ([9655dec](https://github.com/lindorm-io/monorepo/commit/9655dec5ce8d66b4691faa98352980bef11a466e))
+
+### Features
+
+- **hermes:** add CLI with init and generate commands ([a1c5f96](https://github.com/lindorm-io/monorepo/commit/a1c5f964768cac48d2275c58f7a414699f6d7402))
+- **hermes:** add titles and details to errors; widen fixed-constructor classes ([fb1675e](https://github.com/lindorm-io/monorepo/commit/fb1675e7fefa792244f0f045acb926fa596130d7))
+- **hermes:** implement v2 decorator-based CQRS/ES architecture ([8a55475](https://github.com/lindorm-io/monorepo/commit/8a554758122fb2029ec00743727e1e5acfc3c0d7))
+- **hermes:** mark EventRecord and ChecksumRecord as @AppendOnly ([9a42bba](https://github.com/lindorm-io/monorepo/commit/9a42bba1ad956af40fe518da6f5292ddb171af18))
+- **hermes:** migrate ids to namespaced lindorm ids ([e326caa](https://github.com/lindorm-io/monorepo/commit/e326caa5e395b94848ebd44702d644fb60fa6591))
+- **hermes:** migrate tests from jest to vitest ([d19f386](https://github.com/lindorm-io/monorepo/commit/d19f386cd8e4c7ae32963517f3c27605bc11f966))
+- **hermes:** namespace and enrich thrown errors ([08eda24](https://github.com/lindorm-io/monorepo/commit/08eda24732c4993a5cf76b30e7f137c3614635ed))
+
 ## [0.9.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/hermes@0.9.1...@lindorm/hermes@0.9.2) (2026-07-04)
 
 **Note:** Version bump only for package @lindorm/hermes

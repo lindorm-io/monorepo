@@ -3,6 +3,41 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.3.3...@lindorm/conduit@0.10.0) (2026-07-09)
+
+### Bug Fixes
+
+- **conduit:** add origin to RequestContext fixtures and fix breaker middleware test args ([d319108](https://github.com/lindorm-io/monorepo/commit/d31910835aaf8244a2ed9b657b9a1d665f8ecf5a))
+- **conduit:** add sensitive header redaction and OIDC token endpoint validation ([4c3778a](https://github.com/lindorm-io/monorepo/commit/4c3778a2f0b2a6428de8c174880b7d191cb1063b))
+- **conduit:** force axios http adapter so nock can intercept in tests ([5103631](https://github.com/lindorm-io/monorepo/commit/5103631a97ec0cea495d45cf790a9840ca8820e2))
+- **conduit:** make base64/buffer paths browser-safe ([235a28a](https://github.com/lindorm-io/monorepo/commit/235a28aeb2beca8e6cf9df389bfd95fd2c4ae281))
+- **conduit:** normalize request method to uppercase and tighten ConfigContext ([a14c7b2](https://github.com/lindorm-io/monorepo/commit/a14c7b2ac7b138b563cd04707178a54e426de032))
+- **conduit:** resolve circuit breaker and retry reliability issues ([9997e8f](https://github.com/lindorm-io/monorepo/commit/9997e8fe981d884ce0457652eb5238041a206486))
+- **conduit:** resolve critical bugs in schema validation, token caching, and request composition ([6a425f1](https://github.com/lindorm-io/monorepo/commit/6a425f19df9fc5ec46092210c343fb2e31f49d27))
+- **conduit:** resolve OAuth2 token stampede and data composition bugs ([8816da9](https://github.com/lindorm-io/monorepo/commit/8816da941b65b71775083b2365bda175a132aa32))
+- **conduit:** surface invalid schema as 500 instead of swallowing it ([7720373](https://github.com/lindorm-io/monorepo/commit/7720373a779a6bed92c73b6e87dbe89c8be8ec39))
+- declare zod as a peerDependency on packages with zod-typed public APIs ([790bc68](https://github.com/lindorm-io/monorepo/commit/790bc689aa8e9450f74c3e880cbe3825a0d680ae))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+- widen @lindorm/\* peer ranges to unbounded >= ([9655dec](https://github.com/lindorm-io/monorepo/commit/9655dec5ce8d66b4691faa98352980bef11a466e))
+
+### Features
+
+- **conduit:** add conduitUserAgentMiddleware for x-user-agent-\* headers ([13319bd](https://github.com/lindorm-io/monorepo/commit/13319bd19ea3104418dd774cc54ae6eed39f0374))
+- **conduit:** add createMockConduit mock factory ([e0d9477](https://github.com/lindorm-io/monorepo/commit/e0d9477849131586982e82b1bec291f1063c6c94))
+- **conduit:** add DPoP auth middleware and Web Crypto signer ([7a7f66e](https://github.com/lindorm-io/monorepo/commit/7a7f66ed28fc155ca12803a69748929c28927318))
+- **conduit:** add fetch engine parity with abort, streaming, progress, and network retry ([dfa0b5f](https://github.com/lindorm-io/monorepo/commit/dfa0b5fd8a080cdad5923be3dcb08d84ae327860))
+- **conduit:** add rate limiting, response caching, request deduplication, and retry hook ([fcda644](https://github.com/lindorm-io/monorepo/commit/fcda644132a4ef36139942642b1ada08279f452f))
+- **conduit:** add titles and details to thrown errors ([08dd781](https://github.com/lindorm-io/monorepo/commit/08dd78192417d5c6472f2a6ef7debeaa05b5abbd))
+- **conduit:** driver-based response cache with pluggable drivers ([f296301](https://github.com/lindorm-io/monorepo/commit/f296301b967f3fe6afaeabc52462ae134b5c2f76))
+- **conduit:** expose axios adapter as conduit option ([9135573](https://github.com/lindorm-io/monorepo/commit/91355734430d0e4401612de19349fe9fa79ee84c))
+- **conduit:** forward error type urn during reconstruction ([a75357f](https://github.com/lindorm-io/monorepo/commit/a75357f610e5a83caf64a15d424d1e3778f5a3c1))
+- **conduit:** infer cache provenance into response.cached ([37d0831](https://github.com/lindorm-io/monorepo/commit/37d08315908290a94ddf86fe34589c939afc1be3))
+- **conduit:** namespace and enrich thrown errors ([612f33f](https://github.com/lindorm-io/monorepo/commit/612f33fd8637c21dac27bd3adad1af81b4b53f90))
+- **conduit:** namespaced lindorm ids for request context ([38af9e9](https://github.com/lindorm-io/monorepo/commit/38af9e9aeb14d67ec1a0403dc8883ec815000f08))
+- **conduit:** support DPoP-bound tokens in client credentials flow ([6ef00db](https://github.com/lindorm-io/monorepo/commit/6ef00db3f4a74e2773c05d60df8146fda1fcbcfd))
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+
 # [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/conduit@0.8.0...@lindorm/conduit@0.9.0) (2026-07-02)
 
 ### Bug Fixes

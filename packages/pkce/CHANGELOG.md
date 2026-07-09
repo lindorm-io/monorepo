@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/pkce@0.1.8...@lindorm/pkce@0.4.0) (2026-07-09)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+- **pkce:** add titles and details to thrown errors ([9f16fe3](https://github.com/lindorm-io/monorepo/commit/9f16fe300e92411fe815971fdf3f5137bc32dea9))
+- **pkce:** namespace and enrich thrown errors ([980c1b5](https://github.com/lindorm-io/monorepo/commit/980c1b5de9611e6095bc0024d8f04905cecb89cc))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/pkce@0.3.1...@lindorm/pkce@0.3.2) (2026-07-02)
 
 ### Bug Fixes

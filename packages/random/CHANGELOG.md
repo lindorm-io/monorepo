@@ -3,6 +3,17 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/random@0.2.0...@lindorm/random@0.5.0) (2026-07-09)
+
+### Bug Fixes
+
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+- **random:** validate namespace is alphanumeric; export RandomIdOptions/RandomIdLength ([16cd52d](https://github.com/lindorm-io/monorepo/commit/16cd52d27dba8d5446e3ce5162acad884f0f38f5))
+
 # [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/random@0.3.2...@lindorm/random@0.4.0) (2026-06-19)
 
 ### Features

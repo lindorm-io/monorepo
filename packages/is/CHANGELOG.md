@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.1.11...@lindorm/is@0.3.0) (2026-07-09)
+
+### Bug Fixes
+
+- add bigint to is ([115ca45](https://github.com/lindorm-io/monorepo/commit/115ca455359cbfc48d188e44115517d0e64a4f79))
+- **is:** rename Function alias to avoid shadowing the global constructor ([1b81a24](https://github.com/lindorm-io/monorepo/commit/1b81a24009556fae269e55216b642f77ed2d6960))
+- **is:** use type-only imports from @lindorm/types ([d8e42b6](https://github.com/lindorm-io/monorepo/commit/d8e42b65a730869f299c136d77c422ad062ec26c))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- **is:** add browser-safe isRegExp and drop Node Buffer usage ([0f85947](https://github.com/lindorm-io/monorepo/commit/0f85947484e5b49c8b0ca58580e3ec7b0666dcd7))
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+
 ## [0.2.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/is@0.2.3...@lindorm/is@0.2.4) (2026-07-02)
 
 **Note:** Version bump only for package @lindorm/is

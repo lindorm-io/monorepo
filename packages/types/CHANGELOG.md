@@ -3,6 +3,29 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.10.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.3.3...@lindorm/types@0.10.0) (2026-07-09)
+
+### Bug Fixes
+
+- **aes:** make CBC HMAC auth tag compliant with RFC 7518 ([04eafc4](https://github.com/lindorm-io/monorepo/commit/04eafc491347c24b20fb295361a88902823e993a))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+- **types:** rename OpenIdClaims.birthDate to birthdate ([d16b876](https://github.com/lindorm-io/monorepo/commit/d16b876e6c759e0d3243734380ed802ca8937a7d))
+- **types:** use `| (string & {})` to preserve autocomplete on open unions ([2f31d01](https://github.com/lindorm-io/monorepo/commit/2f31d0179db57bfa4b8b4d4dc1c70b1cfe3c2abb))
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+- **types:** add $similar trigram predicate operator ([97116cf](https://github.com/lindorm-io/monorepo/commit/97116cf2079e419ac3361173947d1041a8f2de82))
+- **types:** add AbortReason union and WithSignal<T> mixin ([4542f05](https://github.com/lindorm-io/monorepo/commit/4542f051d9d2b34a4dee80e3fe56a09119c9fc5e))
+- **types:** add AES-CCM content-encryption algorithms ([535ba4a](https://github.com/lindorm-io/monorepo/commit/535ba4aabc1e4e51aeef35ffa193eeefc5dd6b2b))
+- **types:** add client-context types and x-user-agent-\* header map ([0589f03](https://github.com/lindorm-io/monorepo/commit/0589f03b1421bfa161eeff4fe2079bc34a119a70))
+- **types:** add DpopSigner contract ([e63c3b2](https://github.com/lindorm-io/monorepo/commit/e63c3b2ab1b591d0b2dcaf44debdac138440be91))
+- **types:** add PredicateBase type ([c34e225](https://github.com/lindorm-io/monorepo/commit/c34e22565367cdee303ebe207f396dc35ae61630))
+- **types:** add RFC 6749 error fields to OpenIdAuthorizeResponseQuery ([a51f635](https://github.com/lindorm-io/monorepo/commit/a51f635fab277eb6a83d120fd44d994319bef31f))
+- **types:** add RFC 8707 resource parameter to OpenIdAuthorizeRequestQuery ([6782fca](https://github.com/lindorm-io/monorepo/commit/6782fca598a6f6e788a674474bc4d4705359d1f9))
+- **types:** add RFC 9396 authorization details to OpenID types ([260c246](https://github.com/lindorm-io/monorepo/commit/260c24683f21e078056e913fd4a5ce9812bc837b))
+- **types:** widen extensible OpenId unions while preserving autocomplete ([cf58359](https://github.com/lindorm-io/monorepo/commit/cf5835976c50e507dd20cd5c3caf97733a337098))
+
 # [0.9.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/types@0.8.0...@lindorm/types@0.9.0) (2026-07-02)
 
 ### Features

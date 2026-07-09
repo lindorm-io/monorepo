@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/url@0.1.11...@lindorm/url@0.3.0) (2026-07-09)
+
+### Bug Fixes
+
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+
 ## [0.2.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/url@0.2.3...@lindorm/url@0.2.4) (2026-07-02)
 
 **Note:** Version bump only for package @lindorm/url

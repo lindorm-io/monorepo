@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.8.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.5.3...@lindorm/json-kit@0.8.0) (2026-07-09)
+
+### Bug Fixes
+
+- add bigint to json-kit ([0a41cd8](https://github.com/lindorm-io/monorepo/commit/0a41cd88aef1c076b8fc3dc6545e89972c9e0a89))
+- add deserialisation to json-kit ([3de4808](https://github.com/lindorm-io/monorepo/commit/3de48080c4dce65507fb0f0328474b2871a23783))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- **json-kit:** add split/join for separated data + type metadata ([5447802](https://github.com/lindorm-io/monorepo/commit/544780269e6d6dcb0e3b8a769edbae3d731b8cf2))
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+
 # [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/json-kit@0.6.3...@lindorm/json-kit@0.7.0) (2026-07-02)
 
 ### Bug Fixes

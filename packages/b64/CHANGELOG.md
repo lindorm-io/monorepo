@@ -3,6 +3,19 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.1.6...@lindorm/b64@0.3.0) (2026-07-09)
+
+### Bug Fixes
+
+- **b64:** guard toBuffer with a clear browser error ([0b57e5b](https://github.com/lindorm-io/monorepo/commit/0b57e5b1b33cc50050d7be4c31a39901eeca64f0))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- **b64:** switch internals to Uint8Array.fromBase64/toBase64 and add toBytes ([2e5918c](https://github.com/lindorm-io/monorepo/commit/2e5918c77748be77a31dd64790de299f5bf2edd5))
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+
 ## [0.2.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/b64@0.2.1...@lindorm/b64@0.2.2) (2026-07-02)
 
 ### Bug Fixes

@@ -3,6 +3,35 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.2.6...@lindorm/amphora@0.7.0) (2026-07-09)
+
+### Bug Fixes
+
+- **aes,amphora:** use relative imports for test fixtures ([5f529e6](https://github.com/lindorm-io/monorepo/commit/5f529e6276d847ca3af2d25c26d65207a7bf017f))
+- **amphora:** add JWKS resilience, issuer validation, key limits, preserve local keys ([464292d](https://github.com/lindorm-io/monorepo/commit/464292dc7b4824fbe7c31de06a8cd3f212b5c7be))
+- **amphora:** add public issuer config to invalid-options error debug ([c096594](https://github.com/lindorm-io/monorepo/commit/c096594c8033b478d3bd315fe777baa2e5b29762))
+- **amphora:** clear-and-rebuild config on refresh, reduce retries ([f93cdf8](https://github.com/lindorm-io/monorepo/commit/f93cdf87ab1c891b72cb76eeb5847e1eef64d74b))
+- **amphora:** deduplicate concurrent refresh/setup, add lazy setup ([dfd645a](https://github.com/lindorm-io/monorepo/commit/dfd645a2e67eaed088cd1f9da81feee33df44f43))
+- **amphora:** fix mock, improve error context, validate domain, log mutations ([2768479](https://github.com/lindorm-io/monorepo/commit/2768479ec253f41eb07a6d064419c59a2a7d89df))
+- **amphora:** return defensive copies from getters, prune expired keys ([5a79419](https://github.com/lindorm-io/monorepo/commit/5a7941992573ff2ddffcd43c12021000601ed89a))
+- **amphora:** shift trust anchor cert windows to include MockDate clock ([a882ab9](https://github.com/lindorm-io/monorepo/commit/a882ab95d8e45584e91127987a184624e8769afb))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **lint:** resolve eslint warnings and errors ([2727420](https://github.com/lindorm-io/monorepo/commit/2727420afd268e6cb8271cd235144fb636a02715))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+- widen @lindorm/\* peer ranges to unbounded >= ([9655dec](https://github.com/lindorm-io/monorepo/commit/9655dec5ce8d66b4691faa98352980bef11a466e))
+
+### Features
+
+- **amphora:** add configurable TTL for cached external keys ([6d10743](https://github.com/lindorm-io/monorepo/commit/6d10743f8cad38a97796be5a36099f48b9fc41fd))
+- **amphora:** add findById and findByIdSync for historical key lookup ([e6b6095](https://github.com/lindorm-io/monorepo/commit/e6b6095220fbf68328c8de7bde485136d19fb4e4))
+- **amphora:** add issuer-scoped trustAnchors for external JWKS chain validation ([44bd3a6](https://github.com/lindorm-io/monorepo/commit/44bd3a6955b91a50db11fe8d9cb180dce0d56742))
+- **amphora:** add titles and details to thrown errors ([bb56de3](https://github.com/lindorm-io/monorepo/commit/bb56de3a7cbaa344cc5475eb8b418e512363de4f))
+- **amphora:** add trustMode for external JWKS trust anchors ([1470221](https://github.com/lindorm-io/monorepo/commit/1470221a50ea78e9d8adda16300a1bece9bc600c))
+- **amphora:** adopt kryptos descriptive cert fields and drop SHA-1 x5t from JWKS ([d306638](https://github.com/lindorm-io/monorepo/commit/d306638bce0a2577e334ca88080ed7e24380a631))
+- **amphora:** emit x5c/x5t#S256 in JWKS and support cert thumbprint filter ([9003327](https://github.com/lindorm-io/monorepo/commit/9003327ceb3314080db3c1e63655c589a103f5c3)), closes [x5c/x5t#S256](https://github.com/x5c/x5t/issues/S256)
+- **amphora:** namespace and enrich thrown errors ([c3ea14f](https://github.com/lindorm-io/monorepo/commit/c3ea14fb184c381c7bd81e430405025a323132f9))
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+
 ## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/amphora@0.6.1...@lindorm/amphora@0.6.2) (2026-07-02)
 
 ### Bug Fixes

@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.3.0 (2026-07-09)
+
+### Bug Fixes
+
+- add missing MySQL service, fix MongoDB replica set and auth config ([70da3d6](https://github.com/lindorm-io/monorepo/commit/70da3d6ca50f4df6e5efc8f0df331c7289362234))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- add composed package ([2127388](https://github.com/lindorm-io/monorepo/commit/2127388e68f0068d5035d694091569fe7b66c2f6))
+- **composed:** add --keep-volumes and --project flags ([12acaf0](https://github.com/lindorm-io/monorepo/commit/12acaf0a1edb5815b7c61b15c0c42c04cffb66fe))
+- **composed:** surface docker stdout/stderr on failure and report timing ([9490024](https://github.com/lindorm-io/monorepo/commit/949002459010a1c514a9128acff824f75dc6c28a))
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/composed@0.2.0...@lindorm/composed@0.2.1) (2026-05-05)
 
 ### Bug Fixes

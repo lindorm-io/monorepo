@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.4.0 (2026-07-09)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- **akp:** add package with AkpKit for ML-DSA signatures ([a4a8ec0](https://github.com/lindorm-io/monorepo/commit/a4a8ec08f69077ed97ec50dc78f1dc0a13fbc543))
+- **akp:** add titles and details to thrown errors ([53595d4](https://github.com/lindorm-io/monorepo/commit/53595d4e368e835e551affb5c5e1cbb0d52c87e6))
+- **akp:** namespace and enrich thrown errors ([a786783](https://github.com/lindorm-io/monorepo/commit/a7867834abc247684d78086319e4c03bf0db196f))
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+
 ## [0.3.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/akp@0.3.1...@lindorm/akp@0.3.2) (2026-07-02)
 
 ### Bug Fixes

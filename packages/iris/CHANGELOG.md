@@ -3,6 +3,55 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.7.0 (2026-07-09)
+
+### Bug Fixes
+
+- declare zod as a peerDependency on packages with zod-typed public APIs ([790bc68](https://github.com/lindorm-io/monorepo/commit/790bc689aa8e9450f74c3e880cbe3825a0d680ae))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **esm:** switch ioredis imports to named Redis export ([dc2cb8a](https://github.com/lindorm-io/monorepo/commit/dc2cb8a47f999996482bbaf2a4a2fa12effe5287))
+- **iris:** access private KafkaDriver.state via any-cast in TCK teardown ([30c8c47](https://github.com/lindorm-io/monorepo/commit/30c8c47b732349c0725ca079f119c6e6b1461c7b))
+- **iris:** add explicit return types and resolve floating promises ([3a13bf5](https://github.com/lindorm-io/monorepo/commit/3a13bf5f90a871f10448f7cf4753457510f06b23))
+- **iris:** add explicit return types to inline arrow functions ([3d6cae1](https://github.com/lindorm-io/monorepo/commit/3d6cae10b66be7455c89ade476efa8987b23f89d))
+- **iris:** decrypt message payload by exact kid, not predicate ([d7cedeb](https://github.com/lindorm-io/monorepo/commit/d7cedeb96ca471569183c633a35c66ebbfbc3614))
+- **iris:** ensure Kafka topic exists before publishing ([4ddc87f](https://github.com/lindorm-io/monorepo/commit/4ddc87f8a0e7e3dd90802bb36e6c0c50d728a09e))
+- **iris:** force serial test execution to avoid kafka consumer rebalance race ([7a1f4dc](https://github.com/lindorm-io/monorepo/commit/7a1f4dc677f869c404e60e44305e22103ccf2683))
+- **iris:** harden NATS reset and surface flaky test diagnostics ([60eba23](https://github.com/lindorm-io/monorepo/commit/60eba2300a12a79e3694903b54bf7a2e5982e415))
+- **iris:** honor the caller's explicit consume topic for dynamic @Topic messages ([f9509e7](https://github.com/lindorm-io/monorepo/commit/f9509e7c805a24da0ffc0fb4fc451aaede3c3c02))
+- **iris:** improve init source template ([3159410](https://github.com/lindorm-io/monorepo/commit/3159410c9c9d798bd2a88c39b34bd3bcfb693581))
+- **iris:** let @Generated determine the type of a role-marker field ([1993853](https://github.com/lindorm-io/monorepo/commit/1993853b05a7317dba78da4de6266f51184b3d61))
+- **iris:** polyfill Symbol.metadata at package entry ([4588a8b](https://github.com/lindorm-io/monorepo/commit/4588a8b34256b0f40b152e9b56580ab24c112c75))
+- **iris:** reject unknown fields during message validation ([a1a819b](https://github.com/lindorm-io/monorepo/commit/a1a819b069324c8e6ee855571f2eae90b9ef1fec))
+- **iris:** remove redundant type casts and fix type narrowing in MessageScanner ([73e5851](https://github.com/lindorm-io/monorepo/commit/73e585189753fcd61fc7d42351342b472e52939b))
+- **iris:** typecheck cleanup ([7242b0c](https://github.com/lindorm-io/monorepo/commit/7242b0ce8be4783904bfb85f5247995c297e4fcb))
+- **iris:** update ioredis mock for ESM named Redis export ([332d1ce](https://github.com/lindorm-io/monorepo/commit/332d1ce6ca73c7a566aad2d969f60568e3d650bb))
+- **iris:** use import.meta.dirname and accept configImport in generateSource ([be14499](https://github.com/lindorm-io/monorepo/commit/be14499dc8f86e20ebb200f0e8a98931903fe8a8))
+- **iris:** use positional filter in test:integration script ([23f4acb](https://github.com/lindorm-io/monorepo/commit/23f4acb1d220c3005fda6df9cc27fc7128f2600e))
+- **proteus,iris,hermes:** simplify logger in init templates ([79df6d8](https://github.com/lindorm-io/monorepo/commit/79df6d889f945c3731a83974d2ba96e6565cd26b))
+- widen @lindorm/\* peer ranges to unbounded >= ([9655dec](https://github.com/lindorm-io/monorepo/commit/9655dec5ce8d66b4691faa98352980bef11a466e))
+
+### Features
+
+- add @lindorm/iris unified messaging package ([642ed39](https://github.com/lindorm-io/monorepo/commit/642ed39ba1ca173c163cbcf9b251ee4ed3388f96))
+- **iris:** add CLI with init and generate message commands ([02ae3b7](https://github.com/lindorm-io/monorepo/commit/02ae3b73ffcc0d839f6b9aeca40256d167c07655))
+- **iris:** add lindorm_id strategy and function form to @Generated ([7a503e9](https://github.com/lindorm-io/monorepo/commit/7a503e9dae617c5716b8e50366a29d0be93cc5e0))
+- **iris:** add Nullable, Default, and Optional field decorators ([5a13aea](https://github.com/lindorm-io/monorepo/commit/5a13aeaadff5f8275cf9c04462e68c6d38fe5afd))
+- **iris:** add titles and details to thrown errors ([664cbd2](https://github.com/lindorm-io/monorepo/commit/664cbd26a100aec364b6324d7c901e9fba4e38df))
+- **iris:** align driver behavior with real-broker semantics ([7b301d6](https://github.com/lindorm-io/monorepo/commit/7b301d6a8eb057c755ab458f1f3e9a7404269f5b))
+- **iris:** default identifier and correlation ids to lindorm random id ([fe49750](https://github.com/lindorm-io/monorepo/commit/fe4975037976f29eb9309880d7a2244d49d27d3d))
+- **iris:** migrate tests from jest to vitest ([3f3d893](https://github.com/lindorm-io/monorepo/commit/3f3d89392f24adaecf778882f1b332d683596886))
+- **iris:** namespace and enrich thrown errors ([57520c2](https://github.com/lindorm-io/monorepo/commit/57520c265c3c06863c0898c52a7822481819590c))
+- **iris:** reject duplicate @Generated on a field ([801c2ea](https://github.com/lindorm-io/monorepo/commit/801c2eaaab315b3af1c77b42717661cd6d85d160))
+- **iris:** resolve init/message dirs via lindorm.config ([1e8cef6](https://github.com/lindorm-io/monorepo/commit/1e8cef64c9fe148dca3dfa5416628c130eda4f13))
+- **iris:** scaffold sources export the driver name, not `source` ([30566d1](https://github.com/lindorm-io/monorepo/commit/30566d1f78310a22f2de5b827ce5666772dbc187))
+- **iris:** support namespace on @Generated("lindorm_id") ([a03f7e2](https://github.com/lindorm-io/monorepo/commit/a03f7e2d62fc3269617645e280773e97ee5dd7db))
+
+### Performance Improvements
+
+- **iris:** detach kafka consumers on reset instead of awaiting stop ([721a0b3](https://github.com/lindorm-io/monorepo/commit/721a0b3da6649bfdde87bb810194a3d336136a05))
+- **iris:** set explicit rpc timeout for no-handler tck tests ([e03d937](https://github.com/lindorm-io/monorepo/commit/e03d9370551a825a90d80c3ba779acd0c6cc1983))
+- **iris:** speed up kafka tck tests ([f972483](https://github.com/lindorm-io/monorepo/commit/f9724837c37779e538449f4863353ac25c5794ff))
+
 ## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/iris@0.6.1...@lindorm/iris@0.6.2) (2026-07-04)
 
 **Note:** Version bump only for package @lindorm/iris

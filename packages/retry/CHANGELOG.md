@@ -3,6 +3,18 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.4.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.1.9...@lindorm/retry@0.4.0) (2026-07-09)
+
+### Bug Fixes
+
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+- **retry:** add explicit return type to isRetryable default ([2ad970b](https://github.com/lindorm-io/monorepo/commit/2ad970b1db49e7aa83a61645db4d1ade6f9fbb0b))
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+- **retry:** add compute-delay, sleep, and with-retry utilities ([e0c999b](https://github.com/lindorm-io/monorepo/commit/e0c999bac123f30c48e5821ee52da693b3bf2dfb))
+
 ## [0.3.4](https://github.com/lindorm-io/monorepo/compare/@lindorm/retry@0.3.3...@lindorm/retry@0.3.4) (2026-07-02)
 
 **Note:** Version bump only for package @lindorm/retry

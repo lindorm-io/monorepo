@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.3.4...@lindorm/logger@0.7.0) (2026-07-09)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **esm:** use default imports for picocolors and object-path ([ccdad9a](https://github.com/lindorm-io/monorepo/commit/ccdad9acef125fc6ca08b32d21a5373633404024))
+- **lint:** remove unnecessary type assertions ([3c6fe80](https://github.com/lindorm-io/monorepo/commit/3c6fe800fbbc6ce1c1c2e3260054d16163124e12))
+- **lint:** restore type assertions needed for build ([b85bbeb](https://github.com/lindorm-io/monorepo/commit/b85bbebedd27c13f16c7b57116f74b0adc264f6a))
+- **logger:** route uncaughtException through active Logger ([745aeac](https://github.com/lindorm-io/monorepo/commit/745aeacb4b6543db41b0594483a4e8922e5e86e7))
+- **logger:** winston default access and mockImplementation noop ([b509309](https://github.com/lindorm-io/monorepo/commit/b5093093dbbc9d91166cfa29ff78a579a2305cf9))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- **logger:** add session method and improve child logger ([123ac40](https://github.com/lindorm-io/monorepo/commit/123ac4053e1ba848067f1422e664f7cf4b8c609a))
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+- optimise and improve logger with timers ([95b6021](https://github.com/lindorm-io/monorepo/commit/95b6021580ae23e96554fd245493b52ecdcd00c8))
+
 ## [0.6.6](https://github.com/lindorm-io/monorepo/compare/@lindorm/logger@0.6.5...@lindorm/logger@0.6.6) (2026-07-02)
 
 ### Bug Fixes

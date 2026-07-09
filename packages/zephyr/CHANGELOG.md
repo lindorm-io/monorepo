@@ -3,6 +3,38 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.5.0 (2026-07-09)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+- widen @lindorm/\* peer ranges to unbounded >= ([9655dec](https://github.com/lindorm-io/monorepo/commit/9655dec5ce8d66b4691faa98352980bef11a466e))
+- **zephyr:** typecheck cleanup ([a795b88](https://github.com/lindorm-io/monorepo/commit/a795b883f03c5cde7d7f462654d63677e4ac4a35))
+- **zephyr:** widen @lindorm/\* peer ranges to current workspace versions ([9353607](https://github.com/lindorm-io/monorepo/commit/93536078bf8fefc88a12f05e82be35333f9ab135))
+
+### Features
+
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+- **pylon:** pin cnf.jkt across bearer refresh ([8de63a6](https://github.com/lindorm-io/monorepo/commit/8de63a6deb2529d1f1d8746d98f8d2783e9c6e4d))
+- **zephyr:** add changeKeys middleware for outgoing/incoming data ([90cc708](https://github.com/lindorm-io/monorepo/commit/90cc7089750f307020299abbd9d94cf078a6bc02))
+- **zephyr:** add core types, ZephyrError, and package exports ([32b50cc](https://github.com/lindorm-io/monorepo/commit/32b50cc64fdeca0858a1a9c9322caf8df468c015))
+- **zephyr:** add createBearerAuthStrategy ([7bb0558](https://github.com/lindorm-io/monorepo/commit/7bb055801988993af4c43fe10bd2ea1add9868ae))
+- **zephyr:** add createCookieAuthStrategy ([68311a3](https://github.com/lindorm-io/monorepo/commit/68311a30ded662bc34e5f64c58222c1207c59b6a))
+- **zephyr:** add createDpopBearerAuthStrategy ([033a29a](https://github.com/lindorm-io/monorepo/commit/033a29ac69306f4a7e459ce3c5a3fcff08ca522a))
+- **zephyr:** add createMockZephyr and createMockZephyrRoom mock factories ([8fee41d](https://github.com/lindorm-io/monorepo/commit/8fee41d3ecb1c91f12206ea6b070002b8da898ea))
+- **zephyr:** add dedupe-promise utility ([cda8b34](https://github.com/lindorm-io/monorepo/commit/cda8b34ec86ef195d906b77aa45483776a6fe433))
+- **zephyr:** add React hooks — ZephyrProvider, useZephyr, useRequest, useEvent, useRoom ([5960a15](https://github.com/lindorm-io/monorepo/commit/5960a155b0304435bffcab5a8c5eaebb3dc8ccd2))
+- **zephyr:** add resolveHandshakeHtu utility ([4077888](https://github.com/lindorm-io/monorepo/commit/40778882ac03213bda6fae0a21a22abebe719273))
+- **zephyr:** add signDpopProof utility ([d9ac47e](https://github.com/lindorm-io/monorepo/commit/d9ac47e3bc0114a2a52e90b971e74e594ae42668))
+- **zephyr:** add titles and details to thrown errors ([4e0d286](https://github.com/lindorm-io/monorepo/commit/4e0d2869cb2538317db0cda6f07670c6226efb23))
+- **zephyr:** add type-safe event definitions via generic Zephyr<Events> ([84f292c](https://github.com/lindorm-io/monorepo/commit/84f292cf75e8078418152dd27c6eacd5b36909bf))
+- **zephyr:** add ZephyrRoom with IZephyr and IZephyrRoom interfaces ([e637a8c](https://github.com/lindorm-io/monorepo/commit/e637a8cd461aaa853b3f86d3cc27c012aab2d33a))
+- **zephyr:** implement core Zephyr client with emit, request, on/off, and lifecycle hooks ([5bd4c5a](https://github.com/lindorm-io/monorepo/commit/5bd4c5afadda72a17da81800c57b11de1178206f))
+- **zephyr:** initialise zephyr ([a19fbf0](https://github.com/lindorm-io/monorepo/commit/a19fbf029ed7209cf9427ac81e6ec964cc10961b))
+- **zephyr:** namespace and enrich thrown errors ([182c583](https://github.com/lindorm-io/monorepo/commit/182c5837a6446946e48017fce3c88982b91b5796))
+- **zephyr:** namespaced lindorm ids for context and DPoP jti ([ef77f45](https://github.com/lindorm-io/monorepo/commit/ef77f45a3037e7136861cb978d47a67d71b35aeb))
+
 ## [0.4.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/zephyr@0.4.0...@lindorm/zephyr@0.4.1) (2026-07-02)
 
 ### Bug Fixes

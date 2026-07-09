@@ -3,6 +3,24 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.1.12...@lindorm/errors@0.6.0) (2026-07-09)
+
+### Bug Fixes
+
+- add number to error code ([8f19fd3](https://github.com/lindorm-io/monorepo/commit/8f19fd3a316feedc42afe47a453881c2819880c0))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- **errors:** add AbortError extending LindormError ([009d435](https://github.com/lindorm-io/monorepo/commit/009d4353009e579f9a1c640768c831660b7e3feb))
+- **errors:** add ErrorRegistry and HTTP-status error subclasses ([0bc4365](https://github.com/lindorm-io/monorepo/commit/0bc4365e320cf0e901d08a0a847aed39a0f2f95d))
+- **errors:** add type urn to LindormError ([a2ddc09](https://github.com/lindorm-io/monorepo/commit/a2ddc09b0161df4fd784bcb926f3c64d18be1759))
+- **errors:** auto-generate readable support codes ([33d5128](https://github.com/lindorm-io/monorepo/commit/33d51281e9f1e42260778c2fd0c2af143460336a))
+- **errors:** generate the fallback error id as a namespaced lindorm id ([4cc2b8c](https://github.com/lindorm-io/monorepo/commit/4cc2b8cd5f265dd1c64b739be89abc977bc5fe7c))
+- **errors:** support package-namespaced type urns ([17f73c5](https://github.com/lindorm-io/monorepo/commit/17f73c5d7eedfa820c1edad5a7bd707e544cf7ca))
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+
 # [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/errors@0.4.0...@lindorm/errors@0.5.0) (2026-07-02)
 
 ### Bug Fixes

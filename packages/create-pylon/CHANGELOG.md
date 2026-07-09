@@ -3,6 +3,72 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.6.0 (2026-07-09)
+
+### Bug Fixes
+
+- **create-pylon:** accept an npm-scoped project name ([fe99a7a](https://github.com/lindorm-io/monorepo/commit/fe99a7a4d6a26779f559b0a21594df938914cc9d))
+- **create-pylon:** add --passWithNoTests to generated test script ([af7a90f](https://github.com/lindorm-io/monorepo/commit/af7a90fefe65f2b0c485259b46eb3fc8a51e1814))
+- **create-pylon:** add missing session feature in compose test fixture ([db89fe6](https://github.com/lindorm-io/monorepo/commit/db89fe6ea0615de7f80e861f4defcbee1000dfdc))
+- **create-pylon:** bump compose images and surface docker:up next step ([c24551e](https://github.com/lindorm-io/monorepo/commit/c24551e44a4c9ae27f289f95de4214cf604acd2b))
+- **create-pylon:** consistent none-last order; drop memory from the db prompt ([e5a73f0](https://github.com/lindorm-io/monorepo/commit/e5a73f07cddff5e04c765ffe7a26b1294f625bfd))
+- **create-pylon:** correct base dependency lists ([245f053](https://github.com/lindorm-io/monorepo/commit/245f053c6eec8fd9f89dc8ac88881fcc8b55f210))
+- **create-pylon:** correct generated config so a fresh scaffold boots as an OP ([75c4c84](https://github.com/lindorm-io/monorepo/commit/75c4c8448b9d6787fbb10a7c70818e787ba35aee))
+- **create-pylon:** correct webhook template import paths and tsconfig moduleResolution ([33dde6c](https://github.com/lindorm-io/monorepo/commit/33dde6cf8d9380048899f7f3c743a0f0adba0b5e))
+- **create-pylon:** drop stale audit.actor from generated pylon.ts ([8c72938](https://github.com/lindorm-io/monorepo/commit/8c72938151cd103663019772fcf95c6634edad9c))
+- **create-pylon:** export renamed driver helpers from index ([fc9c295](https://github.com/lindorm-io/monorepo/commit/fc9c295590173af81f0051744fac94e5c4d8abf0))
+- **create-pylon:** format generated project with prettier ([9362f88](https://github.com/lindorm-io/monorepo/commit/9362f88ae1f79f6f856ebe09be93bccb4de65faa))
+- **create-pylon:** generate vitest config with swc decorator transform ([edcb0b4](https://github.com/lindorm-io/monorepo/commit/edcb0b401f16d0d73ebbc96959b3e2d211e99458))
+- **create-pylon:** import primary nested source in worker templates ([32c7740](https://github.com/lindorm-io/monorepo/commit/32c7740af8a87674bd5772560c713206cef5bd94))
+- **create-pylon:** install @lindorm/errors as a base runtime dependency ([9301145](https://github.com/lindorm-io/monorepo/commit/9301145ed2a50dc7e9f32aea81fcb0b70d4dd586))
+- **create-pylon:** install proteus's @lindorm/aes encryption peer ([1e8f412](https://github.com/lindorm-io/monorepo/commit/1e8f412402964ad9c2dcb15edc9cc2f1419d59a7))
+- **create-pylon:** mark parseAsync floating promise with void ([2297998](https://github.com/lindorm-io/monorepo/commit/2297998ce9b31906dafffcc927ddb4166d69dec3))
+- **create-pylon:** rename middleware templates to avoid http+socket collision ([8a25864](https://github.com/lindorm-io/monorepo/commit/8a258643b10c102dbdef862570e6314b7a243b7c))
+- **create-pylon:** resolve symlinked argv[1] in CLI entry-point guard ([3239f84](https://github.com/lindorm-io/monorepo/commit/3239f848a1e5b9fc996e07ded9f14016e8fd9116))
+- **create-pylon:** seed pylon:kek with urn issuer ([e5199af](https://github.com/lindorm-io/monorepo/commit/e5199af9038a698b89ab390ad9c81c0540e8c98f))
+- **create-pylon:** skip git init when scaffolding inside existing repo ([3268e9e](https://github.com/lindorm-io/monorepo/commit/3268e9ea021e4d269f8b87cf02c5bb6774abf0a5))
+- **create-pylon:** use moduleResolution node16 instead of node10 ([62344e5](https://github.com/lindorm-io/monorepo/commit/62344e5f624f93ef73d037a90128f69fbe9fc208))
+- **create-pylon:** use public attach-source middleware in generated scaffolder output ([a23244e](https://github.com/lindorm-io/monorepo/commit/a23244e76978881277e034cbd3d998948b9dc614))
+- **create-pylon:** use zod-4 .prefault({}) in generated config ([4d09f23](https://github.com/lindorm-io/monorepo/commit/4d09f23768a3c75f2b8efbdaa6c95c9724bf2682))
+- **create-pylon:** webhook schemas enforce entity enums and URL format ([c27ec42](https://github.com/lindorm-io/monorepo/commit/c27ec42e25987b1f62c1bc093e3c2239d9832f39))
+- **create-pylon:** wire logger.readable through config ([5aa53d8](https://github.com/lindorm-io/monorepo/commit/5aa53d82ecfe0a7e8de8288b962997208bb4f736))
+
+### Features
+
+- **create-pylon:** add session, OIDC auth, rate limit prompts with typed config ([1b377cb](https://github.com/lindorm-io/monorepo/commit/1b377cb001f028fe239aae297926f4508b147c2e))
+- **create-pylon:** assemble config, pylon, docker-compose, workers, iris samples ([39800d1](https://github.com/lindorm-io/monorepo/commit/39800d10c372870bb8bdb169ca04ba89c7c46d78))
+- **create-pylon:** codegen default.yml and adopt \_\_ env-var convention ([f04fff9](https://github.com/lindorm-io/monorepo/commit/f04fff9ae9d4cd5a9aa8a7e5f909d9d7c6db5111))
+- **create-pylon:** codegen development.yml; split .env/.env.example ([8f15c39](https://github.com/lindorm-io/monorepo/commit/8f15c397a10290d932ec3f6900d4257ca9e10c94))
+- **create-pylon:** echo the exact npm install command before running it ([65aa6cb](https://github.com/lindorm-io/monorepo/commit/65aa6cbf5f75bf0f6878755a991d40aae2f4eb4c))
+- **create-pylon:** enforce Node 24.13 via engines, drop Symbol.metadata polyfill ([8fbdb9b](https://github.com/lindorm-io/monorepo/commit/8fbdb9bba3d71e11c70b149dcc51e08bb8d73d03))
+- **create-pylon:** generate and load a pylon:kek at scaffold time ([8e79a1c](https://github.com/lindorm-io/monorepo/commit/8e79a1cfb069b1ea5e2c8b7f29a56760c5ab6c35))
+- **create-pylon:** generate db/kv pylon options, wire ctx.kv ([c6feb3c](https://github.com/lindorm-io/monorepo/commit/c6feb3c4fb4538acf975c415bd07825067fe9dd2))
+- **create-pylon:** generate lindorm.config + make scaffold() self-contained ([694fb08](https://github.com/lindorm-io/monorepo/commit/694fb085adef7aa0af3cddd19388601aeb56a012))
+- **create-pylon:** import WebhookSubscription from @lindorm/pylon/entities ([88290e9](https://github.com/lindorm-io/monorepo/commit/88290e978625b532ad2fcb7de736b37d30db0aff))
+- **create-pylon:** initial scaffolding CLI with templates ([add781f](https://github.com/lindorm-io/monorepo/commit/add781fe08a9e0c731475e110a504df9f8da4754))
+- **create-pylon:** manage dev/test docker services via composed ([917468c](https://github.com/lindorm-io/monorepo/commit/917468cddb4f2a83fce7048b54f51663953ce87d))
+- **create-pylon:** mount non-primary Proteus sources on ctx.<driver> ([3b0822b](https://github.com/lindorm-io/monorepo/commit/3b0822bfb3cb93e79641d1036e060417f6944075))
+- **create-pylon:** multi-driver proteus selection + per-driver sources ([f7e2628](https://github.com/lindorm-io/monorepo/commit/f7e26284636ccda3e355b32e3b0bc98e0103f46a))
+- **create-pylon:** narrow nodeEnv to the Environment union and wire to pylon ([14a6925](https://github.com/lindorm-io/monorepo/commit/14a69257a2e49506e584d6085cb71f607dbce152))
+- **create-pylon:** pass scope: import.meta.url to configuration() ([412de7d](https://github.com/lindorm-io/monorepo/commit/412de7dbf72fd5b7a0cb5d63a5d75422c9e5b691))
+- **create-pylon:** per-env YAML config examples with logger.level ([35b6983](https://github.com/lindorm-io/monorepo/commit/35b69830535018aa4e9e9f27fd001b5809a644e0))
+- **create-pylon:** prefer fast stores for session, mirror rate-limit pattern ([aef99b5](https://github.com/lindorm-io/monorepo/commit/aef99b52f6c07d427be899518fa435ab9e4aeb42))
+- **create-pylon:** rename irisDriver answer field to bus ([1b1d639](https://github.com/lindorm-io/monorepo/commit/1b1d639001e793b8a4c7c20be3a3184ecf2f4233))
+- **create-pylon:** scaffold a **fixtures** test-ctx helper ([4540efa](https://github.com/lindorm-io/monorepo/commit/4540efad37427d7a1b0576b59d1d4511517dd690))
+- **create-pylon:** scaffold ESM projects on vitest ([f259557](https://github.com/lindorm-io/monorepo/commit/f2595572df77b7d7ea4ada0f89c383df271a86bf))
+- **create-pylon:** scaffold snake naming and config-driven sync/migrations ([5e1cc40](https://github.com/lindorm-io/monorepo/commit/5e1cc4005c4a87d02697f8450d30ed1593d26ad9))
+- **create-pylon:** single db + single kv store selects, not a driver checkbox ([07b3e2c](https://github.com/lindorm-io/monorepo/commit/07b3e2cc550fc6734ecc92292a17bcf7c298c87e))
+- **create-pylon:** use module + moduleResolution node16 in template ([cec97b8](https://github.com/lindorm-io/monorepo/commit/cec97b8b50766ceab27b48e64c1751bb3c3e5c73))
+- **create-pylon:** wire amphora into scaffolded proteus sources ([ffd1c13](https://github.com/lindorm-io/monorepo/commit/ffd1c1352b36d4bfe6e24a06ded5567cd9e122bf))
+- **create-pylon:** wire package name and version into pylon options ([d8c48fd](https://github.com/lindorm-io/monorepo/commit/d8c48fdca521f55125625982d503c240348fb1ac))
+- **create-pylon:** wire pylon by driver-named source imports ([8c517c0](https://github.com/lindorm-io/monorepo/commit/8c517c015218f33b2d9f6a24f00a1e6bed6dfd6d))
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+
+### Reverts
+
+- **create-pylon:** drop end-to-end scaffold integration test ([7ac9946](https://github.com/lindorm-io/monorepo/commit/7ac9946da7d97bb335bc6bda1127f7cbdb40ed34))
+- **create-pylon:** keep moduleResolution on node with ignoreDeprecations ([41f4c3a](https://github.com/lindorm-io/monorepo/commit/41f4c3aca258801a3e53294de91e3454b45a2f61))
+
 ## [0.5.5](https://github.com/lindorm-io/monorepo/compare/@lindorm/create-pylon@0.5.4...@lindorm/create-pylon@0.5.5) (2026-07-04)
 
 **Note:** Version bump only for package @lindorm/create-pylon

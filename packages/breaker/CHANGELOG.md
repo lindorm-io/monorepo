@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.5.0 (2026-07-09)
+
+### Bug Fixes
+
+- **breaker:** use eventemitter3 for browser compatibility ([5f2fa37](https://github.com/lindorm-io/monorepo/commit/5f2fa3781e9635588be06d1606671a0478f3d85d))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- add @lindorm/breaker circuit breaker package ([51cb231](https://github.com/lindorm-io/monorepo/commit/51cb2313478f200cb631c8102d7a29da882a7dfc))
+- **breaker:** add EventEmitter support and integrate circuit breaker into proteus ([8fb8474](https://github.com/lindorm-io/monorepo/commit/8fb8474477ecfccfc22114c637bda794a6f38ebc))
+- **breaker:** add titles and details to thrown errors ([c76797d](https://github.com/lindorm-io/monorepo/commit/c76797d7c79209b0f14e8e5f9202ecd2cf92244e))
+- **breaker:** namespace and enrich thrown errors ([0d1c924](https://github.com/lindorm-io/monorepo/commit/0d1c92494ec7a1a95a8b9f373c23d1896fc972c8))
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+
 ## [0.4.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/breaker@0.4.1...@lindorm/breaker@0.4.2) (2026-07-02)
 
 ### Bug Fixes

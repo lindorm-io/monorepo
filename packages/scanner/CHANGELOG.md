@@ -3,6 +3,22 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.6.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.3.7...@lindorm/scanner@0.6.0) (2026-07-09)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- mock tsx/cjs/api in scanner tests to prevent Jest namespace conflicts ([bbb78e0](https://github.com/lindorm-io/monorepo/commit/bbb78e0e28c374fc876c361194c57f0e42fd2a23))
+- **scanner:** skip sourcemaps and .d.ts declarations by default ([8aa12bb](https://github.com/lindorm-io/monorepo/commit/8aa12bb995cf21e95ea5c48403ba63a513b018be))
+- **scanner:** treat a missing scan directory as empty, not ENOENT ([19a18d8](https://github.com/lindorm-io/monorepo/commit/19a18d8080b63da1d8f6b7688c77a8d0cfc777b6))
+
+### Features
+
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+- **scanner:** add CJS interop via tsx and improve Scanner ([d70b4ee](https://github.com/lindorm-io/monorepo/commit/d70b4eed34f7d19eb731f91de50cdb6282ec2aa5))
+- **scanner:** fall back to tsx loader for .ts files native import rejects ([2a33dee](https://github.com/lindorm-io/monorepo/commit/2a33dee781752ef143ae5d098186c71f76788de7))
+- **scanner:** switch import() to native dynamic import and flatten ScanData ([587130c](https://github.com/lindorm-io/monorepo/commit/587130caad7bb3d1752c407a14b221f42f07f5d9))
+
 ## [0.5.7](https://github.com/lindorm-io/monorepo/compare/@lindorm/scanner@0.5.6...@lindorm/scanner@0.5.7) (2026-07-04)
 
 ### Bug Fixes

@@ -3,6 +3,20 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.5.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/rsa@0.2.5...@lindorm/rsa@0.5.0) (2026-07-09)
+
+### Bug Fixes
+
+- **ec,oct,okp,rsa:** harden signing kits with validation and security fixes ([27b07b9](https://github.com/lindorm-io/monorepo/commit/27b07b9eb9ba0132ebda8f46de83fda2cf3c0a3b))
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+- **rsa:** add titles and details to thrown errors ([d6843d7](https://github.com/lindorm-io/monorepo/commit/d6843d7916aa0e6aca08b2e879d556aa536fa94d))
+- **rsa:** namespace and enrich thrown errors ([5d939c7](https://github.com/lindorm-io/monorepo/commit/5d939c739b43c893b78e3a9bcd216ffcb62a9af2))
+
 ## [0.4.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/rsa@0.4.1...@lindorm/rsa@0.4.2) (2026-07-02)
 
 ### Bug Fixes

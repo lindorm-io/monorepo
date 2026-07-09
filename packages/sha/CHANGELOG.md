@@ -3,6 +3,21 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.7.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.2.4...@lindorm/sha@0.7.0) (2026-07-09)
+
+### Bug Fixes
+
+- **eslint:** forbid redundant public via explicit-member-accessibility no-public ([e759b1f](https://github.com/lindorm-io/monorepo/commit/e759b1f1c552b50d150aecca51488eac64856d91))
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- migrate 13 utility packages + drop jest configs from types/enums ([614c7b9](https://github.com/lindorm-io/monorepo/commit/614c7b9354d7bd46dfe4627de98cae4d3a8227b7))
+- **sha:** accept Buffer input on hash methods and add S1 for legacy x509 x5t ([602f362](https://github.com/lindorm-io/monorepo/commit/602f362fb9e3744d91fce16cecdf9d2d805f0e13))
+- **sha:** add ShaKit.equal method ([4f77f9d](https://github.com/lindorm-io/monorepo/commit/4f77f9d4174c69e98070cdba7049f2f1e9ff43fd))
+- **sha:** add titles and details to thrown errors ([0ec3459](https://github.com/lindorm-io/monorepo/commit/0ec3459da1b210ed51134b5e446875b26a558ade))
+- **sha:** namespace and enrich thrown errors ([d9836e9](https://github.com/lindorm-io/monorepo/commit/d9836e96561e6b51bcbd12a52916501225fcbb4a))
+
 ## [0.6.2](https://github.com/lindorm-io/monorepo/compare/@lindorm/sha@0.6.1...@lindorm/sha@0.6.2) (2026-07-02)
 
 ### Bug Fixes

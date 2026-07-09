@@ -3,6 +3,16 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# [0.3.0](https://github.com/lindorm-io/monorepo/compare/@lindorm/middleware@0.1.5...@lindorm/middleware@0.3.0) (2026-07-09)
+
+### Bug Fixes
+
+- **packages:** declare files: ["dist"] for every publishable package ([b8d29fc](https://github.com/lindorm-io/monorepo/commit/b8d29fc24996a02636ddecc11c5d25da4930ef11))
+
+### Features
+
+- migrate 20 packages from jest to vitest ([e9d3c7a](https://github.com/lindorm-io/monorepo/commit/e9d3c7ad717b15fee223451242eb8d7bb71edf4a))
+
 ## [0.2.1](https://github.com/lindorm-io/monorepo/compare/@lindorm/middleware@0.2.0...@lindorm/middleware@0.2.1) (2026-05-05)
 
 ### Bug Fixes
