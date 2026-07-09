@@ -14,7 +14,7 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
   try {
     await next();
 
-    ctx.logger?.info("Conduit request successful", {
+    ctx.logger?.verbose("Conduit request successful", {
       app: ctx.app,
       request: {
         body: ctx.req.body ? ctx.req.body : {},
