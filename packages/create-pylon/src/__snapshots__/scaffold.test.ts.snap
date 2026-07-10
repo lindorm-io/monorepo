@@ -200,6 +200,9 @@ coverage/
 .env.*
 !.env.example
 
+# Kryptos key files written by \`kryptos generate/derive --write\` — never commit.
+*.kryptos
+
 .DS_Store
 *.log
 ",
@@ -622,6 +625,9 @@ coverage/
 .env.*
 !.env.example
 
+# Kryptos key files written by \`kryptos generate/derive --write\` — never commit.
+*.kryptos
+
 .DS_Store
 *.log
 ",
@@ -768,6 +774,9 @@ coverage/
 .env
 .env.*
 !.env.example
+
+# Kryptos key files written by \`kryptos generate/derive --write\` — never commit.
+*.kryptos
 
 .DS_Store
 *.log
