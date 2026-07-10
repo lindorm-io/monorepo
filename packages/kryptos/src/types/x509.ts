@@ -23,6 +23,7 @@ export type X509SubjectAltNameInput =
 export type ParsedX509Name = {
   readonly commonName?: string;
   readonly organization?: string;
+  readonly organizationalUnit?: string;
   readonly raw: Buffer;
 };
 

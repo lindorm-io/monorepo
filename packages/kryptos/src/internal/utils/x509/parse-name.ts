@@ -12,7 +12,11 @@ import {
   readSequenceChildren,
   readTlv,
 } from "../asn1/index.js";
-import { X509_OID_COMMON_NAME, X509_OID_ORGANIZATION_NAME } from "./oids.js";
+import {
+  X509_OID_COMMON_NAME,
+  X509_OID_ORGANIZATION_NAME,
+  X509_OID_ORGANIZATIONAL_UNIT_NAME,
+} from "./oids.js";
 
 const decodeDirectoryString = (tag: number, content: Buffer): string => {
   if (tag === ASN1_TAG_UTF8_STRING) return decodeUtf8String(content);
@@ -36,6 +40,7 @@ export const parseX509Name = (der: Buffer): ParsedX509Name => {
 
   let commonName: string | undefined;
   let organization: string | undefined;
+  let organizationalUnit: string | undefined;
 
   for (const rdn of readSequenceChildren(body)) {
     if (rdn.tag !== ASN1_TAG_SET) continue;
@@ -49,6 +54,11 @@ export const parseX509Name = (der: Buffer): ParsedX509Name => {
         commonName = value;
       } else if (oid === X509_OID_ORGANIZATION_NAME && organization === undefined) {
         organization = value;
+      } else if (
+        oid === X509_OID_ORGANIZATIONAL_UNIT_NAME &&
+        organizationalUnit === undefined
+      ) {
+        organizationalUnit = value;
       }
     }
   }
@@ -56,6 +66,7 @@ export const parseX509Name = (der: Buffer): ParsedX509Name => {
   const result: ParsedX509Name = {
     ...(commonName !== undefined ? { commonName } : {}),
     ...(organization !== undefined ? { organization } : {}),
+    ...(organizationalUnit !== undefined ? { organizationalUnit } : {}),
     raw,
   };
   return result;

@@ -111,6 +111,7 @@ describe("kryptos generate CLI", () => {
       .mockResolvedValueOnce("Lindorm Root CA") // subject
       .mockResolvedValueOnce("Lindorm") // organization
       .mockResolvedValueOnce("") // SANs
+      .mockResolvedValueOnce("") // environment / OU
       .mockResolvedValueOnce("1"); // path length constraint
     mockConfirm
       .mockResolvedValueOnce(false) // hidden
@@ -278,6 +279,34 @@ describe("kryptos generate CLI", () => {
     );
 
     expect(key.hidden).toBe(false);
+  });
+
+  test("stamps --environment as the certificate subject OU (scripted)", async () => {
+    const key = KryptosKit.env.import(
+      await runGenerate({
+        type: "EC",
+        use: "sig",
+        algorithm: "ES256",
+        certificate: "self-signed",
+        subject: "leaf",
+        environment: "development",
+      }),
+    );
+
+    expect(key.certificate?.subject.organizationalUnit).toBe("development");
+  });
+
+  test("rejects an invalid --environment value", async () => {
+    await expect(
+      runGenerate({
+        type: "EC",
+        use: "sig",
+        algorithm: "ES256",
+        certificate: "self-signed",
+        subject: "leaf",
+        environment: "prod",
+      }),
+    ).rejects.toThrow(/Invalid --environment/i);
   });
 });
 

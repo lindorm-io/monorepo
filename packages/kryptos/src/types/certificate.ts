@@ -1,10 +1,15 @@
+import type { Environment } from "@lindorm/types";
 import type { IKryptos } from "../interfaces/Kryptos.js";
 import type { X509SubjectAltNameInput } from "./x509.js";
 
+// When set, `environment` is stamped as the certificate subject's OU
+// (organizationalUnitName) DN attribute. It lives ONLY on certificates — never
+// as a key attribute, JWK member, CBOR label, or DB column.
 export type KryptosCertificateSelfSignedOption = {
   mode: "self-signed";
   subject?: string;
   organization?: string;
+  environment?: Environment;
   subjectAlternativeNames?: Array<string | X509SubjectAltNameInput>;
 };
 
@@ -12,6 +17,7 @@ export type KryptosCertificateRootCaOption = {
   mode: "root-ca";
   subject?: string;
   organization?: string;
+  environment?: Environment;
   subjectAlternativeNames?: Array<string | X509SubjectAltNameInput>;
   pathLengthConstraint?: number;
 };
@@ -21,6 +27,7 @@ export type KryptosCertificateCaSignedOption = {
   ca: IKryptos;
   subject?: string;
   organization?: string;
+  environment?: Environment;
   subjectAlternativeNames?: Array<string | X509SubjectAltNameInput>;
 };
 
@@ -32,6 +39,7 @@ export type KryptosCertificateIntermediateCaOption = {
   ca: IKryptos;
   subject?: string;
   organization?: string;
+  environment?: Environment;
   subjectAlternativeNames?: Array<string | X509SubjectAltNameInput>;
   pathLengthConstraint?: number;
 };

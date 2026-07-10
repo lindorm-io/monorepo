@@ -4,13 +4,14 @@ import { realpathSync } from "fs";
 import { pathToFileURL } from "url";
 import { confirm, input, select } from "@inquirer/prompts";
 import { expiresAt, isReadableTime } from "@lindorm/date";
-import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
+import { AES_ENCRYPTION_ALGORITHMS, type Environment } from "@lindorm/types";
 import { program } from "commander";
 import { KryptosKit } from "./classes/index.js";
 import { KryptosError } from "./errors/index.js";
 import type { IKryptos } from "./interfaces/index.js";
 import { CBOR_OPS } from "./internal/constants/cbor-table.js";
 import { getEcCurve } from "./internal/utils/ec/get-curve.js";
+import { ENVIRONMENTS, isEnvironment } from "./internal/utils/is-environment.js";
 import { inspectJson, inspectSummary } from "./internal/utils/inspect-key.js";
 import { getOkpCurve } from "./internal/utils/okp/get-curve.js";
 import {
@@ -356,6 +357,7 @@ export type GenerateOptions = {
   certificate?: string;
   subject?: string;
   organization?: string;
+  environment?: string;
   san?: Array<string>;
   pathLength?: string;
   ca?: string;
@@ -423,6 +425,25 @@ const resolveCertificate = async (
       ? await inputList("Subject alternative names (comma-separated, optional)")
       : undefined;
 
+  // Environment → subject OU. Only prompted while creating a certificate.
+  const environmentValue =
+    options.environment ??
+    (interactive
+      ? await inputOptional(`Environment / OU (${ENVIRONMENTS.join(", ")} — optional)`)
+      : undefined);
+
+  if (environmentValue !== undefined && !isEnvironment(environmentValue)) {
+    throw new KryptosError(`Invalid --environment: ${environmentValue}`, {
+      code: "invalid_environment",
+      title: "Invalid Environment",
+      details: `The environment "${environmentValue}" is not valid; use ${ENVIRONMENTS.join(", ")}.`,
+      data: { environment: environmentValue, valid: [...ENVIRONMENTS] },
+    });
+  }
+
+  const environment: Environment | undefined = environmentValue;
+  const environmentOption = environment ? { environment } : {};
+
   const resolvePathLength = async (): Promise<number | undefined> => {
     const pathLength =
       options.pathLength ??
@@ -460,7 +481,13 @@ const resolveCertificate = async (
 
   switch (mode) {
     case "self-signed":
-      return { mode, subject, organization, subjectAlternativeNames };
+      return {
+        mode,
+        subject,
+        organization,
+        subjectAlternativeNames,
+        ...environmentOption,
+      };
 
     case "root-ca":
       return {
@@ -468,6 +495,7 @@ const resolveCertificate = async (
         subject,
         organization,
         subjectAlternativeNames,
+        ...environmentOption,
         pathLengthConstraint: await resolvePathLength(),
       };
 
@@ -478,6 +506,7 @@ const resolveCertificate = async (
         subject,
         organization,
         subjectAlternativeNames,
+        ...environmentOption,
       };
 
     case "intermediate-ca":
@@ -487,6 +516,7 @@ const resolveCertificate = async (
         subject,
         organization,
         subjectAlternativeNames,
+        ...environmentOption,
         pathLengthConstraint: await resolvePathLength(),
       };
 
@@ -738,6 +768,10 @@ program
   )
   .option("--subject <subject>", "certificate subject / CN")
   .option("--organization <organization>", "certificate organization / O")
+  .option(
+    "--environment <environment>",
+    "certificate environment / OU: production, staging, development, test, unknown",
+  )
   .option("--san <san...>", "certificate subject alternative name (repeatable)")
   .option("--path-length <n>", "path length constraint (root-ca / intermediate-ca)")
   .option("--ca <env>", "issuing CA key env string (kryptos:…) for ca-signed")

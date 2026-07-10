@@ -19,6 +19,7 @@ const nameText = (name: DescribedX509Name): string =>
   [
     name.commonName && `CN=${name.commonName}`,
     name.organization && `O=${name.organization}`,
+    name.organizationalUnit && `OU=${name.organizationalUnit}`,
   ]
     .filter(Boolean)
     .join(", ") || "—";

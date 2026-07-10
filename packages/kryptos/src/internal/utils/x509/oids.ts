@@ -15,6 +15,7 @@ export const X509_OID_ML_DSA_87 = "2.16.840.1.101.3.4.3.19";
 
 export const X509_OID_COMMON_NAME = "2.5.4.3";
 export const X509_OID_ORGANIZATION_NAME = "2.5.4.10";
+export const X509_OID_ORGANIZATIONAL_UNIT_NAME = "2.5.4.11";
 export const X509_OID_COUNTRY_NAME = "2.5.4.6";
 
 export const X509_OID_EXT_BASIC_CONSTRAINTS = "2.5.29.19";

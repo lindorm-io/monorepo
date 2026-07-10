@@ -20,6 +20,16 @@ describe("encodeX509Name", () => {
     expect(encodeX509Name({ commonName: "Ölåñd" }).toString("hex")).toMatchSnapshot();
   });
 
+  test("encodes organization + organizationalUnit + CN in O, OU, CN order", () => {
+    expect(
+      encodeX509Name({
+        commonName: "example.test",
+        organization: "Lindorm",
+        organizationalUnit: "development",
+      }).toString("hex"),
+    ).toMatchSnapshot();
+  });
+
   test("passes raw bytes through unchanged", () => {
     const raw = Buffer.from("3014311230100603550403130965786576616d706c65", "hex");
     const out = encodeX509Name({ raw });

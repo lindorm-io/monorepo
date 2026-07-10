@@ -176,7 +176,7 @@ npx kryptos generate
 
 Answer the prompts (type, use, algorithm, encryption, purpose) and the CLI prints a `kryptos:...` blob ready to paste into a `.env` file. Re-import it at runtime with `KryptosKit.env.import(process.env.MY_KEY!)`.
 
-For an asymmetric key it then asks whether to stamp an **X.509 certificate** — answer yes and pick a mode (`self-signed` / `root-ca` / `ca-signed` / `intermediate-ca`) plus subject, organization, SANs, and (for `root-ca` / `intermediate-ca`) a path-length constraint; `ca-signed` and `intermediate-ca` prompt for the issuing CA's `kryptos:…` env string. The certificate is embedded in the exported blob (see [X.509 certificates](#x509-certificates)). Symmetric `oct` keys skip this step.
+For an asymmetric key it then asks whether to stamp an **X.509 certificate** — answer yes and pick a mode (`self-signed` / `root-ca` / `ca-signed` / `intermediate-ca`) plus subject, organization, `--environment` (OU), SANs, and (for `root-ca` / `intermediate-ca`) a path-length constraint; `ca-signed` and `intermediate-ca` prompt for the issuing CA's `kryptos:…` env string. The certificate is embedded in the exported blob (see [X.509 certificates](#x509-certificates)). Symmetric `oct` keys skip this step.
 
 **Every prompt has a matching flag**, so `generate` is fully scriptable — pass `--type` to skip interaction entirely (anything omitted takes its default, nothing is prompted); pass only some flags to pre-fill those answers and be prompted for the rest. Run `kryptos generate --help` for the full list.
 
@@ -324,6 +324,29 @@ leaf.verifyCertificate({ trustAnchors: root.certificateChain[0] });
 **`pathLenConstraint` (RFC 5280 §4.2.1.9)** is the maximum number of non-self-issued intermediate CAs that may follow this certificate in a path. `pathLenConstraint: 0` means the CA may issue **only end-entity** certificates, not further CAs. Only CA certs carry it; end-entity certs never do.
 
 Mint-time guards refuse to create misleading certs: issuing an intermediate under a `pathLen=0` CA throws, and an intermediate's `pathLenConstraint` must be **strictly less** than its issuer's (a house-policy tightening — RFC path validation would merely clamp via `min()`). `verifyCertificate` enforces the full §6.1.4 path-length walk and requires every non-leaf to be a CA with `keyCertSign`.
+
+### Environment
+
+`environment` (the `Environment` union from `@lindorm/types`: `production` / `staging` / `development` / `test` / `unknown`) stamps the certificate subject's **OU** (organizationalUnitName, `2.5.4.11`) — the only sanctioned OU use. It lives **only on certificates** — never as a key attribute, JWK member, CBOR label, or DB column.
+
+```ts
+const root = KryptosKit.generate.sig.ec({
+  algorithm: "ES384",
+  certificate: {
+    mode: "root-ca",
+    subject: "Lindorm Root CA",
+    environment: "development",
+  },
+});
+// subject DN: CN=Lindorm Root CA, OU=development
+
+const leaf = KryptosKit.generate.sig.ec({
+  algorithm: "ES256",
+  certificate: { mode: "ca-signed", ca: root, subject: "svc" }, // inherits OU=development
+});
+```
+
+When a CA-signed / intermediate-ca child omits `environment`, it **inherits** the signing CA's environment OU. If the child declares a **different** environment, minting throws `cross_environment_certificate_signing` — dev/prod hierarchies never mix (house policy). A CA whose leaf carries no OU, or a foreign (non-`Environment`) OU, imposes no constraint. `@lindorm/amphora` enforces the same boundary when keys are added to a vault.
 
 ### Verification
 

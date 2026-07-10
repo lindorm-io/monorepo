@@ -17,4 +17,24 @@ describe("parseX509Name", () => {
     expect(parsed.commonName).toBe("leaf");
     expect(parsed.organization).toBe("lindorm");
   });
+
+  test("round-trips a CN + O + OU name", () => {
+    const der = encodeX509Name({
+      commonName: "leaf",
+      organization: "lindorm",
+      organizationalUnit: "development",
+    });
+    const parsed = parseX509Name(der);
+    expect(parsed.commonName).toBe("leaf");
+    expect(parsed.organization).toBe("lindorm");
+    expect(parsed.organizationalUnit).toBe("development");
+  });
+
+  test("parses a foreign (non-environment) OU value verbatim", () => {
+    const der = encodeX509Name({
+      commonName: "leaf",
+      organizationalUnit: "platform-engineering",
+    });
+    expect(parseX509Name(der).organizationalUnit).toBe("platform-engineering");
+  });
 });

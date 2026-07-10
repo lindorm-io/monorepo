@@ -6,6 +6,7 @@ import { signAlgorithmName } from "./sign-algorithm-name.js";
 export type DescribedX509Name = {
   commonName?: string;
   organization?: string;
+  organizationalUnit?: string;
 };
 
 export type DescribedX509BasicConstraints = {
@@ -31,6 +32,7 @@ export type DescribedX509Certificate = {
 const describeName = (name: ParsedX509Name): DescribedX509Name => ({
   ...(name.commonName ? { commonName: name.commonName } : {}),
   ...(name.organization ? { organization: name.organization } : {}),
+  ...(name.organizationalUnit ? { organizationalUnit: name.organizationalUnit } : {}),
 });
 
 // Parse one DER certificate (base64) into its public description.

@@ -1,3 +1,4 @@
+import type { Environment } from "@lindorm/types";
 import { KryptosError } from "../../errors/index.js";
 import type { IKryptos } from "../../interfaces/index.js";
 import type {
@@ -9,6 +10,7 @@ import type {
   ParsedX509Certificate,
   X509SubjectAltNameInput,
 } from "../../types/index.js";
+import { isEnvironment } from "./is-environment.js";
 import { computeSpkiKeyIdentifier } from "./x509/compute-spki-key-identifier.js";
 import type { X509BasicConstraints, X509KeyUsageFlag } from "./x509/encode-extensions.js";
 import type { X509NameInput } from "./x509/encode-name.js";
@@ -32,14 +34,47 @@ type StampInput = {
   serialNumber?: Buffer;
 };
 
+// The environment is stamped as the subject OU DN attribute (2.5.4.11).
 const resolveSubject = (
   option: KryptosCertificateOption,
   issuer: string | null,
   id: string,
-): { commonName: string; organization?: string } => ({
+  environment: Environment | undefined,
+): { commonName: string; organization?: string; organizationalUnit?: string } => ({
   commonName: option.subject ?? issuer ?? id,
   ...(option.organization !== undefined ? { organization: option.organization } : {}),
+  ...(environment !== undefined ? { organizationalUnit: environment } : {}),
 });
+
+// HOUSE POLICY: dev/prod (etc.) hierarchies never mix. When a child is signed by
+// a CA whose leaf carries an Environment OU, the child inherits it if it declared
+// none; if the child declares a DIFFERENT environment, refuse to sign. A CA leaf
+// with no OU, or a foreign (non-Environment) OU, imposes no constraint.
+const resolveChildEnvironment = (
+  child: Environment | undefined,
+  caLeaf: ParsedX509Certificate,
+): Environment | undefined => {
+  const parent = caLeaf.subject.organizationalUnit;
+
+  if (!isEnvironment(parent)) {
+    return child;
+  }
+
+  if (child === undefined) {
+    return parent;
+  }
+
+  if (child !== parent) {
+    throw new KryptosError("cross-environment certificate signing", {
+      code: "cross_environment_certificate_signing",
+      title: "Cross-Environment Certificate Signing",
+      details: `A '${child}' certificate cannot be signed by a '${parent}' CA; environment hierarchies (e.g. development and production) never mix.`,
+      data: { childEnvironment: child, caEnvironment: parent },
+    });
+  }
+
+  return child;
+};
 
 const normalizeSan = (
   entry: string | X509SubjectAltNameInput,
@@ -333,18 +368,20 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     );
   }
 
-  const subjectName: X509NameInput = resolveSubject(
-    certificate,
-    subjectKryptos.issuer,
-    subjectKryptos.id,
-  );
   const sans = resolveSans(certificate, subjectKryptos.issuer);
+
+  // The subject OU (environment) is resolved per mode: self-issued certs take it
+  // verbatim; CA-signed certs may inherit it from the signing CA (see
+  // resolveChildEnvironment), which needs the CA leaf, so those branches build
+  // the subject after validation.
+  const subjectFor = (environment: Environment | undefined): X509NameInput =>
+    resolveSubject(certificate, subjectKryptos.issuer, subjectKryptos.id, environment);
 
   switch (certificate.mode) {
     case "self-signed": {
       const der = buildSelfIssuedDer(
         input,
-        subjectName,
+        subjectFor(certificate.environment),
         sans,
         { ca: false },
         keyUsageForUse(subjectKryptos.use),
@@ -356,7 +393,7 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     case "root-ca": {
       const der = buildSelfIssuedDer(
         input,
-        subjectName,
+        subjectFor(certificate.environment),
         sans,
         {
           ca: true,
@@ -373,11 +410,15 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     case "ca-signed": {
       const validated = assertSigningCa(certificate.ca);
       assertValidityWithinCa(subjectKryptos, validated.caLeaf);
+      const environment = resolveChildEnvironment(
+        certificate.environment,
+        validated.caLeaf,
+      );
 
       const der = buildCaSignedDer(
         input,
         validated,
-        subjectName,
+        subjectFor(environment),
         sans,
         { ca: false },
         keyUsageForUse(subjectKryptos.use),
@@ -392,11 +433,15 @@ export const stampCertificate = (input: StampInput): Array<string> => {
         validated.caLeaf.extensions.basicConstraintsPathLen,
         certificate.pathLengthConstraint,
       );
+      const environment = resolveChildEnvironment(
+        certificate.environment,
+        validated.caLeaf,
+      );
 
       const der = buildCaSignedDer(
         input,
         validated,
-        subjectName,
+        subjectFor(environment),
         sans,
         {
           ca: true,
