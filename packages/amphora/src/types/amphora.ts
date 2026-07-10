@@ -1,6 +1,6 @@
 import type { KryptosAttributes, KryptosMetadata, LindormJwk } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { OpenIdConfiguration, Predicate } from "@lindorm/types";
+import type { Environment, OpenIdConfiguration, Predicate } from "@lindorm/types";
 
 export type AmphoraConfig = Partial<OpenIdConfiguration> & {
   issuer: string;
@@ -21,6 +21,10 @@ export type AmphoraExternalOption = {
 
 export type AmphoraOptions = {
   domain?: string;
+  // When set, keys whose leaf certificate declares a DIFFERENT Environment OU are
+  // rejected on add (cross-environment guard). Keys without a cert, or with a
+  // non-Environment (foreign) OU, are unrestricted.
+  environment?: Environment;
   external?: Array<AmphoraExternalOption>;
   logger: ILogger;
   maxExternalKeys?: number;

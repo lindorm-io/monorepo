@@ -58,13 +58,14 @@ new Amphora({
 });
 ```
 
-| Option            | Type                           | Default   | Description                                                                                                                                                                         |
-| ----------------- | ------------------------------ | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `logger`          | `ILogger`                      | required  | Logger instance from `@lindorm/logger`.                                                                                                                                             |
-| `domain`          | `string`                       | `null`    | The server's domain. Used as the default `issuer` and `jwksUri` for added keys, and as the filter for which keys appear in `amphora.jwks`. Validated as a URL at construction time. |
-| `external`        | `Array<AmphoraExternalOption>` | `[]`      | External OIDC providers to discover keys from.                                                                                                                                      |
-| `maxExternalKeys` | `number`                       | `100`     | Maximum number of keys accepted per external provider; excess keys are truncated.                                                                                                   |
-| `refreshInterval` | `number`                       | `300_000` | Milliseconds before externally-fetched keys are considered stale.                                                                                                                   |
+| Option            | Type                           | Default   | Description                                                                                                                                                                          |
+| ----------------- | ------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `logger`          | `ILogger`                      | required  | Logger instance from `@lindorm/logger`.                                                                                                                                              |
+| `domain`          | `string`                       | `null`    | The server's domain. Used as the default `issuer` and `jwksUri` for added keys, and as the filter for which keys appear in `amphora.jwks`. Validated as a URL at construction time.  |
+| `environment`     | `Environment`                  | `null`    | Cross-environment guard. When set, a key whose leaf certificate declares a different `Environment` OU is rejected on `add`. See [Environment enforcement](#environment-enforcement). |
+| `external`        | `Array<AmphoraExternalOption>` | `[]`      | External OIDC providers to discover keys from.                                                                                                                                       |
+| `maxExternalKeys` | `number`                       | `100`     | Maximum number of keys accepted per external provider; excess keys are truncated.                                                                                                    |
+| `refreshInterval` | `number`                       | `300_000` | Milliseconds before externally-fetched keys are considered stale.                                                                                                                    |
 
 ## Adding Keys
 
@@ -88,6 +89,22 @@ When `domain` is set, Amphora auto-assigns `issuer` and `jwksUri` to added keys 
 amphora.env(process.env.SIGNING_KEY!);
 amphora.env([process.env.SIGNING_KEY!, process.env.ENCRYPTION_KEY!]);
 ```
+
+### Environment enforcement
+
+When Amphora is constructed with an `environment`, `add` (and therefore `env`) rejects any key whose **leaf certificate** declares a different deployment environment — a `development` service refuses a `production` key and vice versa. The environment is read from the certificate subject's OU (organizationalUnitName), which `@lindorm/kryptos` stamps from the certificate `environment` option.
+
+```typescript
+const amphora = new Amphora({
+  domain: "https://auth.example.com",
+  environment: "production",
+  logger,
+});
+
+amphora.env(process.env.SIGNING_KEY!); // throws environment_mismatch if the cert is not production
+```
+
+The guard is deliberately narrow: keys **without a certificate** (an oct KEK, a JWK with no `x5c`), or whose leaf OU is absent or a **foreign** (non-`Environment`) value, are unrestricted. An Amphora without an `environment` ignores certificate environments entirely.
 
 ## Finding Keys
 

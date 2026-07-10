@@ -1,4 +1,5 @@
 import { KryptosKit } from "@lindorm/kryptos";
+import { createMockKryptos } from "@lindorm/kryptos/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
 import nock from "nock";
@@ -1545,5 +1546,85 @@ describe("Amphora", () => {
       expect(laxKeys[0]!.id).toBe(laxChainless.id);
       expect(strictKeys).toHaveLength(0);
     });
+  });
+});
+
+describe("Amphora environment enforcement", () => {
+  const issuer = "https://test.lindorm.io/";
+
+  const keyForEnvironment = (environment: "development" | "production") =>
+    KryptosKit.generate.sig.ec({
+      algorithm: "ES256",
+      certificate: { mode: "self-signed", subject: "leaf", environment },
+    });
+
+  test("rejects a key whose certificate environment differs", () => {
+    const amphora = new Amphora({
+      domain: issuer,
+      environment: "development",
+      logger: createMockLogger(),
+    });
+
+    expect(() => amphora.add(keyForEnvironment("production"))).toThrow(AmphoraError);
+
+    try {
+      amphora.add(keyForEnvironment("production"));
+    } catch (error) {
+      expect((error as AmphoraError).code).toBe("environment_mismatch");
+      expect((error as AmphoraError).data).toMatchObject({
+        expected: "development",
+        actual: "production",
+      });
+    }
+  });
+
+  test("accepts a key whose certificate environment matches", () => {
+    const amphora = new Amphora({
+      domain: issuer,
+      environment: "development",
+      logger: createMockLogger(),
+    });
+
+    expect(() => amphora.add(keyForEnvironment("development"))).not.toThrow();
+    expect(amphora.vault).toHaveLength(1);
+  });
+
+  test("accepts a key without a certificate (e.g. an oct KEK)", () => {
+    const amphora = new Amphora({
+      domain: issuer,
+      environment: "development",
+      logger: createMockLogger(),
+    });
+    const kek = KryptosKit.generate.enc.oct({ algorithm: "A256KW", issuer });
+
+    expect(() => amphora.add(kek)).not.toThrow();
+    expect(amphora.vault.map((k) => k.id)).toContain(kek.id);
+  });
+
+  test("accepts a key whose certificate OU is a foreign (non-environment) value", () => {
+    const amphora = new Amphora({
+      domain: issuer,
+      environment: "development",
+      logger: createMockLogger(),
+    });
+    const foreign = createMockKryptos({
+      id: "foreign-dept-key",
+      issuer,
+      jwksUri: new URL("/.well-known/jwks.json", issuer).toString(),
+      hasCertificate: true,
+      certificate: {
+        subject: { organizationalUnit: "platform-engineering" },
+      } as never,
+    });
+
+    expect(() => amphora.add(foreign)).not.toThrow();
+    expect(amphora.vault.map((k) => k.id)).toContain("foreign-dept-key");
+  });
+
+  test("an amphora without an environment ignores certificate environments", () => {
+    const amphora = new Amphora({ domain: issuer, logger: createMockLogger() });
+
+    expect(() => amphora.add(keyForEnvironment("production"))).not.toThrow();
+    expect(amphora.vault).toHaveLength(1);
   });
 });

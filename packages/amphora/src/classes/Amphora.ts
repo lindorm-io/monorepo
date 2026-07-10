@@ -2,7 +2,11 @@ import { Conduit, conduitChangeResponseDataMiddleware } from "@lindorm/conduit";
 import { isArray, isString, isUrlLike } from "@lindorm/is";
 import { type IKryptos, KryptosKit, type LindormJwk } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import type { OpenIdConfigurationResponse, OpenIdJwksResponse } from "@lindorm/types";
+import type {
+  Environment,
+  OpenIdConfigurationResponse,
+  OpenIdJwksResponse,
+} from "@lindorm/types";
 import { Predicated } from "@lindorm/utils";
 import { AmphoraError } from "../errors/index.js";
 import type { IAmphora } from "../interfaces/index.js";
@@ -13,6 +17,7 @@ import type {
   AmphoraOptions,
   AmphoraPredicate,
 } from "../types/index.js";
+import { isEnvironment } from "../utils/is-environment.js";
 
 const OIDCONF = "/.well-known/openid-configuration" as const;
 
@@ -20,6 +25,7 @@ export class Amphora implements IAmphora {
   readonly domain: string | null;
 
   private readonly conduit: Conduit;
+  private readonly environment: Environment | null;
   private readonly logger: ILogger;
   private readonly maxExternalKeys: number;
   private readonly refreshInterval: number;
@@ -51,6 +57,7 @@ export class Amphora implements IAmphora {
     this._vault = [];
 
     this.domain = options.domain ?? null;
+    this.environment = options.environment ?? null;
     this.maxExternalKeys = options.maxExternalKeys ?? 100;
     this.refreshInterval = options.refreshInterval ?? 300_000;
 
@@ -169,6 +176,8 @@ export class Amphora implements IAmphora {
         });
       }
 
+      this.assertEnvironment(item);
+
       this._vault = this._vault.filter((i) => i.id !== item.id).concat(item);
     }
 
@@ -185,6 +194,24 @@ export class Amphora implements IAmphora {
     }
 
     this.add(result);
+  }
+
+  // Cross-environment guard: reject a key whose leaf certificate declares an
+  // Environment OU that differs from this Amphora's. Keys without a certificate
+  // (oct KEKs etc.), or whose leaf OU is absent or a foreign (non-Environment)
+  // value, are unrestricted.
+  private assertEnvironment(item: IKryptos): void {
+    if (!this.environment || !item.hasCertificate) return;
+
+    const ou = item.certificate?.subject.organizationalUnit;
+    if (!isEnvironment(ou) || ou === this.environment) return;
+
+    throw new AmphoraError("Kryptos certificate environment mismatch", {
+      code: "environment_mismatch",
+      data: { id: item.id, expected: this.environment, actual: ou },
+      title: "Environment Mismatch",
+      details: `The Kryptos "${item.id}" carries a certificate for the "${ou}" environment, which does not match this Amphora's "${this.environment}" environment.`,
+    });
   }
 
   async filter(predicate: AmphoraPredicate): Promise<Array<IKryptos>> {
