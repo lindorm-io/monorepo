@@ -3717,7 +3717,7 @@ export const createTestCtx = (options?: CreateTestPylonCtxOptions): ServerHttpCo
 "
 `;
 
-exports[`scaffold > writeWorkerFiles > snapshot: all three > amphora-entity-sync content 1`] = `
+exports[`scaffold > writeWorkerFiles > snapshot: all four > amphora-entity-sync content 1`] = `
 "import { createAmphoraEntityWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
@@ -3727,7 +3727,16 @@ export default createAmphoraEntityWorker({ amphora, logger, db: postgres });
 "
 `;
 
-exports[`scaffold > writeWorkerFiles > snapshot: all three > expiry-cleanup content 1`] = `
+exports[`scaffold > writeWorkerFiles > snapshot: all four > certificate-expiry content 1`] = `
+"import { createCertificateExpiryWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora.js";
+import { logger } from "../logger/index.js";
+
+export default createCertificateExpiryWorker({ amphora, logger });
+"
+`;
+
+exports[`scaffold > writeWorkerFiles > snapshot: all four > expiry-cleanup content 1`] = `
 "import { createExpiryCleanupWorker } from "@lindorm/pylon";
 import { logger } from "../logger/index.js";
 import { postgres } from "../proteus/source.js";
@@ -3737,7 +3746,7 @@ export default createExpiryCleanupWorker({ logger, db: postgres, targets: [] });
 "
 `;
 
-exports[`scaffold > writeWorkerFiles > snapshot: all three > kryptos-rotation content 1`] = `
+exports[`scaffold > writeWorkerFiles > snapshot: all four > kryptos-rotation content 1`] = `
 "import { createKryptosRotationWorker } from "@lindorm/pylon";
 import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
@@ -3754,6 +3763,15 @@ import { logger } from "../logger/index.js";
 import { postgres } from "../proteus/source.js";
 
 export default createAmphoraEntityWorker({ amphora, logger, db: postgres });
+"
+`;
+
+exports[`scaffold > writeWorkerFiles > snapshot: certificate-expiry only > certificate-expiry content 1`] = `
+"import { createCertificateExpiryWorker } from "@lindorm/pylon";
+import { amphora } from "../pylon/amphora.js";
+import { logger } from "../logger/index.js";
+
+export default createCertificateExpiryWorker({ amphora, logger });
 "
 `;
 

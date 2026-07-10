@@ -112,6 +112,7 @@ const promptRateLimit = async (): Promise<boolean> =>
 const promptWorkers = async (): Promise<Array<WorkerKey>> => {
   const choices: Array<{ name: string; value: WorkerKey; checked?: boolean }> = [
     { name: "Amphora entity sync", value: "amphora-entity-sync" },
+    { name: "Certificate expiry monitor", value: "certificate-expiry" },
     { name: "Expiry cleanup", value: "expiry-cleanup" },
     { name: "Kryptos key rotation", value: "kryptos-rotation" },
   ];

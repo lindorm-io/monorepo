@@ -24,6 +24,18 @@ const expiryCleanup = (dbDriver: string): string =>
     ``,
   ].join("\n");
 
+const certificateExpiry = (): string =>
+  [
+    `import { createCertificateExpiryWorker } from "@lindorm/pylon";`,
+    `import { amphora } from "../pylon/amphora.js";`,
+    `import { logger } from "../logger/index.js";`,
+    ``,
+    // Monitors the certificate chains of vault keys (leaf + issuing/root CA)
+    // and logs warn/error as they approach expiry. Needs no db.
+    `export default createCertificateExpiryWorker({ amphora, logger });`,
+    ``,
+  ].join("\n");
+
 const kryptosRotation = (dbDriver: string): string =>
   [
     `import { createKryptosRotationWorker } from "@lindorm/pylon";`,
@@ -41,6 +53,8 @@ export const buildWorkerFile = (key: WorkerKey, dbDriver: string): string => {
   switch (key) {
     case "amphora-entity-sync":
       return amphoraEntitySync(dbDriver);
+    case "certificate-expiry":
+      return certificateExpiry();
     case "expiry-cleanup":
       return expiryCleanup(dbDriver);
     case "kryptos-rotation":

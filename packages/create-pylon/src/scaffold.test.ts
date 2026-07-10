@@ -617,9 +617,18 @@ describe("scaffold", () => {
   describe("writeWorkerFiles", () => {
     test.each<[string, Answers["workers"]]>([
       ["amphora-entity-sync only", ["amphora-entity-sync"]],
+      ["certificate-expiry only", ["certificate-expiry"]],
       ["expiry-cleanup only", ["expiry-cleanup"]],
       ["kryptos-rotation only", ["kryptos-rotation"]],
-      ["all three", ["amphora-entity-sync", "expiry-cleanup", "kryptos-rotation"]],
+      [
+        "all four",
+        [
+          "amphora-entity-sync",
+          "certificate-expiry",
+          "expiry-cleanup",
+          "kryptos-rotation",
+        ],
+      ],
     ])("snapshot: %s", (_name, workers) => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
