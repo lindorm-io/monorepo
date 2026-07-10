@@ -969,16 +969,20 @@ const app = new Pylon({
 ```typescript
 import {
   createAmphoraEntityWorker,
+  createCertificateExpiryWorker,
   createExpiryCleanupWorker,
   createKryptosRotationWorker,
 } from "@lindorm/pylon";
 ```
 
-| Factory                       | Default interval | Description                                                            |
-| ----------------------------- | ---------------- | ---------------------------------------------------------------------- |
-| `createAmphoraEntityWorker`   | `3m`             | Loads `KryptosDB` entities from Proteus and feeds them into Amphora    |
-| `createExpiryCleanupWorker`   | `15m`            | Calls `repository.deleteExpired()` for each entity in `targets`        |
-| `createKryptosRotationWorker` | `1d`             | Generates + rotates keys, publishing fresh ones to Amphora immediately |
+| Factory                         | Default schedule  | Description                                                            |
+| ------------------------------- | ----------------- | ---------------------------------------------------------------------- |
+| `createAmphoraEntityWorker`     | `3m` interval     | Loads `KryptosDB` entities from Proteus and feeds them into Amphora    |
+| `createCertificateExpiryWorker` | `0 10 * * *` cron | Warns/errors as vault-key certificate chains approach expiry           |
+| `createExpiryCleanupWorker`     | `15m` interval    | Calls `repository.deleteExpired()` for each entity in `targets`        |
+| `createKryptosRotationWorker`   | `1d` interval     | Generates + rotates keys, publishing fresh ones to Amphora immediately |
+
+`createCertificateExpiryWorker({ amphora, logger, warnThreshold?, errorThreshold?, cron?, timezone? })` runs daily (cron `0 10 * * *`, `UTC`) and inspects **every certificate** in **every** vault key's chain — leaf and issuing/root CAs alike (the long-lived CA certs are the real targets, and they are only reachable through the chains). A cert already expired or within `errorThreshold` (default `1mo`) logs `error`; within `warnThreshold` (default `3mo`) logs `warn`; otherwise it is silent. Certs are **deduped by `x5t#S256`** across the run — a shared CA cert produces one line, annotated with every referencing `kid` — and each run ends with one `verbose` summary (`checked / warn / error`).
 
 `createKryptosRotationWorker` defaults to the following key set (override `keys` to change the token set):
 
