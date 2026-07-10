@@ -2,6 +2,7 @@ import { B64 } from "@lindorm/b64";
 import type { ParsedX509Name } from "../../../types/index.js";
 import { parseX509Certificate } from "./parse-certificate.js";
 import { signAlgorithmName } from "./sign-algorithm-name.js";
+import { x5tS256 } from "./x509-thumbprints.js";
 
 export type DescribedX509Name = {
   commonName?: string;
@@ -17,6 +18,8 @@ export type DescribedX509BasicConstraints = {
 
 // A public, secret-free description of an X.509 certificate for inspection.
 export type DescribedX509Certificate = {
+  // RFC 7517 x5t#S256 (SHA-256 over the DER) — a stable per-certificate id.
+  thumbprint: string;
   subject: DescribedX509Name;
   issuer: DescribedX509Name;
   serialNumber: string;
@@ -37,9 +40,11 @@ const describeName = (name: ParsedX509Name): DescribedX509Name => ({
 
 // Parse one DER certificate (base64) into its public description.
 export const describeCertificate = (der: string): DescribedX509Certificate => {
-  const cert = parseX509Certificate(B64.toBuffer(der, "base64"));
+  const buffer = B64.toBuffer(der, "base64");
+  const cert = parseX509Certificate(buffer);
 
   return {
+    thumbprint: x5tS256(buffer),
     subject: describeName(cert.subject),
     issuer: describeName(cert.issuer),
     serialNumber: cert.serialNumber.toString("hex"),

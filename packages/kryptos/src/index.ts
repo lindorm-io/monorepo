@@ -6,3 +6,9 @@ export {
   isOctSecretConformant,
   validateOctSecret,
 } from "./internal/utils/oct/validate-secret.js";
+export {
+  describeCertificate,
+  type DescribedX509BasicConstraints,
+  type DescribedX509Certificate,
+  type DescribedX509Name,
+} from "./internal/utils/x509/describe-certificate.js";
