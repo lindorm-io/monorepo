@@ -61,3 +61,6 @@ pids
 
 # TypeScript
 *.tsbuildinfo
+
+# Kryptos key ceremony files (private keys — never commit)
+*.kryptos
