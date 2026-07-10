@@ -12,7 +12,7 @@ import { B64 } from "@lindorm/b64";
 import { confirm, input, select } from "@inquirer/prompts";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import { KryptosKit } from "./classes/index.js";
-import { derive, generate, inspect } from "./cli.js";
+import { derive, exportKey, generate, inspect } from "./cli.js";
 
 vi.mock("@inquirer/prompts", () => ({
   confirm: vi.fn(),
@@ -874,5 +874,175 @@ describe("kryptos CLI — .kryptos files", () => {
     const intermediate = KryptosKit.env.import(readFileSync(intPath, "utf8"));
     expect(intermediate.certificateChain).toHaveLength(2);
     expect(intermediate.certificate?.subject.organizationalUnit).toBe("development");
+  });
+});
+
+describe("kryptos export CLI", () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "kryptos-export-"));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const NB = new Date("2026-01-01T00:00:00Z");
+
+  const threeTierLeaf = (algorithm: string) => {
+    const root = KryptosKit.generate.auto({
+      algorithm: "ES384",
+      notBefore: NB,
+      expiresAt: new Date("2046-01-01T00:00:00Z"),
+      certificate: { mode: "root-ca", subject: "Root", pathLengthConstraint: 1 },
+    });
+    const inter = KryptosKit.generate.auto({
+      algorithm: "ES256",
+      notBefore: NB,
+      expiresAt: new Date("2040-01-01T00:00:00Z"),
+      certificate: {
+        mode: "intermediate-ca",
+        ca: root,
+        subject: "Int",
+        pathLengthConstraint: 0,
+      },
+    });
+    return KryptosKit.generate.auto({
+      algorithm,
+      notBefore: NB,
+      expiresAt: new Date("2036-01-01T00:00:00Z"),
+      certificate: { mode: "ca-signed", ca: inter, subject: "leaf" },
+    });
+  };
+
+  const read = (suffix: string): string =>
+    readFileSync(join(dir, `${kid}.${suffix}`), "utf8");
+
+  let kid: string;
+
+  const countCerts = (suffix: string): number =>
+    (read(suffix).match(/-----BEGIN CERTIFICATE-----/g) ?? []).length;
+
+  describe.each(["ES256", "EdDSA", "RS256", "ML-DSA-44"])(
+    "3-tier ca-signed %s leaf",
+    (algorithm) => {
+      test("writes all five PEM files that parse and round-trip", async () => {
+        const leaf = threeTierLeaf(algorithm);
+        kid = leaf.id;
+
+        await exportKey(KryptosKit.env.export(leaf), { write: dir });
+
+        // All five files exist.
+        for (const suffix of [
+          "privkey.pem",
+          "pubkey.pem",
+          "cert.pem",
+          "chain.pem",
+          "fullchain.pem",
+        ]) {
+          expect(statSync(join(dir, `${kid}.${suffix}`)).isFile()).toBe(true);
+        }
+
+        // privkey is 0600, the rest are readable.
+        expect(statSync(join(dir, `${kid}.privkey.pem`)).mode & 0o777).toBe(0o600);
+
+        // BEGIN/END markers present.
+        expect(read("privkey.pem")).toMatch(/-----BEGIN [\w ]*PRIVATE KEY-----/);
+        expect(read("privkey.pem")).toMatch(/-----END [\w ]*PRIVATE KEY-----\s*$/);
+        expect(read("pubkey.pem")).toMatch(/-----BEGIN [\w ]*PUBLIC KEY-----/);
+
+        // Cert block counts: leaf=1, chain(issuers)=2, fullchain=3.
+        expect(countCerts("cert.pem")).toBe(1);
+        expect(countCerts("chain.pem")).toBe(2);
+        expect(countCerts("fullchain.pem")).toBe(3);
+
+        // chain.pem = fullchain.pem minus the leaf.
+        expect(read("fullchain.pem").trim()).toBe(
+          `${read("cert.pem").trim()}\n${read("chain.pem").trim()}`,
+        );
+
+        // The private key PEM round-trips to the same key material.
+        const reimport = KryptosKit.from.pem({
+          id: leaf.id,
+          algorithm: leaf.algorithm,
+          type: leaf.type,
+          use: leaf.use,
+          ...(leaf.curve ? { curve: leaf.curve } : {}),
+          privateKey: read("privkey.pem"),
+        });
+        expect(reimport.export("der").privateKey).toEqual(leaf.export("der").privateKey);
+      });
+    },
+  );
+
+  test("a key without a certificate writes only privkey + pubkey", async () => {
+    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
+    kid = key.id;
+
+    await exportKey(KryptosKit.env.export(key), { write: dir });
+
+    expect(readdirSync(dir).sort()).toEqual([`${kid}.privkey.pem`, `${kid}.pubkey.pem`]);
+  });
+
+  test("a public-only key writes no privkey file", async () => {
+    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
+    const publicOnly = KryptosKit.from.jwk({ ...key.toJWK("public") });
+    kid = publicOnly.id;
+
+    await exportKey(KryptosKit.env.export(publicOnly), { write: dir });
+
+    const files = readdirSync(dir);
+    expect(files).toContain(`${kid}.pubkey.pem`);
+    expect(files).not.toContain(`${kid}.privkey.pem`);
+  });
+
+  test("a symmetric oct key writes only a private-key block", async () => {
+    const oct = KryptosKit.generate.auto({ algorithm: "A256KW" });
+    kid = oct.id;
+
+    await exportKey(KryptosKit.env.export(oct), { write: dir });
+
+    expect(readdirSync(dir)).toEqual([`${kid}.privkey.pem`]);
+  });
+
+  test("refuses to overwrite an existing file", async () => {
+    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
+    const env = KryptosKit.env.export(key);
+
+    await exportKey(env, { write: dir });
+
+    await expect(exportKey(env, { write: dir })).rejects.toThrow(
+      /Refusing to overwrite/i,
+    );
+  });
+
+  test("accepts a .kryptos file path as input", async () => {
+    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
+    kid = key.id;
+    const keyPath = join(dir, "key.kryptos");
+    writeFileSync(keyPath, KryptosKit.env.export(key) + "\n");
+
+    await exportKey(keyPath, { write: dir });
+
+    expect(statSync(join(dir, `${kid}.privkey.pem`)).isFile()).toBe(true);
+  });
+
+  test("never prints key material to stdout", async () => {
+    const key = KryptosKit.generate.auto({
+      algorithm: "ES256",
+      certificate: { mode: "self-signed", subject: "leaf" },
+    });
+    kid = key.id;
+
+    const out = await captureLogs(() =>
+      exportKey(KryptosKit.env.export(key), { write: dir }),
+    );
+
+    // The private key body must never appear on stdout — only paths + summary.
+    const privateBody = read("privkey.pem").split("\n")[1];
+    expect(out).not.toContain(privateBody);
+    expect(out).toContain(join(dir, `${kid}.privkey.pem`));
+    expect(out).toContain("thumbprint");
   });
 });

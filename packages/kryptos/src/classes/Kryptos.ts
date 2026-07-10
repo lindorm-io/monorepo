@@ -20,6 +20,7 @@ import type {
   KryptosKeys,
   KryptosOperation,
   KryptosOptions,
+  KryptosPem,
   KryptosString,
   KryptosType,
   KryptosUse,
@@ -29,6 +30,7 @@ import type {
 } from "../types/index.js";
 import type { ExportCache } from "../internal/types/export-cache.js";
 import { encodeCborEnv } from "../internal/utils/cbor/encode-cbor-env.js";
+import { certDerToPem } from "../internal/utils/x509/der-to-pem.js";
 import { computeKeyId } from "../internal/utils/compute-key-id.js";
 import { computeThumbprint } from "../internal/utils/compute-thumbprint.js";
 import { createDerFromDer } from "../internal/utils/from/der-from-der.js";
@@ -317,7 +319,7 @@ export class Kryptos implements IKryptos {
   export<K extends KryptosString>(format: "b64"): K;
   export<K extends KryptosBuffer>(format: "der"): K;
   export<K extends KryptosJwk>(format: "jwk"): K;
-  export<K extends KryptosString>(format: "pem"): K;
+  export(format: "pem"): KryptosPem;
   export(format: KryptosFormat): KryptosKey {
     this.assertNotDisposed();
 
@@ -394,7 +396,19 @@ export class Kryptos implements IKryptos {
             }),
           );
         }
-        return { ...metadata, ...this._cache.pem } as KryptosString;
+
+        // Attach the certificate side (standard PEM CERTIFICATE blocks, leaf
+        // first) when a chain exists; `certificate` is the leaf.
+        const chain = this.certificateChain;
+        const certificatePem =
+          chain.length > 0
+            ? {
+                certificate: certDerToPem(chain[0]),
+                certificateChain: chain.map(certDerToPem),
+              }
+            : {};
+
+        return { ...metadata, ...this._cache.pem, ...certificatePem } as KryptosPem;
       }
 
       default:

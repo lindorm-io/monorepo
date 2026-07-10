@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { realpathSync } from "fs";
+import { join } from "path";
 import { pathToFileURL } from "url";
 import { confirm, input, select } from "@inquirer/prompts";
 import { expiresAt, isReadableTime } from "@lindorm/date";
@@ -15,6 +16,7 @@ import { ENVIRONMENTS, isEnvironment } from "./internal/utils/is-environment.js"
 import { inspectJson, inspectSummary } from "./internal/utils/inspect-key.js";
 import { getOkpCurve } from "./internal/utils/okp/get-curve.js";
 import { resolveEnvInput } from "./internal/utils/resolve-env-input.js";
+import { writeFileExclusive } from "./internal/utils/write-file-exclusive.js";
 import { writeKeyFile } from "./internal/utils/write-key-file.js";
 import {
   EC_CURVES,
@@ -759,6 +761,54 @@ export const inspect = async (
   console.log(options.json ? inspectJson(key) : inspectSummary(key));
 };
 
+export type ExportOptions = {
+  write?: string | boolean;
+};
+
+// Certbot-style PEM file set, flat with the kid as prefix. Only what exists is
+// written (a symmetric oct key yields just a private-key block). No key material
+// ever reaches stdout — only the written paths + the inspect summary.
+export const exportKey = async (
+  arg: string,
+  options: ExportOptions = {},
+): Promise<void> => {
+  if (!arg || !arg.trim()) {
+    throw new KryptosError("Missing key to export", {
+      code: "invalid_export_input",
+      title: "Invalid Export Input",
+      details:
+        "Pass a kryptos:… env string or a path to a .kryptos file to export as PEM.",
+    });
+  }
+
+  const key = KryptosKit.env.import(resolveEnvInput(arg, "key to export"));
+  const pem = key.export("pem");
+
+  const dir =
+    typeof options.write === "string" && options.write.length > 0
+      ? options.write
+      : process.cwd();
+
+  const written: Array<string> = [];
+  const writePem = (suffix: string, contents: string, mode: number): void => {
+    const body = contents.endsWith("\n") ? contents : `${contents}\n`;
+    written.push(writeFileExclusive(join(dir, `${key.id}.${suffix}`), body, mode));
+  };
+
+  if (pem.privateKey) writePem("privkey.pem", pem.privateKey, 0o600);
+  if (pem.publicKey) writePem("pubkey.pem", pem.publicKey, 0o644);
+  if (pem.certificate) writePem("cert.pem", pem.certificate, 0o644);
+  if (pem.certificateChain && pem.certificateChain.length > 1) {
+    // chain.pem = the issuers only (everything above the leaf).
+    writePem("chain.pem", pem.certificateChain.slice(1).join("\n"), 0o644);
+  }
+  if (pem.certificateChain && pem.certificateChain.length > 0) {
+    writePem("fullchain.pem", pem.certificateChain.join("\n"), 0o644);
+  }
+
+  console.log(`\nWrote:\n\n${written.join("\n")}\n\n${inspectSummary(key)}\n`);
+};
+
 program
   .command("generate")
   .description(
@@ -839,6 +889,18 @@ program
   .argument("<input>", "a kryptos:… env string or a path to a .kryptos file")
   .option("--json", "print the decoded structure (secrets redacted) instead of a summary")
   .action(inspect);
+
+program
+  .command("export")
+  .description(
+    "Export a key to certbot-style PEM files: <kid>.{privkey,pubkey,cert,chain,fullchain}.pem. Writes only what exists (a symmetric oct key yields just a private-key block); privkey is mode 0600 and never printed",
+  )
+  .argument("<key>", "a kryptos:… env string or a path to a .kryptos file")
+  .option(
+    "--write [dir]",
+    "output directory (default cwd); refuses to overwrite existing files",
+  )
+  .action(exportKey);
 
 const invokedAs = process.argv[1]
   ? pathToFileURL(realpathSync(process.argv[1])).href

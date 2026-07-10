@@ -593,6 +593,26 @@ Use the path convention `urn:lindorm:<service>:<purpose>:<version>`. The version
 
 Prints a readable, secret-free view of any `kryptos:` env string (CBOR or JSON) **or `.kryptos` file** — attributes, thumbprint, and full certificate-chain details. `--json` prints the decoded structure instead, with secret members shown as `<n bytes>`. See [Inspect an env string](#inspect-an-env-string).
 
+### `kryptos export`
+
+Exports a key to a **certbot-style PEM file set** (flat, `<kid>` prefix) for tools that speak PEM. The `<key>` argument is path-or-string (`kryptos:…` or a `.kryptos` file); output goes to `--write [dir]` (default cwd). Only the files that apply are written, an existing file is never overwritten, and **key material never touches stdout** — only the written paths + the inspect summary.
+
+```bash
+kryptos export ./secrets/key_<kid>.kryptos --write ./pem
+```
+
+| File                  | Contents                                 | Mode | Written when            |
+| --------------------- | ---------------------------------------- | ---- | ----------------------- |
+| `<kid>.privkey.pem`   | private key PEM                          | 0600 | private material exists |
+| `<kid>.pubkey.pem`    | public key PEM                           | 0644 | public material exists  |
+| `<kid>.cert.pem`      | leaf certificate                         | 0644 | a certificate exists    |
+| `<kid>.chain.pem`     | issuer certs only (chain minus the leaf) | 0644 | the chain has > 1 entry |
+| `<kid>.fullchain.pem` | leaf + issuers                           | 0644 | a certificate exists    |
+
+The bodies are standard PEM (`openssl pkey`, `openssl x509`, `openssl verify` accept them; `openssl verify -CAfile root.pem -untrusted chain.pem cert.pem` passes). Point a server straight at the pair — e.g. nginx `ssl_certificate <kid>.fullchain.pem; ssl_certificate_key <kid>.privkey.pem;`. Symmetric `oct` keys are a special case: they produce only a proprietary `<kid>.privkey.pem` block (no public half, no certs) — PEM export is really for the asymmetric `EC` / `OKP` / `RSA` / `AKP` keys.
+
+`Kryptos.export("pem")` returns the same shape programmatically — the key material plus, when a chain exists, `certificate` (leaf PEM) and `certificateChain` (PEM blocks, leaf first).
+
 ## Testing helpers
 
 Two ESM subpaths expose mock factories matched to your test runner:

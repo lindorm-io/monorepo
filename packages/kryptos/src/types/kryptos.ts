@@ -14,6 +14,15 @@ export type KryptosString = {
   use: KryptosUse;
 };
 
+// The PEM export result: key material PEM plus, when a certificate chain exists,
+// the leaf `certificate` and the full `certificateChain` as PEM blocks (leaf
+// first). Backward-compatible with `KryptosString` — the cert members are
+// optional and absent for key-only exports.
+export type KryptosPem = KryptosString & {
+  certificate?: string;
+  certificateChain?: Array<string>;
+};
+
 export type KryptosBuffer = {
   id: string;
   algorithm: KryptosAlgorithm;

@@ -7,6 +7,7 @@ import type {
   KryptosJSON,
   KryptosJwk,
   KryptosMetadata,
+  KryptosPem,
   KryptosString,
   LindormJwk,
   ParsedX509Certificate,
@@ -29,5 +30,5 @@ export interface IKryptos
   export(format: "b64"): KryptosString;
   export(format: "der"): KryptosBuffer;
   export(format: "jwk"): KryptosJwk;
-  export(format: "pem"): KryptosString;
+  export(format: "pem"): KryptosPem;
 }
