@@ -2,6 +2,7 @@ import type {
   KryptosAttributes,
   KryptosBuffer,
   KryptosDB,
+  KryptosEnvFormat,
   KryptosExportMode,
   KryptosJSON,
   KryptosJwk,
@@ -20,7 +21,7 @@ export interface IKryptos
   verifyCertificate(options: { trustAnchors: string | Array<string> }): void;
 
   toDB(): KryptosDB;
-  toEnvString(): string;
+  toEnvString(format?: KryptosEnvFormat): string;
   toJSON(): KryptosJSON;
   toJWK(mode?: KryptosExportMode): LindormJwk;
   toString(): string;

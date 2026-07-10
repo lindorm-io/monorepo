@@ -22,7 +22,7 @@ This package is **ESM-only**. It cannot be loaded with `require(...)`. Use `impo
 - `KryptosKit` — a static facade for generating, importing, cloning, and type-narrowing keys.
 - Sync and async generators for every supported JOSE algorithm, plus an algorithm-only `auto` shortcut that picks a sensible curve / modulus.
 - Multi-format export (`jwk`, `pem`, `b64`, `der`) and import (`jwk`, `pem`, `b64`, `der`, `utf`, `db`, `auto`).
-- Compact `kryptos:<base64url-JWK>` env-string format with matching importer.
+- Compact `kryptos:` env-string format — CBOR by default, JSON opt-in, auto-detected on import.
 - Built-in X.509 certificate stamping at generation time — self-signed, root-CA, or CA-signed — with chain verification against trust anchors.
 - Secure key disposal via the TC39 Explicit Resource Management protocol (`Symbol.dispose`, `using`).
 - Interactive CLI (`kryptos generate`) for one-off env-ready keys.
@@ -103,6 +103,26 @@ const fromPem = KryptosKit.from.pem({
 const auto = KryptosKit.from.auto(unknownInput);
 ```
 
+### Env strings
+
+A key serialises to a single `kryptos:` blob for a `.env` file. There is **one prefix** and two encodings:
+
+- **CBOR** (`kryptos:<base64url-cbor>`) — the compact **default**. A proprietary integer-keyed map (see [`cbor-table.ts`](src/internal/constants/cbor-table.ts)); raw key material as byte strings, enums as integers. Typically 30–60% smaller than JSON.
+- **JSON** (`kryptos:<base64url-json>`) — opt-in, human-readable, the classic private JWK.
+
+```ts
+const cbor = KryptosKit.env.export(key); // default
+const json = KryptosKit.env.export(key, "json"); // opt-in
+```
+
+`env.import` **auto-detects** the encoding from the decoded first byte (`{` ⇒ JSON, a CBOR map header ⇒ CBOR), so older vaulted JSON strings keep importing unchanged:
+
+```ts
+const restored = KryptosKit.env.import(process.env.EC_KEY!); // either form
+```
+
+Both forms carry the full private surface (including `hidden`) and round-trip to an identical key — same thumbprint-derived `kid`. The CBOR format is **versioned**: a string from a newer kryptos than yours fails with a clear error rather than mis-parsing.
+
 ### Key ids
 
 An explicit id always wins — `options.id`, a JWK `kid`, a DB row, an env string are honored verbatim. When no id is given, one is derived:
@@ -177,6 +197,19 @@ kryptos generate --type OKP --use sig --algorithm EdDSA --curve Ed448 --expiry 2
 ```
 
 `hidden` keeps a key **out of the published JWKS** (e.g. a CA whose public half must never be advertised). It is an operational flag, not part of the JOSE standard: it round-trips through env strings and private JWKs, but is **never** emitted in a public JWK. Both `generate` and `derive` take `--hidden` (scripted) or prompt for it (interactive).
+
+Power-user flags (scripted only, no prompts) cover every attribute the library accepts: `--id`, `--issuer`, `--jwks-uri`, `--owner-id`, `--not-before` (ISO date), `--modulus` (RSA `2048`/`3072`/`4096`), `--operations` (comma list overriding the computed `key_ops`), and `--format` (`cbor` default, or `json`). `derive` additionally takes `--id`, `--expiry`, `--issuer`, `--jwks-uri`, `--owner-id`, `--format`. Every flag is validated with a clear error.
+
+### Inspect an env string
+
+`kryptos inspect <kryptos:…>` prints a readable, **secret-free** summary of a key — kid, type/alg/use/curve/enc, purpose, hidden, timestamps, operations, which key halves are present, thumbprint, and (when present) every certificate in the chain (subject, issuer, serial, validity, basic constraints, key usage, SANs). It accepts both CBOR and JSON strings.
+
+```bash
+kryptos inspect "$LINDORM_ROOT_CA"
+kryptos inspect "$MY_KEY" --json   # decoded structure; secret members shown as "<n bytes>"
+```
+
+Secret material (`d`, `k`, `priv`, `p`, `q`, `dp`, `dq`, `qi`) is never printed — not even truncated.
 
 ## X.509 certificates
 
@@ -343,7 +376,7 @@ The model class. Construct directly only if you already have raw key material �
 | `verifyCertificate({ trustAnchors })`        | Walks the chain, verifies signatures and validity windows; throws on failure.         |
 | `export("b64" \| "der" \| "jwk" \| "pem")`   | Returns key material in the requested format.                                         |
 | `toDB()`                                     | Database row — attributes plus base64 `privateKey` / `publicKey`.                     |
-| `toEnvString()`                              | Compact `kryptos:<base64url-private-JWK>` blob.                                       |
+| `toEnvString(format?)`                       | `kryptos:` blob; `format` is `"cbor"` (default) or `"json"`.                          |
 | `toJSON()`                                   | Attributes plus computed flags, no key material.                                      |
 | `toJWK(mode?)`                               | Lindorm-extended JWK; `mode` defaults to `"public"`, pass `"private"` to include `d`. |
 | `toString()`                                 | `Kryptos<{type}:{algorithm}:{id}>`.                                                   |
@@ -386,10 +419,10 @@ A static-only facade. Every method below is `KryptosKit.<member>`.
 
 #### Env strings
 
-| Member                | Description                                                             |
-| --------------------- | ----------------------------------------------------------------------- |
-| `env.export(kryptos)` | Returns `kryptos:<base64url(private LindormJwk)>`.                      |
-| `env.import(string)`  | Parses a `kryptos:` blob back into an `IKryptos`. Throws on bad prefix. |
+| Member                         | Description                                                                     |
+| ------------------------------ | ------------------------------------------------------------------------------- |
+| `env.export(kryptos, format?)` | Returns a `kryptos:` blob; `format` is `"cbor"` (default) or `"json"`.          |
+| `env.import(string)`           | Parses a `kryptos:` blob (CBOR or JSON, auto-detected) back into an `IKryptos`. |
 
 #### Type guards
 
@@ -461,6 +494,10 @@ kryptos derive --type oct --use enc --algorithm A256KW \
 `--seed` is a `kryptos:` env string for an oct key (its private bytes are the HKDF input); `--path` is bound into the derivation. Only `oct` keys can be derived. Without `--type` the command is interactive and prompts for anything missing.
 
 Use the path convention `urn:lindorm:<service>:<purpose>:<version>`. The version segment is the rotation lever: bump `v1` → `v2` to derive a fresh, unrelated key from the same seed.
+
+### `kryptos inspect`
+
+Prints a readable, secret-free view of any `kryptos:` env string (CBOR or JSON) — attributes, thumbprint, and full certificate-chain details. `--json` prints the decoded structure instead, with secret members shown as `<n bytes>`. See [Inspect an env string](#inspect-an-env-string).
 
 ## Testing helpers
 

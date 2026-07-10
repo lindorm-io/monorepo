@@ -1,6 +1,8 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`KryptosKit (OKP) > env > export 1`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6ImZmMmE0NDhlLThlYjAtNTlhOC04ZmM2LTBjZTIzYWQwN2U4ZiIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiZXhwIjoyNDkzMTAwODAwLCJoaWRkZW4iOmZhbHNlLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
+exports[`KryptosKit (OKP) > env > export 1`] = `"kryptos:rAABAQICeCRmZjJhNDQ4ZS04ZWIwLTU5YTgtOGZjNi0wY2UyM2FkMDdlOGYDFAQBBQQKGpSZswALGmWScQAMGmWScQAQ9BgeWCAZELAIDqUKGiwUYxDDEaIcJ3NuV-8LPQU2JG1OebWqpxggWCAcCiZb6IdZ4HfS0Xe3bbxjkqluLmWpnbyLtAAQ9gJMSw"`;
+
+exports[`KryptosKit (OKP) > env > export 2`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6ImZmMmE0NDhlLThlYjAtNTlhOC04ZmM2LTBjZTIzYWQwN2U4ZiIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiZXhwIjoyNDkzMTAwODAwLCJoaWRkZW4iOmZhbHNlLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
 
 exports[`KryptosKit (OKP) > from > auto > b64 1`] = `
 {

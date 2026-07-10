@@ -14,6 +14,7 @@ import type {
   KryptosAuto,
   KryptosCurve,
   KryptosDB,
+  KryptosEnvFormat,
   KryptosFormat,
   KryptosFrom,
   KryptosFromBuffer,
@@ -40,6 +41,7 @@ import {
   generateKeyAsync,
 } from "../internal/utils/generate.js";
 import { calculateKeyOps } from "../internal/utils/key-ops.js";
+import { decodeCborEnv } from "../internal/utils/cbor/decode-cbor-env.js";
 import { fromOptions } from "../internal/utils/from-options.js";
 import { isB64, isDer, isJwk, isPem } from "../internal/utils/is.js";
 import { isKryptos } from "../internal/utils/is-kryptos.js";
@@ -48,7 +50,7 @@ import { Kryptos } from "./Kryptos.js";
 
 type Env = {
   import(string: string): IKryptos;
-  export(kryptos: IKryptos): string;
+  export(kryptos: IKryptos, format?: KryptosEnvFormat): string;
 };
 
 type From = {
@@ -205,13 +207,33 @@ export class KryptosKit {
       });
     }
 
-    const [_, jwk] = string.split(":");
+    const payload = B64.toBuffer(string.slice("kryptos:".length), "b64u");
 
-    return KryptosKit.fromJwk(JSON.parse(B64.decode(jwk, "b64u")));
+    // One prefix, two payloads — auto-detect on the first decoded byte: a JSON
+    // object opens with `{` (0x7b); a CBOR map header is major type 5 (0xa0–0xbb,
+    // including the 0xb8–0xbb long-count forms). Anything else is not a kryptos
+    // env payload.
+    const first = payload[0];
+
+    if (first === 0x7b) {
+      return KryptosKit.fromJwk(JSON.parse(payload.toString("utf8")));
+    }
+
+    if (first >= 0xa0 && first <= 0xbb) {
+      return KryptosKit.fromJwk(decodeCborEnv(payload));
+    }
+
+    throw new KryptosError("Unrecognized kryptos env payload", {
+      code: "invalid_kryptos_string",
+      title: "Invalid Kryptos String",
+      details:
+        "The kryptos: payload is neither a JSON object nor a CBOR map; it is not a recognized env string.",
+      data: { firstByte: first },
+    });
   }
 
-  private static envExport(kryptos: IKryptos): string {
-    return kryptos.toEnvString();
+  private static envExport(kryptos: IKryptos, format?: KryptosEnvFormat): string {
+    return kryptos.toEnvString(format);
   }
 
   // private from
@@ -340,7 +362,6 @@ export class KryptosKit {
 
   private static generateAuto(options: KryptosAuto): IKryptos {
     const config = autoGenerateConfig(options.algorithm);
-    const operations = calculateKeyOps(config);
 
     if (config.purpose && ["cookie", "session"].includes(config.purpose)) {
       config.hidden = config.hidden ?? true;
@@ -349,7 +370,7 @@ export class KryptosKit {
     const generate: KryptosGenerate = {
       ...config,
       ...options,
-      operations,
+      operations: options.operations ?? calculateKeyOps(config),
     };
 
     return KryptosKit.finalizeGenerate(generate, generateKey(generate));
@@ -548,7 +569,6 @@ export class KryptosKit {
 
   private static async generateAutoAsync(options: KryptosAuto): Promise<IKryptos> {
     const config = autoGenerateConfig(options.algorithm);
-    const operations = calculateKeyOps(config);
 
     if (config.purpose && ["cookie", "session"].includes(config.purpose)) {
       config.hidden = config.hidden ?? true;
@@ -557,7 +577,7 @@ export class KryptosKit {
     const generate: KryptosGenerate = {
       ...config,
       ...options,
-      operations,
+      operations: options.operations ?? calculateKeyOps(config),
     };
 
     return KryptosKit.finalizeGenerate(generate, await generateKeyAsync(generate));

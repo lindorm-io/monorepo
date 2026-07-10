@@ -35,6 +35,7 @@ describe("KryptosKit (RSA)", () => {
       const kryptos = KryptosKit.from.auto(TEST_RSA_KEY_B64);
 
       expect(KryptosKit.env.export(kryptos)).toMatchSnapshot();
+      expect(KryptosKit.env.export(kryptos, "json")).toMatchSnapshot();
     });
   });
 

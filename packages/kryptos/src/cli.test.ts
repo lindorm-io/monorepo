@@ -1,7 +1,8 @@
+import { B64 } from "@lindorm/b64";
 import { confirm, input, select } from "@inquirer/prompts";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import { KryptosKit } from "./classes/index.js";
-import { derive, generate } from "./cli.js";
+import { derive, generate, inspect } from "./cli.js";
 
 vi.mock("@inquirer/prompts", () => ({
   confirm: vi.fn(),
@@ -47,6 +48,26 @@ const runDerive = async (options: Parameters<typeof derive>[0] = {}): Promise<st
   if (!match) throw new Error("no env string in CLI output");
   return match[0];
 };
+
+// Runs `inspect`, returning everything it printed.
+const runInspect = async (
+  envString: string,
+  options: Parameters<typeof inspect>[1] = {},
+): Promise<string> => {
+  const logs: Array<string> = [];
+  const spy = vi.spyOn(console, "log").mockImplementation((...args: Array<unknown>) => {
+    logs.push(args.map(String).join(" "));
+  });
+
+  await inspect(envString, options);
+
+  spy.mockRestore();
+  return logs.join("\n");
+};
+
+// The decoded payload's first byte distinguishes JSON (0x7b) from CBOR (map).
+const firstPayloadByte = (env: string): number =>
+  B64.toBuffer(env.slice("kryptos:".length), "b64u")[0];
 
 // A reusable oct seed key exported as its kryptos:… env string.
 const seedEnv = (): string =>
@@ -418,5 +439,162 @@ describe("kryptos derive CLI", () => {
     );
 
     expect(withoutHidden.hidden).toBe(false);
+  });
+});
+
+describe("kryptos CLI — env format & power-user flags", () => {
+  beforeEach(() => {
+    mockSelect.mockReset();
+    mockInput.mockReset();
+    mockConfirm.mockReset();
+  });
+
+  test("generate defaults to CBOR", async () => {
+    const env = await runGenerate({ type: "EC", use: "sig", algorithm: "ES256" });
+
+    expect(firstPayloadByte(env)).toBeGreaterThanOrEqual(0xa0);
+    expect(firstPayloadByte(env)).toBeLessThanOrEqual(0xbb);
+    expect(KryptosKit.env.import(env).type).toBe("EC");
+  });
+
+  test("generate --format json emits a JSON payload", async () => {
+    const env = await runGenerate({
+      type: "EC",
+      use: "sig",
+      algorithm: "ES256",
+      format: "json",
+    });
+
+    expect(firstPayloadByte(env)).toBe(0x7b); // '{'
+    expect(KryptosKit.env.import(env).type).toBe("EC");
+  });
+
+  test("generate rejects an invalid --format", async () => {
+    await expect(
+      runGenerate({ type: "EC", use: "sig", algorithm: "ES256", format: "yaml" }),
+    ).rejects.toThrow(/Invalid --format/i);
+  });
+
+  test("generate honours id/issuer/jwks-uri/owner-id/not-before", async () => {
+    const key = KryptosKit.env.import(
+      await runGenerate({
+        type: "EC",
+        use: "sig",
+        algorithm: "ES256",
+        id: "key_customId000000",
+        issuer: "https://iss.test",
+        jwksUri: "https://iss.test/jwks",
+        ownerId: "owner-1",
+        notBefore: "2026-01-01T00:00:00Z",
+      }),
+    );
+
+    expect(key.id).toBe("key_customId000000");
+    expect(key.issuer).toBe("https://iss.test");
+    expect(key.jwksUri).toBe("https://iss.test/jwks");
+    expect(key.ownerId).toBe("owner-1");
+    expect(key.notBefore.toISOString()).toBe("2026-01-01T00:00:00.000Z");
+  });
+
+  test("generate honours --modulus and --operations", async () => {
+    const key = KryptosKit.env.import(
+      await runGenerate({
+        type: "RSA",
+        use: "sig",
+        algorithm: "RS256",
+        modulus: "4096",
+        operations: "sign",
+      }),
+    );
+
+    expect(key.modulus).toBe(4096);
+    expect(key.operations).toEqual(["sign"]);
+  });
+
+  test("generate rejects invalid --modulus, --operations, --not-before", async () => {
+    await expect(
+      runGenerate({ type: "RSA", use: "sig", algorithm: "RS256", modulus: "1024" }),
+    ).rejects.toThrow(/Invalid --modulus/i);
+
+    await expect(
+      runGenerate({
+        type: "EC",
+        use: "sig",
+        algorithm: "ES256",
+        operations: "sign,bogus",
+      }),
+    ).rejects.toThrow(/Invalid --operations/i);
+
+    await expect(
+      runGenerate({
+        type: "EC",
+        use: "sig",
+        algorithm: "ES256",
+        notBefore: "not-a-date",
+      }),
+    ).rejects.toThrow(/Invalid --not-before/i);
+  });
+
+  test("derive honours --format json and --id/--expiry/--issuer", async () => {
+    const env = await runDerive({
+      type: "oct",
+      use: "enc",
+      algorithm: "A256KW",
+      seed: seedEnv(),
+      path: "urn:lindorm:tyr:kek:v1",
+      id: "key_deriveId000000",
+      expiry: "5y",
+      issuer: "https://iss.test",
+      format: "json",
+    });
+
+    expect(firstPayloadByte(env)).toBe(0x7b);
+    const key = KryptosKit.env.import(env);
+    expect(key.id).toBe("key_deriveId000000");
+    expect(key.issuer).toBe("https://iss.test");
+    expect(key.expiresAt.getFullYear()).toBe(new Date().getFullYear() + 5);
+  });
+});
+
+describe("kryptos inspect CLI", () => {
+  test("prints a readable summary for a CBOR env string", async () => {
+    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
+    const out = await runInspect(KryptosKit.env.export(key));
+
+    expect(out).toContain(key.id);
+    expect(out).toContain("EC/ES256/sig");
+    expect(out).toContain("thumbprint");
+  });
+
+  test("accepts a JSON env string too", async () => {
+    const key = KryptosKit.generate.auto({ algorithm: "EdDSA" });
+    const out = await runInspect(key.toEnvString("json"));
+
+    expect(out).toContain(key.id);
+  });
+
+  test("--json prints the decoded structure with secrets redacted", async () => {
+    const key = KryptosKit.generate.auto({ algorithm: "RS256" });
+    const secretD = (key.toJWK("private") as { d?: string }).d!;
+
+    const out = await runInspect(KryptosKit.env.export(key), { json: true });
+
+    expect(out).not.toContain(secretD);
+    expect(out).toMatch(/"d": "<\d+ bytes>"/);
+  });
+
+  test("never prints secret bytes in the summary", async () => {
+    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
+    const secretD = (key.toJWK("private") as { d?: string }).d!;
+
+    const out = await runInspect(KryptosKit.env.export(key));
+
+    expect(out).not.toContain(secretD);
+  });
+
+  test("rejects a non-kryptos argument", async () => {
+    await expect(runInspect("not-a-kryptos-string")).rejects.toThrow(
+      /Invalid Inspect Input|env string/i,
+    );
   });
 });

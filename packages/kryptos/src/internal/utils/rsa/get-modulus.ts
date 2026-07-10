@@ -3,9 +3,13 @@ import type { KryptosAlgorithm, RsaModulus } from "../../../types/index.js";
 
 type Options = {
   algorithm: KryptosAlgorithm;
+  modulus?: RsaModulus;
 };
 
 export const getRsaModulus = (options: Options): RsaModulus => {
+  // An explicit modulus (e.g. from the CLI) wins over the algorithm default.
+  if (options.modulus) return options.modulus;
+
   switch (options.algorithm) {
     case "RSA-OAEP":
       return 2048;

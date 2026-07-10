@@ -1,6 +1,7 @@
 import type { Optional } from "@lindorm/types";
 import type { KryptosAttributes } from "../../types/attributes.js";
 import type { KryptosCertificateOption } from "../../types/certificate.js";
+import type { RsaModulus } from "../../types/key-types/index.js";
 
 type Attributes = Omit<
   KryptosAttributes,
@@ -26,4 +27,5 @@ type Std = Optional<
 
 type Req = Pick<KryptosAttributes, "algorithm" | "type" | "use">;
 
-export type KryptosGenerate = Std & Req & { certificate?: KryptosCertificateOption };
+export type KryptosGenerate = Std &
+  Req & { certificate?: KryptosCertificateOption; modulus?: RsaModulus };

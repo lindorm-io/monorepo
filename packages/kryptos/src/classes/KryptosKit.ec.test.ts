@@ -62,7 +62,10 @@ describe("KryptosKit (EC)", () => {
         use: "enc",
       });
 
+      // CBOR is the default; the JSON opt-in is locked separately so neither
+      // format can drift silently.
       expect(KryptosKit.env.export(kryptos)).toMatchSnapshot();
+      expect(KryptosKit.env.export(kryptos, "json")).toMatchSnapshot();
     });
   });
 

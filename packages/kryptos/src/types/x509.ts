@@ -28,6 +28,7 @@ export type ParsedX509Name = {
 
 export type ParsedX509Extensions = {
   readonly basicConstraintsCa: boolean;
+  readonly basicConstraintsPathLen?: number;
   readonly keyUsage: ReadonlyArray<ParsedX509KeyUsageFlag>;
   readonly subjectKeyIdentifier?: Buffer;
   readonly authorityKeyIdentifier?: Buffer;

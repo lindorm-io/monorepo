@@ -1,0 +1,133 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`inspectSummary / inspectJson > renders full certificate details for a ca-signed 2-cert chain (snapshot) 1`] = `
+"Kryptos EC/ES256/sig
+  kid          key_leaf000000000
+  curve        P-256
+  encryption   —
+  purpose      —
+  hidden       false
+  ownerId      —
+  issuer       —
+  jwksUri      —
+  createdAt    2026-01-01T00:00:00.000Z
+  notBefore    2026-01-01T00:00:00.000Z
+  expiresAt    2036-01-01T00:00:00.000Z
+  operations   sign, verify
+  privateKey   true
+  publicKey    true
+  thumbprint   <thumb>
+  x5t#S256     <thumb>
+  certificates (2):
+  [0] subject     CN=tyr.lindorm.io, O=Lindorm
+      issuer      CN=Lindorm Root CA, O=Lindorm
+      serial      <hex>
+      validity    2026-01-01T00:00:00.000Z → 2036-01-01T00:00:00.000Z
+      sigAlg      ECDSA-SHA384
+      basic       CA=false
+      keyUsage    digitalSignature
+      sans        dns:tyr.lindorm.io
+  [1] subject     CN=Lindorm Root CA, O=Lindorm
+      issuer      CN=Lindorm Root CA, O=Lindorm
+      serial      <hex>
+      validity    2026-01-01T00:00:00.000Z → 2046-01-01T00:00:00.000Z
+      sigAlg      ECDSA-SHA384
+      basic       CA=true, pathLen=1
+      keyUsage    keyCertSign, crlSign
+      sans        uri:urn:lindorm:kryptos:key_rootca00000000"
+`;
+
+exports[`inspectSummary / inspectJson > summary snapshot: AKP 1`] = `
+"Kryptos AKP/ML-DSA-44/sig
+  kid          4aa7b7bb-4f3a-48b0-8140-61f22013a41a
+  curve        —
+  encryption   —
+  purpose      —
+  hidden       false
+  ownerId      —
+  issuer       —
+  jwksUri      —
+  createdAt    2026-01-01T00:00:00.000Z
+  notBefore    2026-01-01T00:00:00.000Z
+  expiresAt    2051-01-01T00:00:00.000Z
+  operations   sign, verify
+  privateKey   true
+  publicKey    true
+  thumbprint   pl8ltpIZt6ZA8j63sRIyt2I2iqItF5E9EgHcVxnjq4M"
+`;
+
+exports[`inspectSummary / inspectJson > summary snapshot: EC 1`] = `
+"Kryptos EC/ES256/sig
+  kid          b3b62d67-9c48-4e3c-9efd-81f82f6b6551
+  curve        P-256
+  encryption   —
+  purpose      —
+  hidden       false
+  ownerId      —
+  issuer       —
+  jwksUri      —
+  createdAt    2026-01-01T00:00:00.000Z
+  notBefore    2026-01-01T00:00:00.000Z
+  expiresAt    2051-01-01T00:00:00.000Z
+  operations   sign, verify
+  privateKey   true
+  publicKey    true
+  thumbprint   9frPmeYEmy3Yr9biE5huOHwcTUdGMjP-PAqC0oOFNuU"
+`;
+
+exports[`inspectSummary / inspectJson > summary snapshot: OKP 1`] = `
+"Kryptos OKP/EdDSA/sig
+  kid          96cc6942-bfde-4c7d-8ee4-4357208c9db8
+  curve        Ed25519
+  encryption   —
+  purpose      —
+  hidden       false
+  ownerId      —
+  issuer       —
+  jwksUri      —
+  createdAt    2026-01-01T00:00:00.000Z
+  notBefore    2026-01-01T00:00:00.000Z
+  expiresAt    2051-01-01T00:00:00.000Z
+  operations   sign, verify
+  privateKey   true
+  publicKey    true
+  thumbprint   dBIbSqSfm5uZP2eW5JgaF9tlQBQkbnNoUsb90IvJ62A"
+`;
+
+exports[`inspectSummary / inspectJson > summary snapshot: RSA 1`] = `
+"Kryptos RSA/RS256/sig
+  kid          587fd323-46d5-46d7-a22a-56200991c20b
+  curve        —
+  encryption   —
+  purpose      —
+  hidden       false
+  ownerId      —
+  issuer       —
+  jwksUri      —
+  createdAt    2026-01-01T00:00:00.000Z
+  notBefore    2026-01-01T00:00:00.000Z
+  expiresAt    2051-01-01T00:00:00.000Z
+  operations   sign, verify
+  privateKey   true
+  publicKey    true
+  thumbprint   qz-zSKonahkoGyMKHtyt7by1URfOES3ZW9yROPXyhwA"
+`;
+
+exports[`inspectSummary / inspectJson > summary snapshot: oct 1`] = `
+"Kryptos oct/HS256/sig
+  kid          245fb48b-c9fb-408a-882f-46589efb6611
+  curve        —
+  encryption   —
+  purpose      —
+  hidden       false
+  ownerId      —
+  issuer       —
+  jwksUri      —
+  createdAt    2026-01-01T00:00:00.000Z
+  notBefore    2026-01-01T00:00:00.000Z
+  expiresAt    2051-01-01T00:00:00.000Z
+  operations   sign, verify
+  privateKey   true
+  publicKey    false
+  thumbprint   8tdFNyiTs1bcQDNPcxnBe3JenJfPrhXv2eppqUdocJs"
+`;

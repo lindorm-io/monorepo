@@ -11,6 +11,7 @@ import type {
   KryptosCurve,
   KryptosDB,
   KryptosEncryption,
+  KryptosEnvFormat,
   KryptosExportMode,
   KryptosFormat,
   KryptosJSON,
@@ -27,6 +28,7 @@ import type {
   RsaModulus,
 } from "../types/index.js";
 import type { ExportCache } from "../internal/types/export-cache.js";
+import { encodeCborEnv } from "../internal/utils/cbor/encode-cbor-env.js";
 import { computeKeyId } from "../internal/utils/compute-key-id.js";
 import { computeThumbprint } from "../internal/utils/compute-thumbprint.js";
 import { createDerFromDer } from "../internal/utils/from/der-from-der.js";
@@ -434,10 +436,26 @@ export class Kryptos implements IKryptos {
     });
   }
 
-  toEnvString(): string {
+  toEnvString(format: KryptosEnvFormat = "cbor"): string {
     this.assertNotDisposed();
 
-    return "kryptos:" + B64.encode(JSON.stringify(this.toJWK("private")), "b64u");
+    const jwk = this.toJWK("private");
+
+    switch (format) {
+      case "cbor":
+        return "kryptos:" + B64.encode(encodeCborEnv(jwk), "b64u");
+
+      case "json":
+        return "kryptos:" + B64.encode(JSON.stringify(jwk), "b64u");
+
+      default:
+        throw new KryptosError(`Unsupported env-string format: ${format as string}`, {
+          code: "unsupported_env_format",
+          title: "Unsupported Env Format",
+          details: `The env-string format "${format as string}" is not supported; use "cbor" or "json".`,
+          data: { format },
+        });
+    }
   }
 
   toJSON(): KryptosJSON {

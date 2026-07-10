@@ -36,6 +36,7 @@ describe("KryptosKit (oct)", () => {
       const kryptos = KryptosKit.from.auto(TEST_OCT_KEY_B64);
 
       expect(KryptosKit.env.export(kryptos)).toMatchSnapshot();
+      expect(KryptosKit.env.export(kryptos, "json")).toMatchSnapshot();
     });
   });
 

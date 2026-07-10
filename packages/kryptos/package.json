@@ -61,6 +61,7 @@
     "@lindorm/sha": "^0.7.0",
     "@lindorm/types": "^0.10.0",
     "@lindorm/utils": "^0.10.0",
+    "cbor2": "^2.3.0",
     "commander": "^14.0.3"
   },
   "devDependencies": {

@@ -8,7 +8,9 @@ import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
 import { program } from "commander";
 import { KryptosKit } from "./classes/index.js";
 import { KryptosError } from "./errors/index.js";
+import { CBOR_OPS } from "./internal/constants/cbor-table.js";
 import { getEcCurve } from "./internal/utils/ec/get-curve.js";
+import { inspectJson, inspectSummary } from "./internal/utils/inspect-key.js";
 import { getOkpCurve } from "./internal/utils/okp/get-curve.js";
 import {
   EC_CURVES,
@@ -18,6 +20,8 @@ import {
   type KryptosCertificateOption,
   type KryptosCurve,
   type KryptosEncryption,
+  type KryptosEnvFormat,
+  type KryptosOperation,
   type KryptosType,
   type KryptosUse,
   OCT_ENC_DIR_ALGORITHMS,
@@ -28,8 +32,86 @@ import {
   OKP_SIG_ALGORITHMS,
   OKP_SIG_CURVES,
   RSA_ENC_ALGORITHMS,
+  type RsaModulus,
   RSA_SIG_ALGORITHMS,
 } from "./types/index.js";
+
+// Wire format (`--format`): CBOR is the compact default, JSON is opt-in.
+const resolveFormat = (format: string | undefined): KryptosEnvFormat => {
+  switch (format) {
+    case undefined:
+    case "cbor":
+      return "cbor";
+
+    case "json":
+      return "json";
+
+    default:
+      throw new KryptosError(`Invalid --format: ${format}`, {
+        code: "invalid_format",
+        title: "Invalid Format",
+        details: `The env format "${format}" is not supported; use "cbor" or "json".`,
+        data: { format },
+      });
+  }
+};
+
+const resolveNotBefore = (value: string | undefined): Date | undefined => {
+  if (!value) return undefined;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    throw new KryptosError(`Invalid --not-before: ${value}`, {
+      code: "invalid_not_before",
+      title: "Invalid Not-Before",
+      details: `The not-before value "${value}" is not a parseable ISO date.`,
+      data: { notBefore: value },
+    });
+  }
+  return date;
+};
+
+// Weak 1024-bit keys are intentionally excluded from the CLI surface.
+const ALLOWED_MODULI: ReadonlyArray<RsaModulus> = [2048, 3072, 4096];
+
+const resolveModulus = (value: string | undefined): RsaModulus | undefined => {
+  if (!value) return undefined;
+
+  const modulus = Number(value);
+  if (!(ALLOWED_MODULI as readonly number[]).includes(modulus)) {
+    throw new KryptosError(`Invalid --modulus: ${value}`, {
+      code: "invalid_modulus",
+      title: "Invalid Modulus",
+      details: `The RSA modulus "${value}" is not supported; use ${ALLOWED_MODULI.join(", ")}.`,
+      data: { modulus: value, valid: [...ALLOWED_MODULI] },
+    });
+  }
+  return modulus as RsaModulus;
+};
+
+const resolveOperations = (
+  value: string | undefined,
+): Array<KryptosOperation> | undefined => {
+  if (!value) return undefined;
+
+  const domain = Object.keys(CBOR_OPS);
+  const operations = value
+    .split(",")
+    .map((op) => op.trim())
+    .filter(Boolean);
+
+  for (const op of operations) {
+    if (!domain.includes(op)) {
+      throw new KryptosError(`Invalid --operations entry: ${op}`, {
+        code: "invalid_operations",
+        title: "Invalid Operations",
+        details: `The key operation "${op}" is not valid; choose from ${domain.join(", ")}.`,
+        data: { operation: op, valid: domain },
+      });
+    }
+  }
+  return operations as Array<KryptosOperation>;
+};
 
 program.name("kryptos").description("CLI for managing kryptos keys");
 
@@ -262,6 +344,14 @@ export type GenerateOptions = {
   expiry?: string;
   hidden?: boolean;
   purpose?: string;
+  id?: string;
+  issuer?: string;
+  jwksUri?: string;
+  ownerId?: string;
+  notBefore?: string;
+  modulus?: string;
+  operations?: string;
+  format?: string;
   certificate?: string;
   subject?: string;
   organization?: string;
@@ -407,19 +497,31 @@ export const generate = async (options: GenerateOptions = {}): Promise<void> => 
 
   const hidden = options.hidden ?? (scripted ? false : await confirmHidden());
 
+  // Power-user metadata: scripted flags only, no interactive prompts.
+  const notBefore = resolveNotBefore(options.notBefore);
+  const modulus = resolveModulus(options.modulus);
+  const operations = resolveOperations(options.operations);
+
   const certificate = await resolveCertificate(type, options, scripted);
 
   const kryptos = KryptosKit.generate.auto({
     algorithm,
     certificate,
     purpose,
+    ...(options.id ? { id: options.id } : {}),
+    ...(options.issuer ? { issuer: options.issuer } : {}),
+    ...(options.jwksUri ? { jwksUri: options.jwksUri } : {}),
+    ...(options.ownerId ? { ownerId: options.ownerId } : {}),
     ...(curve ? { curve } : {}),
     ...(encryption ? { encryption } : {}),
     ...(keyExpiresAt ? { expiresAt: keyExpiresAt } : {}),
+    ...(notBefore ? { notBefore } : {}),
+    ...(modulus ? { modulus } : {}),
+    ...(operations ? { operations } : {}),
     ...(hidden ? { hidden: true } : {}),
   });
 
-  const result = KryptosKit.env.export(kryptos);
+  const result = KryptosKit.env.export(kryptos, resolveFormat(options.format));
 
   if (kryptos.hasCertificate) {
     console.log(
@@ -444,6 +546,12 @@ export type DeriveOptions = {
   encryption?: string;
   hidden?: boolean;
   purpose?: string;
+  id?: string;
+  expiry?: string;
+  issuer?: string;
+  jwksUri?: string;
+  ownerId?: string;
+  format?: string;
 };
 
 const inputSeed = async (): Promise<string> =>
@@ -517,6 +625,8 @@ export const derive = async (options: DeriveOptions = {}): Promise<void> => {
 
   const hidden = options.hidden ?? (scripted ? false : await confirmHidden());
 
+  const deriveExpiresAt = resolveExpiry(options.expiry);
+
   const kryptos = KryptosKit.from.derive({
     type: "oct",
     use,
@@ -524,15 +634,41 @@ export const derive = async (options: DeriveOptions = {}): Promise<void> => {
     deriveFrom: seed,
     path: path.trim(),
     purpose,
+    ...(options.id ? { id: options.id } : {}),
+    ...(options.issuer ? { issuer: options.issuer } : {}),
+    ...(options.jwksUri ? { jwksUri: options.jwksUri } : {}),
+    ...(options.ownerId ? { ownerId: options.ownerId } : {}),
+    ...(deriveExpiresAt ? { expiresAt: deriveExpiresAt } : {}),
     ...(encryption ? { encryption } : {}),
     ...(hidden ? { hidden: true } : {}),
   });
 
-  const result = KryptosKit.env.export(kryptos);
+  const result = KryptosKit.env.export(kryptos, resolveFormat(options.format));
 
   console.log(
     `\nCopy the string to your env:\n\n${result}\n\nThe string can be imported into a Kryptos object by using KryptosKit:\n\nconst key = KryptosKit.env.import("${result}");\n`,
   );
+};
+
+export type InspectOptions = {
+  json?: boolean;
+};
+
+export const inspect = async (
+  envString: string,
+  options: InspectOptions = {},
+): Promise<void> => {
+  if (!envString || !envString.trim().startsWith("kryptos:")) {
+    throw new KryptosError("Missing or invalid env string to inspect", {
+      code: "invalid_inspect_input",
+      title: "Invalid Inspect Input",
+      details: "Pass a kryptos:… env string (CBOR or JSON) to inspect.",
+    });
+  }
+
+  const key = KryptosKit.env.import(envString.trim());
+
+  console.log(options.json ? inspectJson(key) : inspectSummary(key));
 };
 
 program
@@ -546,8 +682,16 @@ program
   .option("--curve <curve>", "curve when the algorithm supports more than one")
   .option("-e, --encryption <encryption>", "AES encryption for enc keys, e.g. A256GCM")
   .option("--expiry <duration>", "validity duration, e.g. 20y, 6mo (default 25y)")
+  .option("--not-before <iso>", "validity start as an ISO date")
   .option("--hidden", "mark hidden — exclude from JWKS publication")
   .option("-p, --purpose <purpose>", "key purpose")
+  .option("--id <id>", "explicit key id (else a thumbprint/random id is derived)")
+  .option("--issuer <issuer>", "issuer (iss)")
+  .option("--jwks-uri <uri>", "JWKS URI (jku)")
+  .option("--owner-id <id>", "owner id")
+  .option("--modulus <bits>", "RSA modulus: 2048, 3072, 4096")
+  .option("--operations <ops>", "comma-separated key_ops override, e.g. sign,verify")
+  .option("--format <format>", "env-string format: cbor (default) or json")
   .option("-c, --certificate <mode>", "stamp a cert: self-signed, root-ca, ca-signed")
   .option("--subject <subject>", "certificate subject / CN")
   .option("--organization <organization>", "certificate organization / O")
@@ -572,7 +716,20 @@ program
   )
   .option("--hidden", "mark hidden — exclude from JWKS publication")
   .option("-p, --purpose <purpose>", "key purpose")
+  .option("--id <id>", "explicit key id (else derived from seed + path)")
+  .option("--expiry <duration>", "validity duration, e.g. 20y, 6mo (default 25y)")
+  .option("--issuer <issuer>", "issuer (iss)")
+  .option("--jwks-uri <uri>", "JWKS URI (jku)")
+  .option("--owner-id <id>", "owner id")
+  .option("--format <format>", "env-string format: cbor (default) or json")
   .action(derive);
+
+program
+  .command("inspect")
+  .description("Inspect a kryptos:… env string (CBOR or JSON); never prints secret bytes")
+  .argument("<env-string>", "the kryptos:… env string to inspect")
+  .option("--json", "print the decoded structure (secrets redacted) instead of a summary")
+  .action(inspect);
 
 const invokedAs = process.argv[1]
   ? pathToFileURL(realpathSync(process.argv[1])).href

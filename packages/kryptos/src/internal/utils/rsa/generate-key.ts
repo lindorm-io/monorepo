@@ -7,6 +7,7 @@ const generateKeyPairAsync = promisify(generateKeyPair);
 
 type Options = {
   algorithm: KryptosAlgorithm;
+  modulus?: RsaModulus;
 };
 
 type Result = {

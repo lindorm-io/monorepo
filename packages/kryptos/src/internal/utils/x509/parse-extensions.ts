@@ -7,11 +7,13 @@ import type {
 import {
   ASN1_TAG_BIT_STRING,
   ASN1_TAG_BOOLEAN,
+  ASN1_TAG_INTEGER,
   ASN1_TAG_OCTET_STRING,
   ASN1_TAG_OID,
   ASN1_TAG_SEQUENCE,
   decodeBitString,
   decodeBoolean,
+  decodeInteger,
   decodeOid,
   readSequenceChildren,
   readTlv,
@@ -37,7 +39,9 @@ const KEY_USAGE_BITS: ReadonlyArray<ParsedX509KeyUsageFlag> = [
   "decipherOnly",
 ];
 
-const parseBasicConstraints = (extnValue: Buffer): { ca: boolean } => {
+// RFC 5280 §4.2.1.9: BasicConstraints ::= SEQUENCE { cA BOOLEAN DEFAULT FALSE,
+// pathLenConstraint INTEGER (0..MAX) OPTIONAL }.
+const parseBasicConstraints = (extnValue: Buffer): { ca: boolean; pathLen?: number } => {
   const tlv = readTlv(extnValue, 0);
   if (tlv.tag !== ASN1_TAG_SEQUENCE) {
     throw new KryptosError("BasicConstraints is not a SEQUENCE", {
@@ -48,13 +52,28 @@ const parseBasicConstraints = (extnValue: Buffer): { ca: boolean } => {
     });
   }
   const body = extnValue.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
-  const children = readSequenceChildren(body);
-  for (const child of children) {
-    if (child.tag === ASN1_TAG_BOOLEAN) {
-      return { ca: decodeBoolean(child.content) };
+
+  let ca = false;
+  let pathLen: number | undefined;
+
+  for (const child of readSequenceChildren(body)) {
+    switch (child.tag) {
+      case ASN1_TAG_BOOLEAN:
+        ca = decodeBoolean(child.content);
+        break;
+
+      case ASN1_TAG_INTEGER: {
+        const bytes = decodeInteger(child.content);
+        pathLen = bytes.readUIntBE(0, bytes.length);
+        break;
+      }
+
+      default:
+        break;
     }
   }
-  return { ca: false };
+
+  return pathLen !== undefined ? { ca, pathLen } : { ca };
 };
 
 const parseKeyUsage = (extnValue: Buffer): ReadonlyArray<ParsedX509KeyUsageFlag> => {
@@ -243,6 +262,7 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
   const body = der.subarray(tlv.contentStart, tlv.contentStart + tlv.contentLength);
 
   let basicConstraintsCa = false;
+  let basicConstraintsPathLen: number | undefined;
   let keyUsage: ReadonlyArray<ParsedX509KeyUsageFlag> = [];
   let subjectKeyIdentifier: Buffer | undefined;
   let authorityKeyIdentifier: Buffer | undefined;
@@ -271,7 +291,9 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
     const extnValue = parts[valueIndex].content;
 
     if (oid === X509_OID_EXT_BASIC_CONSTRAINTS) {
-      basicConstraintsCa = parseBasicConstraints(extnValue).ca;
+      const basicConstraints = parseBasicConstraints(extnValue);
+      basicConstraintsCa = basicConstraints.ca;
+      basicConstraintsPathLen = basicConstraints.pathLen;
     } else if (oid === X509_OID_EXT_KEY_USAGE) {
       keyUsage = parseKeyUsage(extnValue);
     } else if (oid === X509_OID_EXT_SUBJECT_KEY_IDENTIFIER) {
@@ -292,6 +314,7 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
 
   return {
     basicConstraintsCa,
+    ...(basicConstraintsPathLen !== undefined ? { basicConstraintsPathLen } : {}),
     keyUsage,
     ...(subjectKeyIdentifier !== undefined ? { subjectKeyIdentifier } : {}),
     ...(authorityKeyIdentifier !== undefined ? { authorityKeyIdentifier } : {}),

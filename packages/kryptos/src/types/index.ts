@@ -6,6 +6,7 @@ export * from "./auto.js";
 export * from "./certificate.js";
 export * from "./curve.js";
 export * from "./encryption.js";
+export * from "./env.js";
 export * from "./from.js";
 export * from "./jwk.js";
 export * from "./kryptos.js";
