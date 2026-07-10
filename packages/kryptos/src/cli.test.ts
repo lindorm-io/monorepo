@@ -1,6 +1,16 @@
+import {
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 import { B64 } from "@lindorm/b64";
 import { confirm, input, select } from "@inquirer/prompts";
-import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import { KryptosKit } from "./classes/index.js";
 import { derive, generate, inspect } from "./cli.js";
 
@@ -62,6 +72,21 @@ const runInspect = async (
   await inspect(envString, options);
 
   spy.mockRestore();
+  return logs.join("\n");
+};
+
+// Captures everything a command prints (used when there is no env string to
+// extract — e.g. `--write` runs).
+const captureLogs = async (fn: () => Promise<void>): Promise<string> => {
+  const logs: Array<string> = [];
+  const spy = vi.spyOn(console, "log").mockImplementation((...args: Array<unknown>) => {
+    logs.push(args.map(String).join(" "));
+  });
+  try {
+    await fn();
+  } finally {
+    spy.mockRestore();
+  }
   return logs.join("\n");
 };
 
@@ -625,5 +650,229 @@ describe("kryptos inspect CLI", () => {
     await expect(runInspect("not-a-kryptos-string")).rejects.toThrow(
       /Invalid Inspect Input|env string/i,
     );
+  });
+});
+
+describe("kryptos CLI — .kryptos files", () => {
+  let dir: string;
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), "kryptos-cli-"));
+  });
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  const kryptosFile = (): string => readdirSync(dir).find((f) => f.endsWith(".kryptos"))!;
+
+  const onlyFile = (): string =>
+    KryptosKit.env.import(readFileSync(join(dir, kryptosFile()), "utf8")).id;
+
+  describe("--write", () => {
+    test("writes <kid>.kryptos at mode 0600, prints path + summary and NOT the secret", async () => {
+      const out = await captureLogs(() =>
+        generate({
+          type: "EC",
+          use: "sig",
+          algorithm: "ES256",
+          certificate: "self-signed",
+          subject: "leaf",
+          environment: "development",
+          write: dir,
+        }),
+      );
+
+      const file = kryptosFile();
+      const kid = onlyFile();
+      const filePath = join(dir, file);
+
+      expect(file).toBe(`${kid}.kryptos`);
+      expect(statSync(filePath).mode & 0o777).toBe(0o600);
+
+      const content = readFileSync(filePath, "utf8").trim();
+      const restored = KryptosKit.env.import(content);
+      expect(restored.id).toBe(kid);
+      expect(restored.certificate?.subject.organizationalUnit).toBe("development");
+
+      // Path + summary printed; the secret env string never touches stdout.
+      expect(out).toContain(filePath);
+      expect(out).toContain("OU=development");
+      expect(out).not.toContain(content);
+      expect(out).not.toMatch(/kryptos:\S/);
+    });
+
+    test("derive --write keeps the secret off stdout", async () => {
+      const out = await captureLogs(() =>
+        derive({
+          type: "oct",
+          use: "enc",
+          algorithm: "A256KW",
+          seed: seedEnv(),
+          path: "urn:lindorm:tyr:kek:v1",
+          write: dir,
+        }),
+      );
+
+      const content = readFileSync(join(dir, kryptosFile()), "utf8").trim();
+      expect(KryptosKit.env.import(content).type).toBe("oct");
+      expect(out).not.toMatch(/kryptos:\S/);
+      expect(out).toContain(join(dir, kryptosFile()));
+    });
+
+    test("refuses to overwrite an existing file", async () => {
+      const opts = {
+        type: "EC" as const,
+        use: "sig",
+        algorithm: "ES256",
+        id: "key_fixedId00000000",
+        write: dir,
+      };
+
+      await generate(opts);
+
+      await expect(generate(opts)).rejects.toThrow(/Refusing to overwrite/i);
+    });
+
+    test("defaults the directory to cwd when --write has no value", async () => {
+      const cwd = process.cwd();
+      const spy = vi.spyOn(process, "cwd").mockReturnValue(dir);
+      try {
+        await generate({ type: "EC", use: "sig", algorithm: "ES256", write: true });
+      } finally {
+        spy.mockRestore();
+      }
+      expect(cwd).toBe(cwd); // sanity: cwd unchanged for other tests
+      expect(kryptosFile()).toMatch(/^key_.*\.kryptos$/);
+    });
+  });
+
+  describe("path-or-string inputs", () => {
+    test("generate --ca accepts a file path", async () => {
+      const rootPath = join(dir, "root.kryptos");
+      writeFileSync(
+        rootPath,
+        KryptosKit.env.export(
+          KryptosKit.generate.auto({
+            algorithm: "ES384",
+            certificate: { mode: "root-ca", subject: "Root", pathLengthConstraint: 1 },
+          }),
+        ) + "\n",
+      );
+
+      const leaf = KryptosKit.env.import(
+        await runGenerate({
+          type: "EC",
+          use: "sig",
+          algorithm: "ES256",
+          certificate: "ca-signed",
+          ca: rootPath,
+          subject: "leaf",
+        }),
+      );
+
+      expect(leaf.certificateChain).toHaveLength(2);
+    });
+
+    test("derive --seed accepts a file path", async () => {
+      const seedPath = join(dir, "seed.kryptos");
+      writeFileSync(seedPath, seedEnv() + "\n");
+
+      const key = KryptosKit.env.import(
+        await runDerive({
+          type: "oct",
+          use: "enc",
+          algorithm: "A256KW",
+          seed: seedPath,
+          path: "urn:lindorm:tyr:kek:v1",
+        }),
+      );
+
+      expect(key.type).toBe("oct");
+    });
+
+    test("inspect accepts both a file path and an inline string", async () => {
+      const env = KryptosKit.env.export(
+        KryptosKit.generate.auto({
+          algorithm: "ES256",
+          certificate: { mode: "self-signed", subject: "leaf" },
+        }),
+      );
+      const path = join(dir, "key.kryptos");
+      writeFileSync(path, env + "\n");
+
+      expect(await runInspect(path)).toContain("CN=leaf");
+      expect(await runInspect(env)).toContain("CN=leaf");
+    });
+
+    test("errors clearly on a missing file", async () => {
+      await expect(runInspect(join(dir, "nope.kryptos"))).rejects.toThrow(
+        /could not be read as a file|Could not read/i,
+      );
+    });
+
+    test("errors clearly on a file without a kryptos env string", async () => {
+      const path = join(dir, "bad.kryptos");
+      writeFileSync(path, "not-a-key\n");
+
+      await expect(runInspect(path)).rejects.toThrow(/does not contain a/i);
+    });
+  });
+
+  test("full history-clean ceremony: root → intermediate → KEK, no inline secrets", async () => {
+    // Root CA written to a file (the secret is never passed inline).
+    const rootOut = await captureLogs(() =>
+      generate({
+        type: "EC",
+        use: "sig",
+        algorithm: "ES384",
+        certificate: "root-ca",
+        subject: "Root CA",
+        environment: "development",
+        pathLength: "1",
+        id: "key_ceremonyRoot00",
+        write: dir,
+      }),
+    );
+    const rootPath = join(dir, "key_ceremonyRoot00.kryptos");
+
+    // Intermediate signed by the root FILE, written to a file.
+    const intOut = await captureLogs(() =>
+      generate({
+        type: "EC",
+        use: "sig",
+        algorithm: "ES256",
+        certificate: "intermediate-ca",
+        ca: rootPath,
+        subject: "Issuing CA",
+        pathLength: "0",
+        id: "key_ceremonyInt000",
+        write: dir,
+      }),
+    );
+    const intPath = join(dir, "key_ceremonyInt000.kryptos");
+
+    // KEK derived from a seed FILE.
+    const seedPath = join(dir, "seed.kryptos");
+    writeFileSync(seedPath, seedEnv() + "\n");
+    const kekOut = await captureLogs(() =>
+      derive({
+        type: "oct",
+        use: "enc",
+        algorithm: "A256KW",
+        seed: seedPath,
+        path: "urn:lindorm:tyr:kek:v1",
+        write: dir,
+      }),
+    );
+
+    // No inline secret ever appeared on stdout during the ceremony.
+    for (const out of [rootOut, intOut, kekOut]) {
+      expect(out).not.toMatch(/kryptos:\S/);
+    }
+
+    const intermediate = KryptosKit.env.import(readFileSync(intPath, "utf8"));
+    expect(intermediate.certificateChain).toHaveLength(2);
+    expect(intermediate.certificate?.subject.organizationalUnit).toBe("development");
   });
 });

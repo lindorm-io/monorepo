@@ -549,6 +549,33 @@ kryptos generate
 
 Prompts for type, use, algorithm, curve (only when the algorithm allows more than one), encryption (for `enc` keys), an optional purpose, and an optional expiry, then prints both the `kryptos:` env blob and a one-liner showing how to import it. Every prompt has a matching flag — pass `--type` to run fully scripted.
 
+### `.kryptos` files — a history-clean ceremony
+
+`generate` and `derive` take `--write [dir]` to write the env string to `<dir>/<kid>.kryptos` (mode **0600**, `dir` defaults to cwd) instead of printing it. **No secret ever reaches stdout or shell history** — only the file path plus the same summary `inspect` shows. An existing file is never overwritten (there is no `--force`).
+
+`--ca` (generate), `--seed` (derive), and `inspect`'s argument each accept **either** an inline `kryptos:…` string **or** a path to a `.kryptos` file — anything not starting with `kryptos:` is read as a file. So a full CA ceremony never puts a secret on a command line:
+
+```bash
+# Root CA → root.<kid>.kryptos (0600), nothing secret printed
+kryptos generate --type EC --use sig --algorithm ES384 \
+  --certificate root-ca --subject "Lindorm Root CA" --environment production \
+  --path-length 1 --write ./secrets
+
+# Issuing CA signed by the root FILE → another 0600 file
+kryptos generate --type EC --use sig --algorithm ES256 \
+  --certificate intermediate-ca --ca ./secrets/key_<rootkid>.kryptos \
+  --subject "Tyr Issuing CA" --path-length 0 --write ./secrets
+
+# A KEK derived from a seed FILE
+kryptos derive --type oct --use enc --algorithm A256KW \
+  --seed ./secrets/root-seed.kryptos --path urn:lindorm:tyr:kek:v1 --write ./secrets
+
+# Read one back — path or inline string
+kryptos inspect ./secrets/key_<kid>.kryptos
+```
+
+`.kryptos` files hold private key material — keep them out of version control. `@lindorm/create-pylon` adds `*.kryptos` to the generated `.gitignore`; both workspace-root `.gitignore`s already ignore it.
+
 ### `kryptos derive`
 
 Derives a **deterministic** oct key from a seed key and a derivation path — the root of a key hierarchy (KEKs, HMAC keys). Same seed + same path + same algorithm always yields byte-identical key material **and the same key id**, so the derived key never has to be stored: keep the seed, re-derive on demand, and existing ciphertexts (which embed the key id) still decrypt.
@@ -558,13 +585,13 @@ kryptos derive --type oct --use enc --algorithm A256KW \
   --seed "$ROOT_SEED" --path urn:lindorm:tyr:kek:v1
 ```
 
-`--seed` is a `kryptos:` env string for an oct key (its private bytes are the HKDF input); `--path` is bound into the derivation. Only `oct` keys can be derived. Without `--type` the command is interactive and prompts for anything missing.
+`--seed` is an oct key as a `kryptos:` string **or a path to a `.kryptos` file** (its private bytes are the HKDF input); `--path` is bound into the derivation. Only `oct` keys can be derived. Without `--type` the command is interactive and prompts for anything missing.
 
 Use the path convention `urn:lindorm:<service>:<purpose>:<version>`. The version segment is the rotation lever: bump `v1` → `v2` to derive a fresh, unrelated key from the same seed.
 
 ### `kryptos inspect`
 
-Prints a readable, secret-free view of any `kryptos:` env string (CBOR or JSON) — attributes, thumbprint, and full certificate-chain details. `--json` prints the decoded structure instead, with secret members shown as `<n bytes>`. See [Inspect an env string](#inspect-an-env-string).
+Prints a readable, secret-free view of any `kryptos:` env string (CBOR or JSON) **or `.kryptos` file** — attributes, thumbprint, and full certificate-chain details. `--json` prints the decoded structure instead, with secret members shown as `<n bytes>`. See [Inspect an env string](#inspect-an-env-string).
 
 ## Testing helpers
 

@@ -14,6 +14,8 @@ import { getEcCurve } from "./internal/utils/ec/get-curve.js";
 import { ENVIRONMENTS, isEnvironment } from "./internal/utils/is-environment.js";
 import { inspectJson, inspectSummary } from "./internal/utils/inspect-key.js";
 import { getOkpCurve } from "./internal/utils/okp/get-curve.js";
+import { resolveEnvInput } from "./internal/utils/resolve-env-input.js";
+import { writeKeyFile } from "./internal/utils/write-key-file.js";
 import {
   EC_CURVES,
   EC_ENC_ALGORITHMS,
@@ -361,6 +363,7 @@ export type GenerateOptions = {
   san?: Array<string>;
   pathLength?: string;
   ca?: string;
+  write?: string | boolean;
 };
 
 const resolveCertificate = async (
@@ -453,17 +456,16 @@ const resolveCertificate = async (
     return pathLength != null ? Number(pathLength) : undefined;
   };
 
-  // Parent CA: --ca flag (works interactively too), else prompt to paste it.
+  // Parent CA: --ca flag (works interactively too), else prompt. Accepts an
+  // inline kryptos:… string OR a path to a .kryptos file.
   const resolveCaEnv = async (): Promise<IKryptos> => {
     const caEnv =
       options.ca ??
       (interactive
         ? await input({
-            message: "Issuing CA key (its kryptos:… env string)",
+            message: "Issuing CA key (a kryptos:… string or a path to a .kryptos file)",
             validate: (value) =>
-              value.trim().startsWith("kryptos:")
-                ? true
-                : "Paste the kryptos: env string exported from the CA key",
+              value.trim() ? true : "Provide a kryptos:… string or a file path",
           })
         : undefined);
 
@@ -472,11 +474,11 @@ const resolveCertificate = async (
         code: "missing_issuing_ca",
         title: "Missing Issuing CA",
         details:
-          "A ca-signed or intermediate-ca certificate needs the issuing CA — pass --ca <kryptos:… env string>.",
+          "A ca-signed or intermediate-ca certificate needs the issuing CA — pass --ca <kryptos:… string or path>.",
       });
     }
 
-    return KryptosKit.env.import(caEnv.trim());
+    return KryptosKit.env.import(resolveEnvInput(caEnv, "issuing CA"));
   };
 
   switch (mode) {
@@ -528,6 +530,32 @@ const resolveCertificate = async (
         data: { mode },
       });
   }
+};
+
+// When `--write` is used the secret never touches stdout: the env string goes to
+// a 0600 `<kid>.kryptos` file and only the absolute path + the same summary that
+// `inspect` prints are shown. Without it, behaviour is unchanged.
+const printKeyResult = (
+  kryptos: IKryptos,
+  result: string,
+  write: string | boolean | undefined,
+): void => {
+  if (write !== undefined) {
+    const dir = typeof write === "string" && write.length > 0 ? write : process.cwd();
+    const filePath = writeKeyFile(dir, kryptos.id, result);
+    console.log(`\nWrote key to:\n\n${filePath}\n\n${inspectSummary(kryptos)}\n`);
+    return;
+  }
+
+  if (kryptos.hasCertificate) {
+    console.log(
+      `\nGenerated an X.509 certificate (thumbprint ${kryptos.certificateThumbprint}). It is embedded in the env string below.`,
+    );
+  }
+
+  console.log(
+    `\nCopy the string to your env:\n\n${result}\n\nThe string can be imported into a Kryptos object by using KryptosKit:\n\nconst key = KryptosKit.env.import("${result}");\n`,
+  );
 };
 
 export const generate = async (options: GenerateOptions = {}): Promise<void> => {
@@ -593,15 +621,7 @@ export const generate = async (options: GenerateOptions = {}): Promise<void> => 
 
   const result = KryptosKit.env.export(kryptos, resolveFormat(options.format));
 
-  if (kryptos.hasCertificate) {
-    console.log(
-      `\nGenerated an X.509 certificate (thumbprint ${kryptos.certificateThumbprint}). It is embedded in the env string below.`,
-    );
-  }
-
-  console.log(
-    `\nCopy the string to your env:\n\n${result}\n\nThe string can be imported into a Kryptos object by using KryptosKit:\n\nconst key = KryptosKit.env.import("${result}");\n`,
-  );
+  printKeyResult(kryptos, result, options.write);
 };
 
 // Every field is a flag that falls back to an interactive prompt when unset, so
@@ -622,15 +642,14 @@ export type DeriveOptions = {
   jwksUri?: string;
   ownerId?: string;
   format?: string;
+  write?: string | boolean;
 };
 
 const inputSeed = async (): Promise<string> =>
   await input({
-    message: "Seed key (its kryptos:… env string)",
+    message: "Seed key (a kryptos:… string or a path to a .kryptos file)",
     validate: (value) =>
-      value.trim().startsWith("kryptos:")
-        ? true
-        : "Paste the kryptos: env string exported from the seed key",
+      value.trim() ? true : "Provide a kryptos:… string or a file path",
   });
 
 export const derive = async (options: DeriveOptions = {}): Promise<void> => {
@@ -657,11 +676,11 @@ export const derive = async (options: DeriveOptions = {}): Promise<void> => {
     throw new KryptosError("Missing seed key", {
       code: "missing_seed",
       title: "Missing Seed Key",
-      details: "A seed key is required — pass --seed <kryptos:… env string>.",
+      details: "A seed key is required — pass --seed <kryptos:… string or path>.",
     });
   }
 
-  const seed = KryptosKit.env.import(seedEnv.trim());
+  const seed = KryptosKit.env.import(resolveEnvInput(seedEnv, "seed key"));
 
   const path =
     options.path ??
@@ -715,9 +734,7 @@ export const derive = async (options: DeriveOptions = {}): Promise<void> => {
 
   const result = KryptosKit.env.export(kryptos, resolveFormat(options.format));
 
-  console.log(
-    `\nCopy the string to your env:\n\n${result}\n\nThe string can be imported into a Kryptos object by using KryptosKit:\n\nconst key = KryptosKit.env.import("${result}");\n`,
-  );
+  printKeyResult(kryptos, result, options.write);
 };
 
 export type InspectOptions = {
@@ -725,18 +742,19 @@ export type InspectOptions = {
 };
 
 export const inspect = async (
-  envString: string,
+  arg: string,
   options: InspectOptions = {},
 ): Promise<void> => {
-  if (!envString || !envString.trim().startsWith("kryptos:")) {
-    throw new KryptosError("Missing or invalid env string to inspect", {
+  if (!arg || !arg.trim()) {
+    throw new KryptosError("Missing env string to inspect", {
       code: "invalid_inspect_input",
       title: "Invalid Inspect Input",
-      details: "Pass a kryptos:… env string (CBOR or JSON) to inspect.",
+      details:
+        "Pass a kryptos:… env string (CBOR or JSON) or a path to a .kryptos file to inspect.",
     });
   }
 
-  const key = KryptosKit.env.import(envString.trim());
+  const key = KryptosKit.env.import(resolveEnvInput(arg, "env string to inspect"));
 
   console.log(options.json ? inspectJson(key) : inspectSummary(key));
 };
@@ -774,7 +792,14 @@ program
   )
   .option("--san <san...>", "certificate subject alternative name (repeatable)")
   .option("--path-length <n>", "path length constraint (root-ca / intermediate-ca)")
-  .option("--ca <env>", "issuing CA key env string (kryptos:…) for ca-signed")
+  .option(
+    "--ca <input>",
+    "issuing CA key: a kryptos:… string or a path to a .kryptos file",
+  )
+  .option(
+    "--write [dir]",
+    "write the env string to <dir>/<kid>.kryptos (mode 0600, dir defaults to cwd); prints the path + summary instead of the secret",
+  )
   .action(generate);
 
 program
@@ -782,7 +807,10 @@ program
   .description(
     "Derive a deterministic oct key from a seed key + path (oct only; flags are optional, anything omitted is prompted)",
   )
-  .option("-s, --seed <env>", "seed key env string (kryptos:…) — must be an oct key")
+  .option(
+    "-s, --seed <input>",
+    "seed key (oct): a kryptos:… string or a path to a .kryptos file",
+  )
   .option("--path <path>", "derivation path, e.g. urn:lindorm:tyr:kek:v1")
   .option("-t, --type <type>", "key type: oct (the only supported type)")
   .option("-u, --use <use>", "key use: sig, enc")
@@ -799,12 +827,16 @@ program
   .option("--jwks-uri <uri>", "JWKS URI (jku)")
   .option("--owner-id <id>", "owner id")
   .option("--format <format>", "env-string format: cbor (default) or json")
+  .option(
+    "--write [dir]",
+    "write the env string to <dir>/<kid>.kryptos (mode 0600, dir defaults to cwd); prints the path + summary instead of the secret",
+  )
   .action(derive);
 
 program
   .command("inspect")
   .description("Inspect a kryptos:… env string (CBOR or JSON); never prints secret bytes")
-  .argument("<env-string>", "the kryptos:… env string to inspect")
+  .argument("<input>", "a kryptos:… env string or a path to a .kryptos file")
   .option("--json", "print the decoded structure (secrets redacted) instead of a summary")
   .action(inspect);
 
