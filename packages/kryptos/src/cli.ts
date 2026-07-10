@@ -223,6 +223,12 @@ const resolveExpiry = (value: string | undefined): Date | undefined => {
   return expiresAt(value);
 };
 
+const confirmHidden = async (): Promise<boolean> =>
+  await confirm({
+    message: "Hidden — exclude from JWKS publication?",
+    default: false,
+  });
+
 const inputPurpose = async (): Promise<string | null> => {
   const value = await input({
     message: "Purpose (leave empty for any)",
@@ -254,6 +260,7 @@ export type GenerateOptions = {
   curve?: string;
   encryption?: string;
   expiry?: string;
+  hidden?: boolean;
   purpose?: string;
   certificate?: string;
   subject?: string;
@@ -398,6 +405,8 @@ export const generate = async (options: GenerateOptions = {}): Promise<void> => 
         : await inputOptional("Expiry duration (e.g. 20y, 6mo — empty for default)")),
   );
 
+  const hidden = options.hidden ?? (scripted ? false : await confirmHidden());
+
   const certificate = await resolveCertificate(type, options, scripted);
 
   const kryptos = KryptosKit.generate.auto({
@@ -407,6 +416,7 @@ export const generate = async (options: GenerateOptions = {}): Promise<void> => 
     ...(curve ? { curve } : {}),
     ...(encryption ? { encryption } : {}),
     ...(keyExpiresAt ? { expiresAt: keyExpiresAt } : {}),
+    ...(hidden ? { hidden: true } : {}),
   });
 
   const result = KryptosKit.env.export(kryptos);
@@ -432,6 +442,7 @@ export type DeriveOptions = {
   use?: string;
   algorithm?: string;
   encryption?: string;
+  hidden?: boolean;
   purpose?: string;
 };
 
@@ -504,6 +515,8 @@ export const derive = async (options: DeriveOptions = {}): Promise<void> => {
 
   const purpose = scripted ? (options.purpose ?? null) : await inputPurpose();
 
+  const hidden = options.hidden ?? (scripted ? false : await confirmHidden());
+
   const kryptos = KryptosKit.from.derive({
     type: "oct",
     use,
@@ -512,6 +525,7 @@ export const derive = async (options: DeriveOptions = {}): Promise<void> => {
     path: path.trim(),
     purpose,
     ...(encryption ? { encryption } : {}),
+    ...(hidden ? { hidden: true } : {}),
   });
 
   const result = KryptosKit.env.export(kryptos);
@@ -532,6 +546,7 @@ program
   .option("--curve <curve>", "curve when the algorithm supports more than one")
   .option("-e, --encryption <encryption>", "AES encryption for enc keys, e.g. A256GCM")
   .option("--expiry <duration>", "validity duration, e.g. 20y, 6mo (default 25y)")
+  .option("--hidden", "mark hidden — exclude from JWKS publication")
   .option("-p, --purpose <purpose>", "key purpose")
   .option("-c, --certificate <mode>", "stamp a cert: self-signed, root-ca, ca-signed")
   .option("--subject <subject>", "certificate subject / CN")
@@ -555,6 +570,7 @@ program
     "-e, --encryption <encryption>",
     "AES encryption for 'dir' enc keys, e.g. A256GCM",
   )
+  .option("--hidden", "mark hidden — exclude from JWKS publication")
   .option("-p, --purpose <purpose>", "key purpose")
   .action(derive);
 

@@ -35,6 +35,8 @@ export const parseJwkOptions = (
     createdAt: jwk.iat ? new Date(jwk.iat * 1000) : undefined,
     encryption: jwk.enc,
     expiresAt: jwk.exp ? new Date(jwk.exp * 1000) : undefined,
+    // Present only in private JWKs; legacy/public JWKs default to not-hidden.
+    hidden: jwk.hidden ?? false,
     isExternal: true,
     issuer: jwk.iss,
     jwksUri: jwk.jku,

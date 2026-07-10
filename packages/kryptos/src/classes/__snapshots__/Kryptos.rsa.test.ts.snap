@@ -3066,6 +3066,7 @@ exports[`Kryptos (RSA) > to > should return jwk with private key 1`] = `
   "dq": "HQ_pAScRS9Vo43XjvQgHDpD1DQmSlKclr9Sqd88M-BYD54TG-B0NdoFPqXd8gtyi3txWqwlY_lTOM1UApaeZmhX5KdcQ_6A4k5sj-1Buu9BkvvTMWsGZ48y-NS70ifCgYV8jzrF5jpSaTuk-dCgBViMmcAGFjRJgwkoMupHjdmgXUZT-_xRQqIJrkuR7GT_FUoDA6cZH9EJ7jiM62G0J8sPxOamcVHZNHzTKvUXoEIoCWgEMLvtSNMexCGKIOuN4B9gj9VXTaTogojTpxSt_LS7nF9KE2J5KqomgAi7q-n4LSS9yGDTzTm2ckc2rc2JOfW7PSvIc6n6oAYM2R89o2w",
   "e": "AQAB",
   "exp": 4070937600,
+  "hidden": false,
   "iat": 1672560000,
   "iss": "https://example.com",
   "jku": "https://example.com/.well-known/jwks.json",

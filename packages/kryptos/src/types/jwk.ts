@@ -16,6 +16,9 @@ export type JwkMetadata = {
 export type LindormJwkMetadata = {
   enc?: KryptosEncryption;
   exp?: number;
+  // Operational flag, emitted only in private JWKs (never in the published,
+  // public JWKS). Round-trips through env strings so a hidden key stays hidden.
+  hidden?: boolean;
   iat: number;
   iss?: string;
   jku?: string;

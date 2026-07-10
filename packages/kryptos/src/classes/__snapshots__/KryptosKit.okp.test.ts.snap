@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`KryptosKit (OKP) > env > export 1`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6ImZmMmE0NDhlLThlYjAtNTlhOC04ZmM2LTBjZTIzYWQwN2U4ZiIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiZXhwIjoyNDkzMTAwODAwLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
+exports[`KryptosKit (OKP) > env > export 1`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5IiwieCI6IkdSQ3dDQTZsQ2hvc0ZHTVF3eEdpSENkemJsZnZDejBGTmlSdFRubTFxcWMiLCJkIjoiSEFvbVctaUhXZUIzMHRGM3QyMjhZNUtwYmk1bHFaMjhpN1FBRVBZQ1RFcyIsImtpZCI6ImZmMmE0NDhlLThlYjAtNTlhOC04ZmM2LTBjZTIzYWQwN2U4ZiIsImFsZyI6IkVkRFNBIiwidXNlIjoic2lnIiwia3R5IjoiT0tQIiwiZXhwIjoyNDkzMTAwODAwLCJoaWRkZW4iOmZhbHNlLCJpYXQiOjE3MDQwOTYwMDAsImtleV9vcHMiOlsic2lnbiIsInZlcmlmeSJdLCJuYmYiOjE3MDQwOTYwMDB9"`;
 
 exports[`KryptosKit (OKP) > from > auto > b64 1`] = `
 {

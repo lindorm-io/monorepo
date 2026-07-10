@@ -27,6 +27,7 @@ import type {
   RsaModulus,
 } from "../types/index.js";
 import type { ExportCache } from "../internal/types/export-cache.js";
+import { computeKeyId } from "../internal/utils/compute-key-id.js";
 import { computeThumbprint } from "../internal/utils/compute-thumbprint.js";
 import { createDerFromDer } from "../internal/utils/from/der-from-der.js";
 import { exportToB64 } from "../internal/utils/export/export-b64.js";
@@ -69,7 +70,6 @@ export class Kryptos implements IKryptos {
   private _disposed: boolean = false;
 
   constructor(options: KryptosOptions) {
-    this._id = options.id || randomId({ namespace: "key", length: 16 });
     this._algorithm = options.algorithm;
     this._createdAt = options.createdAt ?? new Date();
     this._curve = options.curve || null;
@@ -107,6 +107,10 @@ export class Kryptos implements IKryptos {
         },
       );
     }
+
+    // Resolved after key material is set: an explicit id always wins; otherwise
+    // asymmetric keys get a deterministic thumbprint id, oct keys a random one.
+    this._id = options.id || this.resolveId();
 
     this._modulus =
       options.modulus ??
@@ -493,6 +497,10 @@ export class Kryptos implements IKryptos {
       kty: this.type,
       enc: this.encryption ?? undefined,
       exp: getUnixTime(this.expiresAt),
+      // Emitted only in private JWKs (env strings), always as an explicit
+      // boolean; public JWKs feed the published JWKS and must omit it. An
+      // explicit `false` survives removeEmpty; `undefined` is stripped.
+      hidden: mode === "private" ? this.hidden : undefined,
       iat: getUnixTime(this.createdAt),
       iss: this.issuer ?? undefined,
       jku: this.jwksUri ?? undefined,
@@ -529,6 +537,34 @@ export class Kryptos implements IKryptos {
       return { privateKey: keys.privateKey };
     } else {
       return { privateKey: keys.privateKey, publicKey: keys.publicKey };
+    }
+  }
+
+  // Derive the id when none was supplied. `export("jwk")` yields the public
+  // members needed for the thumbprint (public half is derived from the private
+  // key when necessary); the canonicalization ignores `kid`, so it is safe to
+  // call before `_id` is set.
+  private resolveId(): string {
+    switch (this._type) {
+      case "oct":
+        return randomId({ namespace: "key", length: 16 });
+
+      case "AKP":
+      case "EC":
+      case "OKP":
+      case "RSA":
+        return computeKeyId(this.export("jwk"));
+
+      default:
+        throw new KryptosError(
+          `Cannot derive key id: unsupported key type "${this._type as string}"`,
+          {
+            code: "unsupported_key_type",
+            title: "Unsupported Key Type",
+            details: `The key type "${this._type as string}" is not supported for key id derivation.`,
+            data: { type: this._type },
+          },
+        );
     }
   }
 }

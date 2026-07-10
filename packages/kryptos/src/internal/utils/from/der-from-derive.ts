@@ -3,14 +3,13 @@ import { randomId } from "@lindorm/random";
 import { KryptosError } from "../../../errors/index.js";
 import type { KryptosBuffer, KryptosFromDerive } from "../../../types/index.js";
 import { isKryptos } from "../is-kryptos.js";
+import { keyIdFromBytes } from "../key-id-from-bytes.js";
 import { getOctSize } from "../oct/get-size.js";
 
 // Extra HKDF-Expand bytes taken past the key material to seed a deterministic
 // id. HKDF-Expand output is prefix-stable (T(1)|T(2)|…), so the leading `size`
 // bytes are byte-identical whether we expand `size` or `size + ID_BYTES`.
 const ID_BYTES = 16;
-
-const ID_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
 // Resolve the HKDF input keying material (IKM). A string passphrase keeps the
 // exact legacy behaviour (utf8 bytes); an oct seed key contributes its raw
@@ -71,14 +70,6 @@ const expand = (options: KryptosFromDerive): { key: Buffer; idSeed: Buffer } => 
   return { key: out.subarray(0, size), idSeed: out.subarray(size, size + ID_BYTES) };
 };
 
-// Map the id-seed bytes onto the `key_`-prefixed base62 kid convention. Modulo
-// bias is irrelevant here — this is an identifier, not secret key material.
-const deriveKeyId = (idSeed: Buffer): string => {
-  let id = "";
-  for (const byte of idSeed) id += ID_ALPHABET[byte % 62];
-  return `key_${id}`;
-};
-
 export const createDerFromDerive = (options: KryptosFromDerive): KryptosBuffer => {
   switch (options.type) {
     case "oct": {
@@ -91,7 +82,7 @@ export const createDerFromDerive = (options: KryptosFromDerive): KryptosBuffer =
       const id = options.id
         ? options.id
         : options.path
-          ? deriveKeyId(idSeed)
+          ? keyIdFromBytes(idSeed)
           : randomId({ namespace: "key", length: 16 });
 
       return {

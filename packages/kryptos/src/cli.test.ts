@@ -67,12 +67,15 @@ describe("kryptos generate CLI", () => {
     mockInput
       .mockResolvedValueOnce("") // purpose
       .mockResolvedValueOnce(""); // expiry
-    mockConfirm.mockResolvedValueOnce(false); // no certificate
+    mockConfirm
+      .mockResolvedValueOnce(false) // hidden
+      .mockResolvedValueOnce(false); // no certificate
 
     const key = KryptosKit.env.import(await runGenerate());
 
     expect(key.type).toBe("EC");
     expect(key.hasCertificate).toBe(false);
+    expect(key.hidden).toBe(false);
   });
 
   test("stamps a root-ca certificate when requested", async () => {
@@ -88,7 +91,9 @@ describe("kryptos generate CLI", () => {
       .mockResolvedValueOnce("Lindorm") // organization
       .mockResolvedValueOnce("") // SANs
       .mockResolvedValueOnce("1"); // path length constraint
-    mockConfirm.mockResolvedValueOnce(true); // wants a certificate
+    mockConfirm
+      .mockResolvedValueOnce(false) // hidden
+      .mockResolvedValueOnce(true); // wants a certificate
 
     const key = KryptosKit.env.import(await runGenerate());
 
@@ -105,12 +110,15 @@ describe("kryptos generate CLI", () => {
     mockInput
       .mockResolvedValueOnce("") // purpose
       .mockResolvedValueOnce(""); // expiry
+    mockConfirm.mockResolvedValueOnce(false); // hidden (oct is never offered a cert)
 
     const key = KryptosKit.env.import(await runGenerate());
 
     expect(key.type).toBe("oct");
     expect(key.hasCertificate).toBe(false);
-    expect(mockConfirm).not.toHaveBeenCalled();
+    // The hidden confirm fires, but a symmetric key is never offered a cert:
+    // exactly one confirm (hidden), no certificate-mode select consumed.
+    expect(mockConfirm).toHaveBeenCalledTimes(1);
   });
 
   test("runs fully from flags with no prompts (scriptable root-ca)", async () => {
@@ -226,6 +234,29 @@ describe("kryptos generate CLI", () => {
     await expect(
       runGenerate({ type: "EC", use: "sig", algorithm: "ES256", expiry: "banana" }),
     ).rejects.toThrow(/Invalid Expiry|not a valid duration/i);
+  });
+
+  test("marks the key hidden with --hidden (scripted, round-trips in env)", async () => {
+    const key = KryptosKit.env.import(
+      await runGenerate({
+        type: "EC",
+        use: "sig",
+        algorithm: "ES256",
+        hidden: true,
+      }),
+    );
+
+    expect(key.hidden).toBe(true);
+    expect("hidden" in key.toJWK("public")).toBe(false);
+    expect(mockConfirm).not.toHaveBeenCalled();
+  });
+
+  test("defaults hidden:false when --hidden is omitted (scripted)", async () => {
+    const key = KryptosKit.env.import(
+      await runGenerate({ type: "EC", use: "sig", algorithm: "ES256" }),
+    );
+
+    expect(key.hidden).toBe(false);
   });
 });
 
@@ -359,5 +390,33 @@ describe("kryptos derive CLI", () => {
         path: "urn:lindorm:tyr:kek:v1",
       }),
     ).rejects.toThrow(/Invalid seed key type/i);
+  });
+
+  test("marks a derived key hidden with --hidden (scripted)", async () => {
+    const withHidden = KryptosKit.env.import(
+      await runDerive({
+        type: "oct",
+        use: "enc",
+        algorithm: "A256KW",
+        seed: seedEnv(),
+        path: "urn:lindorm:tyr:kek:v1",
+        hidden: true,
+      }),
+    );
+
+    expect(withHidden.hidden).toBe(true);
+    expect("hidden" in withHidden.toJWK("public")).toBe(false);
+
+    const withoutHidden = KryptosKit.env.import(
+      await runDerive({
+        type: "oct",
+        use: "enc",
+        algorithm: "A256KW",
+        seed: seedEnv(),
+        path: "urn:lindorm:tyr:kek:v1",
+      }),
+    );
+
+    expect(withoutHidden.hidden).toBe(false);
   });
 });

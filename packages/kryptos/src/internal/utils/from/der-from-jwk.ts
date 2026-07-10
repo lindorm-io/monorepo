@@ -1,4 +1,3 @@
-import { randomId } from "@lindorm/random";
 import { KryptosError } from "../../../errors/index.js";
 import type {
   AkpJwk,
@@ -15,12 +14,14 @@ import { createOctDerFromJwk } from "../oct/der-from-jwk.js";
 import { createOkpDerFromJwk } from "../okp/der-from-jwk.js";
 import { createRsaDerFromJwk } from "../rsa/der-from-jwk.js";
 
-export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
+// The `id` is intentionally omitted: `parseJwkOptions` carries `kid` through as
+// the id, and when the JWK has no `kid` the Kryptos constructor derives one
+// (thumbprint for asymmetric keys, random for oct).
+export const createDerFromJwk = (options: KryptosFromJwk): Omit<KryptosBuffer, "id"> => {
   switch (options.kty) {
     case "AKP":
       return {
         ...createAkpDerFromJwk(options as AkpJwk),
-        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -29,7 +30,6 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     case "EC":
       return {
         ...createEcDerFromJwk(options as EcJwk),
-        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -38,7 +38,6 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     case "oct":
       return {
         ...createOctDerFromJwk(options as OctJwk),
-        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -47,7 +46,6 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     case "OKP":
       return {
         ...createOkpDerFromJwk(options as OkpJwk),
-        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,
@@ -56,7 +54,6 @@ export const createDerFromJwk = (options: KryptosFromJwk): KryptosBuffer => {
     case "RSA":
       return {
         ...createRsaDerFromJwk(options as RsaJwk),
-        id: options.kid || randomId({ namespace: "key", length: 16 }),
         algorithm: options.alg,
         type: options.kty,
         use: options.use,

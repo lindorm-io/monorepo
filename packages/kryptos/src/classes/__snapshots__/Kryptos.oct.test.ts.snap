@@ -377,6 +377,7 @@ exports[`Kryptos (oct) > to > should return jwk with private key 1`] = `
 {
   "alg": "HS512",
   "exp": 4070937600,
+  "hidden": false,
   "iat": 1672560000,
   "iss": "https://example.com",
   "jku": "https://example.com/.well-known/jwks.json",

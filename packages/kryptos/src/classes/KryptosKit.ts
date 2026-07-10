@@ -1,6 +1,5 @@
 import { B64 } from "@lindorm/b64";
 import { expiresAt } from "@lindorm/date";
-import { randomId } from "@lindorm/random";
 import { KryptosError } from "../errors/index.js";
 import type {
   IKryptos,
@@ -445,8 +444,6 @@ export class KryptosKit {
     generate: KryptosGenerate,
     key: ReturnType<typeof generateKey>,
   ): IKryptos {
-    const id = generate.id ?? randomId({ namespace: "key", length: 16 });
-
     // In ca-signed mode, the child's validity window MUST fit within the CA's.
     // Default the child's window to the CA's own window so that the natural
     // idiomatic usage (generate CA, generate child, chain them) works without
@@ -470,7 +467,6 @@ export class KryptosKit {
 
     const base = {
       ...generate,
-      id,
       notBefore,
       expiresAt: childExpiresAt,
       encryption,
@@ -478,8 +474,13 @@ export class KryptosKit {
       ...key,
     };
 
+    // Construct the key first so its id is resolved (explicit id wins, otherwise
+    // a thumbprint id for asymmetric keys). The certificate — whose subject/SAN
+    // embed the id — is then stamped with that final id.
+    const kryptos = new Kryptos(base);
+
     if (!generate.certificate) {
-      return new Kryptos(base);
+      return kryptos;
     }
 
     if (generate.type === "oct") {
@@ -495,7 +496,7 @@ export class KryptosKit {
     const certificateChain = stampCertificate({
       certificate: generate.certificate,
       subjectKryptos: {
-        id,
+        id: kryptos.id,
         issuer: generate.issuer ?? null,
         notBefore,
         expiresAt: childExpiresAt,
@@ -508,7 +509,7 @@ export class KryptosKit {
       },
     });
 
-    return new Kryptos({ ...base, certificateChain });
+    return new Kryptos({ ...base, id: kryptos.id, certificateChain });
   }
 
   private static resolveCurveForCert(

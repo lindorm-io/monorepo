@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`keyIdFromBytes > maps the leading 16 bytes to a stable \`key_\` base62 id 1`] = `"key_ABCDEFGHIJKLMNOP"`;

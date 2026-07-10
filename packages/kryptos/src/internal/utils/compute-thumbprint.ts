@@ -2,7 +2,9 @@ import { ShaKit } from "@lindorm/sha";
 import { KryptosError } from "../../errors/index.js";
 import type { KryptosJwk } from "../../types/index.js";
 
-const computeCanonical = (jwk: KryptosJwk): Partial<KryptosJwk> => {
+// RFC 7638 canonicalization — PUBLIC members only, in lexical order per type.
+// Shared by the thumbprint (base64 digest) and the key-id (base62 digest) paths.
+export const canonicalJwk = (jwk: KryptosJwk): Partial<KryptosJwk> => {
   switch (jwk.kty) {
     case "AKP":
       return { alg: jwk.alg, kty: jwk.kty, pub: jwk.pub };
@@ -33,4 +35,4 @@ const computeCanonical = (jwk: KryptosJwk): Partial<KryptosJwk> => {
 };
 
 export const computeThumbprint = (jwk: KryptosJwk): string =>
-  ShaKit.S256(JSON.stringify(computeCanonical(jwk)));
+  ShaKit.S256(JSON.stringify(canonicalJwk(jwk)));

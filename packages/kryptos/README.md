@@ -103,6 +103,22 @@ const fromPem = KryptosKit.from.pem({
 const auto = KryptosKit.from.auto(unknownInput);
 ```
 
+### Key ids
+
+An explicit id always wins — `options.id`, a JWK `kid`, a DB row, an env string are honored verbatim. When no id is given, one is derived:
+
+- **Asymmetric (EC, OKP, RSA, AKP):** deterministically from the key's RFC 7638 thumbprint (public members only) — `key_` + 16 base62 chars. The **same key always gets the same id**, whether imported public-only or private-only, so a key survives an export/re-import round trip with its `kid` intact. Metadata (purpose, expiry, …) does not affect it.
+- **oct:** a random id (or, for path-derived keys, the HKDF-tail id — see below). oct is never thumbprinted: its canonical form hashes the secret, which would leak a guess-verification oracle via the `kid`.
+
+```ts
+const a = KryptosKit.generate.auto({ algorithm: "ES256" });
+
+const jwk = a.toJWK("public");
+delete jwk.kid; // a foreign JWKS key with no kid
+
+KryptosKit.from.jwk(jwk).id === a.id; // true — re-derived from the thumbprint
+```
+
 ### Persist and restore
 
 ```ts
@@ -154,11 +170,13 @@ kryptos generate --type EC --use sig --algorithm ES256 \
   --certificate ca-signed --ca "$LINDORM_ROOT_CA" --subject tyr.lindorm.io
 ```
 
-`--curve` picks the curve when the algorithm supports more than one (`EdDSA` → `Ed25519`/`Ed448`, the `ECDH-ES` family → `X25519`/`X448`); interactively you are prompted only in that case. `--expiry` sets the validity window as a `@lindorm/date` duration (`20y`, `6mo`, `90d`); omit it for the 25-year default.
+`--curve` picks the curve when the algorithm supports more than one (`EdDSA` → `Ed25519`/`Ed448`, the `ECDH-ES` family → `X25519`/`X448`); interactively you are prompted only in that case. `--expiry` sets the validity window as a `@lindorm/date` duration (`20y`, `6mo`, `90d`); omit it for the 25-year default. `--hidden` marks the key hidden (see below).
 
 ```bash
-kryptos generate --type OKP --use sig --algorithm EdDSA --curve Ed448 --expiry 20y
+kryptos generate --type OKP --use sig --algorithm EdDSA --curve Ed448 --expiry 20y --hidden
 ```
+
+`hidden` keeps a key **out of the published JWKS** (e.g. a CA whose public half must never be advertised). It is an operational flag, not part of the JOSE standard: it round-trips through env strings and private JWKs, but is **never** emitted in a public JWK. Both `generate` and `derive` take `--hidden` (scripted) or prompt for it (interactive).
 
 ## X.509 certificates
 
