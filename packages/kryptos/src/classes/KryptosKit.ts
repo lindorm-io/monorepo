@@ -465,13 +465,14 @@ export class KryptosKit {
     generate: KryptosGenerate,
     key: ReturnType<typeof generateKey>,
   ): IKryptos {
-    // In ca-signed mode, the child's validity window MUST fit within the CA's.
-    // Default the child's window to the CA's own window so that the natural
-    // idiomatic usage (generate CA, generate child, chain them) works without
-    // the caller having to pin dates defensively. Callers may still override
-    // notBefore/expiresAt explicitly.
+    // When signed by a CA (ca-signed or intermediate-ca), the child's validity
+    // window MUST fit within the CA's. Default the child's window to the CA's own
+    // window so that the natural idiomatic usage (generate CA, generate child,
+    // chain them) works without the caller having to pin dates defensively.
+    // Callers may still override notBefore/expiresAt explicitly.
     const caWindow =
-      generate.certificate?.mode === "ca-signed"
+      generate.certificate?.mode === "ca-signed" ||
+      generate.certificate?.mode === "intermediate-ca"
         ? {
             notBefore: generate.certificate.ca.notBefore,
             expiresAt: generate.certificate.ca.expiresAt,

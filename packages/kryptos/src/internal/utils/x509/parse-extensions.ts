@@ -263,6 +263,8 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
 
   let basicConstraintsCa = false;
   let basicConstraintsPathLen: number | undefined;
+  let basicConstraintsCritical: boolean | undefined;
+  let keyUsageCritical: boolean | undefined;
   let keyUsage: ReadonlyArray<ParsedX509KeyUsageFlag> = [];
   let subjectKeyIdentifier: Buffer | undefined;
   let authorityKeyIdentifier: Buffer | undefined;
@@ -294,8 +296,10 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
       const basicConstraints = parseBasicConstraints(extnValue);
       basicConstraintsCa = basicConstraints.ca;
       basicConstraintsPathLen = basicConstraints.pathLen;
+      basicConstraintsCritical = critical;
     } else if (oid === X509_OID_EXT_KEY_USAGE) {
       keyUsage = parseKeyUsage(extnValue);
+      keyUsageCritical = critical;
     } else if (oid === X509_OID_EXT_SUBJECT_KEY_IDENTIFIER) {
       subjectKeyIdentifier = parseSubjectKeyIdentifier(extnValue);
     } else if (oid === X509_OID_EXT_AUTHORITY_KEY_IDENTIFIER) {
@@ -315,6 +319,8 @@ export const parseX509Extensions = (der: Buffer): ParsedX509Extensions => {
   return {
     basicConstraintsCa,
     ...(basicConstraintsPathLen !== undefined ? { basicConstraintsPathLen } : {}),
+    ...(basicConstraintsCritical !== undefined ? { basicConstraintsCritical } : {}),
+    ...(keyUsageCritical !== undefined ? { keyUsageCritical } : {}),
     keyUsage,
     ...(subjectKeyIdentifier !== undefined ? { subjectKeyIdentifier } : {}),
     ...(authorityKeyIdentifier !== undefined ? { authorityKeyIdentifier } : {}),

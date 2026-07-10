@@ -8,6 +8,7 @@ import { AES_ENCRYPTION_ALGORITHMS } from "@lindorm/types";
 import { program } from "commander";
 import { KryptosKit } from "./classes/index.js";
 import { KryptosError } from "./errors/index.js";
+import type { IKryptos } from "./interfaces/index.js";
 import { CBOR_OPS } from "./internal/constants/cbor-table.js";
 import { getEcCurve } from "./internal/utils/ec/get-curve.js";
 import { inspectJson, inspectSummary } from "./internal/utils/inspect-key.js";
@@ -368,7 +369,12 @@ const resolveCertificate = async (
   // Symmetric (oct) keys have no public half, so they cannot carry an X.509 cert.
   if (type === "oct") return undefined;
 
-  let mode = options.certificate as "self-signed" | "root-ca" | "ca-signed" | undefined;
+  let mode = options.certificate as
+    | "self-signed"
+    | "root-ca"
+    | "ca-signed"
+    | "intermediate-ca"
+    | undefined;
 
   // No mode flag → a scripted run simply gets no cert; interactively, ask.
   if (!mode) {
@@ -380,7 +386,7 @@ const resolveCertificate = async (
     });
     if (!wanted) return undefined;
 
-    mode = await select<"self-signed" | "root-ca" | "ca-signed">({
+    mode = await select<"self-signed" | "root-ca" | "ca-signed" | "intermediate-ca">({
       message: "Certificate mode",
       choices: [
         { value: "self-signed", name: "self-signed — a standalone leaf certificate" },
@@ -388,7 +394,14 @@ const resolveCertificate = async (
           value: "root-ca",
           name: "root-ca — a self-signed CA that can sign other certs",
         },
-        { value: "ca-signed", name: "ca-signed — signed by an existing CA key" },
+        {
+          value: "ca-signed",
+          name: "ca-signed — an end-entity signed by an existing CA",
+        },
+        {
+          value: "intermediate-ca",
+          name: "intermediate-ca — a subordinate CA signed by an existing CA",
+        },
       ],
     });
   }
@@ -410,23 +423,17 @@ const resolveCertificate = async (
       ? await inputList("Subject alternative names (comma-separated, optional)")
       : undefined;
 
-  if (mode === "root-ca") {
+  const resolvePathLength = async (): Promise<number | undefined> => {
     const pathLength =
       options.pathLength ??
       (interactive
         ? await inputOptional("Path length constraint (optional integer)")
         : undefined);
-    return {
-      mode,
-      subject,
-      organization,
-      subjectAlternativeNames,
-      pathLengthConstraint: pathLength != null ? Number(pathLength) : undefined,
-    };
-  }
+    return pathLength != null ? Number(pathLength) : undefined;
+  };
 
-  if (mode === "ca-signed") {
-    // Parent CA: --ca flag (works interactively too), else prompt to paste it.
+  // Parent CA: --ca flag (works interactively too), else prompt to paste it.
+  const resolveCaEnv = async (): Promise<IKryptos> => {
     const caEnv =
       options.ca ??
       (interactive
@@ -440,24 +447,57 @@ const resolveCertificate = async (
         : undefined);
 
     if (!caEnv) {
-      throw new KryptosError("Missing issuing CA for a ca-signed certificate", {
+      throw new KryptosError("Missing issuing CA for a CA-signed certificate", {
         code: "missing_issuing_ca",
         title: "Missing Issuing CA",
         details:
-          "A ca-signed certificate needs the issuing CA — pass --ca <kryptos:… env string>.",
+          "A ca-signed or intermediate-ca certificate needs the issuing CA — pass --ca <kryptos:… env string>.",
       });
     }
 
-    return {
-      mode,
-      ca: KryptosKit.env.import(caEnv.trim()),
-      subject,
-      organization,
-      subjectAlternativeNames,
-    };
-  }
+    return KryptosKit.env.import(caEnv.trim());
+  };
 
-  return { mode, subject, organization, subjectAlternativeNames };
+  switch (mode) {
+    case "self-signed":
+      return { mode, subject, organization, subjectAlternativeNames };
+
+    case "root-ca":
+      return {
+        mode,
+        subject,
+        organization,
+        subjectAlternativeNames,
+        pathLengthConstraint: await resolvePathLength(),
+      };
+
+    case "ca-signed":
+      return {
+        mode,
+        ca: await resolveCaEnv(),
+        subject,
+        organization,
+        subjectAlternativeNames,
+      };
+
+    case "intermediate-ca":
+      return {
+        mode,
+        ca: await resolveCaEnv(),
+        subject,
+        organization,
+        subjectAlternativeNames,
+        pathLengthConstraint: await resolvePathLength(),
+      };
+
+    default:
+      throw new KryptosError(`Unsupported certificate mode: ${String(mode)}`, {
+        code: "unsupported_certificate_mode",
+        title: "Unsupported Certificate Mode",
+        details: `The certificate mode "${String(mode)}" is not supported; use self-signed, root-ca, ca-signed, or intermediate-ca.`,
+        data: { mode },
+      });
+  }
 };
 
 export const generate = async (options: GenerateOptions = {}): Promise<void> => {
@@ -692,11 +732,14 @@ program
   .option("--modulus <bits>", "RSA modulus: 2048, 3072, 4096")
   .option("--operations <ops>", "comma-separated key_ops override, e.g. sign,verify")
   .option("--format <format>", "env-string format: cbor (default) or json")
-  .option("-c, --certificate <mode>", "stamp a cert: self-signed, root-ca, ca-signed")
+  .option(
+    "-c, --certificate <mode>",
+    "stamp a cert: self-signed, root-ca, ca-signed, intermediate-ca",
+  )
   .option("--subject <subject>", "certificate subject / CN")
   .option("--organization <organization>", "certificate organization / O")
   .option("--san <san...>", "certificate subject alternative name (repeatable)")
-  .option("--path-length <n>", "root-ca path length constraint")
+  .option("--path-length <n>", "path length constraint (root-ca / intermediate-ca)")
   .option("--ca <env>", "issuing CA key env string (kryptos:…) for ca-signed")
   .action(generate);
 

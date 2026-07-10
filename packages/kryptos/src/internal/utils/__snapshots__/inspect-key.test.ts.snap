@@ -24,17 +24,17 @@ exports[`inspectSummary / inspectJson > renders full certificate details for a c
       serial      <hex>
       validity    2026-01-01T00:00:00.000Z → 2036-01-01T00:00:00.000Z
       sigAlg      ECDSA-SHA384
-      basic       CA=false
-      keyUsage    digitalSignature
+      basic       CA=false (critical)
+      keyUsage    digitalSignature (critical)
       sans        dns:tyr.lindorm.io
   [1] subject     CN=Lindorm Root CA, O=Lindorm
       issuer      CN=Lindorm Root CA, O=Lindorm
       serial      <hex>
       validity    2026-01-01T00:00:00.000Z → 2046-01-01T00:00:00.000Z
       sigAlg      ECDSA-SHA384
-      basic       CA=true, pathLen=1
-      keyUsage    keyCertSign, crlSign
-      sans        uri:urn:lindorm:kryptos:key_rootca00000000"
+      basic       CA=true, pathLen=1 (critical)
+      keyUsage    keyCertSign, crlSign (critical)
+      sans        —"
 `;
 
 exports[`inspectSummary / inspectJson > summary snapshot: AKP 1`] = `

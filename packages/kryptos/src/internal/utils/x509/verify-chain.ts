@@ -89,9 +89,10 @@ export const verifyX509Chain = (
   chain: ReadonlyArray<Buffer>,
   trustAnchors: string | Array<string> | ReadonlyArray<Buffer>,
 ): void => {
-  // Pragmatic chain validation only: signature walk, validity window, basic
-  // constraints CA on non-leaf, anchor match by DER equality. Revocation
-  // (OCSP/CRL) and full RFC 5280 policy validation are explicitly out of scope.
+  // Chain validation: signature walk, validity window, basicConstraints cA=true
+  // + keyCertSign on every non-leaf, RFC 5280 §6.1.4 pathLenConstraint tracking,
+  // and anchor match by DER equality or signature. Revocation (OCSP/CRL) and
+  // name-constraint / policy processing are explicitly out of scope.
 
   if (chain.length === 0) {
     throw new KryptosError("Certificate chain is empty", {
@@ -138,17 +139,64 @@ export const verifyX509Chain = (
     }
   }
 
+  // RFC 5280 §4.2.1.9 / §4.2.1.3: every non-leaf (issuing) certificate must be a
+  // CA (cA=true) and carry keyCertSign in its keyUsage.
   for (let i = 1; i < parsedChain.length; i++) {
-    if (!parsedChain[i].cert.extensions.basicConstraintsCa) {
+    const cert = parsedChain[i].cert;
+
+    if (!cert.extensions.basicConstraintsCa) {
       throw new KryptosError(
-        `Non-leaf certificate ${describeCert(parsedChain[i].cert)} is not marked as a CA`,
+        `Non-leaf certificate ${describeCert(cert)} is not marked as a CA`,
         {
           code: "certificate_not_a_ca",
           title: "Certificate Not A CA",
-          details: `Non-leaf certificate ${describeCert(parsedChain[i].cert)} lacks basicConstraints CA=true and cannot act as an issuer in the chain.`,
-          data: { certificate: describeCert(parsedChain[i].cert) },
+          details: `Non-leaf certificate ${describeCert(cert)} lacks basicConstraints CA=true and cannot act as an issuer in the chain.`,
+          data: { certificate: describeCert(cert) },
         },
       );
+    }
+
+    if (!cert.extensions.keyUsage.includes("keyCertSign")) {
+      throw new KryptosError(
+        `Non-leaf certificate ${describeCert(cert)} lacks keyCertSign`,
+        {
+          code: "certificate_missing_key_cert_sign",
+          title: "Certificate Missing keyCertSign",
+          details: `Non-leaf certificate ${describeCert(cert)} does not assert keyCertSign in its keyUsage extension and cannot sign certificates (RFC 5280 §4.2.1.3).`,
+          data: { certificate: describeCert(cert) },
+        },
+      );
+    }
+  }
+
+  // RFC 5280 §6.1.4: track max_path_length from the trust anchor towards the
+  // leaf. Walking the CA certs (indices high→low, anchor-side first): each
+  // non-self-issued intermediate consumes one unit ("if not self-issued, verify
+  // max_path_length > 0 and decrement"); each cert's pathLenConstraint clamps
+  // the remaining budget via min(). Dropping below zero is a violation.
+  let maxPathLength = parsedChain.length;
+  for (let i = parsedChain.length - 1; i >= 1; i--) {
+    const cert = parsedChain[i].cert;
+    const selfIssued = cert.subject.raw.equals(cert.issuer.raw);
+
+    if (!selfIssued) {
+      if (maxPathLength <= 0) {
+        throw new KryptosError(
+          `Certificate path length constraint exceeded at ${describeCert(cert)}`,
+          {
+            code: "certificate_path_length_exceeded",
+            title: "Certificate Path Length Exceeded",
+            details: `Certificate ${describeCert(cert)} exceeds a pathLenConstraint asserted by a higher CA in the chain (RFC 5280 §6.1.4).`,
+            data: { certificate: describeCert(cert) },
+          },
+        );
+      }
+      maxPathLength -= 1;
+    }
+
+    const pathLen = cert.extensions.basicConstraintsPathLen;
+    if (pathLen !== undefined) {
+      maxPathLength = Math.min(maxPathLength, pathLen);
     }
   }
 

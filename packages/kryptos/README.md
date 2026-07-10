@@ -176,7 +176,7 @@ npx kryptos generate
 
 Answer the prompts (type, use, algorithm, encryption, purpose) and the CLI prints a `kryptos:...` blob ready to paste into a `.env` file. Re-import it at runtime with `KryptosKit.env.import(process.env.MY_KEY!)`.
 
-For an asymmetric key it then asks whether to stamp an **X.509 certificate** — answer yes and pick a mode (`self-signed` / `root-ca` / `ca-signed`) plus subject, organization, SANs, and (for `root-ca`) a path-length constraint; a `ca-signed` cert prompts for the issuing CA's `kryptos:…` env string. The certificate is embedded in the exported blob (see [X.509 certificates](#x509-certificates)). Symmetric `oct` keys skip this step.
+For an asymmetric key it then asks whether to stamp an **X.509 certificate** — answer yes and pick a mode (`self-signed` / `root-ca` / `ca-signed` / `intermediate-ca`) plus subject, organization, SANs, and (for `root-ca` / `intermediate-ca`) a path-length constraint; `ca-signed` and `intermediate-ca` prompt for the issuing CA's `kryptos:…` env string. The certificate is embedded in the exported blob (see [X.509 certificates](#x509-certificates)). Symmetric `oct` keys skip this step.
 
 **Every prompt has a matching flag**, so `generate` is fully scriptable — pass `--type` to skip interaction entirely (anything omitted takes its default, nothing is prompted); pass only some flags to pre-fill those answers and be prompted for the rest. Run `kryptos generate --help` for the full list.
 
@@ -213,7 +213,16 @@ Secret material (`d`, `k`, `priv`, `p`, `q`, `dp`, `dq`, `qi`) is never printed 
 
 ## X.509 certificates
 
-Any asymmetric key (`EC`, `OKP`, `RSA`, `AKP`) can be stamped with an X.509 certificate at generation time. Symmetric `oct` keys cannot — attempting it throws `KryptosError("symmetric keys cannot have certificates")`. Three modes are supported.
+Any asymmetric key (`EC`, `OKP`, `RSA`, `AKP`) can be stamped with an X.509 certificate at generation time. Symmetric `oct` keys cannot — attempting it throws `KryptosError("symmetric keys cannot have certificates")`. Four modes are supported, implemented to RFC 5280:
+
+| Mode              | Signed by      | `cA`    | Key usage                | Use it for                    |
+| ----------------- | -------------- | ------- | ------------------------ | ----------------------------- |
+| `self-signed`     | itself         | `false` | per `use`                | a standalone end-entity leaf  |
+| `root-ca`         | itself         | `true`  | `keyCertSign`, `cRLSign` | a trust-anchor root CA        |
+| `ca-signed`       | an existing CA | `false` | per `use`                | an end-entity leaf under a CA |
+| `intermediate-ca` | an existing CA | `true`  | `keyCertSign`, `cRLSign` | a subordinate (issuing) CA    |
+
+`basicConstraints` and `keyUsage` are marked **critical** on every certificate (RFC 5280 §4.2.1.9 MUST for CA certs; §4.2.1.3 SHOULD for keyUsage).
 
 ### Self-signed leaf
 
@@ -232,7 +241,9 @@ leaf.certificateThumbprint; // x5t#S256 (SHA-256 over the leaf DER)
 leaf.certificate; // ParsedX509Certificate (lazy, cached)
 ```
 
-A self-signed leaf has `cA=false`. Key usage is derived from `use`: `sig` keys get `digitalSignature`, `enc` keys get `keyEncipherment` and `dataEncipherment`. If `subjectAlternativeNames` is omitted, a single URI SAN is derived from the key's `issuer` when it is URL-shaped, or `urn:lindorm:kryptos:<id>` when no issuer is set. A non-URL issuer with no explicit SANs throws — supply `subjectAlternativeNames` (or a URL issuer) in that case. Override with `subject`, `organization`, or `subjectAlternativeNames`:
+A self-signed leaf has `cA=false`. Key usage is derived from `use`: `sig` keys get `digitalSignature`, `enc` keys get `keyEncipherment` and `dataEncipherment`.
+
+**SAN policy** (RFC 5280 §4.2.1.6 — SAN is optional when the subject DN is non-empty). Explicit `subjectAlternativeNames` always win. Otherwise: **end-entity** certs (`self-signed`, `ca-signed`) default to a single URI SAN of the key's `issuer` when set (URI GeneralName is scheme-unrestricted), and to **no SAN** when there is no issuer; **CA** certs (`root-ca`, `intermediate-ca`) get **no SAN** by default — a CA is identified by its DN. Override with `subject`, `organization`, or `subjectAlternativeNames`:
 
 ```ts
 certificate: {
@@ -280,6 +291,39 @@ child.verifyCertificate({ trustAnchors: [ca.certificateChain[0]] });
 The child algorithm may differ from the CA (e.g. RSA child under an EC root). The child's AKI is bound to the CA's SKI, the issuer DN is copied byte-for-byte from the CA's subject, and the signing algorithm is resolved from the CA's private key.
 
 If `notBefore` / `expiresAt` are omitted on a CA-signed child, the child inherits the CA's window — so the natural idiom of generating a CA and then a child without pinning dates "just works". Explicit dates still win, but are rejected at stamp time if they fall outside the CA's window.
+
+### Intermediate CA
+
+An intermediate (subordinate) CA is signed by an existing CA — like `ca-signed` — but is itself a CA (`cA=true`, `keyCertSign | cRLSign`) that can sign further certificates. Its AKI is bound to the parent's SKI.
+
+```ts
+const root = KryptosKit.generate.sig.ec({
+  algorithm: "ES384",
+  certificate: { mode: "root-ca", subject: "Lindorm Root CA", pathLengthConstraint: 1 },
+});
+
+const issuing = KryptosKit.generate.sig.ec({
+  algorithm: "ES256",
+  certificate: {
+    mode: "intermediate-ca",
+    ca: root,
+    subject: "Tyr Issuing CA",
+    pathLengthConstraint: 0,
+  },
+});
+
+const leaf = KryptosKit.generate.sig.ec({
+  algorithm: "ES256",
+  certificate: { mode: "ca-signed", ca: issuing, subject: "tyr.lindorm.io" },
+});
+
+leaf.certificateChain.length; // 3 — [leaf, issuing, root]
+leaf.verifyCertificate({ trustAnchors: root.certificateChain[0] });
+```
+
+**`pathLenConstraint` (RFC 5280 §4.2.1.9)** is the maximum number of non-self-issued intermediate CAs that may follow this certificate in a path. `pathLenConstraint: 0` means the CA may issue **only end-entity** certificates, not further CAs. Only CA certs carry it; end-entity certs never do.
+
+Mint-time guards refuse to create misleading certs: issuing an intermediate under a `pathLen=0` CA throws, and an intermediate's `pathLenConstraint` must be **strictly less** than its issuer's (a house-policy tightening — RFC path validation would merely clamp via `min()`). `verifyCertificate` enforces the full §6.1.4 path-length walk and requires every non-leaf to be a CA with `keyCertSign`.
 
 ### Verification
 

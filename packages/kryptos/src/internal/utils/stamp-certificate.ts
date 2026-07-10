@@ -1,14 +1,16 @@
 import { KryptosError } from "../../errors/index.js";
+import type { IKryptos } from "../../interfaces/index.js";
 import type {
   KryptosAlgorithm,
   KryptosCertificateOption,
   KryptosCurve,
   KryptosType,
   KryptosUse,
+  ParsedX509Certificate,
   X509SubjectAltNameInput,
 } from "../../types/index.js";
 import { computeSpkiKeyIdentifier } from "./x509/compute-spki-key-identifier.js";
-import type { X509KeyUsageFlag } from "./x509/encode-extensions.js";
+import type { X509BasicConstraints, X509KeyUsageFlag } from "./x509/encode-extensions.js";
 import type { X509NameInput } from "./x509/encode-name.js";
 import { generateX509Certificate } from "./x509/generate-x509.js";
 import { resolveSignAlgorithmForCert } from "./resolve-sign-algorithm.js";
@@ -30,30 +32,6 @@ type StampInput = {
   serialNumber?: Buffer;
 };
 
-const isUrl = (value: string): boolean => {
-  try {
-    new URL(value);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
-const deriveSan = (issuer: string | null, id: string): string => {
-  if (!issuer) return `urn:lindorm:kryptos:${id}`;
-  if (isUrl(issuer)) return issuer;
-  throw new KryptosError(
-    "Cannot derive SAN from non-URL issuer; supply explicit subjectAlternativeNames or use a URL-shaped issuer",
-    {
-      code: "invalid_certificate_san_issuer",
-      title: "Invalid Certificate SAN Issuer",
-      details:
-        "A Subject Alternative Name cannot be derived from a non-URL issuer; supply explicit subjectAlternativeNames or use a URL-shaped issuer.",
-      data: { issuer },
-    },
-  );
-};
-
 const resolveSubject = (
   option: KryptosCertificateOption,
   issuer: string | null,
@@ -68,19 +46,268 @@ const normalizeSan = (
 ): X509SubjectAltNameInput =>
   typeof entry === "string" ? { type: "uri", value: entry } : entry;
 
+// RFC 5280 §4.2.1.6: SAN is OPTIONAL when the subject DN is non-empty (ours
+// always carries a CN) and required (critical) only when the DN is empty.
+// Explicit `subjectAlternativeNames` always win in every mode; otherwise:
+//   - CA certs (root-ca, intermediate-ca): no SAN — a CA is identified by DN.
+//   - end-entity certs (self-signed, ca-signed): a URI SAN of the key's issuer
+//     when set (URI GeneralName is scheme-unrestricted, §4.2.1.6), else none.
 const resolveSans = (
   option: KryptosCertificateOption,
   issuer: string | null,
-  id: string,
 ): ReadonlyArray<X509SubjectAltNameInput> => {
   if (option.subjectAlternativeNames && option.subjectAlternativeNames.length > 0) {
     return option.subjectAlternativeNames.map(normalizeSan);
   }
-  return [{ type: "uri", value: deriveSan(issuer, id) }];
+
+  switch (option.mode) {
+    case "root-ca":
+    case "intermediate-ca":
+      return [];
+
+    case "self-signed":
+    case "ca-signed":
+      return issuer ? [{ type: "uri", value: issuer }] : [];
+
+    default:
+      return [];
+  }
 };
 
 const keyUsageForUse = (use: KryptosUse): ReadonlyArray<X509KeyUsageFlag> =>
   use === "sig" ? ["digitalSignature"] : ["keyEncipherment", "dataEncipherment"];
+
+// CA cert key usage per RFC 5280 §4.2.1.3 (keyCertSign asserts cA=true).
+const CA_KEY_USAGE: ReadonlyArray<X509KeyUsageFlag> = ["keyCertSign", "cRLSign"];
+
+type ValidatedCa = {
+  ca: IKryptos;
+  caLeaf: ParsedX509Certificate;
+  caSki: Buffer;
+  caPrivateKey: Buffer;
+};
+
+// Validate that a Kryptos can sign child certificates: private key present, a
+// certificate with basicConstraints cA=true (§4.2.1.9), a subjectKeyIdentifier
+// to become the child's AKI (§4.2.1.1/§4.2.1.2), and keyCertSign in keyUsage
+// (§4.2.1.3).
+const assertSigningCa = (ca: IKryptos): ValidatedCa => {
+  if (!ca.hasPrivateKey) {
+    throw new KryptosError("CA-signing requires CA kryptos with a private key", {
+      code: "missing_ca_private_key",
+      title: "Missing CA Private Key",
+      details:
+        "Signing a certificate requires the CA Kryptos to contain a private key for signing.",
+    });
+  }
+
+  if (!ca.hasCertificate || !ca.certificateChain || !ca.certificate) {
+    throw new KryptosError("CA-signing requires CA kryptos with a certificate", {
+      code: "missing_ca_certificate",
+      title: "Missing CA Certificate",
+      details:
+        "Signing a certificate requires the CA Kryptos to have a certificate and a complete certificate chain.",
+    });
+  }
+
+  const caLeaf = ca.certificate;
+
+  if (!caLeaf.extensions.basicConstraintsCa) {
+    throw new KryptosError(
+      "signing CA leaf cert must have basicConstraints cA=true (RFC 5280 §4.2.1.9)",
+      {
+        code: "invalid_ca_certificate",
+        title: "Invalid CA Certificate",
+        details:
+          "The CA leaf certificate must have the basicConstraints extension with cA=true to sign child certificates (RFC 5280 §4.2.1.9).",
+      },
+    );
+  }
+
+  const caSki = caLeaf.extensions.subjectKeyIdentifier;
+  if (!caSki) {
+    throw new KryptosError(
+      "signing CA leaf cert must have a subjectKeyIdentifier extension (RFC 5280 §4.2.1.2)",
+      {
+        code: "invalid_ca_certificate",
+        title: "Invalid CA Certificate",
+        details:
+          "The CA leaf certificate must include a subjectKeyIdentifier extension to act as the child's authority key identifier (RFC 5280 §4.2.1.2).",
+      },
+    );
+  }
+
+  if (!caLeaf.extensions.keyUsage.includes("keyCertSign")) {
+    throw new KryptosError(
+      "signing CA leaf cert must have keyCertSign in keyUsage (RFC 5280 §4.2.1.3)",
+      {
+        code: "invalid_ca_certificate",
+        title: "Invalid CA Certificate",
+        details:
+          "The CA leaf certificate must include keyCertSign in its keyUsage extension to sign child certificates (RFC 5280 §4.2.1.3).",
+      },
+    );
+  }
+
+  const caDer = ca.export("der");
+  if (!caDer.privateKey) {
+    throw new KryptosError("CA-signing requires CA kryptos with a private key", {
+      code: "missing_ca_private_key",
+      title: "Missing CA Private Key",
+      details:
+        "Signing a certificate requires the exported CA Kryptos to expose a private key for signing.",
+    });
+  }
+
+  return { ca, caLeaf, caSki, caPrivateKey: caDer.privateKey };
+};
+
+const assertValidityWithinCa = (
+  subjectKryptos: StampInput["subjectKryptos"],
+  caLeaf: ParsedX509Certificate,
+): void => {
+  if (
+    subjectKryptos.notBefore.getTime() < caLeaf.notBefore.getTime() ||
+    subjectKryptos.expiresAt.getTime() > caLeaf.notAfter.getTime()
+  ) {
+    throw new KryptosError(
+      "ca-signed child validity window must fit within the CA's validity window",
+      {
+        code: "invalid_certificate_validity_window",
+        title: "Invalid Certificate Validity Window",
+        details:
+          "The child certificate's notBefore and expiresAt must fall within the CA certificate's validity window.",
+      },
+    );
+  }
+};
+
+// RFC 5280 §4.2.1.9 mint-time guards for issuing an intermediate CA.
+const assertIntermediatePathLen = (
+  parentPathLen: number | undefined,
+  childPathLen: number | undefined,
+): void => {
+  // "Where pathLenConstraint is zero, the subject may issue certificates, but
+  // only to end entities, not to CAs" (§4.2.1.9) — refuse to mint an
+  // intermediate under a pathLen=0 issuer.
+  if (parentPathLen === 0) {
+    throw new KryptosError(
+      "issuing CA has pathLenConstraint=0 and may only issue end-entity certificates (RFC 5280 §4.2.1.9)",
+      {
+        code: "invalid_intermediate_ca_path_length",
+        title: "Invalid Intermediate CA Path Length",
+        details:
+          "The issuing CA's basicConstraints pathLenConstraint is 0, so per RFC 5280 §4.2.1.9 it may only sign end-entity certificates, not further CAs.",
+        data: { parentPathLen },
+      },
+    );
+  }
+
+  // HOUSE POLICY: RFC 5280 §6.1.4 path validation would merely clamp the child's
+  // effective path length via min(); we go further and refuse to MINT a cert
+  // whose declared pathLenConstraint would be misleading. Under a parent with
+  // pathLen N, a child CA must declare pathLen < N.
+  if (
+    parentPathLen !== undefined &&
+    childPathLen !== undefined &&
+    childPathLen >= parentPathLen
+  ) {
+    throw new KryptosError(
+      "intermediate CA pathLengthConstraint must be strictly less than its issuer's",
+      {
+        code: "invalid_intermediate_ca_path_length",
+        title: "Invalid Intermediate CA Path Length",
+        details: `An intermediate CA's pathLengthConstraint (${childPathLen}) must be strictly less than its issuing CA's (${parentPathLen}).`,
+        data: { parentPathLen, childPathLen },
+      },
+    );
+  }
+};
+
+const buildCaSignedDer = (
+  input: StampInput,
+  validated: ValidatedCa,
+  subjectName: X509NameInput,
+  sans: ReadonlyArray<X509SubjectAltNameInput>,
+  basicConstraints: X509BasicConstraints,
+  keyUsage: ReadonlyArray<X509KeyUsageFlag>,
+): Buffer => {
+  const { subjectKryptos } = input;
+  const { ca, caLeaf, caSki, caPrivateKey } = validated;
+
+  const caSignAlgorithm = resolveSignAlgorithmForCert({
+    type: ca.type,
+    algorithm: ca.algorithm,
+    curve: ca.curve,
+  });
+
+  return generateX509Certificate({
+    subjectKryptos: {
+      publicKey: subjectKryptos.publicKey,
+      type: subjectKryptos.type,
+      algorithm: subjectKryptos.algorithm,
+    },
+    issuerKryptos: {
+      privateKey: caPrivateKey,
+      type: ca.type,
+      algorithm: caSignAlgorithm,
+    },
+    subject: subjectName,
+    issuer: { raw: caLeaf.subject.raw },
+    notBefore: subjectKryptos.notBefore,
+    notAfter: subjectKryptos.expiresAt,
+    basicConstraints,
+    keyUsage,
+    subjectAlternativeNames: sans,
+    authorityKeyIdentifier: caSki,
+    ...(input.serialNumber ? { serialNumber: input.serialNumber } : {}),
+  });
+};
+
+const buildSelfIssuedDer = (
+  input: StampInput,
+  subjectName: X509NameInput,
+  sans: ReadonlyArray<X509SubjectAltNameInput>,
+  basicConstraints: X509BasicConstraints,
+  keyUsage: ReadonlyArray<X509KeyUsageFlag>,
+  // RFC 5280 §4.2.1.1: a self-signed CA MAY omit AKI. A self-signed end-entity
+  // leaf sets AKI = own SKI; a root CA omits it.
+  includeAuthorityKeyIdentifier: boolean,
+): Buffer => {
+  const { subjectKryptos } = input;
+
+  const signAlgorithm = resolveSignAlgorithmForCert({
+    type: subjectKryptos.type,
+    algorithm: subjectKryptos.algorithm,
+    curve: subjectKryptos.curve,
+  });
+
+  const ownSki = includeAuthorityKeyIdentifier
+    ? computeSpkiKeyIdentifier(subjectKryptos.publicKey, subjectKryptos.type)
+    : undefined;
+
+  return generateX509Certificate({
+    subjectKryptos: {
+      publicKey: subjectKryptos.publicKey,
+      type: subjectKryptos.type,
+      algorithm: subjectKryptos.algorithm,
+    },
+    issuerKryptos: {
+      privateKey: subjectKryptos.privateKey!,
+      type: subjectKryptos.type,
+      algorithm: signAlgorithm,
+    },
+    subject: subjectName,
+    issuer: subjectName,
+    notBefore: subjectKryptos.notBefore,
+    notAfter: subjectKryptos.expiresAt,
+    basicConstraints,
+    keyUsage,
+    subjectAlternativeNames: sans,
+    ...(ownSki ? { authorityKeyIdentifier: ownSki } : {}),
+    ...(input.serialNumber ? { serialNumber: input.serialNumber } : {}),
+  });
+};
 
 export const stampCertificate = (input: StampInput): Array<string> => {
   const { certificate, subjectKryptos } = input;
@@ -111,186 +338,86 @@ export const stampCertificate = (input: StampInput): Array<string> => {
     subjectKryptos.issuer,
     subjectKryptos.id,
   );
-  const sans = resolveSans(certificate, subjectKryptos.issuer, subjectKryptos.id);
+  const sans = resolveSans(certificate, subjectKryptos.issuer);
 
-  const subjectKryptosSig = {
-    publicKey: subjectKryptos.publicKey,
-    type: subjectKryptos.type,
-    algorithm: subjectKryptos.algorithm,
-  };
+  switch (certificate.mode) {
+    case "self-signed": {
+      const der = buildSelfIssuedDer(
+        input,
+        subjectName,
+        sans,
+        { ca: false },
+        keyUsageForUse(subjectKryptos.use),
+        true,
+      );
+      return [der.toString("base64")];
+    }
 
-  if (certificate.mode === "self-signed") {
-    const signAlgorithm = resolveSignAlgorithmForCert({
-      type: subjectKryptos.type,
-      algorithm: subjectKryptos.algorithm,
-      curve: subjectKryptos.curve,
-    });
+    case "root-ca": {
+      const der = buildSelfIssuedDer(
+        input,
+        subjectName,
+        sans,
+        {
+          ca: true,
+          ...(certificate.pathLengthConstraint !== undefined
+            ? { pathLengthConstraint: certificate.pathLengthConstraint }
+            : {}),
+        },
+        CA_KEY_USAGE,
+        false,
+      );
+      return [der.toString("base64")];
+    }
 
-    const ownSki = computeSpkiKeyIdentifier(
-      subjectKryptos.publicKey,
-      subjectKryptos.type,
-    );
+    case "ca-signed": {
+      const validated = assertSigningCa(certificate.ca);
+      assertValidityWithinCa(subjectKryptos, validated.caLeaf);
 
-    const der = generateX509Certificate({
-      subjectKryptos: subjectKryptosSig,
-      issuerKryptos: {
-        privateKey: subjectKryptos.privateKey,
-        type: subjectKryptos.type,
-        algorithm: signAlgorithm,
-      },
-      subject: subjectName,
-      issuer: subjectName,
-      notBefore: subjectKryptos.notBefore,
-      notAfter: subjectKryptos.expiresAt,
-      basicConstraints: { ca: false },
-      keyUsage: keyUsageForUse(subjectKryptos.use),
-      subjectAlternativeNames: sans,
-      authorityKeyIdentifier: ownSki,
-      ...(input.serialNumber ? { serialNumber: input.serialNumber } : {}),
-    });
+      const der = buildCaSignedDer(
+        input,
+        validated,
+        subjectName,
+        sans,
+        { ca: false },
+        keyUsageForUse(subjectKryptos.use),
+      );
+      return [der.toString("base64"), ...certificate.ca.certificateChain];
+    }
 
-    return [der.toString("base64")];
+    case "intermediate-ca": {
+      const validated = assertSigningCa(certificate.ca);
+      assertValidityWithinCa(subjectKryptos, validated.caLeaf);
+      assertIntermediatePathLen(
+        validated.caLeaf.extensions.basicConstraintsPathLen,
+        certificate.pathLengthConstraint,
+      );
+
+      const der = buildCaSignedDer(
+        input,
+        validated,
+        subjectName,
+        sans,
+        {
+          ca: true,
+          ...(certificate.pathLengthConstraint !== undefined
+            ? { pathLengthConstraint: certificate.pathLengthConstraint }
+            : {}),
+        },
+        CA_KEY_USAGE,
+      );
+      return [der.toString("base64"), ...certificate.ca.certificateChain];
+    }
+
+    default:
+      throw new KryptosError(
+        `Unsupported certificate mode: ${(certificate as { mode: string }).mode}`,
+        {
+          code: "unsupported_certificate_mode",
+          title: "Unsupported Certificate Mode",
+          details: `The certificate mode "${(certificate as { mode: string }).mode}" is not supported.`,
+          data: { mode: (certificate as { mode: string }).mode },
+        },
+      );
   }
-
-  if (certificate.mode === "root-ca") {
-    const signAlgorithm = resolveSignAlgorithmForCert({
-      type: subjectKryptos.type,
-      algorithm: subjectKryptos.algorithm,
-      curve: subjectKryptos.curve,
-    });
-
-    const der = generateX509Certificate({
-      subjectKryptos: subjectKryptosSig,
-      issuerKryptos: {
-        privateKey: subjectKryptos.privateKey,
-        type: subjectKryptos.type,
-        algorithm: signAlgorithm,
-      },
-      subject: subjectName,
-      issuer: subjectName,
-      notBefore: subjectKryptos.notBefore,
-      notAfter: subjectKryptos.expiresAt,
-      basicConstraints: {
-        ca: true,
-        ...(certificate.pathLengthConstraint !== undefined
-          ? { pathLengthConstraint: certificate.pathLengthConstraint }
-          : {}),
-      },
-      keyUsage: ["keyCertSign", "cRLSign"],
-      subjectAlternativeNames: sans,
-      ...(input.serialNumber ? { serialNumber: input.serialNumber } : {}),
-    });
-
-    return [der.toString("base64")];
-  }
-
-  const ca = certificate.ca;
-
-  if (!ca.hasPrivateKey) {
-    throw new KryptosError("ca-signed mode requires CA kryptos with a private key", {
-      code: "missing_ca_private_key",
-      title: "Missing CA Private Key",
-      details:
-        "ca-signed mode requires the CA Kryptos to contain a private key for signing.",
-    });
-  }
-
-  if (!ca.hasCertificate || !ca.certificateChain || !ca.certificate) {
-    throw new KryptosError("ca-signed mode requires CA kryptos with a certificate", {
-      code: "missing_ca_certificate",
-      title: "Missing CA Certificate",
-      details:
-        "ca-signed mode requires the CA Kryptos to have a certificate and a complete certificate chain.",
-    });
-  }
-
-  const caLeaf = ca.certificate;
-
-  if (!caLeaf.extensions.basicConstraintsCa) {
-    throw new KryptosError(
-      "ca-signed requires CA kryptos whose leaf cert has basicConstraints cA=true",
-      {
-        code: "invalid_ca_certificate",
-        title: "Invalid CA Certificate",
-        details:
-          "The CA leaf certificate must have the basicConstraints extension with cA=true to sign child certificates.",
-      },
-    );
-  }
-
-  const caSki = caLeaf.extensions.subjectKeyIdentifier;
-  if (!caSki) {
-    throw new KryptosError(
-      "ca-signed requires CA leaf certificate with a subjectKeyIdentifier extension",
-      {
-        code: "invalid_ca_certificate",
-        title: "Invalid CA Certificate",
-        details:
-          "The CA leaf certificate must include a subjectKeyIdentifier extension to act as an authority key identifier.",
-      },
-    );
-  }
-
-  if (!caLeaf.extensions.keyUsage.includes("keyCertSign")) {
-    throw new KryptosError(
-      "ca-signed requires CA leaf certificate with keyCertSign in keyUsage",
-      {
-        code: "invalid_ca_certificate",
-        title: "Invalid CA Certificate",
-        details:
-          "The CA leaf certificate must include keyCertSign in its keyUsage extension to sign child certificates.",
-      },
-    );
-  }
-
-  if (
-    subjectKryptos.notBefore.getTime() < caLeaf.notBefore.getTime() ||
-    subjectKryptos.expiresAt.getTime() > caLeaf.notAfter.getTime()
-  ) {
-    throw new KryptosError(
-      "ca-signed child validity window must fit within the CA's validity window",
-      {
-        code: "invalid_certificate_validity_window",
-        title: "Invalid Certificate Validity Window",
-        details:
-          "The child certificate's notBefore and expiresAt must fall within the CA certificate's validity window.",
-      },
-    );
-  }
-
-  const caDer = ca.export("der");
-  if (!caDer.privateKey) {
-    throw new KryptosError("ca-signed mode requires CA kryptos with a private key", {
-      code: "missing_ca_private_key",
-      title: "Missing CA Private Key",
-      details:
-        "ca-signed mode requires the exported CA Kryptos to expose a private key for signing.",
-    });
-  }
-
-  const caSignAlgorithm = resolveSignAlgorithmForCert({
-    type: ca.type,
-    algorithm: ca.algorithm,
-    curve: ca.curve,
-  });
-
-  const der = generateX509Certificate({
-    subjectKryptos: subjectKryptosSig,
-    issuerKryptos: {
-      privateKey: caDer.privateKey,
-      type: ca.type,
-      algorithm: caSignAlgorithm,
-    },
-    subject: subjectName,
-    issuer: { raw: caLeaf.subject.raw },
-    notBefore: subjectKryptos.notBefore,
-    notAfter: subjectKryptos.expiresAt,
-    basicConstraints: { ca: false },
-    keyUsage: keyUsageForUse(subjectKryptos.use),
-    subjectAlternativeNames: sans,
-    authorityKeyIdentifier: caSki,
-    ...(input.serialNumber ? { serialNumber: input.serialNumber } : {}),
-  });
-
-  return [der.toString("base64"), ...ca.certificateChain];
 };

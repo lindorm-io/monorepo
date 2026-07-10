@@ -24,7 +24,20 @@ export type KryptosCertificateCaSignedOption = {
   subjectAlternativeNames?: Array<string | X509SubjectAltNameInput>;
 };
 
+// An intermediate CA: signed by `ca` (like ca-signed) but itself a CA
+// (basicConstraints cA=true) that can sign further certificates. RFC 5280
+// §4.2.1.9.
+export type KryptosCertificateIntermediateCaOption = {
+  mode: "intermediate-ca";
+  ca: IKryptos;
+  subject?: string;
+  organization?: string;
+  subjectAlternativeNames?: Array<string | X509SubjectAltNameInput>;
+  pathLengthConstraint?: number;
+};
+
 export type KryptosCertificateOption =
   | KryptosCertificateSelfSignedOption
   | KryptosCertificateRootCaOption
-  | KryptosCertificateCaSignedOption;
+  | KryptosCertificateCaSignedOption
+  | KryptosCertificateIntermediateCaOption;

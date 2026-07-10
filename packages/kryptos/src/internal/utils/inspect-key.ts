@@ -23,14 +23,16 @@ const nameText = (name: DescribedX509Name): string =>
     .filter(Boolean)
     .join(", ") || "—";
 
+const critical = (flag: boolean | undefined): string => (flag ? " (critical)" : "");
+
 const basicConstraintsText = (cert: DescribedX509Certificate): string =>
-  cert.basicConstraints.ca
+  (cert.basicConstraints.ca
     ? `CA=true${
         cert.basicConstraints.pathLenConstraint !== undefined
           ? `, pathLen=${cert.basicConstraints.pathLenConstraint}`
           : ""
       }`
-    : "CA=false";
+    : "CA=false") + critical(cert.basicConstraints.critical);
 
 // One compact block per certificate (leaf first).
 const certificateBlock = (cert: DescribedX509Certificate, index: number): string =>
@@ -41,7 +43,7 @@ const certificateBlock = (cert: DescribedX509Certificate, index: number): string
     `      validity    ${cert.notBefore} → ${cert.notAfter}`,
     `      sigAlg      ${cert.signatureAlgorithm}`,
     `      basic       ${basicConstraintsText(cert)}`,
-    `      keyUsage    ${cert.keyUsage.length ? cert.keyUsage.join(", ") : "—"}`,
+    `      keyUsage    ${cert.keyUsage.length ? cert.keyUsage.join(", ") : "—"}${critical(cert.keyUsageCritical)}`,
     `      sans        ${cert.subjectAltNames.length ? cert.subjectAltNames.join(", ") : "—"}`,
   ].join("\n");
 

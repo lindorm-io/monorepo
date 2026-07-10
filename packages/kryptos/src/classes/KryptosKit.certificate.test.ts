@@ -195,7 +195,7 @@ describe("KryptosKit certificate generation", () => {
       ]);
     });
 
-    test("SAN defaulting: no issuer → URN SAN from id", () => {
+    test("SAN defaulting: end-entity with no issuer → no SAN", () => {
       const kryptos = KryptosKit.generate.sig.ec({
         algorithm: "ES256",
         id: "abc-123",
@@ -207,22 +207,27 @@ describe("KryptosKit certificate generation", () => {
       const parsed = parseX509Certificate(
         Buffer.from(kryptos.certificateChain![0], "base64"),
       );
-      expect(parsed.extensions.subjectAltNames).toEqual([
-        { type: "uri", value: "urn:lindorm:kryptos:abc-123" },
-      ]);
+      // RFC 5280 §4.2.1.6: SAN is optional when the subject DN is non-empty.
+      expect(parsed.extensions.subjectAltNames).toEqual([]);
       expect(parsed.subject.commonName).toBe("abc-123");
     });
 
-    test("SAN defaulting: non-URL issuer throws unless explicit SANs supplied", () => {
-      expect(() =>
-        KryptosKit.generate.sig.ec({
-          algorithm: "ES256",
-          issuer: "my-local-svc",
-          notBefore: NOT_BEFORE,
-          expiresAt: EXPIRES_AT,
-          certificate: { mode: "self-signed" },
-        }),
-      ).toThrow("non-URL issuer");
+    test("SAN defaulting: non-URL issuer → URI SAN of the issuer (scheme-unrestricted)", () => {
+      const kryptos = KryptosKit.generate.sig.ec({
+        algorithm: "ES256",
+        issuer: "my-local-svc",
+        notBefore: NOT_BEFORE,
+        expiresAt: EXPIRES_AT,
+        certificate: { mode: "self-signed" },
+      });
+
+      const parsed = parseX509Certificate(
+        Buffer.from(kryptos.certificateChain![0], "base64"),
+      );
+      // §4.2.1.6: URI GeneralName is scheme-unrestricted.
+      expect(parsed.extensions.subjectAltNames).toEqual([
+        { type: "uri", value: "my-local-svc" },
+      ]);
     });
 
     test("SAN defaulting: non-URL issuer + explicit SANs is allowed", () => {

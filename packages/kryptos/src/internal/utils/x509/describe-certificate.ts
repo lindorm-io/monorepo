@@ -11,6 +11,7 @@ export type DescribedX509Name = {
 export type DescribedX509BasicConstraints = {
   ca: boolean;
   pathLenConstraint?: number;
+  critical?: boolean;
 };
 
 // A public, secret-free description of an X.509 certificate for inspection.
@@ -23,6 +24,7 @@ export type DescribedX509Certificate = {
   signatureAlgorithm: string;
   basicConstraints: DescribedX509BasicConstraints;
   keyUsage: Array<string>;
+  keyUsageCritical?: boolean;
   subjectAltNames: Array<string>;
 };
 
@@ -47,8 +49,14 @@ export const describeCertificate = (der: string): DescribedX509Certificate => {
       ...(cert.extensions.basicConstraintsPathLen !== undefined
         ? { pathLenConstraint: cert.extensions.basicConstraintsPathLen }
         : {}),
+      ...(cert.extensions.basicConstraintsCritical !== undefined
+        ? { critical: cert.extensions.basicConstraintsCritical }
+        : {}),
     },
     keyUsage: [...cert.extensions.keyUsage],
+    ...(cert.extensions.keyUsageCritical !== undefined
+      ? { keyUsageCritical: cert.extensions.keyUsageCritical }
+      : {}),
     subjectAltNames: cert.extensions.subjectAltNames.map(
       (san) => `${san.type}:${san.value}`,
     ),
