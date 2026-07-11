@@ -3,8 +3,9 @@ import type { LindormConfig } from "../types/lindorm-config.js";
 export const createMockLindormConfig = (
   overrides: Partial<LindormConfig> = {},
 ): LindormConfig => ({
-  proteus: { sourceDir: "./src/proteus", entitiesDir: "./src/proteus/entities" },
-  iris: { sourceDir: "./src/iris", messagesDir: "./src/iris/messages" },
+  db: { sourceDir: "./src/proteus/db", entitiesDir: "./src/proteus/db/entities" },
+  kv: { sourceDir: "./src/proteus/kv", entitiesDir: "./src/proteus/kv/entities" },
+  bus: { sourceDir: "./src/iris", messagesDir: "./src/iris/messages" },
   pylon: {
     routesDir: "./src/routes",
     handlersDir: "./src/handlers",

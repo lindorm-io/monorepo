@@ -1,6 +1,7 @@
 export type LindormConfig = {
-  proteus?: { sourceDir?: string; entitiesDir?: string };
-  iris?: { sourceDir?: string; messagesDir?: string };
+  db?: { sourceDir?: string; entitiesDir?: string };
+  kv?: { sourceDir?: string; entitiesDir?: string };
+  bus?: { sourceDir?: string; messagesDir?: string };
   pylon?: {
     routesDir?: string;
     handlersDir?: string;

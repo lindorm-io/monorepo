@@ -5,7 +5,7 @@ import { defineConfig } from "./define-config.js";
 describe("defineConfig", () => {
   test("returns its input unchanged", () => {
     const config: LindormConfig = {
-      proteus: { sourceDir: "./src/proteus" },
+      db: { sourceDir: "./src/proteus/db" },
     };
 
     expect(defineConfig(config)).toBe(config);

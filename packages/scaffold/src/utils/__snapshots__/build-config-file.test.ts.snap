@@ -4,11 +4,42 @@ exports[`buildConfigFile > matches snapshot 1`] = `
 "import { defineConfig } from "@lindorm/scaffold";
 
 export default defineConfig({
-  proteus: {
-    sourceDir: "./src/proteus",
-    entitiesDir: "./src/proteus/entities",
+  db: {
+    sourceDir: "./src/proteus/db",
+    entitiesDir: "./src/proteus/db/entities",
   },
-  iris: {
+  kv: {
+    sourceDir: "./src/proteus/kv",
+    entitiesDir: "./src/proteus/kv/entities",
+  },
+  bus: {
+    sourceDir: "./src/iris",
+    messagesDir: "./src/iris/messages",
+  },
+  pylon: {
+    routesDir: "./src/routes",
+    handlersDir: "./src/handlers",
+    listenersDir: "./src/listeners",
+    workersDir: "./src/workers",
+    featureDir: "./src/features",
+  },
+});
+"
+`;
+
+exports[`buildConfigFile > matches snapshot with overrides 1`] = `
+"import { defineConfig } from "@lindorm/scaffold";
+
+export default defineConfig({
+  db: {
+    sourceDir: "./custom/db",
+    entitiesDir: "./custom/db/entities",
+  },
+  kv: {
+    sourceDir: "./src/proteus/kv",
+    entitiesDir: "./src/proteus/kv/entities",
+  },
+  bus: {
     sourceDir: "./src/iris",
     messagesDir: "./src/iris/messages",
   },

@@ -5,9 +5,9 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { ScaffoldError } from "../errors/ScaffoldError.js";
 import { loadLindormConfig } from "./load-lindorm-config.js";
 
-const TS_CONFIG = `export default { proteus: { sourceDir: "./from-ts" } };\n`;
-const MJS_CONFIG = `export default { proteus: { sourceDir: "./from-mjs" } };\n`;
-const NAMED_CONFIG = `export const config = { iris: { sourceDir: "./from-named" } };\n`;
+const TS_CONFIG = `export default { db: { sourceDir: "./from-ts" } };\n`;
+const MJS_CONFIG = `export default { db: { sourceDir: "./from-mjs" } };\n`;
+const NAMED_CONFIG = `export const config = { bus: { sourceDir: "./from-named" } };\n`;
 const NON_OBJECT_CONFIG = `export default 42;\n`;
 
 describe("loadLindormConfig", () => {
@@ -27,7 +27,7 @@ describe("loadLindormConfig", () => {
 
     const config = await loadLindormConfig({ cwd });
 
-    expect(config).toEqual({ proteus: { sourceDir: "./from-ts" } });
+    expect(config).toEqual({ db: { sourceDir: "./from-ts" } });
   });
 
   test("uses lindorm.config.mjs when only it exists", async () => {
@@ -35,7 +35,7 @@ describe("loadLindormConfig", () => {
 
     const config = await loadLindormConfig({ cwd });
 
-    expect(config).toEqual({ proteus: { sourceDir: "./from-mjs" } });
+    expect(config).toEqual({ db: { sourceDir: "./from-mjs" } });
   });
 
   test("loads an explicit relative path", async () => {
@@ -43,7 +43,7 @@ describe("loadLindormConfig", () => {
 
     const config = await loadLindormConfig({ cwd, path: "custom.config.mjs" });
 
-    expect(config).toEqual({ proteus: { sourceDir: "./from-mjs" } });
+    expect(config).toEqual({ db: { sourceDir: "./from-mjs" } });
   });
 
   test("loads an explicit absolute path", async () => {
@@ -52,7 +52,7 @@ describe("loadLindormConfig", () => {
 
     const config = await loadLindormConfig({ cwd, path });
 
-    expect(config).toEqual({ proteus: { sourceDir: "./from-mjs" } });
+    expect(config).toEqual({ db: { sourceDir: "./from-mjs" } });
   });
 
   test("accepts a named `config` export when no default is present", async () => {
@@ -60,7 +60,7 @@ describe("loadLindormConfig", () => {
 
     const config = await loadLindormConfig({ cwd });
 
-    expect(config).toEqual({ iris: { sourceDir: "./from-named" } });
+    expect(config).toEqual({ bus: { sourceDir: "./from-named" } });
   });
 
   test("throws config_file_not_found for a missing explicit path", async () => {

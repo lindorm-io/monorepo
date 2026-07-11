@@ -12,11 +12,14 @@ Projects describe their scaffold target directories in a `lindorm.config.ts` (or
 import { defineConfig } from "@lindorm/scaffold";
 
 export default defineConfig({
-  proteus: { entitiesDir: "./src/proteus/entities" },
-  iris: { messagesDir: "./src/iris/messages" },
+  db: { sourceDir: "./src/proteus/db", entitiesDir: "./src/proteus/db/entities" },
+  kv: { sourceDir: "./src/proteus/kv", entitiesDir: "./src/proteus/kv/entities" },
+  bus: { sourceDir: "./src/iris", messagesDir: "./src/iris/messages" },
   pylon: { routesDir: "./src/routes" },
 });
 ```
+
+Sections use pylon's role names: `db` and `kv` are proteus sources, `bus` is the iris source, `pylon` covers its own generators.
 
 `defineConfig` is an identity helper — it only exists for editor type inference.
 
@@ -41,8 +44,8 @@ The default (or named `config`) export must be an object, else it throws `invali
 ```ts
 const dir = resolveTarget({
   arg: argv.dir,
-  config: config?.proteus?.entitiesDir,
-  default: LINDORM_CONFIG_DEFAULTS.proteus.entitiesDir,
+  config: config?.db?.entitiesDir,
+  default: LINDORM_CONFIG_DEFAULTS.db.entitiesDir,
 });
 ```
 
