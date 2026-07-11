@@ -7,6 +7,7 @@ if (typeof Symbol.metadata === "undefined") {
 
 import { readFileSync } from "fs";
 import { resolve } from "path";
+import { Logger } from "@lindorm/logger";
 import { Command } from "commander";
 import { registerMigrateCommands } from "./internal/cli/commands/migrate.js";
 import { registerDbCommands } from "./internal/cli/commands/db.js";
@@ -34,18 +35,18 @@ let shuttingDown = false;
 
 const onSignal = (signal: string): void => {
   if (shuttingDown) {
-    console.error(`Received ${signal} again — forcing exit`);
+    Logger.std.warn(`Received ${signal} again — forcing exit`);
     process.exit(1);
   }
 
   shuttingDown = true;
-  console.error(`Shutdown signal received (${signal})`);
+  Logger.std.info(`Shutdown signal received (${signal})`);
 };
 
 process.on("SIGTERM", () => onSignal("SIGTERM"));
 process.on("SIGINT", () => onSignal("SIGINT"));
 
 program.parseAsync().catch((err) => {
-  console.error(err instanceof Error ? err.message : String(err));
+  Logger.std.error(err instanceof Error ? err.message : String(err));
   process.exit(1);
 });
