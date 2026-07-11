@@ -11,7 +11,9 @@ import { Command } from "commander";
 import { registerInitCommand } from "./internal/cli/commands/register-init.js";
 import { registerGenerateCommands } from "./internal/cli/commands/register-generate.js";
 
-const pkg = JSON.parse(readFileSync(resolve(__dirname, "..", "package.json"), "utf-8"));
+const pkg = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, "..", "package.json"), "utf-8"),
+);
 
 const program = new Command();
 
