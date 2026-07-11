@@ -27,8 +27,8 @@ export const init = async (options: InitOptions): Promise<void> => {
   const config = await loadLindormConfig();
   const directory = resolveTarget({
     arg: options.directory,
-    config: config?.iris?.sourceDir,
-    default: LINDORM_CONFIG_DEFAULTS.iris.sourceDir,
+    config: config?.bus?.sourceDir,
+    default: LINDORM_CONFIG_DEFAULTS.bus.sourceDir,
   });
 
   await writeSource({

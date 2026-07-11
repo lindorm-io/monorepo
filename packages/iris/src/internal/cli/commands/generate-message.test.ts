@@ -100,7 +100,7 @@ describe("generateMessage", () => {
 
   it("should use lindorm.config messagesDir when no directory arg is given", async () => {
     loadLindormConfig.mockResolvedValueOnce({
-      iris: { messagesDir: "./from/config/messages" },
+      bus: { messagesDir: "./from/config/messages" },
     });
 
     await generateMessage("OrderCreated", {});
@@ -116,7 +116,7 @@ describe("generateMessage", () => {
 
   it("should let the --directory arg win over lindorm.config", async () => {
     loadLindormConfig.mockResolvedValueOnce({
-      iris: { messagesDir: "./from/config/messages" },
+      bus: { messagesDir: "./from/config/messages" },
     });
 
     await generateMessage("OrderCreated", { directory: "./from/arg" });

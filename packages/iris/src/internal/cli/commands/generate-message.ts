@@ -26,8 +26,8 @@ export const generateMessage = async (
   const config = await loadLindormConfig();
   const directory = resolveTarget({
     arg: options.directory,
-    config: config?.iris?.messagesDir,
-    default: LINDORM_CONFIG_DEFAULTS.iris.messagesDir,
+    config: config?.bus?.messagesDir,
+    default: LINDORM_CONFIG_DEFAULTS.bus.messagesDir,
   });
 
   await writeMessage({
