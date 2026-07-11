@@ -1,0 +1,1020 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`projectDesiredSchemaSqlite > projects @Generated('identity') as a plain column without autoincrement 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "name",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldIdentity",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects ManyToMany join table 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "name",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldCourse",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "goldCourseId",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "goldStudentId",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "goldCourseId",
+          ],
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "GoldCourse",
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+        },
+        {
+          "columns": [
+            "goldStudentId",
+          ],
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "GoldStudent",
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+        },
+      ],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "goldStudentId",
+            },
+          ],
+          "name": "idx_X1WNChCam-R",
+          "unique": false,
+          "where": null,
+        },
+      ],
+      "name": "gold_course_x_gold_student",
+      "primaryKeys": [
+        "goldCourseId",
+        "goldStudentId",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "name",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldStudent",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, computed, defaults, embedded lists and relations 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "firstName",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "lastName",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "email",
+          "nullable": true,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": "0",
+          "isAutoincrement": false,
+          "name": "age",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": "CHECK("status" IN ('active', 'archived'))",
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "status",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "displayName",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldUser",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "gold_user_id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "__ordinal",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "value",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "gold_user_id",
+          ],
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "GoldUser",
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+        },
+      ],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "gold_user_id",
+            },
+          ],
+          "name": "idx_J4UkylOAGJb",
+          "unique": false,
+          "where": null,
+        },
+      ],
+      "name": "gold_user_tags",
+      "primaryKeys": [
+        "gold_user_id",
+        "__ordinal",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "gold_user_id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "__ordinal",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "street",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "zip",
+          "nullable": true,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": "CHECK("status" IN ('active', 'archived'))",
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "status",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "gold_user_id",
+          ],
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "GoldUser",
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+        },
+      ],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "gold_user_id",
+            },
+          ],
+          "name": "idx_0baWdZssCID",
+          "unique": false,
+          "where": null,
+        },
+      ],
+      "name": "gold_user_addresses",
+      "primaryKeys": [
+        "gold_user_id",
+        "__ordinal",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": true,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "title",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "authorId",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "authorId",
+          ],
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "GoldUser",
+          "onDelete": "SET NULL",
+          "onUpdate": "CASCADE",
+        },
+      ],
+      "indexes": [],
+      "name": "GoldPost",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects append-only triggers 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "event",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldLedger",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [
+        {
+          "ddl": "CREATE TRIGGER IF NOT EXISTS "proteus_ao_GoldLedger_no_update"
+  BEFORE UPDATE ON "GoldLedger"
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(ABORT, 'append-only entity: UPDATE operations are forbidden');
+  END;",
+          "name": "proteus_ao_GoldLedger_no_update",
+        },
+        {
+          "ddl": "CREATE TRIGGER IF NOT EXISTS "proteus_ao_GoldLedger_no_delete"
+  BEFORE DELETE ON "GoldLedger"
+  FOR EACH ROW
+  BEGIN
+    SELECT RAISE(ABORT, 'append-only entity: DELETE operations are forbidden');
+  END;",
+          "name": "proteus_ao_GoldLedger_no_delete",
+        },
+      ],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects boolean defaults as 1 and 0 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": "1",
+          "isAutoincrement": false,
+          "name": "isActive",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": "0",
+          "isAutoincrement": false,
+          "name": "isArchived",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldFlags",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects check constraints 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [
+        "CONSTRAINT "chk_5l9oJ5AYkyf" CHECK (score BETWEEN 0 AND 100)",
+        "CONSTRAINT "gold_age_positive" CHECK (age >= 0)",
+      ],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "age",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "score",
+          "nullable": false,
+          "sqliteType": "REAL",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldChecked",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects encrypted fields as TEXT while encrypted enums keep their CHECK expression 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "secret",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": "CHECK("status" IN ('active', 'archived'))",
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "status",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldSecret",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects indexes, uniques and sparse index WHERE clauses 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "name",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "email",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "region",
+          "nullable": true,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "name",
+            },
+          ],
+          "name": "gold_idx_name",
+          "unique": false,
+          "where": null,
+        },
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "region",
+            },
+          ],
+          "name": "idx_h_BM4y4YzKi",
+          "unique": false,
+          "where": ""region" IS NOT NULL",
+        },
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "email",
+            },
+            {
+              "direction": "asc",
+              "name": "name",
+            },
+          ],
+          "name": "idx_p9xC5ROr1lg",
+          "unique": false,
+          "where": null,
+        },
+      ],
+      "name": "GoldIndexed",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [
+        {
+          "columns": [
+            "email",
+          ],
+          "name": "unique_gold_email",
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and child tables with inheritance FKs 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "kind",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "name",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "kind",
+            },
+          ],
+          "name": "idx_yuq2QirCUBs",
+          "unique": false,
+          "where": null,
+        },
+      ],
+      "name": "GoldAnimal",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "breed",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "id",
+          ],
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "GoldAnimal",
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+        },
+      ],
+      "indexes": [],
+      "name": "GoldDog",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "isIndoor",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "id",
+          ],
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "GoldAnimal",
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+        },
+      ],
+      "indexes": [],
+      "name": "GoldCat",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects single-table inheritance into the root table only 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "kind",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "make",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "seatCount",
+          "nullable": true,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "payloadCapacity",
+          "nullable": true,
+          "sqliteType": "REAL",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "kind",
+            },
+          ],
+          "name": "idx_l6bAAMkgDuS",
+          "unique": false,
+          "where": null,
+        },
+      ],
+      "name": "GoldVehicle",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects typedJson sidecar companion columns 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "payload",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "payload__typemeta",
+          "nullable": true,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldTyped",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaSqlite > projects with namespace (name-only tables, no schema qualification) 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [
+        "CONSTRAINT "chk_5l9oJ5AYkyf" CHECK (score BETWEEN 0 AND 100)",
+        "CONSTRAINT "gold_age_positive" CHECK (age >= 0)",
+      ],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "age",
+          "nullable": false,
+          "sqliteType": "INTEGER",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "score",
+          "nullable": false,
+          "sqliteType": "REAL",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldChecked",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;

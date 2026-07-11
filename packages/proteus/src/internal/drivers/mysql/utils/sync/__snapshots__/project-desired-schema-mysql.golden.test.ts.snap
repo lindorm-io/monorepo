@@ -1,0 +1,660 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`projectDesiredSchemaMysql (golden) > projects @Generated('identity') as a plain column without auto-increment 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "int",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "name",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "MyGoldIdentity",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaMysql (golden) > projects append-only triggers 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "event",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "MyGoldLedger",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [
+        {
+          "name": "proteus_ao_MyGoldLedger_no_update",
+          "statements": [
+            "DROP TRIGGER IF EXISTS \`proteus_ao_MyGoldLedger_no_update\`;",
+            "CREATE TRIGGER \`proteus_ao_MyGoldLedger_no_update\`
+  BEFORE UPDATE ON \`MyGoldLedger\`
+  FOR EACH ROW
+  SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'append-only entity: UPDATE operations are forbidden';",
+          ],
+        },
+        {
+          "name": "proteus_ao_MyGoldLedger_no_delete",
+          "statements": [
+            "DROP TRIGGER IF EXISTS \`proteus_ao_MyGoldLedger_no_delete\`;",
+            "CREATE TRIGGER \`proteus_ao_MyGoldLedger_no_delete\`
+  BEFORE DELETE ON \`MyGoldLedger\`
+  FOR EACH ROW
+  SIGNAL SQLSTATE '45000'
+    SET MESSAGE_TEXT = 'append-only entity: DELETE operations are forbidden';",
+          ],
+        },
+      ],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaMysql (golden) > projects boolean defaults as 1 and 0 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": "1",
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "tinyint(1)",
+          "name": "isActive",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": "0",
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "tinyint(1)",
+          "name": "isArchived",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "MyGoldFlags",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaMysql (golden) > projects embedded lists into collection tables with (parentFk, __ordinal) primary key 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "name",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "MyGoldUser",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "my_gold_user_id",
+          "nullable": false,
+        },
+        {
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "int",
+          "name": "__ordinal",
+          "nullable": false,
+        },
+        {
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "value",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "my_gold_user_id",
+          ],
+          "constraintName": "fk_S_4YkjQy5dy",
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "MyGoldUser",
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+        },
+      ],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "my_gold_user_id",
+              "prefixLength": null,
+            },
+          ],
+          "name": "idx_S_4YkjQy5dy",
+          "unique": false,
+        },
+      ],
+      "name": "my_gold_user_tags",
+      "primaryKeys": [
+        "my_gold_user_id",
+        "__ordinal",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "my_gold_user_id",
+          "nullable": false,
+        },
+        {
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "int",
+          "name": "__ordinal",
+          "nullable": false,
+        },
+        {
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "street",
+          "nullable": false,
+        },
+        {
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "zip",
+          "nullable": true,
+        },
+        {
+          "defaultExpr": null,
+          "enumValues": [
+            "active",
+            "archived",
+          ],
+          "isAutoIncrement": false,
+          "mysqlType": "enum('active','archived')",
+          "name": "status",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "my_gold_user_id",
+          ],
+          "constraintName": "fk_jZzI02fcLXm",
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "MyGoldUser",
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+        },
+      ],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "my_gold_user_id",
+              "prefixLength": null,
+            },
+          ],
+          "name": "idx_jZzI02fcLXm",
+          "unique": false,
+        },
+      ],
+      "name": "my_gold_user_addresses",
+      "primaryKeys": [
+        "my_gold_user_id",
+        "__ordinal",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaMysql (golden) > projects encrypted enum fields as text while enumValues remain populated 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": [
+            "active",
+            "archived",
+          ],
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "status",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "MyGoldSecret",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaMysql (golden) > projects enum fields as inline enum('a','b') column types with quote escaping 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": [
+            "active",
+            "archived",
+          ],
+          "isAutoIncrement": false,
+          "mysqlType": "enum('active','archived')",
+          "name": "status",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": [
+            "happy",
+            "can't",
+          ],
+          "isAutoIncrement": false,
+          "mysqlType": "enum('happy','can''t')",
+          "name": "mood",
+          "nullable": true,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "MyGoldEnumEntity",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaMysql (golden) > projects joined inheritance with inheritance FK, child uniques and checks 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "kind",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "name",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "kind",
+              "prefixLength": 191,
+            },
+          ],
+          "name": "idx_XAETsBszc2f",
+          "unique": false,
+        },
+      ],
+      "name": "MyGoldAnimal",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [
+        {
+          "expression": "length(breed) > 0",
+          "name": "my_gold_dog_breed_not_empty",
+        },
+      ],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "breed",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "id",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "id",
+          ],
+          "constraintName": "fk_Bw6yC2ppNKh",
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "MyGoldAnimal",
+          "onDelete": "CASCADE",
+          "onUpdate": "CASCADE",
+        },
+      ],
+      "indexes": [],
+      "name": "MyGoldDog",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [
+        {
+          "columns": [
+            {
+              "name": "breed",
+              "prefixLength": 191,
+            },
+          ],
+          "name": "unique_my_gold_dog_breed",
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaMysql (golden) > projects single-table inheritance into the root table with discriminator index 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "kind",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "make",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "int",
+          "name": "seatCount",
+          "nullable": true,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "kind",
+              "prefixLength": 191,
+            },
+          ],
+          "name": "idx_Hj2x_cozu7i",
+          "unique": false,
+        },
+      ],
+      "name": "MyGoldVehicle",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchemaMysql (golden) > projects sparse indexes without a WHERE clause 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "char(36)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "region",
+          "nullable": true,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [
+        {
+          "columns": [
+            {
+              "direction": "asc",
+              "name": "region",
+              "prefixLength": 191,
+            },
+          ],
+          "name": "my_gold_sparse_region",
+          "unique": false,
+        },
+      ],
+      "name": "MyGoldSparse",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
