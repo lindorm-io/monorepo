@@ -26,12 +26,14 @@ export const runProteusInit = async (
   const cache =
     db !== "none" && PROTEUS_DB_DRIVERS.includes(db) && kv !== "none" ? kv : null;
 
+  // The primary fills pylon's `db` role (even when the kv driver is the sole
+  // store), so it lives under src/proteus/db — mirroring src/proteus/kv.
   await writeProteusSource({
     driver: primaryDriver,
-    directory: join(projectDir, "src/proteus"),
-    loggerImport: "../logger/index.js",
-    configImport: "../pylon/config.js",
-    amphoraImport: "../pylon/amphora.js",
+    directory: join(projectDir, "src/proteus/db"),
+    loggerImport: "../../logger/index.js",
+    configImport: "../../pylon/config.js",
+    amphoraImport: "../../pylon/amphora.js",
     cache,
     naming: "snake",
     synchronizeFromConfig: true,
@@ -58,7 +60,7 @@ export const runProteusGenerateSampleEntity = async (
 ): Promise<void> => {
   await writeProteusEntity({
     name: "SampleEntity",
-    directory: join(projectDir, "src/proteus/entities"),
+    directory: join(projectDir, "src/proteus/db/entities"),
   });
 };
 

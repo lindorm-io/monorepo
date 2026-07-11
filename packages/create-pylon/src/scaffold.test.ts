@@ -194,6 +194,12 @@ describe("scaffold", () => {
       const content = readFileSync(join(projectDir, "lindorm.config.ts"), "utf-8");
       expect(content).toContain('import { defineConfig } from "@lindorm/scaffold"');
       expect(content).toContain("export default defineConfig({");
+      expect(content).toContain("db: {");
+      expect(content).toContain("kv: {");
+      expect(content).toContain("bus: {");
+      expect(content).toContain('sourceDir: "./src/proteus/db"');
+      expect(content).toContain('entitiesDir: "./src/proteus/db/entities"');
+      expect(content).toContain('sourceDir: "./src/proteus/kv"');
       expect(content).toMatchSnapshot();
     });
   });
@@ -644,7 +650,7 @@ describe("scaffold", () => {
       }
     });
 
-    test("workers import the flat primary source (db + kv)", () => {
+    test("workers import the db primary source (db + kv)", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
         projectDir,
@@ -658,12 +664,12 @@ describe("scaffold", () => {
           join(projectDir, "src/workers", `${key}.ts`),
           "utf-8",
         );
-        expect(content).toContain(`from "../proteus/source.js"`);
+        expect(content).toContain(`from "../proteus/db/source.js"`);
         expect(content).not.toContain(`from "../proteus/kv/source.js"`);
       }
     });
 
-    test("workers import the flat primary source when kv is the sole driver", () => {
+    test("workers import the db primary source when kv is the sole driver", () => {
       mkdirSync(projectDir, { recursive: true });
       const answers = baseAnswers({
         projectDir,
@@ -675,7 +681,7 @@ describe("scaffold", () => {
         join(projectDir, "src/workers/kryptos-rotation.ts"),
         "utf-8",
       );
-      expect(content).toContain(`from "../proteus/source.js"`);
+      expect(content).toContain(`from "../proteus/db/source.js"`);
     });
 
     test("skipped when no workers selected", () => {
@@ -849,7 +855,7 @@ describe("scaffold", () => {
         );
       });
 
-      test("db + kv writes a distinct kv/source.ts secondary", async () => {
+      test("db + kv writes the db/source.ts primary and a distinct kv/source.ts secondary", async () => {
         const answers = baseAnswers({
           projectDir,
           db: "postgres",
@@ -857,23 +863,25 @@ describe("scaffold", () => {
         });
         await scaffold(answers, FIXED_KEK);
 
-        expect(existsSync(join(projectDir, "src/proteus/source.ts"))).toBe(true);
+        expect(existsSync(join(projectDir, "src/proteus/db/source.ts"))).toBe(true);
         expect(existsSync(join(projectDir, "src/proteus/kv/source.ts"))).toBe(true);
+        expect(existsSync(join(projectDir, "src/proteus/source.ts"))).toBe(false);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toContain(`import { postgres } from "../proteus/source.js";`);
+        expect(pylon).toContain(`import { postgres } from "../proteus/db/source.js";`);
         expect(pylon).toContain(`import { redis } from "../proteus/kv/source.js";`);
       });
 
-      test("kv-only writes a single flat primary — no kv subdir", async () => {
+      test("kv-only writes a single db-role primary — no kv subdir", async () => {
         const answers = baseAnswers({ projectDir, kv: "redis" });
         await scaffold(answers, FIXED_KEK);
 
-        expect(existsSync(join(projectDir, "src/proteus/source.ts"))).toBe(true);
+        expect(existsSync(join(projectDir, "src/proteus/db/source.ts"))).toBe(true);
         expect(existsSync(join(projectDir, "src/proteus/kv"))).toBe(false);
+        expect(existsSync(join(projectDir, "src/proteus/source.ts"))).toBe(false);
 
         const pylon = readFileSync(join(projectDir, "src/pylon/pylon.ts"), "utf-8");
-        expect(pylon).toContain(`import { redis } from "../proteus/source.js";`);
+        expect(pylon).toContain(`import { redis } from "../proteus/db/source.js";`);
         expect(pylon).not.toContain(`../proteus/kv/source.js`);
       });
 
@@ -904,7 +912,7 @@ describe("scaffold", () => {
         expect(pylon).toMatch(/^ {2}kv: redis,$/m);
       });
 
-      test("session falls back to the flat proteus source when only db is selected", async () => {
+      test("session falls back to the db primary when only db is selected", async () => {
         const answers = baseAnswers({
           projectDir,
           db: "postgres",
@@ -917,7 +925,7 @@ describe("scaffold", () => {
         expect(pylon).not.toContain(`../proteus/kv/source.js`);
       });
 
-      test("session binds to the flat primary when only kv is selected", async () => {
+      test("session binds to the db-role primary when only kv is selected", async () => {
         const answers = baseAnswers({
           projectDir,
           kv: "redis",

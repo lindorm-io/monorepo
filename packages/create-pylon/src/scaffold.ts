@@ -360,6 +360,8 @@ export const writeConfigFile = (answers: Answers): void => {
 
 // The CLI/scaffold-only lindorm.config.ts — drives the proteus/iris/pylon
 // generator commands' target directories. Never imported by the runtime.
+// @lindorm/scaffold's role-named defaults (db/kv/bus) already match the
+// generated layout, so no overrides are needed.
 export const writeLindormConfigFile = (answers: Answers): void => {
   const target = join(answers.projectDir, "lindorm.config.ts");
   writeFileSync(target, buildLindormConfigFile(), "utf-8");

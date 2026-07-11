@@ -1,6 +1,6 @@
 import type { WorkerKey } from "./types.js";
 
-const SOURCE_IMPORT = "../proteus/source.js";
+const SOURCE_IMPORT = "../proteus/db/source.js";
 
 const amphoraEntitySync = (dbDriver: string): string =>
   [

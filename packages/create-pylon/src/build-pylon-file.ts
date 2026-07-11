@@ -32,7 +32,7 @@ const computeSlots = (answers: Answers): Array<SourceSlot> => {
     slots.push({
       role: "db",
       driver: primaryDriver,
-      path: "../proteus/source.js",
+      path: "../proteus/db/source.js",
       binding: primaryDriver,
     });
   }
@@ -122,7 +122,7 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
   const kvIsSecondary = answers.db !== "none" && answers.kv !== "none";
 
   // When a kv store is picked, the kv source is either the distinct secondary
-  // (kvSlot) or, when kv is the sole primary, the flat primary (dbSlot).
+  // (kvSlot) or, when kv is the sole primary, the db-role primary (dbSlot).
   const kvRef = kvIsSecondary ? kvSlot!.binding : (dbSlot?.binding ?? null);
 
   // session falls back to the db primary as its keyValue store when no kv

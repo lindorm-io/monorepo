@@ -47,9 +47,9 @@ The scaffolder asks for features and drivers, copies templates into the target d
 ```
 
 You pick at most one **db** store and one **kv** store. The db store is the primary Proteus source
-(`src/proteus/source.ts`) — schema-managed, holds your entities, and backs the kryptos/worker layer. The kv
+(`src/proteus/db/source.ts`) — schema-managed, holds your entities, and backs the kryptos/worker layer. The kv
 store (`src/proteus/kv/source.ts` when a db is also picked, otherwise the primary) backs rate limiting,
-sessions, and the db query cache. When only one store is picked it is the primary at `src/proteus/source.ts`;
+sessions, and the db query cache. When only one store is picked it is the primary at `src/proteus/db/source.ts`;
 `none` is valid for either.
 
 ## What gets scaffolded
@@ -66,7 +66,7 @@ Generated layout (some files only appear depending on the answers):
 - `src/listeners/ping.ts` + `src/features/ping/ping-handler.ts` — example Socket.IO listener (only when Socket.IO is selected)
 - `src/routes/webhooks/` + `src/features/webhooks/` — CRUD routes and handlers for `WebhookSubscription` (only when webhooks are selected)
 - `src/workers/<worker>.ts` — one file per selected worker (`amphora-entity-sync`, `expiry-cleanup`, `kryptos-rotation`) plus an `alive.ts` example
-- `src/proteus/source.ts` (the primary db/kv store) — plus `src/proteus/kv/source.ts` when both a db and a kv store are picked — and a sample `SampleEntity`, written by `@lindorm/proteus/scaffold`'s code generator
+- `src/proteus/db/source.ts` (the primary db/kv store, with `entities/` + `migrations/`) — plus `src/proteus/kv/source.ts` when both a db and a kv store are picked — and a sample `SampleEntity`, written by `@lindorm/proteus/scaffold`'s code generator
 - `src/__fixtures__/test-ctx.ts` — a project-bound `createTestCtx` helper (only when a db or kv store is picked) wrapping `@lindorm/pylon/mocks/vitest`'s `createTestPylonCtx`; `ctx.db`/`ctx.kv` are stateful in-memory Proteus mocks (writes persist, reads reflect them) so repository round-trips work in tests
 - `src/iris/source.ts`, a sample `SampleMessage`, plus a sample publisher and subscriber — written by `@lindorm/iris`'s code generator
 - `docker-compose.yml` — only emitted when a selected driver is `postgres`, `mysql`, `mongo`, `redis`, `kafka`, `nats`, or `rabbit`
@@ -135,12 +135,12 @@ await initGit(answers.projectDir);
 
 ### Driver code generation
 
-| Export                           | Signature                                                                     | Description                                                                                                                            |
-| -------------------------------- | ----------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `runProteusInit`                 | `(projectDir: string, answers: Pick<Answers, "db" \| "kv">) => Promise<void>` | Calls `@lindorm/proteus/scaffold`'s `writeSource` for the db + kv stores (primary at `src/proteus`, kv secondary at `src/proteus/kv`). |
-| `runProteusGenerateSampleEntity` | `(projectDir: string) => Promise<void>`                                       | Writes a `SampleEntity` under `src/proteus/entities/`.                                                                                 |
-| `runIrisInit`                    | `(projectDir: string, driver: IrisDriver) => Promise<void>`                   | Calls `@lindorm/iris`'s `writeSource` with the chosen driver. No-op for `"none"`.                                                      |
-| `runIrisGenerateSampleMessage`   | `(projectDir: string) => Promise<void>`                                       | Writes a `SampleMessage` under `src/iris/messages/`.                                                                                   |
+| Export                           | Signature                                                                     | Description                                                                                                                               |
+| -------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `runProteusInit`                 | `(projectDir: string, answers: Pick<Answers, "db" \| "kv">) => Promise<void>` | Calls `@lindorm/proteus/scaffold`'s `writeSource` for the db + kv stores (primary at `src/proteus/db`, kv secondary at `src/proteus/kv`). |
+| `runProteusGenerateSampleEntity` | `(projectDir: string) => Promise<void>`                                       | Writes a `SampleEntity` under `src/proteus/db/entities/`.                                                                                 |
+| `runIrisInit`                    | `(projectDir: string, driver: IrisDriver) => Promise<void>`                   | Calls `@lindorm/iris`'s `writeSource` with the chosen driver. No-op for `"none"`.                                                         |
+| `runIrisGenerateSampleMessage`   | `(projectDir: string) => Promise<void>`                                       | Writes a `SampleMessage` under `src/iris/messages/`.                                                                                      |
 
 ### Types and constants
 
