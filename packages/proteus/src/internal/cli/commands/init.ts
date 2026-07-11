@@ -27,8 +27,8 @@ export const init = async (options: InitOptions): Promise<void> => {
   const config = await loadLindormConfig();
   const directory = resolveTarget({
     arg: options.directory,
-    config: config?.proteus?.sourceDir,
-    default: LINDORM_CONFIG_DEFAULTS.proteus.sourceDir,
+    config: config?.db?.sourceDir,
+    default: LINDORM_CONFIG_DEFAULTS.db.sourceDir,
   });
 
   await writeSource({

@@ -24,7 +24,7 @@ vi.mock("@lindorm/logger", () => ({
   },
 }));
 
-const defaultDir = resolve(process.cwd(), "./src/proteus");
+const defaultDir = resolve(process.cwd(), "./src/proteus/db");
 
 describe("init", () => {
   beforeEach(() => {

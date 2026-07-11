@@ -26,8 +26,8 @@ export const generateEntity = async (
   const config = await loadLindormConfig();
   const directory = resolveTarget({
     arg: options.directory,
-    config: config?.proteus?.entitiesDir,
-    default: LINDORM_CONFIG_DEFAULTS.proteus.entitiesDir,
+    config: config?.db?.entitiesDir,
+    default: LINDORM_CONFIG_DEFAULTS.db.entitiesDir,
   });
 
   await writeEntity({

@@ -2304,8 +2304,8 @@ await writeEntity({ directory: "./src/proteus/entities", name: "User" });
 | `-d, --directory <path>` | Output directory (where applicable)                         |
 
 `init` and `generate entity` resolve their output directory as **`--directory` > `lindorm.config.{ts,mjs}`
-(`proteus.sourceDir` / `proteus.entitiesDir`) > built-in default** (`./src/proteus` / `./src/proteus/entities`).
-See `@lindorm/scaffold` for the config contract.
+(`db.sourceDir` / `db.entitiesDir` — the standalone proteus source fills the db role) > built-in default**
+(`./src/proteus/db` / `./src/proteus/db/entities`). See `@lindorm/scaffold` for the config contract.
 
 ## Errors
 

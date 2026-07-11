@@ -33,7 +33,7 @@ vi.mock("@lindorm/logger", () => ({
   },
 }));
 
-const defaultDir = resolve(process.cwd(), "./src/proteus/entities");
+const defaultDir = resolve(process.cwd(), "./src/proteus/db/entities");
 
 describe("generateEntity", () => {
   beforeEach(() => {
@@ -116,7 +116,7 @@ describe("generateEntity", () => {
 
   it("should use lindorm.config entitiesDir when no directory arg is given", async () => {
     loadLindormConfig.mockResolvedValueOnce({
-      proteus: { entitiesDir: "./from/config/entities" },
+      db: { entitiesDir: "./from/config/entities" },
     });
 
     await generateEntity("User", {});
@@ -132,7 +132,7 @@ describe("generateEntity", () => {
 
   it("should let the --directory arg win over lindorm.config", async () => {
     loadLindormConfig.mockResolvedValueOnce({
-      proteus: { entitiesDir: "./from/config/entities" },
+      db: { entitiesDir: "./from/config/entities" },
     });
 
     await generateEntity("User", { directory: "./from/arg" });
