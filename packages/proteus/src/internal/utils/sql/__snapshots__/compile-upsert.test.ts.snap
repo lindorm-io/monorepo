@@ -1,0 +1,73 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileUpsert [mysql] > should compile the dialect's conflict clause with version bump and now-expression 1`] = `
+{
+  "params": [
+    "1",
+    "Alice",
+    1,
+    2024-01-01T00:00:00.000Z,
+  ],
+  "text": "INSERT INTO \`app\`.\`users\` (\`id\`, \`name\`, \`version\`, \`updated_at\`) VALUES (?, ?, ?, ?) AS \`_new\` ON DUPLICATE KEY UPDATE \`name\` = \`_new\`.\`name\`, \`version\` = \`app\`.\`users\`.\`version\` + 1, \`updated_at\` = NOW(3)",
+}
+`;
+
+exports[`compileUpsert [mysql] > should use explicit conflict columns when provided 1`] = `
+{
+  "params": [
+    "1",
+    "Alice",
+    1,
+    2024-01-01T00:00:00.000Z,
+  ],
+  "text": "INSERT INTO \`app\`.\`users\` (\`id\`, \`name\`, \`version\`, \`updated_at\`) VALUES (?, ?, ?, ?) AS \`_new\` ON DUPLICATE KEY UPDATE \`name\` = \`_new\`.\`name\`, \`version\` = \`app\`.\`users\`.\`version\` + 1, \`updated_at\` = NOW(3)",
+}
+`;
+
+exports[`compileUpsert [postgres] > should compile the dialect's conflict clause with version bump and now-expression 1`] = `
+{
+  "params": [
+    "1",
+    "Alice",
+    1,
+    2024-01-01T00:00:00.000Z,
+  ],
+  "text": "INSERT INTO "app"."users" ("id", "name", "version", "updated_at") VALUES ($1, $2, $3, $4) ON CONFLICT ("id") DO UPDATE SET "name" = EXCLUDED."name", "version" = "app"."users"."version" + 1, "updated_at" = NOW() RETURNING *",
+}
+`;
+
+exports[`compileUpsert [postgres] > should use explicit conflict columns when provided 1`] = `
+{
+  "params": [
+    "1",
+    "Alice",
+    1,
+    2024-01-01T00:00:00.000Z,
+  ],
+  "text": "INSERT INTO "app"."users" ("id", "name", "version", "updated_at") VALUES ($1, $2, $3, $4) ON CONFLICT ("name") DO UPDATE SET "name" = EXCLUDED."name", "version" = "app"."users"."version" + 1, "updated_at" = NOW() RETURNING *",
+}
+`;
+
+exports[`compileUpsert [sqlite] > should compile the dialect's conflict clause with version bump and now-expression 1`] = `
+{
+  "params": [
+    "1",
+    "Alice",
+    1,
+    2024-01-01T00:00:00.000Z,
+  ],
+  "text": "INSERT INTO "users" ("id", "name", "version", "updated_at") VALUES (?, ?, ?, ?) ON CONFLICT ("id") DO UPDATE SET "name" = excluded."name", "version" = "users"."version" + 1, "updated_at" = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') RETURNING *",
+}
+`;
+
+exports[`compileUpsert [sqlite] > should use explicit conflict columns when provided 1`] = `
+{
+  "params": [
+    "1",
+    "Alice",
+    1,
+    2024-01-01T00:00:00.000Z,
+  ],
+  "text": "INSERT INTO "users" ("id", "name", "version", "updated_at") VALUES (?, ?, ?, ?) ON CONFLICT ("name") DO UPDATE SET "name" = excluded."name", "version" = "users"."version" + 1, "updated_at" = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') RETURNING *",
+}
+`;

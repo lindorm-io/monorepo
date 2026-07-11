@@ -95,6 +95,16 @@ export const mysqlDialect: SqlDialect = {
   joinedDeleteSyntax: "multi-table",
   joinedUpdateManySyntax: "multi-table",
 
+  // MySQL supports UPDATE ... AS alias, but single-row updates historically emit
+  // unaliased statements (locked by snapshots).
+  singleRowUpdateAlias: null,
+
+  // The `AS _new` clause (MySQL 8.0.19+) allows referencing the new row values.
+  buildUpsertConflictClause: (_conflictColumns, setClauses) =>
+    `AS ${quoteIdentifier("_new")} ON DUPLICATE KEY UPDATE ${setClauses.join(", ")}`,
+  upsertExcludedRef: (quotedColumn) => `${quoteIdentifier("_new")}.${quotedColumn}`,
+  upsertDateNowExpression: () => "NOW(3)",
+
   compileLockClause: (lock: LockMode | null): string => {
     if (!lock) return "";
     switch (lock) {

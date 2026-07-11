@@ -122,6 +122,14 @@ export const sqliteDialect: SqlDialect = {
   joinedDeleteSyntax: "subquery",
   joinedUpdateManySyntax: "subquery",
 
+  singleRowUpdateAlias: null,
+
+  buildUpsertConflictClause: (conflictColumns, setClauses) =>
+    `ON CONFLICT (${conflictColumns.join(", ")}) DO UPDATE SET ${setClauses.join(", ")}`,
+  upsertExcludedRef: (quotedColumn) => `excluded.${quotedColumn}`,
+  // Spaced variant (differs from dateNowExpression) — locked by upsert snapshots.
+  upsertDateNowExpression: () => "strftime('%Y-%m-%dT%H:%M:%fZ', 'now')",
+
   compileLockClause: (lock: LockMode | null): string => {
     if (lock) {
       throw new NotSupportedError(

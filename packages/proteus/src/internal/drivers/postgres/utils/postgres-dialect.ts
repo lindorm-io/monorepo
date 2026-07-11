@@ -147,6 +147,13 @@ export const postgresDialect: SqlDialect = {
   joinedDeleteSyntax: "using",
   joinedUpdateManySyntax: "from",
 
+  singleRowUpdateAlias: "t0",
+
+  buildUpsertConflictClause: (conflictColumns, setClauses) =>
+    `ON CONFLICT (${conflictColumns.join(", ")}) DO UPDATE SET ${setClauses.join(", ")}`,
+  upsertExcludedRef: (quotedColumn) => `EXCLUDED.${quotedColumn}`,
+  upsertDateNowExpression: () => "NOW()",
+
   reindexRawParams: reindexParams,
 
   compileLockClause: (lock: LockMode | null): string => {

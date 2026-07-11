@@ -1,0 +1,109 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compilePartialUpdate [mysql] > should apply field transforms to changed values 1`] = `
+{
+  "params": [
+    "BOB",
+    "1",
+  ],
+  "text": "UPDATE \`app\`.\`users\` SET \`name\` = ? WHERE \`id\` = ?",
+}
+`;
+
+exports[`compilePartialUpdate [mysql] > should compile changed columns plus version and update date 1`] = `
+{
+  "params": [
+    "Bob",
+    3,
+    2024-01-01T00:00:00.000Z,
+    "1",
+    2,
+  ],
+  "text": "UPDATE \`app\`.\`users\` SET \`name\` = ?, \`version\` = ?, \`updated_at\` = ? WHERE \`id\` = ? AND \`version\` = ?",
+}
+`;
+
+exports[`compilePartialUpdate [mysql] > should not re-add version or update date when already in changed dict 1`] = `
+{
+  "params": [
+    "Bob",
+    3,
+    2024-01-01T00:00:00.000Z,
+    "1",
+    2,
+  ],
+  "text": "UPDATE \`app\`.\`users\` SET \`name\` = ?, \`version\` = ?, \`updated_at\` = ? WHERE \`id\` = ? AND \`version\` = ?",
+}
+`;
+
+exports[`compilePartialUpdate [postgres] > should apply field transforms to changed values 1`] = `
+{
+  "params": [
+    "BOB",
+    "1",
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1 WHERE "t0"."id" = $2 RETURNING *",
+}
+`;
+
+exports[`compilePartialUpdate [postgres] > should compile changed columns plus version and update date 1`] = `
+{
+  "params": [
+    "Bob",
+    3,
+    2024-01-01T00:00:00.000Z,
+    "1",
+    2,
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "version" = $2, "updated_at" = $3 WHERE "t0"."id" = $4 AND "t0"."version" = $5 RETURNING *",
+}
+`;
+
+exports[`compilePartialUpdate [postgres] > should not re-add version or update date when already in changed dict 1`] = `
+{
+  "params": [
+    "Bob",
+    3,
+    2024-01-01T00:00:00.000Z,
+    "1",
+    2,
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "version" = $2, "updated_at" = $3 WHERE "t0"."id" = $4 AND "t0"."version" = $5 RETURNING *",
+}
+`;
+
+exports[`compilePartialUpdate [sqlite] > should apply field transforms to changed values 1`] = `
+{
+  "params": [
+    "BOB",
+    "1",
+  ],
+  "text": "UPDATE "users" SET "name" = ? WHERE "id" = ? RETURNING *",
+}
+`;
+
+exports[`compilePartialUpdate [sqlite] > should compile changed columns plus version and update date 1`] = `
+{
+  "params": [
+    "Bob",
+    3,
+    2024-01-01T00:00:00.000Z,
+    "1",
+    2,
+  ],
+  "text": "UPDATE "users" SET "name" = ?, "version" = ?, "updated_at" = ? WHERE "id" = ? AND "version" = ? RETURNING *",
+}
+`;
+
+exports[`compilePartialUpdate [sqlite] > should not re-add version or update date when already in changed dict 1`] = `
+{
+  "params": [
+    "Bob",
+    3,
+    2024-01-01T00:00:00.000Z,
+    "1",
+    2,
+  ],
+  "text": "UPDATE "users" SET "name" = ?, "version" = ?, "updated_at" = ? WHERE "id" = ? AND "version" = ? RETURNING *",
+}
+`;

@@ -1,0 +1,127 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileUpdate [mysql] > should compile a single-row update with version lock 1`] = `
+{
+  "params": [
+    "Alice",
+    3,
+    "1",
+    2,
+  ],
+  "text": "UPDATE \`app\`.\`users\` SET \`name\` = ?, \`version\` = ? WHERE \`id\` = ? AND \`version\` = ?",
+}
+`;
+
+exports[`compileUpdate [postgres] > should compile a single-row update with version lock 1`] = `
+{
+  "params": [
+    "Alice",
+    3,
+    "1",
+    2,
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1, "version" = $2 WHERE "t0"."id" = $3 AND "t0"."version" = $4 RETURNING *",
+}
+`;
+
+exports[`compileUpdate [sqlite] > should compile a single-row update with version lock 1`] = `
+{
+  "params": [
+    "Alice",
+    3,
+    "1",
+    2,
+  ],
+  "text": "UPDATE "users" SET "name" = ?, "version" = ? WHERE "id" = ? AND "version" = ? RETURNING *",
+}
+`;
+
+exports[`compileUpdateMany [mysql] > should compile a bulk update with criteria 1`] = `
+{
+  "params": [
+    "Bob",
+    "Alice",
+  ],
+  "text": "UPDATE \`app\`.\`users\` AS \`t0\` SET \`name\` = ? WHERE \`t0\`.\`name\` = ?",
+}
+`;
+
+exports[`compileUpdateMany [mysql] > should compile the joined inheritance strategy for root-only columns 1`] = `
+{
+  "params": [
+    "Rex",
+    "Beagle",
+  ],
+  "text": "UPDATE \`app\`.\`animals\` AS \`t0\` INNER JOIN \`app\`.\`dogs\` AS \`t1\` ON \`t1\`.\`id\` = \`t0\`.\`id\` SET \`t0\`.\`name\` = ? WHERE \`t1\`.\`breed\` = ?",
+}
+`;
+
+exports[`compileUpdateMany [mysql] > should compile the joined inheritance strategy for the dialect 1`] = `
+{
+  "params": [
+    "Beagle",
+    "Rex",
+  ],
+  "text": "UPDATE \`app\`.\`animals\` AS \`t0\` INNER JOIN \`app\`.\`dogs\` AS \`t1\` ON \`t1\`.\`id\` = \`t0\`.\`id\` SET \`t1\`.\`breed\` = ? WHERE \`t0\`.\`name\` = ?",
+}
+`;
+
+exports[`compileUpdateMany [postgres] > should compile a bulk update with criteria 1`] = `
+{
+  "params": [
+    "Bob",
+    "Alice",
+  ],
+  "text": "UPDATE "app"."users" AS "t0" SET "name" = $1 WHERE "t0"."name" = $2",
+}
+`;
+
+exports[`compileUpdateMany [postgres] > should compile the joined inheritance strategy for root-only columns 1`] = `
+{
+  "params": [
+    "Rex",
+    "Beagle",
+  ],
+  "text": "UPDATE "app"."animals" AS "t0" SET "name" = $1 FROM "app"."dogs" AS "t1" WHERE "t1"."breed" = $2 AND "t0"."id" = "t1"."id"",
+}
+`;
+
+exports[`compileUpdateMany [postgres] > should compile the joined inheritance strategy for the dialect 1`] = `
+{
+  "params": [
+    "Beagle",
+    "Rex",
+  ],
+  "text": "UPDATE "app"."dogs" AS "t0" SET "breed" = $1 FROM "app"."animals" AS "t1" WHERE "t1"."name" = $2 AND "t0"."id" = "t1"."id"",
+}
+`;
+
+exports[`compileUpdateMany [sqlite] > should compile a bulk update with criteria 1`] = `
+{
+  "params": [
+    "Bob",
+    "Alice",
+  ],
+  "text": "UPDATE "users" SET "name" = ? WHERE "name" = ?",
+}
+`;
+
+exports[`compileUpdateMany [sqlite] > should compile the joined inheritance strategy for root-only columns 1`] = `
+{
+  "params": [
+    "Rex",
+    "Beagle",
+  ],
+  "text": "UPDATE "animals" SET "name" = ? WHERE "id" IN (SELECT "t0"."id" FROM "animals" AS "t0" INNER JOIN "dogs" AS "t1" ON "t0"."id" = "t1"."id" WHERE "t1"."breed" = ?)",
+}
+`;
+
+exports[`compileUpdateMany [sqlite] > should compile the joined inheritance strategy for the dialect 1`] = `
+{
+  "params": [
+    "Beagle",
+    "Rex",
+  ],
+  "text": "UPDATE "dogs" SET "breed" = ? WHERE "id" IN (SELECT "t0"."id" FROM "dogs" AS "t0" INNER JOIN "animals" AS "t1" ON "t0"."id" = "t1"."id" WHERE "t1"."name" = ?)",
+}
+`;

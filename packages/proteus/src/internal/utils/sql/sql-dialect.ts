@@ -55,6 +55,27 @@ export type SqlDialect = {
   joinedDeleteSyntax: "using" | "multi-table" | "subquery";
   joinedUpdateManySyntax: "from" | "multi-table" | "subquery";
 
+  // Alias applied to single-row (PK-scoped) UPDATE statements, or null for an
+  // unaliased UPDATE with unqualified column references. PG aliases as "t0";
+  // MySQL and SQLite emit plain `UPDATE <table> SET ...`.
+  singleRowUpdateAlias: string | null;
+
+  // Upsert conflict handling — the clause emitted between `VALUES (...)` and
+  // `RETURNING`. PG/SQLite: `ON CONFLICT (<cols>) DO UPDATE SET <set>`;
+  // MySQL: `AS _new ON DUPLICATE KEY UPDATE <set>` (ignores the conflict target —
+  // ON DUPLICATE KEY always resolves against the row's unique keys).
+  buildUpsertConflictClause: (
+    conflictColumns: Array<string>,
+    setClauses: Array<string>,
+  ) => string;
+  // Reference to the incoming (proposed) row inside the conflict SET clause:
+  // PG `EXCLUDED.<col>`, SQLite `excluded.<col>`, MySQL `` `_new`.<col> ``.
+  upsertExcludedRef: (quotedColumn: string) => string;
+  // NOW-expression for @UpdateDate in the conflict SET clause. Kept separate from
+  // dateNowExpression() because the SQLite upsert spelling differs (space after
+  // the comma) and is locked by snapshots.
+  upsertDateNowExpression: () => string;
+
   // Raw param reindexing (PG-only — for $1/$2 renumbering in raw SQL fragments)
   reindexRawParams?: (
     expression: string,
