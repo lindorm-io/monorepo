@@ -11,6 +11,7 @@ exports[`PrimaryKeyField > should register uuid primary key field (default) 1`] 
     "comment": null,
     "decorator": "Entity",
     "name": "PrimaryKeyFieldUuid",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

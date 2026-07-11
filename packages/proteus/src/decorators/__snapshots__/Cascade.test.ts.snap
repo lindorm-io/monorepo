@@ -11,6 +11,7 @@ exports[`Cascade > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "CascadeChild",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

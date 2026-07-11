@@ -260,7 +260,7 @@ export const compileJoinedPartialUpdate = <E extends IEntity>(
   // ─── Child table UPDATE or SELECT ───
   // Always emit a child SQL statement so the merged row contains child-specific columns
   // for hydration, even when no child columns were changed.
-  const childEntityName = getEntityName(metadata.target, {
+  const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
   const childTableName = quoteQualifiedName(

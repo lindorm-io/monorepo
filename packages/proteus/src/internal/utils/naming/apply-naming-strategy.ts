@@ -66,6 +66,14 @@ export const applyNamingStrategy = (
 
   return {
     ...metadata,
+    entity: {
+      ...metadata.entity,
+      // An explicit `@Entity({ name })` is preserved verbatim; a default entity
+      // name IS the class name, so transform it to follow the strategy.
+      name: metadata.entity.named
+        ? metadata.entity.name
+        : transformName(metadata.entity.name, strategy),
+    },
     fields: metadata.fields.map((field) => {
       const name = resolveFieldName(field, strategy);
       return { ...field, name, typedJson: resolveTypedJson(field.typedJson, name) };

@@ -11,6 +11,7 @@ exports[`Namespace > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "NamespacedEntity",
+    "named": true,
     "namespace": "tenant",
   },
   "extras": [],

@@ -1,15 +1,23 @@
 import { snakeCase } from "@lindorm/case";
-import type { Constructor } from "@lindorm/types";
 import { EntityManagerError } from "../errors/EntityManagerError.js";
-import type { IEntity } from "../../../interfaces/index.js";
+import type { EntityMetadata } from "../types/metadata.js";
 import type { NamespaceOptions, ScopedName } from "../../types/types.js";
-import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 
-export const getEntityName = <E extends IEntity>(
-  target: Constructor<E>,
+/**
+ * Resolve an entity's scoped table name from its metadata.
+ *
+ * Takes the caller's **already naming-resolved** metadata (the source's
+ * `resolveMetadata` / `applyNamingStrategy` output) so the table name follows the
+ * source's naming strategy: a bare `@Entity()` under `naming: "snake"` resolves
+ * `RefreshTokenChain` → `refresh_token_chain`, while `@Entity({ name })` stays
+ * verbatim (guaranteed by `metadata.entity.named`). Foreign entities must be
+ * resolved through `getForeignMetadata` before being passed here so they follow
+ * the same strategy as the owner.
+ */
+export const getEntityName = (
+  metadata: EntityMetadata,
   options: NamespaceOptions,
 ): ScopedName => {
-  const metadata = getEntityMetadata(target);
   const ns = metadata.entity.namespace || options.namespace;
 
   if (ns === "system") {
@@ -22,7 +30,7 @@ export const getEntityName = <E extends IEntity>(
   }
 
   const namespace = ns ?? null;
-  const name = metadata.entity.name || snakeCase(target.name);
+  const name = metadata.entity.name || snakeCase(metadata.target.name);
   const type = snakeCase(metadata.entity.decorator);
 
   if (namespace && namespace.length > 63) {

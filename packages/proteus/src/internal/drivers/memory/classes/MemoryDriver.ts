@@ -117,7 +117,9 @@ export class MemoryDriver implements IProteusDriver {
     for (const target of entities) {
       const metadata = this.resolveMetadata(target);
       const rootTarget = resolveInheritanceRoot(target, metadata);
-      const entityName = getEntityName(rootTarget, { namespace: this.namespace });
+      const entityName = getEntityName(this.resolveMetadata(rootTarget), {
+        namespace: this.namespace,
+      });
       const tableKey = resolveTableKey(entityName.namespace, entityName.name);
 
       if (!this.store.tables.has(tableKey)) {
@@ -162,7 +164,9 @@ export class MemoryDriver implements IProteusDriver {
   getTableKey<E extends IEntity>(target: Constructor<E>): string {
     const metadata = this.resolveMetadata(target);
     const rootTarget = resolveInheritanceRoot(target, metadata);
-    const entityName = getEntityName(rootTarget, { namespace: this.namespace });
+    const entityName = getEntityName(this.resolveMetadata(rootTarget), {
+      namespace: this.namespace,
+    });
     return resolveTableKey(entityName.namespace, entityName.name);
   }
 

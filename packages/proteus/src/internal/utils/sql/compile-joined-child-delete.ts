@@ -45,7 +45,7 @@ export const compileJoinedChildDelete = <E extends IEntity>(
   // Child-only fields: exist on child metadata but not on root
   if (criteriaKeys.some((k) => !rootFieldKeys.has(k))) return null;
 
-  const childEntityName = getEntityName(metadata.target, {
+  const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
   const childSchema = dialect.supportsNamespace

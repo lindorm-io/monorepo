@@ -100,6 +100,7 @@ describe("stage-metadata", () => {
         decorator: "Entity",
         comment: null,
         name: "TestEntity",
+        named: false,
         namespace: null,
       });
 
@@ -112,6 +113,7 @@ describe("stage-metadata", () => {
         decorator: "Entity",
         comment: null,
         name: "ParentEntity",
+        named: false,
         namespace: null,
       });
 
@@ -120,6 +122,7 @@ describe("stage-metadata", () => {
         decorator: "Entity",
         comment: null,
         name: "ChildEntity",
+        named: false,
         namespace: null,
       });
 

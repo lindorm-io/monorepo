@@ -11,6 +11,7 @@ exports[`UpdateDateField > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "UpdateDateFieldDecorated",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

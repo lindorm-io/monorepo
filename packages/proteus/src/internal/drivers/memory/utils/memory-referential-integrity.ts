@@ -1,7 +1,8 @@
-import type { Dict } from "@lindorm/types";
+import type { Constructor, Dict } from "@lindorm/types";
 import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError.js";
+import type { IEntity } from "../../../../interfaces/index.js";
 import type { EntityMetadata, MetaRelation } from "../../../entity/types/metadata.js";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 import { getRegisteredTargets } from "../../../entity/metadata/registry.js";
 import { getEntityName } from "../../../entity/utils/get-entity-name.js";
 import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
@@ -11,10 +12,16 @@ import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
  * Resolve the memory store table key for an entity target, root-resolved for
  * inheritance and namespace-aware. Mirrors the resolution used by MemoryDriver.
  */
-export const resolveTableKey = (target: Function, namespace: string | null): string => {
-  const metadata = getEntityMetadata(target);
-  const rootTarget = resolveInheritanceRoot(target as any, metadata);
-  const entityName = getEntityName(rootTarget, { namespace });
+export const resolveTableKey = (
+  metadata: EntityMetadata,
+  namespace: string | null,
+): string => {
+  const rootTarget = resolveInheritanceRoot(metadata.target, metadata);
+  // Resolve the root's metadata through the same source resolver (naming-aware)
+  // so an inheritance child keys off the ROOT's strategy-applied table name.
+  const rootMeta =
+    rootTarget === metadata.target ? metadata : getForeignMetadata(metadata, rootTarget);
+  const entityName = getEntityName(rootMeta, { namespace });
   return entityName.namespace
     ? `${entityName.namespace}.${entityName.name}`
     : entityName.name;
@@ -48,8 +55,8 @@ export const assertForeignKeysExist = (
   namespace: string | null,
 ): void => {
   for (const relation of owningRelations(metadata)) {
-    const foreignTarget = getEntityMetadata(relation.foreignConstructor()).target;
-    const tableKey = resolveTableKey(foreignTarget, namespace);
+    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
+    const tableKey = resolveTableKey(foreignMeta, namespace);
     const parentTable = store.tables.get(tableKey);
 
     for (const [localCol, foreignPk] of Object.entries(relation.joinKeys!)) {
@@ -61,7 +68,7 @@ export const assertForeignKeysExist = (
 
       if (!exists) {
         throw new ForeignKeyViolationError(
-          `Foreign key violation: "${metadata.entity.name}.${localCol}" references a non-existent "${getEntityMetadata(foreignTarget).entity.name}" row`,
+          `Foreign key violation: "${metadata.entity.name}.${localCol}" references a non-existent "${foreignMeta.entity.name}" row`,
           {
             code: "foreign_key_violation",
             title: "Foreign Key Violation",
@@ -95,13 +102,15 @@ export const applyDeleteReferentialActions = (
   const parentTarget = parentMetadata.target;
 
   for (const childTarget of getRegisteredTargets()) {
-    const childMetadata = getEntityMetadata(childTarget);
+    const childMetadata = getForeignMetadata(
+      parentMetadata,
+      childTarget as Constructor<IEntity>,
+    );
 
     for (const relation of owningRelations(childMetadata)) {
-      const foreignTarget = getEntityMetadata(relation.foreignConstructor()).target;
-      if (foreignTarget !== parentTarget) continue;
+      if (relation.foreignConstructor() !== parentTarget) continue;
 
-      const childTableKey = resolveTableKey(childTarget, namespace);
+      const childTableKey = resolveTableKey(childMetadata, namespace);
       const childTable = store.tables.get(childTableKey);
       if (!childTable) continue;
 

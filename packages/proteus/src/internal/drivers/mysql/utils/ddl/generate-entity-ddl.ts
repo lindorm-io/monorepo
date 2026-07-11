@@ -23,7 +23,7 @@ export const generateEntityDDL = (
   metadata: EntityMetadata,
   namespaceOptions: NamespaceOptions,
 ): MysqlDdlOutput => {
-  const entityName = getEntityName(metadata.target, namespaceOptions);
+  const entityName = getEntityName(metadata, namespaceOptions);
   const tableName = entityName.name;
 
   const output: MysqlDdlOutput = {

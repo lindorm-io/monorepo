@@ -11,6 +11,7 @@ exports[`Unique > should register class-level composite unique constraint 1`] = 
     "comment": null,
     "decorator": "Entity",
     "name": "UniqueClassLevel",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

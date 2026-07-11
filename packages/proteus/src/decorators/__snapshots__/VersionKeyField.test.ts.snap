@@ -11,6 +11,7 @@ exports[`VersionKeyField > should register uuid version key field (default) 1`] 
     "comment": null,
     "decorator": "Entity",
     "name": "VersionKeyFieldUuid",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

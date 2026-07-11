@@ -11,6 +11,7 @@ exports[`TypedJson > should match full metadata snapshot for a typed-json entity
     "comment": null,
     "decorator": "Entity",
     "name": "TypedJsonDefault",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

@@ -16,6 +16,7 @@ const metadata = {
     comment: null,
     database: null,
     name: "users",
+    named: false,
     namespace: "app",
   },
   fields: [
@@ -204,6 +205,7 @@ describe("PostgresQueryBuilder", () => {
         comment: null,
         database: null,
         name: "posts",
+        named: false,
         namespace: "app",
       },
       fields: [

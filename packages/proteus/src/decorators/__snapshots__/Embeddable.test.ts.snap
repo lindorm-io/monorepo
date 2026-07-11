@@ -11,6 +11,7 @@ exports[`Embedded > should flatten embeddable fields into parent entity metadata
     "comment": null,
     "decorator": "Entity",
     "name": "PersonWithAddress",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

@@ -21,7 +21,13 @@ const makeMinimalMetadata = (
   checks: [],
   defaultOrder: null,
   embeddedLists: [],
-  entity: { decorator: "Entity", comment: null, name: "RIRRoot", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "RIRRoot",
+    named: false,
+    namespace: null,
+  },
   extras: [],
   fields: [],
   filters: [],
@@ -62,7 +68,13 @@ const rootMetadata = makeMinimalMetadata({
 // Child entity: discriminatorValue is "child" → return root
 const childMetadata = makeMinimalMetadata({
   target: RIRChild as any,
-  entity: { decorator: "Entity", comment: null, name: "RIRChild", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "RIRChild",
+    named: false,
+    namespace: null,
+  },
   inheritance: {
     strategy: "single-table",
     discriminatorField: "type",
@@ -80,7 +92,13 @@ const joinedChildren = new Map([
 
 const joinedRootMetadata = makeMinimalMetadata({
   target: RIRJoinedRoot as any,
-  entity: { decorator: "Entity", comment: null, name: "RIRJoinedRoot", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "RIRJoinedRoot",
+    named: false,
+    namespace: null,
+  },
   inheritance: {
     strategy: "joined",
     discriminatorField: "type",
@@ -93,7 +111,13 @@ const joinedRootMetadata = makeMinimalMetadata({
 
 const joinedChildMetadata = makeMinimalMetadata({
   target: RIRJoinedChild as any,
-  entity: { decorator: "Entity", comment: null, name: "RIRJoinedChild", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "RIRJoinedChild",
+    named: false,
+    namespace: null,
+  },
   inheritance: {
     strategy: "joined",
     discriminatorField: "type",

@@ -31,6 +31,10 @@ export const Entity =
       decorator: "Entity",
       comment: null,
       name,
+      // `named` records an explicit `@Entity({ name })` override — the registry
+      // still uses the class-name fallback, but the naming strategy must leave an
+      // explicit name verbatim and transform a class-name default.
+      named: options.name != null,
       namespace: null,
     });
 

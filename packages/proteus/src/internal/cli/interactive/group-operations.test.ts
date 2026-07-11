@@ -4,12 +4,16 @@ import { groupOperationsByEntity } from "./group-operations.js";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("../../entity/utils/get-entity-name.js", () => ({
-  getEntityName: vi.fn((target: Function, options: { namespace?: string }) => ({
-    namespace: options.namespace ?? null,
-    name: target.name.toLowerCase(),
-    type: "entity",
-    parts: [options.namespace, "entity", target.name.toLowerCase()].filter(Boolean),
-  })),
+  getEntityName: vi.fn(
+    (metadata: { target: { name: string } }, options: { namespace?: string }) => ({
+      namespace: options.namespace ?? null,
+      name: metadata.target.name.toLowerCase(),
+      type: "entity",
+      parts: [options.namespace, "entity", metadata.target.name.toLowerCase()].filter(
+        Boolean,
+      ),
+    }),
+  ),
 }));
 
 const makeOp = (overrides: Partial<SyncOperation>): SyncOperation => ({

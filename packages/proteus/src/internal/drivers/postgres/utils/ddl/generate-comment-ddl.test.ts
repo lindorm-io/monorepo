@@ -21,6 +21,7 @@ const makeMetadata = (tableComment: string | null, fields: MetaField[]): EntityM
       comment: tableComment,
       database: null,
       name: "TestCommentEntity",
+      named: false,
       namespace: null,
     },
     extras: [],

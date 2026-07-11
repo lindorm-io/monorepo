@@ -20,7 +20,13 @@ const makeMinimalMetadata = (
   checks: [],
   defaultOrder: null,
   embeddedLists: [],
-  entity: { decorator: "Entity", comment: null, name: "RPMRoot", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "RPMRoot",
+    named: false,
+    namespace: null,
+  },
   extras: [],
   fields: [],
   filters: [],
@@ -63,14 +69,26 @@ const rootInheritance: MetaInheritance = {
 
 const rootMetadata = makeMinimalMetadata({
   target: RPMRoot as any,
-  entity: { decorator: "Entity", comment: null, name: "RPMRoot", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "RPMRoot",
+    named: false,
+    namespace: null,
+  },
   inheritance: rootInheritance,
 });
 
 // Child metadata (for mocking getEntityMetadata)
 const childAMetadata = makeMinimalMetadata({
   target: RPMChildA as any,
-  entity: { decorator: "Entity", comment: null, name: "RPMChildA", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "RPMChildA",
+    named: false,
+    namespace: null,
+  },
   inheritance: {
     strategy: "single-table",
     discriminatorField: "type",
@@ -83,7 +101,13 @@ const childAMetadata = makeMinimalMetadata({
 
 const childBMetadata = makeMinimalMetadata({
   target: RPMChildB as any,
-  entity: { decorator: "Entity", comment: null, name: "RPMChildB", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "RPMChildB",
+    named: false,
+    namespace: null,
+  },
   inheritance: {
     strategy: "single-table",
     discriminatorField: "type",
@@ -193,6 +217,7 @@ describe("resolvePolymorphicMetadata", () => {
           decorator: "Entity",
           comment: null,
           name: "ChildNum1",
+          named: false,
           namespace: null,
         },
         inheritance: {
@@ -207,7 +232,13 @@ describe("resolvePolymorphicMetadata", () => {
 
       const numRootMetadata = makeMinimalMetadata({
         target: RootNum as any,
-        entity: { decorator: "Entity", comment: null, name: "RootNum", namespace: null },
+        entity: {
+          decorator: "Entity",
+          comment: null,
+          name: "RootNum",
+          named: false,
+          namespace: null,
+        },
         inheritance: {
           strategy: "single-table",
           discriminatorField: "kind",

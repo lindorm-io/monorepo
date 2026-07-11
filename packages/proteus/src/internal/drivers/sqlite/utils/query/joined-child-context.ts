@@ -52,7 +52,7 @@ export const buildJoinedChildContext = (
   }
 
   // Build child table reference — SQLite has no schemas
-  const childEntityName = getEntityName(metadata.target, {
+  const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
   const childTableRef = `${quoteQualifiedName(

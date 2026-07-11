@@ -93,6 +93,7 @@ const makeMetadata = (
       comment: null,
       database: null,
       name: "Test",
+      named: false,
       namespace: null,
     },
     extras: [],

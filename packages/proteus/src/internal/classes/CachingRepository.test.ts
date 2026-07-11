@@ -99,7 +99,13 @@ const makeBaseMetadata = (overrides: Partial<EntityMetadata> = {}): EntityMetada
     target: TestEntity,
     cache: { ttlMs: 60_000 }, // 1 minute — enables caching by default in tests
     checks: [],
-    entity: { decorator: "Entity", comment: null, name: "TestEntity", namespace: null },
+    entity: {
+      decorator: "Entity",
+      comment: null,
+      name: "TestEntity",
+      named: false,
+      namespace: null,
+    },
     extras: [],
     fields: [
       {

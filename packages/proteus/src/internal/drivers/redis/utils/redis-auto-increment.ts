@@ -29,7 +29,7 @@ export const applyRedisAutoIncrement = async (
     const current = row[gen.key];
     if (current != null && current !== 0) continue;
 
-    const key = buildIncrementKey(metadata.target, gen.key, namespace);
+    const key = buildIncrementKey(metadata, gen.key, namespace);
     const next = await client.incr(key);
     row[gen.key] = next;
   }

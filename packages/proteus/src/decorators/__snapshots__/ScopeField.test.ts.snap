@@ -11,6 +11,7 @@ exports[`ScopeField > should register scope field with correct metadata 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "ScopeFieldDecorated",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

@@ -11,6 +11,7 @@ exports[`DeleteDateField > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "DeleteDateFieldDecorated",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

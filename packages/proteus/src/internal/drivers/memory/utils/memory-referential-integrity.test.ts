@@ -14,6 +14,7 @@ import {
 } from "../../../../decorators/index.js";
 import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError.js";
 import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { applyNamingStrategy } from "../../../utils/naming/apply-naming-strategy.js";
 import type { MemoryStore } from "../types/memory-store.js";
 import {
   applyDeleteReferentialActions,
@@ -89,7 +90,7 @@ const createStore = (): MemoryStore => ({
 });
 
 const seedParent = (store: MemoryStore, id: string): void => {
-  const key = resolveTableKey(RiParent, null);
+  const key = resolveTableKey(getEntityMetadata(RiParent), null);
   const table = store.tables.get(key) ?? new Map();
   table.set(JSON.stringify([id]), { id, name: `parent-${id}` });
   store.tables.set(key, table);
@@ -101,14 +102,14 @@ const seedChild = (
   id: string,
   parentId: string | null,
 ): void => {
-  const key = resolveTableKey(target, null);
+  const key = resolveTableKey(getEntityMetadata(target), null);
   const table = store.tables.get(key) ?? new Map();
   table.set(JSON.stringify([id]), { id, value: `child-${id}`, parentId });
   store.tables.set(key, table);
 };
 
 const childTable = (store: MemoryStore, target: Function) =>
-  store.tables.get(resolveTableKey(target, null))!;
+  store.tables.get(resolveTableKey(getEntityMetadata(target), null))!;
 
 // ─── assertForeignKeysExist ──────────────────────────────────────────────────
 
@@ -245,5 +246,40 @@ describe("applyDeleteReferentialActions", () => {
     expect(() =>
       applyDeleteReferentialActions([], getEntityMetadata(RiParent), store, null),
     ).not.toThrow();
+  });
+});
+
+// ─── resolveTableKey follows the naming strategy ─────────────────────────────
+
+@Entity()
+class MemNamingRefreshTokenChain {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+}
+
+@Entity({ name: "custom_chain" })
+class MemNamingCustomChain {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+}
+
+describe("resolveTableKey (memory store key)", () => {
+  test("snake_cases the table key for a bare @Entity()", () => {
+    const meta = applyNamingStrategy(
+      getEntityMetadata(MemNamingRefreshTokenChain),
+      "snake",
+    );
+    expect(resolveTableKey(meta, null)).toBe("mem_naming_refresh_token_chain");
+  });
+
+  test("keeps the class name verbatim under 'none'", () => {
+    const meta = applyNamingStrategy(
+      getEntityMetadata(MemNamingRefreshTokenChain),
+      "none",
+    );
+    expect(resolveTableKey(meta, null)).toBe("MemNamingRefreshTokenChain");
+  });
+
+  test("keeps an @Entity({ name }) override verbatim under 'snake'", () => {
+    const meta = applyNamingStrategy(getEntityMetadata(MemNamingCustomChain), "snake");
+    expect(resolveTableKey(meta, null)).toBe("custom_chain");
   });
 });

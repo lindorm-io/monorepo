@@ -131,11 +131,11 @@ const projectFieldColumn = (
 const projectFkColumn = (
   joinCol: string,
   foreignPkKey: string,
-  foreignConstructor: () => any,
+  foreignMeta: EntityMetadata,
   nullable: boolean,
   namespaceOptions: NamespaceOptions,
 ): DesiredColumn => {
-  const pgType = resolveFkColumnType(foreignConstructor, foreignPkKey, namespaceOptions);
+  const pgType = resolveFkColumnType(foreignMeta, foreignPkKey, namespaceOptions);
 
   return {
     name: joinCol,
@@ -190,10 +190,13 @@ export const projectDesiredSchema = (
     if (isJoinedChild) {
       const rootMeta = getForeignMetadata(metadata, metadata.inheritance!.root);
       rootFieldKeys = new Set(rootMeta.fields.map((f) => f.key));
-      rootEntityName = getEntityName(metadata.inheritance!.root, namespaceOptions);
+      rootEntityName = getEntityName(
+        getForeignMetadata(metadata, metadata.inheritance!.root),
+        namespaceOptions,
+      );
     }
 
-    const entityName = getEntityName(metadata.target, namespaceOptions);
+    const entityName = getEntityName(metadata, namespaceOptions);
     const { namespace, name: tableName } = entityName;
 
     if (namespace) schemaSet.add(namespace);
@@ -281,7 +284,7 @@ export const projectDesiredSchema = (
           projectFkColumn(
             joinCol,
             foreignPk,
-            relation.foreignConstructor,
+            getForeignMetadata(relation, relation.foreignConstructor()),
             relation.options.nullable,
             namespaceOptions,
           ),
@@ -411,9 +414,8 @@ export const projectDesiredSchema = (
       if (!relation.joinKeys) continue;
       if (relation.type === "ManyToMany") continue;
 
-      const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
-
       const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
+      const foreignName = getEntityName(foreignMeta, namespaceOptions);
       for (const [joinCol, foreignPk] of Object.entries(relation.joinKeys)) {
         // For joined children, skip FK constraints that belong to root table
         if (isJoinedChild && rootFieldKeys!.has(joinCol)) continue;
@@ -585,8 +587,8 @@ export const projectDesiredSchema = (
         continue;
       }
 
-      const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
       const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
+      const foreignName = getEntityName(foreignMeta, namespaceOptions);
       const inverseRelation = foreignMeta.relations.find(
         (r) =>
           r.foreignKey === relation.key &&
@@ -602,11 +604,7 @@ export const projectDesiredSchema = (
 
       // Owner-side columns
       for (const [joinCol, ownerPk] of Object.entries(relation.joinKeys)) {
-        const colType = resolveFkColumnType(
-          () => metadata.target,
-          ownerPk,
-          namespaceOptions,
-        );
+        const colType = resolveFkColumnType(metadata, ownerPk, namespaceOptions);
         joinColumns.push({
           name: joinCol,
           pgType: colType,
@@ -624,11 +622,7 @@ export const projectDesiredSchema = (
       // Foreign-side columns
       if (inverseRelation?.joinKeys) {
         for (const [joinCol, foreignPk] of Object.entries(inverseRelation.joinKeys)) {
-          const colType = resolveFkColumnType(
-            relation.foreignConstructor,
-            foreignPk,
-            namespaceOptions,
-          );
+          const colType = resolveFkColumnType(foreignMeta, foreignPk, namespaceOptions);
           joinColumns.push({
             name: joinCol,
             pgType: colType,

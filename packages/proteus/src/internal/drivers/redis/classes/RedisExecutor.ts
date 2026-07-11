@@ -1,5 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
-import type { Constructor, DeepPartial, Dict, Predicate } from "@lindorm/types";
+import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
 import type { ILogger } from "@lindorm/logger";
 import type { Redis } from "ioredis";
 import type { IEntity } from "../../../../interfaces/index.js";
@@ -42,7 +42,7 @@ import {
 } from "../utils/lua-scripts.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
-import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
+import { resolveStorageMetadata } from "../../../entity/utils/resolve-storage-metadata.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
 import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
 import { RedisOptimisticLockError } from "../errors/RedisOptimisticLockError.js";
@@ -71,7 +71,7 @@ const validateDate = (value: unknown, context: string): Date => {
 
 export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> {
   private readonly metadata: EntityMetadata;
-  private readonly storageTarget: Constructor<IEntity>;
+  private readonly storageMetadata: EntityMetadata;
   private readonly client: Redis;
   private readonly namespace: string | null;
   private readonly deleteFieldKey: string | null;
@@ -90,10 +90,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     amphora?: IAmphora,
   ) {
     this.metadata = metadata;
-    this.storageTarget = resolveInheritanceRoot(
-      metadata.target as Constructor<E>,
-      metadata,
-    );
+    this.storageMetadata = resolveStorageMetadata(metadata);
     this.client = client;
     this.namespace = namespace;
     this.deleteFieldKey =
@@ -115,7 +112,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     await applyRedisAutoIncrement(this.client, row, this.metadata, this.namespace);
 
     const redisKey = buildEntityKeyFromRow(
-      this.storageTarget,
+      this.storageMetadata,
       row,
       this.metadata,
       this.namespace,
@@ -166,7 +163,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   async executeUpdate(entity: E): Promise<E> {
     const row = dehydrateToRow(entity, this.metadata, this.amphora);
     const redisKey = buildEntityKeyFromRow(
-      this.storageTarget,
+      this.storageMetadata,
       row,
       this.metadata,
       this.namespace,
@@ -306,7 +303,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   async executeDeleteExpired(): Promise<void> {
     if (!this.expiryFieldKey) return;
 
-    const pattern = buildScanPattern(this.storageTarget, this.namespace);
+    const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);
 
     if (keys.length === 0) return;
@@ -358,7 +355,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       });
     }
 
-    const redisKey = buildEntityKey(this.storageTarget, pkValues, this.namespace);
+    const redisKey = buildEntityKey(this.storageMetadata, pkValues, this.namespace);
     const ttl = await this.client.pttl(redisKey);
 
     if (ttl === -2) {
@@ -392,7 +389,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
 
     if (pkValues) {
       // O(1) PK-exact lookup
-      const redisKey = buildEntityKey(this.storageTarget, pkValues, this.namespace);
+      const redisKey = buildEntityKey(this.storageMetadata, pkValues, this.namespace);
       const hash = await this.client.hgetall(redisKey);
       const row = deserializeHash(hash, this.metadata.fields, this.metadata.relations);
       rows = row ? [row] : [];
@@ -455,7 +452,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     let rows: Array<Dict>;
 
     if (pkValues) {
-      const redisKey = buildEntityKey(this.storageTarget, pkValues, this.namespace);
+      const redisKey = buildEntityKey(this.storageMetadata, pkValues, this.namespace);
       const hash = await this.client.hgetall(redisKey);
       const row = deserializeHash(hash, this.metadata.fields, this.metadata.relations);
       rows = row ? [row] : [];
@@ -499,7 +496,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     const pkValues = extractExactPk(criteria, this.metadata.primaryKeys);
 
     if (pkValues) {
-      const redisKey = buildEntityKey(this.storageTarget, pkValues, this.namespace);
+      const redisKey = buildEntityKey(this.storageMetadata, pkValues, this.namespace);
       const hash = await this.client.hgetall(redisKey);
       if (!hash || Object.keys(hash).length === 0) return false;
 
@@ -924,7 +921,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
    * F-029: Delegates to the shared scanAllRows utility.
    */
   private async doScanAllRows(): Promise<Array<Dict>> {
-    const pattern = buildScanPattern(this.storageTarget, this.namespace);
+    const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     return scanAllRows(
       this.client,
       pattern,
@@ -945,7 +942,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
     const pkValues = extractExactPk(criteria, this.metadata.primaryKeys);
 
     if (pkValues) {
-      return [buildEntityKey(this.storageTarget, pkValues, this.namespace)];
+      return [buildEntityKey(this.storageMetadata, pkValues, this.namespace)];
     }
 
     const keyRowPairs = await this.scanAndFilter(criteria);
@@ -967,7 +964,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   private async scanAndFilterWithDiscriminator(
     criteria: Predicate<E>,
   ): Promise<Array<{ key: string; row: Dict }>> {
-    const pattern = buildScanPattern(this.storageTarget, this.namespace);
+    const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);
 
     if (keys.length === 0) return [];
@@ -1016,7 +1013,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   private async scanAndFilter(
     criteria: Predicate<E>,
   ): Promise<Array<{ key: string; row: Dict }>> {
-    const pattern = buildScanPattern(this.storageTarget, this.namespace);
+    const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);
 
     if (keys.length === 0) return [];
@@ -1058,7 +1055,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
   private async scanAndFilterWithSystemFilters(
     criteria: Predicate<E>,
   ): Promise<Array<{ key: string; row: Dict }>> {
-    const pattern = buildScanPattern(this.storageTarget, this.namespace);
+    const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);
 
     if (keys.length === 0) return [];

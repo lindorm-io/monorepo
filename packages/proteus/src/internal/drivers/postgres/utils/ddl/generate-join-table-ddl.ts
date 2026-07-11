@@ -37,14 +37,14 @@ export const generateJoinTableDDL = (
     const joinName = getJoinName(relation.joinTable, namespaceOptions);
     const qualifiedJoinTable = quoteQualifiedName(joinName.namespace, joinName.name);
 
-    const ownerName = getEntityName(metadata.target, namespaceOptions);
+    const ownerName = getEntityName(metadata, namespaceOptions);
     const qualifiedOwner = quoteQualifiedName(ownerName.namespace, ownerName.name);
 
-    const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
+    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
+    const foreignName = getEntityName(foreignMeta, namespaceOptions);
     const qualifiedForeign = quoteQualifiedName(foreignName.namespace, foreignName.name);
 
     // Get the inverse relation's joinKeys from the foreign entity
-    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
     const inverseRelation = foreignMeta.relations.find(
       (r) =>
         r.foreignKey === relation.key &&
@@ -58,11 +58,7 @@ export const generateJoinTableDDL = (
 
     // Owner-side columns
     for (const [joinCol, ownerPk] of Object.entries(relation.joinKeys)) {
-      const colType = resolveFkColumnType(
-        () => metadata.target,
-        ownerPk,
-        namespaceOptions,
-      );
+      const colType = resolveFkColumnType(metadata, ownerPk, namespaceOptions);
       const resolvedOwnerPk = resolveColumnNameSafe(metadata.fields, ownerPk);
       lines.push(
         `${quoteIdentifier(joinCol)} ${colType} NOT NULL` +
@@ -86,11 +82,7 @@ export const generateJoinTableDDL = (
     }
 
     for (const [joinCol, foreignPk] of Object.entries(inverseRelation.joinKeys)) {
-      const colType = resolveFkColumnType(
-        relation.foreignConstructor,
-        foreignPk,
-        namespaceOptions,
-      );
+      const colType = resolveFkColumnType(foreignMeta, foreignPk, namespaceOptions);
       const resolvedForeignPk = resolveColumnNameSafe(foreignMeta.fields, foreignPk);
       lines.push(
         `${quoteIdentifier(joinCol)} ${colType} NOT NULL` +

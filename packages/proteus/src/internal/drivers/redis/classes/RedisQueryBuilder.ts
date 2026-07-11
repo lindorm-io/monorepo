@@ -1,6 +1,6 @@
 import type { IAmphora } from "@lindorm/amphora";
 import type { ILogger } from "@lindorm/logger";
-import type { Constructor, DeepPartial, Dict, Predicate } from "@lindorm/types";
+import type { DeepPartial, Dict, Predicate } from "@lindorm/types";
 import type { Redis } from "ioredis";
 import type {
   IEntity,
@@ -31,7 +31,7 @@ import { serializeHash } from "../utils/serialize-hash.js";
 import { extractExactPk } from "../utils/is-pk-exact.js";
 import { scanEntityKeys } from "../utils/scan-entity-keys.js";
 import { applyRedisAutoIncrement } from "../utils/redis-auto-increment.js";
-import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
+import { resolveStorageMetadata } from "../../../entity/utils/resolve-storage-metadata.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
 import { RedisDriverError } from "../errors/RedisDriverError.js";
 import { RedisDuplicateKeyError } from "../errors/RedisDuplicateKeyError.js";
@@ -89,7 +89,7 @@ const warnOnReadPipelineError = (
 // ─── RedisQueryBuilder ───────────────────────────────────────────────────────
 
 export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
-  private readonly storageTarget: Constructor<IEntity>;
+  private readonly storageMetadata: EntityMetadata;
   private readonly client: Redis;
   private readonly namespace: string | null;
   private readonly logger: ILogger | undefined;
@@ -105,10 +105,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
     amphora?: IAmphora,
   ) {
     super(metadata);
-    this.storageTarget = resolveInheritanceRoot(
-      metadata.target as Constructor<E>,
-      metadata,
-    );
+    this.storageMetadata = resolveStorageMetadata(metadata);
     this.client = client;
     this.namespace = namespace;
     this.logger = logger;
@@ -428,7 +425,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
       : null;
 
     if (pkValues && this.state.predicates.length === 1) {
-      const redisKey = buildEntityKey(this.storageTarget, pkValues, this.namespace);
+      const redisKey = buildEntityKey(this.storageMetadata, pkValues, this.namespace);
       const hash = await this.client.hgetall(redisKey);
       const row = deserializeHash(hash, this.metadata.fields, this.metadata.relations);
       rows = row ? [row] : [];
@@ -569,7 +566,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
   }
 
   private async scanAllRows(): Promise<Array<Dict>> {
-    const pattern = buildScanPattern(this.storageTarget, this.namespace);
+    const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     return scanAllRowsShared(
       this.client,
       pattern,
@@ -606,7 +603,7 @@ export class RedisQueryBuilder<E extends IEntity> extends QueryBuilder<E> {
 class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
   private readonly client: Redis;
   private readonly metadata: EntityMetadata;
-  private readonly storageTarget: Constructor<IEntity>;
+  private readonly storageMetadata: EntityMetadata;
   private readonly namespace: string | null;
   private readonly amphora: IAmphora | undefined;
   private data: Array<DeepPartial<E>> = [];
@@ -619,10 +616,7 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
   ) {
     this.client = client;
     this.metadata = metadata;
-    this.storageTarget = resolveInheritanceRoot(
-      metadata.target as Constructor<E>,
-      metadata,
-    );
+    this.storageMetadata = resolveStorageMetadata(metadata);
     this.namespace = namespace;
     this.amphora = amphora;
   }
@@ -690,7 +684,7 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
       await applyRedisAutoIncrement(this.client, row, this.metadata, this.namespace);
 
       const redisKey = buildEntityKeyFromRow(
-        this.storageTarget,
+        this.storageMetadata,
         row,
         this.metadata,
         this.namespace,
@@ -767,7 +761,7 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
 class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   private readonly client: Redis;
   private readonly metadata: EntityMetadata;
-  private readonly storageTarget: Constructor<IEntity>;
+  private readonly storageMetadata: EntityMetadata;
   private readonly namespace: string | null;
   private readonly filterRegistry: FilterRegistry;
   private readonly logger: ILogger | undefined;
@@ -785,10 +779,7 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   ) {
     this.client = client;
     this.metadata = metadata;
-    this.storageTarget = resolveInheritanceRoot(
-      metadata.target as Constructor<E>,
-      metadata,
-    );
+    this.storageMetadata = resolveStorageMetadata(metadata);
     this.namespace = namespace;
     this.filterRegistry = filterRegistry;
     this.logger = logger;
@@ -823,7 +814,7 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
   async execute(): Promise<WriteResult<E>> {
     if (!this.updateData) return { rows: [], rowCount: 0 };
 
-    const pattern = buildScanPattern(this.storageTarget, this.namespace);
+    const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);
 
     if (keys.length === 0) return { rows: [], rowCount: 0 };
@@ -952,7 +943,7 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
 class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   private readonly client: Redis;
   private readonly metadata: EntityMetadata;
-  private readonly storageTarget: Constructor<IEntity>;
+  private readonly storageMetadata: EntityMetadata;
   private readonly namespace: string | null;
   private readonly soft: boolean;
   private readonly filterRegistry: FilterRegistry;
@@ -971,10 +962,7 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   ) {
     this.client = client;
     this.metadata = metadata;
-    this.storageTarget = resolveInheritanceRoot(
-      metadata.target as Constructor<E>,
-      metadata,
-    );
+    this.storageMetadata = resolveStorageMetadata(metadata);
     this.namespace = namespace;
     this.soft = soft;
     this.filterRegistry = filterRegistry;
@@ -1003,7 +991,7 @@ class RedisDeleteBuilder<E extends IEntity> implements IDeleteQueryBuilder<E> {
   }
 
   async execute(): Promise<WriteResult<E>> {
-    const pattern = buildScanPattern(this.storageTarget, this.namespace);
+    const pattern = buildScanPattern(this.storageMetadata, this.namespace);
     const keys = await scanEntityKeys(this.client, pattern);
 
     if (keys.length === 0) return { rows: [], rowCount: 0 };

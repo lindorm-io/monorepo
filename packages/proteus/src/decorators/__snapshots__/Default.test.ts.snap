@@ -11,6 +11,7 @@ exports[`Default > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "DefaultLiteralValue",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

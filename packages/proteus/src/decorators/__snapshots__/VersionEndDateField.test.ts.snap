@@ -11,6 +11,7 @@ exports[`VersionEndDateField > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "VersionEndDateFieldDecorated",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

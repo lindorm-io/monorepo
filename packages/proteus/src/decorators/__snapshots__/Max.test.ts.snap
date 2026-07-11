@@ -11,6 +11,7 @@ exports[`Max > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "MaxDecoratedInteger",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

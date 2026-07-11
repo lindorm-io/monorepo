@@ -11,6 +11,7 @@ exports[`OneToMany > should register parent entity with OneToMany metadata 1`] =
     "comment": null,
     "decorator": "Entity",
     "name": "OneToManyPost",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

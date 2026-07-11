@@ -42,6 +42,7 @@ exports[`PostgresQueryBuilder > toSQL > should return compiled query 1`] = `
           "database": null,
           "decorator": "Entity",
           "name": "users",
+          "named": false,
           "namespace": "app",
         },
         "extras": [],

@@ -33,7 +33,13 @@ const makeField = (key: string, name: string) => ({
 const makeMetadata = (fieldMappings: Record<string, string>): EntityMetadata =>
   ({
     fields: Object.entries(fieldMappings).map(([key, name]) => makeField(key, name)),
-    entity: { decorator: "Entity", comment: null, name: "test_entity", namespace: null },
+    entity: {
+      decorator: "Entity",
+      comment: null,
+      name: "test_entity",
+      named: false,
+      namespace: null,
+    },
     primaryKeys: ["id"],
     relations: [],
     relationIds: [],

@@ -11,6 +11,7 @@ exports[`OnCreate > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "OnCreateDecorated",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

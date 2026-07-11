@@ -238,7 +238,7 @@ export const compileJoinedPartialUpdate = <E extends IEntity>(
   }
 
   // ─── Child table UPDATE or SELECT ───
-  const childEntityName = getEntityName(metadata.target, {
+  const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
   const childTableName = quoteQualifiedName(null, childEntityName.name);

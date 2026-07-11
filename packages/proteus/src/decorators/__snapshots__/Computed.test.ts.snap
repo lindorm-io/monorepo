@@ -11,6 +11,7 @@ exports[`Computed > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "ComputedDecorated",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

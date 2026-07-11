@@ -11,6 +11,7 @@ exports[`getEntityMetadata > should return full entity metadata snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "GetMetadataSimple",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

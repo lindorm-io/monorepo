@@ -20,6 +20,7 @@ exports[`buildPrimaryMetadata — full metadata snapshot > snapshot of complete 
     "comment": null,
     "decorator": "Entity",
     "name": "BpSnapshotEntity",
+    "named": true,
     "namespace": null,
   },
   "fields": [

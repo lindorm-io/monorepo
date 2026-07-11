@@ -1,3 +1,4 @@
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { ScopedName } from "../../../types/types.js";
 import { buildScanPattern } from "./build-scan-pattern.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
@@ -18,6 +19,8 @@ class TestEntity {
   id!: string;
 }
 
+const meta = { target: TestEntity } as unknown as EntityMetadata;
+
 const makeScopedName = (overrides: Partial<ScopedName> = {}): ScopedName => ({
   namespace: null,
   name: "test_entity",
@@ -35,7 +38,7 @@ describe("buildScanPattern", () => {
 
   test("should build pattern without namespace", () => {
     mockGetEntityName.mockReturnValue(makeScopedName());
-    expect(buildScanPattern(TestEntity, null)).toMatchSnapshot();
+    expect(buildScanPattern(meta, null)).toMatchSnapshot();
   });
 
   test("should build pattern with namespace", () => {
@@ -45,6 +48,6 @@ describe("buildScanPattern", () => {
         parts: ["myapp", "entity", "test_entity"],
       }),
     );
-    expect(buildScanPattern(TestEntity, "myapp")).toMatchSnapshot();
+    expect(buildScanPattern(meta, "myapp")).toMatchSnapshot();
   });
 });

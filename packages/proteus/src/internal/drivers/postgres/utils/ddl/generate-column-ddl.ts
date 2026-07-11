@@ -5,6 +5,7 @@ import type {
   MetaGenerated,
 } from "../../../../entity/types/metadata.js";
 import type { NamespaceOptions } from "../../../../types/types.js";
+import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { mapFieldType } from "../map-field-type.js";
 import { quoteIdentifier } from "../quote-identifier.js";
 import { resolveFkColumnType } from "../resolve-fk-column-type.js";
@@ -70,12 +71,12 @@ const buildFieldColumn = (
 const buildFkColumn = (
   joinColName: string,
   foreignPkKey: string,
-  foreignConstructor: () => any,
+  foreignMeta: EntityMetadata,
   nullable: boolean,
   namespaceOptions: NamespaceOptions,
 ): string => {
   const parts: Array<string> = [quoteIdentifier(joinColName)];
-  parts.push(resolveFkColumnType(foreignConstructor, foreignPkKey, namespaceOptions));
+  parts.push(resolveFkColumnType(foreignMeta, foreignPkKey, namespaceOptions));
 
   if (!nullable) {
     parts.push("NOT NULL");
@@ -117,7 +118,7 @@ export const generateColumnDDL = (
         buildFkColumn(
           joinCol,
           foreignPk,
-          relation.foreignConstructor,
+          getForeignMetadata(relation, relation.foreignConstructor()),
           relation.options.nullable,
           namespaceOptions,
         ),

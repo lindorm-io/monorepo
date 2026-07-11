@@ -11,6 +11,7 @@ exports[`Field > should register integer field 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "FieldIntegerType",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

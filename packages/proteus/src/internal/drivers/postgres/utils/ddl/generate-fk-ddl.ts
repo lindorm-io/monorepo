@@ -71,13 +71,12 @@ export const generateFkDDL = (
     if (!relation.joinKeys) continue;
     if (relation.type === "ManyToMany") continue;
 
-    const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
+    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
+    const foreignName = getEntityName(foreignMeta, namespaceOptions);
     const foreignTable = quoteQualifiedName(
       foreignName.namespace ?? namespace,
       foreignName.name,
     );
-
-    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
 
     for (const [joinCol, foreignPk] of Object.entries(relation.joinKeys)) {
       const resolvedJoinCol = resolveColumnNameSafe(metadata.fields, joinCol);

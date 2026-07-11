@@ -22,6 +22,7 @@ const makeMinimalMetadata = (): EntityMetadata =>
       comment: null,
       database: null,
       name: "RegistryTestEntity",
+      named: false,
       namespace: null,
     },
     extras: [],

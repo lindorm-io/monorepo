@@ -41,14 +41,14 @@ export const generateJoinTableDDL = (
     const joinName = getJoinName(relation.joinTable, namespaceOptions);
     const joinTableQuoted = quoteIdentifier(joinName.name);
 
-    const ownerName = getEntityName(metadata.target, namespaceOptions);
+    const ownerName = getEntityName(metadata, namespaceOptions);
     const ownerTableQuoted = quoteIdentifier(ownerName.name);
 
-    const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
+    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
+    const foreignName = getEntityName(foreignMeta, namespaceOptions);
     const foreignTableQuoted = quoteIdentifier(foreignName.name);
 
     // Get the inverse relation's joinKeys from the foreign entity
-    const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
     const inverseRelation = foreignMeta.relations.find(
       (r) =>
         r.foreignKey === relation.key &&

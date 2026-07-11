@@ -11,6 +11,7 @@ exports[`VersionField > should register version field metadata 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "VersionFieldDecorated",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

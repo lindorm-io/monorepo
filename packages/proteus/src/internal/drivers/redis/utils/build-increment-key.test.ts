@@ -1,3 +1,4 @@
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { ScopedName } from "../../../types/types.js";
 import { buildIncrementKey } from "./build-increment-key.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
@@ -18,6 +19,8 @@ class TestEntity {
   id!: number;
 }
 
+const meta = { target: TestEntity } as unknown as EntityMetadata;
+
 const makeScopedName = (overrides: Partial<ScopedName> = {}): ScopedName => ({
   namespace: null,
   name: "test_entity",
@@ -35,7 +38,7 @@ describe("buildIncrementKey", () => {
 
   test("should build increment key without namespace", () => {
     mockGetEntityName.mockReturnValue(makeScopedName());
-    expect(buildIncrementKey(TestEntity, "id", null)).toMatchSnapshot();
+    expect(buildIncrementKey(meta, "id", null)).toMatchSnapshot();
   });
 
   test("should build increment key with namespace", () => {
@@ -45,11 +48,11 @@ describe("buildIncrementKey", () => {
         parts: ["myapp", "entity", "test_entity"],
       }),
     );
-    expect(buildIncrementKey(TestEntity, "id", "myapp")).toMatchSnapshot();
+    expect(buildIncrementKey(meta, "id", "myapp")).toMatchSnapshot();
   });
 
   test("should build increment key for different field names", () => {
     mockGetEntityName.mockReturnValue(makeScopedName());
-    expect(buildIncrementKey(TestEntity, "sequence", null)).toMatchSnapshot();
+    expect(buildIncrementKey(meta, "sequence", null)).toMatchSnapshot();
   });
 });

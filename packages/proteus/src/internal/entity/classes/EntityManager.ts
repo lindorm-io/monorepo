@@ -237,7 +237,7 @@ export class EntityManager<
   }
 
   getEntityName(options: NamespaceOptions): ScopedName {
-    return getEntityName(this.target, options);
+    return getEntityName(this.metadata, options);
   }
 
   getIncrementName(options: NamespaceOptions): ScopedName {

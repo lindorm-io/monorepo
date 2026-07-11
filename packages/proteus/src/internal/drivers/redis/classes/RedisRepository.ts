@@ -53,7 +53,7 @@ import { buildJoinSetKey, buildReverseJoinSetKey } from "../utils/build-join-set
 import { buildScanPattern } from "../utils/build-scan-pattern.js";
 import { scanEntityKeys } from "../utils/scan-entity-keys.js";
 import { deserializeHash } from "../utils/deserialize-hash.js";
-import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
+import { resolveStorageMetadata } from "../../../entity/utils/resolve-storage-metadata.js";
 
 export type RedisRepositoryOptions<E extends IEntity> = {
   target: Constructor<E>;
@@ -250,8 +250,10 @@ export class RedisRepository<
       this.metadata.inheritance.discriminatorValue != null;
 
     if (isSingleTableChild) {
-      const rootTarget = resolveInheritanceRoot(this.metadata.target, this.metadata);
-      const rootPattern = buildScanPattern(rootTarget, this.namespace);
+      const rootPattern = buildScanPattern(
+        resolveStorageMetadata(this.metadata),
+        this.namespace,
+      );
       const allKeys = await scanEntityKeys(this.client, rootPattern);
 
       if (allKeys.length === 0) return;
@@ -308,7 +310,7 @@ export class RedisRepository<
     }
 
     // Delete all entity HASH keys
-    const entityPattern = buildScanPattern(this.metadata.target, this.namespace);
+    const entityPattern = buildScanPattern(this.metadata, this.namespace);
     const entityKeys = await scanEntityKeys(this.client, entityPattern);
 
     // Delete all M2M join SET keys (forward + reverse) for each M2M relation

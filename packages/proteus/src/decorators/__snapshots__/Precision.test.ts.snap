@@ -11,6 +11,7 @@ exports[`Precision > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "PrecisionWithScale",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

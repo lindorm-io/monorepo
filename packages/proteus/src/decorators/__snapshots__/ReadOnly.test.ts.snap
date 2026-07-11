@@ -11,6 +11,7 @@ exports[`ReadOnly > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "ReadOnlyDecorated",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

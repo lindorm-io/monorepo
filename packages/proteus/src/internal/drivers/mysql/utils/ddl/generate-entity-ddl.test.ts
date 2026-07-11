@@ -12,8 +12,12 @@ import {
   TestUserWithProfile,
   TestVersionKeyed,
 } from "../../../../__fixtures__/test-entities.js";
+import { Entity } from "../../../../../decorators/Entity.js";
+import { Generated } from "../../../../../decorators/Generated.js";
+import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
 import { generateEntityDDL } from "./generate-entity-ddl.js";
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { applyNamingStrategy } from "../../../../utils/naming/apply-naming-strategy.js";
 
 const OPTS = {};
 
@@ -131,4 +135,34 @@ describe("generateEntityDDL (MySQL)", () => {
       }
     });
   });
+
+  describe("naming strategy applies to the table name", () => {
+    test("bare @Entity() emits a snake_cased table under 'snake'", () => {
+      const meta = applyNamingStrategy(
+        getEntityMetadata(MysqlNamingRefreshTokenChain),
+        "snake",
+      );
+      const create = generateEntityDDL(meta, {}).tables[0];
+      expect(create).toContain("mysql_naming_refresh_token_chain");
+      expect(create).not.toContain("MysqlNamingRefreshTokenChain");
+    });
+
+    test("@Entity({ name }) stays verbatim under 'snake'", () => {
+      const meta = applyNamingStrategy(
+        getEntityMetadata(MysqlNamingCustomChain),
+        "snake",
+      );
+      expect(generateEntityDDL(meta, {}).tables[0]).toContain("custom_chain");
+    });
+  });
 });
+
+@Entity()
+class MysqlNamingRefreshTokenChain {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+}
+
+@Entity({ name: "custom_chain" })
+class MysqlNamingCustomChain {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+}

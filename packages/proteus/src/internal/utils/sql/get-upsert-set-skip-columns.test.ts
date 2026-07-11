@@ -4,7 +4,13 @@ import { getUpsertSetSkipColumns } from "./get-upsert-set-skip-columns.js";
 import { describe, expect, test } from "vitest";
 
 const metadata = {
-  entity: { decorator: "Entity", comment: null, name: "widget", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "widget",
+    named: false,
+    namespace: null,
+  },
   fields: [
     makeField("id", { type: "uuid", name: "id", readonly: ["update", "upsert"] }),
     makeField("createdAt", {

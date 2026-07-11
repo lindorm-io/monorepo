@@ -30,7 +30,7 @@ export const generateEntityDDL = (
   metadata: EntityMetadata,
   namespaceOptions: NamespaceOptions,
 ): DdlOutput => {
-  const entityName = getEntityName(metadata.target, namespaceOptions);
+  const entityName = getEntityName(metadata, namespaceOptions);
   const { namespace, name: tableName } = entityName;
 
   const output: DdlOutput = {

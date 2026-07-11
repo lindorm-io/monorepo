@@ -11,6 +11,7 @@ exports[`Entity > should register all entity options 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "EntityWithOptions",
+    "named": true,
     "namespace": "myapp",
   },
   "extras": [],

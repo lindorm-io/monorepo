@@ -147,6 +147,10 @@ export type MetaEntity = {
   decorator: string;
   comment: string | null;
   name: string;
+  // Whether `name` was set explicitly via `@Entity({ name })`. When true the
+  // name is preserved verbatim through a naming strategy; when false it holds
+  // the class name and is transformed by the strategy (mirrors MetaField.named).
+  named: boolean;
   namespace: string | null;
 };
 

@@ -5,6 +5,10 @@ import type {
   MetaRelation,
   MetaRelationOptions,
 } from "../../entity/types/metadata.js";
+import { Entity } from "../../../decorators/Entity.js";
+import { Generated } from "../../../decorators/Generated.js";
+import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { getEntityMetadata } from "../../entity/metadata/get-entity-metadata.js";
 import { applyNamingStrategy } from "./apply-naming-strategy.js";
 
 const defaultOptions: MetaRelationOptions = {
@@ -27,7 +31,10 @@ const baseMetadata = {
     cache: null,
     comment: null,
     database: null,
-    name: "test_entity",
+    // A bare `@Entity()` stages the class name verbatim with `named: false`, so
+    // the strategy must transform it (PascalCase class → snake/camel table).
+    name: "RefreshTokenChain",
+    named: false,
     namespace: null,
   },
   fields: [
@@ -54,6 +61,30 @@ describe("applyNamingStrategy", () => {
   test("should return original metadata for 'none' strategy", () => {
     const result = applyNamingStrategy(baseMetadata, "none");
     expect(result).toBe(baseMetadata);
+  });
+
+  test("should transform a bare entity name to snake_case", () => {
+    const result = applyNamingStrategy(baseMetadata, "snake");
+    expect(result.entity.name).toBe("refresh_token_chain");
+  });
+
+  test("should transform a bare entity name to camelCase", () => {
+    const result = applyNamingStrategy(baseMetadata, "camel");
+    expect(result.entity.name).toBe("refreshTokenChain");
+  });
+
+  test("should keep a bare entity name verbatim under 'none'", () => {
+    const result = applyNamingStrategy(baseMetadata, "none");
+    expect(result.entity.name).toBe("RefreshTokenChain");
+  });
+
+  test("should preserve an explicitly-named entity verbatim under snake and camel", () => {
+    const named = {
+      ...baseMetadata,
+      entity: { ...baseMetadata.entity, name: "CustomTable", named: true },
+    } as unknown as EntityMetadata;
+    expect(applyNamingStrategy(named, "snake").entity.name).toBe("CustomTable");
+    expect(applyNamingStrategy(named, "camel").entity.name).toBe("CustomTable");
   });
 
   test("should transform field names to snake_case", () => {
@@ -303,5 +334,78 @@ describe("applyNamingStrategy — flattened @Embedded fields", () => {
     const result = applyNamingStrategy(embeddedMetadata(false), "snake");
     // default child (named: false) follows the strategy
     expect(result.fields[3].name).toBe("home_address_zip");
+  });
+});
+
+// ─── Resolved entity (table) name via real @Entity decorators ─────────────────
+//
+// End-to-end through the real decorator → metadata → applyNamingStrategy chain:
+// a bare @Entity() stages the class name with `named: false` and follows the
+// strategy; @Entity({ name }) stages `named: true` and stays verbatim under every
+// strategy — exactly mirroring @Field({ name }).
+
+@Entity()
+class NamingBareTokenChain {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+}
+
+@Entity({ name: "custom_token_chain" })
+class NamingSnakeOverrideChain {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+}
+
+@Entity({ name: "MixedCaseOverride" })
+class NamingMixedOverrideChain {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+}
+
+const resolvedEntityName = (target: Function, strategy: "snake" | "camel" | "none") =>
+  applyNamingStrategy(getEntityMetadata(target), strategy).entity.name;
+
+describe("applyNamingStrategy — resolved entity table name (real @Entity)", () => {
+  test("should snake_case a bare @Entity() class name", () => {
+    expect(resolvedEntityName(NamingBareTokenChain, "snake")).toBe(
+      "naming_bare_token_chain",
+    );
+  });
+
+  test("should camelCase a bare @Entity() class name", () => {
+    expect(resolvedEntityName(NamingBareTokenChain, "camel")).toBe(
+      "namingBareTokenChain",
+    );
+  });
+
+  test("should keep a bare @Entity() class name verbatim under 'none'", () => {
+    expect(resolvedEntityName(NamingBareTokenChain, "none")).toBe("NamingBareTokenChain");
+  });
+
+  test("should keep an @Entity({ name }) override verbatim under snake", () => {
+    expect(resolvedEntityName(NamingSnakeOverrideChain, "snake")).toBe(
+      "custom_token_chain",
+    );
+  });
+
+  test("should keep an @Entity({ name }) override verbatim under camel", () => {
+    expect(resolvedEntityName(NamingSnakeOverrideChain, "camel")).toBe(
+      "custom_token_chain",
+    );
+  });
+
+  test("should keep an @Entity({ name }) override verbatim under 'none'", () => {
+    expect(resolvedEntityName(NamingSnakeOverrideChain, "none")).toBe(
+      "custom_token_chain",
+    );
+  });
+
+  test("should NOT transform a mixed-case @Entity({ name }) override under snake", () => {
+    expect(resolvedEntityName(NamingMixedOverrideChain, "snake")).toBe(
+      "MixedCaseOverride",
+    );
+  });
+
+  test("should NOT transform a mixed-case @Entity({ name }) override under camel", () => {
+    expect(resolvedEntityName(NamingMixedOverrideChain, "camel")).toBe(
+      "MixedCaseOverride",
+    );
   });
 });

@@ -70,7 +70,7 @@ export const compileJoinedInsert = <E extends IEntity>(
   const rootSql: CompiledSql = { text: rootText, params: rootParams };
 
   // --- Child table INSERT ---
-  const childEntityName = getEntityName(metadata.target, {
+  const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
   const childTableName = quoteQualifiedName(namespace ?? null, childEntityName.name);
@@ -186,7 +186,7 @@ export const compileJoinedUpdate = <E extends IEntity>(
   // --- Child table UPDATE ---
   let childSql: CompiledSql | null = null;
   if (childUpdateColumns.length > 0) {
-    const childEntityName = getEntityName(metadata.target, {
+    const childEntityName = getEntityName(metadata, {
       namespace: namespace ?? undefined,
     });
     const childTableName = quoteQualifiedName(namespace ?? null, childEntityName.name);

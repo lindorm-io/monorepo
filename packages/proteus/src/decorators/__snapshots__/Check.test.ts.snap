@@ -20,6 +20,7 @@ exports[`Check > should register multiple check constraints 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "CheckMultiple",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

@@ -54,7 +54,7 @@ export const buildJoinedChildContext = (
   }
 
   // Build child table reference -- MySQL uses namespace (database) as qualifier
-  const childEntityName = getEntityName(metadata.target, {
+  const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
   const childTableQualified = quoteQualifiedName(namespace ?? null, childEntityName.name);

@@ -28,7 +28,13 @@ const createBaseMetadata = (overrides?: Partial<EntityMetadata>): EntityMetadata
   checks: [],
   defaultOrder: null,
   embeddedLists: [],
-  entity: { decorator: "Entity", comment: null, name: "TestEntity", namespace: null },
+  entity: {
+    decorator: "Entity",
+    comment: null,
+    name: "TestEntity",
+    named: false,
+    namespace: null,
+  },
   extras: [],
   fields: [
     {

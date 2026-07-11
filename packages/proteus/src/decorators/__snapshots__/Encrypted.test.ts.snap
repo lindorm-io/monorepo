@@ -11,6 +11,7 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
     "comment": null,
     "decorator": "Entity",
     "name": "EncryptedWithPurpose",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

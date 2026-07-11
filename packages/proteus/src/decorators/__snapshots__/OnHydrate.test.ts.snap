@@ -11,6 +11,7 @@ exports[`OnHydrate > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "OnHydrateDecorated",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

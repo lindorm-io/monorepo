@@ -186,7 +186,7 @@ const compileJoinedUpdateMany = <E extends IEntity>(
   const resolved = resolveTableName(metadata, namespace);
   const rootQualified = quoteQualifiedName(resolved.schema, resolved.name);
 
-  const childEntityName = getEntityName(metadata.target, {
+  const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
   const childQualified = quoteQualifiedName(

@@ -21,6 +21,7 @@ import { Generated } from "../../../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../../../decorators/PrimaryKeyField.js";
 import { generateEntityDDL } from "./generate-entity-ddl.js";
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
+import { applyNamingStrategy } from "../../../../utils/naming/apply-naming-strategy.js";
 
 // ---------------------------------------------------------------------------
 // Additional test entities at module scope
@@ -240,4 +241,32 @@ describe("generateEntityDDL", () => {
       expect(generateEntityDDL(meta, OPTS)).toMatchSnapshot();
     });
   });
+
+  describe("naming strategy applies to the table name", () => {
+    test("bare @Entity() emits a snake_cased table under 'snake'", () => {
+      const meta = applyNamingStrategy(
+        getEntityMetadata(PgNamingRefreshTokenChain),
+        "snake",
+      );
+      const create = generateEntityDDL(meta, OPTS).tables[0];
+      expect(create).toContain('"pg_naming_refresh_token_chain"');
+      expect(create).not.toContain("PgNamingRefreshTokenChain");
+    });
+
+    test("@Entity({ name }) stays verbatim under 'snake'", () => {
+      const meta = applyNamingStrategy(getEntityMetadata(PgNamingCustomChain), "snake");
+      const create = generateEntityDDL(meta, OPTS).tables[0];
+      expect(create).toContain('"custom_chain"');
+    });
+  });
 });
+
+@Entity()
+class PgNamingRefreshTokenChain {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+}
+
+@Entity({ name: "custom_chain" })
+class PgNamingCustomChain {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+}

@@ -59,7 +59,7 @@ export const buildJoinedChildContext = (
   }
 
   // Build child table reference
-  const childEntityName = getEntityName(metadata.target, {
+  const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
   const childTableRef = `${quoteQualifiedName(

@@ -83,7 +83,13 @@ const makeOwnerMetadata = (
   relations: Array<MetaRelation>,
 ): EntityMetadata =>
   ({
-    entity: { decorator: "Entity", comment: null, name: "articles", namespace: null },
+    entity: {
+      decorator: "Entity",
+      comment: null,
+      name: "articles",
+      named: false,
+      namespace: null,
+    },
     fields: [makeField("id", "id")],
     primaryKeys: ["id"],
     relations,

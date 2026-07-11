@@ -26,7 +26,7 @@ export const groupOperationsByEntity = (
   const entityTables = new Set<string>();
 
   for (const meta of metadataList) {
-    const name = getEntityName(meta.target, { namespace });
+    const name = getEntityName(meta, { namespace });
     const qualifiedName = `${name.namespace ?? "public"}.${name.name}`;
     tableToEntity.set(qualifiedName, meta.target.name);
     entityTables.add(qualifiedName);

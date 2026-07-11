@@ -11,6 +11,7 @@ exports[`Lazy > should match snapshot for lazy on both scopes 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "LazyMember",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

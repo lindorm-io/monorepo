@@ -102,7 +102,7 @@ export const compileJoinedInsert = <E extends IEntity>(
 
   // ─── Child table INSERT ───
   // Child table: child-only fields + PK columns
-  const childEntityName = getEntityName(metadata.target, {
+  const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
   const childTableName = quoteQualifiedName(
@@ -231,7 +231,7 @@ export const compileJoinedUpdate = <E extends IEntity>(
   // ─── Child table UPDATE ───
   let childSql: CompiledSql | null = null;
   if (childUpdateColumns.length > 0) {
-    const childEntityName = getEntityName(metadata.target, {
+    const childEntityName = getEntityName(metadata, {
       namespace: namespace ?? undefined,
     });
     const childTableName = quoteQualifiedName(

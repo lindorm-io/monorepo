@@ -11,6 +11,7 @@ exports[`Min > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "MinDecoratedInteger",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

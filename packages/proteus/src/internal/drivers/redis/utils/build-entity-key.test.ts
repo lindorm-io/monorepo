@@ -19,6 +19,8 @@ class TestEntity {
   id!: string;
 }
 
+const meta = { target: TestEntity } as unknown as EntityMetadata;
+
 const makeScopedName = (overrides: Partial<ScopedName> = {}): ScopedName => ({
   namespace: null,
   name: "test_entity",
@@ -36,7 +38,7 @@ describe("buildEntityKey", () => {
 
   test("should build key without namespace", () => {
     mockGetEntityName.mockReturnValue(makeScopedName());
-    expect(buildEntityKey(TestEntity, ["pk-1"], null)).toMatchSnapshot();
+    expect(buildEntityKey(meta, ["pk-1"], null)).toMatchSnapshot();
   });
 
   test("should build key with namespace", () => {
@@ -46,22 +48,22 @@ describe("buildEntityKey", () => {
         parts: ["myapp", "entity", "test_entity"],
       }),
     );
-    expect(buildEntityKey(TestEntity, ["pk-1"], "myapp")).toMatchSnapshot();
+    expect(buildEntityKey(meta, ["pk-1"], "myapp")).toMatchSnapshot();
   });
 
   test("should build key with composite PK", () => {
     mockGetEntityName.mockReturnValue(makeScopedName());
-    expect(buildEntityKey(TestEntity, ["pk-1", "pk-2"], null)).toMatchSnapshot();
+    expect(buildEntityKey(meta, ["pk-1", "pk-2"], null)).toMatchSnapshot();
   });
 
   test("should encode PK values containing colons", () => {
     mockGetEntityName.mockReturnValue(makeScopedName());
-    expect(buildEntityKey(TestEntity, ["val:with:colons"], null)).toMatchSnapshot();
+    expect(buildEntityKey(meta, ["val:with:colons"], null)).toMatchSnapshot();
   });
 
   test("should handle numeric PK values", () => {
     mockGetEntityName.mockReturnValue(makeScopedName());
-    expect(buildEntityKey(TestEntity, [42], null)).toMatchSnapshot();
+    expect(buildEntityKey(meta, [42], null)).toMatchSnapshot();
   });
 });
 
@@ -79,7 +81,7 @@ describe("buildEntityKeyFromRow", () => {
 
     const row = { id: "abc-123", name: "test" };
 
-    expect(buildEntityKeyFromRow(TestEntity, row, metadata, null)).toMatchSnapshot();
+    expect(buildEntityKeyFromRow(meta, row, metadata, null)).toMatchSnapshot();
   });
 
   test("should handle composite PK from row", () => {
@@ -91,6 +93,6 @@ describe("buildEntityKeyFromRow", () => {
 
     const row = { tenantId: "t1", userId: "u1", name: "test" };
 
-    expect(buildEntityKeyFromRow(TestEntity, row, metadata, null)).toMatchSnapshot();
+    expect(buildEntityKeyFromRow(meta, row, metadata, null)).toMatchSnapshot();
   });
 });

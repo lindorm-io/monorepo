@@ -197,10 +197,13 @@ export const projectDesiredSchemaMysql = (
     if (isJoinedChild) {
       const rootMeta = getForeignMetadata(metadata, metadata.inheritance!.root);
       rootFieldKeys = new Set(rootMeta.fields.map((f) => f.key));
-      rootEntityName = getEntityName(metadata.inheritance!.root, namespaceOptions);
+      rootEntityName = getEntityName(
+        getForeignMetadata(metadata, metadata.inheritance!.root),
+        namespaceOptions,
+      );
     }
 
-    const entityName = getEntityName(metadata.target, namespaceOptions);
+    const entityName = getEntityName(metadata, namespaceOptions);
     const tableName = entityName.name;
 
     const effectiveFields = isJoinedChild
@@ -311,8 +314,8 @@ export const projectDesiredSchemaMysql = (
       if (!relation.joinKeys) continue;
       if (relation.type === "ManyToMany") continue;
 
-      const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
       const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
+      const foreignName = getEntityName(foreignMeta, namespaceOptions);
 
       for (const [joinCol, foreignPk] of Object.entries(relation.joinKeys)) {
         if (isJoinedChild && rootFieldKeys!.has(joinCol)) continue;
@@ -483,8 +486,8 @@ export const projectDesiredSchemaMysql = (
         continue;
       }
 
-      const foreignName = getEntityName(relation.foreignConstructor(), namespaceOptions);
       const foreignMeta = getForeignMetadata(relation, relation.foreignConstructor());
+      const foreignName = getEntityName(foreignMeta, namespaceOptions);
       const inverseRelation = foreignMeta.relations.find(
         (r) =>
           r.foreignKey === relation.key &&

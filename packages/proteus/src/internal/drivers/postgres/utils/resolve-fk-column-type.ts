@@ -1,8 +1,6 @@
-import type { Constructor } from "@lindorm/types";
 import { ProteusError } from "../../../../errors/index.js";
-import type { IEntity } from "../../../../interfaces/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { NamespaceOptions } from "../../../types/types.js";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
 import { getEntityName } from "../../../entity/utils/get-entity-name.js";
 import { mapFieldType } from "./map-field-type.js";
 
@@ -10,14 +8,15 @@ import { mapFieldType } from "./map-field-type.js";
  * Resolves the PostgreSQL column type for a foreign key column by looking up the
  * referenced entity's primary key field and mapping its type. The `foreignPkKey`
  * parameter is the **property key** (e.g. `"id"`), not the column name.
+ *
+ * `foreignMeta` is the **resolved** metadata of the referenced entity so the
+ * derived enum type name (if any) follows the source's naming strategy.
  */
 export const resolveFkColumnType = (
-  foreignConstructor: () => Constructor<IEntity>,
+  foreignMeta: EntityMetadata,
   foreignPkKey: string,
   namespaceOptions: NamespaceOptions,
 ): string => {
-  const foreignTarget = foreignConstructor();
-  const foreignMeta = getEntityMetadata(foreignTarget);
   const pkField = foreignMeta.fields.find((f) => f.key === foreignPkKey);
 
   if (!pkField) {
@@ -32,6 +31,6 @@ export const resolveFkColumnType = (
     );
   }
 
-  const foreignName = getEntityName(foreignTarget, namespaceOptions);
+  const foreignName = getEntityName(foreignMeta, namespaceOptions);
   return mapFieldType(pkField, foreignName.name, foreignName.namespace);
 };

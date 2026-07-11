@@ -11,6 +11,7 @@ exports[`OnOrphan > should match snapshot 1`] = `
     "comment": null,
     "decorator": "Entity",
     "name": "OnOrphanDeleteChild",
+    "named": true,
     "namespace": null,
   },
   "extras": [],

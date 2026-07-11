@@ -11,6 +11,7 @@ import type {
   UpsertOptions,
 } from "../../../../types/index.js";
 import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor.js";
 import type { MetaRelation, QueryScope } from "../../../entity/types/metadata.js";
 import type { RepositoryFactory } from "../../../types/repository-factory.js";
@@ -267,10 +268,11 @@ export class MemoryRepository<
     const isInheritanceChild = this.metadata.inheritance?.discriminatorValue != null;
 
     const resolvedName = isInheritanceChild
-      ? getEntityName(getEntityMetadata(this.metadata.inheritance!.root).target, {
-          namespace: this.namespace,
-        })
-      : getEntityName(this.metadata.target, { namespace: this.namespace });
+      ? getEntityName(
+          getForeignMetadata(this.metadata, this.metadata.inheritance!.root),
+          { namespace: this.namespace },
+        )
+      : getEntityName(this.metadata, { namespace: this.namespace });
 
     const entityNamespace = resolvedName.namespace ?? null;
     const tableKey = resolvedName.namespace
