@@ -51,7 +51,7 @@ describe("generateRouteFeature", () => {
 
     for (const name of ["get", "create", "update", "delete"]) {
       expect(writeFile).toHaveBeenCalledWith(
-        join(featureDir, "user", `${name}-user.ts`),
+        join(featureDir, "user", `${name}-user-users-by-id.ts`),
         expect.any(String),
         "utf-8",
       );
@@ -67,11 +67,11 @@ describe("generateRouteFeature", () => {
       featureDir,
     });
 
-    const content = written(join(featureDir, "user", "get-user.ts"));
+    const content = written(join(featureDir, "user", "get-user-users-by-id.ts"));
 
-    expect(content).toContain("export const getUserSchema = z.object(");
+    expect(content).toContain("export const getUserUsersByIdSchema = z.object(");
     expect(content).toContain(
-      "export const getUser: ServerHandler<typeof getUserSchema>",
+      "export const getUserUsersById: ServerHandler<typeof getUserUsersByIdSchema>",
     );
   });
 
@@ -84,7 +84,7 @@ describe("generateRouteFeature", () => {
       featureDir,
     });
 
-    const content = written(join(featureDir, "user", "get-user.ts"));
+    const content = written(join(featureDir, "user", "get-user-users-by-id.ts"));
 
     expect(content).toContain(
       'import type { ServerHandler } from "../../types/context.js";',
@@ -108,8 +108,8 @@ describe("generateRouteFeature", () => {
       );
     }
 
-    expect(content).toContain("useSchema(getUserSchema)");
-    expect(content).toContain("useHandler(getUser)");
+    expect(content).toContain("useSchema(getUserUsersByIdSchema)");
+    expect(content).toContain("useHandler(getUserUsersById)");
   });
 
   it("should compute route → context and route → handler imports", async () => {
@@ -127,7 +127,7 @@ describe("generateRouteFeature", () => {
       'import type { ServerHttpMiddleware } from "../../../types/context.js";',
     );
     expect(content).toContain(
-      'import { getUser, getUserSchema } from "../../../features/user/get-user.js";',
+      'import { getUserUsersById, getUserUsersByIdSchema } from "../../../features/user/get-user-users-by-id.js";',
     );
   });
 
@@ -157,7 +157,9 @@ describe("generateRouteFeature", () => {
       featureDir,
     });
 
-    expect(written(join(featureDir, "user", "get-user.ts"))).toMatchSnapshot();
+    expect(
+      written(join(featureDir, "user", "get-user-users-by-id.ts")),
+    ).toMatchSnapshot();
   });
 
   it("should snapshot the generated route file", async () => {
@@ -184,13 +186,13 @@ describe("generateRouteFeature", () => {
     });
 
     expect(writeFile).toHaveBeenCalledWith(
-      join(customFeatureDir, "user", "get-user.ts"),
+      join(customFeatureDir, "user", "get-user-users-by-id.ts"),
       expect.any(String),
       "utf-8",
     );
 
     // context still resolves relative to the custom feature dir's parent.
-    const content = written(join(customFeatureDir, "user", "get-user.ts"));
+    const content = written(join(customFeatureDir, "user", "get-user-users-by-id.ts"));
     expect(content).toContain(
       'import type { ServerHandler } from "../../types/context.js";',
     );

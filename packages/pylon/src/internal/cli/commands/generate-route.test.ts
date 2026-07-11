@@ -211,7 +211,7 @@ describe("generateRoute --feature", () => {
 
     for (const name of ["get", "create", "update", "delete"]) {
       expect(writeFile).toHaveBeenCalledWith(
-        join(defaultFeatureDir, "user", `${name}-user.ts`),
+        join(defaultFeatureDir, "user", `${name}-user-users-by-id.ts`),
         expect.any(String),
         "utf-8",
       );
@@ -240,7 +240,7 @@ describe("generateRoute --feature", () => {
       'import type { ServerHttpMiddleware } from "../../../types/context.js";',
     );
     expect(content).toContain(
-      'import { getUser, getUserSchema } from "../../../features/user/get-user.js";',
+      'import { getUserUsersById, getUserUsersByIdSchema } from "../../../features/user/get-user-users-by-id.js";',
     );
     expect(content).toContain("export const DELETE: Array<ServerHttpMiddleware>");
   });
@@ -259,7 +259,7 @@ describe("generateRoute --feature", () => {
     const configFeatureDir = resolve(process.cwd(), "./from/config/features");
 
     expect(writeFile).toHaveBeenCalledWith(
-      join(configFeatureDir, "user", "get-user.ts"),
+      join(configFeatureDir, "user", "get-user-users-by-id.ts"),
       expect.any(String),
       "utf-8",
     );
@@ -269,7 +269,7 @@ describe("generateRoute --feature", () => {
     await generateRoute("get", "/v1/users/[id]", { feature: "user" });
 
     expect(writeFile).toHaveBeenCalledWith(
-      join(defaultFeatureDir, "user", "get-user.ts"),
+      join(defaultFeatureDir, "user", "get-user-users-by-id.ts"),
       expect.any(String),
       "utf-8",
     );

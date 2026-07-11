@@ -3,6 +3,7 @@ import { Logger } from "@lindorm/logger";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, join, relative, resolve } from "path";
 import { resolveRouteFile } from "./resolve-route-file.js";
+import { routeNameFromPath } from "./route-name-from-path.js";
 
 type GenerateRouteFeatureOptions = {
   feature: string;
@@ -53,6 +54,7 @@ const handlerTemplate = (
     `});`,
     ``,
     `export const ${handlerName}: ServerHandler<typeof ${schemaName}> = async (ctx) => {`,
+    `  ctx.logger.debug("${handlerName}");`,
     `  // TODO: implement`,
     `  return { body: {} };`,
     `};`,
@@ -119,7 +121,9 @@ export const generateRouteFeature = async (
         );
       }
 
-      const handlerName = verb + featurePascal;
+      // <verb><Feature><RouteTail> — the route tail keeps sibling routes within
+      // one feature from colliding (feature oauth: /token vs /authorize).
+      const handlerName = verb + featurePascal + routeNameFromPath(path);
       const schemaName = handlerName + "Schema";
       const handlerFileAbs = join(
         featureDir,

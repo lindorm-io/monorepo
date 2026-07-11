@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`routeNameFromPath > should derive tail-of-the-path names 1`] = `
+{
+  "/": "",
+  "/:id": "ById",
+  "/authorize": "Authorize",
+  "/files/*path": "FilesByPath",
+  "/files/[...path]": "FilesByPath",
+  "/token": "Token",
+  "/v1/admin/status": "Status",
+  "/v1/users/:id": "UsersById",
+  "/v1/users/:userId/orders/:orderId": "OrdersByOrderId",
+  "/v1/users/[id]": "UsersById",
+}
+`;

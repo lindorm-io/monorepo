@@ -4,11 +4,12 @@ exports[`generateRouteFeature > should snapshot the generated handler file 1`] =
 "import { z } from "zod";
 import type { ServerHandler } from "../../types/context.js";
 
-export const getUserSchema = z.object({
+export const getUserUsersByIdSchema = z.object({
   // TODO: define the request schema
 });
 
-export const getUser: ServerHandler<typeof getUserSchema> = async (ctx) => {
+export const getUserUsersById: ServerHandler<typeof getUserUsersByIdSchema> = async (ctx) => {
+  ctx.logger.debug("getUserUsersById");
   // TODO: implement
   return { body: {} };
 };
@@ -18,29 +19,29 @@ export const getUser: ServerHandler<typeof getUserSchema> = async (ctx) => {
 exports[`generateRouteFeature > should snapshot the generated route file 1`] = `
 "import { useHandler, useSchema } from "@lindorm/pylon";
 import type { ServerHttpMiddleware } from "../../../types/context.js";
-import { getUser, getUserSchema } from "../../../features/user/get-user.js";
-import { createUser, createUserSchema } from "../../../features/user/create-user.js";
-import { updateUser, updateUserSchema } from "../../../features/user/update-user.js";
-import { deleteUser, deleteUserSchema } from "../../../features/user/delete-user.js";
+import { getUserUsersById, getUserUsersByIdSchema } from "../../../features/user/get-user-users-by-id.js";
+import { createUserUsersById, createUserUsersByIdSchema } from "../../../features/user/create-user-users-by-id.js";
+import { updateUserUsersById, updateUserUsersByIdSchema } from "../../../features/user/update-user-users-by-id.js";
+import { deleteUserUsersById, deleteUserUsersByIdSchema } from "../../../features/user/delete-user-users-by-id.js";
 
 export const GET: Array<ServerHttpMiddleware> = [
-  useSchema(getUserSchema),
-  useHandler(getUser),
+  useSchema(getUserUsersByIdSchema),
+  useHandler(getUserUsersById),
 ];
 
 export const POST: Array<ServerHttpMiddleware> = [
-  useSchema(createUserSchema),
-  useHandler(createUser),
+  useSchema(createUserUsersByIdSchema),
+  useHandler(createUserUsersById),
 ];
 
 export const PUT: Array<ServerHttpMiddleware> = [
-  useSchema(updateUserSchema),
-  useHandler(updateUser),
+  useSchema(updateUserUsersByIdSchema),
+  useHandler(updateUserUsersById),
 ];
 
 export const DELETE: Array<ServerHttpMiddleware> = [
-  useSchema(deleteUserSchema),
-  useHandler(deleteUser),
+  useSchema(deleteUserUsersByIdSchema),
+  useHandler(deleteUserUsersById),
 ];
 "
 `;
