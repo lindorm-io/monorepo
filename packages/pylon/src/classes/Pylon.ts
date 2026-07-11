@@ -112,6 +112,21 @@ export class Pylon<
     const workers = await scanWorkers(this.options);
     this.workers.push(...workers);
 
+    // Connect the supplied sources before the user setup callback so it (and the
+    // source setup below) can use them — the mirror of teardown, which
+    // disconnects after the user teardown callback. connect() is idempotent.
+    if (this.options.db) {
+      await this.options.db.connect();
+    }
+
+    if (this.options.kv) {
+      await this.options.kv.connect();
+    }
+
+    if (this.options.bus) {
+      await this.options.bus.connect();
+    }
+
     if (this._setup) {
       try {
         const result = await this._setup();
