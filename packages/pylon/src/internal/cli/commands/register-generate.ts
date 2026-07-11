@@ -27,10 +27,10 @@ export const registerGenerateCommands = (program: Command): void => {
       "Feature name; scaffolds per-method schema+handler files + a wired route",
     )
     .option(
-      "--methods <list>",
+      "-m, --methods <list>",
       "HTTP methods, comma-separated (alt to the positional arg)",
     )
-    .option("--path <path>", "URL path (alt to the positional arg)")
+    .option("-p, --path <path>", "URL path (alt to the positional arg)")
     .option("--dry-run", "Show what would be created without writing files")
     .action(generateRoute);
 
