@@ -23,7 +23,11 @@ import { getJoinName } from "../../../../entity/utils/get-join-name.js";
 import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { extractEnumValues } from "../../../../utils/extract-enum-values.js";
 import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
-import { hashIdentifier } from "../../../../utils/sql/hash-identifier.js";
+import {
+  buildCheckName,
+  buildIndexName,
+  buildUniqueName,
+} from "../../../../utils/sql/constraint-names.js";
 import { mapFieldTypeSqlite } from "../map-field-type-sqlite.js";
 import { SQLITE_IDENTIFIER_LIMIT } from "../../constants/sqlite-constants.js";
 import { SqliteSyncError } from "../../errors/SqliteSyncError.js";
@@ -333,17 +337,14 @@ export const projectDesiredSchemaSqlite = (
       const resolvedUniqueKeys = unique.keys.map((k) =>
         resolveColumnNameSafe(metadata.fields, k),
       );
-      const name =
-        unique.name ??
-        `uq_${hashIdentifier(`${tableName}_${resolvedUniqueKeys.join("_")}`)}`;
+      const name = unique.name ?? buildUniqueName(tableName, resolvedUniqueKeys);
       uniqueConstraints.push({ name, columns: resolvedUniqueKeys });
     }
 
     // Check constraints
     const checkConstraints: Array<string> = [];
     for (const check of metadata.checks) {
-      const name =
-        check.name ?? `chk_${hashIdentifier(`${tableName}_${check.expression}`)}`;
+      const name = check.name ?? buildCheckName(tableName, check.expression);
       checkConstraints.push(
         `CONSTRAINT ${quoteIdentifier(name)} CHECK (${check.expression})`,
       );
@@ -368,7 +369,7 @@ export const projectDesiredSchemaSqlite = (
       const resolvedIndexKeys = validKeys.map((k) =>
         resolveColumnNameSafe(metadata.fields, k.key),
       );
-      const autoName = `idx_${hashIdentifier(`${tableName}_${resolvedIndexKeys.join("_")}`)}`;
+      const autoName = buildIndexName(tableName, resolvedIndexKeys);
       const name = index.name ?? autoName;
 
       let where: string | null = null;
@@ -401,7 +402,7 @@ export const projectDesiredSchemaSqlite = (
         metadata.fields,
         metadata.inheritance.discriminatorField,
       );
-      const discrimIdxName = `idx_${hashIdentifier(`${tableName}_${discrimCol}`)}`;
+      const discrimIdxName = buildIndexName(tableName, [discrimCol]);
 
       if (
         !indexes.some(
@@ -518,7 +519,7 @@ export const projectDesiredSchemaSqlite = (
 
       // Reverse-side index
       if (foreignSideCols.length > 0) {
-        const indexName = `idx_${hashIdentifier(`${joinTableName}_${foreignSideCols.join("_")}`)}`;
+        const indexName = buildIndexName(joinTableName, foreignSideCols);
         joinIndexes.push({
           name: indexName,
           unique: false,
@@ -640,7 +641,7 @@ export const projectDesiredSchemaSqlite = (
       });
 
       // Index on FK column
-      const idxName = `idx_${hashIdentifier(`${collTableName}_${embeddedList.parentFkColumn}`)}`;
+      const idxName = buildIndexName(collTableName, [embeddedList.parentFkColumn]);
       collIndexes.push({
         name: idxName,
         unique: false,

@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`constraint-names > buildCheckName > snapshot for known expression 1`] = `"chk_RJLcSGs5xKT"`;
+
+exports[`constraint-names > buildForeignKeyName > snapshot for known input (canonical postgres formula) 1`] = `"fk_QSavrc0QjwP"`;
+
+exports[`constraint-names > buildForeignKeyName > stays within the 63-char postgres identifier limit for long inputs 1`] = `"fk_hho8_63GtYd"`;
+
+exports[`constraint-names > buildIndexName > snapshot for composite columns 1`] = `"idx_Yoi6Os0buC2"`;
+
+exports[`constraint-names > buildIndexName > snapshot for single column 1`] = `"idx_QMdQup51PQE"`;
+
+exports[`constraint-names > buildInheritanceForeignKeyName > snapshot for known input 1`] = `"fk_x-BVA21sNyH"`;
+
+exports[`constraint-names > buildUniqueName > snapshot for composite columns 1`] = `"uq_m4FH0BNpcYR"`;
+
+exports[`constraint-names > buildUniqueName > snapshot for single column 1`] = `"uq_kW2hzehhZ7L"`;

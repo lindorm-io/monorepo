@@ -24,7 +24,13 @@ import { getJoinName } from "../../../../entity/utils/get-join-name.js";
 import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { extractEnumValues } from "../../../../utils/extract-enum-values.js";
 import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
-import { hashIdentifier } from "../../../../utils/sql/hash-identifier.js";
+import {
+  buildCheckName,
+  buildForeignKeyName,
+  buildIndexName,
+  buildInheritanceForeignKeyName,
+  buildUniqueName,
+} from "../../../../utils/sql/constraint-names.js";
 import { mapFieldTypeMysql } from "../map-field-type-mysql.js";
 import {
   INDEX_PREFIX_LENGTH,
@@ -297,7 +303,10 @@ export const projectDesiredSchemaMysql = (
       const rootPkColumns = rootMeta.primaryKeys.map((k) =>
         resolveColumnNameSafe(rootMeta.fields, k),
       );
-      const constraintName = `fk_${hashIdentifier(`${tableName}_${pkColumns.join("_")}_${rootEntityName.name}_${rootPkColumns.join("_")}`)}`;
+      const constraintName = buildInheritanceForeignKeyName(
+        tableName,
+        rootEntityName.name,
+      );
 
       foreignKeys.push({
         constraintName,
@@ -324,7 +333,7 @@ export const projectDesiredSchemaMysql = (
         const resolvedForeignPk = resolveColumnNameSafe(foreignMeta.fields, foreignPk);
         const onDelete = mapOnDeleteAction(relation.options.onDestroy);
         const onUpdate = mapOnUpdateAction(relation.options.onUpdate);
-        const constraintName = `fk_${hashIdentifier(`${tableName}_${resolvedJoinCol}_${foreignName.name}_${resolvedForeignPk}`)}`;
+        const constraintName = buildForeignKeyName(tableName, resolvedJoinCol);
 
         foreignKeys.push({
           constraintName,
@@ -350,9 +359,7 @@ export const projectDesiredSchemaMysql = (
       const resolvedUniqueKeys = unique.keys.map((k) =>
         resolveColumnNameSafe(metadata.fields, k),
       );
-      const name =
-        unique.name ??
-        `uq_${hashIdentifier(`${tableName}_${resolvedUniqueKeys.join("_")}`)}`;
+      const name = unique.name ?? buildUniqueName(tableName, resolvedUniqueKeys);
       uniqueConstraints.push({
         name,
         columns: resolvedUniqueKeys.map((colName) => {
@@ -370,8 +377,7 @@ export const projectDesiredSchemaMysql = (
     // Check constraints
     const checkConstraints: Array<MysqlDesiredCheck> = [];
     for (const check of metadata.checks) {
-      const name =
-        check.name ?? `chk_${hashIdentifier(`${tableName}_${check.expression}`)}`;
+      const name = check.name ?? buildCheckName(tableName, check.expression);
       checkConstraints.push({ name, expression: check.expression });
     }
 
@@ -394,7 +400,7 @@ export const projectDesiredSchemaMysql = (
       const resolvedIndexKeys = validKeys.map((k) =>
         resolveColumnNameSafe(metadata.fields, k.key),
       );
-      const autoName = `idx_${hashIdentifier(`${tableName}_${resolvedIndexKeys.join("_")}`)}`;
+      const autoName = buildIndexName(tableName, resolvedIndexKeys);
       const name = index.name ?? autoName;
 
       indexes.push({
@@ -425,7 +431,7 @@ export const projectDesiredSchemaMysql = (
         (f) =>
           f.name === discrimCol || f.key === metadata.inheritance!.discriminatorField,
       );
-      const discrimIdxName = `idx_${hashIdentifier(`${tableName}_${discrimCol}`)}`;
+      const discrimIdxName = buildIndexName(tableName, [discrimCol]);
 
       if (
         !indexes.some(
@@ -515,7 +521,7 @@ export const projectDesiredSchemaMysql = (
         joinPkCols.push(joinCol);
 
         const resolvedOwnerPk = resolveColumnNameSafe(metadata.fields, ownerPk);
-        const fkName = `fk_${hashIdentifier(`${joinTableName}_${joinCol}_${entityName.name}_${resolvedOwnerPk}`)}`;
+        const fkName = buildForeignKeyName(joinTableName, joinCol);
         joinForeignKeys.push({
           constraintName: fkName,
           columns: [joinCol],
@@ -545,7 +551,7 @@ export const projectDesiredSchemaMysql = (
           foreignSideCols.push(joinCol);
 
           const resolvedForeignPk = resolveColumnNameSafe(foreignMeta.fields, foreignPk);
-          const fkName = `fk_${hashIdentifier(`${joinTableName}_${joinCol}_${foreignName.name}_${resolvedForeignPk}`)}`;
+          const fkName = buildForeignKeyName(joinTableName, joinCol);
           joinForeignKeys.push({
             constraintName: fkName,
             columns: [joinCol],
@@ -559,7 +565,7 @@ export const projectDesiredSchemaMysql = (
 
       // Reverse-side index
       if (foreignSideCols.length > 0) {
-        const indexName = `idx_${hashIdentifier(`${joinTableName}_${foreignSideCols.join("_")}`)}`;
+        const indexName = buildIndexName(joinTableName, foreignSideCols);
         joinIndexes.push({
           name: indexName,
           unique: false,
@@ -684,7 +690,7 @@ export const projectDesiredSchemaMysql = (
         metadata.fields,
         embeddedList.parentPkColumn,
       );
-      const fkName = `fk_${hashIdentifier(`${collTableName}_${embeddedList.parentFkColumn}_${tableName}_${parentPkColumnName}`)}`;
+      const fkName = buildForeignKeyName(collTableName, embeddedList.parentFkColumn);
       collForeignKeys.push({
         constraintName: fkName,
         columns: [embeddedList.parentFkColumn],
@@ -695,7 +701,7 @@ export const projectDesiredSchemaMysql = (
       });
 
       // Index on FK column
-      const idxName = `idx_${hashIdentifier(`${collTableName}_${embeddedList.parentFkColumn}`)}`;
+      const idxName = buildIndexName(collTableName, [embeddedList.parentFkColumn]);
       collIndexes.push({
         name: idxName,
         unique: false,

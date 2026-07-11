@@ -103,7 +103,7 @@ exports[`projectDesiredSchemaMysql > projects ManyToMany join table 1`] = `
           "columns": [
             "testCourseId",
           ],
-          "constraintName": "fk_u6dSdkSK-5Z",
+          "constraintName": "fk_bFXUMk_r25z",
           "foreignColumns": [
             "id",
           ],
@@ -115,7 +115,7 @@ exports[`projectDesiredSchemaMysql > projects ManyToMany join table 1`] = `
           "columns": [
             "testStudentId",
           ],
-          "constraintName": "fk_XPf387lxnDA",
+          "constraintName": "fk_z58Ij1Xi9Mi",
           "foreignColumns": [
             "id",
           ],
@@ -482,7 +482,7 @@ exports[`projectDesiredSchemaMysql > projects an entity with a ManyToOne FK 1`] 
           "columns": [
             "authorId",
           ],
-          "constraintName": "fk_k8iBfroD0WS",
+          "constraintName": "fk_pNTj5bHp-kM",
           "foreignColumns": [
             "id",
           ],
@@ -814,7 +814,7 @@ exports[`projectDesiredSchemaMysql > projects owning side of OneToOne with FK co
           "columns": [
             "profileId",
           ],
-          "constraintName": "fk_1vUEfw_liWK",
+          "constraintName": "fk_f2qdLLdp2uo",
           "foreignColumns": [
             "id",
           ],

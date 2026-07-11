@@ -24,7 +24,13 @@ import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata
 import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
 import { extractEnumValues } from "../extract-enum-values.js";
 import { getEnumTypeName } from "../get-enum-type-name.js";
-import { hashIdentifier } from "../../../../utils/sql/hash-identifier.js";
+import {
+  buildCheckName,
+  buildForeignKeyName,
+  buildIndexName,
+  buildInheritanceForeignKeyName,
+  buildUniqueName,
+} from "../../../../utils/sql/constraint-names.js";
 import { mapFieldType } from "../map-field-type.js";
 import { PG_IDENTIFIER_LIMIT } from "../../constants/postgres-constants.js";
 import { PostgresSyncError } from "../../errors/PostgresSyncError.js";
@@ -342,7 +348,7 @@ export const projectDesiredSchema = (
       const rootPkColumns = rootMeta.primaryKeys.map((k) =>
         resolveColumnNameSafe(rootMeta.fields, k),
       );
-      const inhFkName = `fk_${hashIdentifier(`${tableName}_inh_${rootEntityName.name}`)}`;
+      const inhFkName = buildInheritanceForeignKeyName(tableName, rootEntityName.name);
 
       constraints.push({
         name: inhFkName,
@@ -371,9 +377,7 @@ export const projectDesiredSchema = (
       const resolvedUniqueKeys = unique.keys.map((k) =>
         resolveColumnNameSafe(metadata.fields, k),
       );
-      const name =
-        unique.name ??
-        `uq_${hashIdentifier(`${tableName}_${resolvedUniqueKeys.join("_")}`)}`;
+      const name = unique.name ?? buildUniqueName(tableName, resolvedUniqueKeys);
       constraints.push({
         name,
         type: "UNIQUE",
@@ -391,8 +395,7 @@ export const projectDesiredSchema = (
 
     // Checks — for joined children, include all checks (they may reference child columns)
     for (const check of metadata.checks) {
-      const name =
-        check.name ?? `chk_${hashIdentifier(`${tableName}_${check.expression}`)}`;
+      const name = check.name ?? buildCheckName(tableName, check.expression);
       constraints.push({
         name,
         type: "CHECK",
@@ -422,7 +425,7 @@ export const projectDesiredSchema = (
 
         const resolvedJoinCol = resolveColumnNameSafe(metadata.fields, joinCol);
         const resolvedForeignPk = resolveColumnNameSafe(foreignMeta.fields, foreignPk);
-        const constraintName = `fk_${hashIdentifier(`${tableName}_${resolvedJoinCol}`)}`;
+        const constraintName = buildForeignKeyName(tableName, resolvedJoinCol);
         const onDelete = mapOnDeleteAction(relation.options.onDestroy);
         const onUpdate = mapOnUpdateAction(relation.options.onUpdate);
 
@@ -462,7 +465,7 @@ export const projectDesiredSchema = (
       const resolvedIndexKeys = validKeys.map((k) =>
         resolveColumnNameSafe(metadata.fields, k.key),
       );
-      const autoName = `idx_${hashIdentifier(`${tableName}_${resolvedIndexKeys.join("_")}`)}`;
+      const autoName = buildIndexName(tableName, resolvedIndexKeys);
       const name = index.name ?? autoName;
       const method = index.using?.toLowerCase() ?? "btree";
 
@@ -502,7 +505,7 @@ export const projectDesiredSchema = (
         metadata.fields,
         metadata.inheritance.discriminatorField,
       );
-      const discrimIdxName = `idx_${hashIdentifier(`${tableName}_${discrimCol}`)}`;
+      const discrimIdxName = buildIndexName(tableName, [discrimCol]);
 
       // Only add if no user-defined index already covers this column
       if (
@@ -656,7 +659,7 @@ export const projectDesiredSchema = (
 
       // FK constraints for join table
       for (const [joinCol, ownerPk] of Object.entries(relation.joinKeys)) {
-        const fkName = `fk_${hashIdentifier(`${joinTableName}_${joinCol}`)}`;
+        const fkName = buildForeignKeyName(joinTableName, joinCol);
         joinConstraints.push({
           name: fkName,
           type: "FOREIGN KEY",
@@ -674,7 +677,7 @@ export const projectDesiredSchema = (
 
       if (inverseRelation?.joinKeys) {
         for (const [joinCol, foreignPk] of Object.entries(inverseRelation.joinKeys)) {
-          const fkName = `fk_${hashIdentifier(`${joinTableName}_${joinCol}`)}`;
+          const fkName = buildForeignKeyName(joinTableName, joinCol);
           joinConstraints.push({
             name: fkName,
             type: "FOREIGN KEY",
@@ -693,7 +696,7 @@ export const projectDesiredSchema = (
 
       // Reverse-side index
       if (foreignSideCols.length > 0) {
-        const indexName = `idx_${hashIdentifier(`${joinTableName}_${foreignSideCols.join("_")}`)}`;
+        const indexName = buildIndexName(joinTableName, foreignSideCols);
         joinIndexes.push({
           name: indexName,
           unique: false,
@@ -844,7 +847,7 @@ export const projectDesiredSchema = (
       }
 
       // FK constraint with ON DELETE CASCADE
-      const fkName = `fk_${hashIdentifier(`${collTableName}_${embeddedList.parentFkColumn}`)}`;
+      const fkName = buildForeignKeyName(collTableName, embeddedList.parentFkColumn);
       const parentPkColumnName = resolveColumnNameSafe(
         metadata.fields,
         embeddedList.parentPkColumn,
@@ -865,7 +868,7 @@ export const projectDesiredSchema = (
       });
 
       // Index on FK column for efficient lookups
-      const idxName = `idx_${hashIdentifier(`${collTableName}_${embeddedList.parentFkColumn}`)}`;
+      const idxName = buildIndexName(collTableName, [embeddedList.parentFkColumn]);
       collIndexes.push({
         name: idxName,
         unique: false,
