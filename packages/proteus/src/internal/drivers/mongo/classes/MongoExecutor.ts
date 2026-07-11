@@ -6,6 +6,7 @@ import type { IRepositoryExecutor } from "../../../interfaces/RepositoryExecutor
 import type { DeleteOptions, FindOptions } from "../../../../types/index.js";
 import type { EntityMetadata, QueryScope } from "../../../entity/types/metadata.js";
 import type { FilterRegistry } from "../../../utils/query/filter-registry.js";
+import { shouldAutoIncrement } from "../../../entity/utils/should-auto-increment.js";
 import { toAbortError } from "../../../utils/abort.js";
 import { dehydrateEntity } from "../utils/dehydrate.js";
 import { hydrateEntity, hydrateEntities } from "../utils/hydrate.js";
@@ -720,14 +721,11 @@ export class MongoExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
    */
   private async applyAutoIncrement(doc: Document): Promise<void> {
     for (const gen of this.metadata.generated) {
-      if (gen.strategy !== "increment" && gen.strategy !== "identity") continue;
-
-      // Check if value is already set (non-null and non-zero)
       const field = this.metadata.fields.find((f) => f.key === gen.key);
       const isPk = this.metadata.primaryKeys.includes(gen.key);
       const currentValue = isPk ? doc._id : doc[field?.name ?? gen.key];
 
-      if (currentValue != null && currentValue !== 0) continue;
+      if (!shouldAutoIncrement(gen, currentValue)) continue;
 
       const seqCollection = this.db.collection("_proteus_sequences");
       const seqId = `${this.metadata.entity.name}.${gen.key}`;

@@ -1,0 +1,15 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`shouldAutoIncrement > filters by generation strategy 1`] = `
+{
+  "date": false,
+  "float": false,
+  "identity": true,
+  "increment": true,
+  "integer": false,
+  "lindorm_id": false,
+  "null": false,
+  "string": false,
+  "uuid": false,
+}
+`;

@@ -1,6 +1,7 @@
 import type { Redis } from "ioredis";
 import type { Dict } from "@lindorm/types";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { shouldAutoIncrement } from "../../../entity/utils/should-auto-increment.js";
 import { buildIncrementKey } from "./build-increment-key.js";
 
 /**
@@ -24,10 +25,7 @@ export const applyRedisAutoIncrement = async (
   namespace: string | null,
 ): Promise<void> => {
   for (const gen of metadata.generated) {
-    if (gen.strategy !== "increment" && gen.strategy !== "identity") continue;
-
-    const current = row[gen.key];
-    if (current != null && current !== 0) continue;
+    if (!shouldAutoIncrement(gen, row[gen.key])) continue;
 
     const key = buildIncrementKey(metadata, gen.key, namespace);
     const next = await client.incr(key);
