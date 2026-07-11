@@ -1,9 +1,11 @@
-import { assertDpopHttpRequestMatch } from "../../internal/utils/dpop/assert-dpop-http-request-match.js";
+import type { VerifyJwtOptions } from "@lindorm/aegis";
+import { ClientError, ServerError } from "@lindorm/errors";
 import { DEFAULT_AUTH_WARNING_MS } from "../../internal/constants/auth.js";
 import { isInExpiryWarningWindow } from "../../internal/utils/auth-state/is-in-expiry-warning-window.js";
 import { isTokenExpired } from "../../internal/utils/auth-state/is-token-expired.js";
 import { markAuthExpiredEmitted } from "../../internal/utils/auth-state/mark-auth-expired-emitted.js";
 import { shouldEmitAuthExpired } from "../../internal/utils/auth-state/should-emit-auth-expired.js";
+import { assertDpopHttpRequestMatch } from "../../internal/utils/dpop/assert-dpop-http-request-match.js";
 import {
   isHttpContext,
   isSocketEventContext,
@@ -11,8 +13,6 @@ import {
 } from "../../internal/utils/is-context.js";
 import { extractTokenFromSession } from "../../internal/utils/tokens/extract-token-from-session.js";
 import { resolveHttpTokenSource } from "../../internal/utils/tokens/resolve-http-token-source.js";
-import type { VerifyJwtOptions } from "@lindorm/aegis";
-import { ClientError, ServerError } from "@lindorm/errors";
 import type {
   PylonContext,
   PylonHttpContext,
