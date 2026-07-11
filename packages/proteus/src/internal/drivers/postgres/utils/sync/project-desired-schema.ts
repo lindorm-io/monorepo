@@ -24,7 +24,7 @@ import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata
 import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
 import { extractEnumValues } from "../extract-enum-values.js";
 import { getEnumTypeName } from "../get-enum-type-name.js";
-import { hashIdentifier } from "../hash-identifier.js";
+import { hashIdentifier } from "../../../../utils/sql/hash-identifier.js";
 import { mapFieldType } from "../map-field-type.js";
 import { PG_IDENTIFIER_LIMIT } from "../../constants/postgres-constants.js";
 import { PostgresSyncError } from "../../errors/PostgresSyncError.js";

@@ -1,4 +1,4 @@
-import { hashIdentifier } from "./hash-identifier.js";
+import { hashIdentifier } from "../../../utils/sql/hash-identifier.js";
 
 /**
  * Generates a PostgreSQL enum type name from the table and field names. Falls back

@@ -1,5 +1,5 @@
 import { getEnumTypeName } from "./get-enum-type-name.js";
-import { hashIdentifier } from "./hash-identifier.js";
+import { hashIdentifier } from "../../../utils/sql/hash-identifier.js";
 import { describe, expect, test } from "vitest";
 
 describe("getEnumTypeName", () => {

@@ -23,7 +23,7 @@ import { getJoinName } from "../../../../entity/utils/get-join-name.js";
 import { getForeignMetadata } from "../../../../entity/metadata/foreign-metadata.js";
 import { extractEnumValues } from "../../../../utils/extract-enum-values.js";
 import { generateAppendOnlyDDL } from "../ddl/generate-append-only-ddl.js";
-import { hashIdentifier } from "../hash-identifier.js";
+import { hashIdentifier } from "../../../../utils/sql/hash-identifier.js";
 import { mapFieldTypeSqlite } from "../map-field-type-sqlite.js";
 import { SQLITE_IDENTIFIER_LIMIT } from "../../constants/sqlite-constants.js";
 import { SqliteSyncError } from "../../errors/SqliteSyncError.js";
