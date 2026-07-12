@@ -85,7 +85,6 @@ const makeJoinedCtx = (dialect: SqlDialect): JoinedChildUpdateContext => ({
     `${dialect.quoteIdentifier("t1")}.${dialect.quoteIdentifier("id")} = ${dialect.quoteIdentifier("t0")}.${dialect.quoteIdentifier("id")}`,
   ],
   fieldAliasOverrides: new Map([["breed", "t1"]]),
-  childAlias: "t1",
   childFieldNames: new Set(["breed"]),
 });
 
