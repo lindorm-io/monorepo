@@ -11,6 +11,7 @@ const fieldWithMinMax = [
   "integer",
   "real",
   "float",
+  "lindorm_id",
   "string",
   "text",
   "varchar",

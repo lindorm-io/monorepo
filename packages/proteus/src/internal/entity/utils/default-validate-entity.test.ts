@@ -605,6 +605,22 @@ class ValidateEntityLindormId {
   @PrimaryKeyField("lindorm_id") @Generated() id!: string;
 }
 
+// A bare @Generated() infers a VARCHAR(24) column — namespaced/longer ids need
+// the @Generated config to declare that shape (the inferred max is width-checked)
+@Entity({ name: "ValidateEntityLindormIdNamespaced" })
+class ValidateEntityLindormIdNamespaced {
+  @PrimaryKeyField("lindorm_id")
+  @Generated("lindorm_id", { namespace: "client" })
+  id!: string;
+}
+
+@Entity({ name: "ValidateEntityLindormIdLong" })
+class ValidateEntityLindormIdLong {
+  @PrimaryKeyField("lindorm_id")
+  @Generated("lindorm_id", { length: 64 })
+  id!: string;
+}
+
 describe("defaultValidateEntity — lindorm_id", () => {
   const validate = (id: string): void =>
     defaultValidateEntity(ValidateEntityLindormId, { id } as any);
@@ -613,16 +629,32 @@ describe("defaultValidateEntity — lindorm_id", () => {
     expect(() => validate("A1b2C3d4E5f6G7h8I9j0K1l2")).not.toThrow();
   });
 
-  test("should pass for a namespaced id", () => {
-    expect(() => validate("client_A1b2C3d4E5f6G7h8I9j0K1l2")).not.toThrow();
+  test("should pass for a namespaced id when @Generated declares the namespace", () => {
+    expect(() =>
+      defaultValidateEntity(ValidateEntityLindormIdNamespaced, {
+        id: "client_A1b2C3d4E5f6G7h8I9j0K1l2",
+      } as any),
+    ).not.toThrow();
+  });
+
+  test("should throw for a namespaced id that exceeds the inferred column width", () => {
+    expect(() => validate("client_A1b2C3d4E5f6G7h8I9j0K1l2")).toThrow();
   });
 
   test("should pass for the minimum body length (16)", () => {
     expect(() => validate("A1b2C3d4E5f6G7h8")).not.toThrow();
   });
 
-  test("should pass for the maximum body length (64)", () => {
-    expect(() => validate("A".repeat(64))).not.toThrow();
+  test("should pass for the maximum body length (64) when @Generated declares it", () => {
+    expect(() =>
+      defaultValidateEntity(ValidateEntityLindormIdLong, {
+        id: "A".repeat(64),
+      } as any),
+    ).not.toThrow();
+  });
+
+  test("should throw for a 64-character body on a default-width column", () => {
+    expect(() => validate("A".repeat(64))).toThrow();
   });
 
   test("should throw for a body that is too short (15)", () => {

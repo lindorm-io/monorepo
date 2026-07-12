@@ -639,13 +639,22 @@ describe("MemoryRepository lindorm_id field type", () => {
     expect(item.id).toMatch(/^[A-Za-z0-9]{24}$/);
   });
 
-  test("insert with an explicit valid namespaced id passes validation", async () => {
+  test("insert with an explicit valid id passes validation", async () => {
     const entity = lindormIdRepo.create({ name: "ok" });
-    entity.id = "client_A1b2C3d4E5f6G7h8I9j0K1l2";
+    entity.id = "A1b2C3d4E5f6G7h8I9j0K1l2";
 
     await expect(lindormIdRepo.insert(entity)).resolves.toMatchObject({
-      id: "client_A1b2C3d4E5f6G7h8I9j0K1l2",
+      id: "A1b2C3d4E5f6G7h8I9j0K1l2",
     });
+  });
+
+  test("insert with a format-valid id wider than the column throws validation", async () => {
+    // The bare @Generated() PK resolves max 24 — a namespaced 31-char id is
+    // format-valid but must be rejected here, not by the SQL driver at insert.
+    const entity = lindormIdRepo.create({ name: "too-wide" });
+    entity.id = "client_A1b2C3d4E5f6G7h8I9j0K1l2";
+
+    await expect(lindormIdRepo.insert(entity)).rejects.toThrow();
   });
 
   test("insert with a malformed id throws validation", async () => {
