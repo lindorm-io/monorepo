@@ -1372,6 +1372,70 @@ describe("RedisExecutor", () => {
         executor.executeIncrement({ id: "1" } as any, "score" as any, 5),
       ).rejects.toThrow(RedisDriverError);
     });
+
+    test("should redact a @Sensitive field value in the key-not-found error debug", async () => {
+      const sensitiveMetadata = {
+        ...baseMetadata,
+        fields: [
+          ...baseMetadata.fields.filter((f) => f.key !== "score"),
+          makeField("score", "integer", "Field", { sensitive: { digest: null } }),
+        ],
+      } as unknown as EntityMetadata;
+
+      const sensitiveExecutor = new RedisExecutor<TestEntity>(
+        sensitiveMetadata,
+        redis.client,
+        null,
+      );
+
+      mockedScanEntityKeys.mockResolvedValueOnce(["entity:test_entity:1"]);
+      redis.mockPipeline._setExecResults([
+        [
+          null,
+          {
+            id: "1",
+            name: "test",
+            version: "1",
+            score: "10",
+            createdAt: "2025-01-01",
+            updatedAt: "2025-01-01",
+          },
+        ],
+      ]);
+      redis.client.eval.mockResolvedValueOnce(null);
+
+      const error: any = await sensitiveExecutor
+        .executeIncrement({ id: "1" } as any, "score" as any, 5)
+        .catch((e) => e);
+
+      expect(error).toBeInstanceOf(RedisDriverError);
+      expect(error.debug.value).toBe("[Filtered]");
+    });
+
+    test("should keep a non-sensitive field value in the key-not-found error debug", async () => {
+      mockedScanEntityKeys.mockResolvedValueOnce(["entity:test_entity:1"]);
+      redis.mockPipeline._setExecResults([
+        [
+          null,
+          {
+            id: "1",
+            name: "test",
+            version: "1",
+            score: "10",
+            createdAt: "2025-01-01",
+            updatedAt: "2025-01-01",
+          },
+        ],
+      ]);
+      redis.client.eval.mockResolvedValueOnce(null);
+
+      const error: any = await executor
+        .executeIncrement({ id: "1" } as any, "score" as any, 5)
+        .catch((e) => e);
+
+      expect(error).toBeInstanceOf(RedisDriverError);
+      expect(error.debug.value).toBe(5);
+    });
   });
 
   // ─── executeDecrement ───────────────────────────────────────────────
@@ -1426,6 +1490,45 @@ describe("RedisExecutor", () => {
       await expect(
         executor.executeDecrement({ id: "1" } as any, "score" as any, 5),
       ).rejects.toThrow(RedisDriverError);
+    });
+
+    test("should redact a @Sensitive field value in the key-not-found error debug", async () => {
+      const sensitiveMetadata = {
+        ...baseMetadata,
+        fields: [
+          ...baseMetadata.fields.filter((f) => f.key !== "score"),
+          makeField("score", "integer", "Field", { sensitive: { digest: null } }),
+        ],
+      } as unknown as EntityMetadata;
+
+      const sensitiveExecutor = new RedisExecutor<TestEntity>(
+        sensitiveMetadata,
+        redis.client,
+        null,
+      );
+
+      mockedScanEntityKeys.mockResolvedValueOnce(["entity:test_entity:1"]);
+      redis.mockPipeline._setExecResults([
+        [
+          null,
+          {
+            id: "1",
+            name: "test",
+            version: "1",
+            score: "10",
+            createdAt: "2025-01-01",
+            updatedAt: "2025-01-01",
+          },
+        ],
+      ]);
+      redis.client.eval.mockResolvedValueOnce(null);
+
+      const error: any = await sensitiveExecutor
+        .executeDecrement({ id: "1" } as any, "score" as any, 5)
+        .catch((e) => e);
+
+      expect(error).toBeInstanceOf(RedisDriverError);
+      expect(error.debug.value).toBe("[Filtered]");
     });
   });
 

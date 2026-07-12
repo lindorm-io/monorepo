@@ -41,6 +41,7 @@ import {
   GUARDED_HSET,
 } from "../utils/lua-scripts.js";
 import { encryptFieldValue } from "../../../entity/utils/encrypt-field-value.js";
+import { redactSensitive } from "../../../entity/utils/redact-sensitive.js";
 import { flattenEmbeddedCriteria } from "../../../utils/query/flatten-embedded-criteria.js";
 import { resolveStorageMetadata } from "../../../entity/utils/resolve-storage-metadata.js";
 import { resolvePolymorphicMetadata } from "../../../entity/utils/resolve-polymorphic-metadata.js";
@@ -591,7 +592,11 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
             title: "Key Not Found",
             details:
               "increment() matched a row whose Redis key no longer existed when the guarded HINCRBY script ran, indicating a concurrent delete.",
-            debug: { redisKey: rows[i].key, property, value },
+            debug: {
+              redisKey: rows[i].key,
+              property,
+              value: redactSensitive(field, value),
+            },
           },
         );
       }
@@ -645,7 +650,11 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
             title: "Key Not Found",
             details:
               "decrement() matched a row whose Redis key no longer existed when the guarded HINCRBY script ran, indicating a concurrent delete.",
-            debug: { redisKey: rows[i].key, property, value },
+            debug: {
+              redisKey: rows[i].key,
+              property,
+              value: redactSensitive(field, value),
+            },
           },
         );
       }

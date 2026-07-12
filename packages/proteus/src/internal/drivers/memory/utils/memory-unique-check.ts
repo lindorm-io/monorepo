@@ -2,6 +2,7 @@ import type { Dict } from "@lindorm/types";
 import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import type { MemoryTable } from "../types/memory-store.js";
 import { MemoryDuplicateKeyError } from "../errors/MemoryDuplicateKeyError.js";
+import { redactSensitive } from "../../../entity/utils/redact-sensitive.js";
 
 export const checkUniqueConstraints = (
   table: MemoryTable,
@@ -33,7 +34,13 @@ export const checkUniqueConstraints = (
             details: `Another "${metadata.entity.name}" row already holds the same value on the unique columns [${columns.join(", ")}].`,
             data: { entityName: metadata.entity.name, columns },
             debug: {
-              values: columns.map((c) => row[c]),
+              // A @Sensitive unique column must not leak its value into error output
+              values: columns.map((c) =>
+                redactSensitive(
+                  metadata.fields.find((f) => f.key === c),
+                  row[c],
+                ),
+              ),
             },
           },
         );

@@ -41,6 +41,7 @@ exports[`Lazy > should match snapshot for lazy on both scopes 1`] = `
       ],
       "scale": null,
       "schema": null,
+      "sensitive": null,
       "transform": null,
       "type": "uuid",
       "typedJson": null,

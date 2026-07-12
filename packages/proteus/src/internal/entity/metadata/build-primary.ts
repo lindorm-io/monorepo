@@ -126,6 +126,7 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
     }
     if (modifier.comment != null) field.comment = modifier.comment;
     if (modifier.schema != null) field.schema = modifier.schema;
+    if (modifier.sensitive != null) field.sensitive = modifier.sensitive;
   }
 };
 

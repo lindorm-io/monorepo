@@ -36,6 +36,7 @@ export const CreateDateField =
       readonly: ["update", "upsert"],
       scale: null,
       schema: null,
+      sensitive: null,
       transform: null,
       typedJson: null,
       type: "timestamp",

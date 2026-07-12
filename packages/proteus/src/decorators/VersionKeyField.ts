@@ -44,6 +44,7 @@ export const VersionKeyField =
       readonly: ["update", "upsert"],
       scale: null,
       schema: null,
+      sensitive: null,
       transform: null,
       typedJson: null,
       type: type ?? null,

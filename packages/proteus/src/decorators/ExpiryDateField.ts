@@ -33,6 +33,7 @@ export const ExpiryDateField =
       readonly: [],
       scale: null,
       schema: null,
+      sensitive: null,
       transform: null,
       typedJson: null,
       type: "timestamp",

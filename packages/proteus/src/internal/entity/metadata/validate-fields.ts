@@ -15,6 +15,8 @@ const PRECISION_TYPES: Array<MetaFieldType> = ["decimal", "float", "real"];
 
 const TYPED_JSON_TYPES: Array<MetaFieldType> = ["array", "json", "object"];
 
+const SENSITIVE_DIGEST_TYPES: Array<MetaFieldType> = ["string", "text", "varchar"];
+
 const validateModifierFieldTypes = (targetName: string, field: MetaField): void => {
   const type = field.type;
 
@@ -46,6 +48,30 @@ const validateModifierFieldTypes = (targetName: string, field: MetaField): void 
         code: "invalid_typed_json_type",
         title: "Invalid TypedJson Type",
         details: `@TypedJson on "${field.key}" requires the @Field type to be "json", "object", or "array", but it is "${type ?? "unset"}" — change the field type or remove @TypedJson.`,
+        debug: { target: targetName, field: field.key, actualType: type },
+      },
+    );
+  }
+
+  if (field.sensitive?.digest && field.schema) {
+    throw new EntityMetadataError(
+      `@Sensitive digest and field-level @Schema cannot be combined on "${field.key}"`,
+      {
+        code: "sensitive_digest_schema_conflict",
+        title: "Sensitive Digest Schema Conflict",
+        details: `Field "${field.key}" on "${targetName}" declares both a @Sensitive digest ("${field.sensitive.digest}") and a field-level @Schema — a digest column holds an opaque hash string, so a custom schema is nonsensical; remove one of the two.`,
+        debug: { target: targetName, field: field.key, digest: field.sensitive.digest },
+      },
+    );
+  }
+
+  if (field.sensitive?.digest && (!type || !SENSITIVE_DIGEST_TYPES.includes(type))) {
+    throw new EntityMetadataError(
+      `@Sensitive digest on "${field.key}" requires a "string", "varchar", or "text" field`,
+      {
+        code: "invalid_sensitive_digest_type",
+        title: "Invalid Sensitive Digest Type",
+        details: `@Sensitive({ digest: "${field.sensitive.digest}" }) on "${field.key}" requires the @Field type to be "string", "varchar", or "text", but it is "${type ?? "unset"}" — change the field type or drop the digest (a bare @Sensitive() is valid on any type).`,
         debug: { target: targetName, field: field.key, actualType: type },
       },
     );

@@ -41,6 +41,7 @@ exports[`Entity > should register all entity options 1`] = `
       ],
       "scale": null,
       "schema": null,
+      "sensitive": null,
       "transform": null,
       "type": "uuid",
       "typedJson": null,

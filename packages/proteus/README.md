@@ -1058,6 +1058,32 @@ Excludes a field from query results for a given scope. The field still exists in
 @Hide("multiple") // hidden only from find (list queries)
 ```
 
+#### `@Sensitive`
+
+Marks a field as sensitive. Proteus never emits the value in its own error/log output (replaced with `[Filtered]`), and the flag is exposed in entity metadata so consumers can register logger filters. With a `digest`, the stored value must also look like a digest of the declared algorithm — catching plaintext accidentally stored in a hash column.
+
+```typescript
+@Sensitive()                     // redaction only — valid on any field type
+@Field("string")
+apiToken!: string;
+
+@Sensitive({ digest: "argon2" }) // redaction + digest format validation
+@Field("string")
+passwordHash!: string;
+```
+
+A `digest` requires a string-family field type (`string`, `varchar`, `text`) and cannot be combined with a field-level `@Schema`. Expected stored formats:
+
+| Digest   | Format                                                     |
+| -------- | ---------------------------------------------------------- |
+| `sha256` | unpadded base64url, 43 chars (`ShaKit.S256`)               |
+| `sha384` | unpadded base64url, 64 chars (`ShaKit.S384`)               |
+| `sha512` | unpadded base64url, 86 chars (`ShaKit.S512`)               |
+| `md5`    | hex-32, case-insensitive (legacy interop only)             |
+| `argon2` | strict PHC string (`$argon2id$v=19$m=…,t=…,p=…$salt$hash`) |
+
+`@Sensitive` does no hashing and no cryptographic verification — producing and verifying digests belongs in the crypto layer (`@lindorm/sha`, `@lindorm/enigma`). Orthogonal to its siblings: `@Hide` strips a field from query results, `@Encrypted` encrypts at rest, `@Sensitive` redacts error/log output and validates digest shape.
+
 #### `@Unique` (field-level)
 
 Single-field unique constraint.

@@ -63,6 +63,7 @@ export * from "./RelationCount.js";
 export * from "./RelationId.js";
 export * from "./Schema.js";
 export * from "./ScopeField.js";
+export * from "./Sensitive.js";
 export * from "./Transform.js";
 export * from "./TypedJson.js";
 export * from "./Unique.js";

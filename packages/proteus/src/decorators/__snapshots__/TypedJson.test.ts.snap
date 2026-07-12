@@ -41,6 +41,7 @@ exports[`TypedJson > should match full metadata snapshot for a typed-json entity
       ],
       "scale": null,
       "schema": null,
+      "sensitive": null,
       "transform": null,
       "type": "uuid",
       "typedJson": null,
@@ -68,6 +69,7 @@ exports[`TypedJson > should match full metadata snapshot for a typed-json entity
       "readonly": [],
       "scale": null,
       "schema": null,
+      "sensitive": null,
       "transform": null,
       "type": "json",
       "typedJson": {

@@ -53,6 +53,7 @@ export const ScopeField =
       readonly: ["update", "upsert"],
       scale: null,
       schema: null,
+      sensitive: null,
       transform: null,
       typedJson: null,
       type: "string",

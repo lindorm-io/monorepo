@@ -32,6 +32,7 @@ export const VersionEndDateField =
       readonly: [],
       scale: null,
       schema: null,
+      sensitive: null,
       transform: null,
       typedJson: null,
       type: "timestamp",

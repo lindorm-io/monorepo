@@ -5,6 +5,7 @@ import type { EntityMetadata, MetaRelation } from "../../../entity/types/metadat
 import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 import { getRegisteredTargets } from "../../../entity/metadata/registry.js";
 import { getEntityName } from "../../../entity/utils/get-entity-name.js";
+import { redactSensitive } from "../../../entity/utils/redact-sensitive.js";
 import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
 import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
 
@@ -67,18 +68,23 @@ export const assertForeignKeysExist = (
         parentTable != null && tableContainsForeignValue(parentTable, foreignPk, value);
 
       if (!exists) {
+        // A @Sensitive FK column must not leak its value into error output
+        const safeValue = redactSensitive(
+          metadata.fields.find((f) => f.key === localCol),
+          value,
+        );
         throw new ForeignKeyViolationError(
           `Foreign key violation: "${metadata.entity.name}.${localCol}" references a non-existent "${foreignMeta.entity.name}" row`,
           {
             code: "foreign_key_violation",
             title: "Foreign Key Violation",
-            details: `The value "${String(value)}" supplied for "${localCol}" does not match any existing parent row; the foreign key constraint was violated.`,
+            details: `The value "${String(safeValue)}" supplied for "${localCol}" does not match any existing parent row; the foreign key constraint was violated.`,
             data: {
               entityName: metadata.entity.name,
               column: localCol,
               foreignColumn: foreignPk,
             },
-            debug: { value, table: tableKey },
+            debug: { value: safeValue, table: tableKey },
           },
         );
       }
@@ -164,7 +170,14 @@ export const applyDeleteReferentialActions = (
                     foreignColumn: foreignPk,
                     onDestroy: relation.options.onDestroy,
                   },
-                  debug: { value: pkValue, childTable: childTableKey },
+                  debug: {
+                    // A @Sensitive parent PK column must not leak into error output
+                    value: redactSensitive(
+                      parentMetadata.fields.find((f) => f.key === foreignPk),
+                      pkValue,
+                    ),
+                    childTable: childTableKey,
+                  },
                 },
               );
           }

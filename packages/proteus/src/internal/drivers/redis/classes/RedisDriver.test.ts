@@ -69,6 +69,7 @@ const createBaseMetadata = (): EntityMetadata => ({
       readonly: [],
       scale: null,
       schema: null,
+      sensitive: null,
       transform: null,
       typedJson: null,
       type: "uuid",

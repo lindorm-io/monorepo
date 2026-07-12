@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { IEntity } from "../../../interfaces/index.js";
 import type { MetaField } from "../types/metadata.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
+import { digestFormatRegex } from "./digest-format.js";
 
 const fieldWithMinMax = [
   "array",
@@ -163,6 +164,13 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
         );
       }
     }
+    // @Sensitive digest — the stored value must LOOK like a digest of the
+    // declared algorithm. Composed before .nullish() like every other check.
+    if (field.sensitive?.digest) {
+      validator = (validator as z.ZodString).regex(
+        digestFormatRegex(field.sensitive.digest),
+      );
+    }
     if (field.nullable || dbAssignedKeys.has(field.key)) {
       validator = validator.nullish();
     }
@@ -191,6 +199,12 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
             field.max,
           );
         }
+      }
+      // @Sensitive digest applies to embedded fields too
+      if (field.sensitive?.digest) {
+        validator = (validator as z.ZodString).regex(
+          digestFormatRegex(field.sensitive.digest),
+        );
       }
       if (field.nullable) {
         validator = validator.nullish();
@@ -228,6 +242,12 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
         // Field-level @Schema replaces the default validator here too
         let validator = field.schema ?? getValidator(field);
         if (!validator) continue;
+        // @Sensitive digest applies to embedded-list element fields too
+        if (field.sensitive?.digest) {
+          validator = (validator as z.ZodString).regex(
+            digestFormatRegex(field.sensitive.digest),
+          );
+        }
         if (field.nullable) {
           validator = validator.nullish();
         }

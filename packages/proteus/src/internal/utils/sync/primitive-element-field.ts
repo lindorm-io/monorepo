@@ -27,6 +27,7 @@ export const buildPrimitiveElementField = (elementType: MetaFieldType): MetaFiel
   readonly: [],
   scale: null,
   schema: null,
+  sensitive: null,
   transform: null,
   typedJson: null,
   type: elementType,

@@ -11,9 +11,13 @@ const makeUnique = (keys: string[]): EntityMetadata["uniques"][number] => ({
   name: null,
 });
 
-const makeMetadata = (uniques: EntityMetadata["uniques"]): EntityMetadata =>
+const makeMetadata = (
+  uniques: EntityMetadata["uniques"],
+  fields: Array<{ key: string; sensitive?: { digest: null } }> = [],
+): EntityMetadata =>
   ({
     entity: { name: "TestEntity" },
+    fields,
     uniques,
   }) as unknown as EntityMetadata;
 
@@ -157,6 +161,43 @@ describe("checkUniqueConstraints", () => {
       const row = { email: "z@z.com", phone: "999" };
 
       expect(() => checkUniqueConstraints(table, row, metadata, null)).not.toThrow();
+    });
+  });
+
+  describe("sensitive redaction", () => {
+    test("redacts @Sensitive column values in the duplicate error debug", () => {
+      const table = makeTable([["pk1", { email: "dup@test.com", tokenHash: "secret" }]]);
+      const metadata = makeMetadata(
+        [makeUnique(["email", "tokenHash"])],
+        [{ key: "tokenHash", sensitive: { digest: null } }],
+      );
+      const row = { email: "dup@test.com", tokenHash: "secret" };
+
+      let error: any;
+      try {
+        checkUniqueConstraints(table, row, metadata, null);
+      } catch (caught) {
+        error = caught;
+      }
+
+      expect(error).toBeInstanceOf(MemoryDuplicateKeyError);
+      expect(error.debug.values).toEqual(["dup@test.com", "[Filtered]"]);
+    });
+
+    test("keeps non-sensitive column values visible (behaviour unchanged)", () => {
+      const table = makeTable([["pk1", { email: "dup@test.com" }]]);
+      const metadata = makeMetadata([makeUnique(["email"])], [{ key: "email" }]);
+      const row = { email: "dup@test.com" };
+
+      let error: any;
+      try {
+        checkUniqueConstraints(table, row, metadata, null);
+      } catch (caught) {
+        error = caught;
+      }
+
+      expect(error).toBeInstanceOf(MemoryDuplicateKeyError);
+      expect(error.debug.values).toEqual(["dup@test.com"]);
     });
   });
 });

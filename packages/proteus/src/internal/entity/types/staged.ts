@@ -15,6 +15,7 @@ import type {
   MetaIndex,
   MetaPrimaryKey,
   MetaRelationOptions,
+  MetaSensitive,
   MetaUnique,
   MetaVersionKey,
   QueryScope,
@@ -56,6 +57,7 @@ export type StagedFieldModifier = {
   typedJson?: { name: string | null };
   hideOn?: Array<QueryScope>;
   schema?: z.ZodType;
+  sensitive?: MetaSensitive;
 };
 
 // Relation modifier — partial metadata staged by relation modifier decorators
