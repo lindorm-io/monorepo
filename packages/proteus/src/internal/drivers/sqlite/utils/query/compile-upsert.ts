@@ -8,6 +8,7 @@ import {
 } from "../../../../utils/sql/compile-upsert.js";
 import { sqliteDialect } from "../sqlite-dialect.js";
 import { quoteIdentifier } from "../quote-identifier.js";
+import { resolveColumnName } from "../resolve-column-name.js";
 import type { CompiledSql } from "./compiled-sql.js";
 import { dehydrateEntity } from "./dehydrate-entity.js";
 
@@ -15,14 +16,12 @@ export type { UpsertCompileOptions };
 
 const deps: CompileUpsertDeps = {
   dehydrateEntity,
-  // Conflict target: explicit columns (quoted raw) or primary key columns
+  // Conflict target: explicit columns or primary key columns. In both cases the
+  // supplied entity-property keys must be resolved to their DB column names.
   resolveConflictColumns: (metadata, conflictColumns) =>
-    conflictColumns
-      ? conflictColumns.map((col) => quoteIdentifier(col))
-      : metadata.primaryKeys.map((pk) => {
-          const field = metadata.fields.find((f) => f.key === pk);
-          return quoteIdentifier(field?.name ?? pk);
-        }),
+    (conflictColumns ?? metadata.primaryKeys).map((col) =>
+      quoteIdentifier(resolveColumnName(metadata.fields, col, metadata.relations)),
+    ),
 };
 
 export const compileUpsert = <E extends IEntity>(

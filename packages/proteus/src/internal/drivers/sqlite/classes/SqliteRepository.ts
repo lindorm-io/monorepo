@@ -1072,13 +1072,10 @@ export class SqliteRepository<
       const prepared = await this.entityManager.insert(entity);
       this.entityManager.validate(prepared);
 
+      // conflictOn carries entity-property keys; the compiler resolves them to
+      // DB column names exactly once (pg parity).
       const compileOptions: UpsertCompileOptions | undefined = options?.conflictOn
-        ? {
-            conflictColumns: (options.conflictOn as Array<string>).map((propKey) => {
-              const field = this.metadata.fields.find((f) => f.key === propKey);
-              return field?.name ?? propKey;
-            }),
-          }
+        ? { conflictColumns: options.conflictOn as Array<string> }
         : undefined;
 
       if (!this.hasRelations && !this.hasEmbeddedLists) {

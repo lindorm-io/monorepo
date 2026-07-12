@@ -1,0 +1,23 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`compileUpsert (sqlite) > default conflict target resolves renamed primary keys to column names 1`] = `
+{
+  "params": [
+    "a1",
+    "x@y.z",
+    "X",
+  ],
+  "text": "INSERT INTO "accounts" ("account_id", "user_email", "display_name") VALUES (?, ?, ?) ON CONFLICT ("account_id") DO UPDATE SET "user_email" = excluded."user_email", "display_name" = excluded."display_name" RETURNING *",
+}
+`;
+
+exports[`compileUpsert (sqlite) > explicit conflict columns resolve entity keys to column names 1`] = `
+{
+  "params": [
+    "a1",
+    "x@y.z",
+    "X",
+  ],
+  "text": "INSERT INTO "accounts" ("account_id", "user_email", "display_name") VALUES (?, ?, ?) ON CONFLICT ("user_email") DO UPDATE SET "user_email" = excluded."user_email", "display_name" = excluded."display_name" RETURNING *",
+}
+`;
