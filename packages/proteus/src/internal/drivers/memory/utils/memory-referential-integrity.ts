@@ -5,7 +5,7 @@ import type { EntityMetadata, MetaRelation } from "../../../entity/types/metadat
 import { getForeignMetadata } from "../../../entity/metadata/foreign-metadata.js";
 import { getRegisteredTargets } from "../../../entity/metadata/registry.js";
 import { getEntityName } from "../../../entity/utils/get-entity-name.js";
-import { redactSensitive } from "../../../entity/utils/redact-sensitive.js";
+import { REDACTED, redactSensitive } from "../../../entity/utils/redact-sensitive.js";
 import { resolveInheritanceRoot } from "../../../entity/utils/resolve-inheritance-root.js";
 import type { MemoryStore, MemoryTable } from "../types/memory-store.js";
 
@@ -68,11 +68,12 @@ export const assertForeignKeysExist = (
         parentTable != null && tableContainsForeignValue(parentTable, foreignPk, value);
 
       if (!exists) {
-        // A @Sensitive FK column must not leak its value into error output
-        const safeValue = redactSensitive(
-          metadata.fields.find((f) => f.key === localCol),
-          value,
-        );
+        // The FK column holds the PARENT's PK value — redact when either the
+        // child FK field or the referenced parent PK field is @Sensitive
+        const sensitive =
+          metadata.fields.find((f) => f.key === localCol)?.sensitive != null ||
+          foreignMeta.fields.find((f) => f.key === foreignPk)?.sensitive != null;
+        const safeValue = sensitive ? REDACTED : value;
         throw new ForeignKeyViolationError(
           `Foreign key violation: "${metadata.entity.name}.${localCol}" references a non-existent "${foreignMeta.entity.name}" row`,
           {

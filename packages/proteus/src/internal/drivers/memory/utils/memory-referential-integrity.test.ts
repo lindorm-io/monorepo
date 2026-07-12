@@ -307,6 +307,27 @@ class RiSensitiveChild {
   @Sensitive() @Field("uuid") parentId!: string;
 }
 
+// Parent PK sensitive, child FK NOT sensitive — the FK column still holds the
+// parent's PK value, so the parent-side flag alone must trigger redaction
+@Entity({ name: "RiSensitivePkParent" })
+class RiSensitivePkParent {
+  @Sensitive() @PrimaryKeyField() @Generated("uuid") id!: string;
+  @Field("string") name!: string;
+
+  @OneToMany(() => RiPlainFkChild, "parent") children!: RiPlainFkChild[];
+}
+
+@Entity({ name: "RiPlainFkChild" })
+class RiPlainFkChild {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+  @Field("string") value!: string;
+
+  @ManyToOne(() => RiSensitivePkParent, "children")
+  parent!: RiSensitivePkParent;
+
+  @Field("uuid") parentId!: string;
+}
+
 describe("sensitive redaction", () => {
   test("redacts a @Sensitive FK value in the FK-violation error", () => {
     const store = createStore();
@@ -326,6 +347,26 @@ describe("sensitive redaction", () => {
     expect(error).toBeInstanceOf(ForeignKeyViolationError);
     expect(error.debug.value).toBe("[Filtered]");
     expect(error.details).not.toContain("secret-parent-id");
+  });
+
+  test("redacts the FK value when only the referenced parent PK is @Sensitive", () => {
+    const store = createStore();
+
+    let error: any;
+    try {
+      assertForeignKeysExist(
+        { id: "c1", value: "child", parentId: "secret-parent-pk" },
+        getEntityMetadata(RiPlainFkChild),
+        store,
+        null,
+      );
+    } catch (caught) {
+      error = caught;
+    }
+
+    expect(error).toBeInstanceOf(ForeignKeyViolationError);
+    expect(error.debug.value).toBe("[Filtered]");
+    expect(error.details).not.toContain("secret-parent-pk");
   });
 
   test("keeps a non-sensitive FK value visible (behaviour unchanged)", () => {

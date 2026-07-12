@@ -10,7 +10,7 @@ exports[`wrapPgError > PG error code 40P01 — Deadlock detected > DeadlockError
 
 exports[`wrapPgError > PG error code 23502 — NOT NULL violation > NotNullViolationError debug includes detail, column, table, and context fields 1`] = `
 {
-  "detail": "Failing row contains (null, foo@bar.com).",
+  "detail": "Failing row contains ([Filtered]).",
   "entity": "User",
   "operation": "insert",
 }
@@ -18,7 +18,7 @@ exports[`wrapPgError > PG error code 23502 — NOT NULL violation > NotNullViola
 
 exports[`wrapPgError > PG error code 23503 — FK violation > ForeignKeyViolationError debug includes detail, constraint, table, and context fields 1`] = `
 {
-  "detail": "Key (user_id)=(999) is not present in table "users".",
+  "detail": "Key (user_id)=([Filtered]) is not present in table "users".",
   "entity": "Order",
   "operation": "insert",
 }
@@ -26,14 +26,14 @@ exports[`wrapPgError > PG error code 23503 — FK violation > ForeignKeyViolatio
 
 exports[`wrapPgError > PG error code 23505 — unique constraint violation > DuplicateKeyError debug forwards constraint field when present 1`] = `
 {
-  "detail": "Key (email)=(foo@bar.com) already exists.",
+  "detail": "Key (email)=([Filtered]) already exists.",
   "table": "users",
 }
 `;
 
 exports[`wrapPgError > PG error code 23505 — unique constraint violation > DuplicateKeyError debug includes context fields 1`] = `
 {
-  "detail": "Key (id)=(1) already exists.",
+  "detail": "Key (id)=([Filtered]) already exists.",
   "entity": "Order",
   "operation": "insert",
 }
@@ -41,14 +41,14 @@ exports[`wrapPgError > PG error code 23505 — unique constraint violation > Dup
 
 exports[`wrapPgError > PG error code 23505 — unique constraint violation > DuplicateKeyError debug includes pg detail when present 1`] = `
 {
-  "detail": "Key (email)=(foo@bar.com) already exists.",
+  "detail": "Key (email)=([Filtered]) already exists.",
   "table": "users",
 }
 `;
 
 exports[`wrapPgError > PG error code 23514 — CHECK constraint violation > CheckConstraintError debug includes detail, constraint, table, and context fields 1`] = `
 {
-  "detail": "Failing row contains (age=-1).",
+  "detail": "Failing row contains ([Filtered]).",
   "entity": "User",
   "operation": "update",
 }

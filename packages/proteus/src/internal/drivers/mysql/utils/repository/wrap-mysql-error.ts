@@ -6,6 +6,8 @@ import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError.js";
 import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError.js";
 import { NotNullViolationError } from "../../../../errors/NotNullViolationError.js";
 import { SerializationError } from "../../../../errors/SerializationError.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { redactMysqlDuplicateEntry } from "./redact-mysql-duplicate.js";
 
 /**
  * Maps mysql2 error codes to Proteus error classes and throws.
@@ -17,6 +19,7 @@ export const wrapMysqlError = (
   error: unknown,
   message: string,
   context?: Record<string, unknown>,
+  metadata?: EntityMetadata,
 ): never => {
   // Already a Proteus error — rethrow as-is
   if (error instanceof ProteusError) throw error;
@@ -29,12 +32,16 @@ export const wrapMysqlError = (
 
     // Duplicate key (ER_DUP_ENTRY, ER_DUP_ENTRY_WITH_KEY_NAME)
     if (errno === 1062 || errno === 1586) {
+      // ER_DUP_ENTRY carries the raw conflicting value in detail, message,
+      // and stack — @Sensitive columns must not leak through any of them
+      // (fails closed when no metadata is available).
+      const redacted = redactMysqlDuplicateEntry(error, detail, metadata);
       throw new DuplicateKeyError(message, {
         code: "unique_violation",
         title: "Unique Violation",
         details: "A unique constraint or primary key was violated by the affected row.",
-        error,
-        debug: { ...context, detail, errno, sqlState: code },
+        error: redacted.error,
+        debug: { ...context, detail: redacted.detail, errno, sqlState: code },
       });
     }
 

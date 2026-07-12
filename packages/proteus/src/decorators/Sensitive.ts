@@ -16,7 +16,9 @@ export type SensitiveOptions = {
  *   in a hash column). Requires a string-family field type (string, varchar, text).
  *
  * Proteus performs no hashing or cryptographic verification — producing and
- * verifying digests stays in the crypto layer.
+ * verifying digests stays in the crypto layer. Redaction covers proteus-generated
+ * error payloads (including recognised driver constraint details); the database
+ * server's own logs and unrecognised driver error messages are outside its reach.
  */
 export const Sensitive =
   (options?: SensitiveOptions) =>

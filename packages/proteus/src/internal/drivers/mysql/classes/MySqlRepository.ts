@@ -235,9 +235,14 @@ export class MySqlRepository<
         await this.executor.executeDelete(criteria);
       }
     } catch (error) {
-      return wrapMysqlError(error, `Failed to delete "${this.metadata.entity.name}"`, {
-        criteria,
-      });
+      return wrapMysqlError(
+        error,
+        `Failed to delete "${this.metadata.entity.name}"`,
+        {
+          criteria,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -267,6 +272,7 @@ export class MySqlRepository<
         error,
         `Failed to updateMany "${this.metadata.entity.name}"`,
         { criteria },
+        this.metadata,
       );
     }
   }
@@ -284,6 +290,7 @@ export class MySqlRepository<
         error,
         `Failed to softDelete "${this.metadata.entity.name}"`,
         { criteria },
+        this.metadata,
       );
     }
   }
@@ -297,9 +304,14 @@ export class MySqlRepository<
     try {
       await this.executor.executeRestore(criteria);
     } catch (error) {
-      return wrapMysqlError(error, `Failed to restore "${this.metadata.entity.name}"`, {
-        criteria,
-      });
+      return wrapMysqlError(
+        error,
+        `Failed to restore "${this.metadata.entity.name}"`,
+        {
+          criteria,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -419,6 +431,7 @@ export class MySqlRepository<
         {
           entityName: this.metadata.entity.name,
         },
+        this.metadata,
       );
     }
   }
@@ -483,9 +496,14 @@ export class MySqlRepository<
       );
     } catch (error) {
       const label = hookKind === "save" ? "save" : "insert";
-      return wrapMysqlError(error, `Failed to ${label} "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapMysqlError(
+        error,
+        `Failed to ${label} "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -748,9 +766,14 @@ export class MySqlRepository<
       );
     } catch (error) {
       const label = hookKind === "save" ? "save" : "update";
-      return wrapMysqlError(error, `Failed to ${label} "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapMysqlError(
+        error,
+        `Failed to ${label} "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -875,9 +898,14 @@ export class MySqlRepository<
       );
     } catch (error) {
       const label = hookKind === "save" ? "save" : "update versioned";
-      return wrapMysqlError(error, `Failed to ${label} "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapMysqlError(
+        error,
+        `Failed to ${label} "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -932,9 +960,14 @@ export class MySqlRepository<
         },
       );
     } catch (error) {
-      return wrapMysqlError(error, `Failed to clone "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapMysqlError(
+        error,
+        `Failed to clone "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -993,6 +1026,7 @@ export class MySqlRepository<
         {
           entityName: this.metadata.entity.name,
         },
+        this.metadata,
       );
     }
   }
@@ -1035,9 +1069,14 @@ export class MySqlRepository<
 
       clearSnapshot(entity);
     } catch (error) {
-      return wrapMysqlError(error, `Failed to ${label} "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapMysqlError(
+        error,
+        `Failed to ${label} "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -1131,9 +1170,14 @@ export class MySqlRepository<
         return hydrated;
       });
     } catch (error) {
-      return wrapMysqlError(error, `Failed to upsert "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapMysqlError(
+        error,
+        `Failed to upsert "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 

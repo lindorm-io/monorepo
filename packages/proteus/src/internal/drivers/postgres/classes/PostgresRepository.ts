@@ -260,9 +260,14 @@ export class PostgresRepository<
         await this.executor.executeDelete(criteria);
       }
     } catch (error) {
-      return wrapPgError(error, `Failed to delete "${this.metadata.entity.name}"`, {
-        criteria,
-      });
+      return wrapPgError(
+        error,
+        `Failed to delete "${this.metadata.entity.name}"`,
+        {
+          criteria,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -287,9 +292,14 @@ export class PostgresRepository<
     try {
       await this.executor.executeUpdateMany(criteria, update);
     } catch (error) {
-      return wrapPgError(error, `Failed to updateMany "${this.metadata.entity.name}"`, {
-        criteria,
-      });
+      return wrapPgError(
+        error,
+        `Failed to updateMany "${this.metadata.entity.name}"`,
+        {
+          criteria,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -302,9 +312,14 @@ export class PostgresRepository<
     try {
       await this.executor.executeSoftDelete(criteria);
     } catch (error) {
-      return wrapPgError(error, `Failed to softDelete "${this.metadata.entity.name}"`, {
-        criteria,
-      });
+      return wrapPgError(
+        error,
+        `Failed to softDelete "${this.metadata.entity.name}"`,
+        {
+          criteria,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -317,9 +332,14 @@ export class PostgresRepository<
     try {
       await this.executor.executeRestore(criteria);
     } catch (error) {
-      return wrapPgError(error, `Failed to restore "${this.metadata.entity.name}"`, {
-        criteria,
-      });
+      return wrapPgError(
+        error,
+        `Failed to restore "${this.metadata.entity.name}"`,
+        {
+          criteria,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -491,9 +511,14 @@ export class PostgresRepository<
         return hydrated;
       });
     } catch (error) {
-      return wrapPgError(error, `Failed to bulk insert "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapPgError(
+        error,
+        `Failed to bulk insert "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -562,9 +587,14 @@ export class PostgresRepository<
       );
     } catch (error) {
       const label = hookKind === "save" ? "save" : "insert";
-      return wrapPgError(error, `Failed to ${label} "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapPgError(
+        error,
+        `Failed to ${label} "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -830,9 +860,14 @@ export class PostgresRepository<
       );
     } catch (error) {
       const label = hookKind === "save" ? "save" : "update";
-      return wrapPgError(error, `Failed to ${label} "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapPgError(
+        error,
+        `Failed to ${label} "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -970,9 +1005,14 @@ export class PostgresRepository<
       );
     } catch (error) {
       const label = hookKind === "save" ? "save" : "update versioned";
-      return wrapPgError(error, `Failed to ${label} "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapPgError(
+        error,
+        `Failed to ${label} "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -1032,9 +1072,14 @@ export class PostgresRepository<
         },
       );
     } catch (error) {
-      return wrapPgError(error, `Failed to clone "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapPgError(
+        error,
+        `Failed to clone "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -1093,9 +1138,14 @@ export class PostgresRepository<
 
       clearSnapshot(entity);
     } catch (error) {
-      return wrapPgError(error, `Failed to soft destroy "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapPgError(
+        error,
+        `Failed to soft destroy "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -1138,9 +1188,14 @@ export class PostgresRepository<
 
       clearSnapshot(entity);
     } catch (error) {
-      return wrapPgError(error, `Failed to ${label} "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapPgError(
+        error,
+        `Failed to ${label} "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 
@@ -1231,9 +1286,14 @@ export class PostgresRepository<
         return hydrated;
       });
     } catch (error) {
-      return wrapPgError(error, `Failed to upsert "${this.metadata.entity.name}"`, {
-        entityName: this.metadata.entity.name,
-      });
+      return wrapPgError(
+        error,
+        `Failed to upsert "${this.metadata.entity.name}"`,
+        {
+          entityName: this.metadata.entity.name,
+        },
+        this.metadata,
+      );
     }
   }
 

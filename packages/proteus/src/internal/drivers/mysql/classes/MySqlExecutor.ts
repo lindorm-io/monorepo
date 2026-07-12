@@ -109,6 +109,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeInsert failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -169,6 +171,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeUpdate failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -212,6 +216,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeDelete failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -225,6 +231,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeSoftDelete failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -238,6 +246,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeRestore failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -253,6 +263,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeDeleteExpired failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -297,6 +309,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeTtl failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -344,6 +358,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeFind failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -369,6 +385,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeCount failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -382,6 +400,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeExists failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -404,6 +424,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeIncrement failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -426,6 +448,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeDecrement failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -538,6 +562,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeInsertBulk failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }
@@ -560,6 +586,8 @@ export class MySqlExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
       return wrapMysqlError(
         error,
         `executeUpdateMany failed for "${this.metadata.entity.name}"`,
+        undefined,
+        this.metadata,
       );
     }
   }

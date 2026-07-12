@@ -6,6 +6,8 @@ import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError.js";
 import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError.js";
 import { NotNullViolationError } from "../../../../errors/NotNullViolationError.js";
 import { SerializationError } from "../../../../errors/SerializationError.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
+import { redactPgDetail } from "./redact-pg-detail.js";
 
 type PgError = Error & {
   code?: string;
@@ -22,10 +24,15 @@ export const wrapPgError = (
   error: unknown,
   message: string,
   context?: Record<string, unknown>,
+  metadata?: EntityMetadata,
 ): never => {
   if (error instanceof ProteusError) throw error;
 
   if (isPgError(error)) {
+    // Constraint details carry raw row values — @Sensitive columns must not
+    // leak through them (fails closed when no metadata is available).
+    const detail = redactPgDetail(error.detail, metadata);
+
     switch (error.code) {
       case "23502":
         throw new NotNullViolationError(message, {
@@ -35,7 +42,7 @@ export const wrapPgError = (
             "PostgreSQL rejected the write with SQLSTATE 23502 because a NOT NULL column received a null value.",
           error,
           data: { sqlState: error.code, column: error.column, table: error.table },
-          debug: { ...context, detail: error.detail },
+          debug: { ...context, detail },
         });
 
       case "23503":
@@ -50,7 +57,7 @@ export const wrapPgError = (
             constraint: error.constraint,
             table: error.table,
           },
-          debug: { ...context, detail: error.detail },
+          debug: { ...context, detail },
         });
 
       case "23505":
@@ -61,7 +68,7 @@ export const wrapPgError = (
             "PostgreSQL rejected the write with SQLSTATE 23505 because a unique constraint was violated.",
           error,
           data: { sqlState: error.code, constraint: error.constraint },
-          debug: { ...context, detail: error.detail },
+          debug: { ...context, detail },
         });
 
       case "23514":
@@ -76,7 +83,7 @@ export const wrapPgError = (
             constraint: error.constraint,
             table: error.table,
           },
-          debug: { ...context, detail: error.detail },
+          debug: { ...context, detail },
         });
 
       case "40001":
@@ -87,7 +94,7 @@ export const wrapPgError = (
             "PostgreSQL aborted the transaction with SQLSTATE 40001 due to a serialization failure; the transaction can be retried.",
           error,
           data: { sqlState: error.code },
-          debug: { ...context, detail: error.detail },
+          debug: { ...context, detail },
         });
 
       case "40P01":
@@ -98,7 +105,7 @@ export const wrapPgError = (
             "PostgreSQL aborted the transaction with SQLSTATE 40P01 because a deadlock was detected; the transaction can be retried.",
           error,
           data: { sqlState: error.code },
-          debug: { ...context, detail: error.detail },
+          debug: { ...context, detail },
         });
     }
   }

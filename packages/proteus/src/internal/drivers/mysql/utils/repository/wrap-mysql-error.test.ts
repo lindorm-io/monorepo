@@ -5,6 +5,7 @@ import { DuplicateKeyError } from "../../../../errors/DuplicateKeyError.js";
 import { ForeignKeyViolationError } from "../../../../errors/ForeignKeyViolationError.js";
 import { NotNullViolationError } from "../../../../errors/NotNullViolationError.js";
 import { SerializationError } from "../../../../errors/SerializationError.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { wrapMysqlError } from "./wrap-mysql-error.js";
 import { describe, expect, it } from "vitest";
 
@@ -188,5 +189,72 @@ describe("wrapMysqlError", () => {
     expect(() => wrapMysqlError("string error", "operation failed")).toThrow(
       ProteusRepositoryError,
     );
+  });
+
+  describe("@Sensitive redaction", () => {
+    const metadata = {
+      fields: [
+        { key: "tokenHash", name: "token_hash", sensitive: { digest: null } },
+        { key: "email", name: "email", sensitive: null },
+      ],
+      uniques: [
+        { keys: ["tokenHash"], name: "uq_token" },
+        { keys: ["email"], name: "uq_email" },
+      ],
+      indexes: [],
+      primaryKeys: ["id"],
+    } as unknown as EntityMetadata;
+
+    it("should redact the ER_DUP_ENTRY value for a sensitive column everywhere", () => {
+      const error = createMysqlError(
+        1062,
+        "ER_DUP_ENTRY",
+        "Duplicate entry 'hunter2' for key 'tokens.uq_token'",
+      );
+      let thrown: DuplicateKeyError | undefined;
+      try {
+        wrapMysqlError(error, "insert failed", undefined, metadata);
+      } catch (e) {
+        thrown = e as DuplicateKeyError;
+      }
+      expect(thrown?.debug.detail).toBe(
+        "Duplicate entry '[Filtered]' for key 'tokens.uq_token'",
+      );
+      // The raw driver error's message/stack carried the value too — the
+      // scrubbed clone must keep it out of errors[] and the stack
+      expect(JSON.stringify(thrown?.toJSON())).not.toContain("hunter2");
+    });
+
+    it("should keep the ER_DUP_ENTRY value for a non-sensitive column", () => {
+      const error = createMysqlError(
+        1062,
+        "ER_DUP_ENTRY",
+        "Duplicate entry 'foo@bar.com' for key 'users.uq_email'",
+      );
+      let thrown: DuplicateKeyError | undefined;
+      try {
+        wrapMysqlError(error, "insert failed", undefined, metadata);
+      } catch (e) {
+        thrown = e as DuplicateKeyError;
+      }
+      expect(thrown?.debug.detail).toBe(
+        "Duplicate entry 'foo@bar.com' for key 'users.uq_email'",
+      );
+    });
+
+    it("should fail closed on ER_DUP_ENTRY without metadata", () => {
+      const error = createMysqlError(
+        1062,
+        "ER_DUP_ENTRY",
+        "Duplicate entry 'foo' for key 'PRIMARY'",
+      );
+      let thrown: DuplicateKeyError | undefined;
+      try {
+        wrapMysqlError(error, "insert failed");
+      } catch (e) {
+        thrown = e as DuplicateKeyError;
+      }
+      expect(thrown?.debug.detail).toBe("Duplicate entry '[Filtered]' for key 'PRIMARY'");
+    });
   });
 });

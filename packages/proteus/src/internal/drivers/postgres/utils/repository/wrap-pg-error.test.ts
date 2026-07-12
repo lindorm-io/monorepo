@@ -8,6 +8,7 @@ import { NotNullViolationError } from "../../../../errors/NotNullViolationError.
 import { OptimisticLockError } from "../../../../errors/OptimisticLockError.js";
 import { SerializationError } from "../../../../errors/SerializationError.js";
 import { PostgresExecutorError } from "../../errors/PostgresExecutorError.js";
+import type { EntityMetadata } from "../../../../entity/types/metadata.js";
 import { wrapPgError } from "./wrap-pg-error.js";
 import { describe, expect, test } from "vitest";
 
@@ -376,6 +377,57 @@ describe("wrapPgError", () => {
         thrown = e as ProteusRepositoryError;
       }
       expect(thrown?.debug).toMatchSnapshot();
+    });
+  });
+
+  describe("@Sensitive redaction", () => {
+    const metadata = {
+      fields: [
+        { key: "tokenHash", name: "token_hash", sensitive: { digest: null } },
+        { key: "email", name: "email", sensitive: null },
+      ],
+    } as unknown as EntityMetadata;
+
+    test("redacts the 23505 detail value for a sensitive column", () => {
+      const pgError = makePgError("23505", {
+        detail: "Key (token_hash)=(hunter2) already exists.",
+      });
+      let thrown: DuplicateKeyError | undefined;
+      try {
+        wrapPgError(pgError, "duplicate", { table: "tokens" }, metadata);
+      } catch (e) {
+        thrown = e as DuplicateKeyError;
+      }
+      expect(thrown?.debug.detail).toBe("Key (token_hash)=([Filtered]) already exists.");
+      expect(JSON.stringify(thrown?.toJSON())).not.toContain("hunter2");
+    });
+
+    test("keeps the 23505 detail value for a non-sensitive column", () => {
+      const pgError = makePgError("23505", {
+        detail: "Key (email)=(foo@bar.com) already exists.",
+      });
+      let thrown: DuplicateKeyError | undefined;
+      try {
+        wrapPgError(pgError, "duplicate", { table: "users" }, metadata);
+      } catch (e) {
+        thrown = e as DuplicateKeyError;
+      }
+      expect(thrown?.debug.detail).toBe("Key (email)=(foo@bar.com) already exists.");
+    });
+
+    test("fails closed on a value-carrying detail without metadata (COMMIT path)", () => {
+      const pgError = makePgError("23503", {
+        detail: 'Key (user_id)=(42) is not present in table "users".',
+      });
+      let thrown: ForeignKeyViolationError | undefined;
+      try {
+        wrapPgError(pgError, "commit failed");
+      } catch (e) {
+        thrown = e as ForeignKeyViolationError;
+      }
+      expect(thrown?.debug.detail).toBe(
+        'Key (user_id)=([Filtered]) is not present in table "users".',
+      );
     });
   });
 });
