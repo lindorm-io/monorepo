@@ -185,9 +185,7 @@ export const projectCollectionTables = (
       namespace: collNamespace,
       name: collTableName,
       columns: collColumns,
-      primaryKey: dialect.collectionTableHasPrimaryKey
-        ? { columns: [embeddedList.parentFkColumn, "__ordinal"] }
-        : null,
+      primaryKey: { columns: [embeddedList.parentFkColumn, "__ordinal"] },
       foreignKeys,
       uniques: [],
       checks: [],

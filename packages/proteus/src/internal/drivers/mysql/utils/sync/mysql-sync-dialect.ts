@@ -23,8 +23,6 @@ import { resolveFkColumnType } from "../resolve-fk-column-type.js";
 export const mysqlSyncDialect: SyncDialect = {
   identifierLimit: MYSQL_IDENTIFIER_LIMIT,
   namedForeignKeys: true,
-  fkColumnNullableFromRelation: true,
-  collectionTableHasPrimaryKey: true,
   supportsNamespaces: false,
   typedJsonColumnType: "JSON",
   ordinalColumnType: "int",

@@ -14,14 +14,11 @@ import { resolveFkColumnType } from "../resolve-fk-column-type.js";
 /**
  * Postgres `SyncDialect` for the shared desired-schema projection. Preserves
  * the historical postgres projection byte-for-byte: named enum types, IDENTITY
- * columns, gen_random_uuid() defaults, schema-qualified names, extensions —
- * and the known drift that collection tables carry no primary key.
+ * columns, gen_random_uuid() defaults, schema-qualified names, extensions.
  */
 export const postgresSyncDialect: SyncDialect = {
   identifierLimit: PG_IDENTIFIER_LIMIT,
   namedForeignKeys: true,
-  fkColumnNullableFromRelation: true,
-  collectionTableHasPrimaryKey: false,
   supportsNamespaces: true,
   typedJsonColumnType: "JSONB",
   ordinalColumnType: "INTEGER",

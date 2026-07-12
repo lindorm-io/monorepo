@@ -303,7 +303,7 @@ $$ LANGUAGE plpgsql IMMUTABLE;",
 }
 `;
 
-exports[`projectDesiredSchema (golden) > projects embedded lists into collection tables without primary keys 1`] = `
+exports[`projectDesiredSchema (golden) > projects embedded lists into collection tables with (parentFk, __ordinal) primary keys 1`] = `
 {
   "enums": [
     {
@@ -410,6 +410,22 @@ exports[`projectDesiredSchema (golden) > projects embedded lists into collection
           "checkExpr": null,
           "columns": [
             "pg_gold_user_id",
+            "__ordinal",
+          ],
+          "deferrable": false,
+          "foreignColumns": null,
+          "foreignSchema": null,
+          "foreignTable": null,
+          "initiallyDeferred": false,
+          "name": "pg_gold_user_tags_pkey",
+          "onDelete": null,
+          "onUpdate": null,
+          "type": "PRIMARY KEY",
+        },
+        {
+          "checkExpr": null,
+          "columns": [
+            "pg_gold_user_id",
           ],
           "deferrable": false,
           "foreignColumns": [
@@ -505,6 +521,22 @@ exports[`projectDesiredSchema (golden) > projects embedded lists into collection
       ],
       "comment": null,
       "constraints": [
+        {
+          "checkExpr": null,
+          "columns": [
+            "pg_gold_user_id",
+            "__ordinal",
+          ],
+          "deferrable": false,
+          "foreignColumns": null,
+          "foreignSchema": null,
+          "foreignTable": null,
+          "initiallyDeferred": false,
+          "name": "pg_gold_user_addresses_pkey",
+          "onDelete": null,
+          "onUpdate": null,
+          "type": "PRIMARY KEY",
+        },
         {
           "checkExpr": null,
           "columns": [

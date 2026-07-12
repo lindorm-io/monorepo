@@ -295,14 +295,16 @@ describe("projectDesiredSchema (golden)", () => {
     expect(schema).toMatchSnapshot();
   });
 
-  test("projects embedded lists into collection tables without primary keys", () => {
+  test("projects embedded lists into collection tables with (parentFk, __ordinal) primary keys", () => {
     const schema = projectDesiredSchema([getEntityMetadata(PgGoldUser)], {});
 
     const collectionTables = schema.tables.filter((t) => t.name !== "PgGoldUser");
     expect(collectionTables).toHaveLength(2);
-    // Postgres collection tables carry no PK constraint — only the parent FK.
+    // Collection tables carry a composite PK (parentFk, __ordinal) — pg drift
+    // fixed 2026-07-11; mysql/sqlite always declared it.
     for (const table of collectionTables) {
-      expect(table.constraints.some((c) => c.type === "PRIMARY KEY")).toBe(false);
+      const pk = table.constraints.find((c) => c.type === "PRIMARY KEY");
+      expect(pk?.columns).toEqual([expect.stringMatching(/_id$/), "__ordinal"]);
     }
     expect(schema).toMatchSnapshot();
   });

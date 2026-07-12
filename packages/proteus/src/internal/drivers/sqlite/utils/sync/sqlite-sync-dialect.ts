@@ -13,14 +13,11 @@ import { resolveFkColumnType } from "../resolve-fk-column-type.js";
  * SQLite `SyncDialect` for the shared desired-schema projection. Preserves the
  * historical sqlite projection byte-for-byte: type affinities, inline enum
  * CHECKs, unnamed inline FKs, name-only table dedupe — and the known drift
- * that relation FK columns are always NOT NULL (relation.options.nullable is
- * ignored) and that the raw-metadata FK column-type lookup is kept.
+ * that the raw-metadata FK column-type lookup is kept.
  */
 export const sqliteSyncDialect: SyncDialect = {
   identifierLimit: SQLITE_IDENTIFIER_LIMIT,
   namedForeignKeys: false,
-  fkColumnNullableFromRelation: false,
-  collectionTableHasPrimaryKey: true,
   supportsNamespaces: false,
   typedJsonColumnType: "TEXT",
   ordinalColumnType: "INTEGER",

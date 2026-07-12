@@ -89,10 +89,7 @@ export const projectColumns = (
           foreignPk,
           namespaceOptions,
         ),
-        // Drift (kept): sqlite ignores relation.options.nullable — always NOT NULL.
-        nullable: dialect.fkColumnNullableFromRelation
-          ? relation.options.nullable
-          : false,
+        nullable: relation.options.nullable,
         defaultExpr: null,
         identity: null,
         generatedExpr: null,

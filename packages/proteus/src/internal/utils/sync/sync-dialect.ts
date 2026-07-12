@@ -35,10 +35,6 @@ export type SyncDialect = {
   identifierLimit: number;
   /** False for sqlite: FKs are unnamed inline clauses, model name stays null. */
   namedForeignKeys: boolean;
-  /** Drift: sqlite ignores relation.options.nullable — FK columns always NOT NULL. */
-  fkColumnNullableFromRelation: boolean;
-  /** Drift: pg collection tables have no PK; mysql/sqlite use (parentFk, __ordinal). */
-  collectionTableHasPrimaryKey: boolean;
   /** Pg only: (namespace, name) table dedupe + namespaces output. */
   supportsNamespaces: boolean;
   /** Companion column type for typedJson fields. */
