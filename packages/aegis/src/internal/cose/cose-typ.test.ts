@@ -11,10 +11,14 @@ describe("coseTyp", () => {
     ["application/token-introspection+jwt", "application/token-introspection+cwt"],
     ["JWT", "application/cwt"],
   ])("maps the JOSE typ %s to the CWT media type %s", (jose, cose) => {
-    expect(coseTyp(jose)).toBe(cose);
+    expect(coseTyp({ presence: "required", value: jose })).toBe(cose);
   });
 
-  test("a null profile typ maps to undefined (no mandated typ)", () => {
-    expect(coseTyp(null)).toBeUndefined();
+  test("maps an optional-presence typ by its value (presence is verify-side only)", () => {
+    expect(coseTyp({ presence: "optional", value: "JWT" })).toBe("application/cwt");
+  });
+
+  test("presence none maps to undefined (no mandated typ)", () => {
+    expect(coseTyp({ presence: "none" })).toBeUndefined();
   });
 });

@@ -10,7 +10,7 @@ import type { SignContext, TokenProfile } from "../../../types/index.js";
  */
 export const idTokenProfile: TokenProfile = {
   name: "id_token",
-  typ: "JWT",
+  typ: { presence: "required", value: "JWT" },
   required: ["issuer", "subject", "audience", "expiresAt", "issuedAt"],
   forbidden: [],
   requiredWhen: [

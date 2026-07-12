@@ -9,7 +9,7 @@ import type { TokenProfile } from "../../../types/index.js";
  */
 export const delegationProfile: TokenProfile = {
   name: "delegation",
-  typ: "application/delegation+jwt",
+  typ: { presence: "required", value: "application/delegation+jwt" },
   required: ["issuer", "subject", "audience", "expiresAt", "tokenId"],
   forbidden: [],
   requiredWhen: [],

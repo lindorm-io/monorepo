@@ -9,7 +9,9 @@ import type { OidcClaims } from "../../types/claims/oidc-claims.js";
 import type { PopClaims } from "../../types/claims/pop-claims.js";
 import type { RarClaims } from "../../types/claims/rar-claims.js";
 import type { DelegationClaims } from "../../types/claims/delegation-claims.js";
+import type { SetClaims } from "../../types/claims/set-claims.js";
 import type { StdClaims } from "../../types/claims/std-claims.js";
+import type { SubjectIdentifier } from "../claims/sub-id.js";
 import type {
   AuthenticatorAssuranceLevel,
   FederationAssuranceLevel,
@@ -18,14 +20,17 @@ import type {
 } from "../../types/level-of-assurance.js";
 
 // Unified domain claim set — RFC-grouped intersection that JWT parsing,
-// introspection parsing, and userinfo parsing all share.
+// introspection parsing, and userinfo parsing all share. Of SetClaims only
+// `subjectId` has a wire/domain name split (`sub_id`, RFC 9493) — `events`
+// keeps its wire key and stays in `rest`.
 export type DomainClaims = StdClaims &
   OidcClaims &
   PopClaims &
   DelegationClaims &
   OAuthClaims &
   RarClaims &
-  LindormClaims;
+  LindormClaims &
+  Pick<SetClaims, "subjectId">;
 
 export type ExtractClaimsResult = {
   claims: DomainClaims;
@@ -83,6 +88,10 @@ const FIELD_KEYS: Record<string, ReadonlyArray<string>> = {
   sessionId: ["sessionId", "sid"],
   subjectHint: ["subjectHint", "suh"],
   tenantId: ["tenantId", "tenant_id"],
+
+  // SetClaims (RFC 9493) — mirrors the COSE decoder, which restores the
+  // domain key; without this the JOSE path leaves `sub_id` wire-keyed.
+  subjectId: ["subjectId", "sub_id"],
 };
 
 // Recursive claim extractors get their own key sets so we can also strip
@@ -225,6 +234,7 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
   const sessionId = consume(FIELD_KEYS.sessionId);
   const subjectHint = consume(FIELD_KEYS.subjectHint);
   const tenantId = consume(FIELD_KEYS.tenantId);
+  const subjectId = consume(FIELD_KEYS.subjectId);
 
   const act = consume(RFC8693_KEYS.act);
   const mayAct = consume(RFC8693_KEYS.mayAct);
@@ -295,6 +305,10 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
     sessionId: isString(sessionId) ? sessionId : undefined,
     subjectHint: isString(subjectHint) ? subjectHint : undefined,
     tenantId: isString(tenantId) ? tenantId : undefined,
+
+    // SetClaims — same object guard as the mint side (map-content-to-claims);
+    // the RFC 9493 member shape is the subIdShape rule's job, not extraction's.
+    subjectId: isObject(subjectId) ? (subjectId as SubjectIdentifier) : undefined,
   });
 
   // Build the leftover dict — every key the parser didn't consume.

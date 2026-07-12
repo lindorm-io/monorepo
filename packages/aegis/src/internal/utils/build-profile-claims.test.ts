@@ -10,7 +10,7 @@ const CTX = { algorithm: "ES512" as const, issuer: "https://test.lindorm.io/" };
 
 const noInjectProfile: TokenProfile = {
   name: "no_inject",
-  typ: null,
+  typ: { presence: "none" },
   required: [],
   forbidden: [],
   requiredWhen: [],

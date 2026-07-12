@@ -175,6 +175,26 @@ export type ProfileRules = {
 };
 
 /**
+ * The profile's JOSE `typ` header policy — a discriminated union on `presence`:
+ *
+ * - `"none"` — the profile mandates no typ. Mint falls back to the
+ *   tokenType-derived default (bare `JWT`); verify runs no typ check.
+ * - `"optional"` — mint stamps `value`; verify accepts an ABSENT typ, but a
+ *   PRESENT typ must strictly equal `value` (RFC 8725 explicit typing kept as
+ *   defense where clients do send it — e.g. RFC 7523 client assertions, which
+ *   stock OAuth libraries emit without a typ header).
+ * - `"required"` — mint stamps `value`; verify rejects an absent or
+ *   mismatching typ.
+ *
+ * Presence is a verify-side knob only: mint always stamps `value` for both
+ * `"optional"` and `"required"`.
+ */
+export type TokenProfileTyp =
+  | { presence: "none" }
+  | { presence: "optional"; value: string }
+  | { presence: "required"; value: string };
+
+/**
  * Runtime descriptor that enforces a profile's policy. Types erase and are
  * bypassable, so each profile is also a runtime descriptor applied by
  * `buildProfileClaims` (presence/forbid/atLeastOneOf/requiredWhen) and
@@ -182,7 +202,7 @@ export type ProfileRules = {
  */
 export type TokenProfile = {
   name: string;
-  typ: string | null;
+  typ: TokenProfileTyp;
   required: Array<string>;
   forbidden: Array<string>;
   requiredWhen: Array<{

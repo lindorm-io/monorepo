@@ -193,7 +193,7 @@ export class JwtKit implements IJwtKit {
   ): ParsedJwt<C> {
     this.logger.debug("Verifying token", { token, verify });
 
-    const parsed = JwtKit.parse<C>(token);
+    const parsed = JwtKit.parse<C>(token, { typPresence: verify.typPresence });
 
     // RFC 7515 Section 4.1.11: reject any critical extension params we don't understand
     if (parsed.header.critical?.length) {
@@ -361,16 +361,38 @@ export class JwtKit implements IJwtKit {
     };
   }
 
-  static parse<C extends Dict = Dict>(token: string): ParsedJwt<C> {
+  /**
+   * `typPresence` (default `"required"`): a typ-less token is rejected unless
+   * the caller opts in with `"optional"` — profiled verify does, because the
+   * profile floor owns the real presence policy (RFC 7519 §5.1 makes typ
+   * optional on the wire). Direct callers keep the strict RFC 8725
+   * explicit-typing default. A PRESENT typ must always be a JWT media type,
+   * so a JWS/JWE cannot be parsed as a JWT.
+   */
+  static parse<C extends Dict = Dict>(
+    token: string,
+    options: Pick<VerifyJwtOptions, "typPresence"> = {},
+  ): ParsedJwt<C> {
     const decoded = JwtKit.decode<C>(token);
 
     const typ = decoded.header.typ;
-    if (typ !== "JWT" && !(typeof typ === "string" && typ.endsWith("+jwt"))) {
+    if (typ === undefined) {
+      if (options.typPresence !== "optional") {
+        throw new JwtError("Invalid token", {
+          code: "jwt_invalid_typ",
+          data: { typ },
+          title: "JWT Invalid Typ",
+          details:
+            "Header typ is absent; a typ of JWT or a <type>+jwt media type is required to parse as a JWT.",
+        });
+      }
+    } else if (typ !== "JWT" && !typ.endsWith("+jwt")) {
       throw new JwtError("Invalid token", {
         code: "jwt_invalid_typ",
         data: { typ },
         title: "JWT Invalid Typ",
-        details: "Header typ must be JWT or a <type>+jwt media type to parse as a JWT.",
+        details:
+          "Header typ is present but is not JWT or a <type>+jwt media type, so the token cannot be parsed as a JWT.",
       });
     }
 

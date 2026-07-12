@@ -7,7 +7,7 @@ import type { TokenProfile } from "../../../types/index.js";
  */
 export const introspectionProfile: TokenProfile = {
   name: "introspection",
-  typ: "application/token-introspection+jwt",
+  typ: { presence: "required", value: "application/token-introspection+jwt" },
   required: ["issuer", "audience", "issuedAt", "token_introspection"],
   forbidden: [],
   requiredWhen: [],

@@ -19,7 +19,7 @@ describe("registry", () => {
   test("registers and resolves a custom profile", () => {
     const custom: TokenProfile = {
       name: "custom_test_profile",
-      typ: "custom+jwt",
+      typ: { presence: "required", value: "custom+jwt" },
       required: ["subject"],
       forbidden: [],
       requiredWhen: [],

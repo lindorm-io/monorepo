@@ -9,6 +9,7 @@ import type {
   PopClaims,
   RarClaims,
   DelegationClaims,
+  SetClaims,
   StdClaims,
 } from "../claims/index.js";
 import type { RefinedTokenHeader } from "../header.js";
@@ -24,7 +25,9 @@ export type ParsedJwtPayload<C extends Dict = Dict> = StdClaims &
   DelegationClaims &
   OAuthClaims &
   RarClaims &
-  LindormClaims & {
+  LindormClaims &
+  // Of SetClaims only subjectId is domain-extracted (wire `sub_id`, RFC 9493)
+  Pick<SetClaims, "subjectId"> & {
     audience: Array<string>;
     authMethods: Array<string>;
     claims: C;

@@ -113,6 +113,8 @@ export const createJwtVerify = (
     if (key === "dpopProof") continue;
     // trustBoundThumbprint is a binary flag consumed by each Kit directly
     if (key === "trustBoundThumbprint") continue;
+    // typPresence governs the JOSE typ gate in JwtKit.parse directly
+    if (key === "typPresence") continue;
 
     const mapped = mapVerify(key as keyof VerifyJwtOptions);
 

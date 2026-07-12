@@ -64,6 +64,7 @@ import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { selectEncoder } from "../internal/utils/select-encoder.js";
 import { validateProfileClaims } from "../internal/utils/validate-profile-claims.js";
 import { enforceVerifyFloor } from "../internal/utils/enforce-verify-floor.js";
+import { extractDomainClaims } from "../internal/utils/extract-claims.js";
 import {
   registerProfile as registerProfileFn,
   resolveProfile,
@@ -525,16 +526,18 @@ export class Aegis implements IAegis {
       },
     );
 
-    // A profile typ stamps the header verbatim (e.g. `at+jwt`). A `null` profile
-    // typ means "none mandated": fall back to the tokenType-derived default
-    // (bare `JWT` when no tokenType), which JwtKit requires as a header floor.
+    // A profile typ value stamps the header verbatim (e.g. `at+jwt`) — for
+    // BOTH optional and required presence (presence is a verify-side knob
+    // only). Presence `none` means "none mandated": fall back to the
+    // tokenType-derived default (bare `JWT` when no tokenType), which JwtKit
+    // requires as a header floor.
     const signed = this.joseKit.signClaims(
       kryptos,
       claims,
       signContent as SignJwtContent,
       {
         ...options,
-        ...(profile.typ !== null ? { typ: profile.typ } : {}),
+        ...(profile.typ.presence !== "none" ? { typ: profile.typ.value } : {}),
       },
     );
 
@@ -749,19 +752,36 @@ export class Aegis implements IAegis {
       format: _format,
       ...rest
     } = options;
-    const parsed = await this.verifySmart<ParsedJwt>(token, rest);
+
+    // The typ-sniffing dispatcher (verifySmart) cannot classify a typ-less
+    // JWS, but profiled verify knows the format from the profile — so only a
+    // JWE goes through verifySmart (decrypt + re-verify the inner JWT); bare
+    // tokens verify as JWTs directly, with `typPresence: "optional"` so a
+    // typ-less RFC 7523 client assertion reaches the floor, which owns the
+    // profile's typ presence policy (required-presence profiles still reject
+    // an absent typ there). Direct jwt.verify callers keep the strict default.
+    const parsed = Aegis.isJwe(token)
+      ? await this.verifySmart<ParsedJwt>(token, rest)
+      : await this.jwtVerify(token, { ...rest, typPresence: "optional" });
 
     const expectedIssuer =
       options.issuer ??
       (profile.issuer === "platform" ? (this.issuer ?? undefined) : undefined);
 
+    // DOMAIN-keyed floor payload from the RAW wire claims, not parsed.payload:
+    // parseTokenPayload backfills absent sub/jti with "unknown" and nests
+    // custom claims under `claims`, which would defeat the floor's
+    // required-claims presence check. extractDomainClaims reports true wire
+    // presence and leaves non-domain claims flat in `rest`.
+    const { claims: domain, rest: custom } = extractDomainClaims(
+      parsed.decoded.payload as Dict,
+    );
+
     enforceVerifyFloor({
       audience: options.audience,
       decodedTyp: parsed.decoded.header.typ,
       expectedIssuer,
-      // DOMAIN-keyed parsed payload (issuer/audience/expiresAt), not the raw
-      // wire claims — the floor reads domain names so it is format-agnostic.
-      payload: parsed.payload as Dict,
+      payload: { ...custom, ...domain },
       profile,
     });
 

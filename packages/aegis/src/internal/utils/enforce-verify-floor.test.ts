@@ -1,6 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { JwtError } from "../../errors/index.js";
 import { accessTokenProfile } from "../profiles/definitions/access-token.js";
+import { clientAssertionProfile } from "../profiles/definitions/client-assertion.js";
+import { defaultProfile } from "../profiles/definitions/default.js";
 import { securityEventProfile } from "../profiles/definitions/security-event.js";
 import { enforceVerifyFloor } from "./enforce-verify-floor.js";
 
@@ -14,26 +16,30 @@ const base = {
   profile: accessTokenProfile,
 };
 
-// DOMAIN-keyed payload (the floor now consumes `parsed.payload`, not raw wire claims).
+// DOMAIN-keyed payload (the floor now consumes the domain view of the raw
+// claims) — compliant with the access_token profile's `required` floor.
 const validPayload = {
   issuer: ISSUER,
   audience: [RESOURCE],
   expiresAt: new Date(1704099600 * 1000),
+  issuedAt: new Date(1704096000 * 1000),
+  subject: "user-1",
+  clientId: "client-1",
+  tokenId: "token-1",
+};
+
+// Compliant client_assertion payload (iss = sub = client_id, RFC 7523).
+const assertionPayload = {
+  issuer: "client-1",
+  subject: "client-1",
+  audience: [RESOURCE],
+  expiresAt: new Date(1704099600 * 1000),
+  tokenId: "token-1",
 };
 
 describe("enforceVerifyFloor", () => {
   test("passes for a conformant token", () => {
     expect(() => enforceVerifyFloor({ ...base, payload: validPayload })).not.toThrow();
-  });
-
-  test("rejects a typ mismatch", () => {
-    expect(() =>
-      enforceVerifyFloor({
-        ...base,
-        decodedTyp: "application/logout+jwt",
-        payload: validPayload,
-      }),
-    ).toThrow(JwtError);
   });
 
   test("rejects an issuer mismatch", () => {
@@ -58,9 +64,9 @@ describe("enforceVerifyFloor", () => {
     expect(() =>
       enforceVerifyFloor({
         ...base,
-        payload: { issuer: ISSUER, audience: [RESOURCE] },
+        payload: { ...validPayload, expiresAt: undefined },
       }),
-    ).toThrow(JwtError);
+    ).toThrow(expect.objectContaining({ code: "jwt_missing_claim_exp" }));
   });
 
   test("does NOT require exp when the profile lifetime is null (SET)", () => {
@@ -70,8 +76,192 @@ describe("enforceVerifyFloor", () => {
         decodedTyp: "application/secevent+jwt",
         expectedIssuer: ISSUER,
         profile: securityEventProfile,
-        payload: { issuer: ISSUER, audience: [RESOURCE] },
+        payload: {
+          issuer: ISSUER,
+          audience: [RESOURCE],
+          issuedAt: new Date(1704096000 * 1000),
+          tokenId: "token-1",
+          subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+          events: { "urn:example:event": {} },
+        },
       }),
     ).not.toThrow();
+  });
+
+  describe("typ presence: required", () => {
+    test("rejects an absent typ", () => {
+      expect(() =>
+        enforceVerifyFloor({ ...base, decodedTyp: undefined, payload: validPayload }),
+      ).toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
+    });
+
+    test("rejects a typ mismatch", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          decodedTyp: "application/logout+jwt",
+          payload: validPayload,
+        }),
+      ).toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
+    });
+
+    test("passes an exact typ match", () => {
+      expect(() => enforceVerifyFloor({ ...base, payload: validPayload })).not.toThrow();
+    });
+  });
+
+  describe("typ presence: optional (client_assertion)", () => {
+    const assertionBase = {
+      audience: RESOURCE,
+      expectedIssuer: "client-1",
+      profile: clientAssertionProfile,
+    };
+
+    test("passes an absent typ (RFC 7523 stock libraries omit it)", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...assertionBase,
+          decodedTyp: undefined,
+          payload: assertionPayload,
+        }),
+      ).not.toThrow();
+    });
+
+    test("rejects a present-but-wrong typ (RFC 8725 explicit typing)", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...assertionBase,
+          decodedTyp: "application/at+jwt",
+          payload: assertionPayload,
+        }),
+      ).toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
+    });
+
+    test("passes a present-and-correct typ", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...assertionBase,
+          decodedTyp: "JWT",
+          payload: assertionPayload,
+        }),
+      ).not.toThrow();
+    });
+  });
+
+  describe("typ presence: none (default profile)", () => {
+    const nonePayload = {
+      issuer: ISSUER,
+      audience: [RESOURCE],
+      subject: "user-1",
+      expiresAt: new Date(1704099600 * 1000),
+    };
+
+    const noneBase = {
+      audience: RESOURCE,
+      expectedIssuer: undefined,
+      profile: defaultProfile,
+      payload: nonePayload,
+    };
+
+    test("passes an absent typ", () => {
+      expect(() =>
+        enforceVerifyFloor({ ...noneBase, decodedTyp: undefined }),
+      ).not.toThrow();
+    });
+
+    test("passes any present typ", () => {
+      expect(() => enforceVerifyFloor({ ...noneBase, decodedTyp: "JWT" })).not.toThrow();
+    });
+
+    test("still enforces a COSE expectedTyp override as required", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...noneBase,
+          decodedTyp: undefined,
+          expectedTyp: "application/cwt",
+        }),
+      ).toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
+
+      expect(() =>
+        enforceVerifyFloor({
+          ...noneBase,
+          decodedTyp: "application/cwt",
+          expectedTyp: "application/cwt",
+        }),
+      ).not.toThrow();
+    });
+  });
+
+  describe("required claims", () => {
+    test("rejects a token missing required claims, listing ALL missing keys", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          payload: { ...validPayload, tokenId: undefined, clientId: undefined },
+        }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "jwt_required_claims_missing",
+          data: { missing: ["clientId", "tokenId"] },
+        }),
+      );
+    });
+
+    test("counts an empty string as missing", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          payload: { ...validPayload, tokenId: "" },
+        }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "jwt_required_claims_missing",
+          data: { missing: ["tokenId"] },
+        }),
+      );
+    });
+
+    test("counts null as missing", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          ...base,
+          payload: { ...validPayload, subject: null },
+        }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "jwt_required_claims_missing",
+          data: { missing: ["subject"] },
+        }),
+      );
+    });
+
+    test("passes a compliant client assertion (jti present)", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          audience: RESOURCE,
+          decodedTyp: undefined,
+          expectedIssuer: "client-1",
+          profile: clientAssertionProfile,
+          payload: assertionPayload,
+        }),
+      ).not.toThrow();
+    });
+
+    test("rejects a client assertion without jti", () => {
+      expect(() =>
+        enforceVerifyFloor({
+          audience: RESOURCE,
+          decodedTyp: undefined,
+          expectedIssuer: "client-1",
+          profile: clientAssertionProfile,
+          payload: { ...assertionPayload, tokenId: undefined },
+        }),
+      ).toThrow(
+        expect.objectContaining({
+          code: "jwt_required_claims_missing",
+          data: { missing: ["tokenId"] },
+        }),
+      );
+    });
   });
 });

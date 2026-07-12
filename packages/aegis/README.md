@@ -200,6 +200,14 @@ kit.assert(data, signature); // throws on mismatch
 const formatted = kit.format(signature); // string
 ```
 
+## Token profiles
+
+`aegis.mint(profile, content)` and `aegis.verify(profile, token, options)` apply a named token profile (`access_token`, `id_token`, `client_assertion`, …) on top of the standard JOSE operations.
+
+**`typ` presence.** Each profile declares a `typ` policy: `required` (the header must carry exactly the profile's typ), `optional` (an absent typ is accepted; a present typ must match exactly), or `none` (no typ mandated). Mint always stamps the profile's typ value — presence only governs verify. `client_assertion` is `optional`: RFC 7523 does not require a typ on client assertions and stock OAuth libraries omit it.
+
+**Required claims on verify.** Profiled verify enforces the profile's `required` claims (the same domain-keyed names enforced at mint) — a token missing one is rejected with `jwt_required_claims_missing`. Missing means absent, `null`, or an empty string.
+
 ## COSE / CWT
 
 Every token profile can be issued as a CBOR Web Token (CWT, RFC 8392) instead of a JWT by passing `format: "cose"` — the same profile, the same domain claims, the same validation floor, only the wire encoding differs. The token is returned as a base64url string.

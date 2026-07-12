@@ -11,7 +11,7 @@ import type { TokenProfile } from "../../../types/index.js";
  */
 export const securityEventProfile: TokenProfile = {
   name: "security_event",
-  typ: "application/secevent+jwt",
+  typ: { presence: "required", value: "application/secevent+jwt" },
   required: ["issuer", "audience", "issuedAt", "tokenId", "subjectId", "events"],
   forbidden: ["subject", "expiresAt", "nonce"],
   requiredWhen: [],

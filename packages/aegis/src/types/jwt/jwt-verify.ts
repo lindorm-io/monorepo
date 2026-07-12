@@ -35,4 +35,13 @@ export type VerifyJwtOptions = JwtClaimMatchers & {
    */
   trustBoundThumbprint?: boolean;
   tokenType?: TokenType;
+  /**
+   * JOSE `typ` header presence policy at parse time (default `"required"`).
+   * `"required"` rejects a typ-less token (`jwt_invalid_typ`) — the RFC 8725
+   * explicit-typing defense direct callers rely on. `"optional"` accepts an
+   * absent typ; profiled verify sets this, because the profile floor owns the
+   * real presence policy (required-presence profiles still reject an absent
+   * typ at the floor). Vocabulary matches TokenProfileTyp.
+   */
+  typPresence?: "required" | "optional";
 };

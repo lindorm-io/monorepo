@@ -306,7 +306,7 @@ describe("Aegis", () => {
   test("registerProfile registers a custom profile usable by sign", async () => {
     aegis.registerProfile({
       name: "custom_aegis_profile",
-      typ: "custom+jwt",
+      typ: { presence: "required", value: "custom+jwt" },
       required: ["subject"],
       forbidden: [],
       requiredWhen: [],
