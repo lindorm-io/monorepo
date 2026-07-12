@@ -295,7 +295,7 @@ export type MetaRelation = {
 export type MetaDriver = "memory" | "mongo" | "mysql" | "postgres" | "redis" | "sqlite";
 
 export type MetaSchema = {
-  schema: z.ZodObject<IEntity>;
+  schema: z.ZodObject<any>;
 };
 
 export type MetaRelationId = {
@@ -359,7 +359,7 @@ export type EntityMetadata<
   relationIds: Array<MetaRelationId>;
   relationCounts: Array<MetaRelationCount>;
   relations: Array<MetaRelation>;
-  schemas: Array<z.ZodObject<IEntity>>;
+  schemas: Array<z.ZodObject<any>>;
   scopeKeys: Array<string>;
   uniques: Array<MetaUnique>;
   versionKeys: Array<string>;

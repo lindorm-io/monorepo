@@ -51,6 +51,18 @@ const validateModifierFieldTypes = (targetName: string, field: MetaField): void 
     );
   }
 
+  if (field.schema && (!type || !TYPED_JSON_TYPES.includes(type))) {
+    throw new EntityMetadataError(
+      `@Schema on "${field.key}" requires a "json", "object", or "array" field`,
+      {
+        code: "invalid_schema_type",
+        title: "Invalid Schema Type",
+        details: `Field-level @Schema on "${field.key}" requires the @Field type to be "json", "object", or "array", but it is "${type ?? "unset"}" — change the field type or remove @Schema (class-level @Schema covers scalar fields).`,
+        debug: { target: targetName, field: field.key, actualType: type },
+      },
+    );
+  }
+
   if (type === "enum" && !field.enum) {
     throw new EntityMetadataError(
       `Enum type on "${field.key}" requires an @Enum decorator with values`,

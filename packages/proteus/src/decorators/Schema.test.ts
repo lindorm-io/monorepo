@@ -9,11 +9,15 @@ import { describe, expect, test } from "vitest";
 
 const nameSchema = z.object({
   name: z.string().min(1).max(100),
-}) as any;
+});
 
 const emailSchema = z.object({
   email: z.string().email(),
-}) as any;
+});
+
+const settingsSchema = z.object({
+  theme: z.enum(["light", "dark"]),
+});
 
 @Entity({ name: "SchemaDecorated" })
 @Schema(nameSchema)
@@ -37,6 +41,32 @@ class SchemaMultiple {
   email!: string;
 }
 
+@Entity({ name: "SchemaFieldLevel" })
+class SchemaFieldLevel {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Schema(settingsSchema)
+  @Field("json")
+  settings!: { theme: string };
+
+  @Schema(z.array(z.string()))
+  @Field("array")
+  tags!: Array<string>;
+}
+
+@Entity({ name: "SchemaBothKinds" })
+@Schema(nameSchema)
+class SchemaBothKinds {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  name!: string;
+
+  @Schema(settingsSchema)
+  @Field("object")
+  settings!: { theme: string };
+}
+
 describe("Schema", () => {
   test("should register schema decorator", () => {
     const meta = getEntityMetadata(SchemaDecorated);
@@ -49,5 +79,65 @@ describe("Schema", () => {
     expect(meta.schemas.length).toBe(2);
     expect(meta.schemas).toContain(nameSchema);
     expect(meta.schemas).toContain(emailSchema);
+  });
+
+  test("should register field-level schemas on field metadata", () => {
+    const meta = getEntityMetadata(SchemaFieldLevel);
+    const settings = meta.fields.find((f) => f.key === "settings");
+    const tags = meta.fields.find((f) => f.key === "tags");
+    expect(settings?.schema).toBe(settingsSchema);
+    expect(tags?.schema).toBeInstanceOf(z.ZodArray);
+    expect(meta.schemas.length).toBe(0);
+  });
+
+  test("should register class-level and field-level schemas together", () => {
+    const meta = getEntityMetadata(SchemaBothKinds);
+    expect(meta.schemas).toEqual([nameSchema]);
+    expect(meta.fields.find((f) => f.key === "settings")?.schema).toBe(settingsSchema);
+  });
+
+  test("should throw for field-level schema on a non-json field type", () => {
+    @Entity({ name: "SchemaInvalidFieldType" })
+    class SchemaInvalidFieldType {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Schema(z.string())
+      @Field("string")
+      name!: string;
+    }
+
+    expect(() => getEntityMetadata(SchemaInvalidFieldType)).toThrow(
+      '@Schema on "name" requires a "json", "object", or "array" field',
+    );
+  });
+
+  test("should throw for duplicate field-level schemas on one property", () => {
+    @Entity({ name: "SchemaDuplicateField" })
+    class SchemaDuplicateField {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Schema(settingsSchema)
+      @Schema(settingsSchema)
+      @Field("json")
+      settings!: { theme: string };
+    }
+
+    expect(() => getEntityMetadata(SchemaDuplicateField)).toThrow(
+      'Duplicate @Schema on property "settings"',
+    );
+  });
+
+  test("should throw for field-level schema without a field decorator", () => {
+    @Entity({ name: "SchemaMissingField" })
+    class SchemaMissingField {
+      @PrimaryKeyField() @Generated("uuid") id!: string;
+
+      @Schema(settingsSchema)
+      settings!: { theme: string };
+    }
+
+    expect(() => getEntityMetadata(SchemaMissingField)).toThrow(
+      '@Schema on property "settings" requires a @Field decorator',
+    );
   });
 });

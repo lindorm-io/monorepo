@@ -66,7 +66,7 @@ class ValidateEntityEnum {
   status!: Status;
 }
 
-const nameSchema = z.object({ name: z.string().min(1) }) as any;
+const nameSchema = z.object({ name: z.string().min(1) });
 const validateSchemaCb = vi.fn();
 
 @Entity({ name: "ValidateEntityWithSchema" })
@@ -396,5 +396,206 @@ describe("defaultValidateEntity — @Embedded nullable (H1)", () => {
         defaultValidateEntity(H1EmbeddedNullableEntity, entity as any),
       ).toThrow(/Unrecognized key/);
     });
+  });
+});
+
+// ─── Field-level @Schema validation ──────────────────────────────────────────
+
+const settingsSchema = z.object({
+  theme: z.enum(["light", "dark"]),
+  fontSize: z.number().int().min(8),
+});
+
+@Entity({ name: "FieldSchemaJson" })
+class FieldSchemaJson {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Schema(settingsSchema)
+  @Field("json")
+  settings!: { theme: string; fontSize: number };
+}
+
+@Entity({ name: "FieldSchemaNullable" })
+class FieldSchemaNullable {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Schema(settingsSchema)
+  @Nullable()
+  @Field("json")
+  settings!: { theme: string; fontSize: number } | null;
+}
+
+@Entity({ name: "FieldSchemaArray" })
+class FieldSchemaArray {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Schema(z.array(z.object({ label: z.string().min(1), weight: z.number() })))
+  @Field("array")
+  entries!: Array<{ label: string; weight: number }>;
+}
+
+@Entity({ name: "FieldSchemaObject" })
+class FieldSchemaObject {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Schema(settingsSchema)
+  @Field("object")
+  settings!: { theme: string; fontSize: number };
+}
+
+@Embeddable()
+class FieldSchemaEmbeddablePrefs {
+  @Field("string")
+  locale!: string;
+
+  @Schema(settingsSchema)
+  @Field("json")
+  settings!: { theme: string; fontSize: number };
+}
+
+@Entity({ name: "FieldSchemaEmbedded" })
+class FieldSchemaEmbedded {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Embedded(() => FieldSchemaEmbeddablePrefs)
+  prefs!: FieldSchemaEmbeddablePrefs | null;
+}
+
+@Entity({ name: "FieldSchemaEmbeddedList" })
+class FieldSchemaEmbeddedList {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @EmbeddedList(() => FieldSchemaEmbeddablePrefs)
+  prefs!: Array<FieldSchemaEmbeddablePrefs>;
+}
+
+@Entity({ name: "FieldSchemaBothKinds" })
+@Schema(
+  z
+    .looseObject({ start: z.number(), end: z.number() })
+    .refine((v) => v.start <= v.end, { error: "start must be <= end" }),
+)
+class FieldSchemaBothKinds {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("integer")
+  start!: number;
+
+  @Field("integer")
+  end!: number;
+
+  @Schema(settingsSchema)
+  @Field("json")
+  settings!: { theme: string; fontSize: number };
+}
+
+describe("defaultValidateEntity — field-level @Schema", () => {
+  const validUuid = "550e8400-e29b-41d4-a716-446655440000";
+  const validSettings = { theme: "dark", fontSize: 12 };
+
+  test("should pass for valid json field value", () => {
+    const entity = { id: validUuid, settings: validSettings };
+    expect(() => defaultValidateEntity(FieldSchemaJson, entity as any)).not.toThrow();
+  });
+
+  test("should throw for invalid json field value and surface the zod issue", () => {
+    const entity = { id: validUuid, settings: { theme: "neon", fontSize: 12 } };
+    expect(() => defaultValidateEntity(FieldSchemaJson, entity as any)).toThrow(/theme/);
+  });
+
+  test("should enforce nested bounds from the field schema", () => {
+    // the default loose object would accept any fontSize — the field schema won't
+    const entity = { id: validUuid, settings: { ...validSettings, fontSize: 6 } };
+    expect(() => defaultValidateEntity(FieldSchemaJson, entity as any)).toThrow(
+      /fontSize/,
+    );
+  });
+
+  test("should compose with @Nullable — null passes", () => {
+    const entity = { id: validUuid, settings: null };
+    expect(() => defaultValidateEntity(FieldSchemaNullable, entity as any)).not.toThrow();
+  });
+
+  test("should compose with @Nullable — undefined passes", () => {
+    const entity = { id: validUuid };
+    expect(() => defaultValidateEntity(FieldSchemaNullable, entity as any)).not.toThrow();
+  });
+
+  test("should compose with @Nullable — present but invalid value throws", () => {
+    const entity = { id: validUuid, settings: { theme: "dark", fontSize: 4 } };
+    expect(() => defaultValidateEntity(FieldSchemaNullable, entity as any)).toThrow(
+      /fontSize/,
+    );
+  });
+
+  test("should pass for valid array field elements", () => {
+    const entity = { id: validUuid, entries: [{ label: "a", weight: 1 }] };
+    expect(() => defaultValidateEntity(FieldSchemaArray, entity as any)).not.toThrow();
+  });
+
+  test("should throw for invalid array field element", () => {
+    const entity = { id: validUuid, entries: [{ label: "", weight: 1 }] };
+    expect(() => defaultValidateEntity(FieldSchemaArray, entity as any)).toThrow(/label/);
+  });
+
+  test("should pass and throw for object field", () => {
+    const valid = { id: validUuid, settings: validSettings };
+    expect(() => defaultValidateEntity(FieldSchemaObject, valid as any)).not.toThrow();
+
+    const invalid = { id: validUuid, settings: { theme: "dark", fontSize: "big" } };
+    expect(() => defaultValidateEntity(FieldSchemaObject, invalid as any)).toThrow(
+      /fontSize/,
+    );
+  });
+
+  test("should enforce field schema inside an @Embedded entity", () => {
+    const valid = { id: validUuid, prefs: { locale: "sv", settings: validSettings } };
+    expect(() => defaultValidateEntity(FieldSchemaEmbedded, valid as any)).not.toThrow();
+
+    const invalid = {
+      id: validUuid,
+      prefs: { locale: "sv", settings: { theme: "neon", fontSize: 12 } },
+    };
+    expect(() => defaultValidateEntity(FieldSchemaEmbedded, invalid as any)).toThrow(
+      /theme/,
+    );
+  });
+
+  test("should enforce field schema inside @EmbeddedList elements", () => {
+    const valid = {
+      id: validUuid,
+      prefs: [{ locale: "sv", settings: validSettings }],
+    };
+    expect(() =>
+      defaultValidateEntity(FieldSchemaEmbeddedList, valid as any),
+    ).not.toThrow();
+
+    const invalid = {
+      id: validUuid,
+      prefs: [{ locale: "sv", settings: { theme: "dark", fontSize: 4 } }],
+    };
+    expect(() => defaultValidateEntity(FieldSchemaEmbeddedList, invalid as any)).toThrow(
+      /fontSize/,
+    );
+  });
+
+  test("should compose class-level and field-level schemas on one entity", () => {
+    const valid = { id: validUuid, start: 1, end: 2, settings: validSettings };
+    expect(() => defaultValidateEntity(FieldSchemaBothKinds, valid as any)).not.toThrow();
+
+    const fieldInvalid = {
+      id: validUuid,
+      start: 1,
+      end: 2,
+      settings: { theme: "neon", fontSize: 12 },
+    };
+    expect(() =>
+      defaultValidateEntity(FieldSchemaBothKinds, fieldInvalid as any),
+    ).toThrow(/theme/);
+
+    const classInvalid = { id: validUuid, start: 3, end: 2, settings: validSettings };
+    expect(() =>
+      defaultValidateEntity(FieldSchemaBothKinds, classInvalid as any),
+    ).toThrow(/start must be <= end/);
   });
 });

@@ -1,6 +1,5 @@
 import type { Dict } from "@lindorm/types";
 import type { z } from "zod";
-import type { IEntity } from "../../../interfaces/index.js";
 import type { DiscriminatorValue, InheritanceStrategy } from "./inheritance.js";
 import type {
   EmbeddedListLoadingScope,
@@ -155,5 +154,5 @@ export type StagedMetadata = {
   filters?: Array<MetaFilter>;
   hooks?: Array<MetaHook>;
   namespace?: string;
-  schemas?: Array<z.ZodObject<IEntity>>;
+  schemas?: Array<z.ZodObject<any>>;
 };

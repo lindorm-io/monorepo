@@ -137,34 +137,11 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
       continue;
     }
 
-    let validator = getValidator(field);
+    // A field-level @Schema replaces the default validator wholesale (bounds
+    // belong inside the custom schema); @Nullable / db-assigned still compose.
+    let validator = field.schema ?? getValidator(field);
     if (!validator) continue;
-    if (field.type === "decimal") {
-      validator = applyDecimalMinMax(validator, field);
-    }
-    if (field.type && fieldWithMinMax.includes(field.type) && field.min != null) {
-      validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).min(
-        field.min,
-      );
-    }
-    if (field.type && fieldWithMinMax.includes(field.type) && field.max != null) {
-      validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).max(
-        field.max,
-      );
-    }
-    if (field.nullable || dbAssignedKeys.has(field.key)) {
-      validator = validator.nullish();
-    }
-    validators[field.key] = validator;
-  }
-
-  // Build nested validators for embedded objects
-  for (const [parentKey, fields] of embeddedGroups) {
-    const nestedShape: Record<string, z.ZodType> = {};
-    for (const field of fields) {
-      const nestedKey = field.key.split(".")[1];
-      let validator = getValidator(field);
-      if (!validator) continue;
+    if (field.schema == null) {
       if (field.type === "decimal") {
         validator = applyDecimalMinMax(validator, field);
       }
@@ -177,6 +154,36 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
         validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).max(
           field.max,
         );
+      }
+    }
+    if (field.nullable || dbAssignedKeys.has(field.key)) {
+      validator = validator.nullish();
+    }
+    validators[field.key] = validator;
+  }
+
+  // Build nested validators for embedded objects
+  for (const [parentKey, fields] of embeddedGroups) {
+    const nestedShape: Record<string, z.ZodType> = {};
+    for (const field of fields) {
+      const nestedKey = field.key.split(".")[1];
+      // Field-level @Schema replaces the default validator here too
+      let validator = field.schema ?? getValidator(field);
+      if (!validator) continue;
+      if (field.schema == null) {
+        if (field.type === "decimal") {
+          validator = applyDecimalMinMax(validator, field);
+        }
+        if (field.type && fieldWithMinMax.includes(field.type) && field.min != null) {
+          validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).min(
+            field.min,
+          );
+        }
+        if (field.type && fieldWithMinMax.includes(field.type) && field.max != null) {
+          validator = (validator as z.ZodArray<any> | z.ZodNumber | z.ZodString).max(
+            field.max,
+          );
+        }
       }
       if (field.nullable) {
         validator = validator.nullish();
@@ -211,7 +218,8 @@ const buildSchema = (target: Constructor<any>): z.ZodObject<any> => {
       // Embeddable element type: array of objects with typed fields
       const elementShape: Record<string, z.ZodType> = {};
       for (const field of el.elementFields) {
-        let validator = getValidator(field);
+        // Field-level @Schema replaces the default validator here too
+        let validator = field.schema ?? getValidator(field);
         if (!validator) continue;
         if (field.nullable) {
           validator = validator.nullish();

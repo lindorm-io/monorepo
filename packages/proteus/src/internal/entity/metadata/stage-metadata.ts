@@ -1,5 +1,4 @@
 import type { z } from "zod";
-import type { IEntity } from "../../../interfaces/index.js";
 import type { DiscriminatorValue, InheritanceStrategy } from "../types/inheritance.js";
 import type {
   MetaCheck,
@@ -198,7 +197,7 @@ export const stageNamespace = (
 
 export const stageSchema = (
   metadata: DecoratorMetadataObject,
-  schema: z.ZodObject<IEntity>,
+  schema: z.ZodObject<any>,
 ): void => {
   ensureOwnArray(metadata, "schemas").push(schema);
 };

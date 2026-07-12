@@ -564,7 +564,10 @@ class Invoice {
 
 #### `@Schema`
 
-Attaches a Zod schema for runtime validation. Evaluated automatically before every insert/update and manually via `repository.validate()`.
+Attaches a Zod schema for runtime validation. Evaluated automatically before every insert/update and manually via `repository.validate()`. Works at two levels:
+
+- **Class-level** — cross-field rules parsed against the whole entity.
+- **Field-level** — replaces the default loose-object validator for a `json`, `object`, or `array` field. Composes with `@Nullable`. Orthogonal to `@TypedJson` (serialization fidelity vs validation).
 
 ```typescript
 import { z } from "zod";
@@ -573,6 +576,10 @@ import { z } from "zod";
 @Entity()
 class User {
   /* ... */
+
+  @Schema(z.object({ theme: z.enum(["light", "dark"]) }))
+  @Field("json")
+  settings!: { theme: string };
 }
 ```
 
