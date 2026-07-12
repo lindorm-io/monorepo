@@ -32,6 +32,7 @@ import type {
   KryptosGenerateRsaEnc,
   KryptosGenerateRsaSig,
   KryptosLike,
+  KryptosOptions,
   KryptosType,
 } from "../types/index.js";
 import type { KryptosGenerate } from "../internal/types/generate.js";
@@ -59,7 +60,7 @@ type From = {
   db(options: KryptosDB): IKryptos;
   der(options: KryptosFromBuffer): IKryptos;
   derive(options: KryptosFromDerive): IKryptos;
-  jwk(options: KryptosFromJwk): IKryptos;
+  jwk(options: KryptosFromJwk, isExternal?: boolean): IKryptos;
   pem(options: KryptosFromString): IKryptos;
   utf(options: KryptosFromString): IKryptos;
 };
@@ -215,12 +216,13 @@ export class KryptosKit {
     // env payload.
     const first = payload[0];
 
+    // Env-provided keys are the service's own by definition — never external.
     if (first === 0x7b) {
-      return KryptosKit.fromJwk(JSON.parse(payload.toString("utf8")));
+      return KryptosKit.fromJwk(JSON.parse(payload.toString("utf8")), false);
     }
 
     if (first >= 0xa0 && first <= 0xbb) {
-      return KryptosKit.fromJwk(decodeCborEnv(payload));
+      return KryptosKit.fromJwk(decodeCborEnv(payload), false);
     }
 
     throw new KryptosError("Unrecognized kryptos env payload", {
@@ -276,8 +278,12 @@ export class KryptosKit {
     return KryptosKit.fromKryptos("derive", options);
   }
 
-  private static fromJwk(options: KryptosFromJwk): IKryptos {
-    const kryptos = KryptosKit.fromKryptos("jwk", options);
+  // Ownership is decided by the IMPORT PATH, never by the JWK payload — a
+  // remote JWKS could otherwise plant `isExternal: false` and masquerade as an
+  // own key. Direct JWK imports default to external; `env.import` passes false
+  // (env-provided keys are the service's own by definition).
+  private static fromJwk(options: KryptosFromJwk, isExternal = true): IKryptos {
+    const kryptos = KryptosKit.fromKryptos("jwk", options, { isExternal });
 
     if (options.x5c && options.x5c.length > 0) {
       const incomingS256 = options["x5t#S256"];
@@ -305,8 +311,12 @@ export class KryptosKit {
     return KryptosKit.fromKryptos("utf", options);
   }
 
-  private static fromKryptos(format: KryptosFormat, arg: KryptosFrom): Kryptos {
-    const options = fromOptions(format, arg);
+  private static fromKryptos(
+    format: KryptosFormat,
+    arg: KryptosFrom,
+    overrides?: Partial<Pick<KryptosOptions, "isExternal">>,
+  ): Kryptos {
+    const options = { ...fromOptions(format, arg), ...overrides };
 
     if (!options.algorithm) {
       throw new KryptosError("Algorithm is required", {

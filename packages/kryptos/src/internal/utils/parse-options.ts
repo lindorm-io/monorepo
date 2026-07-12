@@ -37,6 +37,9 @@ export const parseJwkOptions = (
     expiresAt: jwk.exp ? new Date(jwk.exp * 1000) : undefined,
     // Present only in private JWKs; legacy/public JWKs default to not-hidden.
     hidden: jwk.hidden ?? false,
+    // Deliberately NOT read from the payload (a remote JWKS could plant
+    // `isExternal: false`). Ownership is decided by the import path — see
+    // KryptosKit.fromJwk, which overrides this default for own-key paths.
     isExternal: true,
     issuer: jwk.iss,
     jwksUri: jwk.jku,
