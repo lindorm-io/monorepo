@@ -1,0 +1,10 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`resolveFkColumnType (mysql) > resolves the coherent type per PK-capable field type 1`] = `
+{
+  "enum": "enum('active','inactive')",
+  "integer": "INT",
+  "uuid": "CHAR(36)",
+  "varchar": "VARCHAR(64)",
+}
+`;

@@ -1,14 +1,18 @@
 import type { Constructor } from "@lindorm/types";
-import { ProteusError } from "../../../../errors/index.js";
+import { NotSupportedError, ProteusError } from "../../../../errors/index.js";
 import type { IEntity } from "../../../../interfaces/index.js";
 import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import { buildEnumColumnType } from "./build-enum-column-type.js";
+import { mapFieldTypeMysql } from "./map-field-type-mysql.js";
 
 /**
- * Resolves the MySQL column type for a foreign key column by looking up the
- * referenced entity's primary key field type.
- *
- * MySQL FK columns use CHAR(36) for uuid PKs, VARCHAR(255) for string PKs,
- * and the appropriate integer type for integer PKs.
+ * Resolves the MySQL column type for a foreign key column from the referenced
+ * entity's primary-key field — through the SAME mappers as the PK column itself
+ * (`buildEnumColumnType` / `mapFieldTypeMysql`), so FK and referenced PK column
+ * types agree by construction. InnoDB rejects foreign keys between mismatched
+ * types, and cannot place a key on TEXT/BLOB/JSON columns at all — a referenced
+ * PK mapping to one of those (e.g. a string PK without `max`) throws with a
+ * pointer to declare `max` on the primary-key field.
  */
 export const resolveFkColumnType = (
   foreignConstructor: () => Constructor<IEntity>,
@@ -31,25 +35,20 @@ export const resolveFkColumnType = (
     );
   }
 
-  switch (pkField.type) {
-    case "smallint":
-      return "SMALLINT";
-    case "integer":
-      return "INT";
-    case "bigint":
-      return "BIGINT";
-    case "uuid":
-      return "CHAR(36)";
-    case "string":
-    case "varchar":
-      return `VARCHAR(${pkField.max ?? 255})`;
-    case "text":
-      return "TEXT";
-    case "email":
-      return "VARCHAR(320)";
-    case "url":
-      return "TEXT";
-    default:
-      return "VARCHAR(255)";
+  const type = buildEnumColumnType(pkField) ?? mapFieldTypeMysql(pkField);
+
+  if (["TEXT", "BLOB", "JSON"].includes(type)) {
+    throw new NotSupportedError(
+      `Primary key "${foreignPkKey}" on ${foreignMeta.entity.name} maps to ${type} — MySQL cannot reference it with a foreign key`,
+      {
+        code: "unsupported_column_type",
+        title: "Unsupported Column Type",
+        details:
+          "InnoDB cannot place a key on TEXT, BLOB, or JSON columns. Declare a max length on the referenced primary-key field (e.g. a string field needs `max`) so it maps to VARCHAR.",
+        data: { column: foreignPkKey, entity: foreignMeta.entity.name, type },
+      },
+    );
   }
+
+  return type;
 };
