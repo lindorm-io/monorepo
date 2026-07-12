@@ -93,7 +93,9 @@ export const mapContentToClaims = <C extends Dict = Dict>(
     aal: isFinite(content.authenticatorAssuranceLevel)
       ? content.authenticatorAssuranceLevel
       : undefined,
-    acr: isString(content.authContextClass) ? content.authContextClass : undefined,
+    acr: isString(content.authContextClassReference)
+      ? content.authContextClassReference
+      : undefined,
     act: isObject(content.act) ? actClaimToWire(content.act) : undefined,
     afr: isArray(content.authFactor) ? content.authFactor : undefined,
     amr: isArray(content.authMethods) ? content.authMethods : undefined,

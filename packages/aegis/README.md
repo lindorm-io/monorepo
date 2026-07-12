@@ -278,7 +278,7 @@ const uri = CoseKit.thumbprintUri(kryptos); // urn:ietf:params:oauth:ckt:sha-256
   nonce?: string;
   notBefore?: Date;
   authTime?: Date;
-  authContextClass?: string;
+  authContextClassReference?: string;
   authFactor?: string[];
   authMethods?: string[];
   authorizedParty?: string;

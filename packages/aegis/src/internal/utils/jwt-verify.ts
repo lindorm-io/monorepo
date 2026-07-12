@@ -14,7 +14,7 @@ const mapVerify = (key: keyof VerifyJwtOptions): keyof JwtClaims => {
       return "aud";
     case "authCode":
       return "c_hash";
-    case "authContextClass":
+    case "authContextClassReference":
       return "acr";
     case "authFactor":
       return "afr";

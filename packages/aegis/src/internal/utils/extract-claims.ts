@@ -51,7 +51,7 @@ const FIELD_KEYS: Record<string, ReadonlyArray<string>> = {
 
   // OidcClaims
   accessTokenHash: ["accessTokenHash", "at_hash"],
-  authContextClass: ["authContextClass", "acr"],
+  authContextClassReference: ["authContextClassReference", "acr"],
   authMethods: ["authMethods", "amr"],
   authorizedParty: ["authorizedParty", "azp"],
   authTime: ["authTime", "auth_time"],
@@ -196,7 +196,7 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
   const tokenId = consume(FIELD_KEYS.tokenId);
 
   const accessTokenHash = consume(FIELD_KEYS.accessTokenHash);
-  const authContextClass = consume(FIELD_KEYS.authContextClass);
+  const authContextClassReference = consume(FIELD_KEYS.authContextClassReference);
   const authMethods = consume(FIELD_KEYS.authMethods);
   const authorizedParty = consume(FIELD_KEYS.authorizedParty);
   const authTime = consume(FIELD_KEYS.authTime);
@@ -242,7 +242,9 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
 
     // OidcClaims
     accessTokenHash: isString(accessTokenHash) ? accessTokenHash : undefined,
-    authContextClass: isString(authContextClass) ? authContextClass : undefined,
+    authContextClassReference: isString(authContextClassReference)
+      ? authContextClassReference
+      : undefined,
     authMethods: isArray(authMethods) ? (authMethods as Array<string>) : undefined,
     authorizedParty: isString(authorizedParty) ? authorizedParty : undefined,
     authTime: toDate(authTime),

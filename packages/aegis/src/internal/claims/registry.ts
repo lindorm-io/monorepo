@@ -89,7 +89,7 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
   //     string-keyed in CBOR (interoperable; the string key is the smaller
   //     encoding). Includes the standards-based assurance levels
   //     (ISO/IEC 29115 / NIST SP 800-63A/B/C) and the short lindorm hints.
-  { domain: "authContextClass", jose: "acr", cose: null, value: "text" },
+  { domain: "authContextClassReference", jose: "acr", cose: null, value: "text" },
   { domain: "authMethods", jose: "amr", cose: null, value: "array" },
   { domain: "authorizedParty", jose: "azp", cose: null, value: "text" },
   { domain: "vectorOfTrust", jose: "vot", cose: null, value: "text" },

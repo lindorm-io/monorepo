@@ -4,7 +4,7 @@ export type JwtClaimMatchers = {
   accessToken?: string;
   audience?: Array<string> | string | PredicateOperator<any>;
   authCode?: string;
-  authContextClass?: string | PredicateOperator<string>;
+  authContextClassReference?: string | PredicateOperator<string>;
   authFactor?: string | PredicateOperator<string>;
   authMethods?: Array<string> | string | PredicateOperator<any>;
   authorizedParty?: string | PredicateOperator<string>;

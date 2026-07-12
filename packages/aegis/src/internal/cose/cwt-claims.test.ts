@@ -163,7 +163,7 @@ describe("CWT claims round-trip (domain -> CBOR -> domain)", () => {
     permissions: ["read", "write"],
     tenantId: "tenant-7",
     levelOfAssurance: 3, // short -> string-keyed
-    authContextClass: "urn:acr:high", // acr, short -> string-keyed
+    authContextClassReference: "urn:acr:high", // acr, short -> string-keyed
   };
 
   test("reclassified claims round-trip on-platform (integer labels)", () => {
