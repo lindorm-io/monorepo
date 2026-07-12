@@ -140,4 +140,30 @@ describe("Schema", () => {
       '@Schema on property "settings" requires a @Field decorator',
     );
   });
+
+  test("should throw at decoration time for a class-level non-object schema", () => {
+    expect(() => {
+      // A JS consumer can pass any schema — the overload types don't protect them
+      @Schema(z.array(z.string()) as any)
+      @Entity({ name: "SchemaClassArray" })
+      class SchemaClassArray {
+        @PrimaryKeyField() @Generated("uuid") id!: string;
+      }
+      return SchemaClassArray;
+    }).toThrow('Class-level @Schema on "SchemaClassArray" requires a Zod object schema');
+  });
+
+  test("should accept a class-level strict/loose object schema", () => {
+    expect(() => {
+      @Schema(z.strictObject({ name: z.string() }))
+      @Entity({ name: "SchemaClassStrict" })
+      class SchemaClassStrict {
+        @PrimaryKeyField() @Generated("uuid") id!: string;
+
+        @Field("string")
+        name!: string;
+      }
+      return getEntityMetadata(SchemaClassStrict);
+    }).not.toThrow();
+  });
 });

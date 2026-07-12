@@ -1,8 +1,15 @@
 import type { z } from "zod";
+import { EntityMetadataError } from "../internal/entity/errors/EntityMetadataError.js";
 import {
   stageFieldModifier,
   stageSchema,
 } from "../internal/entity/metadata/stage-metadata.js";
+
+// Duck-check instead of `instanceof z.ZodObject` — safe across duplicate zod
+// installs. Zod 4 exposes the schema kind at `def.type` ("object" covers
+// z.object / z.strictObject / z.looseObject).
+const isZodObjectSchema = (schema: z.ZodType): boolean =>
+  (schema as any)?.def?.type === "object";
 
 /**
  * Attach a Zod schema for runtime validation. Schemas are evaluated during
@@ -30,6 +37,19 @@ export function Schema(schema: z.ZodType): any {
         schema,
       });
     } else if (context.kind === "class") {
+      // The class branch parses the WHOLE entity, so anything but an object
+      // schema is a mistake — fail at decoration time, not at first validate
+      if (!isZodObjectSchema(schema)) {
+        throw new EntityMetadataError(
+          `Class-level @Schema on "${String(context.name)}" requires a Zod object schema`,
+          {
+            code: "invalid_class_schema",
+            title: "Invalid Class Schema",
+            details: `Class-level @Schema on "${String(context.name)}" received a non-object Zod schema — the entity is parsed as a whole, so pass z.object({ ... }) (or use a field-level @Schema for a single column).`,
+            debug: { target: String(context.name) },
+          },
+        );
+      }
       stageSchema(context.metadata, schema as z.ZodObject<any>);
     }
   };
