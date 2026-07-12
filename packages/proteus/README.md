@@ -968,7 +968,21 @@ bounded `VARCHAR` column as before, plus write-side id validation.
 
 #### `@ReadOnly`
 
-Excludes the field from UPDATE statements after initial insert. Value is still set during entity creation.
+Excludes the field from later writes after initial insert. Value is still set during entity creation.
+
+**Arguments:** `(operation?: "update" | "upsert")`. Bare `@ReadOnly()` covers both.
+
+- `@ReadOnly("update")` — the field is never touched by UPDATE.
+- `@ReadOnly("upsert")` — the field is written on the INSERT arm of an upsert but preserved on
+  conflict. Use this for tables mixing ingest-owned and enrichment-owned columns: a re-ingest
+  upsert keeps the enriched value instead of overwriting it.
+
+```typescript
+@ReadOnly("upsert")
+@Nullable()
+@Field("url")
+coverUrl!: string | null; // set by enrichment; survives re-ingest upserts
+```
 
 #### `@Enum`
 
@@ -1082,7 +1096,9 @@ A `digest` requires a string-family field type (`string`, `varchar`, `text`) and
 | `md5`    | hex-32, case-insensitive (legacy interop only)             |
 | `argon2` | strict PHC string (`$argon2id$v=19$m=…,t=…,p=…$salt$hash`) |
 
-`@Sensitive` does no hashing and no cryptographic verification — producing and verifying digests belongs in the crypto layer (`@lindorm/sha`, `@lindorm/enigma`). Orthogonal to its siblings: `@Hide` strips a field from query results, `@Encrypted` encrypts at rest, `@Sensitive` redacts error/log output and validates digest shape.
+The SHA formats match the **static** `ShaKit.S256/S384/S512` outputs — an instance kit (`new ShaKit({ algorithm: "SHA256" })`) defaults to padded standard base64 and will NOT match.
+
+`@Sensitive` does no hashing and no cryptographic verification — producing and verifying digests belongs in the crypto layer (`@lindorm/sha`, `@lindorm/enigma`). Redaction covers proteus-generated error payloads, including driver constraint details (pg `Key (...)=(...)` / `Failing row contains (...)`, MySQL `Duplicate entry '...'`); the database server's own logs and unrecognised driver error messages (e.g. malformed-value syntax errors) are outside proteus' reach. Orthogonal to its siblings: `@Hide` strips a field from query results, `@Encrypted` encrypts at rest, `@Sensitive` redacts error/log output and validates digest shape.
 
 #### `@Unique` (field-level)
 
@@ -1257,6 +1273,10 @@ commentCount!: number;
 ```
 
 The field must also have `@Field("integer")`.
+
+The count is computed per read — the backing column is never maintained in the database — so it
+cannot be used in `WHERE` or `ORDER BY`. Count-sorted lists need a raw aggregate query or a
+denormalized, load-maintained column.
 
 ### Relation Modifiers
 
