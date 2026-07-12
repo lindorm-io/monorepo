@@ -34,9 +34,45 @@ type StandardConfiguration = {
    * https://www.rfc-editor.org/rfc/rfc9396
    */
   authorizationDetailsTypesSupported?: Array<string>;
+  /**
+   * OPTIONAL
+   *
+   * JARM — JWT-Secured Authorization Response Mode. JWE `alg` values
+   * supported for encrypting authorization response JWTs.
+   *
+   * https://openid.net/specs/oauth-v2-jarm.html
+   */
+  authorizationEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm>;
+  /**
+   * OPTIONAL
+   *
+   * JARM — JWT-Secured Authorization Response Mode. JWE `enc` values
+   * supported for encrypting authorization response JWTs.
+   *
+   * https://openid.net/specs/oauth-v2-jarm.html
+   */
+  authorizationEncryptionEncValuesSupported?: Array<AesEncryption>;
   authorizationEndpoint: string;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9207 — whether the authorization server includes the `iss`
+   * parameter in authorization responses.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9207
+   */
+  authorizationResponseIssParameterSupported?: boolean;
+  /**
+   * OPTIONAL
+   *
+   * JARM — JWT-Secured Authorization Response Mode. JWS `alg` values
+   * supported for signing authorization response JWTs.
+   *
+   * https://openid.net/specs/oauth-v2-jarm.html
+   */
+  authorizationSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
   backchannelAuthenticationEndpoint: string;
-  backchannelAuthenticationRequestSigningAlgValuesSupported: [];
+  backchannelAuthenticationRequestSigningAlgValuesSupported: Array<JwksSigningAlgorithm>;
   backchannelLogoutSessionSupported: boolean;
   backchannelLogoutSupported: boolean;
   backchannelTokenDeliveryModesSupported: Array<OpenIdBackchannelTokenDeliveryMode>;
@@ -45,20 +81,111 @@ type StandardConfiguration = {
   claimsSupported: Array<keyof OpenIdClaims | string>;
   codeChallengeMethodsSupported: Array<string>;
   displayValuesSupported: Array<OpenIdDisplayMode>;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9449 §5.1 — DPoP. JWS `alg` values supported for DPoP
+   * proof JWTs.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9449
+   */
+  dpopSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
   endSessionEndpoint: string;
   grantTypesSupported: Array<OpenIdGrantType>;
   idTokenEncryptionAlgValuesSupported: Array<JwksEncryptionAlgorithm>;
   idTokenEncryptionEncValuesSupported: Array<AesEncryption>;
   idTokenSigningAlgValuesSupported: Array<JwksSigningAlgorithm>;
   introspectEndpoint: string;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9701 — JWT introspection responses. JWE `alg` values
+   * supported for encrypting introspection response JWTs.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9701
+   */
+  introspectionEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm>;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9701 — JWT introspection responses. JWE `enc` values
+   * supported for encrypting introspection response JWTs.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9701
+   */
+  introspectionEncryptionEncValuesSupported?: Array<AesEncryption>;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9701 — JWT introspection responses. JWS `alg` values
+   * supported for signing introspection response JWTs.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9701
+   */
+  introspectionSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
   issuer: string;
   jwksUri: string;
   logoutEndpoint: string;
   opPolicyUri: string;
   opTosUri: string;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9126 §5 — Pushed Authorization Requests. URL of the PAR
+   * endpoint.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9126
+   */
+  pushedAuthorizationRequestEndpoint?: string;
   registrationEndpoint: string;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9101 — JWT-Secured Authorization Request (JAR). JWE `alg`
+   * values supported for encrypting request objects.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9101
+   */
+  requestObjectEncryptionAlgValuesSupported?: Array<JwksEncryptionAlgorithm>;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9101 — JWT-Secured Authorization Request (JAR). JWE `enc`
+   * values supported for encrypting request objects.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9101
+   */
+  requestObjectEncryptionEncValuesSupported?: Array<AesEncryption>;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9101 — JWT-Secured Authorization Request (JAR). JWS `alg`
+   * values supported for signing request objects.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9101
+   */
+  requestObjectSigningAlgValuesSupported?: Array<JwksSigningAlgorithm>;
   requestParameterSupported: boolean;
   requestUriParameterSupported: boolean;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9126 §5 — Pushed Authorization Requests. Whether the
+   * authorization server accepts authorization requests only via PAR.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9126
+   */
+  requirePushedAuthorizationRequests?: boolean;
+  /**
+   * OPTIONAL
+   *
+   * RFC 9101 §10.5 — JWT-Secured Authorization Request (JAR).
+   * Whether the authorization server accepts request objects only
+   * as signed JWTs.
+   *
+   * https://www.rfc-editor.org/rfc/rfc9101
+   */
+  requireSignedRequestObject?: boolean;
   responseModesSupported: Array<string>;
   responseTypesSupported: Array<OpenIdResponseType>;
   revocationEndpoint: string;

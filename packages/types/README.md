@@ -86,7 +86,7 @@ console.log(AES_KEY_LENGTH_A256GCM); // 32
 - `LindormJwks` — Lindorm-only JWK metadata fields
 - `JwksAlgorithm` — union of `JwksEncryptionAlgorithm` and `JwksSigningAlgorithm`
 - `JwksEncryptionAlgorithm` — JWE alg values: `dir`, `A128KW`–`A256KW`, `A128GCMKW`–`A256GCMKW`, `ECDH-ES` family, `PBES2` family, `RSA-OAEP` family
-- `JwksSigningAlgorithm` — JWS alg values: `EdDSA`, `ES256`–`ES512`, `HS256`–`HS512`, `PS256`–`PS512`, `RS256`–`RS512`
+- `JwksSigningAlgorithm` — JWS alg values: `EdDSA`, `ES256`–`ES512`, `HS256`–`HS512`, `ML-DSA-44`–`ML-DSA-87`, `PS256`–`PS512`, `RS256`–`RS512`
 - `JwksCurve` — `Ed25519`, `Ed448`, `P-256`, `P-384`, `P-521`, `X25519`, `X448`
 - `JwksKeyOps` — `decrypt`, `deriveBits`, `deriveKey`, `encrypt`, `sign`, `unwrapKey`, `verify`, `wrapKey`
 - `JwksKeyType` — `EC`, `oct`, `OKP`, `RSA`
