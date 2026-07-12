@@ -83,7 +83,7 @@ When `domain` is set, Amphora auto-assigns `issuer` and `jwksUri` to added keys 
 
 ### From environment-encoded strings
 
-`Amphora.env()` accepts compact `kryptos:`-prefixed strings (the format produced by `KryptosKit.env.import` / `export`) and adds them to the vault.
+`Amphora.env()` accepts compact `kryptos:`-prefixed strings (the format produced by `KryptosKit.env.import` / `export`) and adds them to the vault. Env-provided keys are the service's **own** keys (`isExternal: false`) — they are served in the JWKS when public and not `hidden`, so operational keys like a KEK must be generated with `hidden: true`. A key whose `issuer` differs from the Amphora domain logs a warning (it would never be served).
 
 ```typescript
 amphora.env(process.env.SIGNING_KEY!);

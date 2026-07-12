@@ -190,7 +190,20 @@ export class Amphora implements IAmphora {
     const result: Array<IKryptos> = [];
 
     for (const key of array) {
-      result.push(KryptosKit.env.import(key));
+      const kryptos = KryptosKit.env.import(key);
+
+      // Env-imported keys are own keys (isExternal: false) and feed the JWKS
+      // when public + not hidden — an issuer that differs from this Amphora's
+      // domain would never be served, which is almost certainly a config error.
+      if (this.domain && kryptos.issuer && kryptos.issuer !== this.domain) {
+        this.logger.warn("Env-imported key issuer differs from amphora domain", {
+          domain: this.domain,
+          issuer: kryptos.issuer,
+          kid: kryptos.id,
+        });
+      }
+
+      result.push(kryptos);
     }
 
     this.add(result);
@@ -501,11 +514,14 @@ export class Amphora implements IAmphora {
         continue;
       }
 
-      const kryptos = KryptosKit.from.jwk({
-        ...jwk,
-        iss: config.issuer,
-        jku: jwk.jku ?? config.jwksUri,
-      });
+      const kryptos = KryptosKit.from.jwk(
+        {
+          ...jwk,
+          iss: config.issuer,
+          jku: jwk.jku ?? config.jwksUri,
+        },
+        true,
+      );
 
       if (kryptos.isExpired) {
         expiredCount++;

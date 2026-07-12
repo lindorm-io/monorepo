@@ -18,7 +18,7 @@ import {
 import { TEST_X509_KRYPTOS_SIG } from "../__fixtures__/x509.js";
 import { AmphoraError } from "../errors/index.js";
 import { Amphora } from "./Amphora.js";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 const MockedDate = new Date("2024-01-01T08:00:00.000Z");
 MockDate.set(MockedDate);
@@ -90,6 +90,31 @@ describe("Amphora", () => {
           type: "OKP",
         }),
       ]);
+    });
+
+    test("should mark env-imported keys as own and serve them in the jwks", () => {
+      amphora.env(KryptosKit.env.export(TEST_EC_KEY_SIG));
+
+      expect(amphora.vault[0].isExternal).toBe(false);
+      expect(amphora.jwks.keys.some((k) => k.kid === TEST_EC_KEY_SIG.id)).toBe(true);
+    });
+
+    test("should warn when an env-imported key issuer differs from the domain", () => {
+      const logger = createMockLogger();
+      const child = createMockLogger();
+      vi.mocked(logger.child).mockReturnValue(child);
+      const scoped = new Amphora({ domain: issuer, logger });
+
+      const foreign = KryptosKit.from.jwk(
+        { ...TEST_EC_KEY_SIG.toJWK("private"), iss: "https://other.lindorm.io/" },
+        false,
+      );
+      scoped.env(KryptosKit.env.export(foreign));
+
+      expect(child.warn).toHaveBeenCalledWith(
+        "Env-imported key issuer differs from amphora domain",
+        expect.objectContaining({ issuer: "https://other.lindorm.io/" }),
+      );
     });
   });
 
