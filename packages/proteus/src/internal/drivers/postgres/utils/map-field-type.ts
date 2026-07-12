@@ -7,7 +7,7 @@ import { quoteQualifiedName } from "./quote-identifier.js";
  * Maps a metadata field to its PostgreSQL type string. Handles all supported types
  * including precision/scale for decimal, max-length for varchar/string/vector,
  * enum type references, native array types (falling back to JSONB when `arrayType`
- * is unset), and logical types (email/url → TEXT).
+ * is unset), and logical types (email/url → TEXT, lindorm_id → VARCHAR(max)).
  */
 export const mapFieldType = (
   field: MetaField,
@@ -146,6 +146,10 @@ export const mapFieldType = (
     case "email":
     case "url":
       return "TEXT";
+
+    // logical (app-validated, stored as bounded VARCHAR — metadata build resolves max)
+    case "lindorm_id":
+      return max ? `VARCHAR(${max})` : "VARCHAR(255)";
 
     default:
       throw new NotSupportedError(`Unsupported MetaFieldType: "${type as string}"`, {

@@ -164,6 +164,12 @@ exports[`deserializeHash > string-like types pass through > should pass through 
 }
 `;
 
+exports[`deserializeHash > string-like types pass through > should pass through lindorm_id as string 1`] = `
+{
+  "val": "test-value",
+}
+`;
+
 exports[`deserializeHash > string-like types pass through > should pass through macaddr as string 1`] = `
 {
   "val": "test-value",

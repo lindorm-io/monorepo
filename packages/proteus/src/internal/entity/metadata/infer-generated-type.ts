@@ -1,6 +1,35 @@
 import { EntityMetadataError } from "../errors/EntityMetadataError.js";
 import type { MetaField, MetaGenerated } from "../types/metadata.js";
 
+// Resolves the column width for a lindorm_id-generated field: an explicit @Max
+// wins (but must fit a generated id), otherwise the width is derived from the
+// @Generated config (namespace + "_" + body length, default body 24).
+const resolveLindormIdMax = (
+  targetName: string,
+  field: MetaField,
+  generate: MetaGenerated,
+): void => {
+  const idLength = generate.length ?? 24;
+  const nsLength = generate.namespace ? generate.namespace.length + 1 : 0;
+  const computedMax = nsLength + idLength;
+  if (field.max === null) {
+    field.max = computedMax;
+  } else if (field.max < computedMax) {
+    throw new EntityMetadataError("Invalid @Max for lindorm_id field", {
+      code: "invalid_generated_max",
+      title: "Invalid Generated Max",
+      details: `@Generated("lindorm_id") on "${field.key}" needs a column wide enough to hold a ${computedMax}-character id (namespace + length), but @Max(${field.max}) was declared — raise the @Max or shorten the namespace/length.`,
+      debug: {
+        target: targetName,
+        field: field.key,
+        strategy: "lindorm_id",
+        computedMax,
+        max: field.max,
+      },
+    });
+  }
+};
+
 export const inferGeneratedTypes = (
   targetName: string,
   generated: Array<MetaGenerated>,
@@ -56,13 +85,12 @@ export const inferGeneratedTypes = (
         case "uuid":
           field.type = "uuid";
           break;
-        case "lindorm_id": {
-          const idLength = generate.length ?? 24;
-          const nsLength = generate.namespace ? generate.namespace.length + 1 : 0;
-          field.type = "varchar";
-          field.max = nsLength + idLength;
+        case "lindorm_id":
+          // Self-documenting logical type — emits the same bounded VARCHAR as
+          // before, but adds write-side id validation.
+          field.type = "lindorm_id";
+          resolveLindormIdMax(targetName, field, generate);
           break;
-        }
         case "string":
           field.type = "string";
           break;
@@ -159,6 +187,7 @@ export const inferGeneratedTypes = (
           break;
         case "lindorm_id":
           if (
+            field.type !== "lindorm_id" &&
             field.type !== "varchar" &&
             field.type !== "string" &&
             field.type !== "text"
@@ -166,7 +195,7 @@ export const inferGeneratedTypes = (
             throw new EntityMetadataError("Invalid @Generated strategy for field type", {
               code: "invalid_generated_strategy",
               title: "Invalid Generated Strategy",
-              details: `@Generated("lindorm_id") on "${field.key}" requires a varchar, string, or text field type, but "${field.type}" was declared — change the @Field type or the @Generated strategy.`,
+              details: `@Generated("lindorm_id") on "${field.key}" requires a lindorm_id, varchar, string, or text field type, but "${field.type}" was declared — change the @Field type or the @Generated strategy.`,
               debug: {
                 target: targetName,
                 field: field.key,
@@ -176,29 +205,12 @@ export const inferGeneratedTypes = (
             });
           }
           if (
+            field.type === "lindorm_id" ||
             field.type === "varchar" ||
             field.type === "string" ||
             field.type === "text"
           ) {
-            const idLength = generate.length ?? 24;
-            const nsLength = generate.namespace ? generate.namespace.length + 1 : 0;
-            const computedMax = nsLength + idLength;
-            if (field.max === null) {
-              field.max = computedMax;
-            } else if (field.max < computedMax) {
-              throw new EntityMetadataError("Invalid @Max for lindorm_id field", {
-                code: "invalid_generated_max",
-                title: "Invalid Generated Max",
-                details: `@Generated("lindorm_id") on "${field.key}" needs a column wide enough to hold a ${computedMax}-character id (namespace + length), but @Max(${field.max}) was declared — raise the @Max or shorten the namespace/length.`,
-                debug: {
-                  target: targetName,
-                  field: field.key,
-                  strategy: "lindorm_id",
-                  computedMax,
-                  max: field.max,
-                },
-              });
-            }
+            resolveLindormIdMax(targetName, field, generate);
           }
           break;
       }
@@ -213,6 +225,11 @@ export const inferGeneratedTypes = (
   for (const field of fields) {
     if (field.type === null) {
       field.type = "varchar";
+      field.max = 255;
+    }
+    // A bare lindorm_id field (no @Max, no paired @Generated to derive a width
+    // from) still needs a resolved column width — same bounded default.
+    if (field.type === "lindorm_id" && field.max === null) {
       field.max = 255;
     }
   }

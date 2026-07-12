@@ -150,6 +150,18 @@ describe("mapFieldTypeMysql", () => {
     test("url -> TEXT", () => {
       expect(mapFieldTypeMysql(makeField("x", { type: "url" }))).toMatchSnapshot();
     });
+
+    test("lindorm_id with max -> VARCHAR(max)", () => {
+      expect(
+        mapFieldTypeMysql(makeField("x", { type: "lindorm_id", max: 29 })),
+      ).toMatchSnapshot();
+    });
+
+    test("lindorm_id without max -> VARCHAR(255)", () => {
+      expect(
+        mapFieldTypeMysql(makeField("x", { type: "lindorm_id", max: null })),
+      ).toMatchSnapshot();
+    });
   });
 
   describe("unsupported types", () => {

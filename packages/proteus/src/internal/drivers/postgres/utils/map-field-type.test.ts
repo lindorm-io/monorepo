@@ -359,6 +359,22 @@ describe("mapFieldType", () => {
         mapFieldType(makeField("testField", { type: "url" }), TABLE, NS),
       ).toMatchSnapshot();
     });
+
+    test("lindorm_id with max → VARCHAR(max)", () => {
+      expect(
+        mapFieldType(makeField("testField", { type: "lindorm_id", max: 24 }), TABLE, NS),
+      ).toMatchSnapshot();
+    });
+
+    test("lindorm_id without max → VARCHAR(255) (defensive — metadata build resolves max)", () => {
+      expect(
+        mapFieldType(
+          makeField("testField", { type: "lindorm_id", max: null }),
+          TABLE,
+          NS,
+        ),
+      ).toMatchSnapshot();
+    });
   });
 
   describe("error cases", () => {

@@ -317,6 +317,7 @@ describe("deserializeHash", () => {
       "varchar",
       "enum",
       "email",
+      "lindorm_id",
       "url",
       "cidr",
       "inet",

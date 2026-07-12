@@ -150,6 +150,7 @@ const coerceFromString = (raw: string, type: MetaFieldType | null): unknown => {
     case "uuid":
     case "enum":
     case "email":
+    case "lindorm_id":
     case "url":
     case "cidr":
     case "inet":

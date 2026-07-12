@@ -758,6 +758,131 @@ exports[`projectDesiredSchema (golden) > projects joined inheritance with inheri
 }
 `;
 
+exports[`projectDesiredSchema (golden) > projects lindorm_id PK as bounded VARCHAR with FK column type equal to the PK 1`] = `
+{
+  "enums": [],
+  "extensions": [],
+  "schemas": [],
+  "tables": [
+    {
+      "columnComments": {},
+      "columns": [
+        {
+          "collation": null,
+          "defaultExpr": null,
+          "generationExpr": null,
+          "identityGeneration": null,
+          "isGenerated": false,
+          "isIdentity": false,
+          "name": "id",
+          "nullable": false,
+          "pgType": "VARCHAR(31)",
+        },
+        {
+          "collation": null,
+          "defaultExpr": null,
+          "generationExpr": null,
+          "identityGeneration": null,
+          "isGenerated": false,
+          "isIdentity": false,
+          "name": "name",
+          "nullable": false,
+          "pgType": "TEXT",
+        },
+      ],
+      "comment": null,
+      "constraints": [
+        {
+          "checkExpr": null,
+          "columns": [
+            "id",
+          ],
+          "deferrable": false,
+          "foreignColumns": null,
+          "foreignSchema": null,
+          "foreignTable": null,
+          "initiallyDeferred": false,
+          "name": "PgGoldLindormClient_pkey",
+          "onDelete": null,
+          "onUpdate": null,
+          "type": "PRIMARY KEY",
+        },
+      ],
+      "indexes": [],
+      "name": "PgGoldLindormClient",
+      "schema": "public",
+      "triggers": [],
+    },
+    {
+      "columnComments": {},
+      "columns": [
+        {
+          "collation": null,
+          "defaultExpr": null,
+          "generationExpr": null,
+          "identityGeneration": null,
+          "isGenerated": false,
+          "isIdentity": false,
+          "name": "id",
+          "nullable": false,
+          "pgType": "VARCHAR(24)",
+        },
+        {
+          "collation": null,
+          "defaultExpr": null,
+          "generationExpr": null,
+          "identityGeneration": null,
+          "isGenerated": false,
+          "isIdentity": false,
+          "name": "clientId",
+          "nullable": false,
+          "pgType": "VARCHAR(31)",
+        },
+      ],
+      "comment": null,
+      "constraints": [
+        {
+          "checkExpr": null,
+          "columns": [
+            "id",
+          ],
+          "deferrable": false,
+          "foreignColumns": null,
+          "foreignSchema": null,
+          "foreignTable": null,
+          "initiallyDeferred": false,
+          "name": "PgGoldLindormToken_pkey",
+          "onDelete": null,
+          "onUpdate": null,
+          "type": "PRIMARY KEY",
+        },
+        {
+          "checkExpr": null,
+          "columns": [
+            "clientId",
+          ],
+          "deferrable": false,
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignSchema": "public",
+          "foreignTable": "PgGoldLindormClient",
+          "initiallyDeferred": false,
+          "name": "fk_uYJSyKzg-vg",
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+          "type": "FOREIGN KEY",
+        },
+      ],
+      "indexes": [],
+      "name": "PgGoldLindormToken",
+      "schema": "public",
+      "triggers": [],
+    },
+  ],
+}
+`;
+
 exports[`projectDesiredSchema (golden) > projects named enums, opclass and sparse indexes, deferrable relation, defaults, encrypted and typedJson fields 1`] = `
 {
   "enums": [

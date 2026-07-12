@@ -110,33 +110,47 @@ describe("inferGeneratedTypes", () => {
     ).not.toThrow();
   });
 
-  test("should infer varchar(24) for lindorm_id strategy when type is null", () => {
+  test("should infer lindorm_id(24) for lindorm_id strategy when type is null", () => {
     const fields = [makeField("id", { type: null })];
     inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields);
-    expect(fields[0].type).toBe("varchar");
+    expect(fields[0].type).toBe("lindorm_id");
     expect(fields[0].max).toBe(24);
   });
 
-  test("should compute varchar max from namespace for lindorm_id when type is null", () => {
+  test("should compute lindorm_id max from namespace when type is null", () => {
     const fields = [makeField("id", { type: null })];
     inferGeneratedTypes(
       "Test",
       [makeGenerated("id", "lindorm_id", { namespace: "user" })],
       fields,
     );
-    expect(fields[0].type).toBe("varchar");
+    expect(fields[0].type).toBe("lindorm_id");
     expect(fields[0].max).toBe(29);
   });
 
-  test("should compute varchar max from length for lindorm_id when type is null", () => {
+  test("should compute lindorm_id max from length when type is null", () => {
     const fields = [makeField("id", { type: null })];
     inferGeneratedTypes(
       "Test",
       [makeGenerated("id", "lindorm_id", { length: 32 })],
       fields,
     );
-    expect(fields[0].type).toBe("varchar");
+    expect(fields[0].type).toBe("lindorm_id");
     expect(fields[0].max).toBe(32);
+  });
+
+  test("should keep an explicit max on an untyped lindorm_id-generated field", () => {
+    const fields = [makeField("id", { type: null, max: 64 })];
+    inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields);
+    expect(fields[0].type).toBe("lindorm_id");
+    expect(fields[0].max).toBe(64);
+  });
+
+  test("should throw when an explicit max on an untyped field is too small", () => {
+    const fields = [makeField("id", { type: null, max: 10 })];
+    expect(() =>
+      inferGeneratedTypes("Test", [makeGenerated("id", "lindorm_id")], fields),
+    ).toThrow("Invalid @Max for lindorm_id field");
   });
 
   test("should accept lindorm_id on an existing varchar field and default max to 24", () => {
@@ -168,6 +182,17 @@ describe("inferGeneratedTypes", () => {
         fields,
       ),
     ).toThrow("Invalid @Max for lindorm_id field");
+  });
+
+  test("should accept lindorm_id strategy on a lindorm_id field and derive max", () => {
+    const fields = [makeField("id", { type: "lindorm_id", max: null })];
+    inferGeneratedTypes(
+      "Test",
+      [makeGenerated("id", "lindorm_id", { namespace: "client", length: 32 })],
+      fields,
+    );
+    expect(fields[0].type).toBe("lindorm_id");
+    expect(fields[0].max).toBe(39);
   });
 
   test("should accept lindorm_id on string and text field types", () => {
@@ -215,6 +240,19 @@ describe("inferGeneratedTypes", () => {
     inferGeneratedTypes("Test", [], fields);
     expect(fields[0].type).toBe("varchar");
     expect(fields[0].max).toBe(255);
+  });
+
+  test("should default a bare lindorm_id field (no @Generated) to max 255", () => {
+    const fields = [makeField("id", { type: "lindorm_id", max: null })];
+    inferGeneratedTypes("Test", [], fields);
+    expect(fields[0].type).toBe("lindorm_id");
+    expect(fields[0].max).toBe(255);
+  });
+
+  test("should keep an explicit max on a bare lindorm_id field (no @Generated)", () => {
+    const fields = [makeField("id", { type: "lindorm_id", max: 32 })];
+    inferGeneratedTypes("Test", [], fields);
+    expect(fields[0].max).toBe(32);
   });
 
   test("should throw when two @Generated entries target the same field key", () => {

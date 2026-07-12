@@ -92,6 +92,9 @@ export const mapFieldTypeMysql = (field: MetaField): string => {
     // logical (app-validated)
     case "email":
       return "VARCHAR(320)";
+    case "lindorm_id":
+      // Bounded VARCHAR — metadata build resolves max, so the fallback is defensive
+      return max ? `VARCHAR(${max})` : "VARCHAR(255)";
     case "url":
       return "TEXT";
 

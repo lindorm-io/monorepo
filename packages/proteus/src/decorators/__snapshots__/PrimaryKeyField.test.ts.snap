@@ -1,5 +1,80 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`PrimaryKeyField > explicit @PrimaryKeyField("lindorm_id") declares a lindorm_id column 1`] = `
+{
+  "appendOnly": false,
+  "cache": null,
+  "checks": [],
+  "defaultOrder": null,
+  "embeddedLists": [],
+  "entity": {
+    "comment": null,
+    "decorator": "Entity",
+    "name": "PrimaryKeyFieldTypedLindormId",
+    "named": true,
+    "namespace": null,
+  },
+  "extras": [],
+  "fields": [
+    {
+      "arrayType": null,
+      "collation": null,
+      "comment": null,
+      "computed": null,
+      "decorator": "Field",
+      "default": null,
+      "embedded": null,
+      "encrypted": null,
+      "enum": null,
+      "hideOn": [],
+      "key": "id",
+      "max": 24,
+      "min": null,
+      "name": "id",
+      "named": false,
+      "nullable": false,
+      "order": null,
+      "precision": null,
+      "readonly": [
+        "update",
+        "upsert",
+      ],
+      "scale": null,
+      "schema": null,
+      "transform": null,
+      "type": "lindorm_id",
+      "typedJson": null,
+    },
+  ],
+  "filters": [],
+  "generated": [
+    {
+      "generator": null,
+      "key": "id",
+      "length": null,
+      "max": null,
+      "min": null,
+      "namespace": null,
+      "strategy": "lindorm_id",
+    },
+  ],
+  "hooks": [],
+  "indexes": [],
+  "inheritance": null,
+  "primaryKeys": [
+    "id",
+  ],
+  "relationCounts": [],
+  "relationIds": [],
+  "relations": [],
+  "schemas": [],
+  "scopeKeys": [],
+  "target": [Function],
+  "uniques": [],
+  "versionKeys": [],
+}
+`;
+
 exports[`PrimaryKeyField > should register uuid primary key field (default) 1`] = `
 {
   "appendOnly": false,

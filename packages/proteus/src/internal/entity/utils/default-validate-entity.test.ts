@@ -599,3 +599,54 @@ describe("defaultValidateEntity — field-level @Schema", () => {
     ).toThrow(/start must be <= end/);
   });
 });
+
+@Entity({ name: "ValidateEntityLindormId" })
+class ValidateEntityLindormId {
+  @PrimaryKeyField("lindorm_id") @Generated() id!: string;
+}
+
+describe("defaultValidateEntity — lindorm_id", () => {
+  const validate = (id: string): void =>
+    defaultValidateEntity(ValidateEntityLindormId, { id } as any);
+
+  test("should pass for a bare 24-character base62 id", () => {
+    expect(() => validate("A1b2C3d4E5f6G7h8I9j0K1l2")).not.toThrow();
+  });
+
+  test("should pass for a namespaced id", () => {
+    expect(() => validate("client_A1b2C3d4E5f6G7h8I9j0K1l2")).not.toThrow();
+  });
+
+  test("should pass for the minimum body length (16)", () => {
+    expect(() => validate("A1b2C3d4E5f6G7h8")).not.toThrow();
+  });
+
+  test("should pass for the maximum body length (64)", () => {
+    expect(() => validate("A".repeat(64))).not.toThrow();
+  });
+
+  test("should throw for a body that is too short (15)", () => {
+    expect(() => validate("A1b2C3d4E5f6G7h")).toThrow();
+  });
+
+  test("should throw for a body that is too long (65)", () => {
+    expect(() => validate("A".repeat(65))).toThrow();
+  });
+
+  test("should throw for invalid characters", () => {
+    expect(() => validate("A1b2C3d4-5f6G7h8I9j0K1l2")).toThrow();
+    expect(() => validate("A1b2C3d4E5f6G7h8I9j0K1l!")).toThrow();
+  });
+
+  test("should throw for a double underscore", () => {
+    expect(() => validate("client__A1b2C3d4E5f6G7h8I9j0K1l2")).toThrow();
+  });
+
+  test("should throw for an empty namespace", () => {
+    expect(() => validate("_A1b2C3d4E5f6G7h8I9j0K1l2")).toThrow();
+  });
+
+  test("should throw for a uuid", () => {
+    expect(() => validate("550e8400-e29b-41d4-a716-446655440000")).toThrow();
+  });
+});

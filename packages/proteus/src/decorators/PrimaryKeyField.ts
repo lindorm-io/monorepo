@@ -13,11 +13,13 @@ import {
  * - `@PrimaryKeyField()` — type-less PK marker; pair with `@Generated(...)` to infer the column type
  * - `@PrimaryKeyField("uuid")` — uuid primary key column
  * - `@PrimaryKeyField("integer")` — integer primary key column
+ * - `@PrimaryKeyField("lindorm_id")` — lindorm id PK column (bounded VARCHAR + id validation)
  * - `@PrimaryKeyField("string", { name: "pk" })` — string PK column with custom column name
  *
  * When `type` is omitted, the column type is inferred from the paired `@Generated(...)`
- * (`@Generated()` → varchar(24), `@Generated("uuid")` → uuid, `@Generated("increment")` → integer).
- * A bare `@PrimaryKeyField()` with no `@Generated` and no type surfaces a metadata error.
+ * (`@Generated()` → lindorm_id stored as VARCHAR(24), `@Generated("uuid")` → uuid,
+ * `@Generated("increment")` → integer). A bare `@PrimaryKeyField()` with no `@Generated`
+ * and no type surfaces a metadata error.
  */
 export const PrimaryKeyField =
   (type?: MetaFieldPrimaryType, options: NamedDecoratorOptions = {}) =>

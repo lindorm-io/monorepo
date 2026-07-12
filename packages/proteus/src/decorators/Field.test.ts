@@ -2,6 +2,7 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { Entity } from "./Entity.js";
 import { Field } from "./Field.js";
 import { Generated } from "./Generated.js";
+import { Max } from "./Max.js";
 import { Nullable } from "./Nullable.js";
 import { PrimaryKeyField } from "./PrimaryKeyField.js";
 import { describe, expect, test } from "vitest";
@@ -45,6 +46,25 @@ class FieldNamedFlag {
   @Field("string", { name: "display_name" })
   @Nullable()
   displayName!: string;
+}
+
+@Entity({ name: "FieldLindormIdMaxStages" })
+class FieldLindormIdMaxStages {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  // Explicit @Max wins
+  @Max(64)
+  @Field("lindorm_id")
+  explicitMax!: string;
+
+  // Derived from the paired @Generated (namespace + "_" + length)
+  @Field("lindorm_id")
+  @Generated("lindorm_id", { namespace: "user", length: 32 })
+  derivedMax!: string;
+
+  // Bare — defaults to 255
+  @Field("lindorm_id")
+  bareDefault!: string;
 }
 
 describe("Field", () => {
@@ -112,5 +132,13 @@ describe("Field", () => {
     expect(field.computed).toBeNull();
     expect(field.comment).toBeNull();
     expect(field.hideOn).toEqual([]);
+  });
+
+  test("should resolve lindorm_id max in stages: explicit > derived > default 255", () => {
+    const meta = getEntityMetadata(FieldLindormIdMaxStages);
+    expect(meta.fields.find((f) => f.key === "explicitMax")!.max).toBe(64);
+    expect(meta.fields.find((f) => f.key === "derivedMax")!.max).toBe(37);
+    expect(meta.fields.find((f) => f.key === "bareDefault")!.max).toBe(255);
+    expect(meta).toMatchSnapshot();
   });
 });

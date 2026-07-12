@@ -23,6 +23,13 @@ class PrimaryKeyFieldLindormId {
   id!: string;
 }
 
+@Entity({ name: "PrimaryKeyFieldTypedLindormId" })
+class PrimaryKeyFieldTypedLindormId {
+  @PrimaryKeyField("lindorm_id")
+  @Generated()
+  id!: string;
+}
+
 @Entity({ name: "PrimaryKeyFieldUuid" })
 class PrimaryKeyFieldUuid {
   @PrimaryKeyField()
@@ -104,11 +111,19 @@ describe("PrimaryKeyField", () => {
     expect(field!.type).toBe("uuid");
   });
 
-  test("marker paired with @Generated() infers a varchar(24) lindorm_id column", () => {
+  test("marker paired with @Generated() infers a lindorm_id column stored as VARCHAR(24)", () => {
     const meta = getEntityMetadata(PrimaryKeyFieldLindormId);
     const field = meta.fields.find((f) => f.key === "id");
-    expect(field!.type).toBe("varchar");
+    expect(field!.type).toBe("lindorm_id");
     expect(field!.max).toBe(24);
+  });
+
+  test('explicit @PrimaryKeyField("lindorm_id") declares a lindorm_id column', () => {
+    const meta = getEntityMetadata(PrimaryKeyFieldTypedLindormId);
+    const field = meta.fields.find((f) => f.key === "id");
+    expect(field!.type).toBe("lindorm_id");
+    expect(field!.max).toBe(24);
+    expect(meta).toMatchSnapshot();
   });
 
   test('marker paired with @Generated("uuid") stays a uuid column (backward compat)', () => {

@@ -14,7 +14,9 @@ import {
   Generated,
   Index,
   Inheritance,
+  ManyToOne,
   Nullable,
+  OneToMany,
   PrimaryKey,
   PrimaryKeyField,
   Unique,
@@ -196,6 +198,30 @@ class MyGoldSparse {
   region!: string | null;
 }
 
+@Entity({ name: "MyGoldLindormClient" })
+class MyGoldLindormClient {
+  @PrimaryKeyField("lindorm_id")
+  @Generated("lindorm_id", { namespace: "client" })
+  id!: string;
+
+  @Field("string")
+  name!: string;
+
+  @OneToMany(() => MyGoldLindormToken, "client")
+  tokens!: MyGoldLindormToken[];
+}
+
+@Entity({ name: "MyGoldLindormToken" })
+class MyGoldLindormToken {
+  // Bare @Generated() infers the lindorm_id field type (R1) — VARCHAR(24)
+  @PrimaryKeyField()
+  @Generated()
+  id!: string;
+
+  @ManyToOne(() => MyGoldLindormClient, "tokens")
+  client!: MyGoldLindormClient | null;
+}
+
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe("projectDesiredSchemaMysql (golden)", () => {
@@ -297,6 +323,22 @@ describe("projectDesiredSchemaMysql (golden)", () => {
     );
     expect(index).toBeDefined();
     expect(index).not.toHaveProperty("where");
+    expect(schema).toMatchSnapshot();
+  });
+
+  test("projects lindorm_id PK as bounded VARCHAR with FK column type equal to the PK", () => {
+    const schema = projectDesiredSchemaMysql(
+      [getEntityMetadata(MyGoldLindormClient), getEntityMetadata(MyGoldLindormToken)],
+      {},
+    );
+
+    const client = schema.tables.find((t) => t.name === "MyGoldLindormClient")!;
+    const token = schema.tables.find((t) => t.name === "MyGoldLindormToken")!;
+    expect(client.columns.find((c) => c.name === "id")?.mysqlType).toBe("varchar(31)");
+    expect(token.columns.find((c) => c.name === "id")?.mysqlType).toBe("varchar(24)");
+    expect(token.columns.find((c) => c.name === "clientId")?.mysqlType).toBe(
+      "varchar(31)",
+    );
     expect(schema).toMatchSnapshot();
   });
 });

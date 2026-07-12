@@ -54,6 +54,7 @@ export const mapFieldTypeSqlite = (field: MetaField): string => {
     case "uuid":
     case "enum":
     case "email":
+    case "lindorm_id":
     case "url":
     case "date":
     case "time":

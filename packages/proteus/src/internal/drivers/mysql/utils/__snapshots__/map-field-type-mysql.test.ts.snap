@@ -32,6 +32,10 @@ exports[`mapFieldTypeMysql > integer types > smallint -> SMALLINT 1`] = `"SMALLI
 
 exports[`mapFieldTypeMysql > logical types > email -> VARCHAR(320) 1`] = `"VARCHAR(320)"`;
 
+exports[`mapFieldTypeMysql > logical types > lindorm_id with max -> VARCHAR(max) 1`] = `"VARCHAR(29)"`;
+
+exports[`mapFieldTypeMysql > logical types > lindorm_id without max -> VARCHAR(255) 1`] = `"VARCHAR(255)"`;
+
 exports[`mapFieldTypeMysql > logical types > url -> TEXT 1`] = `"TEXT"`;
 
 exports[`mapFieldTypeMysql > network types > cidr -> VARCHAR(45) 1`] = `"VARCHAR(45)"`;

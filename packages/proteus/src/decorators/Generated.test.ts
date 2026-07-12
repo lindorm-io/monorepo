@@ -149,14 +149,14 @@ describe("Generated", () => {
     expect(field!.max).toBe(24);
   });
 
-  test("should compute varchar max from namespace for lindorm_id", () => {
+  test("should compute lindorm_id max from namespace on an untyped field", () => {
     const meta = getEntityMetadata(GeneratedLindormIdNamespace);
     const gen = meta.generated.find((g) => g.key === "id");
     expect(gen!.strategy).toBe("lindorm_id");
     expect(gen!.namespace).toBe("user");
 
     const field = meta.fields.find((f) => f.key === "id");
-    expect(field!.type).toBe("varchar");
+    expect(field!.type).toBe("lindorm_id");
     expect(field!.max).toBe(29);
   });
 

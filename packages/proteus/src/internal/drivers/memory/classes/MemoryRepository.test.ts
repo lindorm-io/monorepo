@@ -114,6 +114,14 @@ class RepoReadonlyScoped {
   upsertReadonly!: string;
 }
 
+@Entity({ name: "RepoLindormIdItem" })
+class RepoLindormIdItem {
+  @PrimaryKeyField("lindorm_id") @Generated() id!: string;
+
+  @Field("string")
+  name!: string;
+}
+
 // ─── Setup ────────────────────────────────────────────────────────────────────
 
 let source: ProteusSource;
@@ -121,11 +129,18 @@ let categoryRepo: IProteusRepository<RepoTestCategory>;
 let itemRepo: IProteusRepository<RepoTestItem>;
 let softRepo: IProteusRepository<RepoSoftItem>;
 let readonlyRepo: IProteusRepository<RepoReadonlyScoped>;
+let lindormIdRepo: IProteusRepository<RepoLindormIdItem>;
 
 beforeAll(async () => {
   source = new ProteusSource({
     driver: "memory",
-    entities: [RepoTestCategory, RepoTestItem, RepoSoftItem, RepoReadonlyScoped],
+    entities: [
+      RepoTestCategory,
+      RepoTestItem,
+      RepoSoftItem,
+      RepoReadonlyScoped,
+      RepoLindormIdItem,
+    ],
     logger: createMockLogger(),
   });
   await source.connect();
@@ -135,6 +150,7 @@ beforeAll(async () => {
   itemRepo = source.repository(RepoTestItem);
   softRepo = source.repository(RepoSoftItem);
   readonlyRepo = source.repository(RepoReadonlyScoped);
+  lindormIdRepo = source.repository(RepoLindormIdItem);
 });
 
 afterAll(async () => {
@@ -146,6 +162,7 @@ beforeEach(async () => {
   await itemRepo.clear();
   await softRepo.clear();
   await readonlyRepo.clear();
+  await lindormIdRepo.clear();
 });
 
 // ─── create ───────────────────────────────────────────────────────────────────
@@ -610,5 +627,31 @@ describe("MemoryRepository duplicate key handling", () => {
     }
 
     expect(caughtError).toBeInstanceOf(MemoryDuplicateKeyError);
+  });
+});
+
+// ─── lindorm_id write path ────────────────────────────────────────────────────
+
+describe("MemoryRepository lindorm_id field type", () => {
+  test("insert with a generated id passes validation", async () => {
+    const item = await lindormIdRepo.insert(lindormIdRepo.create({ name: "ok" }));
+
+    expect(item.id).toMatch(/^[A-Za-z0-9]{24}$/);
+  });
+
+  test("insert with an explicit valid namespaced id passes validation", async () => {
+    const entity = lindormIdRepo.create({ name: "ok" });
+    entity.id = "client_A1b2C3d4E5f6G7h8I9j0K1l2";
+
+    await expect(lindormIdRepo.insert(entity)).resolves.toMatchObject({
+      id: "client_A1b2C3d4E5f6G7h8I9j0K1l2",
+    });
+  });
+
+  test("insert with a malformed id throws validation", async () => {
+    const entity = lindormIdRepo.create({ name: "bad" });
+    entity.id = "not-a-lindorm-id!";
+
+    await expect(lindormIdRepo.insert(entity)).rejects.toThrow();
   });
 });

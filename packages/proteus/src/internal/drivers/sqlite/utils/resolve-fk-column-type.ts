@@ -41,6 +41,7 @@ export const resolveFkColumnType = (
     case "varchar":
     case "text":
     case "email":
+    case "lindorm_id":
     case "url":
       return "TEXT";
 

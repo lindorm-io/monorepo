@@ -298,6 +298,30 @@ class GoldIdentity {
   name!: string;
 }
 
+@Entity({ name: "GoldLindormClient" })
+class GoldLindormClient {
+  @PrimaryKeyField("lindorm_id")
+  @Generated("lindorm_id", { namespace: "client" })
+  id!: string;
+
+  @Field("string")
+  name!: string;
+
+  @OneToMany(() => GoldLindormToken, "client")
+  tokens!: GoldLindormToken[];
+}
+
+@Entity({ name: "GoldLindormToken" })
+class GoldLindormToken {
+  // Bare @Generated() infers the lindorm_id field type (R1) — TEXT affinity
+  @PrimaryKeyField()
+  @Generated()
+  id!: string;
+
+  @ManyToOne(() => GoldLindormClient, "tokens")
+  client!: GoldLindormClient | null;
+}
+
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe("projectDesiredSchemaSqlite", () => {
@@ -414,6 +438,20 @@ describe("projectDesiredSchemaSqlite", () => {
     const id = schema.tables[0].columns.find((c) => c.name === "id");
     expect(id?.isAutoincrement).toBe(false);
     expect(id?.defaultExpr).toBeNull();
+    expect(schema).toMatchSnapshot();
+  });
+
+  test("projects lindorm_id PK as TEXT with FK column type equal to the PK", () => {
+    const schema = projectDesiredSchemaSqlite(
+      [getEntityMetadata(GoldLindormClient), getEntityMetadata(GoldLindormToken)],
+      {},
+    );
+
+    const client = schema.tables.find((t) => t.name === "GoldLindormClient")!;
+    const token = schema.tables.find((t) => t.name === "GoldLindormToken")!;
+    expect(client.columns.find((c) => c.name === "id")?.sqliteType).toBe("TEXT");
+    expect(token.columns.find((c) => c.name === "id")?.sqliteType).toBe("TEXT");
+    expect(token.columns.find((c) => c.name === "clientId")?.sqliteType).toBe("TEXT");
     expect(schema).toMatchSnapshot();
   });
 });

@@ -238,6 +238,30 @@ class PgGoldScoped {
   status!: PgGoldStatus;
 }
 
+@Entity({ name: "PgGoldLindormClient" })
+class PgGoldLindormClient {
+  @PrimaryKeyField("lindorm_id")
+  @Generated("lindorm_id", { namespace: "client" })
+  id!: string;
+
+  @Field("string")
+  name!: string;
+
+  @OneToMany(() => PgGoldLindormToken, "client")
+  tokens!: PgGoldLindormToken[];
+}
+
+@Entity({ name: "PgGoldLindormToken" })
+class PgGoldLindormToken {
+  // Bare @Generated() infers the lindorm_id field type (R1) — VARCHAR(24)
+  @PrimaryKeyField()
+  @Generated()
+  id!: string;
+
+  @ManyToOne(() => PgGoldLindormClient, "tokens")
+  client!: PgGoldLindormClient | null;
+}
+
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe("projectDesiredSchema (golden)", () => {
@@ -342,6 +366,20 @@ describe("projectDesiredSchema (golden)", () => {
     expect(schema.schemas).toContain("analytics");
     expect(schema.tables[0].schema).toBe("analytics");
     expect(schema.enums[0].schema).toBe("analytics");
+    expect(schema).toMatchSnapshot();
+  });
+
+  test("projects lindorm_id PK as bounded VARCHAR with FK column type equal to the PK", () => {
+    const schema = projectDesiredSchema(
+      [getEntityMetadata(PgGoldLindormClient), getEntityMetadata(PgGoldLindormToken)],
+      {},
+    );
+
+    const client = schema.tables.find((t) => t.name === "PgGoldLindormClient")!;
+    const token = schema.tables.find((t) => t.name === "PgGoldLindormToken")!;
+    expect(client.columns.find((c) => c.name === "id")?.pgType).toBe("VARCHAR(31)");
+    expect(token.columns.find((c) => c.name === "id")?.pgType).toBe("VARCHAR(24)");
+    expect(token.columns.find((c) => c.name === "clientId")?.pgType).toBe("VARCHAR(31)");
     expect(schema).toMatchSnapshot();
   });
 });

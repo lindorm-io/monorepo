@@ -46,6 +46,10 @@ exports[`mapFieldType > integer types > smallint → SMALLINT 1`] = `"SMALLINT"`
 
 exports[`mapFieldType > logical types (stored as TEXT) > email → TEXT 1`] = `"TEXT"`;
 
+exports[`mapFieldType > logical types (stored as TEXT) > lindorm_id with max → VARCHAR(max) 1`] = `"VARCHAR(24)"`;
+
+exports[`mapFieldType > logical types (stored as TEXT) > lindorm_id without max → VARCHAR(255) (defensive — metadata build resolves max) 1`] = `"VARCHAR(255)"`;
+
 exports[`mapFieldType > logical types (stored as TEXT) > url → TEXT 1`] = `"TEXT"`;
 
 exports[`mapFieldType > network types > cidr → CIDR 1`] = `"CIDR"`;

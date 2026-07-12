@@ -15,6 +15,10 @@ const fieldWithMinMax = [
   "varchar",
 ];
 
+// Mirrors @lindorm/random randomId: an optional alphanumeric namespace joined
+// with "_", followed by a base62 body of 16-64 characters.
+const LINDORM_ID_REGEX = /^(?:[A-Za-z0-9]+_)?[A-Za-z0-9]{16,64}$/;
+
 const schemaCache = new WeakMap<Constructor<any>, z.ZodObject<any>>();
 
 const getValidator = (field: MetaField): z.ZodType | undefined => {
@@ -54,6 +58,9 @@ const getValidator = (field: MetaField): z.ZodType | undefined => {
 
     case "email":
       return z.email();
+
+    case "lindorm_id":
+      return z.string().regex(LINDORM_ID_REGEX);
 
     case "url":
       return z.url();

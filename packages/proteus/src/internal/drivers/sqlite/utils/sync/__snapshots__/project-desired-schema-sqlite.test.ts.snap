@@ -856,6 +856,83 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
 }
 `;
 
+exports[`projectDesiredSchemaSqlite > projects lindorm_id PK as TEXT with FK column type equal to the PK 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "name",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "GoldLindormClient",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "id",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+        {
+          "checkExpr": null,
+          "defaultExpr": null,
+          "isAutoincrement": false,
+          "name": "clientId",
+          "nullable": false,
+          "sqliteType": "TEXT",
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "clientId",
+          ],
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "GoldLindormClient",
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+        },
+      ],
+      "indexes": [],
+      "name": "GoldLindormToken",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
 exports[`projectDesiredSchemaSqlite > projects single-table inheritance into the root table only 1`] = `
 {
   "tables": [

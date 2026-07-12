@@ -49,9 +49,10 @@ export type MetaFieldType =
   | "xml"
   // logical (convenience — stored as string, adds validation)
   | "email"
+  | "lindorm_id"
   | "url";
 
-export type MetaFieldPrimaryType = "integer" | "string" | "uuid";
+export type MetaFieldPrimaryType = "integer" | "lindorm_id" | "string" | "uuid";
 
 /**
  * Operations on which a field is read-only:

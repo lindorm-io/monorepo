@@ -541,6 +541,87 @@ exports[`projectDesiredSchemaMysql (golden) > projects joined inheritance with i
 }
 `;
 
+exports[`projectDesiredSchemaMysql (golden) > projects lindorm_id PK as bounded VARCHAR with FK column type equal to the PK 1`] = `
+{
+  "tables": [
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "varchar(31)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "text",
+          "name": "name",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [],
+      "indexes": [],
+      "name": "MyGoldLindormClient",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+    {
+      "checkConstraints": [],
+      "columns": [
+        {
+          "computed": null,
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "varchar(24)",
+          "name": "id",
+          "nullable": false,
+        },
+        {
+          "defaultExpr": null,
+          "enumValues": null,
+          "isAutoIncrement": false,
+          "mysqlType": "varchar(31)",
+          "name": "clientId",
+          "nullable": false,
+        },
+      ],
+      "foreignKeys": [
+        {
+          "columns": [
+            "clientId",
+          ],
+          "constraintName": "fk_5xPY5HJd1Qt",
+          "foreignColumns": [
+            "id",
+          ],
+          "foreignTable": "MyGoldLindormClient",
+          "onDelete": "NO ACTION",
+          "onUpdate": "NO ACTION",
+        },
+      ],
+      "indexes": [],
+      "name": "MyGoldLindormToken",
+      "primaryKeys": [
+        "id",
+      ],
+      "triggers": [],
+      "uniqueConstraints": [],
+    },
+  ],
+}
+`;
+
 exports[`projectDesiredSchemaMysql (golden) > projects single-table inheritance into the root table with discriminator index 1`] = `
 {
   "tables": [

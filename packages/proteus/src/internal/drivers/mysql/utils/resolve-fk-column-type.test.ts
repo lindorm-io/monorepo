@@ -59,9 +59,19 @@ class MysqlFkRefStringNoMax {
   id!: string;
 }
 
+@Entity({ name: "MysqlFkRefLindormId" })
+class MysqlFkRefLindormId {
+  @PrimaryKeyField("lindorm_id") @Generated() id!: string;
+}
+
 describe("resolveFkColumnType (mysql)", () => {
   test("FK column type equals the referenced PK column type by construction", () => {
-    for (const target of [MysqlFkRefUuid, MysqlFkRefInteger, MysqlFkRefVarchar]) {
+    for (const target of [
+      MysqlFkRefUuid,
+      MysqlFkRefInteger,
+      MysqlFkRefVarchar,
+      MysqlFkRefLindormId,
+    ]) {
       const meta = getEntityMetadata(target);
       const pk = meta.primaryKeys[0];
       const pkField = meta.fields.find((f) => f.key === pk)!;
@@ -75,6 +85,7 @@ describe("resolveFkColumnType (mysql)", () => {
       integer: resolveFkColumnType(() => MysqlFkRefInteger, "id"),
       varchar: resolveFkColumnType(() => MysqlFkRefVarchar, "id"),
       enum: resolveFkColumnType(() => MysqlFkRefEnum, "status"),
+      lindormId: resolveFkColumnType(() => MysqlFkRefLindormId, "id"),
     }).toMatchSnapshot();
   });
 
