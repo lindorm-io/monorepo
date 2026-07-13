@@ -37,7 +37,7 @@ exports[`buildMessageMetadata > abstract + concrete hierarchy > should inherit f
       "schema": null,
       "sensitive": null,
       "transform": null,
-      "type": "string",
+      "type": "lindorm_id",
     },
     {
       "decorator": "Field",
@@ -90,6 +90,44 @@ exports[`buildMessageMetadata > abstract + concrete hierarchy > should inherit f
 }
 `;
 
+exports[`buildMessageMetadata > lindorm_id field type > should infer lindorm_id for a role marker paired with a bare @Generated 1`] = `
+[
+  {
+    "decorator": "IdentifierField",
+    "default": null,
+    "enum": null,
+    "key": "id",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "sensitive": null,
+    "transform": null,
+    "type": "lindorm_id",
+  },
+]
+`;
+
+exports[`buildMessageMetadata > lindorm_id field type > should keep an explicit @Field('lindorm_id') 1`] = `
+[
+  {
+    "decorator": "Field",
+    "default": null,
+    "enum": null,
+    "key": "userId",
+    "max": null,
+    "min": null,
+    "nullable": false,
+    "optional": false,
+    "schema": null,
+    "sensitive": null,
+    "transform": null,
+    "type": "lindorm_id",
+  },
+]
+`;
+
 exports[`buildMessageMetadata > multi-level hierarchy > should merge metadata from all three levels 1`] = `
 {
   "broadcast": true,
@@ -139,7 +177,7 @@ exports[`buildMessageMetadata > multi-level hierarchy > should merge metadata fr
       "schema": null,
       "sensitive": null,
       "transform": null,
-      "type": "string",
+      "type": "lindorm_id",
     },
   ],
   "generated": [
@@ -190,7 +228,7 @@ exports[`buildMessageMetadata > single class with mixed decorators > should reso
       "schema": null,
       "sensitive": null,
       "transform": null,
-      "type": "string",
+      "type": "lindorm_id",
     },
     {
       "decorator": "TimestampField",

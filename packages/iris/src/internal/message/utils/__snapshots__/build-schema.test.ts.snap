@@ -54,6 +54,15 @@ exports[`buildSchema > field type mapping > should create a float validator 2`] 
 }
 `;
 
+exports[`buildSchema > field type mapping > should create a lindorm_id validator 1`] = `
+{
+  "data": {
+    "id": "aZ09aZ09aZ09aZ09aZ09aZ09",
+  },
+  "success": true,
+}
+`;
+
 exports[`buildSchema > field type mapping > should create a string validator 1`] = `
 {
   "data": {

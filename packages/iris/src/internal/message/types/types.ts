@@ -7,6 +7,7 @@ export type MetaFieldType =
   | "enum"
   | "float"
   | "integer"
+  | "lindorm_id"
   | "object"
   | "string"
   | "url"

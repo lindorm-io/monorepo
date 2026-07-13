@@ -21,7 +21,7 @@ exports[`getMessageMetadata > should return correct metadata 1`] = `
       "schema": null,
       "sensitive": null,
       "transform": null,
-      "type": "string",
+      "type": "lindorm_id",
     },
     {
       "decorator": "Field",

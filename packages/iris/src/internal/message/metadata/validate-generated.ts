@@ -9,7 +9,14 @@ const STRATEGY_TYPES: Record<MetaGeneratedStrategy, MetaFieldType> = {
   string: "string",
   integer: "integer",
   float: "float",
-  lindorm_id: "string",
+  lindorm_id: "lindorm_id",
+};
+
+// An explicit @Field type must normally equal the strategy's type exactly. lindorm_id
+// is the one exception: a generated id declared as a plain "string" field stays legal —
+// it simply carries no format validation. Anything else keeps strict equality.
+const COMPATIBLE_TYPES: Partial<Record<MetaGeneratedStrategy, Array<MetaFieldType>>> = {
+  lindorm_id: ["lindorm_id", "string"],
 };
 
 // Role-marker decorators declare a field's role, not its column/value type. When one
@@ -52,7 +59,8 @@ export const validateGenerated = (
 
     if (gen.generator) continue;
 
-    const expectedType = STRATEGY_TYPES[gen.strategy as MetaGeneratedStrategy];
+    const strategy = gen.strategy as MetaGeneratedStrategy;
+    const expectedType = STRATEGY_TYPES[strategy];
 
     // Role markers (@IdentifierField/@CorrelationField/@TimestampField) declare the
     // field's ROLE, not its type — so the @Generated strategy determines the type.
@@ -63,7 +71,9 @@ export const validateGenerated = (
     }
 
     // An explicit @Field type must agree with the strategy.
-    if (field.type !== expectedType) {
+    const acceptedTypes = COMPATIBLE_TYPES[strategy] ?? [expectedType];
+
+    if (!acceptedTypes.includes(field.type)) {
       throw new IrisMetadataError("Invalid @Generated strategy for field type", {
         code: "invalid_generated_strategy",
         title: "Invalid Generated Strategy",

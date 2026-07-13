@@ -1,3 +1,4 @@
+import { randomId, randomUUID } from "@lindorm/random";
 import { z } from "zod";
 import { buildSchema } from "./build-schema.js";
 import type { MetaField } from "../types/metadata.js";
@@ -100,6 +101,49 @@ describe("buildSchema", () => {
       const schema = buildSchema(makeMetadata([makeField({ key: "link", type: "url" })]));
       expect(parse(schema, { link: "https://example.com" })).toMatchSnapshot();
       expect(parse(schema, { link: "not-a-url" }).success).toBe(false);
+    });
+
+    it("should create a lindorm_id validator", () => {
+      const schema = buildSchema(
+        makeMetadata([makeField({ key: "id", type: "lindorm_id" })]),
+      );
+      // Snapshot a fixed id — a generated one would churn the snapshot every run.
+      expect(parse(schema, { id: "aZ09aZ09aZ09aZ09aZ09aZ09" })).toMatchSnapshot();
+      expect(parse(schema, { id: randomId() }).success).toBe(true);
+      expect(parse(schema, { id: randomId("user") }).success).toBe(true);
+      expect(parse(schema, { id: randomId({ length: 16 }) }).success).toBe(true);
+      expect(parse(schema, { id: randomId({ length: 64 }) }).success).toBe(true);
+    });
+
+    it("should reject a malformed lindorm_id", () => {
+      const schema = buildSchema(
+        makeMetadata([makeField({ key: "id", type: "lindorm_id" })]),
+      );
+      expect(parse(schema, { id: "a".repeat(15) }).success).toBe(false); // too short
+      expect(parse(schema, { id: "a".repeat(65) }).success).toBe(false); // too long
+      expect(parse(schema, { id: `user_${"a".repeat(15)}` }).success).toBe(false);
+      expect(parse(schema, { id: "abcdefghijklmnop-qrst" }).success).toBe(false); // bad chars
+      expect(parse(schema, { id: `user__${"a".repeat(24)}` }).success).toBe(false); // double underscore
+      expect(parse(schema, { id: `_${"a".repeat(24)}` }).success).toBe(false); // empty namespace
+      expect(parse(schema, { id: randomUUID() }).success).toBe(false);
+      expect(parse(schema, { id: "" }).success).toBe(false);
+      expect(parse(schema, { id: 123 }).success).toBe(false);
+    });
+
+    it("should compose a lindorm_id validator with nullable and optional", () => {
+      const nullable = buildSchema(
+        makeMetadata([makeField({ key: "id", type: "lindorm_id", nullable: true })]),
+      );
+      expect(parse(nullable, { id: null }).success).toBe(true);
+      expect(parse(nullable, { id: undefined }).success).toBe(false);
+      expect(parse(nullable, { id: "not-an-id" }).success).toBe(false);
+
+      const optional = buildSchema(
+        makeMetadata([makeField({ key: "id", type: "lindorm_id", optional: true })]),
+      );
+      expect(parse(optional, {}).success).toBe(true);
+      expect(parse(optional, { id: null }).success).toBe(false);
+      expect(parse(optional, { id: randomId() }).success).toBe(true);
     });
 
     it("should create an array validator", () => {

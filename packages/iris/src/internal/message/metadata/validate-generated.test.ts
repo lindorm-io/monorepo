@@ -124,11 +124,41 @@ describe("validateGenerated", () => {
     expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
   });
 
-  it("should pass for lindorm_id strategy on a string field", () => {
-    const fields = [makeField({ key: "id", type: "string" })];
+  it("should pass for lindorm_id strategy on a lindorm_id field", () => {
+    const fields = [makeField({ key: "id", type: "lindorm_id" })];
     const generated = [makeGenerated({ key: "id", strategy: "lindorm_id" })];
 
     expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
+    expect(fields[0].type).toBe("lindorm_id");
+  });
+
+  it("should keep an explicit @Field('string') legal for lindorm_id strategy", () => {
+    const fields = [makeField({ key: "id", type: "string" })];
+    const generated = [makeGenerated({ key: "id", strategy: "lindorm_id" })];
+
+    // Back-compat: a plain string field holding a generated id stays legal — it just
+    // gets no format validation. The declared type is NOT rewritten.
+    expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
+    expect(fields[0].type).toBe("string");
+  });
+
+  it("should infer lindorm_id for a role-marker field with a bare @Generated", () => {
+    const fields = [
+      makeField({ key: "id", decorator: "IdentifierField", type: "string" }),
+    ];
+    const generated = [makeGenerated({ key: "id", strategy: "lindorm_id" })];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).not.toThrow();
+    expect(fields[0].type).toBe("lindorm_id");
+  });
+
+  it("should keep strict type equality for every other strategy", () => {
+    const fields = [makeField({ key: "id", type: "string" })];
+    const generated = [makeGenerated({ key: "id", strategy: "uuid" })];
+
+    expect(() => validateGenerated("TestMsg", generated, fields)).toThrow(
+      "Invalid @Generated strategy for field type",
+    );
   });
 
   it("should throw for lindorm_id strategy on a non-string field", () => {

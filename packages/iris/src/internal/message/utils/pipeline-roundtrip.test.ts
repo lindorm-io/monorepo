@@ -3,6 +3,7 @@ import { Compressed } from "../../../decorators/Compressed.js";
 import { Field } from "../../../decorators/Field.js";
 import { Generated } from "../../../decorators/Generated.js";
 import { Header } from "../../../decorators/Header.js";
+import { IdentifierField } from "../../../decorators/IdentifierField.js";
 import { Message } from "../../../decorators/Message.js";
 import { Nullable } from "../../../decorators/Nullable.js";
 import { Transform } from "../../../decorators/Transform.js";
@@ -403,6 +404,68 @@ describe("pipeline round-trip", () => {
   });
 
   describe("message with @Generated fields", () => {
+    it("should preserve and validate a generated lindorm_id through the pipeline", async () => {
+      @Message({ name: "GeneratedLindormIdMsg" })
+      class GeneratedLindormIdMsg implements IMessage {
+        @IdentifierField()
+        @Generated()
+        id!: string;
+
+        @Field("string")
+        name!: string;
+      }
+
+      const manager = new MessageManager({ target: GeneratedLindormIdMsg });
+      const { original, hydrated } = await roundTrip(manager, {
+        name: "test",
+      } as Partial<GeneratedLindormIdMsg>);
+
+      // The bare @Generated() on a role marker infers the lindorm_id field type.
+      expect(manager.metadata.fields.find((f) => f.key === "id")?.type).toBe(
+        "lindorm_id",
+      );
+      expect(original.id).toMatch(/^[A-Za-z0-9]{24}$/);
+      expect(hydrated.id).toBe(original.id);
+      expect(() => manager.validate(hydrated)).not.toThrow();
+    });
+
+    it("should preserve and validate a namespaced generated lindorm_id", async () => {
+      @Message({ name: "GeneratedNamespacedIdMsg" })
+      class GeneratedNamespacedIdMsg implements IMessage {
+        @Field("lindorm_id")
+        @Generated("lindorm_id", { namespace: "user", length: 32 })
+        userId!: string;
+      }
+
+      const manager = new MessageManager({ target: GeneratedNamespacedIdMsg });
+      const { original, hydrated } = await roundTrip(
+        manager,
+        {} as Partial<GeneratedNamespacedIdMsg>,
+      );
+
+      expect(original.userId).toMatch(/^user_[A-Za-z0-9]{32}$/);
+      expect(hydrated.userId).toBe(original.userId);
+      expect(() => manager.validate(hydrated)).not.toThrow();
+    });
+
+    it("should throw when a hydrated message carries a malformed lindorm_id", async () => {
+      @Message({ name: "HydratedBadIdMsg" })
+      class HydratedBadIdMsg implements IMessage {
+        @IdentifierField()
+        @Generated()
+        id!: string;
+
+        @Field("string")
+        name!: string;
+      }
+
+      const manager = new MessageManager({ target: HydratedBadIdMsg });
+      const hydrated = manager.hydrate({ id: "not-a-lindorm-id", name: "test" });
+
+      expect(hydrated.id).toBe("not-a-lindorm-id");
+      expect(() => manager.validate(hydrated)).toThrow();
+    });
+
     it("should preserve generated uuid through the pipeline", async () => {
       @Message({ name: "GeneratedUuidMsg" })
       class GeneratedUuidMsg implements IMessage {

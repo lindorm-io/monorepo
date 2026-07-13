@@ -1,10 +1,11 @@
+import { LINDORM_ID_PATTERN } from "@lindorm/random";
 import { z } from "zod";
 import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
 import type { MetaField } from "../types/metadata.js";
 import type { MessageMetadata } from "../types/metadata.js";
 import { digestFormatRegex } from "./digest-format.js";
 
-const fieldWithMinMax = ["array", "bigint", "integer", "float", "string"];
+const fieldWithMinMax = ["array", "bigint", "integer", "float", "lindorm_id", "string"];
 
 const getValidator = (field: MetaField): z.ZodType | undefined => {
   switch (field.type) {
@@ -28,6 +29,10 @@ const getValidator = (field: MetaField): z.ZodType | undefined => {
 
     case "email":
       return z.email();
+
+    // Format owned by @lindorm/random, alongside the generator that mints it.
+    case "lindorm_id":
+      return z.string().regex(LINDORM_ID_PATTERN);
 
     case "url":
       return z.url();

@@ -228,15 +228,17 @@ The builder also exposes `flatMap((msg) => Array<T>)` and `batch(size, { timeout
 
 `@Field()` accepts the following type identifiers:
 
-| Category       | Types                            |
-| -------------- | -------------------------------- |
-| Boolean        | `boolean`                        |
-| Integer        | `integer`, `bigint`              |
-| Floating point | `float`                          |
-| String         | `string`, `email`, `url`, `uuid` |
-| Enum           | `enum`                           |
-| Date/Time      | `date`                           |
-| Structured     | `object`, `array`                |
+| Category       | Types                                          |
+| -------------- | ---------------------------------------------- |
+| Boolean        | `boolean`                                      |
+| Integer        | `integer`, `bigint`                            |
+| Floating point | `float`                                        |
+| String         | `string`, `email`, `lindorm_id`, `url`, `uuid` |
+| Enum           | `enum`                                         |
+| Date/Time      | `date`                                         |
+| Structured     | `object`, `array`                              |
+
+`email`, `lindorm_id`, `url`, and `uuid` are strings with format validation. `lindorm_id` accepts a base62 id from `@lindorm/random` — an optional alphanumeric namespace joined with `_`, then a 16-64 character body.
 
 ```typescript
 @Message()
@@ -251,6 +253,7 @@ class Example {
   @Field("boolean") active!: boolean;
   @Field("date") expiresAt!: Date;
   @Field("uuid") referenceId!: string;
+  @Field("lindorm_id") externalId!: string;
   @Field("email") contactEmail!: string;
   @Field("url") callbackUrl!: string;
   @Field("array") tags!: Array<string>;
@@ -526,18 +529,18 @@ Declares a field with an explicit type from the [Field Types](#field-types) tabl
 
 #### `@IdentifierField`
 
-Auto-generated UUID v4 primary identifier. Equivalent to `@Default(() => randomUUID()) @Field("uuid")`. Non-nullable, non-optional.
+Marks the primary identifier. Non-nullable, non-optional. A pure marker — pair it with `@Generated()` to fill it, which types the field `lindorm_id`.
 
 ```typescript
-@IdentifierField() id!: string;
+@IdentifierField() @Generated() id!: string;
 ```
 
 #### `@CorrelationField`
 
-Auto-generated UUID v4 used to trace related messages across publish/consume chains. Equivalent to `@Default(() => randomUUID()) @Field("uuid")`. Non-nullable, non-optional.
+Marks the id used to trace related messages across publish/consume chains. Non-nullable, non-optional. Same pairing as `@IdentifierField`.
 
 ```typescript
-@CorrelationField() correlationId!: string;
+@CorrelationField() @Generated() correlationId!: string;
 ```
 
 #### `@TimestampField`
@@ -589,6 +592,8 @@ Stack these on top of a field decorator to refine its behavior.
 Marks a field for automatic value generation when an instance is created.
 
 ```typescript
+@Generated() @IdentifierField() id!: string;                    // bare @Generated() → lindorm_id
+@Generated("lindorm_id", { namespace: "user" }) @Field("lindorm_id") userId!: string;
 @Generated("uuid") @Field("uuid") traceId!: string;
 @Generated("date") @Field("date") processedAt!: Date;
 @Generated("string") @Field("string") token!: string;
@@ -597,7 +602,9 @@ Marks a field for automatic value generation when an instance is created.
 @Generated("float", { min: 0, max: 1 }) @Field("float") weight!: number;
 ```
 
-**Strategies:** `"uuid" | "date" | "string" | "integer" | "float"` (re-exported as `IrisGeneratedStrategy`). **Options:** `{ length?, min?, max? }`.
+**Strategies:** `"lindorm_id" | "uuid" | "date" | "string" | "integer" | "float"` (re-exported as `IrisGeneratedStrategy`); `lindorm_id` is the default. **Options:** `{ length?, min?, max? }`, plus `{ namespace? }` for `lindorm_id`.
+
+The strategy determines the field type of a role marker (`@IdentifierField` / `@CorrelationField` / `@TimestampField`), so a bare `@Generated()` types the field `lindorm_id` and validates the id format. An explicit `@Field("string") @Generated()` stays legal — it just carries no format validation. Any other type/strategy mismatch throws.
 
 #### `@Header`
 

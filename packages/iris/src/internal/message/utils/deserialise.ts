@@ -149,6 +149,7 @@ export const deserialise = (value: any, type: MetaFieldType): any => {
     }
 
     case "email":
+    case "lindorm_id":
     case "string":
     case "url":
     case "uuid": {

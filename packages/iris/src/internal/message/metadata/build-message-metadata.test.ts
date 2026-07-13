@@ -163,6 +163,73 @@ describe("buildMessageMetadata", () => {
     });
   });
 
+  describe("lindorm_id field type", () => {
+    it("should infer lindorm_id for a role marker paired with a bare @Generated", () => {
+      @Message({ name: "InferredIdEvent" })
+      class InferredIdEvent {
+        @IdentifierField()
+        @Generated()
+        id!: string;
+      }
+
+      const metadata = buildMessageMetadata(InferredIdEvent);
+      expect(metadata.fields[0].type).toBe("lindorm_id");
+      expect(stabilize(metadata).fields).toMatchSnapshot();
+    });
+
+    it("should keep an explicit @Field('lindorm_id')", () => {
+      @Message({ name: "ExplicitIdEvent" })
+      class ExplicitIdEvent {
+        @Field("lindorm_id")
+        @Generated("lindorm_id", { namespace: "user" })
+        userId!: string;
+      }
+
+      const metadata = buildMessageMetadata(ExplicitIdEvent);
+      expect(metadata.fields[0].type).toBe("lindorm_id");
+      expect(stabilize(metadata).fields).toMatchSnapshot();
+    });
+
+    it("should allow a bare @Field('lindorm_id') without @Generated", () => {
+      @Message({ name: "BareIdEvent" })
+      class BareIdEvent {
+        @Field("lindorm_id")
+        externalId!: string;
+      }
+
+      const metadata = buildMessageMetadata(BareIdEvent);
+      expect(metadata.fields[0].type).toBe("lindorm_id");
+      expect(metadata.generated).toHaveLength(0);
+    });
+
+    it("should still allow an explicit @Field('string') with @Generated()", () => {
+      @Message({ name: "StringIdEvent" })
+      class StringIdEvent {
+        @Field("string")
+        @Generated()
+        id!: string;
+      }
+
+      // Back-compat: legal, and the declared "string" type is preserved — the id is
+      // generated but carries no format validation.
+      const metadata = buildMessageMetadata(StringIdEvent);
+      expect(metadata.fields[0].type).toBe("string");
+    });
+
+    it("should throw for a genuinely mismatched type with @Generated()", () => {
+      @Message({ name: "IntegerIdEvent" })
+      class IntegerIdEvent {
+        @Field("integer")
+        @Generated()
+        id!: number;
+      }
+
+      expect(() => buildMessageMetadata(IntegerIdEvent)).toThrow(
+        "Invalid @Generated strategy for field type",
+      );
+    });
+  });
+
   describe("abstract + concrete hierarchy", () => {
     const parentHook = () => {};
     const childHook = () => {};
