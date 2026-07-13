@@ -98,6 +98,14 @@ export const decodeJwtPayload = <C extends Dict = Dict<never>>(
   payload: string,
 ): DecodeClaims<C> => JSON.parse(B64.toString(payload)) as DecodeClaims<C>;
 
+/**
+ * The shared parse gate. Only `exp` and `iss` are enforced here — `iat` is
+ * deliberately NOT required: RFC 7523 §3 makes `exp` mandatory on a client
+ * assertion but `iat` only OPTIONAL, so a conformant assertion omitting it
+ * must still parse. `iat` PRESENCE policy belongs to the profile floor
+ * (`profile.required` carries `issuedAt` where the spec mandates it, e.g.
+ * access tokens per RFC 9068) or to the caller, not to the parser.
+ */
 export const parseTokenPayload = <C extends Dict = Dict<never>>(
   decoded: DecodeClaims<C>,
 ): ParsedJwtPayload<C> => {
@@ -106,13 +114,6 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
       code: "jwt_missing_claim_exp",
       title: "JWT Missing Claim Exp",
       details: "The payload has no finite exp claim, which is required to parse a JWT.",
-    });
-  }
-  if (!isFinite(decoded.iat)) {
-    throw new JwtError("Missing claim: iat", {
-      code: "jwt_missing_claim_iat",
-      title: "JWT Missing Claim IAT",
-      details: "The payload has no finite iat claim, which is required to parse a JWT.",
     });
   }
   if (!isString(decoded.iss)) {
@@ -132,10 +133,11 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
   // "unknown" fallbacks for required fields — stricter than DomainClaims.
   return removeUndefined({
     ...domain,
-    // Required fields (validated above — iss/exp/iat all checked)
+    // Required fields (validated above — iss/exp checked)
     issuer: domain.issuer!,
     expiresAt: domain.expiresAt!,
-    issuedAt: domain.issuedAt!,
+    // Optional — an absent iat leaves issuedAt undefined (removeUndefined strips it)
+    issuedAt: domain.issuedAt,
     // Non-optional arrays default to []
     audience: domain.audience ?? [],
     authMethods: domain.authMethods ?? [],

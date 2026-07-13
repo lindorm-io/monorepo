@@ -1,0 +1,40 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`parseTokenPayload > should parse a token with an iat 1`] = `
+{
+  "audience": [
+    "https://test.lindorm.io/",
+  ],
+  "authMethods": [],
+  "claims": {},
+  "entitlements": [],
+  "expiresAt": 2024-01-01T08:02:00.000Z,
+  "groups": [],
+  "issuedAt": 2024-01-01T08:00:00.000Z,
+  "issuer": "client-1",
+  "permissions": [],
+  "roles": [],
+  "scope": [],
+  "subject": "client-1",
+  "tokenId": "assertion-1",
+}
+`;
+
+exports[`parseTokenPayload > should parse an RFC 7523 client assertion with no iat 1`] = `
+{
+  "audience": [
+    "https://test.lindorm.io/",
+  ],
+  "authMethods": [],
+  "claims": {},
+  "entitlements": [],
+  "expiresAt": 2024-01-01T08:02:00.000Z,
+  "groups": [],
+  "issuer": "client-1",
+  "permissions": [],
+  "roles": [],
+  "scope": [],
+  "subject": "client-1",
+  "tokenId": "assertion-1",
+}
+`;

@@ -118,6 +118,31 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     ).rejects.toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
   });
 
+  test("rejects an access token with no iat — presence policy lives in the floor", async () => {
+    // The parse gate no longer requires iat (RFC 7523 assertions may omit it),
+    // so the profile floor is what keeps RFC 9068's REQUIRED iat honest.
+    const token = craftToken(
+      { ...assertionHeader, typ: "application/at+jwt" },
+      {
+        iss: ISSUER,
+        sub: "user-1",
+        aud: [RESOURCE],
+        exp: 1704096120,
+        jti: "access-1",
+        client_id: "client-1",
+      },
+    );
+
+    await expect(
+      aegis.verify("access_token", token, { audience: RESOURCE }),
+    ).rejects.toThrow(
+      expect.objectContaining({
+        code: "jwt_required_claims_missing",
+        data: { missing: ["issuedAt"] },
+      }),
+    );
+  });
+
   test("raw jwt.verify rejects a validly-signed typ-less JWT (strict default)", async () => {
     // Regression pin for direct callers (e.g. pylon token middleware): only
     // profiled verify opts into typPresence "optional" — the raw path keeps
@@ -274,6 +299,21 @@ describe("Aegis profiled verify floor (§4.4)", () => {
           data: { missing: ["tokenId"] },
         }),
       );
+    });
+
+    test("accepts an assertion WITHOUT an iat claim (RFC 7523 §3 — iat is OPTIONAL)", async () => {
+      const { iat: _iat, ...withoutIat } = assertionPayload;
+      const token = craftToken(assertionHeader, withoutIat);
+
+      const parsed = await aegis.verify("client_assertion", token, {
+        audience: ISSUER,
+        issuer: "client-1",
+      });
+
+      expect(parsed.payload.issuedAt).toBeUndefined();
+      expect(parsed).toMatchObject({
+        payload: { issuer: "client-1", subject: "client-1", tokenId: "assertion-1" },
+      });
     });
 
     test("rejects an assertion with an empty-string jti", async () => {
