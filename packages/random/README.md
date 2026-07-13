@@ -13,6 +13,7 @@ This package is **ESM-only**. Use `import`, not `require`. It has no runtime dep
 ## Features
 
 - `randomId` — base62 id with an optional namespace prefix and configurable length
+- `isLindormId` / `LINDORM_ID_PATTERN` — validate a value against the `randomId` format
 - `randomNumber` — uniform random integer with up to `length` digits, generated via rejection sampling against a 64-bit space
 - `randomString` — random string with an exact count of digits and symbols, the rest filled with letters
 - `randomUUID` — thin wrapper over `crypto.randomUUID()` returning a v4 UUID
@@ -20,11 +21,19 @@ This package is **ESM-only**. Use `import`, not `require`. It has no runtime dep
 ## Usage
 
 ```ts
-import { randomId, randomNumber, randomString, randomUUID } from "@lindorm/random";
+import {
+  isLindormId,
+  randomId,
+  randomNumber,
+  randomString,
+  randomUUID,
+} from "@lindorm/random";
 
 const id = randomId();
 const namespaced = randomId("usr");
 const long = randomId({ namespace: "usr", length: 32 });
+
+const valid = isLindormId(namespaced);
 
 const code = randomNumber(6);
 
@@ -47,6 +56,23 @@ randomId(options: { namespace?: string; length?: RandomIdLength }): string;
 ```
 
 `RandomIdLength` is one of `16 | 20 | 24 | 28 | 32 | 36 | 40 | 44 | 48 | 52 | 56 | 60 | 64`. The default is `24`. The id body is exactly `length` characters drawn from `[A-Za-z0-9]` (base62, generated via rejection sampling to avoid modulo bias), making it safe for URLs, filenames, and headers. When a `namespace` is supplied, the result is `${namespace}_${id}`; the namespace must be non-empty and match `[A-Za-z0-9]+`, otherwise an error is thrown (a symbol in the namespace would make `namespace_id` ambiguous to split).
+
+### `isLindormId` / `LINDORM_ID_PATTERN`
+
+```ts
+const fn = (value: unknown) => boolean;
+```
+
+`isLindormId` returns `true` when the value is a string in the `randomId` format: an optional alphanumeric namespace joined with `_`, then a base62 body of 16-64 characters. `LINDORM_ID_PATTERN` is the underlying `RegExp` — export it into a schema (`z.string().regex(LINDORM_ID_PATTERN)`) rather than copying the format.
+
+Both are derived from the same alphabet and length bounds the generator uses, so a validator cannot drift from the ids it validates. The length range is continuous (16-64), a deliberate superset of `RandomIdLength`'s step-4 union.
+
+```ts
+import { isLindormId, LINDORM_ID_PATTERN, randomId } from "@lindorm/random";
+
+isLindormId(randomId("usr")); // true
+isLindormId("not-an-id"); // false
+```
 
 ### `randomNumber`
 

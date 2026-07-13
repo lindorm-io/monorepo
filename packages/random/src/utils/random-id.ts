@@ -1,3 +1,7 @@
+import { ID_ALPHABET, ID_CHARACTER_CLASS } from "../constants/id-format.js";
+
+// Bounded by ID_MIN_LENGTH / ID_MAX_LENGTH — pinned by is-lindorm-id.test.ts, which
+// generates every length in this union and validates it against LINDORM_ID_PATTERN.
 export type RandomIdLength =
   | 16
   | 20
@@ -18,10 +22,10 @@ export type RandomIdOptions = {
   length?: RandomIdLength;
 };
 
-const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-const MAX = 248; // 256 - (256 % 62); reject bytes at or above to avoid modulo bias
+// 256 - (256 % 62) = 248; reject bytes at or above to avoid modulo bias
+const MAX = 256 - (256 % ID_ALPHABET.length);
 
-const NAMESPACE_PATTERN = /^[A-Za-z0-9]+$/;
+const NAMESPACE_PATTERN = new RegExp(`^${ID_CHARACTER_CLASS}+$`);
 
 const assertNamespace = (namespace: string): void => {
   if (!NAMESPACE_PATTERN.test(namespace)) {
@@ -38,7 +42,7 @@ const randomChars = (length: number): string => {
     const bytes = new Uint8Array(length - result.length);
     globalThis.crypto.getRandomValues(bytes);
     for (const byte of bytes) {
-      if (byte < MAX) result += ALPHABET[byte % 62];
+      if (byte < MAX) result += ID_ALPHABET[byte % ID_ALPHABET.length];
       if (result.length === length) break;
     }
   }
