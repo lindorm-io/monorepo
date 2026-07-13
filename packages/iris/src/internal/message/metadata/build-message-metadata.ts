@@ -138,6 +138,7 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
 
   // Merge field modifiers into fields
   const fieldModifiers = collectAll(target, "fieldModifiers");
+  const appliedModifiers = new Map<string, Set<string>>();
   for (const mod of fieldModifiers) {
     const field = fields.find((f) => f.key === mod.key);
     if (!field) {
@@ -152,6 +153,28 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
         },
       );
     }
+
+    // Each field modifier is once-only per property — stacking the same one twice
+    // silently discards the first, so it is always a mistake.
+    let applied = appliedModifiers.get(mod.key);
+    if (!applied) {
+      applied = new Set();
+      appliedModifiers.set(mod.key, applied);
+    }
+    if (applied.has(mod.decorator)) {
+      throw new IrisMetadataError(
+        `Duplicate @${mod.decorator} on property "${mod.key}"`,
+        {
+          code: "duplicate_field_modifier",
+          title: "Duplicate Field Modifier",
+          details:
+            "A field modifier decorator was applied more than once to the same property. Apply each field modifier decorator only once per property.",
+          debug: { target: target.name, property: mod.key, decorator: mod.decorator },
+        },
+      );
+    }
+    applied.add(mod.decorator);
+
     if (mod.min != null) field.min = mod.min;
     if (mod.max != null) field.max = mod.max;
     if (mod.enum != null) field.enum = mod.enum;
@@ -159,6 +182,7 @@ export const buildMessageMetadata = (target: Function): MessageMetadata => {
     if (mod.default !== undefined) field.default = mod.default;
     if (mod.nullable === true) field.nullable = true;
     if (mod.optional === true) field.optional = true;
+    if (mod.sensitive != null) field.sensitive = mod.sensitive;
     if (mod.transform != null) field.transform = mod.transform;
   }
 
