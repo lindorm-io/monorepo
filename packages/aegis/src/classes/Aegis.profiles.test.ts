@@ -337,7 +337,7 @@ describe("Aegis profiles", () => {
     });
   });
 
-  describe("delegation / client_assertion (per-token issuer)", () => {
+  describe("delegation (per-token issuer)", () => {
     test("delegation uses the per-token issuer, not the platform issuer", async () => {
       const { token } = await aegis.mint("delegation", {
         issuer: "client-1",
@@ -349,18 +349,6 @@ describe("Aegis profiles", () => {
       expect(header.typ).toBe("application/delegation+jwt");
       expect(payload.iss).toBe("client-1");
       expect(payload.sub).toBe("customer-sub");
-    });
-
-    test("client_assertion uses iss=sub=client_id, bare JWT typ", async () => {
-      const { token } = await aegis.mint("client_assertion", {
-        issuer: "client-1",
-        subject: "client-1",
-        audience: [ISSUER],
-      });
-      const { header, payload } = JwtKit.decode(token);
-
-      expect(header.typ).toBe("JWT");
-      expect(payload.iss).toBe("client-1");
     });
   });
 });

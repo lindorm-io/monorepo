@@ -1,7 +1,6 @@
 import type { TokenProfile } from "../../types/index.js";
 import { JwtError } from "../../errors/index.js";
 import { accessTokenProfile } from "./definitions/access-token.js";
-import { clientAssertionProfile } from "./definitions/client-assertion.js";
 import { defaultProfile } from "./definitions/default.js";
 import { delegationProfile } from "./definitions/delegation.js";
 import { erasureTokenProfile } from "./definitions/erasure-token.js";
@@ -41,7 +40,6 @@ export const resolveProfile = (name: string): TokenProfile => {
 };
 
 registerProfile(accessTokenProfile);
-registerProfile(clientAssertionProfile);
 registerProfile(defaultProfile);
 registerProfile(delegationProfile);
 registerProfile(erasureTokenProfile);

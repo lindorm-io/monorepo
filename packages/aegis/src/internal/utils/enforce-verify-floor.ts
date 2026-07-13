@@ -42,8 +42,7 @@ const typMismatch = (
  * on top of the standard signature/alg/exp/nbf checks JwtKit already runs:
  *
  *   - `typ` per the profile's presence policy: `required` demands an exact
- *     match, `optional` accepts an absent typ but a present one must match
- *     exactly, `none` runs no check (unless the COSE path overrides),
+ *     match, `none` runs no check (unless the COSE path overrides),
  *   - `iss` exact-match against the expected issuer,
  *   - `aud` contains the verifier's identity (`audience`),
  *   - `exp` PRESENT when `profile.lifetime !== null` (no `$exists:false`
@@ -66,16 +65,6 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
       }
       break;
 
-    case "optional": {
-      // Absent typ is accepted (RFC 7523 client assertions from stock
-      // libraries omit it); a present typ must still match exactly (RFC 8725).
-      const expected = input.expectedTyp ?? profile.typ.value;
-      if (decodedTyp !== undefined && decodedTyp !== expected) {
-        throw typMismatch(decodedTyp, expected, profile);
-      }
-      break;
-    }
-
     case "required": {
       const expected = input.expectedTyp ?? profile.typ.value;
       if (decodedTyp !== expected) {
@@ -91,7 +80,7 @@ export const enforceVerifyFloor = (input: VerifyFloorInput): void => {
         debug: { profile: profile.name },
         title: "Unsupported Typ Presence",
         details:
-          "The profile typ presence is not one of none, optional, or required, so the floor cannot enforce it.",
+          "The profile typ presence is not one of none or required, so the floor cannot enforce it.",
       });
   }
 

@@ -106,11 +106,6 @@ export type DelegationContent = Required<
 > &
   Partial<Pick<SignContent, "expires">>;
 
-export type ClientAssertionContent = Required<
-  Pick<SignContent, "issuer" | "subject" | "audience">
-> &
-  Partial<Pick<SignContent, "expires">>;
-
 export type IntrospectionContent = Required<Pick<SignContent, "audience">> &
   Partial<Pick<SignContent, "claims" | "expires">>;
 
@@ -132,7 +127,6 @@ export type ProfileContent = {
   erasure_token: ErasureTokenContent;
   security_event: SecurityEventContent;
   delegation: DelegationContent;
-  client_assertion: ClientAssertionContent;
   introspection: IntrospectionContent;
   userinfo: UserinfoContent;
   jarm: JarmContent;
@@ -179,19 +173,14 @@ export type ProfileRules = {
  *
  * - `"none"` — the profile mandates no typ. Mint falls back to the
  *   tokenType-derived default (bare `JWT`); verify runs no typ check.
- * - `"optional"` — mint stamps `value`; verify accepts an ABSENT typ, but a
- *   PRESENT typ must strictly equal `value` (RFC 8725 explicit typing kept as
- *   defense where clients do send it — e.g. RFC 7523 client assertions, which
- *   stock OAuth libraries emit without a typ header).
  * - `"required"` — mint stamps `value`; verify rejects an absent or
- *   mismatching typ.
+ *   mismatching typ (RFC 8725 explicit typing).
  *
- * Presence is a verify-side knob only: mint always stamps `value` for both
- * `"optional"` and `"required"`.
+ * Presence is a verify-side knob only: mint always stamps `value` for
+ * `"required"`.
  */
 export type TokenProfileTyp =
   | { presence: "none" }
-  | { presence: "optional"; value: string }
   | { presence: "required"; value: string };
 
 /**

@@ -14,10 +14,6 @@ describe("coseTyp", () => {
     expect(coseTyp({ presence: "required", value: jose })).toBe(cose);
   });
 
-  test("maps an optional-presence typ by its value (presence is verify-side only)", () => {
-    expect(coseTyp({ presence: "optional", value: "JWT" })).toBe("application/cwt");
-  });
-
   test("presence none maps to undefined (no mandated typ)", () => {
     expect(coseTyp({ presence: "none" })).toBeUndefined();
   });

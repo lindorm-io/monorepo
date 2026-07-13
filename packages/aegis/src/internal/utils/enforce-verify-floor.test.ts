@@ -1,8 +1,8 @@
 import { describe, expect, test } from "vitest";
 import { JwtError } from "../../errors/index.js";
 import { accessTokenProfile } from "../profiles/definitions/access-token.js";
-import { clientAssertionProfile } from "../profiles/definitions/client-assertion.js";
 import { defaultProfile } from "../profiles/definitions/default.js";
+import { delegationProfile } from "../profiles/definitions/delegation.js";
 import { securityEventProfile } from "../profiles/definitions/security-event.js";
 import { enforceVerifyFloor } from "./enforce-verify-floor.js";
 
@@ -28,10 +28,11 @@ const validPayload = {
   tokenId: "token-1",
 };
 
-// Compliant client_assertion payload (iss = sub = client_id, RFC 7523).
-const assertionPayload = {
+// Compliant `delegation` payload — a per-token issuer, and no `issuedAt`: the
+// profile omits it from `required` (iat RECOMMENDED, not REQUIRED).
+const delegationPayload = {
   issuer: "client-1",
-  subject: "client-1",
+  subject: "customer-sub",
   audience: [RESOURCE],
   expiresAt: new Date(1704099600 * 1000),
   tokenId: "token-1",
@@ -107,44 +108,6 @@ describe("enforceVerifyFloor", () => {
 
     test("passes an exact typ match", () => {
       expect(() => enforceVerifyFloor({ ...base, payload: validPayload })).not.toThrow();
-    });
-  });
-
-  describe("typ presence: optional (client_assertion)", () => {
-    const assertionBase = {
-      audience: RESOURCE,
-      expectedIssuer: "client-1",
-      profile: clientAssertionProfile,
-    };
-
-    test("passes an absent typ (RFC 7523 stock libraries omit it)", () => {
-      expect(() =>
-        enforceVerifyFloor({
-          ...assertionBase,
-          decodedTyp: undefined,
-          payload: assertionPayload,
-        }),
-      ).not.toThrow();
-    });
-
-    test("rejects a present-but-wrong typ (RFC 8725 explicit typing)", () => {
-      expect(() =>
-        enforceVerifyFloor({
-          ...assertionBase,
-          decodedTyp: "application/at+jwt",
-          payload: assertionPayload,
-        }),
-      ).toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
-    });
-
-    test("passes a present-and-correct typ", () => {
-      expect(() =>
-        enforceVerifyFloor({
-          ...assertionBase,
-          decodedTyp: "JWT",
-          payload: assertionPayload,
-        }),
-      ).not.toThrow();
     });
   });
 
@@ -235,26 +198,26 @@ describe("enforceVerifyFloor", () => {
       );
     });
 
-    test("passes a compliant client assertion (jti present)", () => {
+    test("passes a compliant delegation (jti present, iat absent and not required)", () => {
       expect(() =>
         enforceVerifyFloor({
           audience: RESOURCE,
-          decodedTyp: undefined,
+          decodedTyp: "application/delegation+jwt",
           expectedIssuer: "client-1",
-          profile: clientAssertionProfile,
-          payload: assertionPayload,
+          profile: delegationProfile,
+          payload: delegationPayload,
         }),
       ).not.toThrow();
     });
 
-    test("rejects a client assertion without jti", () => {
+    test("rejects a delegation without jti", () => {
       expect(() =>
         enforceVerifyFloor({
           audience: RESOURCE,
-          decodedTyp: undefined,
+          decodedTyp: "application/delegation+jwt",
           expectedIssuer: "client-1",
-          profile: clientAssertionProfile,
-          payload: { ...assertionPayload, tokenId: undefined },
+          profile: delegationProfile,
+          payload: { ...delegationPayload, tokenId: undefined },
         }),
       ).toThrow(
         expect.objectContaining({

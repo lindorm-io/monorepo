@@ -16,7 +16,6 @@ const REQUIRED_DOMAIN_KEYS: Record<string, Array<string>> = {
   erasure_token: ["audience", "subject", "events"],
   security_event: ["audience", "subjectId", "events"],
   delegation: ["issuer", "subject", "audience"],
-  client_assertion: ["issuer", "subject", "audience"],
   introspection: ["audience"],
   userinfo: ["subject", "audience"],
   jarm: ["audience"],

@@ -9,7 +9,7 @@ import type { TokenProfileTyp } from "../../types/index.js";
  *   { presence: "required", value: "application/at+jwt" } -> application/at+cwt
  *   { presence: "required", value: "application/secevent+jwt" }
  *                                                          -> application/secevent+cwt
- *   { presence: "optional", value: "JWT" }                 -> application/cwt
+ *   { presence: "required", value: "JWT" }                 -> application/cwt
  *                                       (the one registered CWT type, RFC 8392
  *                                        — bare JWT has no structured equivalent)
  *   { presence: "none" }                                   -> undefined

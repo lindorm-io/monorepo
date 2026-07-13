@@ -16,9 +16,9 @@ MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
 const ISSUER = "https://test.lindorm.io/";
 const RESOURCE = "https://rs.lindorm.io/";
 
-// Hand-built JWS so the header carries EXACTLY the given fields — the mint
-// path always stamps a typ, so a typ-less RFC 7523 assertion (what stock
-// OAuth libraries emit) must be crafted at the wire level.
+// Hand-built JWS so the header/payload carry EXACTLY the given fields — mint
+// always stamps a typ and auto-injects iat, so a typ-less or iat-less token
+// can only be produced at the wire level.
 const craftToken = (header: Dict, payload: Dict): string => {
   const encodedHeader = B64.encode(JSON.stringify(header), B64U);
   const encodedPayload = B64.encode(JSON.stringify(payload), B64U);
@@ -30,18 +30,20 @@ const craftToken = (header: Dict, payload: Dict): string => {
   return `${encodedHeader}.${encodedPayload}.${signature}`;
 };
 
-const assertionHeader = {
+const wireHeader = {
   alg: TEST_EC_KEY_SIG.algorithm,
   kid: TEST_EC_KEY_SIG.id,
 };
 
-const assertionPayload = {
+// A per-token-issuer payload (iss = sub = the client), the shape `delegation`
+// carries on the wire.
+const perTokenPayload = {
   iss: "client-1",
   sub: "client-1",
   aud: [ISSUER],
   iat: 1704096000,
   exp: 1704096120,
-  jti: "assertion-1",
+  jti: "token-1",
 };
 
 describe("Aegis profiled verify floor (§4.4)", () => {
@@ -105,8 +107,8 @@ describe("Aegis profiled verify floor (§4.4)", () => {
   });
 
   test("rejects an absent typ for a required-presence profile", async () => {
-    const token = craftToken(assertionHeader, {
-      ...assertionPayload,
+    const token = craftToken(wireHeader, {
+      ...perTokenPayload,
       iss: ISSUER,
       sub: "user-1",
       aud: [RESOURCE],
@@ -119,10 +121,10 @@ describe("Aegis profiled verify floor (§4.4)", () => {
   });
 
   test("rejects an access token with no iat — presence policy lives in the floor", async () => {
-    // The parse gate no longer requires iat (RFC 7523 assertions may omit it),
-    // so the profile floor is what keeps RFC 9068's REQUIRED iat honest.
+    // The parse gate does not require iat, so the profile floor is what keeps
+    // RFC 9068's REQUIRED iat honest.
     const token = craftToken(
-      { ...assertionHeader, typ: "application/at+jwt" },
+      { ...wireHeader, typ: "application/at+jwt" },
       {
         iss: ISSUER,
         sub: "user-1",
@@ -147,8 +149,8 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     // Regression pin for direct callers (e.g. pylon token middleware): only
     // profiled verify opts into typPresence "optional" — the raw path keeps
     // parse-time explicit typing (RFC 8725) as its typ gate.
-    const token = craftToken(assertionHeader, {
-      ...assertionPayload,
+    const token = craftToken(wireHeader, {
+      ...perTokenPayload,
       iss: ISSUER,
       sub: "user-1",
       aud: [RESOURCE],
@@ -225,74 +227,49 @@ describe("Aegis profiled verify floor (§4.4)", () => {
     });
   });
 
-  describe("client_assertion (RFC 7523 interop)", () => {
-    test("mints and verifies its own client assertion", async () => {
-      const { token } = await aegis.mint("client_assertion", {
+  describe("delegation (per-token issuer)", () => {
+    const delegationHeader = { ...wireHeader, typ: "application/delegation+jwt" };
+
+    test("mints and verifies its own delegation token", async () => {
+      const { token } = await aegis.mint("delegation", {
         issuer: "client-1",
-        subject: "client-1",
+        subject: "customer-sub",
         audience: [ISSUER],
       });
 
       // jti auto-injected at mint; the floor's required-claims check passes.
       await expect(
-        aegis.verify("client_assertion", token, {
-          audience: ISSUER,
-          issuer: "client-1",
-        }),
+        aegis.verify("delegation", token, { audience: ISSUER, issuer: "client-1" }),
       ).resolves.toMatchObject({
-        payload: { issuer: "client-1", subject: "client-1" },
+        payload: { issuer: "client-1", subject: "customer-sub" },
       });
     });
 
-    test("accepts an externally-crafted assertion WITHOUT a typ header", async () => {
-      const token = craftToken(assertionHeader, assertionPayload);
+    test("accepts a token WITHOUT an iat claim (the profile does not require it)", async () => {
+      // The mirror of the access_token case above: the parse gate does not
+      // require iat, and the floor requires it only where the profile asks.
+      // `delegation` omits `issuedAt` from `required` (iat is RECOMMENDED, not
+      // REQUIRED), so an iat-less delegation resolves.
+      const { iat: _iat, ...withoutIat } = perTokenPayload;
+      const token = craftToken(delegationHeader, withoutIat);
 
-      await expect(
-        aegis.verify("client_assertion", token, {
-          audience: ISSUER,
-          issuer: "client-1",
-        }),
-      ).resolves.toMatchObject({
-        payload: { issuer: "client-1", subject: "client-1", tokenId: "assertion-1" },
+      const parsed = await aegis.verify("delegation", token, {
+        audience: ISSUER,
+        issuer: "client-1",
+      });
+
+      expect(parsed.payload.issuedAt).toBeUndefined();
+      expect(parsed).toMatchObject({
+        payload: { issuer: "client-1", subject: "client-1", tokenId: "token-1" },
       });
     });
 
-    test("accepts an assertion WITH the correct typ header", async () => {
-      const token = craftToken({ ...assertionHeader, typ: "JWT" }, assertionPayload);
+    test("rejects a token missing the required jti", async () => {
+      const { jti: _jti, ...withoutJti } = perTokenPayload;
+      const token = craftToken(delegationHeader, withoutJti);
 
       await expect(
-        aegis.verify("client_assertion", token, {
-          audience: ISSUER,
-          issuer: "client-1",
-        }),
-      ).resolves.toMatchObject({
-        payload: { issuer: "client-1", subject: "client-1" },
-      });
-    });
-
-    test("rejects an assertion with a present-but-wrong typ", async () => {
-      const token = craftToken(
-        { ...assertionHeader, typ: "application/at+jwt" },
-        assertionPayload,
-      );
-
-      await expect(
-        aegis.verify("client_assertion", token, {
-          audience: ISSUER,
-          issuer: "client-1",
-        }),
-      ).rejects.toThrow(expect.objectContaining({ code: "jwt_typ_mismatch" }));
-    });
-
-    test("rejects an assertion missing the required jti", async () => {
-      const { jti: _jti, ...withoutJti } = assertionPayload;
-      const token = craftToken(assertionHeader, withoutJti);
-
-      await expect(
-        aegis.verify("client_assertion", token, {
-          audience: ISSUER,
-          issuer: "client-1",
-        }),
+        aegis.verify("delegation", token, { audience: ISSUER, issuer: "client-1" }),
       ).rejects.toThrow(
         expect.objectContaining({
           code: "jwt_required_claims_missing",
@@ -301,29 +278,11 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       );
     });
 
-    test("accepts an assertion WITHOUT an iat claim (RFC 7523 §3 — iat is OPTIONAL)", async () => {
-      const { iat: _iat, ...withoutIat } = assertionPayload;
-      const token = craftToken(assertionHeader, withoutIat);
-
-      const parsed = await aegis.verify("client_assertion", token, {
-        audience: ISSUER,
-        issuer: "client-1",
-      });
-
-      expect(parsed.payload.issuedAt).toBeUndefined();
-      expect(parsed).toMatchObject({
-        payload: { issuer: "client-1", subject: "client-1", tokenId: "assertion-1" },
-      });
-    });
-
-    test("rejects an assertion with an empty-string jti", async () => {
-      const token = craftToken(assertionHeader, { ...assertionPayload, jti: "" });
+    test("rejects a token with an empty-string jti", async () => {
+      const token = craftToken(delegationHeader, { ...perTokenPayload, jti: "" });
 
       await expect(
-        aegis.verify("client_assertion", token, {
-          audience: ISSUER,
-          issuer: "client-1",
-        }),
+        aegis.verify("delegation", token, { audience: ISSUER, issuer: "client-1" }),
       ).rejects.toThrow(expect.objectContaining({ code: "jwt_required_claims_missing" }));
     });
   });
