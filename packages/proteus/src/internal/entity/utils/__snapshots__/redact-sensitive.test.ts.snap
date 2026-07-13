@@ -1,0 +1,41 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`redactSensitiveEntity > filters a flat sensitive column 1`] = `
+{
+  "apiKey": "[Filtered]",
+  "name": "public",
+}
+`;
+
+exports[`redactSensitiveEntity > filters a sensitive element field in an @EmbeddedList 1`] = `
+{
+  "keys": [
+    {
+      "label": "primary",
+      "value": "[Filtered]",
+    },
+    {
+      "label": "backup",
+      "value": "[Filtered]",
+    },
+  ],
+  "name": "public",
+}
+`;
+
+exports[`redactSensitiveEntity > filters a sensitive field inside an @Embedded object 1`] = `
+{
+  "credentials": {
+    "secret": "[Filtered]",
+    "username": "alice",
+  },
+  "name": "public",
+}
+`;
+
+exports[`redactSensitiveEntity > tolerates a missing embedded parent and a non-array list 1`] = `
+{
+  "credentials": null,
+  "keys": undefined,
+}
+`;

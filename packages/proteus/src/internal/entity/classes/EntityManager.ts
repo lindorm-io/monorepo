@@ -21,6 +21,7 @@ import type { EntityManagerOptions, GetIncrementFn } from "../types/entity-manag
 import type { ProteusHookMeta } from "../../../types/proteus-hook-meta.js";
 import { defaultCloneEntity } from "../utils/default-clone-entity.js";
 import { defaultCreateEntity } from "../utils/default-create-entity.js";
+import { redactSensitiveEntity } from "../utils/redact-sensitive.js";
 import { defaultCreateRaw } from "../utils/default-create-raw.js";
 import { defaultGenerateEntity } from "../utils/default-generate-entity.js";
 import { defaultRelationFilter } from "../utils/default-relation-filter.js";
@@ -106,7 +107,9 @@ export class EntityManager<
     const entity = defaultCreateEntity(this.target, options);
     runHooksSync("OnCreate", this.metadata.hooks, entity, this.meta);
 
-    this.logger?.silly("Created entity", { entity });
+    this.logger?.silly("Created entity", {
+      entity: redactSensitiveEntity(this.metadata, entity),
+    });
 
     return entity;
   }
@@ -115,7 +118,9 @@ export class EntityManager<
     const copy = defaultCreateEntity(this.target, entity);
     runHooksSync("OnCreate", this.metadata.hooks, copy, this.meta);
 
-    this.logger?.silly("Copied entity", { entity });
+    this.logger?.silly("Copied entity", {
+      entity: redactSensitiveEntity(this.metadata, entity),
+    });
 
     return copy;
   }
@@ -319,7 +324,9 @@ export class EntityManager<
     assertSerialisableJsonFields(this.metadata, entity);
     runHooksSync("OnValidate", this.metadata.hooks, entity, this.meta);
 
-    this.logger?.silly("Validated entity", { entity });
+    this.logger?.silly("Validated entity", {
+      entity: redactSensitiveEntity(this.metadata, entity),
+    });
   }
 
   verifyReadonly(entity: DeepPartial<E>): void {
