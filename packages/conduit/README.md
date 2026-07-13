@@ -58,20 +58,20 @@ const client = new Conduit({
 });
 ```
 
-| Option            | Type                             | Default         | Description                                                                                  |
-| ----------------- | -------------------------------- | --------------- | -------------------------------------------------------------------------------------------- |
-| `adapter`         | `"http" \| "fetch"`              | `"http"`        | Axios adapter. `"http"` uses Node `http`/`https`; `"fetch"` uses native fetch / undici.      |
-| `alias`           | `string`                         | `null`          | Human-readable name used in log entries.                                                     |
-| `baseURL`         | `URL \| string`                  | `undefined`     | Base URL prepended to every request path.                                                    |
-| `config`          | `RawAxiosRequestConfig` (subset) | `{}`            | Native Axios config pass-through (excluding fields Conduit owns: method, url, headers, etc). |
-| `environment`     | `Environment`                    | `null`          | Sent as the `X-Environment` request header.                                                  |
-| `headers`         | `Dict<string>`                   | `{}`            | Default headers merged into every request.                                                   |
-| `logger`          | `ILogger`                        | `undefined`     | When set, request and response logging middleware are added automatically.                   |
-| `middleware`      | `Array<ConduitMiddleware>`       | `[]`            | Instance-wide middleware pipeline.                                                           |
-| `retryCallback`   | `RetryCallback`                  | network + 5xx\* | Predicate deciding whether a failed request is retried.                                      |
-| `retryOptions`    | `RetryOptions`                   | see below       | Retry config from `@lindorm/retry`.                                                          |
-| `timeout`         | `number`                         | `30000`         | Per-request timeout in milliseconds.                                                         |
-| `withCredentials` | `boolean`                        | `undefined`     | Whether to send credentials with cross-origin requests.                                      |
+| Option            | Type                             | Default         | Description                                                                                                                                                |
+| ----------------- | -------------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `adapter`         | `"http" \| "fetch"`              | `"http"`        | Axios adapter. `"http"` uses Node `http`/`https`; `"fetch"` uses native fetch / undici.                                                                    |
+| `alias`           | `string`                         | `null`          | Human-readable name used in log entries.                                                                                                                   |
+| `baseURL`         | `URL \| string`                  | `undefined`     | Base URL prepended to every request path.                                                                                                                  |
+| `config`          | `RawAxiosRequestConfig` (subset) | `{}`            | Native Axios config pass-through (excluding fields Conduit owns: method, url, headers, etc).                                                               |
+| `environment`     | `Environment`                    | `null`          | Sent as the `X-Environment` request header.                                                                                                                |
+| `headers`         | `Dict<string>`                   | `{}`            | Default headers merged into every request.                                                                                                                 |
+| `logger`          | `ILogger`                        | `undefined`     | When set, request and response logging middleware are added automatically. Auth headers, cookies and token response fields are [redacted](#log-redaction). |
+| `middleware`      | `Array<ConduitMiddleware>`       | `[]`            | Instance-wide middleware pipeline.                                                                                                                         |
+| `retryCallback`   | `RetryCallback`                  | network + 5xx\* | Predicate deciding whether a failed request is retried.                                                                                                    |
+| `retryOptions`    | `RetryOptions`                   | see below       | Retry config from `@lindorm/retry`.                                                                                                                        |
+| `timeout`         | `number`                         | `30000`         | Per-request timeout in milliseconds.                                                                                                                       |
+| `withCredentials` | `boolean`                        | `undefined`     | Whether to send credentials with cross-origin requests.                                                                                                    |
 
 \* The default predicate retries on network errors and HTTP `502`, `503`, `504`.
 
@@ -153,6 +153,17 @@ Every request automatically sets:
 Conduit uses a Koa-style middleware pipeline. Each middleware receives `(ctx, next)` and may modify the request before `next()` and/or the response after `next()`.
 
 The execution order is: response logger (if `logger` is set) → default headers → instance middleware → per-request middleware → request logger (if `logger` is set) → terminal Axios handler.
+
+### Log redaction
+
+Credentials are redacted before anything is logged, on every path — including the `warn` entry on a failed request and the `debug.transport` payload carried by the thrown error. Nothing is level-gated.
+
+- `Authorization` — the scheme survives, the credential does not. `Bearer` / `DPoP` tokens are signature-stripped (`Bearer <header>.<payload>`), so `alg` / `kid` and the claims stay debuggable while the token is unusable. `Basic` keeps the username (`Basic <username>:[Filtered]`). An unknown scheme is filtered whole.
+- `DPoP` — the proof is signature-stripped.
+- `Cookie` / `Set-Cookie` — names and attributes survive, values are filtered.
+- Request and response bodies — the top-level keys `access_token`, `refresh_token` and `id_token` are signature-stripped; `client_secret`, `password` and `secret` are filtered whole. This is a shallow pass over the known token/secret keys, not a deep walk of your payload.
+
+Opaque (non-JWT) tokens have no structure to keep and are filtered whole. Header names are matched case-insensitively, and the live headers are never mutated — logging always works on a copy.
 
 ### Writing custom middleware
 

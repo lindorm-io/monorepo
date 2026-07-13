@@ -1,0 +1,141 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`redactHeaderValue > should redact by header name regardless of casing 1`] = `"Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0"`;
+
+exports[`redactHeaderValue > should redact by header name regardless of casing 2`] = `"eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0"`;
+
+exports[`redactHeaders > authorization > should filter a non-string authorization header 1`] = `
+{
+  "Authorization": "[Filtered]",
+}
+`;
+
+exports[`redactHeaders > authorization > should filter a schemeless authorization header 1`] = `
+{
+  "Authorization": "[Filtered]",
+}
+`;
+
+exports[`redactHeaders > authorization > should filter an opaque bearer token entirely 1`] = `
+{
+  "Authorization": "Bearer [Filtered]",
+}
+`;
+
+exports[`redactHeaders > authorization > should filter an unknown scheme 1`] = `
+{
+  "Authorization": "[Filtered]",
+}
+`;
+
+exports[`redactHeaders > authorization > should filter basic auth that does not decode 1`] = `
+{
+  "Authorization": "Basic [Filtered]",
+}
+`;
+
+exports[`redactHeaders > authorization > should filter basic auth without a colon separator 1`] = `
+{
+  "Authorization": "Basic [Filtered]",
+}
+`;
+
+exports[`redactHeaders > authorization > should keep scheme and strip the signature of a bearer token 1`] = `
+{
+  "Authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+}
+`;
+
+exports[`redactHeaders > authorization > should keep scheme and strip the signature of a dpop bound token 1`] = `
+{
+  "Authorization": "DPoP eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+}
+`;
+
+exports[`redactHeaders > authorization > should keep the username and filter the password of basic auth 1`] = `
+{
+  "Authorization": "Basic client_01HZ:[Filtered]",
+}
+`;
+
+exports[`redactHeaders > authorization > should redact a bearer token on a lowercase header key 1`] = `
+{
+  "authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+}
+`;
+
+exports[`redactHeaders > cookie > should filter a malformed cookie segment 1`] = `
+{
+  "cookie": "[Filtered]",
+}
+`;
+
+exports[`redactHeaders > cookie > should keep cookie names and filter values 1`] = `
+{
+  "Cookie": "sid=[Filtered]; theme=[Filtered]; csrf=[Filtered]",
+}
+`;
+
+exports[`redactHeaders > cookie > should keep cookie names on a lowercase header key 1`] = `
+{
+  "cookie": "sid=[Filtered]",
+}
+`;
+
+exports[`redactHeaders > cookie > should keep the name and attributes of a set-cookie string 1`] = `
+{
+  "set-cookie": "sid=[Filtered]; Path=/; HttpOnly; SameSite=Strict",
+}
+`;
+
+exports[`redactHeaders > cookie > should redact a capital-case Set-Cookie header 1`] = `
+{
+  "Set-Cookie": "sid=[Filtered]; Path=/",
+}
+`;
+
+exports[`redactHeaders > cookie > should redact every entry of a set-cookie array 1`] = `
+{
+  "set-cookie": [
+    "sid=[Filtered]; Path=/; HttpOnly",
+    "csrf=[Filtered]; Secure",
+  ],
+}
+`;
+
+exports[`redactHeaders > dpop > should filter a malformed dpop proof 1`] = `
+{
+  "DPoP": "[Filtered]",
+}
+`;
+
+exports[`redactHeaders > dpop > should strip the signature of a dpop proof 1`] = `
+{
+  "DPoP": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+}
+`;
+
+exports[`redactHeaders > dpop > should strip the signature of a dpop proof on a lowercase header key 1`] = `
+{
+  "dpop": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+}
+`;
+
+exports[`redactHeaders > passthrough > should leave non-sensitive headers untouched 1`] = `
+{
+  "Content-Type": "application/json",
+  "User-Agent": "conduit/1.0",
+  "X-Correlation-Id": "corr_01HZ",
+}
+`;
+
+exports[`redactRawHeaders > should redact credentials in a raw header block 1`] = `
+"POST /oauth/token HTTP/1.1
+Host: api.test.lindorm.io
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0
+DPoP: eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0
+Cookie: sid=[Filtered]
+
+"
+`;

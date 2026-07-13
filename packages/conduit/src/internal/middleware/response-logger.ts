@@ -1,5 +1,7 @@
 import { LindormError } from "@lindorm/errors";
 import { isObject, isObjectLike, isString } from "@lindorm/is";
+import { redactData } from "../utils/redact-data.js";
+import { redactHeaders } from "../utils/redact-headers.js";
 import type { ConduitMiddleware } from "../../types/index.js";
 
 type Transport = {
@@ -17,10 +19,10 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
     ctx.logger?.verbose("Conduit request successful", {
       app: ctx.app,
       request: {
-        body: ctx.req.body ? ctx.req.body : {},
+        body: ctx.req.body ? redactData(ctx.req.body) : {},
         config: ctx.req.config,
         form: ctx.req.form ? ctx.req.form : {},
-        headers: ctx.req.headers,
+        headers: redactHeaders(ctx.req.headers),
         metadata: ctx.req.metadata,
         origin: ctx.req.origin,
         params: ctx.req.params,
@@ -32,11 +34,11 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
       response: {
         data:
           isObject(ctx.res?.data) || isString(ctx.res?.data)
-            ? ctx.res?.data
+            ? redactData(ctx.res?.data)
             : isObjectLike(ctx.res?.data)
               ? "[Stream]"
               : ctx.res?.data,
-        headers: ctx.res?.headers,
+        headers: redactHeaders(ctx.res?.headers),
         status: ctx.res?.status,
         statusText: ctx.res?.statusText,
       },
@@ -44,15 +46,17 @@ export const responseLogger: ConduitMiddleware = async (ctx, next) => {
     });
   } catch (err: any) {
     if (err instanceof LindormError) {
+      // `transport` is built by `reconstructFromAxiosError`, which redacts its own
+      // headers / data — the error is thrown to the caller, so it must be safe at source.
       const transport = (err.debug?.transport ?? {}) as Transport;
 
       ctx.logger?.warn("Conduit request failed", {
         app: ctx.app,
         request: {
-          body: ctx.req.body ? ctx.req.body : {},
+          body: ctx.req.body ? redactData(ctx.req.body) : {},
           config: ctx.req.config,
           form: ctx.req.form ? ctx.req.form : {},
-          headers: ctx.req.headers,
+          headers: redactHeaders(ctx.req.headers),
           metadata: ctx.req.metadata,
           params: ctx.req.params,
           query: ctx.req.query,

@@ -1,13 +1,15 @@
+import { redactData } from "../utils/redact-data.js";
+import { redactHeaders } from "../utils/redact-headers.js";
 import type { ConduitMiddleware } from "../../types/index.js";
 
 export const requestLogger: ConduitMiddleware = async (ctx, next) => {
   ctx.logger?.verbose("Conduit request sent", {
     app: ctx.app,
     request: {
-      body: ctx.req.body ? ctx.req.body : {},
+      body: ctx.req.body ? redactData(ctx.req.body) : {},
       config: ctx.req.config,
       form: ctx.req.form ? ctx.req.form : {},
-      headers: ctx.req.headers,
+      headers: redactHeaders(ctx.req.headers),
       metadata: ctx.req.metadata,
       origin: ctx.req.origin,
       params: ctx.req.params,

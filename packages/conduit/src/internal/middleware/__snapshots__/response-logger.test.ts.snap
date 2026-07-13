@@ -1,0 +1,42 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`responseLogger > failure > should redact request auth headers on the warn path 1`] = `
+{
+  "Authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+  "Content-Type": "application/json",
+  "DPoP": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+}
+`;
+
+exports[`responseLogger > failure > should redact request auth headers on the warn path 2`] = `
+{
+  "client_id": "client_01HZ",
+  "client_secret": "[Filtered]",
+}
+`;
+
+exports[`responseLogger > success > should redact request auth headers 1`] = `
+{
+  "Authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+  "Content-Type": "application/json",
+}
+`;
+
+exports[`responseLogger > success > should redact set-cookie response headers 1`] = `
+{
+  "content-type": "application/json",
+  "set-cookie": [
+    "sid=[Filtered]; Path=/; HttpOnly",
+    "csrf=[Filtered]; Secure",
+  ],
+}
+`;
+
+exports[`responseLogger > success > should redact token fields of the response data 1`] = `
+{
+  "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+  "expires_in": 3600,
+  "refresh_token": "[Filtered]",
+  "token_type": "Bearer",
+}
+`;

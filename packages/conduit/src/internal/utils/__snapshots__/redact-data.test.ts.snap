@@ -1,0 +1,61 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`redactData > should filter an unparseable body naming a sensitive key 1`] = `"[Filtered]"`;
+
+exports[`redactData > should filter camel cased secrets 1`] = `
+{
+  "clientId": "client_01HZ",
+  "clientSecret": "[Filtered]",
+}
+`;
+
+exports[`redactData > should filter password and secret keys 1`] = `
+{
+  "password": "[Filtered]",
+  "secret": "[Filtered]",
+  "username": "user",
+}
+`;
+
+exports[`redactData > should filter secrets entirely 1`] = `
+{
+  "client_id": "client_01HZ",
+  "client_secret": "[Filtered]",
+  "grant_type": "client_credentials",
+}
+`;
+
+exports[`redactData > should leave a plain string body untouched 1`] = `"Not Found"`;
+
+exports[`redactData > should not deep walk nested objects 1`] = `
+{
+  "items": [
+    1,
+    2,
+    3,
+  ],
+  "user": {
+    "password": "s3cr3t-p4ssw0rd",
+  },
+}
+`;
+
+exports[`redactData > should redact a serialised json body 1`] = `"{"client_id":"client_01HZ","client_secret":"[Filtered]"}"`;
+
+exports[`redactData > should redact camel cased token fields 1`] = `
+{
+  "accessToken": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+  "tokenType": "Bearer",
+}
+`;
+
+exports[`redactData > should strip signatures from token response fields 1`] = `
+{
+  "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+  "expires_in": 3600,
+  "id_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+  "refresh_token": "[Filtered]",
+  "scope": "openid profile",
+  "token_type": "Bearer",
+}
+`;

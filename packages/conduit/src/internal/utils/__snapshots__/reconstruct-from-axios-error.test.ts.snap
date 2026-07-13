@@ -1,0 +1,34 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`reconstructFromAxiosError > should redact credentials carried in the transport debug payload 1`] = `
+{
+  "Authorization": "Bearer eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+  "Content-Type": "application/json",
+  "DPoP": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+}
+`;
+
+exports[`reconstructFromAxiosError > should redact credentials carried in the transport debug payload 2`] = `"{"client_id":"client_01HZ","client_secret":"[Filtered]"}"`;
+
+exports[`reconstructFromAxiosError > should redact credentials carried in the transport debug payload 3`] = `
+"POST /oauth/token HTTP/1.1
+Host: api.test.lindorm.io
+Authorization: Basic client_01HZ:[Filtered]
+
+"
+`;
+
+exports[`reconstructFromAxiosError > should redact credentials carried in the transport debug payload 4`] = `
+{
+  "set-cookie": [
+    "sid=[Filtered]; Path=/; HttpOnly",
+  ],
+}
+`;
+
+exports[`reconstructFromAxiosError > should sanitise token fields of the response body 1`] = `
+{
+  "access_token": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+  "token_type": "Bearer",
+}
+`;

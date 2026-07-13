@@ -1,0 +1,61 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`requestLogger > should log a request without auth unchanged 1`] = `
+[
+  "Conduit request sent",
+  {
+    "app": {
+      "alias": "test",
+      "baseURL": "https://api.test.lindorm.io",
+      "environment": "test",
+    },
+    "request": {
+      "body": {},
+      "config": {
+        "method": "GET",
+      },
+      "form": {},
+      "headers": {
+        "Content-Type": "application/json",
+      },
+      "metadata": {
+        "correlationId": "corr_01HZ",
+        "requestId": "req_01HZ",
+        "sessionId": null,
+      },
+      "origin": "https://api.test.lindorm.io",
+      "params": {},
+      "query": {},
+      "retryConfig": {
+        "maxAttempts": 3,
+      },
+      "stream": {},
+      "url": "https://api.test.lindorm.io/orders",
+    },
+  },
+]
+`;
+
+exports[`requestLogger > should redact bearer, dpop and cookie headers 1`] = `
+{
+  "Authorization": "DPoP eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+  "Content-Type": "application/json",
+  "Cookie": "sid=[Filtered]",
+  "DPoP": "eyJhbGciOiJFUzI1NiIsImtpZCI6ImtleV8wMUhaIiwidHlwIjoiSldUIn0.eyJzdWIiOiJ1c2VyXzAxSFoiLCJhdWQiOiJhcGkiLCJzY29wZSI6Im9wZW5pZCIsImV4cCI6MTg5MzQ1NjAwMH0",
+}
+`;
+
+exports[`requestLogger > should redact the client secret of a token request body 1`] = `
+{
+  "client_id": "client_01HZ",
+  "client_secret": "[Filtered]",
+  "grant_type": "client_credentials",
+}
+`;
+
+exports[`requestLogger > should redact the password of a basic auth header 1`] = `
+{
+  "Authorization": "Basic client_01HZ:[Filtered]",
+  "Content-Type": "application/json",
+}
+`;
