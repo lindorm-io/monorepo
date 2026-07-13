@@ -1,0 +1,44 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`redactSensitiveIdentity > filters the domain identity numbers and keeps the verified flags 1`] = `
+{
+  "sensitiveIdentity": {
+    "nationalIdentityNumber": "[Filtered]",
+    "nationalIdentityNumberVerified": true,
+    "socialSecurityNumber": "[Filtered]",
+    "socialSecurityNumberVerified": false,
+  },
+  "subject": "sub-1",
+}
+`;
+
+exports[`redactSensitiveIdentity > filters the wire identity numbers and keeps the verified flags 1`] = `
+{
+  "sensitive_identity": {
+    "national_identity_number": "[Filtered]",
+    "national_identity_number_verified": true,
+    "social_security_number": "[Filtered]",
+  },
+  "sub": "sub-1",
+}
+`;
+
+exports[`redactSensitiveIdentity > tolerates a non-object sensitive identity 1`] = `
+{
+  "sensitiveIdentity": "nonsense",
+}
+`;
+
+exports[`redactSensitiveIdentity > tolerates a null sensitive identity 1`] = `
+{
+  "sensitiveIdentity": null,
+  "subject": "sub-1",
+}
+`;
+
+exports[`redactVerifyOptions > sanitises a dpop proof to its header and payload 1`] = `
+{
+  "audience": "aud",
+  "dpopProof": "header-segment.payload-segment",
+}
+`;

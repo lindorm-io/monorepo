@@ -4,6 +4,10 @@ import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
 import { sanitiseToken } from "@lindorm/utils";
+import {
+  redactSensitiveIdentity,
+  redactVerifyOptions,
+} from "../internal/utils/redact-sensitive-identity.js";
 import { JwtError } from "../errors/index.js";
 import {
   computeTypHeader,
@@ -78,7 +82,10 @@ export class JwtKit implements IJwtKit {
     content: SignJwtContent<C>,
     options: SignJwtOptions = {},
   ): SignedJwt {
-    this.logger.debug("Signing token", { content, options });
+    this.logger.debug("Signing token", {
+      content: redactSensitiveIdentity(content),
+      options,
+    });
 
     const { expiresAt, expiresIn, expiresOn, payload, tokenId } = encodeJwtPayload<C>(
       { algorithm: this.kryptos.algorithm },
@@ -109,7 +116,10 @@ export class JwtKit implements IJwtKit {
     content: SignJwtContent<C>,
     options: SignJwtOptions = {},
   ): SignedJwt {
-    this.logger.debug("Signing claims", { claims, options });
+    this.logger.debug("Signing claims", {
+      claims: redactSensitiveIdentity(claims),
+      options,
+    });
 
     const { payload, tokenId } = encodeClaimsPayload<C>(claims, content);
 
@@ -194,12 +204,7 @@ export class JwtKit implements IJwtKit {
   ): ParsedJwt<C> {
     this.logger.debug("Verifying token", {
       token: sanitiseToken(token),
-      verify: {
-        ...verify,
-        ...(verify.dpopProof !== undefined
-          ? { dpopProof: sanitiseToken(verify.dpopProof) }
-          : {}),
-      },
+      verify: redactVerifyOptions(verify),
     });
 
     const parsed = JwtKit.parse<C>(token, { typPresence: verify.typPresence });

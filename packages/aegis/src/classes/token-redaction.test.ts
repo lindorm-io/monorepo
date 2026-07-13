@@ -173,5 +173,43 @@ describe("token redaction", () => {
         expect(JSON.stringify(err.debug)).not.toContain(signature.slice(0, -4));
       }
     });
+
+    // Aegis refuses to put a government identifier on the wire in clear — it forces
+    // encryption and omits the claim when no recipient key resolves. Logging the same
+    // number in cleartext would walk straight around that guarantee.
+    test("should never log a sensitive identity number", () => {
+      const nationalIdentityNumber = "19900101-1234";
+
+      kit.sign({
+        subject: "sub-1",
+        expires: "1h",
+        tokenType: "id_token",
+        sensitiveIdentity: {
+          nationalIdentityNumber,
+          nationalIdentityNumberVerified: true,
+        },
+      });
+
+      expect(logged()).not.toContain(nationalIdentityNumber);
+      expect(logged()).toContain("[Filtered]");
+      // the assurance flag is not a secret and is what you debug against
+      expect(logged()).toContain("nationalIdentityNumberVerified");
+    });
+
+    test("should never log a sensitive identity number staged as a wire claim", () => {
+      const socialSecurityNumber = "078-05-1120";
+
+      kit.signClaims(
+        {
+          sub: "sub-1",
+          exp: 1704099600,
+          sensitive_identity: { social_security_number: socialSecurityNumber },
+        },
+        { subject: "sub-1", expires: "1h", tokenType: "id_token" },
+      );
+
+      expect(logged()).not.toContain(socialSecurityNumber);
+      expect(logged()).toContain("[Filtered]");
+    });
   });
 });
