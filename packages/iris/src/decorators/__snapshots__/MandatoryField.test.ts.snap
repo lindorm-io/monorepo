@@ -12,6 +12,7 @@ exports[`MandatoryField > should stage mandatory field metadata 1`] = `
     "nullable": false,
     "optional": false,
     "schema": null,
+    "sensitive": null,
     "transform": null,
     "type": "boolean",
   },

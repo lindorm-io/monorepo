@@ -12,6 +12,7 @@ import { buildSchema } from "../utils/build-schema.js";
 import { deserialise } from "../utils/deserialise.js";
 import { generateFields } from "../utils/generate-fields.js";
 import { parseField } from "../utils/parse-field.js";
+import { redactSensitiveMessage } from "../utils/redact-sensitive.js";
 import { runHooksAsync, runHooksSync } from "../utils/run-hooks.js";
 
 const IDENTITY_DECORATORS = new Set(["IdentifierField", "TimestampField"]);
@@ -81,7 +82,9 @@ export class MessageManager<M extends IMessage> {
 
     runHooksSync("OnCreate", this.metadata.hooks, message, this.meta);
 
-    this.logger?.silly("Created message", { message });
+    this.logger?.silly("Created message", {
+      message: redactSensitiveMessage(this.metadata, message),
+    });
 
     return message;
   }
@@ -126,7 +129,9 @@ export class MessageManager<M extends IMessage> {
 
     runHooksSync("OnHydrate", this.metadata.hooks, message, this.meta);
 
-    this.logger?.silly("Hydrated message", { message });
+    this.logger?.silly("Hydrated message", {
+      message: redactSensitiveMessage(this.metadata, message),
+    });
 
     return message;
   }
@@ -155,7 +160,9 @@ export class MessageManager<M extends IMessage> {
 
     runHooksSync("OnValidate", this.metadata.hooks, message, this.meta);
 
-    this.logger?.silly("Validated message", { message });
+    this.logger?.silly("Validated message", {
+      message: redactSensitiveMessage(this.metadata, message),
+    });
   }
 
   // hooks — async lifecycle

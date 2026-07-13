@@ -12,6 +12,18 @@ import type {
   MetaTransform,
 } from "./types.js";
 
+/**
+ * Digest algorithms whose stored representation @Sensitive can format-validate.
+ * The SHA family is pinned to the house ShaKit output (unpadded base64url);
+ * md5 (hex) exists for legacy interop only; argon2 expects a strict PHC string.
+ */
+export type SensitiveDigest = "sha256" | "sha384" | "sha512" | "md5" | "argon2";
+
+export type MetaSensitive = {
+  /** Declared digest algorithm, or null for a redact-only @Sensitive(). */
+  digest: SensitiveDigest | null;
+};
+
 export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
   key: string;
   decorator: T;
@@ -22,6 +34,7 @@ export type MetaField<T extends MetaFieldDecorator = MetaFieldDecorator> = {
   nullable: boolean;
   optional: boolean;
   schema: z.ZodType | null;
+  sensitive: MetaSensitive | null;
   transform: MetaTransform | null;
   type: MetaFieldType;
 };

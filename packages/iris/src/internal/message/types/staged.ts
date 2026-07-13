@@ -8,6 +8,7 @@ import type {
   MetaHook,
   MetaMessage,
   MetaRetry,
+  MetaSensitive,
   MetaStagedTransform,
   MetaTopic,
 } from "./metadata.js";
@@ -23,6 +24,7 @@ export type StagedFieldModifier = {
   nullable?: boolean;
   optional?: boolean;
   schema?: z.ZodType | null;
+  sensitive?: MetaSensitive;
   transform?: MetaTransform | null;
 };
 

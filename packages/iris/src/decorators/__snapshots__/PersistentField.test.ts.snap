@@ -12,6 +12,7 @@ exports[`PersistentField > should stage persistent field metadata 1`] = `
     "nullable": false,
     "optional": false,
     "schema": null,
+    "sensitive": null,
     "transform": null,
     "type": "boolean",
   },

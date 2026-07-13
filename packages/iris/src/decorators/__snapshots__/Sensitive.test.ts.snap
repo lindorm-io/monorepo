@@ -1,18 +1,20 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Field > should accumulate multiple fields 1`] = `
+exports[`Sensitive > metadata > should merge digest and bare sensitive metadata into the fields 1`] = `
 [
   {
     "decorator": "Field",
     "default": null,
     "enum": null,
-    "key": "first",
+    "key": "passwordHash",
     "max": null,
     "min": null,
     "nullable": false,
     "optional": false,
     "schema": null,
-    "sensitive": null,
+    "sensitive": {
+      "digest": "sha256",
+    },
     "transform": null,
     "type": "string",
   },
@@ -20,21 +22,18 @@ exports[`Field > should accumulate multiple fields 1`] = `
     "decorator": "Field",
     "default": null,
     "enum": null,
-    "key": "second",
+    "key": "apiToken",
     "max": null,
     "min": null,
     "nullable": false,
     "optional": false,
     "schema": null,
-    "sensitive": null,
+    "sensitive": {
+      "digest": null,
+    },
     "transform": null,
-    "type": "integer",
+    "type": "string",
   },
-]
-`;
-
-exports[`Field > should stage field with explicit type 1`] = `
-[
   {
     "decorator": "Field",
     "default": null,
@@ -50,4 +49,24 @@ exports[`Field > should stage field with explicit type 1`] = `
     "type": "string",
   },
 ]
+`;
+
+exports[`Sensitive > metadata > should stage a fully-resolved null digest for a bare @Sensitive 1`] = `
+{
+  "decorator": "Sensitive",
+  "key": "apiToken",
+  "sensitive": {
+    "digest": null,
+  },
+}
+`;
+
+exports[`Sensitive > metadata > should stage the field modifier 1`] = `
+{
+  "decorator": "Sensitive",
+  "key": "passwordHash",
+  "sensitive": {
+    "digest": "sha256",
+  },
+}
 `;

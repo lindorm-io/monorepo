@@ -32,6 +32,7 @@ export * from "./PersistentField.js";
 export * from "./Priority.js";
 export * from "./Retry.js";
 export * from "./Schema.js";
+export * from "./Sensitive.js";
 export * from "./TimestampField.js";
 export * from "./Topic.js";
 export * from "./Transform.js";

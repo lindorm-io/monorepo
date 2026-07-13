@@ -18,6 +18,7 @@ export const TimestampField =
       nullable: false,
       optional: false,
       schema: null,
+      sensitive: null,
       transform: null,
       type: "date",
     });

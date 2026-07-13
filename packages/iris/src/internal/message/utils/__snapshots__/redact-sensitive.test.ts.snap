@@ -1,0 +1,41 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`redactSensitiveMessage > should filter a @Header property (a header is always a field too) 1`] = `
+{
+  "authorization": "[Filtered]",
+  "name": "public",
+}
+`;
+
+exports[`redactSensitiveMessage > should filter a digest field the same way as a bare sensitive field 1`] = `
+{
+  "passwordHash": "[Filtered]",
+}
+`;
+
+exports[`redactSensitiveMessage > should filter a null-valued sensitive field 1`] = `
+{
+  "apiKey": "[Filtered]",
+}
+`;
+
+exports[`redactSensitiveMessage > should filter a sensitive field and leave the others 1`] = `
+{
+  "apiKey": "[Filtered]",
+  "name": "public",
+}
+`;
+
+exports[`redactSensitiveMessage > should filter every sensitive field on the message 1`] = `
+{
+  "apiKey": "[Filtered]",
+  "name": "public",
+  "password": "[Filtered]",
+}
+`;
+
+exports[`redactSensitiveMessage > should tolerate a sensitive field that is absent from the message 1`] = `
+{
+  "name": "public",
+}
+`;

@@ -434,6 +434,8 @@ class MedicalRecord {
 
 **Argument:** `AmphoraPredicate` (defaults to `{}`) — predicate object that selects which key from the amphora key store is used (e.g. `algorithm`, `encryption`, `purpose`, `type`, `ownerId`, plus the standard `$eq`, `$in`, `$neq` operators).
 
+`@Encrypted` protects the payload on the wire; it does not stop a field value from reaching your logs. For that, mark the field [`@Sensitive`](#sensitive) — the two are orthogonal and compose.
+
 #### `@Compressed`
 
 Compresses the payload before publishing.
@@ -643,6 +645,25 @@ import { z } from "zod";
 ```
 
 **Argument:** `z.ZodType`.
+
+#### `@Sensitive`
+
+Marks a field as sensitive. Iris replaces its value with `[Filtered]` in its own log output, and the flag is visible in message metadata so consumers can register logger filters.
+
+```typescript
+@Sensitive() @Field("string") apiToken!: string;
+@Sensitive({ digest: "sha256" }) @Field("string") passwordHash!: string;
+@Sensitive() @Header("authorization") @Field("string") auth!: string;
+```
+
+**Options:** `{ digest?: "sha256" | "sha384" | "sha512" | "md5" | "argon2" }`.
+
+- Bare `@Sensitive()` — redaction only, valid on any field type.
+- With `digest` — additionally validates that the carried value _looks like_ a digest of the declared algorithm, catching plaintext sent in a hash field. Requires a `"string"` field, and cannot be combined with a field-level `@Schema` (a digest field holds an opaque hash). SHA digests are expected as unpadded base64url (the `@lindorm/sha` `ShaKit` output), md5 as legacy hex, argon2 as a PHC string.
+
+A `@Header` property is a `@Field` too, so a sensitive header value is redacted the same way.
+
+**What it does not do:** no hashing, no encryption, no verification — minting and checking digests stays in the crypto layer. It is orthogonal to [`@Encrypted`](#encrypted): `@Encrypted` encrypts the payload in transit, `@Sensitive` keeps the value out of the logs. Redaction covers iris' own log output; the broker's logs and whatever your handler does with the consumed message are outside its reach.
 
 #### `@Transform`
 

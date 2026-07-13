@@ -12,6 +12,7 @@ const makeField = (overrides: Partial<MetaField>): MetaField => ({
   nullable: false,
   optional: false,
   schema: null,
+  sensitive: null,
   transform: null,
   type: "string",
   ...overrides,

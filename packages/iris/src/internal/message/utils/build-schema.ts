@@ -2,6 +2,7 @@ import { z } from "zod";
 import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
 import type { MetaField } from "../types/metadata.js";
 import type { MessageMetadata } from "../types/metadata.js";
+import { digestFormatRegex } from "./digest-format.js";
 
 const fieldWithMinMax = ["array", "bigint", "integer", "float", "string"];
 
@@ -82,6 +83,14 @@ export const buildSchema = (metadata: MessageMetadata): z.ZodType => {
 
     let validator = getValidator(field);
     if (!validator) continue;
+
+    // @Sensitive digest — the carried value must LOOK like a digest of the declared
+    // algorithm. Composed before .nullable()/.optional() like every other check.
+    if (field.sensitive?.digest) {
+      validator = (validator as z.ZodString).regex(
+        digestFormatRegex(field.sensitive.digest),
+      );
+    }
 
     if (fieldWithMinMax.includes(field.type) && field.min != null) {
       if (field.type === "bigint") {

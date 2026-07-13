@@ -74,6 +74,7 @@ describe("deserializeMessage", () => {
           nullable: false,
           optional: false,
           schema: null,
+          sensitive: null,
           transform: null,
           type: "string",
         },
@@ -87,6 +88,7 @@ describe("deserializeMessage", () => {
           nullable: false,
           optional: false,
           schema: null,
+          sensitive: null,
           transform: null,
           type: "string",
         },
@@ -120,6 +122,7 @@ describe("deserializeMessage", () => {
           nullable: false,
           optional: false,
           schema: null,
+          sensitive: null,
           transform: {
             to: (v: unknown) => (v as number) * 100,
             from: (v: unknown) => (v as number) / 100,

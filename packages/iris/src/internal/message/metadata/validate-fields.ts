@@ -1,6 +1,6 @@
 import { IrisMetadataError } from "../../../errors/IrisMetadataError.js";
 import type { MetaField } from "../types/metadata.js";
-import type { MetaFieldDecorator } from "../types/types.js";
+import type { MetaFieldDecorator, MetaFieldType } from "../types/types.js";
 
 const UNIQUE_DECORATORS: Array<MetaFieldDecorator> = [
   "IdentifierField",
@@ -9,6 +9,36 @@ const UNIQUE_DECORATORS: Array<MetaFieldDecorator> = [
   "MandatoryField",
   "PersistentField",
 ];
+
+const SENSITIVE_DIGEST_TYPES: Array<MetaFieldType> = ["string"];
+
+const validateSensitive = (targetName: string, field: MetaField): void => {
+  if (!field.sensitive?.digest) return;
+
+  if (field.schema) {
+    throw new IrisMetadataError(
+      `@Sensitive digest and field-level @Schema cannot be combined on "${field.key}"`,
+      {
+        code: "sensitive_digest_schema_conflict",
+        title: "Sensitive Digest Schema Conflict",
+        details: `Field "${field.key}" on "${targetName}" declares both a @Sensitive digest ("${field.sensitive.digest}") and a field-level @Schema — a digest field holds an opaque hash string, so a custom schema is nonsensical; remove one of the two.`,
+        debug: { target: targetName, field: field.key, digest: field.sensitive.digest },
+      },
+    );
+  }
+
+  if (!SENSITIVE_DIGEST_TYPES.includes(field.type)) {
+    throw new IrisMetadataError(
+      `@Sensitive digest on "${field.key}" requires a "string" field`,
+      {
+        code: "invalid_sensitive_digest_type",
+        title: "Invalid Sensitive Digest Type",
+        details: `@Sensitive({ digest: "${field.sensitive.digest}" }) on "${field.key}" requires the @Field type to be "string", but it is "${field.type}" — change the field type or drop the digest (a bare @Sensitive() is valid on any type).`,
+        debug: { target: targetName, field: field.key, actualType: field.type },
+      },
+    );
+  }
+};
 
 export const validateFields = (targetName: string, fields: Array<MetaField>): void => {
   const seenKeys = new Set<string>();
@@ -25,6 +55,8 @@ export const validateFields = (targetName: string, fields: Array<MetaField>): vo
       });
     }
     seenKeys.add(field.key);
+
+    validateSensitive(targetName, field);
 
     const decorator = field.decorator;
 
