@@ -13,6 +13,7 @@ import type {
   PylonHttpMiddleware,
   PylonLoginCookie,
 } from "../../../types/index.js";
+import { redactLoginCookie } from "../redact/redact-login-cookie.js";
 import { parseTokenData } from "./parse-token-data.js";
 
 const resolveSubjectViaUserinfo = (
@@ -96,7 +97,7 @@ export const createLoginCallbackHandler = (
         status: ClientError.Status.BadRequest,
         details:
           "The state parameter returned by the IdP does not match the value stored in the login cookie (possible CSRF)",
-        debug: { cookie, state: ctx.data.state },
+        debug: { cookie: redactLoginCookie(cookie), state: ctx.data.state },
       });
     }
 
@@ -154,7 +155,7 @@ export const createLoginCallbackHandler = (
           status: ClientError.Status.BadRequest,
           details:
             "The nonce in the returned id_token does not match the value stored in the login cookie (possible token replay)",
-          debug: { cookie, nonce: verified.payload.nonce },
+          debug: { cookie: redactLoginCookie(cookie), nonce: verified.payload.nonce },
         });
       }
     }

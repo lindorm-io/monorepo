@@ -1,5 +1,6 @@
 import { SignatureKit } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
+import { sanitiseToken } from "@lindorm/utils";
 import type { PylonCommonContext } from "../../../types/index.js";
 
 export const verifyCookie = async (
@@ -17,7 +18,7 @@ export const verifyCookie = async (
       type: "urn:lindorm:pylon:error:missing_cookie_signature",
       status: ClientError.Status.Unauthorized,
       data: { name },
-      debug: { value, signature, kid },
+      debug: { value: sanitiseToken(value), signature, kid },
     });
   }
 
@@ -29,7 +30,7 @@ export const verifyCookie = async (
       type: "urn:lindorm:pylon:error:missing_cookie_kid",
       status: ClientError.Status.Unauthorized,
       data: { name },
-      debug: { value, signature, kid },
+      debug: { value: sanitiseToken(value), signature, kid },
     });
   }
 
@@ -45,7 +46,7 @@ export const verifyCookie = async (
         type: "urn:lindorm:pylon:error:invalid_cookie_signature",
         status: ClientError.Status.Unauthorized,
         data: { name },
-        debug: { value, signature, kid },
+        debug: { value: sanitiseToken(value), signature, kid },
       });
     }
   } catch (error) {
@@ -60,7 +61,7 @@ export const verifyCookie = async (
       status: ClientError.Status.Unauthorized,
       data: { name },
       debug: {
-        value,
+        value: sanitiseToken(value),
         signature,
         kid,
         error: error instanceof Error ? error.message : String(error),

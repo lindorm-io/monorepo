@@ -1,3 +1,4 @@
+import { redactHeaders } from "../utils/redact/redact-headers.js";
 import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const httpRequestLoggerMiddleware: PylonHttpMiddleware = async (ctx, next) => {
@@ -5,7 +6,7 @@ export const httpRequestLoggerMiddleware: PylonHttpMiddleware = async (ctx, next
     metadata: ctx.state.metadata,
     request: {
       body: ctx.request.body,
-      header: ctx.request.header,
+      header: redactHeaders(ctx.request.header),
       method: ctx.request.method,
       query: ctx.query,
       url: ctx.request.url,

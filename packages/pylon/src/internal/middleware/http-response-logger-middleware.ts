@@ -1,4 +1,5 @@
 import { Stream } from "stream";
+import { redactHeaders } from "../utils/redact/redact-headers.js";
 import type { PylonHttpMiddleware } from "../../types/index.js";
 
 export const httpResponseLoggerMiddleware: PylonHttpMiddleware = async (ctx, next) => {
@@ -10,7 +11,7 @@ export const httpResponseLoggerMiddleware: PylonHttpMiddleware = async (ctx, nex
       request: {
         body: ctx.request.body,
         files: ctx.request.files,
-        header: ctx.request.header,
+        header: redactHeaders(ctx.request.header),
         method: ctx.request.method,
         params: ctx.params,
         query: ctx.query,
@@ -18,7 +19,7 @@ export const httpResponseLoggerMiddleware: PylonHttpMiddleware = async (ctx, nex
       },
       response: {
         body: ctx.response.body instanceof Stream ? "[Stream]" : ctx.response.body,
-        header: ctx.response.header,
+        header: redactHeaders(ctx.response.header),
         message: ctx.response.message,
         status: ctx.response.status,
       },

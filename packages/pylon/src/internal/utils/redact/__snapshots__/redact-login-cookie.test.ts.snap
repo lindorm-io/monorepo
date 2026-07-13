@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`redactLoginCookie > should filter the pkce code verifier and keep the rest 1`] = `
+{
+  "codeChallengeMethod": "S256",
+  "codeVerifier": "[Filtered]",
+  "nonce": "nonce",
+  "redirectUri": "https://test.lindorm.io/callback",
+  "responseType": "code",
+  "scope": "openid profile",
+  "state": "state",
+}
+`;

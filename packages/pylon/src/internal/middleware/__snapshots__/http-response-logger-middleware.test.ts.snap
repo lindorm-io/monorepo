@@ -1,0 +1,31 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`httpResponseLoggerMiddleware > should log response information with redacted headers 1`] = `
+{
+  "metadata": "metadata",
+  "request": {
+    "body": "request.body",
+    "files": undefined,
+    "header": {
+      "accept": "application/json",
+      "authorization": "Bearer header.payload",
+      "cookie": "sid=[Filtered]",
+    },
+    "method": "request.method",
+    "params": undefined,
+    "query": undefined,
+    "url": "request.url",
+  },
+  "response": {
+    "body": "response.body",
+    "header": {
+      "content-type": "application/json",
+      "set-cookie": [
+        "sid=[Filtered]; Path=/; HttpOnly",
+      ],
+    },
+    "message": "response.message",
+    "status": "response.status",
+  },
+}
+`;

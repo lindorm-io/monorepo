@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`redactAuthorization > basic > should filter a password containing colons in full 1`] = `"Basic admin:[Filtered]"`;
+
+exports[`redactAuthorization > basic > should filter credentials that do not decode to username:password 1`] = `"Basic [Filtered]"`;
+
+exports[`redactAuthorization > basic > should filter credentials with no colon 1`] = `"Basic [Filtered]"`;
+
+exports[`redactAuthorization > basic > should keep the username and filter the password 1`] = `"Basic admin:[Filtered]"`;
+
+exports[`redactAuthorization > bearer / dpop > should filter an opaque bearer token 1`] = `"Bearer [Filtered]"`;
+
+exports[`redactAuthorization > bearer / dpop > should keep the header and payload of a bearer token, dropping the signature 1`] = `"Bearer header.payload"`;
+
+exports[`redactAuthorization > bearer / dpop > should keep the header and payload of a dpop token, dropping the signature 1`] = `"DPoP header.payload"`;
+
+exports[`redactAuthorization > bearer / dpop > should preserve the scheme as received 1`] = `"bearer header.payload"`;

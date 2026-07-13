@@ -10,13 +10,20 @@ describe("httpResponseLoggerMiddleware", () => {
       logger: createMockLogger(),
       request: {
         body: "request.body",
-        header: "request.header",
+        header: {
+          accept: "application/json",
+          authorization: "Bearer header.payload.signature",
+          cookie: "sid=session-value",
+        },
         method: "request.method",
         url: "request.url",
       },
       response: {
         body: "response.body",
-        header: "response.header",
+        header: {
+          "content-type": "application/json",
+          "set-cookie": ["sid=new-session-value; Path=/; HttpOnly"],
+        },
         message: "response.message",
         status: "response.status",
       },
@@ -26,26 +33,30 @@ describe("httpResponseLoggerMiddleware", () => {
     };
   });
 
-  test("should log response information", async () => {
+  test("should log response information with redacted headers", async () => {
     await expect(httpResponseLoggerMiddleware(ctx, vi.fn())).resolves.toBeUndefined();
 
-    expect(ctx.logger.info).toHaveBeenCalledWith("Service response", {
-      metadata: "metadata",
-      request: {
-        body: "request.body",
-        files: undefined,
-        header: "request.header",
-        method: "request.method",
-        params: undefined,
-        query: undefined,
-        url: "request.url",
-      },
-      response: {
-        body: "response.body",
-        header: "response.header",
-        message: "response.message",
-        status: "response.status",
-      },
-    });
+    const [, payload] = ctx.logger.info.mock.calls[0];
+
+    expect(payload).toMatchSnapshot();
+  });
+
+  test("should redact the set-cookie response header", async () => {
+    await httpResponseLoggerMiddleware(ctx, vi.fn());
+
+    const logged = JSON.stringify(ctx.logger.info.mock.calls);
+
+    expect(logged).not.toContain("new-session-value");
+    expect(logged).not.toContain("session-value");
+    expect(logged).not.toContain("signature");
+  });
+
+  test("should not mutate the live headers", async () => {
+    await httpResponseLoggerMiddleware(ctx, vi.fn());
+
+    expect(ctx.request.header.authorization).toBe("Bearer header.payload.signature");
+    expect(ctx.response.header["set-cookie"]).toEqual([
+      "sid=new-session-value; Path=/; HttpOnly",
+    ]);
   });
 });

@@ -1032,6 +1032,19 @@ const app2 = new Pylon({
 });
 ```
 
+## Logging & redaction
+
+Pylon redacts credentials before they reach a log. The live header object is never mutated — logging gets a redacted copy.
+
+| Header                           | Logged as                                                          |
+| -------------------------------- | ------------------------------------------------------------------ |
+| `authorization: Bearer` / `DPoP` | `Bearer header.payload` — the signature is dropped                 |
+| `authorization: Basic`           | `Basic <username>:[Filtered]` — the password never appears         |
+| `dpop`                           | `header.payload` — the proof's claims stay, its signature does not |
+| `cookie` / `set-cookie`          | names and attributes kept, every value `[Filtered]`                |
+
+Tokens pylon's own middleware handles are logged signature-stripped, and cookie values are filtered wherever pylon logs them. Everything else — including request and response **bodies** — is logged as-is: pylon is transport, and body contents are the application's to redact.
+
 ## Error handling
 
 Raise errors with `@lindorm/errors` — not koa's `ctx.throw`, which is intentionally removed from the typed HTTP context. Throw any `LindormError` (or subclass — `ClientError`, `ServerError`, `PylonError`, the status-coded HTTP classes `BadRequestError` / `NotFoundError` / `ConflictError` / …) from a handler or middleware. Pass `code`, `data`, `details`, and `title` to enrich the response.

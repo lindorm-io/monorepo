@@ -1,0 +1,22 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`redactCookieHeader > should filter a malformed pair with no equals sign 1`] = `"sid=[Filtered]; [Filtered]"`;
+
+exports[`redactCookieHeader > should filter a value containing an equals sign in full 1`] = `"sid=[Filtered]; theme=[Filtered]"`;
+
+exports[`redactCookieHeader > should keep cookie names and filter every value 1`] = `"sid=[Filtered]; theme=[Filtered]"`;
+
+exports[`redactCookieHeader > should keep the name of a single cookie 1`] = `"sid=[Filtered]"`;
+
+exports[`redactCookieHeader > should tolerate surplus whitespace and empty pairs 1`] = `"sid=[Filtered]; theme=[Filtered]"`;
+
+exports[`redactSetCookieHeader > should filter a set-cookie with no equals sign 1`] = `"[Filtered]"`;
+
+exports[`redactSetCookieHeader > should keep the name and attributes of each set cookie, filtering the value 1`] = `
+[
+  "sid=[Filtered]; Path=/; HttpOnly; SameSite=Strict",
+  "theme=[Filtered]; Path=/",
+]
+`;
+
+exports[`redactSetCookieHeader > should redact a single set-cookie string 1`] = `"sid=[Filtered]; Path=/; HttpOnly"`;

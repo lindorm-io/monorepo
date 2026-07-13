@@ -1,0 +1,28 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`redactHeaders > should redact authorization, dpop and cookie while passing everything else through 1`] = `
+{
+  "accept": "application/json",
+  "authorization": "Bearer header.payload",
+  "cookie": "sid=[Filtered]; theme=[Filtered]",
+  "dpop": "proofheader.proofpayload",
+  "user-agent": "lindorm/1.0",
+}
+`;
+
+exports[`redactHeaders > should redact regardless of header key casing 1`] = `
+{
+  "Authorization": "Bearer header.payload",
+  "Cookie": "sid=[Filtered]",
+  "DPoP": "proofheader.proofpayload",
+}
+`;
+
+exports[`redactHeaders > should redact the set-cookie response header 1`] = `
+{
+  "content-type": "application/json",
+  "set-cookie": [
+    "sid=[Filtered]; Path=/; HttpOnly",
+  ],
+}
+`;

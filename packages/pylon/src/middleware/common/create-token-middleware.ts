@@ -2,6 +2,7 @@ import { isSocketContext } from "../../internal/utils/is-context.js";
 import type { VerifyJwtOptions } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { isString } from "@lindorm/is";
+import { sanitiseToken } from "@lindorm/utils";
 import objectPath from "object-path";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
@@ -19,7 +20,7 @@ export const createTokenMiddleware =
       try {
         const token = objectPath.get(ctx, path);
 
-        ctx.logger.debug("Token found on path", { token, path });
+        ctx.logger.debug("Token found on path", { token: sanitiseToken(token), path });
 
         if (!isString(token) && !optional) {
           throw new ClientError("Expected a JWT string token on the request", {
