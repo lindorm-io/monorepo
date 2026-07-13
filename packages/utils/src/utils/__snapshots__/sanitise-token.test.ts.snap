@@ -1,0 +1,13 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sanitiseToken > should filter a malformed four part token 1`] = `"[Filtered]"`;
+
+exports[`sanitiseToken > should filter a malformed two part token 1`] = `"[Filtered]"`;
+
+exports[`sanitiseToken > should filter an empty string 1`] = `"[Filtered]"`;
+
+exports[`sanitiseToken > should filter an opaque token without dots 1`] = `"[Filtered]"`;
+
+exports[`sanitiseToken > should keep header and payload of a jws / jwt, dropping the signature 1`] = `"header.payload"`;
+
+exports[`sanitiseToken > should keep only the protected header of a jwe 1`] = `"header"`;

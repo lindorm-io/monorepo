@@ -14,6 +14,7 @@ export * from "./remove.js";
 export * from "./remove-empty.js";
 export * from "./remove-undefined.js";
 export * from "./safely-parse.js";
+export * from "./sanitise-token.js";
 export * from "./sleep.js";
 export * from "./sort-keys.js";
 export * from "./uniq.js";

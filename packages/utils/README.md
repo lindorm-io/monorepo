@@ -18,6 +18,7 @@ npm install @lindorm/utils
 - `combineSignals` and `isAbortReason` helpers for `AbortSignal` composition and the shared `AbortReason` shape
 - `removeEmpty` and `removeUndefined` for recursive object/array cleanup
 - `parseStringRecord` for coercing `Record<string, string>` (e.g. query strings) into typed values
+- `sanitiseToken` for making a JWT/JWE safe to log
 - `sortKeys` for deterministic JSON key ordering
 - `safelyParse`, `sleep`, `wait`, `noop`, `noopAsync`, `lazyFactory`, `uniq`, `uniqFlat`
 
@@ -122,6 +123,17 @@ parseStringRecord({
 
 Strings that look like booleans, numbers, ISO date strings, JSON arrays/objects, `"null"`, or `"undefined"` are coerced to their typed value. Everything else is returned URL-decoded as a string. Array values are mapped element-wise.
 
+### Sanitising tokens for logs
+
+```ts
+import { sanitiseToken } from "@lindorm/utils";
+
+sanitiseToken("eyJhbGciOiJ...eyJzdWIiOiJ...sIg7Kn9Qk"); // "eyJhbGciOiJ....eyJzdWIiOiJ..."
+sanitiseToken("opaque-token"); // "[Filtered]"
+```
+
+The JOSE header and payload are what you need to debug a token; the signature is what makes it usable. A JWS/JWT (3 parts) keeps `header.payload`, a JWE (5 parts) keeps the protected header, and anything else — opaque, malformed, empty, non-string — is `[Filtered]` in full. Pure string manipulation; never throws, so it is safe on a logging path. Pairs with `logger.filterKey("token", sanitiseToken)`.
+
 ### Other helpers
 
 ```ts
@@ -195,6 +207,7 @@ The `Predicate<T>` type lives in `@lindorm/types` — import it from there if yo
 | ------------------- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `parseStringRecord` | `<T = any>(record: Dict<string \| undefined \| Array<string \| undefined>>) => Dict<T>` | Coerces booleans, numbers, ISO date strings, JSON arrays/objects, `"null"`, and `"undefined"` to their typed values. Other strings are URL-decoded. |
 | `safelyParse`       | `<T = any>(value: string) => T`                                                         | `JSON.parse(value)` that returns the original string instead of throwing.                                                                           |
+| `sanitiseToken`     | `(token: unknown) => string`                                                            | Log-safe token: JWS/JWT (3 parts) → `header.payload`; JWE (5 parts) → protected header; anything else → `[Filtered]`. Never throws.                 |
 
 ### Async helpers
 
