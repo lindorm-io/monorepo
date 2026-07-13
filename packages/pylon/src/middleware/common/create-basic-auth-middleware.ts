@@ -1,7 +1,7 @@
-import { B64 } from "@lindorm/b64";
 import { ClientError } from "@lindorm/errors";
 import { isArray, isFunction } from "@lindorm/is";
 import { PylonError } from "../../errors/index.js";
+import { parseBasicCredentials } from "../../internal/utils/auth/parse-basic-credentials.js";
 import type { Credentials, PylonMiddleware } from "../../types/index.js";
 
 type VerifyCredentialsFn = (username: string, password: string) => Promise<void>;
@@ -29,7 +29,7 @@ const defaultCallback =
         type: "urn:lindorm:pylon:error:invalid_credentials",
         title: "Invalid Credentials",
         details: "Password does not match",
-        debug: { username, password, reason: "password_mismatch" },
+        debug: { username, reason: "password_mismatch" },
       });
     }
   };
@@ -62,20 +62,20 @@ export const createBasicAuthMiddleware = (
       });
     }
 
-    const parsed = B64.toString(ctx.state.authorization.value);
+    const credentials = parseBasicCredentials(ctx.state.authorization.value);
 
-    if (!parsed.includes(":")) {
+    if (!credentials) {
       throw new ClientError("Invalid credentials", {
         status: ClientError.Status.Unauthorized,
         code: "invalid_credentials",
         type: "urn:lindorm:pylon:error:invalid_credentials",
         title: "Invalid Credentials",
         details: "Decoded basic credentials are not in username:password format",
-        debug: { parsed, reason: "malformed_credentials" },
+        debug: { reason: "malformed_credentials" },
       });
     }
 
-    const [username, password] = parsed.split(":");
+    const { username, password } = credentials;
 
     try {
       await verify(username, password);
@@ -87,7 +87,7 @@ export const createBasicAuthMiddleware = (
         type: "urn:lindorm:pylon:error:invalid_credentials",
         title: "Invalid Credentials",
         details: "Credential verification callback rejected the credentials",
-        debug: { username, password, reason: "verify_callback_rejected" },
+        debug: { username, reason: "verify_callback_rejected" },
       });
     }
 
