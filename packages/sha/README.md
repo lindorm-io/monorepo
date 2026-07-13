@@ -15,6 +15,7 @@ This package is **ESM-only**. Use `import` syntax; `require` is not supported.
 - `ShaKit` class with configurable algorithm and encoding
 - Instance helpers to `hash`, `verify`, and `assert` digests against input data
 - Static one-shot helpers `S1`, `S256`, `S384`, `S512` that produce `base64url` digests and accept both `string` and `Buffer` input
+- `verify` / `assert` compare the decoded digest **bytes** in constant time (`crypto.timingSafeEqual`) — safe for secret comparison
 - `ShaError` thrown by `assert` on mismatch
 
 ## Usage
@@ -84,7 +85,7 @@ new ShaKit(options?: ShaKitOptions);
 #### Instance methods
 
 - `hash(data: string): string` — returns the digest of `data` using the configured algorithm and encoding.
-- `verify(data: string, hash: string): boolean` — returns `true` if hashing `data` produces `hash`.
+- `verify(data: string, hash: string): boolean` — returns `true` if hashing `data` produces `hash`. `hash` is decoded with the configured encoding and compared byte-wise in constant time; a malformed or wrong-length `hash` returns `false` (never throws).
 - `assert(data: string, hash: string): void` — throws `ShaError` with message `"Hash does not match"` if `verify` would return `false`.
 
 #### Static methods

@@ -1,0 +1,29 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`sha-hash > assert > should throw error with hash_mismatch code 1`] = `"Hash does not match"`;
+
+exports[`sha-hash > assert > should throw error with hash_mismatch code 2`] = `"The computed SHA hash of the provided data does not match the expected hash."`;
+
+exports[`sha-hash > create > SHA1 > should create hash at base64 digest 1`] = `"oXyaqmHoChv3HQ2FCvTluqmAC70="`;
+
+exports[`sha-hash > create > SHA1 > should create hash at base64url digest 1`] = `"oXyaqmHoChv3HQ2FCvTluqmAC70"`;
+
+exports[`sha-hash > create > SHA1 > should create hash at hex digest 1`] = `"a17c9aaa61e80a1bf71d0d850af4e5baa9800bbd"`;
+
+exports[`sha-hash > create > SHA256 > should create hash at base64 digest 1`] = `"Om6weQ85rIfJTzhWst0sXREOaBFgImGpqSPTuyOtyLc="`;
+
+exports[`sha-hash > create > SHA256 > should create hash at base64url digest 1`] = `"Om6weQ85rIfJTzhWst0sXREOaBFgImGpqSPTuyOtyLc"`;
+
+exports[`sha-hash > create > SHA256 > should create hash at hex digest 1`] = `"3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"`;
+
+exports[`sha-hash > create > SHA384 > should create hash at base64 digest 1`] = `"IDng8LknKEmfuI4j68PP0FVLKEALDte3UwVciLWGXDwqpyxqGprgp1XYeQCkpv9B"`;
+
+exports[`sha-hash > create > SHA384 > should create hash at base64url digest 1`] = `"IDng8LknKEmfuI4j68PP0FVLKEALDte3UwVciLWGXDwqpyxqGprgp1XYeQCkpv9B"`;
+
+exports[`sha-hash > create > SHA384 > should create hash at hex digest 1`] = `"2039e0f0b92728499fb88e23ebc3cfd0554b28400b0ed7b753055c88b5865c3c2aa72c6a1a9ae0a755d87900a4a6ff41"`;
+
+exports[`sha-hash > create > SHA512 > should create hash at base64 digest 1`] = `"d8fOml2GuzhtRDu5Y5D6oSBjMVhpnIhEwwsTqwv5J2C35EFq6jl9uRtKwOXdVrjvfksGYWKrH9wIgxnObe/Idg=="`;
+
+exports[`sha-hash > create > SHA512 > should create hash at base64url digest 1`] = `"d8fOml2GuzhtRDu5Y5D6oSBjMVhpnIhEwwsTqwv5J2C35EFq6jl9uRtKwOXdVrjvfksGYWKrH9wIgxnObe_Idg"`;
+
+exports[`sha-hash > create > SHA512 > should create hash at hex digest 1`] = `"77c7ce9a5d86bb386d443bb96390faa120633158699c8844c30b13ab0bf92760b7e4416aea397db91b4ac0e5dd56b8ef7e4b066162ab1fdc088319ce6defc876"`;

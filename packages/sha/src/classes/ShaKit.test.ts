@@ -1,3 +1,5 @@
+import type { ShaAlgorithm } from "@lindorm/types";
+import type { BinaryToTextEncoding } from "crypto";
 import { ShaError } from "../errors/index.js";
 import { ShaKit } from "./ShaKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -26,6 +28,70 @@ describe("ShaKit", () => {
   test("should throw error", () => {
     expect(() => kit.assert("wrong", hash)).toThrow(ShaError);
   });
+
+  test("should reject a hash of unequal length without throwing", () => {
+    expect(() => kit.verify("string", hash.slice(0, 10))).not.toThrow();
+    expect(kit.verify("string", hash.slice(0, 10))).toEqual(false);
+    expect(kit.verify("string", hash + hash)).toEqual(false);
+  });
+
+  test("should reject an empty hash without throwing", () => {
+    expect(() => kit.verify("string", "")).not.toThrow();
+    expect(kit.verify("string", "")).toEqual(false);
+  });
+
+  test("should reject a garbage hash without throwing", () => {
+    expect(() => kit.verify("string", "!! not a digest !!")).not.toThrow();
+    expect(kit.verify("string", "!! not a digest !!")).toEqual(false);
+  });
+
+  test("should throw error on a hash of unequal length", () => {
+    expect(() => kit.assert("string", hash.slice(0, 10))).toThrow(ShaError);
+    expect(() => kit.assert("string", "")).toThrow(ShaError);
+  });
+
+  describe.each(["SHA1", "SHA256", "SHA384", "SHA512"] as Array<ShaAlgorithm>)(
+    "%s",
+    (algorithm) => {
+      describe.each([
+        "base64",
+        "base64url",
+        "hex",
+        "binary",
+      ] as Array<BinaryToTextEncoding>)("%s", (encoding) => {
+        let configured: ShaKit;
+
+        beforeEach(() => {
+          configured = new ShaKit({ algorithm, encoding });
+        });
+
+        test("should verify its own hash", () => {
+          expect(configured.verify("string", configured.hash("string"))).toEqual(true);
+        });
+
+        test("should reject a wrong hash of equal length", () => {
+          expect(configured.verify("string", configured.hash("wrong"))).toEqual(false);
+        });
+
+        test("should reject an unequal length hash without throwing", () => {
+          const short = configured.hash("string").slice(0, 8);
+
+          expect(() => configured.verify("string", short)).not.toThrow();
+          expect(configured.verify("string", short)).toEqual(false);
+        });
+
+        test("should assert its own hash", () => {
+          expect(configured.assert("string", configured.hash("string"))).toBeUndefined();
+        });
+
+        test("should throw error on mismatch", () => {
+          expect(() => configured.assert("string", configured.hash("wrong"))).toThrow(
+            ShaError,
+          );
+        });
+      });
+    },
+  );
 
   describe("static hashes", () => {
     const buffer = Buffer.from("data", "utf8");
