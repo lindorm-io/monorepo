@@ -1,3 +1,4 @@
+import { LINDORM_ID_PATTERN } from "@lindorm/random";
 import type { Constructor } from "@lindorm/types";
 import { z } from "zod";
 import type { IEntity } from "../../../interfaces/index.js";
@@ -16,10 +17,6 @@ const fieldWithMinMax = [
   "text",
   "varchar",
 ];
-
-// Mirrors @lindorm/random randomId: an optional alphanumeric namespace joined
-// with "_", followed by a base62 body of 16-64 characters.
-const LINDORM_ID_REGEX = /^(?:[A-Za-z0-9]+_)?[A-Za-z0-9]{16,64}$/;
 
 const schemaCache = new WeakMap<Constructor<any>, z.ZodObject<any>>();
 
@@ -61,8 +58,9 @@ const getValidator = (field: MetaField): z.ZodType | undefined => {
     case "email":
       return z.email();
 
+    // Format owned by @lindorm/random, alongside the generator that mints it.
     case "lindorm_id":
-      return z.string().regex(LINDORM_ID_REGEX);
+      return z.string().regex(LINDORM_ID_PATTERN);
 
     case "url":
       return z.url();
