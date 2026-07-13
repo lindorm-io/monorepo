@@ -1,3 +1,5 @@
+import { LindormError } from "@lindorm/errors";
+import type { Dict } from "@lindorm/types";
 import MockDate from "mockdate";
 import { Logger } from "./Logger.js";
 import { LoggerBase } from "./LoggerBase.js";
@@ -314,18 +316,19 @@ describe("Logger", () => {
     );
   });
 
-  test("should not clone extracted error data (error + stack pattern)", () => {
+  test("should filter extracted error data (error + stack pattern)", () => {
     logger.filterPath("message");
 
     const error = new Error("test");
     logger.error(error);
 
-    // extractErrorData wraps it with { error, name, message, stack }
-    // getFilteredContent should skip this because it matches the error+stack pattern
+    // extractErrorData wraps it with { error, name, message, stack } — filters
+    // must reach into that shape, the stack must survive it
     expect(log).toHaveBeenCalledWith(
       expect.objectContaining({
         context: expect.objectContaining({
-          error: expect.any(Error),
+          message: "[Filtered]",
+          name: "Error",
           stack: expect.any(Array),
         }),
       }),
@@ -555,6 +558,157 @@ describe("Logger", () => {
         context: { mySecret: "[Filtered]" },
       }),
     );
+  });
+
+  // filtering errors — extracted error content used to bypass filters entirely
+
+  describe("filtering errors", () => {
+    const context = (): any => log.mock.calls[0]?.[0]?.context;
+
+    test("should filterKey a value carried on the error itself", () => {
+      logger.filterKey("token");
+
+      const error = new Error("boom") as Error & { debug: Dict };
+      error.debug = { token: "abc" };
+
+      logger.error(error);
+
+      expect(context().error.debug.token).toBe("[Filtered]");
+      expect(JSON.stringify(context())).not.toContain("abc");
+    });
+
+    test("should filterKey inside error.data and error.debug of a lindorm error", () => {
+      logger.filterKey("password");
+      logger.filterKey(/token$/i);
+
+      logger.error(
+        new LindormError("boom", {
+          data: { username: "alice", password: "hunter2" },
+          debug: { accessToken: "abc", nested: { refreshToken: "xyz" } },
+        }),
+      );
+
+      expect(context().error.data).toEqual({
+        username: "alice",
+        password: "[Filtered]",
+      });
+      expect(context().error.debug).toEqual({
+        accessToken: "[Filtered]",
+        nested: { refreshToken: "[Filtered]" },
+      });
+      expect(JSON.stringify(context())).not.toContain("hunter2");
+      expect(JSON.stringify(context())).not.toContain("xyz");
+    });
+
+    test("should filterPath into extracted error content", () => {
+      logger.filterPath("error.debug.token");
+
+      const error = new Error("boom") as Error & { debug: Dict };
+      error.debug = { token: "abc", safe: "keep" };
+
+      logger.error(error);
+
+      expect(context().error.debug).toEqual({ token: "[Filtered]", safe: "keep" });
+    });
+
+    test("should filterKey inside the cause of an error", () => {
+      logger.filterKey("token");
+
+      const cause = new Error("root cause") as Error & { debug: Dict };
+      cause.debug = { token: "abc" };
+
+      logger.error(new Error("boom", { cause }));
+
+      expect(context().cause.error.debug.token).toBe("[Filtered]");
+      expect(JSON.stringify(context())).not.toContain("abc");
+    });
+
+    test("should preserve the stack intact and never filter it", () => {
+      logger.filterKey("stack");
+      logger.filterKey("token");
+
+      const error = new Error("boom") as Error & { debug: Dict };
+      error.debug = { token: "abc" };
+
+      const expected = error
+        .stack!.split("\n")
+        .map((s) => s.trim())
+        .filter((s) => s);
+
+      logger.error(error);
+
+      // `stack` is skipped by the key walk — it carries no secrets and walking it is
+      // pure cost — so it reaches the transport untouched even with a filter on it
+      expect(context().stack).toEqual(expected);
+      expect(context().error.debug.token).toBe("[Filtered]");
+    });
+
+    test("should survive a circular reference on the error", () => {
+      logger.filterKey("token");
+
+      const error = new Error("boom") as Error & { debug: Dict };
+      error.debug = { token: "abc" };
+      error.debug.self = error.debug;
+      (error as any).origin = error;
+
+      expect(() => logger.error(error)).not.toThrow();
+
+      expect(context().error.debug.token).toBe("[Filtered]");
+    });
+
+    test("should filter errors passed as extra", () => {
+      logger.filterKey("token");
+
+      const error = new Error("boom") as Error & { debug: Dict };
+      error.debug = { token: "abc" };
+
+      logger.info("message", {}, [error]);
+
+      const extra = log.mock.calls[0]?.[0]?.extra;
+
+      expect(extra[0].error.debug.token).toBe("[Filtered]");
+    });
+
+    test("should not touch error content when no filter matches", () => {
+      logger.filterKey("password");
+
+      const error = new Error("boom");
+      logger.error(error);
+
+      // no match, no clone — the Error instance survives for readable output
+      expect(context().error).toBe(error);
+    });
+
+    test("should filter plain content that duck-types as an error", () => {
+      logger.filterKey("password");
+
+      // `isError` duck-types on string name + message, so extractErrorData wraps this
+      // shape as an error — and it used to slip past the filters entirely because of it
+      logger.info("message", { name: "alice", message: "hi", password: "hunter2" });
+
+      expect(context().error.password).toBe("[Filtered]");
+      expect(JSON.stringify(context())).not.toContain("hunter2");
+    });
+
+    test("should not touch error content when no filters are registered", () => {
+      const error = new Error("boom") as Error & { debug: Dict };
+      error.debug = { token: "abc" };
+
+      logger.error(error);
+
+      // fast path: no filters, no walking, no cloning
+      expect(context().error).toBe(error);
+      expect(context().error.debug.token).toBe("abc");
+    });
+  });
+
+  test("should pass content through by reference when no filters are registered", () => {
+    const content = { token: "abc", nested: { password: "hunter2" } };
+
+    logger.info("message", content);
+
+    // fast path: the exact same object, never cloned
+    expect(log.mock.calls[0]?.[0]?.context).toBe(content);
   });
 
   // level gating

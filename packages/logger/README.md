@@ -109,6 +109,8 @@ logger.filterKey(/token/i, () => "[Token]");
 
 `filterPath` matches a single exact dotted path (via `object-path`). `filterKey` matches a key name at any depth, including inside arrays — pass either a string (exact match) or a `RegExp` (pattern match). Both default to replacing the matched value with `"[Filtered]"` if no callback is supplied.
 
+Filters also apply to errors: `logger.error(err)` is expanded into `{ error, name, message, stack }`, and filters reach into it — including the `data` / `debug` payloads a lindorm error carries. The `stack` array is the one exception: it is never walked or filtered, and always reaches the transport intact. Registering no filters costs nothing — content passes through by reference, unwalked and uncloned.
+
 ### Timers
 
 Handle-based timer — `time()` with no label:

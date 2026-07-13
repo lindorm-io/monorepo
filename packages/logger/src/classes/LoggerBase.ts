@@ -22,6 +22,12 @@ import type {
 import type { InternalLog } from "../internal/types/internal-log.js";
 import { LoggerTimer } from "./LoggerTimer.js";
 
+// Errors are object-like but `isObject` deliberately excludes them, so the filter
+// walk has to opt them back in — a lindorm error's `data` / `debug` payloads hang
+// off the Error instance itself.
+const isWalkable = (value: any): boolean =>
+  isArray(value) || isObject(value) || isError(value);
+
 // Shared logger behaviour used by both Logger (root) and LoggerChild.
 // Concrete subclasses own construction: Logger creates winston/transport
 // and registers process handlers, LoggerChild inherits refs from a parent.
@@ -227,16 +233,24 @@ export abstract class LoggerBase implements ILogger {
     ];
   }
 
+  // Filters apply to error content too — extracted errors used to bail out here,
+  // which meant `logger.error(err)` leaked whatever the error carried in `data` /
+  // `debug`. When a filter does match inside an error, the clone below replaces the
+  // Error instance with its serialised shape: redacting inside an Error is not
+  // possible without replacing it (mutating the caller's error is not an option).
+  // Registering no filters still costs nothing — the fast path returns first.
   private getFilteredContent(content: LogContent): LogContent {
-    if (!isObject(content)) return content ?? undefined;
+    // `isObject` rejects anything that duck-types as an Error — which the extracted
+    // error shape ({ error, name, message, stack }) does — so it cannot be the guard
+    // here; that alone would skip every filter on every error. Only primitives and
+    // nullish content fall through.
+    if (!isObject(content) && !isError(content)) return content ?? undefined;
 
     const hasPathFilters = this.filterRef.entries.length > 0;
     const hasKeyFilters =
       this.keyFilterRef.exact.size > 0 || this.keyFilterRef.patterns.length > 0;
 
     if (!hasPathFilters && !hasKeyFilters) return content;
-    if (isError((content as any)?.error) && isArray((content as any)?.stack))
-      return content;
 
     const pathMatches: Array<[string, FilterCallback, any]> = [];
     if (hasPathFilters) {
@@ -250,7 +264,7 @@ export abstract class LoggerBase implements ILogger {
 
     const keyMatches: Array<[string, FilterCallback, any]> = [];
     if (hasKeyFilters) {
-      this.collectKeyMatches(content as Dict, "", keyMatches);
+      this.collectKeyMatches(content as Dict, "", keyMatches, new WeakSet());
     }
 
     if (!pathMatches.length && !keyMatches.length) return content;
@@ -272,17 +286,26 @@ export abstract class LoggerBase implements ILogger {
     }
   }
 
+  // Collects the paths key filters match, walking arrays, plain objects, and Error
+  // instances alike — `logger.error(err)` where the error carries `debug: { token }`
+  // is exactly the path that must not leak, and `isObject` rejects Errors, so they
+  // need to be walked explicitly. `seen` guards circular references (the clone in
+  // getFilteredContent is cycle-safe, this walk has to be too).
   private collectKeyMatches(
     obj: Dict,
     prefix: string,
     matches: Array<[string, FilterCallback, any]>,
+    seen: WeakSet<object>,
   ): void {
+    if (seen.has(obj)) return;
+    seen.add(obj);
+
     if (isArray(obj)) {
       for (let i = 0; i < obj.length; i++) {
         const item = obj[i];
         const path = prefix ? `${prefix}.${i}` : `${i}`;
-        if (isArray(item) || isObject(item)) {
-          this.collectKeyMatches(item as Dict, path, matches);
+        if (isWalkable(item)) {
+          this.collectKeyMatches(item as Dict, path, matches, seen);
         }
       }
       return;
@@ -291,6 +314,10 @@ export abstract class LoggerBase implements ILogger {
     for (const key of Object.keys(obj)) {
       const value = obj[key];
       const path = prefix ? `${prefix}.${key}` : key;
+
+      // an extracted error's stack is a long list of strings that never carries a
+      // secret — walking it is pure cost, so it passes through untouched
+      if (key === "stack" && isArray(value)) continue;
 
       if (value) {
         const exactCb = this.keyFilterRef.exact.get(key);
@@ -312,8 +339,8 @@ export abstract class LoggerBase implements ILogger {
         }
       }
 
-      if (isArray(value) || isObject(value)) {
-        this.collectKeyMatches(value as Dict, path, matches);
+      if (isWalkable(value)) {
+        this.collectKeyMatches(value as Dict, path, matches, seen);
       }
     }
   }
