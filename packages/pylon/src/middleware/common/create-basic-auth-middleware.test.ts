@@ -59,8 +59,54 @@ describe("createBasicAuthMiddleware", () => {
         await middleware(ctx, next);
       } catch (err: any) {
         expect(err.status).toBe(401);
+        expect(err.code).toBe("invalid_credentials");
         expect(err.message).toMatchSnapshot();
       }
+    });
+  });
+
+  // The password is compared as a fixed-length SHA-256 digest with `timingSafeEqual`. A naive
+  // `timingSafeEqual` over the raw UTF-8 password bytes would throw on a length mismatch, and an
+  // unknown username must not short-circuit past the comparison and expose itself by timing.
+  describe("constant-time comparison", () => {
+    test.each([
+      ["shorter", "s"],
+      ["longer", "a-considerably-longer-password-than-the-configured-one"],
+      ["empty", ""],
+    ])(
+      "should throw 401 for a %s wrong password without an unexpected error",
+      async (_, password) => {
+        const ctx = createCtx("admin", password);
+        const middleware = createBasicAuthMiddleware(credentials);
+
+        await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
+
+        try {
+          await middleware(ctx, next);
+        } catch (err: any) {
+          expect(err).toBeInstanceOf(ClientError);
+          expect(err.status).toBe(401);
+          expect(err.code).toBe("invalid_credentials");
+        }
+
+        expect(next).not.toHaveBeenCalled();
+      },
+    );
+
+    test("should throw 401 for an unknown username", async () => {
+      const ctx = createCtx("unknown", "secret");
+      const middleware = createBasicAuthMiddleware(credentials);
+
+      try {
+        await middleware(ctx, next);
+      } catch (err: any) {
+        expect(err.status).toBe(401);
+        expect(err.code).toBe("invalid_credentials");
+        expect(err.debug).toMatchSnapshot();
+      }
+
+      expect(next).not.toHaveBeenCalled();
+      expect.assertions(4);
     });
   });
 
@@ -73,6 +119,26 @@ describe("createBasicAuthMiddleware", () => {
       await expect(middleware(ctx, next)).resolves.toBeUndefined();
 
       expect(verifyFn).toHaveBeenCalledWith("custom", "pass");
+    });
+
+    test("should use the custom verify function verbatim and map its rejection to 401", async () => {
+      const ctx = createCtx("custom", "pa:ss%20word");
+      const verifyFn = vi.fn().mockRejectedValue(new Error("nope"));
+      const middleware = createBasicAuthMiddleware(verifyFn);
+
+      await expect(middleware(ctx, next)).rejects.toThrow(ClientError);
+
+      expect(verifyFn).toHaveBeenCalledWith("custom", "pa:ss word");
+
+      try {
+        await middleware(ctx, next);
+      } catch (err: any) {
+        expect(err.status).toBe(401);
+        expect(err.code).toBe("invalid_credentials");
+        expect(err.message).toMatchSnapshot();
+      }
+
+      expect(next).not.toHaveBeenCalled();
     });
   });
 
@@ -171,9 +237,57 @@ describe("createBasicAuthMiddleware", () => {
 
       expect(verifyFn).toHaveBeenCalledWith("client id", "s>cret&more");
     });
+
+    test("should authenticate against a configured percent-encoded credential", async () => {
+      const ctx: any = {
+        logger: createMockLogger(),
+        state: {
+          authorization: {
+            type: "basic",
+            value: Buffer.from("client%20id:s%3Ecret%26more").toString("base64"),
+          },
+          tokens: {},
+        },
+      };
+
+      await expect(
+        createBasicAuthMiddleware([{ username: "client id", password: "s>cret&more" }])(
+          ctx,
+          next,
+        ),
+      ).resolves.toBeUndefined();
+
+      expect(next).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("redaction", () => {
+    test.each([
+      ["array mode", "wrong-password", () => createBasicAuthMiddleware(credentials)],
+      [
+        "custom verify function",
+        "top-secret",
+        () => createBasicAuthMiddleware(vi.fn().mockRejectedValue(new Error("nope"))),
+      ],
+    ])("should never log the password (%s)", async (_, password, factory) => {
+      const ctx = createCtx("admin", password);
+
+      await expect(factory()(ctx, next)).rejects.toThrow(ClientError);
+
+      const logged = JSON.stringify([
+        ctx.logger.error.mock.calls,
+        ctx.logger.warn.mock.calls,
+        ctx.logger.info.mock.calls,
+        ctx.logger.verbose.mock.calls,
+        ctx.logger.debug.mock.calls,
+        ctx.logger.silly.mock.calls,
+        ctx.logger.log.mock.calls,
+      ]);
+
+      expect(logged).not.toContain(password);
+      expect(logged).not.toContain("secret");
+    });
+
     test("should not log the password when the password does not match", async () => {
       const ctx = createCtx("admin", "wrong-password");
 

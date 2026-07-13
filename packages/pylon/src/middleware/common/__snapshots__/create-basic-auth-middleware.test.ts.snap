@@ -6,7 +6,16 @@ exports[`createBasicAuthMiddleware > array mode > should throw 401 when username
 
 exports[`createBasicAuthMiddleware > authorization type > should throw 401 when authorization type is not basic 1`] = `"Invalid Authorization header"`;
 
+exports[`createBasicAuthMiddleware > constant-time comparison > should throw 401 for an unknown username 1`] = `
+{
+  "reason": "verify_callback_rejected",
+  "username": "unknown",
+}
+`;
+
 exports[`createBasicAuthMiddleware > credentials format > should throw 401 when credentials format is invalid (no colon) 1`] = `"Invalid credentials"`;
+
+exports[`createBasicAuthMiddleware > custom verify function > should use the custom verify function verbatim and map its rejection to 401 1`] = `"Invalid credentials"`;
 
 exports[`createBasicAuthMiddleware > redaction > should not log the decoded credentials when they are malformed 1`] = `
 {
