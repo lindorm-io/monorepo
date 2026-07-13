@@ -375,6 +375,7 @@ import {
 - JWE payload compression (`zip` header) is rejected outright.
 - Critical header parameters are enforced per RFC 7515 §4.1.11; unknown `crit` entries cause verification to fail.
 - DPoP-bound tokens (`cnf.jkt`) require either a matching DPoP proof or `trustBoundThumbprint: true` on verify.
+- Tokens are never logged whole. Every log line and error payload carries a token as `header.payload` — the signature is dropped, so a logged token stays debuggable but unusable. A JWE is logged as its protected header only; a token with no safely-showable structure (opaque, COSE/CWT) is logged as `[Filtered]`. This applies to DPoP proofs passed on verify as well.
 
 ## Testing
 

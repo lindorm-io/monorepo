@@ -3,6 +3,7 @@ import { B64 } from "@lindorm/b64";
 import { isString } from "@lindorm/is";
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
+import { sanitiseToken } from "@lindorm/utils";
 import { B64U } from "../internal/constants/format.js";
 import { JweError } from "../errors/index.js";
 import type { IJweKit } from "../interfaces/index.js";
@@ -104,7 +105,7 @@ export class JweKit implements IJweKit {
       B64.encode(authTag, B64U),
     ].join(".");
 
-    this.logger.debug("Token encrypted", { token });
+    this.logger.debug("Token encrypted", { token: sanitiseToken(token) });
 
     return { token };
   }
@@ -112,7 +113,7 @@ export class JweKit implements IJweKit {
   decrypt(token: string): DecryptedJwe {
     const kit = new AesKit({ encryption: this.encryption, kryptos: this.kryptos });
 
-    this.logger.debug("Decrypting token", { token });
+    this.logger.debug("Decrypting token", { token: sanitiseToken(token) });
 
     const decoded = JweKit.decode(token);
 

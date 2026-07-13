@@ -3,6 +3,7 @@ import { isFinite } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
+import { sanitiseToken } from "@lindorm/utils";
 import { JwtError } from "../errors/index.js";
 import {
   computeTypHeader,
@@ -175,7 +176,7 @@ export class JwtKit implements IJwtKit {
 
     const token = `${header}.${payload}.${signature}`;
 
-    this.logger.debug("Token signed", { token });
+    this.logger.debug("Token signed", { token: sanitiseToken(token) });
 
     return {
       expiresAt: meta.expiresAt,
@@ -191,7 +192,15 @@ export class JwtKit implements IJwtKit {
     token: string,
     verify: VerifyJwtOptions = {},
   ): ParsedJwt<C> {
-    this.logger.debug("Verifying token", { token, verify });
+    this.logger.debug("Verifying token", {
+      token: sanitiseToken(token),
+      verify: {
+        ...verify,
+        ...(verify.dpopProof !== undefined
+          ? { dpopProof: sanitiseToken(verify.dpopProof) }
+          : {}),
+      },
+    });
 
     const parsed = JwtKit.parse<C>(token, { typPresence: verify.typPresence });
 
@@ -238,7 +247,7 @@ export class JwtKit implements IJwtKit {
     if (!verified) {
       throw new JwtError("Invalid token", {
         code: "jwt_signature_invalid",
-        debug: { token },
+        debug: { token: sanitiseToken(token) },
         title: "JWT Signature Invalid",
         details:
           "The signature did not verify against the configured kryptos key, indicating the JWT was tampered with or signed by another key.",

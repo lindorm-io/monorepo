@@ -2,6 +2,7 @@ import { B64 } from "@lindorm/b64";
 import { isBuffer, isString } from "@lindorm/is";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
+import { sanitiseToken } from "@lindorm/utils";
 import { B64U } from "../internal/constants/format.js";
 import { JwsError } from "../errors/index.js";
 import type { IJwsKit } from "../interfaces/index.js";
@@ -73,13 +74,13 @@ export class JwsKit implements IJwsKit {
 
     const token = `${header}.${payload}.${signature}`;
 
-    this.logger.debug("Token signed", { token });
+    this.logger.debug("Token signed", { token: sanitiseToken(token) });
 
     return { objectId, token };
   }
 
   verify<T extends Buffer | string>(token: string): ParsedJws<T> {
-    this.logger.debug("Verifying token", { token });
+    this.logger.debug("Verifying token", { token: sanitiseToken(token) });
 
     const parsed = JwsKit.parse<T>(token);
 
@@ -112,7 +113,7 @@ export class JwsKit implements IJwsKit {
     if (!verified) {
       throw new JwsError("Invalid token", {
         code: "jws_signature_invalid",
-        debug: { token },
+        debug: { token: sanitiseToken(token) },
         title: "JWS Signature Invalid",
         details:
           "The signature did not verify against the configured kryptos key, indicating the JWS was tampered with or signed by another key.",

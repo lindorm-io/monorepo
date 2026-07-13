@@ -9,7 +9,7 @@ import {
 import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
 import { getUnixTime } from "@lindorm/date";
 import { isBuffer, isDate, isString } from "@lindorm/is";
-import { removeUndefined } from "@lindorm/utils";
+import { removeUndefined, sanitiseToken } from "@lindorm/utils";
 import type {
   IKryptos,
   KryptosEncAlgorithm,
@@ -244,7 +244,7 @@ export class Aegis implements IAegis {
 
     throw new AegisError("Invalid token type", {
       code: "unsupported_token_type",
-      debug: { token },
+      debug: { token: sanitiseToken(token) },
       title: "Unsupported Token Type",
       details:
         "The token is not a recognised JWT, JWE, JWS, or COSE token, so Aegis cannot select a kit to verify it.",
@@ -282,7 +282,7 @@ export class Aegis implements IAegis {
     }
     throw new AegisError("Invalid token type", {
       code: "unsupported_token_type",
-      debug: { token },
+      debug: { token: sanitiseToken(token) },
       title: "Unsupported Token Type",
       details:
         "The token is not a recognised JWT, JWE, or JWS, so Aegis cannot select a kit to decode it.",
@@ -298,7 +298,7 @@ export class Aegis implements IAegis {
     }
     throw new AegisError("Invalid token type", {
       code: "unsupported_token_type",
-      debug: { token },
+      debug: { token: sanitiseToken(token) },
       title: "Unsupported Token Type",
       details:
         "The token is not a recognised JWT or JWS, so Aegis cannot select a kit to parse it.",
