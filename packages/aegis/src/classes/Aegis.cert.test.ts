@@ -59,7 +59,7 @@ const buildCertBoundKryptos = (): Kryptos =>
     curve: "P-256",
     type: "EC",
     use: "sig",
-    isExternal: false,
+    internal: true,
     privateKey: Buffer.from(TEST_X509_LEAF_PRIVATE_KEY_B64, "base64url"),
     publicKey: Buffer.from(TEST_X509_LEAF_PUBLIC_KEY_B64, "base64url"),
     certificateChain: [
@@ -77,7 +77,7 @@ const buildChainlessKryptos = (): Kryptos =>
     curve: "P-256",
     type: "EC",
     use: "sig",
-    isExternal: false,
+    internal: true,
     privateKey: Buffer.from(TEST_X509_LEAF_PRIVATE_KEY_B64, "base64url"),
     publicKey: Buffer.from(TEST_X509_LEAF_PUBLIC_KEY_B64, "base64url"),
   });
@@ -351,7 +351,7 @@ describe("Aegis cert binding", () => {
         curve: "P-256",
         type: "EC",
         use: "sig",
-        isExternal: false,
+        internal: true,
         privateKey: Buffer.from(TEST_X509_LEAF_PRIVATE_KEY_B64, "base64url"),
         publicKey: Buffer.from(TEST_X509_LEAF_PUBLIC_KEY_B64, "base64url"),
         certificateChain: [
@@ -369,7 +369,7 @@ describe("Aegis cert binding", () => {
         curve: "P-256",
         type: "EC",
         use: "sig",
-        isExternal: false,
+        internal: true,
         privateKey: Buffer.from(TEST_X509_LEAF_PRIVATE_KEY_B64, "base64url"),
         publicKey: Buffer.from(TEST_X509_LEAF_PUBLIC_KEY_B64, "base64url"),
       });
