@@ -948,6 +948,12 @@ export const pylon = new Pylon({
   rooms: { presence: true },
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   kv: redis,
   bus: rabbit,
   queue: { enabled: true },
@@ -1170,6 +1176,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   kv: redis,
   rateLimit: {
     enabled: true,
@@ -2927,6 +2939,12 @@ export const pylon = new Pylon({
   rooms: { presence: true },
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   kv: redis,
   bus: kafka,
   queue: { enabled: true },
@@ -3014,6 +3032,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: memoryDb,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   kv: memoryKv,
   setup: async () => {
     await memoryDb.connect();
@@ -3045,6 +3069,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: redisDb,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   bus: redisBus,
   queue: { enabled: true },
   setup: async () => {
@@ -3076,6 +3106,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: redis,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   setup: async () => {
     await redis.connect();
   },
@@ -3105,6 +3141,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   kv: redis,
   session: {
     enabled: true,
@@ -3168,6 +3210,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   kv: redis,
   bus: rabbit,
   queue: { enabled: true },
@@ -3203,6 +3251,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   kv: redisKv,
   bus: redisBus,
   queue: { enabled: true },
@@ -3237,6 +3291,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   bus: rabbit,
   queue: { enabled: true },
   webhook: { enabled: true },
@@ -3276,6 +3336,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   bus: rabbit,
   queue: { enabled: true },
   setup: async () => {
@@ -3307,6 +3373,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   setup: async () => {
     await postgres.connect();
   },
@@ -3363,6 +3435,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: redis,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   setup: async () => {
     await redis.connect();
   },
@@ -3445,6 +3523,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   kv: redis,
   rateLimit: {
     enabled: true,
@@ -3483,6 +3567,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: redis,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   rateLimit: {
     enabled: true,
     kv: redis,
@@ -3520,6 +3610,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   kv: redis,
   session: {
     enabled: true,
@@ -3613,6 +3709,12 @@ export const pylon = new Pylon({
   routes: join(import.meta.dirname, "..", "routes"),
   db: postgres,
   kryptos: { enabled: true },
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
   session: {
     enabled: true,
     kv: postgres,
@@ -3756,7 +3858,56 @@ import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
 import { postgres } from "../proteus/db/source.js";
 
-export default createKryptosRotationWorker({ amphora, logger, db: postgres });
+// The keys this app mints and rotates. \`publish\` is stated on EVERY key: it
+// decides which keys reach the JWKS and which never leave the server, and it
+// defaults to false — a key you want published MUST say so, or the JWKS is
+// empty and no relying party can verify anything.
+//
+// Cookie + session keys are internal and long-lived (1y) — they never leave
+// the server, and rotating them churns live sessions. Token keys are published
+// and rotate faster (6mo) — a smaller blast radius if leaked, and relying
+// parties re-fetch the JWKS anyway.
+//
+// The purposes below are the ones \`src/pylon/pylon.ts\` selects on (its \`keys\`
+// option). Rename one here and you must rename it there too.
+
+export default createKryptosRotationWorker({
+  amphora,
+  logger,
+  db: postgres,
+  keys: [
+    { algorithm: "dir", publish: false, purpose: "cookie", expiry: "1y" },
+    { algorithm: "HS256", publish: false, purpose: "cookie", expiry: "1y" },
+    {
+      algorithm: "EdDSA",
+      curve: "Ed448",
+      publish: false,
+      purpose: "session",
+      expiry: "1y",
+    },
+    {
+      algorithm: "ECDH-ES",
+      curve: "X448",
+      publish: false,
+      purpose: "session",
+      expiry: "1y",
+    },
+    {
+      algorithm: "EdDSA",
+      curve: "Ed25519",
+      publish: true,
+      purpose: "token",
+      expiry: "6mo",
+    },
+    {
+      algorithm: "ECDH-ES+A256GCMKW",
+      curve: "X448",
+      publish: true,
+      purpose: "token",
+      expiry: "6mo",
+    },
+  ],
+});
 "
 `;
 
@@ -3795,6 +3946,55 @@ import { amphora } from "../pylon/amphora.js";
 import { logger } from "../logger/index.js";
 import { postgres } from "../proteus/db/source.js";
 
-export default createKryptosRotationWorker({ amphora, logger, db: postgres });
+// The keys this app mints and rotates. \`publish\` is stated on EVERY key: it
+// decides which keys reach the JWKS and which never leave the server, and it
+// defaults to false — a key you want published MUST say so, or the JWKS is
+// empty and no relying party can verify anything.
+//
+// Cookie + session keys are internal and long-lived (1y) — they never leave
+// the server, and rotating them churns live sessions. Token keys are published
+// and rotate faster (6mo) — a smaller blast radius if leaked, and relying
+// parties re-fetch the JWKS anyway.
+//
+// The purposes below are the ones \`src/pylon/pylon.ts\` selects on (its \`keys\`
+// option). Rename one here and you must rename it there too.
+
+export default createKryptosRotationWorker({
+  amphora,
+  logger,
+  db: postgres,
+  keys: [
+    { algorithm: "dir", publish: false, purpose: "cookie", expiry: "1y" },
+    { algorithm: "HS256", publish: false, purpose: "cookie", expiry: "1y" },
+    {
+      algorithm: "EdDSA",
+      curve: "Ed448",
+      publish: false,
+      purpose: "session",
+      expiry: "1y",
+    },
+    {
+      algorithm: "ECDH-ES",
+      curve: "X448",
+      publish: false,
+      purpose: "session",
+      expiry: "1y",
+    },
+    {
+      algorithm: "EdDSA",
+      curve: "Ed25519",
+      publish: true,
+      purpose: "token",
+      expiry: "6mo",
+    },
+    {
+      algorithm: "ECDH-ES+A256GCMKW",
+      curve: "X448",
+      publish: true,
+      purpose: "token",
+      expiry: "6mo",
+    },
+  ],
+});
 "
 `;

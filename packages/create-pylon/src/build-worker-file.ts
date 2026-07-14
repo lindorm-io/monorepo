@@ -36,6 +36,10 @@ const certificateExpiry = (): string =>
     ``,
   ].join("\n");
 
+// Pylon has NO default key set — it does not know your `purpose` taxonomy and
+// will not invent one. So the keys are scaffolded here, explicitly, as source you
+// can read and edit. The pylon options (`keys`) name the same purposes, so every
+// role resolves the key it is meant to use.
 const kryptosRotation = (dbDriver: string): string =>
   [
     `import { createKryptosRotationWorker } from "@lindorm/pylon";`,
@@ -43,9 +47,58 @@ const kryptosRotation = (dbDriver: string): string =>
     `import { logger } from "../logger/index.js";`,
     `import { ${dbDriver} } from "${SOURCE_IMPORT}";`,
     ``,
+    `// The keys this app mints and rotates. \`publish\` is stated on EVERY key: it`,
+    `// decides which keys reach the JWKS and which never leave the server, and it`,
+    `// defaults to false — a key you want published MUST say so, or the JWKS is`,
+    `// empty and no relying party can verify anything.`,
+    `//`,
+    `// Cookie + session keys are internal and long-lived (1y) — they never leave`,
+    `// the server, and rotating them churns live sessions. Token keys are published`,
+    `// and rotate faster (6mo) — a smaller blast radius if leaked, and relying`,
+    `// parties re-fetch the JWKS anyway.`,
+    `//`,
+    `// The purposes below are the ones \`src/pylon/pylon.ts\` selects on (its \`keys\``,
+    `// option). Rename one here and you must rename it there too.`,
+    ``,
     // Pass the amphora so freshly-minted keys land in the vault immediately
     // (JWKS is populated on first boot, not after the next entity-sync tick).
-    `export default createKryptosRotationWorker({ amphora, logger, db: ${dbDriver} });`,
+    `export default createKryptosRotationWorker({`,
+    `  amphora,`,
+    `  logger,`,
+    `  db: ${dbDriver},`,
+    `  keys: [`,
+    `    { algorithm: "dir", publish: false, purpose: "cookie", expiry: "1y" },`,
+    `    { algorithm: "HS256", publish: false, purpose: "cookie", expiry: "1y" },`,
+    `    {`,
+    `      algorithm: "EdDSA",`,
+    `      curve: "Ed448",`,
+    `      publish: false,`,
+    `      purpose: "session",`,
+    `      expiry: "1y",`,
+    `    },`,
+    `    {`,
+    `      algorithm: "ECDH-ES",`,
+    `      curve: "X448",`,
+    `      publish: false,`,
+    `      purpose: "session",`,
+    `      expiry: "1y",`,
+    `    },`,
+    `    {`,
+    `      algorithm: "EdDSA",`,
+    `      curve: "Ed25519",`,
+    `      publish: true,`,
+    `      purpose: "token",`,
+    `      expiry: "6mo",`,
+    `    },`,
+    `    {`,
+    `      algorithm: "ECDH-ES+A256GCMKW",`,
+    `      curve: "X448",`,
+    `      publish: true,`,
+    `      purpose: "token",`,
+    `      expiry: "6mo",`,
+    `    },`,
+    `  ],`,
+    `});`,
     ``,
   ].join("\n");
 

@@ -145,6 +145,28 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
   if (primaryExists) {
     lines.push(`  db: ${dbSlot!.binding},`);
     lines.push(`  kryptos: { enabled: true },`);
+
+    // Which vault key does what. Pylon holds no opinion — it does not know your
+    // `purpose` taxonomy — so every key role it resolves is named here, matching
+    // the purposes the kryptos-rotation worker mints.
+    //
+    // ⚠ `publish: false` is load-bearing: amphora's default query is the
+    // PUBLISHED set, so an internal cookie/session key is unreachable without it
+    // and the JWKS token key would be selected instead.
+    lines.push(`  keys: {`);
+    lines.push(
+      `    cookieSignature: { predicate: { purpose: "cookie", publish: false } },`,
+    );
+    lines.push(
+      `    cookieVerification: { predicate: { purpose: "cookie", publish: false } },`,
+    );
+    lines.push(
+      `    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },`,
+    );
+    lines.push(
+      `    sessionEncryption: { predicate: { purpose: "session", publish: false } },`,
+    );
+    lines.push(`  },`);
   }
 
   if (kvIsSecondary) {
