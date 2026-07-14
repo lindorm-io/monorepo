@@ -221,10 +221,86 @@ describe("resolveKey", () => {
       policy: {
         use: "sig",
         hasPrivateKey: true,
+        isActive: true,
         algClass: "asymmetric",
         purpose: "token",
       },
       profile: "access_token",
+    });
+  });
+
+  // The vault filters `isActive` on a QUERY, so the clock only bites where the
+  // vault does not: a key handed in outright, and a key named by an artifact's
+  // own `kid`. Both are the paths a caller controls.
+  describe("the time floor", () => {
+    const detached = (notBefore: Date, expiresAt: Date): IKryptos =>
+      KryptosKit.clone(TEST_EC_KEY_SIG, {
+        id: "6b1f0c9e-0000-4000-8000-00000000000a",
+        notBefore,
+        expiresAt,
+      });
+
+    const resolveSign = (kryptos: IKryptos) =>
+      resolveKey({
+        amphora,
+        floor: SIGN_FLOOR,
+        selector: {},
+        logger,
+        operation: "sign",
+        kryptos,
+      }).catch((err: Error) => err);
+
+    test("refuses to SIGN with an injected key that has expired", async () => {
+      const expired = detached(new Date("2020-01-01"), new Date("2021-01-01"));
+
+      const error = await resolveSign(expired);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("sign_key_policy_violation");
+    });
+
+    test("refuses to SIGN with an injected key that is not yet valid", async () => {
+      const pending = detached(new Date("2099-01-01"), new Date("2100-01-01"));
+
+      const error = await resolveSign(pending);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("sign_key_policy_violation");
+    });
+
+    test("still VERIFIES with a key that has since expired", async () => {
+      // The point of an `expiresAt` rather than a deletion: a token signed while
+      // the key was valid must keep verifying after the key rotates out.
+      const expired = detached(new Date("2020-01-01"), new Date("2021-01-01"));
+
+      const kryptos = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        selector: {},
+        logger,
+        operation: "verify",
+        kryptos: expired,
+      });
+
+      expect(kryptos.id).toBe(expired.id);
+    });
+
+    test("refuses to VERIFY against a key that is not yet valid", async () => {
+      // A client can name any `kid` in the vault. A key whose `notBefore` has not
+      // passed cannot have signed anything, ever — so nothing it names is real.
+      const pending = detached(new Date("2099-01-01"), new Date("2100-01-01"));
+
+      const error = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        selector: {},
+        logger,
+        operation: "verify",
+        kryptos: pending,
+      }).catch((err: Error) => err);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("verify_key_policy_violation");
     });
   });
 });

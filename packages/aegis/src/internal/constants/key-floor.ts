@@ -29,10 +29,33 @@ import type { AmphoraPredicate } from "@lindorm/amphora";
  *   decrypt case: an RFC 9101 encrypted request object, whose `A128KW` / `dir`
  *   key is derived from the client secret and is emphatically not our own.
  */
-export const SIGN_FLOOR: AmphoraPredicate = { use: "sig", hasPrivateKey: true };
+/**
+ * The TIME half of the floor, and it is not symmetric either.
+ *
+ * A key's lifetime runs pending → active → expired. The vault already drops
+ * inactive keys from a QUERY — but `findById` is unfiltered by design, and an
+ * INJECTED `kryptos` never touches the vault at all. So without the clock in the
+ * floor, an expired or not-yet-valid key handed in by a caller would sign.
+ *
+ * - WRITE (`sign` / `encrypt`) demands `isActive`: the key must be usable NOW.
+ * - READ (`verify` / `decrypt`) demands only `isPending: false`. An EXPIRED key
+ *   MUST still verify what it signed while it was valid — that is the whole
+ *   point of `findById` being unfiltered, and of keys having an `expiresAt`
+ *   rather than vanishing. But a key whose `notBefore` has not yet passed cannot
+ *   have signed or sealed anything, ever, so nothing it names is trustworthy.
+ */
+export const SIGN_FLOOR: AmphoraPredicate = {
+  use: "sig",
+  hasPrivateKey: true,
+  isActive: true,
+};
 
-export const VERIFY_FLOOR: AmphoraPredicate = { use: "sig" };
+export const VERIFY_FLOOR: AmphoraPredicate = { use: "sig", isPending: false };
 
-export const ENCRYPT_FLOOR: AmphoraPredicate = { use: "enc" };
+export const ENCRYPT_FLOOR: AmphoraPredicate = { use: "enc", isActive: true };
 
-export const DECRYPT_FLOOR: AmphoraPredicate = { use: "enc", hasPrivateKey: true };
+export const DECRYPT_FLOOR: AmphoraPredicate = {
+  use: "enc",
+  hasPrivateKey: true,
+  isPending: false,
+};
