@@ -48,8 +48,12 @@ export type KryptosMetadata = {
   hasCertificate: boolean;
   hasPrivateKey: boolean;
   hasPublicKey: boolean;
+  // pending → active → expired: mutually exclusive, exhaustive. Named in full
+  // so a consumer can state a TIME policy as a predicate and enforce it on a
+  // key it was handed as well as one it queried.
   isActive: boolean;
   isExpired: boolean;
+  isPending: boolean;
   modulus: RsaModulus | null;
   // Derived from the key material, never stored — see `Kryptos.operations`.
   operations: Array<KryptosOperation>;

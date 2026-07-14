@@ -49,6 +49,7 @@ exports[`Kryptos (X.509 round-trip) > toJSON → fromJwk round-trip > preserves 
   "internal": true,
   "isActive": true,
   "isExpired": false,
+  "isPending": false,
   "issuer": null,
   "jwksUri": null,
   "modulus": null,

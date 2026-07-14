@@ -6297,6 +6297,7 @@ exports[`Kryptos (AKP) > to > should return json 1`] = `
   "internal": true,
   "isActive": true,
   "isExpired": false,
+  "isPending": false,
   "issuer": "https://example.com",
   "jwksUri": "https://example.com/.well-known/jwks.json",
   "modulus": null,

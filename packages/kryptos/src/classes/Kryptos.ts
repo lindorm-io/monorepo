@@ -1,5 +1,5 @@
 import { B64 } from "@lindorm/b64";
-import { expiresAt, getUnixTime, isAfter, isEqual } from "@lindorm/date";
+import { expiresAt, getUnixTime, isAfter, isBefore, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { randomId } from "@lindorm/random";
 import { removeEmpty, removeUndefined } from "@lindorm/utils";
@@ -284,11 +284,25 @@ export class Kryptos implements IKryptos {
     return isBuffer(this._publicKey) && this._publicKey.length > 0;
   }
 
+  // A key's lifetime has THREE states, and they are mutually exclusive and
+  // exhaustive: pending → active → expired. Naming all three is what lets a
+  // consumer state a time policy as a predicate, and therefore enforce it on a
+  // key it was HANDED as well as one it queried — the vault filters `isActive`,
+  // but an injected key never touches the vault.
+  //
+  //   sign / encrypt   `isActive: true`    the key must be usable NOW
+  //   verify / decrypt `isPending: false`  the key must have been usable at SOME
+  //                                        point. An expired key MUST still
+  //                                        verify what it signed while valid;
+  //                                        a key whose notBefore has not passed
+  //                                        cannot have signed anything, ever.
+
+  get isPending(): boolean {
+    return isBefore(new Date(), this._notBefore);
+  }
+
   get isActive(): boolean {
-    return (
-      (isEqual(new Date(), this._notBefore) || isAfter(new Date(), this._notBefore)) &&
-      !this.isExpired
-    );
+    return !this.isPending && !this.isExpired;
   }
 
   get isExpired(): boolean {
@@ -546,6 +560,7 @@ export class Kryptos implements IKryptos {
       hasPublicKey: this.hasPublicKey,
       isActive: this.isActive,
       isExpired: this.isExpired,
+      isPending: this.isPending,
       internal: this.internal,
       issuer: this.issuer,
       jwksUri: this.jwksUri,

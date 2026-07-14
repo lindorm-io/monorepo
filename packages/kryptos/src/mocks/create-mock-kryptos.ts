@@ -41,6 +41,7 @@ export const _createMockKryptos = (
     hasPrivateKey: true,
     hasPublicKey: true,
     isActive: true,
+    isPending: false,
     isExpired: false,
     modulus: null,
     // Metadata, not an attribute — the real class DERIVES this from the key
