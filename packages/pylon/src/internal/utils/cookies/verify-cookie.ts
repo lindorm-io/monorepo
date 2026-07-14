@@ -1,7 +1,8 @@
 import { SignatureKit } from "@lindorm/aegis";
 import { ClientError } from "@lindorm/errors";
 import { sanitiseToken } from "@lindorm/utils";
-import type { PylonCommonContext } from "../../../types/index.js";
+import type { PylonCommonContext, PylonVerifyKey } from "../../../types/index.js";
+import { resolveCookieVerificationKey } from "../keys/resolve-cookie-verification-key.js";
 
 export const verifyCookie = async (
   ctx: Pick<PylonCommonContext, "amphora">,
@@ -9,6 +10,7 @@ export const verifyCookie = async (
   value: string,
   signature: string | null,
   kid: string | null,
+  key: PylonVerifyKey | undefined,
 ): Promise<void> => {
   if (!signature) {
     throw new ClientError("Cookie signature is missing", {
@@ -35,7 +37,7 @@ export const verifyCookie = async (
   }
 
   try {
-    const kryptos = ctx.amphora.findByIdSync(kid);
+    const kryptos = resolveCookieVerificationKey(ctx.amphora, kid, key, name);
 
     if (!new SignatureKit({ kryptos }).verify(value, signature)) {
       throw new ClientError("Cookie signature is invalid", {

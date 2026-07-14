@@ -4,6 +4,7 @@ import { removeUndefined } from "@lindorm/utils";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type {
   PylonHttpMiddleware,
+  PylonKeys,
   PylonSessionConfig,
   PylonSessionOptions,
 } from "../../types/index.js";
@@ -11,6 +12,7 @@ import { createSessionStore } from "../utils/create-session-store.js";
 
 export const createHttpSessionMiddleware = (
   options: PylonSessionOptions,
+  keys?: PylonKeys,
 ): PylonHttpMiddleware => {
   const name = options.name ?? "pylon_session";
 
@@ -27,7 +29,7 @@ export const createHttpSessionMiddleware = (
     signed: options.signed,
   });
 
-  const store = createSessionStore(options);
+  const store = createSessionStore(options, keys);
 
   return async function httpSessionMiddleware(ctx, next) {
     ctx.session = {

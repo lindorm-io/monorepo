@@ -1,10 +1,16 @@
+import { Aegis } from "@lindorm/aegis";
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
+import { AesKit } from "@lindorm/aes";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
+import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import {
   createMockProteusSource,
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
 import type { IPylonSession } from "../../interfaces/index.js";
+import type { PylonKeys } from "../../types/index.js";
 import { createSessionStore } from "./create-session-store.js";
 import { beforeEach, describe, expect, test, type Mock } from "vitest";
 
@@ -85,5 +91,111 @@ describe("createSessionStore", () => {
     // del and logout are no-ops
     await expect(store!.del(ctx, session.id)).resolves.toBeUndefined();
     await expect(store!.logout(ctx, session.subject)).resolves.toBeUndefined();
+  });
+
+  /**
+   * Session ENCRYPTION, against a REAL vault and a REAL aegis. A mocked `find`
+   * cannot select the wrong key — which is why this bug survived: the store's
+   * `aes.encrypt` took no selector, so it resolved through aegis's
+   * deployment-wide enc policy, which queries the PUBLISHED set. The internal
+   * session key was unreachable and the JWKS token key sealed every session's
+   * bearer tokens.
+   *
+   * The token key is deliberately NEWER than the session key: `amphora.find`
+   * returns the newest match, so a vacuous selector resolves to it.
+   */
+  describe("encryption key selection (real vault)", () => {
+    const OLDER = new Date("2024-01-01T00:00:00.000Z");
+    const NEWER = new Date("2024-06-01T00:00:00.000Z");
+    const ISSUER = "http://test.lindorm.io";
+
+    const keys: PylonKeys = {
+      sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    };
+
+    let amphora: IAmphora;
+    let sessionKey: IKryptos;
+    let tokenKey: IKryptos;
+    let realCtx: any;
+
+    beforeEach(() => {
+      const logger = createMockLogger();
+
+      amphora = new Amphora({ domain: ISSUER, logger });
+
+      sessionKey = KryptosKit.generate.auto({
+        algorithm: "ECDH-ES",
+        createdAt: OLDER,
+        curve: "X448",
+        issuer: ISSUER,
+        publish: false,
+        purpose: "session",
+      });
+
+      tokenKey = KryptosKit.generate.auto({
+        algorithm: "ECDH-ES+A256GCMKW",
+        createdAt: NEWER,
+        curve: "X448",
+        issuer: ISSUER,
+        publish: true,
+        purpose: "token",
+      });
+
+      amphora.add([sessionKey, tokenKey]);
+
+      realCtx = { aegis: new Aegis({ amphora, logger }), amphora, kv: ctx.kv };
+    });
+
+    test("seals the session's tokens with the INTERNAL session key, not the newer PUBLISHED token key", async () => {
+      const store = createSessionStore({ enabled: true }, keys);
+
+      await store!.set(realCtx, session);
+
+      for (const token of [session.accessToken, session.idToken, session.refreshToken]) {
+        expect(AesKit.isAesTokenised(token)).toBe(true);
+        expect(AesKit.parse(token!).keyId).toBe(sessionKey.id);
+        expect(AesKit.parse(token!).keyId).not.toBe(tokenKey.id);
+      }
+    });
+
+    // The regression guard: with no selector, aegis's default enc policy queries
+    // the published set and the token key — newer — wins. This is the old
+    // behaviour, asserted so the fix cannot silently revert.
+    test("without the selector it falls back to the published token key", async () => {
+      const store = createSessionStore({ enabled: true });
+
+      await store!.set(realCtx, session);
+
+      expect(AesKit.parse(session.accessToken).keyId).toBe(tokenKey.id);
+    });
+
+    // Ciphertext names its own key, so aegis resolves the read side by kid: a
+    // session sealed with the OLD key still decrypts after the change.
+    test("a session sealed with the OLD key still decrypts", async () => {
+      const stale = await realCtx.aegis.aes.encrypt(session.accessToken, "tokenised", {
+        predicate: { purpose: "token" },
+      });
+
+      expect(AesKit.parse(stale).keyId).toBe(tokenKey.id);
+
+      (mockRepo.findOne as Mock).mockResolvedValue({ ...session, accessToken: stale });
+
+      const store = createSessionStore({ enabled: true }, keys);
+      const read = await store!.get(realCtx, session.id);
+
+      expect(read!.accessToken).toBe("access-token");
+    });
+
+    // Fail LOUDLY, not silently — a named key the vault does not hold must never
+    // degrade into persisting a bearer token in the clear.
+    test("throws when the named session enc key is not in the vault", async () => {
+      const store = createSessionStore(
+        { enabled: true },
+        { sessionEncryption: { predicate: { purpose: "no-such-purpose" } } },
+      );
+
+      await expect(store!.set(realCtx, session)).rejects.toThrow();
+      expect(mockRepo.upsert).not.toHaveBeenCalled();
+    });
   });
 });

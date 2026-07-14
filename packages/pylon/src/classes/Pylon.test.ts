@@ -123,12 +123,27 @@ describe("Pylon", () => {
       }),
     );
 
-    // The PUBLISHED token enc key — what `createKryptosRotationWorker` actually
-    // mints. It is here because `aegis.aes.encrypt` (session store, tokenised
-    // cookies) resolves its key through `amphora.find({ use: "enc" })`, which now
-    // defaults to `publish: true`. Without a published enc key in the vault every
-    // cookie/session encryption fails closed — so a fixture without one would not
-    // be a realistic pylon deployment.
+    // The INTERNAL cookie enc key — the `dir` key a pylon exists to seal cookies
+    // with. It was unreachable before the `keys` option: `aegis.aes.encrypt` fell
+    // back to aegis's deployment-wide enc policy, which queries amphora's default
+    // set (PUBLISHED keys), so the token key below won every time.
+    amphora.add(
+      KryptosKit.from.b64({
+        id: "b41d7c9e-2f65-4a03-9e17-8c5d3b0a6f24",
+        algorithm: "dir",
+        encryption: "A256GCM",
+        privateKey: "cvnvbKV6CrV6vc794UpQc6H7XiTsuhcTFXl9z0D7zGQ",
+        publish: false,
+        purpose: "cookie",
+        type: "oct",
+        use: "enc",
+      }),
+    );
+
+    // The PUBLISHED token enc key — what a deployment's rotation worker mints for
+    // the JWKS. It is the key the cookie/session encryption MUST NOT pick: it is
+    // published, and it is NEWER than the internal cookie key above, so a vacuous
+    // selector resolves to it.
     amphora.add(
       KryptosKit.from.b64({
         id: "9f6c1e2b-3d84-5a71-b0c9-7e2f4a6d8b31",
@@ -280,6 +295,17 @@ describe("Pylon", () => {
       },
 
       environment: "test",
+
+      // The deployment SAYS which key does what. Pylon guesses none of it — and
+      // `publish: false` is load-bearing in every predicate: amphora's default
+      // query is the PUBLISHED set, so an internal key is otherwise unreachable.
+      keys: {
+        cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+        cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+        cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+        sessionEncryption: { predicate: { purpose: "session", publish: false } },
+      },
+
       routes: [{ path: "/test", router }],
       name: "@lindorm/pylon",
       openIdConfiguration: { jwksUri: "http://test.lindorm.io/.well-known/jwks.json" },

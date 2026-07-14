@@ -62,15 +62,41 @@ vi.mock("@lindorm/kryptos", async () => ({
 
 const future = new Date("2030-01-01T00:00:00.000Z");
 
-const seedInternalKeys = () => [
-  { algorithm: "dir", purpose: "cookie", expiresAt: future },
-  { algorithm: "dir", purpose: "cookie", expiresAt: future },
-  { algorithm: "HS256", purpose: "cookie", expiresAt: future },
-  { algorithm: "HS256", purpose: "cookie", expiresAt: future },
-  { algorithm: "EdDSA", curve: "Ed448", purpose: "session", expiresAt: future },
-  { algorithm: "EdDSA", curve: "Ed448", purpose: "session", expiresAt: future },
-  { algorithm: "ECDH-ES", curve: "X448", purpose: "session", expiresAt: future },
-  { algorithm: "ECDH-ES", curve: "X448", purpose: "session", expiresAt: future },
+// The key set `@lindorm/create-pylon` scaffolds into a generated app. The worker
+// itself has NO default set — this is a deployment's list, and it lives here to
+// prove the worker mints exactly what it is given, with the `publish` flags it is
+// given.
+const scaffoldKeys = () => [
+  { algorithm: "dir", publish: false, purpose: "cookie", expiry: "1y" },
+  { algorithm: "HS256", publish: false, purpose: "cookie", expiry: "1y" },
+  {
+    algorithm: "EdDSA",
+    curve: "Ed448",
+    publish: false,
+    purpose: "session",
+    expiry: "1y",
+  },
+  {
+    algorithm: "ECDH-ES",
+    curve: "X448",
+    publish: false,
+    purpose: "session",
+    expiry: "1y",
+  },
+  {
+    algorithm: "EdDSA",
+    curve: "Ed25519",
+    publish: true,
+    purpose: "token",
+    expiry: "6mo",
+  },
+  {
+    algorithm: "ECDH-ES+A256GCMKW",
+    curve: "X448",
+    publish: true,
+    purpose: "token",
+    expiry: "6mo",
+  },
 ];
 
 describe("createKryptosRotationWorker", () => {
@@ -135,16 +161,36 @@ describe("createKryptosRotationWorker", () => {
       expect(mockRepository).toHaveBeenCalledWith(FakeKryptosDB);
     });
 
-    test("should use default keys when none provided", async () => {
+    // The magic is GONE, not moved. The worker only needed a default key list
+    // because pylon GUESSED which key each of its roles wanted, so the keys had
+    // to exist by convention. The options name them now — so a worker with no
+    // keys mints nothing, and says so.
+    test("should mint nothing and warn when no keys are configured", async () => {
       const worker = createKryptosRotationWorker({ logger: mockLogger, db });
+
+      expect(mockLogger.warn).toHaveBeenCalledWith(
+        "Kryptos rotation worker has no keys configured, nothing will be rotated",
+        expect.any(Object),
+      );
 
       await worker.trigger();
 
-      expect(mockGenerate).toHaveBeenCalledTimes(12);
+      expect(mockGenerate).not.toHaveBeenCalled();
+      expect(mockRepository).not.toHaveBeenCalled();
+      expect(mockInsert).not.toHaveBeenCalled();
+    });
+
+    test("should not warn when keys are configured", () => {
+      createKryptosRotationWorker({
+        logger: mockLogger,
+        db,
+        keys: [{ algorithm: "ES512", publish: true, purpose: "token" }],
+      });
+
+      expect(mockLogger.warn).not.toHaveBeenCalled();
     });
 
     test("should use provided keys", async () => {
-      mockFind.mockResolvedValueOnce(seedInternalKeys());
       const keys = [{ algorithm: "ES256", purpose: "test" }];
 
       const worker = createKryptosRotationWorker({
@@ -212,7 +258,6 @@ describe("createKryptosRotationWorker", () => {
 
     test("should not create keys when two or more existing keys found", async () => {
       mockFind.mockResolvedValueOnce([
-        ...seedInternalKeys(),
         { algorithm: "ES512", purpose: "token", expiresAt: future },
         { algorithm: "ES512", purpose: "token", expiresAt: future },
       ]);
@@ -231,7 +276,6 @@ describe("createKryptosRotationWorker", () => {
 
     test("should filter existing keys by algorithm and purpose", async () => {
       mockFind.mockResolvedValueOnce([
-        ...seedInternalKeys(),
         { algorithm: "ES512", purpose: "token", expiresAt: future },
         { algorithm: "ES512", purpose: "token", expiresAt: future },
       ]);
@@ -259,7 +303,6 @@ describe("createKryptosRotationWorker", () => {
     test("should treat expired keys as non-existent and generate initial key", async () => {
       const past = new Date("2020-01-01T00:00:00.000Z");
       mockFind.mockResolvedValueOnce([
-        ...seedInternalKeys(),
         { algorithm: "ES512", purpose: "token", expiresAt: past },
       ]);
 
@@ -280,7 +323,6 @@ describe("createKryptosRotationWorker", () => {
     test("should count only non-expired keys toward rotation decision", async () => {
       const past = new Date("2020-01-01T00:00:00.000Z");
       mockFind.mockResolvedValueOnce([
-        ...seedInternalKeys(),
         { algorithm: "ES512", purpose: "token", expiresAt: past },
         { algorithm: "ES512", purpose: "token", expiresAt: future },
       ]);
@@ -301,8 +343,6 @@ describe("createKryptosRotationWorker", () => {
     });
 
     test("should default token keys to a 6mo expiry (months, not minutes)", async () => {
-      mockFind.mockResolvedValueOnce(seedInternalKeys());
-
       const worker = createKryptosRotationWorker({
         logger: mockLogger,
         db,
@@ -355,16 +395,21 @@ describe("createKryptosRotationWorker", () => {
       await expect(worker.trigger()).resolves.not.toThrow();
     });
 
-    // The security-relevant guard for the whole default key set. `publish` defaults
-    // to FALSE in kryptos, so the two token keys MUST assert `true` explicitly — if
-    // they ever come out `false` the JWKS silently empties and no RP can verify a
-    // thing. And the four internal keys MUST assert `false` — a published cookie or
-    // session key is a silent exposure. Both directions are checked; neither is a
-    // snapshot to bless.
-    test("stamps publish onto every generated key (cookie/session internal, token published)", async () => {
-      mockFind.mockResolvedValueOnce([]); // fresh — default key set is minted
+    // The worker mints EXACTLY the keys it is given, with the `publish` flags it
+    // is given — no additions of its own. `publish` defaults to FALSE in kryptos,
+    // so the two token keys MUST come out `true` — if they ever come out `false`
+    // the JWKS silently empties and no RP can verify a thing. And the four
+    // internal keys MUST come out `false` — a published cookie or session key is
+    // a silent exposure. Both directions are checked; neither is a snapshot to
+    // bless.
+    test("mints exactly the keys it is given, with the publish flags it is given", async () => {
+      mockFind.mockResolvedValueOnce([]); // fresh vault — the whole set is minted
 
-      const worker = createKryptosRotationWorker({ logger: mockLogger, db });
+      const worker = createKryptosRotationWorker({
+        logger: mockLogger,
+        db,
+        keys: scaffoldKeys() as any,
+      });
 
       await worker.trigger();
 
@@ -420,8 +465,6 @@ describe("createKryptosRotationWorker", () => {
       const rootCaKey = { id: "root-ca-id" } as any;
 
       test("should not pass certificate when rootCaKey is unset", async () => {
-        mockFind.mockResolvedValueOnce(seedInternalKeys());
-
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
           db,
@@ -436,8 +479,6 @@ describe("createKryptosRotationWorker", () => {
       });
 
       test("should pass ca-signed certificate for published asymmetric key", async () => {
-        mockFind.mockResolvedValueOnce(seedInternalKeys());
-
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
           db,
@@ -458,8 +499,6 @@ describe("createKryptosRotationWorker", () => {
       // A cert exists to let an RP build trust to a key it can see. An internal key
       // has no relying party, so it gets no chain.
       test("should skip certificate when key is not published", async () => {
-        mockFind.mockResolvedValueOnce(seedInternalKeys());
-
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
           db,
@@ -479,8 +518,6 @@ describe("createKryptosRotationWorker", () => {
       });
 
       test("should skip certificate when algorithm is symmetric (oct)", async () => {
-        mockFind.mockResolvedValueOnce(seedInternalKeys());
-
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
           db,
@@ -501,7 +538,6 @@ describe("createKryptosRotationWorker", () => {
 
       test("should pass ca-signed certificate on rotation branch too", async () => {
         mockFind.mockResolvedValueOnce([
-          ...seedInternalKeys(),
           { algorithm: "ES512", purpose: "token", expiresAt: future },
         ]);
 

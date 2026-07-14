@@ -6,6 +6,7 @@ import { createSessionRefreshHandler } from "../utils/refresh/create-session-ref
 import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
 import type {
   PylonConnectionMiddleware,
+  PylonKeys,
   PylonSessionConfig,
   PylonSessionOptions,
   PylonSocketAuth,
@@ -16,6 +17,7 @@ export const createConnectionSessionMiddleware = <
   C extends PylonSocketHandshakeContext = PylonSocketHandshakeContext,
 >(
   options: PylonSessionOptions,
+  keys?: PylonKeys,
 ): PylonConnectionMiddleware<C> => {
   const name = options.name ?? "pylon_session";
 
@@ -32,7 +34,7 @@ export const createConnectionSessionMiddleware = <
     signed: options.signed,
   });
 
-  const store = createSessionStore(options);
+  const store = createSessionStore(options, keys);
 
   return async function connectionSessionMiddleware(ctx, next): Promise<void> {
     const socket = ctx.io.socket;
@@ -43,7 +45,7 @@ export const createConnectionSessionMiddleware = <
     }
 
     const parsed = parseCookieHeader(cookieHeader);
-    const getCookie = createGetCookie({ ctx, config, parsed });
+    const getCookie = createGetCookie({ ctx, config, parsed, keys });
 
     const sessionId = await getCookie<string>(name);
 

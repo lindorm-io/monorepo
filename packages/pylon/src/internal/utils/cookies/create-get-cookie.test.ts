@@ -107,6 +107,7 @@ describe("createGetCookie", async () => {
       "Y29va2llX3ZhbHVl",
       "cookie_signature",
       "cookie_kid",
+      undefined,
     );
   });
 

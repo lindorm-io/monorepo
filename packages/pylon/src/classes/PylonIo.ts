@@ -197,7 +197,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       createCommonContextInitialisationMiddleware(this.options.amphora),
       ...(this.options.cors ? [createConnectionCorsMiddleware(this.options.cors)] : []),
       ...(this.options.session
-        ? [createConnectionSessionMiddleware(this.options.session)]
+        ? [createConnectionSessionMiddleware(this.options.session, this.options.keys)]
         : []),
       connectionLoggerMiddleware,
       ...((this.options.socket?.connectionMiddleware ??

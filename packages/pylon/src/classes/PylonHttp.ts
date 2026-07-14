@@ -105,9 +105,9 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         minRequestAge: this.options.minRequestAge,
         maxRequestAge: this.options.maxRequestAge,
       }),
-      createHttpCookiesMiddleware(this.options.cookies),
+      createHttpCookiesMiddleware(this.options.cookies, this.options.keys),
       ...(this.options.session
-        ? [createHttpSessionMiddleware(this.options.session)]
+        ? [createHttpSessionMiddleware(this.options.session, this.options.keys)]
         : []),
       createHttpBodyParserMiddleware(this.options.parseBody),
       httpQueryParserMiddleware,

@@ -55,7 +55,7 @@ export class Kryptos implements KryptosDB {
   @Field("string")
   encryption!: KryptosEncryption | null;
 
-  @Encrypted({ purpose: "pylon:kek" })
+  @Encrypted({ predicate: { purpose: "pylon:kek" } })
   @Nullable()
   @Field("text")
   privateKey!: string | null;

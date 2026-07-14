@@ -23,10 +23,23 @@ type KeyOption = Pick<
 
 type Options = CreateLindormWorkerOptions & {
   expiry?: ReadableTime;
-  // Replaces the DEFAULT TOKEN KEYS only — the four internal cookie/session keys
-  // are always minted. ⚠ `publish` defaults to FALSE (the kryptos default), so a
-  // key meant for the JWKS MUST say `publish: true` — an override that forgets it
-  // yields an empty JWKS and no RP can verify anything.
+  /**
+   * The keys this deployment mints and rotates. There is NO default set: the
+   * worker used to invent six keys by convention, because pylon GUESSED which
+   * key each of its roles wanted and the keys therefore had to exist under the
+   * purposes it guessed. Pylon's options now name the key for every role
+   * (`PylonKeys`), so the worker has no reason to hold an opinion about which
+   * keys exist. Pass none and it rotates nothing.
+   *
+   * ⚠ `publish` defaults to FALSE (the kryptos default), so a key meant for the
+   * JWKS MUST say `publish: true` — a key set that forgets it yields an empty
+   * JWKS and no RP can verify anything. State `publish` on every key: which keys
+   * reach the JWKS and which never leave the server is the security-relevant
+   * policy of the whole set, and it should be readable at the definition.
+   *
+   * `@lindorm/create-pylon` scaffolds a complete, working set into the generated
+   * app — cookie, session and token keys — as editable source.
+   */
   keys?: Array<KeyOption>;
   rootCaKey?: IKryptos;
   logger: ILogger;
@@ -40,49 +53,17 @@ type Options = CreateLindormWorkerOptions & {
 };
 
 export const createKryptosRotationWorker = (options: Options): LindormWorker => {
-  // `publish` is stated on EVERY key, even where it repeats the kryptos default
-  // (`false`). This is the security-relevant policy of the whole key set — which
-  // keys reach the JWKS and which never leave the server — and it must be
-  // readable at the definition rather than inferred from an upstream default.
-  // kryptos does NOT derive it from `purpose`; that safety is ours, explicitly.
-  const keys: Array<KeyOption> = [
-    // Cookie + session keys are long-lived (1y) — they never leave the server
-    // and rotating them churns live sessions, so a longer lifetime is safer.
-    { algorithm: "dir", publish: false, purpose: "cookie", expiry: "1y" },
-    { algorithm: "HS256", publish: false, purpose: "cookie", expiry: "1y" },
-    {
-      algorithm: "EdDSA",
-      curve: "Ed448",
-      publish: false,
-      purpose: "session",
-      expiry: "1y",
-    },
-    {
-      algorithm: "ECDH-ES",
-      curve: "X448",
-      publish: false,
-      purpose: "session",
-      expiry: "1y",
-    },
-    // Published token keys rotate faster (6m) — smaller blast radius if leaked,
-    // and RPs re-fetch JWKS.
-    ...(options.keys ?? [
-      {
-        algorithm: "EdDSA",
-        curve: "Ed25519",
-        publish: true,
-        purpose: "token",
-        expiry: "6mo",
-      },
-      {
-        algorithm: "ECDH-ES+A256GCMKW",
-        curve: "X448",
-        publish: true,
-        purpose: "token",
-        expiry: "6mo",
-      },
-    ]),
-  ];
+  const keys: Array<KeyOption> = options.keys ?? [];
+
+  // A pylon with no keys is almost certainly a misconfiguration — an empty JWKS,
+  // no cookie signing, no session encryption — but it is not pylon's business to
+  // invent six keys to cover for it. Say so, loudly, and mint nothing.
+  if (!keys.length) {
+    options.logger.warn(
+      "Kryptos rotation worker has no keys configured, nothing will be rotated",
+      { hint: "Pass `keys` to createKryptosRotationWorker to mint and rotate keys" },
+    );
+  }
 
   // Fallback lifetime for any key that doesn't set its own `expiry`.
   const defaultExpiry = options.expiry ?? "6mo";
@@ -95,6 +76,8 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
     retry: options.retry,
     logger: options.logger,
     callback: async (ctx): Promise<void> => {
+      if (!keys.length) return;
+
       const target = options.target ?? (await import("../entities/Kryptos.js")).Kryptos;
       const repository = options.db.repository(target);
       const existing = await repository.find();

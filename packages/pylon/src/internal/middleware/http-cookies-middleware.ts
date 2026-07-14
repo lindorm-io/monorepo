@@ -6,6 +6,7 @@ import { PylonCookie } from "../classes/PylonCookie.js";
 import type {
   PylonCookieConfig,
   PylonHttpMiddleware,
+  PylonKeys,
   PylonSetCookie,
 } from "../../types/index.js";
 import { chunkCookieValue } from "../utils/cookies/chunk-cookie-value.js";
@@ -17,13 +18,14 @@ const DEFAULT_CHUNK_SIZE = 4000;
 
 export const createHttpCookiesMiddleware = (
   config: PylonCookieConfig = {},
+  keys?: PylonKeys,
 ): PylonHttpMiddleware => {
   config.encoding = config.encoding || "base64url";
 
   return async function httpCookiesMiddleware(ctx, next) {
     const parsed = parseCookieHeader(ctx.get("cookie"));
 
-    const getCookie = createGetCookie({ ctx, config, parsed });
+    const getCookie = createGetCookie({ ctx, config, parsed, keys });
 
     let cookies: Array<PylonCookie> = [];
 
@@ -76,7 +78,16 @@ export const createHttpCookiesMiddleware = (
         let final: any;
 
         if (opts.encrypted) {
-          final = await ctx.aegis.aes.encrypt(value as AesContent, "tokenised");
+          // The selector scopes the write to the key the deployment named for
+          // cookies. Without it aegis falls back to its deployment-wide enc
+          // policy, which queries the PUBLISHED set — so an internal `dir`
+          // cookie key, which exists for exactly this job, was unreachable and
+          // cookies were sealed with the JWKS token key instead.
+          final = await ctx.aegis.aes.encrypt(
+            value as AesContent,
+            "tokenised",
+            keys?.cookieEncryption,
+          );
         } else {
           final = isString(value) ? value : JSON.stringify(value);
 
@@ -110,7 +121,7 @@ export const createHttpCookiesMiddleware = (
         }
 
         if (opts.signed) {
-          const { signature, kid } = await signCookie(ctx, final);
+          const { signature, kid } = await signCookie(ctx, final, keys?.cookieSignature);
 
           cookies.push(new PylonCookie(`${name}.sig`, signature, opts));
           cookies.push(new PylonCookie(`${name}.kid`, kid, opts));

@@ -1,26 +1,17 @@
 import { SignatureKit } from "@lindorm/aegis";
-import type { PylonCommonContext } from "../../../types/index.js";
+import type { PylonCommonContext, PylonSignKey } from "../../../types/index.js";
+import { resolveCookieSigningKey } from "../keys/resolve-cookie-signing-key.js";
 
 export const signCookie = async (
   ctx: Pick<PylonCommonContext, "amphora">,
   value: string,
+  key: PylonSignKey | undefined,
 ): Promise<{ signature: string; kid: string }> => {
   // A cookie signature is an INTERNAL artifact — it never leaves this server's
-  // own trust boundary, and no relying party verifies it. So the key must be one
-  // of our own unpublished cookie/session keys, and explicitly NOT a published
-  // token key: amphora's default is `publish: true`, so `publish: false` here is
-  // load-bearing, not decoration.
-  //
-  // `hasPrivateKey` — not `operations: ["sign"]` — is the question that matters:
-  // it asks what the key MATERIAL can do rather than what it declares, and it is
-  // the same floor aegis signs against.
-  const kryptos = await ctx.amphora.find({
-    hasPrivateKey: true,
-    internal: true,
-    publish: false,
-    purpose: { $in: ["cookie", "session"] },
-    use: "sig",
-  });
+  // own trust boundary, and no relying party verifies it. WHICH key does that is
+  // the deployment's call, not pylon's: it names the key in `keys.cookieSignature`
+  // and pylon holds only the floor (`use: "sig"`, a private half).
+  const kryptos = await resolveCookieSigningKey(ctx.amphora, key);
 
   const kit = new SignatureKit({ kryptos });
 

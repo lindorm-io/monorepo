@@ -2,7 +2,7 @@ import { AesKit } from "@lindorm/aes";
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { B64 } from "@lindorm/b64";
-import type { PylonCookieConfig } from "../../types/index.js";
+import type { PylonCookieConfig, PylonKeys } from "../../types/index.js";
 import { parseCookieHeader as _parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { signCookie as _signCookie } from "../utils/cookies/sign-cookie.js";
 import { verifyCookie as _verifyCookie } from "../utils/cookies/verify-cookie.js";
@@ -16,6 +16,13 @@ vi.mock("../utils/cookies/verify-cookie.js");
 const parseCookieHeader = _parseCookieHeader as Mock;
 const signCookie = _signCookie as Mock;
 const verifyCookie = _verifyCookie as Mock;
+
+// What a deployment's `keys` option says. Pylon guesses none of it.
+const keys: PylonKeys = {
+  cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+  cookieVerification: { predicate: { purpose: "cookie" } },
+  cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+};
 
 describe("httpCookiesMiddleware", async () => {
   let config: PylonCookieConfig;
@@ -82,14 +89,58 @@ describe("httpCookiesMiddleware", async () => {
       ctx.cookies.set("new_cookie", "new_value", { encrypted: true });
     });
 
-    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+    await expect(
+      createHttpCookiesMiddleware(config, keys)(ctx, next),
+    ).resolves.toBeUndefined();
 
-    expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith("new_value", "tokenised");
+    // The cookie enc key the deployment NAMED — not aegis's deployment-wide enc
+    // policy, which queries the published set and would seal the cookie with the
+    // JWKS token key.
+    expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith(
+      "new_value",
+      "tokenised",
+      keys.cookieEncryption,
+    );
 
     const setCookieHeader = ctx.set.mock.calls[0][1][0] as string;
     const cookieValue = setCookieHeader.split("=")[1].split(";")[0];
 
     expect(AesKit.isAesTokenised(cookieValue)).toBe(true);
+  });
+
+  test("should pass the cookie signing key from the options to the signer", async () => {
+    next.mockImplementation(async () => {
+      ctx.cookies.set("new_cookie", "new_value", { signed: true });
+    });
+
+    await expect(
+      createHttpCookiesMiddleware(config, keys)(ctx, next),
+    ).resolves.toBeUndefined();
+
+    expect(signCookie).toHaveBeenCalledWith(
+      ctx,
+      expect.any(String),
+      keys.cookieSignature,
+    );
+  });
+
+  test("should pass the cookie verification key from the options to the verifier", async () => {
+    next.mockImplementation(async () => {
+      await ctx.cookies.get("cookie_name", { signed: true });
+    });
+
+    await expect(
+      createHttpCookiesMiddleware(config, keys)(ctx, next),
+    ).resolves.toBeUndefined();
+
+    expect(verifyCookie).toHaveBeenCalledWith(
+      ctx,
+      "cookie_name",
+      "Y29va2llX3ZhbHVl",
+      "cookie_signature",
+      "cookie_kid",
+      keys.cookieVerification,
+    );
   });
 
   test("should set cookie with signature", async () => {
@@ -310,9 +361,15 @@ describe("httpCookiesMiddleware", async () => {
       ctx.cookies.set("new_cookie", "secret_value", { encrypted: true });
     });
 
-    await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
+    await expect(
+      createHttpCookiesMiddleware(config, keys)(ctx, next),
+    ).resolves.toBeUndefined();
 
-    expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith("secret_value", "tokenised");
+    expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith(
+      "secret_value",
+      "tokenised",
+      keys.cookieEncryption,
+    );
 
     const headers = ctx.set.mock.calls[0][1] as Array<string>;
     expect(headers.length).toBeGreaterThan(1);

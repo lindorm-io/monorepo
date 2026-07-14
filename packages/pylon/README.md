@@ -985,23 +985,85 @@ import {
 
 `createCertificateExpiryWorker({ amphora, logger, warnThreshold?, errorThreshold?, cron?, timezone? })` runs daily (cron `0 10 * * *`, `UTC`) and inspects **every certificate** in **every** vault key's chain — leaf and issuing/root CAs alike (the long-lived CA certs are the real targets, and they are only reachable through the chains). A cert already expired or within `errorThreshold` (default `1mo`) logs `error`; within `warnThreshold` (default `3mo`) logs `warn`; otherwise it is silent. Certs are **deduped by `x5t#S256`** across the run — a shared CA cert produces one line, annotated with every referencing `kid` — and each run ends with one `verbose` summary (`checked / warn / error`).
 
-`createKryptosRotationWorker` defaults to the following key set (override `keys` to change the token set):
+`createKryptosRotationWorker` has **no default key set**. It mints exactly the keys you give it — pass none and it rotates nothing (and warns at startup). The key set is your deployment's, not Pylon's: see [Keys](#keys). `@lindorm/create-pylon` scaffolds a complete, working set into the generated app as editable source.
 
-| Algorithm           | Curve     | Purpose | Publish | Expiry |
-| ------------------- | --------- | ------- | ------- | ------ |
-| `dir`               | —         | cookie  | `false` | `1y`   |
-| `HS256`             | —         | cookie  | `false` | `1y`   |
-| `EdDSA`             | `Ed448`   | session | `false` | `1y`   |
-| `ECDH-ES`           | `X448`    | session | `false` | `1y`   |
-| `EdDSA`             | `Ed25519` | token   | `true`  | `6mo`  |
-| `ECDH-ES+A256GCMKW` | `X448`    | token   | `true`  | `6mo`  |
+```typescript
+createKryptosRotationWorker({
+  amphora,
+  logger,
+  db,
+  keys: [
+    { algorithm: "dir", publish: false, purpose: "cookie", expiry: "1y" },
+    { algorithm: "HS256", publish: false, purpose: "cookie", expiry: "1y" },
+    {
+      algorithm: "EdDSA",
+      curve: "Ed448",
+      publish: false,
+      purpose: "session",
+      expiry: "1y",
+    },
+    {
+      algorithm: "ECDH-ES",
+      curve: "X448",
+      publish: false,
+      purpose: "session",
+      expiry: "1y",
+    },
+    {
+      algorithm: "EdDSA",
+      curve: "Ed25519",
+      publish: true,
+      purpose: "token",
+      expiry: "6mo",
+    },
+    {
+      algorithm: "ECDH-ES+A256GCMKW",
+      curve: "X448",
+      publish: true,
+      purpose: "token",
+      expiry: "6mo",
+    },
+  ],
+});
+```
 
-- **`publish: false`** keys stay in the vault for internal use (cookie/session crypto) and are **excluded from the JWKS** — and, since Amphora's `find`/`filter` default to `{ publish: true }`, from ordinary key selection too. Only the `token` keys are published. To select an internal key you must ask for it: `amphora.find({ publish: false, … })`. `findById` is unfiltered — an explicit kid is explicit intent.
-- ⚠ **`publish` defaults to `false`** (the Kryptos default: a minted key is unpublished until you say otherwise). **If you override `keys`, every key you want in the JWKS must say `publish: true`** — an override that omits it produces an **empty JWKS**, and no relying party can verify anything. The four internal cookie/session keys are always minted regardless of the override.
+- **`publish: false`** keys stay in the vault for internal use (cookie/session crypto) and are **excluded from the JWKS** — and, since Amphora's `find`/`filter` default to `{ publish: true }`, from ordinary key selection too. To select an internal key you must ask for it: `{ publish: false, … }`. `findById` is unfiltered — an explicit kid is explicit intent.
+- ⚠ **`publish` defaults to `false`** (the Kryptos default: a minted key is unpublished until you say otherwise). **Every key you want in the JWKS must say `publish: true`** — a key set that omits it produces an **empty JWKS**, and no relying party can verify anything. State `publish` on every key.
 - **Per-key `expiry`** — rotation overlap is half each key's own expiry. The unit for months is `mo`/`month`; `m` means **minutes**. Unset keys fall back to the worker-level `expiry` (default `6mo`).
 - Pass **`amphora`** so freshly-minted keys are added to the vault at rotation time — JWKS is populated on first boot instead of after the next `createAmphoraEntityWorker` tick (that worker is for picking up _other_ instances' keys). Pass **`rootCaKey`** to CA-sign the published, asymmetric keys (an internal key gets no chain — it has no relying party to convince).
 
 `createKryptosRotationWorker` and `createAmphoraEntityWorker` use Pylon's built-in `Kryptos` entity by default; pass `target` to override with a custom `KryptosDB` implementation.
+
+## Keys
+
+Pylon resolves a vault key for a handful of jobs — signing a cookie, verifying one, encrypting a cookie value, encrypting a stored session's tokens. It holds **no opinion about which key that should be**: it does not know your `purpose` taxonomy and will not invent one. **The deployment says which key does what**, in `keys`:
+
+```typescript
+const app = new Pylon({
+  keys: {
+    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
+    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
+    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+  },
+  // …
+});
+```
+
+This is the same `{ kryptos?, predicate? }` descriptor used across the toolkit (`@lindorm/aegis`, `@lindorm/proteus`, `@lindorm/iris`): `kryptos` is a key supplied outright, `predicate` is which of the vault's keys.
+
+| Role                 | Kind     | Floor Pylon owns              | Required                       |
+| -------------------- | -------- | ----------------------------- | ------------------------------ |
+| `cookieSignature`    | selector | `use: "sig"`, private half    | **yes**, to sign a cookie      |
+| `cookieVerification` | check    | `use: "sig"`                  | no — the floor applies anyway  |
+| `cookieEncryption`   | selector | `use: "enc"` (owned by Aegis) | no — Aegis's deployment policy |
+| `sessionEncryption`  | selector | `use: "enc"` (owned by Aegis) | no — Aegis's deployment policy |
+
+- ⚠ **`publish: false` is load-bearing.** Amphora's default query is the **published** set, so an internal cookie/session key is unreachable without it. Omit it and you select the JWKS token key.
+- **`cookieSignature` is required to sign a cookie.** There is no fallback: the floor alone would resolve to whichever published key is newest — in practice the token key, since token keys rotate twice as often as cookie keys. A purposeless fallback is worse than a loud failure, so a signed cookie with no `cookieSignature` throws.
+- **The floor is Pylon's, the selector is yours.** `use` and `hasPrivateKey` are the minimum that makes an operation possible; they are absent from the predicate type by construction, so you cannot widen them. `purpose`, `publish` and `internal` are your policy.
+- **The read side takes no selector.** Ciphertext names its own key, so `aes.decrypt` resolves it by kid — cookies and sessions written before you changed which key you write with keep decrypting.
+- A role naming a key the vault does not hold **fails loudly**, never silently.
 
 ## Health & readiness
 

@@ -2,7 +2,11 @@ import { AesKit } from "@lindorm/aes";
 import type { IProteusSession, IProteusSource } from "@lindorm/proteus";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type { IPylonSessionStore } from "../../interfaces/PylonSessionStore.js";
-import type { PylonCommonContext, PylonSessionOptions } from "../../types/index.js";
+import type {
+  PylonCommonContext,
+  PylonKeys,
+  PylonSessionOptions,
+} from "../../types/index.js";
 import { buildHookMeta } from "./build-hook-meta.js";
 import { resolveActor } from "./resolve-actor.js";
 
@@ -31,26 +35,41 @@ const getSessionEntity = async (): Promise<
 
 export const createSessionStore = (
   options?: PylonSessionOptions,
+  keys?: PylonKeys,
 ): IPylonSessionStore | undefined => {
   if (!options?.enabled) return;
+
+  const encryptionKey = keys?.sessionEncryption;
 
   return {
     set: async (ctx, session): Promise<string> => {
       const source = getSource(ctx, options.kv);
       if (!source) return session.id;
 
-      if (ctx.amphora.canEncrypt()) {
+      // A named key makes encryption MANDATORY — if it cannot be resolved, aegis
+      // throws rather than persisting a bearer token in the clear. Without one,
+      // the vault's capability decides, as before. The selector scopes the write
+      // to the internal session enc key; without it aegis's deployment-wide enc
+      // policy queries the PUBLISHED set and seals the session with the JWKS
+      // token key instead.
+      if (encryptionKey || ctx.amphora.canEncrypt()) {
         session.accessToken = await ctx.aegis.aes.encrypt(
           session.accessToken,
           "tokenised",
+          encryptionKey,
         );
         if (session.idToken) {
-          session.idToken = await ctx.aegis.aes.encrypt(session.idToken, "tokenised");
+          session.idToken = await ctx.aegis.aes.encrypt(
+            session.idToken,
+            "tokenised",
+            encryptionKey,
+          );
         }
         if (session.refreshToken) {
           session.refreshToken = await ctx.aegis.aes.encrypt(
             session.refreshToken,
             "tokenised",
+            encryptionKey,
           );
         }
       }
@@ -69,6 +88,9 @@ export const createSessionStore = (
 
       if (!session) return null;
 
+      // No selector on the read side: the ciphertext names its own key, so aegis
+      // resolves it by kid. Sessions written before this deployment changed
+      // which key it encrypts with still decrypt.
       if (ctx.amphora.canDecrypt()) {
         if (AesKit.isAesTokenised(session.accessToken)) {
           session.accessToken = await ctx.aegis.aes.decrypt(session.accessToken);

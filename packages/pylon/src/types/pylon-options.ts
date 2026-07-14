@@ -20,6 +20,7 @@ import type { PylonSocketContext, PylonSocketMiddleware } from "./context-socket
 import type { PylonEventMap } from "./pylon-event-map.js";
 import type { PylonCookieConfig } from "./cookies.js";
 import type { CorsOptions } from "./cors.js";
+import type { PylonKeys } from "./keys.js";
 import type { OpenIdConfigurationOptions } from "./open-id-configuration.js";
 import type { ParseBodyOptions } from "./parse-body.js";
 import type {
@@ -52,6 +53,13 @@ type CommonOptions = {
   environment?: Environment;
   hermes?: IHermes;
   bus?: IIrisSource;
+  /**
+   * Which vault key does what. Pylon resolves a key for cookie signing, cookie
+   * verification and cookie / session encryption — and holds no opinion about
+   * which key that should be. Name them here; pylon owns only the FLOOR of each
+   * operation (`use`, a private half), never the selector.
+   */
+  keys?: PylonKeys;
   /**
    * Ephemeral / in-memory storage source (redis in production, a proteus
    * memory-driver source in dev/test). Backs ephemeral features (rate limit,
