@@ -19,7 +19,7 @@ vi.mock("@lindorm/aegis", async () => ({
 }));
 
 // The deployment's selector. Pylon holds no opinion about which key signs a
-// cookie — this is what an app's `keys.cookieSignature` says.
+// cookie — this is what an app's `keys.cookie.signature` says.
 const COOKIE_KEY: PylonSignKey = {
   predicate: { purpose: "cookie", publish: false },
 };

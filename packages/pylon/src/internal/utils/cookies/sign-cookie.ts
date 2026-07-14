@@ -9,7 +9,8 @@ export const signCookie = async (
 ): Promise<{ signature: string; kid: string }> => {
   // A cookie signature is an INTERNAL artifact — it never leaves this server's
   // own trust boundary, and no relying party verifies it. WHICH key does that is
-  // the deployment's call, not pylon's: it names the key in `keys.cookieSignature`
+  // the deployment's call, not pylon's: it names the key in `keys.cookie.signature`
+  // (or `keys.session.signature`, which the session cookie chains from)
   // and pylon holds only the floor (`use: "sig"`, a private half).
   const kryptos = await resolveCookieSigningKey(ctx.amphora, key);
 

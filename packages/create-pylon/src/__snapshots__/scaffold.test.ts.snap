@@ -949,10 +949,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   kv: redis,
   bus: rabbit,
@@ -1177,10 +1189,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   kv: redis,
   rateLimit: {
@@ -2940,10 +2964,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   kv: redis,
   bus: kafka,
@@ -3033,10 +3069,22 @@ export const pylon = new Pylon({
   db: memoryDb,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   kv: memoryKv,
   setup: async () => {
@@ -3070,10 +3118,22 @@ export const pylon = new Pylon({
   db: redisDb,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   bus: redisBus,
   queue: { enabled: true },
@@ -3107,10 +3167,22 @@ export const pylon = new Pylon({
   db: redis,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   setup: async () => {
     await redis.connect();
@@ -3142,10 +3214,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   kv: redis,
   session: {
@@ -3211,10 +3295,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   kv: redis,
   bus: rabbit,
@@ -3252,10 +3348,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   kv: redisKv,
   bus: redisBus,
@@ -3292,10 +3400,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   bus: rabbit,
   queue: { enabled: true },
@@ -3337,10 +3457,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   bus: rabbit,
   queue: { enabled: true },
@@ -3374,10 +3506,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   setup: async () => {
     await postgres.connect();
@@ -3436,10 +3580,22 @@ export const pylon = new Pylon({
   db: redis,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   setup: async () => {
     await redis.connect();
@@ -3524,10 +3680,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   kv: redis,
   rateLimit: {
@@ -3568,10 +3736,22 @@ export const pylon = new Pylon({
   db: redis,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   rateLimit: {
     enabled: true,
@@ -3611,10 +3791,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   kv: redis,
   session: {
@@ -3710,10 +3902,22 @@ export const pylon = new Pylon({
   db: postgres,
   kryptos: { enabled: true },
   keys: {
-    cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-    cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-    sessionEncryption: { predicate: { purpose: "session", publish: false } },
+    // \`verification\` — the check on the key a cookie's kid names — is
+    // omitted: it defaults to the SIGNING predicate of its own scope,
+    // which is the only read policy that cannot reject a cookie this app
+    // just issued. Name it only to make the read policy deliberately
+    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live
+    // session cookies valid while migrating to a new signing key).
+    cookie: {
+      signature: { predicate: { purpose: "cookie", publish: false } },
+      encryption: { predicate: { purpose: "cookie", publish: false } },
+    },
+    // The session cookie gets its own keys — a separate blast radius,
+    // and an asymmetric signature.
+    session: {
+      signature: { predicate: { purpose: "session", publish: false } },
+      encryption: { predicate: { purpose: "session", publish: false } },
+    },
   },
   session: {
     enabled: true,

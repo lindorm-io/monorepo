@@ -110,7 +110,7 @@ describe("createSessionStore", () => {
     const ISSUER = "http://test.lindorm.io";
 
     const keys: PylonKeys = {
-      sessionEncryption: { predicate: { purpose: "session", publish: false } },
+      session: { encryption: { predicate: { purpose: "session", publish: false } } },
     };
 
     let amphora: IAmphora;
@@ -191,7 +191,7 @@ describe("createSessionStore", () => {
     test("throws when the named session enc key is not in the vault", async () => {
       const store = createSessionStore(
         { enabled: true },
-        { sessionEncryption: { predicate: { purpose: "no-such-purpose" } } },
+        { session: { encryption: { predicate: { purpose: "no-such-purpose" } } } },
       );
 
       await expect(store!.set(realCtx, session)).rejects.toThrow();

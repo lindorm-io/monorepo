@@ -300,10 +300,16 @@ describe("Pylon", () => {
       // `publish: false` is load-bearing in every predicate: amphora's default
       // query is the PUBLISHED set, so an internal key is otherwise unreachable.
       keys: {
-        cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-        cookieVerification: { predicate: { purpose: "cookie", publish: false } },
-        cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
-        sessionEncryption: { predicate: { purpose: "session", publish: false } },
+        cookie: {
+          signature: { predicate: { purpose: "cookie", publish: false } },
+          verification: { predicate: { purpose: "cookie", publish: false } },
+          encryption: { predicate: { purpose: "cookie", publish: false } },
+        },
+        // The session cookie SEALS with its own key. Signature and verification
+        // are unnamed, so they CHAIN to the cookie keys above.
+        session: {
+          encryption: { predicate: { purpose: "session", publish: false } },
+        },
       },
 
       routes: [{ path: "/test", router }],

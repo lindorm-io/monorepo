@@ -45,7 +45,7 @@ const publishedTokenEncKey = (): IKryptos =>
   });
 
 const keys: PylonKeys = {
-  cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+  cookie: { encryption: { predicate: { purpose: "cookie", publish: false } } },
 };
 
 const buildCtx = (amphora: IAmphora, cookieHeader = "") => {
@@ -138,7 +138,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
     await expect(
       createHttpCookiesMiddleware(
         {},
-        { cookieEncryption: { predicate: { purpose: "no-such-purpose" } } },
+        { cookie: { encryption: { predicate: { purpose: "no-such-purpose" } } } },
       )(ctx as any, async () => {
         await (ctx as any).cookies.set("sid", "secret_value", { encrypted: true });
       }),

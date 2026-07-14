@@ -19,9 +19,11 @@ const verifyCookie = _verifyCookie as Mock;
 
 // What a deployment's `keys` option says. Pylon guesses none of it.
 const keys: PylonKeys = {
-  cookieSignature: { predicate: { purpose: "cookie", publish: false } },
-  cookieVerification: { predicate: { purpose: "cookie" } },
-  cookieEncryption: { predicate: { purpose: "cookie", publish: false } },
+  cookie: {
+    signature: { predicate: { purpose: "cookie", publish: false } },
+    verification: { predicate: { purpose: "cookie" } },
+    encryption: { predicate: { purpose: "cookie", publish: false } },
+  },
 };
 
 describe("httpCookiesMiddleware", async () => {
@@ -99,7 +101,7 @@ describe("httpCookiesMiddleware", async () => {
     expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith(
       "new_value",
       "tokenised",
-      keys.cookieEncryption,
+      keys.cookie!.encryption,
     );
 
     const setCookieHeader = ctx.set.mock.calls[0][1][0] as string;
@@ -120,7 +122,7 @@ describe("httpCookiesMiddleware", async () => {
     expect(signCookie).toHaveBeenCalledWith(
       ctx,
       expect.any(String),
-      keys.cookieSignature,
+      keys.cookie!.signature,
     );
   });
 
@@ -139,7 +141,7 @@ describe("httpCookiesMiddleware", async () => {
       "Y29va2llX3ZhbHVl",
       "cookie_signature",
       "cookie_kid",
-      keys.cookieVerification,
+      keys.cookie!.verification,
     );
   });
 
@@ -368,7 +370,7 @@ describe("httpCookiesMiddleware", async () => {
     expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith(
       "secret_value",
       "tokenised",
-      keys.cookieEncryption,
+      keys.cookie!.encryption,
     );
 
     const headers = ctx.set.mock.calls[0][1] as Array<string>;

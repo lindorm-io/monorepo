@@ -5,16 +5,27 @@ import type {
   PylonCommonContext,
   PylonCookieConfig,
   PylonGetCookie,
-  PylonKeys,
+  PylonKeyRoles,
 } from "../../../types/index.js";
 import type { ParsedCookie } from "./parse-cookie-header.js";
 import { verifyCookie } from "./verify-cookie.js";
 
 export type CreateGetCookieOptions = {
   ctx: Pick<PylonCommonContext, "aegis" | "amphora">;
-  config: PylonCookieConfig;
+  /**
+   * The deployment-wide cookie config, widened by `PylonGetCookie` because the
+   * connection-session middleware reads the session cookie through THIS config
+   * rather than a per-call options object — so the session's own verification
+   * key has to be able to travel in it.
+   */
+  config: PylonCookieConfig & PylonGetCookie;
   parsed: Array<ParsedCookie>;
-  keys?: PylonKeys;
+  /**
+   * The ORDINARY-cookie key roles, already resolved (`resolveCookieKeys`) — so
+   * `verification` has already inherited the cookie signing predicate where the
+   * deployment named no explicit one.
+   */
+  cookieKeys?: PylonKeyRoles;
 };
 
 export type GetCookie = <T = any>(
@@ -26,7 +37,7 @@ export const createGetCookie = ({
   ctx,
   config,
   parsed,
-  keys,
+  cookieKeys,
 }: CreateGetCookieOptions): GetCookie => {
   const cache: Dict = {};
 
@@ -43,13 +54,16 @@ export const createGetCookie = ({
     const opts = { ...config, ...options };
 
     if (opts.signed) {
+      // A cookie may name its OWN verification key (the session middleware hands
+      // us the resolved session keys, whose `verification` already follows the
+      // session SIGNATURE) — otherwise it is the deployment's cookie key.
       await verifyCookie(
         ctx,
         name,
         cookie.value,
         cookie.signature,
         cookie.kid,
-        keys?.cookieVerification,
+        opts.verification ?? cookieKeys?.verification,
       );
     }
 

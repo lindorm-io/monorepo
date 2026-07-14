@@ -4,11 +4,13 @@ import { removeUndefined } from "@lindorm/utils";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type {
   PylonHttpMiddleware,
+  PylonKeyRoles,
   PylonKeys,
   PylonSessionConfig,
   PylonSessionOptions,
 } from "../../types/index.js";
 import { createSessionStore } from "../utils/create-session-store.js";
+import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
 
 export const createHttpSessionMiddleware = (
   options: PylonSessionOptions,
@@ -16,7 +18,10 @@ export const createHttpSessionMiddleware = (
 ): PylonHttpMiddleware => {
   const name = options.name ?? "pylon_session";
 
-  const config: PylonSessionConfig = removeUndefined({
+  // The session cookie is a cookie like any other, so its keys reach the signer
+  // and the cipher the way any cookie's do: named in the config handed to
+  // `ctx.cookies.set` / `.get`. Pylon never sniffs cookie names.
+  const config: PylonSessionConfig & PylonKeyRoles = removeUndefined({
     domain: options.domain,
     encoding: options.encoding,
     encrypted: options.encrypted,
@@ -27,6 +32,7 @@ export const createHttpSessionMiddleware = (
     sameSite: options.sameSite,
     secure: options.secure,
     signed: options.signed,
+    ...resolveSessionKeys(keys),
   });
 
   const store = createSessionStore(options, keys);

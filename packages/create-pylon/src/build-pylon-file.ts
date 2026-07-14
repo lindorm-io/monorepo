@@ -150,22 +150,37 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
     // `purpose` taxonomy — so every key role it resolves is named here, matching
     // the purposes the kryptos-rotation worker mints.
     //
+    // A pylon session IS a cookie, so `session` is a per-role OVERRIDE of
+    // `cookie`: `session.<role> ?? cookie.<role>`. Both are named here because
+    // the worker mints both key sets; delete the `session` block and every role
+    // chains to the cookie keys instead.
+    //
     // ⚠ `publish: false` is load-bearing: amphora's default query is the
     // PUBLISHED set, so an internal cookie/session key is unreachable without it
     // and the JWKS token key would be selected instead.
     lines.push(`  keys: {`);
     lines.push(
-      `    cookieSignature: { predicate: { purpose: "cookie", publish: false } },`,
+      `    // \`verification\` — the check on the key a cookie's kid names — is`,
     );
+    lines.push(`    // omitted: it defaults to the SIGNING predicate of its own scope,`);
     lines.push(
-      `    cookieVerification: { predicate: { purpose: "cookie", publish: false } },`,
+      `    // which is the only read policy that cannot reject a cookie this app`,
     );
+    lines.push(`    // just issued. Name it only to make the read policy deliberately`);
+    lines.push(`    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live`);
+    lines.push(`    // session cookies valid while migrating to a new signing key).`);
+    lines.push(`    cookie: {`);
+    lines.push(`      signature: { predicate: { purpose: "cookie", publish: false } },`);
+    lines.push(`      encryption: { predicate: { purpose: "cookie", publish: false } },`);
+    lines.push(`    },`);
+    lines.push(`    // The session cookie gets its own keys — a separate blast radius,`);
+    lines.push(`    // and an asymmetric signature.`);
+    lines.push(`    session: {`);
+    lines.push(`      signature: { predicate: { purpose: "session", publish: false } },`);
     lines.push(
-      `    cookieEncryption: { predicate: { purpose: "cookie", publish: false } },`,
+      `      encryption: { predicate: { purpose: "session", publish: false } },`,
     );
-    lines.push(
-      `    sessionEncryption: { predicate: { purpose: "session", publish: false } },`,
-    );
+    lines.push(`    },`);
     lines.push(`  },`);
   }
 

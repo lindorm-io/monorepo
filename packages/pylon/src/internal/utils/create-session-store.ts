@@ -8,6 +8,7 @@ import type {
   PylonSessionOptions,
 } from "../../types/index.js";
 import { buildHookMeta } from "./build-hook-meta.js";
+import { resolveSessionKeys } from "./keys/resolve-session-keys.js";
 import { resolveActor } from "./resolve-actor.js";
 
 const getSource = (
@@ -39,7 +40,10 @@ export const createSessionStore = (
 ): IPylonSessionStore | undefined => {
   if (!options?.enabled) return;
 
-  const encryptionKey = keys?.sessionEncryption;
+  // Same key that seals the session COOKIE: `session.encryption ?? cookie.encryption`.
+  // A stored session and a cookie-only session are the same secret in two
+  // places — the store just holds it at rest instead of on the wire.
+  const { encryption: encryptionKey } = resolveSessionKeys(keys);
 
   return {
     set: async (ctx, session): Promise<string> => {

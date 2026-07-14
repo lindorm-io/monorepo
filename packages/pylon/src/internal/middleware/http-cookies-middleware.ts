@@ -13,6 +13,7 @@ import { chunkCookieValue } from "../utils/cookies/chunk-cookie-value.js";
 import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
 import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { signCookie } from "../utils/cookies/sign-cookie.js";
+import { resolveCookieKeys } from "../utils/keys/resolve-cookie-keys.js";
 
 const DEFAULT_CHUNK_SIZE = 4000;
 
@@ -22,10 +23,15 @@ export const createHttpCookiesMiddleware = (
 ): PylonHttpMiddleware => {
   config.encoding = config.encoding || "base64url";
 
+  // The ordinary-cookie key roles, resolved once. `verification` defaults to the
+  // cookie SIGNING predicate — a read policy that rejected our own writes would
+  // be no policy at all.
+  const cookieKeys = resolveCookieKeys(keys);
+
   return async function httpCookiesMiddleware(ctx, next) {
     const parsed = parseCookieHeader(ctx.get("cookie"));
 
-    const getCookie = createGetCookie({ ctx, config, parsed, keys });
+    const getCookie = createGetCookie({ ctx, config, parsed, cookieKeys });
 
     let cookies: Array<PylonCookie> = [];
 
@@ -83,10 +89,13 @@ export const createHttpCookiesMiddleware = (
           // policy, which queries the PUBLISHED set — so an internal `dir`
           // cookie key, which exists for exactly this job, was unreachable and
           // cookies were sealed with the JWKS token key instead.
+          //
+          // A cookie may name its OWN key (the session middleware hands us the
+          // resolved session keys) — otherwise it is the deployment's cookie key.
           final = await ctx.aegis.aes.encrypt(
             value as AesContent,
             "tokenised",
-            keys?.cookieEncryption,
+            opts.encryption ?? cookieKeys.encryption,
           );
         } else {
           final = isString(value) ? value : JSON.stringify(value);
@@ -121,7 +130,11 @@ export const createHttpCookiesMiddleware = (
         }
 
         if (opts.signed) {
-          const { signature, kid } = await signCookie(ctx, final, keys?.cookieSignature);
+          const { signature, kid } = await signCookie(
+            ctx,
+            final,
+            opts.signature ?? cookieKeys.signature,
+          );
 
           cookies.push(new PylonCookie(`${name}.sig`, signature, opts));
           cookies.push(new PylonCookie(`${name}.kid`, kid, opts));

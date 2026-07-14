@@ -2,10 +2,13 @@ import { removeUndefined } from "@lindorm/utils";
 import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
 import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { createSessionStore } from "../utils/create-session-store.js";
+import { resolveCookieKeys } from "../utils/keys/resolve-cookie-keys.js";
+import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
 import { createSessionRefreshHandler } from "../utils/refresh/create-session-refresh-handler.js";
 import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
 import type {
   PylonConnectionMiddleware,
+  PylonKeyRoles,
   PylonKeys,
   PylonSessionConfig,
   PylonSessionOptions,
@@ -21,7 +24,9 @@ export const createConnectionSessionMiddleware = <
 ): PylonConnectionMiddleware<C> => {
   const name = options.name ?? "pylon_session";
 
-  const config: PylonSessionConfig = removeUndefined({
+  // The session cookie's keys travel in the config — the handshake reads the
+  // cookie through this config, not a per-call options object.
+  const config: PylonSessionConfig & PylonKeyRoles = removeUndefined({
     domain: options.domain,
     encoding: options.encoding ?? "base64url",
     encrypted: options.encrypted,
@@ -32,8 +37,10 @@ export const createConnectionSessionMiddleware = <
     sameSite: options.sameSite,
     secure: options.secure,
     signed: options.signed,
+    ...resolveSessionKeys(keys),
   });
 
+  const cookieKeys = resolveCookieKeys(keys);
   const store = createSessionStore(options, keys);
 
   return async function connectionSessionMiddleware(ctx, next): Promise<void> {
@@ -45,7 +52,7 @@ export const createConnectionSessionMiddleware = <
     }
 
     const parsed = parseCookieHeader(cookieHeader);
-    const getCookie = createGetCookie({ ctx, config, parsed, keys });
+    const getCookie = createGetCookie({ ctx, config, parsed, cookieKeys });
 
     const sessionId = await getCookie<string>(name);
 
