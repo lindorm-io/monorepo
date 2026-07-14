@@ -22,6 +22,7 @@ amphora.add(
   KryptosKit.generate.auto({
     algorithm: "ES256",
     issuer: "http://test.lindorm.io",
+    publish: true,
   }),
 );
 
@@ -46,6 +47,7 @@ externalAmphora.add(
   KryptosKit.generate.auto({
     algorithm: "RS256",
     issuer: "http://external.lindorm.io",
+    publish: true,
     jwksUri: "http://localhost:3001/.well-known/jwks.json",
   }),
 );

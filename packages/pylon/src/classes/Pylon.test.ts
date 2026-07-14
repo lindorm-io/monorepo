@@ -87,6 +87,7 @@ describe("Pylon", () => {
           "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgcyOxjn7CekTvSkiQvqx5JhFOmwPYFVFHmLKfio6aJ1uhRANCAAQfFaJkGZMxDn656YiDrSJ5sLRwip-y3a0VzC4cUPxxAJzuRBRtVqM3GitfTQEiUrzF2pcmMZbteAOhIqLlU_f6",
         publicKey:
           "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEHxWiZBmTMQ5-uemIg60iebC0cIqfst2tFcwuHFD8cQCc7kQUbVajNxorX00BIlK8xdqXJjGW7XgDoSKi5VP3-g",
+        publish: true,
         purpose: "token",
         type: "EC",
         use: "sig",
@@ -99,6 +100,7 @@ describe("Pylon", () => {
         algorithm: "HS256",
         privateKey:
           "ZtL9AyQMb60GXUhTYziSizr6SFb_i6bHu8RnN283-gU4I1fPRZbGE9X0QT0YLWW3m1AM1rl2yRf9zS9PhDuylA",
+        publish: false,
         purpose: "cookie",
         type: "oct",
         use: "sig",
@@ -114,7 +116,30 @@ describe("Pylon", () => {
           "MEYCAQAwBQYDK2VvBDoEOGRWElZ3_EFza2XMyTVr4LroWzaQtjDpyA0h3JX6HcHbf1_91UOlU4_mdMkQUDfRFtL4VR9PmwHT",
         publicKey:
           "MEIwBQYDK2VvAzkACmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",
+        publish: false,
         purpose: "session",
+        type: "OKP",
+        use: "enc",
+      }),
+    );
+
+    // The PUBLISHED token enc key — what `createKryptosRotationWorker` actually
+    // mints. It is here because `aegis.aes.encrypt` (session store, tokenised
+    // cookies) resolves its key through `amphora.find({ use: "enc" })`, which now
+    // defaults to `publish: true`. Without a published enc key in the vault every
+    // cookie/session encryption fails closed — so a fixture without one would not
+    // be a realistic pylon deployment.
+    amphora.add(
+      KryptosKit.from.b64({
+        id: "9f6c1e2b-3d84-5a71-b0c9-7e2f4a6d8b31",
+        algorithm: "ECDH-ES+A256GCMKW",
+        curve: "X448",
+        privateKey:
+          "MEYCAQAwBQYDK2VvBDoEOPy0jbm-3GwuIajqI7ZF27BRPZ3jY1hbx6AnjhZr7XO2wy64F3qIkLH9lLUAHHdL4RVx1rTcltj1",
+        publicKey:
+          "MEIwBQYDK2VvAzkA0j6YEUZ3wxYJGme_Gf9dcIutSq1JmcElhywZRmPVxwz7W9ZMV87VDVCMebQ4PsY0gDdK6hHtaBc",
+        publish: true,
+        purpose: "token",
         type: "OKP",
         use: "enc",
       }),
@@ -125,7 +150,7 @@ describe("Pylon", () => {
         id: "257ba848-a577-5c3f-9bdc-ff3ef3f69fa0",
         algorithm: "EdDSA",
         curve: "Ed25519",
-        hidden: true,
+        publish: false,
         privateKey: "MC4CAQAwBQYDK2VwBCIEIHz8wdpCMi7g2mLiYK8UbwsK-mek7rE5hEi-XJXI53sy",
         publicKey: "MCowBQYDK2VwAyEAN9ZHC3n7N-ie40H0DkXuRfHQziEPu-YhDgORjHmuneU",
         type: "OKP",
@@ -189,7 +214,10 @@ describe("Pylon", () => {
 
     router.post(
       "/signed",
-      createHttpSignedRequestMiddleware(async (_, id) => amphora.find({ id }), {
+      // `findById`, not `find({ id })` — the latter goes through `filteredKeys`,
+      // which now defaults to `publish: true`, so it cannot see the internal key
+      // that signed this request. An explicit kid is explicit intent.
+      createHttpSignedRequestMiddleware(async (_, id) => amphora.findById(id), {
         required: true,
       }),
       async (ctx) => {
@@ -215,7 +243,7 @@ describe("Pylon", () => {
       ctx.amphora.add(
         KryptosKit.generate.auto({
           algorithm: "HS256",
-          hidden: true,
+          publish: false,
           ownerId: "e9cea99a-9bcc-534e-a7ee-c58af70d33ad",
         }),
       );
@@ -326,6 +354,11 @@ describe("Pylon", () => {
   // private operations (`sign`, `deriveKey`) it was generated with, and
   // WebCrypto — so `jose`, so every mainstream RP — refuses to import a public
   // JWK that does. `use` conveys the intent instead.
+  //
+  // ⚠ This assertion previously encoded a BUG as expected behaviour: the
+  // `purpose: "session"` ECDH key was in the published set. Session and cookie
+  // keys are INTERNAL — they never leave the server and no RP has any business
+  // seeing them. The set below is the INTENDED one: `publish: true` keys only.
   test("should return well-known jwks", async () => {
     const response = await request(pylon.callback)
       .get("/.well-known/jwks.json")
@@ -349,21 +382,38 @@ describe("Pylon", () => {
           y: "nO5EFG1WozcaK19NASJSvMXalyYxlu14A6EiouVT9_o",
         },
         {
-          alg: "ECDH-ES",
+          alg: "ECDH-ES+A256GCMKW",
           crv: "X448",
           exp: 2493100800,
           iat: 1704096000,
           iss: "http://test.lindorm.io",
           jku: "http://test.lindorm.io/.well-known/jwks.json",
-          kid: "5382ca15-b849-55ae-904a-9196797ccc1b",
+          kid: "9f6c1e2b-3d84-5a71-b0c9-7e2f4a6d8b31",
           kty: "OKP",
           nbf: 1704096000,
-          purpose: "session",
+          purpose: "token",
           use: "enc",
-          x: "CmHn63oaLtiwYY2FyuoObj5A6nLWxyqKgiMa-ueJuYr6WhirvxFYYYY-tB_7HolUBGCca3UxG04",
+          x: "0j6YEUZ3wxYJGme_Gf9dcIutSq1JmcElhywZRmPVxwz7W9ZMV87VDVCMebQ4PsY0gDdK6hHtaBc",
         },
       ],
     });
+  });
+
+  test("should NOT publish internal cookie or session keys in the jwks", async () => {
+    const response = await request(pylon.callback)
+      .get("/.well-known/jwks.json")
+      .expect(200);
+
+    const purposes = response.body.keys.map((key: { purpose: string }) => key.purpose);
+    const kids = response.body.keys.map((key: { kid: string }) => key.kid);
+
+    expect(purposes).not.toContain("cookie");
+    expect(purposes).not.toContain("session");
+    expect(purposes).toEqual(["token", "token"]);
+
+    // the internal session enc key and the internal signed-request key, by kid
+    expect(kids).not.toContain("5382ca15-b849-55ae-904a-9196797ccc1b");
+    expect(kids).not.toContain("257ba848-a577-5c3f-9bdc-ff3ef3f69fa0");
   });
 
   test("should return well-known openid-configuration", async () => {
@@ -478,7 +528,7 @@ describe("Pylon", () => {
       },
     };
 
-    const kryptos = amphora.findSync({ id: "257ba848-a577-5c3f-9bdc-ff3ef3f69fa0" });
+    const kryptos = amphora.findByIdSync("257ba848-a577-5c3f-9bdc-ff3ef3f69fa0");
 
     await conduitSignedRequestMiddleware({ kryptos })(mockContext, vi.fn());
 
@@ -533,10 +583,17 @@ describe("Pylon", () => {
   test("should add amphora key globally", async () => {
     await request(pylon.callback).post("/test/amphora").expect(204);
 
-    expect(amphora.findSync({ ownerId: "e9cea99a-9bcc-534e-a7ee-c58af70d33ad" })).toEqual(
+    // The route mints an INTERNAL key (`publish: false`), so the query must say so
+    // — `filteredKeys` defaults to `publish: true` and would not see it otherwise.
+    expect(
+      amphora.findSync({
+        ownerId: "e9cea99a-9bcc-534e-a7ee-c58af70d33ad",
+        publish: false,
+      }),
+    ).toEqual(
       expect.objectContaining({
         algorithm: "HS256",
-        hidden: true,
+        publish: false,
         ownerId: "e9cea99a-9bcc-534e-a7ee-c58af70d33ad",
       }),
     );

@@ -19,6 +19,7 @@ amphora.add(
   KryptosKit.generate.auto({
     algorithm: "ES256",
     issuer: "http://test.lindorm.io",
+    publish: true,
   }),
 );
 

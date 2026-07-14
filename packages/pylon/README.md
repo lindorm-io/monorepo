@@ -987,18 +987,19 @@ import {
 
 `createKryptosRotationWorker` defaults to the following key set (override `keys` to change the token set):
 
-| Algorithm           | Curve     | Purpose | Hidden | Expiry |
-| ------------------- | --------- | ------- | ------ | ------ |
-| `dir`               | —         | cookie  | yes    | `1y`   |
-| `HS256`             | —         | cookie  | yes    | `1y`   |
-| `EdDSA`             | `Ed448`   | session | yes    | `1y`   |
-| `ECDH-ES`           | `X448`    | session | yes    | `1y`   |
-| `EdDSA`             | `Ed25519` | token   | no     | `6mo`  |
-| `ECDH-ES+A256GCMKW` | `X448`    | token   | no     | `6mo`  |
+| Algorithm           | Curve     | Purpose | Publish | Expiry |
+| ------------------- | --------- | ------- | ------- | ------ |
+| `dir`               | —         | cookie  | `false` | `1y`   |
+| `HS256`             | —         | cookie  | `false` | `1y`   |
+| `EdDSA`             | `Ed448`   | session | `false` | `1y`   |
+| `ECDH-ES`           | `X448`    | session | `false` | `1y`   |
+| `EdDSA`             | `Ed25519` | token   | `true`  | `6mo`  |
+| `ECDH-ES+A256GCMKW` | `X448`    | token   | `true`  | `6mo`  |
 
-- **`hidden`** keys stay in the vault for internal use (cookie/session crypto) and are **excluded from JWKS**; only the non-hidden `token` keys are published.
+- **`publish: false`** keys stay in the vault for internal use (cookie/session crypto) and are **excluded from the JWKS** — and, since Amphora's `find`/`filter` default to `{ publish: true }`, from ordinary key selection too. Only the `token` keys are published. To select an internal key you must ask for it: `amphora.find({ publish: false, … })`. `findById` is unfiltered — an explicit kid is explicit intent.
+- ⚠ **`publish` defaults to `false`** (the Kryptos default: a minted key is unpublished until you say otherwise). **If you override `keys`, every key you want in the JWKS must say `publish: true`** — an override that omits it produces an **empty JWKS**, and no relying party can verify anything. The four internal cookie/session keys are always minted regardless of the override.
 - **Per-key `expiry`** — rotation overlap is half each key's own expiry. The unit for months is `mo`/`month`; `m` means **minutes**. Unset keys fall back to the worker-level `expiry` (default `6mo`).
-- Pass **`amphora`** so freshly-minted keys are added to the vault at rotation time — JWKS is populated on first boot instead of after the next `createAmphoraEntityWorker` tick (that worker is for picking up _other_ instances' keys). Pass **`rootCaKey`** to CA-sign the published (non-hidden, asymmetric) keys.
+- Pass **`amphora`** so freshly-minted keys are added to the vault at rotation time — JWKS is populated on first boot instead of after the next `createAmphoraEntityWorker` tick (that worker is for picking up _other_ instances' keys). Pass **`rootCaKey`** to CA-sign the published, asymmetric keys (an internal key gets no chain — it has no relying party to convince).
 
 `createKryptosRotationWorker` and `createAmphoraEntityWorker` use Pylon's built-in `Kryptos` entity by default; pass `target` to override with a custom `KryptosDB` implementation.
 

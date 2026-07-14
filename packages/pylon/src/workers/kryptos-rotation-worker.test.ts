@@ -355,7 +355,13 @@ describe("createKryptosRotationWorker", () => {
       await expect(worker.trigger()).resolves.not.toThrow();
     });
 
-    test("stamps hidden onto generated keys (cookie/session hidden, token public)", async () => {
+    // The security-relevant guard for the whole default key set. `publish` defaults
+    // to FALSE in kryptos, so the two token keys MUST assert `true` explicitly — if
+    // they ever come out `false` the JWKS silently empties and no RP can verify a
+    // thing. And the four internal keys MUST assert `false` — a published cookie or
+    // session key is a silent exposure. Both directions are checked; neither is a
+    // snapshot to bless.
+    test("stamps publish onto every generated key (cookie/session internal, token published)", async () => {
       mockFind.mockResolvedValueOnce([]); // fresh — default key set is minted
 
       const worker = createKryptosRotationWorker({ logger: mockLogger, db });
@@ -363,14 +369,51 @@ describe("createKryptosRotationWorker", () => {
       await worker.trigger();
 
       const calls = mockGenerate.mock.calls.map((c) => c[0]);
-      const cookie = calls.find((c) => c.purpose === "cookie");
-      const session = calls.find((c) => c.purpose === "session");
-      const token = calls.find((c) => c.purpose === "token");
 
-      // hidden keys must not surface in JWKS; token keys are published.
-      expect(cookie.hidden).toBe(true);
-      expect(session.hidden).toBe(true);
-      expect(token.hidden).toBeFalsy();
+      const internal = calls.filter(
+        (c) => c.purpose === "cookie" || c.purpose === "session",
+      );
+      const published = calls.filter((c) => c.purpose === "token");
+
+      // On a fresh vault each key is minted TWICE — the current key and its
+      // rotation successor — so 6 configured keys produce 12 generate calls.
+      expect(internal).toHaveLength(8);
+      expect(published).toHaveLength(4);
+
+      for (const key of internal) {
+        expect(key.publish).toBe(false);
+      }
+      for (const key of published) {
+        expect(key.publish).toBe(true);
+      }
+
+      // and the token keys are the sig + enc pair an RP actually needs
+      expect(new Set(published.map((c) => c.algorithm))).toEqual(
+        new Set(["EdDSA", "ECDH-ES+A256GCMKW"]),
+      );
+      expect(new Set(internal.map((c) => c.algorithm))).toEqual(
+        new Set(["dir", "HS256", "EdDSA", "ECDH-ES"]),
+      );
+    });
+
+    test("a caller-supplied key set is NOT published unless it says so", async () => {
+      mockFind.mockResolvedValueOnce([]);
+
+      const worker = createKryptosRotationWorker({
+        logger: mockLogger,
+        db,
+        keys: [{ algorithm: "ES512", purpose: "token" }],
+      });
+
+      await worker.trigger();
+
+      const override = mockGenerate.mock.calls
+        .map((c) => c[0])
+        .find((c) => c.algorithm === "ES512");
+
+      // Fail-closed: an override that forgets `publish` gets the kryptos default
+      // (false). This is intentional — see the `keys` doc comment on the worker.
+      expect(override.publish).toBeUndefined();
     });
 
     describe("rootCaKey", () => {
@@ -382,7 +425,7 @@ describe("createKryptosRotationWorker", () => {
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
           db,
-          keys: [{ algorithm: "ES512", purpose: "token" }],
+          keys: [{ algorithm: "ES512", publish: true, purpose: "token" }],
         });
 
         await worker.trigger();
@@ -392,14 +435,14 @@ describe("createKryptosRotationWorker", () => {
         );
       });
 
-      test("should pass ca-signed certificate for non-hidden asymmetric key", async () => {
+      test("should pass ca-signed certificate for published asymmetric key", async () => {
         mockFind.mockResolvedValueOnce(seedInternalKeys());
 
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
           db,
           rootCaKey,
-          keys: [{ algorithm: "ES512", purpose: "token" }],
+          keys: [{ algorithm: "ES512", publish: true, purpose: "token" }],
         });
 
         await worker.trigger();
@@ -412,14 +455,16 @@ describe("createKryptosRotationWorker", () => {
         );
       });
 
-      test("should skip certificate when key is hidden", async () => {
+      // A cert exists to let an RP build trust to a key it can see. An internal key
+      // has no relying party, so it gets no chain.
+      test("should skip certificate when key is not published", async () => {
         mockFind.mockResolvedValueOnce(seedInternalKeys());
 
         const worker = createKryptosRotationWorker({
           logger: mockLogger,
           db,
           rootCaKey,
-          keys: [{ algorithm: "ES512", hidden: true, purpose: "my:hidden" }],
+          keys: [{ algorithm: "ES512", publish: false, purpose: "my:internal" }],
         });
 
         await worker.trigger();
@@ -427,7 +472,7 @@ describe("createKryptosRotationWorker", () => {
         expect(mockGenerate).toHaveBeenCalledWith(
           expect.objectContaining({
             algorithm: "ES512",
-            purpose: "my:hidden",
+            purpose: "my:internal",
             certificate: undefined,
           }),
         );
@@ -464,7 +509,7 @@ describe("createKryptosRotationWorker", () => {
           logger: mockLogger,
           db,
           rootCaKey,
-          keys: [{ algorithm: "ES512", purpose: "token" }],
+          keys: [{ algorithm: "ES512", publish: true, purpose: "token" }],
         });
 
         await worker.trigger();

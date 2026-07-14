@@ -93,5 +93,5 @@ export class Kryptos implements KryptosDB {
   purpose!: string | null;
 
   @Field("boolean")
-  hidden!: boolean;
+  publish!: boolean;
 }

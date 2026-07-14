@@ -13,7 +13,7 @@ import { type CreateLindormWorkerOptions, LindormWorker } from "@lindorm/worker"
 
 type KeyOption = Pick<
   KryptosAuto,
-  "algorithm" | "curve" | "encryption" | "hidden" | "purpose"
+  "algorithm" | "curve" | "encryption" | "publish" | "purpose"
 > & {
   // Per-key lifetime. Falls back to the worker-level `expiry` (default 6mo) when
   // unset. NOTE: the unit for months is `mo`/`month` — `m` means MINUTES.
@@ -23,6 +23,10 @@ type KeyOption = Pick<
 
 type Options = CreateLindormWorkerOptions & {
   expiry?: ReadableTime;
+  // Replaces the DEFAULT TOKEN KEYS only — the four internal cookie/session keys
+  // are always minted. ⚠ `publish` defaults to FALSE (the kryptos default), so a
+  // key meant for the JWKS MUST say `publish: true` — an override that forgets it
+  // yields an empty JWKS and no RP can verify anything.
   keys?: Array<KeyOption>;
   rootCaKey?: IKryptos;
   logger: ILogger;
@@ -36,30 +40,47 @@ type Options = CreateLindormWorkerOptions & {
 };
 
 export const createKryptosRotationWorker = (options: Options): LindormWorker => {
+  // `publish` is stated on EVERY key, even where it repeats the kryptos default
+  // (`false`). This is the security-relevant policy of the whole key set — which
+  // keys reach the JWKS and which never leave the server — and it must be
+  // readable at the definition rather than inferred from an upstream default.
+  // kryptos does NOT derive it from `purpose`; that safety is ours, explicitly.
   const keys: Array<KeyOption> = [
     // Cookie + session keys are long-lived (1y) — they never leave the server
     // and rotating them churns live sessions, so a longer lifetime is safer.
-    { algorithm: "dir", hidden: true, purpose: "cookie", expiry: "1y" },
-    { algorithm: "HS256", hidden: true, purpose: "cookie", expiry: "1y" },
+    { algorithm: "dir", publish: false, purpose: "cookie", expiry: "1y" },
+    { algorithm: "HS256", publish: false, purpose: "cookie", expiry: "1y" },
     {
       algorithm: "EdDSA",
       curve: "Ed448",
-      hidden: true,
+      publish: false,
       purpose: "session",
       expiry: "1y",
     },
     {
       algorithm: "ECDH-ES",
       curve: "X448",
-      hidden: true,
+      publish: false,
       purpose: "session",
       expiry: "1y",
     },
     // Published token keys rotate faster (6m) — smaller blast radius if leaked,
     // and RPs re-fetch JWKS.
     ...(options.keys ?? [
-      { algorithm: "EdDSA", curve: "Ed25519", purpose: "token", expiry: "6mo" },
-      { algorithm: "ECDH-ES+A256GCMKW", curve: "X448", purpose: "token", expiry: "6mo" },
+      {
+        algorithm: "EdDSA",
+        curve: "Ed25519",
+        publish: true,
+        purpose: "token",
+        expiry: "6mo",
+      },
+      {
+        algorithm: "ECDH-ES+A256GCMKW",
+        curve: "X448",
+        publish: true,
+        purpose: "token",
+        expiry: "6mo",
+      },
     ]),
   ];
 
@@ -96,9 +117,12 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
             isAfter(k.expiresAt, notBefore),
         );
 
+        // Only PUBLISHED keys get a CA-signed chain — a cert exists to let an RP
+        // build trust to a key it can actually see. An internal key never leaves
+        // the server, so it has no relying party to convince.
         const certificate =
           options.rootCaKey &&
-          !opts.hidden &&
+          opts.publish &&
           KryptosKit.getTypeForAlgorithm(opts.algorithm) !== "oct"
             ? ({ mode: "ca-signed", ca: options.rootCaKey } as const)
             : undefined;
@@ -108,7 +132,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
             algorithm: opts.algorithm,
             certificate,
             curve: opts.curve,
-            hidden: opts.hidden,
+            publish: opts.publish,
             expiresAt,
             notBefore,
             purpose: opts.purpose,
@@ -138,7 +162,7 @@ export const createKryptosRotationWorker = (options: Options): LindormWorker => 
             algorithm: opts.algorithm,
             certificate,
             curve: opts.curve,
-            hidden: opts.hidden,
+            publish: opts.publish,
             expiresAt: add(existingKey.expiresAt, duration(rotation)),
             notBefore: sub(existingKey.expiresAt, duration(rotation)),
             purpose: opts.purpose,
