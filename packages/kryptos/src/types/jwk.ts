@@ -7,7 +7,10 @@ import type { KryptosType, KryptosUse } from "./types.js";
 
 export type JwkMetadata = {
   alg: KryptosAlgorithm;
-  key_ops: Array<KryptosOperation>;
+  // OPTIONAL per RFC 7517 §4.3, and absent from public JWKs by construction: a
+  // public key cannot claim a private operation, and WebCrypto rejects one that
+  // does. Only private JWKs (env strings) carry it.
+  key_ops?: Array<KryptosOperation>;
   kid: string;
   kty: KryptosType;
   use: KryptosUse;
@@ -29,5 +32,4 @@ export type LindormJwkMetadata = {
 
 export type LindormJwk = JwkMetadata & LindormJwkMetadata & KryptosJwk;
 
-export type UnknownJwk = Optional<JwkMetadata, "kid" | "key_ops"> &
-  Partial<LindormJwkMetadata>;
+export type UnknownJwk = Optional<JwkMetadata, "kid"> & Partial<LindormJwkMetadata>;

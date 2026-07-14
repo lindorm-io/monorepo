@@ -536,7 +536,14 @@ export class Kryptos implements IKryptos {
       iat: getUnixTime(this.createdAt),
       iss: this.issuer ?? undefined,
       jku: this.jwksUri ?? undefined,
-      key_ops: this.operations,
+      // Emitted only in private JWKs (env strings). A public key cannot claim
+      // the private-half operations it is exported alongside — a public sig key
+      // can only `verify`, never `sign` — and WebCrypto (so jose, and every RP
+      // built on it) HARD REJECTS a public JWK whose key_ops names a private
+      // operation. There is no correct subset to emit either: WebCrypto gives a
+      // public ECDH key no usages at all. RFC 7517 §4.3 makes key_ops OPTIONAL
+      // and SHOULD NOT pair it with `use`, which the public JWK already carries.
+      key_ops: mode === "private" ? this.operations : undefined,
       nbf: getUnixTime(this.notBefore),
       owner_id: this.ownerId ?? undefined,
       purpose: this.purpose ?? undefined,

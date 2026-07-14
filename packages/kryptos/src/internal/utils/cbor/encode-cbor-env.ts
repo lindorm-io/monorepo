@@ -1,6 +1,6 @@
 import { B64 } from "@lindorm/b64";
 import { encode } from "cbor2";
-import type { LindormJwk } from "../../../types/index.js";
+import type { KryptosOperation, LindormJwk } from "../../../types/index.js";
 import {
   CBOR_ALG,
   CBOR_CRV,
@@ -25,8 +25,10 @@ const arraysEqual = (a: ReadonlyArray<string>, b: ReadonlyArray<string>): boolea
 
 // `key_ops` is omitted when it equals the alg/use-derived default (the decoder
 // recomputes the same default), keeping the common case compact.
-const isDefaultKeyOps = (jwk: LindormJwk): boolean =>
-  arraysEqual(jwk.key_ops, calculateKeyOps({ algorithm: jwk.alg, use: jwk.use }));
+const isDefaultKeyOps = (
+  jwk: LindormJwk,
+  keyOps: ReadonlyArray<KryptosOperation>,
+): boolean => arraysEqual(keyOps, calculateKeyOps({ algorithm: jwk.alg, use: jwk.use }));
 
 const setText = (map: Map<number, unknown>, label: number, value?: string): void => {
   if (typeof value === "string" && value.length > 0) map.set(label, value);
@@ -50,10 +52,11 @@ export const encodeCborEnv = (jwk: LindormJwk): Uint8Array => {
   if (jwk.crv) map.set(CBOR_LABEL.crv, CBOR_CRV[jwk.crv]);
   if (jwk.enc) map.set(CBOR_LABEL.enc, CBOR_ENC[jwk.enc]);
 
-  if (jwk.key_ops && !isDefaultKeyOps(jwk)) {
+  const keyOps = jwk.key_ops;
+  if (keyOps && !isDefaultKeyOps(jwk, keyOps)) {
     map.set(
       CBOR_LABEL.key_ops,
-      jwk.key_ops.map((op) => CBOR_OPS[op]),
+      keyOps.map((op) => CBOR_OPS[op]),
     );
   }
 

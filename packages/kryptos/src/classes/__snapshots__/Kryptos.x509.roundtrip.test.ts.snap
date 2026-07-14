@@ -75,10 +75,6 @@ exports[`Kryptos (X.509 round-trip) > toJWK → fromJwk round-trip > preserves c
   "crv": "P-256",
   "exp": 2366841600,
   "iat": 1577836800,
-  "key_ops": [
-    "sign",
-    "verify",
-  ],
   "kid": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "kty": "EC",
   "nbf": 1577836800,
