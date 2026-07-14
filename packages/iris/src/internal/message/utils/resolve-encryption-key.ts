@@ -3,7 +3,11 @@ import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
 import { IrisEncryptionError } from "../../../errors/IrisEncryptionError.js";
 import type { IrisEncryptionKey } from "../../../types/encryption.js";
-import { ENCRYPTION_DEFAULT, ENCRYPTION_FLOOR } from "../../constants/key-floor.js";
+import {
+  DECRYPTION_FLOOR,
+  ENCRYPTION_DEFAULT,
+  ENCRYPTION_FLOOR,
+} from "../../constants/key-floor.js";
 import { hasEncryptionKey } from "./has-encryption-key.js";
 
 export type ResolveEncryptionKeyOptions = {
@@ -31,11 +35,20 @@ export type ResolveEncryptionKeyOptions = {
  * There is no fallback: a key either satisfies the policy or it does not, and a
  * miss is a throw. Falling back to a key the policy forbids is how a signing key
  * ends up wrapping a payload.
+ *
+ * `id` is what tells the two DIRECTIONS apart: an encrypted payload names the
+ * key that sealed it, so an `id` means DECRYPT, and its floor is the other one.
+ * Writing demands a key usable NOW (`isActive`); reading demands only that the
+ * key was usable at some point (`isPending: false`), so a message sealed before
+ * a rotation still opens after it.
  */
 export const resolveEncryptionKey = async (
   options: ResolveEncryptionKeyOptions,
 ): Promise<IKryptos> => {
   const { amphora, id, key } = options;
+
+  const decrypting = Boolean(id);
+  const floor = decrypting ? DECRYPTION_FLOOR : ENCRYPTION_FLOOR;
 
   if (!hasEncryptionKey(key)) {
     throw new IrisEncryptionError("@Encrypted names no encryption key", {
@@ -82,20 +95,28 @@ export const resolveEncryptionKey = async (
       })));
 
   // The FLOOR applies to the selected key, the pinned key AND the injected key.
-  if (!Predicated.match(kryptos, ENCRYPTION_FLOOR)) {
-    throw new IrisEncryptionError("Encryption key violates the iris key floor", {
-      code: "encryption_key_policy_violation",
-      title: "Encryption Key Policy Violation",
-      details:
-        "The resolved key cannot be used for message encryption. A message key must be an encryption key (use: enc) and must hold a private half, so that what it encrypts it can also decrypt.",
-      data: {
-        kid: kryptos.id,
-        algorithm: kryptos.algorithm,
-        use: kryptos.use,
-        floor: ENCRYPTION_FLOOR,
+  if (!Predicated.match(kryptos, floor)) {
+    throw new IrisEncryptionError(
+      decrypting
+        ? "Decryption key violates the iris key floor"
+        : "Encryption key violates the iris key floor",
+      {
+        code: "encryption_key_policy_violation",
+        title: "Encryption Key Policy Violation",
+        details: decrypting
+          ? "The key the encrypted payload names cannot be used to decrypt it. A message key must be an encryption key (use: enc) and must hold a private half, and it must not be pending — a key whose notBefore has not yet passed cannot have encrypted this payload. An EXPIRED key is accepted, and must be: a message sealed before a rotation has to keep opening afterwards."
+          : "The resolved key cannot be used for message encryption. A message key must be an encryption key (use: enc) and must hold a private half, so that what it encrypts it can also decrypt, and it must be active — a key that has expired, or whose notBefore has not yet passed, cannot seal a new message.",
+        data: {
+          kid: kryptos.id,
+          algorithm: kryptos.algorithm,
+          use: kryptos.use,
+          isActive: kryptos.isActive,
+          isPending: kryptos.isPending,
+          floor,
+        },
+        debug: { kryptos: kryptos.toJSON() },
       },
-      debug: { kryptos: kryptos.toJSON() },
-    });
+    );
   }
 
   return kryptos;

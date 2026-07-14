@@ -459,6 +459,8 @@ const source = new IrisSource({
 
 **The floor.** Iris pins `use: "enc"` and `hasPrivateKey: true` on every key that reaches the crypto layer — selected, injected, or named by an inbound payload's `kid`. Neither is expressible in the predicate, so neither can be widened. A signing key or a public-only key is refused with an `IrisEncryptionError`, not quietly used. `publish: false` is a _default_ rather than a floor (a message KEK never leaves the service), so a predicate that says otherwise wins.
 
+**The clock is on the floor too, and it is not symmetric.** Encrypting demands `isActive: true` — the key must be usable **now**, which is what stops an injected KEK from sealing a message after it has expired. Decrypting demands only `isPending: false`: an **expired** key must still open what it sealed while it was valid, or a rotation would strand every message already on the wire. A key whose `notBefore` has not passed cannot have sealed anything, and the payload chooses the `kid`, so it is refused on both sides.
+
 `@Encrypted` protects the payload on the wire; it does not stop a field value from reaching your logs. For that, mark the field [`@Sensitive`](#sensitive) — the two are orthogonal and compose.
 
 #### `@Compressed`

@@ -1,6 +1,7 @@
 import { Amphora, type IAmphora } from "@lindorm/amphora";
+import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import { beforeEach, describe, expect, test } from "vitest";
+import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { IrisEncryptionError } from "../../../errors/IrisEncryptionError.js";
 import {
   TEST_KEY_ENC_AUDIT,
@@ -224,6 +225,105 @@ describe("resolveEncryptionKey", () => {
 
       expect(error).toBeInstanceOf(IrisEncryptionError);
       expect(error.code).toBe("encryption_key_not_found");
+    });
+  });
+
+  // The vault drops inactive keys from a QUERY, so the clock only bites where the
+  // vault does not: a key INJECTED on the decorator, and a key an encrypted
+  // payload names by `kid` (`findById` is unfiltered by design). Both are paths
+  // the caller — potentially the attacker — controls.
+  describe("the time floor", () => {
+    const lifetime = (notBefore: Date, expiresAt: Date): IKryptos =>
+      KryptosKit.clone(TEST_KEY_ENV_KEK, { notBefore, expiresAt });
+
+    const vault = (...keys: Array<IKryptos>): IAmphora => {
+      const instance = new Amphora({
+        domain: "https://test.lindorm.io/",
+        logger: createMockLogger(),
+      });
+      instance.add(keys);
+      return instance;
+    };
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    test("should refuse to ENCRYPT with an INJECTED key that has expired", async () => {
+      const expired = lifetime(new Date("2020-01-01"), new Date("2021-01-01"));
+
+      const error = await rejection({ amphora, key: { kryptos: expired } });
+
+      expect(error).toBeInstanceOf(IrisEncryptionError);
+      expect(error.code).toBe("encryption_key_policy_violation");
+      expect(error.data).toMatchObject({ kid: expired.id, isActive: false });
+    });
+
+    test("should refuse to ENCRYPT with an INJECTED key that is not yet valid", async () => {
+      const pending = lifetime(new Date("2099-01-01"), new Date("2100-01-01"));
+
+      const error = await rejection({ amphora, key: { kryptos: pending } });
+
+      expect(error).toBeInstanceOf(IrisEncryptionError);
+      expect(error.code).toBe("encryption_key_policy_violation");
+      expect(error.data).toMatchObject({ kid: pending.id, isActive: false });
+    });
+
+    // THE ROTATION PROPERTY. Messages already on the wire name the key that sealed
+    // them. If the read floor demanded `isActive`, rotating a KEK would strand
+    // every one of them. This is the test that must never regress.
+    //
+    // The clock has to MOVE for this to be honest: `Amphora.add` refuses a key
+    // that is already expired, so the only way a vault holds one is the way a
+    // deployment gets one — it was added while valid, and it aged.
+    test("should still DECRYPT with a vault key that has since expired", async () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2024-06-01T00:00:00.000Z"));
+
+      const rotated = lifetime(
+        new Date("2024-01-01T00:00:00.000Z"),
+        new Date("2025-01-01T00:00:00.000Z"),
+      );
+      const rotatedVault = vault(rotated);
+
+      vi.setSystemTime(new Date("2026-06-01T00:00:00.000Z"));
+      expect(rotated.isExpired).toBe(true);
+
+      await expect(
+        resolveEncryptionKey({
+          amphora: rotatedVault,
+          key: { predicate: { purpose: rotated.purpose ?? undefined } },
+          id: rotated.id,
+        }),
+      ).resolves.toMatchObject({ id: rotated.id });
+    });
+
+    test("should still DECRYPT with an INJECTED key that has since expired", async () => {
+      // An env KEK that never reached the vault. It sealed the payload while it
+      // was valid; it is the only thing that can open it.
+      const expired = lifetime(new Date("2020-01-01"), new Date("2021-01-01"));
+
+      await expect(
+        resolveEncryptionKey({ amphora, key: { kryptos: expired }, id: expired.id }),
+      ).resolves.toBe(expired);
+    });
+
+    test("should refuse to DECRYPT against a key that is not yet valid", async () => {
+      // A payload can name any `kid` in the vault. A key whose `notBefore` has not
+      // passed cannot have sealed anything, ever — so nothing it names is real.
+      // `Amphora.add` accepts a pending key, which is exactly why this bites.
+      const pending = lifetime(new Date("2099-01-01"), new Date("2100-01-01"));
+      const pendingVault = vault(pending);
+
+      const error = await rejection({
+        amphora: pendingVault,
+        key: { predicate: { purpose: pending.purpose ?? undefined } },
+        id: pending.id,
+      });
+
+      expect(error).toBeInstanceOf(IrisEncryptionError);
+      expect(error.code).toBe("encryption_key_policy_violation");
+      expect(error.data).toMatchObject({ kid: pending.id, isPending: true });
     });
   });
 
