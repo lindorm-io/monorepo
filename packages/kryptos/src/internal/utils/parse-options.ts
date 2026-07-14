@@ -44,14 +44,25 @@ export const parseJwkOptions = (
     // silently break. And it is semantically right: a JWK is the interchange format
     // of a PUBLISHED key. That is what the format is for.
     //
-    // Same seam as `isExternal` below (default here, overridden by the import path
+    // Same seam as `internal` below (default here, overridden by the import path
     // in KryptosKit.fromJwk); our own env strings always carry the member
     // explicitly, so this default never applies to them.
     publish: jwk.publish ?? true,
-    // Deliberately NOT read from the payload (a remote JWKS could plant
-    // `isExternal: false`). Ownership is decided by the import path — see
-    // KryptosKit.fromJwk, which overrides this default for own-key paths.
-    isExternal: true,
+    // ⚠ FALSE here, deliberately — the INVERSE of the Kryptos constructor default
+    // (`true`, because a key we mint is ours). Do NOT harmonise the two, for the
+    // same reason as `publish` above: the JWK path is where FOREIGN key material
+    // arrives, so its defaults describe a foreign key, not a minted one.
+    //
+    // ⚠⚠ And it is HARDCODED, never `jwk.internal ?? …` — the payload does not get
+    // a vote. A remote JWKS could otherwise plant `internal: true` and pass its key
+    // off as one of ours. Provenance is a property of HOW the key arrived, so only
+    // the import path may decide it — see KryptosKit.fromJwk, which overrides this
+    // default to `true` for the own-key paths (env.import).
+    //
+    // Together the two defaults make a key from someone's JWKS `{ internal: false,
+    // publish: true }`: not ours, and a published artifact. That pair is what keeps
+    // remote verification keys both correctly attributed and visible to `find()`.
+    internal: false,
     issuer: jwk.iss,
     jwksUri: jwk.jku,
     notBefore: jwk.nbf ? new Date(jwk.nbf * 1000) : undefined,
@@ -75,6 +86,13 @@ export const parseStdOptions = (options: Options): KryptosOptions => ({
   createdAt: options.createdAt,
   encryption: options.encryption,
   expiresAt: options.expiresAt,
+  // Carried through, unlike on the JWK path: these are OUR OWN structured options
+  // (b64/der/pem/utf/derive — and `from.db`, which routes through b64), not a
+  // foreign payload, so an explicit value is intent rather than a plant. It is what
+  // lets a stored key round-trip its provenance: `toDB` writes the column, and
+  // without this `from.db` would silently relabel a foreign key as one of ours.
+  // Absent ⇒ the constructor default (`true`), which is right for every own-key path.
+  internal: options.internal,
   issuer: options.issuer,
   jwksUri: options.jwksUri,
   notBefore: options.notBefore,

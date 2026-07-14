@@ -13,7 +13,14 @@ export type KryptosAttributes = {
   curve: KryptosCurve | null;
   encryption: KryptosEncryption | null;
   expiresAt: Date;
-  isExternal: boolean;
+  // Is this OUR key material? A STORED fact about PROVENANCE, and it defaults to
+  // TRUE: a key we mint, derive or import from our own env is ours. It goes FALSE
+  // only for key material someone handed us — in practice a remote JWKS.
+  //
+  // ⚠ Provenance is decided by the IMPORT PATH, never by the payload. `from.jwk`
+  // defaults it to FALSE and `parseJwkOptions` refuses to read it off the JWK, so
+  // a remote JWKS cannot plant `internal: true` and masquerade as one of our keys.
+  internal: boolean;
   issuer: string | null;
   jwksUri: string | null;
   notBefore: Date;

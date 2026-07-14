@@ -59,7 +59,7 @@ type From = {
   db(options: KryptosDB): IKryptos;
   der(options: KryptosFromBuffer): IKryptos;
   derive(options: KryptosFromDerive): IKryptos;
-  jwk(options: KryptosFromJwk, isExternal?: boolean): IKryptos;
+  jwk(options: KryptosFromJwk, internal?: boolean): IKryptos;
   pem(options: KryptosFromString): IKryptos;
   utf(options: KryptosFromString): IKryptos;
 };
@@ -215,13 +215,13 @@ export class KryptosKit {
     // env payload.
     const first = payload[0];
 
-    // Env-provided keys are the service's own by definition — never external.
+    // Env-provided keys are the service's own by definition — always internal.
     if (first === 0x7b) {
-      return KryptosKit.fromJwk(JSON.parse(payload.toString("utf8")), false);
+      return KryptosKit.fromJwk(JSON.parse(payload.toString("utf8")), true);
     }
 
     if (first >= 0xa0 && first <= 0xbb) {
-      return KryptosKit.fromJwk(decodeCborEnv(payload), false);
+      return KryptosKit.fromJwk(decodeCborEnv(payload), true);
     }
 
     throw new KryptosError("Unrecognized kryptos env payload", {
@@ -277,12 +277,12 @@ export class KryptosKit {
     return KryptosKit.fromKryptos("derive", options);
   }
 
-  // Ownership is decided by the IMPORT PATH, never by the JWK payload — a
-  // remote JWKS could otherwise plant `isExternal: false` and masquerade as an
-  // own key. Direct JWK imports default to external; `env.import` passes false
+  // Provenance is decided by the IMPORT PATH, never by the JWK payload — a
+  // remote JWKS could otherwise plant `internal: true` and masquerade as an own
+  // key. So a direct JWK import defaults to NOT ours; `env.import` passes true
   // (env-provided keys are the service's own by definition).
-  private static fromJwk(options: KryptosFromJwk, isExternal = true): IKryptos {
-    const kryptos = KryptosKit.fromKryptos("jwk", options, { isExternal });
+  private static fromJwk(options: KryptosFromJwk, internal = false): IKryptos {
+    const kryptos = KryptosKit.fromKryptos("jwk", options, { internal });
 
     if (options.x5c && options.x5c.length > 0) {
       const incomingS256 = options["x5t#S256"];
@@ -313,7 +313,7 @@ export class KryptosKit {
   private static fromKryptos(
     format: KryptosFormat,
     arg: KryptosFrom,
-    overrides?: Partial<Pick<KryptosOptions, "isExternal">>,
+    overrides?: Partial<Pick<KryptosOptions, "internal">>,
   ): Kryptos {
     const options = { ...fromOptions(format, arg), ...overrides };
 

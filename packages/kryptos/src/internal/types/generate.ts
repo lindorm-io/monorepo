@@ -15,7 +15,7 @@ type Std = Optional<
   | "curve"
   | "encryption"
   | "expiresAt"
-  | "isExternal"
+  | "internal"
   | "issuer"
   | "jwksUri"
   | "notBefore"

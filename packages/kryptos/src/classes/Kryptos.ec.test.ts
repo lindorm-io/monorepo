@@ -14,7 +14,7 @@ describe("Kryptos (EC)", () => {
       id: "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
       createdAt: new Date("2023-01-01T08:00:00.000Z"),
       expiresAt: new Date("2099-01-01T08:00:00.000Z"),
-      isExternal: false,
+      internal: true,
       issuer: "https://example.com",
       jwksUri: "https://example.com/.well-known/jwks.json",
       notBefore: new Date("2023-01-01T08:00:00.000Z"),
@@ -35,7 +35,7 @@ describe("Kryptos (EC)", () => {
       expect(kryptos.expiresIn).toEqual(2366841600);
       expect(kryptos.isActive).toEqual(true);
       expect(kryptos.isExpired).toEqual(false);
-      expect(kryptos.isExternal).toEqual(false);
+      expect(kryptos.internal).toEqual(true);
       expect(kryptos.issuer).toEqual("https://example.com");
       expect(kryptos.jwksUri).toEqual("https://example.com/.well-known/jwks.json");
       expect(kryptos.modulus).toEqual(null);

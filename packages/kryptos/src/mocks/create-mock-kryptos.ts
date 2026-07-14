@@ -18,7 +18,7 @@ export const _createMockKryptos = (
     curve: "P-521",
     encryption: "A256GCM",
     expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-    isExternal: false,
+    internal: true,
     issuer: null,
     jwksUri: null,
     notBefore: new Date("2000-01-01T00:00:00.000Z"),

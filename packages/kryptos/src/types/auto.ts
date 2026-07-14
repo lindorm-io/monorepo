@@ -14,7 +14,7 @@ export type KryptosAuto = Optional<
   | "curve"
   | "encryption"
   | "expiresAt"
-  | "isExternal"
+  | "internal"
   | "issuer"
   | "jwksUri"
   | "notBefore"

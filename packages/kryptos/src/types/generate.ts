@@ -28,7 +28,7 @@ type StdBase = Optional<
   | "id"
   | "createdAt"
   | "expiresAt"
-  | "isExternal"
+  | "internal"
   | "issuer"
   | "jwksUri"
   | "notBefore"

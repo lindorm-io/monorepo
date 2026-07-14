@@ -54,7 +54,7 @@ export class Kryptos implements IKryptos {
   private readonly _algorithm: KryptosAlgorithm;
   private readonly _createdAt: Date;
   private readonly _curve: KryptosCurve | null;
-  private readonly _isExternal: boolean;
+  private readonly _internal: boolean;
   private readonly _modulus: RsaModulus | null;
   private readonly _privateKey: Buffer | undefined;
   private readonly _publicKey: Buffer | undefined;
@@ -80,7 +80,15 @@ export class Kryptos implements IKryptos {
     this._encryption = options.encryption || null;
     this._notBefore = options.notBefore ?? new Date();
     this._expiresAt = options.expiresAt ?? expiresAt("25 years", this._notBefore);
-    this._isExternal = options.isExternal ?? false;
+    // Defaults to TRUE: a key we MINT, DERIVE or import from our OWN env is ours.
+    // Provenance only goes FALSE for key material someone handed us — in practice
+    // a remote JWKS, which `from.jwk` marks by defaulting the flag to FALSE.
+    //
+    // ⚠ It is never read off a payload. `parseJwkOptions` hardcodes it rather than
+    // trusting the JWK, so a remote JWKS cannot plant `internal: true` and pass
+    // itself off as one of our keys. Provenance is a property of HOW the key got
+    // here, and only the import path knows that.
+    this._internal = options.internal ?? true;
     this._issuer = options.issuer || null;
     this._jwksUri = options.jwksUri || null;
     this._ownerId = options.ownerId || null;
@@ -196,8 +204,13 @@ export class Kryptos implements IKryptos {
     return this._expiresAt;
   }
 
-  get isExternal(): boolean {
-    return this._isExternal;
+  /**
+   * Is this OUR key material? True for anything we minted, derived or loaded from
+   * our own env; false only for key material a third party handed us (a remote
+   * JWKS). Decided by the import path, never by the payload — see `parseJwkOptions`.
+   */
+  get internal(): boolean {
+    return this._internal;
   }
 
   get issuer(): string | null {
@@ -462,7 +475,7 @@ export class Kryptos implements IKryptos {
       curve: this.curve,
       encryption: this.encryption,
       expiresAt: this.expiresAt,
-      isExternal: this.isExternal,
+      internal: this.internal,
       issuer: this.issuer,
       jwksUri: this.jwksUri,
       notBefore: this.notBefore,
@@ -514,7 +527,7 @@ export class Kryptos implements IKryptos {
       hasPublicKey: this.hasPublicKey,
       isActive: this.isActive,
       isExpired: this.isExpired,
-      isExternal: this.isExternal,
+      internal: this.internal,
       issuer: this.issuer,
       jwksUri: this.jwksUri,
       modulus: this.modulus,

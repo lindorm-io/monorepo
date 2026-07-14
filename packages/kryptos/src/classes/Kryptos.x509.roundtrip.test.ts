@@ -29,7 +29,7 @@ describe("Kryptos (X.509 round-trip)", () => {
     curve: "P-256" as const,
     type: "EC" as const,
     use: "sig" as const,
-    isExternal: false,
+    internal: true,
     privateKey: Buffer.from(TEST_X509_LEAF_PRIVATE_KEY_B64, "base64url"),
     publicKey: Buffer.from(TEST_X509_LEAF_PUBLIC_KEY_B64, "base64url"),
   };
