@@ -4,7 +4,7 @@ import { LindormError } from "./LindormError.js";
 
 export class NetworkError extends LindormError {
   constructor(message: string, options: HttpErrorOptions = {}) {
-    super(message, { ...options, status: -1 });
+    super(message, { ...options, status: -1, title: options.title || "Network Error" });
   }
 }
 
