@@ -6,7 +6,7 @@ exports[`inspectSummary / inspectJson > renders full certificate details for a c
   curve        P-256
   encryption   —
   purpose      —
-  hidden       false
+  publish      false
   ownerId      —
   issuer       —
   jwksUri      —
@@ -43,7 +43,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: AKP 1`] = `
   curve        —
   encryption   —
   purpose      —
-  hidden       false
+  publish      false
   ownerId      —
   issuer       —
   jwksUri      —
@@ -62,7 +62,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: EC 1`] = `
   curve        P-256
   encryption   —
   purpose      —
-  hidden       false
+  publish      false
   ownerId      —
   issuer       —
   jwksUri      —
@@ -81,7 +81,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: OKP 1`] = `
   curve        Ed25519
   encryption   —
   purpose      —
-  hidden       false
+  publish      false
   ownerId      —
   issuer       —
   jwksUri      —
@@ -100,7 +100,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: RSA 1`] = `
   curve        —
   encryption   —
   purpose      —
-  hidden       false
+  publish      false
   ownerId      —
   issuer       —
   jwksUri      —
@@ -119,7 +119,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: oct 1`] = `
   curve        —
   encryption   —
   purpose      —
-  hidden       false
+  publish      false
   ownerId      —
   issuer       —
   jwksUri      —

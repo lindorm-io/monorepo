@@ -115,14 +115,14 @@ describe("kryptos generate CLI", () => {
       .mockResolvedValueOnce("") // purpose
       .mockResolvedValueOnce(""); // expiry
     mockConfirm
-      .mockResolvedValueOnce(false) // hidden
+      .mockResolvedValueOnce(true) // publish
       .mockResolvedValueOnce(false); // no certificate
 
     const key = KryptosKit.env.import(await runGenerate());
 
     expect(key.type).toBe("EC");
     expect(key.hasCertificate).toBe(false);
-    expect(key.hidden).toBe(false);
+    expect(key.publish).toBe(true);
   });
 
   test("stamps a root-ca certificate when requested", async () => {
@@ -140,7 +140,7 @@ describe("kryptos generate CLI", () => {
       .mockResolvedValueOnce("") // environment / OU
       .mockResolvedValueOnce("1"); // path length constraint
     mockConfirm
-      .mockResolvedValueOnce(false) // hidden
+      .mockResolvedValueOnce(true) // publish
       .mockResolvedValueOnce(true); // wants a certificate
 
     const key = KryptosKit.env.import(await runGenerate());
@@ -158,14 +158,14 @@ describe("kryptos generate CLI", () => {
     mockInput
       .mockResolvedValueOnce("") // purpose
       .mockResolvedValueOnce(""); // expiry
-    mockConfirm.mockResolvedValueOnce(false); // hidden (oct is never offered a cert)
+    mockConfirm.mockResolvedValueOnce(true); // publish (oct is never offered a cert)
 
     const key = KryptosKit.env.import(await runGenerate());
 
     expect(key.type).toBe("oct");
     expect(key.hasCertificate).toBe(false);
-    // The hidden confirm fires, but a symmetric key is never offered a cert:
-    // exactly one confirm (hidden), no certificate-mode select consumed.
+    // The publish confirm fires, but a symmetric key is never offered a cert:
+    // exactly one confirm (publish), no certificate-mode select consumed.
     expect(mockConfirm).toHaveBeenCalledTimes(1);
   });
 
@@ -284,27 +284,51 @@ describe("kryptos generate CLI", () => {
     ).rejects.toThrow(/Invalid Expiry|not a valid duration/i);
   });
 
-  test("marks the key hidden with --hidden (scripted, round-trips in env)", async () => {
+  // The CLI's default is the OPPOSITE of the library's, deliberately: a key minted
+  // by hand is a ceremony key (root CA, root seed, KEK), so publication is OPT-IN.
+  // The library contract (default `true`) is pinned in Kryptos.publish.test.ts.
+  test("defaults publish:false when --publish is omitted (scripted)", async () => {
+    const key = KryptosKit.env.import(
+      await runGenerate({ type: "EC", use: "sig", algorithm: "ES256" }),
+    );
+
+    expect(key.publish).toBe(false);
+    expect("publish" in key.toJWK("public")).toBe(false);
+    expect(mockConfirm).not.toHaveBeenCalled();
+  });
+
+  test("publishes the key with --publish (scripted, round-trips in env)", async () => {
     const key = KryptosKit.env.import(
       await runGenerate({
         type: "EC",
         use: "sig",
         algorithm: "ES256",
-        hidden: true,
+        publish: true,
       }),
     );
 
-    expect(key.hidden).toBe(true);
-    expect("hidden" in key.toJWK("public")).toBe(false);
+    expect(key.publish).toBe(true);
+    expect("publish" in key.toJWK("public")).toBe(false);
     expect(mockConfirm).not.toHaveBeenCalled();
   });
 
-  test("defaults hidden:false when --hidden is omitted (scripted)", async () => {
+  // The ceremony shape — a root CA minted at the CLI must never be publishable by
+  // accident. This is the whole reason the CLI default is inverted.
+  test("leaves a root-ca ceremony key unpublished when --publish is omitted", async () => {
     const key = KryptosKit.env.import(
-      await runGenerate({ type: "EC", use: "sig", algorithm: "ES256" }),
+      await runGenerate({
+        type: "OKP",
+        use: "sig",
+        algorithm: "EdDSA",
+        curve: "Ed448",
+        certificate: "root-ca",
+        subject: "Lindorm Root CA",
+        organization: "Lindorm",
+      }),
     );
 
-    expect(key.hidden).toBe(false);
+    expect(key.hasCertificate).toBe(true);
+    expect(key.publish).toBe(false);
   });
 
   test("stamps --environment as the certificate subject OU (scripted)", async () => {
@@ -468,22 +492,9 @@ describe("kryptos derive CLI", () => {
     ).rejects.toThrow(/Invalid seed key type/i);
   });
 
-  test("marks a derived key hidden with --hidden (scripted)", async () => {
-    const withHidden = KryptosKit.env.import(
-      await runDerive({
-        type: "oct",
-        use: "enc",
-        algorithm: "A256KW",
-        seed: seedEnv(),
-        path: "urn:lindorm:tyr:kek:v1",
-        hidden: true,
-      }),
-    );
-
-    expect(withHidden.hidden).toBe(true);
-    expect("hidden" in withHidden.toJWK("public")).toBe(false);
-
-    const withoutHidden = KryptosKit.env.import(
+  // A derived key is a KEK far more often than a JWKS resident — opt-in here too.
+  test("leaves a derived key unpublished unless --publish is passed (scripted)", async () => {
+    const unpublished = KryptosKit.env.import(
       await runDerive({
         type: "oct",
         use: "enc",
@@ -493,7 +504,21 @@ describe("kryptos derive CLI", () => {
       }),
     );
 
-    expect(withoutHidden.hidden).toBe(false);
+    expect(unpublished.publish).toBe(false);
+    expect("publish" in unpublished.toJWK("public")).toBe(false);
+
+    const published = KryptosKit.env.import(
+      await runDerive({
+        type: "oct",
+        use: "enc",
+        algorithm: "A256KW",
+        seed: seedEnv(),
+        path: "urn:lindorm:tyr:kek:v1",
+        publish: true,
+      }),
+    );
+
+    expect(published.publish).toBe(true);
   });
 });
 

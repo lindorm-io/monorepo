@@ -22,14 +22,16 @@ export type JwkMetadata = {
 export type LindormJwkMetadata = {
   enc?: KryptosEncryption;
   exp?: number;
-  // Operational flag, emitted only in private JWKs (never in the published,
-  // public JWKS). Round-trips through env strings so a hidden key stays hidden.
-  hidden?: boolean;
   iat: number;
   iss?: string;
   jku?: string;
   nbf: number;
   owner_id?: string;
+  // Operational flag, emitted only in private JWKs (never in the published,
+  // public JWKS — a published key is publishable by definition). It round-trips
+  // with the key material, so an internal key stays internal. Absent on import
+  // ⇒ `true` (see `parseJwkOptions`).
+  publish?: boolean;
   purpose?: string;
 };
 

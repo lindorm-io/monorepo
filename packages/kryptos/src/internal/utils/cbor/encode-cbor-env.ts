@@ -1,4 +1,5 @@
 import { B64 } from "@lindorm/b64";
+import { isBoolean } from "@lindorm/is";
 import { encode } from "cbor2";
 import type { LindormJwk } from "../../../types/index.js";
 import {
@@ -53,7 +54,7 @@ export const encodeCborEnv = (jwk: LindormJwk): Uint8Array => {
   setText(map, CBOR_LABEL.purpose, jwk.purpose);
   setText(map, CBOR_LABEL.owner_id, jwk.owner_id);
 
-  if (typeof jwk.hidden === "boolean") map.set(CBOR_LABEL.hidden, jwk.hidden);
+  if (isBoolean(jwk.publish)) map.set(CBOR_LABEL.publish, jwk.publish);
 
   if (jwk.x5c && jwk.x5c.length > 0) {
     map.set(

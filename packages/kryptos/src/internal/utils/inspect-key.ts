@@ -56,7 +56,7 @@ export const inspectSummary = (key: IKryptos): string => {
     row("curve", key.curve),
     row("encryption", key.encryption),
     row("purpose", key.purpose),
-    row("hidden", key.hidden),
+    row("publish", key.publish),
     row("ownerId", key.ownerId),
     row("issuer", key.issuer),
     row("jwksUri", key.jwksUri),

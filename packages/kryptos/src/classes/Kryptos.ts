@@ -63,11 +63,11 @@ export class Kryptos implements IKryptos {
   private readonly _certificateChain: ReadonlyArray<Buffer> | undefined;
   private readonly _encryption: KryptosEncryption | null;
   private readonly _expiresAt: Date;
-  private readonly _hidden: boolean;
   private readonly _issuer: string | null;
   private readonly _jwksUri: string | null;
   private readonly _notBefore: Date;
   private readonly _ownerId: string | null;
+  private readonly _publish: boolean;
   private readonly _purpose: string | null;
 
   private _cache: ExportCache = {};
@@ -80,11 +80,23 @@ export class Kryptos implements IKryptos {
     this._encryption = options.encryption || null;
     this._notBefore = options.notBefore ?? new Date();
     this._expiresAt = options.expiresAt ?? expiresAt("25 years", this._notBefore);
-    this._hidden = options.hidden ?? false;
     this._isExternal = options.isExternal ?? false;
     this._issuer = options.issuer || null;
     this._jwksUri = options.jwksUri || null;
     this._ownerId = options.ownerId || null;
+    // Defaults to FALSE: a key we MINT is unpublished until we say otherwise.
+    // The harms are asymmetric — accidentally publishing a key that should have
+    // stayed internal (a KEK, a root CA, a cookie key) is a SILENT exposure, while
+    // accidentally withholding a key that should be public fails LOUDLY and at
+    // once (RPs cannot verify, and you know within seconds). So publication is an
+    // outward-facing act you opt INTO. The flag is never inferred either —
+    // `purpose` is a free-form string owned by the consumer, so kryptos does not
+    // guess publication policy from it.
+    //
+    // ⚠ The ONE exception is the JWK import path: `parseJwkOptions` defaults it to
+    // TRUE, because a JWK is the interchange format of a PUBLISHED key and carries
+    // no `publish` member. Do not "harmonise" the two — see that file.
+    this._publish = options.publish ?? false;
     this._purpose = options.purpose || null;
     this._type = options.type;
     this._use = options.use;
@@ -184,10 +196,6 @@ export class Kryptos implements IKryptos {
     return this._expiresAt;
   }
 
-  get hidden(): boolean {
-    return this._hidden;
-  }
-
   get isExternal(): boolean {
     return this._isExternal;
   }
@@ -206,6 +214,16 @@ export class Kryptos implements IKryptos {
 
   get ownerId(): string | null {
     return this._ownerId;
+  }
+
+  /**
+   * Does this key belong in the published JWKS? Consumers (amphora) filter on it
+   * for BOTH publication and selection, so it means what it says — unlike the
+   * `hidden` flag it replaces, which was only ever consulted when building the
+   * JWKS while the key stayed selectable for any operation.
+   */
+  get publish(): boolean {
+    return this._publish;
   }
 
   get purpose(): string | null {
@@ -444,12 +462,12 @@ export class Kryptos implements IKryptos {
       curve: this.curve,
       encryption: this.encryption,
       expiresAt: this.expiresAt,
-      hidden: this.hidden,
       isExternal: this.isExternal,
       issuer: this.issuer,
       jwksUri: this.jwksUri,
       notBefore: this.notBefore,
       ownerId: this.ownerId,
+      publish: this.publish,
       purpose: this.purpose,
       type: this.type,
       use: this.use,
@@ -494,7 +512,6 @@ export class Kryptos implements IKryptos {
       hasCertificate: this.hasCertificate,
       hasPrivateKey: this.hasPrivateKey,
       hasPublicKey: this.hasPublicKey,
-      hidden: this.hidden,
       isActive: this.isActive,
       isExpired: this.isExpired,
       isExternal: this.isExternal,
@@ -504,6 +521,7 @@ export class Kryptos implements IKryptos {
       notBefore: this.notBefore,
       operations: this.operations,
       ownerId: this.ownerId,
+      publish: this.publish,
       purpose: this.purpose,
       thumbprint: this.thumbprint,
       type: this.type,
@@ -537,10 +555,6 @@ export class Kryptos implements IKryptos {
       kty: this.type,
       enc: this.encryption ?? undefined,
       exp: getUnixTime(this.expiresAt),
-      // Emitted only in private JWKs (env strings), always as an explicit
-      // boolean; public JWKs feed the published JWKS and must omit it. An
-      // explicit `false` survives removeEmpty; `undefined` is stripped.
-      hidden: mode === "private" ? this.hidden : undefined,
       iat: getUnixTime(this.createdAt),
       iss: this.issuer ?? undefined,
       jku: this.jwksUri ?? undefined,
@@ -550,6 +564,13 @@ export class Kryptos implements IKryptos {
       // capability of the key material, re-derived on import.
       nbf: getUnixTime(this.notBefore),
       owner_id: this.ownerId ?? undefined,
+      // Emitted only in private JWKs (env strings, DB round-trips); a public JWK
+      // feeds the published JWKS, where the flag is a tautology. Always an
+      // explicit boolean — `false` survives removeEmpty, `undefined` is stripped
+      // — including when `true`: the import default (`publish ?? true`) is the
+      // safety net for a foreign JWK, not the encoding of our own key. Two bytes
+      // of CBOR buys an env string that states its own policy.
+      publish: mode === "private" ? this.publish : undefined,
       purpose: this.purpose ?? undefined,
       x5c: this.certificateChain.length > 0 ? this.certificateChain : undefined,
       "x5t#S256": this.certificateThumbprint ?? undefined,

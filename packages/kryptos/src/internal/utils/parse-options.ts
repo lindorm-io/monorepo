@@ -33,8 +33,21 @@ export const parseJwkOptions = (
     createdAt: jwk.iat ? new Date(jwk.iat * 1000) : undefined,
     encryption: jwk.enc,
     expiresAt: jwk.exp ? new Date(jwk.exp * 1000) : undefined,
-    // Present only in private JWKs; legacy/public JWKs default to not-hidden.
-    hidden: jwk.hidden ?? false,
+    // ⚠ TRUE here, deliberately — and it is the INVERSE of the Kryptos constructor
+    // default (`false`, because a key we mint is unpublished until we say so). Do
+    // NOT harmonise the two.
+    //
+    // We emit `publish` only in PRIVATE JWKs, so a key imported from a remote JWKS
+    // arrives with the member absent. Amphora filters `publish: true` by default,
+    // so defaulting an imported key to `false` would make every EXTERNAL
+    // verification key invisible to `find()` — foreign-issuer verification would
+    // silently break. And it is semantically right: a JWK is the interchange format
+    // of a PUBLISHED key. That is what the format is for.
+    //
+    // Same seam as `isExternal` below (default here, overridden by the import path
+    // in KryptosKit.fromJwk); our own env strings always carry the member
+    // explicitly, so this default never applies to them.
+    publish: jwk.publish ?? true,
     // Deliberately NOT read from the payload (a remote JWKS could plant
     // `isExternal: false`). Ownership is decided by the import path — see
     // KryptosKit.fromJwk, which overrides this default for own-key paths.
@@ -62,11 +75,11 @@ export const parseStdOptions = (options: Options): KryptosOptions => ({
   createdAt: options.createdAt,
   encryption: options.encryption,
   expiresAt: options.expiresAt,
-  hidden: options.hidden,
   issuer: options.issuer,
   jwksUri: options.jwksUri,
   notBefore: options.notBefore,
   ownerId: options.ownerId,
+  publish: options.publish,
   purpose: options.purpose,
   type: options.type,
   use: options.use,

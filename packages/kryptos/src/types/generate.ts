@@ -28,12 +28,12 @@ type StdBase = Optional<
   | "id"
   | "createdAt"
   | "expiresAt"
-  | "hidden"
   | "isExternal"
   | "issuer"
   | "jwksUri"
   | "notBefore"
   | "ownerId"
+  | "publish"
   | "purpose"
 >;
 

@@ -19,7 +19,7 @@ const EC_JWK = {
   exp: 2493100800,
   iat: 1704096000,
   nbf: 1704096000,
-  hidden: false,
+  publish: false,
 } as unknown as LindormJwk;
 
 const asMap = (bytes: Uint8Array): Map<number, unknown> =>
@@ -91,11 +91,20 @@ describe("encodeCborEnv", () => {
     expect(KryptosKit.from.jwk(jwk).operations).toEqual(["sign", "verify"]);
   });
 
-  test("emits hidden as a boolean and omits absent optional text", () => {
+  // An explicit `false` must survive: it is what keeps an internal key (KEK, CA,
+  // cookie) out of the JWKS, and it is the one value a "strip the empties" pass
+  // is most likely to drop.
+  test("emits publish as a boolean and omits absent optional text", () => {
     const map = asMap(encodeCborEnv(EC_JWK));
 
-    expect(map.get(CBOR_LABEL.hidden)).toBe(false);
+    expect(map.get(CBOR_LABEL.publish)).toBe(false);
     expect(map.has(CBOR_LABEL.iss)).toBe(false);
     expect(map.has(CBOR_LABEL.purpose)).toBe(false);
+  });
+
+  test("emits publish:true explicitly rather than relying on the import default", () => {
+    const map = asMap(encodeCborEnv({ ...EC_JWK, publish: true }));
+
+    expect(map.get(CBOR_LABEL.publish)).toBe(true);
   });
 });

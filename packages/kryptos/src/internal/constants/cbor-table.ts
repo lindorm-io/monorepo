@@ -16,7 +16,7 @@ import type {
 // Conventions:
 // - Map keys are ALWAYS unsigned integers (the labels below).
 // - Values are integers wherever the domain is enumerable (kty, use, crv, alg,
-//   enc), CBOR-native scalars where possible (hidden: bool; exp/iat/nbf:
+//   enc), CBOR-native scalars where possible (publish: bool; exp/iat/nbf:
 //   unix-seconds ints), byte strings for all key material and DER certs
 //   (raw bytes — never base64 text), and text strings ONLY for free-form
 //   fields (kid, iss, jku, purpose, owner_id).
@@ -65,7 +65,9 @@ export const CBOR_LABEL = {
   iss: 13,
   jku: 14,
   purpose: 15,
-  hidden: 16,
+  // Label 16 was `hidden` (inverted polarity) in the pre-release vocabulary; the
+  // env format ships unreleased, so the label is REUSED rather than retired.
+  publish: 16,
   owner_id: 17,
   x5c: 20, // array of bstr (raw DER, leaf first)
   // key material (bstr, raw bytes)

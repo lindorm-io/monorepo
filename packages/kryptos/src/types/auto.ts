@@ -14,12 +14,12 @@ export type KryptosAuto = Optional<
   | "curve"
   | "encryption"
   | "expiresAt"
-  | "hidden"
   | "isExternal"
   | "issuer"
   | "jwksUri"
   | "notBefore"
   | "ownerId"
+  | "publish"
   | "purpose"
   | "type"
 > & {

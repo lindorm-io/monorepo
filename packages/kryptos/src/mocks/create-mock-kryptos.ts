@@ -18,12 +18,16 @@ export const _createMockKryptos = (
     curve: "P-521",
     encryption: "A256GCM",
     expiresAt: new Date("2099-01-01T00:00:00.000Z"),
-    hidden: false,
     isExternal: false,
     issuer: null,
     jwksUri: null,
     notBefore: new Date("2000-01-01T00:00:00.000Z"),
     ownerId: null,
+    // `true`, unlike the constructor default: the mock stands in for an ordinary
+    // vault resident, and amphora filters `publish: true` by default — a mock that
+    // defaulted to `false` would be invisible to `find()` in every consumer's
+    // tests. Override it to model an internal key.
+    publish: true,
     purpose: null,
     type: "EC",
     use: "enc",

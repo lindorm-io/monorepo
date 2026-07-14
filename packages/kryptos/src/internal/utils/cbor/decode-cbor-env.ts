@@ -141,8 +141,8 @@ export const decodeCborEnv = (bytes: Uint8Array): LindormJwk => {
         jwk.nbf = asInt(value, "nbf");
         break;
 
-      case CBOR_LABEL.hidden:
-        jwk.hidden = asBool(value, "hidden");
+      case CBOR_LABEL.publish:
+        jwk.publish = asBool(value, "publish");
         break;
 
       case CBOR_LABEL.x5c:

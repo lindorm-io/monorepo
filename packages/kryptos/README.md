@@ -78,12 +78,12 @@ KryptosKit.generate.auto({
   ownerId: "tenant-42",
   purpose: "token",
   encryption: "A256GCM",
-  hidden: false,
+  publish: true, // opt in — a generated key is NOT published by default
   isExternal: false,
 });
 ```
 
-When `expiresAt` is omitted it defaults to `notBefore` plus 25 years. When `use` is `"enc"` and `encryption` is omitted it defaults to `"A256GCM"`.
+When `expiresAt` is omitted it defaults to `notBefore` plus 25 years. When `use` is `"enc"` and `encryption` is omitted it defaults to `"A256GCM"`. **`publish` defaults to `false`** — see [Publication](#publication): a key you mint is internal until you say otherwise, so a key that belongs in the JWKS must ask for it.
 
 ### Import a key
 
@@ -122,7 +122,7 @@ const json = KryptosKit.env.export(key, "json"); // opt-in
 const restored = KryptosKit.env.import(process.env.EC_KEY!); // either form
 ```
 
-Both forms carry the full private surface (including `hidden`) and round-trip to an identical key — same thumbprint-derived `kid`. The CBOR format is **versioned**: a string from a newer kryptos than yours fails with a clear error rather than mis-parsing.
+Both forms carry the full private surface (including `publish`) and round-trip to an identical key — same thumbprint-derived `kid`. The CBOR format is **versioned**: a string from a newer kryptos than yours fails with a clear error rather than mis-parsing.
 
 ### Key ids
 
@@ -191,19 +191,27 @@ kryptos generate --type EC --use sig --algorithm ES256 \
   --certificate ca-signed --ca "$LINDORM_ROOT_CA" --subject tyr.lindorm.io
 ```
 
-`--curve` picks the curve when the algorithm supports more than one (`EdDSA` → `Ed25519`/`Ed448`, the `ECDH-ES` family → `X25519`/`X448`); interactively you are prompted only in that case. `--expiry` sets the validity window as a `@lindorm/date` duration (`20y`, `6mo`, `90d`); omit it for the 25-year default. `--hidden` marks the key hidden (see below).
+`--curve` picks the curve when the algorithm supports more than one (`EdDSA` → `Ed25519`/`Ed448`, the `ECDH-ES` family → `X25519`/`X448`); interactively you are prompted only in that case. `--expiry` sets the validity window as a `@lindorm/date` duration (`20y`, `6mo`, `90d`); omit it for the 25-year default. `--publish` puts the key in the JWKS (see below).
 
 ```bash
-kryptos generate --type OKP --use sig --algorithm EdDSA --curve Ed448 --expiry 20y --hidden
+kryptos generate --type OKP --use sig --algorithm EdDSA --curve Ed448 --expiry 20y --publish
 ```
 
-`hidden` keeps a key **out of the published JWKS** (e.g. a CA whose public half must never be advertised). It is an operational flag, not part of the JOSE standard: it round-trips through env strings and private JWKs, but is **never** emitted in a public JWK. Both `generate` and `derive` take `--hidden` (scripted) or prompt for it (interactive).
+### Publication
+
+`publish` says whether a key belongs in the **published JWKS**. It is an operational flag, not part of the JOSE standard: it round-trips through env strings and private JWKs, but is **never** emitted in a public JWK. It is never inferred either — `purpose` is free-form and carries no publication policy.
+
+**A key you MINT is unpublished until you say otherwise — `publish` defaults to `false`**, in the library and at the CLI alike. Publication is an outward-facing act you opt into. The harms are asymmetric: accidentally publishing a key that should have stayed internal (a KEK, a root CA, a cookie key) is a _silent_ exposure, while accidentally withholding a key that should be public fails _loudly_ and at once — relying parties cannot verify, and you know within seconds. So kryptos fails closed on the dangerous side.
+
+Both `generate` and `derive` take `--publish` (scripted) or prompt for it (interactive, pre-answered _no_).
+
+**The one exception is JWK import.** `KryptosKit.from.jwk(...)` defaults `publish` to **`true`** when the payload carries no member — because a JWK is the interchange format of a _published_ key, and a key fetched from a remote JWKS never carries the flag. Without this, external verification keys would vanish from a vault that filters on `publish`. Our own env strings always carry the member explicitly, so the default never applies to them.
 
 Power-user flags (scripted only, no prompts) cover every attribute the library accepts: `--id`, `--issuer`, `--jwks-uri`, `--owner-id`, `--not-before` (ISO date), `--modulus` (RSA `2048`/`3072`/`4096`), and `--format` (`cbor` default, or `json`). `derive` additionally takes `--id`, `--expiry`, `--issuer`, `--jwks-uri`, `--owner-id`, `--format`. Every flag is validated with a clear error.
 
 ### Inspect an env string
 
-`kryptos inspect <kryptos:…>` prints a readable, **secret-free** summary of a key — kid, type/alg/use/curve/enc, purpose, hidden, timestamps, operations, which key halves are present, thumbprint, and (when present) every certificate in the chain (subject, issuer, serial, validity, basic constraints, key usage, SANs). It accepts both CBOR and JSON strings.
+`kryptos inspect <kryptos:…>` prints a readable, **secret-free** summary of a key — kid, type/alg/use/curve/enc, purpose, publish, timestamps, operations, which key halves are present, thumbprint, and (when present) every certificate in the chain (subject, issuer, serial, validity, basic constraints, key usage, SANs). It accepts both CBOR and JSON strings.
 
 ```bash
 kryptos inspect "$LINDORM_ROOT_CA"
@@ -420,35 +428,36 @@ AKP is signature-only — there is no `KryptosKit.generate.enc.akp`.
 
 The model class. Construct directly only if you already have raw key material — most callers go through `KryptosKit`. Implements `IKryptos`, `Disposable`.
 
-| Member                                       | Description                                                                                                                                                                                           |
-| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `id`                                         | UUID (or whatever string was passed in `options.id`).                                                                                                                                                 |
-| `algorithm`                                  | JOSE algorithm name.                                                                                                                                                                                  |
-| `type`                                       | `"EC" \| "OKP" \| "RSA" \| "oct" \| "AKP"`.                                                                                                                                                           |
-| `use`                                        | `"sig" \| "enc"`.                                                                                                                                                                                     |
-| `curve`                                      | EC / OKP curve, otherwise `null`.                                                                                                                                                                     |
-| `modulus`                                    | RSA modulus size in bits, otherwise `null`.                                                                                                                                                           |
-| `encryption`                                 | AES content encryption (`enc` keys), otherwise `null`.                                                                                                                                                |
-| `operations`                                 | What the key MATERIAL can do — derived from `algorithm` + `use` + which halves are present. Not JOSE `key_ops` (never emitted) and not WebCrypto usages: a full keypair reports `["sign", "verify"]`. |
-| `createdAt` / `notBefore` / `expiresAt`      | Lifetime dates. `expiresAt` defaults to `notBefore + 25y`.                                                                                                                                            |
-| `expiresIn`                                  | Seconds until expiry, `0` once expired.                                                                                                                                                               |
-| `isActive` / `isExpired`                     | Computed from `notBefore` / `expiresAt` against the current time.                                                                                                                                     |
-| `issuer` / `jwksUri` / `ownerId` / `purpose` | Optional metadata, default `null`.                                                                                                                                                                    |
-| `hidden` / `isExternal`                      | Boolean flags, default `false`. Ownership is decided by the import path — `env.import` ⇒ own, `from.jwk` ⇒ external unless the explicit flag says otherwise; a payload-borne `isExternal` is ignored. |
-| `hasPrivateKey` / `hasPublicKey`             | Whether the underlying buffers are present and non-empty.                                                                                                                                             |
-| `thumbprint`                                 | RFC 7638 JWK thumbprint computed lazily.                                                                                                                                                              |
-| `hasCertificate`                             | Whether an X.509 chain was attached.                                                                                                                                                                  |
-| `certificate`                                | `ParsedX509Certificate` for the leaf (lazy, cached), or `null`.                                                                                                                                       |
-| `certificateChain`                           | `Array<string>` of base64-DER certs in leaf-to-root order.                                                                                                                                            |
-| `certificateThumbprint`                      | x5t#S256 of the leaf, or `null`.                                                                                                                                                                      |
-| `verifyCertificate({ trustAnchors })`        | Walks the chain, verifies signatures and validity windows; throws on failure.                                                                                                                         |
-| `export("b64" \| "der" \| "jwk" \| "pem")`   | Returns key material in the requested format.                                                                                                                                                         |
-| `toDB()`                                     | Database row — attributes plus base64 `privateKey` / `publicKey`.                                                                                                                                     |
-| `toEnvString(format?)`                       | `kryptos:` blob; `format` is `"cbor"` (default) or `"json"`.                                                                                                                                          |
-| `toJSON()`                                   | Attributes plus computed flags, no key material.                                                                                                                                                      |
-| `toJWK(mode?)`                               | Lindorm-extended JWK; `mode` defaults to `"public"`, pass `"private"` to include `d`.                                                                                                                 |
-| `toString()`                                 | `Kryptos<{type}:{algorithm}:{id}>`.                                                                                                                                                                   |
-| `dispose()` / `[Symbol.dispose]()`           | Zero-fills key buffers; further key access throws `KryptosError`.                                                                                                                                     |
+| Member                                       | Description                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                                         | UUID (or whatever string was passed in `options.id`).                                                                                                                                                                                                                                                        |
+| `algorithm`                                  | JOSE algorithm name.                                                                                                                                                                                                                                                                                         |
+| `type`                                       | `"EC" \| "OKP" \| "RSA" \| "oct" \| "AKP"`.                                                                                                                                                                                                                                                                  |
+| `use`                                        | `"sig" \| "enc"`.                                                                                                                                                                                                                                                                                            |
+| `curve`                                      | EC / OKP curve, otherwise `null`.                                                                                                                                                                                                                                                                            |
+| `modulus`                                    | RSA modulus size in bits, otherwise `null`.                                                                                                                                                                                                                                                                  |
+| `encryption`                                 | AES content encryption (`enc` keys), otherwise `null`.                                                                                                                                                                                                                                                       |
+| `operations`                                 | What the key MATERIAL can do — derived from `algorithm` + `use` + which halves are present. Not JOSE `key_ops` (never emitted) and not WebCrypto usages: a full keypair reports `["sign", "verify"]`.                                                                                                        |
+| `createdAt` / `notBefore` / `expiresAt`      | Lifetime dates. `expiresAt` defaults to `notBefore + 25y`.                                                                                                                                                                                                                                                   |
+| `expiresIn`                                  | Seconds until expiry, `0` once expired.                                                                                                                                                                                                                                                                      |
+| `isActive` / `isExpired`                     | Computed from `notBefore` / `expiresAt` against the current time.                                                                                                                                                                                                                                            |
+| `issuer` / `jwksUri` / `ownerId` / `purpose` | Optional metadata, default `null`.                                                                                                                                                                                                                                                                           |
+| `publish`                                    | Does this key belong in the published JWKS? Defaults to **`false`** — a minted key is unpublished until you say otherwise — and is never inferred from `purpose`. The one exception: `from.jwk` defaults it to `true` (a JWK is the interchange format of a published key). See [Publication](#publication). |
+| `isExternal`                                 | Boolean flag, default `false`. Ownership is decided by the import path — `env.import` ⇒ own, `from.jwk` ⇒ external unless the explicit flag says otherwise; a payload-borne `isExternal` is ignored.                                                                                                         |
+| `hasPrivateKey` / `hasPublicKey`             | Whether the underlying buffers are present and non-empty.                                                                                                                                                                                                                                                    |
+| `thumbprint`                                 | RFC 7638 JWK thumbprint computed lazily.                                                                                                                                                                                                                                                                     |
+| `hasCertificate`                             | Whether an X.509 chain was attached.                                                                                                                                                                                                                                                                         |
+| `certificate`                                | `ParsedX509Certificate` for the leaf (lazy, cached), or `null`.                                                                                                                                                                                                                                              |
+| `certificateChain`                           | `Array<string>` of base64-DER certs in leaf-to-root order.                                                                                                                                                                                                                                                   |
+| `certificateThumbprint`                      | x5t#S256 of the leaf, or `null`.                                                                                                                                                                                                                                                                             |
+| `verifyCertificate({ trustAnchors })`        | Walks the chain, verifies signatures and validity windows; throws on failure.                                                                                                                                                                                                                                |
+| `export("b64" \| "der" \| "jwk" \| "pem")`   | Returns key material in the requested format.                                                                                                                                                                                                                                                                |
+| `toDB()`                                     | Database row — attributes plus base64 `privateKey` / `publicKey`.                                                                                                                                                                                                                                            |
+| `toEnvString(format?)`                       | `kryptos:` blob; `format` is `"cbor"` (default) or `"json"`.                                                                                                                                                                                                                                                 |
+| `toJSON()`                                   | Attributes plus computed flags, no key material.                                                                                                                                                                                                                                                             |
+| `toJWK(mode?)`                               | Lindorm-extended JWK; `mode` defaults to `"public"`, pass `"private"` to include `d`.                                                                                                                                                                                                                        |
+| `toString()`                                 | `Kryptos<{type}:{algorithm}:{id}>`.                                                                                                                                                                                                                                                                          |
+| `dispose()` / `[Symbol.dispose]()`           | Zero-fills key buffers; further key access throws `KryptosError`.                                                                                                                                                                                                                                            |
 
 `Kryptos` instances are immutable — to change metadata, clone via `KryptosKit.clone(...)`.
 

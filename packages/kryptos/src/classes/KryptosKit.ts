@@ -365,13 +365,10 @@ export class KryptosKit {
   }
 
   private static generateAuto(options: KryptosAuto): IKryptos {
-    const config = autoGenerateConfig(options.algorithm);
-
-    if (config.purpose && ["cookie", "session"].includes(config.purpose)) {
-      config.hidden = config.hidden ?? true;
-    }
-
-    const generate: KryptosGenerate = { ...config, ...options };
+    const generate: KryptosGenerate = {
+      ...autoGenerateConfig(options.algorithm),
+      ...options,
+    };
 
     return KryptosKit.finalizeGenerate(generate, generateKey(generate));
   }
@@ -565,13 +562,10 @@ export class KryptosKit {
   }
 
   private static async generateAutoAsync(options: KryptosAuto): Promise<IKryptos> {
-    const config = autoGenerateConfig(options.algorithm);
-
-    if (config.purpose && ["cookie", "session"].includes(config.purpose)) {
-      config.hidden = config.hidden ?? true;
-    }
-
-    const generate: KryptosGenerate = { ...config, ...options };
+    const generate: KryptosGenerate = {
+      ...autoGenerateConfig(options.algorithm),
+      ...options,
+    };
 
     return KryptosKit.finalizeGenerate(generate, await generateKeyAsync(generate));
   }

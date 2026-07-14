@@ -20,7 +20,7 @@ const EC_JWK = {
   exp: 2493100800,
   iat: 1704096000,
   nbf: 1704096000,
-  hidden: false,
+  publish: false,
 } as unknown as LindormJwk;
 
 // Re-decode our own output into a raw map so tests can tamper with it.
@@ -36,7 +36,7 @@ describe("decodeCborEnv", () => {
     expect(decoded.crv).toBe("P-256");
     expect(decoded.x).toBe(EC_JWK.x);
     expect(decoded.kid).toBe(EC_JWK.kid);
-    expect(decoded.hidden).toBe(false);
+    expect(decoded.publish).toBe(false);
   });
 
   test("rejects an unknown label", () => {

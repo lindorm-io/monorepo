@@ -5,6 +5,7 @@ import { join } from "path";
 import { pathToFileURL } from "url";
 import { confirm, input, select } from "@inquirer/prompts";
 import { expiresAt, isReadableTime } from "@lindorm/date";
+import { isBoolean } from "@lindorm/is";
 import { AES_ENCRYPTION_ALGORITHMS, type Environment } from "@lindorm/types";
 import { program } from "commander";
 import { KryptosKit } from "./classes/index.js";
@@ -285,11 +286,20 @@ const resolveExpiry = (value: string | undefined): Date | undefined => {
   return expiresAt(value);
 };
 
-const confirmHidden = async (): Promise<boolean> =>
-  await confirm({
-    message: "Hidden — exclude from JWKS publication?",
+// The CLI always states `publish` OUTRIGHT — there is no unset case. It matches
+// the library default (`false`): publication is opted into, never assumed.
+const resolvePublish = async (
+  flag: boolean | undefined,
+  scripted: boolean,
+): Promise<boolean> => {
+  if (isBoolean(flag)) return flag;
+  if (scripted) return false;
+
+  return await confirm({
+    message: "Publish — include in the published JWKS?",
     default: false,
   });
+};
 
 const inputPurpose = async (): Promise<string | null> => {
   const value = await input({
@@ -322,7 +332,7 @@ export type GenerateOptions = {
   curve?: string;
   encryption?: string;
   expiry?: string;
-  hidden?: boolean;
+  publish?: boolean;
   purpose?: string;
   id?: string;
   issuer?: string;
@@ -568,7 +578,7 @@ export const generate = async (options: GenerateOptions = {}): Promise<void> => 
         : await inputOptional("Expiry duration (e.g. 20y, 6mo — empty for default)")),
   );
 
-  const hidden = options.hidden ?? (scripted ? false : await confirmHidden());
+  const publish = await resolvePublish(options.publish, scripted);
 
   // Power-user metadata: scripted flags only, no interactive prompts.
   const notBefore = resolveNotBefore(options.notBefore);
@@ -589,7 +599,7 @@ export const generate = async (options: GenerateOptions = {}): Promise<void> => 
     ...(keyExpiresAt ? { expiresAt: keyExpiresAt } : {}),
     ...(notBefore ? { notBefore } : {}),
     ...(modulus ? { modulus } : {}),
-    ...(hidden ? { hidden: true } : {}),
+    publish,
   });
 
   const result = KryptosKit.env.export(kryptos, resolveFormat(options.format));
@@ -607,7 +617,7 @@ export type DeriveOptions = {
   use?: string;
   algorithm?: string;
   encryption?: string;
-  hidden?: boolean;
+  publish?: boolean;
   purpose?: string;
   id?: string;
   expiry?: string;
@@ -685,7 +695,7 @@ export const derive = async (options: DeriveOptions = {}): Promise<void> => {
 
   const purpose = scripted ? (options.purpose ?? null) : await inputPurpose();
 
-  const hidden = options.hidden ?? (scripted ? false : await confirmHidden());
+  const publish = await resolvePublish(options.publish, scripted);
 
   const deriveExpiresAt = resolveExpiry(options.expiry);
 
@@ -702,7 +712,7 @@ export const derive = async (options: DeriveOptions = {}): Promise<void> => {
     ...(options.ownerId ? { ownerId: options.ownerId } : {}),
     ...(deriveExpiresAt ? { expiresAt: deriveExpiresAt } : {}),
     ...(encryption ? { encryption } : {}),
-    ...(hidden ? { hidden: true } : {}),
+    publish,
   });
 
   const result = KryptosKit.env.export(kryptos, resolveFormat(options.format));
@@ -792,7 +802,10 @@ program
   .option("-e, --encryption <encryption>", "AES encryption for enc keys, e.g. A256GCM")
   .option("--expiry <duration>", "validity duration, e.g. 20y, 6mo (default 25y)")
   .option("--not-before <iso>", "validity start as an ISO date")
-  .option("--hidden", "mark hidden — exclude from JWKS publication")
+  // Publication is opt-in, exactly as in the library: a minted key is unpublished
+  // until you say otherwise (accidentally publishing a root CA / KEK is a silent
+  // exposure; failing to publish a token key fails loudly and at once).
+  .option("--publish", "include the key in the published JWKS (default: not published)")
   .option("-p, --purpose <purpose>", "key purpose")
   .option("--id <id>", "explicit key id (else a thumbprint/random id is derived)")
   .option("--issuer <issuer>", "issuer (iss)")
@@ -839,7 +852,9 @@ program
     "-e, --encryption <encryption>",
     "AES encryption for 'dir' enc keys, e.g. A256GCM",
   )
-  .option("--hidden", "mark hidden — exclude from JWKS publication")
+  // Opt-in publication, as in `generate` — a derived key is a KEK far more often
+  // than a JWKS resident.
+  .option("--publish", "include the key in the published JWKS (default: not published)")
   .option("-p, --purpose <purpose>", "key purpose")
   .option("--id <id>", "explicit key id (else derived from seed + path)")
   .option("--expiry <duration>", "validity duration, e.g. 20y, 6mo (default 25y)")
