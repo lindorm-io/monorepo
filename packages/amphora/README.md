@@ -83,7 +83,7 @@ When `domain` is set, Amphora auto-assigns `issuer` and `jwksUri` to added keys 
 
 ### From environment-encoded strings
 
-`Amphora.env()` accepts compact `kryptos:`-prefixed strings (the format produced by `KryptosKit.env.import` / `export`) and adds them to the vault. Env-provided keys are the service's **own** keys (`isExternal: false`) — they are served in the JWKS when public and not `hidden`, so operational keys like a KEK must be generated with `hidden: true`. A key whose `issuer` differs from the Amphora domain logs a warning (it would never be served).
+`Amphora.env()` accepts compact `kryptos:`-prefixed strings (the format produced by `KryptosKit.env.import` / `export`) and adds them to the vault. Env-provided keys are the service's **own** keys (`isExternal: false`) — they are served in the JWKS when public and `publish: true` (the kryptos default), so operational keys like a KEK must be generated with `publish: false`. A key whose `issuer` differs from the Amphora domain logs a warning (it would never be served).
 
 ```typescript
 amphora.env(process.env.SIGNING_KEY!);
@@ -143,6 +143,22 @@ await amphora.filter({ algorithm: { $in: ["ES256", "ES384", "ES512"] } });
 await amphora.filter({ use: "enc", hasPrivateKey: true });
 ```
 
+### Internal keys are excluded by default
+
+Every query — `find`, `findSync`, `filter`, `filterSync`, and the [capability checks](#capability-checks) — defaults to `{ publish: true }`. A key generated with `publish: false` (a KEK, a CA, a cookie or session key) is hidden from **selection**, not merely from publication: it is never handed to a caller who did not ask for one, so a service cannot accidentally sign a token with a key that is absent from its JWKS and therefore unverifiable.
+
+The caller's key wins, so an internal key is an explicit opt-in:
+
+```typescript
+await amphora.filter({ use: "sig" }); // published keys only — the default
+await amphora.filter({ use: "sig", publish: false }); // internal keys only
+await amphora.filter({ use: "sig", publish: { $exists: true } }); // both
+```
+
+`findById()` / `findByIdSync()` are **not** filtered: an explicit id is explicit intent, and a token signed by an internal (or since-expired) key must still be verifiable.
+
+> ⚠ **`find({ id })` is NOT `findById(id)`.** They read as interchangeable and are not. `find()` goes through the filter, so `find({ id })` will **not** return an internal (`publish: false`) or inactive key — you get a not-found error for a key that is plainly sitting in the vault. `findById()` bypasses the filter entirely. **Resolving a key from a `kid` you read off a token? Use `findById()`.**
+
 Available query fields (from `AmphoraQuery`):
 
 | Field                   | Type                              | Description                                                                                                                                                                    |
@@ -158,15 +174,16 @@ Available query fields (from `AmphoraQuery`):
 | `issuer`                | `string`                          | Issuing authority URL.                                                                                                                                                         |
 | `operations`            | `Array<KeyOperation>`             | Derived capability of the key material (`sign`, `verify`, `encrypt`, `decrypt`, `deriveKey`, `deriveBits`, `wrapKey`, `unwrapKey`) — advisory; prefer `use` + `hasPrivateKey`. |
 | `ownerId`               | `string`                          | Tenant/owner identifier.                                                                                                                                                       |
+| `publish`               | `boolean`                         | Whether the key belongs in the published JWKS. **Defaults to `true` in every query** — pass it explicitly to reach internal keys.                                              |
 | `purpose`               | `string`                          | Caller-defined key purpose.                                                                                                                                                    |
 | `type`                  | `"EC" \| "RSA" \| "oct" \| "OKP"` | Key type.                                                                                                                                                                      |
 | `use`                   | `"sig" \| "enc"`                  | Signature or encryption.                                                                                                                                                       |
 
-All query results are filtered to active keys only (excludes expired and not-yet-valid keys) and sorted newest-first by creation date.
+All query results are filtered to active keys only (excludes expired and not-yet-valid keys), default to published keys only, and are sorted newest-first by creation date.
 
 ## JWKS Endpoint
 
-When `domain` is set, `amphora.jwks` returns the public JWKS for keys that match the configured domain. External keys, hidden keys, expired keys, and keys without public material are excluded. Accessing `jwks` without a configured `domain` throws `AmphoraError`.
+When `domain` is set, `amphora.jwks` returns the public JWKS for keys that match the configured domain. External keys, `publish: false` keys, expired keys, and keys without public material are excluded. Accessing `jwks` without a configured `domain` throws `AmphoraError`.
 
 ```typescript
 app.get("/.well-known/jwks.json", (req, res) => {
@@ -260,14 +277,16 @@ amphora.canSign();
 amphora.canVerify();
 ```
 
-| Method         | Returns true when the vault contains an active key matching… |
-| -------------- | ------------------------------------------------------------ |
-| `canEncrypt()` | `{ use: "enc" }` — a public half or an oct secret.           |
-| `canDecrypt()` | `{ use: "enc", hasPrivateKey: true }`                        |
-| `canSign()`    | `{ use: "sig", hasPrivateKey: true }`                        |
-| `canVerify()`  | `{ use: "sig" }`                                             |
+| Method         | Returns true when the vault contains an active, published key matching… |
+| -------------- | ----------------------------------------------------------------------- |
+| `canEncrypt()` | `{ use: "enc" }` — a public half or an oct secret.                      |
+| `canDecrypt()` | `{ use: "enc", hasPrivateKey: true }`                                   |
+| `canSign()`    | `{ use: "sig", hasPrivateKey: true }`                                   |
+| `canVerify()`  | `{ use: "sig" }`                                                        |
 
 `hasPrivateKey` is what excludes remotely-fetched keys: a JWKS only ever yields public halves, so a vault holding nothing but external sig keys can verify but not sign.
+
+Like every other query, the capability checks run against the **published** set — a vault holding nothing but internal (`publish: false`) keys reports no capabilities, because those keys are not candidates for selection.
 
 ## Properties
 

@@ -48,6 +48,10 @@ const defaults = {
   expiresAt: new Date("2124-01-01T00:00:00.000Z"),
   issuer: "https://test.lindorm.io/",
   jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+
+  // A published leaf key — the cert-bound key a deployment serves in its JWKS.
+  // (The root/intermediate PEMs above are CA certificates, not vault keys.)
+  publish: true,
 };
 
 export const TEST_X509_KRYPTOS_SIG = KryptosKit.from.b64({

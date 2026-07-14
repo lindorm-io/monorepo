@@ -46,6 +46,7 @@ export type AmphoraQuery = Pick<
   | "issuer"
   | "operations"
   | "ownerId"
+  | "publish"
   | "purpose"
   | "type"
   | "use"

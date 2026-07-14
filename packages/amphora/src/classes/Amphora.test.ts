@@ -135,6 +135,9 @@ describe("Amphora", () => {
       const kryptos = KryptosKit.generate.sig.oct({
         algorithm: "HS256",
         issuer: "https://other.lindorm.io/",
+        // Published, so it is the ISSUER query that excludes it — not the
+        // publish default.
+        publish: true,
       });
 
       amphora.add([kryptos, TEST_OCT_KEY_SIG]);
@@ -160,7 +163,9 @@ describe("Amphora", () => {
 
     test("should filter kryptos in vault using the private query", async () => {
       const { privateKey, ...der } = TEST_OKP_KEY_SIG.export("der");
-      const key = KryptosKit.from.der({ issuer, ...der });
+      // Published, so it is the hasPrivateKey query that excludes it — not the
+      // publish default.
+      const key = KryptosKit.from.der({ issuer, ...der, publish: true });
 
       amphora.add([TEST_EC_KEY_SIG, key]);
 
@@ -366,6 +371,80 @@ describe("Amphora", () => {
       MockDate.set(MockedDate);
 
       expect(amphora.jwks.keys.some((k) => k.kid === key.id)).toBe(false);
+    });
+  });
+
+  describe("publish", () => {
+    // An internal key (KEK, CA, cookie, session) is hidden from SELECTION, not
+    // merely from publication. The HS256 cookie key below is deliberately NEWER
+    // than the published EdDSA key: filteredKeys sorts newest-first, so before
+    // the publish default it was the key `find({ use: "sig" })` handed back —
+    // signing access tokens with a symmetric key absent from the JWKS.
+    const internalSig = KryptosKit.clone(TEST_OCT_KEY_SIG, {
+      createdAt: new Date("2024-01-01T00:09:00.000Z"),
+      publish: false,
+      purpose: "cookie",
+    });
+
+    test("should not select an internal key over a published one, even when it is newer", async () => {
+      amphora.add([internalSig, TEST_OKP_KEY_SIG]);
+
+      expect(internalSig.createdAt.getTime()).toBeGreaterThan(
+        TEST_OKP_KEY_SIG.createdAt.getTime(),
+      );
+
+      await expect(amphora.find({ use: "sig" })).resolves.toEqual(TEST_OKP_KEY_SIG);
+      expect(amphora.findSync({ use: "sig" })).toEqual(TEST_OKP_KEY_SIG);
+      await expect(amphora.filter({ use: "sig" })).resolves.toEqual([TEST_OKP_KEY_SIG]);
+    });
+
+    test("should throw rather than hand back an internal key when it is the only match", async () => {
+      amphora.add(internalSig);
+
+      await expect(amphora.find({ use: "sig" })).rejects.toThrow(AmphoraError);
+      expect(() => amphora.findSync({ use: "sig" })).toThrow(AmphoraError);
+      await expect(amphora.filter({ use: "sig" })).resolves.toEqual([]);
+    });
+
+    test("should select an internal key when the caller asks for one", async () => {
+      amphora.add([internalSig, TEST_OKP_KEY_SIG]);
+
+      await expect(amphora.find({ use: "sig", publish: false })).resolves.toEqual(
+        internalSig,
+      );
+      expect(amphora.filterSync({ use: "sig", publish: false })).toEqual([internalSig]);
+    });
+
+    test("should return both published and internal keys when the caller asks for both", async () => {
+      amphora.add([internalSig, TEST_OKP_KEY_SIG]);
+
+      await expect(
+        amphora.filter({ use: "sig", publish: { $exists: true } }),
+      ).resolves.toEqual([internalSig, TEST_OKP_KEY_SIG]);
+    });
+
+    test("should find an internal key by id", async () => {
+      amphora.add(internalSig);
+
+      await expect(amphora.findById(internalSig.id)).resolves.toEqual(internalSig);
+      expect(amphora.findByIdSync(internalSig.id)).toEqual(internalSig);
+    });
+
+    test("should report no signing capability for a vault holding only internal keys", () => {
+      amphora.add(internalSig);
+
+      expect(amphora.canSign()).toBe(false);
+      expect(amphora.canVerify()).toBe(false);
+    });
+
+    test("should exclude internal keys from the jwks", () => {
+      const internalEc = KryptosKit.clone(TEST_EC_KEY_SIG, { publish: false });
+
+      amphora.add([internalEc, TEST_OKP_KEY_SIG]);
+
+      expect(internalEc.hasPublicKey).toBe(true);
+      expect(amphora.jwks.keys.some((k) => k.kid === internalEc.id)).toBe(false);
+      expect(amphora.jwks.keys.some((k) => k.kid === TEST_OKP_KEY_SIG.id)).toBe(true);
     });
   });
 

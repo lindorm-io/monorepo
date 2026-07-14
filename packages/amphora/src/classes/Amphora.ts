@@ -192,8 +192,8 @@ export class Amphora implements IAmphora {
     for (const key of array) {
       const kryptos = KryptosKit.env.import(key);
 
-      // Env-imported keys are own keys (isExternal: false) and feed the JWKS
-      // when public + not hidden — an issuer that differs from this Amphora's
+      // Env-imported keys are own keys (isExternal: false) and feed the JWKS when
+      // public + `publish: true` — an issuer that differs from this Amphora's
       // domain would never be served, which is almost certainly a config error.
       if (this.domain && kryptos.issuer && kryptos.issuer !== this.domain) {
         this.logger.warn("Env-imported key issuer differs from amphora domain", {
@@ -451,10 +451,20 @@ export class Amphora implements IAmphora {
     });
   }
 
+  // `publish: false` hides a key from SELECTION, not merely from publication: an
+  // internal key (KEK, CA, cookie, session) must never be handed to a caller who
+  // did not ask for one. That is what the default here does — every query starts
+  // from the published set, so a consumer cannot accidentally sign with a key that
+  // is absent from the JWKS and therefore unverifiable by anyone.
+  //
+  // The CALLER'S KEY WINS (spread order):
+  //   {}                            -> published keys only (the safe default)
+  //   { publish: false }            -> internal keys only (explicit opt-in)
+  //   { publish: { $exists: true } } -> both
   private filteredKeys(predicate: AmphoraPredicate): Array<IKryptos> {
     const vault = this._vault.filter((i) => i.isActive);
 
-    return Predicated.filter<IKryptos>(vault, predicate).sort(
+    return Predicated.filter<IKryptos>(vault, { publish: true, ...predicate }).sort(
       (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
     );
   }
@@ -758,7 +768,7 @@ export class Amphora implements IAmphora {
 
     this._jwks = Predicated.filter(this._vault, {
       hasPublicKey: true,
-      hidden: false,
+      publish: true,
       isExpired: false,
       isExternal: false,
       issuer: this.domain,
