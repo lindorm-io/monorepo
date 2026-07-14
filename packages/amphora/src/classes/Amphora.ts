@@ -496,6 +496,7 @@ export class Amphora implements IAmphora {
     let rejectedCount = 0;
     let expiredCount = 0;
     let rejectedByTrust = 0;
+    let unusableCount = 0;
 
     const trustAnchors = config.trustAnchors;
     const trustRequired =
@@ -514,14 +515,29 @@ export class Amphora implements IAmphora {
         continue;
       }
 
-      const kryptos = KryptosKit.from.jwk(
-        {
-          ...jwk,
-          iss: config.issuer,
-          jku: jwk.jku ?? config.jwksUri,
-        },
-        true,
-      );
+      // One unusable key must not take out the issuer's entire key set. A JWK that
+      // kryptos cannot parse (commonly a missing "alg", which RFC 7517 makes optional
+      // but kryptos requires) is skipped like any other rejected key.
+      let kryptos: IKryptos;
+
+      try {
+        kryptos = KryptosKit.from.jwk(
+          {
+            ...jwk,
+            iss: config.issuer,
+            jku: jwk.jku ?? config.jwksUri,
+          },
+          true,
+        );
+      } catch (error) {
+        this.logger.warn("External JWK rejected: key could not be parsed", {
+          issuer: config.issuer,
+          kid: jwk.kid,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        unusableCount++;
+        continue;
+      }
 
       if (kryptos.isExpired) {
         expiredCount++;
@@ -565,7 +581,12 @@ export class Amphora implements IAmphora {
       result.push(kryptos);
     }
 
-    if (rejectedCount > 0 || expiredCount > 0 || rejectedByTrust > 0) {
+    if (
+      rejectedCount > 0 ||
+      expiredCount > 0 ||
+      rejectedByTrust > 0 ||
+      unusableCount > 0
+    ) {
       this.logger.silly("External JWKS key summary", {
         issuer: config.issuer,
         total: keys.length,
@@ -573,6 +594,7 @@ export class Amphora implements IAmphora {
         rejected: rejectedCount,
         expired: expiredCount,
         rejectedByTrust,
+        unusable: unusableCount,
       });
     }
 
@@ -583,6 +605,7 @@ export class Amphora implements IAmphora {
         rejected: rejectedCount,
         expired: expiredCount,
         rejectedByTrust,
+        unusable: unusableCount,
       };
 
       if (rejectedByTrust === keys.length) {
@@ -606,14 +629,26 @@ export class Amphora implements IAmphora {
         });
       }
 
-      if (expiredCount + rejectedCount + rejectedByTrust === keys.length) {
+      if (unusableCount === keys.length) {
+        throw new AmphoraError("All external JWK keys could not be parsed", {
+          code: "external_jwks_all_unusable",
+          data,
+          title: "External JWKS All Unusable",
+          details: `Every key returned for issuer "${config.issuer}" could not be parsed. The endpoint is serving keys this library cannot read — most commonly a JWK without an "alg" (optional in RFC 7517, required here). Inspect the JWKS document and ensure each key declares "alg" and "kid".`,
+        });
+      }
+
+      if (
+        expiredCount + rejectedCount + rejectedByTrust + unusableCount ===
+        keys.length
+      ) {
         throw new AmphoraError(
-          "No valid external JWK keys (expired, rejected, or untrusted)",
+          "No valid external JWK keys (expired, rejected, untrusted, or unparseable)",
           {
             code: "external_jwks_no_valid_keys",
             data,
             title: "External JWKS No Valid Keys",
-            details: `All keys from issuer "${config.issuer}" were unusable (expired, issuer-mismatched, or untrusted). Check that the endpoint serves current, trusted keys for this issuer.`,
+            details: `All keys from issuer "${config.issuer}" were unusable (expired, issuer-mismatched, untrusted, or unparseable). Check that the endpoint serves current, trusted, parseable keys for this issuer.`,
           },
         );
       }

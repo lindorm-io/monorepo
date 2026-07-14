@@ -941,6 +941,201 @@ describe("Amphora", () => {
     });
   });
 
+  describe("external JWKS unparseable keys", () => {
+    const externalIssuer = "https://external.lindorm.io/";
+    const externalJwksUri = "https://external.lindorm.io/.well-known/jwks.json";
+
+    // A valid, parseable public JWK from the fixture key, without its iss claim
+    // (the JWKS endpoint is the issuer, the key does not repeat it).
+    const validJwk = (kid: string): Record<string, unknown> => {
+      const jwk: Record<string, unknown> = { ...TEST_EC_KEY_SIG.toJWK("public"), kid };
+      delete jwk.iss;
+      return jwk;
+    };
+
+    // alg is OPTIONAL per RFC 7517 §4.4 and routinely omitted by stock OPs, but
+    // kryptos requires it — so this key throws on parse.
+    const unparseableJwk = (kid: string): Record<string, unknown> => {
+      const jwk = validJwk(kid);
+      delete jwk.alg;
+      return jwk;
+    };
+
+    // Captures the AmphoraError thrown per-issuer inside getExternalJwks, which
+    // refreshExternalKeys swallows into a warn before throwing its own error.
+    const providerError = (child: ReturnType<typeof createMockLogger>): AmphoraError => {
+      const call = vi
+        .mocked(child.warn)
+        .mock.calls.find(([message]) => message === "Failed to refresh external JWKS");
+
+      return (call?.[1] as { error: AmphoraError }).error;
+    };
+
+    const createScoped = (logger: ReturnType<typeof createMockLogger>) =>
+      new Amphora({
+        domain: issuer,
+        logger,
+        external: [{ issuer: externalIssuer, jwksUri: externalJwksUri }],
+      });
+
+    test("should skip the unparseable key and still load the issuer's other keys", async () => {
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, {
+          keys: [
+            validJwk("key-good-1"),
+            unparseableJwk("key-no-alg"),
+            validJwk("key-good-2"),
+          ],
+        });
+
+      amphora = createScoped(createMockLogger());
+
+      await amphora.setup();
+
+      const keys = amphora.vault.filter((k) => k.issuer === externalIssuer);
+
+      expect(keys).toHaveLength(2);
+      expect(keys.map((k) => k.id).sort()).toEqual(["key-good-1", "key-good-2"]);
+    });
+
+    test("should warn with the kid of the skipped key", async () => {
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [validJwk("key-good-1"), unparseableJwk("key-no-alg")] });
+
+      const logger = createMockLogger();
+      const child = createMockLogger();
+      vi.mocked(logger.child).mockReturnValue(child);
+
+      amphora = createScoped(logger);
+
+      await amphora.setup();
+
+      expect(child.warn).toHaveBeenCalledWith(
+        "External JWK rejected: key could not be parsed",
+        expect.objectContaining({
+          issuer: externalIssuer,
+          kid: "key-no-alg",
+          error: expect.any(String),
+        }),
+      );
+    });
+
+    test("should throw external_jwks_all_unusable when every key is unparseable", async () => {
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, {
+          keys: [unparseableJwk("key-no-alg-1"), unparseableJwk("key-no-alg-2")],
+        });
+
+      const logger = createMockLogger();
+      const child = createMockLogger();
+      vi.mocked(logger.child).mockReturnValue(child);
+
+      amphora = createScoped(logger);
+
+      await expect(amphora.setup()).rejects.toThrow(
+        "All external JWKS providers failed during refresh",
+      );
+
+      const error = providerError(child);
+
+      expect(error).toBeInstanceOf(AmphoraError);
+      expect(error.code).toBe("external_jwks_all_unusable");
+      expect(error.data).toEqual({
+        issuer: externalIssuer,
+        total: 2,
+        rejected: 0,
+        expired: 0,
+        rejectedByTrust: 0,
+        unusable: 2,
+      });
+    });
+
+    test("should throw when the only keys are unparseable and expired, never return an empty set", async () => {
+      const expired = { ...validJwk("key-expired"), exp: 1000000000 };
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [unparseableJwk("key-no-alg"), expired] });
+
+      const logger = createMockLogger();
+      const child = createMockLogger();
+      vi.mocked(logger.child).mockReturnValue(child);
+
+      amphora = createScoped(logger);
+
+      await expect(amphora.setup()).rejects.toThrow(
+        "All external JWKS providers failed during refresh",
+      );
+
+      const error = providerError(child);
+
+      expect(error.code).toBe("external_jwks_no_valid_keys");
+      expect(error.data).toEqual({
+        issuer: externalIssuer,
+        total: 2,
+        rejected: 0,
+        expired: 1,
+        rejectedByTrust: 0,
+        unusable: 1,
+      });
+      expect(amphora.vault.filter((k) => k.issuer === externalIssuer)).toHaveLength(0);
+    });
+
+    test("should report per-cause counts when unparseable and issuer-mismatched keys mix", async () => {
+      const mismatched = { ...validJwk("key-mismatch"), iss: "https://attacker.com/" };
+
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [unparseableJwk("key-no-alg"), mismatched] });
+
+      const logger = createMockLogger();
+      const child = createMockLogger();
+      vi.mocked(logger.child).mockReturnValue(child);
+
+      amphora = createScoped(logger);
+
+      await expect(amphora.setup()).rejects.toThrow(
+        "All external JWKS providers failed during refresh",
+      );
+
+      const error = providerError(child);
+
+      expect(error.code).toBe("external_jwks_no_valid_keys");
+      expect(error.data).toEqual({
+        issuer: externalIssuer,
+        total: 2,
+        rejected: 1,
+        expired: 0,
+        rejectedByTrust: 0,
+        unusable: 1,
+      });
+    });
+
+    test("should load a fully valid JWKS unaffected", async () => {
+      nock("https://external.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [validJwk("key-good-1"), validJwk("key-good-2")] });
+
+      amphora = createScoped(createMockLogger());
+
+      await amphora.setup();
+
+      const keys = amphora.vault.filter((k) => k.issuer === externalIssuer);
+
+      expect(keys).toHaveLength(2);
+      expect(keys.map((k) => k.id).sort()).toEqual(["key-good-1", "key-good-2"]);
+    });
+  });
+
   describe("encapsulation", () => {
     test("should not allow mutation of vault via getter", () => {
       amphora.add(TEST_EC_KEY_SIG);

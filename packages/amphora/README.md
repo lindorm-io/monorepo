@@ -220,6 +220,7 @@ Each entry also accepts:
 - After setup, async lookups re-fetch external keys when the cache is older than `refreshInterval`. If the local vault already satisfies the query and the cache is fresh, no network call is made.
 - Partial failures are tolerated: if some providers fail but at least one succeeds, the vault is updated with what's available. If every configured provider fails, refresh throws `AmphoraError`.
 - Fetched keys whose `iss` claim does not match the configured `issuer` are rejected to prevent issuer spoofing.
+- Rejection is per key, never per issuer: a JWK that cannot be parsed (e.g. one without an `alg`, which `@lindorm/kryptos` requires) is logged with its `kid` and skipped — the issuer's remaining keys still load. Only when _no_ key survives does the refresh throw.
 
 ```typescript
 await amphora.setup();
@@ -303,7 +304,7 @@ Common scenarios that throw:
 - Reading `amphora.jwks` when no `domain` is configured.
 - `find()` / `findById()` not finding a match after a refresh.
 - All configured external config providers or all JWKS providers failing during a refresh.
-- Every fetched key being rejected (issuer mismatch, expired, or trust validation failure).
+- Every fetched key being rejected (issuer mismatch, expired, unparseable, or trust validation failure).
 
 ## Testing With Mocks
 
