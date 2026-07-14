@@ -73,6 +73,13 @@ export type AmphoraQuery = Pick<
   | "hasPrivateKey"
   | "hasPublicKey"
   | "internal"
+  // The lifetime states — pending → active → expired — so a consumer can state a
+  // TIME policy as a predicate. `filteredKeys` already drops inactive keys from a
+  // QUERY, but `findById` is unfiltered by design and an injected key never
+  // touches the vault at all: without these, neither could be time-checked.
+  | "isActive"
+  | "isExpired"
+  | "isPending"
   | "issuer"
   | "operations"
   | "ownerId"
