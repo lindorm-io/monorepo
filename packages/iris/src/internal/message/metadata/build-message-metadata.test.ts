@@ -235,7 +235,7 @@ describe("buildMessageMetadata", () => {
     const childHook = () => {};
 
     @AbstractMessage()
-    @Encrypted()
+    @Encrypted({ predicate: { purpose: "message" } })
     @OnCreate(parentHook)
     class BaseMsg {
       @IdentifierField()
@@ -473,7 +473,7 @@ describe("buildMessageMetadata", () => {
 
   describe("singleton inheritance", () => {
     @AbstractMessage()
-    @Encrypted({ algorithm: "A256GCM" } as any)
+    @Encrypted({ predicate: { encryption: "A256GCM" } })
     class EncryptedBase {
       @Field("string")
       data!: string;

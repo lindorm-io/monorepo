@@ -20,7 +20,7 @@ import type {
 } from "../../../../types/index.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { RedisSharedState } from "../types/redis-types.js";
 import { createConsumerLoop } from "../utils/create-consumer-loop.js";
 import { resolveStreamKey } from "../utils/resolve-stream-key.js";
@@ -41,7 +41,7 @@ const DEFAULT_PREFIX = "iris";
 export type RedisDriverOptions = {
   logger: ILogger;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
   url?: string;
   connection?: RedisConnectionOptions;
@@ -56,7 +56,7 @@ export type RedisDriverOptions = {
 export class RedisDriver implements IIrisDriver {
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
-  private readonly amphora: IAmphora | undefined;
+  private readonly encryption: MessageEncryptionContext | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: RedisSharedState;
   private readonly delayManager: DelayManager | undefined;
@@ -70,7 +70,7 @@ export class RedisDriver implements IIrisDriver {
   constructor(options: RedisDriverOptions, state?: RedisSharedState) {
     this.logger = options.logger.child(["RedisDriver"]);
     this.meta = options.meta;
-    this.amphora = options.amphora;
+    this.encryption = options.encryption;
     this.getSubscribers = options.getSubscribers;
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
@@ -351,7 +351,7 @@ export class RedisDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
       delayManager: this.delayManager,
@@ -363,7 +363,7 @@ export class RedisDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
       delayManager: this.delayManager,
@@ -376,7 +376,7 @@ export class RedisDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
       delayManager: this.delayManager,
@@ -389,7 +389,7 @@ export class RedisDriver implements IIrisDriver {
       state: this.state,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -403,7 +403,7 @@ export class RedisDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -417,7 +417,7 @@ export class RedisDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -436,7 +436,7 @@ export class RedisDriver implements IIrisDriver {
       {
         logger: this.logger,
         meta: this.meta,
-        amphora: this.amphora,
+        encryption: this.encryption,
         getSubscribers,
         url: this.state.connectionConfig.url,
         connection: this.state.connectionConfig,

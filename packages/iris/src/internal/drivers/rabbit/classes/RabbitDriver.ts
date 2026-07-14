@@ -17,7 +17,7 @@ import type {
   IrisHookMeta,
   RabbitConnectionOptions,
 } from "../../../../types/index.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { RabbitMessageBus } from "./RabbitMessageBus.js";
@@ -36,7 +36,7 @@ const RECONNECT_MAX_DELAY = 30000;
 export type RabbitDriverOptions = {
   logger: ILogger;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
   url: string;
   connection?: RabbitConnectionOptions;
@@ -47,7 +47,7 @@ export type RabbitDriverOptions = {
 export class RabbitDriver implements IIrisDriver {
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
-  private readonly amphora: IAmphora | undefined;
+  private readonly encryption: MessageEncryptionContext | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly connectionConfig: { url: string } & RabbitConnectionOptions;
   private readonly state: RabbitSharedState;
@@ -63,7 +63,7 @@ export class RabbitDriver implements IIrisDriver {
   constructor(options: RabbitDriverOptions, state?: RabbitSharedState) {
     this.logger = options.logger.child(["RabbitDriver"]);
     this.meta = options.meta;
-    this.amphora = options.amphora;
+    this.encryption = options.encryption;
     this.getSubscribers = options.getSubscribers;
     this.connectionConfig = { url: options.url, ...options.connection };
 
@@ -290,7 +290,7 @@ export class RabbitDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
     });
@@ -301,7 +301,7 @@ export class RabbitDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
     });
@@ -312,7 +312,7 @@ export class RabbitDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
     });
@@ -323,7 +323,7 @@ export class RabbitDriver implements IIrisDriver {
       state: this.state,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -337,7 +337,7 @@ export class RabbitDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -351,7 +351,7 @@ export class RabbitDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -370,7 +370,7 @@ export class RabbitDriver implements IIrisDriver {
       {
         logger: this.logger,
         meta: this.meta,
-        amphora: this.amphora,
+        encryption: this.encryption,
         getSubscribers,
         url: this.connectionConfig.url,
         connection: this.connectionConfig,

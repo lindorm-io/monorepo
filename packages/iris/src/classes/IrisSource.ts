@@ -30,7 +30,7 @@ import type { DelayManager } from "../internal/delay/DelayManager.js";
 import { MessageScanner } from "../internal/message/classes/MessageScanner.js";
 import { isAbstractMessage } from "../internal/message/metadata/abstract-message.js";
 import { clearMetadataCache } from "../internal/message/metadata/registry.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../internal/message/types/encryption-context.js";
 import { lindormSymbol } from "@lindorm/utils";
 import { validateEncryptedMessages } from "../internal/utils/validate-encrypted-messages.js";
 import { IrisSession } from "./IrisSession.js";
@@ -38,7 +38,7 @@ import { IrisSession } from "./IrisSession.js";
 export class IrisSource implements IIrisSource {
   private _driver: IIrisDriver | undefined;
   private readonly _options: IrisSourceOptions;
-  private readonly _amphora: IAmphora | undefined;
+  private readonly _encryption: MessageEncryptionContext;
   private _delayManager: DelayManager | undefined;
   private _deadLetterManager: DeadLetterManager | undefined;
   private readonly logger: ILogger;
@@ -54,7 +54,7 @@ export class IrisSource implements IIrisSource {
 
   constructor(options: IrisSourceOptions) {
     this._options = options;
-    this._amphora = options.amphora;
+    this._encryption = { amphora: options.amphora, key: options.encryption };
     this.logger = options.logger.child(["IrisSource"]);
     this.meta = options.meta ?? createDefaultIrisHookMeta();
     // Pre-loaded classes go straight into _messages; string paths are deferred
@@ -338,7 +338,7 @@ export class IrisSource implements IIrisSource {
         const driver = new MemoryDriver({
           logger: this.logger,
           meta: this.meta,
-          amphora: this._amphora,
+          encryption: this._encryption,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           delayManager: this._delayManager,
           deadLetterManager: this._deadLetterManager,
@@ -355,7 +355,7 @@ export class IrisSource implements IIrisSource {
         const driver = new RabbitDriver({
           logger: this.logger,
           meta: this.meta,
-          amphora: this._amphora,
+          encryption: this._encryption,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           url: rabbitOpts.url,
           connection: rabbitOpts.connection,
@@ -374,7 +374,7 @@ export class IrisSource implements IIrisSource {
         const driver = new KafkaDriver({
           logger: this.logger,
           meta: this.meta,
-          amphora: this._amphora,
+          encryption: this._encryption,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           brokers: kafkaOpts.brokers,
           connection: kafkaOpts.connection,
@@ -397,7 +397,7 @@ export class IrisSource implements IIrisSource {
         const driver = new NatsDriver({
           logger: this.logger,
           meta: this.meta,
-          amphora: this._amphora,
+          encryption: this._encryption,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           servers: natsOpts.servers,
           connection: natsOpts.connection,
@@ -418,7 +418,7 @@ export class IrisSource implements IIrisSource {
         const driver = new RedisDriver({
           logger: this.logger,
           meta: this.meta,
-          amphora: this._amphora,
+          encryption: this._encryption,
           getSubscribers: (): Array<IMessageSubscriber> => this._subscribersRef.current,
           url: redisOpts.url,
           connection: redisOpts.connection,
@@ -527,7 +527,7 @@ export class IrisSource implements IIrisSource {
       (target) => !isAbstractMessage(target),
     );
 
-    validateEncryptedMessages(concreteMessages, this._amphora);
+    validateEncryptedMessages(concreteMessages, this._encryption);
 
     await this.requireDriver().setup(concreteMessages);
     this.isSetUp = true;

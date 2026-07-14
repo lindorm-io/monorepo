@@ -1,17 +1,15 @@
+import { AesKit, parseAes } from "@lindorm/aes";
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { JsonKit } from "@lindorm/json-kit";
-import type { MessageMetadata } from "../types/metadata.js";
-import { prepareOutbound } from "./prepare-outbound.js";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TEST_KEY_ENC_MESSAGE } from "../../__fixtures__/keys.js";
+import type { MessageEncryptionContext } from "../types/encryption-context.js";
+import type { MessageMetadata } from "../types/metadata.js";
+import { decompress } from "./compress.js";
+import { prepareOutbound } from "./prepare-outbound.js";
 
-const mockEncrypt = vi.fn();
-
-vi.mock("@lindorm/aes", async () => ({
-  AesKit: vi.fn(function () {
-    return {
-      encrypt: mockEncrypt,
-    };
-  }),
-}));
+const encrypted = { predicate: { purpose: "message" } };
 
 const baseMetadata: MessageMetadata = {
   target: class TestMsg {} as any,
@@ -64,8 +62,27 @@ const baseMetadata: MessageMetadata = {
 };
 
 describe("prepareOutbound", () => {
-  beforeEach(() => {
+  let encryption: MessageEncryptionContext;
+
+  /** Unwrap a real aes token back to the bytes that went into it. */
+  const unwrap = (token: string, amphora: IAmphora): Promise<Buffer> =>
+    amphora
+      .findById(parseAes(token).keyId)
+      .then((kryptos) =>
+        Buffer.from(new AesKit({ kryptos }).decrypt<string>(token), "base64"),
+      );
+
+  beforeEach(async () => {
     vi.clearAllMocks();
+
+    const amphora = new Amphora({
+      domain: "https://test.lindorm.io/",
+      logger: createMockLogger(),
+    });
+    await amphora.setup();
+    amphora.add(TEST_KEY_ENC_MESSAGE);
+
+    encryption = { amphora };
   });
 
   it("should serialize plain message into Buffer payload with header fields", async () => {
@@ -97,43 +114,49 @@ describe("prepareOutbound", () => {
   });
 
   it("should encrypt payload and set encrypted header", async () => {
-    const mockAmphora = { find: vi.fn().mockResolvedValue({ id: "key-1" }) } as any;
-    mockEncrypt.mockReturnValue("encrypted-token");
-
-    const metadata: MessageMetadata = {
-      ...baseMetadata,
-      encrypted: { predicate: { algorithm: "aes-256-gcm" } as any },
-    };
+    const metadata: MessageMetadata = { ...baseMetadata, encrypted };
 
     const result = await prepareOutbound(
       { name: "hello", traceId: "t-1" },
       metadata,
-      mockAmphora,
+      encryption,
     );
 
     expect(result.headers["x-iris-encrypted"]).toBe("true");
     expect(result.payload).toBeInstanceOf(Buffer);
-    expect(result.payload.toString("utf-8")).toBe("encrypted-token");
+    expect(result.payload.toString("utf-8")).not.toContain("hello");
+
+    const token = result.payload.toString("utf-8");
+    expect(parseAes(token).keyId).toBe(TEST_KEY_ENC_MESSAGE.id);
+
+    const body = await unwrap(token, encryption.amphora!);
+    expect(JsonKit.parse<Record<string, unknown>>(body.toString("utf-8")).name).toBe(
+      "hello",
+    );
   });
 
   it("should compress then encrypt when both are configured", async () => {
-    const mockAmphora = { find: vi.fn().mockResolvedValue({ id: "key-1" }) } as any;
-    mockEncrypt.mockReturnValue("compressed-then-encrypted");
-
     const metadata: MessageMetadata = {
       ...baseMetadata,
       compressed: { algorithm: "deflate" },
-      encrypted: { predicate: { algorithm: "aes-256-gcm" } as any },
+      encrypted,
     };
 
     const result = await prepareOutbound(
       { name: "hello", traceId: "t-1" },
       metadata,
-      mockAmphora,
+      encryption,
     );
 
     expect(result.headers["x-iris-compression"]).toBe("deflate");
     expect(result.headers["x-iris-encrypted"]).toBe("true");
-    expect(result.payload.toString("utf-8")).toBe("compressed-then-encrypted");
+
+    // Order matters: what the cipher wrapped must be the COMPRESSED bytes.
+    const wrapped = await unwrap(result.payload.toString("utf-8"), encryption.amphora!);
+    const body = await decompress(wrapped, "deflate");
+
+    expect(JsonKit.parse<Record<string, unknown>>(body.toString("utf-8")).name).toBe(
+      "hello",
+    );
   });
 });

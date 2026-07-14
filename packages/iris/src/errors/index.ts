@@ -1,4 +1,5 @@
 export * from "./IrisDriverError.js";
+export * from "./IrisEncryptionError.js";
 export * from "./IrisError.js";
 export * from "./IrisMetadataError.js";
 export * from "./IrisNotSupportedError.js";

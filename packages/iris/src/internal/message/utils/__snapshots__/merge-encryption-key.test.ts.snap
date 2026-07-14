@@ -1,0 +1,27 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`mergeEncryptionKey > should fall back to the source default 1`] = `
+{
+  "kryptos": undefined,
+  "predicate": {
+    "purpose": "message",
+  },
+}
+`;
+
+exports[`mergeEncryptionKey > should let the decorator win, key by key 1`] = `
+{
+  "kryptos": undefined,
+  "predicate": {
+    "publish": true,
+    "purpose": "audit",
+  },
+}
+`;
+
+exports[`mergeEncryptionKey > should produce nothing from nothing 1`] = `
+{
+  "kryptos": undefined,
+  "predicate": {},
+}
+`;

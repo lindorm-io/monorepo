@@ -7,6 +7,7 @@ import type {
   IMessage,
 } from "../../interfaces/index.js";
 import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
+import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
 import type { PipelineStage } from "../types/pipeline-stage.js";
 
 export type DriverStreamProcessorBaseOptions<State> = {
@@ -14,7 +15,7 @@ export type DriverStreamProcessorBaseOptions<State> = {
   logger: ILogger;
   stages?: Array<PipelineStage>;
   meta?: IrisHookMeta;
-  amphora?: unknown;
+  encryption?: MessageEncryptionContext;
   inputClass?: Constructor<IMessage>;
   inputTopic?: string;
 };
@@ -29,7 +30,7 @@ export abstract class DriverStreamProcessorBase<
   protected readonly logger: ILogger;
   protected readonly stages: Array<PipelineStage>;
   protected readonly meta: IrisHookMeta | undefined;
-  protected readonly amphora: unknown;
+  protected readonly encryption: MessageEncryptionContext | undefined;
   protected readonly inputClass: Constructor<IMessage> | undefined;
   protected readonly inputTopic: string | undefined;
 
@@ -38,7 +39,7 @@ export abstract class DriverStreamProcessorBase<
     this.logger = options.logger;
     this.stages = options.stages ?? [];
     this.meta = options.meta;
-    this.amphora = options.amphora;
+    this.encryption = options.encryption;
     this.inputClass = options.inputClass;
     this.inputTopic = options.inputTopic;
   }
@@ -56,7 +57,7 @@ export abstract class DriverStreamProcessorBase<
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
     meta?: IrisHookMeta;
-    amphora?: unknown;
+    encryption?: MessageEncryptionContext;
   }): Pipeline;
 
   from<T extends IMessage>(
@@ -68,7 +69,7 @@ export abstract class DriverStreamProcessorBase<
       logger: this.logger,
       stages: [...this.stages],
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       inputClass,
       inputTopic: options?.topic,
     }) as unknown as IIrisStreamProcessor<T, Out>;
@@ -80,7 +81,7 @@ export abstract class DriverStreamProcessorBase<
       logger: this.logger,
       stages: [...this.stages, { type: "filter", predicate }],
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       inputClass: this.inputClass,
       inputTopic: this.inputTopic,
     }) as unknown as IIrisStreamProcessor<In, Out>;
@@ -92,7 +93,7 @@ export abstract class DriverStreamProcessorBase<
       logger: this.logger,
       stages: [...this.stages, { type: "map", transform }],
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       inputClass: this.inputClass,
       inputTopic: this.inputTopic,
     }) as unknown as IIrisStreamProcessor<T, Out>;
@@ -106,7 +107,7 @@ export abstract class DriverStreamProcessorBase<
       logger: this.logger,
       stages: [...this.stages, { type: "flatMap", transform }],
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       inputClass: this.inputClass,
       inputTopic: this.inputTopic,
     }) as unknown as IIrisStreamProcessor<T, Out>;
@@ -132,7 +133,7 @@ export abstract class DriverStreamProcessorBase<
       logger: this.logger,
       stages: [...this.stages, { type: "batch", size, timeout: options?.timeout }],
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       inputClass: this.inputClass,
       inputTopic: this.inputTopic,
     }) as unknown as IIrisStreamProcessor<Array<In>, Out>;
@@ -148,7 +149,7 @@ export abstract class DriverStreamProcessorBase<
       outputClass,
       outputTopic: options?.topic,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 }

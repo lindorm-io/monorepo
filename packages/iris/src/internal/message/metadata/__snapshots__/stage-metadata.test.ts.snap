@@ -65,8 +65,8 @@ exports[`stage-metadata > singleton stage functions > should set compressed 1`] 
 exports[`stage-metadata > singleton stage functions > should set encrypted 1`] = `
 {
   "predicate": {
-    "algorithm": "AES",
-    "purpose": "encryption",
+    "algorithm": "dir",
+    "purpose": "message",
   },
 }
 `;

@@ -16,7 +16,7 @@ import type {
   IrisHookMeta,
   KafkaConnectionOptions,
 } from "../../../../types/index.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { KafkaSharedState } from "../types/kafka-types.js";
@@ -42,7 +42,7 @@ const DEFAULT_SESSION_TIMEOUT_MS = 30_000;
 export type KafkaDriverOptions = {
   logger: ILogger;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
   brokers: Array<string>;
   connection?: KafkaConnectionOptions;
@@ -57,7 +57,7 @@ export type KafkaDriverOptions = {
 export class KafkaDriver implements IIrisDriver {
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
-  private readonly amphora: IAmphora | undefined;
+  private readonly encryption: MessageEncryptionContext | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: KafkaSharedState;
   private readonly delayManager: DelayManager | undefined;
@@ -71,7 +71,7 @@ export class KafkaDriver implements IIrisDriver {
   constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
     this.logger = options.logger.child(["KafkaDriver"]);
     this.meta = options.meta;
-    this.amphora = options.amphora;
+    this.encryption = options.encryption;
     this.getSubscribers = options.getSubscribers;
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
@@ -383,7 +383,7 @@ export class KafkaDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
       delayManager: this.delayManager,
@@ -395,7 +395,7 @@ export class KafkaDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
       delayManager: this.delayManager,
@@ -408,7 +408,7 @@ export class KafkaDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
       delayManager: this.delayManager,
@@ -421,7 +421,7 @@ export class KafkaDriver implements IIrisDriver {
       state: this.state,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -435,7 +435,7 @@ export class KafkaDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -449,7 +449,7 @@ export class KafkaDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -468,7 +468,7 @@ export class KafkaDriver implements IIrisDriver {
       {
         logger: this.logger,
         meta: this.meta,
-        amphora: this.amphora,
+        encryption: this.encryption,
         getSubscribers,
         brokers: this.state.connectionConfig.brokers,
         connection: this.state.connectionConfig,

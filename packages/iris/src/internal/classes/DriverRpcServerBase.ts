@@ -4,7 +4,7 @@ import { IrisDriverError } from "../../errors/IrisDriverError.js";
 import type { IIrisRpcServer, IMessage } from "../../interfaces/index.js";
 import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
 import type { MessageMetadata } from "../message/types/metadata.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
 import { MessageManager } from "../message/classes/MessageManager.js";
 import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
 import { prepareOutbound } from "../message/utils/prepare-outbound.js";
@@ -18,7 +18,7 @@ export type DriverRpcServerBaseOptions<Req extends IMessage, Res extends IMessag
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
 };
 
 export abstract class DriverRpcServerBase<
@@ -30,7 +30,7 @@ export abstract class DriverRpcServerBase<
   protected readonly responseMetadata: MessageMetadata;
   protected readonly requestManager: MessageManager<Req>;
   protected readonly responseManager: MessageManager<Res>;
-  protected readonly amphora: IAmphora | undefined;
+  protected readonly encryption: MessageEncryptionContext | undefined;
   protected readonly registeredQueues: Set<string> = new Set();
 
   protected constructor(
@@ -50,7 +50,7 @@ export abstract class DriverRpcServerBase<
       meta: options.meta,
       logger: options.logger,
     });
-    this.amphora = options.amphora;
+    this.encryption = options.encryption;
   }
 
   async serve(
@@ -93,7 +93,7 @@ export abstract class DriverRpcServerBase<
       payload,
       headers,
       this.requestMetadata,
-      this.amphora,
+      this.encryption,
     );
     const request = this.requestManager.hydrate(data);
 
@@ -102,7 +102,11 @@ export abstract class DriverRpcServerBase<
     const response = await handler(request);
 
     this.responseManager.validate(response);
-    const outbound = await prepareOutbound(response, this.responseMetadata, this.amphora);
+    const outbound = await prepareOutbound(
+      response,
+      this.responseMetadata,
+      this.encryption,
+    );
 
     const responseEnvelope = createDefaultEnvelope(outbound, queue);
     return { responseEnvelope };

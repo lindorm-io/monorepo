@@ -1,3 +1,4 @@
+import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { AbstractMessage } from "../decorators/AbstractMessage.js";
 import { Default } from "../decorators/Default.js";
 import { Encrypted } from "../decorators/Encrypted.js";
@@ -10,6 +11,7 @@ import { IrisSourceError } from "../errors/IrisSourceError.js";
 import type { IMessageSubscriber } from "../interfaces/index.js";
 import type { IIrisDriver } from "../interfaces/IrisDriver.js";
 import type { IrisSourceOptions, IrisSourceOptionsBase } from "../types/index.js";
+import { TEST_KEY_ENC_MESSAGE, TEST_KEY_ENV_KEK } from "../internal/__fixtures__/keys.js";
 import { clearRegistry } from "../internal/message/metadata/registry.js";
 import { IrisSource } from "./IrisSource.js";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
@@ -37,9 +39,22 @@ class AnotherTestMessage {
   count!: number;
 }
 
+/** Names no key — the source must refuse to load it. */
 @Encrypted()
 @Message({ name: "EncryptedTestMessage" })
 class EncryptedTestMessage {
+  @IdentifierField()
+  @Generated()
+  id!: string;
+
+  @Field("string")
+  secret!: string;
+}
+
+/** Names its own key — loads. */
+@Encrypted({ predicate: { purpose: "message" } })
+@Message({ name: "KeyedEncryptedMessage" })
+class KeyedEncryptedMessage {
   @IdentifierField()
   @Generated()
   id!: string;
@@ -103,6 +118,17 @@ const createMemoryOptions = (
   logger: createMockLogger() as any,
   ...overrides,
 });
+
+/** A real vault: key selection is not something a mock can get wrong. */
+const createTestAmphora = async (): Promise<IAmphora> => {
+  const amphora = new Amphora({
+    domain: "https://test.lindorm.io/",
+    logger: createMockLogger() as any,
+  });
+  await amphora.setup();
+  amphora.add(TEST_KEY_ENC_MESSAGE);
+  return amphora;
+};
 
 // --- Tests ---
 
@@ -449,6 +475,52 @@ describe("IrisSource", () => {
       (source as any)._driver = mockDriver;
 
       await expect(source.setup()).rejects.toThrow(IrisSourceError);
+    });
+
+    it("should throw when an encrypted message names no key", async () => {
+      // A bare @Encrypted() would otherwise select "whatever key is newest" on
+      // the first publish. It fails HERE instead — at load, naming the message.
+      const source = new IrisSource(
+        createMemoryOptions({
+          messages: [EncryptedTestMessage],
+          amphora: await createTestAmphora(),
+        }),
+      );
+      (source as any)._driver = createMockDriver();
+
+      const error = await source.setup().catch((e) => e);
+
+      expect(error).toBeInstanceOf(IrisSourceError);
+      expect(error.code).toBe("missing_encryption_key");
+      expect(error.data).toEqual({ message: "EncryptedTestMessage" });
+    });
+
+    it("should accept an encrypted message that names its own key", async () => {
+      const mockDriver = createMockDriver();
+      const source = new IrisSource(
+        createMemoryOptions({
+          messages: [KeyedEncryptedMessage],
+          amphora: await createTestAmphora(),
+        }),
+      );
+      (source as any)._driver = mockDriver;
+
+      await expect(source.setup()).resolves.toBeUndefined();
+      expect(mockDriver.setup).toHaveBeenCalledWith([KeyedEncryptedMessage]);
+    });
+
+    it("should accept a bare @Encrypted when the source declares the key", async () => {
+      const mockDriver = createMockDriver();
+      const source = new IrisSource(
+        createMemoryOptions({
+          messages: [EncryptedTestMessage],
+          amphora: await createTestAmphora(),
+          encryption: { kryptos: TEST_KEY_ENV_KEK },
+        }),
+      );
+      (source as any)._driver = mockDriver;
+
+      await expect(source.setup()).resolves.toBeUndefined();
     });
 
     it("should call driver.setup with concrete messages", async () => {

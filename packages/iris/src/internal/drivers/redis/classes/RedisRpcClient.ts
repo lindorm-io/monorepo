@@ -4,7 +4,7 @@ import type { Constructor } from "@lindorm/types";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { RedisSharedState } from "../types/redis-types.js";
 import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
 import { resolveStreamKey } from "../utils/resolve-stream-key.js";
@@ -19,7 +19,7 @@ export type RedisRpcClientOptions<Req extends IMessage, Res extends IMessage> = 
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
 };
 
 export class RedisRpcClient<

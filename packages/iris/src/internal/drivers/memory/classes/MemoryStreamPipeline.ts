@@ -123,7 +123,7 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
     const message = this.outputManager.hydrate(data as Record<string, unknown>);
     this.outputManager.validate(message);
     const topic = this.outputTopic ?? resolveDefaultTopic(this.outputManager.metadata);
-    const outbound = await prepareOutbound(message, metadata, this.amphora);
+    const outbound = await prepareOutbound(message, metadata, this.encryption);
     const outputEnvelope = buildEnvelope(outbound, topic, metadata);
 
     await dispatchToSubscribers(this.store, outputEnvelope);

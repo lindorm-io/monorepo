@@ -9,13 +9,13 @@ import { getMessageMetadata } from "../message/metadata/get-message-metadata.js"
 import { prepareOutbound } from "../message/utils/prepare-outbound.js";
 import type { OutboundPayload } from "../message/utils/prepare-outbound.js";
 import { prepareInbound } from "../message/utils/prepare-inbound.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
 
 export type DriverBaseOptions<M extends IMessage> = {
   target: Constructor<M>;
   logger: ILogger;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
 };
 
@@ -25,7 +25,7 @@ export abstract class DriverBase<M extends IMessage> {
   protected readonly manager: MessageManager<M>;
   protected readonly logger: ILogger;
   protected readonly meta: IrisHookMeta;
-  protected readonly amphora: IAmphora | undefined;
+  protected readonly encryption: MessageEncryptionContext | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
 
   protected constructor(options: DriverBaseOptions<M>, loggerLabel: string) {
@@ -39,7 +39,7 @@ export abstract class DriverBase<M extends IMessage> {
     });
     this.logger = options.logger.child([loggerLabel, this.metadata.message.name]);
     this.meta = resolvedMeta;
-    this.amphora = options.amphora;
+    this.encryption = options.encryption;
     this.getSubscribers = options.getSubscribers;
   }
 
@@ -70,7 +70,7 @@ export abstract class DriverBase<M extends IMessage> {
       }
     }
 
-    return prepareOutbound(message, this.metadata, this.amphora);
+    return prepareOutbound(message, this.metadata, this.encryption);
   }
 
   protected async completePublish(message: M): Promise<void> {
@@ -88,7 +88,7 @@ export abstract class DriverBase<M extends IMessage> {
     payload: Buffer | string,
     headers: Record<string, string>,
   ): Promise<M> {
-    const data = await prepareInbound(payload, headers, this.metadata, this.amphora);
+    const data = await prepareInbound(payload, headers, this.metadata, this.encryption);
     const message = this.manager.hydrate(data);
 
     await this.manager.beforeConsume(message);

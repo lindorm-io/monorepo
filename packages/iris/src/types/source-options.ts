@@ -5,6 +5,7 @@ import type { ConnectionOptions } from "node:tls";
 import type { IDeadLetterStore } from "../interfaces/IrisDeadLetterStore.js";
 import type { IDelayStore } from "../interfaces/IrisDelayStore.js";
 import type { IMessage } from "../interfaces/index.js";
+import type { IrisEncryptionKey } from "./encryption.js";
 import type { IrisHookMeta } from "./iris-hook-meta.js";
 
 export type IrisDriverType = "memory" | "rabbit" | "kafka" | "nats" | "redis";
@@ -37,6 +38,17 @@ export type IrisSourceOptionsBase = {
   meta?: IrisHookMeta;
   logger: ILogger;
   amphora?: IAmphora;
+
+  /**
+   * The deployment's message-encryption key: declare the KEK once here and
+   * leave the `@Encrypted` decorators bare. A decorator that names a key of its
+   * own overrides this (shallow, caller-wins).
+   *
+   * Every `@Encrypted` message must end up with a key — from its decorator or
+   * from here — or the source refuses to load.
+   */
+  encryption?: IrisEncryptionKey;
+
   persistence?: IrisPersistenceOptions;
 };
 

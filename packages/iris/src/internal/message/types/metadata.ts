@@ -1,7 +1,7 @@
 import type { Constructor } from "@lindorm/types";
 import type { z } from "zod";
 import type { IMessage } from "../../../interfaces/index.js";
-import type { AmphoraPredicate } from "@lindorm/amphora";
+import type { IrisEncryptionKey } from "../../../types/encryption.js";
 import type { IrisHookMeta } from "../../../types/iris-hook-meta.js";
 import type {
   MetaFieldDecorator,
@@ -77,9 +77,13 @@ export type MetaStagedTransform = {
   transform: MetaTransform;
 };
 
-export type MetaEncrypted = {
-  predicate: AmphoraPredicate;
-};
+/**
+ * The key a message's `@Encrypted` names — a key supplied outright, or a query
+ * for one. Either may be absent here and inherited from the source-level
+ * `encryption` default, but the two cannot BOTH be absent once merged: that is
+ * refused when the source loads.
+ */
+export type MetaEncrypted = IrisEncryptionKey;
 
 export type MetaCompressed = {
   algorithm: "gzip" | "deflate" | "brotli";

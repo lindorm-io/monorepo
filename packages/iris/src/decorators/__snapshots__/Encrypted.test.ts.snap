@@ -1,16 +1,11 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`Encrypted > should stage encrypted metadata with defaults 1`] = `
-{
-  "predicate": {},
-}
-`;
-
-exports[`Encrypted > should stage encrypted metadata with predicate 1`] = `
+exports[`Encrypted > should stage a predicate 1`] = `
 {
   "predicate": {
-    "algorithm": "AES-256",
     "purpose": "pii",
   },
 }
 `;
+
+exports[`Encrypted > should stage an empty descriptor, which the source then refuses to load 1`] = `{}`;

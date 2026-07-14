@@ -18,7 +18,7 @@ import type {
 } from "../../../../types/index.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { NatsConnection, NatsSharedState } from "../types/nats-types.js";
 import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
@@ -43,7 +43,7 @@ const resolveStreamName = (prefix: string): string => {
 export type NatsDriverOptions = {
   logger: ILogger;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
   servers: string | Array<string>;
   connection?: NatsConnectionOptions;
@@ -56,7 +56,7 @@ export type NatsDriverOptions = {
 export class NatsDriver implements IIrisDriver {
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
-  private readonly amphora: IAmphora | undefined;
+  private readonly encryption: MessageEncryptionContext | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: NatsSharedState;
   private readonly servers: string | Array<string>;
@@ -73,7 +73,7 @@ export class NatsDriver implements IIrisDriver {
   constructor(options: NatsDriverOptions, state?: NatsSharedState) {
     this.logger = options.logger.child(["NatsDriver"]);
     this.meta = options.meta;
-    this.amphora = options.amphora;
+    this.encryption = options.encryption;
     this.getSubscribers = options.getSubscribers;
     this.servers = options.servers;
     this.connectionOptions = options.connection ?? {};
@@ -330,7 +330,7 @@ export class NatsDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
       delayManager: this.delayManager,
@@ -342,7 +342,7 @@ export class NatsDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
       delayManager: this.delayManager,
@@ -355,7 +355,7 @@ export class NatsDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       state: this.state,
       delayManager: this.delayManager,
@@ -368,7 +368,7 @@ export class NatsDriver implements IIrisDriver {
       state: this.state,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -382,7 +382,7 @@ export class NatsDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -396,7 +396,7 @@ export class NatsDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -415,7 +415,7 @@ export class NatsDriver implements IIrisDriver {
       {
         logger: this.logger,
         meta: this.meta,
-        amphora: this.amphora,
+        encryption: this.encryption,
         getSubscribers,
         servers: this.servers,
         connection: this.connectionOptions,

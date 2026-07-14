@@ -3,6 +3,7 @@ import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
 import type { NatsSharedState } from "../types/nats-types.js";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { PipelineStage } from "../../../types/pipeline-stage.js";
 import {
   DriverStreamProcessorBase,
@@ -32,7 +33,7 @@ export class NatsStreamProcessor<
     outputClass: Constructor<IMessage>;
     outputTopic?: string;
     meta?: IrisHookMeta;
-    amphora?: unknown;
+    encryption?: MessageEncryptionContext;
   }): NatsStreamPipeline {
     return new NatsStreamPipeline({
       state: options.state,
@@ -43,7 +44,7 @@ export class NatsStreamProcessor<
       outputClass: options.outputClass,
       outputTopic: options.outputTopic,
       meta: options.meta,
-      amphora: options.amphora,
+      encryption: options.encryption,
     });
   }
 }

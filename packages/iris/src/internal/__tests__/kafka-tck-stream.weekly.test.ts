@@ -11,10 +11,8 @@ import type { KafkaDriver } from "../drivers/kafka/classes/KafkaDriver.js";
 import type { KafkaSharedState } from "../drivers/kafka/types/kafka-types.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
-import { createMockAesModule } from "../__fixtures__/tck/mock-aes.js";
+import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
 import { describe, vi } from "vitest";
-
-vi.mock("@lindorm/aes", () => createMockAesModule());
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -29,11 +27,6 @@ const createMockLogger = () => ({
   silly: vi.fn(),
   verbose: vi.fn(),
 });
-
-const mockAmphora = {
-  find: vi.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
-  findById: vi.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
-};
 
 const factory: TckDriverFactory = {
   driver: "kafka",
@@ -63,7 +56,7 @@ const factory: TckDriverFactory = {
       prefix,
       logger: logger as any,
       messages,
-      amphora: mockAmphora as any,
+      amphora: await createTckAmphora(),
       sessionTimeoutMs: 15000,
     });
 

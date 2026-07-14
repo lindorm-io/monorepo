@@ -1,22 +1,14 @@
+import { Amphora } from "@lindorm/amphora";
 import { JsonKit } from "@lindorm/json-kit";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
+import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { TEST_KEY_ENC_MESSAGE } from "../../__fixtures__/keys.js";
+import type { MessageEncryptionContext } from "../types/encryption-context.js";
 import type { MessageMetadata } from "../types/metadata.js";
 import { prepareInbound } from "./prepare-inbound.js";
 import { prepareOutbound } from "./prepare-outbound.js";
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
-const mockEncrypt = vi.fn();
-const mockDecrypt = vi.fn();
-const mockParseAes = vi.fn((_data: unknown) => ({ keyId: "key-1" }));
-
-vi.mock("@lindorm/aes", async () => ({
-  AesKit: vi.fn(function () {
-    return {
-      encrypt: mockEncrypt,
-      decrypt: mockDecrypt,
-    };
-  }),
-  parseAes: (data: unknown) => mockParseAes(data),
-}));
+const encrypted = { predicate: { purpose: "message" } };
 
 const baseMetadata: MessageMetadata = {
   target: class TestMsg {} as any,
@@ -69,8 +61,19 @@ const baseMetadata: MessageMetadata = {
 };
 
 describe("prepareInbound", () => {
-  beforeEach(() => {
+  let encryption: MessageEncryptionContext;
+
+  beforeEach(async () => {
     vi.clearAllMocks();
+
+    const amphora = new Amphora({
+      domain: "https://test.lindorm.io/",
+      logger: createMockLogger(),
+    });
+    await amphora.setup();
+    amphora.add(TEST_KEY_ENC_MESSAGE);
+
+    encryption = { amphora };
   });
 
   it("should deserialize plain payload", async () => {
@@ -102,22 +105,17 @@ describe("prepareInbound", () => {
   });
 
   it("should decrypt then deserialize", async () => {
-    const metadata: MessageMetadata = {
-      ...baseMetadata,
-      encrypted: { predicate: { algorithm: "aes-256-gcm" } as any },
-    };
+    const metadata: MessageMetadata = { ...baseMetadata, encrypted };
 
-    const originalBody = JsonKit.stringify({ name: "secret", count: 1 });
-    mockDecrypt.mockReturnValue(Buffer.from(originalBody).toString("base64"));
+    const outbound = await prepareOutbound({ name: "secret", count: 1 }, metadata, encryption); // prettier-ignore
+
+    expect(outbound.payload.toString("utf-8")).not.toContain("secret");
 
     const result = await prepareInbound(
-      Buffer.from("encrypted-token"),
-      { "x-iris-encrypted": "true" },
+      outbound.payload,
+      outbound.headers,
       metadata,
-      {
-        find: vi.fn().mockResolvedValue({ id: "key-1" }),
-        findById: vi.fn().mockResolvedValue({ id: "key-1" }),
-      } as any,
+      encryption,
     );
 
     expect(result.name).toBe("secret");
@@ -128,36 +126,16 @@ describe("prepareInbound", () => {
     const metadata: MessageMetadata = {
       ...baseMetadata,
       compressed: { algorithm: "gzip" },
-      encrypted: { predicate: { algorithm: "aes-256-gcm" } as any },
+      encrypted,
     };
 
-    // Use prepareOutbound to create a realistic payload, capturing what encrypt receives
-    let capturedPayload: string | undefined;
-    mockEncrypt.mockImplementation((data: string) => {
-      capturedPayload = data;
-      return "encrypted-token";
-    });
-
-    const mockAmphora = {
-      find: vi.fn().mockResolvedValue({ id: "key-1" }),
-      findById: vi.fn().mockResolvedValue({ id: "key-1" }),
-    } as any;
-    const outbound = await prepareOutbound(
-      { name: "both", count: 3 },
-      metadata,
-      mockAmphora,
-    );
-
-    expect(capturedPayload).toBeDefined();
-
-    // Mock decrypt to return what encrypt captured (the compressed payload string)
-    mockDecrypt.mockReturnValue(capturedPayload);
+    const outbound = await prepareOutbound({ name: "both", count: 3 }, metadata, encryption); // prettier-ignore
 
     const result = await prepareInbound(
       outbound.payload,
       outbound.headers,
       metadata,
-      mockAmphora,
+      encryption,
     );
 
     expect(result.name).toBe("both");
@@ -199,29 +177,21 @@ describe("prepareInbound", () => {
     ).rejects.toThrow(
       "Received encrypted message but @Encrypted is not configured on this message class",
     );
-
-    expect(mockDecrypt).not.toHaveBeenCalled();
   });
 
   it("should reject unencrypted payload when @Encrypted is configured", async () => {
-    const metadata: MessageMetadata = {
-      ...baseMetadata,
-      encrypted: { predicate: { algorithm: "aes-256-gcm" } as any },
-    };
+    const metadata: MessageMetadata = { ...baseMetadata, encrypted };
 
     const body = JsonKit.stringify({ name: "plain", count: 10 });
-    await expect(prepareInbound(Buffer.from(body), {}, metadata)).rejects.toThrow(
-      "Message requires encryption but received unencrypted payload",
-    );
-
-    expect(mockDecrypt).not.toHaveBeenCalled();
+    await expect(
+      prepareInbound(Buffer.from(body), {}, metadata, encryption),
+    ).rejects.toThrow("Message requires encryption but received unencrypted payload");
   });
 
   it("should skip decryption when neither header nor metadata indicate encryption", async () => {
     const body = JsonKit.stringify({ name: "plain", count: 10 });
-    const result = await prepareInbound(Buffer.from(body), {}, baseMetadata);
+    const result = await prepareInbound(Buffer.from(body), {}, baseMetadata, encryption);
 
     expect(result.name).toBe("plain");
-    expect(mockDecrypt).not.toHaveBeenCalled();
   });
 });

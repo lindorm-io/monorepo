@@ -7,7 +7,7 @@ import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import { prepareInbound } from "../../../message/utils/prepare-inbound.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
@@ -22,7 +22,7 @@ export type RabbitRpcClientOptions<Req extends IMessage, Res extends IMessage> =
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
 };
 
 export class RabbitRpcClient<
@@ -209,7 +209,7 @@ export class RabbitRpcClient<
             parsed.payload,
             parsed.headers,
             this.responseMetadata,
-            this.amphora,
+            this.encryption,
           );
           const response = this.responseManager.hydrate(data);
           pending.resolve(response);

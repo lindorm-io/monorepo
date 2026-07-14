@@ -4,7 +4,7 @@ import type { Constructor } from "@lindorm/types";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 
@@ -14,7 +14,7 @@ export type MemoryRpcClientOptions<Req extends IMessage, Res extends IMessage> =
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
 };
 
 export class MemoryRpcClient<

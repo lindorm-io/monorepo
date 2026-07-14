@@ -6,7 +6,7 @@ import { IrisTransportError } from "../../errors/IrisTransportError.js";
 import type { IIrisRpcClient, IMessage } from "../../interfaces/index.js";
 import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
 import type { MessageMetadata } from "../message/types/metadata.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
 import { MessageManager } from "../message/classes/MessageManager.js";
 import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
 import { prepareOutbound } from "../message/utils/prepare-outbound.js";
@@ -22,7 +22,7 @@ export type DriverRpcClientBaseOptions<Req extends IMessage, Res extends IMessag
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
 };
 
 export type PendingRequest<Res> = {
@@ -41,7 +41,7 @@ export abstract class DriverRpcClientBase<
   protected readonly responseMetadata: MessageMetadata;
   protected readonly requestManager: MessageManager<Req>;
   protected readonly responseManager: MessageManager<Res>;
-  protected readonly amphora: IAmphora | undefined;
+  protected readonly encryption: MessageEncryptionContext | undefined;
   protected readonly pendingRequests: Map<string, PendingRequest<Res>> = new Map();
 
   protected constructor(
@@ -61,7 +61,7 @@ export abstract class DriverRpcClientBase<
       meta: options.meta,
       logger: options.logger,
     });
-    this.amphora = options.amphora;
+    this.encryption = options.encryption;
   }
 
   abstract request(message: Req, options?: { timeout?: number }): Promise<Res>;
@@ -72,7 +72,11 @@ export abstract class DriverRpcClientBase<
     message: Req,
   ): Promise<{ envelope: IrisEnvelope; topic: string }> {
     this.requestManager.validate(message);
-    const outbound = await prepareOutbound(message, this.requestMetadata, this.amphora);
+    const outbound = await prepareOutbound(
+      message,
+      this.requestMetadata,
+      this.encryption,
+    );
     const topic = resolveDefaultTopic(this.requestMetadata);
     const envelope = createDefaultEnvelope(outbound, topic);
     return { envelope, topic };
@@ -144,7 +148,7 @@ export abstract class DriverRpcClientBase<
         payload,
         headers,
         this.responseMetadata,
-        this.amphora,
+        this.encryption,
       );
       const response = this.responseManager.hydrate(data);
       pending.resolve(response);

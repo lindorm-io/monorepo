@@ -4,7 +4,7 @@ import type { IIrisStreamPipeline, IMessage } from "../../interfaces/index.js";
 import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
 import type { PipelineStage } from "../types/pipeline-stage.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
 import { applyStage } from "../message/utils/apply-stage.js";
 import { MessageManager } from "../message/classes/MessageManager.js";
 import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
@@ -21,7 +21,7 @@ export type DriverStreamPipelineBaseOptions = {
   outputClass: Constructor<IMessage>;
   outputTopic?: string;
   meta?: IrisHookMeta;
-  amphora?: unknown;
+  encryption?: MessageEncryptionContext;
 };
 
 export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
@@ -32,7 +32,7 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
   protected readonly outputClass: Constructor<IMessage>;
   protected readonly outputTopic: string | undefined;
   protected readonly meta: IrisHookMeta | undefined;
-  protected readonly amphora: IAmphora | undefined;
+  protected readonly encryption: MessageEncryptionContext | undefined;
   protected readonly outputManager: MessageManager<IMessage>;
   protected running = false;
   protected paused = false;
@@ -48,7 +48,7 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
     this.outputClass = options.outputClass;
     this.outputTopic = options.outputTopic;
     this.meta = options.meta;
-    this.amphora = options.amphora as IAmphora | undefined;
+    this.encryption = options.encryption;
     this.outputManager = new MessageManager({
       target: this.outputClass,
       meta: this.meta,
@@ -104,7 +104,7 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
         payload,
         headers,
         inputMetadata,
-        this.amphora,
+        this.encryption,
       );
 
       let items: Array<any> = [inboundData];
@@ -143,7 +143,7 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
     const message = this.outputManager.hydrate(data as Record<string, unknown>);
     this.outputManager.validate(message);
     const topic = this.outputTopic ?? resolveDefaultTopic(this.outputManager.metadata);
-    const outbound = await prepareOutbound(message, metadata, this.amphora);
+    const outbound = await prepareOutbound(message, metadata, this.encryption);
     const envelope = buildEnvelope(outbound, topic, metadata);
 
     await this.doPublishEnvelope(envelope, topic);

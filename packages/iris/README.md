@@ -22,7 +22,7 @@ Iris is broker-agnostic. The driver is chosen via the `IrisSource` constructor; 
 | `nats`   | `nats` ^2.29    |
 | `redis`  | `ioredis` ^5.10 |
 
-`@lindorm/amphora` ^0.4 is an optional peer used for payload encryption (`@Encrypted`). `@lindorm/logger` ^0.5 is a required peer — every `IrisSource` takes an `ILogger`.
+`@lindorm/amphora` ^0.4 and `@lindorm/kryptos` ^0.11 are optional peers used for payload encryption (`@Encrypted`). `@lindorm/logger` ^0.5 is a required peer — every `IrisSource` takes an `ILogger`.
 
 ```bash
 npm install amqplib       # RabbitMQ
@@ -421,21 +421,43 @@ class TemporaryOffer {
 
 Encrypts the payload via `@lindorm/amphora` before publishing and decrypts on consume. Requires `amphora` on `IrisSource`.
 
+The descriptor must NAME the key — a `kryptos` outright, or a `predicate` that selects one from the vault. Either may come from the source-level `encryption` default instead. A message that names no key is refused when the source loads: an unscoped lookup selects whatever key happens to be newest, which is not a policy.
+
 ```typescript
-@Encrypted()
+const KEK = KryptosKit.env.import(process.env.KEK!);
+
+// Name the key: a KEK is typically an env key, so it exists at class-definition time.
+@Encrypted({ kryptos: KEK })
 @Message()
 class SensitivePayload {
   @Field("string") ssn!: string;
 }
 
-@Encrypted({ purpose: "pii" })
+// Or describe one, and let the vault select it.
+@Encrypted({ predicate: { purpose: "pii" } })
 @Message()
 class MedicalRecord {
   @Field("object") data!: Record<string, unknown>;
 }
 ```
 
-**Argument:** `AmphoraPredicate` (defaults to `{}`) — predicate object that selects which key from the amphora key store is used (e.g. `algorithm`, `encryption`, `purpose`, `type`, `ownerId`, plus the standard `$eq`, `$in`, `$neq` operators).
+Declare the KEK once on the source and leave the decorators bare — a decorator that names a key of its own overrides the default (shallow, caller-wins):
+
+```typescript
+const source = new IrisSource({
+  driver: "memory",
+  logger,
+  amphora,
+  encryption: { predicate: { purpose: "message" } },
+});
+```
+
+**Argument:** `IrisEncryptionKey` — `{ kryptos?, predicate? }`.
+
+- `kryptos` — an `IKryptos` supplied outright. It never came from the vault, so a `predicate` is meaningless for it.
+- `predicate` — selects a vault key by `id`, `algorithm`, `curve`, `encryption`, `internal`, `issuer`, `ownerId`, `publish`, `purpose` or `type`, plus the standard `$eq`, `$in`, `$neq` operators.
+
+**The floor.** Iris pins `use: "enc"` and `hasPrivateKey: true` on every key that reaches the crypto layer — selected, injected, or named by an inbound payload's `kid`. Neither is expressible in the predicate, so neither can be widened. A signing key or a public-only key is refused with an `IrisEncryptionError`, not quietly used. `publish: false` is a _default_ rather than a floor (a message KEK never leaves the service), so a predicate that says otherwise wins.
 
 `@Encrypted` protects the payload on the wire; it does not stop a field value from reaching your logs. For that, mark the field [`@Sensitive`](#sensitive) — the two are orthogonal and compose.
 

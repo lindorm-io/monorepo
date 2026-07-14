@@ -19,7 +19,7 @@ import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import type { DeadLetterEntry } from "../../../../types/dead-letter.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 import { createStore } from "../utils/create-store.js";
 import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
@@ -34,7 +34,7 @@ import { MemoryWorkerQueue } from "./MemoryWorkerQueue.js";
 export type MemoryDriverOptions = {
   logger: ILogger;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
   getSubscribers: () => Array<IMessageSubscriber>;
   delayManager?: DelayManager;
   deadLetterManager?: DeadLetterManager;
@@ -43,7 +43,7 @@ export type MemoryDriverOptions = {
 export class MemoryDriver implements IIrisDriver {
   private readonly logger: ILogger;
   private readonly meta: IrisHookMeta | undefined;
-  private readonly amphora: IAmphora | undefined;
+  private readonly encryption: MessageEncryptionContext | undefined;
   private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly store: MemorySharedState;
   private readonly delayManager: DelayManager | undefined;
@@ -55,7 +55,7 @@ export class MemoryDriver implements IIrisDriver {
   constructor(options: MemoryDriverOptions, store?: MemorySharedState) {
     this.logger = options.logger.child(["MemoryDriver"]);
     this.meta = options.meta;
-    this.amphora = options.amphora;
+    this.encryption = options.encryption;
     this.getSubscribers = options.getSubscribers;
     this.store = store ?? createStore();
     this.delayManager = options.delayManager;
@@ -192,7 +192,7 @@ export class MemoryDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       store: this.store,
       delayManager: this.delayManager,
@@ -204,7 +204,7 @@ export class MemoryDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       store: this.store,
       delayManager: this.delayManager,
@@ -217,7 +217,7 @@ export class MemoryDriver implements IIrisDriver {
       target,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
       getSubscribers: this.getSubscribers,
       store: this.store,
       delayManager: this.delayManager,
@@ -230,7 +230,7 @@ export class MemoryDriver implements IIrisDriver {
       state: this.store,
       logger: this.logger,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -244,7 +244,7 @@ export class MemoryDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -258,7 +258,7 @@ export class MemoryDriver implements IIrisDriver {
       requestTarget,
       responseTarget,
       meta: this.meta,
-      amphora: this.amphora,
+      encryption: this.encryption,
     });
   }
 
@@ -277,7 +277,7 @@ export class MemoryDriver implements IIrisDriver {
       {
         logger: this.logger,
         meta: this.meta,
-        amphora: this.amphora,
+        encryption: this.encryption,
         getSubscribers,
         delayManager: this.delayManager,
         deadLetterManager: this.deadLetterManager,

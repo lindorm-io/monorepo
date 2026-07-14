@@ -1,8 +1,8 @@
 import { IrisSerializationError } from "../../../errors/IrisSerializationError.js";
 import type { IrisCompressionAlgorithm } from "../../../types/compression.js";
+import type { MessageEncryptionContext } from "../types/encryption-context.js";
 import type { MessageMetadata } from "../types/metadata.js";
 import { decompress } from "./compress.js";
-import type { IAmphora } from "@lindorm/amphora";
 import { decryptPayload } from "./encrypt.js";
 import { deserializeMessage } from "./deserialize-message.js";
 
@@ -10,13 +10,13 @@ export const prepareInbound = async (
   payload: Buffer | string,
   headers: Record<string, string>,
   metadata: MessageMetadata,
-  amphora?: IAmphora,
+  encryption?: MessageEncryptionContext,
 ): Promise<Record<string, unknown>> => {
   let data: Buffer | string = payload;
 
   if (headers["x-iris-encrypted"] === "true" && metadata.encrypted) {
     const str = Buffer.isBuffer(data) ? data.toString("utf-8") : data;
-    data = await decryptPayload(str, amphora);
+    data = await decryptPayload(str, encryption, metadata.encrypted);
   }
 
   if (headers["x-iris-encrypted"] === "true" && !metadata.encrypted) {

@@ -5,6 +5,7 @@ export * from "./events.js";
 export * from "./consume-envelope.js";
 export * from "./dead-letter.js";
 export * from "./delay.js";
+export * from "./encryption.js";
 export * from "./envelope.js";
 export * from "./hook.js";
 export * from "./iris-hook-meta.js";

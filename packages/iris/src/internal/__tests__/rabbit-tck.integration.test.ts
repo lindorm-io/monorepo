@@ -12,10 +12,8 @@ import { IrisSource } from "../../classes/IrisSource.js";
 import type { RabbitDriver } from "../drivers/rabbit/classes/RabbitDriver.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
-import { createMockAesModule } from "../__fixtures__/tck/mock-aes.js";
+import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
 import { describe, vi } from "vitest";
-
-vi.mock("@lindorm/aes", () => createMockAesModule());
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -34,11 +32,6 @@ const createMockLogger = () => ({
   silly: vi.fn(),
   verbose: vi.fn(),
 });
-
-const mockAmphora = {
-  find: vi.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
-  findById: vi.fn().mockResolvedValue({ id: "mock-kryptos-key" }),
-};
 
 const factory: TckDriverFactory = {
   driver: "rabbit",
@@ -68,7 +61,7 @@ const factory: TckDriverFactory = {
       exchange,
       logger: logger as any,
       messages,
-      amphora: mockAmphora as any,
+      amphora: await createTckAmphora(),
       // prefetch 1 so a single consumer drains the queue strictly one message
       // at a time. This makes priority-queue ordering deterministic: the broker
       // dispatches the highest-priority waiting message before lower-priority

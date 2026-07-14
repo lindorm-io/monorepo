@@ -5,7 +5,7 @@ import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError.js";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
-import type { IAmphora } from "@lindorm/amphora";
+import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { NatsSharedState } from "../types/nats-types.js";
 import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
 import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
@@ -18,7 +18,7 @@ export type NatsRpcClientOptions<Req extends IMessage, Res extends IMessage> = {
   requestTarget: Constructor<Req>;
   responseTarget: Constructor<Res>;
   meta?: IrisHookMeta;
-  amphora?: IAmphora;
+  encryption?: MessageEncryptionContext;
 };
 
 export class NatsRpcClient<
@@ -70,7 +70,7 @@ export class NatsRpcClient<
         replyEnvelope.payload,
         replyEnvelope.headers,
         this.responseMetadata,
-        this.amphora,
+        this.encryption,
       );
       return this.responseManager.hydrate(inboundData);
     } catch (error) {

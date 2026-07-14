@@ -122,7 +122,7 @@ export const createTckMessages = (hookLog: Array<string>) => {
     @Field("integer") score!: number;
   }
 
-  @Encrypted()
+  @Encrypted({ predicate: { purpose: "message" } })
   @Message({ name: "TckEncryptedMessage" })
   class TckEncryptedMessage implements IMessage {
     @IdentifierField()
