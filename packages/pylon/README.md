@@ -1028,7 +1028,11 @@ createKryptosRotationWorker({
       expiry: "6mo",
     },
     {
-      algorithm: "ECDH-ES+A256GCMKW",
+      // A PUBLISHED key must be one a relying party can actually import.
+      // `ECDH-ES+A*GCMKW` is not a registered JWE algorithm — RFC 7518 §4.6
+      // defines `ECDH-ES` and the three `+A*KW` forms only — so `jose`, and
+      // every RP built on it, rejects it on the `alg` value alone.
+      algorithm: "ECDH-ES+A256KW",
       curve: "X448",
       publish: true,
       purpose: "token",

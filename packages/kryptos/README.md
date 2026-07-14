@@ -389,17 +389,24 @@ const jwk = key.toJWK("public");
 
 ### EC (Elliptic Curve)
 
-| Use        | Algorithms                                                                                                                     | Curves              |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------- |
-| Signature  | `ES256`, `ES384`, `ES512`                                                                                                      | P-256, P-384, P-521 |
-| Encryption | `ECDH-ES`, `ECDH-ES+A128KW`, `ECDH-ES+A192KW`, `ECDH-ES+A256KW`, `ECDH-ES+A128GCMKW`, `ECDH-ES+A192GCMKW`, `ECDH-ES+A256GCMKW` | P-256, P-384, P-521 |
+| Use        | Algorithms                                                                                                                        | Curves              |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Signature  | `ES256`, `ES384`, `ES512`                                                                                                         | P-256, P-384, P-521 |
+| Encryption | `ECDH-ES`, `ECDH-ES+A128KW`, `ECDH-ES+A192KW`, `ECDH-ES+A256KW`, `ECDH-ES+A128GCMKW`†, `ECDH-ES+A192GCMKW`†, `ECDH-ES+A256GCMKW`† | P-256, P-384, P-521 |
 
 ### OKP (Octet Key Pair)
 
-| Use        | Algorithms                                                                                                                     | Curves         |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| Signature  | `EdDSA`                                                                                                                        | Ed25519, Ed448 |
-| Encryption | `ECDH-ES`, `ECDH-ES+A128KW`, `ECDH-ES+A192KW`, `ECDH-ES+A256KW`, `ECDH-ES+A128GCMKW`, `ECDH-ES+A192GCMKW`, `ECDH-ES+A256GCMKW` | X25519, X448   |
+| Use        | Algorithms                                                                                                                        | Curves         |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| Signature  | `EdDSA`                                                                                                                           | Ed25519, Ed448 |
+| Encryption | `ECDH-ES`, `ECDH-ES+A128KW`, `ECDH-ES+A192KW`, `ECDH-ES+A256KW`, `ECDH-ES+A128GCMKW`†, `ECDH-ES+A192GCMKW`†, `ECDH-ES+A256GCMKW`† | X25519, X448   |
+
+> † **`ECDH-ES+A*GCMKW` is NOT a registered JWE algorithm.** RFC 7518 §4.6 defines `ECDH-ES` and the
+> three `+A*KW` forms only — the GCMKW _combination_ is proprietary to this toolkit. `jose`, and every
+> relying party built on it, rejects it on the `alg` value alone. It is fine ON-PLATFORM, where both ends
+> are ours; **never make it a PUBLISHED key's algorithm** — a key nobody can import is not a key. Use
+> `ECDH-ES+A256KW` there. (The standalone `A128/192/256GCMKW` oct algorithms ARE registered, RFC 7518
+> §4.7, and are unaffected.) `Kryptos.jose-interop.test.ts` asserts the rejection as intentional.
 
 ### RSA
 
