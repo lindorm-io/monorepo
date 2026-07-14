@@ -18,10 +18,6 @@ exports[`Kryptos (X.509 round-trip) > toDB → fromDb round-trip > preserves cer
   "issuer": null,
   "jwksUri": null,
   "notBefore": 2020-01-01T00:00:00.000Z,
-  "operations": [
-    "sign",
-    "verify",
-  ],
   "ownerId": null,
   "privateKey": "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgXcNOURiyrhC_7Bfzmf9ELHNfAjNUxDeKYu5N1-qdLlOhRANCAASDv49kdoZKymkGlAra5jxFcCSqrqTYfMLHb6UsCLew3WQtsj4mizNYd3WpRAaKPQFzs7VP1G1cwzPE9RQLW1S3",
   "publicKey": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEg7-PZHaGSsppBpQK2uY8RXAkqq6k2HzCx2-lLAi3sN1kLbI-JoszWHd1qUQGij0Bc7O1T9RtXMMzxPUUC1tUtw",

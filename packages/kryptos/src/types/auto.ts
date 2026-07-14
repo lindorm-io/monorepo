@@ -4,9 +4,8 @@ import type { Optional } from "@lindorm/types";
 import type { KryptosAttributes } from "./attributes.js";
 import type { KryptosCertificateOption } from "./certificate.js";
 import type { RsaModulus } from "./key-types/index.js";
-import type { KryptosOperation } from "./operation.js";
 
-type Attributes = Omit<KryptosAttributes, "certificateChain" | "operations" | "use">;
+type Attributes = Omit<KryptosAttributes, "certificateChain" | "use">;
 
 export type KryptosAuto = Optional<
   Attributes,
@@ -25,8 +24,7 @@ export type KryptosAuto = Optional<
   | "type"
 > & {
   certificate?: KryptosCertificateOption;
-  // Explicit RSA modulus (else derived from the algorithm) and explicit key_ops
-  // (else derived from algorithm + use). Both are power-user overrides.
+  // Explicit RSA modulus (else derived from the algorithm) — a power-user
+  // override.
   modulus?: RsaModulus;
-  operations?: Array<KryptosOperation>;
 };

@@ -1,7 +1,7 @@
 import { B64 } from "@lindorm/b64";
 import { decode } from "cbor2";
 import { KryptosError } from "../../../errors/index.js";
-import type { KryptosOperation, LindormJwk } from "../../../types/index.js";
+import type { LindormJwk } from "../../../types/index.js";
 import { CBOR_LABEL, CBOR_VERSION } from "../../constants/cbor-table.js";
 import type { CborMaterialKey } from "./cbor-material-keys.js";
 import {
@@ -10,7 +10,6 @@ import {
   REV_ENC,
   REV_KTY,
   REV_LABEL,
-  REV_OPS,
   REV_USE,
 } from "./cbor-reverse.js";
 
@@ -55,11 +54,6 @@ const enumName = <V extends string>(
     });
   }
   return rev.get(value)!;
-};
-
-const decodeKeyOps = (value: unknown): Array<KryptosOperation> => {
-  if (!Array.isArray(value)) return fail(`CBOR field "key_ops" must be an array.`);
-  return value.map((op) => enumName(REV_OPS, op, "key_ops"));
 };
 
 const decodeX5c = (value: unknown): Array<string> => {
@@ -113,10 +107,6 @@ export const decodeCborEnv = (bytes: Uint8Array): LindormJwk => {
 
       case CBOR_LABEL.enc:
         jwk.enc = enumName(REV_ENC, value, "enc");
-        break;
-
-      case CBOR_LABEL.key_ops:
-        jwk.key_ops = decodeKeyOps(value);
         break;
 
       case CBOR_LABEL.kid:

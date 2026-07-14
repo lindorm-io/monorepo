@@ -21,20 +21,15 @@ describe("parseJwkOptions", () => {
     expect(result.certificateChain).toEqual(["MIIB"]);
   });
 
-  test("accepts canonical key_ops (RFC 7517)", () => {
-    const jwk = { ...baseJwk, key_ops: ["sign", "verify"] };
+  // `operations` is derived from the key material (see `Kryptos.operations`), so
+  // an incoming key_ops is dropped on the floor — never read, never a throw. A
+  // remote party's odd key_ops is not our failure.
+  test("ignores key_ops entirely", () => {
+    const jwk = { ...baseJwk, key_ops: ["verify"], keyOps: ["sign"] };
 
     const result = parseJwkOptions(jwk);
 
-    expect(result.operations).toEqual(["sign", "verify"]);
-  });
-
-  test("accepts camelCase keyOps as fallback", () => {
-    const jwk = { ...baseJwk, keyOps: ["sign"] };
-
-    const result = parseJwkOptions(jwk);
-
-    expect(result.operations).toEqual(["sign"]);
+    expect(result).not.toHaveProperty("operations");
   });
 
   test("accepts canonical owner_id", () => {
@@ -53,11 +48,11 @@ describe("parseJwkOptions", () => {
     expect(result.ownerId).toBe("user-456");
   });
 
-  test("prefers snake_case when both forms are present", () => {
-    const jwk = { ...baseJwk, key_ops: ["sign"], keyOps: ["verify"] };
+  test("prefers snake_case owner_id when both forms are present", () => {
+    const jwk = { ...baseJwk, owner_id: "user-123", ownerId: "user-456" };
 
     const result = parseJwkOptions(jwk);
 
-    expect(result.operations).toEqual(["sign"]);
+    expect(result.ownerId).toBe("user-123");
   });
 });

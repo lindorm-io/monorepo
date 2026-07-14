@@ -18,7 +18,6 @@ export type KryptosAttributes = {
   issuer: string | null;
   jwksUri: string | null;
   notBefore: Date;
-  operations: Array<KryptosOperation>;
   ownerId: string | null;
   purpose: string | null;
   type: KryptosType;
@@ -34,6 +33,8 @@ export type KryptosMetadata = {
   isActive: boolean;
   isExpired: boolean;
   modulus: RsaModulus | null;
+  // Derived from the key material, never stored — see `Kryptos.operations`.
+  operations: Array<KryptosOperation>;
   thumbprint: string;
 };
 

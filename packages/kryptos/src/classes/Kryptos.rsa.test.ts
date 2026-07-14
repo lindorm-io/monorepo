@@ -18,7 +18,6 @@ describe("Kryptos (RSA)", () => {
       issuer: "https://example.com",
       jwksUri: "https://example.com/.well-known/jwks.json",
       notBefore: new Date("2023-01-01T08:00:00.000Z"),
-      operations: ["sign", "verify"],
       ownerId: "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
       purpose: "test",
     };

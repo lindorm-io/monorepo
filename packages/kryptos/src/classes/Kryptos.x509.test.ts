@@ -29,7 +29,6 @@ describe("Kryptos (X.509)", () => {
     type: "EC" as const,
     use: "sig" as const,
     isExternal: false,
-    operations: ["sign", "verify"] as Array<"sign" | "verify">,
     privateKey: Buffer.from(TEST_X509_LEAF_PRIVATE_KEY_B64, "base64url"),
     publicKey: Buffer.from(TEST_X509_LEAF_PUBLIC_KEY_B64, "base64url"),
   };
@@ -180,7 +179,6 @@ describe("Kryptos (X.509)", () => {
       type: "RSA" as const,
       use: "sig" as const,
       isExternal: false,
-      operations: ["sign", "verify"] as Array<"sign" | "verify">,
       privateKey: Buffer.from(TEST_X509_RSA_LEAF_PRIVATE_KEY_B64, "base64url"),
       publicKey: Buffer.from(TEST_X509_RSA_LEAF_PUBLIC_KEY_B64, "base64url"),
     };

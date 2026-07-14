@@ -41,7 +41,6 @@ import {
   generateKey,
   generateKeyAsync,
 } from "../internal/utils/generate.js";
-import { calculateKeyOps } from "../internal/utils/key-ops.js";
 import { decodeCborEnv } from "../internal/utils/cbor/decode-cbor-env.js";
 import { fromOptions } from "../internal/utils/from-options.js";
 import { isB64, isDer, isJwk, isPem } from "../internal/utils/is.js";
@@ -341,12 +340,7 @@ export class KryptosKit {
       });
     }
 
-    return new Kryptos({
-      ...options,
-      operations: options.operations?.length
-        ? options.operations
-        : calculateKeyOps(options),
-    });
+    return new Kryptos(options);
   }
 
   // private generate
@@ -377,11 +371,7 @@ export class KryptosKit {
       config.hidden = config.hidden ?? true;
     }
 
-    const generate: KryptosGenerate = {
-      ...config,
-      ...options,
-      operations: options.operations ?? calculateKeyOps(config),
-    };
+    const generate: KryptosGenerate = { ...config, ...options };
 
     return KryptosKit.finalizeGenerate(generate, generateKey(generate));
   }
@@ -493,16 +483,12 @@ export class KryptosKit {
       generate.expiresAt ?? caWindow?.expiresAt ?? expiresAt("25 years", notBefore);
 
     const encryption = generate.use === "enc" ? (generate.encryption ?? "A256GCM") : null;
-    const operations = generate.operations?.length
-      ? generate.operations
-      : calculateKeyOps(generate);
 
     const base = {
       ...generate,
       notBefore,
       expiresAt: childExpiresAt,
       encryption,
-      operations,
       ...key,
     };
 
@@ -585,11 +571,7 @@ export class KryptosKit {
       config.hidden = config.hidden ?? true;
     }
 
-    const generate: KryptosGenerate = {
-      ...config,
-      ...options,
-      operations: options.operations ?? calculateKeyOps(config),
-    };
+    const generate: KryptosGenerate = { ...config, ...options };
 
     return KryptosKit.finalizeGenerate(generate, await generateKeyAsync(generate));
   }

@@ -2,7 +2,6 @@ import type { AesEncryption } from "@lindorm/types";
 import type {
   KryptosAlgorithm,
   KryptosCurve,
-  KryptosOperation,
   KryptosType,
   KryptosUse,
   LindormJwk,
@@ -17,15 +16,17 @@ import type {
 // Conventions:
 // - Map keys are ALWAYS unsigned integers (the labels below).
 // - Values are integers wherever the domain is enumerable (kty, use, crv, alg,
-//   enc, key_ops), CBOR-native scalars where possible (hidden: bool; exp/iat/
-//   nbf: unix-seconds ints), byte strings for all key material and DER certs
+//   enc), CBOR-native scalars where possible (hidden: bool; exp/iat/nbf:
+//   unix-seconds ints), byte strings for all key material and DER certs
 //   (raw bytes — never base64 text), and text strings ONLY for free-form
 //   fields (kid, iss, jku, purpose, owner_id).
 // - Label 0 is the format version so the vocabulary can evolve without
 //   breaking strings already vaulted in password managers.
-// - Derivables are never encoded: `x5t#S256` (recompute from x5c) has no
-//   label on purpose; `key_ops` HAS a label but emission SHOULD omit it when
-//   it equals the alg/use-derived default.
+// - DERIVABLES ARE NEVER ENCODED, and therefore carry no label at all:
+//   `x5t#S256` (recompute from x5c) and `key_ops` (`operations` is derived from
+//   the key material — see `calculateKeyOps`). Both are excluded from
+//   `CborLabelDomain` below, so sneaking one back into the encoder is a compile
+//   error.
 // - Enum values are grouped in decades by family so a raw decode is
 //   half-readable to a human who knows the table.
 //
@@ -39,10 +40,14 @@ export const CBOR_VERSION = 1;
 // --- Map labels (integer keys of the encoded map) ---------------------------
 
 // The label set must cover every member of LindormJwk (the full private-JWK
-// surface) except the deliberately-omitted derivable `x5t#S256`, plus the
-// format-internal `version`. Adding a JWK member without a label is a compile
-// error; sneaking `x5t#S256` back in is too (excess property).
-type CborLabelDomain = Record<Exclude<keyof LindormJwk, "x5t#S256">, number> & {
+// surface) except the deliberately-omitted DERIVABLES — `x5t#S256` (recompute
+// from x5c) and `key_ops` (derived from the key material, never emitted) — plus
+// the format-internal `version`. Adding a JWK member without a label is a
+// compile error; sneaking a derivable back in is too (excess property).
+type CborLabelDomain = Record<
+  Exclude<keyof LindormJwk, "x5t#S256" | "key_ops">,
+  number
+> & {
   version: number;
 };
 
@@ -54,7 +59,6 @@ export const CBOR_LABEL = {
   use: 4,
   crv: 5,
   enc: 6,
-  key_ops: 7,
   exp: 10,
   iat: 11,
   nbf: 12,
@@ -104,17 +108,6 @@ export const CBOR_CRV = {
   X25519: 6,
   X448: 7,
 } as const satisfies Record<KryptosCurve, number>;
-
-export const CBOR_OPS = {
-  sign: 1,
-  verify: 2,
-  encrypt: 3,
-  decrypt: 4,
-  wrapKey: 5,
-  unwrapKey: 6,
-  deriveKey: 7,
-  deriveBits: 8,
-} as const satisfies Record<KryptosOperation, number>;
 
 // Signature families in 10-50, key-management families in 60-90.
 export const CBOR_ALG = {

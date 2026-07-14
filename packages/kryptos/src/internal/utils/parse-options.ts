@@ -1,7 +1,6 @@
 import { KryptosError } from "../../errors/index.js";
 import type {
   KryptosJwk,
-  KryptosOperation,
   KryptosOptions,
   KryptosType,
   UnknownJwk,
@@ -11,7 +10,6 @@ const TYPES: Array<KryptosType> = ["AKP", "EC", "oct", "OKP", "RSA"] as const;
 
 type LooseJwk = UnknownJwk &
   Partial<KryptosJwk> & {
-    keyOps?: Array<KryptosOperation>;
     ownerId?: string;
   };
 
@@ -44,7 +42,10 @@ export const parseJwkOptions = (
     issuer: jwk.iss,
     jwksUri: jwk.jku,
     notBefore: jwk.nbf ? new Date(jwk.nbf * 1000) : undefined,
-    operations: jwk.key_ops ?? jwk.keyOps,
+    // An incoming `key_ops` is DELIBERATELY ignored: `operations` is a derived
+    // capability of the key material (see `Kryptos.operations`), so we re-derive
+    // it rather than trust the payload. A contradictory key_ops from a remote
+    // party is not our failure and must never throw.
     ownerId: jwk.owner_id ?? jwk.ownerId,
     purpose: jwk.purpose,
     type: jwk.kty,
@@ -65,7 +66,6 @@ export const parseStdOptions = (options: Options): KryptosOptions => ({
   issuer: options.issuer,
   jwksUri: options.jwksUri,
   notBefore: options.notBefore,
-  operations: options.operations,
   ownerId: options.ownerId,
   purpose: options.purpose,
   type: options.type,

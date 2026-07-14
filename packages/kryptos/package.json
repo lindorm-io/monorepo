@@ -65,6 +65,7 @@
     "commander": "^14.0.3"
   },
   "devDependencies": {
-    "@peculiar/x509": "1.14.3"
+    "@peculiar/x509": "1.14.3",
+    "jose": "^6.2.1"
   }
 }

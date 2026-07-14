@@ -1,11 +1,19 @@
+import { KryptosError } from "../../errors/index.js";
 import type {
   KryptosAlgorithm,
   KryptosOperation,
   KryptosUse,
 } from "../../types/index.js";
 
+// The capability of the KEY MATERIAL — see `Kryptos.operations` for why this is
+// deliberately neither JOSE `key_ops` nor WebCrypto usages. Every row of the
+// table is decidable from `hasPrivateKey` alone: a Kryptos always holds at least
+// one half, an asymmetric private key embeds its public half, and an oct secret
+// lives in the private half. So `hasPublicKey` is not an input — it would be a
+// second, unread source of truth for the same fact.
 type Options = {
   algorithm: KryptosAlgorithm;
+  hasPrivateKey: boolean;
   use: KryptosUse;
 };
 
@@ -26,7 +34,11 @@ const calculateEncryptionKeyOps = (options: Options): Array<KryptosOperation> =>
     case "ECDH-ES+A128GCMKW":
     case "ECDH-ES+A192GCMKW":
     case "ECDH-ES+A256GCMKW":
-      return ["deriveKey"];
+      // Deliberately half-INDEPENDENT: the sender derives with the recipient's
+      // public key and the recipient with its own private one, so deriveKey /
+      // deriveBits cannot separate the directions. A caller that needs to know
+      // which side it holds asks `hasPrivateKey`, not `operations`.
+      return ["deriveKey", "deriveBits"];
 
     case "PBES2-HS256+A128KW":
     case "PBES2-HS384+A192KW":
@@ -37,13 +49,23 @@ const calculateEncryptionKeyOps = (options: Options): Array<KryptosOperation> =>
     case "RSA-OAEP-256":
     case "RSA-OAEP-384":
     case "RSA-OAEP-512":
-      return ["wrapKey", "unwrapKey"];
+      return options.hasPrivateKey
+        ? ["encrypt", "decrypt", "wrapKey", "unwrapKey"]
+        : ["encrypt", "wrapKey"];
 
     case "dir":
       return ["encrypt", "decrypt"];
 
     default:
-      return [];
+      throw new KryptosError(
+        `Algorithm "${options.algorithm}" is not an encryption algorithm`,
+        {
+          code: "unsupported_algorithm",
+          title: "Unsupported Algorithm",
+          details: `The algorithm "${options.algorithm}" cannot be used with key use "enc"; its operations cannot be derived.`,
+          data: { algorithm: options.algorithm, use: options.use },
+        },
+      );
   }
 };
 
@@ -53,9 +75,17 @@ export const calculateKeyOps = (options: Options): Array<KryptosOperation> => {
       return calculateEncryptionKeyOps(options);
 
     case "sig":
-      return ["sign", "verify"];
+      // An asymmetric private key embeds its public half, and an oct secret both
+      // signs and verifies — so anything holding the private half does both. A
+      // public-only key can only verify.
+      return options.hasPrivateKey ? ["sign", "verify"] : ["verify"];
 
     default:
-      return [];
+      throw new KryptosError(`Unsupported key use: ${options.use as string}`, {
+        code: "unsupported_key_use",
+        title: "Unsupported Key Use",
+        details: `The key use "${options.use as string}" is not supported; use "sig" or "enc".`,
+        data: { use: options.use },
+      });
   }
 };

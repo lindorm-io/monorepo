@@ -2,7 +2,6 @@ import type {
   KryptosAlgorithm,
   KryptosCurve,
   KryptosEncryption,
-  KryptosOperation,
   KryptosType,
   KryptosUse,
 } from "../../../types/index.js";
@@ -12,7 +11,6 @@ import {
   CBOR_ENC,
   CBOR_KTY,
   CBOR_LABEL,
-  CBOR_OPS,
   CBOR_USE,
 } from "../../constants/cbor-table.js";
 
@@ -30,5 +28,4 @@ export const REV_USE = invert<KryptosUse>(CBOR_USE);
 export const REV_CRV = invert<KryptosCurve>(CBOR_CRV);
 export const REV_ALG = invert<KryptosAlgorithm>(CBOR_ALG);
 export const REV_ENC = invert<KryptosEncryption>(CBOR_ENC);
-export const REV_OPS = invert<KryptosOperation>(CBOR_OPS);
 export const REV_LABEL = invert(CBOR_LABEL);

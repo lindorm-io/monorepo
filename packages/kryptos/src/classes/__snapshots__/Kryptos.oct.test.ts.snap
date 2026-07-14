@@ -326,10 +326,6 @@ exports[`Kryptos (oct) > to > should return db 1`] = `
   "issuer": "https://example.com",
   "jwksUri": "https://example.com/.well-known/jwks.json",
   "notBefore": 2023-01-01T08:00:00.000Z,
-  "operations": [
-    "sign",
-    "verify",
-  ],
   "ownerId": "f02c2d0c-44ee-5e4e-8b3b-39d46924d227",
   "privateKey": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
   "publicKey": "",
@@ -382,10 +378,6 @@ exports[`Kryptos (oct) > to > should return jwk with private key 1`] = `
   "iss": "https://example.com",
   "jku": "https://example.com/.well-known/jwks.json",
   "k": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
-  "key_ops": [
-    "sign",
-    "verify",
-  ],
   "kid": "3b9a051f-e1ec-562b-bf92-7cf92ec465ba",
   "kty": "oct",
   "nbf": 1672560000,

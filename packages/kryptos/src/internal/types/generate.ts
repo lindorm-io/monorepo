@@ -20,7 +20,6 @@ type Std = Optional<
   | "issuer"
   | "jwksUri"
   | "notBefore"
-  | "operations"
   | "ownerId"
   | "purpose"
 >;

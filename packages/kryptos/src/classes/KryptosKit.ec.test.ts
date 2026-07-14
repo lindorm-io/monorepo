@@ -45,7 +45,8 @@ describe("KryptosKit (EC)", () => {
         expect.objectContaining({
           id: "136171c5-7b76-5e14-9bb8-c60551977c59",
           encryption: "A256GCM",
-          operations: ["sign", "verify"],
+          // Derived from the key material: an ECDH key derives, it never signs.
+          operations: ["deriveKey", "deriveBits"],
           purpose: "test",
         }),
       );
@@ -57,7 +58,6 @@ describe("KryptosKit (EC)", () => {
         id: "136171c5-7b76-5e14-9bb8-c60551977c59",
         algorithm: "ECDH-ES+A256GCMKW",
         encryption: "A256GCM",
-        operations: ["sign", "verify"],
         purpose: null,
         use: "enc",
       });

@@ -551,34 +551,25 @@ describe("kryptos CLI — env format & power-user flags", () => {
     expect(key.notBefore.toISOString()).toBe("2026-01-01T00:00:00.000Z");
   });
 
-  test("generate honours --modulus and --operations", async () => {
+  test("generate honours --modulus", async () => {
     const key = KryptosKit.env.import(
       await runGenerate({
         type: "RSA",
         use: "sig",
         algorithm: "RS256",
         modulus: "4096",
-        operations: "sign",
       }),
     );
 
     expect(key.modulus).toBe(4096);
-    expect(key.operations).toEqual(["sign"]);
+    // Derived from the key material — no --operations flag can override it.
+    expect(key.operations).toEqual(["sign", "verify"]);
   });
 
-  test("generate rejects invalid --modulus, --operations, --not-before", async () => {
+  test("generate rejects invalid --modulus and --not-before", async () => {
     await expect(
       runGenerate({ type: "RSA", use: "sig", algorithm: "RS256", modulus: "1024" }),
     ).rejects.toThrow(/Invalid --modulus/i);
-
-    await expect(
-      runGenerate({
-        type: "EC",
-        use: "sig",
-        algorithm: "ES256",
-        operations: "sign,bogus",
-      }),
-    ).rejects.toThrow(/Invalid --operations/i);
 
     await expect(
       runGenerate({

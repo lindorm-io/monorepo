@@ -23,7 +23,6 @@ export const _createMockKryptos = (
     issuer: null,
     jwksUri: null,
     notBefore: new Date("2000-01-01T00:00:00.000Z"),
-    operations: ["encrypt", "decrypt"],
     ownerId: null,
     purpose: null,
     type: "EC",
@@ -37,6 +36,9 @@ export const _createMockKryptos = (
     isActive: true,
     isExpired: false,
     modulus: null,
+    // Metadata, not an attribute — the real class DERIVES this from the key
+    // material, so the mock must report what an ECDH-ES key actually can do.
+    operations: ["deriveKey", "deriveBits"],
     thumbprint: "mock-thumbprint",
     certificate: null,
 

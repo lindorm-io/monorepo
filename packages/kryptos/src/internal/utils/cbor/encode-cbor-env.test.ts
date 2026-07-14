@@ -1,7 +1,9 @@
-import { decode } from "cbor2";
+import { decode, encode } from "cbor2";
 import { describe, expect, test } from "vitest";
+import { KryptosKit } from "../../../classes/index.js";
 import type { LindormJwk } from "../../../types/index.js";
 import { CBOR_LABEL } from "../../constants/cbor-table.js";
+import { decodeCborEnv } from "./decode-cbor-env.js";
 import { encodeCborEnv } from "./encode-cbor-env.js";
 
 const EC_JWK = {
@@ -45,16 +47,48 @@ describe("encodeCborEnv", () => {
     expect(map.get(CBOR_LABEL.d)).toBeInstanceOf(Uint8Array);
   });
 
-  test("omits key_ops when it equals the alg/use default", () => {
-    const map = asMap(encodeCborEnv(EC_JWK));
+  // `operations` is derived from the key material, so key_ops has nothing to
+  // carry — it is never encoded, whatever the JWK claims. `key_ops` has no
+  // label at all, hence the bare 7 (the integer it used to occupy).
+  const RETIRED_KEY_OPS_LABEL = 7;
 
-    expect(map.has(CBOR_LABEL.key_ops)).toBe(false);
+  test.each([
+    ["the alg/use default", ["sign", "verify"]],
+    ["a contradictory list", ["verify"]],
+    ["nothing at all", undefined],
+  ])("never encodes key_ops (%s)", (_name, keyOps) => {
+    const map = asMap(
+      encodeCborEnv({ ...EC_JWK, key_ops: keyOps } as unknown as LindormJwk),
+    );
+
+    expect(map.has(RETIRED_KEY_OPS_LABEL)).toBe(false);
   });
 
-  test("emits key_ops when it differs from the default", () => {
-    const map = asMap(encodeCborEnv({ ...EC_JWK, key_ops: ["sign"] }));
+  // `key_ops` is gone from the vocabulary entirely, so a string carrying its old
+  // label is not "legacy but tolerated" — it is an unknown label, and the decoder
+  // rejects unknown labels loudly rather than silently ignoring them. The env
+  // format is pre-release, so there is nothing in the wild to keep compatible.
+  test("rejects an env string carrying the retired key_ops label", () => {
+    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
 
-    expect(map.get(CBOR_LABEL.key_ops)).toEqual([1]); // [sign]
+    const stale = encode(
+      new Map<number, unknown>([
+        ...asMap(encodeCborEnv(key.toJWK("private"))),
+        [RETIRED_KEY_OPS_LABEL, [1]],
+      ]),
+      { cde: true },
+    );
+
+    expect(() => decodeCborEnv(stale)).toThrow(/Unknown CBOR label "7"/);
+  });
+
+  // The reason key_ops can go: the key material answers the question by itself.
+  test("re-derives operations from the key material on import", () => {
+    const key = KryptosKit.generate.auto({ algorithm: "ES256" });
+    const jwk = decodeCborEnv(encode(asMap(encodeCborEnv(key.toJWK("private")))));
+
+    expect(jwk.key_ops).toBeUndefined();
+    expect(KryptosKit.from.jwk(jwk).operations).toEqual(["sign", "verify"]);
   });
 
   test("emits hidden as a boolean and omits absent optional text", () => {

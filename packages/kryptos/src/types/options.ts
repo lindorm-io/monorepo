@@ -14,7 +14,6 @@ type StdOptions = Optional<
   | "issuer"
   | "jwksUri"
   | "notBefore"
-  | "operations"
   | "ownerId"
   | "purpose"
 >;

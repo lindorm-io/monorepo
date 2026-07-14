@@ -1,17 +1,15 @@
 import { B64 } from "@lindorm/b64";
 import { encode } from "cbor2";
-import type { KryptosOperation, LindormJwk } from "../../../types/index.js";
+import type { LindormJwk } from "../../../types/index.js";
 import {
   CBOR_ALG,
   CBOR_CRV,
   CBOR_ENC,
   CBOR_KTY,
   CBOR_LABEL,
-  CBOR_OPS,
   CBOR_USE,
   CBOR_VERSION,
 } from "../../constants/cbor-table.js";
-import { calculateKeyOps } from "../key-ops.js";
 import { CBOR_MATERIAL_KEYS } from "./cbor-material-keys.js";
 
 // A Node Buffer carries a `toJSON` that cbor2 honours (encoding it as an object),
@@ -19,16 +17,6 @@ import { CBOR_MATERIAL_KEYS } from "./cbor-material-keys.js";
 // string on the wire.
 const bytesFromB64 = (text: string, encoding: "b64u" | "base64"): Uint8Array =>
   new Uint8Array(B64.toBuffer(text, encoding));
-
-const arraysEqual = (a: ReadonlyArray<string>, b: ReadonlyArray<string>): boolean =>
-  a.length === b.length && a.every((value, index) => value === b[index]);
-
-// `key_ops` is omitted when it equals the alg/use-derived default (the decoder
-// recomputes the same default), keeping the common case compact.
-const isDefaultKeyOps = (
-  jwk: LindormJwk,
-  keyOps: ReadonlyArray<KryptosOperation>,
-): boolean => arraysEqual(keyOps, calculateKeyOps({ algorithm: jwk.alg, use: jwk.use }));
 
 const setText = (map: Map<number, unknown>, label: number, value?: string): void => {
   if (typeof value === "string" && value.length > 0) map.set(label, value);
@@ -40,6 +28,10 @@ const setInt = (map: Map<number, unknown>, label: number, value?: number): void 
 
 // Encode a private LindormJwk into the kryptos CBOR wire map (integer labels,
 // enum ints, byte strings for material). Deterministic (CDE) for stable output.
+//
+// `key_ops` (label 7) is NEVER encoded — `operations` is derived from the key
+// material on import, so there is nothing to carry. The DECODE path still reads
+// label 7, because env strings already in the wild carry it.
 export const encodeCborEnv = (jwk: LindormJwk): Uint8Array => {
   const map = new Map<number, unknown>();
 
@@ -51,14 +43,6 @@ export const encodeCborEnv = (jwk: LindormJwk): Uint8Array => {
 
   if (jwk.crv) map.set(CBOR_LABEL.crv, CBOR_CRV[jwk.crv]);
   if (jwk.enc) map.set(CBOR_LABEL.enc, CBOR_ENC[jwk.enc]);
-
-  const keyOps = jwk.key_ops;
-  if (keyOps && !isDefaultKeyOps(jwk, keyOps)) {
-    map.set(
-      CBOR_LABEL.key_ops,
-      keyOps.map((op) => CBOR_OPS[op]),
-    );
-  }
 
   setInt(map, CBOR_LABEL.exp, jwk.exp);
   setInt(map, CBOR_LABEL.iat, jwk.iat);

@@ -42,7 +42,7 @@ key.algorithm; // "ES512"
 key.type; // "EC"
 key.curve; // "P-521"
 key.use; // "sig"
-key.operations; // ["sign", "verify"]
+key.operations; // ["sign", "verify"] — derived from the key material
 
 const jwk = key.export("jwk");
 const pem = key.export("pem");
@@ -199,7 +199,7 @@ kryptos generate --type OKP --use sig --algorithm EdDSA --curve Ed448 --expiry 2
 
 `hidden` keeps a key **out of the published JWKS** (e.g. a CA whose public half must never be advertised). It is an operational flag, not part of the JOSE standard: it round-trips through env strings and private JWKs, but is **never** emitted in a public JWK. Both `generate` and `derive` take `--hidden` (scripted) or prompt for it (interactive).
 
-Power-user flags (scripted only, no prompts) cover every attribute the library accepts: `--id`, `--issuer`, `--jwks-uri`, `--owner-id`, `--not-before` (ISO date), `--modulus` (RSA `2048`/`3072`/`4096`), `--operations` (comma list overriding the computed `key_ops`), and `--format` (`cbor` default, or `json`). `derive` additionally takes `--id`, `--expiry`, `--issuer`, `--jwks-uri`, `--owner-id`, `--format`. Every flag is validated with a clear error.
+Power-user flags (scripted only, no prompts) cover every attribute the library accepts: `--id`, `--issuer`, `--jwks-uri`, `--owner-id`, `--not-before` (ISO date), `--modulus` (RSA `2048`/`3072`/`4096`), and `--format` (`cbor` default, or `json`). `derive` additionally takes `--id`, `--expiry`, `--issuer`, `--jwks-uri`, `--owner-id`, `--format`. Every flag is validated with a clear error.
 
 ### Inspect an env string
 
@@ -365,7 +365,7 @@ Throws `KryptosError` on any failure (signature mismatch, validity-window violat
 ```ts
 const jwk = key.toJWK("public");
 // {
-//   kid, alg, kty, use, key_ops,                <- standard JWK
+//   kid, alg, kty, use,                        <- standard JWK
 //   enc, exp, iat, iss, jku, nbf, owner_id,     <- Lindorm extensions
 //   purpose,
 //   x5c: ["<base64-DER>", ...],                 <- certificate chain (leaf -> root)
@@ -429,7 +429,7 @@ The model class. Construct directly only if you already have raw key material �
 | `curve`                                      | EC / OKP curve, otherwise `null`.                                                                                                                                                                     |
 | `modulus`                                    | RSA modulus size in bits, otherwise `null`.                                                                                                                                                           |
 | `encryption`                                 | AES content encryption (`enc` keys), otherwise `null`.                                                                                                                                                |
-| `operations`                                 | `key_ops` — derived from `algorithm` + `use` if not explicitly supplied.                                                                                                                              |
+| `operations`                                 | What the key MATERIAL can do — derived from `algorithm` + `use` + which halves are present. Not JOSE `key_ops` (never emitted) and not WebCrypto usages: a full keypair reports `["sign", "verify"]`. |
 | `createdAt` / `notBefore` / `expiresAt`      | Lifetime dates. `expiresAt` defaults to `notBefore + 25y`.                                                                                                                                            |
 | `expiresIn`                                  | Seconds until expiry, `0` once expired.                                                                                                                                                               |
 | `isActive` / `isExpired`                     | Computed from `notBefore` / `expiresAt` against the current time.                                                                                                                                     |

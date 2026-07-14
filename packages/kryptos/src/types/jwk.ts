@@ -7,9 +7,12 @@ import type { KryptosType, KryptosUse } from "./types.js";
 
 export type JwkMetadata = {
   alg: KryptosAlgorithm;
-  // OPTIONAL per RFC 7517 §4.3, and absent from public JWKs by construction: a
-  // public key cannot claim a private operation, and WebCrypto rejects one that
-  // does. Only private JWKs (env strings) carry it.
+  // OPTIONAL per RFC 7517 §4.3, which also says it SHOULD NOT be paired with
+  // `use` — and every JWK we emit carries `use`. So we NEVER emit it, in either
+  // export mode. The member survives on the type for the IMPORT side only: a
+  // foreign JWK (or a legacy kryptos env string) may carry it, and it decodes
+  // cleanly — but it is ignored, since `operations` is derived from the key
+  // material.
   key_ops?: Array<KryptosOperation>;
   kid: string;
   kty: KryptosType;

@@ -29,6 +29,7 @@ import type {
   RsaModulus,
 } from "../types/index.js";
 import type { ExportCache } from "../internal/types/export-cache.js";
+import { calculateKeyOps } from "../internal/utils/key-ops.js";
 import { encodeCborEnv } from "../internal/utils/cbor/encode-cbor-env.js";
 import { certDerToPem } from "../internal/utils/x509/der-to-pem.js";
 import { computeKeyId } from "../internal/utils/compute-key-id.js";
@@ -66,7 +67,6 @@ export class Kryptos implements IKryptos {
   private readonly _issuer: string | null;
   private readonly _jwksUri: string | null;
   private readonly _notBefore: Date;
-  private readonly _operations: ReadonlyArray<KryptosOperation>;
   private readonly _ownerId: string | null;
   private readonly _purpose: string | null;
 
@@ -84,7 +84,6 @@ export class Kryptos implements IKryptos {
     this._isExternal = options.isExternal ?? false;
     this._issuer = options.issuer || null;
     this._jwksUri = options.jwksUri || null;
-    this._operations = options.operations ?? [];
     this._ownerId = options.ownerId || null;
     this._purpose = options.purpose || null;
     this._type = options.type;
@@ -205,10 +204,6 @@ export class Kryptos implements IKryptos {
     return this._notBefore;
   }
 
-  get operations(): Array<KryptosOperation> {
-    return [...this._operations];
-  }
-
   get ownerId(): string | null {
     return this._ownerId;
   }
@@ -253,6 +248,20 @@ export class Kryptos implements IKryptos {
 
   get modulus(): RsaModulus | null {
     return this._modulus;
+  }
+
+  /**
+   * What this key MATERIAL can do — NOT JOSE `key_ops`, and NOT WebCrypto usages.
+   * A private JWK embeds the public half, so a full keypair reports [sign, verify];
+   * WebCrypto would say [sign], because it models ONE CryptoKey with ONE type.
+   * Never emitted on the wire — `toJWK` omits key_ops in BOTH modes.
+   */
+  get operations(): Array<KryptosOperation> {
+    return calculateKeyOps({
+      algorithm: this._algorithm,
+      hasPrivateKey: this.hasPrivateKey,
+      use: this._use,
+    });
   }
 
   get thumbprint(): string {
@@ -440,7 +449,6 @@ export class Kryptos implements IKryptos {
       issuer: this.issuer,
       jwksUri: this.jwksUri,
       notBefore: this.notBefore,
-      operations: this.operations,
       ownerId: this.ownerId,
       purpose: this.purpose,
       type: this.type,
@@ -536,14 +544,10 @@ export class Kryptos implements IKryptos {
       iat: getUnixTime(this.createdAt),
       iss: this.issuer ?? undefined,
       jku: this.jwksUri ?? undefined,
-      // Emitted only in private JWKs (env strings). A public key cannot claim
-      // the private-half operations it is exported alongside — a public sig key
-      // can only `verify`, never `sign` — and WebCrypto (so jose, and every RP
-      // built on it) HARD REJECTS a public JWK whose key_ops names a private
-      // operation. There is no correct subset to emit either: WebCrypto gives a
-      // public ECDH key no usages at all. RFC 7517 §4.3 makes key_ops OPTIONAL
-      // and SHOULD NOT pair it with `use`, which the public JWK already carries.
-      key_ops: mode === "private" ? this.operations : undefined,
+      // `key_ops` is NEVER emitted — in either mode. RFC 7517 §4.3 makes it
+      // OPTIONAL and says it SHOULD NOT be paired with `use`, which every JWK we
+      // emit already carries; and it has no readers — `operations` is a derived
+      // capability of the key material, re-derived on import.
       nbf: getUnixTime(this.notBefore),
       owner_id: this.ownerId ?? undefined,
       purpose: this.purpose ?? undefined,

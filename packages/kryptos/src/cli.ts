@@ -10,7 +10,6 @@ import { program } from "commander";
 import { KryptosKit } from "./classes/index.js";
 import { KryptosError } from "./errors/index.js";
 import type { IKryptos } from "./interfaces/index.js";
-import { CBOR_OPS } from "./internal/constants/cbor-table.js";
 import { getEcCurve } from "./internal/utils/ec/get-curve.js";
 import { ENVIRONMENTS, isEnvironment } from "./internal/utils/is-environment.js";
 import { inspectJson, inspectSummary } from "./internal/utils/inspect-key.js";
@@ -27,7 +26,6 @@ import {
   type KryptosCurve,
   type KryptosEncryption,
   type KryptosEnvFormat,
-  type KryptosOperation,
   type KryptosType,
   type KryptosUse,
   OCT_ENC_DIR_ALGORITHMS,
@@ -93,30 +91,6 @@ const resolveModulus = (value: string | undefined): RsaModulus | undefined => {
     });
   }
   return modulus as RsaModulus;
-};
-
-const resolveOperations = (
-  value: string | undefined,
-): Array<KryptosOperation> | undefined => {
-  if (!value) return undefined;
-
-  const domain = Object.keys(CBOR_OPS);
-  const operations = value
-    .split(",")
-    .map((op) => op.trim())
-    .filter(Boolean);
-
-  for (const op of operations) {
-    if (!domain.includes(op)) {
-      throw new KryptosError(`Invalid --operations entry: ${op}`, {
-        code: "invalid_operations",
-        title: "Invalid Operations",
-        details: `The key operation "${op}" is not valid; choose from ${domain.join(", ")}.`,
-        data: { operation: op, valid: domain },
-      });
-    }
-  }
-  return operations as Array<KryptosOperation>;
 };
 
 program.name("kryptos").description("CLI for managing kryptos keys");
@@ -356,7 +330,6 @@ export type GenerateOptions = {
   ownerId?: string;
   notBefore?: string;
   modulus?: string;
-  operations?: string;
   format?: string;
   certificate?: string;
   subject?: string;
@@ -600,7 +573,6 @@ export const generate = async (options: GenerateOptions = {}): Promise<void> => 
   // Power-user metadata: scripted flags only, no interactive prompts.
   const notBefore = resolveNotBefore(options.notBefore);
   const modulus = resolveModulus(options.modulus);
-  const operations = resolveOperations(options.operations);
 
   const certificate = await resolveCertificate(type, options, scripted);
 
@@ -617,7 +589,6 @@ export const generate = async (options: GenerateOptions = {}): Promise<void> => 
     ...(keyExpiresAt ? { expiresAt: keyExpiresAt } : {}),
     ...(notBefore ? { notBefore } : {}),
     ...(modulus ? { modulus } : {}),
-    ...(operations ? { operations } : {}),
     ...(hidden ? { hidden: true } : {}),
   });
 
@@ -828,7 +799,6 @@ program
   .option("--jwks-uri <uri>", "JWKS URI (jku)")
   .option("--owner-id <id>", "owner id")
   .option("--modulus <bits>", "RSA modulus: 2048, 3072, 4096")
-  .option("--operations <ops>", "comma-separated key_ops override, e.g. sign,verify")
   .option("--format <format>", "env-string format: cbor (default) or json")
   .option(
     "-c, --certificate <mode>",
