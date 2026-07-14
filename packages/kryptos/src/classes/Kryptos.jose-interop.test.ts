@@ -1,8 +1,12 @@
 import { importJWK } from "jose";
 import { describe, expect, test } from "vitest";
 import {
+  EC_CURVES,
+  ECDH_ES_ALGORITHMS,
   KRYPTOS_ENC_ALGORITHMS,
   KRYPTOS_SIG_ALGORITHMS,
+  type EcCurve,
+  type EcEncAlgorithm,
   type KryptosAlgorithm,
 } from "../types/index.js";
 import { KryptosKit } from "./KryptosKit.js";
@@ -189,6 +193,117 @@ describe("Kryptos.toJWK jose interop matrix", () => {
             code: "no_public_jwk",
           }),
         );
+      },
+    );
+  });
+});
+
+// THE EC-CURVE HALF OF ECDH — the blind spot in the matrix above.
+//
+// `autoGenerateConfig` maps EVERY `ECDH-ES*` algorithm to OKP (X25519 for
+// `ECDH-ES`/`+A128KW`/`+A128GCMKW`, X448 for the 192/256 variants), so
+// `generate.auto` CANNOT produce an EC ECDH key. The matrix above therefore
+// proves that OKP ECDH public JWKs import — and says nothing whatsoever about
+// the EC ones, even though `KryptosKit.generate.enc.ec` produces them and a
+// deployment can publish one into its JWKS. Same export surface, same two
+// production blockers waiting; only the key type differs.
+//
+// So this block pins `type: "EC"` explicitly and re-runs the identical
+// assertions over the full ECDH × EC-curve product.
+
+const EC_ECDH_CASES: Array<[EcEncAlgorithm, EcCurve]> = ECDH_ES_ALGORITHMS.flatMap(
+  (algorithm) => EC_CURVES.map((curve): [EcEncAlgorithm, EcCurve] => [algorithm, curve]),
+);
+
+const EC_ECDH_PUBLISHED = EC_ECDH_CASES.filter(
+  ([algorithm]) => !UNREGISTERED_BY_DESIGN.includes(algorithm),
+);
+
+const EC_ECDH_UNREGISTERED = EC_ECDH_CASES.filter(([algorithm]) =>
+  UNREGISTERED_BY_DESIGN.includes(algorithm),
+);
+
+describe("Kryptos.toJWK jose interop matrix — EC-curve ECDH", () => {
+  // Guards the premise of this whole block: `auto` really does resolve every
+  // ECDH-ES algorithm to OKP, which is WHY the matrix above cannot reach EC and
+  // why these cases must name the type themselves. The day `auto` starts
+  // resolving one of them to EC, this fails and the gap analysis is re-opened.
+  test.each(ECDH_ES_ALGORITHMS)("should resolve %s to OKP under auto", (algorithm) => {
+    expect(KryptosKit.getTypeForAlgorithm(algorithm)).toBe("OKP");
+  });
+
+  // The partition, same discipline as the matrix above: every ECDH algorithm on
+  // every EC curve lands in exactly one bucket, and the buckets sum to the full
+  // product. A new ECDH algorithm or a new EC curve cannot fall out of the table.
+  test("should account for every ECDH algorithm on every EC curve exactly once", () => {
+    expect([...EC_ECDH_PUBLISHED, ...EC_ECDH_UNREGISTERED].sort()).toEqual(
+      [...EC_ECDH_CASES].sort(),
+    );
+    expect(EC_ECDH_CASES).toHaveLength(
+      ECDH_ES_ALGORITHMS.length * EC_CURVES.length, // 7 × 3
+    );
+  });
+
+  describe("published keys import into real jose", () => {
+    test.each(EC_ECDH_PUBLISHED)(
+      "should import the public JWK we publish for %s on %s",
+      async (algorithm, curve) => {
+        const kryptos = KryptosKit.generate.enc.ec({ algorithm, curve });
+
+        // The point of the block: this must be an EC key on the requested curve,
+        // not the OKP key `auto` would have handed us.
+        expect(kryptos.type).toBe("EC");
+        expect(kryptos.curve).toBe(curve);
+
+        const jwk = kryptos.toJWK("public");
+
+        expect("key_ops" in jwk).toBe(false);
+
+        const imported = await importJWK(jwk, algorithm);
+
+        // A real WebCrypto CryptoKey, of the PUBLIC half, carrying exactly the
+        // usages the platform grants it — for a public ECDH key that is NONE.
+        expect(imported).toBeInstanceOf(CryptoKey);
+        expect((imported as CryptoKey).type).toBe("public");
+        expect([...(imported as CryptoKey).usages].sort()).toEqual(
+          expectedUsages(algorithm).sort(),
+        );
+      },
+    );
+  });
+
+  describe("unregistered algorithms are rejected — intentionally", () => {
+    test.each(EC_ECDH_UNREGISTERED)(
+      "should be rejected by jose on the alg value, not on key_ops (%s on %s)",
+      async (algorithm, curve) => {
+        const kryptos = KryptosKit.generate.enc.ec({ algorithm, curve });
+        const jwk = kryptos.toJWK("public");
+
+        expect(kryptos.type).toBe("EC");
+        expect(kryptos.curve).toBe(curve);
+
+        // Same cause as the OKP variants, and pinned the same way: `key_ops` is
+        // absent, so the rejection cannot be blamed on it. These fail on the
+        // `alg` VALUE, because `ECDH-ES+A*GCMKW` is not a registered JWE
+        // algorithm — RFC 7518 §4.6 defines `ECDH-ES` and the three `+A*KW`
+        // forms and nothing else. Keeping them is the user's ruling; asserting
+        // the rejection is how we keep that ruling honest instead of silent.
+        expect("key_ops" in jwk).toBe(false);
+
+        await expect(importJWK(jwk, algorithm)).rejects.toThrow(JOSE_UNSUPPORTED_ALG);
+      },
+    );
+  });
+
+  describe("key_ops is never emitted", () => {
+    // The private half too — the field must be absent from BOTH modes, for the
+    // EC curves exactly as for the OKP ones.
+    test.each(EC_ECDH_CASES)(
+      "should omit key_ops from the private JWK (%s on %s)",
+      (algorithm, curve) => {
+        const jwk = KryptosKit.generate.enc.ec({ algorithm, curve }).toJWK("private");
+
+        expect("key_ops" in jwk).toBe(false);
       },
     );
   });
