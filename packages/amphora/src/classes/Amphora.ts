@@ -377,38 +377,28 @@ export class Amphora implements IAmphora {
     this._lastRefresh = new Date();
   }
 
+  // The question is never "does key_ops list this operation?" but "does the vault
+  // hold the HALF the operation needs?" — which is what `hasPrivateKey` answers.
+  // Note `canEncrypt` asks for `use: "enc"` alone: an oct key has no public half
+  // (its secret lives in the private one), so demanding `hasPublicKey` would
+  // exclude every dir / A*KW / PBES2 key. `hasPrivateKey` on the decrypt side is
+  // also exactly what excludes remotely-fetched keys — a JWKS only ever yields
+  // public halves.
+
   canEncrypt(): boolean {
-    return (
-      this.filteredKeys({
-        $or: [
-          { operations: { $in: ["encrypt", "deriveKey", "wrapKey"] } },
-          { use: "enc" },
-        ],
-      }).length > 0
-    );
+    return this.filteredKeys({ use: "enc" }).length > 0;
   }
 
   canDecrypt(): boolean {
-    return (
-      this.filteredKeys({
-        $or: [
-          { operations: { $in: ["decrypt", "deriveKey", "unwrapKey"] } },
-          { use: "enc" },
-        ],
-      }).length > 0
-    );
+    return this.filteredKeys({ use: "enc", hasPrivateKey: true }).length > 0;
   }
 
   canSign(): boolean {
-    return (
-      this.filteredKeys({ $or: [{ operations: ["sign"] }, { use: "sig" }] }).length > 0
-    );
+    return this.filteredKeys({ use: "sig", hasPrivateKey: true }).length > 0;
   }
 
   canVerify(): boolean {
-    return (
-      this.filteredKeys({ $or: [{ operations: ["verify"] }, { use: "sig" }] }).length > 0
-    );
+    return this.filteredKeys({ use: "sig" }).length > 0;
   }
 
   // private methods

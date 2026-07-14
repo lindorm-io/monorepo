@@ -56,7 +56,6 @@ export const TEST_X509_KRYPTOS_SIG = KryptosKit.from.b64({
   algorithm: "ES256",
   curve: "P-256",
   createdAt: new Date("2024-01-01T00:10:00.000Z"),
-  operations: ["sign", "verify"],
   privateKey: TEST_X509_LEAF_PRIVATE_KEY_B64,
   publicKey: TEST_X509_LEAF_PUBLIC_KEY_B64,
   type: "EC",

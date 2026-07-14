@@ -68,6 +68,87 @@ exports[`Amphora > add > should update jwks when adding key 1`] = `
 }
 `;
 
+exports[`Amphora > can > should encrypt AND decrypt with an oct dir key, which has no public half 1`] = `
+{
+  "canDecrypt": true,
+  "canEncrypt": true,
+  "canSign": false,
+  "canVerify": false,
+}
+`;
+
+exports[`Amphora > can > should encrypt and decrypt with an ECDH-ES key holding its private half 1`] = `
+{
+  "canDecrypt": true,
+  "canEncrypt": true,
+  "canSign": false,
+  "canVerify": false,
+}
+`;
+
+exports[`Amphora > can > should encrypt but NOT decrypt with a public-only external enc key 1`] = `
+{
+  "canDecrypt": false,
+  "canEncrypt": true,
+  "canSign": false,
+  "canVerify": false,
+}
+`;
+
+exports[`Amphora > can > should ignore keys that are not active 1`] = `
+{
+  "canDecrypt": false,
+  "canEncrypt": false,
+  "canSign": false,
+  "canVerify": false,
+}
+`;
+
+exports[`Amphora > can > should not report enc capabilities for a sig-only vault 1`] = `
+{
+  "canDecrypt": false,
+  "canEncrypt": false,
+  "canSign": true,
+  "canVerify": true,
+}
+`;
+
+exports[`Amphora > can > should not report sig capabilities for an enc-only vault 1`] = `
+{
+  "canDecrypt": true,
+  "canEncrypt": true,
+  "canSign": false,
+  "canVerify": false,
+}
+`;
+
+exports[`Amphora > can > should report no capabilities for an empty vault 1`] = `
+{
+  "canDecrypt": false,
+  "canEncrypt": false,
+  "canSign": false,
+  "canVerify": false,
+}
+`;
+
+exports[`Amphora > can > should sign and verify with an asymmetric key holding its private half 1`] = `
+{
+  "canDecrypt": false,
+  "canEncrypt": false,
+  "canSign": true,
+  "canVerify": true,
+}
+`;
+
+exports[`Amphora > can > should verify but NOT sign with a public-only external sig key 1`] = `
+{
+  "canDecrypt": false,
+  "canEncrypt": false,
+  "canSign": false,
+  "canVerify": true,
+}
+`;
+
 exports[`Amphora > external config > should add external config and find jwks 1`] = `
 [
   {

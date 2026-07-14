@@ -1,4 +1,4 @@
-import { KryptosKit } from "@lindorm/kryptos";
+import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockKryptos } from "@lindorm/kryptos/mocks/vitest";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import MockDate from "mockdate";
@@ -8,11 +8,13 @@ import {
   OPEN_ID_JWKS_RESPONSE,
 } from "../__fixtures__/auth0.js";
 import {
+  TEST_EC_KEY_ENC,
   TEST_EC_KEY_SIG,
   TEST_OCT_KEY_ENC,
   TEST_OCT_KEY_SIG,
   TEST_OKP_KEY_ENC,
   TEST_OKP_KEY_SIG,
+  TEST_RSA_KEY_ENC,
   TEST_RSA_KEY_SIG,
 } from "../__fixtures__/keys.js";
 import { TEST_X509_KRYPTOS_SIG } from "../__fixtures__/x509.js";
@@ -175,12 +177,12 @@ describe("Amphora", () => {
       ]);
     });
 
-    test("should filter kryptos in vault using the operation query", async () => {
-      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG, TEST_OCT_KEY_ENC]);
+    test("should filter kryptos in vault using the derived operation query", async () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG, TEST_EC_KEY_ENC]);
 
       await expect(
         amphora.filter({ issuer, operations: ["deriveKey"] }),
-      ).resolves.toEqual([TEST_OCT_KEY_ENC]);
+      ).resolves.toEqual([TEST_EC_KEY_ENC]);
     });
 
     test("should filter kryptos in vault using the type query", async () => {
@@ -368,44 +370,90 @@ describe("Amphora", () => {
   });
 
   describe("can", () => {
-    test("should return true for canEncrypt", () => {
-      amphora.add(TEST_OCT_KEY_ENC);
+    // A JWKS only ever yields public halves, so this is the shape of every
+    // remotely-fetched key.
+    const publicOnly = (key: IKryptos) => KryptosKit.from.jwk(key.toJWK("public"), true);
 
-      expect(amphora.canEncrypt()).toBe(true);
+    const capabilities = () => ({
+      canEncrypt: amphora.canEncrypt(),
+      canDecrypt: amphora.canDecrypt(),
+      canSign: amphora.canSign(),
+      canVerify: amphora.canVerify(),
     });
 
-    test("should return false for canEncrypt", () => {
-      expect(amphora.canEncrypt()).toBe(false);
+    test("should report no capabilities for an empty vault", () => {
+      expect(capabilities()).toMatchSnapshot();
     });
 
-    test("should return true for canDecrypt", () => {
-      amphora.add(TEST_OCT_KEY_ENC);
-
-      expect(amphora.canDecrypt()).toBe(true);
-    });
-
-    test("should return false for canDecrypt", () => {
-      expect(amphora.canDecrypt()).toBe(false);
-    });
-
-    test("should return true for canSign", () => {
+    test("should sign and verify with an asymmetric key holding its private half", () => {
       amphora.add(TEST_RSA_KEY_SIG);
 
       expect(amphora.canSign()).toBe(true);
-    });
-
-    test("should return false for canSign", () => {
-      expect(amphora.canSign()).toBe(false);
-    });
-
-    test("should return true for canVerify", () => {
-      amphora.add(TEST_RSA_KEY_SIG);
-
       expect(amphora.canVerify()).toBe(true);
+      expect(capabilities()).toMatchSnapshot();
     });
 
-    test("should return false for canVerify", () => {
+    test("should verify but NOT sign with a public-only external sig key", () => {
+      const external = publicOnly(TEST_EC_KEY_SIG);
+
+      amphora.add(external);
+
+      expect(external.hasPrivateKey).toBe(false);
+      expect(amphora.canVerify()).toBe(true);
+      expect(amphora.canSign()).toBe(false);
+      expect(capabilities()).toMatchSnapshot();
+    });
+
+    test("should encrypt AND decrypt with an oct dir key, which has no public half", () => {
+      amphora.add(TEST_OCT_KEY_ENC);
+
+      expect(TEST_OCT_KEY_ENC.hasPublicKey).toBe(false);
+      expect(amphora.canEncrypt()).toBe(true);
+      expect(amphora.canDecrypt()).toBe(true);
+      expect(capabilities()).toMatchSnapshot();
+    });
+
+    test("should encrypt but NOT decrypt with a public-only external enc key", () => {
+      const external = publicOnly(TEST_RSA_KEY_ENC);
+
+      amphora.add(external);
+
+      expect(external.hasPrivateKey).toBe(false);
+      expect(amphora.canEncrypt()).toBe(true);
+      expect(amphora.canDecrypt()).toBe(false);
+      expect(capabilities()).toMatchSnapshot();
+    });
+
+    test("should encrypt and decrypt with an ECDH-ES key holding its private half", () => {
+      amphora.add(TEST_EC_KEY_ENC);
+
+      expect(capabilities()).toMatchSnapshot();
+    });
+
+    test("should not report sig capabilities for an enc-only vault", () => {
+      amphora.add([TEST_EC_KEY_ENC, TEST_OCT_KEY_ENC]);
+
+      expect(amphora.canSign()).toBe(false);
       expect(amphora.canVerify()).toBe(false);
+      expect(capabilities()).toMatchSnapshot();
+    });
+
+    test("should not report enc capabilities for a sig-only vault", () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
+
+      expect(amphora.canEncrypt()).toBe(false);
+      expect(amphora.canDecrypt()).toBe(false);
+      expect(capabilities()).toMatchSnapshot();
+    });
+
+    test("should ignore keys that are not active", () => {
+      amphora.add(
+        KryptosKit.clone(TEST_EC_KEY_SIG, {
+          notBefore: new Date("2099-01-01T00:00:00.000Z"),
+        }),
+      );
+
+      expect(capabilities()).toMatchSnapshot();
     });
   });
 

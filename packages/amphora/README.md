@@ -140,29 +140,27 @@ await amphora.filter({ use: "sig", type: "EC" });
 
 await amphora.filter({ algorithm: { $in: ["ES256", "ES384", "ES512"] } });
 
-await amphora.filter({
-  $or: [{ operations: { $in: ["encrypt"] } }, { operations: { $in: ["deriveKey"] } }],
-});
+await amphora.filter({ use: "enc", hasPrivateKey: true });
 ```
 
 Available query fields (from `AmphoraQuery`):
 
-| Field                   | Type                              | Description                                                                                       |
-| ----------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `id`                    | `string`                          | Key id.                                                                                           |
-| `algorithm`             | `string`                          | JOSE algorithm (e.g. `ES512`, `RS256`, `EdDSA`).                                                  |
-| `certificateThumbprint` | `string`                          | SHA-256 thumbprint of the leaf certificate.                                                       |
-| `curve`                 | `string`                          | EC/OKP curve (e.g. `P-256`, `Ed25519`, `X25519`).                                                 |
-| `encryption`            | `string`                          | Content encryption algorithm (e.g. `A256GCM`).                                                    |
-| `hasPrivateKey`         | `boolean`                         | Whether the key contains private material.                                                        |
-| `hasPublicKey`          | `boolean`                         | Whether the key contains public material.                                                         |
-| `isExternal`            | `boolean`                         | Whether the key was imported from an external provider.                                           |
-| `issuer`                | `string`                          | Issuing authority URL.                                                                            |
-| `operations`            | `Array<KeyOperation>`             | Allowed operations (`sign`, `verify`, `encrypt`, `decrypt`, `deriveKey`, `wrapKey`, `unwrapKey`). |
-| `ownerId`               | `string`                          | Tenant/owner identifier.                                                                          |
-| `purpose`               | `string`                          | Caller-defined key purpose.                                                                       |
-| `type`                  | `"EC" \| "RSA" \| "oct" \| "OKP"` | Key type.                                                                                         |
-| `use`                   | `"sig" \| "enc"`                  | Signature or encryption.                                                                          |
+| Field                   | Type                              | Description                                                                                                                                                                    |
+| ----------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                    | `string`                          | Key id.                                                                                                                                                                        |
+| `algorithm`             | `string`                          | JOSE algorithm (e.g. `ES512`, `RS256`, `EdDSA`).                                                                                                                               |
+| `certificateThumbprint` | `string`                          | SHA-256 thumbprint of the leaf certificate.                                                                                                                                    |
+| `curve`                 | `string`                          | EC/OKP curve (e.g. `P-256`, `Ed25519`, `X25519`).                                                                                                                              |
+| `encryption`            | `string`                          | Content encryption algorithm (e.g. `A256GCM`).                                                                                                                                 |
+| `hasPrivateKey`         | `boolean`                         | Whether the key contains private material.                                                                                                                                     |
+| `hasPublicKey`          | `boolean`                         | Whether the key contains public material.                                                                                                                                      |
+| `isExternal`            | `boolean`                         | Whether the key was imported from an external provider.                                                                                                                        |
+| `issuer`                | `string`                          | Issuing authority URL.                                                                                                                                                         |
+| `operations`            | `Array<KeyOperation>`             | Derived capability of the key material (`sign`, `verify`, `encrypt`, `decrypt`, `deriveKey`, `deriveBits`, `wrapKey`, `unwrapKey`) — advisory; prefer `use` + `hasPrivateKey`. |
+| `ownerId`               | `string`                          | Tenant/owner identifier.                                                                                                                                                       |
+| `purpose`               | `string`                          | Caller-defined key purpose.                                                                                                                                                    |
+| `type`                  | `"EC" \| "RSA" \| "oct" \| "OKP"` | Key type.                                                                                                                                                                      |
+| `use`                   | `"sig" \| "enc"`                  | Signature or encryption.                                                                                                                                                       |
 
 All query results are filtered to active keys only (excludes expired and not-yet-valid keys) and sorted newest-first by creation date.
 
@@ -253,7 +251,7 @@ new Amphora({
 
 ## Capability Checks
 
-Boolean checks for what the active vault can do, evaluated against key operations and `use` flags:
+Boolean checks for what the active vault can do. Each asks whether the vault holds the key **half** the operation needs — not what a key's `key_ops` advertises:
 
 ```typescript
 amphora.canEncrypt();
@@ -262,12 +260,14 @@ amphora.canSign();
 amphora.canVerify();
 ```
 
-| Method         | Returns true when the vault contains an active key with…                      |
-| -------------- | ----------------------------------------------------------------------------- |
-| `canEncrypt()` | operations including `encrypt`, `deriveKey`, or `wrapKey`, or `use: "enc"`.   |
-| `canDecrypt()` | operations including `decrypt`, `deriveKey`, or `unwrapKey`, or `use: "enc"`. |
-| `canSign()`    | operations including `sign`, or `use: "sig"`.                                 |
-| `canVerify()`  | operations including `verify`, or `use: "sig"`.                               |
+| Method         | Returns true when the vault contains an active key matching… |
+| -------------- | ------------------------------------------------------------ |
+| `canEncrypt()` | `{ use: "enc" }` — a public half or an oct secret.           |
+| `canDecrypt()` | `{ use: "enc", hasPrivateKey: true }`                        |
+| `canSign()`    | `{ use: "sig", hasPrivateKey: true }`                        |
+| `canVerify()`  | `{ use: "sig" }`                                             |
+
+`hasPrivateKey` is what excludes remotely-fetched keys: a JWKS only ever yields public halves, so a vault holding nothing but external sig keys can verify but not sign.
 
 ## Properties
 

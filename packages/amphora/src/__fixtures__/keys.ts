@@ -26,7 +26,6 @@ export const TEST_EC_KEY_SIG = KryptosKit.from.b64({
   id: "b9e7bb4d-d332-55d2-9b33-f990ff7db4c7",
   algorithm: "ES512",
   createdAt: new Date("2024-01-01T00:01:00.000Z"),
-  operations: ["sign", "verify"],
   use: "sig",
 });
 
@@ -35,7 +34,6 @@ export const TEST_EC_KEY_ENC = KryptosKit.from.b64({
   id: "43bd1720-5dab-5d52-ae1e-e9dbbe6adfe4",
   algorithm: "ECDH-ES",
   createdAt: new Date("2024-01-01T00:02:00.000Z"),
-  operations: ["encrypt", "decrypt"],
   use: "enc",
 });
 
@@ -49,7 +47,6 @@ export const TEST_OCT_KEY_SIG = KryptosKit.from.b64({
   type: "oct",
   use: "sig",
   createdAt: new Date("2024-01-01T00:03:00.000Z"),
-  operations: ["sign", "verify"],
 });
 
 export const TEST_OCT_KEY_ENC = KryptosKit.from.b64({
@@ -57,7 +54,6 @@ export const TEST_OCT_KEY_ENC = KryptosKit.from.b64({
   id: "ae26175f-961d-5947-8318-6299e4576b83",
   algorithm: "dir",
   createdAt: new Date("2024-01-01T00:04:00.000Z"),
-  operations: ["encrypt", "decrypt", "deriveKey"],
   privateKey: "0SAdXqYgUS_IPXzub2spRQ2VLJl95iTn3wl4HIRYRZg",
   publicKey: "",
   type: "oct",
@@ -70,7 +66,6 @@ export const TEST_OKP_KEY_SIG = KryptosKit.from.b64({
   algorithm: "EdDSA",
   createdAt: new Date("2024-01-01T00:05:00.000Z"),
   curve: "Ed25519",
-  operations: ["sign", "verify"],
   privateKey: "MC4CAQAwBQYDK2VwBCIEIBwKJlvoh1ngd9LRd7dtvGOSqW4uZamdvIu0ABD2AkxL",
   publicKey: "MCowBQYDK2VwAyEAGRCwCA6lChosFGMQwxGiHCdzblfvCz0FNiRtTnm1qqc",
   type: "OKP",
@@ -83,7 +78,6 @@ export const TEST_OKP_KEY_ENC = KryptosKit.from.b64({
   algorithm: "ECDH-ES",
   createdAt: new Date("2024-01-01T00:05:00.000Z"),
   curve: "X25519",
-  operations: ["encrypt", "decrypt"],
   privateKey: "MC4CAQAwBQYDK2VuBCIEIBB4SslTDV2-GpNJHFXK5ES2j1j7Pa0JNPSzSFxp8Pxb",
   publicKey: "MCowBQYDK2VuAyEA_n8Jf_SY9qIWg51xoHfLiOaW2O42n-k25BQ4apw3QGU",
   type: "OKP",
@@ -107,7 +101,6 @@ export const TEST_RSA_KEY_SIG = KryptosKit.from.b64({
   id: "aaac22b3-2253-5598-8e0c-1733fc748122",
   algorithm: "RS512",
   createdAt: new Date("2024-01-01T00:06:00.000Z"),
-  operations: ["sign", "verify"],
   use: "sig",
 });
 export const TEST_RSA_KEY_ENC = KryptosKit.from.b64({
@@ -115,6 +108,5 @@ export const TEST_RSA_KEY_ENC = KryptosKit.from.b64({
   id: "20b09138-bab7-54ce-a491-1f4ba52e3d4e",
   algorithm: "RSA-OAEP-256",
   createdAt: new Date("2024-01-01T00:07:00.000Z"),
-  operations: ["encrypt", "decrypt"],
   use: "enc",
 });
