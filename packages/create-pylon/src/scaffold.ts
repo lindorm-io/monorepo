@@ -44,7 +44,9 @@ export const generateKekEnvString = (): string =>
     .auto({
       algorithm: "dir",
       expiresAt: KEK_EXPIRES_AT,
-      hidden: true,
+      // A KEK must NEVER reach the published JWKS. `false` is the default, but a
+      // security-relevant policy is stated, not inherited.
+      publish: false,
       issuer: "urn:lindorm:pylon:kek",
       purpose: "pylon:kek",
     })
