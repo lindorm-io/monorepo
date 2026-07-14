@@ -4104,7 +4104,11 @@ export default createKryptosRotationWorker({
       expiry: "6mo",
     },
     {
-      algorithm: "ECDH-ES+A256GCMKW",
+      // ECDH-ES+A256KW, not +A256GCMKW: the GCMKW variants are NOT registered
+      // JWE algorithms — RFC 7518 §4.6 defines ECDH-ES and the three +A*KW
+      // forms only — so \`jose\`, and every RP built on it, rejects them on the
+      // \`alg\` value alone. A published key nobody can import is not a key.
+      algorithm: "ECDH-ES+A256KW",
       curve: "X448",
       publish: true,
       purpose: "token",
@@ -4192,7 +4196,11 @@ export default createKryptosRotationWorker({
       expiry: "6mo",
     },
     {
-      algorithm: "ECDH-ES+A256GCMKW",
+      // ECDH-ES+A256KW, not +A256GCMKW: the GCMKW variants are NOT registered
+      // JWE algorithms — RFC 7518 §4.6 defines ECDH-ES and the three +A*KW
+      // forms only — so \`jose\`, and every RP built on it, rejects them on the
+      // \`alg\` value alone. A published key nobody can import is not a key.
+      algorithm: "ECDH-ES+A256KW",
       curve: "X448",
       publish: true,
       purpose: "token",
