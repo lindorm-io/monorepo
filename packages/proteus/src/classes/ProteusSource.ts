@@ -22,6 +22,7 @@ import type {
   EntityScannerInput,
   NamingStrategy,
   ProteusBreakerOptions,
+  ProteusEncryptionKey,
   ProteusHookMeta,
   ProteusSourceEventMap,
   ProteusSourceOptions,
@@ -38,6 +39,7 @@ import { EntityScanner } from "../internal/entity/classes/EntityScanner.js";
 import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metadata.js";
 import { registerMetadataResolver } from "../internal/entity/metadata/foreign-metadata.js";
 import { resolveInheritanceHierarchies } from "../internal/entity/metadata/resolve-inheritance.js";
+import { applyEncryptionDefault } from "../internal/entity/metadata/apply-encryption-default.js";
 import { clearPrimaryCache } from "../internal/entity/metadata/build-primary.js";
 import { clearMetadataCache } from "../internal/entity/metadata/registry.js";
 import { validateEncryptedFields } from "../internal/entity/utils/validate-encrypted-fields.js";
@@ -98,7 +100,7 @@ export class ProteusSource implements IProteusSource {
   private _registryRef: { current: FilterRegistry };
   private readonly _emitter: EventEmitter = new EventEmitter();
   private _inheritanceMap: Map<Function, MetaInheritance> | undefined;
-  private _namingCache: Map<Function, EntityMetadata> | null = null;
+  private _metadataCache: Map<Function, EntityMetadata> | null = null;
   private _settingUpPromise: Promise<void> | null = null;
   private isSetUp = false;
 
@@ -125,10 +127,11 @@ export class ProteusSource implements IProteusSource {
     this._registryRef = { current: createFilterRegistry() };
     const resolver = createMetadataResolver(
       options.naming ?? "none",
+      options.encryption,
       () => this._inheritanceMap,
     );
     this.resolveMetadata = resolver.resolve;
-    this._namingCache = resolver.cache;
+    this._metadataCache = resolver.cache;
 
     if (options.cache) {
       this.cacheAdapter = options.cache.adapter;
@@ -476,7 +479,7 @@ export class ProteusSource implements IProteusSource {
     // Invalidate any metadata that may have been cached before setup() was called.
     clearPrimaryCache();
     clearMetadataCache();
-    this._namingCache?.clear();
+    this._metadataCache?.clear();
 
     // Resolve inheritance hierarchies across all entities before building metadata.
     // This must happen before any metadata is cached so that inheritance-aware
@@ -495,7 +498,12 @@ export class ProteusSource implements IProteusSource {
       return !meta || !Object.hasOwn(meta, "__abstract");
     });
 
-    // Validate that any entity using @Encrypted has an amphora instance available.
+    // Validate that any entity using @Encrypted has an amphora instance available,
+    // and that every @Encrypted field NAMES its key — from the decorator or the
+    // source-level default. An unnamed field would fall back to an unscoped vault
+    // lookup ("any internal encryption key, newest first"), which in a vault that
+    // also holds a rotated cookie key is the cookie key. Fail here, at load, not
+    // on the first write.
     const resolvedMetadata = concreteEntities.map((target) =>
       this.resolveMetadata(target),
     );
@@ -609,11 +617,17 @@ const driverClassifiers: Record<string, CircuitBreakerOptions["classifier"]> = {
 const resolveDefaultClassifier = (driver: string): CircuitBreakerOptions["classifier"] =>
   driverClassifiers[driver];
 
+// Resolve raw entity metadata into the SOURCE's view of it: column names per the
+// naming strategy, and the source-level encryption default folded into every bare
+// `@Encrypted()` field. Both are build steps — no use-time consumer re-derives
+// either. Raw metadata is shared across sources, so neither step mutates it; when
+// a step applies, the source caches its own resolved copies.
 const createMetadataResolver = (
   naming: NamingStrategy,
+  encryption: ProteusEncryptionKey | undefined,
   getInheritanceMap: () => Map<Function, MetaInheritance> | undefined,
 ): { resolve: MetadataResolver; cache: Map<Function, EntityMetadata> | null } => {
-  if (naming === "none") {
+  if (naming === "none" && !encryption) {
     const resolve: MetadataResolver = (target) => {
       const metadata = getEntityMetadata(target, getInheritanceMap());
       registerMetadataResolver(metadata, resolve);
@@ -627,9 +641,9 @@ const createMetadataResolver = (
   const resolve: MetadataResolver = (target): EntityMetadata => {
     let resolved = cache.get(target);
     if (!resolved) {
-      resolved = applyNamingStrategy(
-        getEntityMetadata(target, getInheritanceMap()),
-        naming,
+      resolved = applyEncryptionDefault(
+        applyNamingStrategy(getEntityMetadata(target, getInheritanceMap()), naming),
+        encryption,
       );
       cache.set(target, resolved);
       registerMetadataResolver(resolved, resolve);

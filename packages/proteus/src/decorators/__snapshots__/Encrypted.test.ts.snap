@@ -10,7 +10,7 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
   "entity": {
     "comment": null,
     "decorator": "Entity",
-    "name": "EncryptedWithPurpose",
+    "name": "EncryptedWithPredicate",
     "named": true,
     "namespace": null,
   },
@@ -55,6 +55,7 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
       "default": null,
       "embedded": null,
       "encrypted": {
+        "kryptos": null,
         "predicate": {
           "purpose": "pii",
         },
@@ -108,8 +109,16 @@ exports[`Encrypted > should match full metadata snapshot for entity with encrypt
 }
 `;
 
-exports[`Encrypted > should stage encrypted with multiple predicate keys 1`] = `
+exports[`Encrypted > should stage a bare descriptor when no options are provided 1`] = `
 {
+  "kryptos": null,
+  "predicate": null,
+}
+`;
+
+exports[`Encrypted > should stage a predicate with multiple keys 1`] = `
+{
+  "kryptos": null,
   "predicate": {
     "id": "key-id",
     "purpose": "pii",
@@ -117,20 +126,9 @@ exports[`Encrypted > should stage encrypted with multiple predicate keys 1`] = `
 }
 `;
 
-exports[`Encrypted > should stage encrypted with null predicate when all option values are undefined 1`] = `
+exports[`Encrypted > should stage the predicate 1`] = `
 {
-  "predicate": null,
-}
-`;
-
-exports[`Encrypted > should stage encrypted with null predicate when no options provided 1`] = `
-{
-  "predicate": null,
-}
-`;
-
-exports[`Encrypted > should stage encrypted with purpose predicate 1`] = `
-{
+  "kryptos": null,
   "predicate": {
     "purpose": "pii",
   },

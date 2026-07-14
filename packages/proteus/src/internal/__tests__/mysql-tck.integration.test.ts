@@ -11,7 +11,10 @@ import type { IEntity } from "../../interfaces/index.js";
 import { ProteusSource } from "../../classes/ProteusSource.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import type { NamingStrategy } from "../../types/source-options.js";
-import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import {
+  createTckAmphora,
+  TCK_ENCRYPTION,
+} from "../__fixtures__/tck/create-tck-amphora.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
 
@@ -97,6 +100,7 @@ const factory: TckDriverFactory = {
       entities,
       logger,
       amphora,
+      encryption: TCK_ENCRYPTION,
     });
 
     await source.connect();

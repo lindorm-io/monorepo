@@ -4,6 +4,7 @@ import type { DiscriminatorValue, InheritanceStrategy } from "./inheritance.js";
 import type {
   EmbeddedListLoadingScope,
   MetaCheck,
+  MetaEncrypted,
   MetaEntity,
   MetaExtra,
   MetaField,
@@ -53,7 +54,7 @@ export type StagedFieldModifier = {
   computed?: string;
   named?: boolean;
   transform?: { to: (value: unknown) => unknown; from: (raw: unknown) => unknown };
-  encrypted?: { predicate: Dict | null };
+  encrypted?: MetaEncrypted;
   typedJson?: { name: string | null };
   hideOn?: Array<QueryScope>;
   schema?: z.ZodType;

@@ -661,7 +661,7 @@ class RedisInsertBuilder<E extends IEntity> implements IInsertQueryBuilder<E> {
           if (value != null && field.encrypted && this.amphora) {
             value = encryptFieldValue(
               value,
-              field.encrypted.predicate,
+              field.encrypted,
               this.amphora,
               field.key,
               this.metadata.entity.name,
@@ -902,7 +902,7 @@ class RedisUpdateBuilder<E extends IEntity> implements IUpdateQueryBuilder<E> {
         if (transformed != null && field?.encrypted && this.amphora) {
           transformed = encryptFieldValue(
             transformed,
-            field.encrypted.predicate,
+            field.encrypted,
             this.amphora,
             field.key,
             this.metadata.entity.name,

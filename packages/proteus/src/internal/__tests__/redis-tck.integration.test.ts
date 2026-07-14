@@ -14,7 +14,10 @@ import { getEntityMetadata } from "../entity/metadata/get-entity-metadata.js";
 import { resolveInheritanceHierarchies } from "../entity/metadata/resolve-inheritance.js";
 import { isRedisCompatibleEntity } from "../drivers/redis/utils/validate-redis-entity.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
-import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import {
+  createTckAmphora,
+  TCK_ENCRYPTION,
+} from "../__fixtures__/tck/create-tck-amphora.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
 
@@ -76,6 +79,7 @@ const factory: TckDriverFactory = {
       logger,
       namespace,
       amphora,
+      encryption: TCK_ENCRYPTION,
     });
 
     await source.connect();

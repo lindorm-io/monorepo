@@ -714,7 +714,7 @@ export class RedisExecutor<E extends IEntity> implements IRepositoryExecutor<E> 
         if (transformed != null && field?.encrypted && this.amphora) {
           transformed = encryptFieldValue(
             transformed,
-            field.encrypted.predicate,
+            field.encrypted,
             this.amphora,
             field.key,
             this.metadata.entity.name,

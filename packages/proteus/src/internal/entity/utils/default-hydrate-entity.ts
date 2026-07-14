@@ -54,7 +54,13 @@ export const defaultHydrateEntity = <E extends IEntity>(
     }
 
     if (raw != null && field.encrypted && amphora) {
-      raw = decryptFieldValue(raw as string, amphora, field.key, metadata.entity.name);
+      raw = decryptFieldValue(
+        raw as string,
+        field.encrypted,
+        amphora,
+        field.key,
+        metadata.entity.name,
+      );
     }
 
     if (raw === null || raw === undefined) {

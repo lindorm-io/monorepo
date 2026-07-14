@@ -2,6 +2,7 @@ export * from "./clear-options.js";
 export * from "./event-map.js";
 export * from "./cursor-options.js";
 export * from "./delete-options.js";
+export * from "./encryption.js";
 export * from "./find-options.js";
 export * from "./hook.js";
 export * from "./inheritance.js";

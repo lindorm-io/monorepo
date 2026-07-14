@@ -5,6 +5,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { ConnectionOptions } from "node:tls";
 import type { IEntity } from "../interfaces/index.js";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
+import type { ProteusEncryptionKey } from "./encryption.js";
 import type { ProteusHookMeta } from "./proteus-hook-meta.js";
 import type { EntityScannerInput } from "./scanner.js";
 
@@ -53,6 +54,12 @@ export type ProteusSourceOptionsBase = {
   logger: ILogger;
   /** Amphora key store for field-level encryption. When provided, @Encrypted fields are encrypted/decrypted transparently. */
   amphora?: IAmphora;
+  /**
+   * Default key for every `@Encrypted` field on this source — declare the KEK
+   * once here and leave the decorators bare. A decorator that names its own key
+   * overrides this; a field that resolves to neither throws when the source loads.
+   */
+  encryption?: ProteusEncryptionKey;
   /**
    * Circuit breaker for database operations. Protects against cascading failures
    * when the database is unreachable by failing fast instead of waiting for timeouts.

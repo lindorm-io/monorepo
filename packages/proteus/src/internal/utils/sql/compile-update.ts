@@ -531,7 +531,7 @@ const coerceAndEncrypt = (
   if (coerced != null && field.encrypted && amphora) {
     coerced = encryptFieldValue(
       coerced,
-      field.encrypted.predicate,
+      field.encrypted,
       amphora,
       field.key,
       metadata.entity.name,

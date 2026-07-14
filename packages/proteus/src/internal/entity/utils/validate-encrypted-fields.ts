@@ -1,4 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
+import { isNull } from "@lindorm/is";
 import { ProteusError } from "../../../errors/index.js";
 import type { EntityMetadata } from "../types/metadata.js";
 
@@ -69,6 +70,25 @@ export const validateEncryptedFields = (
             code: "invalid_encrypted_field",
             title: "Invalid Encrypted Field",
             details: `Field "${field.key}" on entity "${metadata.entity.name}" is computed and cannot be @Encrypted; computed values are derived rather than stored.`,
+            data: { entity: metadata.entity.name, field: field.key },
+          },
+        );
+      }
+
+      // The field must NAME its key — outright (`kryptos`) or as a query
+      // (`predicate`) — from the decorator or the source-level `encryption`
+      // default, which is already folded in by the time metadata reaches here.
+      // Without one the lookup would degrade to "any internal encryption key,
+      // newest first": in a vault that also holds a yearly-rotated cookie key,
+      // that IS the cookie key. "Which key encrypts my database" must not have
+      // an implicit answer — so fail at source load, not on the first write.
+      if (isNull(field.encrypted.kryptos) && isNull(field.encrypted.predicate)) {
+        throw new ProteusError(
+          `Entity "${metadata.entity.name}" has @Encrypted field "${field.key}" but names no encryption key`,
+          {
+            code: "unnamed_encryption_key",
+            title: "Unnamed Encryption Key",
+            details: `Field "${field.key}" on entity "${metadata.entity.name}" must name its at-rest encryption key: pass @Encrypted({ kryptos }) or @Encrypted({ predicate }), or declare a default with the ProteusSource "encryption" option.`,
             data: { entity: metadata.entity.name, field: field.key },
           },
         );

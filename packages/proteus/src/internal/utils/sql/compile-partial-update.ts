@@ -337,7 +337,7 @@ const pushChangedColumns = (
     if (transformed != null && field?.encrypted && amphora) {
       transformed = encryptFieldValue(
         transformed,
-        field.encrypted.predicate,
+        field.encrypted,
         amphora,
         field.key,
         metadata.entity.name,

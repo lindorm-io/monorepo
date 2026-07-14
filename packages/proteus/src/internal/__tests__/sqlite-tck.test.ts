@@ -14,7 +14,10 @@ import { ProteusSource } from "../../classes/ProteusSource.js";
 import { MemoryCacheAdapter } from "../../classes/MemoryCacheAdapter.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import type { NamingStrategy, ProteusCacheConfig } from "../../types/source-options.js";
-import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import {
+  createTckAmphora,
+  TCK_ENCRYPTION,
+} from "../__fixtures__/tck/create-tck-amphora.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
 
@@ -66,6 +69,7 @@ const factory: TckDriverFactory = {
         naming,
         cache: cacheConfig(),
         amphora,
+        encryption: TCK_ENCRYPTION,
       });
 
     source = makeSource();

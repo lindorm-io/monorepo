@@ -1,28 +1,30 @@
-import type { Dict } from "@lindorm/types";
+import { isUndefined } from "@lindorm/is";
 import { stageFieldModifier } from "../internal/entity/metadata/stage-metadata.js";
+import type { ProteusEncryptionKey } from "../types/encryption.js";
 
-export type EncryptedOptions = {
-  id?: string;
-  algorithm?: string;
-  encryption?: string;
-  purpose?: string;
-  type?: string;
-  ownerId?: string;
-};
-
+/**
+ * Encrypt this field at rest with an amphora-held key.
+ *
+ * The key is NAMED, never guessed: either handed over outright
+ * (`@Encrypted({ kryptos: KEK })` — a KEK is typically an env key, so it is
+ * available at class-definition time) or queried for
+ * (`@Encrypted({ predicate: { purpose: "pylon:kek" } })`). Leave the decorator
+ * bare and the source-level `encryption` default supplies it — declare the KEK
+ * once on the source and every `@Encrypted()` field follows it.
+ *
+ * A field that resolves to NEITHER throws when the source loads: an unscoped
+ * lookup would take "any internal encryption key, newest first", and in a vault
+ * that also holds a yearly-rotated cookie key that is the cookie key.
+ */
 export const Encrypted =
-  (options?: EncryptedOptions) =>
+  (options?: ProteusEncryptionKey) =>
   (_target: undefined, context: ClassFieldDecoratorContext): void => {
-    let predicate: Dict | null = null;
-
-    if (options) {
-      const entries = Object.entries(options).filter(([, v]) => v !== undefined);
-      predicate = entries.length > 0 ? Object.fromEntries(entries) : null;
-    }
-
     stageFieldModifier(context.metadata, {
       key: String(context.name),
       decorator: "Encrypted",
-      encrypted: { predicate },
+      encrypted: {
+        kryptos: isUndefined(options?.kryptos) ? null : options.kryptos,
+        predicate: isUndefined(options?.predicate) ? null : options.predicate,
+      },
     });
   };

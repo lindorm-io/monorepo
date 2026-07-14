@@ -44,7 +44,7 @@ export const defaultDehydrateEntity = <E extends IEntity>(
     if (value != null && field.encrypted && amphora) {
       value = encryptFieldValue(
         value,
-        field.encrypted.predicate,
+        field.encrypted,
         amphora,
         field.key,
         metadata.entity.name,

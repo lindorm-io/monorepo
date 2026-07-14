@@ -58,7 +58,7 @@ export const dehydrateEntity = <E extends IEntity>(
     }
 
     if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(value, field.encrypted.predicate, amphora);
+      value = encryptFieldValue(value, field.encrypted, amphora);
     }
 
     // Ensure nullable fields store explicit null, never undefined
@@ -145,7 +145,7 @@ export const dehydrateToRow = <E extends IEntity>(
     }
 
     if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(value, field.encrypted.predicate, amphora);
+      value = encryptFieldValue(value, field.encrypted, amphora);
     }
 
     result[field.key] = value;

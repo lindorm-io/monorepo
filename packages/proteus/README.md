@@ -255,16 +255,17 @@ Full transaction support with snapshot isolation. Zero config. Ideal for unit te
 
 All drivers accept these base options:
 
-| Option      | Type                           | Description                                           |
-| ----------- | ------------------------------ | ----------------------------------------------------- |
-| `entities`  | `Array<Constructor \| string>` | Entity classes or glob patterns                       |
-| `namespace` | `string`                       | Schema (SQL), database (Mongo), key prefix (Redis)    |
-| `naming`    | `"snake" \| "camel" \| "none"` | Column name strategy (default: `"none"`)              |
-| `cache`     | `{ adapter, ttl? }`            | Query caching configuration                           |
-| `amphora`   | `IAmphora`                     | Key store for `@Encrypted` fields                     |
-| `meta`      | `ProteusHookMeta`              | Default request-scoped hook metadata                  |
-| `breaker`   | `boolean \| BreakerOptions`    | Circuit breaker for network drivers (default enabled) |
-| `logger`    | `ILogger`                      | **Required.** Logger instance                         |
+| Option       | Type                           | Description                                           |
+| ------------ | ------------------------------ | ----------------------------------------------------- |
+| `entities`   | `Array<Constructor \| string>` | Entity classes or glob patterns                       |
+| `namespace`  | `string`                       | Schema (SQL), database (Mongo), key prefix (Redis)    |
+| `naming`     | `"snake" \| "camel" \| "none"` | Column name strategy (default: `"none"`)              |
+| `cache`      | `{ adapter, ttl? }`            | Query caching configuration                           |
+| `amphora`    | `IAmphora`                     | Key store for `@Encrypted` fields                     |
+| `encryption` | `{ kryptos?, predicate? }`     | Default key for `@Encrypted` fields                   |
+| `meta`       | `ProteusHookMeta`              | Default request-scoped hook metadata                  |
+| `breaker`    | `boolean \| BreakerOptions`    | Circuit breaker for network drivers (default enabled) |
+| `logger`     | `ILogger`                      | **Required.** Logger instance                         |
 
 SQL drivers, MongoDB, and SQLite also accept schema management options:
 
@@ -1050,17 +1051,26 @@ tags!: string[];
 
 Marks a field for application-level encryption at rest. Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store configured on `ProteusSource`.
 
+The key is always **named**, never guessed — see [Field-Level Encryption](#field-level-encryption).
+
 ```typescript
+// Leave it bare and the source-level `encryption` default names the key.
 @Encrypted()
 @Field("string")
 ssn!: string;
 
-@Encrypted({ purpose: "pii", ownerId: "userId" })
+// Or query the vault for one.
+@Encrypted({ predicate: { purpose: "pii", ownerId: "userId" } })
 @Field("json")
 medicalRecord!: Record<string, unknown>;
+
+// Or hand the key over outright.
+@Encrypted({ kryptos: KEK })
+@Field("string")
+token!: string;
 ```
 
-**Options:** `{ id?, algorithm?, encryption?, purpose?, type?, ownerId? }`.
+**Options:** `{ kryptos?, predicate? }` — `predicate` selects on `{ id, algorithm, curve, encryption, internal, issuer, ownerId, publish, purpose, type }`.
 
 #### `@Hide`
 
@@ -2209,6 +2219,10 @@ const fresh = await repo.find({ status: "active" }, { cache: false });
 
 ## Field-Level Encryption
 
+Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store (peer dependency `@lindorm/amphora`).
+
+**Every `@Encrypted` field must name its key.** Declare the KEK once on the source and leave the decorators bare:
+
 ```typescript
 @Entity()
 class Patient {
@@ -2227,12 +2241,45 @@ class Patient {
 new ProteusSource({
   driver: "postgres",
   amphora,
+  encryption: { predicate: { purpose: "pylon:kek" } },
   entities: [Patient],
   logger,
 });
 ```
 
-Values are encrypted before writing and decrypted after reading. Requires an `IAmphora` key store (peer dependency `@lindorm/amphora`).
+A decorator that names its own key overrides the source default. A field that names **neither** throws when the source loads — there is no unscoped fallback, because an unscoped lookup means "any internal encryption key, newest first", and a vault typically holds more than one (a KEK **and** a rotated cookie key). Which key encrypts your database must not have an implicit answer.
+
+### Naming the key
+
+| Where                                          | Meaning                                                             |
+| ---------------------------------------------- | ------------------------------------------------------------------- |
+| `encryption: { predicate }` on `ProteusSource` | Default for every `@Encrypted` field on the source                  |
+| `@Encrypted({ predicate })`                    | Query the vault for this field's key — overrides the source default |
+| `@Encrypted({ kryptos })`                      | Hand the key over outright — overrides the source default           |
+
+`kryptos` on a decorator is deliberate: a KEK is typically an env key, so it is available at class-definition time.
+
+```typescript
+const KEK = KryptosKit.env.import(process.env.KEK!);
+
+@Encrypted({ kryptos: KEK })
+@Field("string")
+secret!: string;
+```
+
+An injected key is not required to be a vault resident — it is consulted on the read side too, so a column it encrypts still decrypts.
+
+### The floor
+
+Whatever names the key, proteus enforces the minimum that makes at-rest encryption possible. The floor is not expressible in a predicate, so it cannot be widened:
+
+| Attribute             | Kind        | Why                                                                                                 |
+| --------------------- | ----------- | --------------------------------------------------------------------------------------------------- |
+| `use: "enc"`          | **Floor**   | A signing key must never encrypt a column.                                                          |
+| `hasPrivateKey: true` | **Floor**   | At-rest encryption runs in both directions. A public-only key encrypts and can never decrypt again. |
+| `publish: false`      | **Default** | A KEK never leaves the service — but `publish` is your policy, so your predicate wins.              |
+
+A key that violates the floor — including one passed as `kryptos` — throws.
 
 ## Naming Strategies
 

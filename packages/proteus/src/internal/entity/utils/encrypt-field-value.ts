@@ -1,11 +1,12 @@
-import type { Dict } from "@lindorm/types";
 import type { IAmphora } from "@lindorm/amphora";
 import { AesKit } from "@lindorm/aes";
 import { ProteusError } from "../../../errors/index.js";
+import type { MetaEncrypted } from "../types/metadata.js";
+import { resolveEncryptionKey } from "./resolve-encryption-key.js";
 
 export const encryptFieldValue = (
   value: unknown,
-  predicate: Dict | null,
+  encrypted: MetaEncrypted,
   amphora: IAmphora,
   fieldKey = "unknown",
   entityName = "unknown",
@@ -22,14 +23,12 @@ export const encryptFieldValue = (
     );
   }
 
+  // Resolved OUTSIDE the try: a key that cannot be found, or that violates the
+  // encryption floor, is a policy failure with its own error — not a cipher
+  // failure to be wrapped as one.
+  const key = resolveEncryptionKey(encrypted, amphora, fieldKey, entityName);
+
   try {
-    // A field-encryption key is a KEK: it never leaves the service and never
-    // belongs in a JWKS, so it is an internal (`publish: false`) key — and
-    // amphora excludes internal keys from selection unless asked. This is a
-    // default, not a floor: the caller's predicate still wins, as everywhere
-    // else. Decryption needs no equivalent — it resolves the exact key by id
-    // from the ciphertext, and `findByIdSync` is deliberately unfiltered.
-    const key = amphora.findSync({ publish: false, ...predicate, use: "enc" });
     const kit = new AesKit({ kryptos: key });
     return kit.encrypt(value as any, "encoded");
   } catch (error) {
@@ -38,8 +37,8 @@ export const encryptFieldValue = (
       {
         code: "encrypt_failed",
         title: "Encrypt Failed",
-        details: `Could not encrypt field "${fieldKey}" on entity "${entityName}"; the amphora may not have an encryption key matching the required predicate.`,
-        data: { field: fieldKey, entity: entityName },
+        details: `Could not encrypt field "${fieldKey}" on entity "${entityName}" with key "${key.id}"; the value may not be a supported type.`,
+        data: { entity: entityName, field: fieldKey, kid: key.id },
         error: error as Error,
       },
     );

@@ -1,0 +1,78 @@
+import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
+import type { IKryptos } from "@lindorm/kryptos";
+import { Predicated } from "@lindorm/utils";
+import { ProteusError } from "../../../errors/index.js";
+import { ENCRYPTION_DEFAULT, ENCRYPTION_FLOOR } from "../../constants/key-floor.js";
+import type { MetaEncrypted } from "../types/metadata.js";
+
+/**
+ * Resolve the key that encrypts one `@Encrypted` field, keeping the two jobs a
+ * predicate can do strictly apart (only one of them survives key injection):
+ *
+ *   FLOOR     — policy. Checked on the key, whatever its provenance.
+ *   PREDICATE — a vault query. Checked on nothing; it only ever selects.
+ *
+ * An injected `kryptos` never came from the vault, so the predicate cannot apply
+ * to it — but the FLOOR does, or a signing key handed to `@Encrypted({ kryptos })`
+ * would happily encrypt the database. There is no fallback: a key either
+ * satisfies the policy or it does not, and a miss is a throw.
+ */
+export const resolveEncryptionKey = (
+  encrypted: MetaEncrypted,
+  amphora: IAmphora,
+  fieldKey: string,
+  entityName: string,
+): IKryptos => {
+  // The floor is spread first and the predicate last only for readability — the
+  // predicate type cannot express `use` or `hasPrivateKey`, so it can never
+  // widen the floor whatever the order. `publish: false` sits between them: a
+  // default, so the caller's predicate wins.
+  const query: AmphoraPredicate = {
+    ...ENCRYPTION_FLOOR,
+    ...ENCRYPTION_DEFAULT,
+    ...encrypted.predicate,
+  };
+
+  let kryptos: IKryptos;
+
+  if (encrypted.kryptos) {
+    kryptos = encrypted.kryptos;
+  } else {
+    try {
+      kryptos = amphora.findSync(query);
+    } catch (error) {
+      throw new ProteusError(
+        `No encryption key matches field "${fieldKey}" on entity "${entityName}"`,
+        {
+          code: "encryption_key_not_found",
+          title: "Encryption Key Not Found",
+          details: `The amphora holds no usable encryption key matching the predicate declared for field "${fieldKey}" on entity "${entityName}"; add the key to the vault or correct the predicate.`,
+          data: { entity: entityName, field: fieldKey, query },
+          debug: { error: (error as Error).message },
+        },
+      );
+    }
+  }
+
+  if (!Predicated.match(kryptos, ENCRYPTION_FLOOR)) {
+    throw new ProteusError(
+      `Encryption key for field "${fieldKey}" on entity "${entityName}" violates the encryption floor`,
+      {
+        code: "encryption_key_policy_violation",
+        title: "Encryption Key Policy Violation",
+        details: `The key named for field "${fieldKey}" on entity "${entityName}" cannot encrypt at rest: an at-rest key must have use "enc" and a private half, so that what it encrypts can be decrypted again.`,
+        data: {
+          entity: entityName,
+          field: fieldKey,
+          kid: kryptos.id,
+          use: kryptos.use,
+          hasPrivateKey: kryptos.hasPrivateKey,
+          floor: ENCRYPTION_FLOOR,
+        },
+        debug: { kryptos: kryptos.toJSON() },
+      },
+    );
+  }
+
+  return kryptos;
+};

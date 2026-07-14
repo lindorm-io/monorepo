@@ -45,7 +45,7 @@ export const dehydrateEntity = <E extends IEntity>(
       value = field.transform.to(value);
     }
     if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(value, field.encrypted.predicate, amphora);
+      value = encryptFieldValue(value, field.encrypted, amphora);
     }
     if (field.typedJson) {
       const { data, meta } = splitTypedJson(value);

@@ -68,7 +68,7 @@ const dehydrateToRow = (
 
     value = value != null && field.transform ? field.transform.to(value) : value;
     if (value != null && field.encrypted && amphora) {
-      value = encryptFieldValue(value, field.encrypted.predicate, amphora);
+      value = encryptFieldValue(value, field.encrypted, amphora);
     }
 
     // @TypedJson: store JSON-safe data + sidecar meta so structuredClone is lossless
@@ -639,7 +639,7 @@ export class MemoryExecutor<E extends IEntity> implements IRepositoryExecutor<E>
           if (transformed != null && field?.encrypted && this.amphora) {
             transformed = encryptFieldValue(
               transformed,
-              field.encrypted.predicate,
+              field.encrypted,
               this.amphora,
               field.key,
               this.metadata.entity.name,
