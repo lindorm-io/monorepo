@@ -190,6 +190,19 @@ describe("Amphora", () => {
       ).resolves.toEqual([TEST_EC_KEY_ENC]);
     });
 
+    // The derived class, not a hand-written `type: { $nin: ["oct"] }` — the point
+    // of the field is that this query cannot rot when a sixth key type lands.
+    test("should filter kryptos in vault using the derived algClass query", async () => {
+      amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
+
+      await expect(amphora.filter({ issuer, algClass: "asymmetric" })).resolves.toEqual([
+        TEST_EC_KEY_SIG,
+      ]);
+      await expect(amphora.filter({ issuer, algClass: "symmetric" })).resolves.toEqual([
+        TEST_OCT_KEY_SIG,
+      ]);
+    });
+
     test("should filter kryptos in vault using the type query", async () => {
       amphora.add([TEST_EC_KEY_SIG, TEST_OCT_KEY_SIG]);
 

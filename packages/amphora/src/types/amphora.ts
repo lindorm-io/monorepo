@@ -36,6 +36,7 @@ export type AmphoraPredicate = Predicate<AmphoraQuery>;
 export type AmphoraQuery = Pick<
   KryptosAttributes & KryptosMetadata,
   | "id"
+  | "algClass"
   | "algorithm"
   | "certificateThumbprint"
   | "curve"
