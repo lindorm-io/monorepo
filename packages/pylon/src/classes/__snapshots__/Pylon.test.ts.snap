@@ -176,6 +176,7 @@ exports[`Pylon > should setup correctly 2`] = `
     "notBefore": 2024-01-01T08:00:00.000Z,
     "operations": [
       "deriveKey",
+      "deriveBits",
     ],
     "ownerId": null,
     "purpose": "session",
@@ -238,7 +239,6 @@ exports[`Pylon > should setup correctly 2`] = `
     "modulus": 2048,
     "notBefore": 2024-01-01T08:00:00.000Z,
     "operations": [
-      "sign",
       "verify",
     ],
     "ownerId": null,
@@ -271,7 +271,6 @@ exports[`Pylon > should setup correctly 2`] = `
     "modulus": 2048,
     "notBefore": 2024-01-01T08:00:00.000Z,
     "operations": [
-      "sign",
       "verify",
     ],
     "ownerId": null,

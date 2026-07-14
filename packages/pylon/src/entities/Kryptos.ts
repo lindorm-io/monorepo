@@ -3,7 +3,6 @@ import type {
   KryptosCurve,
   KryptosDB,
   KryptosEncryption,
-  KryptosOperation,
   KryptosType,
   KryptosUse,
 } from "@lindorm/kryptos";
@@ -55,10 +54,6 @@ export class Kryptos implements KryptosDB {
   @Nullable()
   @Field("string")
   encryption!: KryptosEncryption | null;
-
-  @Eager()
-  @EmbeddedList("string")
-  operations!: Array<KryptosOperation>;
 
   @Encrypted({ purpose: "pylon:kek" })
   @Nullable()
