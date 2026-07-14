@@ -6,12 +6,16 @@ import { createOctDerFromPem } from "../oct/der-from-pem.js";
 import { createOkpDerFromPem } from "../okp/der-from-pem.js";
 import { createRsaDerFromPem } from "../rsa/der-from-pem.js";
 
-export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
+// The `id` is intentionally omitted: `parseStdOptions` carries an explicit id
+// through, and absent one the Kryptos constructor derives it from the key
+// material (thumbprint for asymmetric keys, random for oct).
+export const createDerFromPem = (
+  options: KryptosFromString,
+): Omit<KryptosBuffer, "id"> => {
   switch (options.type) {
     case "AKP":
       return {
         ...createAkpDerFromPem(options),
-        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -20,7 +24,6 @@ export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
     case "EC":
       return {
         ...createEcDerFromPem(options),
-        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -29,7 +32,6 @@ export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
     case "oct":
       return {
         ...createOctDerFromPem(options),
-        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -38,7 +40,6 @@ export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
     case "OKP":
       return {
         ...createOkpDerFromPem(options),
-        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,
@@ -47,7 +48,6 @@ export const createDerFromPem = (options: KryptosFromString): KryptosBuffer => {
     case "RSA":
       return {
         ...createRsaDerFromPem(options),
-        id: options.id,
         algorithm: options.algorithm,
         use: options.use,
         type: options.type,

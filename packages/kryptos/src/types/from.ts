@@ -14,9 +14,13 @@ export type KryptosFromDb = KryptosAttributes & {
   publicKey: string | null;
 };
 
-export type KryptosFromString = Std & KryptosString;
+// `id` comes from `Std` (optional) on every import path: an explicit id always
+// wins, and absent one the Kryptos constructor derives it from the key material
+// (thumbprint for asymmetric keys, random for oct). It is required on the EXPORT
+// shapes (`KryptosString` / `KryptosBuffer`) — by then it always exists.
+export type KryptosFromString = Std & Omit<KryptosString, "id">;
 
-export type KryptosFromBuffer = Std & KryptosBuffer;
+export type KryptosFromBuffer = Std & Omit<KryptosBuffer, "id">;
 
 export type KryptosFromDerive = Std &
   // `id` comes from `Std` (optional): with a `path` and no explicit `id`, the id

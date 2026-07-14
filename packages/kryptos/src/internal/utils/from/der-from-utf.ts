@@ -18,11 +18,14 @@ const allocate = (options: KryptosFromString): Buffer => {
   return secret;
 };
 
-export const createDerFromUtf = (options: KryptosFromString): KryptosBuffer => {
+// The `id` is intentionally omitted: `parseStdOptions` carries an explicit id
+// through, and absent one the Kryptos constructor derives it (oct: random).
+export const createDerFromUtf = (
+  options: KryptosFromString,
+): Omit<KryptosBuffer, "id"> => {
   switch (options.type) {
     case "oct":
       return {
-        id: options.id,
         algorithm: options.algorithm,
         privateKey: allocate(options),
         publicKey: Buffer.alloc(0),
