@@ -78,9 +78,11 @@ export class Kryptos implements KryptosDB {
   @Field("url")
   jwksUri!: string | null;
 
+  // Is this OUR key material? Flipped polarity from the `isExternal` column it
+  // replaces — a stored `isExternal: false` row is an `internal: true` row.
   @Index()
   @Field("boolean")
-  isExternal!: boolean;
+  internal!: boolean;
 
   @Index()
   @Nullable()

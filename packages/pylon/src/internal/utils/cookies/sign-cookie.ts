@@ -16,7 +16,7 @@ export const signCookie = async (
   // the same floor aegis signs against.
   const kryptos = await ctx.amphora.find({
     hasPrivateKey: true,
-    isExternal: false,
+    internal: true,
     publish: false,
     purpose: { $in: ["cookie", "session"] },
     use: "sig",
