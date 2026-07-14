@@ -2281,6 +2281,15 @@ Whatever names the key, proteus enforces the minimum that makes at-rest encrypti
 
 A key that violates the floor — including one passed as `kryptos` — throws.
 
+**The clock is on the floor too, and it is not symmetric:**
+
+| Direction           | Floor              | Why                                                                                                                                                                                                                                      |
+| ------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **write** (encrypt) | `isActive: true`   | The key must be usable **now**. An injected `kryptos` never touches the vault, so nothing else time-checks it.                                                                                                                           |
+| **read** (decrypt)  | `isPending: false` | An **expired** key must still decrypt — a column encrypted before a KEK rotation has to keep opening. But a key whose `notBefore` has not passed cannot have encrypted anything, and the ciphertext chooses the `kid`, so it is refused. |
+
+Rotating a KEK therefore never strands the data the old key wrote.
+
 ## Naming Strategies
 
 ```typescript

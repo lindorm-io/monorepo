@@ -4,7 +4,7 @@ import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { ProteusError } from "../../../errors/index.js";
 import type { MetaEncrypted } from "../types/metadata.js";
 import { resolveEncryptionKey } from "./resolve-encryption-key.js";
-import { describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 
 const createEncKey = (purpose: string, publish = false): IKryptos =>
   KryptosKit.generate.enc.oct({
@@ -149,6 +149,63 @@ describe("resolveEncryptionKey", () => {
       expect(() => resolve({ kryptos: publicOnly, predicate: null }, amphora)).toThrow(
         'Encryption key for field "secret" on entity "TestEntity" violates the encryption floor',
       );
+    });
+  });
+
+  // The vault drops inactive keys from a QUERY, so the clock only bites where the
+  // vault does not — and on the write side that is the INJECTED key: an env KEK
+  // handed to `@Encrypted({ kryptos })` never touches the vault at all.
+  describe("the time floor", () => {
+    const detached = (notBefore: Date, expiresAt: Date): IKryptos =>
+      KryptosKit.clone(createEncKey("env:kek"), { notBefore, expiresAt });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    test("should refuse to ENCRYPT with an injected key that has expired", () => {
+      const expired = detached(new Date("2020-01-01"), new Date("2021-01-01"));
+
+      expect(() =>
+        resolve({ kryptos: expired, predicate: null }, createAmphora()),
+      ).toThrow(
+        'Encryption key for field "secret" on entity "TestEntity" violates the encryption floor',
+      );
+    });
+
+    test("should refuse to ENCRYPT with an injected key that is not yet valid", () => {
+      const pending = detached(new Date("2099-01-01"), new Date("2100-01-01"));
+
+      expect(() =>
+        resolve({ kryptos: pending, predicate: null }, createAmphora()),
+      ).toThrow(
+        'Encryption key for field "secret" on entity "TestEntity" violates the encryption floor',
+      );
+    });
+
+    // `Amphora.add` refuses a key that is ALREADY expired, so the only way a vault
+    // holds one is the way a deployment gets one: it was added while valid, and it
+    // aged. The clock has to move for this to be honest.
+    test("should not select a key that has expired while in the vault", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(new Date("2024-06-01T00:00:00.000Z"));
+
+      const amphora = createAmphora(
+        detached(
+          new Date("2024-01-01T00:00:00.000Z"),
+          new Date("2025-01-01T00:00:00.000Z"),
+        ),
+      );
+
+      expect(
+        resolve({ kryptos: null, predicate: { purpose: "env:kek" } }, amphora).purpose,
+      ).toBe("env:kek");
+
+      vi.setSystemTime(new Date("2026-06-01T00:00:00.000Z"));
+
+      expect(() =>
+        resolve({ kryptos: null, predicate: { purpose: "env:kek" } }, amphora),
+      ).toThrow('No encryption key matches field "secret" on entity "TestEntity"');
     });
   });
 

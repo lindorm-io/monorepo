@@ -24,9 +24,9 @@ export const resolveEncryptionKey = (
   entityName: string,
 ): IKryptos => {
   // The floor is spread first and the predicate last only for readability — the
-  // predicate type cannot express `use` or `hasPrivateKey`, so it can never
-  // widen the floor whatever the order. `publish: false` sits between them: a
-  // default, so the caller's predicate wins.
+  // predicate type cannot express `use`, `hasPrivateKey` or the lifetime states,
+  // so it can never widen the floor whatever the order. `publish: false` sits
+  // between them: a default, so the caller's predicate wins.
   const query: AmphoraPredicate = {
     ...ENCRYPTION_FLOOR,
     ...ENCRYPTION_DEFAULT,
@@ -60,13 +60,14 @@ export const resolveEncryptionKey = (
       {
         code: "encryption_key_policy_violation",
         title: "Encryption Key Policy Violation",
-        details: `The key named for field "${fieldKey}" on entity "${entityName}" cannot encrypt at rest: an at-rest key must have use "enc" and a private half, so that what it encrypts can be decrypted again.`,
+        details: `The key named for field "${fieldKey}" on entity "${entityName}" cannot encrypt at rest: an at-rest key must have use "enc" and a private half, so that what it encrypts can be decrypted again, and it must be active — a key that has expired, or whose notBefore has not yet passed, cannot encrypt a new value.`,
         data: {
           entity: entityName,
           field: fieldKey,
           kid: kryptos.id,
           use: kryptos.use,
           hasPrivateKey: kryptos.hasPrivateKey,
+          isActive: kryptos.isActive,
           floor: ENCRYPTION_FLOOR,
         },
         debug: { kryptos: kryptos.toJSON() },

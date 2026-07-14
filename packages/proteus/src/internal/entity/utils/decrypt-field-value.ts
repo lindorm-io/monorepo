@@ -1,22 +1,9 @@
 import type { IAmphora } from "@lindorm/amphora";
-import { AesKit, parseAes } from "@lindorm/aes";
-import type { IKryptos } from "@lindorm/kryptos";
+import { AesKit } from "@lindorm/aes";
 import { ProteusError } from "../../../errors/index.js";
 import type { MetaEncrypted } from "../types/metadata.js";
+import { resolveDecryptionKey } from "./resolve-decryption-key.js";
 
-/**
- * Decryption needs no SELECTOR: the ciphertext names its own key. The predicate
- * is therefore irrelevant here, and `findByIdSync` is deliberately unfiltered —
- * a column written by a key that has since been rotated out of the active set
- * must still open.
- *
- * An INJECTED key, though, is not necessarily a vault resident at all: a KEK
- * imported from the environment and handed to `@Encrypted({ kryptos })` may never
- * be added to the amphora. Such a column would encrypt fine and then fail to
- * decrypt forever. So the injected key is consulted FIRST — but only when the
- * ciphertext actually names it, so that rows written before the injection (by a
- * vault key) still resolve through the vault.
- */
 export const decryptFieldValue = (
   cipher: string,
   encrypted: MetaEncrypted,
@@ -36,12 +23,12 @@ export const decryptFieldValue = (
     );
   }
 
+  // Resolved OUTSIDE the try: a key that cannot be found, or that violates the
+  // decryption floor, is a policy failure with its own error — not a cipher
+  // failure to be wrapped as one.
+  const key = resolveDecryptionKey(cipher, encrypted, amphora, fieldKey, entityName);
+
   try {
-    const { keyId } = parseAes(cipher);
-
-    const key: IKryptos =
-      encrypted.kryptos?.id === keyId ? encrypted.kryptos : amphora.findByIdSync(keyId);
-
     const kit = new AesKit({ kryptos: key });
     return kit.decrypt(cipher);
   } catch (error) {
@@ -50,8 +37,8 @@ export const decryptFieldValue = (
       {
         code: "decrypt_failed",
         title: "Decrypt Failed",
-        details: `Could not decrypt field "${fieldKey}" on entity "${entityName}"; the decryption key may be missing from the amphora or the ciphertext may be malformed.`,
-        data: { entity: entityName, field: fieldKey },
+        details: `Could not decrypt field "${fieldKey}" on entity "${entityName}"; the ciphertext may be malformed or was not sealed by the key it names.`,
+        data: { entity: entityName, field: fieldKey, kid: key.id },
         error: error as Error,
       },
     );
