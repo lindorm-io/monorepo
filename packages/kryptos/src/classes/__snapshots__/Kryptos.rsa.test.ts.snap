@@ -3022,6 +3022,7 @@ exports[`Kryptos (RSA) > to > should return db 1`] = `
 
 exports[`Kryptos (RSA) > to > should return json 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "RS512",
   "certificateChain": [],
   "certificateThumbprint": null,

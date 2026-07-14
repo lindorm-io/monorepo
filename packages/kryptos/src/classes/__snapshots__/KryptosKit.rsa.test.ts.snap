@@ -6,6 +6,7 @@ exports[`KryptosKit (RSA) > env > export 2`] = `"kryptos:eyJlIjoiQVFBQiIsIm4iOiI
 
 exports[`KryptosKit (RSA) > from > auto > b64 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "RS512",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -65,6 +66,7 @@ exports[`KryptosKit (RSA) > from > auto > b64 3`] = `
 
 exports[`KryptosKit (RSA) > from > auto > jwk 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "RS256",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -130,6 +132,7 @@ exports[`KryptosKit (RSA) > from > auto > jwk 3`] = `
 
 exports[`KryptosKit (RSA) > from > auto > pem 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "RS256",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -209,6 +212,7 @@ E/WiZilDH1btbVDr5GQ1PtJuymXlg1Mk4AvzVxn8rVFNZMQbJH1TAgMBAAE=
 
 exports[`KryptosKit (RSA) > from > b64 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "RS512",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -268,6 +272,7 @@ exports[`KryptosKit (RSA) > from > b64 3`] = `
 
 exports[`KryptosKit (RSA) > from > jwk 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "RS256",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -333,6 +338,7 @@ exports[`KryptosKit (RSA) > from > jwk 3`] = `
 
 exports[`KryptosKit (RSA) > from > pem 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "RS256",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -412,6 +418,7 @@ E/WiZilDH1btbVDr5GQ1PtJuymXlg1Mk4AvzVxn8rVFNZMQbJH1TAgMBAAE=
 
 exports[`KryptosKit (RSA) > generate > auto 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "PS384",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -446,6 +453,7 @@ exports[`KryptosKit (RSA) > generate > auto 1`] = `
 
 exports[`KryptosKit (RSA) > generate > enc 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "RSA-OAEP-384",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -482,6 +490,7 @@ exports[`KryptosKit (RSA) > generate > enc 1`] = `
 
 exports[`KryptosKit (RSA) > generate > sig 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "RS256",
   "certificateChain": [],
   "certificateThumbprint": null,

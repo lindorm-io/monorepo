@@ -6,6 +6,7 @@ exports[`KryptosKit (OKP) > env > export 2`] = `"kryptos:eyJjcnYiOiJFZDI1NTE5Iiw
 
 exports[`KryptosKit (OKP) > from > auto > b64 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "EdDSA",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -66,6 +67,7 @@ exports[`KryptosKit (OKP) > from > auto > b64 3`] = `
 
 exports[`KryptosKit (OKP) > from > auto > jwk 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "EdDSA",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -126,6 +128,7 @@ exports[`KryptosKit (OKP) > from > auto > jwk 3`] = `
 
 exports[`KryptosKit (OKP) > from > auto > pem 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "EdDSA",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -192,6 +195,7 @@ MCowBQYDK2VwAyEAFqCTfRe3gmMUYSmAmAl8id+ZYSsmFpKHXmh+ZOaPOfM=
 
 exports[`KryptosKit (OKP) > from > b64 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "EdDSA",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -252,6 +256,7 @@ exports[`KryptosKit (OKP) > from > b64 3`] = `
 
 exports[`KryptosKit (OKP) > from > jwk 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "EdDSA",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -312,6 +317,7 @@ exports[`KryptosKit (OKP) > from > jwk 3`] = `
 
 exports[`KryptosKit (OKP) > from > pem 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "EdDSA",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -378,6 +384,7 @@ MCowBQYDK2VwAyEAFqCTfRe3gmMUYSmAmAl8id+ZYSsmFpKHXmh+ZOaPOfM=
 
 exports[`KryptosKit (OKP) > generate > auto 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ECDH-ES+A128GCMKW",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -412,6 +419,7 @@ exports[`KryptosKit (OKP) > generate > auto 1`] = `
 
 exports[`KryptosKit (OKP) > generate > enc 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ECDH-ES",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -446,6 +454,7 @@ exports[`KryptosKit (OKP) > generate > enc 1`] = `
 
 exports[`KryptosKit (OKP) > generate > sig 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "EdDSA",
   "certificateChain": [],
   "certificateThumbprint": null,

@@ -63,6 +63,7 @@ export const inspectSummary = (key: IKryptos): string => {
     row("createdAt", key.createdAt.toISOString()),
     row("notBefore", key.notBefore.toISOString()),
     row("expiresAt", key.expiresAt.toISOString()),
+    row("algClass", key.algClass),
     row("operations", key.operations.join(", ")),
     row("privateKey", key.hasPrivateKey),
     row("publicKey", key.hasPublicKey),

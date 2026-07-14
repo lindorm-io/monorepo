@@ -29,6 +29,7 @@ exports[`Kryptos (X.509 round-trip) > toDB → fromDb round-trip > preserves cer
 
 exports[`Kryptos (X.509 round-trip) > toJSON → fromJwk round-trip > preserves certificateChain via toJWK 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ES256",
   "certificateChain": [
     "MIIBozCCAUqgAwIBAgIUH8a+d6uH7hZYplK+HoMbcv8ly8QwCgYIKoZIzj0EAwIwJDEiMCAGA1UEAwwZbGluZG9ybS10ZXN0LWludGVybWVkaWF0ZTAgFw0yNjA0MTMxMTM1MDBaGA8yMTI2MDMyMDExMzUwMFowHDEaMBgGA1UEAwwRbGluZG9ybS10ZXN0LWxlYWYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAASDv49kdoZKymkGlAra5jxFcCSqrqTYfMLHb6UsCLew3WQtsj4mizNYd3WpRAaKPQFzs7VP1G1cwzPE9RQLW1S3o2AwXjAMBgNVHRMBAf8EAjAAMA4GA1UdDwEB/wQEAwIHgDAdBgNVHQ4EFgQU7PPxSt9sZhGL5y3DpWarh0/ouM8wHwYDVR0jBBgwFoAUuvcF1azFaNW8Sy7CB6nJsVd4XpIwCgYIKoZIzj0EAwIDRwAwRAIgc6WORqsJtaAWHffTnBm9jGlAYrkx4gn4HB8yP+AxEdUCIEMVwc2zE5/q4VbQGFRAbEFONnzpi+akdVcuHYYy87To",

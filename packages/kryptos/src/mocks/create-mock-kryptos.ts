@@ -32,6 +32,9 @@ export const _createMockKryptos = (
     type: "EC",
     use: "enc",
 
+    // Metadata, not an attribute — the real class DERIVES this from `type`, so it
+    // must stay consistent with the mock's declared type ("EC" ⇒ asymmetric).
+    algClass: "asymmetric",
     certificateThumbprint: null,
     expiresIn: 999999999,
     hasCertificate: false,

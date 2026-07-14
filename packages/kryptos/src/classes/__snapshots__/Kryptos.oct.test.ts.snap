@@ -337,6 +337,7 @@ exports[`Kryptos (oct) > to > should return db 1`] = `
 
 exports[`Kryptos (oct) > to > should return json 1`] = `
 {
+  "algClass": "symmetric",
   "algorithm": "HS512",
   "certificateChain": [],
   "certificateThumbprint": null,

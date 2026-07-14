@@ -13,6 +13,7 @@ exports[`inspectSummary / inspectJson > renders full certificate details for a c
   createdAt    2026-01-01T00:00:00.000Z
   notBefore    2026-01-01T00:00:00.000Z
   expiresAt    2036-01-01T00:00:00.000Z
+  algClass     asymmetric
   operations   sign, verify
   privateKey   true
   publicKey    true
@@ -50,6 +51,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: AKP 1`] = `
   createdAt    2026-01-01T00:00:00.000Z
   notBefore    2026-01-01T00:00:00.000Z
   expiresAt    2051-01-01T00:00:00.000Z
+  algClass     asymmetric
   operations   sign, verify
   privateKey   true
   publicKey    true
@@ -69,6 +71,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: EC 1`] = `
   createdAt    2026-01-01T00:00:00.000Z
   notBefore    2026-01-01T00:00:00.000Z
   expiresAt    2051-01-01T00:00:00.000Z
+  algClass     asymmetric
   operations   sign, verify
   privateKey   true
   publicKey    true
@@ -88,6 +91,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: OKP 1`] = `
   createdAt    2026-01-01T00:00:00.000Z
   notBefore    2026-01-01T00:00:00.000Z
   expiresAt    2051-01-01T00:00:00.000Z
+  algClass     asymmetric
   operations   sign, verify
   privateKey   true
   publicKey    true
@@ -107,6 +111,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: RSA 1`] = `
   createdAt    2026-01-01T00:00:00.000Z
   notBefore    2026-01-01T00:00:00.000Z
   expiresAt    2051-01-01T00:00:00.000Z
+  algClass     asymmetric
   operations   sign, verify
   privateKey   true
   publicKey    true
@@ -126,6 +131,7 @@ exports[`inspectSummary / inspectJson > summary snapshot: oct 1`] = `
   createdAt    2026-01-01T00:00:00.000Z
   notBefore    2026-01-01T00:00:00.000Z
   expiresAt    2051-01-01T00:00:00.000Z
+  algClass     symmetric
   operations   sign, verify
   privateKey   true
   publicKey    false

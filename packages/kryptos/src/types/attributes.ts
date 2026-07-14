@@ -1,3 +1,4 @@
+import type { KryptosAlgClass } from "./alg-class.js";
 import type { KryptosAlgorithm } from "./algorithm.js";
 import type { KryptosCurve } from "./curve.js";
 import type { KryptosEncryption } from "./encryption.js";
@@ -40,6 +41,8 @@ export type KryptosAttributes = {
 };
 
 export type KryptosMetadata = {
+  // Asymmetric or symmetric, derived from `type` — see `Kryptos.algClass`.
+  algClass: KryptosAlgClass;
   certificateThumbprint: string | null;
   expiresIn: number;
   hasCertificate: boolean;

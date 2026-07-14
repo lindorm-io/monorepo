@@ -6281,6 +6281,7 @@ exports[`Kryptos (AKP) > to > should return db 1`] = `
 
 exports[`Kryptos (AKP) > to > should return json 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ML-DSA-65",
   "certificateChain": [],
   "certificateThumbprint": null,

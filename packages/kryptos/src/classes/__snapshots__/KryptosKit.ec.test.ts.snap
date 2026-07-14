@@ -6,6 +6,7 @@ exports[`KryptosKit (EC) > env > export 2`] = `"kryptos:eyJjcnYiOiJQLTUyMSIsIngi
 
 exports[`KryptosKit (EC) > from > auto > b64 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ES512",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -67,6 +68,7 @@ exports[`KryptosKit (EC) > from > auto > b64 3`] = `
 
 exports[`KryptosKit (EC) > from > auto > jwk 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ES512",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -129,6 +131,7 @@ exports[`KryptosKit (EC) > from > auto > jwk 3`] = `
 
 exports[`KryptosKit (EC) > from > auto > pem 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ES512",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -204,6 +207,7 @@ QGygbB2Th7u8NIPlFVE=
 
 exports[`KryptosKit (EC) > from > b64 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ES512",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -265,6 +269,7 @@ exports[`KryptosKit (EC) > from > b64 3`] = `
 
 exports[`KryptosKit (EC) > from > jwk 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ES512",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -327,6 +332,7 @@ exports[`KryptosKit (EC) > from > jwk 3`] = `
 
 exports[`KryptosKit (EC) > from > pem 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ES512",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -402,6 +408,7 @@ QGygbB2Th7u8NIPlFVE=
 
 exports[`KryptosKit (EC) > generate > auto 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ES256",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -436,6 +443,7 @@ exports[`KryptosKit (EC) > generate > auto 1`] = `
 
 exports[`KryptosKit (EC) > generate > enc 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ECDH-ES+A192GCMKW",
   "certificateChain": [],
   "certificateThumbprint": null,
@@ -470,6 +478,7 @@ exports[`KryptosKit (EC) > generate > enc 1`] = `
 
 exports[`KryptosKit (EC) > generate > sig 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "ES256",
   "certificateChain": [],
   "certificateThumbprint": null,

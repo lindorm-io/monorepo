@@ -1,5 +1,6 @@
 export * from "./key-types/index.js";
 
+export * from "./alg-class.js";
 export * from "./algorithm.js";
 export * from "./attributes.js";
 export * from "./auto.js";

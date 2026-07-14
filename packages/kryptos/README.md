@@ -43,6 +43,7 @@ key.type; // "EC"
 key.curve; // "P-521"
 key.use; // "sig"
 key.operations; // ["sign", "verify"] — derived from the key material
+key.algClass; // "asymmetric" — derived from the key type ("oct" ⇔ "symmetric")
 
 const jwk = key.export("jwk");
 const pem = key.export("pem");
@@ -438,6 +439,7 @@ The model class. Construct directly only if you already have raw key material �
 | `modulus`                                    | RSA modulus size in bits, otherwise `null`.                                                                                                                                                                                                                                                                                                            |
 | `encryption`                                 | AES content encryption (`enc` keys), otherwise `null`.                                                                                                                                                                                                                                                                                                 |
 | `operations`                                 | What the key MATERIAL can do — derived from `algorithm` + `use` + which halves are present. Not JOSE `key_ops` (never emitted) and not WebCrypto usages: a full keypair reports `["sign", "verify"]`.                                                                                                                                                  |
+| `algClass`                                   | `"asymmetric" \| "symmetric"` — derived from `type` (`oct` ⇔ symmetric). Never stored, never on the wire. Ask for it instead of hand-writing `type: { $nin: ["oct"] }`: `KryptosType` grows (AKP arrived with post-quantum), and every consumer that spells the list out rots the day a sixth type lands.                                              |
 | `createdAt` / `notBefore` / `expiresAt`      | Lifetime dates. `expiresAt` defaults to `notBefore + 25y`.                                                                                                                                                                                                                                                                                             |
 | `expiresIn`                                  | Seconds until expiry, `0` once expired.                                                                                                                                                                                                                                                                                                                |
 | `isActive` / `isExpired`                     | Computed from `notBefore` / `expiresAt` against the current time.                                                                                                                                                                                                                                                                                      |

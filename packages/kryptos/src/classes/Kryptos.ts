@@ -6,6 +6,7 @@ import { removeEmpty, removeUndefined } from "@lindorm/utils";
 import { KryptosError } from "../errors/index.js";
 import type { IKryptos } from "../interfaces/index.js";
 import type {
+  KryptosAlgClass,
   KryptosAlgorithm,
   KryptosBuffer,
   KryptosCurve,
@@ -29,6 +30,7 @@ import type {
   RsaModulus,
 } from "../types/index.js";
 import type { ExportCache } from "../internal/types/export-cache.js";
+import { calculateAlgClass } from "../internal/utils/alg-class.js";
 import { calculateKeyOps } from "../internal/utils/key-ops.js";
 import { encodeCborEnv } from "../internal/utils/cbor/encode-cbor-env.js";
 import { certDerToPem } from "../internal/utils/x509/der-to-pem.js";
@@ -252,6 +254,22 @@ export class Kryptos implements IKryptos {
   }
 
   // metadata
+
+  /**
+   * Asymmetric or symmetric key material, derived from `type` (`oct` ⇔ symmetric).
+   * Never stored and never on the wire — a derived fact, like `operations`.
+   *
+   * NOT redundant with `type: { $nin: ["oct"] }`. `KryptosType` is `"AKP" | "EC" |
+   * "oct" | "OKP" | "RSA"` and it grows — AKP arrived with post-quantum. Every
+   * consumer that hand-writes that `$nin` list rots silently the day a sixth type
+   * lands, which is the same "every consumer re-derives the rule" pattern that
+   * produced the hidden cookie-key bug. The rule is defined ONCE, here, on the
+   * key, so it cannot drift; and `calculateAlgClass` throws on an unclassified
+   * type rather than guessing.
+   */
+  get algClass(): KryptosAlgClass {
+    return calculateAlgClass(this._type);
+  }
 
   get expiresIn(): number {
     if (this.isExpired) return 0;
@@ -514,6 +532,7 @@ export class Kryptos implements IKryptos {
   toJSON(): KryptosJSON {
     return removeUndefined<KryptosJSON>({
       id: this.id,
+      algClass: this.algClass,
       algorithm: this.algorithm,
       certificateChain: this.certificateChain,
       certificateThumbprint: this.certificateThumbprint,

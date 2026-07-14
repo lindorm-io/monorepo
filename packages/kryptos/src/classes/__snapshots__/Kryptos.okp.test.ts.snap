@@ -179,6 +179,7 @@ exports[`Kryptos (OKP) > to > should return db 1`] = `
 
 exports[`Kryptos (OKP) > to > should return json 1`] = `
 {
+  "algClass": "asymmetric",
   "algorithm": "EdDSA",
   "certificateChain": [],
   "certificateThumbprint": null,
