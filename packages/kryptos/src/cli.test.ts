@@ -505,7 +505,13 @@ describe("kryptos derive CLI", () => {
     );
 
     expect(unpublished.publish).toBe(false);
-    expect("publish" in unpublished.toJWK("public")).toBe(false);
+    // A derived key is oct, so it has no public JWK to leak the flag into — the
+    // export is refused outright. The flag lives in the private JWK the env
+    // string carries.
+    expect(unpublished.toJWK("private").publish).toBe(false);
+    expect(() => unpublished.toJWK("public")).toThrow(
+      expect.objectContaining({ name: "KryptosError", code: "no_public_jwk" }),
+    );
 
     const published = KryptosKit.env.import(
       await runDerive({

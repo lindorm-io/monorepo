@@ -18,6 +18,13 @@ const SIG: Array<[string, Parameters<typeof KryptosKit.generate.auto>[0]]> = [
 const ENC: Array<[string, Parameters<typeof KryptosKit.generate.auto>[0]]> = [
   ["ECDH-ES+A256KW", { algorithm: "ECDH-ES+A256KW", encryption: "A256GCM" }],
   ["RSA-OAEP-256", { algorithm: "RSA-OAEP-256", encryption: "A256GCM" }],
+];
+
+// Symmetric, and therefore PRIVATE-MODE ONLY: an oct key's material is its secret,
+// so it has no public JWK to omit anything from — `toJWK("public")` throws. It stays
+// its own row rather than being folded into ENC, so no public-mode sweep can quietly
+// pick it up again.
+const OCT: Array<[string, Parameters<typeof KryptosKit.generate.auto>[0]]> = [
   ["A256KW", { algorithm: "A256KW", encryption: "A256GCM" }],
 ];
 
@@ -31,6 +38,17 @@ describe("Kryptos key_ops attribute", () => {
         expect("key_ops" in jwk).toBe(false);
       },
     );
+
+    test.each(OCT)("should have no public JWK to emit it into (%s)", (_name, options) => {
+      const key = KryptosKit.generate.auto(options);
+
+      expect(() => key.toJWK("public")).toThrow(
+        expect.objectContaining({
+          name: "KryptosError",
+          code: "no_public_jwk",
+        }),
+      );
+    });
 
     test("should still carry `use`, which conveys the intent instead", () => {
       const sig = KryptosKit.generate.auto({ algorithm: "ES256" }).toJWK("public");
@@ -46,8 +64,10 @@ describe("Kryptos key_ops attribute", () => {
     });
   });
 
+  // The private JWK is the one mode every key type HAS, oct included — so the oct
+  // row rejoins the table here, and its key_ops coverage is not lost.
   describe("private JWK", () => {
-    test.each([...SIG, ...ENC])(
+    test.each([...SIG, ...ENC, ...OCT])(
       "should never emit the key_ops member (%s)",
       (_name, options) => {
         const jwk = KryptosKit.generate.auto(options).toJWK("private");
@@ -60,7 +80,7 @@ describe("Kryptos key_ops attribute", () => {
   describe("import", () => {
     // The JWK carries no key_ops, so `operations` must come back from the key
     // material alone — and the halves the export mode actually carried.
-    test.each([...SIG, ...ENC])(
+    test.each([...SIG, ...ENC, ...OCT])(
       "should re-derive operations from a private JWK (%s)",
       (_name, options) => {
         const key = KryptosKit.generate.auto(options);

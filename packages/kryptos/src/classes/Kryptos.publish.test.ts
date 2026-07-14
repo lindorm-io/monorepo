@@ -103,7 +103,23 @@ describe("Kryptos publish attribute", () => {
     const restored = KryptosKit.env.import(KryptosKit.env.export(key));
 
     expect(restored.publish).toBe(false);
-    expect("publish" in key.toJWK("public")).toBe(false);
+    // The flag survives in the PRIVATE JWK, which is what the env string carries.
+    expect(key.toJWK("private").publish).toBe(false);
+  });
+
+  // An oct key cannot leak the flag into a public JWK for a stronger reason than
+  // "the member is omitted": it has no public JWK at all. Its material is the
+  // secret, so `toJWK("public")` is refused outright — the key never reaches a
+  // JWKS, with or without the flag.
+  test("should refuse a public JWK for an oct key entirely", () => {
+    const key = KryptosKit.generate.auto({ algorithm: "A256KW", publish: true });
+
+    expect(() => key.toJWK("public")).toThrow(
+      expect.objectContaining({
+        name: "KryptosError",
+        code: "no_public_jwk",
+      }),
+    );
   });
 
   test("should carry publish through toDB and toJSON", () => {

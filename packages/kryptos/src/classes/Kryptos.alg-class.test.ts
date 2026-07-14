@@ -47,11 +47,25 @@ describe("Kryptos algClass", () => {
       },
     );
 
-    test("should omit algClass from toJWK for an oct key in both modes", () => {
+    // An oct key has ONE mode, not two: its material is the secret itself, so it
+    // has no public JWK and `toJWK("public")` is refused. So the omission is
+    // asserted on the mode that exists, and the mode that does not is asserted to
+    // throw — rather than pretending both exist and checking the same thing twice.
+    test("should omit algClass from the private toJWK of an oct key", () => {
       const kryptos = KryptosKit.generate.auto({ algorithm: "HS256" });
 
-      expect("algClass" in kryptos.toJWK("public")).toBe(false);
       expect("algClass" in kryptos.toJWK("private")).toBe(false);
+    });
+
+    test("should refuse a public toJWK for an oct key — it has none", () => {
+      const kryptos = KryptosKit.generate.auto({ algorithm: "HS256" });
+
+      expect(() => kryptos.toJWK("public")).toThrow(
+        expect.objectContaining({
+          name: "KryptosError",
+          code: "no_public_jwk",
+        }),
+      );
     });
   });
 });

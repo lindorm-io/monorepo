@@ -45,9 +45,11 @@ exports[`KryptosKit (oct) > from > auto > b64 2`] = `
   "alg": "HS512",
   "exp": 2493100800,
   "iat": 1704096000,
+  "k": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
   "kid": "d8e83070-b906-5540-9933-01fe89037168",
   "kty": "oct",
   "nbf": 1704096000,
+  "publish": false,
   "use": "sig",
 }
 `;
@@ -104,9 +106,11 @@ exports[`KryptosKit (oct) > from > auto > jwk 2`] = `
   "alg": "HS512",
   "exp": 2493100800,
   "iat": 1704096000,
+  "k": "tt8sKlXAatelhbSo_IZgvyFzIiKPOKhv-IZTqAEkCkJZPVrO5PK9hb1NH9m9bJXa1nGmqlEVCjzsA1lwYsA2clgUvjQ3QlL3x7yDxzZqReg2x_W4XezFU2fBsGdsD2u-CW5FJ3WJZPsSDG5zOsARCdjvIyDiNO1Ryb-MRb0LWxcvsDdzNPIJNTf5adhf4Qsf5ZIWhvnSF5y9fglB6QRcskgwdRfGoYjjkiw3-h5UDrUnjzCPLQ7GVhq2gg_OyZJsduwTVYGObpAG6EYplvQZjNAWyekHivXfpc556jNTWCzfmAyZvvucsGIM5wuupicfn7AbA1a50fuppCyMwbBKSg",
   "kid": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "kty": "oct",
   "nbf": 1704096000,
+  "publish": true,
   "use": "sig",
 }
 `;
@@ -162,9 +166,11 @@ exports[`KryptosKit (oct) > from > auto > pem 2`] = `
   "alg": "HS512",
   "exp": 2493100800,
   "iat": 1704096000,
+  "k": "ts4FwuyVlXJqw2ruyxbpzRpkknqiZicDS02J2YjfX-FwZ423Q42E0T_AKYkVXHNWuD8Gi0aKMYytagkT7qJx3PsFCgDND01mXOg8pDhXv1n1Cbl8JxavKwbx87QCZ9BmPlUCPWDU8khZ_djxbtK_Hdl7ehFnk3KoFsEYphydCFhdI29UaURoj1ZNDV08PsnuiqBCE9DgYc58QHaGRmpct9ORyYOJ4o-7jOD45cxeKZubVq4HIifiXk724DGP4M1_crSKuYK1lddiniPwv_nnl0DAxI8_5Vz8NGXvGoJFaltQiZmKMC8y5O74DvIDknS3cvQHzpn-t5VXn6eD-7A74Q",
   "kid": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
   "kty": "oct",
   "nbf": 1704096000,
+  "publish": false,
   "use": "sig",
 }
 `;
@@ -227,9 +233,11 @@ exports[`KryptosKit (oct) > from > b64 2`] = `
   "alg": "HS512",
   "exp": 2493100800,
   "iat": 1704096000,
+  "k": "diYnyceZxmn18xGjVobBEwOSj2QOavHfv_tWGNuBpjND572Pa3qD8PDqDSrvoLtLOWyHdQ5lsmsuEIDcPgbPKp92HfNkawbKpCsVNBpoTlbZ-5jewLMREoGje9_pQzGSPLgh-cAkwtcrLUJNbwbyMGMlXmIJXeGukWsD6BfOAimNzPIyLf8QYMJYL9tzf16X4mQ1SvU76Y8Mqop6wz8ylAET7xWTivI-iOK8Zk1MiiomJww5w47Uz7X6Ha_uz7ctCESsyYMef9ZnYlsqwsHPrnP78ihyiv8cH7obubKJ6HkmsCnSTBOchDYxnmQiVZffuMSb8pScaIK6Vfef_1c7Vg",
   "kid": "d8e83070-b906-5540-9933-01fe89037168",
   "kty": "oct",
   "nbf": 1704096000,
+  "publish": false,
   "use": "sig",
 }
 `;
@@ -286,9 +294,11 @@ exports[`KryptosKit (oct) > from > derive 2`] = `
   "alg": "A256KW",
   "exp": 2493100800,
   "iat": 1704096000,
+  "k": "TpmRGmq4AsAvKf8Oscduxri3QqjSXMJED2_U9_pr4w4",
   "kid": "key_derive_test",
   "kty": "oct",
   "nbf": 1704096000,
+  "publish": false,
   "use": "enc",
 }
 `;
@@ -345,9 +355,11 @@ exports[`KryptosKit (oct) > from > jwk 2`] = `
   "alg": "HS512",
   "exp": 2493100800,
   "iat": 1704096000,
+  "k": "tt8sKlXAatelhbSo_IZgvyFzIiKPOKhv-IZTqAEkCkJZPVrO5PK9hb1NH9m9bJXa1nGmqlEVCjzsA1lwYsA2clgUvjQ3QlL3x7yDxzZqReg2x_W4XezFU2fBsGdsD2u-CW5FJ3WJZPsSDG5zOsARCdjvIyDiNO1Ryb-MRb0LWxcvsDdzNPIJNTf5adhf4Qsf5ZIWhvnSF5y9fglB6QRcskgwdRfGoYjjkiw3-h5UDrUnjzCPLQ7GVhq2gg_OyZJsduwTVYGObpAG6EYplvQZjNAWyekHivXfpc556jNTWCzfmAyZvvucsGIM5wuupicfn7AbA1a50fuppCyMwbBKSg",
   "kid": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "kty": "oct",
   "nbf": 1704096000,
+  "publish": true,
   "use": "sig",
 }
 `;
@@ -403,9 +415,11 @@ exports[`KryptosKit (oct) > from > pem 2`] = `
   "alg": "HS512",
   "exp": 2493100800,
   "iat": 1704096000,
+  "k": "ts4FwuyVlXJqw2ruyxbpzRpkknqiZicDS02J2YjfX-FwZ423Q42E0T_AKYkVXHNWuD8Gi0aKMYytagkT7qJx3PsFCgDND01mXOg8pDhXv1n1Cbl8JxavKwbx87QCZ9BmPlUCPWDU8khZ_djxbtK_Hdl7ehFnk3KoFsEYphydCFhdI29UaURoj1ZNDV08PsnuiqBCE9DgYc58QHaGRmpct9ORyYOJ4o-7jOD45cxeKZubVq4HIifiXk724DGP4M1_crSKuYK1lddiniPwv_nnl0DAxI8_5Vz8NGXvGoJFaltQiZmKMC8y5O74DvIDknS3cvQHzpn-t5VXn6eD-7A74Q",
   "kid": "737b2dcd-f6d0-5535-86f0-956ecfa8b983",
   "kty": "oct",
   "nbf": 1704096000,
+  "publish": false,
   "use": "sig",
 }
 `;
@@ -468,9 +482,11 @@ exports[`KryptosKit (oct) > from > utf 2`] = `
   "alg": "HS512",
   "exp": 2493100800,
   "iat": 1704096000,
+  "k": "I-KCrCEuYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXouQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVouMDEyMzQ1Njc4OQ",
   "kid": "19a58ae7-b62c-51be-8bd5-cc417002cee4",
   "kty": "oct",
   "nbf": 1704096000,
+  "publish": false,
   "use": "sig",
 }
 `;

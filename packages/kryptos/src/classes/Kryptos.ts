@@ -579,6 +579,26 @@ export class Kryptos implements IKryptos {
   toJWK(mode: KryptosExportMode = "public"): LindormJwk {
     this.assertNotDisposed();
 
+    // A PUBLIC oct JWK is a contradiction, not merely an awkward export. An oct
+    // key's material IS `k` — the secret itself — so the only two things this
+    // could return are a JWK that PUBLISHES YOUR SECRET, or one that omits `k`
+    // and is malformed (RFC 7517 §6.4.1 requires it). It used to do the latter,
+    // silently. There is no third answer, so asking is a programming error.
+    //
+    // Nothing in the toolkit reaches this: amphora's JWKS filters
+    // `hasPublicKey: true`, and an oct key has no public half. The guard is for
+    // the direct caller — `export("jwk")` is unaffected, since it always exports
+    // the private JWK, where `k` belongs.
+    if (mode === "public" && this._type === "oct") {
+      throw new KryptosError("A symmetric key has no public JWK", {
+        code: "no_public_jwk",
+        data: { kid: this._id, type: this._type },
+        title: "No Public JWK",
+        details:
+          'An oct (symmetric) key\'s material is its secret, so it has no public JWK: emitting one would either publish the secret or omit the required `k` parameter. Export it with mode "private", or exclude symmetric keys from whatever expects a public JWK.',
+      });
+    }
+
     const cacheKey = mode === "private" ? "jwkPrivate" : "jwkPublic";
     if (!this._cache[cacheKey]) {
       const { kid, alg, kty, use, ...keys } = exportToJwk({

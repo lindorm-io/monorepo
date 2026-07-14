@@ -13,13 +13,29 @@ MockDate.set(MockedDate.toISOString());
 
 describe("KryptosKit (oct)", () => {
   describe("clone", () => {
+    // The private JWK is the only JWK an oct key has — its material IS `k`, so
+    // there is no public half and `toJWK("public")` throws. Comparing the clone on
+    // the private mode is therefore the STRONGER check, not a concession: it
+    // compares the secret itself, which a public-mode comparison never could.
     test("should clone", () => {
       const kryptos = KryptosKit.from.auto(TEST_OCT_KEY_B64);
       const cloned = KryptosKit.clone(kryptos);
 
       expect(cloned.toJSON()).toEqual(kryptos.toJSON());
-      expect(cloned.toJWK()).toEqual(kryptos.toJWK());
+      expect(cloned.toJWK("private")).toEqual(kryptos.toJWK("private"));
+      expect(cloned.toJWK("private").k).toBeTypeOf("string");
       expect(cloned.export("b64")).toEqual(kryptos.export("b64"));
+    });
+
+    test("should clone a key that still has no public JWK", () => {
+      const cloned = KryptosKit.clone(KryptosKit.from.auto(TEST_OCT_KEY_B64));
+
+      expect(() => cloned.toJWK("public")).toThrow(
+        expect.objectContaining({
+          name: "KryptosError",
+          code: "no_public_jwk",
+        }),
+      );
     });
   });
 
@@ -46,7 +62,7 @@ describe("KryptosKit (oct)", () => {
         const kryptos = KryptosKit.from.auto(TEST_OCT_KEY_B64);
 
         expect(kryptos.toJSON()).toMatchSnapshot();
-        expect(kryptos.toJWK()).toMatchSnapshot();
+        expect(kryptos.toJWK("private")).toMatchSnapshot();
         expect(kryptos.export("b64")).toMatchSnapshot();
       });
 
@@ -54,7 +70,7 @@ describe("KryptosKit (oct)", () => {
         const kryptos = KryptosKit.from.auto(TEST_OCT_KEY_JWK);
 
         expect(kryptos.toJSON()).toMatchSnapshot();
-        expect(kryptos.toJWK()).toMatchSnapshot();
+        expect(kryptos.toJWK("private")).toMatchSnapshot();
         expect(kryptos.export("jwk")).toMatchSnapshot();
       });
 
@@ -62,7 +78,7 @@ describe("KryptosKit (oct)", () => {
         const kryptos = KryptosKit.from.auto(TEST_OCT_KEY_PEM);
 
         expect(kryptos.toJSON()).toMatchSnapshot();
-        expect(kryptos.toJWK()).toMatchSnapshot();
+        expect(kryptos.toJWK("private")).toMatchSnapshot();
         expect(kryptos.export("pem")).toMatchSnapshot();
       });
     });
@@ -71,7 +87,7 @@ describe("KryptosKit (oct)", () => {
       const kryptos = KryptosKit.from.b64(TEST_OCT_KEY_B64);
 
       expect(kryptos.toJSON()).toMatchSnapshot();
-      expect(kryptos.toJWK()).toMatchSnapshot();
+      expect(kryptos.toJWK("private")).toMatchSnapshot();
       expect(kryptos.export("b64")).toMatchSnapshot();
     });
 
@@ -79,7 +95,7 @@ describe("KryptosKit (oct)", () => {
       const kryptos = KryptosKit.from.jwk(TEST_OCT_KEY_JWK);
 
       expect(kryptos.toJSON()).toMatchSnapshot();
-      expect(kryptos.toJWK()).toMatchSnapshot();
+      expect(kryptos.toJWK("private")).toMatchSnapshot();
       expect(kryptos.export("jwk")).toMatchSnapshot();
     });
 
@@ -87,7 +103,7 @@ describe("KryptosKit (oct)", () => {
       const kryptos = KryptosKit.from.pem(TEST_OCT_KEY_PEM);
 
       expect(kryptos.toJSON()).toMatchSnapshot();
-      expect(kryptos.toJWK()).toMatchSnapshot();
+      expect(kryptos.toJWK("private")).toMatchSnapshot();
       expect(kryptos.export("pem")).toMatchSnapshot();
     });
 
@@ -95,7 +111,7 @@ describe("KryptosKit (oct)", () => {
       const kryptos = KryptosKit.from.utf(TEST_OCT_KEY_UTF);
 
       expect(kryptos.toJSON()).toMatchSnapshot();
-      expect(kryptos.toJWK()).toMatchSnapshot();
+      expect(kryptos.toJWK("private")).toMatchSnapshot();
       expect(kryptos.export("b64")).toMatchSnapshot();
     });
 
@@ -109,7 +125,7 @@ describe("KryptosKit (oct)", () => {
       });
 
       expect(kryptos.toJSON()).toMatchSnapshot();
-      expect(kryptos.toJWK()).toMatchSnapshot();
+      expect(kryptos.toJWK("private")).toMatchSnapshot();
       expect(kryptos.export("b64")).toMatchSnapshot();
     });
   });

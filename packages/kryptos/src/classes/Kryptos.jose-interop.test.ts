@@ -65,8 +65,13 @@ const isOct = (algorithm: KryptosAlgorithm) =>
 
 const OCT_ALGORITHMS = ALL_ALGORITHMS.filter(isOct);
 
-const PUBLISHED_ALGORITHMS = ALL_ALGORITHMS.filter(
-  (algorithm) => !isOct(algorithm) && !UNREGISTERED_BY_DESIGN.includes(algorithm),
+// Every algorithm that HAS a public JWK — i.e. everything but oct. `toJWK("public")`
+// throws on an oct key, so this is the domain of every public-mode assertion below,
+// including the key_ops guard. Its asymmetric coverage is therefore undiminished.
+const ASYMMETRIC_ALGORITHMS = ALL_ALGORITHMS.filter((algorithm) => !isOct(algorithm));
+
+const PUBLISHED_ALGORITHMS = ASYMMETRIC_ALGORITHMS.filter(
+  (algorithm) => !UNREGISTERED_BY_DESIGN.includes(algorithm),
 );
 
 // What WebCrypto grants the PUBLIC half. This is the platform's truth table, not
@@ -128,7 +133,14 @@ describe("Kryptos.toJWK jose interop matrix", () => {
   describe("key_ops is never emitted", () => {
     // No jose needed — a cheap unit assertion over the FULL matrix, so a future
     // re-add of the field is caught for every algorithm, not just the sampled few.
-    test.each(ALL_ALGORITHMS)(
+    //
+    // The public sweep runs over every algorithm that HAS a public JWK — all 26
+    // asymmetric ones, undiminished. It is the guard against the bug that once
+    // meant no RP could verify any token we issued (see the header), so it is
+    // scoped to the keys that reach an RP, never softened for the ones that don't.
+    // The oct algorithms are absent because they have no public JWK at all — the
+    // final describe block asserts that, so they are excluded, not skipped.
+    test.each(ASYMMETRIC_ALGORITHMS)(
       "should omit key_ops from the public JWK (%s)",
       (algorithm) => {
         const jwk = KryptosKit.generate.auto({ algorithm }).toJWK("public");
@@ -137,6 +149,8 @@ describe("Kryptos.toJWK jose interop matrix", () => {
       },
     );
 
+    // The private sweep keeps the FULL matrix — oct included. A private JWK is the
+    // one JWK an oct key has, so the field must stay absent from it too.
     test.each(ALL_ALGORITHMS)(
       "should omit key_ops from the private JWK (%s)",
       (algorithm) => {
@@ -158,6 +172,23 @@ describe("Kryptos.toJWK jose interop matrix", () => {
 
         expect(kryptos.hasPublicKey).toBe(false);
         expect(kryptos.hasPrivateKey).toBe(true);
+      },
+    );
+
+    // ...and the export refuses to invent one. This is what makes the exclusion
+    // above structural rather than a matter of taste: there is no public JWK to
+    // feed jose, because asking for one is an error.
+    test.each(OCT_ALGORITHMS)(
+      "should refuse to produce a public JWK at all (%s)",
+      (algorithm) => {
+        const kryptos = KryptosKit.generate.auto({ algorithm });
+
+        expect(() => kryptos.toJWK("public")).toThrow(
+          expect.objectContaining({
+            name: "KryptosError",
+            code: "no_public_jwk",
+          }),
+        );
       },
     );
   });

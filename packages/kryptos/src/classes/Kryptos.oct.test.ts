@@ -1,5 +1,6 @@
 import MockDate from "mockdate";
 import { TEST_OCT_KEY_B64 } from "../__fixtures__/oct-keys.js";
+import { KryptosError } from "../errors/index.js";
 import { KryptosKit } from "./KryptosKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -90,15 +91,30 @@ describe("Kryptos (oct)", () => {
       expect(kryptos.toJSON()).toMatchSnapshot();
     });
 
-    test("should return jwk with public key", () => {
+    // An oct key's material IS `k` — the secret. It has no public half to publish,
+    // so `toJWK("public")` is refused rather than answered: the only two things it
+    // could return are a JWK that leaks the secret, or one that omits `k` and is
+    // malformed per RFC 7517 §6.4.1 (it used to emit the latter, silently). The
+    // default mode IS "public", so a bare `toJWK()` is refused too. Asserted as an
+    // error class + code, not a snapshot — a snapshot of the message would only
+    // re-encode the wording, not the contract.
+    test("should have no public JWK", () => {
       const kryptos = KryptosKit.from.b64({ ...TEST_OCT_KEY_B64, ...options });
 
-      expect(kryptos.toJWK()).toMatchSnapshot();
+      expect(() => kryptos.toJWK("public")).toThrow(
+        expect.objectContaining({
+          name: "KryptosError",
+          code: "no_public_jwk",
+        }),
+      );
+      expect(() => kryptos.toJWK()).toThrow(KryptosError);
     });
 
     test("should return jwk with private key", () => {
       const kryptos = KryptosKit.from.b64({ ...TEST_OCT_KEY_B64, ...options });
 
+      // The private JWK is the only JWK an oct key has, and `k` belongs in it.
+      expect(kryptos.toJWK("private").k).toBeTypeOf("string");
       expect(kryptos.toJWK("private")).toMatchSnapshot();
     });
 
