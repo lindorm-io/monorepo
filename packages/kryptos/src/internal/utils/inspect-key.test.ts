@@ -28,7 +28,7 @@ const FIXTURES: Array<[string, IKryptos]> = [
 
 // Secret material that must never appear in any rendered output.
 const secretStrings = (key: IKryptos): Array<string> => {
-  const jwk = key.toJWK("private") as Record<string, string | undefined>;
+  const jwk = key.toJWK("private") as unknown as Record<string, string | undefined>;
   return ["d", "k", "priv", "p", "q", "dp", "dq", "qi"]
     .map((member) => jwk[member])
     .filter((value): value is string => typeof value === "string" && value.length > 0);

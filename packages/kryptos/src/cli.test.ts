@@ -13,6 +13,7 @@ import { confirm, input, select } from "@inquirer/prompts";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import { KryptosKit } from "./classes/index.js";
 import { derive, exportKey, generate, inspect } from "./cli.js";
+import type { KryptosAlgorithm } from "./types/index.js";
 
 vi.mock("@inquirer/prompts", () => ({
   confirm: vi.fn(),
@@ -890,7 +891,7 @@ describe("kryptos export CLI", () => {
 
   const NB = new Date("2026-01-01T00:00:00Z");
 
-  const threeTierLeaf = (algorithm: string) => {
+  const threeTierLeaf = (algorithm: KryptosAlgorithm) => {
     const root = KryptosKit.generate.auto({
       algorithm: "ES384",
       notBefore: NB,
@@ -924,7 +925,7 @@ describe("kryptos export CLI", () => {
   const countCerts = (suffix: string): number =>
     (read(suffix).match(/-----BEGIN CERTIFICATE-----/g) ?? []).length;
 
-  describe.each(["ES256", "EdDSA", "RS256", "ML-DSA-44"])(
+  describe.each(["ES256", "EdDSA", "RS256", "ML-DSA-44"] as const)(
     "3-tier ca-signed %s leaf",
     (algorithm) => {
       test("writes all five PEM files that parse and round-trip", async () => {
