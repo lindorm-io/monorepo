@@ -19,6 +19,15 @@ class TestStatuslessError extends LindormError {
   }
 }
 
+/** An application's own error sharing a status with a canonical HTTP class. */
+class TestApplicationNotFoundError extends ClientError {
+  public static readonly status = 404;
+
+  public constructor(message: string, options = {}) {
+    super(message, { ...options, status: 404 });
+  }
+}
+
 describe("ErrorRegistry", () => {
   beforeEach(() => {
     resetErrorRegistry();
@@ -57,6 +66,19 @@ describe("ErrorRegistry", () => {
       expect(() => errorRegistry.register(Anonymous)).toThrow(
         "Cannot register anonymous error class",
       );
+    });
+
+    test("should keep the first class registered for a status", () => {
+      errorRegistry.register(TestNotFoundError);
+      errorRegistry.register(TestApplicationNotFoundError);
+
+      // Both are reconstructable by name — that is the point of an application error.
+      expect(errorRegistry.resolve({ name: "TestApplicationNotFoundError" })).toBe(
+        TestApplicationNotFoundError,
+      );
+
+      // But a bare 404 is still the canonical class, not the application's.
+      expect(errorRegistry.resolve({ status: 404 })).toBe(TestNotFoundError);
     });
   });
 
@@ -192,6 +214,17 @@ describe("ErrorRegistry", () => {
 
     test("should return false when class is not registered", () => {
       expect(errorRegistry.unregister("Nope")).toBe(false);
+    });
+
+    test("should leave a status mapping held by another class intact", () => {
+      errorRegistry.register(TestNotFoundError);
+      errorRegistry.register(TestApplicationNotFoundError);
+
+      expect(errorRegistry.unregister("TestApplicationNotFoundError")).toBe(true);
+      expect(errorRegistry.has("TestApplicationNotFoundError")).toBe(false);
+
+      // The application class never held 404, so it cannot take it down on the way out.
+      expect(errorRegistry.resolve({ status: 404 })).toBe(TestNotFoundError);
     });
 
     test("should remove only by name when class has no status", () => {

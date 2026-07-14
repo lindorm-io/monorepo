@@ -18,6 +18,7 @@ This package is **ESM-only**. Use `import` syntax — `require()` is not support
 - `ServerError` subclass with HTTP 5xx status codes and matching titles, defaulting to `500 Internal Server Error`
 - `AbortError` subclass for cancelled operations, defaulting to status `499 Client Closed Request` and carrying an arbitrary `reason`
 - `toJSON()` returning a stable, fully-typed `LindormErrorAttributes` shape suitable for logging or API responses
+- `errorRegistry` resolving a serialised error back to its original class, so an error that crossed a wire is still catchable with `instanceof`
 
 ## Quick Start
 
@@ -228,17 +229,92 @@ export class AuthenticationError extends ClientError {
 }
 ```
 
+## Error Registry
+
+`errorRegistry` is a process-wide map from error **names** and HTTP **statuses** back to error classes. It exists so an error that crossed a wire can be rebuilt as the class it was thrown as — which is what lets a caller write `catch (e) { if (e instanceof UserSuspendedError) }` instead of picking apart a status code and a string.
+
+Every class in this package registers itself on import. Register your own the same way:
+
+```typescript
+import { errorRegistry, ForbiddenError } from "@lindorm/errors";
+
+export class UserSuspendedError extends ForbiddenError {
+  public constructor(message: string, options = {}) {
+    super(message, { code: "USER_SUSPENDED", ...options });
+  }
+}
+
+errorRegistry.register(UserSuspendedError);
+```
+
+`reconstruct()` then rebuilds it from a serialised payload — this is what `@lindorm/conduit` does with a failed HTTP response:
+
+```typescript
+const error = errorRegistry.reconstruct({
+  message: "Account suspended",
+  name: "UserSuspendedError",
+  status: 403,
+  code: "USER_SUSPENDED",
+});
+
+error instanceof UserSuspendedError; // true
+```
+
+Both ends must register the class. Registration is an **import side effect**, so the class has to live somewhere both the thrower and the catcher import — a shared package. If the reconstructing process has never imported it, resolution falls back to the status and you get a plain `ForbiddenError`. That is the intended degradation, but it means a missing import turns `instanceof` silently false rather than throwing.
+
+### Resolution order
+
+`resolve()` picks the class in this order:
+
+1. **By name** — a registered class with that exact name.
+2. **By exact status** — the canonical class for that status (`404` → `NotFoundError`).
+3. **By status range** — `ClientError` for any other 4xx, `ServerError` for any other 5xx.
+4. **`LindormError`** — nothing matched.
+
+### Names and statuses are not symmetrical
+
+Registering a subclass adds it to the name map. It does **not** change what a bare status resolves to: the status map keeps its **first** registration, which is always the canonical HTTP class, since defining a subclass requires importing this package and that registers the built-ins first.
+
+This matters more than it looks, because **JavaScript inherits statics**. `UserSuspendedError extends ForbiddenError` inherits `static status = 403` without declaring it. Were the status map last-write-wins, registering it would quietly make _every_ bare 403 — including one from a third-party API that has never heard of your application — reconstruct as `UserSuspendedError`. It does not:
+
+```typescript
+errorRegistry.register(UserSuspendedError);
+
+errorRegistry.resolve({ name: "UserSuspendedError" }); // UserSuspendedError
+errorRegistry.resolve({ status: 403 }); // ForbiddenError — unchanged
+```
+
+### API
+
+| Method                 | Returns             | Description                                                               |
+| ---------------------- | ------------------- | ------------------------------------------------------------------------- |
+| `register(cls)`        | `void`              | Adds by name, and by status if it is the first class to claim that status |
+| `resolve(hint)`        | `LindormErrorClass` | Resolves a class from `{ name?, status? }` using the order above          |
+| `reconstruct(payload)` | `LindormError`      | Resolves the class and constructs it with the payload's fields            |
+| `has(name)`            | `boolean`           | Whether a class is registered under that name                             |
+| `unregister(name)`     | `boolean`           | Removes it; releases the status only if this class actually held it       |
+
+`register()` throws if the class is anonymous — a class with no name cannot be resolved by one.
+
 ## Exported Symbols
 
-| Symbol                   | Kind  |
-| ------------------------ | ----- |
-| `LindormError`           | class |
-| `LindormErrorOptions`    | type  |
-| `LindormErrorAttributes` | type  |
-| `ClientError`            | class |
-| `ServerError`            | class |
-| `AbortError`             | class |
-| `AbortErrorOptions`      | type  |
+| Symbol                                                        | Kind     |
+| ------------------------------------------------------------- | -------- |
+| `LindormError`                                                | class    |
+| `LindormErrorOptions`                                         | type     |
+| `LindormErrorAttributes`                                      | type     |
+| `ClientError`                                                 | class    |
+| `ServerError`                                                 | class    |
+| `AbortError`                                                  | class    |
+| `AbortErrorOptions`                                           | type     |
+| `NetworkError`                                                | class    |
+| `NotFoundError`, `UnauthorizedError`, … (one per HTTP status) | class    |
+| `HttpErrorOptions`                                            | type     |
+| `ErrorRegistry`                                               | class    |
+| `errorRegistry`                                               | instance |
+| `LindormErrorClass`, `ResolveHint`, `ReconstructPayload`      | type     |
+| `createErrorTypeUrn`, `assertValidErrorType`                  | function |
+| `generateSupport`                                             | function |
 
 ## License
 

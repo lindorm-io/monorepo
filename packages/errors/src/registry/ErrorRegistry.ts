@@ -31,12 +31,24 @@ export class ErrorRegistry {
   private readonly byName: Map<string, LindormErrorClass> = new Map();
   private readonly byStatus: Map<number, LindormErrorClass> = new Map();
 
+  /**
+   * Every class is registered by NAME — that is what lets a service's own error (an
+   * `InvalidFirstNameSchemaError` among a dozen other 400s) be reconstructed as itself and
+   * caught with `instanceof`.
+   *
+   * The STATUS map is different: it answers "what class is a bare 400?", and only the
+   * canonical HTTP class may answer that. So the first registration of a status keeps it —
+   * the built-ins always register first, since defining a subclass requires importing this
+   * package, which registers them. Without this, an application error declaring
+   * `static status = 400` would silently become the class every unnamed 400 reconstructs
+   * as, including one from a foreign server that never heard of it.
+   */
   register(cls: LindormErrorClass): void {
     if (!cls.name) {
       throw new LindormError("Cannot register anonymous error class");
     }
     this.byName.set(cls.name, cls);
-    if (typeof cls.status === "number") {
+    if (typeof cls.status === "number" && !this.byStatus.has(cls.status)) {
       this.byStatus.set(cls.status, cls);
     }
   }
@@ -76,7 +88,11 @@ export class ErrorRegistry {
     const cls = this.byName.get(name);
     if (!cls) return false;
     this.byName.delete(name);
-    if (typeof cls.status === "number") this.byStatus.delete(cls.status);
+    // Only if this class is the one holding the status — an application class that lost the
+    // status to the canonical built-in must not take it down with it on the way out.
+    if (typeof cls.status === "number" && this.byStatus.get(cls.status) === cls) {
+      this.byStatus.delete(cls.status);
+    }
     return true;
   }
 
