@@ -322,6 +322,10 @@ describe("Pylon", () => {
     });
   });
 
+  // The published JWKS carries NO `key_ops`: a public key cannot claim the
+  // private operations (`sign`, `deriveKey`) it was generated with, and
+  // WebCrypto — so `jose`, so every mainstream RP — refuses to import a public
+  // JWK that does. `use` conveys the intent instead.
   test("should return well-known jwks", async () => {
     const response = await request(pylon.callback)
       .get("/.well-known/jwks.json")
@@ -336,7 +340,6 @@ describe("Pylon", () => {
           iat: 1704096000,
           iss: "http://test.lindorm.io",
           jku: "http://test.lindorm.io/.well-known/jwks.json",
-          key_ops: ["sign", "verify"],
           kid: "5d17c551-7b6f-474a-8679-dba9bbfa06a2",
           kty: "EC",
           nbf: 1704096000,
@@ -352,7 +355,6 @@ describe("Pylon", () => {
           iat: 1704096000,
           iss: "http://test.lindorm.io",
           jku: "http://test.lindorm.io/.well-known/jwks.json",
-          key_ops: ["deriveKey"],
           kid: "5382ca15-b849-55ae-904a-9196797ccc1b",
           kty: "OKP",
           nbf: 1704096000,
