@@ -14,7 +14,6 @@ export const TEST_OCT_KEY_SIG = KryptosKit.from.b64({
   ...OCT,
   algorithm: "HS256",
   createdAt: new Date("2024-01-01T00:03:00.000Z"),
-  operations: ["sign", "verify"],
   use: "sig",
 }) as IKryptosOct;
 
@@ -22,6 +21,5 @@ export const TEST_OCT_KEY_ENC = KryptosKit.from.b64({
   ...OCT,
   algorithm: "dir",
   createdAt: new Date("2024-01-01T00:04:00.000Z"),
-  operations: ["encrypt", "decrypt", "deriveKey"],
   use: "enc",
 }) as IKryptosOct;
