@@ -329,24 +329,41 @@ export class Aegis implements IAegis {
 
   // private aes
 
+  // The AES path resolves its key exactly like JWE / COSE do — same resolver,
+  // same floor, same deployment-⊕-per-call selector merge. Without the per-call
+  // `key` a deployment could only ever hold ONE opinion about encryption, and a
+  // pylon's cookie would be sealed with whatever the deployment-wide enc policy
+  // picked (in practice the published token key) while the internal `dir` key
+  // that exists for the job went unused.
   private async aesEncrypt(
     data: AesContent,
     mode: "encoded" | "record" | "serialised" | "tokenised" = "encoded",
+    key?: AegisEncKey,
   ): Promise<string | AesEncryptionRecord | SerialisedAesEncryption> {
-    const kryptos = await this.resolveEncryptKey();
-    const kit = new AesKit({ encryption: this.encryption, kryptos });
+    const kryptos = await this.resolveEncryptKey(key);
+    const kit = new AesKit({
+      encryption: key?.encryption ?? this.encryption,
+      kryptos,
+    });
 
     return kit.encrypt(data, mode as "encoded");
   }
 
+  // The ciphertext names its own key, so `findById` — deliberately unfiltered —
+  // still decrypts what an expired or since-internalised key sealed. A key the
+  // vault never held is the one case that lookup cannot serve, so an injected
+  // `kryptos` short-circuits it; the floor still applies, and a supplied key
+  // that names a different kid than the ciphertext throws (`resolveKey`).
   private async aesDecrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
+    key?: AegisDecryptKey,
   ): Promise<T> {
     const parsed = AesKit.parse(data);
 
     const kryptos = await this.resolveDecryptKey(
       parsed.keyId,
       parsed.algorithm as KryptosEncAlgorithm | undefined,
+      key,
     );
     const kit = new AesKit({ encryption: this.encryption, kryptos });
 
@@ -844,14 +861,20 @@ export class Aegis implements IAegis {
     });
   }
 
+  // Like verify, the deployment/per-call decrypt policy joins the FLOOR rather
+  // than the selector: selection is driven by the ciphertext's own key id, so
+  // the policy has to be a CHECK on the resolved key to bite at all. An injected
+  // key is the one thing that skips the vault — never the floor.
   private resolveDecryptKey(
     id: string | undefined,
     algorithm: KryptosEncAlgorithm | undefined,
+    decrypt?: AegisDecryptKey,
   ): Promise<IKryptos> {
     return resolveKey({
       amphora: this.amphora,
-      floor: { ...DECRYPT_FLOOR, ...this.decryptKey.predicate },
+      floor: { ...DECRYPT_FLOOR, ...this.decryptKey.predicate, ...decrypt?.predicate },
       selector: { algorithm },
+      kryptos: decrypt?.kryptos ?? this.decryptKey.kryptos,
       id,
       logger: this.logger,
       operation: "decrypt",

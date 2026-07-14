@@ -7,6 +7,8 @@ import type {
 } from "@lindorm/aes";
 import type { Dict } from "@lindorm/types";
 import type {
+  AegisDecryptKey,
+  AegisEncKey,
   DecryptedJwe,
   EncryptedJwe,
   JweEncryptOptions,
@@ -27,13 +29,33 @@ import type {
   VerifyJwtOptions,
 } from "../types/index.js";
 
+/**
+ * The AES surface takes the SAME key selector as every other aegis operation:
+ * the deployment default (`AegisOptions.encrypt` / `.decrypt`) merged with a
+ * per-call `key`, resolved through the one resolver, floored like the rest.
+ *
+ * It exists because one Aegis serves a whole deployment: a pylon encrypts a
+ * COOKIE with its internal `dir` key and an id_token to the CLIENT's key, and
+ * only a per-call selector can tell those two apart — `{ predicate: { purpose:
+ * "cookie", publish: false } }` reaches the internal key that exists for
+ * exactly that job.
+ */
 export interface IAegisAes {
-  encrypt(data: AesContent, mode?: "encoded"): Promise<string>;
-  encrypt(data: AesContent, mode: "record"): Promise<AesEncryptionRecord>;
-  encrypt(data: AesContent, mode: "serialised"): Promise<SerialisedAesEncryption>;
-  encrypt(data: AesContent, mode: "tokenised"): Promise<string>;
+  encrypt(data: AesContent, mode?: "encoded", key?: AegisEncKey): Promise<string>;
+  encrypt(
+    data: AesContent,
+    mode: "record",
+    key?: AegisEncKey,
+  ): Promise<AesEncryptionRecord>;
+  encrypt(
+    data: AesContent,
+    mode: "serialised",
+    key?: AegisEncKey,
+  ): Promise<SerialisedAesEncryption>;
+  encrypt(data: AesContent, mode: "tokenised", key?: AegisEncKey): Promise<string>;
   decrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
+    key?: AegisDecryptKey,
   ): Promise<T>;
 }
 

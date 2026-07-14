@@ -74,6 +74,17 @@ There is **no ranking and no fallback**. A key satisfies the policy or it does n
 and a miss throws — falling back to a key the policy forbids is how an unverifiable
 token gets minted.
 
+Every selector is amphora's `AmphoraKeySelector` — `{ kryptos?, predicate? }`, the one
+key-selection vocabulary across the toolkit — narrowed to the attributes aegis permits.
+`sign`, `encrypt` and `decrypt` take the full selector; `AegisEncKey` adds `encryption`,
+which picks the cipher rather than the key. **`verify` deliberately carries no
+`kryptos`**: a token names its verification key by `kid`, so there is no path that
+supplies one, and the field would be surface nothing honours.
+
+All four are accepted per call (`aegis.mint`, `aegis.jws.sign`, `aegis.aes.encrypt`,
+`aegis.aes.decrypt`, …) and as a deployment default on `AegisOptions`; the two merge
+shallowly, caller wins.
+
 ```typescript
 // Pin a key by id, or allowlist a set. `kid` is just `{ id }`.
 await aegis.mint("id_token", content, {
@@ -145,6 +156,38 @@ const serialised = await aegis.aes.encrypt("data", "serialised"); // SerialisedA
 const tokenised = await aegis.aes.encrypt("data", "tokenised"); // base64 string
 
 const plain = await aegis.aes.decrypt(encoded);
+```
+
+AES takes the same [key selector](#key-selection) as every other operation — one Aegis
+serves a whole deployment, so "encrypt this **cookie** with the internal cookie key" has
+to be sayable next to "encrypt this **id_token** to the client's key". Without it the AES
+path can only ask the deployment-wide enc policy, which hands back the newest _published_
+key.
+
+```typescript
+// The internal cookie key. `publish: false` hides a key from SELECTION, not just
+// from publication, so reaching for it is an explicit opt-in.
+const cookie = await aegis.aes.encrypt(session, "encoded", {
+  predicate: { purpose: "cookie", publish: false },
+});
+
+// The ciphertext names its own key, so the read side needs no selector — the
+// lookup is unfiltered and still finds an expired or unpublished key.
+const session = await aegis.aes.decrypt(cookie);
+
+// `encryption` picks the CIPHER, never the key.
+await aegis.aes.encrypt(data, "encoded", { encryption: "A128CBC-HS256" });
+```
+
+A key supplied outright is the one case the vault cannot serve on the way back, so
+**decrypt takes a `kryptos` too** — encrypting with a detached key and being unable to
+decrypt it again would otherwise be a silent one-way trip. The floor still applies, and a
+supplied key that is not the one the ciphertext names throws (`decrypt_key_mismatch`)
+rather than being quietly ignored.
+
+```typescript
+const encoded = await aegis.aes.encrypt(data, "encoded", { kryptos: detached });
+const plain = await aegis.aes.decrypt(encoded, { kryptos: detached });
 ```
 
 ### Universal verification
