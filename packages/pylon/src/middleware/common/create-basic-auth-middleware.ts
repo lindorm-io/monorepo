@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import { isArray, isFunction } from "@lindorm/is";
 import { PylonError } from "../../errors/index.js";
-import { parseBasicCredentials } from "../../internal/utils/auth/parse-basic-credentials.js";
+import { parseBasicCredentials } from "../../utils/parse-basic-credentials.js";
 import { verifyBasicPassword } from "../../internal/utils/auth/verify-basic-password.js";
 import type { Credentials, PylonMiddleware } from "../../types/index.js";
 
