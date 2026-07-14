@@ -1057,11 +1057,11 @@ const app = new Pylon({
 
 This is the same `{ kryptos?, predicate? }` descriptor used across the toolkit (`@lindorm/aegis`, `@lindorm/proteus`, `@lindorm/iris`): `kryptos` is a key supplied outright, `predicate` is which of the vault's keys.
 
-| Role           | Kind     | Floor Pylon owns              | Required                       |
-| -------------- | -------- | ----------------------------- | ------------------------------ |
-| `signature`    | selector | `use: "sig"`, private half    | **yes**, to sign a cookie      |
-| `verification` | check    | `use: "sig"`                  | no — defaults to `signature`   |
-| `encryption`   | selector | `use: "enc"` (owned by Aegis) | no — Aegis's deployment policy |
+| Role           | Kind     | Floor Pylon owns                             | Required                       |
+| -------------- | -------- | -------------------------------------------- | ------------------------------ |
+| `signature`    | selector | `use: "sig"`, private half, `isActive: true` | **yes**, to sign a cookie      |
+| `verification` | check    | `use: "sig"`, `isPending: false`             | no — defaults to `signature`   |
+| `encryption`   | selector | `use: "enc"` (owned by Aegis)                | no — Aegis's deployment policy |
 
 ### A session IS a cookie
 
@@ -1085,14 +1085,15 @@ Naming `session.signature` is therefore **enough**; there is no second option yo
 
 ### Rollover
 
-- **Key rotation never invalidates a live cookie.** A signature is verified against the key the cookie's own `.kid` names, and the predicate matches a key _class_, not a kid — so when the rotation worker mints next year's cookie key, cookies signed by the previous one keep verifying. Ciphertext likewise names its own key, so it keeps decrypting.
+- **Key rotation never invalidates a live cookie.** A signature is verified against the key the cookie's own `.kid` names, and the predicate matches a key _class_, not a kid — so when the rotation worker mints next year's cookie key, cookies signed by the previous one keep verifying. That is why the verification floor is `isPending: false` and **not** `isActive`: an **expired** key must keep verifying, or a rotation would log out every live session. A key whose `notBefore` has not passed cannot have signed anything, so it is refused — the `.kid` is the client's claim, and it does not get to name a key that has never been usable. Ciphertext likewise names its own key, so it keeps decrypting.
 - **Changing the signing _policy_ is different.** Introducing `session.signature: { purpose: "session" }` narrows the inherited read policy to session keys, which excludes the cookie key your live session cookies were signed with. To carry them across, name a `session.verification` broad enough to admit both — `{ predicate: { publish: false } }` covers every internal key while still excluding the published token key. This is what the override is for.
 
 ### The rest
 
 - ⚠ **`publish: false` is load-bearing.** Amphora's default query is the **published** set, so an internal cookie/session key is unreachable without it. Omit it and you select the JWKS token key.
 - **`cookie.signature` is required to sign a cookie.** There is no fallback: the floor alone would resolve to whichever published key is newest — in practice the token key, since token keys rotate twice as often as cookie keys. A purposeless fallback is worse than a loud failure, so a signed cookie with no `cookie.signature` throws. Since `session` chains to `cookie`, a session cookie is signable iff a cookie signing key is named.
-- **The floor is Pylon's, the selector is yours.** `use` and `hasPrivateKey` are the minimum that makes an operation possible; they are absent from the predicate type by construction, so you cannot widen them. `purpose`, `publish` and `internal` are your policy.
+- **The floor is Pylon's, the selector is yours.** `use`, `hasPrivateKey` and the key's lifetime state are the minimum that makes an operation possible; they are absent from the predicate type by construction, so you cannot widen them. `purpose`, `publish` and `internal` are your policy.
+- **Signing demands an active key.** `isActive: true` is on the signing floor, so an expired or not-yet-valid key never signs a cookie — including one handed to `keys.cookie.signature` as an injected `kryptos`, which never touches the vault and is therefore time-checked by nothing else.
 - **The read side of encryption takes no selector.** Ciphertext names its own key, so `aes.decrypt` resolves it by kid.
 - A role naming a key the vault does not hold **fails loudly**, never silently.
 

@@ -33,6 +33,7 @@ describe("signCookie", () => {
       id: "kid-1",
       use: "sig",
       hasPrivateKey: true,
+      isActive: true,
       toJSON: () => ({ id: "kid-1" }),
     });
   });
@@ -50,6 +51,7 @@ describe("signCookie", () => {
     expect(ctx.amphora.find).toHaveBeenCalledWith({
       use: "sig",
       hasPrivateKey: true,
+      isActive: true,
       purpose: "cookie",
       publish: false,
     });

@@ -15,7 +15,11 @@ import { COOKIE_VERIFY_FLOOR } from "../../constants/key-floor.js";
  * signed by the published token key would verify like any other.
  *
  * `findByIdSync` is deliberately UNFILTERED: a cookie signed by a key that has
- * since rotated out of the active set must still verify.
+ * since rotated out of the active set must still verify. That is what the floor's
+ * `isPending: false` — rather than `isActive` — preserves: an EXPIRED key keeps
+ * verifying (or a rotation would log out every live session), while a key whose
+ * `notBefore` has not passed, and which therefore cannot have signed anything, is
+ * refused.
  *
  * Every failure is the client's: it presented the `.kid`. The caller wraps a
  * throw as an invalid cookie signature.
@@ -36,7 +40,7 @@ export const resolveCookieVerificationKey = (
       title: "Invalid Cookie Key",
       type: "urn:lindorm:pylon:error:invalid_cookie_key",
       details:
-        "The key the cookie names cannot verify it: it is not a signing key, or it is not the key this deployment signs cookies with.",
+        "The key the cookie names cannot verify it: it is not a signing key, it is not yet valid, or it is not the key this deployment signs cookies with.",
       status: ClientError.Status.Unauthorized,
       data: { name, kid },
       debug: { floor, kryptos: kryptos.toJSON() },

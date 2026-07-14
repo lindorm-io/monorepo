@@ -19,6 +19,7 @@ const cookieKey = {
   use: "sig",
   purpose: "cookie",
   publish: false,
+  isPending: false,
   toJSON: () => ({ id: "kid-1" }),
 };
 
@@ -88,6 +89,7 @@ describe("verifyCookie", () => {
       ctx.amphora.findByIdSync.mockReturnValue({
         id: "enc-kid",
         use: "enc",
+        isPending: false,
         toJSON: () => ({ id: "enc-kid" }),
       });
 
@@ -105,6 +107,7 @@ describe("verifyCookie", () => {
         use: "sig",
         purpose: "token",
         publish: true,
+        isPending: false,
         toJSON: () => ({ id: "token-kid" }),
       });
 

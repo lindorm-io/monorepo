@@ -41,8 +41,8 @@ export const resolveCookieSigningKey = async (
   }
 
   // The floor is spread first and the predicate last only for readability — the
-  // predicate type cannot express `use` or `hasPrivateKey`, so it can never
-  // widen the floor whatever the order.
+  // predicate type cannot express `use`, `hasPrivateKey` or the lifetime states,
+  // so it can never widen the floor whatever the order.
   const query: AmphoraPredicate = { ...COOKIE_SIGN_FLOOR, ...key.predicate };
 
   let kryptos: IKryptos;
@@ -71,11 +71,12 @@ export const resolveCookieSigningKey = async (
       title: "Cookie Signing Key Policy Violation",
       type: "urn:lindorm:pylon:error:cookie_signing_key_policy_violation",
       details:
-        'The key named as the cookie signing key (`keys.cookie.signature`, or `keys.session.signature` for the session cookie) cannot sign: a signing key must have use "sig" and a private half.',
+        'The key named as the cookie signing key (`keys.cookie.signature`, or `keys.session.signature` for the session cookie) cannot sign: a signing key must have use "sig" and a private half, and it must be active — a key that has expired, or whose notBefore has not yet passed, cannot sign a new cookie.',
       data: {
         kid: kryptos.id,
         use: kryptos.use,
         hasPrivateKey: kryptos.hasPrivateKey,
+        isActive: kryptos.isActive,
         floor: COOKIE_SIGN_FLOOR,
       },
       debug: { kryptos: kryptos.toJSON() },
