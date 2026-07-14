@@ -17,7 +17,6 @@ export const jarmProfile: TokenProfile = {
   issuer: "platform",
   lifetime: "10m",
   encryptable: true,
-  algClass: "confidential",
   rules: {
     issUri: true,
     crossField: true,

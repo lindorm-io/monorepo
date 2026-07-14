@@ -19,7 +19,6 @@ export const logoutTokenProfile: TokenProfile = {
   issuer: "platform",
   lifetime: "2m",
   encryptable: false,
-  algClass: "confidential",
   rules: {
     issUri: true,
     crossField: true,

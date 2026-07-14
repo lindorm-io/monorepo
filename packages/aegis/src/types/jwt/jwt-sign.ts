@@ -12,6 +12,7 @@ import type {
   SetClaims,
   StdClaims,
 } from "../claims/index.js";
+import type { AegisSignKey } from "../aegis.js";
 import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.js";
 
 export type SignJwtContent<C extends Dict = Dict> = Omit<
@@ -44,6 +45,11 @@ export type SignJwtOptions = {
   header?: TokenEncryptOrSignOptions;
   issuedAt?: Date;
   objectId?: string;
+  /**
+   * Per-call signing key policy. Ignored by `JwtKit`, which is handed an
+   * explicit key; consumed by `Aegis`, which resolves one.
+   */
+  sign?: AegisSignKey;
   stateHash?: string;
   tokenId?: string;
   /**

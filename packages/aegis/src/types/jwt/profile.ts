@@ -1,9 +1,9 @@
 import type { Expiry } from "@lindorm/date";
 import type { Dict } from "@lindorm/types";
-import type { KryptosEncAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
+import type { KryptosAlgClass } from "@lindorm/kryptos";
 import type { TokenType } from "../../constants/token-type.js";
 import type { TokenFormat } from "../../internal/utils/select-encoder.js";
-import type { AegisPredicate } from "../aegis.js";
+import type { AegisEncKey, AegisSignKey } from "../aegis.js";
 import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.js";
 import type { SignJwtContent, SignJwtOptions } from "./jwt-sign.js";
 import type { VerifyJwtOptions } from "./jwt-verify.js";
@@ -146,13 +146,6 @@ export type InvalidEntry = {
   message: string;
 };
 
-/** The crypto class a profile permits for its signing algorithm (§5). */
-export type ProfileAlgClass =
-  | "asymmetric"
-  | "asymmetric-recommended"
-  | "confidential"
-  | "fapi";
-
 /**
  * Declarative structural RFC rules a profile opts into. Each flag selects a
  * pure rule from `internal/utils/rules/` that `validateProfileClaims` runs.
@@ -208,7 +201,16 @@ export type TokenProfile = {
   issuer: "platform" | "per-token";
   lifetime?: Expiry | null;
   encryptable: boolean;
-  algClass?: ProfileAlgClass;
+  /**
+   * The artifact's own opinion on the class of key that may sign it. Part of
+   * the signing FLOOR, so it CONSTRAINS the key query rather than merely
+   * auditing its answer — and it is enforced on an injected key too.
+   *
+   * In practice only `"asymmetric"` (access_token, delegation). Absent means no
+   * constraint: with `alg: none` not being a Kryptos algorithm, "asymmetric or
+   * HS*" is the whole algorithm space.
+   */
+  algClass?: KryptosAlgClass;
   rules?: ProfileRules;
   validate: (claims: Dict, ctx: SignContext) => Array<InvalidEntry>;
 };
@@ -228,12 +230,13 @@ export type ProfileSignOptions = SignJwtOptions & {
    * only.)
    */
   proprietary?: boolean;
-  encrypt?: {
-    kid?: string;
-    algorithm?: KryptosEncAlgorithm;
-    encryption?: KryptosEncryption;
-    predicate?: AegisPredicate;
-  };
+  /**
+   * The recipient key that encrypts the signed token (sign-then-encrypt). Pin
+   * it with `{ predicate: { id } }`, target a client with
+   * `{ predicate: { ownerId: client.id } }`, or supply one outright with
+   * `{ kryptos }`. Only meaningful for an encryptable profile.
+   */
+  encrypt?: AegisEncKey;
 };
 
 /**
@@ -263,5 +266,7 @@ export type RawSignInput = {
   header?: TokenEncryptOrSignOptions;
   objectId?: string;
   payload: Buffer | string | Dict;
+  /** Per-call signing key policy. */
+  sign?: AegisSignKey;
   tokenType?: TokenType;
 };

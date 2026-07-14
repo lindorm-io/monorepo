@@ -115,6 +115,9 @@ export const createJwtVerify = (
     if (key === "trustBoundThumbprint") continue;
     // typPresence governs the JOSE typ gate in JwtKit.parse directly
     if (key === "typPresence") continue;
+    // verify is the key-selection policy, consumed by Aegis when it resolves the
+    // key — not a claim matcher, and never present on the payload
+    if (key === "verify") continue;
 
     const mapped = mapVerify(key as keyof VerifyJwtOptions);
 

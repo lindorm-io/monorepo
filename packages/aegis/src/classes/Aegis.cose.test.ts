@@ -7,6 +7,7 @@ import {
   TEST_OCT_KEY_ENC,
   TEST_OCT_KEY_SIG,
 } from "../__fixtures__/keys.js";
+import { AegisError } from "../errors/index.js";
 import { CwtKit } from "./CwtKit.js";
 import { Aegis } from "./Aegis.js";
 
@@ -79,31 +80,48 @@ describe("Aegis — COSE", () => {
     expect(verified.claims.issuer).toBe("https://test.lindorm.io/");
   });
 
-  test("an oct-key access token is permitted with a warning, not rejected", async () => {
-    // RFC 9068 §2.1 permits any signing algorithm and RECOMMENDS asymmetric, so
-    // HS* (COSE_Mac0) is allowed — lindorm only warns, it does not reject.
-    const logged: string[] = [];
-    const logger = createMockLogger((msg: unknown) => {
-      if (typeof msg === "string") logged.push(msg);
-    });
+  test("an oct-key access token is rejected — the COSE path shares the signing floor", async () => {
+    // The access_token floor (`algClass: "asymmetric"`) is enforced on the key
+    // QUERY, so it binds every encoder: COSE cannot MAC an access token with an
+    // HS key any more than JOSE can sign one.
+    const logger = createMockLogger();
+    const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
+    const macAegis = new Aegis({ amphora, logger });
+    await amphora.setup();
+    amphora.add(TEST_OCT_KEY_SIG);
+
+    const error = await macAegis
+      .mint(
+        "access_token",
+        { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
+        { format: "cose" },
+      )
+      .catch((err: Error) => err);
+
+    expect(error).toBeInstanceOf(AegisError);
+    expect((error as AegisError).code).toBe("sign_key_not_found");
+  });
+
+  test("an oct key MACs a profile with no algClass floor (COSE_Mac0)", async () => {
+    // HS* is still a first-class COSE signer — it is the access_token PROFILE
+    // that forbids it, not the COSE encoder. id_token carries no algClass.
+    const logger = createMockLogger();
     const amphora = new Amphora({ domain: "https://test.lindorm.io/", logger });
     const macAegis = new Aegis({ amphora, logger });
     await amphora.setup();
     amphora.add(TEST_OCT_KEY_SIG);
 
     const { token } = await macAegis.mint(
-      "access_token",
-      { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
+      "id_token",
+      { subject: "u", audience: ["client-1"] },
       { format: "cose" },
     );
 
-    // Minted as a COSE_Mac0 (not rejected), and the advisory was warned.
     expect(CwtKit.decode(Buffer.from(token, "base64url")).algorithm).toBe("HS256");
-    expect(logged.some((m) => m.includes("RFC 9068 §2.1"))).toBe(true);
 
-    const verified = (await macAegis.verify("access_token", token, {
+    const verified = (await macAegis.verify("id_token", token, {
       format: "cose",
-      audience: "https://rs.lindorm.io/",
+      audience: "client-1",
     })) as unknown as { claims: Record<string, unknown> };
     expect(verified.claims.subject).toBe("u");
   });

@@ -36,10 +36,79 @@ const aegis = new Aegis({
   issuer: "https://example.com", // optional; falls back to amphora.domain
   clockTolerance: 30, // optional, in seconds (default 0)
   encryption: "A256GCM", // optional, default "A256GCM"
-  encAlgorithm: "ECDH-ES", // optional — restricts encryption key selection
-  sigAlgorithm: "ES256", // optional — restricts signing key selection
   certBindingMode: "strict", // optional, "strict" | "lax" (default "strict")
   dpopMaxSkew: 60, // optional, in seconds (default 60)
+
+  // Deployment key policy — see "Key selection" below.
+  sign: { predicate: { purpose: "token" } },
+  encrypt: { predicate: { purpose: "token" } },
+});
+```
+
+### Key selection
+
+Key selection is one mechanism — a **predicate** — doing two strictly separate jobs.
+
+- **Floor** — policy. Aegis's invariant for the operation, plus the artifact's own
+  opinion (a profile's `algClass`). Enforced on **every** key that reaches the crypto
+  layer: selected from the vault, named by a token's `kid`, or supplied outright.
+- **Selector** — a vault query. "Which of _my_ keys." The deployment default merged
+  with the per-call predicate (shallow; the caller's key wins). It is meaningless for
+  a key that never came from the vault, so it is **not** applied to a supplied key.
+
+The four floors are deliberately asymmetric:
+
+| operation | floor                                                            |
+| --------- | ---------------------------------------------------------------- |
+| `sign`    | `{ use: "sig", hasPrivateKey: true }` + the profile's `algClass` |
+| `verify`  | `{ use: "sig" }`                                                 |
+| `encrypt` | `{ use: "enc" }` — a public half **or** an oct secret            |
+| `decrypt` | `{ use: "enc", hasPrivateKey: true }`                            |
+
+`hasPublicKey` is not the encrypt floor: an oct key has no public half, so requiring
+one would break `dir` / `A*KW` encryption outright. `hasPrivateKey` on the decrypt
+floor is what separates the two encryption directions — `ECDH-ES` reports the same
+operations for both halves and can never tell them apart.
+
+There is **no ranking and no fallback**. A key satisfies the policy or it does not,
+and a miss throws — falling back to a key the policy forbids is how an unverifiable
+token gets minted.
+
+```typescript
+// Pin a key by id, or allowlist a set. `kid` is just `{ id }`.
+await aegis.mint("id_token", content, {
+  sign: { predicate: { algorithm: client.idTokenSignedResponseAlg } },
+});
+
+// FAPI is deployment policy, not a key property — aegis publishes the list.
+import { FAPI_SIG_ALGS } from "@lindorm/aegis";
+
+await aegis.mint("id_token", content, {
+  sign: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } },
+});
+
+// A key from outside the vault: an OIDC client secret IS the HS256 MAC key
+// (Core §10.1). The profile floor still applies to it — the same key is
+// accepted for an id_token and REJECTED for an access_token, which mandates
+// an asymmetric signature.
+await aegis.mint("id_token", content, {
+  sign: {
+    kryptos: KryptosKit.from.utf({
+      type: "oct",
+      use: "sig",
+      algorithm: "HS256",
+      privateKey: client.secret,
+    }),
+  },
+});
+
+// The read side. Selection follows the token's own `kid`, so a predicate is a
+// CHECK on the resolved key, applied before the signature is touched — a token
+// must not get to choose the class of key that verifies it (RFC 8725 §3.1).
+const aegis = new Aegis({
+  amphora,
+  logger,
+  verify: { predicate: { algClass: "asymmetric" } },
 });
 ```
 

@@ -9,24 +9,6 @@ exports[`algPermitted > asymmetric permits an asymmetric alg and rejects HS* 1`]
 ]
 `;
 
-exports[`algPermitted > asymmetric-recommended permits HS* (never rejects) but still rejects none 1`] = `
-[
-  {
-    "key": "alg",
-    "message": "alg: none is never permitted",
-  },
-]
-`;
-
-exports[`algPermitted > fapi permits only the allowlist 1`] = `
-[
-  {
-    "key": "alg",
-    "message": "alg "RS256" is not in the FAPI allowlist (PS256, ES256, EdDSA)",
-  },
-]
-`;
-
 exports[`algPermitted > rejects none for every class 1`] = `
 [
   {
@@ -41,6 +23,24 @@ exports[`algPermitted > rejects none for every class 2`] = `
   {
     "key": "alg",
     "message": "alg: none is never permitted",
+  },
+]
+`;
+
+exports[`algPermitted > rejects none for every class 3`] = `
+[
+  {
+    "key": "alg",
+    "message": "alg: none is never permitted",
+  },
+]
+`;
+
+exports[`algPermitted > symmetric permits HS* and rejects an asymmetric alg 1`] = `
+[
+  {
+    "key": "alg",
+    "message": "asymmetric alg "ES512" is not permitted for this artifact (symmetric only)",
   },
 ]
 `;

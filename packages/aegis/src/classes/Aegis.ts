@@ -6,7 +6,7 @@ import {
   type SerialisedAesDecryption,
   type SerialisedAesEncryption,
 } from "@lindorm/aes";
-import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
+import type { IAmphora } from "@lindorm/amphora";
 import { getUnixTime } from "@lindorm/date";
 import { isBuffer, isDate, isString } from "@lindorm/is";
 import { removeUndefined, sanitiseToken } from "@lindorm/utils";
@@ -27,10 +27,13 @@ import type {
   IAegisJwt,
 } from "../interfaces/index.js";
 import type {
+  AegisDecryptKey,
+  AegisEncKey,
   AegisIntrospection,
   AegisOptions,
-  AegisPredicate,
+  AegisSignKey,
   AegisUserinfo,
+  AegisVerifyKey,
   CertBindingMode,
   DecodedJwe,
   DecodedJws,
@@ -59,7 +62,13 @@ import type {
 import { CoseKit } from "./CoseKit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
 import { coseTyp } from "../internal/cose/cose-typ.js";
-import { algAdvisory } from "../internal/utils/rules/alg-permitted.js";
+import {
+  DECRYPT_FLOOR,
+  ENCRYPT_FLOOR,
+  SIGN_FLOOR,
+  VERIFY_FLOOR,
+} from "../internal/constants/key-floor.js";
+import { resolveKey } from "../internal/utils/resolve-key.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { selectEncoder } from "../internal/utils/select-encoder.js";
 import { validateProfileClaims } from "../internal/utils/validate-profile-claims.js";
@@ -85,22 +94,6 @@ import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
 import { JoseKit } from "./JoseKit.js";
 
-type PredicateOptions = {
-  predicate?: AegisPredicate;
-};
-
-type EncOptions = PredicateOptions & {
-  id?: string;
-  algorithm?: KryptosEncAlgorithm;
-  encrypt?: boolean;
-};
-
-type SigOptions = PredicateOptions & {
-  id?: string;
-  algorithm?: KryptosSigAlgorithm;
-  sign?: boolean;
-};
-
 export class Aegis implements IAegis {
   readonly issuer: string | null;
 
@@ -108,12 +101,14 @@ export class Aegis implements IAegis {
   private readonly certBindingMode: CertBindingMode;
   private readonly clockTolerance: number;
   private readonly coseKit: CoseKit;
+  private readonly decryptKey: AegisDecryptKey;
   private readonly dpopMaxSkew: number | undefined;
-  private readonly encAlgorithm: KryptosEncAlgorithm | undefined;
+  private readonly encryptKey: AegisEncKey;
   private readonly encryption: KryptosEncryption;
   private readonly joseKit: JoseKit;
   private readonly logger: ILogger;
-  private readonly sigAlgorithm: KryptosSigAlgorithm | undefined;
+  private readonly signKey: AegisSignKey;
+  private readonly verifyKey: AegisVerifyKey;
 
   constructor(options: AegisOptions) {
     this.logger = options.logger.child(["AegisKit"]);
@@ -124,9 +119,15 @@ export class Aegis implements IAegis {
     this.certBindingMode = options.certBindingMode ?? "strict";
     this.clockTolerance = options.clockTolerance ?? 0;
     this.dpopMaxSkew = options.dpopMaxSkew;
-    this.encAlgorithm = options.encAlgorithm;
     this.encryption = options.encryption ?? "A256GCM";
-    this.sigAlgorithm = options.sigAlgorithm;
+
+    // The DEPLOYMENT's key policy. Aegis ships no default selector of its own:
+    // it does not know a deployment's `purpose` taxonomy, and amphora already
+    // filters `publish: true` by default, so there is nothing to duplicate.
+    this.signKey = options.sign ?? {};
+    this.encryptKey = options.encrypt ?? {};
+    this.verifyKey = options.verify ?? {};
+    this.decryptKey = options.decrypt ?? {};
 
     this.joseKit = new JoseKit({
       certBindingMode: this.certBindingMode,
@@ -328,17 +329,12 @@ export class Aegis implements IAegis {
 
   // private aes
 
-  private async aesKit(options: EncOptions = {}): Promise<AesKit> {
-    const kryptos = await this.kryptosEnc(options);
-
-    return new AesKit({ encryption: this.encryption, kryptos });
-  }
-
   private async aesEncrypt(
     data: AesContent,
     mode: "encoded" | "record" | "serialised" | "tokenised" = "encoded",
   ): Promise<string | AesEncryptionRecord | SerialisedAesEncryption> {
-    const kit = await this.aesKit({ encrypt: true });
+    const kryptos = await this.resolveEncryptKey();
+    const kit = new AesKit({ encryption: this.encryption, kryptos });
 
     return kit.encrypt(data, mode as "encoded");
   }
@@ -348,10 +344,11 @@ export class Aegis implements IAegis {
   ): Promise<T> {
     const parsed = AesKit.parse(data);
 
-    const kit = await this.aesKit({
-      id: parsed.keyId,
-      algorithm: parsed.algorithm as KryptosEncAlgorithm | undefined,
-    });
+    const kryptos = await this.resolveDecryptKey(
+      parsed.keyId,
+      parsed.algorithm as KryptosEncAlgorithm | undefined,
+    );
+    const kit = new AesKit({ encryption: this.encryption, kryptos });
 
     return kit.decrypt<T>(data);
   }
@@ -360,9 +357,9 @@ export class Aegis implements IAegis {
 
   private async jweEncrypt(
     data: string,
-    options: JweEncryptOptions & PredicateOptions = {},
+    options: JweEncryptOptions = {},
   ): Promise<EncryptedJwe> {
-    const kryptos = await this.kryptosEnc({ encrypt: true });
+    const kryptos = await this.resolveEncryptKey();
 
     return this.joseKit.encryptJwe(kryptos, data, options);
   }
@@ -370,10 +367,10 @@ export class Aegis implements IAegis {
   private async jweDecrypt(jwe: string): Promise<DecryptedJwe> {
     const decode = JweKit.decode(jwe);
 
-    const kryptos = await this.kryptosEnc({
-      id: decode.header.kid,
-      algorithm: decode.header.alg as KryptosEncAlgorithm,
-    });
+    const kryptos = await this.resolveDecryptKey(
+      decode.header.kid,
+      decode.header.alg as KryptosEncAlgorithm,
+    );
 
     return this.joseKit.decryptJwe(kryptos, jwe);
   }
@@ -382,9 +379,9 @@ export class Aegis implements IAegis {
 
   private async jwsSign<T extends JwsContent>(
     data: T,
-    options: SignJwsOptions & PredicateOptions = {},
+    options: SignJwsOptions = {},
   ): Promise<SignedJws> {
-    const kryptos = await this.kryptosSig({ sign: true });
+    const kryptos = await this.resolveSignKey(options);
 
     return this.joseKit.signJws(kryptos, data, options);
   }
@@ -392,10 +389,10 @@ export class Aegis implements IAegis {
   private async jwsVerify<T extends JwsContent>(jws: string): Promise<ParsedJws<T>> {
     const decode = JwsKit.decode(jws);
 
-    const kryptos = await this.kryptosSig({
-      id: decode.header.kid,
-      algorithm: decode.header.alg as KryptosSigAlgorithm,
-    });
+    const kryptos = await this.resolveVerifyKey(
+      decode.header.kid,
+      decode.header.alg as KryptosSigAlgorithm,
+    );
 
     return this.joseKit.verifyJws(kryptos, jws);
   }
@@ -404,9 +401,9 @@ export class Aegis implements IAegis {
 
   private async jwtSign<T extends Dict = Dict>(
     content: SignJwtContent<T>,
-    options: SignJwtOptions & PredicateOptions = {},
+    options: SignJwtOptions = {},
   ): Promise<SignedJwt> {
-    const kryptos = await this.kryptosSig({ sign: true });
+    const kryptos = await this.resolveSignKey(options);
 
     return this.joseKit.signJwt(kryptos, content, options);
   }
@@ -424,6 +421,7 @@ export class Aegis implements IAegis {
       contentType: input.contentType,
       header: input.header,
       objectId: input.objectId,
+      sign: input.sign,
       tokenType: input.tokenType,
     });
   }
@@ -455,7 +453,9 @@ export class Aegis implements IAegis {
       });
     }
 
-    const kryptos = await this.kryptosSig({ sign: true });
+    // The profile's algClass is part of the signing FLOOR, so the right class of
+    // key is SELECTED here rather than the wrong one being caught afterwards.
+    const kryptos = await this.resolveSignKey(options, profile);
 
     // T5 — resolve the recipient (client) enc key when encryption is in play.
     // Encryption fires when the profile is encryptable AND either an explicit
@@ -471,14 +471,7 @@ export class Aegis implements IAegis {
     // hard error. When encryption is forced ONLY by `sensitive_identity`, a
     // missing key is tolerated — the claim is omitted instead (see below).
     const encKryptos = wantsEncryption
-      ? await this.resolveEncKey(
-          {
-            id: options.encrypt?.kid,
-            algorithm: options.encrypt?.algorithm,
-            predicate: options.encrypt?.predicate,
-          },
-          explicitEncrypt,
-        )
+      ? await this.resolveEncKey(options.encrypt, explicitEncrypt)
       : undefined;
 
     // `sensitive_identity` MUST NOT travel in cleartext. If it cannot be
@@ -503,8 +496,6 @@ export class Aegis implements IAegis {
       ...(options.context ?? {}),
       algorithm: kryptos.algorithm as any,
     });
-
-    this.warnAlgAdvisory(profile, kryptos.algorithm);
 
     // JOSE wire claims: the existing wire mapper, fed the envelope ALREADY
     // resolved on the common layer (iss/iat/jti/nbf/exp) so the signed token
@@ -550,7 +541,12 @@ export class Aegis implements IAegis {
     // (set automatically by JweKit.encrypt from the inner-token shape). The
     // read side (verifySmart recursion) decrypts then verifies the inner JWT,
     // applying the profile floor to the inner claims/typ.
-    const { token } = this.joseKit.encryptJwe(encKryptos, signed.token);
+    const { token } = this.joseKit.encryptJwe(
+      encKryptos,
+      signed.token,
+      {},
+      options.encrypt?.encryption,
+    );
 
     return { ...signed, token };
   }
@@ -589,14 +585,7 @@ export class Aegis implements IAegis {
       profile.encryptable && (explicitEncrypt || hasSensitiveIdentity);
 
     const encKryptos = wantsEncryption
-      ? await this.resolveEncKey(
-          {
-            id: options.encrypt?.kid,
-            algorithm: options.encrypt?.algorithm,
-            predicate: options.encrypt?.predicate,
-          },
-          explicitEncrypt,
-        )
+      ? await this.resolveEncKey(options.encrypt, explicitEncrypt)
       : undefined;
 
     // `sensitive_identity` MUST NOT travel in cleartext: if it cannot be
@@ -606,7 +595,7 @@ export class Aegis implements IAegis {
         ? (removeUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
         : content;
 
-    const kryptos = await this.kryptosSig({ sign: true });
+    const kryptos = await this.resolveSignKey(options, profile);
 
     const common = assembleCommonClaims(
       { algorithm: kryptos.algorithm, issuer: this.issuer },
@@ -619,8 +608,6 @@ export class Aegis implements IAegis {
       algorithm: kryptos.algorithm as any,
     });
 
-    this.warnAlgAdvisory(profile, kryptos.algorithm);
-
     let token = this.coseKit.sign(kryptos, common, {
       typ: coseTyp(profile.typ),
       proprietary: options.proprietary,
@@ -630,7 +617,7 @@ export class Aegis implements IAegis {
     if (encKryptos) {
       token = this.coseKit.encrypt(encKryptos, token, {
         typ: coseTyp(profile.typ),
-        encryption: this.encryption,
+        encryption: options.encrypt?.encryption ?? this.encryption,
       });
     }
 
@@ -681,30 +668,18 @@ export class Aegis implements IAegis {
     let bytes = input;
 
     if (this.coseKit.isEncrypted(bytes)) {
-      const encKryptos = await this.kryptosEnc({
-        id: this.coseKit.decodeEncryptedKid(bytes),
-      });
+      const encKryptos = await this.resolveDecryptKey(
+        this.coseKit.decodeEncryptedKid(bytes),
+        undefined,
+      );
       bytes = this.coseKit.decrypt(encKryptos, bytes);
     }
 
     const decoded = this.coseKit.decode(bytes);
-    const kryptos = await this.kryptosSig({ id: decoded.kid });
+    const kryptos = await this.resolveVerifyKey(decoded.kid, undefined);
     const { claims, typ } = this.coseKit.verify(kryptos, bytes);
 
     return { claims, decoded, typ };
-  }
-
-  // RFC-conformance advisory: a profile that RECOMMENDS asymmetric (RFC 9068
-  // §2.1 access tokens) still mints with an HS* key — we only WARN, never
-  // reject, since the RFC permits any signing algorithm.
-  private warnAlgAdvisory(profile: TokenProfile, algorithm: string): void {
-    const advisory = profile.algClass
-      ? algAdvisory(algorithm as KryptosSigAlgorithm, profile.algClass)
-      : undefined;
-
-    if (advisory) {
-      this.logger.warn(advisory, { profile: profile.name, algorithm });
-    }
   }
 
   // Resolve the recipient encryption key for both the JOSE (JWE) and COSE
@@ -713,15 +688,11 @@ export class Aegis implements IAegis {
   // tolerated — encryption is skipped and the claim is omitted rather than
   // leaked in cleartext (token-claims.md:98).
   private async resolveEncKey(
-    options: {
-      id?: string;
-      algorithm?: KryptosEncAlgorithm;
-      predicate?: AegisPredicate;
-    },
+    encrypt: AegisEncKey | undefined,
     required: boolean,
   ): Promise<IKryptos | undefined> {
     try {
-      return await this.kryptosEnc({ encrypt: true, ...options });
+      return await this.resolveEncryptKey(encrypt);
     } catch (error) {
       if (required) {
         throw error;
@@ -794,77 +765,96 @@ export class Aegis implements IAegis {
   ): Promise<ParsedJwt<T>> {
     const decode = JwtKit.decode(jwt);
 
-    const kryptos = await this.kryptosSig({
-      id: decode.header.kid,
-      algorithm: decode.header.alg as KryptosSigAlgorithm,
-    });
+    const kryptos = await this.resolveVerifyKey(
+      decode.header.kid,
+      decode.header.alg as KryptosSigAlgorithm,
+      verify.verify,
+    );
 
     return this.joseKit.verifyJwt(kryptos, jwt, verify);
   }
 
   // private kryptos
+  //
+  // Key selection is ONE mechanism — a predicate — doing two strictly separate
+  // jobs (only one of which survives key injection):
+  //
+  //   FLOOR    — policy. Aegis's invariants for the operation, plus the
+  //              artifact's own opinion (profile.algClass). Enforced on EVERY
+  //              key that reaches the crypto layer, however it got there.
+  //   SELECTOR — a vault query. "Which of MY keys": the deployment default
+  //              merged with the per-call predicate, caller's key winning. It
+  //              is meaningless for a key that never came from the vault, so it
+  //              is not applied to an injected key or to one named by a token.
+  //
+  // SECURITY INVARIANT: verification keys are ALWAYS sourced from Amphora (or
+  // supplied outright by the trusted caller). The JOSE header parameters `jku`,
+  // `jwk`, `x5u`, `x5c`, `x5t` and `x5t#S256` are never trusted as key sources
+  // during verification, even when present in the token header. This closes the
+  // "header-embedded key" attack class that has hit multiple other JOSE
+  // libraries. The only header input the verifier accepts is `kid`, used as a
+  // lookup key into Amphora — never as a key itself.
 
-  private async kryptosEnc(options: EncOptions = {}): Promise<IKryptos> {
-    const query: AmphoraPredicate = options.encrypt
-      ? {
-          $or: [
-            { operations: ["encrypt"] },
-            { operations: ["deriveKey"] },
-            { operations: ["wrapKey"] },
-          ],
-          algorithm: options.algorithm ?? this.encAlgorithm,
-          issuer: this.issuer ?? undefined,
-          ...(options.predicate ?? {}),
-        }
-      : {
-          $or: [
-            { operations: ["decrypt"] },
-            { operations: ["deriveKey"] },
-            { operations: ["unwrapKey"] },
-          ],
-          algorithm: options.algorithm ?? this.encAlgorithm,
-          ...(options.predicate ?? {}),
-        };
-
-    const kryptos = options.id
-      ? await this.amphora.findById(options.id)
-      : await this.amphora.find({ ...query, use: "enc" });
-
-    this.logger.debug("Kryptos found", { kryptos: kryptos.toJSON() });
-
-    return kryptos;
+  private resolveSignKey(
+    options: SignJwsOptions | SignJwtOptions,
+    profile?: TokenProfile,
+  ): Promise<IKryptos> {
+    return resolveKey({
+      amphora: this.amphora,
+      floor: {
+        ...SIGN_FLOOR,
+        ...(profile?.algClass ? { algClass: profile.algClass } : {}),
+      },
+      selector: { ...this.signKey.predicate, ...options.sign?.predicate },
+      kryptos: options.sign?.kryptos ?? this.signKey.kryptos,
+      logger: this.logger,
+      operation: "sign",
+      profile: profile?.name,
+    });
   }
 
-  private async kryptosSig(options: SigOptions = {}): Promise<IKryptos> {
-    // SECURITY INVARIANT: verification keys are ALWAYS sourced from Amphora.
-    // The JOSE header parameters `jku`, `jwk`, `x5u`, `x5c`, `x5t`, and
-    // `x5t#S256` are never trusted as key sources during verification, even
-    // if present in the token header. This closes the "header-embedded key"
-    // attack class (CVE-class vulnerabilities that have hit multiple other
-    // JOSE libraries where the verifier naively used the header-supplied
-    // key to validate the signature).
-    //
-    // The only input the verifier accepts from the header is `kid`, which
-    // is used as a lookup key into Amphora — never as a key itself.
-    const query: AmphoraPredicate = options.sign
-      ? {
-          algorithm: this.sigAlgorithm,
-          issuer: this.issuer ?? undefined,
-          operations: ["sign"],
-          ...(options.predicate ?? {}),
-        }
-      : {
-          algorithm: options.algorithm ?? this.sigAlgorithm,
-          operations: ["verify"],
-          ...(options.predicate ?? {}),
-        };
+  // The deployment/per-call verify policy joins the FLOOR rather than the
+  // selector: selection here is driven by the token's own `kid`, so the policy
+  // has to be a CHECK on the resolved key to bite at all. The token's `alg` is
+  // only a query hint for the kid-less case — never a check, or a token could
+  // choose the class of key that verifies it (RFC 8725 §3.1).
+  private resolveVerifyKey(
+    id: string | undefined,
+    algorithm: KryptosSigAlgorithm | undefined,
+    verify?: AegisVerifyKey,
+  ): Promise<IKryptos> {
+    return resolveKey({
+      amphora: this.amphora,
+      floor: { ...VERIFY_FLOOR, ...this.verifyKey.predicate, ...verify?.predicate },
+      selector: { algorithm },
+      id,
+      logger: this.logger,
+      operation: "verify",
+    });
+  }
 
-    const kryptos = options.id
-      ? await this.amphora.findById(options.id)
-      : await this.amphora.find({ ...query, use: "sig" });
+  private resolveEncryptKey(encrypt?: AegisEncKey): Promise<IKryptos> {
+    return resolveKey({
+      amphora: this.amphora,
+      floor: ENCRYPT_FLOOR,
+      selector: { ...this.encryptKey.predicate, ...encrypt?.predicate },
+      kryptos: encrypt?.kryptos ?? this.encryptKey.kryptos,
+      logger: this.logger,
+      operation: "encrypt",
+    });
+  }
 
-    this.logger.debug("Kryptos found", { kryptos: kryptos.toJSON() });
-
-    return kryptos;
+  private resolveDecryptKey(
+    id: string | undefined,
+    algorithm: KryptosEncAlgorithm | undefined,
+  ): Promise<IKryptos> {
+    return resolveKey({
+      amphora: this.amphora,
+      floor: { ...DECRYPT_FLOOR, ...this.decryptKey.predicate },
+      selector: { algorithm },
+      id,
+      logger: this.logger,
+      operation: "decrypt",
+    });
   }
 }

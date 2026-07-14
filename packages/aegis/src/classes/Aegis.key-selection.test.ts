@@ -9,6 +9,7 @@ import {
   TEST_EC_KEY_SIG,
   TEST_RSA_KEY_ENC,
 } from "../__fixtures__/keys.js";
+import { AegisError } from "../errors/index.js";
 import { Aegis } from "./Aegis.js";
 import { JwsKit } from "./JwsKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -60,9 +61,10 @@ describe("Aegis key selection", () => {
     test("a public-only external sig key is not selected for signing", async () => {
       amphora.add(publicOnly(TEST_EC_KEY_SIG, PUBLIC_SIG_KID));
 
-      await expect(aegis.jws.sign("data")).rejects.toThrow(
-        /Kryptos not found using query after refresh/,
-      );
+      const error = await aegis.jws.sign("data").catch((err: Error) => err);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("sign_key_not_found");
     });
 
     test("the private key is selected for signing when a public-only twin is present", async () => {
@@ -88,9 +90,10 @@ describe("Aegis key selection", () => {
 
       amphora.add(publicOnly(TEST_RSA_KEY_ENC, PUBLIC_ENC_KID));
 
-      await expect(aegis.jwe.decrypt(jwe)).rejects.toThrow(
-        /Kryptos not found using query after refresh/,
-      );
+      const error = await aegis.jwe.decrypt(jwe).catch((err: Error) => err);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("decrypt_key_not_found");
     });
 
     test("the private key is selected for decryption when a public-only twin is present", async () => {
@@ -112,16 +115,17 @@ describe("Aegis key selection", () => {
       expect(token).toEqual(expect.any(String));
     });
 
-    // KNOWN AND DELIBERATE — asserted so the gap stays visible, NOT a bug to fix
-    // here. ECDH-ES derives with the recipient's public key on one side and its
-    // private key on the other, so `operations` reports [deriveKey, deriveBits]
-    // for BOTH halves and cannot separate the directions. The decrypt query
-    // therefore still admits a public-only ECDH-ES key, and the failure lands in
-    // the crypto layer rather than in key selection. Slice S4 replaces these
-    // queries with a `hasPrivateKey` floor, which is what actually closes this.
-    test("a public-only ECDH-ES key is still selected for decryption (S4)", async () => {
+    // THE BUG S4 FIXES. ECDH-ES derives with the recipient's public key on one
+    // side and its private key on the other, so `operations` reports
+    // [deriveKey, deriveBits] for BOTH halves and can NEVER separate encrypt
+    // from decrypt — which is why the old `$or: [{operations: [...]}]` decrypt
+    // query admitted a public-only ECDH-ES key and failed deep in the crypto
+    // layer. The decrypt FLOOR asks about the key's halves instead
+    // (`hasPrivateKey`), which is the question that actually has an answer.
+    test("a public-only ECDH-ES key is NOT selected for decryption", async () => {
       const publicKey = publicOnly(TEST_EC_KEY_ENC, PUBLIC_ENC_KID);
 
+      // The declared operations are identical for both halves — the trap.
       expect(publicKey.operations).toEqual(["deriveKey", "deriveBits"]);
       expect(publicKey.hasPrivateKey).toBe(false);
 
@@ -129,12 +133,22 @@ describe("Aegis key selection", () => {
 
       amphora.add(publicKey);
 
-      // Selection admits it; the crypto layer is what fails — NOT amphora with
-      // "Kryptos not found using query". Under S4 this becomes a not-found.
+      // Rejected in KEY SELECTION now, not in the crypto layer.
       const error = await aegis.jwe.decrypt(jwe).catch((err: Error) => err);
 
-      expect(error).toBeInstanceOf(Error);
-      expect((error as Error).message).toBe("Kryptos private key is missing");
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("decrypt_key_not_found");
+    });
+
+    test("the private ECDH-ES key is selected when a public-only twin is present", async () => {
+      const jwe = await foreignJwe(TEST_EC_KEY_ENC, "ECDH-ES");
+
+      amphora.add(publicOnly(TEST_EC_KEY_ENC, PUBLIC_ENC_KID));
+      amphora.add(TEST_EC_KEY_ENC);
+
+      const decrypted = await aegis.jwe.decrypt(jwe);
+
+      expect(decrypted.payload).toBe(PLAINTEXT);
     });
   });
 });

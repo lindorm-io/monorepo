@@ -20,7 +20,6 @@ export const securityEventProfile: TokenProfile = {
   issuer: "platform",
   lifetime: null,
   encryptable: false,
-  algClass: "confidential",
   rules: {
     issUri: true,
     subIdShape: true,

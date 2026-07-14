@@ -16,7 +16,6 @@ export const introspectionProfile: TokenProfile = {
   issuer: "platform",
   lifetime: null,
   encryptable: true,
-  algClass: "confidential",
   rules: {
     issUri: true,
   },

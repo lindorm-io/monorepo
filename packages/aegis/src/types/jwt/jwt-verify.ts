@@ -1,5 +1,6 @@
 import type { Predicate } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
+import type { AegisVerifyKey } from "../aegis.js";
 import type { ActClaim } from "../claims/act-claim.js";
 import type { JwtClaimMatchers } from "./jwt-claim-matchers.js";
 
@@ -35,6 +36,13 @@ export type VerifyJwtOptions = JwtClaimMatchers & {
    */
   trustBoundThumbprint?: boolean;
   tokenType?: TokenType;
+  /**
+   * Per-call verification key policy — a CHECK on the key the token's `kid`
+   * names, applied before the signature is checked. Not a claim matcher:
+   * `createJwtVerify` skips it, and `JwtKit` (which is handed an explicit key)
+   * ignores it entirely.
+   */
+  verify?: AegisVerifyKey;
   /**
    * JOSE `typ` header presence policy at parse time (default `"required"`).
    * `"required"` rejects a typ-less token (`jwt_invalid_typ`) — the RFC 8725

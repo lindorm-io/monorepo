@@ -25,7 +25,6 @@ export const idTokenProfile: TokenProfile = {
   issuer: "platform",
   lifetime: "1h",
   encryptable: true,
-  algClass: "confidential",
   rules: {
     issUri: true,
     crossField: true,

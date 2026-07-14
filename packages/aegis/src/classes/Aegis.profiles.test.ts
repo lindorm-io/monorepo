@@ -8,7 +8,7 @@ import {
   TEST_EC_KEY_SIG,
   TEST_OKP_KEY_SIG,
 } from "../__fixtures__/keys.js";
-import { JwtError } from "../errors/index.js";
+import { AegisError, JwtError } from "../errors/index.js";
 import { Aegis } from "./Aegis.js";
 import { JwtKit } from "./JwtKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -68,23 +68,39 @@ describe("Aegis profiles", () => {
       ).rejects.toThrow(JwtError);
     });
 
-    test("permits a symmetric signing key with a warning (RFC 9068 §2.1)", async () => {
-      // RFC 9068 §2.1 permits any signing algorithm and RECOMMENDS asymmetric:
-      // HS* is allowed and warned, never rejected.
+    test("refuses to mint when the vault holds no asymmetric signing key", async () => {
+      // The access_token floor is a HARD `algClass: "asymmetric"`. A vault with
+      // only an HS key can no longer mint a (forgeable) access token — it fails
+      // LOUDLY, and the error names the policy and the profile rather than
+      // reporting a bare not-found.
       const { TEST_OCT_KEY_SIG } = await import("../__fixtures__/keys.js");
-      const logged: string[] = [];
-      const symLogger = createMockLogger((msg: unknown) => {
-        if (typeof msg === "string") logged.push(msg);
-      });
+      const symLogger = createMockLogger();
       const symAmphora = new Amphora({ domain: ISSUER, logger: symLogger });
       await symAmphora.setup();
       symAmphora.add(TEST_OCT_KEY_SIG);
       const symAegis = new Aegis({ amphora: symAmphora, logger: symLogger });
 
-      const { token } = await symAegis.mint("access_token", content);
+      const error = await symAegis
+        .mint("access_token", content)
+        .catch((err: Error) => err);
 
-      expect(JwtKit.decode(token).header.alg).toBe("HS256"); // minted, not rejected
-      expect(logged.some((m) => m.includes("RFC 9068 §2.1"))).toBe(true);
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("sign_key_not_found");
+      expect((error as AegisError).data).toMatchObject({
+        profile: "access_token",
+        policy: { algClass: "asymmetric", use: "sig", hasPrivateKey: true },
+      });
+    });
+
+    test("selects the asymmetric key when an HS key sits beside it", async () => {
+      // The floor CONSTRAINS the query, so the right key is SELECTED rather than
+      // the wrong one being minted and caught afterwards.
+      const { TEST_OCT_KEY_SIG } = await import("../__fixtures__/keys.js");
+      amphora.add(TEST_OCT_KEY_SIG);
+
+      const { token } = await aegis.mint("access_token", content);
+
+      expect(JwtKit.decode(token).header.alg).not.toBe("HS256");
     });
   });
 

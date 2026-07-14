@@ -52,11 +52,20 @@ describe("validateProfileClaims", () => {
     tokenId: "j",
   };
 
-  test("permits a symmetric signing alg on an access token (RFC 9068 §2.1)", () => {
-    // HS* is RFC-permitted (asymmetric is only RECOMMENDED); the warning is
-    // surfaced at the Aegis mint layer, not as a validation error.
+  test("rejects a symmetric signing alg on an access token", () => {
+    // A DELIBERATE deviation from RFC 9068 §2.1, which only RECOMMENDS
+    // asymmetric: a shared MAC secret lets every holder forge tokens. The
+    // profile's algClass is also part of the signing FLOOR, so an HS key is not
+    // normally SELECTED at all — this rule is the backstop for a key injected
+    // outright via `sign.kryptos`.
     expect(() =>
       validateProfileClaims(accessTokenProfile, conformant, { algorithm: "HS256" }),
+    ).toThrow(JwtError);
+  });
+
+  test("permits an asymmetric signing alg on an access token", () => {
+    expect(() =>
+      validateProfileClaims(accessTokenProfile, conformant, { algorithm: "ES256" }),
     ).not.toThrow();
   });
 

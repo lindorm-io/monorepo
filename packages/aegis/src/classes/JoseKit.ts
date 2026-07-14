@@ -65,12 +65,17 @@ export class JoseKit {
     return this.jws(kryptos).verify(jws);
   }
 
+  /**
+   * `encryption` overrides the configured content-encryption AEAD for this call
+   * — the caller's `AegisEncKey.encryption`. It picks the cipher, never the key.
+   */
   encryptJwe(
     kryptos: IKryptos,
     data: string,
     options: JweEncryptOptions = {},
+    encryption?: KryptosEncryption,
   ): EncryptedJwe {
-    return this.jwe(kryptos).encrypt(data, options);
+    return this.jwe(kryptos, encryption).encrypt(data, options);
   }
 
   decryptJwe(kryptos: IKryptos, jwe: string): DecryptedJwe {
@@ -112,10 +117,10 @@ export class JoseKit {
     });
   }
 
-  private jwe(kryptos: IKryptos): JweKit {
+  private jwe(kryptos: IKryptos, encryption?: KryptosEncryption): JweKit {
     return new JweKit({
       certBindingMode: this.certBindingMode,
-      encryption: this.encryption,
+      encryption: encryption ?? this.encryption,
       kryptos,
       logger: this.logger,
     });

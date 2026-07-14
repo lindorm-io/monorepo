@@ -16,7 +16,6 @@ export const userinfoProfile: TokenProfile = {
   issuer: "platform",
   lifetime: null,
   encryptable: true,
-  algClass: "confidential",
   rules: {
     issUri: true,
   },
