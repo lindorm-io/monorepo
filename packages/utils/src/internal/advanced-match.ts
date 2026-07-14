@@ -146,16 +146,20 @@ const matchPredicateOperator = <T>(value: T, operator: PredicateOperator<T>): bo
     return regex.test(value);
   }
 
+  // `$in`/`$nin` are typed `Array<NonNullable<T>>` — a value set never usefully
+  // contains null/undefined, and stripping them is what lets a UNION-typed field
+  // take a mixed array. `includes` is a runtime membership test, so a nullable
+  // `value` is safe here (it simply does not match); only the signature narrows.
   if (isArray(operator.$in)) {
     return isArray<any>(value)
       ? value.some((v) => operator.$in!.includes(v))
-      : operator.$in.includes(value);
+      : operator.$in.includes(value as NonNullable<T>);
   }
 
   if (isArray(operator.$nin)) {
     return isArray<any>(value)
       ? value.every((v) => !operator.$nin!.includes(v))
-      : !operator.$nin.includes(value);
+      : !operator.$nin.includes(value as NonNullable<T>);
   }
 
   if (isArray(operator.$all)) {
