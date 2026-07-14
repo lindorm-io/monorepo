@@ -7,6 +7,12 @@ const defaults = {
   expiresAt: new Date("2024-06-01T00:00:00.000Z"),
   issuer: "https://test.lindorm.io/",
   jwksUri: "https://test.lindorm.io/.well-known/jwks.json",
+
+  // These keys stand in for ordinary vault residents — the published token keys
+  // a real deployment holds. `publish` defaults to FALSE (a minted key is
+  // unpublished until we say so) and amphora only selects published keys, so
+  // the flag has to be declared here or the vault looks empty to every query.
+  publish: true,
 };
 
 const EC: KryptosFromString = {

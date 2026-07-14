@@ -146,7 +146,7 @@ describe("Aegis profiles", () => {
       // ⇒ left-most half = 128 bits = 16 bytes (contrast EdDSA/ML-DSA ⇒ SHA-512
       // ⇒ 32 bytes above). No RS256 fixture exists, so ES256 stands in for the
       // *256 family.
-      const es256Key = KryptosKit.generate.auto({ algorithm: "ES256" });
+      const es256Key = KryptosKit.generate.auto({ algorithm: "ES256", publish: true });
       const es256Amphora = new Amphora({ domain: ISSUER, logger });
       await es256Amphora.setup();
       es256Amphora.add(es256Key);
