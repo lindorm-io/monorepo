@@ -1,14 +1,7 @@
 import type { KryptosUse } from "../types.js";
+import { ECDH_ES_ALGORITHMS } from "./ecdh.js";
 
-export const EC_ENC_ALGORITHMS = [
-  "ECDH-ES",
-  "ECDH-ES+A128KW",
-  "ECDH-ES+A192KW",
-  "ECDH-ES+A256KW",
-  "ECDH-ES+A128GCMKW",
-  "ECDH-ES+A192GCMKW",
-  "ECDH-ES+A256GCMKW",
-] as const;
+export const EC_ENC_ALGORITHMS = ECDH_ES_ALGORITHMS;
 
 export const EC_SIG_ALGORITHMS = ["ES256", "ES384", "ES512"] as const;
 

@@ -1,19 +1,20 @@
 import {
   AKP_SIG_ALGORITHMS,
-  EC_ENC_ALGORITHMS,
+  ECDH_ES_ALGORITHMS,
   EC_SIG_ALGORITHMS,
   OCT_ENC_DIR_ALGORITHMS,
   OCT_ENC_STD_ALGORITHMS,
   OCT_SIG_ALGORITHMS,
-  OKP_ENC_ALGORITHMS,
   OKP_SIG_ALGORITHMS,
   RSA_ENC_ALGORITHMS,
   RSA_SIG_ALGORITHMS,
 } from "./key-types/index.js";
 
+// The ECDH-ES family is spread ONCE, not once per key type: EC and OKP support
+// the identical set, so spreading both would duplicate every ECDH-ES entry for
+// anyone iterating this list.
 export const KRYPTOS_ENC_ALGORITHMS = [
-  ...EC_ENC_ALGORITHMS,
-  ...OKP_ENC_ALGORITHMS,
+  ...ECDH_ES_ALGORITHMS,
   ...RSA_ENC_ALGORITHMS,
   ...OCT_ENC_DIR_ALGORITHMS,
   ...OCT_ENC_STD_ALGORITHMS,

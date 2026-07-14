@@ -1,14 +1,7 @@
 import type { KryptosUse } from "../types.js";
+import { ECDH_ES_ALGORITHMS } from "./ecdh.js";
 
-export const OKP_ENC_ALGORITHMS = [
-  "ECDH-ES",
-  "ECDH-ES+A128KW",
-  "ECDH-ES+A192KW",
-  "ECDH-ES+A256KW",
-  "ECDH-ES+A128GCMKW",
-  "ECDH-ES+A192GCMKW",
-  "ECDH-ES+A256GCMKW",
-] as const;
+export const OKP_ENC_ALGORITHMS = ECDH_ES_ALGORITHMS;
 
 export const OKP_SIG_ALGORITHMS = ["EdDSA"] as const;
 
