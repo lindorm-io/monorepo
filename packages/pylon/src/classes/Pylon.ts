@@ -378,7 +378,7 @@ export class Pylon<
 
       if (bus && db) {
         await setupWebhookRequestConsumer(bus, db, this.logger);
-        await setupWebhookDispatchConsumer(bus, db, this.logger, {
+        await setupWebhookDispatchConsumer(bus, db, this.amphora, this.logger, {
           encryptionKey: this.options.webhook.encryptionKey,
           maxErrors: this.options.webhook.maxErrors,
         });

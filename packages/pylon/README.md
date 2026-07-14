@@ -923,7 +923,7 @@ Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ct
 const app = new Pylon({
   webhook: {
     enabled: true,
-    encryptionKey: myKryptos,
+    encryptionKey: { predicate: { purpose: "webhook", publish: false } },
     maxErrors: 20,
   },
   // …
@@ -940,6 +940,17 @@ await ctx.webhook("user.created", { userId: "abc-123", email: "alice@example.com
 | `client_credentials` | `clientId`, `clientSecret`, `issuer` (and `tokenUri`) |
 
 Each subscription tracks `errorCount`, `lastErrorAt`, and `suspendedAt`. After `maxErrors` consecutive failures (default 10) the subscription is auto-suspended and the request consumer skips it until `errorCount` and `suspendedAt` are cleared.
+
+### The stored `clientSecret`
+
+A subscription's `clientSecret` may be stored as AES ciphertext (`aes:…`). Pylon decrypts it on dispatch, and — like every other read path in the toolkit — **the ciphertext names the key that opens it**: the `keyId` in the token, never `webhook.encryptionKey`. A secret sealed with the previous webhook key keeps opening after the current one is minted.
+
+`encryptionKey` is the same `{ kryptos?, predicate? }` descriptor as the [`keys`](#keys) roles, read as a **decrypt** descriptor:
+
+- `predicate` — a **check** on the key the ciphertext names, not a query. It matches a key _class_, so a deployment can refuse a ciphertext naming anything outside it.
+- `kryptos` — a key supplied outright, for a secret sealed with a key the vault never held. It answers for its **own** kid only; one naming a different key than the ciphertext throws, rather than decrypting with the wrong key material.
+
+The floor is Aegis's (`use: "enc"`, private half, `isPending: false`), so a ciphertext cannot name a signing key, or a key that has never been valid, and be decrypted. A plaintext `clientSecret` is sent through untouched.
 
 ## Workers
 

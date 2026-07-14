@@ -23,6 +23,7 @@ describe("setupWebhookDispatchConsumer", async () => {
 
   const iris = { workerQueue: mockWorkerQueue } as any;
   const proteus = { repository: mockRepository } as any;
+  const amphora = { findById: vi.fn() } as any;
   const logger = {
     debug: vi.fn(),
     error: vi.fn(),
@@ -46,7 +47,7 @@ describe("setupWebhookDispatchConsumer", async () => {
   });
 
   test("should set up worker queue consumer for WebhookDispatch", async () => {
-    await setupWebhookDispatchConsumer(iris, proteus, logger);
+    await setupWebhookDispatchConsumer(iris, proteus, amphora, logger);
 
     expect(mockWorkerQueue).toHaveBeenCalledTimes(1);
     expect(mockConsume).toHaveBeenCalledWith(
@@ -56,19 +57,23 @@ describe("setupWebhookDispatchConsumer", async () => {
   });
 
   test("should create dispatch function with provided options", async () => {
-    const encryptionKey = { type: "oct" } as any;
+    const encryptionKey = { predicate: { purpose: "webhook" } } as any;
     const cache = [{ tokenUri: "https://auth.example.com/token" }] as any;
 
-    await setupWebhookDispatchConsumer(iris, proteus, logger, {
+    await setupWebhookDispatchConsumer(iris, proteus, amphora, logger, {
       encryptionKey,
       cache,
     });
 
-    expect(createDispatchWebhook).toHaveBeenCalledWith({ encryptionKey }, logger, cache);
+    expect(createDispatchWebhook).toHaveBeenCalledWith(
+      { amphora, encryptionKey },
+      logger,
+      cache,
+    );
   });
 
   test("should call dispatchWebhook with message data when consumed", async () => {
-    await setupWebhookDispatchConsumer(iris, proteus, logger);
+    await setupWebhookDispatchConsumer(iris, proteus, amphora, logger);
 
     const handler = mockConsume.mock.calls[0][1];
 
@@ -87,7 +92,7 @@ describe("setupWebhookDispatchConsumer", async () => {
   });
 
   test("should not touch the repository on successful dispatch", async () => {
-    await setupWebhookDispatchConsumer(iris, proteus, logger);
+    await setupWebhookDispatchConsumer(iris, proteus, amphora, logger);
 
     const handler = mockConsume.mock.calls[0][1];
 
@@ -108,7 +113,7 @@ describe("setupWebhookDispatchConsumer", async () => {
     const loaded = { ...baseSubscription, errorCount: 2 };
     mockFindOne.mockResolvedValueOnce(loaded);
 
-    await setupWebhookDispatchConsumer(iris, proteus, logger);
+    await setupWebhookDispatchConsumer(iris, proteus, amphora, logger);
 
     const handler = mockConsume.mock.calls[0][1];
 
@@ -132,7 +137,7 @@ describe("setupWebhookDispatchConsumer", async () => {
     const loaded = { ...baseSubscription, errorCount: 9 };
     mockFindOne.mockResolvedValueOnce(loaded);
 
-    await setupWebhookDispatchConsumer(iris, proteus, logger);
+    await setupWebhookDispatchConsumer(iris, proteus, amphora, logger);
 
     const handler = mockConsume.mock.calls[0][1];
 
@@ -163,7 +168,7 @@ describe("setupWebhookDispatchConsumer", async () => {
     const loaded = { ...baseSubscription, errorCount: 2 };
     mockFindOne.mockResolvedValueOnce(loaded);
 
-    await setupWebhookDispatchConsumer(iris, proteus, logger, { maxErrors: 3 });
+    await setupWebhookDispatchConsumer(iris, proteus, amphora, logger, { maxErrors: 3 });
 
     const handler = mockConsume.mock.calls[0][1];
 
@@ -183,7 +188,7 @@ describe("setupWebhookDispatchConsumer", async () => {
     mockDispatchWebhook.mockRejectedValueOnce(new Error("boom"));
     mockFindOne.mockResolvedValueOnce(null);
 
-    await setupWebhookDispatchConsumer(iris, proteus, logger);
+    await setupWebhookDispatchConsumer(iris, proteus, amphora, logger);
 
     const handler = mockConsume.mock.calls[0][1];
 
