@@ -23,7 +23,13 @@ export const encryptFieldValue = (
   }
 
   try {
-    const key = amphora.findSync({ ...predicate, use: "enc" });
+    // A field-encryption key is a KEK: it never leaves the service and never
+    // belongs in a JWKS, so it is an internal (`publish: false`) key — and
+    // amphora excludes internal keys from selection unless asked. This is a
+    // default, not a floor: the caller's predicate still wins, as everywhere
+    // else. Decryption needs no equivalent — it resolves the exact key by id
+    // from the ciphertext, and `findByIdSync` is deliberately unfiltered.
+    const key = amphora.findSync({ publish: false, ...predicate, use: "enc" });
     const kit = new AesKit({ kryptos: key });
     return kit.encrypt(value as any, "encoded");
   } catch (error) {
