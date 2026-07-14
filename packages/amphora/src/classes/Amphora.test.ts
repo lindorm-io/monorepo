@@ -97,7 +97,7 @@ describe("Amphora", () => {
     test("should mark env-imported keys as own and serve them in the jwks", () => {
       amphora.env(KryptosKit.env.export(TEST_EC_KEY_SIG));
 
-      expect(amphora.vault[0].isExternal).toBe(false);
+      expect(amphora.vault[0].internal).toBe(true);
       expect(amphora.jwks.keys.some((k) => k.kid === TEST_EC_KEY_SIG.id)).toBe(true);
     });
 
@@ -1059,12 +1059,44 @@ describe("Amphora", () => {
       const localKeyInVault = amphora.vault.find((k) => k.id === localKey.id);
       expect(localKeyInVault).toBeDefined();
       expect(localKeyInVault?.issuer).toBe("https://external.lindorm.io/");
-      expect(localKeyInVault?.isExternal).toBe(false);
+      expect(localKeyInVault?.internal).toBe(true);
 
       const externalKeyInVault = amphora.vault.find((k) => k.id === TEST_EC_KEY_SIG.id);
       expect(externalKeyInVault).toBeDefined();
       expect(externalKeyInVault?.issuer).toBe("https://external.lindorm.io/");
-      expect(externalKeyInVault?.isExternal).toBe(true);
+      expect(externalKeyInVault?.internal).toBe(false);
+    });
+
+    // We publish OUR keys and only ours. The adversarial case is a provider whose
+    // issuer is OUR OWN domain: every other refreshJwks filter then passes — the
+    // key is public, unexpired, and lands with `publish: true` (a JWK is the
+    // interchange format of a published key) — so `internal: true` is the ONLY
+    // thing keeping someone else's key material out of the JWKS we serve as ours.
+    test("should never publish an external key in our own jwks", async () => {
+      const externalJwk = TEST_EC_KEY_SIG.toJWK("public");
+      delete externalJwk.iss;
+
+      nock("https://test.lindorm.io")
+        .get("/.well-known/jwks.json")
+        .times(1)
+        .reply(200, { keys: [externalJwk] });
+
+      amphora = new Amphora({
+        domain: issuer,
+        logger: createMockLogger(),
+        external: [{ issuer, jwksUri: "https://test.lindorm.io/.well-known/jwks.json" }],
+      });
+
+      await amphora.setup();
+
+      // It is in the vault, it claims our issuer, and it is publishable...
+      const external = amphora.vault.find((k) => k.id === TEST_EC_KEY_SIG.id);
+      expect(external?.issuer).toBe(issuer);
+      expect(external?.publish).toBe(true);
+      expect(external?.internal).toBe(false);
+
+      // ...and it is still NOT in our JWKS.
+      expect(amphora.jwks.keys.some((k) => k.kid === TEST_EC_KEY_SIG.id)).toBe(false);
     });
   });
 

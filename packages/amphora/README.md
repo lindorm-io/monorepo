@@ -83,7 +83,7 @@ When `domain` is set, Amphora auto-assigns `issuer` and `jwksUri` to added keys 
 
 ### From environment-encoded strings
 
-`Amphora.env()` accepts compact `kryptos:`-prefixed strings (the format produced by `KryptosKit.env.import` / `export`) and adds them to the vault. Env-provided keys are the service's **own** keys (`isExternal: false`) — they are served in the JWKS when public and `publish: true` (the kryptos default), so operational keys like a KEK must be generated with `publish: false`. A key whose `issuer` differs from the Amphora domain logs a warning (it would never be served).
+`Amphora.env()` accepts compact `kryptos:`-prefixed strings (the format produced by `KryptosKit.env.import` / `export`) and adds them to the vault. Env-provided keys are the service's **own** keys (`internal: true`) — they are served in the JWKS when public and `publish: true`. Publication is opt-in (`publish` defaults to `false` in kryptos), so a key that belongs in the JWKS must be generated with `publish: true`, while an operational key like a KEK simply takes the default. A key whose `issuer` differs from the Amphora domain logs a warning (it would never be served).
 
 ```typescript
 amphora.env(process.env.SIGNING_KEY!);
@@ -170,7 +170,7 @@ Available query fields (from `AmphoraQuery`):
 | `encryption`            | `string`                          | Content encryption algorithm (e.g. `A256GCM`).                                                                                                                                 |
 | `hasPrivateKey`         | `boolean`                         | Whether the key contains private material.                                                                                                                                     |
 | `hasPublicKey`          | `boolean`                         | Whether the key contains public material.                                                                                                                                      |
-| `isExternal`            | `boolean`                         | Whether the key was imported from an external provider.                                                                                                                        |
+| `internal`              | `boolean`                         | Whether the key is our own. `false` means it was imported from an external provider (a remote JWKS).                                                                           |
 | `issuer`                | `string`                          | Issuing authority URL.                                                                                                                                                         |
 | `operations`            | `Array<KeyOperation>`             | Derived capability of the key material (`sign`, `verify`, `encrypt`, `decrypt`, `deriveKey`, `deriveBits`, `wrapKey`, `unwrapKey`) — advisory; prefer `use` + `hasPrivateKey`. |
 | `ownerId`               | `string`                          | Tenant/owner identifier.                                                                                                                                                       |

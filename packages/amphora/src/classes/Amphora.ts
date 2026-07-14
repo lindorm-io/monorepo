@@ -192,7 +192,7 @@ export class Amphora implements IAmphora {
     for (const key of array) {
       const kryptos = KryptosKit.env.import(key);
 
-      // Env-imported keys are own keys (isExternal: false) and feed the JWKS when
+      // Env-imported keys are our own (`internal: true`) and feed the JWKS when
       // public + `publish: true` — an issuer that differs from this Amphora's
       // domain would never be served, which is almost certainly a config error.
       if (this.domain && kryptos.issuer && kryptos.issuer !== this.domain) {
@@ -527,7 +527,9 @@ export class Amphora implements IAmphora {
             iss: config.issuer,
             jku: jwk.jku ?? config.jwksUri,
           },
-          true,
+          // Not ours — this key came off a remote JWKS. It is also `from.jwk`'s
+          // default, but a provenance claim is worth stating outright.
+          false,
         );
       } catch (error) {
         this.logger.warn("External JWK rejected: key could not be parsed", {
@@ -740,8 +742,11 @@ export class Amphora implements IAmphora {
     for (const result of results) {
       if (result.status === "fulfilled") {
         const { config, keys } = result.value;
+        // Swap out this issuer's previously-fetched keys for the fresh set — but
+        // only the FOREIGN ones. An env-imported key of our own can legitimately
+        // carry the same issuer as a configured provider, and must survive the swap.
         this._vault = this._vault
-          .filter((i) => !(i.issuer === config.issuer && i.isExternal))
+          .filter((i) => i.internal || i.issuer !== config.issuer)
           .concat(keys);
       } else {
         failures++;
@@ -770,7 +775,9 @@ export class Amphora implements IAmphora {
       hasPublicKey: true,
       publish: true,
       isExpired: false,
-      isExternal: false,
+      // We publish OUR keys and only ours — republishing a key fetched from
+      // someone else's JWKS would advertise their key material as our own.
+      internal: true,
       issuer: this.domain,
     })
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())

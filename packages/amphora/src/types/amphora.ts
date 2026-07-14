@@ -42,7 +42,7 @@ export type AmphoraQuery = Pick<
   | "encryption"
   | "hasPrivateKey"
   | "hasPublicKey"
-  | "isExternal"
+  | "internal"
   | "issuer"
   | "operations"
   | "ownerId"
