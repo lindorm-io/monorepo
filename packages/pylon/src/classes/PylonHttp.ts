@@ -5,6 +5,7 @@ import { createDependenciesMiddleware } from "../internal/middleware/common-depe
 import { createWebhookMiddleware } from "../internal/middleware/common-webhook-middleware.js";
 import { createHttpAbortSignalMiddleware } from "../internal/middleware/http-abort-signal-middleware.js";
 import { createHttpBodyParserMiddleware } from "../internal/middleware/http-body-parser-middleware.js";
+import { httpChallengeMiddleware } from "../internal/middleware/http-challenge-middleware.js";
 import { createHttpContextInitialisationMiddleware } from "../internal/middleware/http-context-initialisation-middleware.js";
 import { createHttpCookiesMiddleware } from "../internal/middleware/http-cookies-middleware.js";
 import { createHttpCorsMiddleware } from "../internal/middleware/http-cors-middleware.js";
@@ -96,6 +97,7 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         name: this.options.name,
         version: this.options.version,
       }),
+      httpChallengeMiddleware,
       createHttpContextInitialisationMiddleware(this.logger),
       createHttpAbortSignalMiddleware(),
       createCommonContextInitialisationMiddleware(this.options.amphora),

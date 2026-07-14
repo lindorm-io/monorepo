@@ -1,0 +1,26 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`appendChallenge > should comma-join a second challenge instead of overwriting 1`] = `
+{
+  "www-authenticate": "Basic realm="lindorm.io", Bearer realm="lindorm.io", error="invalid_token"",
+}
+`;
+
+exports[`appendChallenge > should not set the dpop nonce header when no nonce is given 1`] = `
+{
+  "www-authenticate": "DPoP realm="lindorm.io"",
+}
+`;
+
+exports[`appendChallenge > should set a single challenge 1`] = `
+{
+  "www-authenticate": "Bearer realm="lindorm.io", error="invalid_token"",
+}
+`;
+
+exports[`appendChallenge > should set the dpop nonce header and keep the nonce out of the auth-params 1`] = `
+{
+  "dpop-nonce": "nonce-value",
+  "www-authenticate": "DPoP realm="lindorm.io", error="use_dpop_nonce", algs="ES256"",
+}
+`;

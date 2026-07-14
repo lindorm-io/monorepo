@@ -9,7 +9,7 @@ import {
   type CreateTestPylonCtxOptions,
 } from "./create-test-pylon-ctx.js";
 
-export type { CreateTestPylonCtxOptions } from "./create-test-pylon-ctx.js";
+export type { CreateTestPylonCtxOptions, TestPylonCtx } from "./create-test-pylon-ctx.js";
 
 export const createTestPylonCtx = (options?: CreateTestPylonCtxOptions) =>
   _createTestPylonCtx(

@@ -1,8 +1,9 @@
-import { ServerError, generateSupport } from "@lindorm/errors";
+import { ClientError, ServerError, generateSupport } from "@lindorm/errors";
 import { isNumber, isString } from "@lindorm/is";
 import { randomId } from "@lindorm/random";
 import { RedirectError } from "../../errors/index.js";
 import type { PylonHttpMiddleware } from "../../types/index.js";
+import { deriveChallenge } from "../utils/challenge/derive-challenge.js";
 
 export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next) => {
   try {
@@ -31,6 +32,17 @@ export const httpErrorHandlerMiddleware: PylonHttpMiddleware = async (ctx, next)
         ctx.redirect(url.toString());
       } else {
         ctx.status = status;
+
+        // RFC 9110 §11.6.1 — a 401 must advertise how to authenticate. Only 401: a 403
+        // insufficient_scope challenge is a deliberate ctx.challenge() call, never derived.
+        // An explicit challenge already on the response always wins.
+        if (
+          status === ClientError.Status.Unauthorized &&
+          !ctx.response?.get("WWW-Authenticate")
+        ) {
+          deriveChallenge(ctx);
+        }
+
         ctx.body = {
           __meta: {
             app: "Pylon",

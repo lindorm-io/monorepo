@@ -7,12 +7,27 @@ import type { ILogger } from "@lindorm/logger";
 import type { IProteusSession } from "@lindorm/proteus";
 import type { DeepPartial, Dict } from "@lindorm/types";
 import { merge } from "@lindorm/utils";
+import { appendChallenge } from "../internal/utils/challenge/append-challenge.js";
 import type {
   PylonAuthClaimsClient,
+  PylonChallenge,
   PylonContext,
+  PylonHttpContext,
   PylonIoContextHttp,
   PylonState,
 } from "../types/index.js";
+
+/**
+ * The mock ctx is transport-free, so koa's response object is absent. Middleware that
+ * writes response headers (Cache-Control, WWW-Authenticate, ...) needs one: `set` records
+ * onto `response.headers` lower-cased, the way koa does, and `response.get` reads it back
+ * — so a test can assert the headers a real response would carry.
+ */
+export type TestPylonCtx = PylonContext & {
+  challenge: PylonChallenge;
+  response: { headers: Dict<string>; get: (field: string) => string };
+  set: (field: string, value: string) => void;
+};
 
 export type TestPylonCtxDeps = {
   mockFn: () => any;
@@ -72,7 +87,7 @@ const defaultState = (): PylonState => ({
 export const _createTestPylonCtx = (
   deps: TestPylonCtxDeps,
   options: CreateTestPylonCtxOptions = {},
-): PylonContext => {
+): TestPylonCtx => {
   const resolves = (value: any) => {
     const m = deps.mockFn();
     m.mockResolvedValue(value);
@@ -89,7 +104,9 @@ export const _createTestPylonCtx = (
     (options.state ?? {}) as Dict,
   ) as unknown as PylonState;
 
-  const ctx: PylonContext = {
+  const headers: Dict<string> = {};
+
+  const ctx: TestPylonCtx = {
     aegis: deps.aegis,
     amphora: deps.amphora,
     auth,
@@ -103,6 +120,16 @@ export const _createTestPylonCtx = (
     data: options.data ?? {},
     io: {} as PylonIoContextHttp,
     params: options.params ?? {},
+
+    response: { headers, get: (field) => headers[field.toLowerCase()] ?? "" },
+    set: (field, value) => {
+      headers[field.toLowerCase()] = value;
+    },
+
+    // The real thing, not a spy — appendChallenge is pure, so a consumer test can assert
+    // the WWW-Authenticate a real response would carry.
+    challenge: (scheme, params) =>
+      appendChallenge(ctx as unknown as PylonHttpContext, scheme, params),
   };
 
   const db = options.db === undefined ? deps.db : options.db;

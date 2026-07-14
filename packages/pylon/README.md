@@ -211,6 +211,7 @@ HTTP-only additions:
 
 ```typescript
 ctx.auth;       // full PylonAuthClient (login / logout / token in addition to claims)
+ctx.challenge(scheme, params?);  // append a WWW-Authenticate challenge
 ctx.cookies;    // IPylonCookies
 ctx.data;       // parsed request body (camelCased)
 ctx.params;     // path parameters
@@ -1093,6 +1094,26 @@ Pylon catches the throw in the built-in `httpErrorHandlerMiddleware`, derives th
 ```
 
 Throwing a `RedirectError` instead emits a redirect with `error`, `error_uri`, `support`, and `state` query parameters appended to its `redirect` URL.
+
+### Authentication challenges
+
+`ctx.challenge(scheme, params?)` appends a `WWW-Authenticate` challenge to the response. Each call appends — one 401 may advertise several challenges (RFC 9110 §11.6.1), which is how an endpoint says "Basic **or** Bearer". Params are typed per scheme: `basic` (RFC 7617) takes `realm` / `charset` and deliberately has no error param; `bearer` (RFC 6750) takes `realm` / `error` / `errorDescription` / `scope`; `dpop` (RFC 9449) adds `algs` and `nonce` — the nonce is emitted as a `DPoP-Nonce` header, never as an auth-param.
+
+```typescript
+ctx.challenge("bearer", {
+  realm: "api.example.com",
+  error: "insufficient_scope",
+  scope: "songs:write",
+});
+ctx.challenge("dpop", {
+  realm: "api.example.com",
+  error: "use_dpop_nonce",
+  algs: ["ES256"],
+  nonce,
+});
+```
+
+When a request ends in a **401 without any challenge**, the error handler derives one from the scheme the client actually attempted (`ctx.state.authorization.type`): `Basic realm="<domain>"`, or `Bearer` / `DPoP` with `error="invalid_token"`, realm from `app.domain`. If the client attempted no scheme (`type: "none"`) Pylon emits nothing — it does not invent a scheme the client never tried — and logs a warning instead; call `ctx.challenge()` to advertise what the endpoint accepts. Only 401 is derived: a 403 `insufficient_scope` challenge is a deliberate `ctx.challenge()` call.
 
 | Error class                      | Description                                    |
 | -------------------------------- | ---------------------------------------------- |

@@ -81,6 +81,24 @@ describe("createTestPylonCtx", () => {
     expect(ctx.kv).toBe(kv);
   });
 
+  test("should write real challenges onto the mocked response", () => {
+    const ctx = createTestPylonCtx();
+
+    ctx.challenge("bearer", { realm: "lindorm.io", error: "insufficient_scope" });
+    ctx.challenge("basic", { realm: "lindorm.io" });
+
+    expect(ctx.response.headers).toMatchSnapshot();
+  });
+
+  test("should record response headers the way koa does", () => {
+    const ctx = createTestPylonCtx();
+
+    ctx.set("Cache-Control", "no-store");
+
+    expect(ctx.response.get("cache-control")).toBe("no-store");
+    expect(ctx.response.headers).toEqual({ "cache-control": "no-store" });
+  });
+
   test("should flow data and params through", () => {
     const ctx = createTestPylonCtx({
       data: { foo: "bar" },

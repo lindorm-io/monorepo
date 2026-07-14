@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`httpErrorHandlerMiddleware > should derive a WWW-Authenticate challenge on a 401 1`] = `
+{
+  "www-authenticate": "Bearer realm="https://lindorm.io", error="invalid_token"",
+}
+`;
+
+exports[`httpErrorHandlerMiddleware > should derive a basic challenge on a 401 1`] = `
+{
+  "www-authenticate": "Basic realm="https://lindorm.io"",
+}
+`;
+
+exports[`httpErrorHandlerMiddleware > should derive a dpop challenge on a 401 1`] = `
+{
+  "www-authenticate": "DPoP realm="https://lindorm.io", error="invalid_token"",
+}
+`;
+
+exports[`httpErrorHandlerMiddleware > should not overwrite a challenge the handler set explicitly 1`] = `
+{
+  "www-authenticate": "Bearer realm="lindorm.io", error="insufficient_scope"",
+}
+`;

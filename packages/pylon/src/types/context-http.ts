@@ -8,6 +8,7 @@ import type {
   IPylonFileUpload,
   IPylonSession,
 } from "../interfaces/index.js";
+import type { PylonChallenge } from "./challenge.js";
 import type {
   PylonCommonContext,
   PylonHttpMetadata,
@@ -35,6 +36,7 @@ export type PylonHttpState = PylonState & {
 
 type Context<Data, State> = {
   auth: PylonAuthClient;
+  challenge: PylonChallenge;
   cookies: IPylonCookies;
   data: Data;
   io: PylonIoContextHttp;

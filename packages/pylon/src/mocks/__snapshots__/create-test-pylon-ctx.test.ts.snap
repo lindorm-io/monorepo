@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`createTestPylonCtx > should write real challenges onto the mocked response 1`] = `
+{
+  "www-authenticate": "Bearer realm="lindorm.io", error="insufficient_scope", Basic realm="lindorm.io"",
+}
+`;

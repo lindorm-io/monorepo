@@ -1,0 +1,7 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`httpChallengeMiddleware > should write the challenge onto the response 1`] = `
+{
+  "www-authenticate": "Bearer realm="lindorm.io", error="insufficient_scope", Basic realm="lindorm.io"",
+}
+`;

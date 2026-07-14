@@ -1,0 +1,19 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`deriveChallenge > should derive a basic challenge without an error param 1`] = `
+{
+  "www-authenticate": "Basic realm="https://lindorm.io"",
+}
+`;
+
+exports[`deriveChallenge > should derive a bearer challenge 1`] = `
+{
+  "www-authenticate": "Bearer realm="https://lindorm.io", error="invalid_token"",
+}
+`;
+
+exports[`deriveChallenge > should derive a dpop challenge 1`] = `
+{
+  "www-authenticate": "DPoP realm="https://lindorm.io", error="invalid_token"",
+}
+`;

@@ -1,0 +1,21 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`serializeChallenge > should drop empty and undefined params 1`] = `"DPoP error_description="kept""`;
+
+exports[`serializeChallenge > should emit params in a fixed order regardless of input order 1`] = `"Bearer realm="lindorm.io", error="invalid_token", error_description="description", scope="openid""`;
+
+exports[`serializeChallenge > should emit the scheme alone when no params remain 1`] = `"Basic"`;
+
+exports[`serializeChallenge > should emit the scheme alone when no params remain 2`] = `"Bearer"`;
+
+exports[`serializeChallenge > should emit the scheme alone when no params remain 3`] = `"DPoP"`;
+
+exports[`serializeChallenge > should escape backslash and double quote in quoted-strings 1`] = `"Bearer realm="lindorm\\"io\\\\realm", error_description="he said \\"no\\"""`;
+
+exports[`serializeChallenge > should never emit the dpop nonce as an auth-param 1`] = `"DPoP"`;
+
+exports[`serializeChallenge > should serialize a basic challenge 1`] = `"Basic realm="lindorm.io", charset="UTF-8""`;
+
+exports[`serializeChallenge > should serialize a bearer challenge 1`] = `"Bearer realm="lindorm.io", error="insufficient_scope", error_description="The access token lacks the required scope", scope="openid profile""`;
+
+exports[`serializeChallenge > should serialize a dpop challenge 1`] = `"DPoP realm="lindorm.io", error="use_dpop_nonce", error_description="Resource server requires nonce in DPoP proof", algs="ES256 PS256""`;

@@ -1,6 +1,7 @@
 export * from "./auth.js";
 export * from "./authorization.js";
 export * from "./body.js";
+export * from "./challenge.js";
 export * from "./context-common.js";
 export * from "./context-http.js";
 export * from "./context-socket.js";
