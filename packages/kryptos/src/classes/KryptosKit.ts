@@ -110,7 +110,15 @@ export class KryptosKit {
   // clone
 
   static clone(kryptos: IKryptos, overwrite: KryptosLike = {}): IKryptos {
-    return new Kryptos({ ...kryptos.toJSON(), ...overwrite, ...kryptos.export("der") });
+    // Only the KEY MATERIAL is taken from the DER export. That export also
+    // re-emits `id`, `algorithm`, `curve`, `encryption`, `type` and `use`, so
+    // spreading it whole — as this did — put those back on top of `overwrite`
+    // and silently discarded them: `clone(key, { id })` returned a key with the
+    // ORIGINAL id. `overwrite` wins over everything now, which is the only thing
+    // it could have meant.
+    const { privateKey, publicKey } = kryptos.export("der");
+
+    return new Kryptos({ ...kryptos.toJSON(), privateKey, publicKey, ...overwrite });
   }
 
   // env
