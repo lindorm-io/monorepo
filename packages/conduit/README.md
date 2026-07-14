@@ -560,14 +560,19 @@ try {
 
 ### How errors are reconstructed
 
-When an Axios error reaches Conduit, `reconstructFromAxiosError` extracts the status, message, and any Pylon error envelope from the response body, then calls `errorRegistry.reconstruct(...)` from `@lindorm/errors`. The registry resolves the right class in this order:
+What Conduit trusts depends on **who answered**. A Pylon response is one of ours and its envelope is authoritative; anything else gets cast to the class its status earns, and nothing is claimed on its behalf.
 
-1. **By name** — if the response carries a Pylon envelope with `error.name`, the registry returns the registered class with that name (e.g. `NotFoundError`, or any custom subclass the consumer registered with `errorRegistry.register(...)`).
-2. **By status** — if no class is registered under the envelope's name, the registry falls back to the class registered for the exact status code (e.g. `404` → `NotFoundError`).
-3. **By status range** — if no exact-status match exists, falls back to `ClientError` for `4xx` or `ServerError` for `5xx`.
-4. **`LindormError`** — final fallback when nothing else matches.
+**A Pylon upstream** — the `error` envelope is taken whole: `message`, `code`, `data`, `id`, `support`, `title`, `type`, and `name`. The class is resolved from `error.name`, which is the point: a service's own `InvalidFirstNameSchemaError` — a 400 like a dozen others — comes back as itself and the caller catches it with `instanceof`, which a status code alone can never express. Name resolution only works if the **calling** process has the class registered (see below); otherwise it degrades to the status.
 
-When the request fails before any response (network failure, timeout, DNS), `NetworkError` is thrown instead. Its `status` is `-1`.
+**Any other server** — the class comes from the status (`429` → `TooManyRequestsError`), and that is all that is assumed:
+
+- `type` is `urn:http:error:<status>`. It is deliberately **not** a `urn:lindorm:` type — that would assert the error came from a lindorm service, which it did not.
+- `code` and `message` are whatever the body actually supplied — a nested `error.code`, a flat `code`/`error_code`, the OAuth2 `{ error, error_description }` form, an RFC 9457 `detail`, or a `text/plain` body. When the body names none, `code` is `null` and the message is Axios's. Axios's own `code` is never used: for an HTTP response it is `ERR_BAD_REQUEST` for _every_ 4xx and `ERR_BAD_RESPONSE` for _every_ 5xx, so it only repeats the status.
+- `data` stays **empty**. It is caller-visible, and a foreign body of unknown shape carries unknown sensitivity. The body and the response headers go to `debug.transport.response` instead.
+
+The class itself resolves in this order: **by name** (Pylon envelopes only) → **by exact status** (`404` → `NotFoundError`) → **by status range** (`ClientError` for 4xx, `ServerError` for 5xx) → `LindormError`.
+
+When the request fails before any response (network failure, timeout, DNS), `NetworkError` is thrown instead. Its `status` is `-1`, and here Axios's `code` _is_ kept (`ECONNREFUSED`, `ETIMEDOUT`) — the failure is the client's own, and no server said anything.
 
 ### Inspecting transport metadata
 
@@ -608,6 +613,8 @@ errorRegistry.register(UserSuspendedError);
 ```
 
 When a Pylon server throws `UserSuspendedError` and Conduit deserializes the response, name-based resolution returns the same class, and `error instanceof UserSuspendedError` is `true` on the client.
+
+Registering a subclass never changes what a _bare_ status resolves to. `UserSuspendedError` inherits `status = 403` from `ForbiddenError` (statics are inherited in JavaScript), but the status map keeps its **first** registration — the canonical HTTP class — so a plain `403`, including one from a server that never heard of your application, still resolves to `ForbiddenError`. Only the name map gains the subclass.
 
 ## Public Exports
 
