@@ -1,4 +1,4 @@
-import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, type IAmphora } from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
 import { IrisEncryptionError } from "../../../errors/IrisEncryptionError.js";
@@ -60,12 +60,12 @@ export const resolveEncryptionKey = async (
   }
 
   // The selector applies to the vault query alone. An injected key and a key
-  // named by an encrypted payload both come from outside it.
-  const query: AmphoraPredicate = {
-    ...ENCRYPTION_FLOOR,
-    ...ENCRYPTION_DEFAULT,
-    ...key.predicate,
-  };
+  // named by an encrypted payload both come from outside it. The floor is
+  // applied LAST so it always wins the merge: `key.predicate` is duck-typed and
+  // could carry a floor key, which must never override the policy. Per-layer
+  // `undefined` stripping keeps a `{ x: undefined }` predicate from erasing the
+  // `ENCRYPTION_DEFAULT` (`publish: false`).
+  const query = applyKeyFloor(ENCRYPTION_FLOOR, ENCRYPTION_DEFAULT, key.predicate);
 
   const kryptos = id
     ? // An injected key is typically an env KEK that was never added to the

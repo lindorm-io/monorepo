@@ -100,6 +100,22 @@ describe("resolveEncryptionKey", () => {
       expect(error.code).toBe("encryption_key_policy_violation");
     });
 
+    test("a predicate carrying a floor key cannot override the floor", async () => {
+      // #8: `key.predicate` is duck-typed, so a config/JSON one can carry `use`.
+      // The floor (`use: "enc"`) is applied LAST and wins the merge, so the
+      // smuggled `use: "sig"` is overridden — the enc message key is selected,
+      // never the newer sig message key.
+      const kryptos = await resolveEncryptionKey({
+        amphora,
+        key: {
+          predicate: { purpose: "message", use: "sig" },
+        } as unknown as ResolveEncryptionKeyOptions["key"],
+      });
+
+      expect(kryptos.id).toBe(TEST_KEY_ENC_MESSAGE.id);
+      expect(kryptos.use).toBe("enc");
+    });
+
     test("should reject a signing key PINNED by an encrypted payload's kid", async () => {
       // `findById` is unfiltered by design, so a payload gets to name any key in
       // the vault. The floor is the only thing between that and the crypto layer.
