@@ -112,13 +112,14 @@ describe("resolveEncryptionKey", () => {
       const publicOnly = KryptosKit.from.jwk(asymmetric.toJWK("public"));
 
       expect(publicOnly.hasPrivateKey).toBe(false);
-      expect(publicOnly.publish).toBe(true);
+      expect(publicOnly.publish).toBe(false); // a from.jwk import is unpublished by default
 
       const amphora = createAmphora(publicOnly);
 
-      // The predicate matches it on every attribute a consumer can express.
+      // The predicate matches it on every attribute a consumer can express — so
+      // the ONLY thing rejecting it is the floor's `hasPrivateKey`.
       expect(() =>
-        resolve({ kryptos: null, predicate: { type: "EC", publish: true } }, amphora),
+        resolve({ kryptos: null, predicate: { type: "EC", publish: false } }, amphora),
       ).toThrow('No encryption key matches field "secret" on entity "TestEntity"');
     });
 
