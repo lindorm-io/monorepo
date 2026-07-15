@@ -10,7 +10,12 @@ export const createLogoutCallbackHandler = <C extends PylonHttpContext>(
   routerConfig: PylonAuthRouterConfig,
 ): PylonHttpMiddleware<C> =>
   async function logoutCallbackHandler(ctx) {
-    const cookie = await ctx.cookies.get<PylonLogoutCookie>(routerConfig.cookies.logout);
+    // Read under the SAME policy the logout handler wrote: the signature is
+    // verified before `state`/`redirectUri` is trusted, so a forged logout
+    // cookie cannot drive the post-logout redirect.
+    const cookie = await ctx.cookies.get<PylonLogoutCookie>(routerConfig.cookies.logout, {
+      signed: true,
+    });
 
     if (!cookie) {
       throw new ClientError("No logout cookie found", {

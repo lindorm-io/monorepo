@@ -225,7 +225,7 @@ describe("httpCookiesMiddleware round-trip", () => {
     const readMiddleware = createHttpCookiesMiddleware(config);
     let readValue: unknown = undefined;
     await readMiddleware(readCtx as any, async () => {
-      readValue = await (readCtx as any).cookies.get("rt_cookie");
+      readValue = await (readCtx as any).cookies.get("rt_cookie", { encrypted: true });
     });
 
     expect(readCtx.aegis.aes.decrypt).toHaveBeenCalledTimes(1);

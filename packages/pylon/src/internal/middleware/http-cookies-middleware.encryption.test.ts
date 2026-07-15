@@ -124,7 +124,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
     let read: unknown;
 
     await createHttpCookiesMiddleware({}, keys)(readCtx as any, async () => {
-      read = await (readCtx as any).cookies.get("sid");
+      read = await (readCtx as any).cookies.get("sid", { encrypted: true });
     });
 
     expect(read).toBe("old_value");

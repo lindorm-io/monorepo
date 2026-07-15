@@ -25,7 +25,7 @@ export const createLoginHandler = (
   routerConfig: PylonAuthRouterConfig,
 ): PylonHttpMiddleware<PylonHttpContext<OpenIdAuthorizeRequestQuery>> =>
   async function loginHandler(ctx) {
-    if (await ctx.cookies.get(routerConfig.cookies.logout)) {
+    if (await ctx.cookies.get(routerConfig.cookies.logout, { signed: true })) {
       ctx.cookies.del(routerConfig.cookies.logout);
     }
 
@@ -97,7 +97,12 @@ export const createLoginHandler = (
       state,
     };
 
+    // Signed AND encrypted: encryption hides the codeVerifier, but only the
+    // signature AUTHENTICATES the cookie. Without it a forged (unsealed) login
+    // cookie would be trusted for its state/redirectUri — a login hijack + open
+    // redirect. The callback reads it under the same policy.
     await ctx.cookies.set(routerConfig.cookies.login, cookie, {
+      signed: true,
       encrypted: true,
       httpOnly: true,
       expiry: "15m",

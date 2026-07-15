@@ -1,6 +1,7 @@
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { B64 } from "@lindorm/b64";
+import { ClientError } from "@lindorm/errors";
 import type { PylonCookieConfig } from "../../../types/index.js";
 import { createGetCookie } from "./create-get-cookie.js";
 import { verifyCookie as _verifyCookie } from "./verify-cookie.js";
@@ -71,7 +72,7 @@ describe("createGetCookie", async () => {
     await expect(getCookie("cookie_name")).resolves.toEqual({ key: "value" });
   });
 
-  test("should decrypt aes-tokenised value", async () => {
+  test("should decrypt aes-tokenised value when encrypted is declared", async () => {
     const tokenised = `aes:${Buffer.from(JSON.stringify("secret_value")).toString("base64url")}`;
 
     const getCookie = createGetCookie({
@@ -80,8 +81,44 @@ describe("createGetCookie", async () => {
       parsed: [{ name: "cookie_name", signature: null, kid: null, value: tokenised }],
     });
 
-    await expect(getCookie("cookie_name")).resolves.toEqual("secret_value");
+    await expect(getCookie("cookie_name", { encrypted: true })).resolves.toEqual(
+      "secret_value",
+    );
     expect(ctx.aegis.aes.decrypt).toHaveBeenCalledWith(tokenised);
+  });
+
+  // Policy is the authority, not the byte prefix: a value that merely LOOKS
+  // tokenised is parsed as plaintext when the read did not declare `encrypted`.
+  test("should NOT decrypt a tokenised-looking value when encrypted is not declared", async () => {
+    const tokenised = `aes:${Buffer.from(JSON.stringify("secret_value")).toString("base64url")}`;
+
+    const getCookie = createGetCookie({
+      ctx,
+      config,
+      parsed: [{ name: "cookie_name", signature: null, kid: null, value: tokenised }],
+    });
+
+    const result = await getCookie("cookie_name");
+
+    expect(ctx.aegis.aes.decrypt).not.toHaveBeenCalled();
+    expect(result).not.toEqual("secret_value");
+  });
+
+  // The exploit: a forged UNSEALED value under an encrypted policy must throw,
+  // never be handed back as trusted plaintext.
+  test("should throw when encrypted is declared but the value is not sealed", async () => {
+    const forged = Buffer.from(JSON.stringify({ evil: true })).toString("base64url");
+
+    const getCookie = createGetCookie({
+      ctx,
+      config,
+      parsed: [{ name: "cookie_name", signature: null, kid: null, value: forged }],
+    });
+
+    await expect(getCookie("cookie_name", { encrypted: true })).rejects.toThrow(
+      ClientError,
+    );
+    expect(ctx.aegis.aes.decrypt).not.toHaveBeenCalled();
   });
 
   test("should verify signed cookie", async () => {

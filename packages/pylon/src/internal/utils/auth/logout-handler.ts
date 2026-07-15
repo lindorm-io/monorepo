@@ -18,7 +18,12 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
   routerConfig: PylonAuthRouterConfig,
 ): PylonHttpMiddleware<C> =>
   async function logoutHandler(ctx) {
-    if (await ctx.cookies.get(routerConfig.cookies.login)) {
+    if (
+      await ctx.cookies.get(routerConfig.cookies.login, {
+        signed: true,
+        encrypted: true,
+      })
+    ) {
       ctx.cookies.del(routerConfig.cookies.login);
     }
 
@@ -81,7 +86,14 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
       state,
     };
 
-    await ctx.cookies.set(routerConfig.cookies.logout, cookie, { expiry: "15m" });
+    // Signed for integrity: the logout cookie carries `redirectUri` (an
+    // open-redirect vector) and `state` (CSRF). It holds no secret, so it is
+    // not encrypted — but a forged cookie must not dictate the redirect target.
+    // The callback reads it under the same policy.
+    await ctx.cookies.set(routerConfig.cookies.logout, cookie, {
+      signed: true,
+      expiry: "15m",
+    });
 
     ctx.redirect(redirect.toString());
   };

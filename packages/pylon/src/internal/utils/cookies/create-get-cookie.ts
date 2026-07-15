@@ -1,6 +1,7 @@
 import { AesKit } from "@lindorm/aes";
+import { ClientError } from "@lindorm/errors";
 import type { Dict } from "@lindorm/types";
-import { safelyParse } from "@lindorm/utils";
+import { safelyParse, sanitiseToken } from "@lindorm/utils";
 import type {
   PylonCommonContext,
   PylonCookieConfig,
@@ -69,10 +70,28 @@ export const createGetCookie = ({
 
     let value: any = cookie.value;
 
-    // No selector on the read side: the ciphertext names its own key, so aegis
-    // resolves it by kid. A cookie written before this deployment changed which
-    // key it encrypts with still decrypts — and always will.
-    if (AesKit.isAesTokenised(value)) {
+    // The DECLARED policy drives the branch, never the byte prefix. Sniffing
+    // `isAesTokenised(value)` here let a client dictate the read path: an
+    // attacker who planted an unsealed value under a cookie the deployment reads
+    // encrypted had it served back as trusted plaintext (login hijack + open
+    // redirect). Policy is the authority — the value only ever conforms to it.
+    if (opts.encrypted) {
+      if (!AesKit.isAesTokenised(value)) {
+        throw new ClientError("Encrypted cookie is not sealed", {
+          code: "cookie_not_encrypted",
+          title: "Encrypted Cookie Not Sealed",
+          type: "urn:lindorm:pylon:error:cookie_not_encrypted",
+          status: ClientError.Status.Unauthorized,
+          details:
+            "The cookie is declared encrypted but its value did not arrive sealed; an unsealed value under an encrypted policy is tampering or corruption and is never trusted as plaintext.",
+          data: { name },
+          debug: { value: sanitiseToken(value) },
+        });
+      }
+
+      // No selector on the read side: the ciphertext names its own key, so aegis
+      // resolves it by kid. A cookie written before this deployment changed which
+      // key it encrypts with still decrypts — and always will.
       value = await ctx.aegis.aes.decrypt(value);
     } else {
       if (opts.encoding) {

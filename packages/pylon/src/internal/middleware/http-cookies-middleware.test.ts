@@ -213,7 +213,9 @@ describe("httpCookiesMiddleware", async () => {
     ]);
 
     next.mockImplementation(async () => {
-      await expect(ctx.cookies.get("cookie_name")).resolves.toEqual("secret_value");
+      await expect(ctx.cookies.get("cookie_name", { encrypted: true })).resolves.toEqual(
+        "secret_value",
+      );
     });
 
     await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();

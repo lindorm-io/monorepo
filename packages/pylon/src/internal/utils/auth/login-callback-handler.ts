@@ -55,7 +55,10 @@ export const createLoginCallbackHandler = (
     // Clean up the login cookie and redirect to the configured error URL
     // with the error params propagated so the SPA can display them.
     if (ctx.data.error) {
-      const loginCookie = await ctx.cookies.get(routerConfig.cookies.login);
+      const loginCookie = await ctx.cookies.get(routerConfig.cookies.login, {
+        signed: true,
+        encrypted: true,
+      });
       if (loginCookie) {
         ctx.cookies.del(routerConfig.cookies.login);
       }
@@ -76,7 +79,14 @@ export const createLoginCallbackHandler = (
       return;
     }
 
-    const cookie = await ctx.cookies.get<PylonLoginCookie>(routerConfig.cookies.login);
+    // Read under the SAME policy the login handler wrote: signature verified and
+    // decryption enforced BEFORE any of state/redirectUri/codeVerifier/nonce is
+    // trusted. A forged (unsigned or unsealed) cookie is rejected here, not by a
+    // downstream guard reading attacker-controlled values.
+    const cookie = await ctx.cookies.get<PylonLoginCookie>(routerConfig.cookies.login, {
+      signed: true,
+      encrypted: true,
+    });
 
     if (!cookie) {
       throw new ClientError("No login cookie found", {

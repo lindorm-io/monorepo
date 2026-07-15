@@ -897,6 +897,7 @@ const app = new Pylon({
     enabled: true,
     name: "sid",
     domain: ".example.com",
+    signed: true,
     encrypted: true,
     httpOnly: true,
     sameSite: "lax",

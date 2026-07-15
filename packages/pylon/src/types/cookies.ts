@@ -23,7 +23,15 @@ export type PylonCookieOptions = {
 
 export type PylonCookieConfig = Pick<
   PylonCookieOptions,
-  "chunked" | "chunkSize" | "domain" | "encoding" | "httpOnly" | "sameSite" | "secure"
+  | "chunked"
+  | "chunkSize"
+  | "domain"
+  | "encoding"
+  | "encrypted"
+  | "httpOnly"
+  | "sameSite"
+  | "secure"
+  | "signed"
 >;
 
 /**
