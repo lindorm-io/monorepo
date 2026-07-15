@@ -111,6 +111,35 @@ describe("httpSignedRequestMiddleware", () => {
     expect(callback).toHaveBeenCalledTimes(1);
   });
 
+  // The `kid` is attacker-chosen (it comes from the request's own Signature
+  // header), so the resolved key must be FLOORED before it is trusted to verify.
+  // The floor fails CLOSED, before the signature is even checked.
+  test("should reject a key that is not a signing key", async () => {
+    callback = vi
+      .fn()
+      .mockResolvedValue(
+        KryptosKit.generate.enc.oct({ algorithm: "A256KW", purpose: "token" }),
+      );
+
+    await expect(
+      createHttpSignedRequestMiddleware(callback)(ctx, vi.fn()),
+    ).rejects.toMatchObject({ code: "invalid_signed_request_key" });
+  });
+
+  test("should reject a signing key that is not yet valid", async () => {
+    callback = vi.fn().mockResolvedValue(
+      KryptosKit.clone(kryptos, {
+        id: "1c2f0000-0000-4000-8000-0000000000ff",
+        notBefore: new Date("2099-01-01"),
+        expiresAt: new Date("2100-01-01"),
+      }),
+    );
+
+    await expect(
+      createHttpSignedRequestMiddleware(callback)(ctx, vi.fn()),
+    ).rejects.toMatchObject({ code: "invalid_signed_request_key" });
+  });
+
   test("should resolve without signature", async () => {
     signature = undefined;
 

@@ -1,12 +1,27 @@
+import type { AmphoraPredicate } from "@lindorm/amphora";
 import { SignatureKit } from "@lindorm/aegis";
 import { snakeKeys } from "@lindorm/case";
 import { ClientError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
 import { ShaKit } from "@lindorm/sha";
 import type { Dict, DsaEncoding, ShaAlgorithm } from "@lindorm/types";
+import { Predicated } from "@lindorm/utils";
 import type { BinaryToTextEncoding } from "crypto";
 import { z } from "zod";
 import type { PylonHttpContext, PylonHttpMiddleware } from "../../types/index.js";
+
+// The `kid` a signed request is verified against comes from the request's OWN
+// Signature header, so the caller — potentially an attacker — chooses which key
+// in the vault answers. The consumer's callback resolves it (typically via the
+// unfiltered `findById`), so nothing else floors it: without this, a request
+// could be "verified" against an `enc` key or a not-yet-valid key. It is the
+// READ floor (`isPending: false`, not `isActive`): a key that has since expired
+// must still verify a request it signed while valid, but a key whose `notBefore`
+// has not passed cannot have signed anything, ever.
+const SIGNED_REQUEST_VERIFY_FLOOR: AmphoraPredicate = {
+  use: "sig",
+  isPending: false,
+};
 
 export type GetSignedRequestKryptosCallback<
   C extends PylonHttpContext = PylonHttpContext,
@@ -84,6 +99,18 @@ const verifySignature = <C extends PylonHttpContext = PylonHttpContext>(
   kryptos: IKryptos,
   decoded: DecodedSignature,
 ): void => {
+  if (!Predicated.match(kryptos, SIGNED_REQUEST_VERIFY_FLOOR)) {
+    throw new ClientError("Signed request names a key that cannot verify it", {
+      status: ClientError.Status.Unauthorized,
+      code: "invalid_signed_request_key",
+      type: "urn:lindorm:pylon:error:invalid_signed_request_key",
+      title: "Invalid Signed Request Key",
+      details:
+        "The key the request's Signature header names is not a usable verification key (wrong use, or not yet valid), so the request cannot be authenticated.",
+      data: { kid: kryptos.id },
+    });
+  }
+
   const values: Dict = {};
 
   for (const header of decoded.headers) {
