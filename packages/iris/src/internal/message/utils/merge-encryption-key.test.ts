@@ -3,38 +3,39 @@ import { TEST_KEY_ENC_MESSAGE, TEST_KEY_ENV_KEK } from "../../__fixtures__/keys.
 import { mergeEncryptionKey } from "./merge-encryption-key.js";
 
 describe("mergeEncryptionKey", () => {
-  test("should fall back to the source default", () => {
-    expect(
-      mergeEncryptionKey({}, { predicate: { purpose: "message" } }),
-    ).toMatchSnapshot();
+  test("falls back to the source default when the message names no key", () => {
+    expect(mergeEncryptionKey({}, { predicate: { purpose: "message" } })).toEqual({
+      predicate: { purpose: "message" },
+    });
   });
 
-  test("should let the decorator win, key by key", () => {
+  test("an EMPTY predicate does not count as naming a key — the default still applies", () => {
     expect(
-      mergeEncryptionKey(
-        { predicate: { purpose: "audit" } },
-        { predicate: { purpose: "message", publish: true } },
-      ),
-    ).toMatchSnapshot();
+      mergeEncryptionKey({ predicate: {} }, { predicate: { purpose: "message" } }),
+    ).toEqual({ predicate: { purpose: "message" } });
   });
 
-  test("should let the decorator's kryptos win over the source default's", () => {
+  // The security property: the descriptor is resolved AS A WHOLE. A message that
+  // names a PREDICATE must not have a source-level KRYPTOS leak past it — that
+  // would seal the message with a key it never named.
+  test("a message predicate wins WHOLE — a source kryptos does not leak past it", () => {
+    const merged = mergeEncryptionKey(
+      { predicate: { purpose: "audit" } },
+      { kryptos: TEST_KEY_ENV_KEK },
+    );
+
+    expect(merged.predicate).toEqual({ purpose: "audit" });
+    expect(merged.kryptos).toBeUndefined();
+  });
+
+  test("a message kryptos wins over the source default's kryptos", () => {
     expect(
       mergeEncryptionKey({ kryptos: TEST_KEY_ENV_KEK }, { kryptos: TEST_KEY_ENC_MESSAGE })
         .kryptos?.id,
     ).toBe(TEST_KEY_ENV_KEK.id);
   });
 
-  test("should keep the source default's kryptos when the decorator names none", () => {
-    expect(
-      mergeEncryptionKey(
-        { predicate: { purpose: "audit" } },
-        { kryptos: TEST_KEY_ENV_KEK },
-      ).kryptos?.id,
-    ).toBe(TEST_KEY_ENV_KEK.id);
-  });
-
-  test("should produce nothing from nothing", () => {
-    expect(mergeEncryptionKey({}, undefined)).toMatchSnapshot();
+  test("produces nothing from nothing", () => {
+    expect(mergeEncryptionKey({}, undefined)).toEqual({});
   });
 });

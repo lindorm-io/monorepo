@@ -1,16 +1,18 @@
 import type { IrisEncryptionKey } from "../../../types/encryption.js";
+import { hasEncryptionKey } from "./has-encryption-key.js";
 
 /**
- * Merge a message's own `@Encrypted` descriptor over the source-level default.
- * Shallow, caller-wins: the decorator has the last word on every key it names.
+ * Resolve a message's own `@Encrypted` descriptor against the source-level
+ * `encryption` default.
  *
- * A `kryptos` beats a `predicate` when both survive the merge — an injected key
- * never came from the vault, so there is nothing left to query.
+ * The descriptor is resolved AS A WHOLE, not key by key: `kryptos` and
+ * `predicate` are two ways of naming ONE key, not independent knobs. A key-wise
+ * merge would let a source-level `kryptos` outrank a decorator's `predicate` —
+ * the message would be sealed with a key it never named, which is the exact
+ * hazard this descriptor exists to close. So if the message NAMES a key it wins
+ * entirely; otherwise the source default applies entirely.
  */
 export const mergeEncryptionKey = (
   key: IrisEncryptionKey,
   fallback: IrisEncryptionKey | undefined,
-): IrisEncryptionKey => ({
-  kryptos: key.kryptos ?? fallback?.kryptos,
-  predicate: { ...fallback?.predicate, ...key.predicate },
-});
+): IrisEncryptionKey => (hasEncryptionKey(key) ? key : (fallback ?? key));
