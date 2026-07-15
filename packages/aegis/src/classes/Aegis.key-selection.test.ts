@@ -7,8 +7,10 @@ import MockDate from "mockdate";
 import {
   TEST_EC_KEY_ENC,
   TEST_EC_KEY_SIG,
+  TEST_OKP_KEY_SIG,
   TEST_RSA_KEY_ENC,
 } from "../__fixtures__/keys.js";
+import type { AegisSignPredicate } from "../types/index.js";
 import { AegisError } from "../errors/index.js";
 import { Aegis } from "./Aegis.js";
 import { JwsKit } from "./JwsKit.js";
@@ -149,6 +151,47 @@ describe("Aegis key selection", () => {
       const decrypted = await aegis.jwe.decrypt(jwe);
 
       expect(decrypted.payload).toBe(PLAINTEXT);
+    });
+  });
+
+  // #7 / #8: the floor must always win the merge, and a caller-supplied
+  // `undefined` predicate value must neither erase a real constraint nor become
+  // match-all. Both are exercised here against a REAL Amphora, not a mock.
+  describe("floor and undefined-predicate invariants", () => {
+    test("a per-call `{ algorithm: undefined }` does not erase the deployment allowlist", async () => {
+      // The deployment pins EdDSA. Both keys are asymmetric sig keys the vault
+      // could sign with, so only the allowlist keeps them apart.
+      amphora.add(TEST_OKP_KEY_SIG);
+      amphora.add(TEST_EC_KEY_SIG); // added last — a match-all would pick this one
+
+      const aegis = new Aegis({
+        amphora,
+        logger,
+        sign: { predicate: { algorithm: { $in: ["EdDSA"] } } },
+      });
+
+      // Models an OIDC client that registered no signing alg: the per-call value
+      // is `undefined`. It must fall back to the deployment allowlist, not
+      // match-all — so the EdDSA key is chosen, never the ES512 one.
+      const { token } = await aegis.jws.sign("data", {
+        sign: { predicate: { algorithm: undefined } },
+      });
+
+      expect(JwsKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
+    });
+
+    test("a selector cannot smuggle `use: enc` past the sign floor", async () => {
+      amphora.add(TEST_EC_KEY_SIG);
+      amphora.add(TEST_EC_KEY_ENC);
+
+      // `use` is a floor field the sign predicate type excludes; a config/JSON
+      // predicate can still carry it at runtime. The floor wins the merge, so
+      // the enc key is never selected — the sig key signs, and no throw.
+      const { token } = await aegis.jws.sign("data", {
+        sign: { predicate: { use: "enc" } as AegisSignPredicate },
+      });
+
+      expect(JwsKit.decode(token).header.kid).toBe(TEST_EC_KEY_SIG.id);
     });
   });
 });

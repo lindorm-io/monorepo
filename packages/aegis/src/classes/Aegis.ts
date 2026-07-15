@@ -6,7 +6,7 @@ import {
   type SerialisedAesDecryption,
   type SerialisedAesEncryption,
 } from "@lindorm/aes";
-import type { IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, mergePredicates, type IAmphora } from "@lindorm/amphora";
 import { getUnixTime } from "@lindorm/date";
 import { isBuffer, isDate, isString } from "@lindorm/is";
 import { removeUndefined, sanitiseToken } from "@lindorm/utils";
@@ -822,7 +822,7 @@ export class Aegis implements IAegis {
         ...SIGN_FLOOR,
         ...(profile?.algClass ? { algClass: profile.algClass } : {}),
       },
-      selector: { ...this.signKey.predicate, ...options.sign?.predicate },
+      selector: mergePredicates(this.signKey.predicate, options.sign?.predicate),
       kryptos: options.sign?.kryptos ?? this.signKey.kryptos,
       logger: this.logger,
       operation: "sign",
@@ -842,7 +842,7 @@ export class Aegis implements IAegis {
   ): Promise<IKryptos> {
     return resolveKey({
       amphora: this.amphora,
-      floor: { ...VERIFY_FLOOR, ...this.verifyKey.predicate, ...verify?.predicate },
+      floor: applyKeyFloor(VERIFY_FLOOR, this.verifyKey.predicate, verify?.predicate),
       selector: { algorithm },
       id,
       logger: this.logger,
@@ -854,7 +854,7 @@ export class Aegis implements IAegis {
     return resolveKey({
       amphora: this.amphora,
       floor: ENCRYPT_FLOOR,
-      selector: { ...this.encryptKey.predicate, ...encrypt?.predicate },
+      selector: mergePredicates(this.encryptKey.predicate, encrypt?.predicate),
       kryptos: encrypt?.kryptos ?? this.encryptKey.kryptos,
       logger: this.logger,
       operation: "encrypt",
@@ -872,7 +872,7 @@ export class Aegis implements IAegis {
   ): Promise<IKryptos> {
     return resolveKey({
       amphora: this.amphora,
-      floor: { ...DECRYPT_FLOOR, ...this.decryptKey.predicate, ...decrypt?.predicate },
+      floor: applyKeyFloor(DECRYPT_FLOOR, this.decryptKey.predicate, decrypt?.predicate),
       selector: { algorithm },
       kryptos: decrypt?.kryptos ?? this.decryptKey.kryptos,
       id,

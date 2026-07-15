@@ -1,4 +1,4 @@
-import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, type AmphoraPredicate, type IAmphora } from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { Predicated } from "@lindorm/utils";
@@ -84,8 +84,10 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
   }
 
   // The selector applies to the vault query alone. An injected key and a key
-  // named by a token's kid both come from outside it.
-  const query: AmphoraPredicate = { ...floor, ...selector };
+  // named by a token's kid both come from outside it. The floor is applied LAST
+  // so it always wins the merge — a selector duck-typed from config/JSON can
+  // carry a floor key (e.g. `use`), and it must never override the policy.
+  const query = applyKeyFloor(floor, selector);
 
   // BOTH lookups surface as an AegisError. The `findById` branch used to let
   // amphora's own `kryptos_not_found_by_id` escape, so a consumer catching

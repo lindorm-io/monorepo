@@ -83,10 +83,14 @@ supplies one, and the field would be surface nothing honours.
 
 All four are accepted per call (`aegis.mint`, `aegis.jws.sign`, `aegis.aes.encrypt`,
 `aegis.aes.decrypt`, …) and as a deployment default on `AegisOptions`; the two merge
-shallowly, caller wins.
+shallowly, caller wins — except that an `undefined` caller value is stripped, never
+applied, so it falls back to the deployment default rather than matching every key.
 
 ```typescript
 // Pin a key by id, or allowlist a set. `kid` is just `{ id }`.
+// `idTokenSignedResponseAlg` is OPTIONAL client metadata: when the client
+// registered none it is `undefined`, which is stripped — the key then resolves
+// from the deployment default, NOT from "any key".
 await aegis.mint("id_token", content, {
   sign: { predicate: { algorithm: client.idTokenSignedResponseAlg } },
 });

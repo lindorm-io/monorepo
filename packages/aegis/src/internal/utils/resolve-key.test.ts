@@ -150,24 +150,27 @@ describe("resolveKey", () => {
       expect(kryptos).toBe(TEST_OKP_KEY_SIG);
     });
 
-    test("a selector that contradicts the floor still cannot produce a forbidden key", async () => {
-      // The selector may name `algClass` — but the FLOOR is checked on the
-      // result, so the worst a caller can do is provoke a clean throw.
-      amphora.add(TEST_OCT_KEY_SIG);
-      amphora.add(TEST_EC_KEY_SIG);
+    test("a selector that contradicts the floor is OVERRIDDEN — the floor wins the query", async () => {
+      // #8: the floor is applied LAST, so a selector that names a floor field
+      // (`algClass`) can never win the merge. The forbidden `symmetric` selector
+      // cannot pull the HS256 key through — the floor pins `asymmetric` in the
+      // query itself, so the EC key is selected outright rather than a symmetric
+      // key being selected and then thrown out by the post-check. That the query
+      // floor holds is a stronger guarantee than the fail-closed post-check.
+      amphora.add(TEST_OCT_KEY_SIG); // HS256 (symmetric) — the trap
+      amphora.add(TEST_EC_KEY_SIG); // ES512 (asymmetric)
 
-      const error = await resolveKey({
+      const kryptos = await resolveKey({
         amphora,
         floor: { ...SIGN_FLOOR, algClass: "asymmetric" },
         selector: { algClass: "symmetric" },
         logger,
         operation: "sign",
         profile: "access_token",
-      }).catch((err: Error) => err);
+      });
 
-      expect(error).toBeInstanceOf(AegisError);
-      expect((error as AegisError).code).toBe("sign_key_policy_violation");
-      expect((error as AegisError).data).toMatchObject({ algorithm: "HS256" });
+      expect(kryptos).toBe(TEST_EC_KEY_SIG);
+      expect(kryptos.algClass).toBe("asymmetric");
     });
   });
 
