@@ -1,4 +1,4 @@
-import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, type IAmphora } from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
 import { ProteusError } from "../../../errors/index.js";
@@ -23,15 +23,12 @@ export const resolveEncryptionKey = (
   fieldKey: string,
   entityName: string,
 ): IKryptos => {
-  // The floor is spread first and the predicate last only for readability — the
-  // predicate type cannot express `use`, `hasPrivateKey` or the lifetime states,
-  // so it can never widen the floor whatever the order. `publish: false` sits
-  // between them: a default, so the caller's predicate wins.
-  const query: AmphoraPredicate = {
-    ...ENCRYPTION_FLOOR,
-    ...ENCRYPTION_DEFAULT,
-    ...encrypted.predicate,
-  };
+  // The floor is applied LAST so it always wins the merge: the predicate is
+  // duck-typed and could carry a floor key (e.g. `use`), which must never
+  // override the policy. `ENCRYPTION_DEFAULT` (`publish: false`) is only a
+  // default, so the caller's predicate still wins over it; per-layer `undefined`
+  // stripping keeps a `{ x: undefined }` predicate from erasing that default.
+  const query = applyKeyFloor(ENCRYPTION_FLOOR, ENCRYPTION_DEFAULT, encrypted.predicate);
 
   let kryptos: IKryptos;
 

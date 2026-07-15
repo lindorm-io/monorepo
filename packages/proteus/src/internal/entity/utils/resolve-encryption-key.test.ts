@@ -122,6 +122,33 @@ describe("resolveEncryptionKey", () => {
       ).toThrow('No encryption key matches field "secret" on entity "TestEntity"');
     });
 
+    // #8: a predicate is duck-typed, so a config/JSON one can carry a floor key
+    // (`use`) the type forbids. The floor is applied LAST, so it wins the merge
+    // and the smuggled `use: "sig"` is overridden — the enc key is selected, not
+    // the sig key (which would then fail the post-check floor).
+    test("a predicate carrying a floor key cannot override the floor", () => {
+      const enc = createEncKey("pylon:kek");
+      const sig = KryptosKit.generate.sig.oct({
+        algorithm: "HS256",
+        issuer: "https://test.proteus/",
+        purpose: "pylon:kek",
+      });
+      const amphora = createAmphora(sig, enc);
+
+      const resolved = resolve(
+        {
+          kryptos: null,
+          predicate: {
+            purpose: "pylon:kek",
+            use: "sig",
+          } as unknown as MetaEncrypted["predicate"],
+        },
+        amphora,
+      );
+
+      expect(resolved.id).toBe(enc.id);
+    });
+
     test("should apply the floor to an injected kryptos", () => {
       const sig = KryptosKit.generate.sig.oct({
         algorithm: "HS256",
