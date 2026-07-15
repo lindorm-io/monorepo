@@ -213,6 +213,7 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
       lines.push(`    kv: ${sessionRef},`);
     }
     lines.push(`    name: "sid",`);
+    lines.push(`    signed: true,`);
     lines.push(`    encrypted: true,`);
     lines.push(`    httpOnly: true,`);
     lines.push(`    sameSite: "lax",`);
