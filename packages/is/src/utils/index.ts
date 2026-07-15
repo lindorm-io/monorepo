@@ -24,6 +24,8 @@ export * from "./is-promise.js";
 export * from "./is-reg-exp.js";
 export * from "./is-string.js";
 export * from "./is-undefined.js";
+export * from "./is-uri.js";
 export * from "./is-url.js";
 export * from "./is-url-like.js";
+export * from "./is-urn.js";
 export * from "./is-web-token.js";
