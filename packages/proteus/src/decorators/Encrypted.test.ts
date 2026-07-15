@@ -50,6 +50,15 @@ class EncryptedWithKryptos {
   token!: string;
 }
 
+@Entity({ name: "EncryptedEmptyPredicate" })
+class EncryptedEmptyPredicate {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Encrypted({ predicate: {} })
+  @Field("string")
+  data!: string;
+}
+
 @Entity({ name: "EncryptedNotDecorated" })
 class EncryptedNotDecorated {
   @PrimaryKeyField() @Generated("uuid") id!: string;
@@ -81,6 +90,16 @@ describe("Encrypted", () => {
     const meta = getEntityMetadata(EncryptedWithKryptos);
     const field = meta.fields.find((f) => f.key === "token")!;
     expect(field.encrypted).toEqual({ kryptos: KEK, predicate: null });
+  });
+
+  // An empty predicate is not a predicate — `find({})` is the unscoped "newest
+  // internal enc key" lookup this decorator exists to forbid. So `{}` normalises
+  // to a bare descriptor: the field then takes the source default or throws
+  // `unnamed_encryption_key` at load, exactly as a bare `@Encrypted()` does.
+  test("should stage an empty predicate as a BARE descriptor, not a key", () => {
+    const meta = getEntityMetadata(EncryptedEmptyPredicate);
+    const field = meta.fields.find((f) => f.key === "data")!;
+    expect(field.encrypted).toEqual({ kryptos: null, predicate: null });
   });
 
   test("should default encrypted to null when not decorated", () => {
