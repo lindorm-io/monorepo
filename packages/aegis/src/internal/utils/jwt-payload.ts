@@ -116,11 +116,18 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
       details: "The payload has no finite exp claim, which is required to parse a JWT.",
     });
   }
-  if (!isString(decoded.iss)) {
+  // `iss` must be a NON-EMPTY string. Not a URI: this shared gate also parses RFC
+  // 7523 client assertions, whose `iss` is the client_id (an opaque string, not a
+  // URL/URN), and per-token profiles like delegation. The platform-issuer URI/exact
+  // match is enforced higher up (enforceVerifyFloor checks the token's `iss`
+  // against the configured issuer for `issuer: "platform"` profiles). The only bug
+  // here was `isString("")` passing — an empty issuer is rejected now.
+  if (!isString(decoded.iss) || decoded.iss.length === 0) {
     throw new JwtError("Missing claim: iss", {
       code: "jwt_missing_claim_iss",
       title: "JWT Missing Claim ISS",
-      details: "The payload has no string iss claim, which is required to parse a JWT.",
+      details:
+        "The payload has no non-empty string iss claim, which is required to parse a JWT.",
     });
   }
 

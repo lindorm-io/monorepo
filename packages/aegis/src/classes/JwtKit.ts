@@ -421,15 +421,6 @@ export class JwtKit implements IJwtKit {
       });
     }
 
-    if (!decoded.payload.iss) {
-      throw new JwtError("Invalid token", {
-        code: "jwt_issuer_missing",
-        data: { iss: decoded.payload.iss },
-        title: "JWT Issuer Missing",
-        details: "The payload has no iss claim, which is required to parse a JWT.",
-      });
-    }
-
     const header = parseTokenHeader<ParsedJwtHeader>(decoded.header);
     header.tokenType = decodeTokenTypeFromTyp(typ, "jwt");
     header.baseFormat = "JWT";

@@ -49,6 +49,21 @@ describe("parseTokenPayload", () => {
       expect.objectContaining({ code: "jwt_missing_claim_iss" }),
     );
   });
+
+  // The #15 bug: `isString("")` is true, so an empty issuer slipped through.
+  test("should reject a token with an empty-string iss", () => {
+    expect(() => parseTokenPayload({ ...assertionClaims, iss: "" })).toThrow(
+      expect.objectContaining({ code: "jwt_missing_claim_iss" }),
+    );
+  });
+
+  // ...but an opaque client_id issuer (RFC 7523 client assertion) is NOT a URI and
+  // must still parse — the gate is non-empty, not URI.
+  test("should accept an opaque client_id issuer", () => {
+    expect(parseTokenPayload({ ...assertionClaims, iss: "client-1" }).issuer).toBe(
+      "client-1",
+    );
+  });
 });
 
 describe("JwtKit.parse (iat presence)", () => {
