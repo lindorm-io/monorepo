@@ -93,7 +93,7 @@ exports[`KryptosKit (oct) > from > auto > jwk 1`] = `
     "verify",
   ],
   "ownerId": null,
-  "publish": true,
+  "publish": false,
   "purpose": null,
   "thumbprint": "fWeN_8lOxpzDWpVevVcevup9ImugJDleZeEFzZtpoOc",
   "type": "oct",
@@ -110,7 +110,7 @@ exports[`KryptosKit (oct) > from > auto > jwk 2`] = `
   "kid": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "kty": "oct",
   "nbf": 1704096000,
-  "publish": true,
+  "publish": false,
   "use": "sig",
 }
 `;
@@ -342,7 +342,7 @@ exports[`KryptosKit (oct) > from > jwk 1`] = `
     "verify",
   ],
   "ownerId": null,
-  "publish": true,
+  "publish": false,
   "purpose": null,
   "thumbprint": "fWeN_8lOxpzDWpVevVcevup9ImugJDleZeEFzZtpoOc",
   "type": "oct",
@@ -359,7 +359,7 @@ exports[`KryptosKit (oct) > from > jwk 2`] = `
   "kid": "5c42d670-5db6-5bef-8093-a8e18a89d6c4",
   "kty": "oct",
   "nbf": 1704096000,
-  "publish": true,
+  "publish": false,
   "use": "sig",
 }
 `;

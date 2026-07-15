@@ -66,8 +66,11 @@ describe("Kryptos publish attribute", () => {
   // EXTERNAL verification key would become invisible to `find()` and foreign-issuer
   // verification would silently break. A JWK is the interchange format of a
   // PUBLISHED key; importing one means importing something already published.
-  describe("JWK import defaults to published", () => {
-    test("should default publish:true when a JWK carries no publish member", () => {
+  describe("JWK import defaults to unpublished", () => {
+    // Publishing is opt-in and explicit everywhere, the import path included. An
+    // external key is not hidden by this: amphora's filter gates only INTERNAL
+    // unpublished keys, so a `from.jwk` key (internal: false) stays findable.
+    test("should default publish:false when a JWK carries no publish member", () => {
       const key = KryptosKit.generate.auto({ algorithm: "ES256", publish: false });
 
       const foreign = key.toJWK("private");
@@ -75,18 +78,19 @@ describe("Kryptos publish attribute", () => {
 
       const imported = KryptosKit.from.jwk(foreign);
 
-      expect(imported.publish).toBe(true);
+      expect(imported.publish).toBe(false);
     });
 
     // The realistic shape: a public JWK off a remote JWKS. It never carries the
-    // member, and the key must remain findable.
-    test("should default publish:true for a public JWK off a remote JWKS", () => {
+    // member, so it imports unpublished — and stays findable via the filter,
+    // because it is external.
+    test("should default publish:false for a public JWK off a remote JWKS", () => {
       const key = KryptosKit.generate.auto({ algorithm: "ES256", publish: false });
 
       const published = key.toJWK("public");
 
       expect("publish" in published).toBe(false);
-      expect(KryptosKit.from.jwk(published).publish).toBe(true);
+      expect(KryptosKit.from.jwk(published).publish).toBe(false);
     });
 
     // ...but an explicit member in the payload still wins.

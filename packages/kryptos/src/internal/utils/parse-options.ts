@@ -33,21 +33,18 @@ export const parseJwkOptions = (
     createdAt: jwk.iat ? new Date(jwk.iat * 1000) : undefined,
     encryption: jwk.enc,
     expiresAt: jwk.exp ? new Date(jwk.exp * 1000) : undefined,
-    // ⚠ TRUE here, deliberately — and it is the INVERSE of the Kryptos constructor
-    // default (`false`, because a key we mint is unpublished until we say so). Do
-    // NOT harmonise the two.
+    // FALSE, like every other mint/import path: publishing is opt-in and explicit,
+    // never implicit — we would rather forget to publish a key (a loud, instant
+    // failure) than accidentally publish one (a silent exposure).
     //
     // We emit `publish` only in PRIVATE JWKs, so a key imported from a remote JWKS
-    // arrives with the member absent. Amphora filters `publish: true` by default,
-    // so defaulting an imported key to `false` would make every EXTERNAL
-    // verification key invisible to `find()` — foreign-issuer verification would
-    // silently break. And it is semantically right: a JWK is the interchange format
-    // of a PUBLISHED key. That is what the format is for.
-    //
-    // Same seam as `internal` below (default here, overridden by the import path
-    // in KryptosKit.fromJwk); our own env strings always carry the member
-    // explicitly, so this default never applies to them.
-    publish: jwk.publish ?? true,
+    // arrives with the member absent → `false`. That does NOT hide it: amphora's
+    // selection filter gates only INTERNAL unpublished keys, so an EXTERNAL key
+    // (`internal: false`) is findable regardless of `publish` (see
+    // `Amphora.filteredKeys`). Our own env strings always carry the member
+    // explicitly (`toJWK("private")` emits it), so this default never applies to
+    // them — a `publish: false` KEK reloads `publish: false`.
+    publish: jwk.publish ?? false,
     // ⚠ FALSE here, deliberately — the INVERSE of the Kryptos constructor default
     // (`true`, because a key we mint is ours). Do NOT harmonise the two, for the
     // same reason as `publish` above: the JWK path is where FOREIGN key material

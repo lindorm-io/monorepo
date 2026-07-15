@@ -21,12 +21,15 @@ describe("KryptosKit ownership", () => {
   // keeps it visible to amphora's `find()` (which filters `publish: true` by
   // default), so a remote verification key stays usable while staying correctly
   // attributed. Breaking either half breaks foreign-issuer verification.
-  test("from.jwk yields a key that is not ours but is published", () => {
+  test("from.jwk yields a key that is not ours and unpublished by default", () => {
     const kryptos = KryptosKit.from.jwk(TEST_OCT_KEY_JWK);
 
+    // Not ours (the import path decides provenance), and unpublished — publishing
+    // is opt-in everywhere. Being external, it stays findable regardless (amphora's
+    // filter gates only INTERNAL unpublished keys).
     expect({ internal: kryptos.internal, publish: kryptos.publish }).toEqual({
       internal: false,
-      publish: true,
+      publish: false,
     });
   });
 
