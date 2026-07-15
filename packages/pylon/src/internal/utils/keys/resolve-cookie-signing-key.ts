@@ -1,4 +1,4 @@
-import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, type IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
@@ -40,10 +40,11 @@ export const resolveCookieSigningKey = async (
     });
   }
 
-  // The floor is spread first and the predicate last only for readability — the
-  // predicate type cannot express `use`, `hasPrivateKey` or the lifetime states,
-  // so it can never widen the floor whatever the order.
-  const query: AmphoraPredicate = { ...COOKIE_SIGN_FLOOR, ...key.predicate };
+  // The floor is applied LAST so it always wins the merge: `key.predicate` is
+  // duck-typed and could carry a floor key (e.g. `use`), which must never
+  // override the policy. Per-layer `undefined` stripping keeps a
+  // `{ x: undefined }` predicate from becoming match-all.
+  const query = applyKeyFloor(COOKIE_SIGN_FLOOR, key.predicate);
 
   let kryptos: IKryptos;
 

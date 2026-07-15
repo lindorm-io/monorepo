@@ -1,4 +1,4 @@
-import type { AmphoraPredicate, IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, type IAmphora } from "@lindorm/amphora";
 import { ClientError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
@@ -32,7 +32,11 @@ export const resolveCookieVerificationKey = (
 ): IKryptos => {
   const kryptos = amphora.findByIdSync(kid);
 
-  const floor: AmphoraPredicate = { ...COOKIE_VERIFY_FLOOR, ...key?.predicate };
+  // The floor is applied LAST so it always wins: this floor is the CHECK on the
+  // key the cookie names, and a duck-typed `key.predicate` must never override
+  // the deployment policy. Per-layer `undefined` stripping keeps a
+  // `{ x: undefined }` predicate from erasing a constraint.
+  const floor = applyKeyFloor(COOKIE_VERIFY_FLOOR, key?.predicate);
 
   if (!Predicated.match(kryptos, floor)) {
     throw new ClientError("Cookie key violates the verification floor", {
