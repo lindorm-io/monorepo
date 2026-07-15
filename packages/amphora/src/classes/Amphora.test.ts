@@ -464,7 +464,9 @@ describe("Amphora", () => {
   describe("can", () => {
     // A JWKS only ever yields public halves, so this is the shape of every
     // remotely-fetched key.
-    const publicOnly = (key: IKryptos) => KryptosKit.from.jwk(key.toJWK("public"), true);
+    // A public-only key as amphora ingests it from a remote JWKS: EXTERNAL
+    // (`internal: false`, the `from.jwk` default) and public-half-only.
+    const publicOnly = (key: IKryptos) => KryptosKit.from.jwk(key.toJWK("public"));
 
     const capabilities = () => ({
       canEncrypt: amphora.canEncrypt(),
@@ -1088,6 +1090,10 @@ describe("Amphora", () => {
     test("should never publish an external key in our own jwks", async () => {
       const externalJwk = TEST_EC_KEY_SIG.toJWK("public");
       delete externalJwk.iss;
+      // Adversarial: the served key EXPLICITLY claims it is publishable. Even so,
+      // `internal: false` (decided by the import path, never the payload) is what
+      // keeps it out of our JWKS — not its `publish` value.
+      externalJwk.publish = true;
 
       nock("https://test.lindorm.io")
         .get("/.well-known/jwks.json")

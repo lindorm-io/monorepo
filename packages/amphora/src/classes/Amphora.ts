@@ -451,22 +451,27 @@ export class Amphora implements IAmphora {
     });
   }
 
-  // `publish: false` hides a key from SELECTION, not merely from publication: an
-  // internal key (KEK, CA, cookie, session) must never be handed to a caller who
-  // did not ask for one. That is what the default here does — every query starts
-  // from the published set, so a consumer cannot accidentally sign with a key that
-  // is absent from the JWKS and therefore unverifiable by anyone.
+  // `publish` gates SELECTION, but it means "belongs in OUR published JWKS" — and
+  // an EXTERNAL key (`internal: false`) never does; it is someone else's, and
+  // `refreshJwks` already excludes it by `internal`. So the default gate hides
+  // only INTERNAL unpublished keys — the KEK / CA / cookie / session hazard S1
+  // closed: such a key must never be handed to a caller who did not ask for it.
+  // External keys are always findable (however they arrived — remote fetch or a
+  // consumer's own `add`), so their `publish` default is irrelevant to selection.
   //
-  // The CALLER'S KEY WINS (spread order):
-  //   {}                            -> published keys only (the safe default)
-  //   { publish: false }            -> internal keys only (explicit opt-in)
-  //   { publish: { $exists: true } } -> both
+  // A caller that NAMES `publish` opts out of the default gate entirely:
+  //   {}                             -> external keys + our PUBLISHED keys (safe default)
+  //   { publish: false }             -> unpublished keys (the internal KEK/cookie opt-in)
+  //   { publish: { $exists: true } } -> everything the rest of the predicate matches
   private filteredKeys(predicate: AmphoraPredicate): Array<IKryptos> {
-    const vault = this._vault.filter((i) => i.isActive);
+    const active = this._vault.filter((i) => i.isActive);
 
-    return Predicated.filter<IKryptos>(vault, { publish: true, ...predicate }).sort(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    );
+    const matched = Predicated.filter<IKryptos>(active, predicate);
+
+    const gated =
+      "publish" in predicate ? matched : matched.filter((i) => !i.internal || i.publish);
+
+    return gated.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   private async getExternalJwks(config: AmphoraConfig): Promise<Array<IKryptos>> {
