@@ -15,7 +15,7 @@
     "sync:peers": "syncpack lint",
     "sync:peers:fix": "syncpack fix && syncpack fix",
     "test": "npm run test:unit && composed --file docker-compose.yml npm run test:integration",
-    "test:unit": "lerna run test:unit --concurrency 3",
+    "test:unit": "lerna run test:unit --concurrency 1",
     "test:integration": "lerna run test:integration --concurrency 1",
     "test:weekly": "lerna run test:weekly",
     "typecheck": "lerna run typecheck",
