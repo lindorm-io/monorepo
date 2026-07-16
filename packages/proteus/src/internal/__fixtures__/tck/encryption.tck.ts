@@ -1,10 +1,11 @@
-import { describe, test, expect, beforeEach } from "vitest";
+import { describe, test, expect, beforeEach, vi } from "vitest";
 // TCK: Encryption Suite
 // Tests field-level encryption via @Encrypted decorator across all drivers.
 
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 import type { TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
+import { TCK_INTENDED_KEK, TCK_TRAP_KEK } from "./create-tck-amphora.js";
 
 export const encryptionSuite = (
   getHandle: () => TckDriverHandle,
@@ -33,6 +34,49 @@ export const encryptionSuite = (
 
         const found = await repo.findOneOrFail({ id: inserted.id });
         expect(found.secret).toBe("my-secret-value");
+      });
+
+      test("seals every field with the intended KEK, not the newer trap key", async () => {
+        // The honesty test. The vault holds TWO enc-capable keys: the intended
+        // `purpose: "proteus:tck"` KEK the source-level default names, and a
+        // newer trap under a different purpose. Both seal AND unseal a value, so
+        // a round-trip alone cannot tell a correct selection from a wrong one —
+        // the trap decrypts its own ciphertext just fine. Proteus resolves a KEK
+        // per @Encrypted field via `findSync`; the id it returns is the kid
+        // AesKit embeds in the column. Spying on the vault the source encrypts
+        // through proves every field was sealed with the intended KEK. If
+        // selection ever stops scoping by the predicate, the newer trap wins and
+        // this goes RED, while the plain round-trips stay green.
+        const handle = getHandle();
+        const repo = handle.repository(TckEncrypted);
+
+        const findSpy = vi.spyOn(handle.amphora, "findSync");
+
+        const inserted = await repo.insert({
+          secret: "kek-selection",
+          pin: 4321,
+          verified: true,
+          metadata: { k: "v" },
+          optionalSecret: "opt",
+          transformedSecret: "hello",
+        });
+
+        expect(findSpy).toHaveBeenCalled();
+        const selectedIds = findSpy.mock.results
+          .filter((r) => r.type === "return")
+          .map((r) => (r.value as { id: string }).id);
+
+        expect(selectedIds.length).toBeGreaterThan(0);
+        for (const id of selectedIds) {
+          expect(id).toBe(TCK_INTENDED_KEK.id);
+          expect(id).not.toBe(TCK_TRAP_KEK.id);
+        }
+
+        findSpy.mockRestore();
+
+        // And the plaintext still round-trips.
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.secret).toBe("kek-selection");
       });
 
       test("encrypted integer field round-trips with correct type", async () => {

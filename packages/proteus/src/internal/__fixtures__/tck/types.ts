@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Constructor } from "@lindorm/types";
 import type { IEntity, IProteusRepository } from "../../../interfaces/index.js";
 import type { MetaDriver } from "../../entity/types/metadata.js";
@@ -69,6 +70,13 @@ export type TckCapabilities = {
 };
 
 export type TckDriverHandle = {
+  /**
+   * The exact Amphora instance the source encrypts through — exposed so the
+   * encryption suite can prove which KEK actually sealed a field (the kid in the
+   * ciphertext column equals the id of the key the source's `findSync` selects).
+   * Same object the pipeline uses, so a spy on it observes the real selection.
+   */
+  amphora: IAmphora;
   repository<E extends IEntity>(target: Constructor<E>): IProteusRepository<E>;
   clear(): Promise<void>;
   teardown(): Promise<void>;

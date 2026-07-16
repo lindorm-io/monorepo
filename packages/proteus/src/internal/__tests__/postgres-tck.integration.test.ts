@@ -86,6 +86,8 @@ const factory: TckDriverFactory = {
     await clearClient.connect();
 
     return {
+      amphora,
+
       repository<E extends IEntity>(target: Constructor<E>) {
         return source.repository(target);
       },

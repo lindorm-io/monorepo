@@ -1,9 +1,8 @@
-import type { IAmphora } from "@lindorm/amphora";
+import { DECRYPT_FLOOR, type IAmphora } from "@lindorm/amphora";
 import { parseAes } from "@lindorm/aes";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
 import { ProteusError } from "../../../errors/index.js";
-import { DECRYPTION_FLOOR } from "../../constants/key-floor.js";
 import type { MetaEncrypted } from "../types/metadata.js";
 
 /**
@@ -55,7 +54,7 @@ export const resolveDecryptionKey = (
     );
   }
 
-  if (!Predicated.match(kryptos, DECRYPTION_FLOOR)) {
+  if (!Predicated.match(kryptos, DECRYPT_FLOOR)) {
     throw new ProteusError(
       `Decryption key for field "${fieldKey}" on entity "${entityName}" violates the decryption floor`,
       {
@@ -69,7 +68,7 @@ export const resolveDecryptionKey = (
           use: kryptos.use,
           hasPrivateKey: kryptos.hasPrivateKey,
           isPending: kryptos.isPending,
-          floor: DECRYPTION_FLOOR,
+          floor: DECRYPT_FLOOR,
         },
         debug: { kryptos: kryptos.toJSON() },
       },

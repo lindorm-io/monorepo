@@ -1,8 +1,8 @@
-import { applyKeyFloor, type IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, ENVELOPE_FLOOR, type IAmphora } from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
 import { ProteusError } from "../../../errors/index.js";
-import { ENCRYPTION_DEFAULT, ENCRYPTION_FLOOR } from "../../constants/key-floor.js";
+import { ENCRYPTION_DEFAULT } from "../../constants/key-floor.js";
 import type { MetaEncrypted } from "../types/metadata.js";
 
 /**
@@ -28,7 +28,7 @@ export const resolveEncryptionKey = (
   // override the policy. `ENCRYPTION_DEFAULT` (`publish: false`) is only a
   // default, so the caller's predicate still wins over it; per-layer `undefined`
   // stripping keeps a `{ x: undefined }` predicate from erasing that default.
-  const query = applyKeyFloor(ENCRYPTION_FLOOR, ENCRYPTION_DEFAULT, encrypted.predicate);
+  const query = applyKeyFloor(ENVELOPE_FLOOR, ENCRYPTION_DEFAULT, encrypted.predicate);
 
   let kryptos: IKryptos;
 
@@ -51,7 +51,7 @@ export const resolveEncryptionKey = (
     }
   }
 
-  if (!Predicated.match(kryptos, ENCRYPTION_FLOOR)) {
+  if (!Predicated.match(kryptos, ENVELOPE_FLOOR)) {
     throw new ProteusError(
       `Encryption key for field "${fieldKey}" on entity "${entityName}" violates the encryption floor`,
       {
@@ -65,7 +65,7 @@ export const resolveEncryptionKey = (
           use: kryptos.use,
           hasPrivateKey: kryptos.hasPrivateKey,
           isActive: kryptos.isActive,
-          floor: ENCRYPTION_FLOOR,
+          floor: ENVELOPE_FLOOR,
         },
         debug: { kryptos: kryptos.toJSON() },
       },

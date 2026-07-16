@@ -84,6 +84,8 @@ const factory: TckDriverFactory = {
     await source.setup();
 
     return {
+      amphora,
+
       repository<E extends IEntity>(target: Constructor<E>) {
         return source.repository(target);
       },
