@@ -16,6 +16,7 @@ import type {
   IProteusSource,
 } from "../interfaces/index.js";
 import { ProteusSession } from "./ProteusSession.js";
+import { Encrypted } from "../decorators/Encrypted.js";
 import type { ICacheAdapter } from "../interfaces/CacheAdapter.js";
 import type {
   EntityEmitFn,
@@ -40,6 +41,11 @@ import { getEntityMetadata } from "../internal/entity/metadata/get-entity-metada
 import { registerMetadataResolver } from "../internal/entity/metadata/foreign-metadata.js";
 import { resolveInheritanceHierarchies } from "../internal/entity/metadata/resolve-inheritance.js";
 import { applyEncryptionDefault } from "../internal/entity/metadata/apply-encryption-default.js";
+import {
+  type StagedFieldEncryption,
+  applyStagedEncryptions,
+} from "../internal/entity/metadata/apply-staged-encryptions.js";
+import { buildEncryptedModifier } from "../internal/entity/metadata/build-encrypted-modifier.js";
 import { clearPrimaryCache } from "../internal/entity/metadata/build-primary.js";
 import { clearMetadataCache } from "../internal/entity/metadata/registry.js";
 import { validateEncryptedFields } from "../internal/entity/utils/validate-encrypted-fields.js";
@@ -104,6 +110,12 @@ export class ProteusSource implements IProteusSource {
   private _settingUpPromise: Promise<void> | null = null;
   private isSetUp = false;
 
+  // Per-source programmatic decorator staging. Kept on the INSTANCE — never on
+  // the shared `Entity[Symbol.metadata]` — so a staged override on one source
+  // cannot contaminate a sibling source resolving the same entity. The resolver
+  // reads this store lazily at resolve time (see createMetadataResolver).
+  private readonly _stagedFieldEncryptions: Array<StagedFieldEncryption> = [];
+
   constructor(options: ProteusSourceOptions) {
     this._options = options;
     this._amphora = options.amphora;
@@ -129,6 +141,7 @@ export class ProteusSource implements IProteusSource {
       options.naming ?? "none",
       options.encryption,
       () => this._inheritanceMap,
+      () => this._stagedFieldEncryptions,
     );
     this.resolveMetadata = resolver.resolve;
     this._metadataCache = resolver.cache;
@@ -306,6 +319,90 @@ export class ProteusSource implements IProteusSource {
   /** Return resolved metadata for all registered entities. */
   getEntityMetadata(): Array<EntityMetadata> {
     return this._entities.map((target) => this.resolveMetadata(target));
+  }
+
+  /**
+   * Stage a CLASS-level decorator's metadata onto an entity for THIS source only.
+   *
+   * The `Decorator` argument is the exported decorator FACTORY itself, matched by
+   * reference. No class-level decorators are stageable yet, so any call throws
+   * `not_implemented`.
+   */
+  stageDecorator(_Entity: Function, Decorator: DecoratorFactory, _opts?: unknown): void {
+    this.assertNotStagedAfterSetup();
+
+    switch (Decorator) {
+      default:
+        throw new ProteusError(`@${Decorator.name} cannot be staged programmatically`, {
+          code: "not_implemented",
+          title: "Decorator Not Stageable",
+          details: `@${Decorator.name} cannot be staged programmatically; no class-level decorators are supported.`,
+          data: { decorator: Decorator.name },
+        });
+    }
+  }
+
+  /**
+   * Stage a FIELD-level decorator's metadata onto `field` for THIS source only —
+   * without mutating the shared `Entity[Symbol.metadata]`, so sibling sources
+   * resolving the same entity are unaffected. Lets a consumer supply or OVERRIDE
+   * decorator metadata from its own settings (e.g. the encryption key selector on
+   * a field that ships with a bare `@Encrypted()` marker) before the source
+   * resolves the entity.
+   *
+   * The `Decorator` argument is the exported decorator FACTORY itself (e.g.
+   * `Encrypted`), matched by reference. Passing a decorator this method does not
+   * know how to stage throws `not_implemented`.
+   */
+  stageFieldDecorator(
+    Entity: Function,
+    field: string,
+    Decorator: DecoratorFactory,
+    opts?: ProteusEncryptionKey,
+  ): void {
+    this.assertNotStagedAfterSetup();
+
+    switch (Decorator) {
+      case Encrypted: {
+        const encrypted = buildEncryptedModifier(opts);
+        const existing = this._stagedFieldEncryptions.find(
+          (entry) => entry.entity === Entity && entry.field === field,
+        );
+
+        if (existing) {
+          existing.encrypted = encrypted;
+        } else {
+          this._stagedFieldEncryptions.push({ entity: Entity, field, encrypted });
+        }
+
+        // Drop any resolved copy cached before this staging so the next resolve
+        // rebuilds with the override folded in.
+        this._metadataCache?.clear();
+        return;
+      }
+
+      default:
+        throw new ProteusError(`@${Decorator.name} cannot be staged programmatically`, {
+          code: "not_implemented",
+          title: "Decorator Not Stageable",
+          details: `@${Decorator.name} cannot be staged programmatically; only @Encrypted is supported.`,
+          data: { decorator: Decorator.name, field },
+        });
+    }
+  }
+
+  private assertNotStagedAfterSetup(): void {
+    if (this.isSetUp) {
+      throw new ProteusError(
+        "Cannot stage decorators after setup() has been called. Stage before setup() / first repository use.",
+        {
+          code: "staged_after_setup",
+          title: "Staged After Setup",
+          details:
+            "Stage all programmatic decorators before calling setup(); create a new source to stage more afterwards.",
+        },
+      );
+    }
   }
 
   /** Check whether an entity class was registered with this source. */
@@ -617,23 +714,48 @@ const driverClassifiers: Record<string, CircuitBreakerOptions["classifier"]> = {
 const resolveDefaultClassifier = (driver: string): CircuitBreakerOptions["classifier"] =>
   driverClassifiers[driver];
 
+/** A decorator factory (the exported `Encrypted`, …) matched by reference. */
+type DecoratorFactory = (...args: Array<any>) => unknown;
+
 // Resolve raw entity metadata into the SOURCE's view of it: column names per the
-// naming strategy, and the source-level encryption default folded into every bare
-// `@Encrypted()` field. Both are build steps — no use-time consumer re-derives
-// either. Raw metadata is shared across sources, so neither step mutates it; when
-// a step applies, the source caches its own resolved copies.
+// naming strategy, the source-level encryption default folded into every bare
+// `@Encrypted()` field, and any per-source staged decorator overrides. All are
+// build steps — no use-time consumer re-derives them. Raw metadata is shared
+// across sources, so no step mutates it; when a step applies, the source caches
+// its own resolved copies.
 const createMetadataResolver = (
   naming: NamingStrategy,
   encryption: ProteusEncryptionKey | undefined,
   getInheritanceMap: () => Map<Function, MetaInheritance> | undefined,
+  getStagedFieldEncryptions: () => ReadonlyArray<StagedFieldEncryption>,
 ): { resolve: MetadataResolver; cache: Map<Function, EntityMetadata> | null } => {
+  // Fast path: no naming, no encryption default. Returns the SHARED metadata
+  // object with no copy — but ONLY while this source has staged nothing. The
+  // moment a decorator is staged, staging must fold into a per-source copy;
+  // returning the shared object then would mutate the base and re-contaminate
+  // sibling sources, so we fall through to the copy path below.
   if (naming === "none" && !encryption) {
+    const cache = new Map<Function, EntityMetadata>();
+
     const resolve: MetadataResolver = (target) => {
-      const metadata = getEntityMetadata(target, getInheritanceMap());
-      registerMetadataResolver(metadata, resolve);
-      return metadata;
+      const base = getEntityMetadata(target, getInheritanceMap());
+      const staged = getStagedFieldEncryptions();
+
+      if (staged.length === 0) {
+        registerMetadataResolver(base, resolve);
+        return base;
+      }
+
+      let resolved = cache.get(target);
+      if (!resolved) {
+        resolved = applyStagedEncryptions(base, target, staged);
+        cache.set(target, resolved);
+        registerMetadataResolver(resolved, resolve);
+      }
+      return resolved;
     };
-    return { resolve, cache: null };
+
+    return { resolve, cache };
   }
 
   const cache = new Map<Function, EntityMetadata>();
@@ -641,9 +763,13 @@ const createMetadataResolver = (
   const resolve: MetadataResolver = (target): EntityMetadata => {
     let resolved = cache.get(target);
     if (!resolved) {
-      resolved = applyEncryptionDefault(
-        applyNamingStrategy(getEntityMetadata(target, getInheritanceMap()), naming),
-        encryption,
+      resolved = applyStagedEncryptions(
+        applyEncryptionDefault(
+          applyNamingStrategy(getEntityMetadata(target, getInheritanceMap()), naming),
+          encryption,
+        ),
+        target,
+        getStagedFieldEncryptions(),
       );
       cache.set(target, resolved);
       registerMetadataResolver(resolved, resolve);
