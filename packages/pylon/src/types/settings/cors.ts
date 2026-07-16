@@ -5,7 +5,7 @@ export type EmbedderPolicy = "credentialless" | "require-corp" | "unsafe-none";
 
 export type OpenerPolicy = "same-origin" | "same-origin-allow-popups" | "unsafe-none";
 
-export type CorsOptions = {
+export type PylonCorsSettings = {
   allowCredentials?: boolean;
   /**
    * Allowed request headers.

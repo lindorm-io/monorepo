@@ -20,4 +20,4 @@ export type ParseBodyConfig = {
   multipart: boolean;
 };
 
-export type ParseBodyOptions = DeepPartial<ParseBodyConfig>;
+export type PylonParseBodySettings = DeepPartial<ParseBodyConfig>;

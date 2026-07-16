@@ -2,11 +2,11 @@ import { sec } from "@lindorm/date";
 import { isArray, isBoolean, isFinite, isString } from "@lindorm/is";
 import type { HttpMethod } from "@lindorm/types";
 import { CorsError } from "../../errors/index.js";
-import type { CorsOptions, PylonHttpContext } from "../../types/index.js";
+import type { PylonCorsSettings, PylonHttpContext } from "../../types/index.js";
 
 export const handleAccessControlOrigin = (
   ctx: PylonHttpContext,
-  options: CorsOptions,
+  options: PylonCorsSettings,
 ): boolean => {
   if (!options.allowOrigins) return false;
 
@@ -48,7 +48,7 @@ export const handleAccessControlOrigin = (
 
 export const handleAccessControlCredentials = (
   ctx: PylonHttpContext,
-  options: CorsOptions,
+  options: PylonCorsSettings,
 ): void => {
   if (!isBoolean(options.allowCredentials)) return;
 
@@ -57,7 +57,7 @@ export const handleAccessControlCredentials = (
 
 export const handleAccessControlHeaders = (
   ctx: PylonHttpContext,
-  options: CorsOptions,
+  options: PylonCorsSettings,
 ): void => {
   if (!options.allowHeaders) return;
 
@@ -100,7 +100,7 @@ export const handleAccessControlHeaders = (
 
 export const handleAccessControlMethods = (
   ctx: PylonHttpContext,
-  options: CorsOptions,
+  options: PylonCorsSettings,
 ): void => {
   if (!options.allowMethods) return;
 
@@ -134,7 +134,7 @@ export const handleAccessControlMethods = (
 
 export const handleAccessControlExposeHeaders = (
   ctx: PylonHttpContext,
-  options: CorsOptions,
+  options: PylonCorsSettings,
 ): void => {
   if (!options.exposeHeaders) return;
 
@@ -147,7 +147,7 @@ export const handleAccessControlExposeHeaders = (
 
 export const handleAccessControlMaxAge = (
   ctx: PylonHttpContext,
-  options: CorsOptions,
+  options: PylonCorsSettings,
 ): void => {
   if (!isString(options.maxAge) && !isFinite(options.maxAge)) return;
 
@@ -159,7 +159,7 @@ export const handleAccessControlMaxAge = (
 
 export const handleAccessControlPrivateNetwork = (
   ctx: PylonHttpContext,
-  options: CorsOptions,
+  options: PylonCorsSettings,
 ): void => {
   if (!isBoolean(options.privateNetworkAccess)) return;
 
@@ -170,7 +170,7 @@ export const handleAccessControlPrivateNetwork = (
 
 export const handleCrossOriginEmbedderPolicy = (
   ctx: PylonHttpContext,
-  options: CorsOptions,
+  options: PylonCorsSettings,
 ): void => {
   if (!options.embedderPolicy) return;
 
@@ -179,7 +179,7 @@ export const handleCrossOriginEmbedderPolicy = (
 
 export const handleCrossOriginOpenerPolicy = (
   ctx: PylonHttpContext,
-  options: CorsOptions,
+  options: PylonCorsSettings,
 ): void => {
   if (!options.openerPolicy) return;
 

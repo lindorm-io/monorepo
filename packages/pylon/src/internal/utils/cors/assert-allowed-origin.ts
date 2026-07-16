@@ -1,10 +1,10 @@
 import { ClientError } from "@lindorm/errors";
-import type { CorsOptions } from "../../../types/index.js";
+import type { PylonCorsSettings } from "../../../types/index.js";
 import { matchOrigin } from "./match-origin.js";
 
 export const assertAllowedOrigin = (
   origin: string | undefined,
-  allowOrigins: CorsOptions["allowOrigins"],
+  allowOrigins: PylonCorsSettings["allowOrigins"],
 ): void => {
   if (!origin) {
     throw new ClientError("Origin header is missing", {

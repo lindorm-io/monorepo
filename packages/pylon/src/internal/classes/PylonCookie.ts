@@ -12,7 +12,7 @@ import {
 import type {
   CookiePriority,
   CookieSameSite,
-  PylonCookieOptions,
+  PylonCookieAttributes,
 } from "../../types/index.js";
 
 export class PylonCookie {
@@ -28,7 +28,7 @@ export class PylonCookie {
 
   readonly name: string;
 
-  constructor(name: string, value: string | null, options: PylonCookieOptions) {
+  constructor(name: string, value: string | null, options: PylonCookieAttributes) {
     PylonCookie.verifyDomain(options.domain);
     PylonCookie.verifyExpiry(options.expiry);
     PylonCookie.verifyName(name);

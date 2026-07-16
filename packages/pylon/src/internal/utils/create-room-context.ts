@@ -2,8 +2,8 @@ import { expiresAt } from "@lindorm/date";
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusRepository, IProteusSource } from "@lindorm/proteus";
 import type { PylonRoomContextHttp, PylonRoomContextSocket } from "../../types/index.js";
-import type { PylonSocket } from "../../types/pylon-socket.js";
-import type { IoServer } from "../../types/socket.js";
+import type { PylonSocket } from "../../types/socket/pylon-socket.js";
+import type { IoServer } from "../../types/socket/io.js";
 
 type CreateRoomContextOptions = {
   socket: PylonSocket;

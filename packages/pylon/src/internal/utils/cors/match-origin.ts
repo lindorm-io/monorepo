@@ -1,5 +1,5 @@
 import { isArray } from "@lindorm/is";
-import type { CorsOptions } from "../../../types/index.js";
+import type { PylonCorsSettings } from "../../../types/index.js";
 
 const normalize = (origin: string): string => {
   const lower = origin.toLowerCase();
@@ -8,7 +8,7 @@ const normalize = (origin: string): string => {
 
 export const matchOrigin = (
   origin: string | undefined,
-  allowOrigins: CorsOptions["allowOrigins"],
+  allowOrigins: PylonCorsSettings["allowOrigins"],
 ): boolean => {
   if (!origin) return false;
 

@@ -7,18 +7,18 @@ import type {
   IPylonCookies,
   IPylonFileUpload,
   IPylonSession,
-} from "../interfaces/index.js";
-import type { PylonChallenge } from "./challenge.js";
+} from "../../interfaces/index.js";
+import type { PylonChallenge } from "../http/challenge.js";
 import type {
   PylonCommonContext,
   PylonHttpMetadata,
   PylonState,
 } from "./context-common.js";
-import type { PylonAuthClient } from "./pylon-auth-client.js";
+import type { PylonAuthClient } from "../http/pylon-auth-client.js";
 import type { PylonRoomContextHttp } from "./context-socket.js";
 import type { PylonIoContextHttp } from "./pylon-io-context.js";
-import type { PylonSessionOnContext } from "./session.js";
-import type { PylonSocketEmitter } from "./pylon-socket-emitter.js";
+import type { PylonSessionOnContext } from "./session-context.js";
+import type { PylonSocketEmitter } from "../socket/pylon-socket-emitter.js";
 
 type KoaContext = Omit<RouterContext, "cookies" | "state" | "throw">;
 

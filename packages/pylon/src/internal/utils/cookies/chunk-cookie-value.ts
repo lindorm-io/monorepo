@@ -1,11 +1,11 @@
 import { ServerError } from "@lindorm/errors";
 import { PylonCookie } from "../../classes/PylonCookie.js";
-import type { PylonCookieOptions } from "../../../types/index.js";
+import type { PylonCookieAttributes } from "../../../types/index.js";
 
 export type ChunkCookieValueOptions = {
   name: string;
   value: string;
-  options: PylonCookieOptions;
+  options: PylonCookieAttributes;
   chunkSize: number;
 };
 

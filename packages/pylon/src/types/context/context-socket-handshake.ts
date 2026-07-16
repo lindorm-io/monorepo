@@ -2,7 +2,7 @@ import type { ILogger } from "@lindorm/logger";
 import type { Middleware } from "@lindorm/middleware";
 import type { PylonCommonContext, PylonState } from "./context-common.js";
 import type { PylonIoContextSocket } from "./pylon-io-context.js";
-import type { PylonSocketData } from "./pylon-socket.js";
+import type { PylonSocketData } from "../socket/pylon-socket.js";
 
 export type PylonSocketHandshakeContextBase<D extends PylonSocketData = PylonSocketData> =
   {

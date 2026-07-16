@@ -1,5 +1,5 @@
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import type { CorsOptions } from "../../types/index.js";
+import type { PylonCorsSettings } from "../../types/index.js";
 import { createHttpCorsMiddleware } from "./http-cors-middleware.js";
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
@@ -7,7 +7,7 @@ describe("httpCorsMiddleware", () => {
   const next = vi.fn();
 
   let ctx: any;
-  let options: CorsOptions;
+  let options: PylonCorsSettings;
 
   beforeEach(() => {
     ctx = {
@@ -139,7 +139,7 @@ describe("httpCorsMiddleware", () => {
 
   test("should canonicalise an array allowHeaders and warn via the logger (E9)", () => {
     const logger = createMockLogger();
-    const opts: CorsOptions = {
+    const opts: PylonCorsSettings = {
       allowOrigins: "*",
       allowHeaders: ["accept", "content-type", "x-foo"],
     };

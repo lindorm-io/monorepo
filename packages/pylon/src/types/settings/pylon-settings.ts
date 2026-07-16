@@ -8,35 +8,38 @@ import type { Environment } from "@lindorm/types";
 import type { ILindormWorker } from "@lindorm/worker";
 import type { Redis } from "ioredis";
 import type { ServerOptions as SocketOptions } from "socket.io";
-import type { PylonListener, PylonRouter } from "../classes/index.js";
-import type { PylonAuthSettings } from "./auth.js";
-import type { PylonCommonContext } from "./context-common.js";
+import type { PylonListener, PylonRouter } from "../../classes/index.js";
+import type { PylonAuthSettings } from "./auth-settings.js";
+import type { PylonCommonContext } from "../context/context-common.js";
 import type {
   PylonConnectionMiddleware,
   PylonSocketHandshakeContext,
-} from "./context-socket-handshake.js";
-import type { PylonHttpContext, PylonHttpMiddleware } from "./context-http.js";
-import type { PylonSocketContext, PylonSocketMiddleware } from "./context-socket.js";
-import type { PylonEventMap } from "./pylon-event-map.js";
-import type { PylonCookieSettings } from "./cookies.js";
-import type { CorsOptions } from "./cors.js";
-import type { OpenIdConfigurationOptions } from "./open-id-configuration.js";
-import type { ParseBodyOptions } from "./parse-body.js";
+} from "../context/context-socket-handshake.js";
+import type { PylonHttpContext, PylonHttpMiddleware } from "../context/context-http.js";
+import type {
+  PylonSocketContext,
+  PylonSocketMiddleware,
+} from "../context/context-socket.js";
+import type { PylonEventMap } from "../socket/pylon-event-map.js";
+import type { PylonCookieSettings } from "./cookie-settings.js";
+import type { PylonCorsSettings } from "./cors.js";
+import type { PylonOpenIdConfigurationSettings } from "./open-id-configuration.js";
+import type { PylonParseBodySettings } from "../http/parse-body.js";
 import type {
   PylonAuditSettings,
   PylonCacheSettings,
-  PylonHttpCallback,
   PylonKryptosSettings,
   PylonQueueSettings,
   PylonRateLimitSettings,
   PylonRoomsSettings,
   PylonWebhookSettings,
-} from "./pylon-callback-options.js";
-import type { PylonSessionSettings } from "./session.js";
+} from "./feature-settings.js";
+import type { PylonHttpCallback } from "../http/callbacks.js";
+import type { PylonSessionSettings } from "./session-settings.js";
 
 import type { PylonSecurityTxt } from "./security-txt.js";
 import type { PylonSetup, PylonTeardown } from "./setup.js";
-import type { PylonSubscribeOptions } from "./types.js";
+import type { PylonSubscribeSettings } from "./subscribe-settings.js";
 
 export type PylonHttpRouters<C extends PylonHttpContext> = {
   path: string;
@@ -88,13 +91,13 @@ export type PylonHttpSettings<C extends PylonHttpContext = PylonHttpContext> =
     callbacks?: PylonHttpCallbacksSettings<C>;
     changePasswordUri?: string;
     cookies?: PylonCookieSettings;
-    cors?: CorsOptions;
+    cors?: PylonCorsSettings;
     httpMiddleware?: Array<PylonHttpMiddleware<C>>;
     routes?: string | PylonHttpRouters<C> | Array<string | PylonHttpRouters<C>>;
     maxRequestAge?: ReadableTime;
     minRequestAge?: ReadableTime;
-    openIdConfiguration?: Partial<OpenIdConfigurationOptions>;
-    parseBody?: ParseBodyOptions;
+    openIdConfiguration?: Partial<PylonOpenIdConfigurationSettings>;
+    parseBody?: PylonParseBodySettings;
     proxy?: boolean;
     securityTxt?: PylonSecurityTxt;
     session?: PylonSessionSettings;
@@ -122,6 +125,6 @@ export type PylonSettings<
   port?: number;
   setup?: PylonSetup;
   teardown?: PylonTeardown;
-  subscriptions?: Array<PylonSubscribeOptions>;
+  subscriptions?: Array<PylonSubscribeSettings>;
   workers?: string | ILindormWorker | Array<ILindormWorker | string>;
 };

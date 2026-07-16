@@ -1,5 +1,5 @@
-import type { PylonSubscribeOptions } from "../../types/index.js";
+import type { PylonSubscribeSettings } from "../../types/index.js";
 
-export const calculateSubscriptions = (): Array<PylonSubscribeOptions> => {
+export const calculateSubscriptions = (): Array<PylonSubscribeSettings> => {
   return [];
 };

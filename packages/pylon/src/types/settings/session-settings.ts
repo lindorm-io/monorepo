@@ -1,14 +1,6 @@
 import type { IProteusSource } from "@lindorm/proteus";
-import type { IPylonSession } from "../interfaces/index.js";
-import type { PylonCookieOptions } from "./cookies.js";
+import type { PylonCookieAttributes } from "./cookie-settings.js";
 import type { PylonEncKey, PylonSignKey } from "./keys.js";
-
-export type PylonSessionOnContext = {
-  set(session: IPylonSession): Promise<void>;
-  get(): Promise<IPylonSession | null>;
-  del(): Promise<void>;
-  logout(subject: string): Promise<void>;
-};
 
 /**
  * Session SETTINGS — the `new Pylon({ session })` declaration. A pylon session
@@ -23,7 +15,7 @@ export type PylonSessionOnContext = {
  * from the resolved `signature` predicate, never declared.
  */
 export type PylonSessionSettings = Pick<
-  PylonCookieOptions,
+  PylonCookieAttributes,
   | "domain"
   | "encoding"
   | "expiry"

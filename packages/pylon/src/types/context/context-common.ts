@@ -7,11 +7,11 @@ import type { ILogger } from "@lindorm/logger";
 import type { Middleware } from "@lindorm/middleware";
 import type { IEntity, IProteusSession } from "@lindorm/proteus";
 import type { Dict, Environment, Priority } from "@lindorm/types";
-import type { AuthorizationState } from "./authorization.js";
-import type { PylonAuthClaimsClient } from "./pylon-auth-client.js";
+import type { AuthorizationState } from "../http/authorization.js";
+import type { PylonAuthClaimsClient } from "../http/pylon-auth-client.js";
 import type { PylonClientContext } from "./pylon-client-context.js";
 import type { PylonIoContextHttp } from "./pylon-io-context.js";
-import type { PylonSocketEmitter } from "./pylon-socket-emitter.js";
+import type { PylonSocketEmitter } from "../socket/pylon-socket-emitter.js";
 
 export type AppConfig = {
   audit: boolean;

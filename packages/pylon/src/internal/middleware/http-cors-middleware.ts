@@ -2,7 +2,7 @@ import { isArray } from "@lindorm/is";
 import type { ILogger } from "@lindorm/logger";
 import type { HttpMethod } from "@lindorm/types";
 import { CorsError } from "../../errors/index.js";
-import type { CorsOptions, PylonHttpMiddleware } from "../../types/index.js";
+import type { PylonCorsSettings, PylonHttpMiddleware } from "../../types/index.js";
 import { normaliseAllowHeaders } from "../utils/cors/normalise-allow-headers.js";
 import { validateCorsOptions } from "../utils/cors/validate-cors-options.js";
 import {
@@ -18,7 +18,7 @@ import {
 } from "../utils/cors-handlers.js";
 
 export const createHttpCorsMiddleware = (
-  options: CorsOptions = {},
+  options: PylonCorsSettings = {},
   logger?: ILogger,
 ): PylonHttpMiddleware => {
   validateCorsOptions(options);

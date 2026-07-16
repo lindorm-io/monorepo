@@ -1,31 +1,8 @@
 import type { ReadableTime } from "@lindorm/date";
 import type { IIrisSource } from "@lindorm/iris";
 import type { IEntity, IProteusSource } from "@lindorm/proteus";
-import type { Constructor, Dict, Priority } from "@lindorm/types";
-import type { PylonCommonContext } from "./context-common.js";
-import type { PylonHttpContext } from "./context-http.js";
+import type { Constructor } from "@lindorm/types";
 import type { PylonEncKey } from "./keys.js";
-
-// handlers
-
-export type PylonHttpCallback<C extends PylonHttpContext = PylonHttpContext> = (
-  ctx: C,
-) => Promise<void>;
-
-export type PylonQueueCallback<C extends PylonCommonContext = PylonCommonContext> = (
-  ctx: C,
-  event: string,
-  payload: Dict,
-  priority: Priority,
-) => Promise<void>;
-
-export type PylonWebhookCallback<C extends PylonCommonContext = PylonCommonContext> = (
-  ctx: C,
-  event: string,
-  payload: Dict,
-) => Promise<void>;
-
-// feature settings
 
 export type PylonKryptosSettings = {
   enabled: boolean;
