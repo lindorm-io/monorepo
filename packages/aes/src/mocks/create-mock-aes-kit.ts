@@ -23,13 +23,10 @@ export const _createMockAesKit = (mockFn: () => any, kryptos: IKryptos): IAesKit
   return {
     kryptos,
 
-    encrypt: impl((data: AesContent, mode?: string) => {
+    encrypt: impl((data: AesContent, mode?: unknown) => {
       const encoded = encode(data);
 
       switch (mode) {
-        case "tokenised":
-          return `aes:${encoded}`;
-
         case "serialised":
           return {
             cek: undefined,
@@ -58,9 +55,11 @@ export const _createMockAesKit = (mockFn: () => any, kryptos: IKryptos): IAesKit
             version: "1",
           };
 
-        case "encoded":
+        // "cbor" (default) — and the mode-or-options overload where the 2nd arg
+        // is an options object — produce the `aes:`-prefixed string.
+        case "cbor":
         default:
-          return encoded;
+          return `aes:${encoded}`;
       }
     }),
 

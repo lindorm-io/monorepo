@@ -5,10 +5,9 @@ import type {
   ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
 } from "../types/index.js";
-import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes.js";
-import { parseEncodedAesString } from "../internal/utils/encoded-aes.js";
+import { isAesBufferData, isAesSerialisedData, isAesString } from "./is-aes.js";
+import { parseCborAesString } from "../internal/utils/cbor-aes.js";
 import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes.js";
-import { parseTokenisedAesString } from "../internal/utils/tokenised-aes.js";
 
 type ParseAes = {
   (data: string): ParsedAesDecryptionRecord;
@@ -20,12 +19,8 @@ type ParseAes = {
 export const parseAes: ParseAes = (
   data: AesDecryptionRecord | SerialisedAesDecryption | string,
 ): any => {
-  if (isString(data) && isAesTokenised(data)) {
-    return parseTokenisedAesString(data);
-  }
-
-  if (isString(data) && !isAesTokenised(data)) {
-    return parseEncodedAesString(data);
+  if (isString(data) && isAesString(data)) {
+    return parseCborAesString(data);
   }
 
   if (isObject(data) && isAesBufferData(data)) {
@@ -40,6 +35,6 @@ export const parseAes: ParseAes = (
     code: "invalid_aes_data",
     title: "Invalid AES Data",
     details:
-      "The input could not be recognised as a tokenised string, encoded string, decryption record, or serialised AES record.",
+      "The input could not be recognised as an 'aes:' CBOR string, a decryption record, or a serialised AES record.",
   });
 };

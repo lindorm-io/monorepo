@@ -20,20 +20,14 @@ describe("AesKit — AES-CCM", () => {
       kit = dirKit(encryption);
     });
 
-    test("round-trips through the encoded wire format", () => {
-      expect(kit.decrypt(kit.encrypt("the quick brown fox", "encoded"))).toBe(
+    test("round-trips through the cbor wire format", () => {
+      expect(kit.decrypt(kit.encrypt("the quick brown fox", "cbor"))).toBe(
         "the quick brown fox",
       );
     });
 
     test("round-trips through the serialised wire format", () => {
       expect(kit.decrypt(kit.encrypt("the quick brown fox", "serialised"))).toBe(
-        "the quick brown fox",
-      );
-    });
-
-    test("round-trips through the tokenised wire format", () => {
-      expect(kit.decrypt(kit.encrypt("the quick brown fox", "tokenised"))).toBe(
         "the quick brown fox",
       );
     });

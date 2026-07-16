@@ -2,7 +2,7 @@ import type { KryptosAlgorithm, KryptosEncryption } from "@lindorm/kryptos";
 import type { AesContent, AesContentType } from "./content.js";
 import type { PublicEncryptionJwk } from "./types.js";
 
-export type AesEncryptionMode = "encoded" | "record" | "serialised" | "tokenised";
+export type AesEncryptionMode = "cbor" | "record" | "serialised";
 
 export type AesEncryptionOptions = {
   aad?: Buffer;

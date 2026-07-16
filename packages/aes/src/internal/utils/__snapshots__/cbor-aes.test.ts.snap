@@ -1,0 +1,25 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`cbor-aes > cbor wire decodes to the expected field set (dir vs key-wrap) 1`] = `
+{
+  "dir": [
+    "algorithm",
+    "authTag",
+    "content",
+    "contentType",
+    "encryption",
+    "initialisationVector",
+    "keyId",
+  ],
+  "keyWrap": [
+    "algorithm",
+    "authTag",
+    "content",
+    "contentType",
+    "encryption",
+    "initialisationVector",
+    "keyId",
+    "publicEncryptionKey",
+  ],
+}
+`;

@@ -4,7 +4,7 @@ High-level AES encryption and decryption for Node.js with first-class TypeScript
 
 ## Features
 
-- `AesKit` — `encrypt` / `decrypt` / `verify` / `assert` in four output formats: `encoded`, `record`, `serialised`, `tokenised`
+- `AesKit` — `encrypt` / `decrypt` / `verify` / `assert` in three output formats: `cbor` (default), `record`, `serialised`
 - Content encryption with `A128GCM`, `A192GCM`, `A256GCM`, `A128CBC-HS256`, `A192CBC-HS384`, `A256CBC-HS512`
 - Key management for the ECDH-ES family, RSA-OAEP family, AES-KW, AES-GCM-KW, PBES2, and `dir`
 - Automatic content-type detection for strings, `Buffer`, objects, arrays, numbers, and booleans — original type is preserved on decrypt
@@ -30,7 +30,7 @@ import { KryptosKit } from "@lindorm/kryptos";
 const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A256KW" });
 const aes = new AesKit({ kryptos });
 
-const encrypted = aes.encrypt("Hello World"); // base64url string
+const encrypted = aes.encrypt("Hello World"); // "aes:<base64url-cbor>"
 const decrypted = aes.decrypt(encrypted); // "Hello World"
 ```
 
@@ -39,19 +39,17 @@ const decrypted = aes.decrypt(encrypted); // "Hello World"
 `encrypt` returns a different shape depending on the `mode` argument:
 
 ```ts
-const encoded = aes.encrypt("secret"); // string (default: "encoded")
+const cbor = aes.encrypt("secret"); // string (default: "cbor") — "aes:<base64url-cbor>"
 const record = aes.encrypt("secret", "record"); // AesEncryptionRecord
 const serialised = aes.encrypt("secret", "serialised"); // SerialisedAesEncryption
-const tokenised = aes.encrypt("secret", "tokenised"); // "aes:<header>$..."
 ```
 
-All four formats are accepted by `decrypt`, `verify`, and `assert`:
+All three formats are accepted by `decrypt`, `verify`, and `assert`:
 
 ```ts
-aes.decrypt(encoded);
+aes.decrypt(cbor);
 aes.decrypt(record);
 aes.decrypt(serialised);
-aes.decrypt(tokenised);
 ```
 
 ### Encrypt any supported content
@@ -81,7 +79,7 @@ aes.assert("wrong", cipher); // throws AesError("Invalid AES cipher")
 
 ### Additional Authenticated Data (AAD)
 
-The `encoded`, `serialised`, and `tokenised` formats automatically derive AAD from their base64url-encoded header — metadata integrity is bound to the ciphertext for free.
+The `cbor` and `serialised` formats automatically derive AAD from their header — metadata integrity is bound to the ciphertext for free. For `cbor` the header is the CBOR map's header-only fields (deterministically re-encoded on decrypt); for `serialised` it is the base64url-encoded header.
 
 For raw `record`-mode payloads with no header, you can supply AAD on decrypt through `options.aad`:
 
@@ -113,13 +111,13 @@ new AesKit({ kryptos, encryption });
 ### `aes.encrypt(data, mode?)`
 
 ```ts
-encrypt(data: AesContent, mode?: "encoded"): string;
-encrypt(data: AesContent, mode: "record"): AesEncryptionRecord;
-encrypt(data: AesContent, mode: "serialised"): SerialisedAesEncryption;
-encrypt(data: AesContent, mode: "tokenised"): string;
+encrypt(data: AesContent, options?: AesOperationOptions): string; // "cbor"
+encrypt(data: AesContent, mode: "cbor", options?: AesOperationOptions): string;
+encrypt(data: AesContent, mode: "record", options?: AesOperationOptions): AesEncryptionRecord;
+encrypt(data: AesContent, mode: "serialised", options?: AesOperationOptions): SerialisedAesEncryption;
 ```
 
-Encrypts and returns one of four shapes. `mode` defaults to `"encoded"`.
+Encrypts and returns one of three shapes. `mode` defaults to `"cbor"`; the 2nd argument may be the options object directly when relying on the default.
 
 ### `aes.decrypt<T>(data, options?)`
 
@@ -178,10 +176,10 @@ AesKit.contentType("hello"); // "text/plain"
 AesKit.contentType(Buffer.from("data")); // "application/octet-stream"
 AesKit.contentType({ a: 1 }); // "application/json"
 
-AesKit.isAesTokenised("aes:..."); // true
-AesKit.isAesTokenised("base64string"); // false
+AesKit.isAesString("aes:..."); // true
+AesKit.isAesString("base64string"); // false
 
-AesKit.parse(encodedString); // ParsedAesDecryptionRecord
+AesKit.parse(cborString); // ParsedAesDecryptionRecord
 AesKit.parse(serialisedObject); // ParsedAesDecryptionRecord
 AesKit.parse(decryptionRecord); // AesDecryptionRecord (returned as-is)
 ```
@@ -192,13 +190,13 @@ AesKit.parse(decryptionRecord); // AesDecryptionRecord (returned as-is)
 import {
   isAesBufferData,
   isAesSerialisedData,
-  isAesTokenised,
+  isAesString,
   parseAes,
 } from "@lindorm/aes";
 
 isAesBufferData(value); // value is AesDecryptionRecord
 isAesSerialisedData(value); // value is SerialisedAesDecryption
-isAesTokenised(value); // value starts with "aes:"
+isAesString(value); // value starts with "aes:"
 parseAes(input); // any → AesDecryptionRecord
 ```
 
@@ -223,15 +221,24 @@ type AesHeader = {
 };
 ```
 
-### Encoded
+### CBOR (default)
 
-A single base64url string. Binary layout:
+A single `aes:`-prefixed string: `aes:<base64url(CBOR(map))>`. The CBOR map is
+self-contained — header metadata AND cryptographic material in one map, no separate
+header blob:
 
 ```
-[2B header length][header JSON][2B CEK length][CEK][IV][Tag][Ciphertext]
+{ 0: version, 2: keyId, 3: algorithm, 6: encryption, 7: contentType,
+  8: iv, 9: authTag, 10: ciphertext, 11: cek?, 12: p2c?, 13: p2s?,
+  14: publicEncryptionIv?, 15: publicEncryptionTag?, 16: epk? }
 ```
 
-IV and tag sizes follow the encryption algorithm.
+Integer map labels; `algorithm` / `encryption` / `contentType` are integer enum
+codes; IV / tag / ciphertext / CEK / salt are raw byte strings; `epk` is a
+self-describing JWK sub-map. AAD is the deterministic CBOR encoding of the
+header-only fields (everything except iv / authTag / ciphertext), recomputed on
+decrypt. The codec is `@lindorm/cbor` in strict mode — an unknown label or version
+mismatch throws.
 
 ### Serialised
 
@@ -247,16 +254,6 @@ type SerialisedAesEncryption = {
   v: string;
 };
 ```
-
-### Tokenised
-
-A `$`-delimited string prefixed with `aes:`:
-
-```
-aes:<header>$[<cek>$]<iv>$<tag>$<ciphertext>
-```
-
-All segments are base64url-encoded. The CEK segment is omitted for `dir` and `ECDH-ES`.
 
 ### Record
 
@@ -292,7 +289,7 @@ type AesContent = Array<any> | boolean | Buffer | Dict | number | string;
 
 type AesContentType = "application/json" | "application/octet-stream" | "text/plain";
 
-type AesEncryptionMode = "encoded" | "record" | "serialised" | "tokenised";
+type AesEncryptionMode = "cbor" | "record" | "serialised";
 
 type AesKitOptions = {
   encryption?: KryptosEncryption;

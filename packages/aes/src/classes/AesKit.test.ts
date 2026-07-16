@@ -11,9 +11,8 @@ import { beforeEach, describe, expect, test } from "vitest";
 
 describe("AesKit", () => {
   const modes: Record<AesEncryptionMode, any> = {
-    encoded: String,
+    cbor: String,
     record: Object,
-    tokenised: String,
     serialised: Object,
   };
 
@@ -94,42 +93,42 @@ describe("AesKit", () => {
 
     test("should encrypt and decrypt objects", () => {
       const data = { key: "value", nested: { deep: true } };
-      const encrypted = aesKit.encrypt(data, "encoded");
+      const encrypted = aesKit.encrypt(data, "cbor");
 
       expect(aesKit.decrypt(encrypted)).toEqual(data);
     });
 
     test("should encrypt and decrypt arrays", () => {
       const data = [1, "two", { three: 3 }];
-      const encrypted = aesKit.encrypt(data, "encoded");
+      const encrypted = aesKit.encrypt(data, "cbor");
 
       expect(aesKit.decrypt(encrypted)).toEqual(data);
     });
 
     test("should encrypt and decrypt numbers", () => {
       const data = 42;
-      const encrypted = aesKit.encrypt(data, "encoded");
+      const encrypted = aesKit.encrypt(data, "cbor");
 
       expect(aesKit.decrypt(encrypted)).toEqual(data);
     });
 
     test("should encrypt and decrypt floats", () => {
       const data = 3.14;
-      const encrypted = aesKit.encrypt(data, "encoded");
+      const encrypted = aesKit.encrypt(data, "cbor");
 
       expect(aesKit.decrypt(encrypted)).toEqual(data);
     });
 
     test("should encrypt and decrypt buffers", () => {
       const data = Buffer.from("binary data");
-      const encrypted = aesKit.encrypt(data, "encoded");
+      const encrypted = aesKit.encrypt(data, "cbor");
 
       expect(aesKit.decrypt(encrypted)).toEqual(data);
     });
 
     test("should encrypt and decrypt empty strings", () => {
       const data = "";
-      const encrypted = aesKit.encrypt(data, "encoded");
+      const encrypted = aesKit.encrypt(data, "cbor");
 
       expect(aesKit.decrypt(encrypted)).toEqual(data);
     });
@@ -160,17 +159,17 @@ describe("AesKit", () => {
       });
     });
 
-    describe("isAesTokenised", () => {
-      test("should return true for valid tokenised string", () => {
+    describe("isAesString", () => {
+      test("should return true for valid aes: cbor string", () => {
         const kryptos = KryptosKit.generate.enc.oct({ algorithm: "A128KW" });
         const aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
-        const tokenised = aesKit.encrypt("test", "tokenised");
+        const cipher = aesKit.encrypt("test", "cbor");
 
-        expect(AesKit.isAesTokenised(tokenised)).toEqual(true);
+        expect(AesKit.isAesString(cipher)).toEqual(true);
       });
 
       test("should return false for regular string", () => {
-        expect(AesKit.isAesTokenised("regular string")).toEqual(false);
+        expect(AesKit.isAesString("regular string")).toEqual(false);
       });
     });
 
@@ -229,7 +228,7 @@ describe("AesKit", () => {
     });
 
     test("should return false for wrong content", () => {
-      const encrypted = aesKit.encrypt("correct", "encoded");
+      const encrypted = aesKit.encrypt("correct", "cbor");
 
       expect(aesKit.verify("wrong", encrypted)).toEqual(false);
     });
@@ -288,33 +287,30 @@ describe("AesKit", () => {
     });
 
     describe("string modes - format-derived AAD (automatic)", () => {
-      describe.each(["encoded", "tokenised", "serialised"] as const)(
-        "mode: %s",
-        (mode) => {
-          let aesKit: IAesKit;
+      describe.each(["cbor", "serialised"] as const)("mode: %s", (mode) => {
+        let aesKit: IAesKit;
 
-          beforeEach(() => {
-            const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
-            aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
-          });
+        beforeEach(() => {
+          const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
+          aesKit = new AesKit({ kryptos, encryption: "A128GCM" });
+        });
 
-          test("should encrypt and decrypt with auto-derived AAD", () => {
-            const encrypted = aesKit.encrypt("secret data", mode as any);
-            const decrypted = aesKit.decrypt(encrypted);
-            expect(decrypted).toEqual("secret data");
-          });
+        test("should encrypt and decrypt with auto-derived AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", mode as any);
+          const decrypted = aesKit.decrypt(encrypted);
+          expect(decrypted).toEqual("secret data");
+        });
 
-          test("should verify with auto-derived AAD", () => {
-            const encrypted = aesKit.encrypt("secret data", mode as any);
-            expect(aesKit.verify("secret data", encrypted)).toBe(true);
-          });
+        test("should verify with auto-derived AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", mode as any);
+          expect(aesKit.verify("secret data", encrypted)).toBe(true);
+        });
 
-          test("should assert with auto-derived AAD", () => {
-            const encrypted = aesKit.encrypt("secret data", mode as any);
-            expect(() => aesKit.assert("secret data", encrypted)).not.toThrow();
-          });
-        },
-      );
+        test("should assert with auto-derived AAD", () => {
+          const encrypted = aesKit.encrypt("secret data", mode as any);
+          expect(() => aesKit.assert("secret data", encrypted)).not.toThrow();
+        });
+      });
     });
 
     describe("backward compatibility - record mode without AAD", () => {

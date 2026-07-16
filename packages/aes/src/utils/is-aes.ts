@@ -10,5 +10,5 @@ export const isAesSerialisedData = (
 ): options is SerialisedAesDecryption =>
   Object.values(options).every((x) => !isBuffer(x));
 
-export const isAesTokenised = (string: string): boolean =>
+export const isAesString = (string: string): boolean =>
   isString(string) && string.startsWith("aes:");

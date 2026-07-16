@@ -8,8 +8,8 @@ describe("parseAes (integration — strict return type)", () => {
   const kryptos = KryptosKit.generate.auto({ algorithm: "A128KW" });
   const kit = new AesKit({ kryptos, encryption: "A128GCM" });
 
-  test("tokenised string input produces ParsedAesDecryptionRecord with populated keyId", () => {
-    const cipher = kit.encrypt("payload", "tokenised");
+  test("cbor string input produces ParsedAesDecryptionRecord with populated keyId", () => {
+    const cipher = kit.encrypt("payload", "cbor");
 
     const parsed: ParsedAesDecryptionRecord = parseAes(cipher);
 
@@ -21,8 +21,8 @@ describe("parseAes (integration — strict return type)", () => {
     expect(keyId).toEqual(kryptos.id);
   });
 
-  test("encoded string input produces ParsedAesDecryptionRecord with populated keyId", () => {
-    const cipher = kit.encrypt("payload", "encoded");
+  test("default (no-mode) string input produces ParsedAesDecryptionRecord with populated keyId", () => {
+    const cipher = kit.encrypt("payload");
 
     const parsed: ParsedAesDecryptionRecord = parseAes(cipher);
     const keyId: string = parsed.keyId;

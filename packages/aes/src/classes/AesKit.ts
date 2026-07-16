@@ -1,4 +1,4 @@
-import { isEqual } from "@lindorm/is";
+import { isEqual, isString } from "@lindorm/is";
 import type { IKryptos, KryptosEncryption } from "@lindorm/kryptos";
 import { AesError } from "../errors/index.js";
 import type {
@@ -20,7 +20,7 @@ import type {
   SerialisedAesEncryption,
 } from "../types/index.js";
 import type { PreparedEncryption } from "../internal/types/prepared-encryption.js";
-import { isAesTokenised, parseAes } from "../utils/index.js";
+import { isAesString, parseAes } from "../utils/index.js";
 import { decryptAes, encryptAes } from "../internal/utils/encryption.js";
 import {
   decryptContentDirect,
@@ -28,9 +28,8 @@ import {
 } from "../internal/utils/content-primitive.js";
 import { prepareAesEncryption } from "../internal/utils/prepare-encryption.js";
 import { calculateContentType } from "../internal/utils/content.js";
-import { encryptEncoded } from "../internal/utils/encrypt-encoded.js";
+import { encryptCbor } from "../internal/utils/encrypt-cbor.js";
 import { encryptSerialised } from "../internal/utils/encrypt-serialised.js";
-import { encryptTokenised } from "../internal/utils/encrypt-tokenised.js";
 
 export class AesKit implements IAesKit {
   private readonly encryption: KryptosEncryption;
@@ -41,7 +40,8 @@ export class AesKit implements IAesKit {
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
   }
 
-  encrypt(data: AesContent, mode?: "encoded", options?: AesOperationOptions): string;
+  encrypt(data: AesContent, options?: AesOperationOptions): string;
+  encrypt(data: AesContent, mode: "cbor", options?: AesOperationOptions): string;
   encrypt(
     data: AesContent,
     mode: "record",
@@ -52,16 +52,19 @@ export class AesKit implements IAesKit {
     mode: "serialised",
     options?: AesOperationOptions,
   ): SerialisedAesEncryption;
-  encrypt(data: AesContent, mode: "tokenised", options?: AesOperationOptions): string;
   encrypt(
     data: AesContent,
-    mode: AesEncryptionMode = "encoded",
+    modeOrOptions?: AesEncryptionMode | AesOperationOptions,
     _options?: AesOperationOptions,
   ): string | AesEncryptionRecord | SerialisedAesEncryption {
+    // The 2nd arg is EITHER the output mode (a string) OR the options object.
+    // When it is omitted or an options object the mode defaults to "cbor".
+    const mode = isString(modeOrOptions) ? modeOrOptions : "cbor";
+
     try {
       switch (mode) {
-        case "encoded":
-          return encryptEncoded({
+        case "cbor":
+          return encryptCbor({
             data,
             encryption: this.encryption,
             kryptos: this.kryptos,
@@ -81,19 +84,12 @@ export class AesKit implements IAesKit {
             kryptos: this.kryptos,
           });
 
-        case "tokenised":
-          return encryptTokenised({
-            data,
-            encryption: this.encryption,
-            kryptos: this.kryptos,
-          });
-
         default:
           throw new AesError("Invalid encryption mode", {
             code: "invalid_encryption_mode",
             title: "Invalid Encryption Mode",
             details:
-              "The requested AES encryption mode is not one of the supported output modes (encoded, serialised, or tokenised).",
+              "The requested AES encryption mode is not one of the supported output modes (cbor, record, or serialised).",
           });
       }
     } catch (error) {
@@ -228,8 +224,8 @@ export class AesKit implements IAesKit {
     return calculateContentType(input);
   }
 
-  static isAesTokenised(input: any): input is string {
-    return isAesTokenised(input);
+  static isAesString(input: any): input is string {
+    return isAesString(input);
   }
 
   static parse(data: string): ParsedAesDecryptionRecord;

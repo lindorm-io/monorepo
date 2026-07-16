@@ -6,30 +6,25 @@ import type {
   SerialisedAesDecryption,
 } from "../types/index.js";
 import { createTestAesDecryptionRecord } from "./__fixtures__/aes-decryption-record.js";
-import { isAesBufferData, isAesSerialisedData, isAesTokenised } from "./is-aes.js";
-import { parseEncodedAesString } from "../internal/utils/encoded-aes.js";
+import { isAesBufferData, isAesSerialisedData, isAesString } from "./is-aes.js";
+import { parseCborAesString } from "../internal/utils/cbor-aes.js";
 import { parseSerialisedAesRecord } from "../internal/utils/serialised-aes.js";
-import { parseTokenisedAesString } from "../internal/utils/tokenised-aes.js";
 import { beforeEach, describe, expect, test, vi, type MockedFunction } from "vitest";
 
 vi.mock("./is-aes.js");
-vi.mock("../internal/utils/encoded-aes.js");
+vi.mock("../internal/utils/cbor-aes.js");
 vi.mock("../internal/utils/serialised-aes.js");
-vi.mock("../internal/utils/tokenised-aes.js");
 
 const mockIsAesBufferData = isAesBufferData as MockedFunction<typeof isAesBufferData>;
 const mockIsAesSerialisedData = isAesSerialisedData as MockedFunction<
   typeof isAesSerialisedData
 >;
-const mockIsAesTokenised = isAesTokenised as MockedFunction<typeof isAesTokenised>;
-const mockParseEncodedAesString = parseEncodedAesString as MockedFunction<
-  typeof parseEncodedAesString
+const mockIsAesString = isAesString as MockedFunction<typeof isAesString>;
+const mockParseCborAesString = parseCborAesString as MockedFunction<
+  typeof parseCborAesString
 >;
 const mockParseSerialisedAesRecord = parseSerialisedAesRecord as MockedFunction<
   typeof parseSerialisedAesRecord
->;
-const mockParseTokenisedAesString = parseTokenisedAesString as MockedFunction<
-  typeof parseTokenisedAesString
 >;
 
 describe("parseAes", () => {
@@ -37,35 +32,26 @@ describe("parseAes", () => {
     vi.clearAllMocks();
   });
 
-  describe("tokenised string", () => {
-    test("should parse tokenised string when input starts with 'aes:'", () => {
-      const tokenisedString = "aes:header$iv$tag$ciphertext";
+  describe("cbor string", () => {
+    test("should parse cbor string when input starts with 'aes:'", () => {
+      const cborString = "aes:oWNmb28";
       const expectedRecord: AesDecryptionRecord = createTestAesDecryptionRecord();
 
-      mockIsAesTokenised.mockReturnValue(true);
-      mockParseTokenisedAesString.mockReturnValue(expectedRecord as any);
+      mockIsAesString.mockReturnValue(true);
+      mockParseCborAesString.mockReturnValue(expectedRecord as any);
 
-      const result = parseAes(tokenisedString);
+      const result = parseAes(cborString);
 
-      expect(mockIsAesTokenised).toHaveBeenCalledWith(tokenisedString);
-      expect(mockParseTokenisedAesString).toHaveBeenCalledWith(tokenisedString);
+      expect(mockIsAesString).toHaveBeenCalledWith(cborString);
+      expect(mockParseCborAesString).toHaveBeenCalledWith(cborString);
       expect(result).toEqual(expectedRecord);
     });
-  });
 
-  describe("encoded string (non-tokenised)", () => {
-    test("should parse encoded string when input is string and not tokenised", () => {
-      const encodedString = "ATgkYzAzYjU4OWItMTI0ZC00NWViLTgzNzY";
-      const expectedRecord: AesDecryptionRecord = createTestAesDecryptionRecord();
+    test("should throw AesError for a string without the 'aes:' prefix", () => {
+      mockIsAesString.mockReturnValue(false);
 
-      mockIsAesTokenised.mockReturnValue(false);
-      mockParseEncodedAesString.mockReturnValue(expectedRecord as any);
-
-      const result = parseAes(encodedString);
-
-      expect(mockIsAesTokenised).toHaveBeenCalledWith(encodedString);
-      expect(mockParseEncodedAesString).toHaveBeenCalledWith(encodedString);
-      expect(result).toEqual(expectedRecord);
+      expect(() => parseAes("not-an-aes-string")).toThrow(AesError);
+      expect(() => parseAes("not-an-aes-string")).toThrow("Invalid AES data");
     });
   });
 
