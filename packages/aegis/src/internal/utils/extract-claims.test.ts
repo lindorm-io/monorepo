@@ -31,4 +31,27 @@ describe("extractDomainClaims", () => {
 
     expect(claims.subjectId).toBeUndefined();
   });
+
+  test("maps the wire conforms_to to the domain conformsTo", () => {
+    const { claims, rest } = extractDomainClaims({
+      conforms_to: ["urn:lindorm:profile:fapi", "urn:lindorm:profile:pci"],
+    });
+
+    expect(claims.conformsTo).toEqual([
+      "urn:lindorm:profile:fapi",
+      "urn:lindorm:profile:pci",
+    ]);
+    expect(rest).toEqual({});
+  });
+
+  test("accepts the camelCase conformsTo and a space-delimited string", () => {
+    expect(extractDomainClaims({ conformsTo: ["a", "b"] }).claims.conformsTo).toEqual([
+      "a",
+      "b",
+    ]);
+    expect(extractDomainClaims({ conforms_to: "a b" }).claims.conformsTo).toEqual([
+      "a",
+      "b",
+    ]);
+  });
 });

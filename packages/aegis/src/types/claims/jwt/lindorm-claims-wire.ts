@@ -13,6 +13,7 @@ export type LindormClaimsWire = {
   aal?: AuthenticatorAssuranceLevel; // authenticator assurance level (NIST 800-63B)
   afr?: Array<AuthFactor>; // auth factor references
   client_id?: string; // client id
+  conforms_to?: Array<string>; // profiles the token's posture clears (RS-facing)
   fal?: FederationAssuranceLevel; // federation assurance level (NIST 800-63C)
   gty?: string; // grant type
   ial?: IdentityAssuranceLevel; // identity assurance level (NIST 800-63A)

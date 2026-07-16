@@ -27,6 +27,9 @@ export type LindormClaims = {
   authenticatorAssuranceLevel?: AuthenticatorAssuranceLevel;
   authFactor?: Array<AuthFactor>;
   clientId?: string;
+  // The profiles this token's posture clears (RS-facing signal): required on the
+  // access token / introspection whenever non-empty. See `token-claims.md` §2/§3.
+  conformsTo?: Array<string>;
   federationAssuranceLevel?: FederationAssuranceLevel;
   grantType?: OpenIdGrantType;
   identityAssuranceLevel?: IdentityAssuranceLevel;

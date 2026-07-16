@@ -59,6 +59,7 @@ export type AccessTokenContent = Required<
       | "expires"
       | "vectorOfTrust"
       | "vectorTrustMark"
+      | "conformsTo"
     >
   >;
 
@@ -107,7 +108,7 @@ export type DelegationContent = Required<
   Partial<Pick<SignContent, "expires">>;
 
 export type IntrospectionContent = Required<Pick<SignContent, "audience">> &
-  Partial<Pick<SignContent, "claims" | "expires">>;
+  Partial<Pick<SignContent, "claims" | "expires" | "conformsTo">>;
 
 export type UserinfoContent = Required<Pick<SignContent, "subject" | "audience">> &
   Partial<Pick<SignContent, "profile" | "claims" | "expires">>;

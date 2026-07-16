@@ -78,6 +78,7 @@ const FIELD_KEYS: Record<string, ReadonlyArray<string>> = {
   authenticatorAssuranceLevel: ["authenticatorAssuranceLevel", "aal"],
   authFactor: ["authFactor", "afr"],
   clientId: ["clientId", "client_id"],
+  conformsTo: ["conformsTo", "conforms_to"],
   federationAssuranceLevel: ["federationAssuranceLevel", "fal"],
   grantType: ["grantType", "gty"],
   identityAssuranceLevel: ["identityAssuranceLevel", "ial"],
@@ -224,6 +225,7 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
   const authenticatorAssuranceLevel = consume(FIELD_KEYS.authenticatorAssuranceLevel);
   const authFactor = consume(FIELD_KEYS.authFactor);
   const clientId = consume(FIELD_KEYS.clientId);
+  const conformsTo = consume(FIELD_KEYS.conformsTo);
   const federationAssuranceLevel = consume(FIELD_KEYS.federationAssuranceLevel);
   const grantType = consume(FIELD_KEYS.grantType);
   const identityAssuranceLevel = consume(FIELD_KEYS.identityAssuranceLevel);
@@ -289,6 +291,7 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
       : undefined,
     authFactor: isArray(authFactor) ? (authFactor as Array<string>) : undefined,
     clientId: isString(clientId) ? clientId : undefined,
+    conformsTo: toStringArray(conformsTo),
     federationAssuranceLevel: isFinite<FederationAssuranceLevel>(federationAssuranceLevel)
       ? federationAssuranceLevel
       : undefined,

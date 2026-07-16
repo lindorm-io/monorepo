@@ -137,6 +137,11 @@ export const CLAIM_REGISTRY: ReadonlyArray<ClaimSpec> = [
   { domain: "events", jose: "events", cose: P(13), value: "bespoke" }, // RFC 8417 SET events
 
   { domain: "tenantId", jose: "tenant_id", cose: P(14), value: "text" },
+
+  // RS-facing posture signal (token-claims.md §2/§3): the profiles the token's
+  // issuing client clears above the `permissive` floor. Long JOSE name, no
+  // registered CWT label ⇒ private-use label (append-only: never renumber).
+  { domain: "conformsTo", jose: "conforms_to", cose: P(15), value: "array" },
 ];
 
 const byDomain = new Map<string, ClaimSpec>(

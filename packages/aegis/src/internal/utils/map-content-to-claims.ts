@@ -109,6 +109,7 @@ export const mapContentToClaims = <C extends Dict = Dict>(
     c_hash,
     client_id: isString(content.clientId) ? content.clientId : undefined,
     cnf: cnf && Object.keys(cnf).length > 0 ? cnf : undefined,
+    conforms_to: isArray(content.conformsTo) ? content.conformsTo : undefined,
     entitlements: isArray(content.entitlements) ? content.entitlements : undefined,
     events: isObject(content.events) ? content.events : undefined,
     exp,

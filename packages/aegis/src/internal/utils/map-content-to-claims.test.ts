@@ -36,6 +36,21 @@ describe("mapContentToClaims", () => {
     expect(claims.exp).toBe(1704099600);
   });
 
+  test("maps conformsTo to the wire conforms_to, and omits it when absent", () => {
+    const withIt = mapContentToClaims({ algorithm: "ES512" }, {
+      subject: "subject-1",
+      tokenType: "test_token",
+      conformsTo: ["urn:lindorm:profile:fapi"],
+    } as any);
+    expect(withIt.conforms_to).toEqual(["urn:lindorm:profile:fapi"]);
+
+    const without = mapContentToClaims({ algorithm: "ES512" }, {
+      subject: "subject-1",
+      tokenType: "test_token",
+    } as any);
+    expect(without.conforms_to).toBeUndefined();
+  });
+
   test("omits exp when content has no expires", () => {
     const claims = mapContentToClaims({ algorithm: "ES512" }, {
       subject: "subject-1",
