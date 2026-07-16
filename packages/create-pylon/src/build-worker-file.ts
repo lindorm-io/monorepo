@@ -38,8 +38,8 @@ const certificateExpiry = (): string =>
 
 // Pylon has NO default key set — it does not know your `purpose` taxonomy and
 // will not invent one. So the keys are scaffolded here, explicitly, as source you
-// can read and edit. The pylon options (`keys`) name the same purposes, so every
-// role resolves the key it is meant to use.
+// can read and edit. The pylon `cookies` / `session` key selectors name the same
+// `pylon:*` purposes, so every role resolves the key it is meant to use.
 const kryptosRotation = (dbDriver: string): string =>
   [
     `import { createKryptosRotationWorker } from "@lindorm/pylon";`,
@@ -57,8 +57,10 @@ const kryptosRotation = (dbDriver: string): string =>
     `// and rotate faster (6mo) — a smaller blast radius if leaked, and relying`,
     `// parties re-fetch the JWKS anyway.`,
     `//`,
-    `// The purposes below are the ones \`src/pylon/pylon.ts\` selects on (its \`keys\``,
-    `// option). Rename one here and you must rename it there too.`,
+    `// The \`pylon:cookie\` / \`pylon:session\` purposes below are the ones`,
+    `// \`src/pylon/pylon.ts\` selects on (its flat \`cookies\` / \`session\` key`,
+    `// selectors); \`pylon:token\` feeds the published JWKS. Rename one here and`,
+    `// you must rename it there too.`,
     ``,
     // Pass the amphora so freshly-minted keys land in the vault immediately
     // (JWKS is populated on first boot, not after the next entity-sync tick).
@@ -67,27 +69,27 @@ const kryptosRotation = (dbDriver: string): string =>
     `  logger,`,
     `  db: ${dbDriver},`,
     `  keys: [`,
-    `    { algorithm: "dir", publish: false, purpose: "cookie", expiry: "1y" },`,
-    `    { algorithm: "HS256", publish: false, purpose: "cookie", expiry: "1y" },`,
+    `    { algorithm: "dir", publish: false, purpose: "pylon:cookie", expiry: "1y" },`,
+    `    { algorithm: "HS256", publish: false, purpose: "pylon:cookie", expiry: "1y" },`,
     `    {`,
     `      algorithm: "EdDSA",`,
     `      curve: "Ed448",`,
     `      publish: false,`,
-    `      purpose: "session",`,
+    `      purpose: "pylon:session",`,
     `      expiry: "1y",`,
     `    },`,
     `    {`,
     `      algorithm: "ECDH-ES",`,
     `      curve: "X448",`,
     `      publish: false,`,
-    `      purpose: "session",`,
+    `      purpose: "pylon:session",`,
     `      expiry: "1y",`,
     `    },`,
     `    {`,
     `      algorithm: "EdDSA",`,
     `      curve: "Ed25519",`,
     `      publish: true,`,
-    `      purpose: "token",`,
+    `      purpose: "pylon:token",`,
     `      expiry: "6mo",`,
     `    },`,
     `    {`,
@@ -98,7 +100,7 @@ const kryptosRotation = (dbDriver: string): string =>
     `      algorithm: "ECDH-ES+A256KW",`,
     `      curve: "X448",`,
     `      publish: true,`,
-    `      purpose: "token",`,
+    `      purpose: "pylon:token",`,
     `      expiry: "6mo",`,
     `    },`,
     `  ],`,

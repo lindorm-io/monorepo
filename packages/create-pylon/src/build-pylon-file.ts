@@ -146,41 +146,26 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
     lines.push(`  db: ${dbSlot!.binding},`);
     lines.push(`  kryptos: { enabled: true },`);
 
-    // Which vault key does what. Pylon holds no opinion — it does not know your
-    // `purpose` taxonomy — so every key role it resolves is named here, matching
-    // the purposes the kryptos-rotation worker mints.
-    //
-    // A pylon session IS a cookie, so `session` is a per-role OVERRIDE of
-    // `cookie`: `session.<role> ?? cookie.<role>`. Both are named here because
-    // the worker mints both key sets; delete the `session` block and every role
-    // chains to the cookie keys instead.
+    // Flat cookie key selectors. Naming a `signature` / `encryption` selector
+    // turns that role ON — a plain `set()` is signed and sealed, the matching
+    // `get()` verifies and opens it. There is no `signed`/`encrypted` boolean
+    // and no `verification` selector: verification is derived from the
+    // `signature` predicate in code, never declared here. Pylon holds no
+    // opinion on your `purpose` taxonomy — these selectors SELECT the purposes
+    // the kryptos-rotation worker MINTS, so the two must stay in lockstep.
     //
     // ⚠ `publish: false` is load-bearing: amphora's default query is the
-    // PUBLISHED set, so an internal cookie/session key is unreachable without it
-    // and the JWKS token key would be selected instead.
-    lines.push(`  keys: {`);
+    // PUBLISHED set, so an internal cookie key is unreachable without it and
+    // the JWKS token key would be selected instead.
+    lines.push(`  cookies: {`);
+    lines.push(`    // Signed + sealed with the internal cookie key; verification is`);
+    lines.push(`    // derived from the signature predicate (code, not config).`);
     lines.push(
-      `    // \`verification\` — the check on the key a cookie's kid names — is`,
+      `    signature: { predicate: { purpose: "pylon:cookie", publish: false } },`,
     );
-    lines.push(`    // omitted: it defaults to the SIGNING predicate of its own scope,`);
     lines.push(
-      `    // which is the only read policy that cannot reject a cookie this app`,
+      `    encryption: { predicate: { purpose: "pylon:cookie", publish: false } },`,
     );
-    lines.push(`    // just issued. Name it only to make the read policy deliberately`);
-    lines.push(`    // BROADER (e.g. \`{ predicate: { publish: false } }\` to keep live`);
-    lines.push(`    // session cookies valid while migrating to a new signing key).`);
-    lines.push(`    cookie: {`);
-    lines.push(`      signature: { predicate: { purpose: "cookie", publish: false } },`);
-    lines.push(`      encryption: { predicate: { purpose: "cookie", publish: false } },`);
-    lines.push(`    },`);
-    lines.push(`    // The session cookie gets its own keys — a separate blast radius,`);
-    lines.push(`    // and an asymmetric signature.`);
-    lines.push(`    session: {`);
-    lines.push(`      signature: { predicate: { purpose: "session", publish: false } },`);
-    lines.push(
-      `      encryption: { predicate: { purpose: "session", publish: false } },`,
-    );
-    lines.push(`    },`);
     lines.push(`  },`);
   }
 
@@ -213,8 +198,20 @@ const buildOptions = (answers: Answers, slots: Array<SourceSlot>): string => {
       lines.push(`    kv: ${sessionRef},`);
     }
     lines.push(`    name: "sid",`);
-    lines.push(`    signed: true,`);
-    lines.push(`    encrypted: true,`);
+    // The session cookie signs + seals with its OWN keys — a separate blast
+    // radius from ordinary cookies. Only nameable when a primary source exists
+    // to mint and hold them (the kryptos-rotation worker); without one the
+    // session cookie falls back to unsigned. `session.<role> ?? cookies.<role>`
+    // means dropping these two lines chains the session onto the cookie keys.
+    if (primaryExists) {
+      lines.push(`    // Session's own keys — separate blast radius from other cookies.`);
+      lines.push(
+        `    signature: { predicate: { purpose: "pylon:session", publish: false } },`,
+      );
+      lines.push(
+        `    encryption: { predicate: { purpose: "pylon:session", publish: false } },`,
+      );
+    }
     lines.push(`    httpOnly: true,`);
     lines.push(`    sameSite: "lax",`);
     lines.push(`    secure: false, // TODO: flip to true in production (behind HTTPS)`);
