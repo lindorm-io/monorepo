@@ -461,6 +461,74 @@ describe("createKryptosRotationWorker", () => {
       expect(override.publish).toBeUndefined();
     });
 
+    // A spec that declares `encryption` must reach the generated key — otherwise a
+    // `{ algorithm: "dir", encryption: "A192CBC-HS384" }` key silently hard-codes
+    // the A256GCM default and the deployment gets a key it never asked for.
+    describe("encryption", () => {
+      test("forwards a spec-declared encryption on the initial-mint branch", async () => {
+        mockFind.mockResolvedValueOnce([]); // fresh — initial mint
+
+        const worker = createKryptosRotationWorker({
+          logger: mockLogger,
+          db,
+          keys: [
+            { algorithm: "dir", encryption: "A192CBC-HS384", purpose: "cookie" },
+          ] as any,
+        });
+
+        await worker.trigger();
+
+        // Fresh vault mints the current key AND its rotation successor — both must
+        // carry the declared encryption.
+        expect(mockGenerate).toHaveBeenCalledTimes(2);
+        for (const [call] of mockGenerate.mock.calls) {
+          expect(call.encryption).toBe("A192CBC-HS384");
+        }
+      });
+
+      test("forwards a spec-declared encryption on the rotation branch", async () => {
+        mockFind.mockResolvedValueOnce([
+          { algorithm: "dir", purpose: "cookie", expiresAt: future },
+        ]);
+
+        const worker = createKryptosRotationWorker({
+          logger: mockLogger,
+          db,
+          keys: [
+            { algorithm: "dir", encryption: "A192CBC-HS384", purpose: "cookie" },
+          ] as any,
+        });
+
+        await worker.trigger();
+
+        expect(mockGenerate).toHaveBeenCalledTimes(1);
+        expect(mockGenerate).toHaveBeenCalledWith(
+          expect.objectContaining({
+            algorithm: "dir",
+            encryption: "A192CBC-HS384",
+          }),
+        );
+      });
+
+      // Omitted `encryption` must leave the generator's own default in place — the
+      // worker forwards `undefined`, it does NOT invent A256GCM itself.
+      test("leaves encryption to the generator default when the spec omits it", async () => {
+        mockFind.mockResolvedValueOnce([]);
+
+        const worker = createKryptosRotationWorker({
+          logger: mockLogger,
+          db,
+          keys: [{ algorithm: "dir", purpose: "cookie" }] as any,
+        });
+
+        await worker.trigger();
+
+        for (const [call] of mockGenerate.mock.calls) {
+          expect(call.encryption).toBeUndefined();
+        }
+      });
+    });
+
     describe("rootCaKey", () => {
       const rootCaKey = { id: "root-ca-id" } as any;
 
