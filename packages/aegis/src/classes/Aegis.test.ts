@@ -123,7 +123,7 @@ describe("Aegis", () => {
         subject: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad",
         tokenType: "test_token",
       },
-      { objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad" },
+      { sign: { objectId: "3f2ae79d-f1d1-556b-a8bc-305e6b2334ad" } },
     );
 
     expect(res).toEqual({

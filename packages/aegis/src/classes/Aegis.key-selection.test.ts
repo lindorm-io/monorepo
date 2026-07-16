@@ -13,6 +13,7 @@ import {
 import type { AegisSignPredicate } from "../types/index.js";
 import { AegisError } from "../errors/index.js";
 import { Aegis } from "./Aegis.js";
+import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -189,7 +190,7 @@ describe("Aegis key selection", () => {
       // is `undefined`. It must fall back to the deployment allowlist, not
       // match-all — so the EdDSA key is chosen, never the ES512 one.
       const { token } = await aegis.jws.sign("data", {
-        sign: { predicate: { algorithm: undefined } },
+        key: { predicate: { algorithm: undefined } },
       });
 
       expect(JwsKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
@@ -203,10 +204,161 @@ describe("Aegis key selection", () => {
       // predicate can still carry it at runtime. The floor wins the merge, so
       // the enc key is never selected — the sig key signs, and no throw.
       const { token } = await aegis.jws.sign("data", {
-        sign: { predicate: { use: "enc" } as AegisSignPredicate },
+        key: { predicate: { use: "enc" } as AegisSignPredicate },
       });
 
       expect(JwsKit.decode(token).header.kid).toBe(TEST_EC_KEY_SIG.id);
+    });
+  });
+
+  // Finding #11: the per-call key selector now lives INSIDE each operation's
+  // options object under `key`, which makes three surfaces reachable that a
+  // trailing positional arg never exposed on jwe/jws. These prove each one is
+  // HONOURED — not merely type-accepted — because the whole point of the fix is
+  // that they were unreachable before (e.g. AegisDecryptKey.kryptos's RFC 9101
+  // encrypted-request-object case).
+  describe("per-call key on jwe / jws (finding #11)", () => {
+    describe("jwe.decrypt(jwe, { key: { kryptos } }) — injected, never a vault resident", () => {
+      test("decrypts ciphertext written to a key the vault has NEVER held (RFC 9101)", async () => {
+        // The recipient key is never `amphora.add`-ed: without the injected
+        // `kryptos` the ciphertext's kid resolves against an empty vault and can
+        // never be read again. This is the case the type comment names.
+        const jwe = await foreignJwe(
+          TEST_RSA_KEY_ENC,
+          "RSA-OAEP-256",
+          TEST_RSA_KEY_ENC.id,
+        );
+
+        await expect(amphora.findById(TEST_RSA_KEY_ENC.id)).rejects.toThrow();
+
+        const decrypted = await aegis.jwe.decrypt(jwe, {
+          key: { kryptos: TEST_RSA_KEY_ENC },
+        });
+
+        expect(decrypted.payload).toBe(PLAINTEXT);
+      });
+
+      test("an injected key whose kid does NOT match the ciphertext throws, never silently works", async () => {
+        // The ciphertext names the RSA key; the injected key is the EC one (a
+        // valid private enc key, so it clears the floor). Selection is driven by
+        // the ciphertext's own kid, so a key naming a different kid is a caller
+        // error — decrypting with the wrong material would be worse.
+        const jwe = await foreignJwe(
+          TEST_RSA_KEY_ENC,
+          "RSA-OAEP-256",
+          TEST_RSA_KEY_ENC.id,
+        );
+
+        const error = await aegis.jwe
+          .decrypt(jwe, { key: { kryptos: TEST_EC_KEY_ENC } })
+          .catch((err: Error) => err);
+
+        expect(error).toBeInstanceOf(AegisError);
+        expect((error as AegisError).code).toBe("decrypt_key_mismatch");
+        expect((error as AegisError).data).toMatchObject({
+          kid: TEST_RSA_KEY_ENC.id,
+          suppliedKid: TEST_EC_KEY_ENC.id,
+          operation: "decrypt",
+        });
+      });
+    });
+
+    describe("jwe.decrypt(jwe, { key: { predicate } }) — a CHECK on the kid-resolved key", () => {
+      test("a predicate the kid-resolved key FAILS is rejected before decryption", async () => {
+        const jwe = await foreignJwe(
+          TEST_RSA_KEY_ENC,
+          "RSA-OAEP-256",
+          TEST_RSA_KEY_ENC.id,
+        );
+        amphora.add(TEST_RSA_KEY_ENC);
+
+        // The kid resolves the RSA key; the per-call predicate demands an oct
+        // key. The floor post-check on the named key rejects it — a token must
+        // not pick the class of key that opens it.
+        const error = await aegis.jwe
+          .decrypt(jwe, { key: { predicate: { type: "oct" } } })
+          .catch((err: Error) => err);
+
+        expect(error).toBeInstanceOf(AegisError);
+        expect((error as AegisError).code).toBe("decrypt_key_policy_violation");
+      });
+
+      test("a predicate the kid-resolved key SATISFIES decrypts", async () => {
+        const jwe = await foreignJwe(
+          TEST_RSA_KEY_ENC,
+          "RSA-OAEP-256",
+          TEST_RSA_KEY_ENC.id,
+        );
+        amphora.add(TEST_RSA_KEY_ENC);
+
+        const decrypted = await aegis.jwe.decrypt(jwe, {
+          key: { predicate: { type: "RSA" } },
+        });
+
+        expect(decrypted.payload).toBe(PLAINTEXT);
+      });
+    });
+
+    describe("jws.verify(token, { key: { predicate } }) — RFC 8725 §3.1", () => {
+      test("a predicate the signing key FAILS rejects the JWS (no kid-picks-its-own-class)", async () => {
+        amphora.add(TEST_EC_KEY_SIG);
+        const { token } = await aegis.jws.sign("data");
+
+        // The token's kid names the EC (asymmetric) key; the caller only trusts
+        // symmetric signatures. The CHECK fires before the signature is touched.
+        const error = await aegis.jws
+          .verify(token, { key: { predicate: { algClass: "symmetric" } } })
+          .catch((err: Error) => err);
+
+        expect(error).toBeInstanceOf(AegisError);
+        expect((error as AegisError).code).toBe("verify_key_policy_violation");
+      });
+
+      test("a predicate the signing key SATISFIES verifies", async () => {
+        amphora.add(TEST_EC_KEY_SIG);
+        const { token } = await aegis.jws.sign("data");
+
+        const parsed = await aegis.jws.verify(token, {
+          key: { predicate: { algClass: "asymmetric" } },
+        });
+
+        expect(parsed.payload).toBe("data");
+      });
+    });
+
+    describe("jwe.encrypt(data, { key }) — per-call recipient selection / injection is honoured", () => {
+      test("a per-call predicate selects WHICH vault key seals it (asserted by kid, not a bare round-trip)", async () => {
+        // Both enc keys are present. The predicate must pick the EC one, which
+        // is DELIBERATELY the older key — the RSA key is newest, so amphora's
+        // default sort would hand it back if the predicate were ignored. A bare
+        // round-trip cannot tell which KEK sealed the ciphertext, so assert the
+        // sealed token's kid IS the selected key and NOT the newest default.
+        amphora.add(TEST_EC_KEY_ENC); // createdAt 00:02 — older
+        amphora.add(TEST_RSA_KEY_ENC); // createdAt 00:07 — newest, the default
+
+        const { token } = await aegis.jwe.encrypt(PLAINTEXT, {
+          key: { predicate: { type: "EC" } },
+        });
+
+        expect(JweKit.decode(token).header.kid).toBe(TEST_EC_KEY_ENC.id);
+        expect(JweKit.decode(token).header.kid).not.toBe(TEST_RSA_KEY_ENC.id);
+      });
+
+      test("an injected key seals it even though the vault never held it, and round-trips back", async () => {
+        await expect(amphora.findById(TEST_RSA_KEY_ENC.id)).rejects.toThrow();
+
+        const { token } = await aegis.jwe.encrypt(PLAINTEXT, {
+          key: { kryptos: TEST_RSA_KEY_ENC },
+        });
+
+        expect(JweKit.decode(token).header.kid).toBe(TEST_RSA_KEY_ENC.id);
+
+        const decrypted = await aegis.jwe.decrypt(token, {
+          key: { kryptos: TEST_RSA_KEY_ENC },
+        });
+
+        expect(decrypted.payload).toBe(PLAINTEXT);
+      });
     });
   });
 });

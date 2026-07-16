@@ -14,7 +14,7 @@ import {
 import { createJoseSignature } from "../internal/utils/jose-signature.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { defaultProfile } from "../internal/profiles/definitions/default.js";
-import type { ProfileSignOptions, SignContent, SignJwtContent } from "../types/index.js";
+import type { SignContent, SignJwtContent, SignJwtOptions } from "../types/index.js";
 import { JwtKit } from "./JwtKit.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -30,7 +30,7 @@ const signDefault = (
   kit: JwtKit,
   issuer: string,
   content: SignContent,
-  options: ProfileSignOptions = {},
+  options: SignJwtOptions = {},
 ) => {
   const claims = buildProfileClaims(
     { algorithm: kit.algorithm, issuer },

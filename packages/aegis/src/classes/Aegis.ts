@@ -42,19 +42,22 @@ import type {
   AegisSignKey,
   AegisUserinfo,
   AegisVerifyKey,
+  AesDecryptOptions,
+  AesEncryptOptions,
   CertBindingMode,
   DecodedJwe,
   DecodedJws,
   DecodedJwt,
   DecryptedJwe,
   EncryptedJwe,
+  JweDecryptOptions,
   JweEncryptOptions,
   JwsContent,
   NarrowedJwt,
   ParsedJws,
   ParsedJwt,
   ProfileContent,
-  ProfileSignOptions,
+  ProfileMintOptions,
   ProfileVerifyOptions,
   RawSignInput,
   SignContent,
@@ -66,6 +69,7 @@ import type {
   TokenHeaderClaims,
   TokenProfile,
   ValidateJwtOptions,
+  VerifyJwsOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
 import { CoseKit } from "./CoseKit.js";
@@ -182,17 +186,17 @@ export class Aegis implements IAegis {
   mint<P extends keyof ProfileContent>(
     profile: P,
     content: ProfileContent[P],
-    options?: ProfileSignOptions,
+    options?: ProfileMintOptions,
   ): Promise<SignedJwt>;
   mint(
     profile: string & {},
     content: SignContent,
-    options?: ProfileSignOptions,
+    options?: ProfileMintOptions,
   ): Promise<SignedJwt>;
   mint(
     profile: string,
     content: SignContent,
-    options: ProfileSignOptions = {},
+    options: ProfileMintOptions = {},
   ): Promise<SignedJwt> {
     return this.mintProfile(profile, content, options);
   }
@@ -346,12 +350,18 @@ export class Aegis implements IAegis {
   // that exists for the job went unused.
   private async aesEncrypt(
     data: AesContent,
-    mode: "encoded" | "record" | "serialised" | "tokenised" = "encoded",
-    key?: AegisEncKey,
+    modeOrOptions?: "encoded" | "record" | "serialised" | "tokenised" | AesEncryptOptions,
+    maybeOptions?: AesEncryptOptions,
   ): Promise<string | AesEncryptionRecord | SerialisedAesEncryption> {
-    const kryptos = await this.resolveEncryptKey(key);
+    // The 2nd arg is EITHER the output mode (a string) OR the options object.
+    // When it is a string the 3rd arg carries the options; otherwise the 2nd is
+    // the options and the mode defaults to `"encoded"`.
+    const mode = isString(modeOrOptions) ? modeOrOptions : "encoded";
+    const options = isString(modeOrOptions) ? maybeOptions : modeOrOptions;
+
+    const kryptos = await this.resolveEncryptKey(options?.key);
     const kit = new AesKit({
-      encryption: key?.encryption ?? this.encryption,
+      encryption: options?.key?.encryption ?? this.encryption,
       kryptos,
     });
 
@@ -365,14 +375,14 @@ export class Aegis implements IAegis {
   // that names a different kid than the ciphertext throws (`resolveKey`).
   private async aesDecrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
-    key?: AegisDecryptKey,
+    options?: AesDecryptOptions,
   ): Promise<T> {
     const parsed = AesKit.parse(data);
 
     const kryptos = await this.resolveDecryptKey(
       parsed.keyId,
       parsed.algorithm as KryptosEncAlgorithm | undefined,
-      key,
+      options?.key,
     );
     const kit = new AesKit({ encryption: this.encryption, kryptos });
 
@@ -385,17 +395,21 @@ export class Aegis implements IAegis {
     data: string,
     options: JweEncryptOptions = {},
   ): Promise<EncryptedJwe> {
-    const kryptos = await this.resolveEncryptKey();
+    const kryptos = await this.resolveEncryptKey(options.key);
 
-    return this.joseKit.encryptJwe(kryptos, data, options);
+    return this.joseKit.encryptJwe(kryptos, data, options, options.key?.encryption);
   }
 
-  private async jweDecrypt(jwe: string): Promise<DecryptedJwe> {
+  private async jweDecrypt(
+    jwe: string,
+    options: JweDecryptOptions = {},
+  ): Promise<DecryptedJwe> {
     const decode = JweKit.decode(jwe);
 
     const kryptos = await this.resolveDecryptKey(
       decode.header.kid,
       decode.header.alg as KryptosEncAlgorithm,
+      options.key,
     );
 
     return this.joseKit.decryptJwe(kryptos, jwe);
@@ -412,12 +426,16 @@ export class Aegis implements IAegis {
     return this.joseKit.signJws(kryptos, data, options);
   }
 
-  private async jwsVerify<T extends JwsContent>(jws: string): Promise<ParsedJws<T>> {
+  private async jwsVerify<T extends JwsContent>(
+    jws: string,
+    options: VerifyJwsOptions = {},
+  ): Promise<ParsedJws<T>> {
     const decode = JwsKit.decode(jws);
 
     const kryptos = await this.resolveVerifyKey(
       decode.header.kid,
       decode.header.alg as KryptosSigAlgorithm,
+      options.key,
     );
 
     return this.joseKit.verifyJws(kryptos, jws);
@@ -447,7 +465,7 @@ export class Aegis implements IAegis {
       contentType: input.contentType,
       header: input.header,
       objectId: input.objectId,
-      sign: input.sign,
+      key: input.key,
       tokenType: input.tokenType,
     });
   }
@@ -455,7 +473,7 @@ export class Aegis implements IAegis {
   private async mintProfile(
     name: string,
     content: SignContent,
-    options: ProfileSignOptions,
+    options: ProfileMintOptions,
   ): Promise<SignedJwt> {
     // Encoding seam: dispatch on the per-call format. The COSE path is a
     // separate encoder (P4) that consumes the same domain-keyed common claims;
@@ -481,7 +499,7 @@ export class Aegis implements IAegis {
 
     // The profile's algClass is part of the signing FLOOR, so the right class of
     // key is SELECTED here rather than the wrong one being caught afterwards.
-    const kryptos = await this.resolveSignKey(options, profile);
+    const kryptos = await this.resolveSignKey(options.sign ?? {}, profile);
 
     // T5 — resolve the recipient (client) enc key when encryption is in play.
     // Encryption fires when the profile is encryptable AND either an explicit
@@ -497,7 +515,7 @@ export class Aegis implements IAegis {
     // hard error. When encryption is forced ONLY by `sensitive_identity`, a
     // missing key is tolerated — the claim is omitted instead (see below).
     const encKryptos = wantsEncryption
-      ? await this.resolveEncKey(options.encrypt, explicitEncrypt)
+      ? await this.resolveEncKey(options.encrypt?.key, explicitEncrypt)
       : undefined;
 
     // `sensitive_identity` MUST NOT travel in cleartext. If it cannot be
@@ -515,7 +533,7 @@ export class Aegis implements IAegis {
       { algorithm: kryptos.algorithm, issuer: this.issuer },
       profile,
       signContent,
-      options,
+      { ...(options.sign ?? {}), context: options.context },
     );
 
     validateProfileClaims(profile, common, {
@@ -537,7 +555,7 @@ export class Aegis implements IAegis {
         expires: common.expiresAt as Date | undefined,
       } as SignContent,
       {
-        ...options,
+        ...(options.sign ?? {}),
         issuedAt: common.issuedAt as Date | undefined,
         tokenId: common.tokenId as string | undefined,
       },
@@ -553,7 +571,7 @@ export class Aegis implements IAegis {
       claims,
       signContent as SignJwtContent,
       {
-        ...options,
+        ...(options.sign ?? {}),
         ...(profile.typ.presence !== "none" ? { typ: profile.typ.value } : {}),
       },
     );
@@ -571,7 +589,7 @@ export class Aegis implements IAegis {
       encKryptos,
       signed.token,
       {},
-      options.encrypt?.encryption,
+      options.encrypt?.key?.encryption,
     );
 
     return { ...signed, token };
@@ -586,7 +604,7 @@ export class Aegis implements IAegis {
   private async mintCose(
     name: string,
     content: SignContent,
-    options: ProfileSignOptions,
+    options: ProfileMintOptions,
   ): Promise<SignedJwt> {
     const profile = resolveProfile(name);
 
@@ -611,7 +629,7 @@ export class Aegis implements IAegis {
       profile.encryptable && (explicitEncrypt || hasSensitiveIdentity);
 
     const encKryptos = wantsEncryption
-      ? await this.resolveEncKey(options.encrypt, explicitEncrypt)
+      ? await this.resolveEncKey(options.encrypt?.key, explicitEncrypt)
       : undefined;
 
     // `sensitive_identity` MUST NOT travel in cleartext: if it cannot be
@@ -621,13 +639,13 @@ export class Aegis implements IAegis {
         ? (removeUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
         : content;
 
-    const kryptos = await this.resolveSignKey(options, profile);
+    const kryptos = await this.resolveSignKey(options.sign ?? {}, profile);
 
     const common = assembleCommonClaims(
       { algorithm: kryptos.algorithm, issuer: this.issuer },
       profile,
       signContent,
-      options,
+      { ...(options.sign ?? {}), context: options.context },
     );
     validateProfileClaims(profile, common, {
       ...(options.context ?? {}),
@@ -643,7 +661,7 @@ export class Aegis implements IAegis {
     if (encKryptos) {
       token = this.coseKit.encrypt(encKryptos, token, {
         typ: coseTyp(profile.typ),
-        encryption: options.encrypt?.encryption ?? this.encryption,
+        encryption: options.encrypt?.key?.encryption ?? this.encryption,
       });
     }
 
@@ -800,7 +818,7 @@ export class Aegis implements IAegis {
     const kryptos = await this.resolveVerifyKey(
       decode.header.kid,
       decode.header.alg as KryptosSigAlgorithm,
-      verify.verify,
+      verify.key,
     );
 
     return this.joseKit.verifyJwt(kryptos, jwt, verify);
@@ -837,8 +855,8 @@ export class Aegis implements IAegis {
         ...SIGN_FLOOR,
         ...(profile?.algClass ? { algClass: profile.algClass } : {}),
       },
-      selector: mergePredicates(this.signKey.predicate, options.sign?.predicate),
-      kryptos: options.sign?.kryptos ?? this.signKey.kryptos,
+      selector: mergePredicates(this.signKey.predicate, options.key?.predicate),
+      kryptos: options.key?.kryptos ?? this.signKey.kryptos,
       logger: this.logger,
       operation: "sign",
       profile: profile?.name,

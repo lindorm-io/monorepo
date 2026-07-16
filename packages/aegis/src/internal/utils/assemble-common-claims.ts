@@ -4,7 +4,12 @@ import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
 import { removeUndefined } from "@lindorm/utils";
 import { CLAIM_REGISTRY } from "../claims/registry.js";
-import type { ProfileSignOptions, SignContent, TokenProfile } from "../../types/index.js";
+import type {
+  SignContent,
+  SignContext,
+  SignJwtOptions,
+  TokenProfile,
+} from "../../types/index.js";
 import { enforceProfilePolicy } from "./build-profile-claims.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 import { generateTokenId } from "./generate-token-id.js";
@@ -38,7 +43,7 @@ export const assembleCommonClaims = (
   ctx: AssembleCommonContext,
   profile: TokenProfile,
   content: SignContent & { claims?: Dict },
-  options: ProfileSignOptions = {},
+  options: SignJwtOptions & { context?: SignContext } = {},
 ): Dict => {
   const now = ctx.now ?? new Date();
 

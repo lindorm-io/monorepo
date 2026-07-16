@@ -49,7 +49,7 @@ export type SignJwtOptions = {
    * Per-call signing key policy. Ignored by `JwtKit`, which is handed an
    * explicit key; consumed by `Aegis`, which resolves one.
    */
-  sign?: AegisSignKey;
+  key?: AegisSignKey;
   stateHash?: string;
   tokenId?: string;
   /**

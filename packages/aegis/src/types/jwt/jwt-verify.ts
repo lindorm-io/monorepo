@@ -42,7 +42,7 @@ export type VerifyJwtOptions = JwtClaimMatchers & {
    * `createJwtVerify` skips it, and `JwtKit` (which is handed an explicit key)
    * ignores it entirely.
    */
-  verify?: AegisVerifyKey;
+  key?: AegisVerifyKey;
   /**
    * JOSE `typ` header presence policy at parse time (default `"required"`).
    * `"required"` rejects a typ-less token (`jwt_invalid_typ`) — the RFC 8725

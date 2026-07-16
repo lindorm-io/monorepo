@@ -3,8 +3,9 @@ import type { Dict } from "@lindorm/types";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
 import type { TokenType } from "../../constants/token-type.js";
 import type { TokenFormat } from "../../internal/utils/select-encoder.js";
-import type { AegisEncKey, AegisSignKey } from "../aegis.js";
+import type { AegisSignKey } from "../aegis.js";
 import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.js";
+import type { JweEncryptOptions } from "../jwe/jwe-encrypt.js";
 import type { SignJwtContent, SignJwtOptions } from "./jwt-sign.js";
 import type { VerifyJwtOptions } from "./jwt-verify.js";
 
@@ -136,7 +137,7 @@ export type ProfileContent = {
 /**
  * Mint-time facts the assembled claims object does not itself carry (e.g.
  * "an access token was co-issued", "max_age was requested"). Supplied by the
- * sign caller via {@link ProfileSignOptions.context}; consumed by
+ * mint caller via {@link ProfileMintOptions.context}; consumed by
  * `requiredWhen`/`validate` in later tasks.
  */
 export type SignContext = Dict;
@@ -216,10 +217,25 @@ export type TokenProfile<R extends readonly string[] = readonly string[]> = {
   validate: (claims: Dict, ctx: SignContext) => Array<InvalidEntry>;
 };
 
-export type ProfileSignOptions = SignJwtOptions & {
+export type ProfileMintOptions = {
+  /**
+   * The signed JWT: its envelope options (`header`, `typ`, hash claims, …) and
+   * its own per-call signing key (`sign.key`).
+   */
+  sign?: SignJwtOptions;
+  /**
+   * The sign-then-encrypt wrapper: its envelope options and the recipient
+   * (client) encryption key (`encrypt.key`). Pin it with
+   * `{ key: { predicate: { id } } }`, target a client with
+   * `{ key: { predicate: { ownerId: client.id } } }`, or supply one outright
+   * with `{ key: { kryptos } }`. Only meaningful for an encryptable profile;
+   * its presence forces encryption on.
+   */
+  encrypt?: JweEncryptOptions;
   context?: SignContext;
   /**
    * Per-call wire encoder. Defaults to `"jwt"`; `"cose"` mints a signed CWT.
+   * Applies to the whole pipeline.
    */
   format?: TokenFormat;
   /**
@@ -231,13 +247,6 @@ export type ProfileSignOptions = SignJwtOptions & {
    * only.)
    */
   proprietary?: boolean;
-  /**
-   * The recipient key that encrypts the signed token (sign-then-encrypt). Pin
-   * it with `{ predicate: { id } }`, target a client with
-   * `{ predicate: { ownerId: client.id } }`, or supply one outright with
-   * `{ kryptos }`. Only meaningful for an encryptable profile.
-   */
-  encrypt?: AegisEncKey;
 };
 
 /**
@@ -268,6 +277,6 @@ export type RawSignInput = {
   objectId?: string;
   payload: Buffer | string | Dict;
   /** Per-call signing key policy. */
-  sign?: AegisSignKey;
+  key?: AegisSignKey;
   tokenType?: TokenType;
 };

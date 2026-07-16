@@ -124,9 +124,9 @@ export const createJwtVerify = (
     if (key === "typPresence") continue;
     // expPresence governs the exp matcher above, not a per-claim equality check
     if (key === "expPresence") continue;
-    // verify is the key-selection policy, consumed by Aegis when it resolves the
-    // key — not a claim matcher, and never present on the payload
-    if (key === "verify") continue;
+    // key is the key-selection policy, consumed by Aegis when it resolves the
+    // verification key — not a claim matcher, and never present on the payload
+    if (key === "key") continue;
 
     const mapped = mapVerify(key as keyof VerifyJwtOptions);
 

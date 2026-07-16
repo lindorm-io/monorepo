@@ -81,10 +81,14 @@ which picks the cipher rather than the key. **`verify` deliberately carries no
 `kryptos`**: a token names its verification key by `kid`, so there is no path that
 supplies one, and the field would be surface nothing honours.
 
-All four are accepted per call (`aegis.mint`, `aegis.jws.sign`, `aegis.aes.encrypt`,
-`aegis.aes.decrypt`, …) and as a deployment default on `AegisOptions`; the two merge
-shallowly, caller wins — except that an `undefined` caller value is stripped, never
-applied, so it falls back to the deployment default rather than matching every key.
+All four are accepted per call — as a **`key`** field on each operation's options
+(`aegis.jws.sign`, `aegis.jwt.verify`, `aegis.aes.encrypt`, `aegis.aes.decrypt`,
+`aegis.jwe.encrypt`/`decrypt`, …); `aegis.mint` takes two keys, so it nests them under
+`sign` / `encrypt` sub-blocks (`{ sign: { key }, encrypt: { key } }`) — and as a
+deployment default on `AegisOptions` (the nested `sign` / `encrypt` / `verify` / `decrypt`
+above). The two merge shallowly, caller wins — except that an `undefined` caller value is
+stripped, never applied, so it falls back to the deployment default rather than matching
+every key.
 
 ```typescript
 // Pin a key by id, or allowlist a set. `kid` is just `{ id }`.
@@ -92,14 +96,14 @@ applied, so it falls back to the deployment default rather than matching every k
 // registered none it is `undefined`, which is stripped — the key then resolves
 // from the deployment default, NOT from "any key".
 await aegis.mint("id_token", content, {
-  sign: { predicate: { algorithm: client.idTokenSignedResponseAlg } },
+  sign: { key: { predicate: { algorithm: client.idTokenSignedResponseAlg } } },
 });
 
 // FAPI is deployment policy, not a key property — aegis publishes the list.
 import { FAPI_SIG_ALGS } from "@lindorm/aegis";
 
 await aegis.mint("id_token", content, {
-  sign: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } },
+  sign: { key: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } } },
 });
 
 // A key from outside the vault: an OIDC client secret IS the HS256 MAC key
@@ -108,12 +112,14 @@ await aegis.mint("id_token", content, {
 // an asymmetric signature.
 await aegis.mint("id_token", content, {
   sign: {
-    kryptos: KryptosKit.from.utf({
-      type: "oct",
-      use: "sig",
-      algorithm: "HS256",
-      privateKey: client.secret,
-    }),
+    key: {
+      kryptos: KryptosKit.from.utf({
+        type: "oct",
+        use: "sig",
+        algorithm: "HS256",
+        privateKey: client.secret,
+      }),
+    },
   },
 });
 
@@ -172,7 +178,7 @@ key.
 // The internal cookie key. `publish: false` hides a key from SELECTION, not just
 // from publication, so reaching for it is an explicit opt-in.
 const cookie = await aegis.aes.encrypt(session, "encoded", {
-  predicate: { purpose: "cookie", publish: false },
+  key: { predicate: { purpose: "cookie", publish: false } },
 });
 
 // The ciphertext names its own key, so the read side needs no selector — the
@@ -180,7 +186,7 @@ const cookie = await aegis.aes.encrypt(session, "encoded", {
 const session = await aegis.aes.decrypt(cookie);
 
 // `encryption` picks the CIPHER, never the key.
-await aegis.aes.encrypt(data, "encoded", { encryption: "A128CBC-HS256" });
+await aegis.aes.encrypt(data, "encoded", { key: { encryption: "A128CBC-HS256" } });
 ```
 
 A key supplied outright is the one case the vault cannot serve on the way back, so
@@ -190,8 +196,8 @@ supplied key that is not the one the ciphertext names throws (`decrypt_key_misma
 rather than being quietly ignored.
 
 ```typescript
-const encoded = await aegis.aes.encrypt(data, "encoded", { kryptos: detached });
-const plain = await aegis.aes.decrypt(encoded, { kryptos: detached });
+const encoded = await aegis.aes.encrypt(data, "encoded", { key: { kryptos: detached } });
+const plain = await aegis.aes.decrypt(encoded, { key: { kryptos: detached } });
 ```
 
 ### Universal verification

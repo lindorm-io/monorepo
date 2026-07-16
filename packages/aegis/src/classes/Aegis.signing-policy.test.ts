@@ -55,7 +55,7 @@ describe("Aegis signing policy", () => {
       const aegis = new Aegis({ amphora, logger });
 
       const { token } = await aegis.mint("id_token", ID_TOKEN, {
-        sign: { kryptos: CLIENT_SECRET },
+        sign: { key: { kryptos: CLIENT_SECRET } },
       });
 
       expect(JwtKit.decode(token).header.alg).toBe("HS256");
@@ -67,7 +67,7 @@ describe("Aegis signing policy", () => {
       const aegis = new Aegis({ amphora, logger });
 
       const error = await aegis
-        .mint("access_token", ACCESS_TOKEN, { sign: { kryptos: CLIENT_SECRET } })
+        .mint("access_token", ACCESS_TOKEN, { sign: { key: { kryptos: CLIENT_SECRET } } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -91,7 +91,7 @@ describe("Aegis signing policy", () => {
       });
 
       const { token } = await aegis.mint("id_token", ID_TOKEN, {
-        sign: { kryptos: CLIENT_SECRET },
+        sign: { key: { kryptos: CLIENT_SECRET } },
       });
 
       expect(JwtKit.decode(token).header.alg).toBe("HS256");
@@ -118,7 +118,7 @@ describe("Aegis signing policy", () => {
 
       const perCall = await aegis.jwt.sign(
         { subject: "s", expires: "1h", tokenType: "N_A" },
-        { sign: { predicate: { algorithm: "HS256" } } },
+        { key: { predicate: { algorithm: "HS256" } } },
       );
       expect(JwtKit.decode(perCall.token).header.alg).toBe("HS256");
     });
@@ -131,7 +131,7 @@ describe("Aegis signing policy", () => {
 
       const { token } = await aegis.jwt.sign(
         { subject: "s", expires: "1h", tokenType: "N_A" },
-        { sign: { predicate: { id: TEST_OKP_KEY_SIG.id } } },
+        { key: { predicate: { id: TEST_OKP_KEY_SIG.id } } },
       );
 
       expect(JwtKit.decode(token).header.kid).toBe(TEST_OKP_KEY_SIG.id);
@@ -147,7 +147,7 @@ describe("Aegis signing policy", () => {
 
       const { token } = await aegis.jwt.sign(
         { subject: "s", expires: "1h", tokenType: "N_A" },
-        { sign: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } } },
+        { key: { predicate: { algorithm: { $in: FAPI_SIG_ALGS } } } },
       );
 
       expect(JwtKit.decode(token).header.alg).toBe("EdDSA");
@@ -160,7 +160,7 @@ describe("Aegis signing policy", () => {
       const error = await aegis.jwt
         .sign(
           { subject: "s", expires: "1h", tokenType: "N_A" },
-          { sign: { predicate: { purpose: "none" } } },
+          { key: { predicate: { purpose: "none" } } },
         )
         .catch((err: Error) => err);
 
@@ -181,7 +181,7 @@ describe("Aegis signing policy", () => {
       const { token } = await minter.mint(
         "default",
         { subject: "s", expires: "1h", tokenType: "N_A" },
-        { sign: { predicate: { algorithm: "HS256" } } },
+        { sign: { key: { predicate: { algorithm: "HS256" } } } },
       );
 
       // The same vault, but a verifier that only accepts asymmetric signatures.
@@ -212,16 +212,16 @@ describe("Aegis signing policy", () => {
       });
 
       const error = await aegis.jwt
-        .verify(token, { verify: { predicate: { algClass: "asymmetric" } } })
+        .verify(token, { key: { predicate: { algClass: "asymmetric" } } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
       expect((error as AegisError).code).toBe("verify_key_policy_violation");
     });
 
-    test("a conformant token still verifies, and `verify` is not read as a claim matcher", async () => {
+    test("a conformant token still verifies, and `key` is not read as a claim matcher", async () => {
       // Regression guard: `createJwtVerify` maps every unknown option key to a
-      // CLAIM and throws on one it cannot map. `verify` must be skipped there,
+      // CLAIM and throws on one it cannot map. `key` must be skipped there,
       // or supplying a key policy would reject every token.
       amphora.add(TEST_EC_KEY_SIG);
       const aegis = new Aegis({ amphora, logger });
@@ -234,7 +234,7 @@ describe("Aegis signing policy", () => {
 
       const parsed = await aegis.jwt.verify(token, {
         subject: "s",
-        verify: { predicate: { algClass: "asymmetric" } },
+        key: { predicate: { algClass: "asymmetric" } },
       });
 
       expect(parsed.payload.subject).toBe("s");

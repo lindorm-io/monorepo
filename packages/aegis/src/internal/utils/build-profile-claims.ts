@@ -5,9 +5,9 @@ import { removeUndefined } from "@lindorm/utils";
 import { JwtError } from "../../errors/index.js";
 import type {
   InvalidEntry,
-  ProfileSignOptions,
   SignContent,
   SignContext,
+  SignJwtOptions,
   TokenProfile,
 } from "../../types/index.js";
 import { generateTokenId } from "./generate-token-id.js";
@@ -86,7 +86,7 @@ export const buildProfileClaims = <C extends Dict = Dict>(
   ctx: BuildProfileContext,
   profile: TokenProfile,
   content: SignContent & { claims?: C },
-  options: ProfileSignOptions = {},
+  options: SignJwtOptions = {},
 ): Dict => {
   const now = ctx.now ?? new Date();
   const nowUnix = getUnixTime(now);

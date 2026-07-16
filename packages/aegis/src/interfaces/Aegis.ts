@@ -7,17 +7,18 @@ import type {
 } from "@lindorm/aes";
 import type { Dict } from "@lindorm/types";
 import type {
-  AegisDecryptKey,
-  AegisEncKey,
+  AesDecryptOptions,
+  AesEncryptOptions,
   DecryptedJwe,
   EncryptedJwe,
+  JweDecryptOptions,
   JweEncryptOptions,
   JwsContent,
   NarrowedJwt,
   ParsedJws,
   ParsedJwt,
   ProfileContent,
-  ProfileSignOptions,
+  ProfileMintOptions,
   ProfileVerifyOptions,
   RawSignInput,
   SignContent,
@@ -27,6 +28,7 @@ import type {
   SignedJws,
   SignedJwt,
   TokenProfile,
+  VerifyJwsOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
 import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
@@ -43,32 +45,44 @@ import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js"
  * exactly that job.
  */
 export interface IAegisAes {
-  encrypt(data: AesContent, mode?: "encoded", key?: AegisEncKey): Promise<string>;
+  encrypt(data: AesContent, options?: AesEncryptOptions): Promise<string>;
   encrypt(
     data: AesContent,
     mode: "record",
-    key?: AegisEncKey,
+    options?: AesEncryptOptions,
   ): Promise<AesEncryptionRecord>;
   encrypt(
     data: AesContent,
     mode: "serialised",
-    key?: AegisEncKey,
+    options?: AesEncryptOptions,
   ): Promise<SerialisedAesEncryption>;
-  encrypt(data: AesContent, mode: "tokenised", key?: AegisEncKey): Promise<string>;
+  encrypt(
+    data: AesContent,
+    mode: "tokenised",
+    options?: AesEncryptOptions,
+  ): Promise<string>;
+  encrypt(
+    data: AesContent,
+    mode: "encoded",
+    options?: AesEncryptOptions,
+  ): Promise<string>;
   decrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
-    key?: AegisDecryptKey,
+    options?: AesDecryptOptions,
   ): Promise<T>;
 }
 
 export interface IAegisJwe {
   encrypt(data: string, options?: JweEncryptOptions): Promise<EncryptedJwe>;
-  decrypt(token: string): Promise<DecryptedJwe>;
+  decrypt(token: string, options?: JweDecryptOptions): Promise<DecryptedJwe>;
 }
 
 export interface IAegisJws {
   sign<T extends JwsContent>(data: T, options?: SignJwsOptions): Promise<SignedJws>;
-  verify<T extends JwsContent>(token: string): Promise<ParsedJws<T>>;
+  verify<T extends JwsContent>(
+    token: string,
+    options?: VerifyJwsOptions,
+  ): Promise<ParsedJws<T>>;
 }
 
 export interface IAegisJwt {
@@ -98,12 +112,12 @@ export interface IAegis {
   mint<P extends keyof ProfileContent>(
     profile: P,
     content: ProfileContent[P],
-    options?: ProfileSignOptions,
+    options?: ProfileMintOptions,
   ): Promise<SignedJwt>;
   mint(
     profile: string & {},
     content: SignContent,
-    options?: ProfileSignOptions,
+    options?: ProfileMintOptions,
   ): Promise<SignedJwt>;
 
   verify<P extends keyof BuiltInProfiles>(

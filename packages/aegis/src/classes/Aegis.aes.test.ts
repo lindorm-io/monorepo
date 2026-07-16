@@ -141,7 +141,7 @@ describe("Aegis AES key selection", () => {
   describe("per-call selector", () => {
     test("selects the cookie key over a NEWER published enc key", async () => {
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
-        predicate: { purpose: "cookie" },
+        key: { predicate: { purpose: "cookie" } },
       });
 
       expect(AesKit.parse(encoded).keyId).toBe(COOKIE_KEY.id);
@@ -150,7 +150,7 @@ describe("Aegis AES key selection", () => {
 
     test("reaches the INTERNAL, unpublished cookie key — the pylon case", async () => {
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
-        predicate: { purpose: "cookie", publish: false },
+        key: { predicate: { purpose: "cookie", publish: false } },
       });
 
       expect(AesKit.parse(encoded).keyId).toBe(INTERNAL_COOKIE_KEY.id);
@@ -169,7 +169,7 @@ describe("Aegis AES key selection", () => {
 
       const byDeployment = await deployment.aes.encrypt(PLAINTEXT);
       const byCall = await deployment.aes.encrypt(PLAINTEXT, "encoded", {
-        predicate: { purpose: "cookie" },
+        key: { predicate: { purpose: "cookie" } },
       });
 
       expect(AesKit.parse(byDeployment).keyId).toBe(TOKEN_KEY.id);
@@ -186,18 +186,18 @@ describe("Aegis AES key selection", () => {
       // The caller names the algorithm; `purpose` and `publish` come from the
       // deployment, so the internal cookie key is still the one selected.
       const encoded = await deployment.aes.encrypt(PLAINTEXT, "encoded", {
-        predicate: { algorithm: "dir" },
+        key: { predicate: { algorithm: "dir" } },
       });
 
       expect(AesKit.parse(encoded).keyId).toBe(INTERNAL_COOKIE_KEY.id);
     });
 
     test("carries through every output mode", async () => {
-      const key = { predicate: { purpose: "cookie" } };
+      const options = { key: { predicate: { purpose: "cookie" } } };
 
-      const record = await aegis.aes.encrypt(PLAINTEXT, "record", key);
-      const serialised = await aegis.aes.encrypt(PLAINTEXT, "serialised", key);
-      const tokenised = await aegis.aes.encrypt(PLAINTEXT, "tokenised", key);
+      const record = await aegis.aes.encrypt(PLAINTEXT, "record", options);
+      const serialised = await aegis.aes.encrypt(PLAINTEXT, "serialised", options);
+      const tokenised = await aegis.aes.encrypt(PLAINTEXT, "tokenised", options);
 
       expect(record.keyId).toBe(COOKIE_KEY.id);
       expect(AesKit.parse(serialised).keyId).toBe(COOKIE_KEY.id);
@@ -206,7 +206,7 @@ describe("Aegis AES key selection", () => {
 
     test("picks the CIPHER without touching the key", async () => {
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
-        encryption: "A128CBC-HS256",
+        key: { encryption: "A128CBC-HS256" },
       });
 
       expect(AesKit.parse(encoded).encryption).toBe("A128CBC-HS256");
@@ -216,7 +216,7 @@ describe("Aegis AES key selection", () => {
 
     test("a selector that matches nothing throws, never falls back", async () => {
       const error = await aegis.aes
-        .encrypt(PLAINTEXT, "encoded", { predicate: { purpose: "none" } })
+        .encrypt(PLAINTEXT, "encoded", { key: { predicate: { purpose: "none" } } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -229,19 +229,19 @@ describe("Aegis AES key selection", () => {
       await expect(amphora.findById(DETACHED_KEY.id)).rejects.toThrow();
 
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
-        kryptos: DETACHED_KEY,
+        key: { kryptos: DETACHED_KEY },
       });
 
       expect(AesKit.parse(encoded).keyId).toBe(DETACHED_KEY.id);
 
-      await expect(aegis.aes.decrypt(encoded, { kryptos: DETACHED_KEY })).resolves.toBe(
-        PLAINTEXT,
-      );
+      await expect(
+        aegis.aes.decrypt(encoded, { key: { kryptos: DETACHED_KEY } }),
+      ).resolves.toBe(PLAINTEXT);
     });
 
     test("is not reachable through the vault — the read side MUST be given it", async () => {
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
-        kryptos: DETACHED_KEY,
+        key: { kryptos: DETACHED_KEY },
       });
 
       // Without the key, the ciphertext's `kid` resolves against a vault that
@@ -269,7 +269,7 @@ describe("Aegis AES key selection", () => {
       });
 
       const encoded = await deployment.aes.encrypt(PLAINTEXT, "encoded", {
-        kryptos: DETACHED_KEY,
+        key: { kryptos: DETACHED_KEY },
       });
 
       expect(AesKit.parse(encoded).keyId).toBe(DETACHED_KEY.id);
@@ -277,7 +277,7 @@ describe("Aegis AES key selection", () => {
 
     test("is REJECTED when it violates the ENCRYPT floor", async () => {
       const error = await aegis.aes
-        .encrypt(PLAINTEXT, "encoded", { kryptos: DETACHED_SIG_KEY })
+        .encrypt(PLAINTEXT, "encoded", { key: { kryptos: DETACHED_SIG_KEY } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -290,7 +290,7 @@ describe("Aegis AES key selection", () => {
 
     test("is REJECTED on decrypt when it violates the DECRYPT floor", async () => {
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
-        kryptos: DETACHED_KEY,
+        key: { kryptos: DETACHED_KEY },
       });
 
       const publicOnly = KryptosKit.from.jwk({
@@ -300,7 +300,7 @@ describe("Aegis AES key selection", () => {
 
       // A public half can never decrypt — `hasPrivateKey` is the decrypt floor.
       const error = await aegis.aes
-        .decrypt(encoded, { kryptos: publicOnly })
+        .decrypt(encoded, { key: { kryptos: publicOnly } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -309,14 +309,14 @@ describe("Aegis AES key selection", () => {
 
     test("throws when it is not the key the ciphertext names", async () => {
       const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
-        kryptos: DETACHED_KEY,
+        key: { kryptos: DETACHED_KEY },
       });
 
       // Silently ignoring the supplied key would send us to a vault key that
       // cannot read this ciphertext; preferring it would decrypt with the wrong
       // key material. Both are worse than saying so.
       const error = await aegis.aes
-        .decrypt(encoded, { kryptos: COOKIE_KEY })
+        .decrypt(encoded, { key: { kryptos: COOKIE_KEY } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
