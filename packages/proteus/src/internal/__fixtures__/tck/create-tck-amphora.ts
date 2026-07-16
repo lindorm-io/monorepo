@@ -37,6 +37,24 @@ export const TCK_TRAP_KEK = KryptosKit.generate.enc.oct({
 });
 
 /**
+ * THE STAGED KEK — a third enc-capable key, distinct from BOTH the intended KEK
+ * and the trap, reachable only via its own `purpose`. It exists so the staging
+ * suite can prove `source.stageFieldDecorator(...)` OVERRIDES the source-level
+ * default per field: a field staged to this predicate must seal with THIS key's
+ * id, while its unstaged siblings keep sealing with the intended KEK. Created
+ * between the intended (oldest) and trap (newest) keys — its selection is by
+ * `purpose`, not recency, so the ordering is immaterial; it is fixed only for
+ * determinism. `publish: false`, like every internal at-rest KEK.
+ */
+export const TCK_STAGED_KEK = KryptosKit.generate.enc.oct({
+  algorithm: "A128KW",
+  createdAt: new Date("2024-01-01T02:00:00.000Z"),
+  issuer: ISSUER,
+  publish: false,
+  purpose: "proteus:tck:staged",
+});
+
+/**
  * Every `@Encrypted()` field in the TCK entities is bare, so the source-level
  * default is what names their key — the ergonomic path, exercised against all
  * six drivers.
@@ -45,8 +63,15 @@ export const TCK_ENCRYPTION: ProteusEncryptionKey = {
   predicate: { purpose: "proteus:tck" },
 };
 
+/**
+ * The selector the driver harnesses stage onto one field of `TckStagedEncrypted`
+ * (via `source.stageFieldDecorator`) before `setup()`. Names the STAGED KEK, so
+ * a staged field seals with `TCK_STAGED_KEK`, not the source default.
+ */
+export const TCK_STAGED_PREDICATE = { purpose: "proteus:tck:staged" } as const;
+
 export const createTckAmphora = (): IAmphora => {
   const amphora = new Amphora({ logger: createMockLogger() });
-  amphora.add([TCK_INTENDED_KEK, TCK_TRAP_KEK]);
+  amphora.add([TCK_INTENDED_KEK, TCK_TRAP_KEK, TCK_STAGED_KEK]);
   return amphora;
 };

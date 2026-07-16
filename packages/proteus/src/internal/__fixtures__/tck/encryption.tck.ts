@@ -5,14 +5,14 @@ import { describe, test, expect, beforeEach, vi } from "vitest";
 import { ProteusRepositoryError } from "../../../errors/ProteusRepositoryError.js";
 import type { TckDriverHandle } from "./types.js";
 import type { TckEntities } from "./create-tck-entities.js";
-import { TCK_INTENDED_KEK, TCK_TRAP_KEK } from "./create-tck-amphora.js";
+import { TCK_INTENDED_KEK, TCK_STAGED_KEK, TCK_TRAP_KEK } from "./create-tck-amphora.js";
 
 export const encryptionSuite = (
   getHandle: () => TckDriverHandle,
   entities: TckEntities,
 ) => {
   describe("Encryption", () => {
-    const { TckEncrypted } = entities;
+    const { TckEncrypted, TckStagedEncrypted } = entities;
 
     beforeEach(async () => {
       await getHandle().clear();
@@ -124,6 +124,80 @@ export const encryptionSuite = (
 
         const found = await repo.findOneOrFail({ id: inserted.id });
         expect(found.metadata).toMatchSnapshot();
+      });
+    });
+
+    // ─── Per-source Staged @Encrypted Selector ─────────────────────────
+    // Proves `source.stageFieldDecorator(TckStagedEncrypted, "stagedSecret",
+    // Encrypted, { predicate: { purpose: "proteus:tck:staged" } })` — wired into
+    // every driver harness BEFORE setup() — OVERRIDES the source-level encryption
+    // default per field, at rest. `stagedSecret` must seal with the STAGED KEK;
+    // its bare sibling `defaultSecret` must keep sealing with the source-default
+    // intended KEK. If staging were ignored, `stagedSecret` would seal with the
+    // intended KEK and this goes RED, while every round-trip stays green.
+
+    describe("per-source staged @Encrypted selector (stageFieldDecorator)", () => {
+      test("stages one field to a distinct KEK at rest while its sibling keeps the source default", async () => {
+        const handle = getHandle();
+        const repo = handle.repository(TckStagedEncrypted);
+
+        // The vault query `resolveEncryptionKey` builds folds the field's selector
+        // in as `query.purpose`, and the key `findSync` returns is the kid AesKit
+        // embeds in that column at rest (see the trap-key honesty test). Spying on
+        // the exact vault the source encrypts through lets us tie each field's
+        // selector to the KEK id that actually sealed it.
+        const findSpy = vi.spyOn(handle.amphora, "findSync");
+
+        const inserted = await repo.insert({
+          stagedSecret: "sealed-with-staged-kek",
+          defaultSecret: "sealed-with-default-kek",
+        });
+
+        expect(findSpy).toHaveBeenCalled();
+        const selections = findSpy.mock.calls
+          .map((call, i) => ({
+            purpose: (call[0] as { purpose?: string }).purpose,
+            result: findSpy.mock.results[i],
+          }))
+          .filter((s) => s.result.type === "return")
+          .map((s) => ({
+            purpose: s.purpose,
+            id: (s.result.value as { id: string }).id,
+          }));
+
+        const staged = selections.filter((s) => s.purpose === "proteus:tck:staged");
+        const dflt = selections.filter((s) => s.purpose === "proteus:tck");
+
+        // The STAGED field sealed with the STAGED KEK — the staged selector won
+        // over the source default. Had staging been ignored, no query would carry
+        // the staged purpose and this selection would be the intended KEK instead.
+        expect(staged.length).toBeGreaterThan(0);
+        for (const s of staged) {
+          expect(s.id).toBe(TCK_STAGED_KEK.id);
+          expect(s.id).not.toBe(TCK_INTENDED_KEK.id);
+        }
+
+        // The UNSTAGED sibling still sealed with the source-default intended KEK —
+        // staging is per-field, not a source-wide switch.
+        expect(dflt.length).toBeGreaterThan(0);
+        for (const d of dflt) {
+          expect(d.id).toBe(TCK_INTENDED_KEK.id);
+          expect(d.id).not.toBe(TCK_STAGED_KEK.id);
+        }
+
+        // The trap never sealed anything.
+        for (const s of selections) {
+          expect(s.id).not.toBe(TCK_TRAP_KEK.id);
+        }
+
+        findSpy.mockRestore();
+
+        // Both fields round-trip their plaintext regardless of which KEK sealed
+        // them — a round-trip alone can't tell staged from default apart, which
+        // is exactly why the id assertions above carry the honesty.
+        const found = await repo.findOneOrFail({ id: inserted.id });
+        expect(found.stagedSecret).toBe("sealed-with-staged-kek");
+        expect(found.defaultSecret).toBe("sealed-with-default-kek");
       });
     });
 

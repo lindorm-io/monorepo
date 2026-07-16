@@ -15,6 +15,7 @@ import {
   createTckAmphora,
   TCK_ENCRYPTION,
 } from "../__fixtures__/tck/create-tck-amphora.js";
+import { stageTckEncryptions } from "../__fixtures__/tck/stage-tck-encryptions.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { describe, vi } from "vitest";
 
@@ -102,6 +103,8 @@ const factory: TckDriverFactory = {
       amphora,
       encryption: TCK_ENCRYPTION,
     });
+
+    stageTckEncryptions(source, entities);
 
     await source.connect();
     await source.setup();

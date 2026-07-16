@@ -135,9 +135,9 @@ const runTckForNaming = (
     entities.TckPkInteger,
   ];
 
-  // Encryption test entity
+  // Encryption test entities
   if (caps.encryption) {
-    baseTargets.push(entities.TckEncrypted);
+    baseTargets.push(entities.TckEncrypted, entities.TckStagedEncrypted);
   }
 
   // Single-table inheritance entities (all drivers)

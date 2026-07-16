@@ -1023,6 +1023,36 @@ export const createTckEntities = (hookCallback: Mock) => {
     transformedSecret!: string;
   }
 
+  // A dedicated entity for the per-source staged-selector suite. Both fields
+  // ship as BARE `@Encrypted()` markers. Each driver harness stages
+  // `stagedSecret`'s selector to the STAGED KEK (via source.stageFieldDecorator)
+  // BEFORE setup(); `defaultSecret` is left to the source-level default. Kept
+  // SEPARATE from TckEncrypted so the source-default honesty test — which asserts
+  // every selection is the intended KEK — is undisturbed by a staged override.
+  @Entity({ name: "TckStagedEncrypted" })
+  class TckStagedEncrypted {
+    @PrimaryKeyField()
+    @Generated("uuid")
+    id!: string;
+
+    @VersionField()
+    version!: number;
+
+    @CreateDateField()
+    createdAt!: Date;
+
+    @UpdateDateField()
+    updatedAt!: Date;
+
+    @Encrypted()
+    @Field("string")
+    stagedSecret!: string;
+
+    @Encrypted()
+    @Field("string")
+    defaultSecret!: string;
+  }
+
   // ─── Embedded List Loading Entities ────────────────────────────────
   // Default JPA-aligned loading: { single: "eager", multiple: "lazy" }
 
@@ -1381,6 +1411,7 @@ export const createTckEntities = (hookCallback: Mock) => {
     TckAddress,
     TckWithAddress,
     TckEncrypted,
+    TckStagedEncrypted,
     TckElDefault,
     TckElEagerMultiple,
     TckElLazySingle,
