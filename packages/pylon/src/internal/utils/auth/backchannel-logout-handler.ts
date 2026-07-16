@@ -18,6 +18,18 @@ export const backchannelLogoutHandler: PylonHttpMiddleware = async (ctx) => {
     });
   }
 
+  if (!verified.payload.subject) {
+    throw new ClientError("Invalid backchannel logout token", {
+      code: "invalid_backchannel_logout_token",
+      title: "Invalid Backchannel Logout Token",
+      type: "urn:lindorm:pylon:error:invalid_backchannel_logout_token",
+      status: ClientError.Status.BadRequest,
+      details:
+        "The logout token has no sub claim, which is required to log out a session",
+      debug: { verified },
+    });
+  }
+
   await ctx.session.logout(verified.payload.subject);
 
   ctx.body = undefined;

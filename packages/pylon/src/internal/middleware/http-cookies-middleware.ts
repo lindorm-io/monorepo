@@ -11,6 +11,7 @@ import type {
 } from "../../types/index.js";
 import { chunkCookieValue } from "../utils/cookies/chunk-cookie-value.js";
 import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
+import { encryptCookie } from "../utils/cookies/encrypt-cookie.js";
 import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { signCookie } from "../utils/cookies/sign-cookie.js";
 import { resolveCookieKeys } from "../utils/keys/resolve-cookie-keys.js";
@@ -70,7 +71,7 @@ export const createHttpCookiesMiddleware = (
           });
         }
 
-        if (!opts.encoding && !opts.encrypted && isObject(value)) {
+        if (!opts.encoding && !opts.encryption && isObject(value)) {
           throw new ServerError("Cookie encoding required for object value", {
             code: "cookie_encoding_required",
             title: "Cookie Encoding Required",
@@ -83,20 +84,18 @@ export const createHttpCookiesMiddleware = (
 
         let final: any;
 
-        if (opts.encrypted) {
-          // The selector scopes the write to the key the deployment named for
-          // cookies. Without it aegis falls back to its deployment-wide enc
-          // policy, which queries the PUBLISHED set — so an internal `dir`
-          // cookie key, which exists for exactly this job, was unreachable and
-          // cookies were sealed with the JWKS token key instead.
-          //
-          // A cookie may name its OWN key (the session middleware hands us the
-          // resolved session keys) — otherwise it is the deployment's cookie key.
-          final = await ctx.aegis.aes.encrypt(
-            value as AesContent,
-            "tokenised",
-            opts.encryption ?? cookieKeys.encryption,
-          );
+        if (opts.encryption) {
+          // `encryption` collapses to `boolean | selector`: `true` ⇒ the
+          // deployment cookie key, a selector ⇒ THIS cookie's own key (the
+          // session middleware hands us the resolved session key). `encryptCookie`
+          // resolves it to a concrete key or throws — a cookie set `encryption: true`
+          // with no cookie key configured is a loud failure, never a silent seal
+          // with the published JWKS token key. Do NOT add an undefined-guard here:
+          // the throwing resolver IS the fail-closed contract.
+          const encKey =
+            opts.encryption === true ? cookieKeys.encryption : opts.encryption;
+
+          final = await encryptCookie(ctx, value as AesContent, encKey);
         } else {
           final = isString(value) ? value : JSON.stringify(value);
 
@@ -129,12 +128,13 @@ export const createHttpCookiesMiddleware = (
           }
         }
 
-        if (opts.signed) {
-          const { signature, kid } = await signCookie(
-            ctx,
-            final,
-            opts.signature ?? cookieKeys.signature,
-          );
+        if (opts.signature) {
+          // Same collapsed shape as `encryption`: `true` ⇒ the deployment cookie
+          // signing key, a selector ⇒ this cookie's own. `signCookie` throws when
+          // the resolved key is unconfigured — fail-closed, never an unsigned write.
+          const signKey = opts.signature === true ? cookieKeys.signature : opts.signature;
+
+          const { signature, kid } = await signCookie(ctx, final, signKey);
 
           cookies.push(new PylonCookie(`${name}.sig`, signature, opts));
           cookies.push(new PylonCookie(`${name}.kid`, kid, opts));

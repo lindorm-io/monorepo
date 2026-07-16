@@ -1,7 +1,11 @@
-import { AesKit } from "@lindorm/aes";
+import { Aegis } from "@lindorm/aegis";
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
+import { AesKit } from "@lindorm/aes";
+import { Amphora } from "@lindorm/amphora";
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { B64 } from "@lindorm/b64";
+import { KryptosKit } from "@lindorm/kryptos";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import type { PylonCookieConfig, PylonKeys } from "../../types/index.js";
 import { parseCookieHeader as _parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { signCookie as _signCookie } from "../utils/cookies/sign-cookie.js";
@@ -87,21 +91,31 @@ describe("httpCookiesMiddleware", async () => {
   });
 
   test("should set cookie with encryption", async () => {
+    // The deployment NAMES the cookie enc key; pylon resolves that selector to a
+    // CONCRETE kryptos and hands aegis that exact key — so aegis never reaches
+    // its deployment-wide enc policy (which queries the published set and would
+    // seal the cookie with the JWKS token key). We assert the RESOLVED key, not
+    // the raw selector, because resolving-then-sealing is the whole fix.
+    const cookieKey = KryptosKit.generate.auto({
+      algorithm: "dir",
+      issuer: "http://test.lindorm.io",
+      publish: false,
+      purpose: "cookie",
+    });
+    ctx.amphora.find.mockResolvedValue(cookieKey);
+
     next.mockImplementation(async () => {
-      ctx.cookies.set("new_cookie", "new_value", { encrypted: true });
+      await ctx.cookies.set("new_cookie", "new_value", { encryption: true });
     });
 
     await expect(
       createHttpCookiesMiddleware(config, keys)(ctx, next),
     ).resolves.toBeUndefined();
 
-    // The cookie enc key the deployment NAMED — not aegis's deployment-wide enc
-    // policy, which queries the published set and would seal the cookie with the
-    // JWKS token key.
     expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith(
       "new_value",
       "tokenised",
-      keys.cookie!.encryption,
+      expect.objectContaining({ kryptos: cookieKey }),
     );
 
     const setCookieHeader = ctx.set.mock.calls[0][1][0] as string;
@@ -112,7 +126,7 @@ describe("httpCookiesMiddleware", async () => {
 
   test("should pass the cookie signing key from the options to the signer", async () => {
     next.mockImplementation(async () => {
-      ctx.cookies.set("new_cookie", "new_value", { signed: true });
+      ctx.cookies.set("new_cookie", "new_value", { signature: true });
     });
 
     await expect(
@@ -147,7 +161,7 @@ describe("httpCookiesMiddleware", async () => {
 
   test("should set cookie with signature", async () => {
     next.mockImplementation(async () => {
-      ctx.cookies.set("new_cookie", "new_value", { signed: true });
+      ctx.cookies.set("new_cookie", "new_value", { signature: true });
     });
 
     await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
@@ -326,7 +340,7 @@ describe("httpCookiesMiddleware", async () => {
 
   test("should chunk + sign producing single sig + kid covering joined value", async () => {
     next.mockImplementation(async () => {
-      ctx.cookies.set("new_cookie", "x".repeat(10_000), { signed: true });
+      ctx.cookies.set("new_cookie", "x".repeat(10_000), { signature: true });
     });
 
     await expect(createHttpCookiesMiddleware(config)(ctx, next)).resolves.toBeUndefined();
@@ -357,25 +371,39 @@ describe("httpCookiesMiddleware", async () => {
     expect(reassembled).toBe(signedValue);
   });
 
+  // Byte-exact "tokenise first, THEN chunk" against REAL crypto: a mocked encrypt
+  // cannot prove that the ciphertext survives chunking intact — only a real seal
+  // reassembled and decrypted back to the plaintext does. The plaintext is large
+  // enough that its ciphertext exceeds the chunk threshold.
   test("should AES-tokenise first, then chunk, with byte-exact round-trip", async () => {
-    const tokenised = `aes:${"y".repeat(8_000)}`;
-    ctx.aegis.aes.encrypt = vi.fn().mockResolvedValue(tokenised);
+    const logger = createMockLogger();
+    const amphora = new Amphora({ domain: "http://test.lindorm.io", logger });
+    const cookieKey = KryptosKit.generate.auto({
+      algorithm: "dir",
+      issuer: "http://test.lindorm.io",
+      publish: false,
+      purpose: "cookie",
+    });
+    amphora.add(cookieKey);
+
+    const realCtx: any = {
+      aegis: new Aegis({ amphora, logger }),
+      amphora,
+      get: vi.fn().mockReturnValue(""),
+      set: vi.fn(),
+    };
+
+    const plaintext = "s".repeat(10_000);
 
     next.mockImplementation(async () => {
-      ctx.cookies.set("new_cookie", "secret_value", { encrypted: true });
+      await realCtx.cookies.set("new_cookie", plaintext, { encryption: true });
     });
 
     await expect(
-      createHttpCookiesMiddleware(config, keys)(ctx, next),
+      createHttpCookiesMiddleware(config, keys)(realCtx, next),
     ).resolves.toBeUndefined();
 
-    expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith(
-      "secret_value",
-      "tokenised",
-      keys.cookie!.encryption,
-    );
-
-    const headers = ctx.set.mock.calls[0][1] as Array<string>;
+    const headers = realCtx.set.mock.calls[0][1] as Array<string>;
     expect(headers.length).toBeGreaterThan(1);
 
     const chunkPattern = /^new_cookie\.(\d+)=([^;]*)/;
@@ -386,7 +414,11 @@ describe("httpCookiesMiddleware", async () => {
       .map((m) => m[2])
       .join("");
 
-    expect(reassembled).toBe(tokenised);
+    // Chunking preserved the sealed token: it is still a valid AES token, sealed
+    // with the NAMED cookie key, and decrypts back to the exact plaintext.
+    expect(AesKit.isAesTokenised(reassembled)).toBe(true);
+    expect(AesKit.parse(reassembled).keyId).toBe(cookieKey.id);
+    await expect(realCtx.aegis.aes.decrypt(reassembled)).resolves.toBe(plaintext);
   });
 
   test("should expire stale chunks not produced by the new write", async () => {

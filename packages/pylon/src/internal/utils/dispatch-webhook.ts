@@ -26,8 +26,11 @@ export const createDispatchWebhook = (
   // that id produced, and an injected `kryptos` is honoured ONLY when it IS the
   // key the ciphertext names.
   //
-  // Pylon adds no floor of its own here — aegis owns the encryption floors, as it
-  // does for cookie and session encryption (see `internal/constants/key-floor`).
+  // Pylon adds no floor of its own on this DECRYPT path — the ciphertext names
+  // its own key and aegis owns the decrypt floor. (Cookie/session ENCRYPTION is
+  // the opposite: there pylon owns the `ENVELOPE_FLOOR` and resolves the key,
+  // because it CHOOSES the recipient rather than obeying one the ciphertext named
+  // — see `resolve-cookie-encryption-key`.)
   // What pylon used to do instead was build a raw `AesKit` from
   // `webhook.encryptionKey` and decrypt with it whatever the ciphertext said: an
   // unfloored key, and — worse — a secret sealed by the PREVIOUS key would be

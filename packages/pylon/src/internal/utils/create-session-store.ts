@@ -8,6 +8,7 @@ import type {
   PylonSessionOptions,
 } from "../../types/index.js";
 import { buildHookMeta } from "./build-hook-meta.js";
+import { encryptCookie } from "./cookies/encrypt-cookie.js";
 import { resolveSessionKeys } from "./keys/resolve-session-keys.js";
 import { resolveActor } from "./resolve-actor.js";
 
@@ -50,29 +51,25 @@ export const createSessionStore = (
       const source = getSource(ctx, options.kv);
       if (!source) return session.id;
 
-      // A named key makes encryption MANDATORY — if it cannot be resolved, aegis
-      // throws rather than persisting a bearer token in the clear. Without one,
-      // the vault's capability decides, as before. The selector scopes the write
-      // to the internal session enc key; without it aegis's deployment-wide enc
-      // policy queries the PUBLISHED set and seals the session with the JWKS
-      // token key instead.
-      if (encryptionKey || ctx.amphora.canEncrypt()) {
-        session.accessToken = await ctx.aegis.aes.encrypt(
+      // Encryption at rest follows the same rule as proteus `@Encrypted`: naming
+      // a session enc key (`keys.session.encryption ?? keys.cookie.encryption`)
+      // is what turns it on, and a NAMED key that cannot be resolved throws
+      // rather than persisting a bearer token in the clear. There is deliberately
+      // no `canEncrypt()` fallback — it would query the PUBLISHED set and seal the
+      // session with the JWKS token key. Unnamed ⇒ stored as-is, never guessed.
+      if (encryptionKey) {
+        session.accessToken = await encryptCookie(
+          ctx,
           session.accessToken,
-          "tokenised",
           encryptionKey,
         );
         if (session.idToken) {
-          session.idToken = await ctx.aegis.aes.encrypt(
-            session.idToken,
-            "tokenised",
-            encryptionKey,
-          );
+          session.idToken = await encryptCookie(ctx, session.idToken, encryptionKey);
         }
         if (session.refreshToken) {
-          session.refreshToken = await ctx.aegis.aes.encrypt(
+          session.refreshToken = await encryptCookie(
+            ctx,
             session.refreshToken,
-            "tokenised",
             encryptionKey,
           );
         }

@@ -56,4 +56,20 @@ describe("backchannelLogoutHandler", () => {
 
     await expect(backchannelLogoutHandler(ctx, vi.fn())).rejects.toThrow(ClientError);
   });
+
+  test("should throw when the logout token carries no subject", async () => {
+    ctx.aegis.jwt.verify = vi.fn().mockResolvedValue({
+      payload: {
+        claims: {
+          events: {
+            "http://schemas.openid.net/event/backchannel-logout": {},
+          },
+        },
+        subject: undefined,
+      },
+    });
+
+    await expect(backchannelLogoutHandler(ctx, vi.fn())).rejects.toThrow(ClientError);
+    expect(ctx.session.logout).not.toHaveBeenCalled();
+  });
 });

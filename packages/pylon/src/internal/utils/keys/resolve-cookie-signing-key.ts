@@ -1,9 +1,8 @@
-import { applyKeyFloor, type IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, SIGN_FLOOR, type IAmphora } from "@lindorm/amphora";
 import { ServerError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
 import type { PylonSignKey } from "../../../types/index.js";
-import { COOKIE_SIGN_FLOOR } from "../../constants/key-floor.js";
 
 /**
  * Resolve the key that signs a cookie, keeping the two jobs a predicate can do
@@ -36,7 +35,7 @@ export const resolveCookieSigningKey = async (
       type: "urn:lindorm:pylon:error:cookie_signing_key_not_configured",
       details:
         'A cookie was set with `signed: true`, but no cookie signing key is configured; name the key that signs cookies in the pylon options (`keys.cookie.signature`, e.g. `{ predicate: { purpose: "cookie", publish: false } }`). A session cookie chains to it — `keys.session.signature ?? keys.cookie.signature` — so naming the cookie key is what makes any cookie signable. Pylon will not guess one: the vault\'s default set is the published keys, so a guess would sign cookies with the JWKS token key.',
-      data: { floor: COOKIE_SIGN_FLOOR },
+      data: { floor: SIGN_FLOOR },
     });
   }
 
@@ -44,7 +43,7 @@ export const resolveCookieSigningKey = async (
   // duck-typed and could carry a floor key (e.g. `use`), which must never
   // override the policy. Per-layer `undefined` stripping keeps a
   // `{ x: undefined }` predicate from becoming match-all.
-  const query = applyKeyFloor(COOKIE_SIGN_FLOOR, key.predicate);
+  const query = applyKeyFloor(SIGN_FLOOR, key.predicate);
 
   let kryptos: IKryptos;
 
@@ -66,7 +65,7 @@ export const resolveCookieSigningKey = async (
     }
   }
 
-  if (!Predicated.match(kryptos, COOKIE_SIGN_FLOOR)) {
+  if (!Predicated.match(kryptos, SIGN_FLOOR)) {
     throw new ServerError("Cookie signing key violates the signing floor", {
       code: "cookie_signing_key_policy_violation",
       title: "Cookie Signing Key Policy Violation",
@@ -78,7 +77,7 @@ export const resolveCookieSigningKey = async (
         use: kryptos.use,
         hasPrivateKey: kryptos.hasPrivateKey,
         isActive: kryptos.isActive,
-        floor: COOKIE_SIGN_FLOOR,
+        floor: SIGN_FLOOR,
       },
       debug: { kryptos: kryptos.toJSON() },
     });

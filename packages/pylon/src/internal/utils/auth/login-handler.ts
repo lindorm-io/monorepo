@@ -102,8 +102,8 @@ export const createLoginHandler = (
     // cookie would be trusted for its state/redirectUri — a login hijack + open
     // redirect. The callback reads it under the same policy.
     await ctx.cookies.set(routerConfig.cookies.login, cookie, {
-      signed: true,
-      encrypted: true,
+      signature: true,
+      encryption: true,
       httpOnly: true,
       expiry: "15m",
     });

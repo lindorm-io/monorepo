@@ -158,15 +158,23 @@ describe("createSessionStore", () => {
       }
     });
 
-    // The regression guard: with no selector, aegis's default enc policy queries
-    // the published set and the token key — newer — wins. This is the old
-    // behaviour, asserted so the fix cannot silently revert.
-    test("without the selector it falls back to the published token key", async () => {
+    // The fail-closed guard: with NO session/cookie enc key configured, encryption
+    // at rest is simply OFF — the tokens are stored verbatim. They must never be
+    // silently sealed with the vault's default (published) JWKS token key, which
+    // is what the old `|| canEncrypt()` fallback did. Asserted so the fix cannot
+    // silently revert.
+    test("without a configured key the tokens are stored unencrypted, never sealed with the token key", async () => {
       const store = createSessionStore({ enabled: true });
 
       await store!.set(realCtx, session);
 
-      expect(AesKit.parse(session.accessToken).keyId).toBe(tokenKey.id);
+      for (const token of [session.accessToken, session.idToken, session.refreshToken]) {
+        expect(AesKit.isAesTokenised(token!)).toBe(false);
+      }
+
+      expect(session.accessToken).toBe("access-token");
+      expect(session.idToken).toBe("id-token");
+      expect(session.refreshToken).toBe("refresh-token");
     });
 
     // Ciphertext names its own key, so aegis resolves the read side by kid: a

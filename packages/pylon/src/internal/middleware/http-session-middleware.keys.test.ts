@@ -238,8 +238,8 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
             "preferences",
             { theme: "dark" },
             {
-              encrypted: true,
-              signed: true,
+              encryption: true,
+              signature: true,
             },
           );
         },
@@ -579,6 +579,27 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
         },
       ),
     ).rejects.toThrow(/Cookie signing key is not configured/);
+
+    expect(ctx.set).not.toHaveBeenCalled();
+  });
+
+  // FAIL-CLOSED (the #13 contract, under the collapsed union): an `encrypted`
+  // session whose `encryption` union collapses to `true` — because neither a
+  // session NOR a cookie encryption key resolves — must reach the THROWING
+  // resolver, never fall through to a silent plaintext write.
+  test("throws loudly when an encrypted session has no encryption key named", async () => {
+    const ctx = buildCtx();
+
+    await expect(
+      run(
+        ctx,
+        { cookie: { signature: COOKIE_KEYS!.signature } },
+        { enabled: false, encrypted: true, signed: true },
+        async () => {
+          await ctx.session.set(session());
+        },
+      ),
+    ).rejects.toThrow(/Cookie encryption key is not configured/);
 
     expect(ctx.set).not.toHaveBeenCalled();
   });

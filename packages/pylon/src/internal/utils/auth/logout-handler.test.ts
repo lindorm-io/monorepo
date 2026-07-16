@@ -70,7 +70,7 @@ describe("createLogoutHandler", () => {
         redirectUri: "https://client.com/redirect",
         state: "state",
       },
-      { signed: true, expiry: "15m" },
+      { signature: true, expiry: "15m" },
     );
     expect(ctx.redirect).toHaveBeenCalledWith("https://example.com/auth/logout/callback");
   });
@@ -88,7 +88,7 @@ describe("createLogoutHandler", () => {
         redirectUri: "https://client.com/logout",
         state: "state",
       },
-      { signed: true, expiry: "15m" },
+      { signature: true, expiry: "15m" },
     );
     expect(ctx.redirect).toHaveBeenCalledWith("https://example.com/auth/logout/callback");
   });

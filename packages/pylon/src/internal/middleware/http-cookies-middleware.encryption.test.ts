@@ -82,7 +82,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
     const ctx = buildCtx(amphora);
 
     await createHttpCookiesMiddleware({}, keys)(ctx as any, async () => {
-      await (ctx as any).cookies.set("sid", "secret_value", { encrypted: true });
+      await (ctx as any).cookies.set("sid", "secret_value", { encryption: true });
     });
 
     const { keyId } = AesKit.parse(setCookieValue(ctx));
@@ -91,19 +91,20 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
     expect(keyId).not.toBe(tokenKey.id);
   });
 
-  // The regression guard: with no selector, aegis's default enc policy queries
-  // the published set and the token key — newer — wins. This is the old
-  // behaviour, asserted so the fix cannot silently revert.
-  test("without the selector it falls back to the published token key", async () => {
+  // The fail-closed guard: with NO cookie encryption key configured there is
+  // nothing to seal with, so the write is a LOUD failure — it must never fall
+  // back to the vault's default (published) set and seal the cookie with the
+  // JWKS token key. Asserted so the fix cannot silently revert to the old bug.
+  test("without a configured key it throws rather than sealing with the token key", async () => {
     const ctx = buildCtx(amphora);
 
-    await createHttpCookiesMiddleware({})(ctx as any, async () => {
-      await (ctx as any).cookies.set("sid", "secret_value", { encrypted: true });
-    });
+    await expect(
+      createHttpCookiesMiddleware({})(ctx as any, async () => {
+        await (ctx as any).cookies.set("sid", "secret_value", { encryption: true });
+      }),
+    ).rejects.toMatchObject({ code: "cookie_encryption_key_not_configured" });
 
-    const { keyId } = AesKit.parse(setCookieValue(ctx));
-
-    expect(keyId).toBe(tokenKey.id);
+    expect(ctx.set).not.toHaveBeenCalled();
   });
 
   // Ciphertext names its own key, so aegis resolves the read side by kid. A
@@ -140,7 +141,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
         {},
         { cookie: { encryption: { predicate: { purpose: "no-such-purpose" } } } },
       )(ctx as any, async () => {
-        await (ctx as any).cookies.set("sid", "secret_value", { encrypted: true });
+        await (ctx as any).cookies.set("sid", "secret_value", { encryption: true });
       }),
     ).rejects.toThrow();
 

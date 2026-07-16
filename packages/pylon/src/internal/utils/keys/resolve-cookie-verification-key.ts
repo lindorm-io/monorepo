@@ -1,9 +1,8 @@
-import { applyKeyFloor, type IAmphora } from "@lindorm/amphora";
+import { applyKeyFloor, VERIFY_FLOOR, type IAmphora } from "@lindorm/amphora";
 import { ClientError } from "@lindorm/errors";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
 import type { PylonVerifyKey } from "../../../types/index.js";
-import { COOKIE_VERIFY_FLOOR } from "../../constants/key-floor.js";
 
 /**
  * Resolve the key a cookie's `.kid` names, then CHECK it.
@@ -36,7 +35,7 @@ export const resolveCookieVerificationKey = (
   // key the cookie names, and a duck-typed `key.predicate` must never override
   // the deployment policy. Per-layer `undefined` stripping keeps a
   // `{ x: undefined }` predicate from erasing a constraint.
-  const floor = applyKeyFloor(COOKIE_VERIFY_FLOOR, key?.predicate);
+  const floor = applyKeyFloor(VERIFY_FLOOR, key?.predicate);
 
   if (!Predicated.match(kryptos, floor)) {
     throw new ClientError("Cookie key violates the verification floor", {

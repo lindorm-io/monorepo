@@ -12,14 +12,22 @@ export type PylonSessionConfig = Pick<
   PylonSetCookie,
   | "domain"
   | "encoding"
-  | "encrypted"
   | "expiry"
   | "httpOnly"
   | "path"
   | "priority"
   | "sameSite"
   | "secure"
-  | "signed"
 > & {
   name?: string;
+  /**
+   * Seal the session cookie. A plain boolean — the session middleware resolves
+   * WHICH key (`keys.session.encryption ?? keys.cookie.encryption`, or the
+   * deployment cookie key) and translates it into the cookie's `encryption`
+   * union. An encrypted session with no key configured fails closed, never
+   * writes plaintext.
+   */
+  encrypted?: boolean;
+  /** Sign the session cookie. Resolved the same way as {@link encrypted}. */
+  signed?: boolean;
 };

@@ -1,7 +1,21 @@
+import { Aegis } from "@lindorm/aegis";
 import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
+import { Amphora } from "@lindorm/amphora";
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
+import { KryptosKit } from "@lindorm/kryptos";
+import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
-import type { PylonCookieConfig, PylonSetCookie } from "../../types/index.js";
+import type {
+  PylonCookieConfig,
+  PylonGetCookie,
+  PylonKeys,
+  PylonSetCookie,
+} from "../../types/index.js";
+
+// Round-trip helpers hand the SAME options object to both `set` and `get`. Under
+// the collapsed API the two sides read disjoint fields (`signature`/`encryption`
+// on write, `signed`/`encrypted` on read), so a combined shape drives both.
+type RoundTripOptions = PylonSetCookie & PylonGetCookie;
 import { signCookie as _signCookie } from "../utils/cookies/sign-cookie.js";
 import { verifyCookie as _verifyCookie } from "../utils/cookies/verify-cookie.js";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
@@ -12,7 +26,7 @@ vi.mock("../utils/cookies/verify-cookie.js");
 const signCookie = _signCookie as Mock;
 const verifyCookie = _verifyCookie as Mock;
 
-type SetCall = { name: string; value: unknown; options?: PylonSetCookie };
+type SetCall = { name: string; value: unknown; options?: RoundTripOptions };
 
 const buildCtx = (cookieHeader: string) => ({
   aegis: createMockAegis(),
@@ -42,7 +56,7 @@ type RunRoundTripResult<T> = {
 const runRoundTrip = async <T = unknown>(
   config: PylonCookieConfig,
   sets: Array<SetCall>,
-  reads: Array<{ name: string; options?: PylonSetCookie }>,
+  reads: Array<{ name: string; options?: RoundTripOptions }>,
 ): Promise<{
   setHeaders: Array<string>;
   cookieHeader: string;
@@ -83,7 +97,7 @@ const runRoundTrip = async <T = unknown>(
 
 const runSingleRoundTrip = async <T = unknown>(
   value: unknown,
-  options: PylonSetCookie = {},
+  options: RoundTripOptions = {},
   config: PylonCookieConfig = {},
 ): Promise<RunRoundTripResult<T>> => {
   const name = "rt_cookie";
@@ -163,7 +177,7 @@ describe("httpCookiesMiddleware round-trip", () => {
 
     const { setHeaders, read } = await runSingleRoundTrip<string>(
       value,
-      { signed: true },
+      { signature: true, signed: true },
       config,
     );
 
@@ -200,16 +214,38 @@ describe("httpCookiesMiddleware round-trip", () => {
     expect(read).toBe(value);
   });
 
+  // A REAL set→get round-trip against a real vault + real aegis: the write seals
+  // with the NAMED cookie key, the ciphertext exceeds the chunk threshold so it
+  // is chunked, and the read reassembles + decrypts back to the exact plaintext.
+  // A mocked encrypt/decrypt could never prove the chunk boundaries are byte-safe.
   test("encrypted + over threshold round-trips with byte-exact tokenised payload", async () => {
-    const tokenised = `aes:${"y".repeat(8_000)}`;
-    const plaintext = "secret";
+    const logger = createMockLogger();
+    const amphora = new Amphora({ domain: "http://test.lindorm.io", logger });
+    const cookieKey = KryptosKit.generate.auto({
+      algorithm: "dir",
+      issuer: "http://test.lindorm.io",
+      publish: false,
+      purpose: "cookie",
+    });
+    amphora.add(cookieKey);
 
-    const writeCtx = buildCtx("");
-    writeCtx.aegis.aes.encrypt = vi.fn().mockResolvedValue(tokenised);
+    const keys: PylonKeys = {
+      cookie: { encryption: { predicate: { purpose: "cookie", publish: false } } },
+    };
 
-    const writeMiddleware = createHttpCookiesMiddleware(config);
+    // Large enough that the sealed token overflows the chunk threshold.
+    const plaintext = "s".repeat(10_000);
+
+    const writeCtx = {
+      aegis: new Aegis({ amphora, logger }),
+      amphora,
+      get: vi.fn().mockReturnValue(""),
+      set: vi.fn(),
+    };
+
+    const writeMiddleware = createHttpCookiesMiddleware(config, keys);
     await writeMiddleware(writeCtx as any, async () => {
-      await (writeCtx as any).cookies.set("rt_cookie", plaintext, { encrypted: true });
+      await (writeCtx as any).cookies.set("rt_cookie", plaintext, { encryption: true });
     });
 
     const setHeaders = writeCtx.set.mock.calls[0][1] as Array<string>;
@@ -219,20 +255,18 @@ describe("httpCookiesMiddleware round-trip", () => {
 
     const cookieHeader = headersToCookieHeader(setHeaders);
 
-    const readCtx = buildCtx(cookieHeader);
-    readCtx.aegis.aes.decrypt = vi.fn().mockResolvedValue(plaintext);
+    const readCtx = {
+      aegis: new Aegis({ amphora, logger }),
+      amphora,
+      get: vi.fn().mockReturnValue(cookieHeader),
+      set: vi.fn(),
+    };
 
-    const readMiddleware = createHttpCookiesMiddleware(config);
+    const readMiddleware = createHttpCookiesMiddleware(config, keys);
     let readValue: unknown = undefined;
     await readMiddleware(readCtx as any, async () => {
       readValue = await (readCtx as any).cookies.get("rt_cookie", { encrypted: true });
     });
-
-    expect(readCtx.aegis.aes.decrypt).toHaveBeenCalledTimes(1);
-    const decryptArg = (readCtx.aegis.aes.decrypt as unknown as Mock).mock
-      .calls[0][0] as string;
-    expect(decryptArg).toBe(tokenised);
-    expect(decryptArg.length).toBe(tokenised.length);
 
     expect(readValue).toBe(plaintext);
   });

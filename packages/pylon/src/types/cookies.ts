@@ -10,7 +10,6 @@ export type PylonCookieOptions = {
   chunkSize?: number;
   domain?: string;
   encoding?: CookieEncoding;
-  encrypted?: boolean;
   expiry?: Expiry;
   httpOnly?: boolean;
   partitioned?: boolean;
@@ -18,46 +17,63 @@ export type PylonCookieOptions = {
   priority?: CookiePriority;
   sameSite?: CookieSameSite;
   secure?: boolean;
-  signed?: boolean;
 };
 
+/**
+ * Deployment-wide cookie defaults, merged BEFORE any per-call options. Signing
+ * and sealing collapse into a single field each: a `boolean` picks the
+ * deployment cookie key (`true`) or turns the role off (`false`), a selector
+ * names a different key outright.
+ */
 export type PylonCookieConfig = Pick<
   PylonCookieOptions,
-  | "chunked"
-  | "chunkSize"
-  | "domain"
-  | "encoding"
-  | "encrypted"
-  | "httpOnly"
-  | "sameSite"
-  | "secure"
-  | "signed"
->;
+  "chunked" | "chunkSize" | "domain" | "encoding" | "httpOnly" | "sameSite" | "secure"
+> & {
+  /** `true` ⇒ sign with `keys.cookie.signature`; a selector ⇒ that key; `false`/absent ⇒ unsigned. */
+  signature?: boolean | PylonSignKey;
+  /** `true` ⇒ seal with `keys.cookie.encryption`; a selector ⇒ that key; `false`/absent ⇒ plaintext. */
+  encryption?: boolean | PylonEncKey;
+  /**
+   * Deployment-wide READ defaults, so an ordinary cookie set with a config-level
+   * `signature`/`encryption` is verified/decrypted on read without repeating it
+   * per `get` — the symmetry the old `signed`/`encrypted` booleans gave.
+   */
+  /** `true` ⇒ verify with `keys.cookie.verification`; a selector ⇒ that key; `false`/absent ⇒ not verified. */
+  signed?: boolean | PylonVerifyKey;
+  /** `true` ⇒ decrypt on read (ciphertext names its own key); `false`/absent ⇒ plaintext. */
+  encrypted?: boolean;
+};
 
 /**
- * `ctx.cookies.set` / `.get` are generic — they sign and seal every cookie the
- * same way, with the keys named in `keys.cookie`. A cookie that needs its OWN
- * key says so here, and that is how the session cookie's keys reach the signer
- * and the cipher without pylon ever sniffing cookie names.
+ * `ctx.cookies.set` signs and seals every cookie the same way, driven by two
+ * collapsed fields. Each is `boolean | <selector>`:
  *
- * Absent ⇒ the `keys.cookie.*` key for that role. There is no third fallback:
- * the roles a cookie can override are exactly the roles pylon resolves.
+ * - `true` ⇒ the deployment `keys.cookie.*` key for that role.
+ * - a selector ⇒ THIS cookie's own key (how the session cookie carries its own).
+ * - `false` / absent ⇒ the role is off.
+ *
+ * There is no third fallback: the roles a cookie can override are exactly the
+ * roles pylon resolves. Pylon never sniffs cookie names.
  */
 export type PylonSetCookie = PylonCookieOptions & {
-  /** Signs THIS cookie. Falls back to `keys.cookie.signature`. */
-  signature?: PylonSignKey;
-  /** Encrypts THIS cookie's value. Falls back to `keys.cookie.encryption`. */
-  encryption?: PylonEncKey;
+  /** Signs THIS cookie. `true` ⇒ `keys.cookie.signature`; a selector ⇒ that key. */
+  signature?: boolean | PylonSignKey;
+  /** Encrypts THIS cookie's value. `true` ⇒ `keys.cookie.encryption`; a selector ⇒ that key. */
+  encryption?: boolean | PylonEncKey;
 };
 
 export type PylonGetCookie = Pick<PylonCookieOptions, "encoding"> & {
+  /** `true` ⇒ decrypt (the ciphertext names its own key); `false`/absent ⇒ plaintext. */
   encrypted?: boolean;
-  signed?: boolean;
   /**
-   * Checked on the key THIS cookie's `.kid` names, before its signature is
-   * verified. Falls back to `keys.cookie.verification`.
+   * Whether — and against which key — THIS cookie's signature is verified,
+   * checked on the key its `.kid` names before the signature is trusted.
+   *
+   * - `true` ⇒ verify with `keys.cookie.verification`.
+   * - a selector ⇒ verify against that key's predicate.
+   * - `false` / absent ⇒ not verified.
    *
    * The read side of DECRYPTION takes no key — ciphertext names its own.
    */
-  verification?: PylonVerifyKey;
+  signed?: boolean | PylonVerifyKey;
 };

@@ -3,11 +3,11 @@ import { ServerError } from "@lindorm/errors";
 import { removeUndefined } from "@lindorm/utils";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type {
+  PylonGetCookie,
   PylonHttpMiddleware,
-  PylonKeyRoles,
   PylonKeys,
-  PylonSessionConfig,
   PylonSessionOptions,
+  PylonSetCookie,
 } from "../../types/index.js";
 import { createSessionStore } from "../utils/create-session-store.js";
 import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
@@ -21,18 +21,28 @@ export const createHttpSessionMiddleware = (
   // The session cookie is a cookie like any other, so its keys reach the signer
   // and the cipher the way any cookie's do: named in the config handed to
   // `ctx.cookies.set` / `.get`. Pylon never sniffs cookie names.
-  const config: PylonSessionConfig & PylonKeyRoles = removeUndefined({
+  //
+  // The session's `encrypted`/`signed` booleans collapse into the cookie's
+  // `encryption`/`signature`/`signed` unions. When a session (or cookie)
+  // key resolves, the union carries that selector; when none does the SET side
+  // falls to `true`, which routes through the deployment cookie key and — if
+  // that is absent too — reaches the THROWING resolver. An encrypted session
+  // with no key must fail closed, never silently write plaintext.
+  const sk = resolveSessionKeys(keys);
+
+  const config: PylonSetCookie & PylonGetCookie = removeUndefined({
     domain: options.domain,
     encoding: options.encoding,
-    encrypted: options.encrypted,
     expiry: options.expiry,
     httpOnly: options.httpOnly,
     path: options.path,
     priority: options.priority,
     sameSite: options.sameSite,
     secure: options.secure,
-    signed: options.signed,
-    ...resolveSessionKeys(keys),
+    encryption: options.encrypted ? (sk.encryption ?? true) : undefined,
+    signature: options.signed ? (sk.signature ?? true) : undefined,
+    encrypted: options.encrypted,
+    signed: options.signed ? (sk.verification ?? true) : undefined,
   });
 
   const store = createSessionStore(options, keys);

@@ -1087,7 +1087,7 @@ There is no separate session key taxonomy, because there is no separate artifact
 session.<role> ?? cookie.<role>
 ```
 
-Name only `cookie` and one key set does everything. Name `session` too and the session cookie is signed / sealed with its **own** key — a smaller blast radius, or an asymmetric signature for session cookies specifically — while every ordinary cookie keeps using the `cookie` keys. Any cookie can do the same, per call: `ctx.cookies.set(name, value, { signed: true, signature })`.
+Name only `cookie` and one key set does everything. Name `session` too and the session cookie is signed / sealed with its **own** key — a smaller blast radius, or an asymmetric signature for session cookies specifically — while every ordinary cookie keeps using the `cookie` keys. Any cookie can do the same, per call — `signature` and `encryption` each take `true` (the deployment cookie key) or a selector (its own key): `ctx.cookies.set(name, value, { signature, encryption: true })`.
 
 ### `verification` defaults to `signature`
 

@@ -91,7 +91,7 @@ export const createLogoutHandler = <C extends PylonHttpContext>(
     // not encrypted — but a forged cookie must not dictate the redirect target.
     // The callback reads it under the same policy.
     await ctx.cookies.set(routerConfig.cookies.logout, cookie, {
-      signed: true,
+      signature: true,
       expiry: "15m",
     });
 

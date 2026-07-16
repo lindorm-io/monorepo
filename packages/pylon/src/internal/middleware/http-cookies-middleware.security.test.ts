@@ -104,6 +104,28 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
     return out as T;
   };
 
+  // TWO reads of the same cookie inside ONE request — i.e. sharing a single
+  // get-cache. This is the only way to exercise finding #12's laundering: a lax
+  // read followed by a stricter read of the SAME cookie in the SAME request.
+  const readTwice = async (
+    cookieHeader: string,
+    name: string,
+    first: any,
+    second: any,
+    cfg: PylonCookieConfig = config,
+  ): Promise<[unknown, unknown]> => {
+    const ctx = buildCtx(amphora, cookieHeader);
+
+    let a: unknown;
+    let b: unknown;
+    await createHttpCookiesMiddleware(cfg, keys)(ctx as any, async () => {
+      a = await (ctx as any).cookies.get(name, first);
+      b = await (ctx as any).cookies.get(name, second);
+    });
+
+    return [a, b];
+  };
+
   // A base64url JSON blob is exactly what an attacker plants: not `aes:`-prefixed,
   // so the old sniff decoded it as plaintext. It is NOT aes-tokenised.
   const forgedUnsealed = (payload: unknown): string => {
@@ -115,7 +137,7 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
   test("an encrypted cookie round-trips under an encrypted read", async () => {
     const value = { redirectUri: "https://client.example/app", state: "s-123" };
 
-    const headers = await write("session", value, { encrypted: true });
+    const headers = await write("session", value, { encryption: true });
     expect(AesKit.isAesTokenised(extractNameValue(headers[0]).split("=")[1])).toBe(true);
 
     const result = await read(toCookieHeader(headers), "session", { encrypted: true });
@@ -148,7 +170,7 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
     const value = { secret: "do-not-decrypt" };
 
     // A genuinely sealed value, then read under a FALSY encrypted policy.
-    const headers = await write("session", value, { encrypted: true });
+    const headers = await write("session", value, { encryption: true });
     const sealed = extractNameValue(headers[0]).split("=")[1];
     expect(AesKit.isAesTokenised(sealed)).toBe(true);
 
@@ -163,7 +185,7 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
   test("a signed cookie round-trips, and a tampered value fails verification", async () => {
     const value = { redirectUri: "https://client.example/app", state: "s-777" };
 
-    const headers = await write("session", value, { signed: true });
+    const headers = await write("session", value, { signature: true });
     const cookieHeader = toCookieHeader(headers);
 
     await expect(read(cookieHeader, "session", { signed: true })).resolves.toEqual(value);
@@ -191,8 +213,8 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
     };
 
     const headers = await write("pylon_login_session", loginCookie, {
-      signed: true,
-      encrypted: true,
+      signature: true,
+      encryption: true,
     });
 
     // Round-trip: the callback reads it under the SAME policy and recovers it.
@@ -217,9 +239,8 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
     ).rejects.toThrow(ClientError);
   });
 
-  test("a deployment-wide signed:true in PylonCookieConfig reaches the middleware", async () => {
-    // Compile-level: PylonCookieConfig now accepts signed/encrypted.
-    const deploymentConfig: PylonCookieConfig = { signed: true, encrypted: false };
+  test("a deployment-wide signature:true in PylonCookieConfig drives write-side signing", async () => {
+    const deploymentConfig: PylonCookieConfig = { signature: true, encryption: false };
 
     const headers = await write(
       "session",
@@ -228,11 +249,36 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
       deploymentConfig,
     );
 
-    // Behavioural: config-level `signed` produced the signature artifacts...
+    // Behavioural: config-level `signature` produced the signature artifacts...
     expect(headers.some((h) => h.startsWith("session.sig="))).toBe(true);
     expect(headers.some((h) => h.startsWith("session.kid="))).toBe(true);
 
-    // ...and the read side, under the same config, verifies and returns it.
+    // ...and the read side verifies it when the read declares `signed`.
+    await expect(
+      read(
+        toCookieHeader(headers),
+        "session",
+        { encoding: "base64url", signed: true },
+        deploymentConfig,
+      ),
+    ).resolves.toEqual({ state: "cfg-signed" });
+  });
+
+  test("a deployment-wide signed in PylonCookieConfig drives the READ without a per-call override", async () => {
+    // Symmetry restored: PylonCookieConfig now carries the READ-side defaults too
+    // (`signed`/`encrypted`), so an ordinary cookie signed by config policy
+    // is verified on read without repeating it per `get` — the symmetry the old
+    // `signed` boolean gave, under the collapsed union.
+    const deploymentConfig: PylonCookieConfig = { signature: true, signed: true };
+
+    const headers = await write(
+      "session",
+      { state: "cfg-both" },
+      { encoding: "base64url" },
+      deploymentConfig,
+    );
+
+    // The read passes NO verification of its own — it inherits config.signed.
     await expect(
       read(
         toCookieHeader(headers),
@@ -240,6 +286,76 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
         { encoding: "base64url" },
         deploymentConfig,
       ),
-    ).resolves.toEqual({ state: "cfg-signed" });
+    ).resolves.toEqual({ state: "cfg-both" });
+
+    // And a tampered signature under that config-level policy is rejected on read.
+    const tampered = toCookieHeader(headers).replace(
+      /session\.sig=[^;]+/,
+      "session.sig=AAAA",
+    );
+    await expect(
+      read(tampered, "session", { encoding: "base64url" }, deploymentConfig),
+    ).rejects.toThrow(ClientError);
+  });
+
+  // ── Finding #12: the get-cache (keyed on NAME only, ahead of the
+  // verify/decrypt checks) let a lax read serve a pre-verification /
+  // pre-decryption value to a later stricter read of the SAME request. These
+  // pin the property end-to-end, against real crypto.
+
+  test("a BARE read of a signed cookie is verified — a tampered value is rejected with NO signed option", async () => {
+    const value = { redirectUri: "https://client.example/app", state: "s-12" };
+
+    const headers = await write("session", value, { signature: true });
+    const cookieHeader = toCookieHeader(headers);
+
+    // Genuine cookie, BARE read (no `signed`): auto-verified, returns value.
+    await expect(read(cookieHeader, "session", {})).resolves.toEqual(value);
+
+    // Tamper the payload, keep the now-stale sig + kid. A bare read USED to hand
+    // this back raw; auto-verify must now THROW.
+    const tampered = cookieHeader.replace(
+      /session=[^;]+/,
+      `session=${forgedUnsealed({ redirectUri: "https://evil.example", state: "x" })}`,
+    );
+
+    await expect(read(tampered, "session", {})).rejects.toThrow(ClientError);
+  });
+
+  test("signed:true over an UNSIGNED cookie throws cookie_signature_required", async () => {
+    const headers = await write(
+      "session",
+      { state: "unsigned" },
+      { encoding: "base64url" },
+    );
+
+    await expect(
+      read(toCookieHeader(headers), "session", {
+        encoding: "base64url",
+        signed: true,
+      }),
+    ).rejects.toMatchObject({
+      code: "cookie_signature_required",
+      status: ClientError.Status.Unauthorized,
+    });
+  });
+
+  test("a bare read cannot launder a later encrypted read in the SAME request", async () => {
+    const value = { redirectUri: "https://client.example/callback", state: "s-enc" };
+
+    const headers = await write("session", value, { encryption: true });
+
+    const [bare, encrypted] = await readTwice(
+      toCookieHeader(headers),
+      "session",
+      {}, // bare: plaintext policy, populates the enc=0 slot with the ciphertext
+      { encrypted: true }, // distinct slot ⇒ a real seal-check + decrypt still runs
+    );
+
+    // The bare read did NOT decrypt (plaintext policy on ciphertext)...
+    expect(bare).not.toEqual(value);
+    // ...and the later encrypted read decrypts correctly — the bare slot did not
+    // launder it.
+    expect(encrypted).toEqual(value);
   });
 });

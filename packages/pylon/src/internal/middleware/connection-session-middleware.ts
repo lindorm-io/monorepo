@@ -8,10 +8,10 @@ import { createSessionRefreshHandler } from "../utils/refresh/create-session-ref
 import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
 import type {
   PylonConnectionMiddleware,
-  PylonKeyRoles,
+  PylonGetCookie,
   PylonKeys,
-  PylonSessionConfig,
   PylonSessionOptions,
+  PylonSetCookie,
   PylonSocketAuth,
   PylonSocketHandshakeContext,
 } from "../../types/index.js";
@@ -25,19 +25,24 @@ export const createConnectionSessionMiddleware = <
   const name = options.name ?? "pylon_session";
 
   // The session cookie's keys travel in the config — the handshake reads the
-  // cookie through this config, not a per-call options object.
-  const config: PylonSessionConfig & PylonKeyRoles = removeUndefined({
+  // cookie through this config, not a per-call options object. The session's
+  // `encrypted`/`signed` booleans collapse into the cookie unions the same way
+  // the HTTP session middleware does, preserving the fail-closed contract.
+  const sk = resolveSessionKeys(keys);
+
+  const config: PylonSetCookie & PylonGetCookie = removeUndefined({
     domain: options.domain,
     encoding: options.encoding ?? "base64url",
-    encrypted: options.encrypted,
     expiry: options.expiry,
     httpOnly: options.httpOnly,
     path: options.path,
     priority: options.priority,
     sameSite: options.sameSite,
     secure: options.secure,
-    signed: options.signed,
-    ...resolveSessionKeys(keys),
+    encryption: options.encrypted ? (sk.encryption ?? true) : undefined,
+    signature: options.signed ? (sk.signature ?? true) : undefined,
+    encrypted: options.encrypted,
+    signed: options.signed ? (sk.verification ?? true) : undefined,
   });
 
   const cookieKeys = resolveCookieKeys(keys);

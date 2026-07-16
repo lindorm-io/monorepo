@@ -46,25 +46,68 @@ export const createGetCookie = ({
     name: string,
     options: PylonGetCookie = {},
   ): Promise<T | null> {
-    if (cache[name]) return cache[name];
-
     const cookie = parsed.find((c) => c.name === name);
 
     if (!cookie) return null;
 
     const opts = { ...config, ...options };
 
-    if (opts.signed) {
-      // A cookie may name its OWN verification key (the session middleware hands
-      // us the resolved session keys, whose `verification` already follows the
-      // session SIGNATURE) — otherwise it is the deployment's cookie key.
+    const hasSignature = cookie.signature !== null && cookie.kid !== null;
+
+    // REQUIRE-WHEN-ASKED — a per-call demand, so it runs on EVERY call, ahead of
+    // any cache return. A read that declares a verification policy over a cookie
+    // that carries no signature is a policy violation, not a silent pass: the
+    // caller asked for a verified value and there is nothing to verify.
+    if (opts.signed && !hasSignature) {
+      throw new ClientError("Cookie signature is required", {
+        code: "cookie_signature_required",
+        title: "Cookie Signature Required",
+        details:
+          "The cookie was read under a verification policy but carries no signature; an unsigned value can never satisfy a verification requirement and is never trusted.",
+        type: "urn:lindorm:pylon:error:cookie_signature_required",
+        status: ClientError.Status.Unauthorized,
+        data: { name },
+      });
+    }
+
+    // Cache is keyed on the VALUE-AFFECTING policy (encryption + encoding), NOT
+    // on `name` alone. A name-only cache laundered decryption/decoding: a bare
+    // read cached the undecrypted/undecoded value and a later `{ encrypted: true }`
+    // read served it back without the seal-check + decrypt. Distinct policies now
+    // occupy distinct slots, so decryption can never be skipped by a prior read.
+    //
+    // Verification is DELIBERATELY not in the key: a present signature is always
+    // verified below regardless of the option, so no slot can hold a
+    // pre-verification value, and the require-check above runs per-call anyway.
+    //
+    // Known minor limitation (accepted, not worked around): two reads of the same
+    // cookie with two DIFFERENT verification SELECTORS in one request share a
+    // value-policy slot, so the second reuses the first's already-verified value
+    // without re-applying the second selector's predicate. Verification does not
+    // transform the value and the require-check still runs per-call, so this is
+    // acceptable.
+    const cacheKey = `${name}::enc=${opts.encrypted ? 1 : 0}::codec=${opts.encoding ?? ""}`;
+
+    if (cacheKey in cache) return cache[cacheKey];
+
+    // AUTO-VERIFY a present signature REGARDLESS of the option — an unverified
+    // signature is never trusted. Even a bare `get(name)` verifies a signed
+    // cookie; `signed: false`/absent no longer suppresses this (it only
+    // stops the require-throw above). The key: a selector picks THIS cookie's own
+    // (the session middleware hands us the resolved session key, whose
+    // `verification` already follows the session SIGNATURE); `true`/absent ⇒ the
+    // deployment cookie verification key.
+    if (hasSignature) {
+      const verifyKey =
+        opts.signed && opts.signed !== true ? opts.signed : cookieKeys?.verification;
+
       await verifyCookie(
         ctx,
         name,
         cookie.value,
         cookie.signature,
         cookie.kid,
-        opts.verification ?? cookieKeys?.verification,
+        verifyKey,
       );
     }
 
@@ -101,8 +144,10 @@ export const createGetCookie = ({
       value = safelyParse(value);
     }
 
-    cache[name] = value;
+    // Populate AFTER every check — the slot never holds a pre-verification or
+    // pre-decryption value.
+    cache[cacheKey] = value;
 
-    return cache[name];
+    return value;
   };
 };

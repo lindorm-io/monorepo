@@ -9,7 +9,7 @@ type CreateBearerRefreshHandlerOptions = {
   aegis: IAegis;
   capturedJkt?: string;
   socket: PylonSocket;
-  subject: string;
+  subject: string | undefined;
   verifyOptions: VerifyJwtOptions;
 };
 
