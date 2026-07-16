@@ -39,20 +39,11 @@ describe("decodeCborEnv", () => {
     expect(decoded.publish).toBe(false);
   });
 
-  test("rejects an unknown label", () => {
-    const map = baseMap();
-    map.set(99, "surprise");
-
-    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(KryptosError);
-    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(
-      /Unknown CBOR label/i,
-    );
-  });
-
-  // The shared @lindorm/cbor codec now owns enum, version, and payload validation.
-  // kryptos re-raises every decode failure as its own KryptosError (code
-  // "invalid_cbor_env") with the codec's reason preserved in `details`, so no
-  // CborError or raw TypeError leaks out of the public env-string import.
+  // The shared @lindorm/cbor codec now owns enum, version, payload AND unknown-label
+  // validation (it runs in its default "strict" mode). kryptos re-raises every decode
+  // failure as its own KryptosError (code "invalid_cbor_env") with the codec's reason
+  // preserved in `details`, so no CborError or raw TypeError leaks out of the public
+  // env-string import.
   const reasonOf = (fn: () => unknown): string => {
     try {
       fn();
@@ -62,6 +53,26 @@ describe("decodeCborEnv", () => {
     }
     throw new Error("expected the call to throw");
   };
+
+  test("rejects an unknown label (from the codec's strict mode)", () => {
+    const map = baseMap();
+    map.set(99, "surprise");
+
+    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(KryptosError);
+    expect(reasonOf(() => decodeCborEnv(encode(map, { cde: true })))).toMatch(
+      /unknown cbor label/i,
+    );
+  });
+
+  test("rejects the retired key_ops label 7", () => {
+    const map = baseMap();
+    map.set(7, ["sign"]);
+
+    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(KryptosError);
+    expect(reasonOf(() => decodeCborEnv(encode(map, { cde: true })))).toMatch(
+      /unknown cbor label/i,
+    );
+  });
 
   test("rejects an unknown enum value", () => {
     const map = baseMap();

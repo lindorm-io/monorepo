@@ -65,9 +65,10 @@ describe("encodeCborEnv", () => {
   });
 
   // `key_ops` is gone from the vocabulary entirely, so a string carrying its old
-  // label is not "legacy but tolerated" — it is an unknown label, and the decoder
-  // rejects unknown labels loudly rather than silently ignoring them. The env
-  // format is pre-release, so there is nothing in the wild to keep compatible.
+  // label is not "legacy but tolerated" — it is an unknown label. The shared codec
+  // runs in strict mode and rejects unknown labels loudly; kryptos re-raises that as
+  // a KryptosError with the codec's reason preserved in `details`. The env format is
+  // pre-release, so there is nothing in the wild to keep compatible.
   test("rejects an env string carrying the retired key_ops label", () => {
     const key = KryptosKit.generate.auto({ algorithm: "ES256" });
 
@@ -79,7 +80,12 @@ describe("encodeCborEnv", () => {
       { cde: true },
     );
 
-    expect(() => decodeCborEnv(stale)).toThrow(/Unknown CBOR label "7"/);
+    expect(() => decodeCborEnv(stale)).toThrowError(
+      expect.objectContaining({
+        code: "invalid_cbor_env",
+        details: expect.stringMatching(/unknown cbor label/i),
+      }),
+    );
   });
 
   // The reason key_ops can go: the key material answers the question by itself.
