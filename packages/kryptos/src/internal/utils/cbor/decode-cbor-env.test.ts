@@ -49,30 +49,52 @@ describe("decodeCborEnv", () => {
     );
   });
 
+  // The shared @lindorm/cbor codec now owns enum, version, and payload validation.
+  // kryptos re-raises every decode failure as its own KryptosError (code
+  // "invalid_cbor_env") with the codec's reason preserved in `details`, so no
+  // CborError or raw TypeError leaks out of the public env-string import.
+  const reasonOf = (fn: () => unknown): string => {
+    try {
+      fn();
+    } catch (error) {
+      if (error instanceof KryptosError) return String(error.details);
+      throw error;
+    }
+    throw new Error("expected the call to throw");
+  };
+
   test("rejects an unknown enum value", () => {
     const map = baseMap();
     map.set(CBOR_LABEL.alg, 9999);
 
-    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(/Unknown CBOR alg/i);
+    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(KryptosError);
+    expect(reasonOf(() => decodeCborEnv(encode(map, { cde: true })))).toMatch(/enum/i);
   });
 
   test("rejects a future format version", () => {
     const map = baseMap();
     map.set(CBOR_LABEL.version, CBOR_VERSION + 1);
 
-    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(/newer kryptos/i);
+    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(KryptosError);
+    expect(reasonOf(() => decodeCborEnv(encode(map, { cde: true })))).toMatch(
+      /version mismatch/i,
+    );
   });
 
   test("rejects a missing version", () => {
     const map = baseMap();
     map.delete(CBOR_LABEL.version);
 
-    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(/version/i);
+    expect(() => decodeCborEnv(encode(map, { cde: true }))).toThrow(KryptosError);
+    expect(reasonOf(() => decodeCborEnv(encode(map, { cde: true })))).toMatch(
+      /version mismatch/i,
+    );
   });
 
   test("rejects a non-map payload", () => {
+    expect(() => decodeCborEnv(encode([1, 2, 3], { cde: true }))).toThrow(KryptosError);
     expect(() => decodeCborEnv(encode([1, 2, 3], { cde: true }))).toThrow(
-      /must decode to a map/i,
+      /could not be decoded/i,
     );
   });
 });

@@ -54,6 +54,7 @@
     "@inquirer/prompts": "^8.3.0",
     "@lindorm/b64": "^0.3.0",
     "@lindorm/case": "^0.3.0",
+    "@lindorm/cbor": "^0.0.0",
     "@lindorm/date": "^0.6.0",
     "@lindorm/errors": "^0.6.0",
     "@lindorm/is": "^0.3.0",
@@ -61,11 +62,11 @@
     "@lindorm/sha": "^0.7.0",
     "@lindorm/types": "^0.10.0",
     "@lindorm/utils": "^0.10.0",
-    "cbor2": "^2.3.0",
     "commander": "^14.0.3"
   },
   "devDependencies": {
     "@peculiar/x509": "1.14.3",
+    "cbor2": "^2.3.0",
     "jose": "^6.2.1"
   }
 }

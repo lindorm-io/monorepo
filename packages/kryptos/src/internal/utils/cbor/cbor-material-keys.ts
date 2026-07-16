@@ -17,5 +17,3 @@ export const CBOR_MATERIAL_KEYS = [
   "pub",
   "priv",
 ] as const satisfies ReadonlyArray<keyof KryptosJwk>;
-
-export type CborMaterialKey = (typeof CBOR_MATERIAL_KEYS)[number];
