@@ -47,11 +47,17 @@ export const clearPrimaryCache = (): void => {
  * Merge field modifiers into their corresponding fields by property key.
  * Throws if a modifier targets a property with no @Field decorator.
  * Throws on duplicate modifier decorators for the same property (except @Hide which is additive).
+ *
+ * `relationKeys` names the entity's relation properties: a `@Nullable` targeting a
+ * relation (which has no @Field) is not an error — it composes with the owning
+ * relation decorator and is routed to `relation.options.nullable` by
+ * `resolveRelations`, so it is skipped here rather than demanding a @Field.
  */
 const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
   targetName: string,
   fields: Array<MetaField<TDecorator>>,
   modifiers: Array<StagedFieldModifier>,
+  relationKeys: Set<string> = new Set(),
 ): void => {
   // Track which modifier types have been applied per property
   const applied = new Map<string, Set<string>>();
@@ -60,6 +66,12 @@ const mergeFieldModifiers = <TDecorator extends MetaFieldDecorator>(
     const field = fields.find((f) => f.key === modifier.key);
 
     if (!field) {
+      // @Nullable on a relation property composes with the relation decorator —
+      // resolveRelations routes it to relation.options.nullable. Skip it here.
+      if (modifier.decorator === "Nullable" && relationKeys.has(modifier.key)) {
+        continue;
+      }
+
       throw new EntityMetadataError(
         `@${modifier.decorator} on property "${modifier.key}" requires a @Field decorator`,
         {
@@ -622,9 +634,12 @@ export const buildPrimaryMetadata = <
   const uniques = collectAll(target, "uniques");
   const versionK = collectAll(target, "versionKeys");
 
-  // Merge field modifiers into fields before validation
+  // Merge field modifiers into fields before validation. A @Nullable targeting a
+  // relation property is deferred to resolveRelations, so pass the relation keys
+  // to keep mergeFieldModifiers from rejecting it as a missing @Field.
   if (fieldModifiers.length > 0) {
-    mergeFieldModifiers(target.name, fields, fieldModifiers);
+    const relationKeys = new Set(collectAll(target, "relations").map((r) => r.key));
+    mergeFieldModifiers(target.name, fields, fieldModifiers, relationKeys);
   }
 
   // Flatten @Embedded fields into parent's field array

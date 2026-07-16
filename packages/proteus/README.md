@@ -928,6 +928,8 @@ Marks a field as nullable. Affects both DDL generation and Zod validation.
 email!: string | null;
 ```
 
+`@Nullable` also composes with an **owning-side relation** (`@ManyToOne`, or `@OneToOne` with `@JoinKey`) to make its auto-generated FK column nullable — see [Relation Decorators](#relation-decorators). Applying it to a non-owning relation (`@OneToMany` / `@ManyToMany`) throws.
+
 #### `@Default`
 
 Sets a default value for a field, applied when creating new entities. Accepts a literal or a function returning the default at creation time.
@@ -1166,9 +1168,13 @@ articles!: Article[];
 
 #### `@ManyToOne`
 
-Owning side. This entity's table gets the FK column(s).
+Owning side. This entity's table gets the FK column(s). The auto-generated FK column is `NOT NULL` by default; put `@Nullable()` on the relation property to make it nullable (so the relation can be absent). Declaring an explicit `@Nullable() @Field` for the FK still works, but composing `@Nullable()` on the relation is the simpler way.
 
 ```typescript
+@ManyToOne(() => Author, "articles")
+author!: Author | null;
+
+@Nullable() // auto-FK column allows NULL — the author is optional
 @ManyToOne(() => Author, "articles")
 author!: Author | null;
 ```

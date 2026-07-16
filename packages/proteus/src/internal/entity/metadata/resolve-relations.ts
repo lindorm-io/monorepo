@@ -4,6 +4,7 @@ import type { Dict } from "@lindorm/types";
 import { EntityMetadataError } from "../errors/EntityMetadataError.js";
 import type { EntityMetadata, MetaRelation } from "../types/metadata.js";
 import type {
+  StagedFieldModifier,
   StagedJoinField,
   StagedJoinTable,
   StagedRelation,
@@ -82,6 +83,55 @@ const mergeJoinTables = (
     }
 
     relation.joinTable = jt.name ?? true;
+  }
+};
+
+/**
+ * Route `@Nullable` modifiers that target relation properties onto the relation's
+ * `options.nullable`. `@Nullable` composes with the owning relation decorator to
+ * make the auto-generated FK column NULLable.
+ *
+ * Must run after `mergeJoinFields` so an @OneToOne's `@JoinKey`-declared ownership
+ * is visible when deciding owning-ness.
+ *
+ * A `@Nullable` on a non-owning relation (@OneToMany / @ManyToMany, which own no FK
+ * column on this table, or an inverse @OneToOne whose FK lives on the related
+ * entity) is a hard error — it would silently no-op otherwise.
+ */
+const mergeRelationNullable = (
+  targetName: string,
+  staged: Array<StagedRelation>,
+  fieldModifiers: Array<StagedFieldModifier>,
+): void => {
+  for (const modifier of fieldModifiers) {
+    if (modifier.decorator !== "Nullable") continue;
+
+    const relation = staged.find((r) => r.key === modifier.key);
+    // Not a relation → this @Nullable belongs to a @Field and is merged in build-primary.
+    if (!relation) continue;
+
+    const isOwningFk =
+      relation.type === "ManyToOne" ||
+      (relation.type === "OneToOne" &&
+        (isTrue(relation.joinKeys) || isObject(relation.joinKeys)));
+
+    if (!isOwningFk) {
+      throw new EntityMetadataError(
+        `@Nullable on relation "${modifier.key}" requires an owning-side foreign-key column`,
+        {
+          code: "nullable_on_non_owning_relation",
+          title: "Nullable On Non-Owning Relation",
+          details: `@Nullable on "${modifier.key}" of "${targetName}" is only valid on an owning-side relation that generates a foreign-key column — @ManyToOne, or @OneToOne with @JoinKey. @OneToMany and @ManyToMany own no FK column on this table, and an inverse @OneToOne's FK lives on the related entity — remove @Nullable, or move it to the owning side.`,
+          debug: {
+            target: targetName,
+            property: modifier.key,
+            relationType: relation.type,
+          },
+        },
+      );
+    }
+
+    relation.options.nullable = true;
   }
 };
 
@@ -448,10 +498,15 @@ export const resolveRelations = (
   const joinFields = collectAll(target, "joinFields");
   const joinTables = collectAll(target, "joinTables");
   const relationModifiers = collectAll(target, "relationModifiers");
+  const fieldModifiers = collectAll(target, "fieldModifiers");
 
   // Merge decorator-staged join fields/tables/modifiers into staged relations
   mergeJoinFields(targetName, staged, joinFields);
   mergeJoinTables(targetName, staged, joinTables);
+
+  // Route @Nullable modifiers that target relations onto relation.options.nullable
+  // (after join fields so @OneToOne ownership is known).
+  mergeRelationNullable(targetName, staged, fieldModifiers);
 
   const orderByMap = new Map<string, Record<string, "ASC" | "DESC">>();
   const embeddedListKeys = new Set(primaryMeta.embeddedLists.map((el) => el.key));

@@ -7,7 +7,9 @@ import { stageRelation } from "../internal/entity/metadata/stage-metadata.js";
  * Declare a one-to-one relation between two entities.
  *
  * Use `@JoinKey()` on the owning side to mark FK ownership.
- * Use `@Nullable()` on the FK field to allow NULL values.
+ * Use `@Nullable()` directly on the relation property (owning side) to allow NULL
+ * in the auto-generated FK column. (Declaring an explicit `@Nullable() @Field` for
+ * the FK still works, but composing `@Nullable()` on the relation is the simpler way.)
  * Use `@Deferrable()` for deferred FK constraints.
  *
  * @param entityFn - Thunk returning the related entity constructor (avoids circular imports).

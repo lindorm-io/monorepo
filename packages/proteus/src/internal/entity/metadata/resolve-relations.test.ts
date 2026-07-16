@@ -12,7 +12,26 @@ import { OneToMany } from "../../../decorators/OneToMany.js";
 import { OneToOne } from "../../../decorators/OneToOne.js";
 import { Generated } from "../../../decorators/Generated.js";
 import { PrimaryKeyField } from "../../../decorators/PrimaryKeyField.js";
+import { projectColumns } from "../../utils/sync/project-columns.js";
+import { resolveJoinedChildContext } from "../../utils/sync/joined-child-context.js";
+import { sqliteSyncDialect } from "../../drivers/sqlite/utils/sync/sqlite-sync-dialect.js";
 import { describe, expect, test } from "vitest";
+
+/** Project just the auto-generated FK columns for an entity via the shared
+ *  projection core (using the dependency-free sqlite dialect). */
+const projectFkColumns = (target: Function) => {
+  const metadata = getEntityMetadata(target);
+  const namespaceOptions = { namespace: null };
+  const child = resolveJoinedChildContext(metadata, namespaceOptions);
+  return projectColumns({
+    metadata,
+    child,
+    tableName: metadata.entity.name,
+    namespace: null,
+    dialect: sqliteSyncDialect,
+    namespaceOptions,
+  }).filter((c) => c.origin === "fk");
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Happy path entities
@@ -159,6 +178,120 @@ class RRSelfRefNode {
 
   @ManyToMany(() => RRSelfRefNode, "relatedFrom")
   relatedTo!: RRSelfRefNode[];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Nullable-auto-FK entities: @Nullable composes with an owning relation to make
+// its auto-generated FK column nullable (no explicit @JoinKey/@Field required).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// ManyToOne owning side, @Nullable on the relation, no explicit FK field.
+@Entity({ name: "RRNullablePost" })
+class RRNullablePost {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  title!: string;
+
+  @OneToMany(() => RRNullableComment, "post")
+  comments!: RRNullableComment[];
+}
+
+@Entity({ name: "RRNullableComment" })
+class RRNullableComment {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  body!: string;
+
+  @Nullable()
+  @ManyToOne(() => RRNullablePost, "comments")
+  post!: RRNullablePost | null;
+}
+
+// OneToOne owning side (@JoinKey), @Nullable on the relation, no explicit FK field.
+@Entity({ name: "RRNullableProfile" })
+class RRNullableProfile {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  bio!: string;
+
+  @OneToOne(() => RRNullableAccount, "profile")
+  account!: RRNullableAccount | null;
+}
+
+@Entity({ name: "RRNullableAccount" })
+class RRNullableAccount {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Field("string")
+  name!: string;
+
+  @Nullable()
+  @JoinKey()
+  @OneToOne(() => RRNullableProfile, "account")
+  profile!: RRNullableProfile | null;
+}
+
+// @Nullable on a non-owning @OneToMany — must throw.
+@Entity({ name: "RRNullableOtmParent" })
+class RRNullableOtmParent {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Nullable()
+  @OneToMany(() => RRNullableOtmChild, "parent")
+  children!: RRNullableOtmChild[];
+}
+
+@Entity({ name: "RRNullableOtmChild" })
+class RRNullableOtmChild {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @ManyToOne(() => RRNullableOtmParent, "children")
+  parent!: RRNullableOtmParent | null;
+
+  parentId!: string | null;
+}
+
+// @Nullable on a @ManyToMany — must throw.
+@Entity({ name: "RRNullableMtmA" })
+class RRNullableMtmA {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Nullable()
+  @JoinTable()
+  @ManyToMany(() => RRNullableMtmB, "as")
+  bs!: RRNullableMtmB[];
+}
+
+@Entity({ name: "RRNullableMtmB" })
+class RRNullableMtmB {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @ManyToMany(() => RRNullableMtmA, "bs")
+  as!: RRNullableMtmA[];
+}
+
+// @Nullable on an inverse @OneToOne (no @JoinKey — FK lives on the other side) — must throw.
+@Entity({ name: "RRNullableInverseOwner" })
+class RRNullableInverseOwner {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @JoinKey()
+  @OneToOne(() => RRNullableInverseSide, "owner")
+  side!: RRNullableInverseSide | null;
+
+  sideId!: string | null;
+}
+
+@Entity({ name: "RRNullableInverseSide" })
+class RRNullableInverseSide {
+  @PrimaryKeyField() @Generated("uuid") id!: string;
+
+  @Nullable()
+  @OneToOne(() => RRNullableInverseOwner, "side")
+  owner!: RRNullableInverseOwner | null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -412,6 +545,71 @@ describe("resolveRelations", () => {
     test("should throw when foreign join key field not found", () => {
       expect(() => getEntityMetadata(RRBadForeignJoinOwner)).toThrow(
         "Foreign join key field not found",
+      );
+    });
+  });
+
+  describe("nullable auto-FK (@Nullable composes with owning relation)", () => {
+    test("@Nullable @ManyToOne sets relation.options.nullable true", () => {
+      const meta = getEntityMetadata(RRNullableComment);
+      const rel = meta.relations.find((r) => r.key === "post")!;
+
+      expect(rel.type).toBe("ManyToOne");
+      expect(rel.options.nullable).toBe(true);
+    });
+
+    test("@Nullable @ManyToOne projects a nullable auto-FK column", () => {
+      const fkColumns = projectFkColumns(RRNullableComment);
+
+      expect(fkColumns).toHaveLength(1);
+      expect(fkColumns[0].nullable).toBe(true);
+    });
+
+    test("@Nullable @OneToOne (owning) sets relation.options.nullable true", () => {
+      const meta = getEntityMetadata(RRNullableAccount);
+      const rel = meta.relations.find((r) => r.key === "profile")!;
+
+      expect(rel.type).toBe("OneToOne");
+      expect(rel.joinKeys).not.toBeNull();
+      expect(rel.options.nullable).toBe(true);
+    });
+
+    test("@Nullable @OneToOne (owning) projects a nullable auto-FK column", () => {
+      const fkColumns = projectFkColumns(RRNullableAccount);
+
+      expect(fkColumns).toHaveLength(1);
+      expect(fkColumns[0].nullable).toBe(true);
+    });
+
+    test("a plain (non-nullable) relation keeps options.nullable false", () => {
+      const meta = getEntityMetadata(RRComment);
+      const rel = meta.relations.find((r) => r.key === "post")!;
+
+      expect(rel.options.nullable).toBe(false);
+    });
+
+    test("a plain (non-nullable) relation projects a NOT NULL auto-FK column", () => {
+      const fkColumns = projectFkColumns(RRComment);
+
+      expect(fkColumns).toHaveLength(1);
+      expect(fkColumns[0].nullable).toBe(false);
+    });
+
+    test("@Nullable on @OneToMany throws (non-owning relation)", () => {
+      expect(() => getEntityMetadata(RRNullableOtmParent)).toThrow(
+        /@Nullable on relation "children" requires an owning-side foreign-key column/,
+      );
+    });
+
+    test("@Nullable on @ManyToMany throws (non-owning relation)", () => {
+      expect(() => getEntityMetadata(RRNullableMtmA)).toThrow(
+        /@Nullable on relation "bs" requires an owning-side foreign-key column/,
+      );
+    });
+
+    test("@Nullable on an inverse @OneToOne (no @JoinKey) throws", () => {
+      expect(() => getEntityMetadata(RRNullableInverseSide)).toThrow(
+        /@Nullable on relation "owner" requires an owning-side foreign-key column/,
       );
     });
   });

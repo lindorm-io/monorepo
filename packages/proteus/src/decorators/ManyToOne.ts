@@ -7,7 +7,9 @@ import { stageRelation } from "../internal/entity/metadata/stage-metadata.js";
  * Declare a many-to-one relation (this entity holds the FK).
  *
  * The owning side -- this entity's table gets the foreign key column(s).
- * Use `@Nullable()` on the FK field to allow NULL values.
+ * Use `@Nullable()` directly on the relation property to allow NULL in the
+ * auto-generated FK column. (Declaring an explicit `@Nullable() @Field` for the FK
+ * still works, but composing `@Nullable()` on the relation is the simpler way.)
  * Use `@Deferrable()` for deferred FK constraints.
  * Use `@JoinKey({ localCol: "foreignCol" })` for explicit FK mapping.
  *
