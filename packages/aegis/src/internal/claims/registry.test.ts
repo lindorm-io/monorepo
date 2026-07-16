@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 import { DOMAIN_CLAIM_KEYS } from "../utils/extract-claims.js";
-import { CLAIM_REGISTRY, specByCose, specByDomain, specByJose } from "./registry.js";
+import { CLAIM_REGISTRY, specByDomain, specByJose } from "./registry.js";
 
 describe("CLAIM_REGISTRY", () => {
   test("every domain claim from extract-claims FIELD_KEYS is in the registry", () => {
@@ -106,12 +106,21 @@ describe("CLAIM_REGISTRY", () => {
     // nonce has no registered CWT label; its name is ≥ 5 chars so it gets a
     // private-use label, but never the registered EAT label 10.
     expect(specByDomain("nonce")?.cose).not.toBe(10);
-    expect(specByCose(10)).toBeUndefined();
+    expect(CLAIM_REGISTRY.some((spec) => spec.cose === 10)).toBe(false);
   });
 
-  test("lookups resolve by domain, jose, and cose", () => {
+  test("lookups resolve by domain and jose", () => {
     expect(specByDomain("issuer")?.jose).toBe("iss");
     expect(specByJose("iss")?.domain).toBe("issuer");
-    expect(specByCose(1)?.domain).toBe("issuer");
+  });
+
+  test("every COSE label is a registered integer or a private-use label", () => {
+    // The IANA CWT allocation policy: registered labels are positive; the
+    // lindorm private-use labels are < -65536. The reserved specification-required
+    // band in between is never squatted. (A `null` cose is string-keyed.)
+    for (const spec of CLAIM_REGISTRY) {
+      if (spec.cose === null) continue;
+      expect(spec.cose > 0 || spec.cose < -65536).toBe(true);
+    }
   });
 });

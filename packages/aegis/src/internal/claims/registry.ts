@@ -150,12 +150,6 @@ const byDomain = new Map<string, ClaimSpec>(
 const byJose = new Map<string, ClaimSpec>(
   CLAIM_REGISTRY.map((spec) => [spec.jose, spec]),
 );
-const byCose = new Map<number, ClaimSpec>(
-  CLAIM_REGISTRY.filter((spec) => spec.cose !== null).map((spec) => [
-    spec.cose as number,
-    spec,
-  ]),
-);
 
 /** Resolve a claim spec by its domain name (or `undefined` if not registered). */
 export const specByDomain = (domain: string): ClaimSpec | undefined =>
@@ -163,6 +157,3 @@ export const specByDomain = (domain: string): ClaimSpec | undefined =>
 
 /** Resolve a claim spec by its JOSE wire name. */
 export const specByJose = (jose: string): ClaimSpec | undefined => byJose.get(jose);
-
-/** Resolve a claim spec by its COSE integer label. */
-export const specByCose = (cose: number): ClaimSpec | undefined => byCose.get(cose);
