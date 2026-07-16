@@ -55,13 +55,15 @@ const factory: TckDriverFactory = {
     const exchange = `iris-tck-${randomUUID().slice(0, 8)}`;
     const dlqQueue = `${exchange}.dlq`;
 
+    const amphora = await createTckAmphora();
+
     source = new IrisSource({
       driver: "rabbit",
       url: "amqp://localhost:5672",
       exchange,
       logger: logger as any,
       messages,
-      amphora: await createTckAmphora(),
+      amphora,
       // prefetch 1 so a single consumer drains the queue strictly one message
       // at a time. This makes priority-queue ordering deterministic: the broker
       // dispatches the highest-priority waiting message before lower-priority
@@ -128,6 +130,8 @@ const factory: TckDriverFactory = {
     dlqConsumerTag = consumerTag;
 
     return {
+      amphora,
+
       messageBus<M extends IMessage>(target: Constructor<M>) {
         return source.messageBus(target);
       },

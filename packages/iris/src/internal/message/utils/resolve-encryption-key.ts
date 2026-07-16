@@ -1,13 +1,14 @@
-import { applyKeyFloor, type IAmphora } from "@lindorm/amphora";
+import {
+  applyKeyFloor,
+  DECRYPT_FLOOR,
+  ENVELOPE_FLOOR,
+  type IAmphora,
+} from "@lindorm/amphora";
 import type { IKryptos } from "@lindorm/kryptos";
 import { Predicated } from "@lindorm/utils";
 import { IrisEncryptionError } from "../../../errors/IrisEncryptionError.js";
 import type { IrisEncryptionKey } from "../../../types/encryption.js";
-import {
-  DECRYPTION_FLOOR,
-  ENCRYPTION_DEFAULT,
-  ENCRYPTION_FLOOR,
-} from "../../constants/key-floor.js";
+import { ENCRYPTION_DEFAULT } from "../../constants/key-floor.js";
 import { hasEncryptionKey } from "./has-encryption-key.js";
 
 export type ResolveEncryptionKeyOptions = {
@@ -48,7 +49,7 @@ export const resolveEncryptionKey = async (
   const { amphora, id, key } = options;
 
   const decrypting = Boolean(id);
-  const floor = decrypting ? DECRYPTION_FLOOR : ENCRYPTION_FLOOR;
+  const floor = decrypting ? DECRYPT_FLOOR : ENVELOPE_FLOOR;
 
   if (!hasEncryptionKey(key)) {
     throw new IrisEncryptionError("@Encrypted names no encryption key", {
@@ -65,7 +66,7 @@ export const resolveEncryptionKey = async (
   // could carry a floor key, which must never override the policy. Per-layer
   // `undefined` stripping keeps a `{ x: undefined }` predicate from erasing the
   // `ENCRYPTION_DEFAULT` (`publish: false`).
-  const query = applyKeyFloor(ENCRYPTION_FLOOR, ENCRYPTION_DEFAULT, key.predicate);
+  const query = applyKeyFloor(ENVELOPE_FLOOR, ENCRYPTION_DEFAULT, key.predicate);
 
   const kryptos = id
     ? // An injected key is typically an env KEK that was never added to the

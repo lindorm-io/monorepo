@@ -49,19 +49,23 @@ const factory: TckDriverFactory = {
     const logger = createMockLogger();
     const prefix = `iris-tck-${randomUUID().slice(0, 8)}`;
 
+    const amphora = await createTckAmphora();
+
     source = new IrisSource({
       driver: "redis",
       url: "redis://localhost:6379",
       prefix,
       logger: logger as any,
       messages,
-      amphora: await createTckAmphora(),
+      amphora,
     });
 
     await source.connect();
     await source.setup();
 
     return {
+      amphora,
+
       messageBus<M extends IMessage>(target: Constructor<M>) {
         return source.messageBus(target);
       },

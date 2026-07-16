@@ -46,17 +46,21 @@ const factory: TckDriverFactory = {
   async setup(messages: Array<Constructor<IMessage>>): Promise<TckDriverHandle> {
     const logger = createMockLogger();
 
+    const amphora = await createTckAmphora();
+
     source = new IrisSource({
       driver: "memory",
       logger: logger as any,
       messages,
-      amphora: await createTckAmphora(),
+      amphora,
     });
 
     await source.connect();
     await source.setup();
 
     return {
+      amphora,
+
       messageBus<M extends IMessage>(target: Constructor<M>) {
         return source.messageBus(target);
       },

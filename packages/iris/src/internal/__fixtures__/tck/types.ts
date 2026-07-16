@@ -1,3 +1,4 @@
+import type { IAmphora } from "@lindorm/amphora";
 import type { Constructor } from "@lindorm/types";
 import type {
   IIrisMessageBus,
@@ -67,6 +68,13 @@ export type TckCapabilities = {
 };
 
 export type TckDriverHandle = {
+  /**
+   * The exact Amphora instance the source encrypts through — exposed so the
+   * encryption suite can prove which KEK actually sealed a payload (the sealed
+   * `kid` equals the id of the key the source's `find` selects). Same object the
+   * pipeline uses, so a spy on it observes the real selection.
+   */
+  amphora: IAmphora;
   messageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M>;
   publisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M>;
   workerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M>;

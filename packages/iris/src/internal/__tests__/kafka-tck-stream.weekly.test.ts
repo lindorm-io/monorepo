@@ -50,13 +50,15 @@ const factory: TckDriverFactory = {
     const logger = createMockLogger();
     const prefix = `iris-tck-${randomUUID().slice(0, 8)}`;
 
+    const amphora = await createTckAmphora();
+
     source = new IrisSource({
       driver: "kafka",
       brokers: ["localhost:9092"],
       prefix,
       logger: logger as any,
       messages,
-      amphora: await createTckAmphora(),
+      amphora,
       sessionTimeoutMs: 15000,
     });
 
@@ -64,6 +66,8 @@ const factory: TckDriverFactory = {
     await source.setup();
 
     return {
+      amphora,
+
       messageBus<M extends IMessage>(target: Constructor<M>) {
         return source.messageBus(target);
       },
