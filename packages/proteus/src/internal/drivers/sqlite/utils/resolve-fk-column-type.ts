@@ -1,20 +1,22 @@
-import type { Constructor } from "@lindorm/types";
 import { ProteusError } from "../../../../errors/index.js";
-import type { IEntity } from "../../../../interfaces/index.js";
-import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
+import { mapFieldTypeSqlite } from "./map-field-type-sqlite.js";
 
 /**
- * Resolves the SQLite type affinity for a foreign key column by looking up the
- * referenced entity's primary key field type.
+ * Resolves the SQLite column type for a foreign key column from the referenced
+ * entity's primary-key field, through the SAME mapper as the PK column itself
+ * (`mapFieldTypeSqlite`) so the FK type equals the referenced PK type by
+ * construction. A bespoke INTEGER/TEXT switch drifted: a `decimal` PK is NUMERIC,
+ * a `binary` PK is BLOB, a `real` PK is REAL — all of which the switch mapped to
+ * TEXT, producing an affinity mismatch against the PK column.
  *
- * SQLite FK columns use TEXT for uuid/string PKs and INTEGER for integer/bigint PKs.
+ * `foreignMeta` is the referenced entity's RESOLVED metadata (not re-read from the
+ * constructor), matching postgres and the source's naming strategy.
  */
 export const resolveFkColumnType = (
-  foreignConstructor: () => Constructor<IEntity>,
+  foreignMeta: EntityMetadata,
   foreignPkKey: string,
 ): string => {
-  const foreignTarget = foreignConstructor();
-  const foreignMeta = getEntityMetadata(foreignTarget);
   const pkField = foreignMeta.fields.find((f) => f.key === foreignPkKey);
 
   if (!pkField) {
@@ -30,22 +32,5 @@ export const resolveFkColumnType = (
     );
   }
 
-  switch (pkField.type) {
-    case "integer":
-    case "smallint":
-    case "bigint":
-      return "INTEGER";
-
-    case "uuid":
-    case "string":
-    case "varchar":
-    case "text":
-    case "email":
-    case "lindorm_id":
-    case "url":
-      return "TEXT";
-
-    default:
-      return "TEXT";
-  }
+  return mapFieldTypeSqlite(pkField);
 };

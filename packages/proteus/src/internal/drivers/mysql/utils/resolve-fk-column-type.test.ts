@@ -1,3 +1,4 @@
+import { describe, expect, test } from "vitest";
 import { Entity } from "../../../../decorators/Entity.js";
 import { Enum } from "../../../../decorators/Enum.js";
 import { Field } from "../../../../decorators/Field.js";
@@ -6,10 +7,10 @@ import { Max } from "../../../../decorators/Max.js";
 import { PrimaryKey } from "../../../../decorators/PrimaryKey.js";
 import { PrimaryKeyField } from "../../../../decorators/PrimaryKeyField.js";
 import { NotSupportedError } from "../../../../errors/index.js";
+import type { EntityMetadata } from "../../../entity/types/metadata.js";
 import { getEntityMetadata } from "../../../entity/metadata/get-entity-metadata.js";
 import { mapFieldTypeMysql } from "./map-field-type-mysql.js";
 import { resolveFkColumnType } from "./resolve-fk-column-type.js";
-import { describe, expect, test } from "vitest";
 
 // ---------------------------------------------------------------------------
 // Test entities — must be at module scope for stage-3 decorator execution
@@ -75,38 +76,47 @@ describe("resolveFkColumnType (mysql)", () => {
       const meta = getEntityMetadata(target);
       const pk = meta.primaryKeys[0];
       const pkField = meta.fields.find((f) => f.key === pk)!;
-      expect(resolveFkColumnType(() => target, pk)).toBe(mapFieldTypeMysql(pkField));
+      expect(resolveFkColumnType(meta, pk)).toBe(mapFieldTypeMysql(pkField));
     }
   });
 
   test("resolves the coherent type per PK-capable field type", () => {
     expect({
-      uuid: resolveFkColumnType(() => MysqlFkRefUuid, "id"),
-      integer: resolveFkColumnType(() => MysqlFkRefInteger, "id"),
-      varchar: resolveFkColumnType(() => MysqlFkRefVarchar, "id"),
-      enum: resolveFkColumnType(() => MysqlFkRefEnum, "status"),
-      lindormId: resolveFkColumnType(() => MysqlFkRefLindormId, "id"),
+      uuid: resolveFkColumnType(getEntityMetadata(MysqlFkRefUuid), "id"),
+      integer: resolveFkColumnType(getEntityMetadata(MysqlFkRefInteger), "id"),
+      varchar: resolveFkColumnType(getEntityMetadata(MysqlFkRefVarchar), "id"),
+      enum: resolveFkColumnType(getEntityMetadata(MysqlFkRefEnum), "status"),
+      lindormId: resolveFkColumnType(getEntityMetadata(MysqlFkRefLindormId), "id"),
     }).toMatchSnapshot();
   });
 
   test("enum PK resolves the same inline enum type as the PK column", () => {
-    expect(resolveFkColumnType(() => MysqlFkRefEnum, "status")).toBe(
+    expect(resolveFkColumnType(getEntityMetadata(MysqlFkRefEnum), "status")).toBe(
       "enum('active','inactive')",
     );
   });
 
   test("throws NotSupportedError for a string PK without max (TEXT is unkeyable)", () => {
-    expect(() => resolveFkColumnType(() => MysqlFkRefStringNoMax, "id")).toThrow(
-      NotSupportedError,
-    );
-    expect(() => resolveFkColumnType(() => MysqlFkRefStringNoMax, "id")).toThrow(
+    const meta = getEntityMetadata(MysqlFkRefStringNoMax);
+    expect(() => resolveFkColumnType(meta, "id")).toThrow(NotSupportedError);
+    expect(() => resolveFkColumnType(meta, "id")).toThrow(
       /MySQL cannot reference it with a foreign key/,
     );
   });
 
+  test("throws NotSupportedError for an encrypted PK (stored as TEXT, unkeyable)", () => {
+    const meta = {
+      entity: { name: "MysqlFkRefEncrypted" },
+      fields: [{ key: "id", type: "string", encrypted: true }],
+    } as unknown as EntityMetadata;
+
+    expect(() => resolveFkColumnType(meta, "id")).toThrow(NotSupportedError);
+    expect(() => resolveFkColumnType(meta, "id")).toThrow(/encrypted/);
+  });
+
   test("throws ProteusError when the referenced PK field does not exist", () => {
-    expect(() => resolveFkColumnType(() => MysqlFkRefUuid, "missing")).toThrow(
-      /Foreign primary key field "missing" not found/,
-    );
+    expect(() =>
+      resolveFkColumnType(getEntityMetadata(MysqlFkRefUuid), "missing"),
+    ).toThrow(/Foreign primary key field "missing" not found/);
   });
 });

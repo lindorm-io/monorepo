@@ -16,9 +16,9 @@ import { resolveFkColumnType } from "../resolve-fk-column-type.js";
 /**
  * MySQL `SyncDialect` for the shared desired-schema projection. Preserves the
  * historical mysql projection byte-for-byte: inline enum(...) types, lowercased
- * type spellings, AUTO_INCREMENT (increment only — `@Generated("identity")` is
- * ignored), TEXT/BLOB index prefix lengths, name-only table dedupe, and the
- * raw-metadata FK column-type lookup (known drift, kept).
+ * type spellings, AUTO_INCREMENT (increment only — `@Generated("identity")`
+ * THROWS, no strict identity mode), TEXT/BLOB index prefix lengths, name-only
+ * table dedupe, and the raw-metadata FK column-type lookup (known drift, kept).
  */
 export const mysqlSyncDialect: SyncDialect = {
   identifierLimit: MYSQL_IDENTIFIER_LIMIT,
@@ -61,7 +61,7 @@ export const mysqlSyncDialect: SyncDialect = {
   // Drift (kept): mysql resolves the FK column type from RAW metadata via the
   // constructor, ignoring the naming strategy, and lowercases the result.
   resolveFkColumnType: (foreignMeta, foreignPkKey) =>
-    resolveFkColumnType(() => foreignMeta.target, foreignPkKey).toLowerCase(),
+    resolveFkColumnType(foreignMeta, foreignPkKey).toLowerCase(),
 
   projectColumnBehavior,
 

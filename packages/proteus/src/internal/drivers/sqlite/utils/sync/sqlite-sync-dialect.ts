@@ -64,7 +64,7 @@ export const sqliteSyncDialect: SyncDialect = {
   // Drift (kept): sqlite resolves the FK column type from RAW metadata via the
   // constructor, ignoring the naming strategy.
   resolveFkColumnType: (foreignMeta, foreignPkKey) =>
-    resolveFkColumnType(() => foreignMeta.target, foreignPkKey),
+    resolveFkColumnType(foreignMeta, foreignPkKey),
 
   projectColumnBehavior,
 
