@@ -49,6 +49,8 @@ export const _createMockProteusSource = (
     setup: mockFn(),
 
     addEntities: mockFn(),
+    stageDecorator: mockFn(),
+    stageFieldDecorator: mockFn(),
     getEntityMetadata: returns([]),
     hasEntity: returns(true),
 
