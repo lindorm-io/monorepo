@@ -90,7 +90,7 @@ export class WebhookSubscription implements IWebhookSubscription {
 
   // Bare marker: self-documenting + fail-loud. The KEK selector is staged onto
   // this field from PYLON SETTINGS (`webhook.encryption`, default
-  // `pylon:webhook`) before the source sets up. Proteus encrypts on write and
+  // `pylon:kek`) before the source sets up. Proteus encrypts on write and
   // decrypts transparently on read — a subscription registers a PLAINTEXT
   // secret and dispatch reads it back in the clear. Encrypted columns are text.
   @Encrypted()
