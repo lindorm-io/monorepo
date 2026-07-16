@@ -1,4 +1,4 @@
-import { decode } from "cbor2";
+import { decode, encode } from "cbor2";
 import { describe, expect, test } from "vitest";
 import { CborError } from "../errors/index.js";
 import type { CborKitSettings } from "../types/cbor-field.js";
@@ -110,5 +110,50 @@ describe("CborKit — mixed labels and proprietary fields", () => {
       acr: "urn:acr:1",
       client_id: "client-1",
     });
+  });
+});
+
+describe("CborKit — map mode", () => {
+  const kit = new CborKit({
+    fields: [
+      { key: "sub", label: 1, kind: "text" },
+      { key: "scope", label: 2, kind: "array" },
+    ],
+  });
+
+  const record = { sub: "user-1", scope: ["read", "write"] };
+
+  test('encode("map") should build the intermediate wire map', () => {
+    const map = kit.encode("map", record);
+
+    expect(map).toBeInstanceOf(Map);
+    expect(map.get(1)).toEqual("user-1");
+    expect(map.get(2)).toEqual(["read", "write"]);
+  });
+
+  test('decode("map") should map a pre-decoded wire map back to the record', () => {
+    expect(kit.decode("map", kit.encode("map", record))).toEqual(record);
+  });
+
+  test("serializing the map mode result equals the default byte mode", () => {
+    // Fork C's guarantee: a consumer that owns its own serializer produces the
+    // exact same bytes as the codec's own encode(value).
+    const viaMap = encode(kit.encode("map", record), { cde: true });
+
+    expect(Buffer.from(viaMap)).toEqual(Buffer.from(kit.encode(record)));
+  });
+
+  test("map mode should carry the proprietary option through", () => {
+    const propKit = new CborKit({
+      labels: "mixed",
+      fields: [{ key: "client_id", label: -65548, kind: "text", proprietary: true }],
+    });
+
+    expect(propKit.encode("map", { client_id: "c-1" }).get(-65548)).toEqual("c-1");
+    expect(
+      propKit
+        .encode("map", { client_id: "c-1" }, { proprietary: false })
+        .get("client_id"),
+    ).toEqual("c-1");
   });
 });

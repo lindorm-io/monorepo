@@ -4,6 +4,7 @@ export type CborValueKind =
   | "date"
   | "bool"
   | "enum"
+  | "array"
   | "bstr"
   | "bstrArray"
   | "bespoke";
@@ -40,8 +41,13 @@ export type CborField = {
    */
   encoding?: "b64u" | "base64";
 
-  /** REQUIRED when kind === "bespoke": domain value → wire value. */
-  encode?: (value: unknown) => unknown;
+  /**
+   * REQUIRED when kind === "bespoke": domain value → wire value. Receives the
+   * per-call encode options (e.g. `proprietary`) so a bespoke value can vary its
+   * shape with the encode context — the codec forwards its options unchanged; it
+   * does not interpret them.
+   */
+  encode?: (value: unknown, options: CborEncodeOptions) => unknown;
 
   /** REQUIRED when kind === "bespoke": wire value → domain value. */
   decode?: (value: unknown) => unknown;

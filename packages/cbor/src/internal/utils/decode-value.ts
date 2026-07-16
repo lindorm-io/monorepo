@@ -21,6 +21,9 @@ export const decodeValue = (field: ResolvedCborField, wire: unknown): unknown =>
     case "bool":
       return wire as boolean;
 
+    case "array":
+      return wire as Array<unknown>;
+
     case "date":
       return new Date((wire as number) * 1000);
 

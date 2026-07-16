@@ -30,6 +30,13 @@ describe("decodeValue", () => {
     );
   });
 
+  test("should pass an array through verbatim", () => {
+    expect(decodeValue(field({ kind: "array" }), ["read", "write"])).toEqual([
+      "read",
+      "write",
+    ]);
+  });
+
   describe("enum", () => {
     const enumField = field({
       kind: "enum",

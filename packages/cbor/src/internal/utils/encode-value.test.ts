@@ -90,6 +90,13 @@ describe("encodeValue", () => {
     });
   });
 
+  test("should pass an array through verbatim", () => {
+    expect(encodeValue(field({ kind: "array" }), ["read", "write"])).toEqual([
+      "read",
+      "write",
+    ]);
+  });
+
   test("should encode a bespoke value via the field encoder", () => {
     const bespoke = field({
       kind: "bespoke",
@@ -98,5 +105,16 @@ describe("encodeValue", () => {
     });
 
     expect(encodeValue(bespoke, 21)).toEqual(42);
+  });
+
+  test("should forward the encode options to the bespoke encoder", () => {
+    const bespoke = field({
+      kind: "bespoke",
+      encode: (v, options) => (options.proprietary ? "compact" : (v as string)),
+      decode: (v) => v,
+    });
+
+    expect(encodeValue(bespoke, "plain", { proprietary: true })).toEqual("compact");
+    expect(encodeValue(bespoke, "plain", { proprietary: false })).toEqual("plain");
   });
 });
