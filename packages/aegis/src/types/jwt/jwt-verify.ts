@@ -52,4 +52,13 @@ export type VerifyJwtOptions = JwtClaimMatchers & {
    * typ at the floor). Vocabulary matches TokenProfileTyp.
    */
   typPresence?: "required" | "optional";
+  /**
+   * `exp` claim presence policy (default `"required"`). `"required"` rejects an
+   * exp-less token (`jwt_missing_claim_exp`) — the default for direct/profile-less
+   * callers. `"optional"` accepts an absent exp; profiled verify sets this for a
+   * `lifetime: null` profile (RFC 8417 / SSF `security_event` SETs carry no exp),
+   * where the profile floor owns the real presence policy. When exp IS present its
+   * value is always range-checked (with clock tolerance) regardless of this option.
+   */
+  expPresence?: "required" | "optional";
 };

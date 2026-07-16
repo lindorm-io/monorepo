@@ -13,6 +13,7 @@ import type {
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
+  NarrowedJwt,
   ParsedJws,
   ParsedJwt,
   ProfileContent,
@@ -28,6 +29,7 @@ import type {
   TokenProfile,
   VerifyJwtOptions,
 } from "../types/index.js";
+import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 
 /**
  * The AES surface takes the SAME key selector as every other aegis operation:
@@ -104,12 +106,17 @@ export interface IAegis {
     options?: ProfileSignOptions,
   ): Promise<SignedJwt>;
 
-  verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
-  verify<T extends ParsedJws<any>>(token: string): Promise<T>;
-  verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
+  verify<P extends keyof BuiltInProfiles>(
+    profile: P,
+    token: string,
+    options?: ProfileVerifyOptions,
+  ): Promise<NarrowedJwt<BuiltInProfiles[P]>>;
   verify<T extends ParsedJwt>(
-    profile: string,
+    profile: string & {},
     token: string,
     options: ProfileVerifyOptions,
   ): Promise<T>;
+  verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
+  verify<T extends ParsedJws<any>>(token: string): Promise<T>;
+  verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
 }

@@ -1,4 +1,4 @@
-import type { TokenProfile } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * JARM response JWT (ADR-0016 — no `typ` mandated). REQUIRED: iss, aud
@@ -6,7 +6,7 @@ import type { TokenProfile } from "../../../types/index.js";
  * parameters as claims. Signed always (`none` forbidden); confidential-client
  * `HS*` permitted (§5); encryptable (T5).
  */
-export const jarmProfile: TokenProfile = {
+export const jarmProfile = defineProfile({
   name: "jarm",
   typ: { presence: "none" },
   required: ["issuer", "audience", "expiresAt"],
@@ -22,4 +22,4 @@ export const jarmProfile: TokenProfile = {
     crossField: true,
   },
   validate: () => [],
-};
+});

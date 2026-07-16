@@ -1,4 +1,4 @@
-import type { TokenProfile } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * Access token — `at+jwt` (RFC 9068 §2.2). Server-signed. Never encryptable.
@@ -13,7 +13,7 @@ import type { TokenProfile } from "../../../types/index.js";
  * vault holds no asymmetric signing key now fails to mint, loudly, instead of
  * silently issuing a forgeable token.
  */
-export const accessTokenProfile: TokenProfile = {
+export const accessTokenProfile = defineProfile({
   name: "access_token",
   typ: { presence: "required", value: "application/at+jwt" },
   required: [
@@ -42,4 +42,4 @@ export const accessTokenProfile: TokenProfile = {
     actChainShape: true,
   },
   validate: () => [],
-};
+});

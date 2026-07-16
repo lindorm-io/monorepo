@@ -32,13 +32,20 @@ const publicOnly = (kryptos: IKryptos, kid: string): IKryptos =>
 const PUBLIC_SIG_KID = "5c0f2f0e-1f1a-5a2b-8f4c-0d1e2f3a4b5c";
 const PUBLIC_ENC_KID = "6d1a3b1f-2a2b-5b3c-9a5d-1e2f3a4b5c6d";
 
-const foreignJwe = async (kryptos: IKryptos, alg: string): Promise<string> => {
+const foreignJwe = async (
+  kryptos: IKryptos,
+  alg: string,
+  kid: string,
+): Promise<string> => {
   const key = await importJWK(kryptos.toJWK("public") as never, alg);
 
-  // No `kid` — a foreign JWE need not name our key, which is precisely when
-  // Aegis resolves the decryption key by QUERY instead of by id.
+  // A foreign JWE MUST name our recipient key's `kid` — a real client copies it
+  // from our published JWKS. Aegis resolves the decryption key by that `kid`
+  // (findById) and the DECRYPT_FLOOR post-checks the named key; it will NOT
+  // search the vault by the JWE's declared `alg` (RFC 8725 §3.1). A kid-less
+  // JWE is rejected outright with `decrypt_key_missing_kid`.
   return new CompactEncrypt(new TextEncoder().encode(PLAINTEXT))
-    .setProtectedHeader({ alg, enc: "A256GCM", typ: "JWE" })
+    .setProtectedHeader({ alg, enc: "A256GCM", typ: "JWE", kid })
     .encrypt(key);
 };
 
@@ -87,19 +94,26 @@ describe("Aegis key selection", () => {
       ]);
     });
 
-    test("a public-only RSA-OAEP key is not selected for decryption", async () => {
-      const jwe = await foreignJwe(TEST_RSA_KEY_ENC, "RSA-OAEP-256");
+    test("a public-only RSA-OAEP key named by the JWE's kid is rejected by the decrypt floor", async () => {
+      // The JWE names the PUBLIC-ONLY key's kid, so `findById` returns it — and
+      // the DECRYPT_FLOOR post-check rejects it (no private half). A public-only
+      // key still cannot decrypt; the rejection is now a post-check on the named
+      // key, not a query filter that excluded it from selection.
+      const jwe = await foreignJwe(TEST_RSA_KEY_ENC, "RSA-OAEP-256", PUBLIC_ENC_KID);
 
       amphora.add(publicOnly(TEST_RSA_KEY_ENC, PUBLIC_ENC_KID));
 
       const error = await aegis.jwe.decrypt(jwe).catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
-      expect((error as AegisError).code).toBe("decrypt_key_not_found");
+      expect((error as AegisError).code).toBe("decrypt_key_policy_violation");
     });
 
-    test("the private key is selected for decryption when a public-only twin is present", async () => {
-      const jwe = await foreignJwe(TEST_RSA_KEY_ENC, "RSA-OAEP-256");
+    test("the private key is selected when the JWE names its kid, even beside a public-only twin", async () => {
+      // The JWE names the PRIVATE key's kid → `findById` returns it → floor
+      // passes → decrypt succeeds. The public-only twin (a different kid) is
+      // irrelevant: selection is kid-driven, not a query that could pick it.
+      const jwe = await foreignJwe(TEST_RSA_KEY_ENC, "RSA-OAEP-256", TEST_RSA_KEY_ENC.id);
 
       amphora.add(publicOnly(TEST_RSA_KEY_ENC, PUBLIC_ENC_KID));
       amphora.add(TEST_RSA_KEY_ENC);
@@ -120,30 +134,31 @@ describe("Aegis key selection", () => {
     // THE BUG S4 FIXES. ECDH-ES derives with the recipient's public key on one
     // side and its private key on the other, so `operations` reports
     // [deriveKey, deriveBits] for BOTH halves and can NEVER separate encrypt
-    // from decrypt — which is why the old `$or: [{operations: [...]}]` decrypt
-    // query admitted a public-only ECDH-ES key and failed deep in the crypto
-    // layer. The decrypt FLOOR asks about the key's halves instead
-    // (`hasPrivateKey`), which is the question that actually has an answer.
-    test("a public-only ECDH-ES key is NOT selected for decryption", async () => {
+    // from decrypt. The decrypt FLOOR asks about the key's halves instead
+    // (`hasPrivateKey`), which is the question that actually has an answer — and
+    // it now post-checks the key the JWE's kid names, rather than filtering a
+    // vault query.
+    test("a public-only ECDH-ES key named by the JWE's kid is rejected by the decrypt floor", async () => {
       const publicKey = publicOnly(TEST_EC_KEY_ENC, PUBLIC_ENC_KID);
 
       // The declared operations are identical for both halves — the trap.
       expect(publicKey.operations).toEqual(["deriveKey", "deriveBits"]);
       expect(publicKey.hasPrivateKey).toBe(false);
 
-      const jwe = await foreignJwe(TEST_EC_KEY_ENC, "ECDH-ES");
+      const jwe = await foreignJwe(TEST_EC_KEY_ENC, "ECDH-ES", PUBLIC_ENC_KID);
 
       amphora.add(publicKey);
 
-      // Rejected in KEY SELECTION now, not in the crypto layer.
+      // `findById` returns the public-only key the kid names; the floor rejects
+      // it on `hasPrivateKey`, before any derivation is attempted.
       const error = await aegis.jwe.decrypt(jwe).catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
-      expect((error as AegisError).code).toBe("decrypt_key_not_found");
+      expect((error as AegisError).code).toBe("decrypt_key_policy_violation");
     });
 
-    test("the private ECDH-ES key is selected when a public-only twin is present", async () => {
-      const jwe = await foreignJwe(TEST_EC_KEY_ENC, "ECDH-ES");
+    test("the private ECDH-ES key is selected when the JWE names its kid, even beside a public-only twin", async () => {
+      const jwe = await foreignJwe(TEST_EC_KEY_ENC, "ECDH-ES", TEST_EC_KEY_ENC.id);
 
       amphora.add(publicOnly(TEST_EC_KEY_ENC, PUBLIC_ENC_KID));
       amphora.add(TEST_EC_KEY_ENC);

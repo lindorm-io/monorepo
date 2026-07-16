@@ -99,23 +99,20 @@ export const decodeJwtPayload = <C extends Dict = Dict<never>>(
 ): DecodeClaims<C> => JSON.parse(B64.toString(payload)) as DecodeClaims<C>;
 
 /**
- * The shared parse gate. Only `exp` and `iss` are enforced here — `iat` is
- * deliberately NOT required: RFC 7523 §3 makes `exp` mandatory on a client
- * assertion but `iat` only OPTIONAL, so a conformant assertion omitting it
- * must still parse. `iat` PRESENCE policy belongs to the profile floor
- * (`profile.required` carries `issuedAt` where the spec mandates it, e.g.
- * access tokens per RFC 9068) or to the caller, not to the parser.
+ * The shared parse gate. Only `iss` is STRUCTURALLY enforced here. `exp` is
+ * deliberately NOT required at parse: an RFC 8417 / SSF `security_event` SET
+ * carries no `exp` at all (`lifetime: null`), yet must parse — `exp` PRESENCE
+ * is POLICY, enforced by the verify floor (finite-lifetime profiles) and by the
+ * profile-less `expPresence` matcher (default `"required"`), not by the
+ * structural parser. `iat` is likewise NOT required: RFC 7523 §3 makes `exp`
+ * mandatory on a client assertion but `iat` only OPTIONAL, so a conformant
+ * assertion omitting it must still parse. `iat`/`exp` presence policy belongs
+ * to the profile floor (`profile.required`, `profile.lifetime`) or to the
+ * caller, not to the parser.
  */
 export const parseTokenPayload = <C extends Dict = Dict<never>>(
   decoded: DecodeClaims<C>,
 ): ParsedJwtPayload<C> => {
-  if (!isFinite(decoded.exp)) {
-    throw new JwtError("Missing claim: exp", {
-      code: "jwt_missing_claim_exp",
-      title: "JWT Missing Claim Exp",
-      details: "The payload has no finite exp claim, which is required to parse a JWT.",
-    });
-  }
   // `iss` must be a NON-EMPTY string. Not a URI: this shared gate also parses RFC
   // 7523 client assertions, whose `iss` is the client_id (an opaque string, not a
   // URL/URN), and per-token profiles like delegation. The platform-issuer URI/exact
@@ -136,14 +133,16 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
   const { sensitiveIdentity, rest: customClaims } =
     extractSensitiveIdentity(afterProfile);
 
-  // ParsedJwtPayload uses non-optional arrays with [] defaults and
-  // "unknown" fallbacks for required fields — stricter than DomainClaims.
+  // ParsedJwtPayload keeps set-valued arrays non-optional with [] defaults.
+  // Only `iss` is required at parse (validated above); every other scalar
+  // claim is optional — subject/tokenId stay undefined when absent
+  // (removeUndefined strips them), never a fabricated "unknown".
   return removeUndefined({
     ...domain,
-    // Required fields (validated above — iss/exp checked)
+    // Required field (validated above — iss checked)
     issuer: domain.issuer!,
-    expiresAt: domain.expiresAt!,
-    // Optional — an absent iat leaves issuedAt undefined (removeUndefined strips it)
+    // Optional — an absent exp (SET) / iat leaves them undefined (removeUndefined strips)
+    expiresAt: domain.expiresAt,
     issuedAt: domain.issuedAt,
     // Non-optional arrays default to []
     audience: domain.audience ?? [],
@@ -153,9 +152,9 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
     permissions: domain.permissions ?? [],
     roles: domain.roles ?? [],
     scope: domain.scope ?? [],
-    // Non-optional strings default to "unknown"
-    subject: domain.subject ?? "unknown",
-    tokenId: domain.tokenId ?? "unknown",
+    // Optional strings — undefined when the claim is absent (no sentinel)
+    subject: domain.subject,
+    tokenId: domain.tokenId,
     profile,
     sensitiveIdentity,
     claims: customClaims as C,

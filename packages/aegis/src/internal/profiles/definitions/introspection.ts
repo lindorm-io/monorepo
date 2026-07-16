@@ -1,11 +1,11 @@
-import type { TokenProfile } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * Introspection response JWT — `token-introspection+jwt` (RFC 9701 §5). Top
  * level REQUIRED: iss, aud (the requesting RS), iat, token_introspection.
  * Server-signed; confidential-client `HS*` permitted (§5); encryptable (T5).
  */
-export const introspectionProfile: TokenProfile = {
+export const introspectionProfile = defineProfile({
   name: "introspection",
   typ: { presence: "required", value: "application/token-introspection+jwt" },
   required: ["issuer", "audience", "issuedAt", "token_introspection"],
@@ -20,4 +20,4 @@ export const introspectionProfile: TokenProfile = {
     issUri: true,
   },
   validate: () => [],
-};
+});

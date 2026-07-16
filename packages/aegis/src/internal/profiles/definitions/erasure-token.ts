@@ -1,4 +1,4 @@
-import type { TokenProfile } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * Erasure token — `erasure+jwt` (E9; SET shape, webhook channel). REQUIRED:
@@ -7,7 +7,7 @@ import type { TokenProfile } from "../../../types/index.js";
  * alg), so `confidential` for parity with security_event: `HS*` permitted,
  * `none` rejected. (lindorm-internal — no external RFC governs the alg.)
  */
-export const erasureTokenProfile: TokenProfile = {
+export const erasureTokenProfile = defineProfile({
   name: "erasure_token",
   typ: { presence: "required", value: "application/erasure+jwt" },
   required: [
@@ -32,4 +32,4 @@ export const erasureTokenProfile: TokenProfile = {
     eventsShape: true,
   },
   validate: () => [],
-};
+});

@@ -39,8 +39,8 @@ export type ParsedJwtPayload<C extends Dict = Dict> = StdClaims &
     roles: Array<string>;
     scope: Array<string>;
     sensitiveIdentity: AegisSensitiveIdentity | undefined;
-    subject: string;
-    tokenId: string;
+    subject: string | undefined;
+    tokenId: string | undefined;
   };
 
 export type ParsedJwt<C extends Dict = Dict> = {

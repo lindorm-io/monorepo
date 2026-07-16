@@ -1,5 +1,6 @@
 import type { Dict } from "@lindorm/types";
-import type { SignContext, TokenProfile } from "../../../types/index.js";
+import type { SignContext } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * ID token — bare `JWT` typ (OIDC ecosystem convention; OIDC Core §2).
@@ -8,7 +9,7 @@ import type { SignContext, TokenProfile } from "../../../types/index.js";
  * OPTIONAL in the code flow; we treat it as required. Encryptable (T5);
  * confidential-client `HS*` permitted (§5).
  */
-export const idTokenProfile: TokenProfile = {
+export const idTokenProfile = defineProfile({
   name: "id_token",
   typ: { presence: "required", value: "JWT" },
   required: ["issuer", "subject", "audience", "expiresAt", "issuedAt"],
@@ -32,4 +33,4 @@ export const idTokenProfile: TokenProfile = {
     actChainShape: true,
   },
   validate: () => [],
-};
+});

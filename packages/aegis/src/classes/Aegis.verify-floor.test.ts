@@ -209,20 +209,74 @@ describe("Aegis profiled verify floor (§4.4)", () => {
       });
     });
 
-    test("security_event (JOSE) is rejected at the parse gate (documented gap)", async () => {
-      // JOSE profiled verify of an exp-less SET is unreachable today:
-      // parseTokenPayload hard-requires a finite exp, and the security_event
-      // profile FORBIDS exp (RFC 8417/SSF). The COSE round trip above is the
-      // path that exercises the floor for this profile. If this pin breaks,
-      // the parse gate changed — extend the round trip to JOSE.
+    test("security_event (JOSE) — exp-less SET round-trips, subjectId and events reach the floor", async () => {
+      // exp presence is now POLICY, not structure: the security_event profile
+      // has `lifetime: null`, so profiled verify passes expPresence "optional"
+      // and the exp-less JOSE SET verifies — mirroring the COSE path above.
       const { token } = await aegis.mint("security_event", {
         audience: ["https://receiver"],
         subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
         events: { "urn:lindorm:event:test": {} },
       });
 
+      // JOSE parse is domain-keyed: `subjectId` (wire `sub_id`, RFC 9493) is
+      // domain-extracted onto `payload`, while `events` stays a custom claim
+      // under `payload.claims` (only subjectId is domain-extracted from SetClaims).
       await expect(
         aegis.verify("security_event", token, { audience: "https://receiver" }),
+      ).resolves.toMatchObject({
+        payload: {
+          subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
+          claims: { events: { "urn:lindorm:event:test": {} } },
+        },
+      });
+    });
+  });
+
+  describe("exp presence policy (parse-time structure vs verify-time policy)", () => {
+    // A profile-less (raw) verify: exp presence defaults to "required", so an
+    // exp-less token is rejected at the matcher — NOT at the parse gate, which
+    // no longer requires exp. Passing `expPresence: "optional"` accepts it.
+    // Hand-built via craftToken (signed with the amphora-registered key), the
+    // wire-level way to put an exp-less JWS on the wire.
+    const explessToken = () =>
+      craftToken(
+        { ...wireHeader, typ: "application/at+jwt" },
+        { iss: ISSUER, sub: "user-1", aud: [RESOURCE], iat: 1704096000, jti: "no-exp-1" },
+      );
+
+    test("profile-less verify REJECTS an exp-less token by default (clear error)", async () => {
+      await expect(aegis.jwt.verify(explessToken())).rejects.toThrow(
+        expect.objectContaining({ code: "jwt_missing_claim_exp" }),
+      );
+    });
+
+    test("profile-less verify ACCEPTS an exp-less token with expPresence 'optional'", async () => {
+      await expect(
+        aegis.jwt.verify(explessToken(), { expPresence: "optional" }),
+      ).resolves.toMatchObject({
+        payload: { subject: "user-1", issuer: ISSUER },
+      });
+    });
+
+    test("a finite-lifetime profile still REJECTS an exp-less token (floor)", async () => {
+      // access_token has a finite lifetime, so verifyProfile keeps expPresence
+      // "required" — the exp-less craftToken token is rejected. (enforceVerifyFloor
+      // is the belt-and-suspenders backstop for the same rule.)
+      const token = craftToken(
+        { ...wireHeader, typ: "application/at+jwt" },
+        {
+          iss: ISSUER,
+          sub: "user-1",
+          aud: [RESOURCE],
+          iat: 1704096000,
+          jti: "access-no-exp",
+          client_id: "client-1",
+        },
+      );
+
+      await expect(
+        aegis.verify("access_token", token, { audience: RESOURCE }),
       ).rejects.toThrow(expect.objectContaining({ code: "jwt_missing_claim_exp" }));
     });
   });

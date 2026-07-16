@@ -1,4 +1,4 @@
-import type { TokenProfile } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * Logout token — `logout+jwt` (Back-Channel Logout §2.4; SET-shaped).
@@ -8,7 +8,7 @@ import type { TokenProfile } from "../../../types/index.js";
  * RS256, only `none` forbidden) — so `confidential`: `HS*` is permitted (a
  * confidential client's secret is the MAC key), `none` rejected.
  */
-export const logoutTokenProfile: TokenProfile = {
+export const logoutTokenProfile = defineProfile({
   name: "logout_token",
   typ: { presence: "required", value: "application/logout+jwt" },
   required: ["issuer", "audience", "issuedAt", "expiresAt", "tokenId", "events"],
@@ -25,4 +25,4 @@ export const logoutTokenProfile: TokenProfile = {
     eventsShape: true,
   },
   validate: () => [],
-};
+});

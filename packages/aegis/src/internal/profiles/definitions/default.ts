@@ -1,4 +1,4 @@
-import type { TokenProfile } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * The `default` profile re-imposes the historical `jwt.sign` floor that T1
@@ -8,7 +8,7 @@ import type { TokenProfile } from "../../../types/index.js";
  *
  * `validate` is presence-only for this chunk; deep RFC validators land in T4.
  */
-export const defaultProfile: TokenProfile = {
+export const defaultProfile = defineProfile({
   name: "default",
   typ: { presence: "none" },
   required: ["subject", "expiresAt"],
@@ -20,4 +20,4 @@ export const defaultProfile: TokenProfile = {
   lifetime: null,
   encryptable: false,
   validate: () => [],
-};
+});

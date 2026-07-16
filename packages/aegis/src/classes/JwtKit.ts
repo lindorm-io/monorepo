@@ -290,6 +290,19 @@ export class JwtKit implements IJwtKit {
       auth_time: payload.auth_time ? new Date(payload.auth_time * 1000) : undefined,
     };
 
+    // `exp` presence is POLICY (default "required"). The createJwtVerify matcher
+    // already fails a required-but-absent exp, but only as a generic
+    // jwt_claims_invalid; surface the dedicated, self-describing code instead so
+    // callers keying on it keep working. `"optional"` (profiled SETs) skips this.
+    if (verify.expPresence !== "optional" && withDates.exp === undefined) {
+      throw new JwtError("Missing claim: exp", {
+        code: "jwt_missing_claim_exp",
+        title: "JWT Missing Claim Exp",
+        details:
+          'The token has no exp claim, but exp is required for this verification (expPresence is not "optional").',
+      });
+    }
+
     try {
       validate(withDates, predicate);
     } catch (err) {

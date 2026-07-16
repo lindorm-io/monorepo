@@ -1,11 +1,11 @@
-import type { TokenProfile } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * Signed UserInfo response JWT (OIDC Core §5.3.2 — no `typ` mandated).
  * REQUIRED: iss, sub, aud. Server-signed; confidential-client `HS*` permitted
  * (§5); encryptable (T5).
  */
-export const userinfoProfile: TokenProfile = {
+export const userinfoProfile = defineProfile({
   name: "userinfo",
   typ: { presence: "none" },
   required: ["issuer", "subject", "audience"],
@@ -20,4 +20,4 @@ export const userinfoProfile: TokenProfile = {
     issUri: true,
   },
   validate: () => [],
-};
+});

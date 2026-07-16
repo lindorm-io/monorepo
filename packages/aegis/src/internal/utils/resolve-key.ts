@@ -11,7 +11,7 @@ export type ResolveKeyOptions = {
   operation: KeyOperation;
 
   /**
-   * POLICY. Aegis's invariants for the operation (`internal/constants/key-floor`)
+   * POLICY. Aegis's invariants for the operation (amphora's `key-floor`)
    * plus the artifact's own opinion (`profile.algClass`), plus — on the read
    * side, where selection is driven by the token's `kid` — the deployment's
    * verification/decryption policy.
@@ -88,6 +88,29 @@ export const resolveKey = async (options: ResolveKeyOptions): Promise<IKryptos> 
   // so it always wins the merge — a selector duck-typed from config/JSON can
   // carry a floor key (e.g. `use`), and it must never override the policy.
   const query = applyKeyFloor(floor, selector);
+
+  // Read selection is kid-driven; NOTHING searches. A kid-less artifact with no
+  // supplied key would otherwise fall through to `find(query)`, whose read-side
+  // selector is the token's OWN declared `alg` — i.e. aegis would fetch the
+  // newest vault key of the class the artifact chose for itself. That is an
+  // undocumented fallback the design forbids: an artifact must not steer key
+  // selection by class (RFC 8725 §3.1). So on the read side a missing kid is a
+  // throw, not a query. (Decrypt keeps its escape hatch: an injected `kryptos`
+  // — resolved above — is honoured before this gate is reached. Verify has no
+  // key option by design; its injectable-key case is deferred to the future
+  // `client_secret_jwt` slice.) The WRITE side (sign/encrypt) is legitimately
+  // selector-driven with no kid and is unchanged.
+  const isReadOp = operation === "verify" || operation === "decrypt";
+
+  if (!options.kryptos && !id && isReadOp) {
+    throw new AegisError("The artifact carries no key id and no key was supplied", {
+      code: `${operation}_key_missing_kid`,
+      data: { operation, profile },
+      title: "Read Key Has No Kid",
+      details:
+        "This artifact carries no `kid` header and no key was supplied for the operation, so aegis will not search the vault by the algorithm the artifact declares — an artifact must not steer key selection by class (RFC 8725 §3.1). Supply the key the artifact names via its `kid`, or (decrypt only) an explicit key.",
+    });
+  }
 
   // BOTH lookups surface as an AegisError. The `findById` branch used to let
   // amphora's own `kryptos_not_found_by_id` escape, so a consumer catching

@@ -34,12 +34,25 @@ describe("parseTokenPayload", () => {
     expect(payload).toMatchSnapshot();
   });
 
-  test("should reject a token with no exp", () => {
+  // exp PRESENCE is policy (verify floor / expPresence), not structure: an
+  // RFC 8417 / SSF security_event SET carries no exp yet must parse.
+  test("should parse a token with no exp (expiresAt undefined)", () => {
     const { exp: _exp, ...withoutExp } = assertionClaims;
 
-    expect(() => parseTokenPayload(withoutExp)).toThrow(
-      expect.objectContaining({ code: "jwt_missing_claim_exp" }),
-    );
+    const payload = parseTokenPayload(withoutExp);
+
+    expect(payload.expiresAt).toBeUndefined();
+    expect(payload).toMatchSnapshot();
+  });
+
+  // subject/tokenId are OPTIONAL — an absent sub/jti stays undefined, never a
+  // fabricated "unknown" sentinel. Only iss is structurally required at parse.
+  test("should leave subject and tokenId undefined when sub/jti are absent", () => {
+    const payload = parseTokenPayload({ iss: "client-1", exp: 1704096120 });
+
+    expect(payload.subject).toBeUndefined();
+    expect(payload.tokenId).toBeUndefined();
+    expect(payload).toMatchSnapshot();
   });
 
   test("should reject a token with no iss", () => {

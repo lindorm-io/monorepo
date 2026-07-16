@@ -1,4 +1,4 @@
-import type { TokenProfile } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * CAEP / Shared Signals event — `secevent+jwt` (RFC 8417 under SSF 1.0's SET
@@ -9,7 +9,7 @@ import type { TokenProfile } from "../../../types/index.js";
  * `{"typ":"secevent+jwt","alg":"HS256"}` — so `confidential`: `HS*` permitted,
  * `none` rejected.
  */
-export const securityEventProfile: TokenProfile = {
+export const securityEventProfile = defineProfile({
   name: "security_event",
   typ: { presence: "required", value: "application/secevent+jwt" },
   required: ["issuer", "audience", "issuedAt", "tokenId", "subjectId", "events"],
@@ -26,4 +26,4 @@ export const securityEventProfile: TokenProfile = {
     eventsShape: true,
   },
   validate: () => [],
-};
+});

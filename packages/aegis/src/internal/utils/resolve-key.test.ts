@@ -1,4 +1,11 @@
-import { Amphora, type IAmphora } from "@lindorm/amphora";
+import {
+  Amphora,
+  DECRYPT_FLOOR,
+  type IAmphora,
+  SEAL_FLOOR,
+  SIGN_FLOOR,
+  VERIFY_FLOOR,
+} from "@lindorm/amphora";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
@@ -12,12 +19,6 @@ import {
   TEST_OKP_KEY_SIG,
 } from "../../__fixtures__/keys.js";
 import { AegisError } from "../../errors/index.js";
-import {
-  DECRYPT_FLOOR,
-  ENCRYPT_FLOOR,
-  SIGN_FLOOR,
-  VERIFY_FLOOR,
-} from "../constants/key-floor.js";
 import { resolveKey } from "./resolve-key.js";
 
 MockDate.set(new Date("2024-01-01T08:00:00.000Z"));
@@ -68,9 +69,9 @@ describe("resolveKey", () => {
       // encrypt — a public half OR an oct secret. `hasPublicKey` is NOT the
       // floor: an oct key has none, and requiring one would break `dir`/`A*KW`
       // encryption outright.
-      { name: "encrypt accepts a public-only recipient key", op: "encrypt", floor: ENCRYPT_FLOOR, key: PUB_ENC, ok: true }, // prettier-ignore
-      { name: "encrypt accepts an oct dir key (no public half)", op: "encrypt", floor: ENCRYPT_FLOOR, key: TEST_OCT_KEY_ENC, ok: true }, // prettier-ignore
-      { name: "encrypt rejects a sig key", op: "encrypt", floor: ENCRYPT_FLOOR, key: TEST_EC_KEY_SIG, ok: false }, // prettier-ignore
+      { name: "encrypt accepts a public-only recipient key", op: "encrypt", floor: SEAL_FLOOR, key: PUB_ENC, ok: true }, // prettier-ignore
+      { name: "encrypt accepts an oct dir key (no public half)", op: "encrypt", floor: SEAL_FLOOR, key: TEST_OCT_KEY_ENC, ok: true }, // prettier-ignore
+      { name: "encrypt rejects a sig key", op: "encrypt", floor: SEAL_FLOOR, key: TEST_EC_KEY_SIG, ok: false }, // prettier-ignore
 
       // decrypt — needs a private half
       { name: "decrypt rejects a public-only ECDH key", op: "decrypt", floor: DECRYPT_FLOOR, key: PUB_ENC, ok: false }, // prettier-ignore
@@ -79,18 +80,30 @@ describe("resolveKey", () => {
     ] as const)("$name", async ({ op, floor, key, ok }) => {
       amphora.add(key);
 
+      // READ (verify/decrypt) resolves by the artifact's own `kid` — aegis will
+      // NOT search the vault by a token's declared alg, so a kid-less read is a
+      // throw, not a query (RFC 8725 §3.1). WRITE (sign/encrypt) selects by the
+      // query. The floor bites the same either way; only WHERE differs.
+      const isReadOp = op === "verify" || op === "decrypt";
+
       const result = await resolveKey({
         amphora,
         floor,
         logger,
         operation: op,
+        ...(isReadOp ? { id: key.id } : {}),
       }).catch((err: Error) => err);
 
       if (ok) {
         expect(result).toBe(key);
       } else {
         expect(result).toBeInstanceOf(AegisError);
-        expect((result as AegisError).code).toBe(`${op}_key_not_found`);
+        // WRITE folds the floor into the query, so a forbidden key is simply not
+        // found. READ post-checks the key the `kid` names, so a forbidden key is
+        // a policy violation.
+        expect((result as AegisError).code).toBe(
+          isReadOp ? `${op}_key_policy_violation` : `${op}_key_not_found`,
+        );
       }
     });
   });
@@ -203,6 +216,91 @@ describe("resolveKey", () => {
 
       expect(error).toBeInstanceOf(AegisError);
       expect((error as AegisError).code).toBe("decrypt_key_policy_violation");
+    });
+  });
+
+  // Read selection is kid-driven; nothing searches. A kid-less artifact would
+  // otherwise fall through to `find(query)`, whose read-side selector is the
+  // token's OWN declared `alg` — an undocumented fallback the design forbids
+  // (RFC 8725 §3.1). On the read side a missing kid is a throw, not a query.
+  describe("the read side refuses a kid-less vault search", () => {
+    test("a kid-less VERIFY throws — there is no verify escape hatch", async () => {
+      amphora.add(TEST_EC_KEY_SIG); // a candidate the alg-search would have found
+
+      const error = await resolveKey({
+        amphora,
+        floor: VERIFY_FLOOR,
+        selector: { algorithm: "ES512" }, // the token's own declared alg
+        logger,
+        operation: "verify",
+        profile: "access_token",
+      }).catch((err: Error) => err);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("verify_key_missing_kid");
+      expect((error as AegisError).data).toEqual({
+        operation: "verify",
+        profile: "access_token",
+      });
+    });
+
+    test("a kid-less DECRYPT with no injected key throws", async () => {
+      amphora.add(TEST_EC_KEY_ENC);
+
+      const error = await resolveKey({
+        amphora,
+        floor: DECRYPT_FLOOR,
+        selector: { algorithm: "ECDH-ES" },
+        logger,
+        operation: "decrypt",
+      }).catch((err: Error) => err);
+
+      expect(error).toBeInstanceOf(AegisError);
+      expect((error as AegisError).code).toBe("decrypt_key_missing_kid");
+    });
+
+    test("a kid-less DECRYPT WITH an injected key SUCCEEDS — decrypt's escape hatch", async () => {
+      // Ciphertext written to a key that is not a vault resident (an RFC 9101
+      // encrypted request object keyed off a client secret) has no `kid` to
+      // resolve; the injected key is honoured before the gate is reached.
+      const kryptos = await resolveKey({
+        amphora,
+        floor: DECRYPT_FLOOR,
+        selector: { algorithm: "ECDH-ES" },
+        kryptos: TEST_EC_KEY_ENC,
+        logger,
+        operation: "decrypt",
+      });
+
+      expect(kryptos).toBe(TEST_EC_KEY_ENC);
+    });
+
+    test("the WRITE side is unaffected — a kid-less sign still resolves from the selector", async () => {
+      amphora.add(TEST_EC_KEY_SIG);
+
+      const kryptos = await resolveKey({
+        amphora,
+        floor: SIGN_FLOOR,
+        selector: { algorithm: "ES512" },
+        logger,
+        operation: "sign",
+      });
+
+      expect(kryptos).toBe(TEST_EC_KEY_SIG);
+    });
+
+    test("the WRITE side is unaffected — a kid-less encrypt still resolves from the selector", async () => {
+      amphora.add(TEST_EC_KEY_ENC);
+
+      const kryptos = await resolveKey({
+        amphora,
+        floor: SEAL_FLOOR,
+        selector: { algorithm: "ECDH-ES" },
+        logger,
+        operation: "encrypt",
+      });
+
+      expect(kryptos).toBe(TEST_EC_KEY_ENC);
     });
   });
 

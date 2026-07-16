@@ -74,6 +74,13 @@ export const createJwtVerify = (
   verify: VerifyJwtOptions,
   clockTolerance: number,
 ): Predicate<Dict> => {
+  // `exp` PRESENCE is policy (default `"required"`). When required, the matcher
+  // drops the `$exists: false` escape so a missing exp FAILS; when optional, an
+  // absent exp is tolerated (SSF SETs). `iat`/`nbf`/`auth_time` keep their
+  // `$exists: false` unconditionally — those claims are genuinely optional. When
+  // exp IS present its value is range-checked either way.
+  const expRequired = verify.expPresence !== "optional";
+
   const predicate: Partial<Record<keyof JwtClaims, PredicateOperator<any>>> = {
     iat: {
       $or: [{ $exists: false }, { $lte: addSeconds(new Date(), clockTolerance) }],
@@ -81,9 +88,9 @@ export const createJwtVerify = (
     nbf: {
       $or: [{ $exists: false }, { $lte: addSeconds(new Date(), clockTolerance) }],
     },
-    exp: {
-      $or: [{ $exists: false }, { $gte: subSeconds(new Date(), clockTolerance) }],
-    },
+    exp: expRequired
+      ? { $gte: subSeconds(new Date(), clockTolerance) }
+      : { $or: [{ $exists: false }, { $gte: subSeconds(new Date(), clockTolerance) }] },
     auth_time: {
       $or: [{ $exists: false }, { $lte: addSeconds(new Date(), clockTolerance) }],
     },
@@ -115,6 +122,8 @@ export const createJwtVerify = (
     if (key === "trustBoundThumbprint") continue;
     // typPresence governs the JOSE typ gate in JwtKit.parse directly
     if (key === "typPresence") continue;
+    // expPresence governs the exp matcher above, not a per-claim equality check
+    if (key === "expPresence") continue;
     // verify is the key-selection policy, consumed by Aegis when it resolves the
     // key — not a claim matcher, and never present on the payload
     if (key === "verify") continue;

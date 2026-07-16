@@ -1,4 +1,4 @@
-import type { TokenProfile } from "../../../types/index.js";
+import { defineProfile } from "../define-profile.js";
 
 /**
  * Delegation designation — `delegation+jwt` (ADR-0025; console-signed). The
@@ -7,7 +7,7 @@ import type { TokenProfile } from "../../../types/index.js";
  * jti (single-use); iat RECOMMENDED. Asymmetric (the client's registered
  * keys); not encryptable.
  */
-export const delegationProfile: TokenProfile = {
+export const delegationProfile = defineProfile({
   name: "delegation",
   typ: { presence: "required", value: "application/delegation+jwt" },
   required: ["issuer", "subject", "audience", "expiresAt", "tokenId"],
@@ -24,4 +24,4 @@ export const delegationProfile: TokenProfile = {
     crossField: true,
   },
   validate: () => [],
-};
+});

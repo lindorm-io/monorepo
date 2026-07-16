@@ -6,7 +6,15 @@ import {
   type SerialisedAesDecryption,
   type SerialisedAesEncryption,
 } from "@lindorm/aes";
-import { applyKeyFloor, mergePredicates, type IAmphora } from "@lindorm/amphora";
+import {
+  applyKeyFloor,
+  DECRYPT_FLOOR,
+  type IAmphora,
+  mergePredicates,
+  SEAL_FLOOR,
+  SIGN_FLOOR,
+  VERIFY_FLOOR,
+} from "@lindorm/amphora";
 import { getUnixTime } from "@lindorm/date";
 import { isBuffer, isDate, isString } from "@lindorm/is";
 import { removeUndefined, sanitiseToken } from "@lindorm/utils";
@@ -42,6 +50,7 @@ import type {
   EncryptedJwe,
   JweEncryptOptions,
   JwsContent,
+  NarrowedJwt,
   ParsedJws,
   ParsedJwt,
   ProfileContent,
@@ -62,12 +71,6 @@ import type {
 import { CoseKit } from "./CoseKit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
 import { coseTyp } from "../internal/cose/cose-typ.js";
-import {
-  DECRYPT_FLOOR,
-  ENCRYPT_FLOOR,
-  SIGN_FLOOR,
-  VERIFY_FLOOR,
-} from "../internal/constants/key-floor.js";
 import { resolveKey } from "../internal/utils/resolve-key.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { selectEncoder } from "../internal/utils/select-encoder.js";
@@ -78,6 +81,7 @@ import {
   registerProfile as registerProfileFn,
   resolveProfile,
 } from "../internal/profiles/registry.js";
+import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
 import { createJwtValidate } from "../internal/utils/jwt-validate.js";
 import { validate as validateClaims } from "../internal/utils/validate.js";
 import { decodeJoseHeader } from "../internal/utils/jose-header.js";
@@ -193,14 +197,19 @@ export class Aegis implements IAegis {
     return this.mintProfile(profile, content, options);
   }
 
-  verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
-  verify<T extends ParsedJws<any>>(token: string): Promise<T>;
-  verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
+  verify<P extends keyof BuiltInProfiles>(
+    profile: P,
+    token: string,
+    options?: ProfileVerifyOptions,
+  ): Promise<NarrowedJwt<BuiltInProfiles[P]>>;
   verify<T extends ParsedJwt>(
-    profile: string,
+    profile: string & {},
     token: string,
     options: ProfileVerifyOptions,
   ): Promise<T>;
+  verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
+  verify<T extends ParsedJws<any>>(token: string): Promise<T>;
+  verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
   async verify<T extends ParsedJwt | ParsedJws<any>>(
     tokenOrProfile: string,
     optionsOrToken?: VerifyJwtOptions | string,
@@ -741,6 +750,12 @@ export class Aegis implements IAegis {
       ...rest
     } = options;
 
+    // A `lifetime: null` profile (RFC 8417 / SSF `security_event`, introspection,
+    // userinfo) mints tokens with NO exp, so its verify must tolerate an absent
+    // exp — the floor below owns the real presence policy. Finite-lifetime
+    // profiles stay `"required"` (belt-and-suspenders with the floor's exp check).
+    const expPresence = profile.lifetime === null ? "optional" : "required";
+
     // The typ-sniffing dispatcher (verifySmart) cannot classify a typ-less
     // JWS, but profiled verify knows the format from the profile — so only a
     // JWE goes through verifySmart (decrypt + re-verify the inner JWT); bare
@@ -749,15 +764,15 @@ export class Aegis implements IAegis {
     // profile's typ presence policy (required-presence profiles still reject
     // an absent typ there). Direct jwt.verify callers keep the strict default.
     const parsed = Aegis.isJwe(token)
-      ? await this.verifySmart<ParsedJwt>(token, rest)
-      : await this.jwtVerify(token, { ...rest, typPresence: "optional" });
+      ? await this.verifySmart<ParsedJwt>(token, { ...rest, expPresence })
+      : await this.jwtVerify(token, { ...rest, typPresence: "optional", expPresence });
 
     const expectedIssuer =
       options.issuer ??
       (profile.issuer === "platform" ? (this.issuer ?? undefined) : undefined);
 
     // DOMAIN-keyed floor payload from the RAW wire claims, not parsed.payload:
-    // parseTokenPayload backfills absent sub/jti with "unknown" and nests
+    // parseTokenPayload defaults absent set-valued claims to [] and nests
     // custom claims under `claims`, which would defeat the floor's
     // required-claims presence check. extractDomainClaims reports true wire
     // presence and leaves non-domain claims flat in `rest`.
@@ -832,9 +847,13 @@ export class Aegis implements IAegis {
 
   // The deployment/per-call verify policy joins the FLOOR rather than the
   // selector: selection here is driven by the token's own `kid`, so the policy
-  // has to be a CHECK on the resolved key to bite at all. The token's `alg` is
-  // only a query hint for the kid-less case — never a check, or a token could
-  // choose the class of key that verifies it (RFC 8725 §3.1).
+  // has to be a CHECK on the resolved key to bite at all. There is no kid-less
+  // case: a token with no `kid` is rejected by `resolveKey` (a token must not be
+  // able to steer key selection by its own `alg` — RFC 8725 §3.1), and verify
+  // has no injectable-key escape hatch by design — that is deferred to the
+  // future `client_secret_jwt` slice (see the `AegisVerifyKey` type comment).
+  // The `selector` below is therefore dead for resolution; it stays only to
+  // record the `alg` the token declared.
   private resolveVerifyKey(
     id: string | undefined,
     algorithm: KryptosSigAlgorithm | undefined,
@@ -853,7 +872,7 @@ export class Aegis implements IAegis {
   private resolveEncryptKey(encrypt?: AegisEncKey): Promise<IKryptos> {
     return resolveKey({
       amphora: this.amphora,
-      floor: ENCRYPT_FLOOR,
+      floor: SEAL_FLOOR,
       selector: mergePredicates(this.encryptKey.predicate, encrypt?.predicate),
       kryptos: encrypt?.kryptos ?? this.encryptKey.kryptos,
       logger: this.logger,
@@ -863,8 +882,12 @@ export class Aegis implements IAegis {
 
   // Like verify, the deployment/per-call decrypt policy joins the FLOOR rather
   // than the selector: selection is driven by the ciphertext's own key id, so
-  // the policy has to be a CHECK on the resolved key to bite at all. An injected
-  // key is the one thing that skips the vault — never the floor.
+  // the policy has to be a CHECK on the resolved key to bite at all. There is no
+  // kid-less vault search: ciphertext with no `kid` is rejected by `resolveKey`
+  // UNLESS a key is injected — an injected `kryptos` is the one thing that skips
+  // the vault (never the floor), and it is decrypt's escape hatch for ciphertext
+  // written to a key that is not a vault resident. The `selector` below is dead
+  // for resolution; it stays only to record the `alg` the ciphertext declared.
   private resolveDecryptKey(
     id: string | undefined,
     algorithm: KryptosEncAlgorithm | undefined,

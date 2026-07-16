@@ -183,10 +183,10 @@ export type TokenProfileTyp =
  * `buildProfileClaims` (presence/forbid/atLeastOneOf/requiredWhen) and
  * `validateProfileClaims` (structural RFC + crypto rules).
  */
-export type TokenProfile = {
+export type TokenProfile<R extends readonly string[] = readonly string[]> = {
   name: string;
   typ: TokenProfileTyp;
-  required: Array<string>;
+  required: R;
   forbidden: Array<string>;
   requiredWhen: Array<{
     claim: string;
