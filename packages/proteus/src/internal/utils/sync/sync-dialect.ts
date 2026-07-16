@@ -37,6 +37,8 @@ export type SyncDialect = {
   namedForeignKeys: boolean;
   /** Pg only: (namespace, name) table dedupe + namespaces output. */
   supportsNamespaces: boolean;
+  /** False for mysql: no partial (`WHERE`-predicated) indexes. */
+  supportsPartialIndexes: boolean;
   /** Companion column type for typedJson fields. */
   typedJsonColumnType: string;
   /** Collection-table `__ordinal` column type. */

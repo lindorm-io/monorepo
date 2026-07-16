@@ -24,6 +24,7 @@ export const mysqlSyncDialect: SyncDialect = {
   identifierLimit: MYSQL_IDENTIFIER_LIMIT,
   namedForeignKeys: true,
   supportsNamespaces: false,
+  supportsPartialIndexes: false,
   typedJsonColumnType: "JSON",
   ordinalColumnType: "int",
 

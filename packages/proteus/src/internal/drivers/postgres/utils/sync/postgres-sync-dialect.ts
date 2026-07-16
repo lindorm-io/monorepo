@@ -20,6 +20,7 @@ export const postgresSyncDialect: SyncDialect = {
   identifierLimit: PG_IDENTIFIER_LIMIT,
   namedForeignKeys: true,
   supportsNamespaces: true,
+  supportsPartialIndexes: true,
   typedJsonColumnType: "JSONB",
   ordinalColumnType: "INTEGER",
 

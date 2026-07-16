@@ -19,6 +19,7 @@ export const sqliteSyncDialect: SyncDialect = {
   identifierLimit: SQLITE_IDENTIFIER_LIMIT,
   namedForeignKeys: false,
   supportsNamespaces: false,
+  supportsPartialIndexes: true,
   typedJsonColumnType: "TEXT",
   ordinalColumnType: "INTEGER",
 
