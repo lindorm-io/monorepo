@@ -30,7 +30,7 @@ export const encryptPayload = async (
     const { AesKit } = await import("@lindorm/aes");
     const kryptos = await resolveEncryptionKey({ amphora, key });
     const aesKit = new AesKit({ kryptos });
-    return aesKit.encrypt(data.toString("base64"), "tokenised");
+    return aesKit.encrypt(data.toString("base64"));
   } catch (error) {
     if (error instanceof IrisEncryptionError) throw error;
     throw new IrisSerializationError("Failed to encrypt message payload", {
