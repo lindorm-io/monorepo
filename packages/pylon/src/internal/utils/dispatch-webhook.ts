@@ -1,43 +1,17 @@
-import { Aegis } from "@lindorm/aegis";
-import { AesKit } from "@lindorm/aes";
-import type { IAmphora } from "@lindorm/amphora";
 import { Conduit, type ConduitClientCredentialsCache } from "@lindorm/conduit";
 import type { ILogger } from "@lindorm/logger";
 import { WebhookMethod } from "../../enums/index.js";
 import type { IWebhookSubscription } from "../../interfaces/index.js";
 import { createConduitWebhookAuthMiddleware } from "../../middleware/index.js";
-import type { PylonEncKey } from "../../types/index.js";
 
-type Options = {
-  amphora: IAmphora;
-  encryptionKey?: PylonEncKey;
-};
-
+// `clientSecret` is a proteus `@Encrypted` column: proteus seals it on write and
+// decrypts it transparently on read, so the subscription arrives here in the
+// clear. Dispatch performs no crypto of its own — the read side that loaded the
+// subscription (the webhook request consumer's `repo.find`) already decrypted it.
 export const createDispatchWebhook = (
-  options: Options,
   logger: ILogger,
   cache: ConduitClientCredentialsCache = [],
 ) => {
-  // The stored `clientSecret` is a tokenised AES ciphertext, and ciphertext names
-  // its own key: `keyId` is in the token. So the read goes through `aegis.aes`,
-  // exactly like a stored session's tokens and every other at-rest ciphertext in
-  // the toolkit — the key is resolved from the id the ciphertext carries, the
-  // decrypt FLOOR (`use: "enc"`, private half, not pending) is applied to whatever
-  // that id produced, and an injected `kryptos` is honoured ONLY when it IS the
-  // key the ciphertext names.
-  //
-  // Pylon adds no floor of its own on this DECRYPT path — the ciphertext names
-  // its own key and aegis owns the decrypt floor. (Cookie/session ENCRYPTION is
-  // the opposite: there pylon owns the `ENVELOPE_FLOOR` and resolves the key,
-  // because it CHOOSES the recipient rather than obeying one the ciphertext named
-  // — see `resolve-cookie-encryption-key`.)
-  // What pylon used to do instead was build a raw `AesKit` from
-  // `webhook.encryptionKey` and decrypt with it whatever the ciphertext said: an
-  // unfloored key, and — worse — a secret sealed by the PREVIOUS key would be
-  // decrypted with the CURRENT one, so a single rotation broke every subscription
-  // written before it.
-  const aegis = new Aegis({ amphora: options.amphora, logger });
-
   const conduit = new Conduit({ logger });
 
   return async function dispatchWebhook(dispatch: {
@@ -45,16 +19,6 @@ export const createDispatchWebhook = (
     payload: any;
     subscription: IWebhookSubscription;
   }): Promise<void> {
-    if (
-      dispatch.subscription.clientSecret &&
-      AesKit.isAesTokenised(dispatch.subscription.clientSecret)
-    ) {
-      dispatch.subscription.clientSecret = await aegis.aes.decrypt<string>(
-        dispatch.subscription.clientSecret,
-        { key: options.encryptionKey },
-      );
-    }
-
     const middleware = await createConduitWebhookAuthMiddleware(
       dispatch.subscription,
       cache,

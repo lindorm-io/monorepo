@@ -1,9 +1,7 @@
-import type { IAmphora } from "@lindorm/amphora";
 import type { ConduitClientCredentialsCache } from "@lindorm/conduit";
 import type { IIrisSource } from "@lindorm/iris";
 import type { ILogger } from "@lindorm/logger";
 import type { IProteusSource } from "@lindorm/proteus";
-import type { PylonEncKey } from "../../types/index.js";
 import { createDispatchWebhook } from "../utils/dispatch-webhook.js";
 
 export const WEBHOOK_DISPATCH_QUEUE = "pylon.webhook.dispatch.send";
@@ -11,7 +9,6 @@ export const WEBHOOK_DISPATCH_QUEUE = "pylon.webhook.dispatch.send";
 const DEFAULT_MAX_ERRORS = 10;
 
 export type SetupWebhookDispatchOptions = {
-  encryptionKey?: PylonEncKey;
   cache?: ConduitClientCredentialsCache;
   maxErrors?: number;
 };
@@ -19,15 +16,10 @@ export type SetupWebhookDispatchOptions = {
 export const setupWebhookDispatchConsumer = async (
   bus: IIrisSource,
   db: IProteusSource,
-  amphora: IAmphora,
   logger: ILogger,
   options: SetupWebhookDispatchOptions = {},
 ): Promise<void> => {
-  const dispatchWebhook = createDispatchWebhook(
-    { amphora, encryptionKey: options.encryptionKey },
-    logger,
-    options.cache,
-  );
+  const dispatchWebhook = createDispatchWebhook(logger, options.cache);
 
   const maxErrors = options.maxErrors ?? DEFAULT_MAX_ERRORS;
 
@@ -37,30 +29,38 @@ export const setupWebhookDispatchConsumer = async (
   const wq = bus.workerQueue(WebhookDispatch);
 
   await wq.consume(WEBHOOK_DISPATCH_QUEUE, async (message) => {
+    // Reload the subscription DB-locally — proteus decrypts `clientSecret` here,
+    // at fan-out, so the secret is never carried over the bus.
+    const repo = db.repository(WebhookSubscription);
+    const subscription = await repo.findOne({ id: message.subscriptionId });
+
+    if (!subscription) {
+      logger.debug("Webhook subscription no longer present", {
+        event: message.event,
+        subscriptionId: message.subscriptionId,
+      });
+      return;
+    }
+
     try {
       await dispatchWebhook({
         event: message.event,
         payload: message.payload,
-        subscription: message.subscription,
+        subscription,
       });
 
       logger.debug("Webhook dispatched", {
         event: message.event,
-        url: message.subscription.url,
+        url: subscription.url,
       });
     } catch (error: any) {
       logger.error("Webhook dispatch failed", error, [
         {
           event: message.event,
-          subscriptionId: message.subscription.id,
-          url: message.subscription.url,
+          subscriptionId: subscription.id,
+          url: subscription.url,
         },
       ]);
-
-      const repo = db.repository(WebhookSubscription);
-      const subscription = await repo.findOne({ id: message.subscription.id });
-
-      if (!subscription) return;
 
       subscription.errorCount = (subscription.errorCount ?? 0) + 1;
       subscription.lastErrorAt = new Date();

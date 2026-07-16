@@ -5,6 +5,7 @@ import type {
 import {
   CreateDateField,
   Default,
+  Encrypted,
   Entity,
   Enum,
   Field,
@@ -87,8 +88,14 @@ export class WebhookSubscription implements IWebhookSubscription {
   @Field("string")
   clientId!: string | null;
 
+  // Bare marker: self-documenting + fail-loud. The KEK selector is staged onto
+  // this field from PYLON SETTINGS (`webhook.encryption`, default
+  // `pylon:webhook`) before the source sets up. Proteus encrypts on write and
+  // decrypts transparently on read — a subscription registers a PLAINTEXT
+  // secret and dispatch reads it back in the clear. Encrypted columns are text.
+  @Encrypted()
   @Nullable()
-  @Field("string")
+  @Field("text")
   clientSecret!: string | null;
 
   @Nullable()

@@ -43,11 +43,13 @@ export const setupWebhookRequestConsumer = async (
     const dispatchQueue = bus.workerQueue(WebhookDispatch);
 
     for (const subscription of matched) {
+      // Carry the id only — the subscription (and its encrypted `clientSecret`)
+      // stays DB-local; the dispatch consumer reloads it and decrypts at fan-out.
       const dispatch = dispatchQueue.create({
         correlationId: message.correlationId,
         event: message.event,
         payload: message.payload,
-        subscription,
+        subscriptionId: subscription.id,
       });
       await dispatchQueue.publish(dispatch);
     }

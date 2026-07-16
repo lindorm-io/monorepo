@@ -924,7 +924,9 @@ Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ct
 const app = new Pylon({
   webhook: {
     enabled: true,
-    encryption: { predicate: { purpose: "webhook", publish: false } },
+    // The at-rest KEK for a subscription's `clientSecret`. Default
+    // `{ predicate: { purpose: "pylon:kek" } }` — override for a separate key.
+    encryption: { predicate: { purpose: "pylon:kek", publish: false } },
     maxErrors: 20,
   },
   // …
@@ -944,14 +946,16 @@ Each subscription tracks `errorCount`, `lastErrorAt`, and `suspendedAt`. After `
 
 ### The stored `clientSecret`
 
-A subscription's `clientSecret` may be stored as AES ciphertext (`aes:…`). Pylon decrypts it on dispatch, and — like every other read path in the toolkit — **the ciphertext names the key that opens it**: the `keyId` in the token, never `webhook.encryption`. A secret sealed with the previous webhook key keeps opening after the current one is minted.
+A subscription's `clientSecret` is encrypted **at rest** by Proteus: the `WebhookSubscription.clientSecret` column ships a bare `@Encrypted()` marker, and Pylon stages `webhook.encryption` (the KEK selector) onto it before the source sets up. A client **registers a plaintext secret** — Proteus seals it on write and decrypts it transparently on read.
 
-`webhook.encryption` is the same `{ kryptos?, predicate? }` descriptor as the [`keys`](#keys) roles, read as a **decrypt** descriptor:
+**The secret never travels the bus.** The request consumer selects matched subscriptions and publishes one `WebhookDispatch` carrying the subscription **id** only; the dispatch consumer reloads the row DB-locally (Proteus decrypts there) and fans out — so the broker only ever holds the id, never the secret.
 
-- `predicate` — a **check** on the key the ciphertext names, not a query. It matches a key _class_, so a deployment can refuse a ciphertext naming anything outside it.
-- `kryptos` — a key supplied outright, for a secret sealed with a key the vault never held. It answers for its **own** kid only; one naming a different key than the ciphertext throws, rather than decrypting with the wrong key material.
+`webhook.encryption` is the same `{ kryptos?, predicate? }` descriptor as the [`keys`](#keys) roles, read here as an **encrypt** (KEK) selector for the at-rest column:
 
-The floor is Aegis's (`use: "enc"`, private half, `isPending: false`), so a ciphertext cannot name a signing key, or a key that has never been valid, and be decrypted. A plaintext `clientSecret` is sent through untouched.
+- `predicate` — which of the vault's keys seals the secret. Default `{ purpose: "pylon:kek" }` — the same bootstrap KEK that seals stored private keys (the webhook key does not rotate). Override it for a separate blast radius.
+- `kryptos` — a key supplied outright (e.g. an env-imported KEK).
+
+The floor is Proteus's (`use: "enc"`, private half), so the KEK can never be a signing key. Leaving the marker unresolvable (no `webhook.encryption` **and** no `pylon:kek` key in the vault) throws `unnamed_encryption_key` at setup — the column never silently stores plaintext.
 
 ## Workers
 
@@ -998,6 +1002,8 @@ import {
 `createCertificateExpiryWorker({ amphora, logger, warnThreshold?, errorThreshold?, cron?, timezone? })` runs daily (cron `0 10 * * *`, `UTC`) and inspects **every certificate** in **every** vault key's chain — leaf and issuing/root CAs alike (the long-lived CA certs are the real targets, and they are only reachable through the chains). A cert already expired or within `errorThreshold` (default `1mo`) logs `error`; within `warnThreshold` (default `3mo`) logs `warn`; otherwise it is silent. Certs are **deduped by `x5t#S256`** across the run — a shared CA cert produces one line, annotated with every referencing `kid` — and each run ends with one `verbose` summary (`checked / warn / error`).
 
 `createKryptosRotationWorker` has **no default key set**. It mints exactly the keys you give it — pass none and it rotates nothing (and warns at startup). The key set is your deployment's, not Pylon's: see [Keys](#keys). `@lindorm/create-pylon` scaffolds a complete, working set into the generated app as editable source.
+
+The persisted `Kryptos.privateKey` is encrypted **at rest** by Proteus, sealed under the KEK named by `kryptos.encryption` (default `{ predicate: { purpose: "pylon:kek" } }`) — staged onto the entity's bare `@Encrypted()` marker before the source sets up. As with webhooks, an unresolvable KEK throws `unnamed_encryption_key` at setup rather than storing key material in the clear.
 
 ```typescript
 createKryptosRotationWorker({

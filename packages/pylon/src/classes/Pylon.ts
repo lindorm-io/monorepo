@@ -21,8 +21,17 @@ import { setupWebhookRequestConsumer } from "../internal/consumers/setup-webhook
 import { calculateSubscriptions } from "../internal/utils/calculate-subscriptions.js";
 import { calculateWorkers } from "../internal/utils/calculate-workers.js";
 import { scanWorkers } from "../internal/utils/scan-workers.js";
+import { stageEncryptedField } from "../internal/utils/stage-encrypted-field.js";
+import type { PylonEncKey } from "../types/index.js";
 import { PylonHttp } from "./PylonHttp.js";
 import { PylonIo } from "./PylonIo.js";
+
+// The at-rest KEK selector staged onto the bare `@Encrypted()` markers when a
+// deployment names none — the bootstrap key-encryption-key, shared by stored
+// private keys and webhook client secrets alike (the webhook key does not
+// rotate, so it needs no separate purpose). A deployment can still override
+// `kryptos.encryption` / `webhook.encryption` for blast-radius separation.
+const DEFAULT_KEK: PylonEncKey = { predicate: { purpose: "pylon:kek" } };
 
 export class Pylon<
   E extends PylonEventMap = PylonEventMap,
@@ -274,6 +283,13 @@ export class Pylon<
       if (source) {
         const { Kryptos } = await import("../entities/Kryptos.js");
         source.addEntities([Kryptos]);
+        // Stage the KEK onto the bare `@Encrypted()` marker before setup().
+        await stageEncryptedField(
+          source,
+          Kryptos,
+          "privateKey",
+          this.options.kryptos.encryption ?? DEFAULT_KEK,
+        );
       }
     }
 
@@ -291,6 +307,14 @@ export class Pylon<
         const { WebhookSubscription } =
           await import("../entities/WebhookSubscription.js");
         proteusSource.addEntities([WebhookSubscription]);
+        // Stage the KEK onto the bare `@Encrypted()` marker before setup(), so
+        // proteus seals `clientSecret` at rest and opens it transparently on read.
+        await stageEncryptedField(
+          proteusSource,
+          WebhookSubscription,
+          "clientSecret",
+          this.options.webhook.encryption ?? DEFAULT_KEK,
+        );
       }
 
       const irisSource = this.options.webhook.bus ?? this.options.bus;
@@ -378,8 +402,7 @@ export class Pylon<
 
       if (bus && db) {
         await setupWebhookRequestConsumer(bus, db, this.logger);
-        await setupWebhookDispatchConsumer(bus, db, this.amphora, this.logger, {
-          encryptionKey: this.options.webhook.encryption,
+        await setupWebhookDispatchConsumer(bus, db, this.logger, {
           maxErrors: this.options.webhook.maxErrors,
         });
       }

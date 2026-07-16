@@ -1,6 +1,5 @@
 import { CorrelationField, Field, Message, Namespace, Topic } from "@lindorm/iris";
 import type { Dict } from "@lindorm/types";
-import type { IWebhookSubscription } from "../interfaces/index.js";
 
 @Namespace("pylon")
 @Message()
@@ -15,6 +14,10 @@ export class WebhookDispatch {
   @Field("object")
   readonly payload!: Dict;
 
-  @Field("object")
-  readonly subscription!: IWebhookSubscription;
+  // The subscription is carried by ID only — never the full row. Its
+  // `clientSecret` is an at-rest `@Encrypted` column, so putting the object here
+  // (proteus decrypts on read) would leak the plaintext secret onto the broker.
+  // The dispatch consumer reloads by id and decrypts locally at fan-out.
+  @Field("string")
+  readonly subscriptionId!: string;
 }

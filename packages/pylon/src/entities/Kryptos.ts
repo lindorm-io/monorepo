@@ -55,7 +55,11 @@ export class Kryptos implements KryptosDB {
   @Field("string")
   encryption!: KryptosEncryption | null;
 
-  @Encrypted({ predicate: { purpose: "pylon:kek" } })
+  // Bare marker: self-documenting + fail-loud. The KEK selector is staged onto
+  // this field from PYLON SETTINGS (`kryptos.encryption`, default
+  // `pylon:kek`) before the source sets up. A source that resolves this field
+  // with no key throws `unnamed_encryption_key` at setup.
+  @Encrypted()
   @Nullable()
   @Field("text")
   privateKey!: string | null;

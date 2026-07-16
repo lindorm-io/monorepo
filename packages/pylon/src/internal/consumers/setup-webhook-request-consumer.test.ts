@@ -70,13 +70,13 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-1",
       event: "order.created",
       payload: { orderId: "123" },
-      subscription: subscriptions[0],
+      subscriptionId: subscriptions[0].id,
     });
     expect(mockCreate).toHaveBeenCalledWith({
       correlationId: "corr-id-1",
       event: "order.created",
       payload: { orderId: "123" },
-      subscription: subscriptions[1],
+      subscriptionId: subscriptions[1].id,
     });
     expect(mockPublish).toHaveBeenCalledTimes(2);
   });
@@ -135,7 +135,7 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-3",
       event: "order.created",
       payload: { orderId: "999" },
-      subscription: subscriptions[0],
+      subscriptionId: subscriptions[0].id,
     });
     expect(mockPublish).toHaveBeenCalledTimes(1);
   });
@@ -209,7 +209,7 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-null",
       event: "order.created",
       payload: {},
-      subscription: subscriptions[0],
+      subscriptionId: subscriptions[0].id,
     });
   });
 
@@ -248,7 +248,7 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-a",
       event: "order.created",
       payload: {},
-      subscription: subscriptions[0],
+      subscriptionId: subscriptions[0].id,
     });
   });
 
@@ -294,13 +294,13 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-mixed",
       event: "order.created",
       payload: {},
-      subscription: subscriptions[0],
+      subscriptionId: subscriptions[0].id,
     });
     expect(mockCreate).toHaveBeenCalledWith({
       correlationId: "corr-id-mixed",
       event: "order.created",
       payload: {},
-      subscription: subscriptions[1],
+      subscriptionId: subscriptions[1].id,
     });
   });
 
@@ -380,7 +380,7 @@ describe("setupWebhookRequestConsumer", () => {
       correlationId: "corr-id-and",
       event: "order.created",
       payload: {},
-      subscription: subscriptions[0],
+      subscriptionId: subscriptions[0].id,
     });
   });
 });

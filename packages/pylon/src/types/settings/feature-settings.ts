@@ -7,6 +7,14 @@ import type { PylonEncKey } from "./keys.js";
 export type PylonKryptosSettings = {
   enabled: boolean;
   db?: IProteusSource;
+  /**
+   * The at-rest KEK selector staged onto `Kryptos.privateKey` before the source
+   * sets up. Proteus encrypts the stored private key on write and decrypts it
+   * transparently on read. Default `{ predicate: { purpose: "pylon:kek" } }` —
+   * the bootstrap key-encryption-key. Same `{ kryptos?, predicate? }` descriptor
+   * as every other key surface; `encryption` (the AEAD) is ignored on this path.
+   */
+  encryption?: PylonEncKey;
 };
 
 export type PylonQueueSettings = {
@@ -19,18 +27,14 @@ export type PylonWebhookSettings = {
   db?: IProteusSource;
   bus?: IIrisSource;
   /**
-   * The webhook feature's flat key selector. Only `encryption` applies: the key
-   * that opens a subscription's stored `clientSecret`.
-   *
-   * The same `{ kryptos?, predicate? }` descriptor as every other key surface —
-   * but a DECRYPT descriptor: the stored secret is tokenised ciphertext, so it
-   * names its own key and selection is driven by that id, never by this option.
-   * `predicate` is therefore a CHECK on the key the ciphertext names (a
-   * deployment that seals webhook secrets with one class of key can refuse every
-   * other), and `kryptos` answers only for its OWN kid — a secret sealed by a key
-   * that never reached the vault. A `kryptos` naming a different key than the
-   * ciphertext is a caller error, not a silent override; otherwise a rotated-in
-   * key would shadow every secret the old one sealed.
+   * The at-rest KEK selector staged onto `WebhookSubscription.clientSecret`
+   * before the source sets up. Proteus encrypts the stored secret on write and
+   * decrypts it transparently on read — a subscription registers a PLAINTEXT
+   * secret and dispatch reads it back in the clear (no manual decrypt). Default
+   * `{ predicate: { purpose: "pylon:webhook" } }` — webhook secrets seal with
+   * their OWN key, separate blast radius from the bootstrap `pylon:kek`. Same
+   * `{ kryptos?, predicate? }` descriptor as every other key surface;
+   * `encryption` (the AEAD) is ignored on this path.
    */
   encryption?: PylonEncKey;
   maxErrors?: number;
