@@ -51,7 +51,7 @@ describe("encryptCookie", () => {
 
     const sealed = await encryptCookie(ctx, "secret_value", key);
 
-    expect(AesKit.isAesTokenised(sealed)).toBe(true);
+    expect(AesKit.isAesString(sealed)).toBe(true);
     expect(AesKit.parse(sealed).keyId).toBe(cookieKey.id);
     expect(AesKit.parse(sealed).keyId).not.toBe(tokenKey.id);
   });

@@ -114,14 +114,13 @@ describe("httpCookiesMiddleware", async () => {
 
     expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith(
       "new_value",
-      "tokenised",
       expect.objectContaining({ key: expect.objectContaining({ kryptos: cookieKey }) }),
     );
 
     const setCookieHeader = ctx.set.mock.calls[0][1][0] as string;
     const cookieValue = setCookieHeader.split("=")[1].split(";")[0];
 
-    expect(AesKit.isAesTokenised(cookieValue)).toBe(true);
+    expect(AesKit.isAesString(cookieValue)).toBe(true);
   });
 
   test("should pass the cookie signing key from the options to the signer", async () => {
@@ -427,7 +426,7 @@ describe("httpCookiesMiddleware", async () => {
 
     // Chunking preserved the sealed token: it is still a valid AES token, sealed
     // with the NAMED cookie key, and decrypts back to the exact plaintext.
-    expect(AesKit.isAesTokenised(reassembled)).toBe(true);
+    expect(AesKit.isAesString(reassembled)).toBe(true);
     expect(AesKit.parse(reassembled).keyId).toBe(cookieKey.id);
     await expect(realCtx.aegis.aes.decrypt(reassembled)).resolves.toBe(plaintext);
   });

@@ -94,13 +94,13 @@ export const createSessionStore = (
       // resolves it by kid. Sessions written before this deployment changed
       // which key it encrypts with still decrypt.
       if (ctx.amphora.canDecrypt()) {
-        if (AesKit.isAesTokenised(session.accessToken)) {
+        if (AesKit.isAesString(session.accessToken)) {
           session.accessToken = await ctx.aegis.aes.decrypt(session.accessToken);
         }
-        if (AesKit.isAesTokenised(session.idToken)) {
+        if (AesKit.isAesString(session.idToken)) {
           session.idToken = await ctx.aegis.aes.decrypt(session.idToken);
         }
-        if (AesKit.isAesTokenised(session.refreshToken)) {
+        if (AesKit.isAesString(session.refreshToken)) {
           session.refreshToken = await ctx.aegis.aes.decrypt(session.refreshToken);
         }
       }

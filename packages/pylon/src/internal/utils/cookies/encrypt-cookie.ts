@@ -15,7 +15,7 @@ export const encryptCookie = async (
   // the PUBLISHED set and would seal the cookie with the JWKS token key.
   const kryptos = await resolveCookieEncryptionKey(ctx.amphora, key);
 
-  return ctx.aegis.aes.encrypt(value, "tokenised", {
+  return ctx.aegis.aes.encrypt(value, {
     key: { kryptos, encryption: key?.encryption },
   });
 };

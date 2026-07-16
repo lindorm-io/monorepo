@@ -12,7 +12,7 @@ import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
  * The cookie READ path, against a REAL vault and a REAL aegis.
  *
  * The bug this pins: the read path chose decrypt-vs-plaintext by SNIFFING the
- * client's value (`isAesTokenised`), not by the declared policy. Composed with
+ * client's value (`isAesString`), not by the declared policy. Composed with
  * pylon's own login cookie — written encrypted, read by a bare `get()` — it was
  * an OAuth login hijack + open redirect: plant an unsealed JSON blob and the
  * reader served it back as trusted plaintext (attacker-chosen `state` /
@@ -132,7 +132,7 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
   // so the old sniff decoded it as plaintext. It is NOT aes-tokenised.
   const forgedUnsealed = (payload: unknown): string => {
     const value = Buffer.from(JSON.stringify(payload)).toString("base64url");
-    expect(AesKit.isAesTokenised(value)).toBe(false);
+    expect(AesKit.isAesString(value)).toBe(false);
     return value;
   };
 
@@ -140,7 +140,7 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
     const value = { redirectUri: "https://client.example/app", state: "s-123" };
 
     const headers = await write("session", value, { encryption: true });
-    expect(AesKit.isAesTokenised(extractNameValue(headers[0]).split("=")[1])).toBe(true);
+    expect(AesKit.isAesString(extractNameValue(headers[0]).split("=")[1])).toBe(true);
 
     const result = await read(toCookieHeader(headers), "session", { encrypted: true });
 
@@ -179,7 +179,7 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
     // A genuinely sealed value, then read under a FALSY encrypted policy.
     const headers = await write("session", value, { encryption: true });
     const sealed = extractNameValue(headers[0]).split("=")[1];
-    expect(AesKit.isAesTokenised(sealed)).toBe(true);
+    expect(AesKit.isAesString(sealed)).toBe(true);
 
     const result = await read(toCookieHeader(headers), "session", { encrypted: false });
 

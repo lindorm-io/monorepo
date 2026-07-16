@@ -117,7 +117,7 @@ const rawStringColumns = async (
 };
 
 /** Whether one of the stored string columns is at-rest ciphertext (proteus's
- *  `"encoded"` AES format) sealed by the given key. */
+ *  `"cbor"` AES format) sealed by the given key. */
 const storedUnderKey = (columns: Array<string>, keyId: string): boolean =>
   columns.some((v) => {
     try {

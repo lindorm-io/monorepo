@@ -126,12 +126,12 @@ export const createGetCookie = ({
     let value: any = cookie.value;
 
     // The DECLARED policy drives the branch, never the byte prefix. Sniffing
-    // `isAesTokenised(value)` here let a client dictate the read path: an
+    // `isAesString(value)` here let a client dictate the read path: an
     // attacker who planted an unsealed value under a cookie the deployment reads
     // encrypted had it served back as trusted plaintext (login hijack + open
     // redirect). Policy is the authority — the value only ever conforms to it.
     if (encrypted) {
-      if (!AesKit.isAesTokenised(value)) {
+      if (!AesKit.isAesString(value)) {
         throw new ClientError("Encrypted cookie is not sealed", {
           code: "cookie_not_encrypted",
           title: "Encrypted Cookie Not Sealed",

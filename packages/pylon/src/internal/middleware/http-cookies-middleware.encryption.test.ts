@@ -11,7 +11,7 @@ import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
  * Cookie ENCRYPTION, against a REAL vault and a REAL aegis.
  *
  * A mocked `find` cannot select the wrong key — which is precisely why this bug
- * survived: `ctx.aegis.aes.encrypt(value, "tokenised")` took no selector, so it
+ * survived: `ctx.aegis.aes.encrypt(value)` took no selector, so it
  * resolved through aegis's deployment-wide enc policy. Amphora queries the
  * PUBLISHED set by default, so the internal `dir` cookie key that exists for
  * exactly this job was unreachable and the JWKS token key sealed every cookie.
@@ -114,7 +114,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
     const writeCtx = buildCtx(amphora);
 
     // Exactly what the old code produced: the published token enc key.
-    const stale = await writeCtx.aegis.aes.encrypt("old_value", "tokenised", {
+    const stale = await writeCtx.aegis.aes.encrypt("old_value", {
       key: { predicate: { purpose: "token" } },
     });
 

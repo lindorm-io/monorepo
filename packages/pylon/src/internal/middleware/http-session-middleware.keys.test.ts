@@ -437,7 +437,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const value = setCookies(ctx)["pylon_session"];
 
-      expect(AesKit.isAesTokenised(value)).toBe(true);
+      expect(AesKit.isAesString(value)).toBe(true);
       expect(AesKit.parse(value).keyId).toBe(sessionEncKey.id);
       await expect(ctx.aegis.aes.decrypt(value)).resolves.toBe(session().id);
       expect(setCookies(ctx)["pylon_session.kid"]).toBe(sessionSigKey.id);
@@ -449,7 +449,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
         persisted.idToken,
         persisted.refreshToken,
       ]) {
-        expect(AesKit.isAesTokenised(token)).toBe(true);
+        expect(AesKit.isAesString(token)).toBe(true);
         expect(AesKit.parse(token!).keyId).toBe(sessionEncKey.id);
         expect(AesKit.parse(token!).keyId).not.toBe(tokenEncKey.id);
       }

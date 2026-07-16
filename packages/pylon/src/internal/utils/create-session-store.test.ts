@@ -152,7 +152,7 @@ describe("createSessionStore", () => {
       await store!.set(realCtx, session);
 
       for (const token of [session.accessToken, session.idToken, session.refreshToken]) {
-        expect(AesKit.isAesTokenised(token)).toBe(true);
+        expect(AesKit.isAesString(token)).toBe(true);
         expect(AesKit.parse(token!).keyId).toBe(sessionKey.id);
         expect(AesKit.parse(token!).keyId).not.toBe(tokenKey.id);
       }
@@ -169,7 +169,7 @@ describe("createSessionStore", () => {
       await store!.set(realCtx, session);
 
       for (const token of [session.accessToken, session.idToken, session.refreshToken]) {
-        expect(AesKit.isAesTokenised(token!)).toBe(false);
+        expect(AesKit.isAesString(token!)).toBe(false);
       }
 
       expect(session.accessToken).toBe("access-token");
@@ -180,7 +180,7 @@ describe("createSessionStore", () => {
     // Ciphertext names its own key, so aegis resolves the read side by kid: a
     // session sealed with the OLD key still decrypts after the change.
     test("a session sealed with the OLD key still decrypts", async () => {
-      const stale = await realCtx.aegis.aes.encrypt(session.accessToken, "tokenised", {
+      const stale = await realCtx.aegis.aes.encrypt(session.accessToken, {
         key: { predicate: { purpose: "token" } },
       });
 
