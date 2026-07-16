@@ -136,6 +136,22 @@ export const resolveCborSpec = (settings: CborKitSettings): ResolvedCborSpec => 
 
     byLabel.set(resolved.label, resolved);
 
+    // A proprietary field can appear on the wire under its integer label
+    // (on-platform) OR its string key (off-platform, degraded) — both must decode
+    // to the same field and apply its value transform, mirroring the encode-side
+    // dual-key. Register the string key as a decode alias.
+    if (resolved.proprietary) {
+      if (byLabel.has(resolved.key)) {
+        throw new CborError("Duplicate field label", {
+          code: "duplicate_label",
+          title: "Duplicate Label",
+          details: `Proprietary field key "${resolved.key}" is already used as a wire key by another field; every label and proprietary key must be unique.`,
+        });
+      }
+
+      byLabel.set(resolved.key, resolved);
+    }
+
     return resolved;
   });
 

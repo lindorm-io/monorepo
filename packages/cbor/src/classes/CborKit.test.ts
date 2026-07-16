@@ -63,6 +63,7 @@ describe("CborKit — mixed labels and proprietary fields", () => {
       { key: "iss", label: 1, kind: "text" },
       { key: "acr", label: "acr", kind: "text" },
       { key: "client_id", label: -65548, kind: "text", proprietary: true },
+      { key: "auth_time", label: -65541, kind: "date", proprietary: true },
     ],
   });
 
@@ -70,6 +71,7 @@ describe("CborKit — mixed labels and proprietary fields", () => {
     iss: "https://idp.example",
     acr: "urn:acr:1",
     client_id: "client-1",
+    auth_time: new Date("2026-07-16T00:00:00.000Z"),
   };
 
   const wire = (bytes: Uint8Array): Map<unknown, unknown> =>
@@ -100,16 +102,14 @@ describe("CborKit — mixed labels and proprietary fields", () => {
     expect(map.get("acr")).toEqual("urn:acr:1");
   });
 
-  test("should preserve an off-platform proprietary key via lax passthrough on decode", () => {
-    // The string key is not a spec label, so lax decode keeps it verbatim; a
-    // consumer (e.g. aegis) remaps the wire name back to its domain name.
+  test("should decode an off-platform proprietary field under its string key, applying its transform", () => {
+    // A proprietary field written under its string key (proprietary:false) still
+    // resolves to its field on decode — so its value transform runs. Here the
+    // date degrades to the "auth_time" string key yet decodes back to a Date.
     const decoded = kit.decode(kit.encode(record, { proprietary: false }));
 
-    expect(decoded).toEqual({
-      iss: "https://idp.example",
-      acr: "urn:acr:1",
-      client_id: "client-1",
-    });
+    expect(decoded).toEqual(record);
+    expect((decoded as { auth_time: Date }).auth_time).toBeInstanceOf(Date);
   });
 });
 

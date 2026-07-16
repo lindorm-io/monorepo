@@ -129,6 +129,27 @@ describe("resolveCborSpec", () => {
     ).toThrowError(expect.objectContaining({ code: "invalid_label" }));
   });
 
+  test("should register a proprietary field under both its label and its key", () => {
+    const resolved = resolveCborSpec({
+      fields: [{ key: "client_id", label: -65548, kind: "text", proprietary: true }],
+    });
+
+    expect(resolved.byLabel.get(-65548)?.key).toEqual("client_id");
+    expect(resolved.byLabel.get("client_id")?.key).toEqual("client_id");
+  });
+
+  test("should throw when a proprietary key collides with another field's wire key", () => {
+    expect(() =>
+      resolveCborSpec({
+        labels: "mixed",
+        fields: [
+          { key: "sub_id", label: "sub_id", kind: "text" },
+          { key: "sub_id", label: -65549, kind: "text", proprietary: true },
+        ],
+      }),
+    ).toThrowError(expect.objectContaining({ code: "duplicate_label" }));
+  });
+
   test("should throw when kind is enum but no enum map is given", () => {
     expect(() =>
       resolveCborSpec({ fields: [{ key: "a", label: 1, kind: "enum" }] }),
