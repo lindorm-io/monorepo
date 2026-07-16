@@ -34,8 +34,9 @@ export type CoerceWriteValueFn = (value: unknown, field: MetaField | null) => un
 
 /**
  * Quotes the child table name of a joined inheritance entity. Kept per driver:
- * PG resolves the entity-level namespace via getEntityName, MySQL uses the raw
- * session namespace, SQLite has no schemas.
+ * PG and MySQL both resolve the entity-level namespace via getEntityName (so a
+ * child declaring its own `@Entity({ namespace })` qualifies against the correct
+ * database); SQLite has no schemas.
  */
 export type QuoteChildTableNameFn = (
   metadata: EntityMetadata,

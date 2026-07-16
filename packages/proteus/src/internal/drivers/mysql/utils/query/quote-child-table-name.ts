@@ -3,8 +3,10 @@ import { getEntityName } from "../../../../entity/utils/get-entity-name.js";
 import { quoteQualifiedName } from "../quote-identifier.js";
 
 /**
- * Quote the child table name of a joined inheritance entity.
- * MySQL uses the raw session namespace (database) as qualifier.
+ * Quote the child table name of a joined inheritance entity, resolving the
+ * entity-level namespace via getEntityName (a joined child that declares its own
+ * `@Entity({ namespace })` must qualify against THAT database, not the raw
+ * session namespace — otherwise its columns are written to the wrong database).
  */
 export const quoteChildTableName = (
   metadata: EntityMetadata,
@@ -13,5 +15,5 @@ export const quoteChildTableName = (
   const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
-  return quoteQualifiedName(namespace ?? null, childEntityName.name);
+  return quoteQualifiedName(childEntityName.namespace ?? null, childEntityName.name);
 };

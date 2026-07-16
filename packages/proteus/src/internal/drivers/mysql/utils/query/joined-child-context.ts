@@ -53,11 +53,16 @@ export const buildJoinedChildContext = (
     }
   }
 
-  // Build child table reference -- MySQL uses namespace (database) as qualifier
+  // Build child table reference -- qualify against the child's OWN resolved
+  // namespace (database), not the raw session namespace, so a joined child that
+  // declares `@Entity({ namespace })` is read from the correct database.
   const childEntityName = getEntityName(metadata, {
     namespace: namespace ?? undefined,
   });
-  const childTableQualified = quoteQualifiedName(namespace ?? null, childEntityName.name);
+  const childTableQualified = quoteQualifiedName(
+    childEntityName.namespace ?? null,
+    childEntityName.name,
+  );
   const childTableRef = `${childTableQualified} AS ${quoteIdentifier(childAlias)}`;
 
   // Build join conditions (PK equality)
