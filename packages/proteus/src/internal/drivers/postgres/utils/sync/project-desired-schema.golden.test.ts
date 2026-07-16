@@ -21,6 +21,7 @@ import {
   ManyToOne,
   Nullable,
   OneToMany,
+  PrimaryKey,
   PrimaryKeyField,
   TypedJson,
   Unique,
@@ -262,6 +263,28 @@ class PgGoldLindormToken {
   client!: PgGoldLindormClient | null;
 }
 
+@Entity({ name: "PgGoldIncrement" })
+class PgGoldIncrement {
+  @PrimaryKey()
+  @Field("integer")
+  @Generated("increment")
+  id!: number;
+
+  @Field("string")
+  name!: string;
+}
+
+@Entity({ name: "PgGoldStrictIdentity" })
+class PgGoldStrictIdentity {
+  @PrimaryKey()
+  @Field("integer")
+  @Generated("identity")
+  id!: number;
+
+  @Field("string")
+  name!: string;
+}
+
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe("projectDesiredSchema (golden)", () => {
@@ -380,6 +403,24 @@ describe("projectDesiredSchema (golden)", () => {
     expect(client.columns.find((c) => c.name === "id")?.pgType).toBe("VARCHAR(31)");
     expect(token.columns.find((c) => c.name === "id")?.pgType).toBe("VARCHAR(24)");
     expect(token.columns.find((c) => c.name === "clientId")?.pgType).toBe("VARCHAR(31)");
+    expect(schema).toMatchSnapshot();
+  });
+
+  test("projects @Generated('increment') as an overridable BY DEFAULT identity", () => {
+    const schema = projectDesiredSchema([getEntityMetadata(PgGoldIncrement)], {});
+
+    const id = schema.tables[0].columns.find((c) => c.name === "id");
+    expect(id?.isIdentity).toBe(true);
+    expect(id?.identityGeneration).toBe("BY DEFAULT");
+    expect(schema).toMatchSnapshot();
+  });
+
+  test("projects @Generated('identity') as a strict ALWAYS identity", () => {
+    const schema = projectDesiredSchema([getEntityMetadata(PgGoldStrictIdentity)], {});
+
+    const id = schema.tables[0].columns.find((c) => c.name === "id");
+    expect(id?.isIdentity).toBe(true);
+    expect(id?.identityGeneration).toBe("ALWAYS");
     expect(schema).toMatchSnapshot();
   });
 });

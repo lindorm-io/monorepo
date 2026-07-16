@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`projectDesiredSchemaSqlite > projects @Generated('identity') as a plain column without autoincrement 1`] = `
+exports[`projectDesiredSchemaSqlite > projects @Generated('increment') as an AUTOINCREMENT column 1`] = `
 {
   "tables": [
     {
@@ -8,14 +8,16 @@ exports[`projectDesiredSchemaSqlite > projects @Generated('identity') as a plain
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
-          "isAutoincrement": false,
+          "isAutoincrement": true,
           "name": "id",
           "nullable": false,
           "sqliteType": "INTEGER",
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "name",
@@ -25,7 +27,7 @@ exports[`projectDesiredSchemaSqlite > projects @Generated('identity') as a plain
       ],
       "foreignKeys": [],
       "indexes": [],
-      "name": "GoldIdentity",
+      "name": "GoldIncrement",
       "primaryKeys": [
         "id",
       ],
@@ -44,6 +46,7 @@ exports[`projectDesiredSchemaSqlite > projects ManyToMany join table 1`] = `
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -52,6 +55,7 @@ exports[`projectDesiredSchemaSqlite > projects ManyToMany join table 1`] = `
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "name",
@@ -93,10 +97,12 @@ exports[`projectDesiredSchemaSqlite > projects ManyToMany join table 1`] = `
           "columns": [
             "goldCourseId",
           ],
+          "deferrable": false,
           "foreignColumns": [
             "id",
           ],
           "foreignTable": "GoldCourse",
+          "initiallyDeferred": false,
           "onDelete": "CASCADE",
           "onUpdate": "CASCADE",
         },
@@ -104,10 +110,12 @@ exports[`projectDesiredSchemaSqlite > projects ManyToMany join table 1`] = `
           "columns": [
             "goldStudentId",
           ],
+          "deferrable": false,
           "foreignColumns": [
             "id",
           ],
           "foreignTable": "GoldStudent",
+          "initiallyDeferred": false,
           "onDelete": "CASCADE",
           "onUpdate": "CASCADE",
         },
@@ -138,6 +146,7 @@ exports[`projectDesiredSchemaSqlite > projects ManyToMany join table 1`] = `
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -146,6 +155,7 @@ exports[`projectDesiredSchemaSqlite > projects ManyToMany join table 1`] = `
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "name",
@@ -174,6 +184,7 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -182,6 +193,7 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "firstName",
@@ -190,6 +202,7 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "lastName",
@@ -198,6 +211,7 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "email",
@@ -206,6 +220,7 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": "0",
           "isAutoincrement": false,
           "name": "age",
@@ -214,6 +229,7 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
         },
         {
           "checkExpr": "CHECK("status" IN ('active', 'archived'))",
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "status",
@@ -222,6 +238,7 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
         },
         {
           "checkExpr": null,
+          "computed": "first_name || ' ' || last_name",
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "displayName",
@@ -271,10 +288,12 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
           "columns": [
             "gold_user_id",
           ],
+          "deferrable": false,
           "foreignColumns": [
             "id",
           ],
           "foreignTable": "GoldUser",
+          "initiallyDeferred": false,
           "onDelete": "CASCADE",
           "onUpdate": "CASCADE",
         },
@@ -349,10 +368,12 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
           "columns": [
             "gold_user_id",
           ],
+          "deferrable": false,
           "foreignColumns": [
             "id",
           ],
           "foreignTable": "GoldUser",
+          "initiallyDeferred": false,
           "onDelete": "CASCADE",
           "onUpdate": "CASCADE",
         },
@@ -383,6 +404,7 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": true,
           "name": "id",
@@ -391,6 +413,7 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "title",
@@ -411,10 +434,12 @@ exports[`projectDesiredSchemaSqlite > projects a rich entity with enums, compute
           "columns": [
             "authorId",
           ],
+          "deferrable": true,
           "foreignColumns": [
             "id",
           ],
           "foreignTable": "GoldUser",
+          "initiallyDeferred": true,
           "onDelete": "SET NULL",
           "onUpdate": "CASCADE",
         },
@@ -439,6 +464,7 @@ exports[`projectDesiredSchemaSqlite > projects append-only triggers 1`] = `
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -447,6 +473,7 @@ exports[`projectDesiredSchemaSqlite > projects append-only triggers 1`] = `
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "event",
@@ -494,6 +521,7 @@ exports[`projectDesiredSchemaSqlite > projects boolean defaults as 1 and 0 1`] =
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -502,6 +530,7 @@ exports[`projectDesiredSchemaSqlite > projects boolean defaults as 1 and 0 1`] =
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": "1",
           "isAutoincrement": false,
           "name": "isActive",
@@ -510,6 +539,7 @@ exports[`projectDesiredSchemaSqlite > projects boolean defaults as 1 and 0 1`] =
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": "0",
           "isAutoincrement": false,
           "name": "isArchived",
@@ -541,6 +571,7 @@ exports[`projectDesiredSchemaSqlite > projects check constraints 1`] = `
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -549,6 +580,7 @@ exports[`projectDesiredSchemaSqlite > projects check constraints 1`] = `
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "age",
@@ -557,6 +589,7 @@ exports[`projectDesiredSchemaSqlite > projects check constraints 1`] = `
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "score",
@@ -585,6 +618,7 @@ exports[`projectDesiredSchemaSqlite > projects encrypted fields as TEXT while en
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -593,6 +627,7 @@ exports[`projectDesiredSchemaSqlite > projects encrypted fields as TEXT while en
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "secret",
@@ -601,6 +636,7 @@ exports[`projectDesiredSchemaSqlite > projects encrypted fields as TEXT while en
         },
         {
           "checkExpr": "CHECK("status" IN ('active', 'archived'))",
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "status",
@@ -629,6 +665,7 @@ exports[`projectDesiredSchemaSqlite > projects indexes, uniques and sparse index
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -637,6 +674,7 @@ exports[`projectDesiredSchemaSqlite > projects indexes, uniques and sparse index
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "name",
@@ -645,6 +683,7 @@ exports[`projectDesiredSchemaSqlite > projects indexes, uniques and sparse index
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "email",
@@ -653,6 +692,7 @@ exports[`projectDesiredSchemaSqlite > projects indexes, uniques and sparse index
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "region",
@@ -726,6 +766,7 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -734,6 +775,7 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "kind",
@@ -742,6 +784,7 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "name",
@@ -775,6 +818,7 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "breed",
@@ -783,6 +827,7 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -795,10 +840,12 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
           "columns": [
             "id",
           ],
+          "deferrable": false,
           "foreignColumns": [
             "id",
           ],
           "foreignTable": "GoldAnimal",
+          "initiallyDeferred": false,
           "onDelete": "CASCADE",
           "onUpdate": "CASCADE",
         },
@@ -816,6 +863,7 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "isIndoor",
@@ -824,6 +872,7 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -836,10 +885,12 @@ exports[`projectDesiredSchemaSqlite > projects joined inheritance into root and 
           "columns": [
             "id",
           ],
+          "deferrable": false,
           "foreignColumns": [
             "id",
           ],
           "foreignTable": "GoldAnimal",
+          "initiallyDeferred": false,
           "onDelete": "CASCADE",
           "onUpdate": "CASCADE",
         },
@@ -864,6 +915,7 @@ exports[`projectDesiredSchemaSqlite > projects lindorm_id PK as TEXT with FK col
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -872,6 +924,7 @@ exports[`projectDesiredSchemaSqlite > projects lindorm_id PK as TEXT with FK col
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "name",
@@ -893,6 +946,7 @@ exports[`projectDesiredSchemaSqlite > projects lindorm_id PK as TEXT with FK col
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -913,10 +967,12 @@ exports[`projectDesiredSchemaSqlite > projects lindorm_id PK as TEXT with FK col
           "columns": [
             "clientId",
           ],
+          "deferrable": false,
           "foreignColumns": [
             "id",
           ],
           "foreignTable": "GoldLindormClient",
+          "initiallyDeferred": false,
           "onDelete": "NO ACTION",
           "onUpdate": "NO ACTION",
         },
@@ -941,6 +997,7 @@ exports[`projectDesiredSchemaSqlite > projects single-table inheritance into the
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -949,6 +1006,7 @@ exports[`projectDesiredSchemaSqlite > projects single-table inheritance into the
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "kind",
@@ -957,6 +1015,7 @@ exports[`projectDesiredSchemaSqlite > projects single-table inheritance into the
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "make",
@@ -965,6 +1024,7 @@ exports[`projectDesiredSchemaSqlite > projects single-table inheritance into the
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "seatCount",
@@ -973,6 +1033,7 @@ exports[`projectDesiredSchemaSqlite > projects single-table inheritance into the
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "payloadCapacity",
@@ -1013,6 +1074,7 @@ exports[`projectDesiredSchemaSqlite > projects typedJson sidecar companion colum
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -1021,6 +1083,7 @@ exports[`projectDesiredSchemaSqlite > projects typedJson sidecar companion colum
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "payload",
@@ -1060,6 +1123,7 @@ exports[`projectDesiredSchemaSqlite > projects with namespace (name-only tables,
       "columns": [
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "id",
@@ -1068,6 +1132,7 @@ exports[`projectDesiredSchemaSqlite > projects with namespace (name-only tables,
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "age",
@@ -1076,6 +1141,7 @@ exports[`projectDesiredSchemaSqlite > projects with namespace (name-only tables,
         },
         {
           "checkExpr": null,
+          "computed": null,
           "defaultExpr": null,
           "isAutoincrement": false,
           "name": "score",

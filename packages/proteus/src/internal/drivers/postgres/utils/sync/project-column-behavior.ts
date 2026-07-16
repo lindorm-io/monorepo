@@ -4,8 +4,9 @@ import type { ProjectedColumnBehavior } from "../../../../utils/sync/sync-dialec
 
 /**
  * Postgres column-behavior projection: computed fields become GENERATED
- * expressions; increment|identity strategies become IDENTITY columns; uuid
- * generation defaults to gen_random_uuid(); literal defaults keep native
+ * expressions; `increment` becomes an overridable BY DEFAULT identity
+ * (`"identity"`) and `identity` a strict ALWAYS identity (`"identity_always"`);
+ * uuid generation defaults to gen_random_uuid(); literal defaults keep native
  * spellings (booleans as true/false).
  */
 export const projectColumnBehavior = (
@@ -18,8 +19,10 @@ export const projectColumnBehavior = (
 
   if (field.computed) {
     generatedExpr = field.computed;
-  } else if (gen?.strategy === "increment" || gen?.strategy === "identity") {
+  } else if (gen?.strategy === "increment") {
     identity = "identity";
+  } else if (gen?.strategy === "identity") {
+    identity = "identity_always";
   } else if (gen?.strategy === "uuid") {
     defaultExpr = "gen_random_uuid()";
   } else if (field.default !== null && typeof field.default !== "function") {

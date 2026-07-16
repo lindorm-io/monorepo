@@ -1,13 +1,15 @@
 import { isBoolean, isNumber, isString } from "@lindorm/is";
 import type { MetaField, MetaGenerated } from "../../../../entity/types/metadata.js";
 import type { ProjectedColumnBehavior } from "../../../../utils/sync/sync-dialect.js";
+import { SqliteSyncError } from "../../errors/SqliteSyncError.js";
 
 /**
- * SQLite column-behavior projection: only the increment strategy maps to
- * AUTOINCREMENT (`@Generated("identity")` is ignored — known drift), uuid is
- * generated app-side (no default), and boolean defaults are spelled 1/0.
- * The generated expression is projected but dropped by the sqlite mapper
- * (sqlite's desired schema carries no computed columns — known drift).
+ * SQLite column-behavior projection: the increment strategy maps to
+ * AUTOINCREMENT (overridable); `@Generated("identity")` THROWS — SQLite has no
+ * strict identity mode (AUTOINCREMENT is always overridable). uuid is generated
+ * app-side (no default), and boolean defaults are spelled 1/0. The generated
+ * expression is carried through to the sqlite mapper, which emits
+ * `GENERATED ALWAYS AS (expr) STORED`.
  */
 export const projectColumnBehavior = (
   field: MetaField,
@@ -20,6 +22,16 @@ export const projectColumnBehavior = (
     // Computed columns have no default, no autoincrement
   } else if (gen?.strategy === "increment") {
     identity = "auto_increment";
+  } else if (gen?.strategy === "identity") {
+    throw new SqliteSyncError(
+      `@Generated("identity") is not supported by SQLite on column "${field.key}"`,
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          'SQLite has no strict GENERATED ALWAYS AS IDENTITY mode (AUTOINCREMENT is always overridable); use @Generated("increment") for a portable auto-increment column.',
+      },
+    );
   } else if (gen?.strategy === "uuid") {
     // UUID generated app-side; no default in SQLite
   } else if (field.default !== null && typeof field.default !== "function") {

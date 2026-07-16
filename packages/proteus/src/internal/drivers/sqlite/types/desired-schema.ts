@@ -5,6 +5,7 @@ export type SqliteDesiredColumn = {
   defaultExpr: string | null;
   isAutoincrement: boolean; // INTEGER PRIMARY KEY AUTOINCREMENT
   checkExpr: string | null; // inline CHECK constraint for enum columns
+  computed?: string | null; // GENERATED ALWAYS AS (expr) STORED
 };
 
 export type SqliteDesiredIndex = {
@@ -20,6 +21,8 @@ export type SqliteDesiredForeignKey = {
   foreignColumns: Array<string>;
   onDelete: string;
   onUpdate: string;
+  deferrable: boolean;
+  initiallyDeferred: boolean;
 };
 
 export type SqliteDesiredUnique = {

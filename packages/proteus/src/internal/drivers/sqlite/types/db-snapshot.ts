@@ -5,6 +5,7 @@ export type SqliteSnapshotColumn = {
   notNull: boolean;
   defaultValue: string | null;
   pk: number; // 0 = not PK, 1+ = PK position
+  generatedExpr: string | null; // GENERATED ALWAYS AS (expr) STORED, else null
 };
 
 export type SqliteSnapshotForeignKey = {
@@ -15,6 +16,8 @@ export type SqliteSnapshotForeignKey = {
   to: string;
   onUpdate: string;
   onDelete: string;
+  deferrable: boolean;
+  initiallyDeferred: boolean;
 };
 
 export type SqliteSnapshotIndex = {

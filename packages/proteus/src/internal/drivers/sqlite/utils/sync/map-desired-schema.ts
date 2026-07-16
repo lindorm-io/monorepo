@@ -18,19 +18,30 @@ import { quoteIdentifier } from "../quote-identifier.js";
  * Purely mechanical mapping (rename / regroup / drop — zero decisions) from
  * the shared `DesiredSchemaModel` onto the SQLite `SqliteDesiredSchema` types.
  * Drops namespaces/enums/extensions/comments, FK names (inline unnamed FKs),
- * deferrable flags, computed expressions, and index method/opclass/include —
- * all known sqlite drift, kept. Table checks are rendered as
- * `CONSTRAINT "name" CHECK (expr)` strings; triggers collapse to single-DDL.
+ * and index method/opclass/include — all known sqlite drift, kept. Computed
+ * columns (`GENERATED ALWAYS AS ... STORED`) and deferrable FKs are carried:
+ * sqlite supports both. The optional `computed` key is emitted ONLY on
+ * field-origin columns — snapshot-locked (collection element columns drop it).
+ * Table checks are rendered as `CONSTRAINT "name" CHECK (expr)` strings;
+ * triggers collapse to single-DDL.
  */
 
-const mapColumn = (column: DesiredColumnModel): SqliteDesiredColumn => ({
-  name: column.name,
-  sqliteType: column.columnType,
-  nullable: column.nullable,
-  defaultExpr: column.defaultExpr,
-  isAutoincrement: column.identity === "auto_increment",
-  checkExpr: column.checkExpr,
-});
+const mapColumn = (column: DesiredColumnModel): SqliteDesiredColumn => {
+  const mapped: SqliteDesiredColumn = {
+    name: column.name,
+    sqliteType: column.columnType,
+    nullable: column.nullable,
+    defaultExpr: column.defaultExpr,
+    isAutoincrement: column.identity === "auto_increment",
+    checkExpr: column.checkExpr,
+  };
+
+  if (column.origin === "field") {
+    mapped.computed = column.generatedExpr;
+  }
+
+  return mapped;
+};
 
 const mapForeignKey = (fk: DesiredForeignKeyModel): SqliteDesiredForeignKey => ({
   columns: fk.columns,
@@ -38,6 +49,8 @@ const mapForeignKey = (fk: DesiredForeignKeyModel): SqliteDesiredForeignKey => (
   foreignColumns: fk.foreignColumns,
   onDelete: fk.onDelete,
   onUpdate: fk.onUpdate,
+  deferrable: fk.deferrable,
+  initiallyDeferred: fk.initiallyDeferred,
 });
 
 const mapIndex = (index: DesiredIndexModel): SqliteDesiredIndex => ({

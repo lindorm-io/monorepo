@@ -26,8 +26,13 @@ const mapColumn = (column: DesiredColumnModel): DesiredColumn => ({
   pgType: column.columnType,
   nullable: column.nullable,
   defaultExpr: column.defaultExpr,
-  isIdentity: column.identity === "identity",
-  identityGeneration: column.identity === "identity" ? "ALWAYS" : null,
+  isIdentity: column.identity === "identity" || column.identity === "identity_always",
+  identityGeneration:
+    column.identity === "identity_always"
+      ? "ALWAYS"
+      : column.identity === "identity"
+        ? "BY DEFAULT"
+        : null,
   isGenerated: column.generatedExpr !== null,
   generationExpr: column.generatedExpr,
   collation: column.collation,

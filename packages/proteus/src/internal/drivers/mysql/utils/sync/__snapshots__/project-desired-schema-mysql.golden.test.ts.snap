@@ -1,6 +1,6 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
-exports[`projectDesiredSchemaMysql (golden) > projects @Generated('identity') as a plain column without auto-increment 1`] = `
+exports[`projectDesiredSchemaMysql (golden) > projects @Generated('increment') as an AUTO_INCREMENT column 1`] = `
 {
   "tables": [
     {
@@ -10,7 +10,7 @@ exports[`projectDesiredSchemaMysql (golden) > projects @Generated('identity') as
           "computed": null,
           "defaultExpr": null,
           "enumValues": null,
-          "isAutoIncrement": false,
+          "isAutoIncrement": true,
           "mysqlType": "int",
           "name": "id",
           "nullable": false,
@@ -27,7 +27,7 @@ exports[`projectDesiredSchemaMysql (golden) > projects @Generated('identity') as
       ],
       "foreignKeys": [],
       "indexes": [],
-      "name": "MyGoldIdentity",
+      "name": "MyGoldIncrement",
       "primaryKeys": [
         "id",
       ],

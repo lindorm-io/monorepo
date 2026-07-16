@@ -24,7 +24,12 @@ export type DesiredColumnModel = {
   columnType: string;
   nullable: boolean;
   defaultExpr: string | null;
-  identity: "identity" | "auto_increment" | null;
+  /**
+   * DB-assigned strategy. `"identity"` = overridable (pg BY DEFAULT), from
+   * `@Generated("increment")`; `"identity_always"` = strict (pg ALWAYS), from
+   * `@Generated("identity")`; `"auto_increment"` = mysql/sqlite increment.
+   */
+  identity: "identity" | "identity_always" | "auto_increment" | null;
   generatedExpr: string | null;
   collation: string | null;
   enumValues: Array<string> | null;

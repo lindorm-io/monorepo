@@ -19,7 +19,12 @@ export type ProjectedColumnType = {
 
 export type ProjectedColumnBehavior = {
   defaultExpr: string | null;
-  identity: "identity" | "auto_increment" | null;
+  /**
+   * `"identity"` = overridable (pg BY DEFAULT, from `@Generated("increment")`);
+   * `"identity_always"` = strict (pg ALWAYS, from `@Generated("identity")`);
+   * `"auto_increment"` = mysql/sqlite increment.
+   */
+  identity: "identity" | "identity_always" | "auto_increment" | null;
   generatedExpr: string | null;
 };
 
@@ -90,10 +95,12 @@ export type SyncDialect = {
   ) => string;
 
   /**
-   * Default / identity / generated-expression projection. Drift: pg maps
-   * increment|identity → identity and uuid → gen_random_uuid(); mysql/sqlite
-   * map ONLY increment (`@Generated("identity")` is ignored) and spell boolean
-   * defaults 1/0 instead of true/false.
+   * Default / identity / generated-expression projection. `increment` and
+   * `identity` are DISTINCT strategies: pg maps increment → `"identity"`
+   * (BY DEFAULT, overridable) and identity → `"identity_always"` (ALWAYS,
+   * strict), and uuid → gen_random_uuid(); mysql/sqlite map increment →
+   * `"auto_increment"` and THROW on identity (no strict identity mode).
+   * Drift: mysql/sqlite spell boolean defaults 1/0 instead of true/false.
    */
   projectColumnBehavior: (
     field: MetaField,

@@ -29,6 +29,7 @@ import {
 } from "../../../../../decorators/index.js";
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
 import { resolveInheritanceHierarchies } from "../../../../entity/metadata/resolve-inheritance.js";
+import { SqliteSyncError } from "../../errors/SqliteSyncError.js";
 import { projectDesiredSchemaSqlite } from "./project-desired-schema-sqlite.js";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
@@ -287,8 +288,19 @@ class GoldTyped {
   payload!: unknown;
 }
 
-@Entity({ name: "GoldIdentity" })
-class GoldIdentity {
+@Entity({ name: "GoldIncrement" })
+class GoldIncrement {
+  @PrimaryKey()
+  @Field("integer")
+  @Generated("increment")
+  id!: number;
+
+  @Field("string")
+  name!: string;
+}
+
+@Entity({ name: "GoldStrictIdentity" })
+class GoldStrictIdentity {
   @PrimaryKey()
   @Field("integer")
   @Generated("identity")
@@ -330,6 +342,19 @@ describe("projectDesiredSchemaSqlite", () => {
       [getEntityMetadata(GoldUser), getEntityMetadata(GoldPost)],
       {},
     );
+
+    // Computed columns are carried through to sqlite (GENERATED ... STORED).
+    const user = schema.tables.find((t) => t.name === "GoldUser")!;
+    const displayName = user.columns.find((c) => c.name === "displayName");
+    expect(displayName?.computed).toBe("first_name || ' ' || last_name");
+    // Non-computed field columns carry an explicit null (field-origin key present).
+    expect(user.columns.find((c) => c.name === "firstName")?.computed).toBeNull();
+
+    // Deferrable FKs are carried through to sqlite (DEFERRABLE INITIALLY DEFERRED).
+    const post = schema.tables.find((t) => t.name === "GoldPost")!;
+    expect(post.foreignKeys).toHaveLength(1);
+    expect(post.foreignKeys[0].deferrable).toBe(true);
+    expect(post.foreignKeys[0].initiallyDeferred).toBe(true);
 
     expect(schema).toMatchSnapshot();
   });
@@ -432,13 +457,22 @@ describe("projectDesiredSchemaSqlite", () => {
     expect(schema).toMatchSnapshot();
   });
 
-  test("projects @Generated('identity') as a plain column without autoincrement", () => {
-    const schema = projectDesiredSchemaSqlite([getEntityMetadata(GoldIdentity)], {});
+  test("projects @Generated('increment') as an AUTOINCREMENT column", () => {
+    const schema = projectDesiredSchemaSqlite([getEntityMetadata(GoldIncrement)], {});
 
     const id = schema.tables[0].columns.find((c) => c.name === "id");
-    expect(id?.isAutoincrement).toBe(false);
+    expect(id?.isAutoincrement).toBe(true);
     expect(id?.defaultExpr).toBeNull();
     expect(schema).toMatchSnapshot();
+  });
+
+  test("throws on @Generated('identity') — SQLite has no strict identity mode", () => {
+    expect(() =>
+      projectDesiredSchemaSqlite([getEntityMetadata(GoldStrictIdentity)], {}),
+    ).toThrow(expect.objectContaining({ code: "unsupported_operation" }));
+    expect(() =>
+      projectDesiredSchemaSqlite([getEntityMetadata(GoldStrictIdentity)], {}),
+    ).toThrow(SqliteSyncError);
   });
 
   test("projects lindorm_id PK as TEXT with FK column type equal to the PK", () => {

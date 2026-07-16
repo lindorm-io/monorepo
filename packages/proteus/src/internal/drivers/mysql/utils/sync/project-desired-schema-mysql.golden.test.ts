@@ -23,6 +23,7 @@ import {
 } from "../../../../../decorators/index.js";
 import { getEntityMetadata } from "../../../../entity/metadata/get-entity-metadata.js";
 import { resolveInheritanceHierarchies } from "../../../../entity/metadata/resolve-inheritance.js";
+import { MySqlSyncError } from "../../errors/MySqlSyncError.js";
 import { projectDesiredSchemaMysql } from "./project-desired-schema-mysql.js";
 
 // ─── Fixtures ────────────────────────────────────────────────────────────────
@@ -31,8 +32,8 @@ import { projectDesiredSchemaMysql } from "./project-desired-schema-mysql.js";
 // enum('a','b') column types (incl. quote escaping), inheritance strategies,
 // collection tables with composite (parentFk, __ordinal) PKs, append-only
 // triggers, 1/0 boolean defaults, the encrypted-enum drift quirk (text type,
-// enumValues still populated), identity-ignored plain columns, and sparse
-// indexes whose WHERE clause is dropped.
+// enumValues still populated), AUTO_INCREMENT increment columns (with the
+// strict-identity throw), and sparse indexes whose WHERE clause is dropped.
 
 enum MyGoldStatus {
   Active = "active",
@@ -175,8 +176,19 @@ class MyGoldSecret {
   status!: MyGoldStatus;
 }
 
-@Entity({ name: "MyGoldIdentity" })
-class MyGoldIdentity {
+@Entity({ name: "MyGoldIncrement" })
+class MyGoldIncrement {
+  @PrimaryKey()
+  @Field("integer")
+  @Generated("increment")
+  id!: number;
+
+  @Field("string")
+  name!: string;
+}
+
+@Entity({ name: "MyGoldStrictIdentity" })
+class MyGoldStrictIdentity {
   @PrimaryKey()
   @Field("integer")
   @Generated("identity")
@@ -306,13 +318,22 @@ describe("projectDesiredSchemaMysql (golden)", () => {
     expect(schema).toMatchSnapshot();
   });
 
-  test("projects @Generated('identity') as a plain column without auto-increment", () => {
-    const schema = projectDesiredSchemaMysql([getEntityMetadata(MyGoldIdentity)], {});
+  test("projects @Generated('increment') as an AUTO_INCREMENT column", () => {
+    const schema = projectDesiredSchemaMysql([getEntityMetadata(MyGoldIncrement)], {});
 
     const id = schema.tables[0].columns.find((c) => c.name === "id");
-    expect(id?.isAutoIncrement).toBe(false);
+    expect(id?.isAutoIncrement).toBe(true);
     expect(id?.defaultExpr).toBeNull();
     expect(schema).toMatchSnapshot();
+  });
+
+  test("throws on @Generated('identity') — InnoDB has no strict identity mode", () => {
+    expect(() =>
+      projectDesiredSchemaMysql([getEntityMetadata(MyGoldStrictIdentity)], {}),
+    ).toThrow(expect.objectContaining({ code: "unsupported_operation" }));
+    expect(() =>
+      projectDesiredSchemaMysql([getEntityMetadata(MyGoldStrictIdentity)], {}),
+    ).toThrow(MySqlSyncError);
   });
 
   test("projects sparse indexes without a WHERE clause", () => {

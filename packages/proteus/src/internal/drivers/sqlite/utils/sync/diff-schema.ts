@@ -2,6 +2,7 @@ import type {
   SqliteDesiredSchema,
   SqliteDesiredTable,
   SqliteDesiredColumn,
+  SqliteDesiredForeignKey,
   SqliteDesiredIndex,
   SqliteDesiredTrigger,
 } from "../../types/desired-schema.js";
@@ -15,10 +16,57 @@ import type { SqliteSyncOperation, SqliteSyncPlan } from "../../types/sync-plan.
 import { quoteIdentifier } from "../quote-identifier.js";
 
 /**
- * Renders a full CREATE TABLE DDL from a desired table definition.
- * Used for both new table creation and recreate-table operations.
+ * Renders a single column definition. Computed columns emit
+ * `GENERATED ALWAYS AS (expr) STORED` (sqlite supports STORED generated columns);
+ * the autoincrement PK collapses to `PRIMARY KEY AUTOINCREMENT`.
  */
-const renderCreateTableDDL = (table: SqliteDesiredTable): string => {
+const renderColumnDef = (
+  col: SqliteDesiredColumn,
+  isAutoincrementPk: boolean,
+): string => {
+  let def = `${quoteIdentifier(col.name)} ${col.sqliteType}`;
+
+  if (isAutoincrementPk) {
+    def += " PRIMARY KEY AUTOINCREMENT";
+  } else if (col.computed) {
+    // A STORED generated column takes no DEFAULT; sqlite computes the value.
+    def += ` GENERATED ALWAYS AS (${col.computed}) STORED`;
+    if (!col.nullable) def += " NOT NULL";
+    if (col.checkExpr) def += ` ${col.checkExpr}`;
+  } else {
+    if (col.defaultExpr) def += ` DEFAULT ${col.defaultExpr}`;
+    if (!col.nullable) def += " NOT NULL";
+    if (col.checkExpr) def += ` ${col.checkExpr}`;
+  }
+
+  return def;
+};
+
+/**
+ * Renders an inline FK clause, appending the DEFERRABLE clause when deferred —
+ * sqlite honours deferrable constraints (unlike mysql/InnoDB).
+ */
+const renderForeignKeyClause = (fk: SqliteDesiredForeignKey): string => {
+  const cols = fk.columns.map(quoteIdentifier).join(", ");
+  const refCols = fk.foreignColumns.map(quoteIdentifier).join(", ");
+  let clause =
+    `FOREIGN KEY (${cols}) REFERENCES ${quoteIdentifier(fk.foreignTable)}` +
+    ` (${refCols}) ON DELETE ${fk.onDelete} ON UPDATE ${fk.onUpdate}`;
+
+  if (fk.deferrable) {
+    clause += fk.initiallyDeferred
+      ? " DEFERRABLE INITIALLY DEFERRED"
+      : " DEFERRABLE INITIALLY IMMEDIATE";
+  }
+
+  return clause;
+};
+
+/**
+ * Renders the shared table-body lines (columns, PK, FKs, checks, uniques) used by
+ * both the create and recreate DDL. `header` supplies the `CREATE TABLE ...` prefix.
+ */
+const renderTableDDL = (header: string, table: SqliteDesiredTable): string => {
   const lines: Array<string> = [];
 
   // Check if single PK with autoincrement
@@ -28,18 +76,9 @@ const renderCreateTableDDL = (table: SqliteDesiredTable): string => {
 
   // Columns
   for (const col of table.columns) {
-    let def = quoteIdentifier(col.name);
-    def += ` ${col.sqliteType}`;
-
-    if (isAutoincrement && col.name === table.primaryKeys[0]) {
-      def += " PRIMARY KEY AUTOINCREMENT";
-    } else {
-      if (col.defaultExpr) def += ` DEFAULT ${col.defaultExpr}`;
-      if (!col.nullable) def += " NOT NULL";
-      if (col.checkExpr) def += ` ${col.checkExpr}`;
-    }
-
-    lines.push(def);
+    lines.push(
+      renderColumnDef(col, isAutoincrement && col.name === table.primaryKeys[0]),
+    );
   }
 
   // Primary key (non-autoincrement)
@@ -50,12 +89,7 @@ const renderCreateTableDDL = (table: SqliteDesiredTable): string => {
 
   // Inline FK constraints
   for (const fk of table.foreignKeys) {
-    const cols = fk.columns.map(quoteIdentifier).join(", ");
-    const refCols = fk.foreignColumns.map(quoteIdentifier).join(", ");
-    lines.push(
-      `FOREIGN KEY (${cols}) REFERENCES ${quoteIdentifier(fk.foreignTable)}` +
-        ` (${refCols}) ON DELETE ${fk.onDelete} ON UPDATE ${fk.onUpdate}`,
-    );
+    lines.push(renderForeignKeyClause(fk));
   }
 
   // Check constraints
@@ -70,8 +104,15 @@ const renderCreateTableDDL = (table: SqliteDesiredTable): string => {
   }
 
   const body = lines.map((l) => `  ${l}`).join(",\n");
-  return `CREATE TABLE IF NOT EXISTS ${quoteIdentifier(table.name)} (\n${body}\n);`;
+  return `${header} (\n${body}\n);`;
 };
+
+/**
+ * Renders a full CREATE TABLE DDL from a desired table definition.
+ * Used for both new table creation and recreate-table operations.
+ */
+const renderCreateTableDDL = (table: SqliteDesiredTable): string =>
+  renderTableDDL(`CREATE TABLE IF NOT EXISTS ${quoteIdentifier(table.name)}`, table);
 
 /**
  * Renders a CREATE TABLE DDL *without* IF NOT EXISTS for use in recreate-table.
@@ -80,54 +121,7 @@ const renderCreateTableDDL = (table: SqliteDesiredTable): string => {
 const renderCreateTableDDLForRecreate = (
   tempTableName: string,
   table: SqliteDesiredTable,
-): string => {
-  const lines: Array<string> = [];
-
-  const isAutoincrement =
-    table.primaryKeys.length === 1 &&
-    table.columns.some((c) => c.name === table.primaryKeys[0] && c.isAutoincrement);
-
-  for (const col of table.columns) {
-    let def = quoteIdentifier(col.name);
-    def += ` ${col.sqliteType}`;
-
-    if (isAutoincrement && col.name === table.primaryKeys[0]) {
-      def += " PRIMARY KEY AUTOINCREMENT";
-    } else {
-      if (col.defaultExpr) def += ` DEFAULT ${col.defaultExpr}`;
-      if (!col.nullable) def += " NOT NULL";
-      if (col.checkExpr) def += ` ${col.checkExpr}`;
-    }
-
-    lines.push(def);
-  }
-
-  if (!isAutoincrement) {
-    const pkCols = table.primaryKeys.map(quoteIdentifier).join(", ");
-    lines.push(`PRIMARY KEY (${pkCols})`);
-  }
-
-  for (const fk of table.foreignKeys) {
-    const cols = fk.columns.map(quoteIdentifier).join(", ");
-    const refCols = fk.foreignColumns.map(quoteIdentifier).join(", ");
-    lines.push(
-      `FOREIGN KEY (${cols}) REFERENCES ${quoteIdentifier(fk.foreignTable)}` +
-        ` (${refCols}) ON DELETE ${fk.onDelete} ON UPDATE ${fk.onUpdate}`,
-    );
-  }
-
-  for (const check of table.checkConstraints) {
-    lines.push(check);
-  }
-
-  for (const unique of table.uniqueConstraints) {
-    const cols = unique.columns.map(quoteIdentifier).join(", ");
-    lines.push(`CONSTRAINT ${quoteIdentifier(unique.name)} UNIQUE (${cols})`);
-  }
-
-  const body = lines.map((l) => `  ${l}`).join(",\n");
-  return `CREATE TABLE ${quoteIdentifier(tempTableName)} (\n${body}\n);`;
-};
+): string => renderTableDDL(`CREATE TABLE ${quoteIdentifier(tempTableName)}`, table);
 
 /**
  * Renders index DDL statements for a desired table.
@@ -191,6 +185,14 @@ const canUseAddColumn = (
     ) {
       return { safe: false, newColumns: [] };
     }
+
+    // Generated-expression change (computed ↔ plain, or expression edited)
+    if (
+      normalizeGenerated(existingCol.generatedExpr) !==
+      normalizeGenerated(desiredCol.computed)
+    ) {
+      return { safe: false, newColumns: [] };
+    }
   }
 
   // Check PK changes — if PKs differ, need recreate
@@ -202,16 +204,8 @@ const canUseAddColumn = (
     return { safe: false, newColumns: [] };
   }
 
-  // Check FK changes — compare normalized FK lists
-  const existingFkStr = normalizeFks(existingTable);
-  const desiredFkStr = desiredTable.foreignKeys
-    .map(
-      (fk) =>
-        `${fk.columns.join(",")}->${fk.foreignTable}(${fk.foreignColumns.join(",")})`,
-    )
-    .sort()
-    .join("|");
-  if (existingFkStr !== desiredFkStr) {
+  // Check FK changes — compare normalized FK lists (incl. deferrability)
+  if (normalizeFks(existingTable) !== desiredFksSignature(desiredTable)) {
     return { safe: false, newColumns: [] };
   }
 
@@ -228,8 +222,10 @@ const canUseAddColumn = (
   // New columns
   const newColumns = desiredTable.columns.filter((c) => !existingColNames.has(c.name));
 
-  // All new columns must be nullable or have a default
   for (const col of newColumns) {
+    // sqlite forbids ALTER TABLE ADD COLUMN of a STORED generated column — must rebuild.
+    if (col.computed) return { safe: false, newColumns: [] };
+    // Non-generated new columns must be nullable or carry a default.
     if (!col.nullable && col.defaultExpr === null) {
       return { safe: false, newColumns: [] };
     }
@@ -245,6 +241,19 @@ const normalizeDefault = (expr: string | null): string => {
   return expr.trim();
 };
 
+const normalizeGenerated = (expr: string | null | undefined): string =>
+  expr == null ? "" : expr.trim();
+
+const fkDeferrableSuffix = (deferrable: boolean, initiallyDeferred: boolean): string =>
+  `::def=${deferrable ? 1 : 0}:${initiallyDeferred ? 1 : 0}`;
+
+const desiredFkSignature = (fk: SqliteDesiredForeignKey): string =>
+  `${fk.columns.join(",")}->${fk.foreignTable}(${fk.foreignColumns.join(",")})` +
+  fkDeferrableSuffix(fk.deferrable, fk.initiallyDeferred);
+
+const desiredFksSignature = (table: SqliteDesiredTable): string =>
+  table.foreignKeys.map(desiredFkSignature).sort().join("|");
+
 const normalizeFks = (table: SqliteSnapshotTable): string => {
   // Group FK rows by id, then build normalized strings
   const fkGroups = new Map<number, Array<(typeof table.foreignKeys)[number]>>();
@@ -259,7 +268,11 @@ const normalizeFks = (table: SqliteSnapshotTable): string => {
     const fromCols = sorted.map((r) => r.from).join(",");
     const toCols = sorted.map((r) => r.to).join(",");
     const targetTable = sorted[0].table;
-    strs.push(`${fromCols}->${targetTable}(${toCols})`);
+    // Deferrability is uniform across an FK's rows (parsed from the same clause).
+    strs.push(
+      `${fromCols}->${targetTable}(${toCols})` +
+        fkDeferrableSuffix(sorted[0].deferrable, sorted[0].initiallyDeferred),
+    );
   }
 
   return strs.sort().join("|");
@@ -350,8 +363,13 @@ export const diffSchema = (
       if (hasDifferences) {
         const existingColNames = new Set(existingTable.columns.map((c) => c.name));
         const desiredColNames = new Set(desiredTable.columns.map((c) => c.name));
-        const copyColumns = Array.from(existingColNames).filter((name) =>
-          desiredColNames.has(name),
+        // Generated columns in the target are computed by sqlite — they cannot be
+        // targets of INSERT, so they must be excluded from the copy column list.
+        const desiredGenerated = new Set(
+          desiredTable.columns.filter((c) => c.computed).map((c) => c.name),
+        );
+        const copyColumns = Array.from(existingColNames).filter(
+          (name) => desiredColNames.has(name) && !desiredGenerated.has(name),
         );
 
         const tempName = `_new_${desiredTable.name}`;
@@ -453,6 +471,11 @@ const hasTableDifferences = (
       normalizeDefault(desiredCol.defaultExpr)
     )
       return true;
+    if (
+      normalizeGenerated(existingCol.generatedExpr) !==
+      normalizeGenerated(desiredCol.computed)
+    )
+      return true;
   }
 
   // PK changes
@@ -462,16 +485,8 @@ const hasTableDifferences = (
     .map((c) => c.name);
   if (existingPks.join(",") !== desired.primaryKeys.join(",")) return true;
 
-  // FK changes
-  const existingFkStr = normalizeFks(existing);
-  const desiredFkStr = desired.foreignKeys
-    .map(
-      (fk) =>
-        `${fk.columns.join(",")}->${fk.foreignTable}(${fk.foreignColumns.join(",")})`,
-    )
-    .sort()
-    .join("|");
-  if (existingFkStr !== desiredFkStr) return true;
+  // FK changes (incl. deferrability)
+  if (normalizeFks(existing) !== desiredFksSignature(desired)) return true;
 
   // Unique constraint changes
   const existingUniqueStr = normalizeUniqueConstraints(existing);

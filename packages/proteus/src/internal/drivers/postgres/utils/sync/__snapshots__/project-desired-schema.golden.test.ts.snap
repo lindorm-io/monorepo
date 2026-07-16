@@ -1,5 +1,123 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`projectDesiredSchema (golden) > projects @Generated('identity') as a strict ALWAYS identity 1`] = `
+{
+  "enums": [],
+  "extensions": [],
+  "schemas": [],
+  "tables": [
+    {
+      "columnComments": {},
+      "columns": [
+        {
+          "collation": null,
+          "defaultExpr": null,
+          "generationExpr": null,
+          "identityGeneration": "ALWAYS",
+          "isGenerated": false,
+          "isIdentity": true,
+          "name": "id",
+          "nullable": false,
+          "pgType": "INTEGER",
+        },
+        {
+          "collation": null,
+          "defaultExpr": null,
+          "generationExpr": null,
+          "identityGeneration": null,
+          "isGenerated": false,
+          "isIdentity": false,
+          "name": "name",
+          "nullable": false,
+          "pgType": "TEXT",
+        },
+      ],
+      "comment": null,
+      "constraints": [
+        {
+          "checkExpr": null,
+          "columns": [
+            "id",
+          ],
+          "deferrable": false,
+          "foreignColumns": null,
+          "foreignSchema": null,
+          "foreignTable": null,
+          "initiallyDeferred": false,
+          "name": "PgGoldStrictIdentity_pkey",
+          "onDelete": null,
+          "onUpdate": null,
+          "type": "PRIMARY KEY",
+        },
+      ],
+      "indexes": [],
+      "name": "PgGoldStrictIdentity",
+      "schema": "public",
+      "triggers": [],
+    },
+  ],
+}
+`;
+
+exports[`projectDesiredSchema (golden) > projects @Generated('increment') as an overridable BY DEFAULT identity 1`] = `
+{
+  "enums": [],
+  "extensions": [],
+  "schemas": [],
+  "tables": [
+    {
+      "columnComments": {},
+      "columns": [
+        {
+          "collation": null,
+          "defaultExpr": null,
+          "generationExpr": null,
+          "identityGeneration": "BY DEFAULT",
+          "isGenerated": false,
+          "isIdentity": true,
+          "name": "id",
+          "nullable": false,
+          "pgType": "INTEGER",
+        },
+        {
+          "collation": null,
+          "defaultExpr": null,
+          "generationExpr": null,
+          "identityGeneration": null,
+          "isGenerated": false,
+          "isIdentity": false,
+          "name": "name",
+          "nullable": false,
+          "pgType": "TEXT",
+        },
+      ],
+      "comment": null,
+      "constraints": [
+        {
+          "checkExpr": null,
+          "columns": [
+            "id",
+          ],
+          "deferrable": false,
+          "foreignColumns": null,
+          "foreignSchema": null,
+          "foreignTable": null,
+          "initiallyDeferred": false,
+          "name": "PgGoldIncrement_pkey",
+          "onDelete": null,
+          "onUpdate": null,
+          "type": "PRIMARY KEY",
+        },
+      ],
+      "indexes": [],
+      "name": "PgGoldIncrement",
+      "schema": "public",
+      "triggers": [],
+    },
+  ],
+}
+`;
+
 exports[`projectDesiredSchema (golden) > projects ManyToMany join table 1`] = `
 {
   "enums": [],
