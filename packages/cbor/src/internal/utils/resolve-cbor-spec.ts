@@ -20,7 +20,35 @@ const buildReverseEnum = (map: Record<string, number>): Record<number, string> =
   return reverse;
 };
 
-const resolveField = (field: ResolvedCborField): ResolvedCborField => {
+const validateLabel = (field: ResolvedCborField, labels: "int" | "mixed"): void => {
+  if (typeof field.label === "string") {
+    if (labels !== "mixed") {
+      throw new CborError("Invalid field label", {
+        code: "invalid_label",
+        title: "Invalid Field Label",
+        details: `Field "${field.key}" uses a string label "${field.label}", but the spec is "int"-labelled; set labels: "mixed" to allow string labels.`,
+      });
+    }
+
+    if (field.label.length === 0) {
+      throw new CborError("Invalid field label", {
+        code: "invalid_label",
+        title: "Invalid Field Label",
+        details: `Field "${field.key}" uses an empty string label; a string label must be non-empty.`,
+      });
+    }
+
+    if (field.proprietary) {
+      throw new CborError("Invalid field label", {
+        code: "invalid_label",
+        title: "Invalid Field Label",
+        details: `Field "${field.key}" is "proprietary" but has a string label; a proprietary field degrades to its string key and so must carry an integer label.`,
+      });
+    }
+
+    return;
+  }
+
   if (!Number.isInteger(field.label)) {
     throw new CborError("Invalid field label", {
       code: "invalid_label",
@@ -29,13 +57,20 @@ const resolveField = (field: ResolvedCborField): ResolvedCborField => {
     });
   }
 
-  if (field.label <= 0) {
+  if (field.label === 0) {
     throw new CborError("Reserved field label", {
       code: "invalid_label",
       title: "Invalid Field Label",
-      details: `Field "${field.key}" uses label ${field.label}; labels must be > 0 (label 0 is reserved for the version tag).`,
+      details: `Field "${field.key}" uses label 0, which is reserved for the version tag.`,
     });
   }
+};
+
+const resolveField = (
+  field: ResolvedCborField,
+  labels: "int" | "mixed",
+): ResolvedCborField => {
+  validateLabel(field, labels);
 
   const isEnum = field.kind === "enum";
 
@@ -77,10 +112,11 @@ const resolveField = (field: ResolvedCborField): ResolvedCborField => {
 };
 
 export const resolveCborSpec = (settings: CborKitSettings): ResolvedCborSpec => {
-  const byLabel = new Map<number, ResolvedCborField>();
+  const labels = settings.labels ?? "int";
+  const byLabel = new Map<number | string, ResolvedCborField>();
 
   const fields = settings.fields.map((field) => {
-    const resolved = resolveField(field);
+    const resolved = resolveField(field, labels);
 
     if (settings.version && resolved.label === settings.version.label) {
       throw new CborError("Field label collides with version label", {

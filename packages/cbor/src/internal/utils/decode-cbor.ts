@@ -5,7 +5,7 @@ import type { ResolvedCborSpec } from "../types/resolved-cbor-spec.js";
 import { decodeValue } from "./decode-value.js";
 
 export const decodeCbor = (config: ResolvedCborSpec, bytes: Uint8Array): Dict => {
-  const map = decode<Map<number, unknown>>(bytes, { preferMap: true });
+  const map = decode<Map<number | string, unknown>>(bytes, { preferMap: true });
 
   if (config.version) {
     const version = map.get(config.version.label);

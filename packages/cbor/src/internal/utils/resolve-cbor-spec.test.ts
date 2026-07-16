@@ -84,6 +84,51 @@ describe("resolveCborSpec", () => {
     ).toThrowError(expect.objectContaining({ code: "invalid_label" }));
   });
 
+  test("should allow a negative integer label", () => {
+    const resolved = resolveCborSpec({
+      fields: [{ key: "a", label: -65552, kind: "text" }],
+    });
+
+    expect(resolved.byLabel.get(-65552)?.key).toEqual("a");
+  });
+
+  test("should default the label mode to int and reject a string label", () => {
+    expect(() =>
+      resolveCborSpec({ fields: [{ key: "acr", label: "acr", kind: "text" }] }),
+    ).toThrowError(expect.objectContaining({ code: "invalid_label" }));
+  });
+
+  test("should allow a string label when labels is mixed", () => {
+    const resolved = resolveCborSpec({
+      labels: "mixed",
+      fields: [
+        { key: "acr", label: "acr", kind: "text" },
+        { key: "iss", label: 1, kind: "text" },
+      ],
+    });
+
+    expect(resolved.byLabel.get("acr")?.key).toEqual("acr");
+    expect(resolved.byLabel.get(1)?.key).toEqual("iss");
+  });
+
+  test("should throw on an empty string label", () => {
+    expect(() =>
+      resolveCborSpec({
+        labels: "mixed",
+        fields: [{ key: "a", label: "", kind: "text" }],
+      }),
+    ).toThrowError(expect.objectContaining({ code: "invalid_label" }));
+  });
+
+  test("should throw when a proprietary field has a string label", () => {
+    expect(() =>
+      resolveCborSpec({
+        labels: "mixed",
+        fields: [{ key: "a", label: "a", kind: "text", proprietary: true }],
+      }),
+    ).toThrowError(expect.objectContaining({ code: "invalid_label" }));
+  });
+
   test("should throw when kind is enum but no enum map is given", () => {
     expect(() =>
       resolveCborSpec({ fields: [{ key: "a", label: 1, kind: "enum" }] }),

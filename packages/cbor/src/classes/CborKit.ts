@@ -1,6 +1,6 @@
 import type { DeepPartial, Dict } from "@lindorm/types";
 import type { ICborKit } from "../interfaces/CborKit.js";
-import type { CborKitSettings } from "../types/cbor-field.js";
+import type { CborEncodeOptions, CborKitSettings } from "../types/cbor-field.js";
 import type { ResolvedCborSpec } from "../internal/types/resolved-cbor-spec.js";
 import { decodeCbor, encodeCbor, resolveCborSpec } from "../internal/index.js";
 
@@ -11,8 +11,8 @@ export class CborKit<T extends Dict = Dict> implements ICborKit<T> {
     this.config = resolveCborSpec(settings);
   }
 
-  encode(value: DeepPartial<T>): Uint8Array {
-    return encodeCbor(this.config, value);
+  encode(value: DeepPartial<T>, options: CborEncodeOptions = {}): Uint8Array {
+    return encodeCbor(this.config, value, options.proprietary ?? true);
   }
 
   decode(bytes: Uint8Array): T {

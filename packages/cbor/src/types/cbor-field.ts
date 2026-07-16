@@ -12,8 +12,21 @@ export type CborField = {
   /** Domain key on the plain-object record. */
   key: string;
 
-  /** Integer wire label. Must be > 0 — label 0 is reserved for the version tag. */
-  label: number;
+  /**
+   * Wire label — the CBOR map key.
+   * - A nonzero integer (0 is reserved for the version tag); negatives are legal
+   *   (e.g. COSE private-use labels).
+   * - A string, only when the spec sets `labels: "mixed"` (e.g. a short COSE
+   *   claim keyed by its JOSE name).
+   */
+  label: number | string;
+
+  /**
+   * Marks a field whose compact integer `label` degrades off-platform: on-platform
+   * (encode default) it keys by `label`; when `encode(value, { proprietary: false })`
+   * it keys by `key` instead (the interoperable string). Requires an integer `label`.
+   */
+  proprietary?: boolean;
 
   kind: CborValueKind;
 
@@ -41,12 +54,32 @@ export type CborSpec = {
   /**
    * How decode treats a wire label with no matching field.
    * - "strict" (default): throw — the format is closed, an unknown label is corruption.
-   * - "lax": preserve it verbatim under its numeric key (forward-compat passthrough).
+   * - "lax": preserve it verbatim under its wire key (forward-compat passthrough).
    */
   mode?: "strict" | "lax";
+
+  /**
+   * Which label types the spec's fields may declare.
+   * - "int" (default): integer labels only — a string label is a config error.
+   * - "mixed": integer OR string labels (e.g. COSE claims that key by their JOSE
+   *   string name where no registered integer label exists).
+   *
+   * Orthogonal to `mode`: `labels` gates spec construction, `mode` gates decode.
+   */
+  labels?: "int" | "mixed";
 
   fields: ReadonlyArray<CborField>;
 };
 
 /** The table IS the construction Settings. */
 export type CborKitSettings = CborSpec;
+
+/** Per-call encode options. */
+export type CborEncodeOptions = {
+  /**
+   * Emit compact proprietary integer labels (default `true`). When `false`, every
+   * `proprietary` field degrades to its string `key` instead of its integer `label`
+   * — the interoperable, off-platform wire form. Non-proprietary fields are unaffected.
+   */
+  proprietary?: boolean;
+};

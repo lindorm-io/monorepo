@@ -1,3 +1,4 @@
+import { decode } from "cbor2";
 import { describe, expect, test } from "vitest";
 import { CborError } from "../errors/index.js";
 import type { CborKitSettings } from "../types/cbor-field.js";
@@ -49,5 +50,65 @@ describe("CborKit", () => {
     expect(() => kit.decode(other.encode(record))).toThrowError(
       expect.objectContaining({ code: "version_mismatch" }),
     );
+  });
+});
+
+describe("CborKit — mixed labels and proprietary fields", () => {
+  // A CWT-shaped spec: a registered integer label, a string-labelled short claim,
+  // and a private-use integer label that degrades to its string key off-platform.
+  const kit = new CborKit({
+    labels: "mixed",
+    mode: "lax",
+    fields: [
+      { key: "iss", label: 1, kind: "text" },
+      { key: "acr", label: "acr", kind: "text" },
+      { key: "client_id", label: -65548, kind: "text", proprietary: true },
+    ],
+  });
+
+  const record = {
+    iss: "https://idp.example",
+    acr: "urn:acr:1",
+    client_id: "client-1",
+  };
+
+  const wire = (bytes: Uint8Array): Map<unknown, unknown> =>
+    decode<Map<unknown, unknown>>(bytes, { preferMap: true });
+
+  test("should round-trip mixed integer and string labels", () => {
+    expect(kit.decode(kit.encode(record))).toEqual(record);
+  });
+
+  test("should key a string-labelled field by its string label", () => {
+    expect(wire(kit.encode(record)).get("acr")).toEqual("urn:acr:1");
+  });
+
+  test("should key a proprietary field by its integer label on-platform", () => {
+    const map = wire(kit.encode(record));
+
+    expect(map.get(-65548)).toEqual("client-1");
+    expect(map.has("client_id")).toEqual(false);
+  });
+
+  test("should degrade a proprietary field to its string key off-platform", () => {
+    const map = wire(kit.encode(record, { proprietary: false }));
+
+    expect(map.get("client_id")).toEqual("client-1");
+    expect(map.has(-65548)).toEqual(false);
+    // Non-proprietary fields are unaffected by the flag.
+    expect(map.get(1)).toEqual("https://idp.example");
+    expect(map.get("acr")).toEqual("urn:acr:1");
+  });
+
+  test("should preserve an off-platform proprietary key via lax passthrough on decode", () => {
+    // The string key is not a spec label, so lax decode keeps it verbatim; a
+    // consumer (e.g. aegis) remaps the wire name back to its domain name.
+    const decoded = kit.decode(kit.encode(record, { proprietary: false }));
+
+    expect(decoded).toEqual({
+      iss: "https://idp.example",
+      acr: "urn:acr:1",
+      client_id: "client-1",
+    });
   });
 });

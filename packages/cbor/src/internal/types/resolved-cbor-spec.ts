@@ -11,5 +11,5 @@ export type ResolvedCborSpec = {
   mode: "strict" | "lax";
   fields: ReadonlyArray<ResolvedCborField>;
   /** Wire label → field, for decode lookup. */
-  byLabel: Map<number, ResolvedCborField>;
+  byLabel: Map<number | string, ResolvedCborField>;
 };
