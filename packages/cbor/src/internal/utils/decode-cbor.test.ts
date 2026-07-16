@@ -47,7 +47,8 @@ describe("decodeCbor", () => {
     );
   });
 
-  test("should preserve an unknown label verbatim", () => {
+  test("should preserve an unknown label verbatim in lax mode", () => {
+    const lax = resolveCborSpec({ ...settings, mode: "lax" });
     const withUnknown = encode(
       new Map<number, unknown>([
         [0, 2],
@@ -57,9 +58,25 @@ describe("decodeCbor", () => {
       { cde: true },
     );
 
-    const decoded = decodeCbor(config, withUnknown);
+    const decoded = decodeCbor(lax, withUnknown);
 
     expect(decoded).toEqual({ sub: "abc", 42: "future-field" });
+  });
+
+  test("should throw on an unknown label by default (strict mode)", () => {
+    const withUnknown = encode(
+      new Map<number, unknown>([
+        [0, 2],
+        [1, "abc"],
+        [42, "future-field"],
+      ]),
+      { cde: true },
+    );
+
+    expect(() => decodeCbor(config, withUnknown)).toThrowError(
+      expect.objectContaining({ code: "unknown_label", data: { label: 42 } }),
+    );
+    expect(() => decodeCbor(config, withUnknown)).toThrow(CborError);
   });
 
   test("should decode with no version configured", () => {

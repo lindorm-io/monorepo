@@ -103,5 +103,5 @@ export const resolveCborSpec = (settings: CborKitSettings): ResolvedCborSpec => 
     return resolved;
   });
 
-  return { version: settings.version, fields, byLabel };
+  return { version: settings.version, mode: settings.mode ?? "strict", fields, byLabel };
 };

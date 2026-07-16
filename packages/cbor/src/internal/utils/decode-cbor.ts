@@ -26,11 +26,22 @@ export const decodeCbor = (config: ResolvedCborSpec, bytes: Uint8Array): Dict =>
 
     const field = config.byLabel.get(label);
 
-    // An unknown label is preserved verbatim under its numeric key — never dropped,
-    // so a record written by a newer spec survives a round-trip through an older one.
+    // An unrecognised wire label is handled per the spec's mode:
+    //   - "lax": preserve it verbatim under its numeric key — never dropped, so a
+    //     record written by a newer spec survives a round-trip through an older one.
+    //   - "strict" (default): treat it as corruption of a closed format and throw.
     if (!field) {
-      out[label] = wire;
-      continue;
+      if (config.mode === "lax") {
+        out[label] = wire;
+        continue;
+      }
+
+      throw new CborError("Unknown CBOR label", {
+        code: "unknown_label",
+        title: "Unknown CBOR Label",
+        details: `The record carries label ${label}, which no field in this spec recognises; this is a closed format (mode "strict").`,
+        data: { label },
+      });
     }
 
     out[field.key] = decodeValue(field, wire);

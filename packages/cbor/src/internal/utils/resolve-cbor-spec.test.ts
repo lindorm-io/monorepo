@@ -22,6 +22,19 @@ describe("resolveCborSpec", () => {
     expect(resolved.byLabel.get(4)?.key).toEqual("sig");
   });
 
+  test("should default the unknown-label mode to strict", () => {
+    expect(
+      resolveCborSpec({ fields: [{ key: "a", label: 1, kind: "text" }] }).mode,
+    ).toEqual("strict");
+  });
+
+  test("should carry an explicit lax mode through", () => {
+    expect(
+      resolveCborSpec({ mode: "lax", fields: [{ key: "a", label: 1, kind: "text" }] })
+        .mode,
+    ).toEqual("lax");
+  });
+
   test("should precompute the reverse enum map", () => {
     const resolved = resolveCborSpec({
       fields: [{ key: "amr", label: 1, kind: "enum", enum: { pwd: 1, otp: 2 } }],

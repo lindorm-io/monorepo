@@ -37,6 +37,14 @@ export type CborField = {
 export type CborSpec = {
   /** Auto-written on encode; validated on decode (throws on mismatch). */
   version?: { label: number; value: number };
+
+  /**
+   * How decode treats a wire label with no matching field.
+   * - "strict" (default): throw — the format is closed, an unknown label is corruption.
+   * - "lax": preserve it verbatim under its numeric key (forward-compat passthrough).
+   */
+  mode?: "strict" | "lax";
+
   fields: ReadonlyArray<CborField>;
 };
 

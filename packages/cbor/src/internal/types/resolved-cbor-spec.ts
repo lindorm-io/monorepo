@@ -7,6 +7,8 @@ export type ResolvedCborField = CborField & {
 
 export type ResolvedCborSpec = {
   version?: { label: number; value: number };
+  /** Unknown-label handling on decode; defaults to "strict". */
+  mode: "strict" | "lax";
   fields: ReadonlyArray<ResolvedCborField>;
   /** Wire label → field, for decode lookup. */
   byLabel: Map<number, ResolvedCborField>;
