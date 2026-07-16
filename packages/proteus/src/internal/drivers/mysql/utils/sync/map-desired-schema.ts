@@ -12,6 +12,7 @@ import type {
   DesiredSchemaModel,
   DesiredTableModel,
 } from "../../../../utils/sync/desired-schema-model.js";
+import { MySqlSyncError } from "../../errors/MySqlSyncError.js";
 
 /**
  * Purely mechanical mapping (rename / regroup / drop — zero decisions) from
@@ -19,6 +20,8 @@ import type {
  * Drops namespaces/enums/extensions/comments and index where/method/include
  * (mysql cannot express them); emits the optional `computed` key ONLY on
  * field-origin columns — snapshot-locked (collection element columns drop it).
+ * A DEFERRABLE foreign key throws — InnoDB has no deferred constraints, and a
+ * silent immediate FK would break intentional out-of-order/circular inserts.
  */
 
 const mapColumn = (column: DesiredColumnModel): MysqlDesiredColumn => {
@@ -38,14 +41,28 @@ const mapColumn = (column: DesiredColumnModel): MysqlDesiredColumn => {
   return mapped;
 };
 
-const mapForeignKey = (fk: DesiredForeignKeyModel): MysqlDesiredForeignKey => ({
-  constraintName: fk.name!,
-  columns: fk.columns,
-  foreignTable: fk.foreignTable,
-  foreignColumns: fk.foreignColumns,
-  onDelete: fk.onDelete,
-  onUpdate: fk.onUpdate,
-});
+const mapForeignKey = (fk: DesiredForeignKeyModel): MysqlDesiredForeignKey => {
+  if (fk.deferrable) {
+    throw new MySqlSyncError(
+      `Deferrable foreign key "${fk.name ?? fk.columns.join(", ")}" is not supported by MySQL InnoDB`,
+      {
+        code: "unsupported_operation",
+        title: "Unsupported Operation",
+        details:
+          "MySQL InnoDB does not support DEFERRABLE foreign key constraints; declare the relation without @Deferrable, or run on a driver that supports it (postgres/sqlite).",
+      },
+    );
+  }
+
+  return {
+    constraintName: fk.name!,
+    columns: fk.columns,
+    foreignTable: fk.foreignTable,
+    foreignColumns: fk.foreignColumns,
+    onDelete: fk.onDelete,
+    onUpdate: fk.onUpdate,
+  };
+};
 
 const mapIndex = (index: DesiredIndexModel): MysqlDesiredIndex => ({
   name: index.name,
