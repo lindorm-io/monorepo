@@ -30,7 +30,7 @@ export const encryptFieldValue = (
 
   try {
     const kit = new AesKit({ kryptos: key });
-    return kit.encrypt(value as any, "encoded");
+    return kit.encrypt(value as any);
   } catch (error) {
     throw new ProteusError(
       `Failed to encrypt field "${fieldKey}" on entity "${entityName}"`,
