@@ -46,6 +46,7 @@ import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js"
  */
 export interface IAegisAes {
   encrypt(data: AesContent, options?: AesEncryptOptions): Promise<string>;
+  encrypt(data: AesContent, mode: "cbor", options?: AesEncryptOptions): Promise<string>;
   encrypt(
     data: AesContent,
     mode: "record",
@@ -56,16 +57,6 @@ export interface IAegisAes {
     mode: "serialised",
     options?: AesEncryptOptions,
   ): Promise<SerialisedAesEncryption>;
-  encrypt(
-    data: AesContent,
-    mode: "tokenised",
-    options?: AesEncryptOptions,
-  ): Promise<string>;
-  encrypt(
-    data: AesContent,
-    mode: "encoded",
-    options?: AesEncryptOptions,
-  ): Promise<string>;
   decrypt<T extends AesContent = string>(
     data: AesDecryptionRecord | SerialisedAesDecryption | string,
     options?: AesDecryptOptions,

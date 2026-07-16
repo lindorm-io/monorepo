@@ -114,15 +114,13 @@ describe("Aegis AES key selection", () => {
     });
 
     test("round-trips every mode", async () => {
-      const encoded = await aegis.aes.encrypt(PLAINTEXT);
+      const cbor = await aegis.aes.encrypt(PLAINTEXT);
       const record = await aegis.aes.encrypt(PLAINTEXT, "record");
       const serialised = await aegis.aes.encrypt(PLAINTEXT, "serialised");
-      const tokenised = await aegis.aes.encrypt(PLAINTEXT, "tokenised");
 
-      await expect(aegis.aes.decrypt(encoded)).resolves.toBe(PLAINTEXT);
+      await expect(aegis.aes.decrypt(cbor)).resolves.toBe(PLAINTEXT);
       await expect(aegis.aes.decrypt(record)).resolves.toBe(PLAINTEXT);
       await expect(aegis.aes.decrypt(serialised)).resolves.toBe(PLAINTEXT);
-      await expect(aegis.aes.decrypt(tokenised)).resolves.toBe(PLAINTEXT);
     });
 
     test("honours the deployment encrypt policy", async () => {
@@ -140,7 +138,7 @@ describe("Aegis AES key selection", () => {
 
   describe("per-call selector", () => {
     test("selects the cookie key over a NEWER published enc key", async () => {
-      const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
+      const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
         key: { predicate: { purpose: "cookie" } },
       });
 
@@ -149,7 +147,7 @@ describe("Aegis AES key selection", () => {
     });
 
     test("reaches the INTERNAL, unpublished cookie key — the pylon case", async () => {
-      const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
+      const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
         key: { predicate: { purpose: "cookie", publish: false } },
       });
 
@@ -168,7 +166,7 @@ describe("Aegis AES key selection", () => {
       });
 
       const byDeployment = await deployment.aes.encrypt(PLAINTEXT);
-      const byCall = await deployment.aes.encrypt(PLAINTEXT, "encoded", {
+      const byCall = await deployment.aes.encrypt(PLAINTEXT, "cbor", {
         key: { predicate: { purpose: "cookie" } },
       });
 
@@ -185,7 +183,7 @@ describe("Aegis AES key selection", () => {
 
       // The caller names the algorithm; `purpose` and `publish` come from the
       // deployment, so the internal cookie key is still the one selected.
-      const encoded = await deployment.aes.encrypt(PLAINTEXT, "encoded", {
+      const encoded = await deployment.aes.encrypt(PLAINTEXT, "cbor", {
         key: { predicate: { algorithm: "dir" } },
       });
 
@@ -197,15 +195,15 @@ describe("Aegis AES key selection", () => {
 
       const record = await aegis.aes.encrypt(PLAINTEXT, "record", options);
       const serialised = await aegis.aes.encrypt(PLAINTEXT, "serialised", options);
-      const tokenised = await aegis.aes.encrypt(PLAINTEXT, "tokenised", options);
+      const cbor = await aegis.aes.encrypt(PLAINTEXT, "cbor", options);
 
       expect(record.keyId).toBe(COOKIE_KEY.id);
       expect(AesKit.parse(serialised).keyId).toBe(COOKIE_KEY.id);
-      expect(AesKit.parse(tokenised).keyId).toBe(COOKIE_KEY.id);
+      expect(AesKit.parse(cbor).keyId).toBe(COOKIE_KEY.id);
     });
 
     test("picks the CIPHER without touching the key", async () => {
-      const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
+      const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
         key: { encryption: "A128CBC-HS256" },
       });
 
@@ -216,7 +214,7 @@ describe("Aegis AES key selection", () => {
 
     test("a selector that matches nothing throws, never falls back", async () => {
       const error = await aegis.aes
-        .encrypt(PLAINTEXT, "encoded", { key: { predicate: { purpose: "none" } } })
+        .encrypt(PLAINTEXT, "cbor", { key: { predicate: { purpose: "none" } } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -228,7 +226,7 @@ describe("Aegis AES key selection", () => {
     test("round-trips a key the vault has never held", async () => {
       await expect(amphora.findById(DETACHED_KEY.id)).rejects.toThrow();
 
-      const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
+      const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
         key: { kryptos: DETACHED_KEY },
       });
 
@@ -240,7 +238,7 @@ describe("Aegis AES key selection", () => {
     });
 
     test("is not reachable through the vault — the read side MUST be given it", async () => {
-      const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
+      const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
         key: { kryptos: DETACHED_KEY },
       });
 
@@ -268,7 +266,7 @@ describe("Aegis AES key selection", () => {
         encrypt: { predicate: { purpose: "token" } },
       });
 
-      const encoded = await deployment.aes.encrypt(PLAINTEXT, "encoded", {
+      const encoded = await deployment.aes.encrypt(PLAINTEXT, "cbor", {
         key: { kryptos: DETACHED_KEY },
       });
 
@@ -277,7 +275,7 @@ describe("Aegis AES key selection", () => {
 
     test("is REJECTED when it violates the ENCRYPT floor", async () => {
       const error = await aegis.aes
-        .encrypt(PLAINTEXT, "encoded", { key: { kryptos: DETACHED_SIG_KEY } })
+        .encrypt(PLAINTEXT, "cbor", { key: { kryptos: DETACHED_SIG_KEY } })
         .catch((err: Error) => err);
 
       expect(error).toBeInstanceOf(AegisError);
@@ -289,7 +287,7 @@ describe("Aegis AES key selection", () => {
     });
 
     test("is REJECTED on decrypt when it violates the DECRYPT floor", async () => {
-      const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
+      const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
         key: { kryptos: DETACHED_KEY },
       });
 
@@ -308,7 +306,7 @@ describe("Aegis AES key selection", () => {
     });
 
     test("throws when it is not the key the ciphertext names", async () => {
-      const encoded = await aegis.aes.encrypt(PLAINTEXT, "encoded", {
+      const encoded = await aegis.aes.encrypt(PLAINTEXT, "cbor", {
         key: { kryptos: DETACHED_KEY },
       });
 

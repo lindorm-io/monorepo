@@ -350,13 +350,13 @@ export class Aegis implements IAegis {
   // that exists for the job went unused.
   private async aesEncrypt(
     data: AesContent,
-    modeOrOptions?: "encoded" | "record" | "serialised" | "tokenised" | AesEncryptOptions,
+    modeOrOptions?: "cbor" | "record" | "serialised" | AesEncryptOptions,
     maybeOptions?: AesEncryptOptions,
   ): Promise<string | AesEncryptionRecord | SerialisedAesEncryption> {
     // The 2nd arg is EITHER the output mode (a string) OR the options object.
     // When it is a string the 3rd arg carries the options; otherwise the 2nd is
-    // the options and the mode defaults to `"encoded"`.
-    const mode = isString(modeOrOptions) ? modeOrOptions : "encoded";
+    // the options and the mode defaults to `"cbor"`.
+    const mode = isString(modeOrOptions) ? modeOrOptions : "cbor";
     const options = isString(modeOrOptions) ? maybeOptions : modeOrOptions;
 
     const kryptos = await this.resolveEncryptKey(options?.key);
@@ -365,7 +365,7 @@ export class Aegis implements IAegis {
       kryptos,
     });
 
-    return kit.encrypt(data, mode as "encoded");
+    return kit.encrypt(data, mode as "cbor");
   }
 
   // The ciphertext names its own key, so `findById` — deliberately unfiltered —
