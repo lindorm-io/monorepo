@@ -1,9 +1,9 @@
 import { PylonError } from "../../../errors/PylonError.js";
-import type { PylonSessionOptions } from "../../../types/index.js";
+import type { PylonSessionSettings } from "../../../types/index.js";
 import { assertSameSiteForSockets } from "./assert-same-site-for-sockets.js";
 import { describe, expect, test } from "vitest";
 
-const base: PylonSessionOptions = { enabled: true };
+const base: PylonSessionSettings = { enabled: true };
 
 describe("assertSameSiteForSockets", () => {
   test("should pass when session is unset", () => {

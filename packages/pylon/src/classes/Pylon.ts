@@ -8,7 +8,7 @@ import type {
   HttpCallback,
   PylonEventMap,
   PylonHttpContext,
-  PylonOptions,
+  PylonSettings,
   PylonSetup,
   PylonSocketContext,
   PylonTeardown,
@@ -33,7 +33,7 @@ export class Pylon<
   private readonly http: PylonHttp<H>;
   private readonly io: PylonIo<S> | undefined;
   private readonly logger: ILogger;
-  private readonly options: PylonOptions<E, H, S>;
+  private readonly options: PylonSettings<E, H, S>;
   private readonly port: number;
   private readonly server: HttpServer;
   private readonly workers: Array<ILindormWorker>;
@@ -45,7 +45,7 @@ export class Pylon<
   private readonly _setup: PylonSetup | undefined;
   private readonly _teardown: PylonTeardown | undefined;
 
-  constructor(options: PylonOptions<E, H, S>) {
+  constructor(options: PylonSettings<E, H, S>) {
     this.isSetup = false;
     this.isStarted = false;
     this.isTeardown = false;
@@ -379,7 +379,7 @@ export class Pylon<
       if (bus && db) {
         await setupWebhookRequestConsumer(bus, db, this.logger);
         await setupWebhookDispatchConsumer(bus, db, this.amphora, this.logger, {
-          encryptionKey: this.options.webhook.encryptionKey,
+          encryptionKey: this.options.webhook.encryption,
           maxErrors: this.options.webhook.maxErrors,
         });
       }

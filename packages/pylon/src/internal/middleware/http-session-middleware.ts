@@ -3,18 +3,18 @@ import { ServerError } from "@lindorm/errors";
 import { removeUndefined } from "@lindorm/utils";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type {
-  PylonGetCookie,
+  PylonCookieSettings,
+  PylonGetCookieOptions,
   PylonHttpMiddleware,
-  PylonKeys,
-  PylonSessionOptions,
-  PylonSetCookie,
+  PylonSessionSettings,
+  PylonSetCookieOptions,
 } from "../../types/index.js";
 import { createSessionStore } from "../utils/create-session-store.js";
 import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
 
 export const createHttpSessionMiddleware = (
-  options: PylonSessionOptions,
-  keys?: PylonKeys,
+  options: PylonSessionSettings,
+  cookies?: PylonCookieSettings,
 ): PylonHttpMiddleware => {
   const name = options.name ?? "pylon_session";
 
@@ -22,15 +22,16 @@ export const createHttpSessionMiddleware = (
   // and the cipher the way any cookie's do: named in the config handed to
   // `ctx.cookies.set` / `.get`. Pylon never sniffs cookie names.
   //
-  // The session's `encrypted`/`signed` booleans collapse into the cookie's
-  // `encryption`/`signature`/`signed` unions. When a session (or cookie)
-  // key resolves, the union carries that selector; when none does the SET side
-  // falls to `true`, which routes through the deployment cookie key and — if
-  // that is absent too — reaches the THROWING resolver. An encrypted session
-  // with no key must fail closed, never silently write plaintext.
-  const sk = resolveSessionKeys(keys);
+  // A CONFIGURED key turns its role on: `resolveSessionKeys` folds
+  // `session.<role> ?? cookies.<role>` into concrete selectors, and a resolved
+  // role becomes the cookie's `signature`/`encryption` selector on the SET side
+  // and its `encrypted`/`signed` policy on the READ side. No key ⇒ the field is
+  // dropped and the role is off. The throwing resolver still fires when a NAMED
+  // key cannot be resolved — an encrypted session fails closed, never silently
+  // writes plaintext.
+  const sk = resolveSessionKeys(options, cookies);
 
-  const config: PylonSetCookie & PylonGetCookie = removeUndefined({
+  const config: PylonSetCookieOptions & PylonGetCookieOptions = removeUndefined({
     domain: options.domain,
     encoding: options.encoding,
     expiry: options.expiry,
@@ -39,13 +40,13 @@ export const createHttpSessionMiddleware = (
     priority: options.priority,
     sameSite: options.sameSite,
     secure: options.secure,
-    encryption: options.encrypted ? (sk.encryption ?? true) : undefined,
-    signature: options.signed ? (sk.signature ?? true) : undefined,
-    encrypted: options.encrypted,
-    signed: options.signed ? (sk.verification ?? true) : undefined,
+    encryption: sk.encryption,
+    signature: sk.signature,
+    encrypted: sk.encryption ? true : undefined,
+    signed: sk.verification,
   });
 
-  const store = createSessionStore(options, keys);
+  const store = createSessionStore(options, cookies);
 
   return async function httpSessionMiddleware(ctx, next) {
     ctx.session = {

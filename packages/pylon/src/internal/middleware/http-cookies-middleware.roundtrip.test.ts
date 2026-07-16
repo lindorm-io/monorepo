@@ -6,16 +6,15 @@ import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import type {
-  PylonCookieConfig,
-  PylonGetCookie,
-  PylonKeys,
-  PylonSetCookie,
+  PylonCookieSettings,
+  PylonGetCookieOptions,
+  PylonSetCookieOptions,
 } from "../../types/index.js";
 
-// Round-trip helpers hand the SAME options object to both `set` and `get`. Under
-// the collapsed API the two sides read disjoint fields (`signature`/`encryption`
-// on write, `signed`/`encrypted` on read), so a combined shape drives both.
-type RoundTripOptions = PylonSetCookie & PylonGetCookie;
+// Round-trip helpers hand the SAME options object to both `set` and `get`. The
+// two sides read disjoint fields (`signature`/`encryption` on write,
+// `signed`/`encrypted` on read), so a combined shape drives both.
+type RoundTripOptions = PylonSetCookieOptions & PylonGetCookieOptions;
 import { signCookie as _signCookie } from "../utils/cookies/sign-cookie.js";
 import { verifyCookie as _verifyCookie } from "../utils/cookies/verify-cookie.js";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
@@ -54,7 +53,7 @@ type RunRoundTripResult<T> = {
 };
 
 const runRoundTrip = async <T = unknown>(
-  config: PylonCookieConfig,
+  config: PylonCookieSettings,
   sets: Array<SetCall>,
   reads: Array<{ name: string; options?: RoundTripOptions }>,
 ): Promise<{
@@ -98,7 +97,7 @@ const runRoundTrip = async <T = unknown>(
 const runSingleRoundTrip = async <T = unknown>(
   value: unknown,
   options: RoundTripOptions = {},
-  config: PylonCookieConfig = {},
+  config: PylonCookieSettings = {},
 ): Promise<RunRoundTripResult<T>> => {
   const name = "rt_cookie";
   const result = await runRoundTrip<T>(
@@ -116,7 +115,7 @@ const runSingleRoundTrip = async <T = unknown>(
 };
 
 describe("httpCookiesMiddleware round-trip", () => {
-  let config: PylonCookieConfig;
+  let config: PylonCookieSettings;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -229,8 +228,8 @@ describe("httpCookiesMiddleware round-trip", () => {
     });
     amphora.add(cookieKey);
 
-    const keys: PylonKeys = {
-      cookie: { encryption: { predicate: { purpose: "cookie", publish: false } } },
+    const keys: PylonCookieSettings = {
+      encryption: { predicate: { purpose: "cookie", publish: false } },
     };
 
     // Large enough that the sealed token overflows the chunk threshold.
@@ -243,7 +242,7 @@ describe("httpCookiesMiddleware round-trip", () => {
       set: vi.fn(),
     };
 
-    const writeMiddleware = createHttpCookiesMiddleware(config, keys);
+    const writeMiddleware = createHttpCookiesMiddleware({ ...config, ...keys });
     await writeMiddleware(writeCtx as any, async () => {
       await (writeCtx as any).cookies.set("rt_cookie", plaintext, { encryption: true });
     });
@@ -262,7 +261,7 @@ describe("httpCookiesMiddleware round-trip", () => {
       set: vi.fn(),
     };
 
-    const readMiddleware = createHttpCookiesMiddleware(config, keys);
+    const readMiddleware = createHttpCookiesMiddleware({ ...config, ...keys });
     let readValue: unknown = undefined;
     await readMiddleware(readCtx as any, async () => {
       readValue = await (readCtx as any).cookies.get("rt_cookie", { encrypted: true });

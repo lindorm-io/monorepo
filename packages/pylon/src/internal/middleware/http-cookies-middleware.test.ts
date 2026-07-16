@@ -6,7 +6,7 @@ import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { B64 } from "@lindorm/b64";
 import { KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
-import type { PylonCookieConfig, PylonKeys } from "../../types/index.js";
+import type { PylonCookieSettings } from "../../types/index.js";
 import { parseCookieHeader as _parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { signCookie as _signCookie } from "../utils/cookies/sign-cookie.js";
 import { verifyCookie as _verifyCookie } from "../utils/cookies/verify-cookie.js";
@@ -21,17 +21,14 @@ const parseCookieHeader = _parseCookieHeader as Mock;
 const signCookie = _signCookie as Mock;
 const verifyCookie = _verifyCookie as Mock;
 
-// What a deployment's `keys` option says. Pylon guesses none of it.
-const keys: PylonKeys = {
-  cookie: {
-    signature: { predicate: { purpose: "cookie", publish: false } },
-    verification: { predicate: { purpose: "cookie" } },
-    encryption: { predicate: { purpose: "cookie", publish: false } },
-  },
+// What a deployment's flat `cookies` selectors say. Pylon guesses none of it.
+const cookieKeys: PylonCookieSettings = {
+  signature: { predicate: { purpose: "cookie", publish: false } },
+  encryption: { predicate: { purpose: "cookie", publish: false } },
 };
 
 describe("httpCookiesMiddleware", async () => {
-  let config: PylonCookieConfig;
+  let config: PylonCookieSettings;
   let ctx: any;
   let next: Mock;
 
@@ -109,7 +106,10 @@ describe("httpCookiesMiddleware", async () => {
     });
 
     await expect(
-      createHttpCookiesMiddleware(config, keys)(ctx, next),
+      createHttpCookiesMiddleware({
+        ...config,
+        encryption: cookieKeys.encryption,
+      })(ctx, next),
     ).resolves.toBeUndefined();
 
     expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith(
@@ -130,32 +130,40 @@ describe("httpCookiesMiddleware", async () => {
     });
 
     await expect(
-      createHttpCookiesMiddleware(config, keys)(ctx, next),
+      createHttpCookiesMiddleware({
+        ...config,
+        signature: cookieKeys.signature,
+      })(ctx, next),
     ).resolves.toBeUndefined();
 
     expect(signCookie).toHaveBeenCalledWith(
       ctx,
       expect.any(String),
-      keys.cookie!.signature,
+      cookieKeys.signature,
     );
   });
 
-  test("should pass the cookie verification key from the options to the verifier", async () => {
+  test("should derive the verification key from the configured signature predicate", async () => {
     next.mockImplementation(async () => {
       await ctx.cookies.get("cookie_name", { signed: true });
     });
 
     await expect(
-      createHttpCookiesMiddleware(config, keys)(ctx, next),
+      createHttpCookiesMiddleware({
+        ...config,
+        signature: cookieKeys.signature,
+      })(ctx, next),
     ).resolves.toBeUndefined();
 
+    // Verification is DERIVED from the signing selector's predicate — there is no
+    // separate verification selector.
     expect(verifyCookie).toHaveBeenCalledWith(
       ctx,
       "cookie_name",
       "Y29va2llX3ZhbHVl",
       "cookie_signature",
       "cookie_kid",
-      keys.cookie!.verification,
+      { predicate: cookieKeys.signature!.predicate },
     );
   });
 
@@ -400,7 +408,10 @@ describe("httpCookiesMiddleware", async () => {
     });
 
     await expect(
-      createHttpCookiesMiddleware(config, keys)(realCtx, next),
+      createHttpCookiesMiddleware({
+        ...config,
+        encryption: cookieKeys.encryption,
+      })(realCtx, next),
     ).resolves.toBeUndefined();
 
     const headers = realCtx.set.mock.calls[0][1] as Array<string>;

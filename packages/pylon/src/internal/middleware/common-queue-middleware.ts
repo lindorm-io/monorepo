@@ -1,7 +1,7 @@
 import { ServerError } from "@lindorm/errors";
 import type { Middleware } from "@lindorm/middleware";
 import type { Dict, Priority } from "@lindorm/types";
-import type { PylonContext, PylonQueueOptions } from "../../types/index.js";
+import type { PylonContext, PylonQueueSettings } from "../../types/index.js";
 import { resolveIris } from "../utils/resolve-iris.js";
 
 const PRIORITY_MAP: Record<Priority, number> = {
@@ -14,7 +14,7 @@ const PRIORITY_MAP: Record<Priority, number> = {
 };
 
 export const createQueueMiddleware = <C extends PylonContext>(
-  options?: PylonQueueOptions,
+  options?: PylonQueueSettings,
 ): Middleware<C> => {
   if (!options?.enabled) {
     return async function disabledQueueMiddleware(ctx, next) {

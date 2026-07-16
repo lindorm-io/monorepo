@@ -4,7 +4,7 @@ import {
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
 import type { Next } from "@lindorm/middleware";
-import type { PylonSessionOptions } from "../../types/index.js";
+import type { PylonSessionSettings } from "../../types/index.js";
 import { createConnectionSessionMiddleware } from "./connection-session-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
@@ -59,7 +59,7 @@ const buildCtx = (cookieHeader: string | undefined, kv?: any): any => {
 
 describe("createConnectionSessionMiddleware", () => {
   let next: Next;
-  let options: PylonSessionOptions;
+  let options: PylonSessionSettings;
   let mockRepo: ReturnType<typeof createMockRepository>;
   let mockProteus: ReturnType<typeof createMockProteusSource>;
 
@@ -72,11 +72,9 @@ describe("createConnectionSessionMiddleware", () => {
 
     options = {
       enabled: true,
-      encrypted: false,
       expiry: "90 minutes",
       httpOnly: true,
       sameSite: "lax",
-      signed: false,
       name: "test_pylon_session",
     };
 

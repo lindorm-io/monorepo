@@ -1,5 +1,7 @@
+import type { IProteusSource } from "@lindorm/proteus";
 import type { IPylonSession } from "../interfaces/index.js";
-import type { PylonSetCookie } from "./cookies.js";
+import type { PylonCookieOptions } from "./cookies.js";
+import type { PylonEncKey, PylonSignKey } from "./keys.js";
 
 export type PylonSessionOnContext = {
   set(session: IPylonSession): Promise<void>;
@@ -8,8 +10,20 @@ export type PylonSessionOnContext = {
   logout(subject: string): Promise<void>;
 };
 
-export type PylonSessionConfig = Pick<
-  PylonSetCookie,
+/**
+ * Session SETTINGS — the `new Pylon({ session })` declaration. A pylon session
+ * IS a cookie, so this carries the same presentation defaults and the same two
+ * FLAT key selectors as `PylonCookieSettings` (`signature`/`encryption`), plus
+ * the session-only `enabled`/`kv`/`name`.
+ *
+ * Each key selector defaults to the cookie one:
+ * `session.<role> ?? cookies.<role>` (see `resolveSessionKeys`). Name only
+ * `cookies` and one set of keys does everything; name `session` keys too and the
+ * session cookie is signed / sealed with its OWN key. Verification is derived
+ * from the resolved `signature` predicate, never declared.
+ */
+export type PylonSessionSettings = Pick<
+  PylonCookieOptions,
   | "domain"
   | "encoding"
   | "expiry"
@@ -19,15 +33,9 @@ export type PylonSessionConfig = Pick<
   | "sameSite"
   | "secure"
 > & {
+  enabled: boolean;
+  kv?: IProteusSource;
   name?: string;
-  /**
-   * Seal the session cookie. A plain boolean — the session middleware resolves
-   * WHICH key (`keys.session.encryption ?? keys.cookie.encryption`, or the
-   * deployment cookie key) and translates it into the cookie's `encryption`
-   * union. An encrypted session with no key configured fails closed, never
-   * writes plaintext.
-   */
-  encrypted?: boolean;
-  /** Sign the session cookie. Resolved the same way as {@link encrypted}. */
-  signed?: boolean;
+  encryption?: PylonEncKey;
+  signature?: PylonSignKey;
 };

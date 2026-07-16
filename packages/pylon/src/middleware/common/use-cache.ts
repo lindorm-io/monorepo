@@ -144,7 +144,7 @@ export const useCache = (
         type: "urn:lindorm:pylon:error:cache_not_configured",
         title: "Response Cache Not Configured",
         details:
-          "Enable the response cache in PylonOptions with cache: { enabled: true } before using useCache",
+          "Enable the response cache in PylonSettings with cache: { enabled: true } before using useCache",
       });
     }
 

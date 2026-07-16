@@ -296,20 +296,13 @@ describe("Pylon", () => {
 
       environment: "test",
 
-      // The deployment SAYS which key does what. Pylon guesses none of it — and
-      // `publish: false` is load-bearing in every predicate: amphora's default
-      // query is the PUBLISHED set, so an internal key is otherwise unreachable.
-      keys: {
-        cookie: {
-          signature: { predicate: { purpose: "cookie", publish: false } },
-          verification: { predicate: { purpose: "cookie", publish: false } },
-          encryption: { predicate: { purpose: "cookie", publish: false } },
-        },
-        // The session cookie SEALS with its own key. Signature and verification
-        // are unnamed, so they CHAIN to the cookie keys above.
-        session: {
-          encryption: { predicate: { purpose: "session", publish: false } },
-        },
+      // The deployment SAYS which key does what, per feature. Pylon guesses none
+      // of it — and `publish: false` is load-bearing in every predicate: amphora's
+      // default query is the PUBLISHED set, so an internal key is otherwise
+      // unreachable. A configured key ⇒ that role is on by default.
+      cookies: {
+        signature: { predicate: { purpose: "cookie", publish: false } },
+        encryption: { predicate: { purpose: "cookie", publish: false } },
       },
 
       routes: [{ path: "/test", router }],
@@ -317,7 +310,12 @@ describe("Pylon", () => {
       openIdConfiguration: { jwksUri: "http://test.lindorm.io/.well-known/jwks.json" },
       parseBody: { formidable: true },
       port: 55555,
-      session: { enabled: true, encrypted: true, signed: true },
+      // The session cookie SEALS with its own key. Signature is unnamed, so it
+      // CHAINS to the cookie signature above (and verification derives from it).
+      session: {
+        enabled: true,
+        encryption: { predicate: { purpose: "session", publish: false } },
+      },
       version: "0.0.1",
     });
 

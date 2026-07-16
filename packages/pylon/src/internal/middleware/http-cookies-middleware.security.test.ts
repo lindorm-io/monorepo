@@ -5,7 +5,7 @@ import { ClientError } from "@lindorm/errors";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import type { PylonCookieConfig, PylonKeys } from "../../types/index.js";
+import type { PylonCookieSettings } from "../../types/index.js";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
 
 /**
@@ -37,11 +37,9 @@ const cookieEncKey = (): IKryptos =>
     purpose: "cookie",
   });
 
-const keys: PylonKeys = {
-  cookie: {
-    signature: { predicate: { purpose: "cookie", publish: false } },
-    encryption: { predicate: { purpose: "cookie", publish: false } },
-  },
+const keys: PylonCookieSettings = {
+  signature: { predicate: { purpose: "cookie", publish: false } },
+  encryption: { predicate: { purpose: "cookie", publish: false } },
 };
 
 const buildCtx = (amphora: IAmphora, cookieHeader = "") => {
@@ -65,23 +63,27 @@ const toCookieHeader = (headers: Array<string>): string =>
 
 describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", () => {
   let amphora: IAmphora;
-  let config: PylonCookieConfig;
+  let config: PylonCookieSettings;
 
   beforeEach(() => {
     amphora = new Amphora({ domain: ISSUER, logger: createMockLogger() });
     amphora.add([cookieSignKey(), cookieEncKey()]);
-    config = {};
+    // Both cookie keys are configured, so — under configured-key-⇒-default-on —
+    // an unqualified write signs AND seals, and an unqualified read verifies AND
+    // decrypts. Tests that isolate ONE policy pass a focused selector config or an
+    // explicit per-call opt-out (`signature: false` / `encrypted: false`).
+    config = { ...keys };
   });
 
   const write = async (
     name: string,
     value: unknown,
     options: any,
-    cfg: PylonCookieConfig = config,
+    cfg: PylonCookieSettings = config,
   ): Promise<Array<string>> => {
     const ctx = buildCtx(amphora);
 
-    await createHttpCookiesMiddleware(cfg, keys)(ctx as any, async () => {
+    await createHttpCookiesMiddleware(cfg)(ctx as any, async () => {
       await (ctx as any).cookies.set(name, value, options);
     });
 
@@ -92,12 +94,12 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
     cookieHeader: string,
     name: string,
     options: any,
-    cfg: PylonCookieConfig = config,
+    cfg: PylonCookieSettings = config,
   ): Promise<T> => {
     const ctx = buildCtx(amphora, cookieHeader);
 
     let out: unknown;
-    await createHttpCookiesMiddleware(cfg, keys)(ctx as any, async () => {
+    await createHttpCookiesMiddleware(cfg)(ctx as any, async () => {
       out = await (ctx as any).cookies.get(name, options);
     });
 
@@ -112,13 +114,13 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
     name: string,
     first: any,
     second: any,
-    cfg: PylonCookieConfig = config,
+    cfg: PylonCookieSettings = config,
   ): Promise<[unknown, unknown]> => {
     const ctx = buildCtx(amphora, cookieHeader);
 
     let a: unknown;
     let b: unknown;
-    await createHttpCookiesMiddleware(cfg, keys)(ctx as any, async () => {
+    await createHttpCookiesMiddleware(cfg)(ctx as any, async () => {
       a = await (ctx as any).cookies.get(name, first);
       b = await (ctx as any).cookies.get(name, second);
     });
@@ -153,13 +155,18 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
 
     const cookieHeader = `session=${forgedUnsealed(attacker)}`;
 
+    // Encryption-only config, so the read's encrypted policy is what bites — a
+    // signing key would default-verify first and throw for the missing signature
+    // instead, masking the property under test.
+    const encOnly: PylonCookieSettings = { encryption: keys.encryption };
+
     // The exploit path: the reader must THROW, never hand back attacker plaintext.
-    await expect(read(cookieHeader, "session", { encrypted: true })).rejects.toThrow(
-      ClientError,
-    );
+    await expect(
+      read(cookieHeader, "session", { encrypted: true }, encOnly),
+    ).rejects.toThrow(ClientError);
 
     await expect(
-      read(cookieHeader, "session", { encrypted: true }),
+      read(cookieHeader, "session", { encrypted: true }, encOnly),
     ).rejects.toMatchObject({
       code: "cookie_not_encrypted",
       status: ClientError.Status.Unauthorized,
@@ -239,8 +246,8 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
     ).rejects.toThrow(ClientError);
   });
 
-  test("a deployment-wide signature:true in PylonCookieConfig drives write-side signing", async () => {
-    const deploymentConfig: PylonCookieConfig = { signature: true, encryption: false };
+  test("a configured cookies.signature drives write-side signing by default", async () => {
+    const deploymentConfig: PylonCookieSettings = { signature: keys.signature };
 
     const headers = await write(
       "session",
@@ -249,27 +256,27 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
       deploymentConfig,
     );
 
-    // Behavioural: config-level `signature` produced the signature artifacts...
+    // Behavioural: a configured signing key produced the signature artifacts by
+    // default, with no per-call `signature`...
     expect(headers.some((h) => h.startsWith("session.sig="))).toBe(true);
     expect(headers.some((h) => h.startsWith("session.kid="))).toBe(true);
 
-    // ...and the read side verifies it when the read declares `signed`.
+    // ...and the read side verifies it, again by default (no per-call `signed`).
     await expect(
       read(
         toCookieHeader(headers),
         "session",
-        { encoding: "base64url", signed: true },
+        { encoding: "base64url" },
         deploymentConfig,
       ),
     ).resolves.toEqual({ state: "cfg-signed" });
   });
 
-  test("a deployment-wide signed in PylonCookieConfig drives the READ without a per-call override", async () => {
-    // Symmetry restored: PylonCookieConfig now carries the READ-side defaults too
-    // (`signed`/`encrypted`), so an ordinary cookie signed by config policy
-    // is verified on read without repeating it per `get` — the symmetry the old
-    // `signed` boolean gave, under the collapsed union.
-    const deploymentConfig: PylonCookieConfig = { signature: true, signed: true };
+  test("a configured cookies.signature drives the READ without a per-call override", async () => {
+    // The split's symmetry: config DECLARES the signing key, and a configured key
+    // ⇒ verified on read by default — no per-call `signed` needed, the way the
+    // old `signed` boolean gave.
+    const deploymentConfig: PylonCookieSettings = { signature: keys.signature };
 
     const headers = await write(
       "session",
@@ -278,7 +285,7 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
       deploymentConfig,
     );
 
-    // The read passes NO verification of its own — it inherits config.signed.
+    // The read passes NO verification of its own — it inherits the configured key.
     await expect(
       read(
         toCookieHeader(headers),
@@ -323,10 +330,12 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
   });
 
   test("signed:true over an UNSIGNED cookie throws cookie_signature_required", async () => {
+    // Opt out of the configured sign + seal so the cookie is genuinely bare — the
+    // premise of the test is a cookie carrying no signature.
     const headers = await write(
       "session",
       { state: "unsigned" },
-      { encoding: "base64url" },
+      { encoding: "base64url", signature: false, encryption: false },
     );
 
     await expect(
@@ -343,13 +352,24 @@ describe("httpCookiesMiddleware — read-path policy enforcement (real vault)", 
   test("a bare read cannot launder a later encrypted read in the SAME request", async () => {
     const value = { redirectUri: "https://client.example/callback", state: "s-enc" };
 
-    const headers = await write("session", value, { encryption: true });
+    // No encryption key in this config, so a BARE read defaults to plaintext (the
+    // laundering premise). The write names the enc key by SELECTOR, so it seals
+    // without the config default turning bare reads into decrypts.
+    const noKeys: PylonCookieSettings = {};
+
+    const headers = await write(
+      "session",
+      value,
+      { encryption: keys.encryption },
+      noKeys,
+    );
 
     const [bare, encrypted] = await readTwice(
       toCookieHeader(headers),
       "session",
       {}, // bare: plaintext policy, populates the enc=0 slot with the ciphertext
       { encrypted: true }, // distinct slot ⇒ a real seal-check + decrypt still runs
+      noKeys,
     );
 
     // The bare read did NOT decrypt (plaintext policy on ciphertext)...

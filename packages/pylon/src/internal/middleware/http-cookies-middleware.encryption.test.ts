@@ -4,7 +4,7 @@ import { Amphora, type IAmphora } from "@lindorm/amphora";
 import { type IKryptos, KryptosKit } from "@lindorm/kryptos";
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import type { PylonKeys } from "../../types/index.js";
+import type { PylonCookieSettings } from "../../types/index.js";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
 
 /**
@@ -44,8 +44,8 @@ const publishedTokenEncKey = (): IKryptos =>
     purpose: "token",
   });
 
-const keys: PylonKeys = {
-  cookie: { encryption: { predicate: { purpose: "cookie", publish: false } } },
+const keys: PylonCookieSettings = {
+  encryption: { predicate: { purpose: "cookie", publish: false } },
 };
 
 const buildCtx = (amphora: IAmphora, cookieHeader = "") => {
@@ -81,7 +81,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
   test("seals the cookie with the INTERNAL cookie key, not the newer PUBLISHED token key", async () => {
     const ctx = buildCtx(amphora);
 
-    await createHttpCookiesMiddleware({}, keys)(ctx as any, async () => {
+    await createHttpCookiesMiddleware(keys)(ctx as any, async () => {
       await (ctx as any).cookies.set("sid", "secret_value", { encryption: true });
     });
 
@@ -124,7 +124,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
 
     let read: unknown;
 
-    await createHttpCookiesMiddleware({}, keys)(readCtx as any, async () => {
+    await createHttpCookiesMiddleware(keys)(readCtx as any, async () => {
       read = await (readCtx as any).cookies.get("sid", { encrypted: true });
     });
 
@@ -137,10 +137,9 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
     const ctx = buildCtx(amphora);
 
     await expect(
-      createHttpCookiesMiddleware(
-        {},
-        { cookie: { encryption: { predicate: { purpose: "no-such-purpose" } } } },
-      )(ctx as any, async () => {
+      createHttpCookiesMiddleware({
+        encryption: { predicate: { purpose: "no-such-purpose" } },
+      })(ctx as any, async () => {
         await (ctx as any).cookies.set("sid", "secret_value", { encryption: true });
       }),
     ).rejects.toThrow();

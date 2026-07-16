@@ -1,11 +1,11 @@
 import { ServerError } from "@lindorm/errors";
 import type { Middleware } from "@lindorm/middleware";
 import type { Dict } from "@lindorm/types";
-import type { PylonContext, PylonWebhookOptions } from "../../types/index.js";
+import type { PylonContext, PylonWebhookSettings } from "../../types/index.js";
 import { resolveIris } from "../utils/resolve-iris.js";
 
 export const createWebhookMiddleware = <C extends PylonContext>(
-  options?: PylonWebhookOptions,
+  options?: PylonWebhookSettings,
 ): Middleware<C> => {
   if (!options?.enabled) {
     return async function disabledWebhookMiddleware(ctx, next) {

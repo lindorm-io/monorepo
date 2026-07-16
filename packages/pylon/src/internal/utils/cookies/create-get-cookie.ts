@@ -4,47 +4,51 @@ import type { Dict } from "@lindorm/types";
 import { safelyParse, sanitiseToken } from "@lindorm/utils";
 import type {
   PylonCommonContext,
-  PylonCookieConfig,
-  PylonGetCookie,
-  PylonKeyRoles,
+  PylonEncKey,
+  PylonGetCookieOptions,
+  PylonSignKey,
 } from "../../../types/index.js";
+import { resolveVerificationKey } from "../keys/resolve-verification-key.js";
 import type { ParsedCookie } from "./parse-cookie-header.js";
 import { verifyCookie } from "./verify-cookie.js";
 
 export type CreateGetCookieOptions = {
   ctx: Pick<PylonCommonContext, "aegis" | "amphora">;
   /**
-   * The deployment-wide cookie config, widened by `PylonGetCookie` because the
-   * connection-session middleware reads the session cookie through THIS config
-   * rather than a per-call options object — so the session's own verification
-   * key has to be able to travel in it.
+   * The deployment cookie READ defaults — `encoding`, plus the `signed`/
+   * `encrypted` policy the connection-session middleware travels in because it
+   * reads the session cookie through THIS config rather than a per-call options
+   * object.
    */
-  config: PylonCookieConfig & PylonGetCookie;
+  config: PylonGetCookieOptions;
   parsed: Array<ParsedCookie>;
   /**
-   * The ORDINARY-cookie key roles, already resolved (`resolveCookieKeys`) — so
-   * `verification` has already inherited the cookie signing predicate where the
-   * deployment named no explicit one.
+   * The ORDINARY-cookie signing selector. A configured signature turns
+   * verification ON by default, and its predicate IS the verification policy
+   * (see `resolveVerificationKey`).
    */
-  cookieKeys?: PylonKeyRoles;
+  signature?: PylonSignKey;
+  /** The ORDINARY-cookie encryption selector — a configured key turns decrypt ON by default. */
+  encryption?: PylonEncKey;
 };
 
 export type GetCookie = <T = any>(
   name: string,
-  options?: PylonGetCookie,
+  options?: PylonGetCookieOptions,
 ) => Promise<T | null>;
 
 export const createGetCookie = ({
   ctx,
   config,
   parsed,
-  cookieKeys,
+  signature,
+  encryption,
 }: CreateGetCookieOptions): GetCookie => {
   const cache: Dict = {};
 
   return async function getCookie<T = any>(
     name: string,
-    options: PylonGetCookie = {},
+    options: PylonGetCookieOptions = {},
   ): Promise<T | null> {
     const cookie = parsed.find((c) => c.name === name);
 
@@ -54,11 +58,19 @@ export const createGetCookie = ({
 
     const hasSignature = cookie.signature !== null && cookie.kid !== null;
 
+    // CONFIGURED KEY ⇒ ON BY DEFAULT. A read repeats no option: a cookie set
+    // under a configured signing / encryption key is verified / decrypted on
+    // read because that key is named, not because `get` asked. An explicit
+    // `false` opts THIS read out; a selector names a different key; absent ⇒ the
+    // deployment default (on iff the matching cookie key is configured).
+    const signed = opts.signed ?? signature !== undefined;
+    const encrypted = opts.encrypted ?? encryption !== undefined;
+
     // REQUIRE-WHEN-ASKED — a per-call demand, so it runs on EVERY call, ahead of
     // any cache return. A read that declares a verification policy over a cookie
     // that carries no signature is a policy violation, not a silent pass: the
     // caller asked for a verified value and there is nothing to verify.
-    if (opts.signed && !hasSignature) {
+    if (signed && !hasSignature) {
       throw new ClientError("Cookie signature is required", {
         code: "cookie_signature_required",
         title: "Cookie Signature Required",
@@ -86,7 +98,7 @@ export const createGetCookie = ({
     // without re-applying the second selector's predicate. Verification does not
     // transform the value and the require-check still runs per-call, so this is
     // acceptable.
-    const cacheKey = `${name}::enc=${opts.encrypted ? 1 : 0}::codec=${opts.encoding ?? ""}`;
+    const cacheKey = `${name}::enc=${encrypted ? 1 : 0}::codec=${opts.encoding ?? ""}`;
 
     if (cacheKey in cache) return cache[cacheKey];
 
@@ -99,7 +111,7 @@ export const createGetCookie = ({
     // deployment cookie verification key.
     if (hasSignature) {
       const verifyKey =
-        opts.signed && opts.signed !== true ? opts.signed : cookieKeys?.verification;
+        signed && signed !== true ? signed : resolveVerificationKey(signature);
 
       await verifyCookie(
         ctx,
@@ -118,7 +130,7 @@ export const createGetCookie = ({
     // attacker who planted an unsealed value under a cookie the deployment reads
     // encrypted had it served back as trusted plaintext (login hijack + open
     // redirect). Policy is the authority — the value only ever conforms to it.
-    if (opts.encrypted) {
+    if (encrypted) {
       if (!AesKit.isAesTokenised(value)) {
         throw new ClientError("Encrypted cookie is not sealed", {
           code: "cookie_not_encrypted",

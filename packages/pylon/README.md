@@ -897,13 +897,13 @@ const app = new Pylon({
     enabled: true,
     name: "sid",
     domain: ".example.com",
-    signed: true,
-    encrypted: true,
     httpOnly: true,
     sameSite: "lax",
     secure: true,
     expiry: "7d",
     priority: "high",
+    // Optional flat key selectors — each role falls back to its `cookies` counterpart.
+    encryption: { predicate: { purpose: "session", publish: false } },
   },
   // …
 });
@@ -914,7 +914,7 @@ await ctx.session.del();
 await ctx.session.logout(subject);
 ```
 
-When `session.enabled` is true, Pylon registers the `Session` entity on the configured ephemeral source (`session.kv ?? kv`).
+The session cookie is **signed / sealed when a key is configured** for it — `session.<role> ?? cookies.<role>` (see [Keys](#keys)). There is no separate `signed` / `encrypted` toggle: naming the key turns the role on. When `session.enabled` is true, Pylon registers the `Session` entity on the configured ephemeral source (`session.kv ?? kv`).
 
 ## Webhooks
 
@@ -924,7 +924,7 @@ Pylon ships a `WebhookSubscription` entity, an Iris-backed dispatcher, and a `ct
 const app = new Pylon({
   webhook: {
     enabled: true,
-    encryptionKey: { predicate: { purpose: "webhook", publish: false } },
+    encryption: { predicate: { purpose: "webhook", publish: false } },
     maxErrors: 20,
   },
   // …
@@ -944,9 +944,9 @@ Each subscription tracks `errorCount`, `lastErrorAt`, and `suspendedAt`. After `
 
 ### The stored `clientSecret`
 
-A subscription's `clientSecret` may be stored as AES ciphertext (`aes:…`). Pylon decrypts it on dispatch, and — like every other read path in the toolkit — **the ciphertext names the key that opens it**: the `keyId` in the token, never `webhook.encryptionKey`. A secret sealed with the previous webhook key keeps opening after the current one is minted.
+A subscription's `clientSecret` may be stored as AES ciphertext (`aes:…`). Pylon decrypts it on dispatch, and — like every other read path in the toolkit — **the ciphertext names the key that opens it**: the `keyId` in the token, never `webhook.encryption`. A secret sealed with the previous webhook key keeps opening after the current one is minted.
 
-`encryptionKey` is the same `{ kryptos?, predicate? }` descriptor as the [`keys`](#keys) roles, read as a **decrypt** descriptor:
+`webhook.encryption` is the same `{ kryptos?, predicate? }` descriptor as the [`keys`](#keys) roles, read as a **decrypt** descriptor:
 
 - `predicate` — a **check** on the key the ciphertext names, not a query. It matches a key _class_, so a deployment can refuse a ciphertext naming anything outside it.
 - `kryptos` — a key supplied outright, for a secret sealed with a key the vault never held. It answers for its **own** kid only; one naming a different key than the ciphertext throws, rather than decrypting with the wrong key material.
@@ -1052,64 +1052,66 @@ createKryptosRotationWorker({
 
 ## Keys
 
-Pylon resolves a vault key for signing a cookie, verifying one, and encrypting a cookie value or a stored session's tokens. It holds **no opinion about which key that should be**: it does not know your `purpose` taxonomy and will not invent one. **The deployment says which key does what**, in `keys`:
+Pylon resolves a vault key for signing a cookie, verifying one, and encrypting a cookie value or a stored session's tokens. It holds **no opinion about which key that should be**: it does not know your `purpose` taxonomy and will not invent one. **The deployment says which key does what** — each feature declares its own **flat** key selectors, and **a configured key turns that role on by default**:
 
 ```typescript
 const app = new Pylon({
-  keys: {
-    cookie: {
-      signature: { predicate: { purpose: "cookie", publish: false } },
-      encryption: { predicate: { purpose: "cookie", publish: false } },
-    },
-    // Optional — every role falls back to its `cookie` counterpart.
-    session: {
-      signature: { predicate: { purpose: "session", publish: false } },
-      encryption: { predicate: { purpose: "session", publish: false } },
-    },
+  cookies: {
+    signature: { predicate: { purpose: "cookie", publish: false } },
+    encryption: { predicate: { purpose: "cookie", publish: false } },
+  },
+  // Optional — every role falls back to its `cookies` counterpart.
+  session: {
+    enabled: true,
+    signature: { predicate: { purpose: "session", publish: false } },
+    encryption: { predicate: { purpose: "session", publish: false } },
   },
   // …
 });
 ```
 
+**Settings declare the keys; the runtime toggles them.** A configured `cookies.signature` means a plain `ctx.cookies.set(name, value)` is signed and the matching `get` verified — no per-call option. A per-call `ctx.cookies.set(name, value, { signature: false })` opts THAT cookie out; a selector (`{ signature: mySelector }`) names its own key. The declaration is a pure selector; only the runtime `set` / `get` fields are `boolean | selector`.
+
 This is the same `{ kryptos?, predicate? }` descriptor used across the toolkit (`@lindorm/aegis`, `@lindorm/proteus`, `@lindorm/iris`): `kryptos` is a key supplied outright, `predicate` is which of the vault's keys.
 
-| Role           | Kind     | Floor Pylon owns                             | Required                       |
-| -------------- | -------- | -------------------------------------------- | ------------------------------ |
-| `signature`    | selector | `use: "sig"`, private half, `isActive: true` | **yes**, to sign a cookie      |
-| `verification` | check    | `use: "sig"`, `isPending: false`             | no — defaults to `signature`   |
-| `encryption`   | selector | `use: "enc"` (owned by Aegis)                | no — Aegis's deployment policy |
+| Role         | Kind     | Floor Pylon owns                             | On when                            |
+| ------------ | -------- | -------------------------------------------- | ---------------------------------- |
+| `signature`  | selector | `use: "sig"`, private half, `isActive: true` | named — else cookies are unsigned  |
+| `encryption` | selector | `use: "enc"`, private half, not pending      | named — else cookies are plaintext |
+
+Verification has **no selector**: it is derived from the resolved `signature`'s predicate (see below), checked with the floor `use: "sig"`, `isPending: false`.
 
 ### A session IS a cookie
 
-There is no separate session key taxonomy, because there is no separate artifact. With a session store the cookie carries the session id and the tokens are sealed **at rest**; without one the **whole session object — tokens and all — travels in the cookie**. Either way it is a cookie, so `session` is a per-role override of `cookie`:
+There is no separate session key taxonomy, because there is no separate artifact. With a session store the cookie carries the session id and the tokens are sealed **at rest**; without one the **whole session object — tokens and all — travels in the cookie**. Either way it is a cookie, so each `session` selector is a per-role override of its `cookies` counterpart:
 
 ```
-session.<role> ?? cookie.<role>
+session.<role> ?? cookies.<role>
 ```
 
-Name only `cookie` and one key set does everything. Name `session` too and the session cookie is signed / sealed with its **own** key — a smaller blast radius, or an asymmetric signature for session cookies specifically — while every ordinary cookie keeps using the `cookie` keys. Any cookie can do the same, per call — `signature` and `encryption` each take `true` (the deployment cookie key) or a selector (its own key): `ctx.cookies.set(name, value, { signature, encryption: true })`.
+Name only `cookies` and one key set does everything. Name `session` too and the session cookie is signed / sealed with its **own** key — a smaller blast radius, or an asymmetric signature for session cookies specifically — while every ordinary cookie keeps using the `cookies` keys. Any cookie can do the same, per call — `signature` and `encryption` each take `true` (the deployment cookie key) or a selector (its own key): `ctx.cookies.set(name, value, { signature, encryption: true })`.
 
-### `verification` defaults to `signature`
+### Verification is derived from `signature`
 
-Verification asks: _is the key that signed this cookie one of the keys I would have signed it with?_ That **is** the signing policy — so within a scope, `verification` defaults to that scope's `signature` predicate:
+Verification asks: _is the key that signed this cookie one of the keys I would have signed it with?_ That **is** the signing policy — so the verification predicate is the resolved `signature`'s predicate:
 
 ```
-verification  ??  { predicate: signature.predicate }  ??  <the same rule, on cookie>
+{ predicate: (session.signature ?? cookies.signature).predicate }
 ```
 
-Naming `session.signature` is therefore **enough**; there is no second option you can forget, and no way to configure a session cookie that signs but cannot be read. Name `verification` explicitly only to make the read policy genuinely **broader** than the write policy — see rollover below. When a `signature` is an injected `kryptos` there is no predicate to inherit and the floor (`use: "sig"`) applies alone: the cookie's `.kid` already names the key.
+Naming `session.signature` is therefore **enough**; there is no separate verification field to declare or forget, and no way to configure a session cookie that signs but cannot be read. When a `signature` is an injected `kryptos` there is no predicate to inherit and the floor (`use: "sig"`) applies alone: the cookie's `.kid` already names the key. For a genuinely broader read policy on one read, pass a `PylonVerifyKey` to the per-call `ctx.cookies.get(name, { signed })`.
 
 ### Rollover
 
 - **Key rotation never invalidates a live cookie.** A signature is verified against the key the cookie's own `.kid` names, and the predicate matches a key _class_, not a kid — so when the rotation worker mints next year's cookie key, cookies signed by the previous one keep verifying. That is why the verification floor is `isPending: false` and **not** `isActive`: an **expired** key must keep verifying, or a rotation would log out every live session. A key whose `notBefore` has not passed cannot have signed anything, so it is refused — the `.kid` is the client's claim, and it does not get to name a key that has never been usable. Ciphertext likewise names its own key, so it keeps decrypting.
-- **Changing the signing _policy_ is different.** Introducing `session.signature: { purpose: "session" }` narrows the inherited read policy to session keys, which excludes the cookie key your live session cookies were signed with. To carry them across, name a `session.verification` broad enough to admit both — `{ predicate: { publish: false } }` covers every internal key while still excluding the published token key. This is what the override is for.
+- **Changing the signing _policy_ is different.** Introducing `session.signature: { purpose: "session" }` narrows the derived read policy to session keys, which excludes the cookie key your live session cookies were signed with — those cookies stop verifying on the next read. Plan the cutover as a rotation: keep signing with the cookie key until live sessions have expired, then introduce the session signing key.
 
 ### The rest
 
 - ⚠ **`publish: false` is load-bearing.** Amphora's default query is the **published** set, so an internal cookie/session key is unreachable without it. Omit it and you select the JWKS token key.
-- **`cookie.signature` is required to sign a cookie.** There is no fallback: the floor alone would resolve to whichever published key is newest — in practice the token key, since token keys rotate twice as often as cookie keys. A purposeless fallback is worse than a loud failure, so a signed cookie with no `cookie.signature` throws. Since `session` chains to `cookie`, a session cookie is signable iff a cookie signing key is named.
+- **A cookie is signed only when a signing key is named.** There is no fallback to the floor alone — it would resolve to whichever published key is newest, in practice the token key (token keys rotate twice as often as cookie keys). So no `cookies.signature` ⇒ unsigned cookies; a per-call `{ signature: true }` with none configured throws rather than guessing. Since `session` chains to `cookies`, a session cookie is signable iff a cookie signing key is named.
 - **The floor is Pylon's, the selector is yours.** `use`, `hasPrivateKey` and the key's lifetime state are the minimum that makes an operation possible; they are absent from the predicate type by construction, so you cannot widen them. `purpose`, `publish` and `internal` are your policy.
-- **Signing demands an active key.** `isActive: true` is on the signing floor, so an expired or not-yet-valid key never signs a cookie — including one handed to `keys.cookie.signature` as an injected `kryptos`, which never touches the vault and is therefore time-checked by nothing else.
+- **Signing demands an active key.** `isActive: true` is on the signing floor, so an expired or not-yet-valid key never signs a cookie — including one handed to `cookies.signature` as an injected `kryptos`, which never touches the vault and is therefore time-checked by nothing else.
 - **The read side of encryption takes no selector.** Ciphertext names its own key, so `aes.decrypt` resolves it by kid.
 - A role naming a key the vault does not hold **fails loudly**, never silently.
 

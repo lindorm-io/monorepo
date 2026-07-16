@@ -10,7 +10,7 @@ import {
   createMockRepository,
 } from "@lindorm/proteus/mocks/vitest";
 import type { IPylonSession } from "../../interfaces/index.js";
-import type { PylonKeys } from "../../types/index.js";
+import type { PylonCookieSettings } from "../../types/index.js";
 import { createSessionStore } from "./create-session-store.js";
 import { beforeEach, describe, expect, test, type Mock } from "vitest";
 
@@ -109,8 +109,8 @@ describe("createSessionStore", () => {
     const NEWER = new Date("2024-06-01T00:00:00.000Z");
     const ISSUER = "http://test.lindorm.io";
 
-    const keys: PylonKeys = {
-      session: { encryption: { predicate: { purpose: "session", publish: false } } },
+    const sessionKeys: PylonCookieSettings = {
+      encryption: { predicate: { purpose: "session", publish: false } },
     };
 
     let amphora: IAmphora;
@@ -147,7 +147,7 @@ describe("createSessionStore", () => {
     });
 
     test("seals the session's tokens with the INTERNAL session key, not the newer PUBLISHED token key", async () => {
-      const store = createSessionStore({ enabled: true }, keys);
+      const store = createSessionStore({ enabled: true, ...sessionKeys });
 
       await store!.set(realCtx, session);
 
@@ -188,7 +188,7 @@ describe("createSessionStore", () => {
 
       (mockRepo.findOne as Mock).mockResolvedValue({ ...session, accessToken: stale });
 
-      const store = createSessionStore({ enabled: true }, keys);
+      const store = createSessionStore({ enabled: true, ...sessionKeys });
       const read = await store!.get(realCtx, session.id);
 
       expect(read!.accessToken).toBe("access-token");
@@ -197,10 +197,10 @@ describe("createSessionStore", () => {
     // Fail LOUDLY, not silently — a named key the vault does not hold must never
     // degrade into persisting a bearer token in the clear.
     test("throws when the named session enc key is not in the vault", async () => {
-      const store = createSessionStore(
-        { enabled: true },
-        { session: { encryption: { predicate: { purpose: "no-such-purpose" } } } },
-      );
+      const store = createSessionStore({
+        enabled: true,
+        encryption: { predicate: { purpose: "no-such-purpose" } },
+      });
 
       await expect(store!.set(realCtx, session)).rejects.toThrow();
       expect(mockRepo.upsert).not.toHaveBeenCalled();

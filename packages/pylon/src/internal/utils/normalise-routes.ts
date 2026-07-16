@@ -1,12 +1,12 @@
 import { isArray, isObject, isString } from "@lindorm/is";
 import type {
   PylonHttpContext,
-  PylonHttpOptions,
+  PylonHttpSettings,
   PylonHttpRouters,
 } from "../../types/index.js";
 
 export const normaliseRoutes = <C extends PylonHttpContext>(
-  input: PylonHttpOptions<C>["routes"],
+  input: PylonHttpSettings<C>["routes"],
 ): Array<string | PylonHttpRouters<C>> => {
   if (input === undefined) return [];
   if (isArray<string | PylonHttpRouters<C>>(input)) return input;

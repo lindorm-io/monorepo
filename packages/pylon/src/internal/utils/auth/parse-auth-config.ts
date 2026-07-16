@@ -2,7 +2,7 @@ import type { ReadableTime } from "@lindorm/date";
 import { merge } from "@lindorm/utils";
 import type {
   PylonAuthConfig,
-  PylonAuthOptions,
+  PylonAuthSettings,
   PylonAuthRefreshConfig,
   PylonAuthRouterConfig,
 } from "../../../types/index.js";
@@ -43,7 +43,7 @@ const ROUTER_DEFAULTS: PylonAuthRouterConfig = {
   },
 };
 
-export const parseAuthConfig = (options: PylonAuthOptions): PylonAuthConfig => {
+export const parseAuthConfig = (options: PylonAuthSettings): PylonAuthConfig => {
   const router = options.router
     ? merge<PylonAuthRouterConfig>(ROUTER_DEFAULTS, options.router)
     : null;

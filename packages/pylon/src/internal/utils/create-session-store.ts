@@ -4,8 +4,8 @@ import type { IPylonSession } from "../../interfaces/index.js";
 import type { IPylonSessionStore } from "../../interfaces/PylonSessionStore.js";
 import type {
   PylonCommonContext,
-  PylonKeys,
-  PylonSessionOptions,
+  PylonCookieSettings,
+  PylonSessionSettings,
 } from "../../types/index.js";
 import { buildHookMeta } from "./build-hook-meta.js";
 import { encryptCookie } from "./cookies/encrypt-cookie.js";
@@ -36,15 +36,16 @@ const getSessionEntity = async (): Promise<
 };
 
 export const createSessionStore = (
-  options?: PylonSessionOptions,
-  keys?: PylonKeys,
+  options?: PylonSessionSettings,
+  cookies?: PylonCookieSettings,
 ): IPylonSessionStore | undefined => {
   if (!options?.enabled) return;
 
-  // Same key that seals the session COOKIE: `session.encryption ?? cookie.encryption`.
-  // A stored session and a cookie-only session are the same secret in two
-  // places — the store just holds it at rest instead of on the wire.
-  const { encryption: encryptionKey } = resolveSessionKeys(keys);
+  // Same key that seals the session COOKIE:
+  // `session.encryption ?? cookies.encryption`. A stored session and a
+  // cookie-only session are the same secret in two places — the store just holds
+  // it at rest instead of on the wire.
+  const { encryption: encryptionKey } = resolveSessionKeys(options, cookies);
 
   return {
     set: async (ctx, session): Promise<string> => {
@@ -52,8 +53,8 @@ export const createSessionStore = (
       if (!source) return session.id;
 
       // Encryption at rest follows the same rule as proteus `@Encrypted`: naming
-      // a session enc key (`keys.session.encryption ?? keys.cookie.encryption`)
-      // is what turns it on, and a NAMED key that cannot be resolved throws
+      // a session enc key (`session.encryption ?? cookies.encryption`) is what
+      // turns it on, and a NAMED key that cannot be resolved throws
       // rather than persisting a bearer token in the clear. There is deliberately
       // no `canEncrypt()` fallback — it would query the PUBLISHED set and seal the
       // session with the JWKS token key. Unnamed ⇒ stored as-is, never guessed.

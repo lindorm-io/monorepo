@@ -28,7 +28,7 @@ export const useAuditLog = (options: UseAuditLogOptions = {}): PylonMiddleware =
     const config = (ctx as any)[AUDIT_SOURCE] as AuditConfig | undefined;
     if (!config) {
       throw new ServerError(
-        "Audit logging is not configured. Enable it in PylonOptions with audit: { enabled: true } and provide a top-level actor resolver.",
+        "Audit logging is not configured. Enable it in PylonSettings with audit: { enabled: true } and provide a top-level actor resolver.",
       );
     }
 

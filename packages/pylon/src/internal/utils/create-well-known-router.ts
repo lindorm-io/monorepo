@@ -3,12 +3,12 @@ import { isString, isUrlLike } from "@lindorm/is";
 import type { OpenIdConfiguration } from "@lindorm/types";
 import { removeUndefined, sortKeys } from "@lindorm/utils";
 import { PylonRouter } from "../../classes/index.js";
-import type { PylonHttpContext, PylonHttpOptions } from "../../types/index.js";
+import type { PylonHttpContext, PylonHttpSettings } from "../../types/index.js";
 import { assertSecurityTxtOptions } from "./assert-security-txt-options.js";
 import { renderSecurityTxt } from "./render-security-txt.js";
 
 export const createWellKnownRouter = <C extends PylonHttpContext>(
-  options: PylonHttpOptions<C>,
+  options: PylonHttpSettings<C>,
 ): PylonRouter<C> => {
   const router = new PylonRouter<C>();
 

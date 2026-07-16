@@ -2,7 +2,7 @@ import { createMockAegis } from "@lindorm/aegis/mocks/vitest";
 import { createMockAmphora } from "@lindorm/amphora/mocks/vitest";
 import { B64 } from "@lindorm/b64";
 import { ClientError } from "@lindorm/errors";
-import type { PylonCookieConfig } from "../../../types/index.js";
+import type { PylonCookieSettings } from "../../../types/index.js";
 import { createGetCookie } from "./create-get-cookie.js";
 import { verifyCookie as _verifyCookie } from "./verify-cookie.js";
 import { afterEach, beforeEach, describe, expect, test, vi, type Mock } from "vitest";
@@ -13,7 +13,7 @@ const verifyCookie = _verifyCookie as Mock;
 
 describe("createGetCookie", async () => {
   let ctx: any;
-  let config: PylonCookieConfig;
+  let config: PylonCookieSettings;
 
   beforeEach(() => {
     ctx = { aegis: createMockAegis(), amphora: createMockAmphora() };

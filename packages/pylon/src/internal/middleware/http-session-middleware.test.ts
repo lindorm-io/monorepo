@@ -5,7 +5,7 @@ import {
 } from "@lindorm/proteus/mocks/vitest";
 import type { Next } from "@lindorm/middleware";
 import MockDate from "mockdate";
-import type { PylonSessionOptions } from "../../types/index.js";
+import type { PylonSessionSettings } from "../../types/index.js";
 import { createHttpSessionMiddleware } from "./http-session-middleware.js";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 
@@ -15,7 +15,7 @@ MockDate.set(MockedDate);
 describe("httpSessionMiddleware", () => {
   let ctx: any;
   let next: Next;
-  let options: PylonSessionOptions;
+  let options: PylonSessionSettings;
 
   beforeEach(() => {
     const mockRepo = createMockRepository();
@@ -56,11 +56,9 @@ describe("httpSessionMiddleware", () => {
 
     options = {
       enabled: true,
-      encrypted: false,
       expiry: "90 minutes",
       httpOnly: true,
       sameSite: "strict",
-      signed: true,
       name: "test_pylon_session",
     };
 

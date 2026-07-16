@@ -9,7 +9,7 @@ import type { ILindormWorker } from "@lindorm/worker";
 import type { Redis } from "ioredis";
 import type { ServerOptions as SocketOptions } from "socket.io";
 import type { PylonListener, PylonRouter } from "../classes/index.js";
-import type { PylonAuthOptions } from "./auth.js";
+import type { PylonAuthSettings } from "./auth.js";
 import type { PylonCommonContext } from "./context-common.js";
 import type {
   PylonConnectionMiddleware,
@@ -18,22 +18,21 @@ import type {
 import type { PylonHttpContext, PylonHttpMiddleware } from "./context-http.js";
 import type { PylonSocketContext, PylonSocketMiddleware } from "./context-socket.js";
 import type { PylonEventMap } from "./pylon-event-map.js";
-import type { PylonCookieConfig } from "./cookies.js";
+import type { PylonCookieSettings } from "./cookies.js";
 import type { CorsOptions } from "./cors.js";
-import type { PylonKeys } from "./keys.js";
 import type { OpenIdConfigurationOptions } from "./open-id-configuration.js";
 import type { ParseBodyOptions } from "./parse-body.js";
 import type {
-  PylonAuditOptions,
-  PylonCacheOptions,
+  PylonAuditSettings,
+  PylonCacheSettings,
   PylonHttpCallback,
-  PylonKryptosOptions,
-  PylonQueueOptions,
-  PylonRateLimitOptions,
-  PylonRoomsOptions,
-  PylonSessionOptions,
-  PylonWebhookOptions,
+  PylonKryptosSettings,
+  PylonQueueSettings,
+  PylonRateLimitSettings,
+  PylonRoomsSettings,
+  PylonWebhookSettings,
 } from "./pylon-callback-options.js";
+import type { PylonSessionSettings } from "./session.js";
 
 import type { PylonSecurityTxt } from "./security-txt.js";
 import type { PylonSetup, PylonTeardown } from "./setup.js";
@@ -44,22 +43,15 @@ export type PylonHttpRouters<C extends PylonHttpContext> = {
   router: PylonRouter<C>;
 };
 
-type CommonOptions = {
+type PylonCommonSettings = {
   actor?: (ctx: PylonCommonContext) => string;
   amphora: IAmphora;
-  audit?: PylonAuditOptions;
-  cache?: PylonCacheOptions;
+  audit?: PylonAuditSettings;
+  cache?: PylonCacheSettings;
   domain?: string;
   environment?: Environment;
   hermes?: IHermes;
   bus?: IIrisSource;
-  /**
-   * Which vault key does what. Pylon resolves a key for cookie signing, cookie
-   * verification and cookie / session encryption — and holds no opinion about
-   * which key that should be. Name them here; pylon owns only the FLOOR of each
-   * operation (`use`, a private half), never the selector.
-   */
-  keys?: PylonKeys;
   /**
    * Ephemeral / in-memory storage source (redis in production, a proteus
    * memory-driver source in dev/test). Backs ephemeral features (rate limit,
@@ -69,14 +61,14 @@ type CommonOptions = {
   logger: ILogger;
   name?: string;
   db?: IProteusSource;
-  queue?: PylonQueueOptions;
-  rateLimit?: PylonRateLimitOptions;
-  rooms?: PylonRoomsOptions;
+  queue?: PylonQueueSettings;
+  rateLimit?: PylonRateLimitSettings;
+  rooms?: PylonRoomsSettings;
   version?: string;
-  webhook?: PylonWebhookOptions;
+  webhook?: PylonWebhookSettings;
 };
 
-export type PylonHttpCallbacksOptions<C extends PylonHttpContext = PylonHttpContext> = {
+export type PylonHttpCallbacksSettings<C extends PylonHttpContext = PylonHttpContext> = {
   /**
    * Liveness (`/health`). Default: check I/O once then latch success. Provide a
    * custom callback to add a lightweight liveness check, or `null` for a pure 204.
@@ -90,12 +82,12 @@ export type PylonHttpCallbacksOptions<C extends PylonHttpContext = PylonHttpCont
   rightToBeForgotten?: PylonHttpCallback<C>;
 };
 
-export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> =
-  CommonOptions & {
-    auth?: PylonAuthOptions;
-    callbacks?: PylonHttpCallbacksOptions<C>;
+export type PylonHttpSettings<C extends PylonHttpContext = PylonHttpContext> =
+  PylonCommonSettings & {
+    auth?: PylonAuthSettings;
+    callbacks?: PylonHttpCallbacksSettings<C>;
     changePasswordUri?: string;
-    cookies?: PylonCookieConfig;
+    cookies?: PylonCookieSettings;
     cors?: CorsOptions;
     httpMiddleware?: Array<PylonHttpMiddleware<C>>;
     routes?: string | PylonHttpRouters<C> | Array<string | PylonHttpRouters<C>>;
@@ -105,10 +97,10 @@ export type PylonHttpOptions<C extends PylonHttpContext = PylonHttpContext> =
     parseBody?: ParseBodyOptions;
     proxy?: boolean;
     securityTxt?: PylonSecurityTxt;
-    session?: PylonSessionOptions;
+    session?: PylonSessionSettings;
   };
 
-export type PylonSocketOptions<
+export type PylonSocketSettings<
   T extends PylonSocketContext = PylonSocketContext,
   H extends PylonSocketHandshakeContext = PylonSocketHandshakeContext,
 > = {
@@ -120,13 +112,13 @@ export type PylonSocketOptions<
   redis?: Redis;
 };
 
-export type PylonOptions<
+export type PylonSettings<
   _E extends PylonEventMap = PylonEventMap,
   C extends PylonHttpContext = PylonHttpContext,
   S extends PylonSocketContext = PylonSocketContext,
-> = PylonHttpOptions<C> & {
-  socket?: PylonSocketOptions<S>;
-  kryptos?: PylonKryptosOptions;
+> = PylonHttpSettings<C> & {
+  socket?: PylonSocketSettings<S>;
+  kryptos?: PylonKryptosSettings;
   port?: number;
   setup?: PylonSetup;
   teardown?: PylonTeardown;

@@ -1,10 +1,10 @@
 import { PylonError } from "../../../errors/PylonError.js";
-import type { PylonSessionOptions } from "../../../types/index.js";
+import type { PylonSessionSettings } from "../../../types/index.js";
 
 const ALLOWED: ReadonlyArray<string> = ["lax", "strict"];
 
 export const assertSameSiteForSockets = (
-  sessionConfig: PylonSessionOptions | undefined,
+  sessionConfig: PylonSessionSettings | undefined,
 ): void => {
   if (!sessionConfig) return;
 

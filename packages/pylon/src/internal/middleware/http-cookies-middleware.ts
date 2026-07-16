@@ -4,35 +4,33 @@ import { isObject, isString } from "@lindorm/is";
 import { sanitiseToken } from "@lindorm/utils";
 import { PylonCookie } from "../classes/PylonCookie.js";
 import type {
-  PylonCookieConfig,
+  PylonCookieSettings,
   PylonHttpMiddleware,
-  PylonKeys,
-  PylonSetCookie,
+  PylonSetCookieOptions,
 } from "../../types/index.js";
 import { chunkCookieValue } from "../utils/cookies/chunk-cookie-value.js";
 import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
 import { encryptCookie } from "../utils/cookies/encrypt-cookie.js";
 import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { signCookie } from "../utils/cookies/sign-cookie.js";
-import { resolveCookieKeys } from "../utils/keys/resolve-cookie-keys.js";
 
 const DEFAULT_CHUNK_SIZE = 4000;
 
 export const createHttpCookiesMiddleware = (
-  config: PylonCookieConfig = {},
-  keys?: PylonKeys,
+  config: PylonCookieSettings = {},
 ): PylonHttpMiddleware => {
   config.encoding = config.encoding || "base64url";
-
-  // The ordinary-cookie key roles, resolved once. `verification` defaults to the
-  // cookie SIGNING predicate — a read policy that rejected our own writes would
-  // be no policy at all.
-  const cookieKeys = resolveCookieKeys(keys);
 
   return async function httpCookiesMiddleware(ctx, next) {
     const parsed = parseCookieHeader(ctx.get("cookie"));
 
-    const getCookie = createGetCookie({ ctx, config, parsed, cookieKeys });
+    const getCookie = createGetCookie({
+      ctx,
+      config,
+      parsed,
+      signature: config.signature,
+      encryption: config.encryption,
+    });
 
     let cookies: Array<PylonCookie> = [];
 
@@ -56,9 +54,19 @@ export const createHttpCookiesMiddleware = (
       set: async <T = any>(
         name: string,
         value: T,
-        options: PylonSetCookie = {},
+        options: PylonSetCookieOptions = {},
       ): Promise<void> => {
         const opts = { ...config, ...options };
+
+        // CONFIGURED KEY ⇒ ON BY DEFAULT. A plain `set(name, value)` signs when
+        // a cookie signing key is configured and seals when an encryption key is;
+        // a per-call `signature`/`encryption` overrides that — `false` opts THIS
+        // cookie out even when a key is configured, a selector names its own key.
+        // Resolution below is unchanged: `true` ⇒ the deployment cookie key, a
+        // selector ⇒ that key, and the throwing resolver is the fail-closed
+        // contract when a role is on with no resolvable key.
+        const signatureOpt = options.signature ?? config.signature !== undefined;
+        const encryptionOpt = options.encryption ?? config.encryption !== undefined;
 
         if (!value) {
           throw new ServerError("Cookie value is required", {
@@ -71,7 +79,7 @@ export const createHttpCookiesMiddleware = (
           });
         }
 
-        if (!opts.encoding && !opts.encryption && isObject(value)) {
+        if (!opts.encoding && !encryptionOpt && isObject(value)) {
           throw new ServerError("Cookie encoding required for object value", {
             code: "cookie_encoding_required",
             title: "Cookie Encoding Required",
@@ -84,16 +92,15 @@ export const createHttpCookiesMiddleware = (
 
         let final: any;
 
-        if (opts.encryption) {
-          // `encryption` collapses to `boolean | selector`: `true` ⇒ the
-          // deployment cookie key, a selector ⇒ THIS cookie's own key (the
-          // session middleware hands us the resolved session key). `encryptCookie`
+        if (encryptionOpt) {
+          // `encryptionOpt` is `boolean | selector`: `true` ⇒ the deployment
+          // cookie key, a selector ⇒ THIS cookie's own key (the session
+          // middleware hands us the resolved session key). `encryptCookie`
           // resolves it to a concrete key or throws — a cookie set `encryption: true`
           // with no cookie key configured is a loud failure, never a silent seal
           // with the published JWKS token key. Do NOT add an undefined-guard here:
           // the throwing resolver IS the fail-closed contract.
-          const encKey =
-            opts.encryption === true ? cookieKeys.encryption : opts.encryption;
+          const encKey = encryptionOpt === true ? config.encryption : encryptionOpt;
 
           final = await encryptCookie(ctx, value as AesContent, encKey);
         } else {
@@ -128,11 +135,12 @@ export const createHttpCookiesMiddleware = (
           }
         }
 
-        if (opts.signature) {
-          // Same collapsed shape as `encryption`: `true` ⇒ the deployment cookie
-          // signing key, a selector ⇒ this cookie's own. `signCookie` throws when
-          // the resolved key is unconfigured — fail-closed, never an unsigned write.
-          const signKey = opts.signature === true ? cookieKeys.signature : opts.signature;
+        if (signatureOpt) {
+          // Same collapsed shape as `encryptionOpt`: `true` ⇒ the deployment
+          // cookie signing key, a selector ⇒ this cookie's own. `signCookie`
+          // throws when the resolved key is unconfigured — fail-closed, never an
+          // unsigned write.
+          const signKey = signatureOpt === true ? config.signature : signatureOpt;
 
           const { signature, kid } = await signCookie(ctx, final, signKey);
 

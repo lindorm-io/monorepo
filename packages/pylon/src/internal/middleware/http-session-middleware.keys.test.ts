@@ -9,9 +9,17 @@ import {
 } from "@lindorm/proteus/mocks/vitest";
 import { beforeEach, describe, expect, test, vi, type Mock } from "vitest";
 import type { IPylonSession } from "../../interfaces/index.js";
-import type { PylonKeys, PylonSessionOptions } from "../../types/index.js";
+import type { PylonCookieSettings, PylonSessionSettings } from "../../types/index.js";
 import { createHttpCookiesMiddleware } from "./http-cookies-middleware.js";
 import { createHttpSessionMiddleware } from "./http-session-middleware.js";
+
+/**
+ * A deployment's two flat key scopes: `cookies` and `session`. Under the
+ * settings-declare-keys / configured-key-⇒-default-on model, naming a role's key
+ * is what turns it on — there are no `encrypted`/`signed` session booleans, and
+ * verification is DERIVED from the signature predicate.
+ */
+type Keys = { cookie?: PylonCookieSettings; session?: PylonCookieSettings };
 
 /**
  * The session key CHAIN — `session.<role> ?? cookie.<role>` — end to end, through
@@ -31,15 +39,13 @@ const ISSUER = "http://test.lindorm.io";
 const OLDER = new Date("2024-01-01T00:00:00.000Z");
 const NEWER = new Date("2024-06-01T00:00:00.000Z");
 
-const COOKIE_KEYS: PylonKeys["cookie"] = {
+const COOKIE_KEYS: PylonCookieSettings = {
   signature: { predicate: { purpose: "cookie", publish: false } },
-  verification: { predicate: { purpose: "cookie", publish: false } },
   encryption: { predicate: { purpose: "cookie", publish: false } },
 };
 
-const SESSION_KEYS: PylonKeys["session"] = {
+const SESSION_KEYS: PylonCookieSettings = {
   signature: { predicate: { purpose: "session", publish: false } },
-  verification: { predicate: { purpose: "session", publish: false } },
   encryption: { predicate: { purpose: "session", publish: false } },
 };
 
@@ -110,12 +116,15 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
   /** Cookies middleware + session middleware, exactly as `PylonHttp` composes them. */
   const run = async (
     ctx: Ctx,
-    keys: PylonKeys,
-    options: PylonSessionOptions,
+    keys: Keys,
+    options: PylonSessionSettings,
     handler: () => Promise<void>,
   ): Promise<void> => {
-    const cookies = createHttpCookiesMiddleware({}, keys);
-    const middleware = createHttpSessionMiddleware(options, keys);
+    const cookies = createHttpCookiesMiddleware(keys.cookie);
+    const middleware = createHttpSessionMiddleware(
+      { ...options, ...keys.session },
+      keys.cookie,
+    );
 
     await cookies(ctx as any, async () => {
       await middleware(ctx as any, handler);
@@ -204,14 +213,9 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     test("a session with NO session keys signs and seals with the COOKIE keys", async () => {
       const ctx = buildCtx();
 
-      await run(
-        ctx,
-        { cookie: COOKIE_KEYS },
-        { enabled: false, encrypted: true, signed: true },
-        async () => {
-          await ctx.session.set(session());
-        },
-      );
+      await run(ctx, { cookie: COOKIE_KEYS }, { enabled: false }, async () => {
+        await ctx.session.set(session());
+      });
 
       const cookies = setCookies(ctx);
 
@@ -231,7 +235,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: SESSION_KEYS },
-        { enabled: false, encrypted: true, signed: true },
+        { enabled: false },
         async () => {
           await ctx.session.set(session());
           await ctx.cookies.set(
@@ -262,7 +266,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: { encryption: SESSION_KEYS!.encryption } },
-        { enabled: false, encrypted: true, signed: true },
+        { enabled: false },
         async () => {
           await ctx.session.set(session());
         },
@@ -285,14 +289,9 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     test("rotating the signing key does not invalidate live cookies", async () => {
       const before = buildCtx();
 
-      await run(
-        before,
-        { cookie: COOKIE_KEYS },
-        { enabled: false, encrypted: true, signed: true },
-        async () => {
-          await before.session.set(session());
-        },
-      );
+      await run(before, { cookie: COOKIE_KEYS }, { enabled: false }, async () => {
+        await before.session.set(session());
+      });
 
       expect(setCookies(before)["pylon_session.kid"]).toBe(cookieSigKey.id);
 
@@ -310,15 +309,10 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const after = buildCtx(cookieHeader(before));
 
-      await run(
-        after,
-        { cookie: COOKIE_KEYS },
-        { enabled: false, encrypted: true, signed: true },
-        async () => {
-          // A fresh write picks the rotated key…
-          await after.session.set(session());
-        },
-      );
+      await run(after, { cookie: COOKIE_KEYS }, { enabled: false }, async () => {
+        // A fresh write picks the rotated key…
+        await after.session.set(session());
+      });
 
       // …and the cookie the OLD key signed still read back cleanly.
       expect(after.state.session).toEqual(
@@ -332,32 +326,22 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     // option to forget, and therefore no way to configure a session cookie that
     // signs but cannot be read.
     test("naming `session.signature` ALONE is sufficient — the session cookie signs AND reads back", async () => {
-      const keys: PylonKeys = {
+      const keys: Keys = {
         cookie: COOKIE_KEYS,
         session: { signature: SESSION_KEYS!.signature },
       };
 
       const write = buildCtx();
 
-      await run(
-        write,
-        keys,
-        { enabled: false, encrypted: true, signed: true },
-        async () => {
-          await write.session.set(session());
-        },
-      );
+      await run(write, keys, { enabled: false }, async () => {
+        await write.session.set(session());
+      });
 
       expect(setCookies(write)["pylon_session.kid"]).toBe(sessionSigKey.id);
 
       const read = buildCtx(cookieHeader(write));
 
-      await run(
-        read,
-        keys,
-        { enabled: false, encrypted: true, signed: true },
-        async () => {},
-      );
+      await run(read, keys, { enabled: false }, async () => {});
 
       expect(read.state.session).toEqual(
         expect.objectContaining({ id: session().id, subject: session().subject }),
@@ -379,120 +363,24 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       amphora.add(injected);
 
-      const keys: PylonKeys = {
+      const keys: Keys = {
         cookie: COOKIE_KEYS,
         session: { signature: { kryptos: injected } },
       };
 
       const write = buildCtx();
 
-      await run(
-        write,
-        keys,
-        { enabled: false, encrypted: true, signed: true },
-        async () => {
-          await write.session.set(session());
-        },
-      );
+      await run(write, keys, { enabled: false }, async () => {
+        await write.session.set(session());
+      });
 
       expect(setCookies(write)["pylon_session.kid"]).toBe(injected.id);
 
       const read = buildCtx(cookieHeader(write));
 
-      await run(
-        read,
-        keys,
-        { enabled: false, encrypted: true, signed: true },
-        async () => {},
-      );
+      await run(read, keys, { enabled: false }, async () => {});
 
       expect(read.state.session).toEqual(expect.objectContaining({ id: session().id }));
-    });
-
-    // The override, and what it is FOR: a read policy deliberately BROADER than
-    // the write policy. Introducing session signing keys to a deployment with
-    // live sessions narrows the inherited check to `purpose: "session"` — which
-    // would reject every cookie the cookie key signed. Naming a `verification`
-    // that admits both key classes is how a deployment carries live sessions
-    // across that change.
-    test("an explicit `session.verification` widens the read policy across a signing-policy change", async () => {
-      const before = buildCtx();
-
-      await run(
-        before,
-        { cookie: COOKIE_KEYS },
-        { enabled: false, encrypted: true, signed: true },
-        async () => {
-          await before.session.set(session());
-        },
-      );
-
-      expect(setCookies(before)["pylon_session.kid"]).toBe(cookieSigKey.id);
-
-      // Both the cookie and the session signing keys are internal, so
-      // `publish: false` admits both — and still excludes the published token key.
-      const keys: PylonKeys = {
-        cookie: COOKIE_KEYS,
-        session: {
-          signature: SESSION_KEYS!.signature,
-          verification: { predicate: { publish: false } },
-        },
-      };
-
-      const after = buildCtx(cookieHeader(before));
-
-      await run(
-        after,
-        keys,
-        { enabled: false, encrypted: true, signed: true },
-        async () => {
-          // The fresh write uses the SESSION key…
-          await after.session.set(session());
-        },
-      );
-
-      // …and the live cookie the COOKIE key signed still read back.
-      expect(after.state.session).toEqual(
-        expect.objectContaining({ id: session().id, subject: session().subject }),
-      );
-      expect(setCookies(after)["pylon_session.kid"]).toBe(sessionSigKey.id);
-    });
-
-    // An explicit `verification` always wins over the inherited one — including
-    // when the deployment names one that excludes its own signing key. That is a
-    // misconfiguration, and it fails loudly rather than silently.
-    test("an explicit `session.verification` overrides the inherited signing policy", async () => {
-      const keys: PylonKeys = {
-        cookie: COOKIE_KEYS,
-        session: {
-          signature: SESSION_KEYS!.signature,
-          verification: { predicate: { purpose: "cookie" } },
-        },
-      };
-
-      const write = buildCtx();
-
-      await run(
-        write,
-        keys,
-        { enabled: false, encrypted: true, signed: true },
-        async () => {
-          await write.session.set(session());
-        },
-      );
-
-      expect(setCookies(write)["pylon_session.kid"]).toBe(sessionSigKey.id);
-
-      const read = buildCtx(cookieHeader(write));
-
-      await expect(
-        run(
-          read,
-          keys,
-          { enabled: false, encrypted: true, signed: true },
-          async () => {},
-        ),
-      ).rejects.toThrow(/Cookie key violates the verification floor/);
     });
   });
 
@@ -505,7 +393,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: SESSION_KEYS },
-        { enabled: false, encrypted: true, signed: true },
+        { enabled: false },
         async () => {
           await ctx.session.set(session());
         },
@@ -528,8 +416,11 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     });
 
     // With a store: the cookie carries only the id, and the tokens are sealed at
-    // rest — with the SAME resolved session key. Same secret, two places.
-    test("kv session — the cookie carries the id, the record's tokens are sealed with the resolved session enc key", async () => {
+    // rest — with the SAME resolved session key. Same secret, two places. Under
+    // the new model a configured session enc key seals the ID-carrying cookie too
+    // (the toggle is the key's presence, not a separate `encrypted` boolean), so
+    // the cookie value is a sealed token that decrypts back to the session id.
+    test("kv session — the cookie carries the (sealed) id, the record's tokens are sealed with the resolved session enc key", async () => {
       const ctx = buildCtx();
       const kv = createMockProteusSource();
       kv.repository.mockReturnValue(repository);
@@ -538,7 +429,7 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
       await run(
         ctx,
         { cookie: COOKIE_KEYS, session: SESSION_KEYS },
-        { enabled: true, signed: true },
+        { enabled: true },
         async () => {
           await ctx.session.set(session());
         },
@@ -546,8 +437,9 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
 
       const value = setCookies(ctx)["pylon_session"];
 
-      expect(Buffer.from(value, "base64url").toString()).toBe(session().id);
-      expect(AesKit.isAesTokenised(value)).toBe(false);
+      expect(AesKit.isAesTokenised(value)).toBe(true);
+      expect(AesKit.parse(value).keyId).toBe(sessionEncKey.id);
+      await expect(ctx.aegis.aes.decrypt(value)).resolves.toBe(session().id);
       expect(setCookies(ctx)["pylon_session.kid"]).toBe(sessionSigKey.id);
 
       const [persisted] = (repository.upsert as Mock).mock.calls[0] as [IPylonSession];
@@ -564,42 +456,43 @@ describe("httpSessionMiddleware — key chain (real vault)", () => {
     });
   });
 
-  // No fallback. The floor alone would resolve to whichever published key is
-  // newest — the JWKS token key — which is the bug the selector exists to remove.
-  test("throws loudly when no cookie signing key is named", async () => {
+  // FAIL-CLOSED. Naming a signing key that the vault does not hold is the on-off
+  // for a signed session under the new model — and it must fail LOUDLY, never
+  // fall back to the floor alone (which resolves to the newest published key, the
+  // JWKS token key, the bug the selector exists to remove).
+  test("throws loudly when the named session signing key cannot be resolved", async () => {
     const ctx = buildCtx();
 
     await expect(
       run(
         ctx,
-        { cookie: { encryption: COOKIE_KEYS!.encryption } },
-        { enabled: false, encrypted: true, signed: true },
+        { cookie: { signature: { predicate: { purpose: "no-such-purpose" } } } },
+        { enabled: false },
         async () => {
           await ctx.session.set(session());
         },
       ),
-    ).rejects.toThrow(/Cookie signing key is not configured/);
+    ).rejects.toThrow(/signing key/i);
 
     expect(ctx.set).not.toHaveBeenCalled();
   });
 
-  // FAIL-CLOSED (the #13 contract, under the collapsed union): an `encrypted`
-  // session whose `encryption` union collapses to `true` — because neither a
-  // session NOR a cookie encryption key resolves — must reach the THROWING
-  // resolver, never fall through to a silent plaintext write.
-  test("throws loudly when an encrypted session has no encryption key named", async () => {
+  // FAIL-CLOSED (the #13 contract, under the split): a session whose encryption
+  // key is NAMED but unresolvable must reach the THROWING resolver, never fall
+  // through to a silent plaintext write.
+  test("throws loudly when the named session encryption key cannot be resolved", async () => {
     const ctx = buildCtx();
 
     await expect(
       run(
         ctx,
-        { cookie: { signature: COOKIE_KEYS!.signature } },
-        { enabled: false, encrypted: true, signed: true },
+        { cookie: { encryption: { predicate: { purpose: "no-such-purpose" } } } },
+        { enabled: false },
         async () => {
           await ctx.session.set(session());
         },
       ),
-    ).rejects.toThrow(/Cookie encryption key is not configured/);
+    ).rejects.toThrow(/encryption key/i);
 
     expect(ctx.set).not.toHaveBeenCalled();
   });

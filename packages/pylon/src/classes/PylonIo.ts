@@ -32,7 +32,7 @@ import type {
   IoServer,
   IoSocket,
   PylonConnectionMiddleware,
-  PylonOptions,
+  PylonSettings,
   PylonSocket,
   PylonSocketContext,
   PylonSocketMiddleware,
@@ -41,12 +41,12 @@ import { PylonListener } from "./PylonListener.js";
 
 export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
   private readonly logger: ILogger;
-  private readonly options: PylonOptions<any, any, T>;
+  private readonly options: PylonSettings<any, any, T>;
   private readonly middleware: Array<PylonSocketMiddleware<T>>;
 
   readonly server: IoServer;
 
-  constructor(http: Server, options: PylonOptions<any, any, T>) {
+  constructor(http: Server, options: PylonSettings<any, any, T>) {
     assertSessionCookieSafeForSockets(options);
     assertSameSiteForSockets(options.session);
 
@@ -197,7 +197,7 @@ export class PylonIo<T extends PylonSocketContext = PylonSocketContext> {
       createCommonContextInitialisationMiddleware(this.options.amphora),
       ...(this.options.cors ? [createConnectionCorsMiddleware(this.options.cors)] : []),
       ...(this.options.session
-        ? [createConnectionSessionMiddleware(this.options.session, this.options.keys)]
+        ? [createConnectionSessionMiddleware(this.options.session, this.options.cookies)]
         : []),
       connectionLoggerMiddleware,
       ...((this.options.socket?.connectionMiddleware ??

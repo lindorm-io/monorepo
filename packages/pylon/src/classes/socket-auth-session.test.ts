@@ -124,7 +124,6 @@ describe("socket auth (session / cookie) e2e", () => {
         expiry: "90 minutes",
         httpOnly: true,
         sameSite: "lax",
-        signed: false,
         kv: inMemory.source as any,
       },
       routes: join(__dirname, "..", "__fixtures__", "socket-auth", "routes"),

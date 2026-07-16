@@ -37,7 +37,7 @@ import type {
   PylonHttpCallback,
   PylonHttpContext,
   PylonHttpMiddleware,
-  PylonHttpOptions,
+  PylonHttpSettings,
 } from "../types/index.js";
 import { PylonRouter } from "./PylonRouter.js";
 
@@ -45,14 +45,14 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
   private readonly authConfig: PylonAuthConfig | undefined;
   private readonly logger: ILogger;
   private readonly middleware: Array<PylonHttpMiddleware<T>>;
-  private readonly options: PylonHttpOptions<T>;
+  private readonly options: PylonHttpSettings<T>;
   private readonly router: PylonRouter<T>;
 
   private _callback: HttpCallback | undefined;
 
   readonly server: Koa;
 
-  constructor(options: PylonHttpOptions<T>) {
+  constructor(options: PylonHttpSettings<T>) {
     this.logger = options.logger.child(["PylonHttp"]);
 
     this.authConfig = options.auth ? parseAuthConfig(options.auth) : undefined;
@@ -105,9 +105,9 @@ export class PylonHttp<T extends PylonHttpContext = PylonHttpContext> {
         minRequestAge: this.options.minRequestAge,
         maxRequestAge: this.options.maxRequestAge,
       }),
-      createHttpCookiesMiddleware(this.options.cookies, this.options.keys),
+      createHttpCookiesMiddleware(this.options.cookies),
       ...(this.options.session
-        ? [createHttpSessionMiddleware(this.options.session, this.options.keys)]
+        ? [createHttpSessionMiddleware(this.options.session, this.options.cookies)]
         : []),
       createHttpBodyParserMiddleware(this.options.parseBody),
       httpQueryParserMiddleware,

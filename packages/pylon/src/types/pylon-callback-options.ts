@@ -5,7 +5,6 @@ import type { Constructor, Dict, Priority } from "@lindorm/types";
 import type { PylonCommonContext } from "./context-common.js";
 import type { PylonHttpContext } from "./context-http.js";
 import type { PylonEncKey } from "./keys.js";
-import type { PylonSessionConfig } from "./session.js";
 
 // handlers
 
@@ -26,29 +25,25 @@ export type PylonWebhookCallback<C extends PylonCommonContext = PylonCommonConte
   payload: Dict,
 ) => Promise<void>;
 
-// feature options
+// feature settings
 
-export type PylonSessionOptions = PylonSessionConfig & {
-  enabled: boolean;
-  kv?: IProteusSource;
-};
-
-export type PylonKryptosOptions = {
+export type PylonKryptosSettings = {
   enabled: boolean;
   db?: IProteusSource;
 };
 
-export type PylonQueueOptions = {
+export type PylonQueueSettings = {
   enabled: boolean;
   bus?: IIrisSource;
 };
 
-export type PylonWebhookOptions = {
+export type PylonWebhookSettings = {
   enabled: boolean;
   db?: IProteusSource;
   bus?: IIrisSource;
   /**
-   * The key that opens a subscription's stored `clientSecret`.
+   * The webhook feature's flat key selector. Only `encryption` applies: the key
+   * that opens a subscription's stored `clientSecret`.
    *
    * The same `{ kryptos?, predicate? }` descriptor as every other key surface —
    * but a DECRYPT descriptor: the stored secret is tokenised ciphertext, so it
@@ -60,16 +55,16 @@ export type PylonWebhookOptions = {
    * ciphertext is a caller error, not a silent override; otherwise a rotated-in
    * key would shadow every secret the old one sealed.
    */
-  encryptionKey?: PylonEncKey;
+  encryption?: PylonEncKey;
   maxErrors?: number;
 };
 
-export type PylonCacheOptions = {
+export type PylonCacheSettings = {
   enabled: boolean;
   kv?: IProteusSource;
 };
 
-export type PylonRateLimitOptions = {
+export type PylonRateLimitSettings = {
   enabled: boolean;
   kv?: IProteusSource;
   strategy?: "fixed" | "sliding" | "token-bucket";
@@ -79,7 +74,7 @@ export type PylonRateLimitOptions = {
   skip?: (ctx: any) => boolean;
 };
 
-export type PylonAuditOptions = {
+export type PylonAuditSettings = {
   enabled: boolean;
   db?: IProteusSource;
   bus?: IIrisSource;
@@ -88,7 +83,7 @@ export type PylonAuditOptions = {
   entities?: Array<Constructor<IEntity>>;
 };
 
-export type PylonRoomsOptions = {
+export type PylonRoomsSettings = {
   presence?: boolean;
   kv?: IProteusSource;
 };

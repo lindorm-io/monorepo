@@ -64,18 +64,17 @@ export const EXAMPLE_PYLON = new Pylon({
 
   environment: "test",
 
-  // Which vault key does what. `publish: false` is load-bearing — amphora's
-  // default query is the PUBLISHED set, so an internal key is otherwise
-  // unreachable and the JWKS token key would win.
+  // Which vault key does what — declared per feature. `publish: false` is
+  // load-bearing: amphora's default query is the PUBLISHED set, so an internal
+  // key is otherwise unreachable and the JWKS token key would win. A configured
+  // key turns that role on by default (a plain `set` signs and seals).
   //
-  // No `session` block: a session IS a cookie, and every session role chains to
-  // its `cookie` counterpart — so this vault's two cookie keys do everything.
-  // No `verification` either: it defaults to the signing predicate below.
-  keys: {
-    cookie: {
-      signature: { predicate: { purpose: "cookie", publish: false } },
-      encryption: { predicate: { purpose: "cookie", publish: false } },
-    },
+  // No `session` keys: a session IS a cookie, and every session role chains to
+  // its `cookies` counterpart — so this vault's two cookie keys do everything.
+  // No `verification` either: it derives from the signing predicate.
+  cookies: {
+    signature: { predicate: { purpose: "cookie", publish: false } },
+    encryption: { predicate: { purpose: "cookie", publish: false } },
   },
 
   name: "@lindorm/pylon",

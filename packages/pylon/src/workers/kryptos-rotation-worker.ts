@@ -27,9 +27,9 @@ type Options = CreateLindormWorkerOptions & {
    * The keys this deployment mints and rotates. There is NO default set: the
    * worker used to invent six keys by convention, because pylon GUESSED which
    * key each of its roles wanted and the keys therefore had to exist under the
-   * purposes it guessed. Pylon's options now name the key for every role
-   * (`PylonKeys`), so the worker has no reason to hold an opinion about which
-   * keys exist. Pass none and it rotates nothing.
+   * purposes it guessed. Pylon's settings now name the key for every role
+   * (the flat `cookies`/`session`/… selectors), so the worker has no reason to
+   * hold an opinion about which keys exist. Pass none and it rotates nothing.
    *
    * ⚠ `publish` defaults to FALSE (the kryptos default), so a key meant for the
    * JWKS MUST say `publish: true` — a key set that forgets it yields an empty

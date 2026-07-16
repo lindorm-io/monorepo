@@ -82,7 +82,7 @@ export const useRateLimit = (options: RateLimitOptions): PylonMiddleware => {
         type: "urn:lindorm:pylon:error:rate_limit_not_configured",
         title: "Rate Limit Not Configured",
         details:
-          "Enable rate limiting in PylonOptions with rateLimit: { enabled: true } before using useRateLimit",
+          "Enable rate limiting in PylonSettings with rateLimit: { enabled: true } before using useRateLimit",
         debug: { strategy },
       });
     }

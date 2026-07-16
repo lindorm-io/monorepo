@@ -80,7 +80,7 @@ export type PylonAuthConfig = {
   router: PylonAuthRouterConfig | null;
 };
 
-export type PylonAuthOptions = {
+export type PylonAuthSettings = {
   clientId: string;
   clientSecret: string;
   issuer: string;

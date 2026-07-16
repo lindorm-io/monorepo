@@ -2,16 +2,15 @@ import { removeUndefined } from "@lindorm/utils";
 import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
 import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
 import { createSessionStore } from "../utils/create-session-store.js";
-import { resolveCookieKeys } from "../utils/keys/resolve-cookie-keys.js";
 import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
 import { createSessionRefreshHandler } from "../utils/refresh/create-session-refresh-handler.js";
 import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
 import type {
   PylonConnectionMiddleware,
-  PylonGetCookie,
-  PylonKeys,
-  PylonSessionOptions,
-  PylonSetCookie,
+  PylonCookieSettings,
+  PylonGetCookieOptions,
+  PylonSessionSettings,
+  PylonSetCookieOptions,
   PylonSocketAuth,
   PylonSocketHandshakeContext,
 } from "../../types/index.js";
@@ -19,18 +18,19 @@ import type {
 export const createConnectionSessionMiddleware = <
   C extends PylonSocketHandshakeContext = PylonSocketHandshakeContext,
 >(
-  options: PylonSessionOptions,
-  keys?: PylonKeys,
+  options: PylonSessionSettings,
+  cookies?: PylonCookieSettings,
 ): PylonConnectionMiddleware<C> => {
   const name = options.name ?? "pylon_session";
 
   // The session cookie's keys travel in the config — the handshake reads the
-  // cookie through this config, not a per-call options object. The session's
-  // `encrypted`/`signed` booleans collapse into the cookie unions the same way
-  // the HTTP session middleware does, preserving the fail-closed contract.
-  const sk = resolveSessionKeys(keys);
+  // cookie through this config, not a per-call options object. A CONFIGURED key
+  // turns its role on the same way the HTTP session middleware does
+  // (`session.<role> ?? cookies.<role>`), preserving the fail-closed contract
+  // for a NAMED-but-unresolvable key.
+  const sk = resolveSessionKeys(options, cookies);
 
-  const config: PylonSetCookie & PylonGetCookie = removeUndefined({
+  const config: PylonSetCookieOptions & PylonGetCookieOptions = removeUndefined({
     domain: options.domain,
     encoding: options.encoding ?? "base64url",
     expiry: options.expiry,
@@ -39,14 +39,13 @@ export const createConnectionSessionMiddleware = <
     priority: options.priority,
     sameSite: options.sameSite,
     secure: options.secure,
-    encryption: options.encrypted ? (sk.encryption ?? true) : undefined,
-    signature: options.signed ? (sk.signature ?? true) : undefined,
-    encrypted: options.encrypted,
-    signed: options.signed ? (sk.verification ?? true) : undefined,
+    encryption: sk.encryption,
+    signature: sk.signature,
+    encrypted: sk.encryption ? true : undefined,
+    signed: sk.verification,
   });
 
-  const cookieKeys = resolveCookieKeys(keys);
-  const store = createSessionStore(options, keys);
+  const store = createSessionStore(options, cookies);
 
   return async function connectionSessionMiddleware(ctx, next): Promise<void> {
     const socket = ctx.io.socket;
@@ -57,7 +56,13 @@ export const createConnectionSessionMiddleware = <
     }
 
     const parsed = parseCookieHeader(cookieHeader);
-    const getCookie = createGetCookie({ ctx, config, parsed, cookieKeys });
+    const getCookie = createGetCookie({
+      ctx,
+      config,
+      parsed,
+      signature: cookies?.signature,
+      encryption: cookies?.encryption,
+    });
 
     const sessionId = await getCookie<string>(name);
 
