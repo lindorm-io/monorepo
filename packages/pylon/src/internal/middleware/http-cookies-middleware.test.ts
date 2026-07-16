@@ -115,7 +115,7 @@ describe("httpCookiesMiddleware", async () => {
     expect(ctx.aegis.aes.encrypt).toHaveBeenCalledWith(
       "new_value",
       "tokenised",
-      expect.objectContaining({ kryptos: cookieKey }),
+      expect.objectContaining({ key: expect.objectContaining({ kryptos: cookieKey }) }),
     );
 
     const setCookieHeader = ctx.set.mock.calls[0][1][0] as string;

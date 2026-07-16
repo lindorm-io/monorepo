@@ -181,7 +181,7 @@ describe("createSessionStore", () => {
     // session sealed with the OLD key still decrypts after the change.
     test("a session sealed with the OLD key still decrypts", async () => {
       const stale = await realCtx.aegis.aes.encrypt(session.accessToken, "tokenised", {
-        predicate: { purpose: "token" },
+        key: { predicate: { purpose: "token" } },
       });
 
       expect(AesKit.parse(stale).keyId).toBe(tokenKey.id);

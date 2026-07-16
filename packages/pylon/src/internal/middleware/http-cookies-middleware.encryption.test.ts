@@ -115,7 +115,7 @@ describe("httpCookiesMiddleware — encryption key selection (real vault)", () =
 
     // Exactly what the old code produced: the published token enc key.
     const stale = await writeCtx.aegis.aes.encrypt("old_value", "tokenised", {
-      predicate: { purpose: "token" },
+      key: { predicate: { purpose: "token" } },
     });
 
     expect(AesKit.parse(stale).keyId).toBe(tokenKey.id);

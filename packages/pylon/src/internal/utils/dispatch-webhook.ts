@@ -51,7 +51,7 @@ export const createDispatchWebhook = (
     ) {
       dispatch.subscription.clientSecret = await aegis.aes.decrypt<string>(
         dispatch.subscription.clientSecret,
-        options.encryptionKey,
+        { key: options.encryptionKey },
       );
     }
 

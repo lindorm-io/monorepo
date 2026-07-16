@@ -16,7 +16,6 @@ export const encryptCookie = async (
   const kryptos = await resolveCookieEncryptionKey(ctx.amphora, key);
 
   return ctx.aegis.aes.encrypt(value, "tokenised", {
-    kryptos,
-    encryption: key?.encryption,
+    key: { kryptos, encryption: key?.encryption },
   });
 };
