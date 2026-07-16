@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`CborKit > should pin the wire format 1`] = `"a500010168757365722d313233021a6a581f000302044401020304"`;
