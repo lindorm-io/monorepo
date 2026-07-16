@@ -152,7 +152,6 @@ export const postgresDialect: SqlDialect = {
   buildUpsertConflictClause: (conflictColumns, setClauses) =>
     `ON CONFLICT (${conflictColumns.join(", ")}) DO UPDATE SET ${setClauses.join(", ")}`,
   upsertExcludedRef: (quotedColumn) => `EXCLUDED.${quotedColumn}`,
-  upsertDateNowExpression: () => "NOW()",
 
   reindexRawParams: reindexParams,
 

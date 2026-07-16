@@ -71,10 +71,6 @@ export type SqlDialect = {
   // Reference to the incoming (proposed) row inside the conflict SET clause:
   // PG `EXCLUDED.<col>`, SQLite `excluded.<col>`, MySQL `` `_new`.<col> ``.
   upsertExcludedRef: (quotedColumn: string) => string;
-  // NOW-expression for @UpdateDate in the conflict SET clause. Kept separate from
-  // dateNowExpression() because the SQLite upsert spelling differs (space after
-  // the comma) and is locked by snapshots.
-  upsertDateNowExpression: () => string;
 
   // Raw param reindexing (PG-only — for $1/$2 renumbering in raw SQL fragments)
   reindexRawParams?: (

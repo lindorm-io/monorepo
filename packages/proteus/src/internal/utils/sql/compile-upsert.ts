@@ -118,7 +118,7 @@ const buildSetClauses = (
 
     // UpdateDate field: set to the dialect's now-expression on conflict
     if (updateDateField && col.column === updateDateField.name) {
-      setClauses.push(`${quotedCol} = ${dialect.upsertDateNowExpression()}`);
+      setClauses.push(`${quotedCol} = ${dialect.dateNowExpression()}`);
       continue;
     }
 

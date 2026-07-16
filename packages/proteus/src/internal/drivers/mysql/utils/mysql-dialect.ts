@@ -103,7 +103,6 @@ export const mysqlDialect: SqlDialect = {
   buildUpsertConflictClause: (_conflictColumns, setClauses) =>
     `AS ${quoteIdentifier("_new")} ON DUPLICATE KEY UPDATE ${setClauses.join(", ")}`,
   upsertExcludedRef: (quotedColumn) => `${quoteIdentifier("_new")}.${quotedColumn}`,
-  upsertDateNowExpression: () => "NOW(3)",
 
   compileLockClause: (lock: LockMode | null): string => {
     if (!lock) return "";
