@@ -125,6 +125,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
       this.state,
       this.metadata,
       this.logger,
+      queueName,
     );
 
     const { consumerTag } = await channel.consume(queueName, wrappedCallback);

@@ -13,6 +13,7 @@ import { publishSubscribeSuite } from "./publish-subscribe.tck.js";
 import { fanOutSuite } from "./fan-out.tck.js";
 import { workerQueueSuite } from "./worker-queue.tck.js";
 import { retryDeadLetterSuite } from "./retry-dead-letter.tck.js";
+import { retryFanoutSuite } from "./retry-fanout.tck.js";
 import { retrySkewSuite } from "./retry-skew.tck.js";
 import { rpcSuite } from "./rpc.tck.js";
 import { streamSuite } from "./stream.tck.js";
@@ -56,6 +57,7 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
     messages.TckRetryMessage,
     messages.TckExponentialRetryMessage,
     messages.TckBroadcastMessage,
+    messages.TckBroadcastRetryMessage,
     messages.TckExpiryMessage,
     messages.TckRetryNoDlqMessage,
     messages.TckSkewProducerMessage,
@@ -117,6 +119,12 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
   if (shouldRun("retry-dead-letter"))
     maybeDescribe(caps.retry, "retry", () =>
       retryDeadLetterSuite(getHandle, messages, timeoutMs, caps),
+    );
+  if (shouldRun("retry-fanout"))
+    maybeDescribe(
+      caps.retry && caps.workerQueue && caps.retryConsumerTargeted,
+      "retry-fanout",
+      () => retryFanoutSuite(getHandle, messages, timeoutMs, caps),
     );
   if (shouldRun("retry-skew"))
     maybeDescribe(caps.retry, "retry-skew", () =>

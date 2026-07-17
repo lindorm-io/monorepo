@@ -76,7 +76,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     this.subscribedQueue = queueName;
     this.subscribedRoutingKey = routingKey;
 
-    const onMessage = this.buildOnMessage(inputMetadata);
+    const onMessage = this.buildOnMessage(inputMetadata, queueName);
 
     this.wrappedOnMessage = onMessage;
 
@@ -181,14 +181,20 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     await channel.bindQueue(queueName, this.state.exchange, this.subscribedRoutingKey);
     this.subscribedQueue = queueName;
 
-    const { consumerTag } = await channel.consume(queueName, this.wrappedOnMessage);
+    // Resume asserts a FRESH anonymous queue (the previous one auto-deleted on
+    // pause), so the retry closure must be rebuilt to target this new queue name
+    // — reusing the old closure would dead-letter retries to the now-gone queue.
+    const onMessage = this.buildOnMessage(this.getInputMetadata(), queueName);
+    this.wrappedOnMessage = onMessage;
+
+    const { consumerTag } = await channel.consume(queueName, onMessage);
 
     this.consumerTag = consumerTag;
 
     this.state.consumerRegistrations.push({
       queue: queueName,
       consumerTag,
-      onMessage: this.wrappedOnMessage,
+      onMessage,
       routingKey: this.subscribedRoutingKey,
       exchange: this.state.exchange,
       queueOptions: { exclusive: true, autoDelete: true },
@@ -227,8 +233,14 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
   // then run the transform stages (failures → retry via native delay-queue/TTL
   // bounded by @Retry, then dead letter to the DLX) — the SAME contract the
   // Rabbit worker queue uses. wrapRabbitConsumer owns ack/nack/DLX.
+  // queueName is threaded through so a retry dead-letters to a delay queue keyed
+  // by THIS pipeline's own (anonymous, autoDelete) queue — targeting the failing
+  // consumer only. The closure captures the queue name by value, so it must be
+  // rebuilt whenever the pipeline asserts a fresh queue (start AND resume), never
+  // reused across queue names.
   private buildOnMessage(
     inputMetadata: MessageMetadata,
+    queueName: string,
   ): (msg: ConsumeMessage | null) => Promise<void> {
     return wrapRabbitConsumer(
       this.buildInboundHost(inputMetadata),
@@ -236,6 +248,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
       this.state,
       inputMetadata,
       this.logger,
+      queueName,
     );
   }
 }

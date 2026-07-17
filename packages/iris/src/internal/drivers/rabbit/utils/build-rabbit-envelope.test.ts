@@ -27,6 +27,25 @@ describe("buildRabbitEnvelope", () => {
     expect(result.timestamp).toBe(1700000001000);
   });
 
+  // Queue-targeted retry: a redelivered retry arrives with its routing key
+  // rewritten to the failing consumer's queue name (dead-lettered via the default
+  // exchange). The explicit x-iris-topic header must win over that routing key so
+  // the recovered topic is the real topic, not the queue name.
+  it("should prefer x-iris-topic over the routing key when present (retry redelivery)", () => {
+    const result = buildRabbitEnvelope(
+      createParsed({
+        routingKey: "iris.delay.amq.gen-abc123",
+        irisHeaders: { "x-iris-topic": "orders.created" },
+      }),
+    );
+    expect(result.topic).toBe("orders.created");
+  });
+
+  it("should fall back to the routing key when x-iris-topic is absent", () => {
+    const result = buildRabbitEnvelope(createParsed({ routingKey: "orders.created" }));
+    expect(result.topic).toBe("orders.created");
+  });
+
   it("should decode all scalar fields from x-iris headers", () => {
     const result = buildRabbitEnvelope(
       createParsed({

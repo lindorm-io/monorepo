@@ -55,6 +55,23 @@ export type TckCapabilities = {
    * cannot raise it. See `resolveMaxDeliver`.
    */
   retryProducerAuthoritative: boolean;
+  /**
+   * A retry reaches ONLY the consumer that failed — never the other consumers
+   * that already succeeded. On a fan-out type (N independent bus subscribers, or
+   * N broadcast worker consumers) a single handler failure must redeliver to that
+   * one failing consumer alone; every other consumer sees the message exactly
+   * once, with no spurious duplicate.
+   *
+   * True for drivers whose redelivery targets the failing consumer's own
+   * mailbox: memory (re-invokes the same bound callback closure), NATS JetStream
+   * (server redelivers to the same durable consumer), and Rabbit (retry
+   * dead-letters via the default exchange keyed by the failing queue's own name).
+   *
+   * False for Kafka and Redis Streams today: their retry re-publishes to the
+   * shared topic/stream, so every consumer group re-consumes it — a fan-out
+   * blast-radius. Their targeted-retry slices flip this true.
+   */
+  retryConsumerTargeted: boolean;
   /** Dead letter queue */
   deadLetter: boolean;
   /** Broadcast to all consumers */

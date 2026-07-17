@@ -25,6 +25,7 @@ export const wrapRabbitConsumer = <M extends IMessage>(
   state: RabbitSharedState,
   metadata: MessageMetadata,
   logger: ILogger,
+  queueName: string,
 ): ((msg: ConsumeMessage | null) => Promise<void>) => {
   return async (msg: ConsumeMessage | null): Promise<void> => {
     if (!msg) return;
@@ -96,14 +97,21 @@ export const wrapRabbitConsumer = <M extends IMessage>(
           });
         }
 
-        const routingKey = sanitizeRoutingKey(envelope.topic);
-        const delayQueueName = `${state.exchange}.delay.${routingKey}`;
+        // Per-CONSUMER-QUEUE delay queue (not per-topic): the retry must reach
+        // ONLY the queue whose consumer failed, never every queue bound to the
+        // exchange. After the TTL the message dead-letters to the DEFAULT
+        // exchange ("") keyed by the failing queue's own name, which routes it
+        // to exactly that one queue — matching the memory/nats "retry → failing
+        // consumer only" contract, for both broadcast and non-broadcast types.
+        // (Routing back to the main exchange on the original key fanned the
+        // retry out to every bound queue — the M1 blast-radius bug.)
+        const delayQueueName = `${state.exchange}.delay.${queueName}`;
 
         if (!state.assertedDelayQueues.has(delayQueueName)) {
           await state.publishChannel.assertQueue(delayQueueName, {
             durable: true,
-            deadLetterExchange: state.exchange,
-            deadLetterRoutingKey: routingKey,
+            deadLetterExchange: "",
+            deadLetterRoutingKey: queueName,
             arguments: {},
           });
           state.assertedDelayQueues.add(delayQueueName);
@@ -114,6 +122,17 @@ export const wrapRabbitConsumer = <M extends IMessage>(
           type: metadata.message.name,
         });
         properties.expiration = String(retryDelay);
+
+        // The topic normally rides the AMQP routing key, but dead-lettering from
+        // the delay queue via the default exchange REWRITES the routing key to the
+        // consumer's queue name (that's how the retry is targeted). Carry the real
+        // topic on `x-iris-topic` so buildRabbitEnvelope recovers it on redelivery
+        // — otherwise the redelivered envelope's topic becomes the queue name,
+        // corrupting dead-letter routing and the delivered ConsumeEnvelope.
+        properties.headers = {
+          ...properties.headers,
+          "x-iris-topic": envelope.topic,
+        };
 
         await publishToExchange(
           state.publishChannel,

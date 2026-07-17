@@ -43,6 +43,8 @@ const factory: TckDriverFactory = {
     delay: true,
     retry: true,
     retryProducerAuthoritative: true,
+    // false until the redis targeted-retry slice lands (M1 slice for redis).
+    retryConsumerTargeted: false,
     deadLetter: true,
     broadcast: true,
     encryption: true,

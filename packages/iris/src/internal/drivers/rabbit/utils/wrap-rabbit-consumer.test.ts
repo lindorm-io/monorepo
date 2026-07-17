@@ -129,6 +129,7 @@ describe("wrapRabbitConsumer", () => {
         state,
         createMetadata(),
         logger as any,
+        "iris.worker.test",
       );
 
       await wrapped(null);
@@ -149,6 +150,7 @@ describe("wrapRabbitConsumer", () => {
         state,
         createMetadata(),
         logger as any,
+        "iris.worker.test",
       );
 
       await wrapped(createConsumeMessage());
@@ -170,6 +172,7 @@ describe("wrapRabbitConsumer", () => {
         state,
         createMetadata(),
         logger as any,
+        "iris.worker.test",
       );
 
       const msg = createConsumeMessage();
@@ -194,7 +197,14 @@ describe("wrapRabbitConsumer", () => {
       const metadata = createMetadata({ namespace: "my-ns", version: 3 });
       const logger = createMockLogger();
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       const msg = createConsumeMessage({
         routingKey: "orders.created",
@@ -221,6 +231,7 @@ describe("wrapRabbitConsumer", () => {
         state,
         createMetadata(),
         logger as any,
+        "iris.worker.test",
       );
 
       const msg = createConsumeMessage({
@@ -253,6 +264,7 @@ describe("wrapRabbitConsumer", () => {
         state,
         createMetadata(),
         logger as any,
+        "iris.worker.test",
       );
 
       const msg = createConsumeMessage();
@@ -281,6 +293,7 @@ describe("wrapRabbitConsumer", () => {
         state,
         createMetadata({ deadLetter: true }),
         logger as any,
+        "iris.worker.test",
       );
 
       const msg = createConsumeMessage();
@@ -319,6 +332,7 @@ describe("wrapRabbitConsumer", () => {
         state,
         createMetadata(),
         logger as any,
+        "iris.worker.test",
       );
 
       await wrapped(createConsumeMessage());
@@ -346,7 +360,14 @@ describe("wrapRabbitConsumer", () => {
         },
       });
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       // Retry policy is producer-authoritative — it must travel on the wire
       // (x-iris headers), not be re-derived from the consumer metadata (M2).
@@ -359,17 +380,20 @@ describe("wrapRabbitConsumer", () => {
       await wrapped(msg);
 
       expect(host.onConsumeError).toHaveBeenCalled();
+      // Per-consumer-queue delay queue: dead-letters via the DEFAULT exchange ("")
+      // keyed by the FAILING queue's own name, so the retry reaches only that one
+      // queue (not every queue bound to the exchange — the M1 fan-out fix).
       expect(state.publishChannel!.assertQueue).toHaveBeenCalledWith(
-        "iris.delay.test-topic",
+        "iris.delay.iris.worker.test",
         expect.objectContaining({
           durable: true,
-          deadLetterExchange: "iris",
-          deadLetterRoutingKey: "test-topic",
+          deadLetterExchange: "",
+          deadLetterRoutingKey: "iris.worker.test",
         }),
       );
       expect(state.publishChannel!.publish).toHaveBeenCalledWith(
         "",
-        "iris.delay.test-topic",
+        "iris.delay.iris.worker.test",
         expect.any(Buffer),
         expect.objectContaining({ expiration: expect.any(String) }),
         expect.any(Function),
@@ -382,7 +406,7 @@ describe("wrapRabbitConsumer", () => {
       const host = createMockHost();
       const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
-      state.assertedDelayQueues.add("iris.delay.test-topic");
+      state.assertedDelayQueues.add("iris.delay.iris.worker.test");
       const logger = createMockLogger();
       const metadata = createMetadata({
         retry: {
@@ -395,7 +419,14 @@ describe("wrapRabbitConsumer", () => {
         },
       });
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       const msg = createConsumeMessage({
         headers: { "x-iris-attempt": "0", "x-iris-max-retries": "2" },
@@ -423,7 +454,14 @@ describe("wrapRabbitConsumer", () => {
         },
       });
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       const msg = createConsumeMessage({
         headers: { "x-iris-attempt": "0", "x-iris-max-retries": "3" },
@@ -453,7 +491,14 @@ describe("wrapRabbitConsumer", () => {
         },
       });
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       const msg = createConsumeMessage({
         headers: { "x-iris-attempt": "1", "x-iris-max-retries": "5" },
@@ -464,6 +509,43 @@ describe("wrapRabbitConsumer", () => {
       const publishOptions = publishCall[3];
       // The shared codec serializes scalars as strings on the wire.
       expect(publishOptions.headers["x-iris-attempt"]).toBe("2");
+    });
+
+    it("should stamp x-iris-topic on the retry message so the topic survives the queue-targeted dead-letter", async () => {
+      const host = createMockHost();
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
+      const state = createState();
+      const logger = createMockLogger();
+      const metadata = createMetadata({
+        retry: {
+          maxRetries: 3,
+          strategy: "constant",
+          delay: 1000,
+          delayMax: 30000,
+          multiplier: 2,
+          jitter: false,
+        },
+      });
+
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
+
+      const msg = createConsumeMessage({
+        routingKey: "orders.created",
+        headers: { "x-iris-attempt": "0", "x-iris-max-retries": "3" },
+      });
+      await wrapped(msg);
+
+      // The retry dead-letters via the default exchange keyed by the queue name,
+      // which rewrites the routing key — so the real topic must ride x-iris-topic.
+      const publishOptions = (state.publishChannel!.publish as Mock).mock.calls[0][3];
+      expect(publishOptions.headers["x-iris-topic"]).toBe("orders.created");
     });
   });
 
@@ -485,7 +567,14 @@ describe("wrapRabbitConsumer", () => {
       });
       const logger = createMockLogger();
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       // attempt has reached the producer's wire maxRetries → retries exhausted.
       const msg = createConsumeMessage({
@@ -527,7 +616,14 @@ describe("wrapRabbitConsumer", () => {
       });
       const logger = createMockLogger();
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       const msg = createConsumeMessage({
         headers: { "x-iris-attempt": "3", "x-iris-max-retries": "3" },
@@ -545,7 +641,14 @@ describe("wrapRabbitConsumer", () => {
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       const msg = createConsumeMessage();
       await wrapped(msg);
@@ -586,7 +689,14 @@ describe("wrapRabbitConsumer", () => {
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       const msg = createConsumeMessage();
       await wrapped(msg);
@@ -613,6 +723,7 @@ describe("wrapRabbitConsumer", () => {
         state,
         createMetadata(),
         logger as any,
+        "iris.worker.test",
       );
 
       await wrapped(createConsumeMessage());
@@ -635,7 +746,14 @@ describe("wrapRabbitConsumer", () => {
       const metadata = createMetadata({ deadLetter: true });
       const logger = createMockLogger();
 
-      const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
+      const wrapped = wrapRabbitConsumer(
+        host,
+        callback,
+        state,
+        metadata,
+        logger as any,
+        "iris.worker.test",
+      );
 
       await wrapped(createConsumeMessage());
 

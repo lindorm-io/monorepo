@@ -44,6 +44,8 @@ const factory: TckDriverFactory = {
     delay: true,
     retry: true,
     retryProducerAuthoritative: true,
+    // false until the kafka targeted-retry slice lands (M1 slice for kafka).
+    retryConsumerTargeted: false,
     deadLetter: true,
     broadcast: true,
     encryption: true,

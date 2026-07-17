@@ -67,6 +67,16 @@ export const createTckMessages = (hookLog: Array<string>) => {
     @Field("string") body!: string;
   }
 
+  // Broadcast + retry: exercises the retry-fanout contract on a @Broadcast type.
+  // Every consumer receives the original publish; when ONE consumer's handler
+  // fails, only that consumer must see the redelivery (retryConsumerTargeted).
+  @Broadcast()
+  @Retry({ maxRetries: 3, strategy: "constant", delay: 50 })
+  @Message({ name: "TckBroadcastRetryMessage" })
+  class TckBroadcastRetryMessage implements IMessage {
+    @Field("string") data!: string;
+  }
+
   @Expiry(200)
   @Message({ name: "TckExpiryMessage" })
   class TckExpiryMessage implements IMessage {
@@ -281,6 +291,7 @@ export const createTckMessages = (hookLog: Array<string>) => {
     TckRetryMessage,
     TckExponentialRetryMessage,
     TckBroadcastMessage,
+    TckBroadcastRetryMessage,
     TckExpiryMessage,
     TckHookMessage,
     TckRetryNoDlqMessage,

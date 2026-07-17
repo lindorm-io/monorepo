@@ -104,6 +104,7 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
       this.state,
       this.metadata,
       this.logger,
+      queueName,
     );
 
     const { consumerTag } = await channel.consume(queueName, wrappedCallback);
