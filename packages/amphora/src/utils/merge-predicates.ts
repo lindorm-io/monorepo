@@ -1,4 +1,4 @@
-import { removeUndefined } from "@lindorm/utils";
+import { omitUndefined } from "@lindorm/utils";
 import type { AmphoraPredicate } from "../types/index.js";
 
 /**
@@ -11,7 +11,7 @@ import type { AmphoraPredicate } from "../types/index.js";
 export const mergePredicates = (
   ...layers: Array<AmphoraPredicate | null | undefined>
 ): AmphoraPredicate =>
-  Object.assign({}, ...layers.filter(Boolean).map((layer) => removeUndefined(layer!)));
+  Object.assign({}, ...layers.filter(Boolean).map((layer) => omitUndefined(layer!)));
 
 /**
  * Apply a non-negotiable FLOOR over caller layers. The floor is spread LAST, so

@@ -1,10 +1,4 @@
-import { removeUndefined } from "@lindorm/utils";
-import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
-import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
-import { createSessionStore } from "../utils/create-session-store.js";
-import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
-import { createSessionRefreshHandler } from "../utils/refresh/create-session-refresh-handler.js";
-import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
+import { omitUndefined } from "@lindorm/utils";
 import type {
   PylonConnectionMiddleware,
   PylonCookieSettings,
@@ -14,6 +8,12 @@ import type {
   PylonSocketAuth,
   PylonSocketHandshakeContext,
 } from "../../types/index.js";
+import { createGetCookie } from "../utils/cookies/create-get-cookie.js";
+import { parseCookieHeader } from "../utils/cookies/parse-cookie-header.js";
+import { createSessionStore } from "../utils/create-session-store.js";
+import { resolveSessionKeys } from "../utils/keys/resolve-session-keys.js";
+import { createSessionRefreshHandler } from "../utils/refresh/create-session-refresh-handler.js";
+import { extractTokenFromSession } from "../utils/tokens/extract-token-from-session.js";
 
 export const createConnectionSessionMiddleware = <
   C extends PylonSocketHandshakeContext = PylonSocketHandshakeContext,
@@ -30,7 +30,7 @@ export const createConnectionSessionMiddleware = <
   // for a NAMED-but-unresolvable key.
   const sk = resolveSessionKeys(options, cookies);
 
-  const config: PylonSetCookieOptions & PylonGetCookieOptions = removeUndefined({
+  const config: PylonSetCookieOptions & PylonGetCookieOptions = omitUndefined({
     domain: options.domain,
     encoding: options.encoding ?? "base64url",
     expiry: options.expiry,

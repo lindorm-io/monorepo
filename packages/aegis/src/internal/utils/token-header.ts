@@ -1,5 +1,5 @@
 import { isFinite, isObject, isString, isUrlLike } from "@lindorm/is";
-import { removeUndefined } from "@lindorm/utils";
+import { omitUndefined } from "@lindorm/utils";
 import type {
   CertificateHeaderFields,
   DecodedTokenHeader,
@@ -48,7 +48,7 @@ export const mapTokenHeader = (
     })
     .sort();
 
-  return removeUndefined({
+  return omitUndefined({
     alg: options.algorithm,
     crit,
     cty: options.contentType,
@@ -113,7 +113,7 @@ export const parseTokenHeader = <T extends ParsedTokenHeader = ParsedTokenHeader
       })
       .sort() as ParsedTokenHeader["critical"]) ?? [];
 
-  return removeUndefined({
+  return omitUndefined({
     algorithm: decoded.alg,
     baseFormat: getBaseFormat(decoded.typ),
     contentType: decoded.cty,

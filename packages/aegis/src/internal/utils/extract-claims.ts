@@ -1,23 +1,23 @@
 import { isArray, isFinite, isObject, isString } from "@lindorm/is";
 import type { AuthorizationDetail, Dict } from "@lindorm/types";
-import { removeUndefined } from "@lindorm/utils";
+import { omitUndefined } from "@lindorm/utils";
 import type { ActClaim } from "../../types/claims/act-claim.js";
 import type { ConfirmationClaim } from "../../types/claims/confirmation-claim.js";
+import type { DelegationClaims } from "../../types/claims/delegation-claims.js";
 import type { LindormClaims } from "../../types/claims/lindorm-claims.js";
 import type { OAuthClaims } from "../../types/claims/oauth-claims.js";
 import type { OidcClaims } from "../../types/claims/oidc-claims.js";
 import type { PopClaims } from "../../types/claims/pop-claims.js";
 import type { RarClaims } from "../../types/claims/rar-claims.js";
-import type { DelegationClaims } from "../../types/claims/delegation-claims.js";
 import type { SetClaims } from "../../types/claims/set-claims.js";
 import type { StdClaims } from "../../types/claims/std-claims.js";
-import type { SubjectIdentifier } from "../claims/sub-id.js";
 import type {
   AuthenticatorAssuranceLevel,
   FederationAssuranceLevel,
   IdentityAssuranceLevel,
   LevelOfAssurance,
 } from "../../types/level-of-assurance.js";
+import type { SubjectIdentifier } from "../claims/sub-id.js";
 
 // Unified domain claim set — RFC-grouped intersection that JWT parsing,
 // introspection parsing, and userinfo parsing all share. Of SetClaims only
@@ -129,7 +129,7 @@ const toAudience = (value: unknown): Array<string> | undefined => {
 const toActClaim = (value: unknown): ActClaim | undefined => {
   if (!isObject(value)) return undefined;
   const v = value;
-  const result: ActClaim = removeUndefined({
+  const result: ActClaim = omitUndefined({
     subject: isString(v.subject) ? v.subject : isString(v.sub) ? v.sub : undefined,
     issuer: isString(v.issuer) ? v.issuer : isString(v.iss) ? v.iss : undefined,
     audience: toAudience(v.audience ?? v.aud),
@@ -149,7 +149,7 @@ const toActClaim = (value: unknown): ActClaim | undefined => {
 const toConfirmation = (value: unknown): ConfirmationClaim | undefined => {
   if (!isObject(value)) return undefined;
   const v = value;
-  const result: ConfirmationClaim = removeUndefined({
+  const result: ConfirmationClaim = omitUndefined({
     thumbprint: isString(v.thumbprint)
       ? v.thumbprint
       : isString(v.jkt)
@@ -242,7 +242,7 @@ export const extractDomainClaims = (input: Dict): ExtractClaimsResult => {
   const mayAct = consume(RFC8693_KEYS.mayAct);
   const confirmation = consume(POP_KEYS.confirmation);
 
-  const claims: DomainClaims = removeUndefined({
+  const claims: DomainClaims = omitUndefined({
     // StdClaims
     subject: isString(subject) ? subject : undefined,
     expiresAt: toDate(expiresAt),

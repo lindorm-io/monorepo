@@ -1,17 +1,17 @@
 import { isArray, isObject } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import { removeFromArray } from "./remove-from-array.js";
+import { omitFromArray } from "./omit-from-array.js";
 
 type Predicate = (value: any) => boolean;
 
-export const removeFromObject = <T extends Dict>(dict: T, predicate: Predicate): T => {
+export const omitFromObject = <T extends Dict>(dict: T, predicate: Predicate): T => {
   const result: Dict = {};
 
   for (const [key, value] of Object.entries(dict)) {
     if (isArray(value)) {
-      result[key] = removeFromArray(value, predicate);
+      result[key] = omitFromArray(value, predicate);
     } else if (isObject(value)) {
-      result[key] = removeFromObject(value, predicate);
+      result[key] = omitFromObject(value, predicate);
     } else if (predicate(value)) {
       continue;
     } else {

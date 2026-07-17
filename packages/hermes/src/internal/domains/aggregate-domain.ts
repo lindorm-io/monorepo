@@ -4,21 +4,22 @@ import type { IIrisMessageBus, IIrisWorkerQueue } from "@lindorm/iris";
 import { JsonKit } from "@lindorm/json-kit";
 import {
   KryptosKit,
+  type KryptosCurve,
   type KryptosEncAlgorithm,
   type KryptosEncryption,
-  type KryptosCurve,
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
-import { DuplicateKeyError } from "@lindorm/proteus";
 import type { IProteusSource } from "@lindorm/proteus";
-import type { ClassLike, Dict } from "@lindorm/types";
-import { removeUndefined } from "@lindorm/utils";
+import { DuplicateKeyError } from "@lindorm/proteus";
 import { randomId } from "@lindorm/random";
+import type { ClassLike, Dict } from "@lindorm/types";
+import { omitUndefined } from "@lindorm/utils";
 import {
   AggregateAlreadyCreatedError,
   AggregateDestroyedError,
   AggregateNotCreatedError,
   CausationMissingEventsError,
+  ChecksumError,
   CommandSchemaValidationError,
   ConcurrencyError,
   DomainError,
@@ -31,14 +32,15 @@ import type {
   AggregateIdentifier,
   ErrorDispatchOptions,
 } from "../../types/index.js";
-import { ChecksumError } from "../../errors/index.js";
-import { EventRecord, EncryptionRecord } from "../entities/index.js";
+import { EncryptionRecord, EventRecord } from "../entities/index.js";
 import type { HermesCommandMessage, HermesErrorMessage } from "../messages/index.js";
 import { HermesEventMessage } from "../messages/index.js";
-import type { HermesRegistry } from "../registry/index.js";
-import type { RegisteredAggregate, HandlerRegistration } from "../registry/index.js";
-import { findEvents } from "../stores/index.js";
-import { findEncryptionKey, insertEncryptionKey } from "../stores/index.js";
+import type {
+  HandlerRegistration,
+  HermesRegistry,
+  RegisteredAggregate,
+} from "../registry/index.js";
+import { findEncryptionKey, findEvents, insertEncryptionKey } from "../stores/index.js";
 import {
   assertChecksum,
   createChecksum,
@@ -517,7 +519,7 @@ export class AggregateDomain {
     return records.map((record) => {
       const encrypted = aes.encrypt(JsonKit.buffer(record.data), "serialised");
       return Object.assign(record, {
-        data: removeUndefined(encrypted) as Record<string, unknown>,
+        data: omitUndefined(encrypted) as Record<string, unknown>,
       });
     });
   }

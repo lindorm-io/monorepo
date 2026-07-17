@@ -1,6 +1,6 @@
 import { isBoolean, isString } from "@lindorm/is";
 import type { Dict } from "@lindorm/types";
-import { removeUndefined } from "@lindorm/utils";
+import { omitUndefined } from "@lindorm/utils";
 import { AegisError } from "../../errors/index.js";
 import type { AegisIntrospection } from "../../types/index.js";
 import { extractDomainClaims } from "./extract-claims.js";
@@ -29,7 +29,7 @@ export const parseIntrospection = (data: IntrospectClaimsInput): AegisIntrospect
 
   const { claims } = extractDomainClaims(data);
 
-  return removeUndefined({
+  return omitUndefined({
     ...claims,
     active: true as const,
     tokenType: isString(data.tokenType)

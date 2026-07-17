@@ -1,4 +1,4 @@
-import { removeUndefined } from "@lindorm/utils";
+import { omitUndefined } from "@lindorm/utils";
 import { resolveVerificationKey } from "./resolve-verification-key.js";
 import type { PylonKeySelectors, PylonResolvedKeys } from "./types.js";
 
@@ -26,7 +26,7 @@ export const resolveSessionKeys = (
   session?: PylonKeySelectors,
   cookie?: PylonKeySelectors,
 ): PylonResolvedKeys =>
-  removeUndefined<PylonResolvedKeys>({
+  omitUndefined<PylonResolvedKeys>({
     signature: session?.signature ?? cookie?.signature,
     verification: resolveVerificationKey(session?.signature, cookie?.signature),
     encryption: session?.encryption ?? cookie?.encryption,

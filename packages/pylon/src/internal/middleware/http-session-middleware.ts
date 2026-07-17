@@ -1,6 +1,6 @@
 import { AegisError, isParsedJwt } from "@lindorm/aegis";
 import { ServerError } from "@lindorm/errors";
-import { removeUndefined } from "@lindorm/utils";
+import { omitUndefined } from "@lindorm/utils";
 import type { IPylonSession } from "../../interfaces/index.js";
 import type {
   PylonCookieSettings,
@@ -31,7 +31,7 @@ export const createHttpSessionMiddleware = (
   // writes plaintext.
   const sk = resolveSessionKeys(options, cookies);
 
-  const config: PylonSetCookieOptions & PylonGetCookieOptions = removeUndefined({
+  const config: PylonSetCookieOptions & PylonGetCookieOptions = omitUndefined({
     domain: options.domain,
     encoding: options.encoding,
     expiry: options.expiry,

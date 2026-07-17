@@ -4,8 +4,7 @@ import { expires } from "@lindorm/date";
 import { isFinite, isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import { removeUndefined } from "@lindorm/utils";
-import { B64U } from "../constants/format.js";
+import { omitUndefined } from "@lindorm/utils";
 import { JwtError } from "../../errors/index.js";
 import type {
   JwtClaims,
@@ -13,6 +12,7 @@ import type {
   SignJwtContent,
   SignJwtOptions,
 } from "../../types/index.js";
+import { B64U } from "../constants/format.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { extractDomainClaims } from "./extract-claims.js";
 import { extractSensitiveIdentity } from "./extract-sensitive-identity.js";
@@ -136,12 +136,12 @@ export const parseTokenPayload = <C extends Dict = Dict<never>>(
   // ParsedJwtPayload keeps set-valued arrays non-optional with [] defaults.
   // Only `iss` is required at parse (validated above); every other scalar
   // claim is optional — subject/tokenId stay undefined when absent
-  // (removeUndefined strips them), never a fabricated "unknown".
-  return removeUndefined({
+  // (omitUndefined strips them), never a fabricated "unknown".
+  return omitUndefined({
     ...domain,
     // Required field (validated above — iss checked)
     issuer: domain.issuer!,
-    // Optional — an absent exp (SET) / iat leaves them undefined (removeUndefined strips)
+    // Optional — an absent exp (SET) / iat leaves them undefined (omitUndefined strips)
     expiresAt: domain.expiresAt,
     issuedAt: domain.issuedAt,
     // Non-optional arrays default to []

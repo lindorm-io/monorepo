@@ -1,7 +1,7 @@
 import { expires, getUnixTime } from "@lindorm/date";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import { removeUndefined } from "@lindorm/utils";
+import { omitUndefined } from "@lindorm/utils";
 import { JwtError } from "../../errors/index.js";
 import type {
   InvalidEntry,
@@ -111,7 +111,7 @@ export const buildProfileClaims = <C extends Dict = Dict>(
   // required/forbidden/validate rules can see them (e.g. introspection's
   // `token_introspection`, jarm's `code`/`state`). They are also re-spread at
   // encode time; the merge is idempotent.
-  const claims = removeUndefined({
+  const claims = omitUndefined({
     ...mapped,
     ...(content.claims ?? {}),
     iat,

@@ -16,7 +16,7 @@ npm install @lindorm/utils
 - `filter` / `find` / `findLast` / `remove` over arrays using a `DeepPartial` shape
 - `Predicated` class with a richer query DSL (`$and`, `$or`, `$not`, `$eq`, `$neq`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$nin`, `$regex`, `$like`, `$ilike`, `$between`, `$length`, `$mod`, `$exists`, `$all`, `$overlap`, `$contained`)
 - `combineSignals` and `isAbortReason` helpers for `AbortSignal` composition and the shared `AbortReason` shape
-- `removeEmpty` and `removeUndefined` for recursive object/array cleanup
+- `omitEmpty` and `omitUndefined` for recursive object/array cleanup
 - `parseStringRecord` for coercing `Record<string, string>` (e.g. query strings) into typed values
 - `sanitiseToken` for making a JWT/JWE safe to log
 - `sortKeys` for deterministic JSON key ordering
@@ -92,19 +92,19 @@ if (isAbortReason(signal?.reason)) {
 ### Object/array cleanup
 
 ```ts
-import { removeEmpty, removeUndefined, sortKeys } from "@lindorm/utils";
+import { omitEmpty, omitUndefined, sortKeys } from "@lindorm/utils";
 
-removeEmpty({ a: 1, b: null, c: "", d: [], e: {} });
+omitEmpty({ a: 1, b: null, c: "", d: [], e: {} });
 // { a: 1 }
 
-removeUndefined({ a: 1, b: undefined, c: { d: undefined, e: 2 } });
+omitUndefined({ a: 1, b: undefined, c: { d: undefined, e: 2 } });
 // { a: 1, c: { e: 2 } }
 
 sortKeys({ b: 1, a: { d: 1, c: 1 } });
 // { a: { c: 1, d: 1 }, b: 1 }
 ```
 
-`removeEmpty` strips `null`, `undefined`, `""`, `[]`, and `{}` recursively. `removeUndefined` strips only `undefined`. Both accept either an array or an object and throw `TypeError` for other inputs.
+`omitEmpty` strips `null`, `undefined`, `""`, `[]`, and `{}` recursively. `omitUndefined` strips only `undefined`. Both accept either an array or an object and throw `TypeError` for other inputs.
 
 ### Parsing string records
 
@@ -195,11 +195,11 @@ The `Predicate<T>` type lives in `@lindorm/types` — import it from there if yo
 
 ### Object/array cleanup
 
-| Export            | Signature          | Description                                                                                                             |
-| ----------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| `removeEmpty`     | `<T>(arg: T) => T` | Recursively strips `null`, `undefined`, `""`, `[]`, and `{}`. Accepts an array or object; throws `TypeError` otherwise. |
-| `removeUndefined` | `<T>(arg: T) => T` | Recursively strips `undefined` only. Same input rules as `removeEmpty`.                                                 |
-| `sortKeys`        | `<T>(arg: T) => T` | Returns a new object with keys sorted alphabetically at every depth.                                                    |
+| Export          | Signature          | Description                                                                                                             |
+| --------------- | ------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `omitEmpty`     | `<T>(arg: T) => T` | Recursively strips `null`, `undefined`, `""`, `[]`, and `{}`. Accepts an array or object; throws `TypeError` otherwise. |
+| `omitUndefined` | `<T>(arg: T) => T` | Recursively strips `undefined` only. Same input rules as `omitEmpty`.                                                   |
+| `sortKeys`      | `<T>(arg: T) => T` | Returns a new object with keys sorted alphabetically at every depth.                                                    |
 
 ### String parsing
 

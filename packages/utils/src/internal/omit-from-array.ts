@@ -1,9 +1,9 @@
 import { isArray, isObject } from "@lindorm/is";
-import { removeFromObject } from "./remove-from-object.js";
+import { omitFromObject } from "./omit-from-object.js";
 
 type Predicate = (value: any) => boolean;
 
-export const removeFromArray = <T extends Array<any>>(
+export const omitFromArray = <T extends Array<any>>(
   array: T,
   predicate: Predicate,
 ): T => {
@@ -11,9 +11,9 @@ export const removeFromArray = <T extends Array<any>>(
 
   for (const value of array) {
     if (isArray(value)) {
-      result.push(removeFromArray(value, predicate));
+      result.push(omitFromArray(value, predicate));
     } else if (isObject(value)) {
-      result.push(removeFromObject(value, predicate));
+      result.push(omitFromObject(value, predicate));
     } else if (predicate(value)) {
       continue;
     } else {

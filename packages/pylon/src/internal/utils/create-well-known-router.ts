@@ -1,7 +1,7 @@
 import { ClientError } from "@lindorm/errors";
 import { isString, isUrlLike } from "@lindorm/is";
 import type { OpenIdConfiguration } from "@lindorm/types";
-import { removeUndefined, sortKeys } from "@lindorm/utils";
+import { omitUndefined, sortKeys } from "@lindorm/utils";
 import { PylonRouter } from "../../classes/index.js";
 import type { PylonHttpContext, PylonHttpSettings } from "../../types/index.js";
 import { assertSecurityTxtOptions } from "./assert-security-txt-options.js";
@@ -80,7 +80,7 @@ export const createWellKnownRouter = <C extends PylonHttpContext>(
 
   if (options.openIdConfiguration) {
     const openIdConfiguration = sortKeys(
-      removeUndefined({
+      omitUndefined({
         ...(options.domain && { issuer: options.domain }),
         ...options.openIdConfiguration,
       }),

@@ -2,9 +2,30 @@ import { B64 } from "@lindorm/b64";
 import { expiresAt, getUnixTime, isAfter, isBefore, isEqual } from "@lindorm/date";
 import { isBuffer } from "@lindorm/is";
 import { randomId } from "@lindorm/random";
-import { removeEmpty, removeUndefined } from "@lindorm/utils";
+import { omitEmpty, omitUndefined } from "@lindorm/utils";
 import { KryptosError } from "../errors/index.js";
 import type { IKryptos } from "../interfaces/index.js";
+import { KRYPTOS_BRAND } from "../internal/constants/brand.js";
+import type { ExportCache } from "../internal/types/export-cache.js";
+import { calculateAlgClass } from "../internal/utils/alg-class.js";
+import { encodeCborEnv } from "../internal/utils/cbor/encode-cbor-env.js";
+import { computeKeyId } from "../internal/utils/compute-key-id.js";
+import { computeThumbprint } from "../internal/utils/compute-thumbprint.js";
+import { exportToB64 } from "../internal/utils/export/export-b64.js";
+import { exportToDer } from "../internal/utils/export/export-der.js";
+import { exportToJwk } from "../internal/utils/export/export-jwk.js";
+import { exportToPem } from "../internal/utils/export/export-pem.js";
+import { createDerFromDer } from "../internal/utils/from/der-from-der.js";
+import { calculateKeyOps } from "../internal/utils/key-ops.js";
+import { isOctDer } from "../internal/utils/oct/is.js";
+import { modulusSize } from "../internal/utils/rsa/modulus-size.js";
+import { certDerToPem } from "../internal/utils/x509/der-to-pem.js";
+import { extractLeafSpki } from "../internal/utils/x509/extract-leaf-spki.js";
+import { parseX509Certificate } from "../internal/utils/x509/parse-certificate.js";
+import { parseX509 } from "../internal/utils/x509/parse-x509.js";
+import { verifyX509Chain } from "../internal/utils/x509/verify-chain.js";
+import { x509PublicKeyMatches } from "../internal/utils/x509/x509-public-key-matches.js";
+import { x5tS256 as x5tS256Thumbprint } from "../internal/utils/x509/x509-thumbprints.js";
 import type {
   KryptosAlgClass,
   KryptosAlgorithm,
@@ -29,27 +50,6 @@ import type {
   ParsedX509Certificate,
   RsaModulus,
 } from "../types/index.js";
-import type { ExportCache } from "../internal/types/export-cache.js";
-import { calculateAlgClass } from "../internal/utils/alg-class.js";
-import { calculateKeyOps } from "../internal/utils/key-ops.js";
-import { encodeCborEnv } from "../internal/utils/cbor/encode-cbor-env.js";
-import { certDerToPem } from "../internal/utils/x509/der-to-pem.js";
-import { computeKeyId } from "../internal/utils/compute-key-id.js";
-import { computeThumbprint } from "../internal/utils/compute-thumbprint.js";
-import { createDerFromDer } from "../internal/utils/from/der-from-der.js";
-import { exportToB64 } from "../internal/utils/export/export-b64.js";
-import { exportToDer } from "../internal/utils/export/export-der.js";
-import { exportToJwk } from "../internal/utils/export/export-jwk.js";
-import { exportToPem } from "../internal/utils/export/export-pem.js";
-import { KRYPTOS_BRAND } from "../internal/constants/brand.js";
-import { isOctDer } from "../internal/utils/oct/is.js";
-import { modulusSize } from "../internal/utils/rsa/modulus-size.js";
-import { extractLeafSpki } from "../internal/utils/x509/extract-leaf-spki.js";
-import { parseX509Certificate } from "../internal/utils/x509/parse-certificate.js";
-import { parseX509 } from "../internal/utils/x509/parse-x509.js";
-import { verifyX509Chain } from "../internal/utils/x509/verify-chain.js";
-import { x509PublicKeyMatches } from "../internal/utils/x509/x509-public-key-matches.js";
-import { x5tS256 as x5tS256Thumbprint } from "../internal/utils/x509/x509-thumbprints.js";
 
 export class Kryptos implements IKryptos {
   private readonly _id: string;
@@ -419,7 +419,7 @@ export class Kryptos implements IKryptos {
         if (!this._cache.b64) {
           const result = exportToB64(exportOptions);
           this._cache.b64 = Object.freeze(
-            removeUndefined({
+            omitUndefined({
               privateKey: result.privateKey,
               publicKey: result.publicKey,
             }),
@@ -448,7 +448,7 @@ export class Kryptos implements IKryptos {
           });
           this._cache.jwkPrivate = Object.freeze(keys);
         }
-        return removeUndefined({
+        return omitUndefined({
           ...this._cache.jwkPrivate,
           kid: this.id,
           alg: this.algorithm,
@@ -462,7 +462,7 @@ export class Kryptos implements IKryptos {
         if (!this._cache.pem) {
           const result = exportToPem(exportOptions);
           this._cache.pem = Object.freeze(
-            removeUndefined({
+            omitUndefined({
               privateKey: result.privateKey,
               publicKey: result.publicKey,
             }),
@@ -499,7 +499,7 @@ export class Kryptos implements IKryptos {
     this.assertNotDisposed();
 
     const { privateKey, publicKey } = this.export("b64");
-    return removeUndefined<KryptosDB>({
+    return omitUndefined<KryptosDB>({
       id: this.id,
       algorithm: this.algorithm,
       certificateChain: this.certificateChain,
@@ -544,7 +544,7 @@ export class Kryptos implements IKryptos {
   }
 
   toJSON(): KryptosJSON {
-    return removeUndefined<KryptosJSON>({
+    return omitUndefined<KryptosJSON>({
       id: this.id,
       algClass: this.algClass,
       algorithm: this.algorithm,
@@ -614,7 +614,7 @@ export class Kryptos implements IKryptos {
       this._cache[cacheKey] = Object.freeze(keys);
     }
 
-    return removeEmpty({
+    return omitEmpty({
       ...this._cache[cacheKey],
       kid: this.id,
       alg: this.algorithm,
@@ -633,7 +633,7 @@ export class Kryptos implements IKryptos {
       owner_id: this.ownerId ?? undefined,
       // Emitted only in private JWKs (env strings, DB round-trips); a public JWK
       // feeds the published JWKS, where the flag is a tautology. Always an
-      // explicit boolean — `false` survives removeEmpty, `undefined` is stripped
+      // explicit boolean — `false` survives omitEmpty, `undefined` is stripped
       // — including when `true`: the import default (`publish ?? true`) is the
       // safety net for a foreign JWK, not the encoding of our own key. Two bytes
       // of CBOR buys an env string that states its own policy.

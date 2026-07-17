@@ -1,9 +1,8 @@
-import { expires } from "@lindorm/date";
+import { expires, getUnixTime } from "@lindorm/date";
 import { isArray, isDate, isFinite, isObject, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import { getUnixTime } from "@lindorm/date";
-import { removeUndefined } from "@lindorm/utils";
+import { omitUndefined } from "@lindorm/utils";
 import { JwtError } from "../../errors/index.js";
 import type {
   ActClaim,
@@ -25,7 +24,7 @@ export type MapContentContext = {
 };
 
 const actClaimToWire = (claim: ActClaim): ActClaimWire =>
-  removeUndefined({
+  omitUndefined({
     sub: claim.subject,
     iss: claim.issuer,
     aud: claim.audience,
@@ -80,7 +79,7 @@ export const mapContentToClaims = <C extends Dict = Dict>(
       : undefined;
 
   const cnf = isObject(content.confirmation)
-    ? removeUndefined({
+    ? omitUndefined({
         jkt: content.confirmation.thumbprint,
         "x5t#S256": content.confirmation.mtlsCertThumbprint,
         jwk: content.confirmation.key,
@@ -89,7 +88,7 @@ export const mapContentToClaims = <C extends Dict = Dict>(
       })
     : undefined;
 
-  return removeUndefined({
+  return omitUndefined({
     aal: isFinite(content.authenticatorAssuranceLevel)
       ? content.authenticatorAssuranceLevel
       : undefined,

@@ -1,7 +1,7 @@
-import { removeUndefined } from "./remove-undefined.js";
 import { describe, expect, test } from "vitest";
+import { omitEmpty } from "./omit-empty.js";
 
-describe("removeUndefined", () => {
+describe("omitEmpty", () => {
   const testArray = [
     1,
     2,
@@ -56,10 +56,10 @@ describe("removeUndefined", () => {
   };
 
   test("should remove empty from array", () => {
-    expect(removeUndefined(testArray)).toMatchSnapshot();
+    expect(omitEmpty(testArray)).toMatchSnapshot();
   });
 
   test("should remove empty from object", () => {
-    expect(removeUndefined(testObject)).toMatchSnapshot();
+    expect(omitEmpty(testObject)).toMatchSnapshot();
   });
 });

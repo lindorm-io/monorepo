@@ -17,7 +17,6 @@ import {
 } from "@lindorm/amphora";
 import { getUnixTime } from "@lindorm/date";
 import { isBuffer, isDate, isString } from "@lindorm/is";
-import { removeUndefined, sanitiseToken } from "@lindorm/utils";
 import type {
   IKryptos,
   KryptosEncAlgorithm,
@@ -26,6 +25,7 @@ import type {
 } from "@lindorm/kryptos";
 import type { ILogger } from "@lindorm/logger";
 import type { Dict } from "@lindorm/types";
+import { omitUndefined, sanitiseToken } from "@lindorm/utils";
 import { AegisError } from "../errors/index.js";
 import type {
   IAegis,
@@ -34,6 +34,30 @@ import type {
   IAegisJws,
   IAegisJwt,
 } from "../interfaces/index.js";
+import { coseTyp } from "../internal/cose/cose-typ.js";
+import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
+import {
+  registerProfile as registerProfileFn,
+  resolveProfile,
+} from "../internal/profiles/registry.js";
+import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
+import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
+import { enforceVerifyFloor } from "../internal/utils/enforce-verify-floor.js";
+import { extractDomainClaims } from "../internal/utils/extract-claims.js";
+import { decodeJoseHeader } from "../internal/utils/jose-header.js";
+import { createJwtValidate } from "../internal/utils/jwt-validate.js";
+import {
+  type IntrospectClaimsInput,
+  parseIntrospection,
+} from "../internal/utils/parse-introspection.js";
+import {
+  parseUserinfo,
+  type UserinfoClaimsInput,
+} from "../internal/utils/parse-userinfo.js";
+import { resolveKey } from "../internal/utils/resolve-key.js";
+import { selectEncoder } from "../internal/utils/select-encoder.js";
+import { validateProfileClaims } from "../internal/utils/validate-profile-claims.js";
+import { validate as validateClaims } from "../internal/utils/validate.js";
 import type {
   AegisDecryptKey,
   AegisEncKey,
@@ -61,11 +85,11 @@ import type {
   ProfileVerifyOptions,
   RawSignInput,
   SignContent,
+  SignedJws,
+  SignedJwt,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
-  SignedJws,
-  SignedJwt,
   TokenHeaderClaims,
   TokenProfile,
   ValidateJwtOptions,
@@ -73,34 +97,10 @@ import type {
   VerifyJwtOptions,
 } from "../types/index.js";
 import { CoseKit } from "./CoseKit.js";
-import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
-import { coseTyp } from "../internal/cose/cose-typ.js";
-import { resolveKey } from "../internal/utils/resolve-key.js";
-import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
-import { selectEncoder } from "../internal/utils/select-encoder.js";
-import { validateProfileClaims } from "../internal/utils/validate-profile-claims.js";
-import { enforceVerifyFloor } from "../internal/utils/enforce-verify-floor.js";
-import { extractDomainClaims } from "../internal/utils/extract-claims.js";
-import {
-  registerProfile as registerProfileFn,
-  resolveProfile,
-} from "../internal/profiles/registry.js";
-import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js";
-import { createJwtValidate } from "../internal/utils/jwt-validate.js";
-import { validate as validateClaims } from "../internal/utils/validate.js";
-import { decodeJoseHeader } from "../internal/utils/jose-header.js";
-import {
-  type IntrospectClaimsInput,
-  parseIntrospection,
-} from "../internal/utils/parse-introspection.js";
-import {
-  parseUserinfo,
-  type UserinfoClaimsInput,
-} from "../internal/utils/parse-userinfo.js";
+import { JoseKit } from "./JoseKit.js";
 import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
-import { JoseKit } from "./JoseKit.js";
 
 export class Aegis implements IAegis {
   readonly issuer: string | null;
@@ -523,7 +523,7 @@ export class Aegis implements IAegis {
     // from the content before signing so the claim is omitted entirely.
     const signContent =
       hasSensitiveIdentity && !encKryptos
-        ? (removeUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
+        ? (omitUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
         : content;
 
     // Assemble + validate on the DOMAIN-keyed common layer: presence/forbid/
@@ -636,7 +636,7 @@ export class Aegis implements IAegis {
     // encrypted, strip it before securing the CWT so it is omitted entirely.
     const signContent =
       hasSensitiveIdentity && !encKryptos
-        ? (removeUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
+        ? (omitUndefined({ ...content, sensitiveIdentity: undefined }) as SignContent)
         : content;
 
     const kryptos = await this.resolveSignKey(options.sign ?? {}, profile);

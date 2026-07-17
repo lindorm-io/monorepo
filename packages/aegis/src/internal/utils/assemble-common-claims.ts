@@ -2,14 +2,14 @@ import { expires } from "@lindorm/date";
 import { isDate, isString } from "@lindorm/is";
 import type { KryptosAlgorithm } from "@lindorm/kryptos";
 import type { Dict } from "@lindorm/types";
-import { removeUndefined } from "@lindorm/utils";
-import { CLAIM_REGISTRY } from "../claims/registry.js";
+import { omitUndefined } from "@lindorm/utils";
 import type {
   SignContent,
   SignContext,
   SignJwtOptions,
   TokenProfile,
 } from "../../types/index.js";
+import { CLAIM_REGISTRY } from "../claims/registry.js";
 import { enforceProfilePolicy } from "./build-profile-claims.js";
 import { createAccessTokenHash, createCodeHash, createStateHash } from "./create-hash.js";
 import { generateTokenId } from "./generate-token-id.js";
@@ -98,7 +98,7 @@ export const assembleCommonClaims = (
   // Custom passthrough claims keep their LITERAL key so policy/validation can
   // see required custom claims (introspection's `token_introspection`, jarm's
   // `code`/`state`).
-  const common = removeUndefined({
+  const common = omitUndefined({
     ...picked,
     issuedAt,
     notBefore,
