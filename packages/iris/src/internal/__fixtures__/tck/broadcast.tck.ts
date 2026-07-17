@@ -1,5 +1,10 @@
 // TCK: Broadcast Suite
-// Tests @Broadcast decorator behavior on worker queue consumers.
+// Tests @Broadcast decorator behavior on BOTH worker queue consumers and
+// message-bus subscribers. The message-bus path is the regression guard for
+// H3: publish routes a broadcast message to the `.broadcast`/`:broadcast`
+// destination, and every `bus.subscribe` subscriber must independently receive
+// it (nats/redis previously listened only on the base destination, so a
+// broadcast reached nobody via the bus).
 
 import type { TckDriverHandle } from "./types.js";
 import type { TckMessages } from "./create-tck-messages.js";
@@ -111,6 +116,55 @@ export const broadcastSuite = (
       expect(r1.filter((m) => m.body === "identical-check")).toHaveLength(1);
       expect(r2.filter((m) => m.body === "identical-check")).toHaveLength(1);
       expect(r3.filter((m) => m.body === "identical-check")).toHaveLength(1);
+    });
+
+    test("@Broadcast reaches ALL message-bus subscribers (H3)", async () => {
+      const handle = getHandle();
+      const bus = handle.messageBus(messages.TckBroadcastMessage);
+      const r1: Array<any> = [];
+      const r2: Array<any> = [];
+      const r3: Array<any> = [];
+
+      await bus.subscribe({
+        topic: "TckBroadcastMessage",
+        callback: async (msg) => {
+          r1.push(msg);
+        },
+      });
+      await bus.subscribe({
+        topic: "TckBroadcastMessage",
+        callback: async (msg) => {
+          r2.push(msg);
+        },
+      });
+      await bus.subscribe({
+        topic: "TckBroadcastMessage",
+        callback: async (msg) => {
+          r3.push(msg);
+        },
+      });
+
+      // Allow every subscriber's broadcast consumer to fully initialize.
+      await wait(200);
+
+      const msg = bus.create({ body: "bus-broadcast" } as any);
+      await bus.publish(msg);
+
+      await waitFor(
+        () =>
+          r1.some((m) => m.body === "bus-broadcast") &&
+          r2.some((m) => m.body === "bus-broadcast") &&
+          r3.some((m) => m.body === "bus-broadcast"),
+        timeoutMs,
+      );
+
+      // Every subscriber independently receives the broadcast exactly once —
+      // no competing-consumer round-robin, no silent drop.
+      expect(r1.filter((m) => m.body === "bus-broadcast")).toHaveLength(1);
+      expect(r2.filter((m) => m.body === "bus-broadcast")).toHaveLength(1);
+      expect(r3.filter((m) => m.body === "bus-broadcast")).toHaveLength(1);
+
+      await bus.unsubscribeAll();
     });
 
     test("non-broadcast after unconsume one consumer — remaining consumers still receive", async () => {

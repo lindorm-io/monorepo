@@ -4,9 +4,10 @@ import type { PublishOptions, SubscribeOptions } from "../../../../types/index.j
 import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { NatsSharedState } from "../types/nats-types.js";
+import type { NatsConsumerLoop, NatsSharedState } from "../types/nats-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase.js";
+import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { publishNatsMessages } from "../utils/publish-nats-messages.js";
 import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
@@ -21,10 +22,21 @@ export type NatsMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
   deadLetterManager?: DeadLetterManager;
 };
 
-type OwnedSubscription = {
+type OwnedConsumer = {
   consumerTag: string;
   subject: string;
   consumerName: string;
+};
+
+type OwnedSubscription = OwnedConsumer & {
+  /**
+   * Present only for @Broadcast message types: a second consumer on the
+   * `${subject}.broadcast` subject with its own unique ephemeral consumer, so
+   * this subscriber receives every broadcast independently (published messages
+   * for a broadcast type route to the `.broadcast` subject, which the base
+   * consumer never sees). Always ephemeral — cleaned up unconditionally.
+   */
+  broadcast?: OwnedConsumer;
 };
 
 export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> {
@@ -134,18 +146,70 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
       maxDeliver,
     });
 
-    const tagKey = `${options.topic}:${options.queue ?? ""}`;
-    this.ownedSubscriptions.set(tagKey, {
+    const owned: OwnedSubscription = {
       consumerTag: loop.consumerTag,
       subject,
       consumerName,
-    });
+    };
+
+    // For @Broadcast message types, publish routes every message to the
+    // `${subject}.broadcast` subject. The base consumer above never sees those,
+    // so open a second consumer on the broadcast subject with its own unique
+    // ephemeral consumer, guaranteeing this subscriber receives every broadcast
+    // independently of any other (never competing on a shared consumer).
+    let broadcastLoop: NatsConsumerLoop | undefined;
+
+    if (this.metadata.broadcast) {
+      const broadcastSubject = resolveBroadcastDestination(subject, true, ".");
+      const broadcastConsumerName =
+        `${this.state.prefix}_bc_ephemeral_${randomId({ length: 16 })}`.replace(
+          /[^a-zA-Z0-9_-]/g,
+          "_",
+        );
+
+      broadcastLoop = await createNatsConsumer({
+        js: this.state.js,
+        jsm: this.state.jsm,
+        streamName: this.state.streamName,
+        consumerName: broadcastConsumerName,
+        subject: broadcastSubject,
+        prefetch: this.state.prefetch,
+        onMessage: wrappedCallback,
+        logger: this.logger,
+        ensuredConsumers: this.state.ensuredConsumers,
+        deliverPolicy: "new",
+        maxDeliver,
+      });
+      this.state.consumerLoops.push(broadcastLoop);
+
+      this.state.consumerRegistrations.push({
+        consumerTag: broadcastLoop.consumerTag,
+        streamName: this.state.streamName,
+        consumerName: broadcastConsumerName,
+        subject: broadcastSubject,
+        callback: wrappedCallback,
+        deliverPolicy: "new",
+        maxDeliver,
+      });
+
+      owned.broadcast = {
+        consumerTag: broadcastLoop.consumerTag,
+        subject: broadcastSubject,
+        consumerName: broadcastConsumerName,
+      };
+    }
+
+    const tagKey = `${options.topic}:${options.queue ?? ""}`;
+    this.ownedSubscriptions.set(tagKey, owned);
 
     if (!options.queue) {
       this.ephemeralTags.add(tagKey);
     }
 
     await loop.ready;
+    // Await the broadcast fetch loop too so a publish immediately after
+    // subscribe is seen by this consumer.
+    if (broadcastLoop) await broadcastLoop.ready;
   }
 
   async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
@@ -162,16 +226,11 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
     if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
 
     if (this.ephemeralTags.has(tagKey)) {
-      if (this.state.jsm) {
-        try {
-          await this.state.jsm.consumers.delete(this.state.streamName, sub.consumerName);
-        } catch {
-          // ignore
-        }
-      }
-      this.state.ensuredConsumers.delete(sub.consumerName);
+      await this.deleteEphemeralConsumer(sub.consumerName);
       this.ephemeralTags.delete(tagKey);
     }
+
+    if (sub.broadcast) await this.teardownBroadcast(sub.broadcast);
 
     this.ownedSubscriptions.delete(tagKey);
   }
@@ -186,21 +245,39 @@ export class NatsMessageBus<M extends IMessage> extends DriverMessageBusBase<M> 
       if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
 
       if (this.ephemeralTags.has(tagKey)) {
-        if (this.state.jsm) {
-          try {
-            await this.state.jsm.consumers.delete(
-              this.state.streamName,
-              sub.consumerName,
-            );
-          } catch {
-            // ignore
-          }
-        }
-        this.state.ensuredConsumers.delete(sub.consumerName);
+        await this.deleteEphemeralConsumer(sub.consumerName);
       }
+
+      if (sub.broadcast) await this.teardownBroadcast(sub.broadcast);
     }
 
     this.ephemeralTags.clear();
     this.ownedSubscriptions.clear();
+  }
+
+  /**
+   * Tear down a @Broadcast subscriber's dedicated consumer: stop its loop, drop
+   * its registration, and delete the always-ephemeral server-side consumer.
+   */
+  private async teardownBroadcast(bc: OwnedConsumer): Promise<void> {
+    await stopNatsConsumer(this.state, bc.consumerTag);
+
+    const regIdx = this.state.consumerRegistrations.findIndex(
+      (r) => r.consumerTag === bc.consumerTag,
+    );
+    if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
+
+    await this.deleteEphemeralConsumer(bc.consumerName);
+  }
+
+  private async deleteEphemeralConsumer(consumerName: string): Promise<void> {
+    if (this.state.jsm) {
+      try {
+        await this.state.jsm.consumers.delete(this.state.streamName, consumerName);
+      } catch {
+        // ignore — consumer may already be gone
+      }
+    }
+    this.state.ensuredConsumers.delete(consumerName);
   }
 }

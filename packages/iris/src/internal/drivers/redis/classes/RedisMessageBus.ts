@@ -7,6 +7,7 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { RedisSharedState } from "../types/redis-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase.js";
+import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { publishRedisMessages } from "../utils/publish-redis-messages.js";
 import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
 import { createConsumerLoop } from "../utils/create-consumer-loop.js";
@@ -20,10 +21,21 @@ export type RedisMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & 
   deadLetterManager?: DeadLetterManager;
 };
 
-type OwnedSubscription = {
+type OwnedConsumer = {
   consumerTag: string;
   streamKey: string;
   groupName: string;
+};
+
+type OwnedSubscription = OwnedConsumer & {
+  /**
+   * Present only for @Broadcast message types: a second consumer on the
+   * `${streamKey}:broadcast` stream with its own unique group, so this
+   * subscriber receives every broadcast independently (published messages for a
+   * broadcast type route to the `:broadcast` stream, which the base group never
+   * reads). Always a unique ephemeral group — cleaned up unconditionally.
+   */
+  broadcast?: OwnedConsumer;
 };
 
 export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M> {
@@ -123,18 +135,62 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       callback: wrappedCallback,
     });
 
-    const tagKey = `${options.topic}:${options.queue ?? ""}`;
-    this.ownedSubscriptions.set(tagKey, {
+    const owned: OwnedSubscription = {
       consumerTag: loop.consumerTag,
       streamKey,
       groupName,
-    });
+    };
+
+    // For @Broadcast message types, publish routes every message to the
+    // `${streamKey}:broadcast` stream. The base group above never reads those,
+    // so open a second consumer on the broadcast stream with its own unique
+    // group, guaranteeing this subscriber receives every broadcast independently
+    // of any other (never competing on a shared group).
+    let broadcastLoop: Awaited<ReturnType<typeof createConsumerLoop>> | undefined;
+
+    if (this.metadata.broadcast) {
+      const broadcastStreamKey = resolveBroadcastDestination(streamKey, true, ":");
+      const broadcastGroupName = `${this.state.prefix}.bc.ephemeral.${randomId({ length: 16 })}`;
+
+      broadcastLoop = await createConsumerLoop({
+        publishConnection: this.state.publishConnection,
+        streamKey: broadcastStreamKey,
+        groupName: broadcastGroupName,
+        consumerName: this.state.consumerName,
+        blockMs: this.state.blockMs,
+        count: this.state.prefetch,
+        onEntry: wrappedCallback,
+        logger: this.logger,
+        createdGroups: this.state.createdGroups,
+      });
+      this.state.consumerLoops.push(broadcastLoop);
+
+      this.state.consumerRegistrations.push({
+        consumerTag: broadcastLoop.consumerTag,
+        streamKey: broadcastStreamKey,
+        groupName: broadcastGroupName,
+        consumerName: this.state.consumerName,
+        callback: wrappedCallback,
+      });
+
+      owned.broadcast = {
+        consumerTag: broadcastLoop.consumerTag,
+        streamKey: broadcastStreamKey,
+        groupName: broadcastGroupName,
+      };
+    }
+
+    const tagKey = `${options.topic}:${options.queue ?? ""}`;
+    this.ownedSubscriptions.set(tagKey, owned);
 
     if (!options.queue) {
       this.ephemeralTags.add(tagKey);
     }
 
     await loop.ready;
+    // Await the broadcast loop too so a publish immediately after subscribe is
+    // read by this consumer.
+    if (broadcastLoop) await broadcastLoop.ready;
   }
 
   async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
@@ -150,18 +206,12 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
     );
     if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
 
-    if (this.ephemeralTags.has(tagKey) && this.state.publishConnection) {
-      try {
-        await this.state.publishConnection.xgroup(
-          "DESTROY",
-          sub.streamKey,
-          sub.groupName,
-        );
-      } catch {
-        // Group may already be destroyed
-      }
+    if (this.ephemeralTags.has(tagKey)) {
+      await this.destroyGroup(sub.streamKey, sub.groupName);
       this.ephemeralTags.delete(tagKey);
     }
+
+    if (sub.broadcast) await this.teardownBroadcast(sub.broadcast);
 
     this.ownedSubscriptions.delete(tagKey);
   }
@@ -175,20 +225,38 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       );
       if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
 
-      if (this.ephemeralTags.has(tagKey) && this.state.publishConnection) {
-        try {
-          await this.state.publishConnection.xgroup(
-            "DESTROY",
-            sub.streamKey,
-            sub.groupName,
-          );
-        } catch {
-          // Group may already be destroyed
-        }
+      if (this.ephemeralTags.has(tagKey)) {
+        await this.destroyGroup(sub.streamKey, sub.groupName);
       }
+
+      if (sub.broadcast) await this.teardownBroadcast(sub.broadcast);
     }
 
     this.ephemeralTags.clear();
     this.ownedSubscriptions.clear();
+  }
+
+  /**
+   * Tear down a @Broadcast subscriber's dedicated consumer: stop its loop, drop
+   * its registration, and destroy its always-ephemeral group.
+   */
+  private async teardownBroadcast(bc: OwnedConsumer): Promise<void> {
+    await stopConsumerLoop(this.state, bc.consumerTag);
+
+    const regIdx = this.state.consumerRegistrations.findIndex(
+      (r) => r.consumerTag === bc.consumerTag,
+    );
+    if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
+
+    await this.destroyGroup(bc.streamKey, bc.groupName);
+  }
+
+  private async destroyGroup(streamKey: string, groupName: string): Promise<void> {
+    if (!this.state.publishConnection) return;
+    try {
+      await this.state.publishConnection.xgroup("DESTROY", streamKey, groupName);
+    } catch {
+      // Group may already be destroyed
+    }
   }
 }
