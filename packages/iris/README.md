@@ -988,6 +988,33 @@ new IrisSource({
 });
 ```
 
+### Inspecting and draining the dead letter queue
+
+Every driver exposes a first-class DLQ query/drain surface on the source, so you
+can inspect or purge dead-lettered messages without reaching into internals.
+Entries are returned **newest-first** (most recent failures first) on all drivers.
+
+```typescript
+// All dead letters, newest-first
+const all = await source.getDeadLetters();
+
+// Filter by topic, with pagination
+const page = await source.getDeadLetters({ topic: "OrderPlaced", limit: 20, offset: 0 });
+
+for (const entry of page) {
+  console.log(entry.topic, entry.error, entry.attempt, entry.timestamp);
+}
+
+// Drain the queue — returns the number of entries removed
+const removedAll = await source.purgeDeadLetters();
+const removedTopic = await source.purgeDeadLetters({ topic: "OrderPlaced" });
+```
+
+For the manager-backed drivers (memory / redis / kafka / nats) these read the
+configured `IDeadLetterStore`. Rabbit dead-letters natively via its DLX/DLQ, so
+`getDeadLetters` is a non-destructive read of the broker queue and
+`purgeDeadLetters` drains it.
+
 ### Custom Stores
 
 Implement `IDelayStore` and/or `IDeadLetterStore` for bespoke persistence:

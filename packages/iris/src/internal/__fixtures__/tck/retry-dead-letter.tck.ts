@@ -393,5 +393,35 @@ export const retryDeadLetterSuite = (
         expect(typeof entries[0].timestamp).toBe("number");
       },
     );
+
+    (caps?.deadLetter ? test : test.skip)(
+      "purgeDeadLetters drains the dead-letter queue via the public API",
+      async () => {
+        const handle = getHandle();
+        const bus = handle.messageBus(messages.TckRetryMessage);
+        let callCount = 0;
+
+        await bus.subscribe({
+          topic: "TckRetryMessage",
+          callback: async () => {
+            callCount++;
+            throw new Error("purge-me");
+          },
+        });
+
+        const msg = bus.create({ data: "purge" } as any);
+        await bus.publish(msg);
+
+        await waitFor(() => callCount >= 4, timeoutMs);
+        await waitFor(
+          async () => (await handle.getDeadLetters("TckRetryMessage")).length >= 1,
+          timeoutMs,
+        );
+
+        const purged = await handle.purgeDeadLetters("TckRetryMessage");
+        expect(purged).toBeGreaterThanOrEqual(1);
+        expect(await handle.getDeadLetters("TckRetryMessage")).toHaveLength(0);
+      },
+    );
   });
 };

@@ -340,9 +340,59 @@ describe("MemoryDriver", () => {
       );
       await deadLetterManager.send(envelope, "topic-a", new Error("fail-a2"));
 
-      const filtered = await driver.getDeadLetters("topic-a");
+      const filtered = await driver.getDeadLetters({ topic: "topic-a" });
       expect(filtered).toHaveLength(2);
       expect(filtered.every((e) => e.topic === "topic-a")).toBe(true);
+    });
+  });
+
+  describe("purgeDeadLetters", () => {
+    it("should return 0 when no deadLetterManager", async () => {
+      const driver = createDriver();
+      expect(await driver.purgeDeadLetters()).toBe(0);
+    });
+
+    it("should drain the dead letters and return the removed count", async () => {
+      const logger = createMockLogger();
+      const deadLetterManager = new DeadLetterManager({
+        store: new MemoryDeadLetterStore(),
+        logger: logger as any,
+      });
+
+      const driver = createDriver([], { deadLetterManager });
+
+      const envelope = {
+        payload: Buffer.from("x"),
+        headers: {},
+        topic: "topic-a",
+        priority: 0,
+        timestamp: Date.now(),
+        expiry: null,
+        broadcast: false,
+        attempt: 0,
+        maxRetries: 0,
+        retryStrategy: "constant" as const,
+        retryDelay: 1000,
+        retryDelayMax: 30000,
+        retryMultiplier: 2,
+        retryJitter: false,
+        replyTo: null,
+        correlationId: null,
+        identifierValue: null,
+      };
+
+      await deadLetterManager.send(envelope, "topic-a", new Error("fail-a"));
+      await deadLetterManager.send(
+        { ...envelope, topic: "topic-b" },
+        "topic-b",
+        new Error("fail-b"),
+      );
+
+      expect(await driver.purgeDeadLetters({ topic: "topic-a" })).toBe(1);
+      expect(await driver.getDeadLetters()).toHaveLength(1);
+
+      expect(await driver.purgeDeadLetters()).toBe(1);
+      expect(await driver.getDeadLetters()).toHaveLength(0);
     });
   });
 

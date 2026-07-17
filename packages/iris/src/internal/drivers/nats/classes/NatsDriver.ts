@@ -17,6 +17,11 @@ import type {
   NatsConnectionOptions,
 } from "../../../../types/index.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type {
+  DeadLetterEntry,
+  DeadLetterFilterOptions,
+  DeadLetterListOptions,
+} from "../../../../types/dead-letter.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { NatsConnection, NatsSharedState } from "../types/nats-types.js";
@@ -314,6 +319,16 @@ export class NatsDriver implements IIrisDriver {
         data: { driver: "nats", streamName, timeoutMs },
       },
     );
+  }
+
+  async getDeadLetters(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
+    if (!this.deadLetterManager) return [];
+    return this.deadLetterManager.list(options);
+  }
+
+  async purgeDeadLetters(options?: DeadLetterFilterOptions): Promise<number> {
+    if (!this.deadLetterManager) return 0;
+    return this.deadLetterManager.purge(options);
   }
 
   getConnectionState(): IrisConnectionState {

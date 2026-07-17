@@ -39,6 +39,8 @@ export const _createMockIrisSource = (mockFn: () => any): IIrisSource => {
     drain: mockFn(),
     ping: resolves(true),
     setup: mockFn(),
+    getDeadLetters: resolves([]),
+    purgeDeadLetters: resolves(0),
     getConnectionState: returns("connected" as IrisConnectionState),
     on: mockFn(),
     off: mockFn(),

@@ -18,8 +18,14 @@ import type {
   RabbitConnectionOptions,
 } from "../../../../types/index.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
+import type {
+  DeadLetterEntry,
+  DeadLetterFilterOptions,
+  DeadLetterListOptions,
+} from "../../../../types/dead-letter.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import { reconstructDeadLetterEntry } from "../utils/reconstruct-dead-letter-entry.js";
 import { RabbitMessageBus } from "./RabbitMessageBus.js";
 import { RabbitPublisher } from "./RabbitPublisher.js";
 import { RabbitRpcClient } from "./RabbitRpcClient.js";
@@ -273,6 +279,85 @@ export class RabbitDriver implements IIrisDriver {
       dlxExchange: this.state.dlxExchange,
       dlqQueue: this.state.dlqQueue,
     });
+  }
+
+  async getDeadLetters(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
+    const connection = this.state.connection;
+    if (!connection) return [];
+
+    // Non-destructive peek: pull every message off the native DLQ unacked, then
+    // close the throwaway channel so the broker requeues them all. Nothing else
+    // consumes the DLQ in production, so this is a safe read-only snapshot and it
+    // never disturbs the operational publish/consume channels.
+    const channel = await connection.createChannel();
+    const messages: Array<amqplib.GetMessage> = [];
+
+    try {
+      await channel.assertQueue(this.state.dlqQueue, { durable: true });
+
+      let msg = await channel.get(this.state.dlqQueue, { noAck: false });
+      while (msg) {
+        messages.push(msg);
+        msg = await channel.get(this.state.dlqQueue, { noAck: false });
+      }
+    } finally {
+      // Closing with messages still unacked returns them to the queue intact.
+      await channel.close();
+    }
+
+    let entries = messages.map(reconstructDeadLetterEntry);
+
+    if (options?.topic) {
+      entries = entries.filter((entry) => entry.topic === options.topic);
+    }
+
+    // Canonical DLQ order: newest failures first (matches the memory/redis stores).
+    entries.sort((a, b) => b.timestamp - a.timestamp);
+
+    const offset = options?.offset ?? 0;
+    const limit = options?.limit ?? entries.length;
+
+    return entries.slice(offset, offset + limit);
+  }
+
+  async purgeDeadLetters(options?: DeadLetterFilterOptions): Promise<number> {
+    const connection = this.state.connection;
+    if (!connection) return 0;
+
+    const channel = await connection.createChannel();
+
+    try {
+      await channel.assertQueue(this.state.dlqQueue, { durable: true });
+
+      if (!options?.topic) {
+        const { messageCount } = await channel.purgeQueue(this.state.dlqQueue);
+        return messageCount;
+      }
+
+      // Topic-filtered drain: pull all, ack (remove) the matching topic, and
+      // requeue the rest so an unrelated topic's dead letters survive.
+      let removed = 0;
+      const requeue: Array<amqplib.GetMessage> = [];
+
+      let msg = await channel.get(this.state.dlqQueue, { noAck: false });
+      while (msg) {
+        if (String(msg.fields.routingKey ?? "") === options.topic) {
+          channel.ack(msg);
+          removed++;
+        } else {
+          requeue.push(msg);
+        }
+        msg = await channel.get(this.state.dlqQueue, { noAck: false });
+      }
+
+      for (const held of requeue) {
+        channel.nack(held, false, true);
+      }
+
+      return removed;
+    } finally {
+      await channel.close();
+    }
   }
 
   getConnectionState(): IrisConnectionState {

@@ -93,19 +93,17 @@ const factory: TckDriverFactory = {
       },
 
       async getDeadLetters(topic?: string) {
-        const dlm = (source as any)._deadLetterManager;
-        if (!dlm) return [];
-        if (topic) {
-          return dlm.list({ topic });
-        }
-        return dlm.list();
+        return source.getDeadLetters(topic ? { topic } : undefined);
+      },
+
+      async purgeDeadLetters(topic?: string) {
+        return source.purgeDeadLetters(topic ? { topic } : undefined);
       },
 
       async clear() {
         const driver = (source as any)._driver as RedisDriver;
         await driver.reset();
-        const dlm = (source as any)._deadLetterManager;
-        if (dlm) await dlm.purge();
+        await source.purgeDeadLetters();
       },
 
       async forceReconnect() {

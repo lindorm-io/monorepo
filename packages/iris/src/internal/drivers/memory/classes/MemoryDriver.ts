@@ -16,7 +16,11 @@ import type {
   IrisHookMeta,
 } from "../../../../types/index.js";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
-import type { DeadLetterEntry } from "../../../../types/dead-letter.js";
+import type {
+  DeadLetterEntry,
+  DeadLetterFilterOptions,
+  DeadLetterListOptions,
+} from "../../../../types/dead-letter.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
@@ -289,9 +293,14 @@ export class MemoryDriver implements IIrisDriver {
     );
   }
 
-  async getDeadLetters(topic?: string): Promise<Array<DeadLetterEntry>> {
+  async getDeadLetters(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
     if (!this.deadLetterManager) return [];
-    return this.deadLetterManager.list(topic ? { topic } : undefined);
+    return this.deadLetterManager.list(options);
+  }
+
+  async purgeDeadLetters(options?: DeadLetterFilterOptions): Promise<number> {
+    if (!this.deadLetterManager) return 0;
+    return this.deadLetterManager.purge(options);
   }
 
   get connected(): boolean {

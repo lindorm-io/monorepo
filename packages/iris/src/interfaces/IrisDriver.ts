@@ -1,5 +1,11 @@
 import type { Constructor } from "@lindorm/types";
-import type { IrisConnectionState, IrisEvents } from "../types/index.js";
+import type {
+  DeadLetterEntry,
+  DeadLetterFilterOptions,
+  DeadLetterListOptions,
+  IrisConnectionState,
+  IrisEvents,
+} from "../types/index.js";
 import type { IIrisMessageBus } from "./IrisMessageBus.js";
 import type { IIrisPublisher } from "./IrisPublisher.js";
 import type { IIrisRpcClient } from "./IrisRpcClient.js";
@@ -15,6 +21,9 @@ export interface IIrisDriver {
   drain(timeout?: number): Promise<void>;
   ping(): Promise<boolean>;
   setup(messages: Array<Constructor<IMessage>>): Promise<void>;
+
+  getDeadLetters(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>>;
+  purgeDeadLetters(options?: DeadLetterFilterOptions): Promise<number>;
 
   getConnectionState(): IrisConnectionState;
   on<K extends keyof IrisEvents>(

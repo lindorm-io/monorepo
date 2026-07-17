@@ -21,6 +21,8 @@ const createMockDriver = (): IIrisDriver => ({
   drain: vi.fn().mockResolvedValue(undefined),
   ping: vi.fn().mockResolvedValue(true),
   setup: vi.fn().mockResolvedValue(undefined),
+  getDeadLetters: vi.fn().mockResolvedValue([]),
+  purgeDeadLetters: vi.fn().mockResolvedValue(0),
   getConnectionState: vi.fn().mockReturnValue("connected"),
   on: vi.fn(),
   off: vi.fn(),

@@ -98,6 +98,7 @@ export type TckDriverHandle = {
     responseTarget: Constructor<Res>,
   ): IIrisRpcServer<Req, Res>;
   getDeadLetters(topic?: string): Promise<Array<DeadLetterEntry>>;
+  purgeDeadLetters(topic?: string): Promise<number>;
   clear(): Promise<void>;
   teardown(): Promise<void>;
   /**

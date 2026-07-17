@@ -1,5 +1,8 @@
 import type { Constructor } from "@lindorm/types";
 import type {
+  DeadLetterEntry,
+  DeadLetterFilterOptions,
+  DeadLetterListOptions,
   IrisConnectionState,
   IrisEvents,
   MessageScannerInput,
@@ -22,6 +25,10 @@ export interface IIrisSource extends IIrisMessagingProvider {
   disconnect(): Promise<void>;
   drain(timeout?: number): Promise<void>;
   setup(): Promise<void>;
+
+  getDeadLetters(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>>;
+  purgeDeadLetters(options?: DeadLetterFilterOptions): Promise<number>;
+
   getConnectionState(): IrisConnectionState;
   on<K extends keyof IrisEvents>(
     event: K,

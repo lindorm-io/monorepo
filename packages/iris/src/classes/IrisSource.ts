@@ -16,6 +16,9 @@ import type {
   IMessageSubscriber,
 } from "../interfaces/index.js";
 import type {
+  DeadLetterEntry,
+  DeadLetterFilterOptions,
+  DeadLetterListOptions,
   IrisConnectionState,
   IrisDriverType,
   IrisEvents,
@@ -245,6 +248,14 @@ export class IrisSource implements IIrisSource {
     } finally {
       this._settingUpPromise = null;
     }
+  }
+
+  getDeadLetters(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
+    return this.requireDriver().getDeadLetters(options);
+  }
+
+  purgeDeadLetters(options?: DeadLetterFilterOptions): Promise<number> {
+    return this.requireDriver().purgeDeadLetters(options);
   }
 
   messageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {

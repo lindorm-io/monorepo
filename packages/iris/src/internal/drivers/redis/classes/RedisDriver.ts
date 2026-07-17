@@ -20,6 +20,11 @@ import type {
 } from "../../../../types/index.js";
 import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type {
+  DeadLetterEntry,
+  DeadLetterFilterOptions,
+  DeadLetterListOptions,
+} from "../../../../types/dead-letter.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { RedisSharedState } from "../types/redis-types.js";
@@ -339,6 +344,16 @@ export class RedisDriver implements IIrisDriver {
     this._replyQueueActive = false;
 
     this.logger.debug("Reset");
+  }
+
+  async getDeadLetters(options?: DeadLetterListOptions): Promise<Array<DeadLetterEntry>> {
+    if (!this.deadLetterManager) return [];
+    return this.deadLetterManager.list(options);
+  }
+
+  async purgeDeadLetters(options?: DeadLetterFilterOptions): Promise<number> {
+    if (!this.deadLetterManager) return 0;
+    return this.deadLetterManager.purge(options);
   }
 
   getConnectionState(): IrisConnectionState {

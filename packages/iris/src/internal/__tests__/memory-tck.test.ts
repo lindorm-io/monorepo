@@ -87,15 +87,17 @@ const factory: TckDriverFactory = {
       },
 
       async getDeadLetters(topic?: string) {
-        const driver = (source as any)._driver as MemoryDriver;
-        return driver.getDeadLetters(topic);
+        return source.getDeadLetters(topic ? { topic } : undefined);
+      },
+
+      async purgeDeadLetters(topic?: string) {
+        return source.purgeDeadLetters(topic ? { topic } : undefined);
       },
 
       async clear() {
         const driver = (source as any)._driver as MemoryDriver;
         await driver.reset();
-        const dlm = (source as any)._deadLetterManager;
-        if (dlm) await dlm.purge();
+        await source.purgeDeadLetters();
       },
 
       async teardown() {
