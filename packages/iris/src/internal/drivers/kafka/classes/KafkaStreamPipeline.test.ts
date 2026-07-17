@@ -98,6 +98,7 @@ const createMockState = (): KafkaSharedState => ({
   sessionTimeoutMs: 30000,
   acks: -1,
   consumerPool: new Map(),
+  retryConsumers: new Map(),
   createdTopics: new Set(),
   publishedTopics: new Set(),
   abortController: new AbortController(),

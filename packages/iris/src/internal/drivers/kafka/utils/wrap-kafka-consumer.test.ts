@@ -9,6 +9,9 @@ import {
 } from "./wrap-kafka-consumer.js";
 import { describe, expect, it, vi, type Mock } from "vitest";
 
+// The per-group retry topic every wrapped consumer redirects its retries to.
+const RETRY_TOPIC = "iris.test-topic.retry.grp";
+
 const createMockLogger = () => ({
   child: vi.fn().mockReturnThis(),
   debug: vi.fn(),
@@ -141,6 +144,7 @@ const createState = (overrides?: Partial<KafkaSharedState>): KafkaSharedState =>
   consumers: [],
   consumerRegistrations: [],
   consumerPool: new Map(),
+  retryConsumers: new Map(),
   inFlightCount: 0,
   prefetch: 10,
   sessionTimeoutMs: 30000,
@@ -164,6 +168,7 @@ describe("wrapKafkaConsumer", () => {
 
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
+        retryTopic: RETRY_TOPIC,
       });
 
       const payload = createPayload();
@@ -190,6 +195,7 @@ describe("wrapKafkaConsumer", () => {
 
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
+        retryTopic: RETRY_TOPIC,
       });
 
       await wrapped(createPayload({ offset: "42" }));
@@ -209,6 +215,7 @@ describe("wrapKafkaConsumer", () => {
 
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
+        retryTopic: RETRY_TOPIC,
       });
 
       const payload = createPayload({
@@ -239,7 +246,7 @@ describe("wrapKafkaConsumer", () => {
         state,
         createMetadata(),
         logger as any,
-        { consumer: consumer as any },
+        { consumer: consumer as any, retryTopic: RETRY_TOPIC },
       );
 
       await wrapped(createPayload());
@@ -262,7 +269,7 @@ describe("wrapKafkaConsumer", () => {
         state,
         createMetadata(),
         logger as any,
-        { consumer: consumer as any },
+        { consumer: consumer as any, retryTopic: RETRY_TOPIC },
       );
 
       await wrapped(createPayload());
@@ -285,7 +292,7 @@ describe("wrapKafkaConsumer", () => {
         state,
         createMetadata(),
         logger as any,
-        { consumer: consumer as any },
+        { consumer: consumer as any, retryTopic: RETRY_TOPIC },
       );
 
       const payload = createPayload({
@@ -317,7 +324,7 @@ describe("wrapKafkaConsumer", () => {
         state,
         createMetadata(),
         logger as any,
-        { consumer: consumer as any },
+        { consumer: consumer as any, retryTopic: RETRY_TOPIC },
       );
 
       const payload = createPayload({
@@ -343,6 +350,7 @@ describe("wrapKafkaConsumer", () => {
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
         deadLetterManager,
+        retryTopic: RETRY_TOPIC,
       });
 
       await wrapped(createPayload());
@@ -367,6 +375,7 @@ describe("wrapKafkaConsumer", () => {
 
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
+        retryTopic: RETRY_TOPIC,
       });
 
       await wrapped(createPayload());
@@ -389,6 +398,7 @@ describe("wrapKafkaConsumer", () => {
 
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
+        retryTopic: RETRY_TOPIC,
       });
 
       const payload = createPayload({
@@ -403,8 +413,48 @@ describe("wrapKafkaConsumer", () => {
       expect(state.producer!.send).toHaveBeenCalledTimes(1);
 
       const sendArgs = (state.producer!.send as Mock).mock.calls[0][0];
+      // Retry is redirected to this group's per-group retry topic, NOT the
+      // shared topic — so no other fan-out group re-consumes it (M1).
+      expect(sendArgs.topic).toBe(RETRY_TOPIC);
       const kafkaHeaders = sendArgs.messages[0].headers;
       expect(kafkaHeaders["x-iris-attempt"]).toBe("1");
+    });
+
+    it("awaits ensureRetryReady (lazy attach) BEFORE publishing the retry (M1)", async () => {
+      const host = createMockHost();
+      const callback = vi.fn().mockRejectedValue(new Error("fail"));
+      const state = createState();
+      const metadata = createMetadata();
+      const logger = createMockLogger();
+      const consumer = createMockConsumer();
+
+      const order: Array<string> = [];
+      const ensureRetryReady = vi.fn().mockImplementation(async () => {
+        order.push("attach");
+      });
+      (state.producer!.send as Mock).mockImplementation(async () => {
+        order.push("send");
+      });
+
+      const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
+        consumer: consumer as any,
+        retryTopic: RETRY_TOPIC,
+        ensureRetryReady,
+      });
+
+      await wrapped(
+        createPayload({
+          headers: createHeaders({
+            "x-iris-max-retries": "3",
+            "x-iris-retry-delay": "100",
+          }),
+        }),
+      );
+
+      expect(ensureRetryReady).toHaveBeenCalledTimes(1);
+      // The retry consumer must be joined + seeked before the retry lands on the
+      // retry topic, or the just-published retry slips through the join window.
+      expect(order).toEqual(["attach", "send"]);
     });
 
     it("should schedule retry via delayManager when available", async () => {
@@ -419,6 +469,7 @@ describe("wrapKafkaConsumer", () => {
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
         delayManager,
+        retryTopic: RETRY_TOPIC,
       });
 
       const payload = createPayload({
@@ -431,10 +482,14 @@ describe("wrapKafkaConsumer", () => {
 
       expect(host.onConsumeError).toHaveBeenCalled();
       expect(delayManager.schedule).toHaveBeenCalledTimes(1);
+      // The delayed retry carries the per-group retry topic as its explicit
+      // destination (4th arg), so the delay callback delivers it there verbatim
+      // instead of re-resolving/broadcasting onto the shared topic (M1).
       expect(delayManager.schedule).toHaveBeenCalledWith(
         expect.objectContaining({ attempt: 1, topic: "test-topic" }),
         "test-topic",
         expect.any(Number),
+        RETRY_TOPIC,
       );
       expect(state.producer!.send).not.toHaveBeenCalled();
     });
@@ -449,6 +504,7 @@ describe("wrapKafkaConsumer", () => {
 
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
+        retryTopic: RETRY_TOPIC,
       });
 
       const payload = createPayload({
@@ -476,6 +532,7 @@ describe("wrapKafkaConsumer", () => {
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
         deadLetterManager,
+        retryTopic: RETRY_TOPIC,
       });
 
       const payload = createPayload({
@@ -505,6 +562,7 @@ describe("wrapKafkaConsumer", () => {
       const wrapped = wrapKafkaConsumer(host, callback, state, metadata, logger as any, {
         consumer: consumer as any,
         deadLetterManager,
+        retryTopic: RETRY_TOPIC,
       });
 
       const payload = createPayload({
@@ -534,7 +592,7 @@ describe("wrapKafkaConsumer", () => {
         state,
         createMetadata(),
         logger as any,
-        { consumer: consumer as any },
+        { consumer: consumer as any, retryTopic: RETRY_TOPIC },
       );
 
       await wrapped(createPayload());
@@ -562,7 +620,7 @@ describe("wrapKafkaConsumer", () => {
         state,
         createMetadata(),
         logger as any,
-        { consumer: consumer as any },
+        { consumer: consumer as any, retryTopic: RETRY_TOPIC },
       );
 
       await wrapped(createPayload());
@@ -583,7 +641,7 @@ describe("wrapKafkaConsumer", () => {
         state,
         createMetadata(),
         logger as any,
-        { consumer: consumer as any },
+        { consumer: consumer as any, retryTopic: RETRY_TOPIC },
       );
 
       await wrapped(createPayload());

@@ -113,6 +113,7 @@ export const createKafkaConsumer = async (
     kafka,
     groupId,
     topic,
+    createdTopics,
     onMessage,
     sessionTimeoutMs,
     logger,
@@ -128,7 +129,14 @@ export const createKafkaConsumer = async (
   });
 
   await consumer.connect();
-  await subscribeWithAutoCreate(consumer, kafka, topic, fromBeginning, new Set(), logger);
+  await subscribeWithAutoCreate(
+    consumer,
+    kafka,
+    topic,
+    fromBeginning,
+    createdTopics ?? new Set(),
+    logger,
+  );
 
   const readyPromise = awaitConsumerReady(consumer, sessionTimeoutMs);
 

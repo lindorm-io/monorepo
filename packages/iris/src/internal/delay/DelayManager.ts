@@ -23,11 +23,12 @@ export class DelayManager {
     envelope: IrisEnvelope,
     topic: string,
     delayMs: number,
+    destinationTopic?: string,
   ): Promise<string> {
     const id = randomId({ namespace: "dly", length: 16 });
     const deliverAt = Date.now() + delayMs;
 
-    await this.store.schedule({ id, envelope, topic, deliverAt });
+    await this.store.schedule({ id, envelope, topic, deliverAt, destinationTopic });
 
     this.logger.debug("Scheduled delayed delivery", { id, topic, deliverAt });
 

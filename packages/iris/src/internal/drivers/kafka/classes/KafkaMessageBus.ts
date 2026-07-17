@@ -4,7 +4,11 @@ import type { PublishOptions, SubscribeOptions } from "../../../../types/index.j
 import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { KafkaConsumer, KafkaSharedState } from "../types/kafka-types.js";
+import type {
+  KafkaConsumer,
+  KafkaEachMessagePayload,
+  KafkaSharedState,
+} from "../types/kafka-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { DriverMessageBusBase } from "../../../classes/DriverMessageBusBase.js";
 import { publishKafkaMessages } from "../utils/publish-kafka-messages.js";
@@ -13,6 +17,11 @@ import { getOrCreatePooledConsumer } from "../utils/create-kafka-consumer.js";
 import { releasePooledConsumer } from "../utils/stop-kafka-consumer.js";
 import { resolveTopicName } from "../utils/resolve-topic-name.js";
 import { resolveGroupId } from "../utils/resolve-group-id.js";
+import { resolveRetryTopicName } from "../utils/resolve-retry-topic.js";
+import {
+  ensureRetryTopicAttached,
+  releaseRetryConsumer,
+} from "../utils/retry-topic-consumer.js";
 
 export type KafkaMessageBusOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: KafkaSharedState;
@@ -26,6 +35,8 @@ type OwnedSubscription = {
   topic: string;
   kafkaTopic: string;
   broadcastTopic: string;
+  mainRetryTopic: string;
+  broadcastRetryTopic: string;
   groupId: string;
   broadcastGroupId: string;
 };
@@ -106,6 +117,12 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       return p.consumer;
     };
 
+    const mainRetryTopic = resolveRetryTopicName(kafkaTopic, groupId);
+
+    // Lazy retry-topic attach (M1): the ref lets the retry closure reference the
+    // very onMessage it is wrapped in — only ever read at retry time, by which
+    // point it is fully constructed.
+    const onMessageRef: { current?: (p: KafkaEachMessagePayload) => Promise<void> } = {};
     const onMessage = wrapKafkaConsumer(
       {
         prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
@@ -120,13 +137,24 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
         deadLetterManager: this.deadLetterManager,
         delayManager: this.delayManager,
         consumer: getConsumer,
+        retryTopic: mainRetryTopic,
+        ensureRetryReady: () =>
+          ensureRetryTopicAttached({
+            state: this.state,
+            groupId,
+            retryTopic: mainRetryTopic,
+            onMessage: onMessageRef.current!,
+            logger: this.logger,
+          }),
       },
     );
+    onMessageRef.current = onMessage;
 
     // Broadcast consumer: unique group per consumer on a separate broadcast
     // topic so every consumer independently receives every broadcast message.
     const broadcastTopic = `${kafkaTopic}.broadcast`;
     const broadcastGroupId = `${groupId}.bc.${randomId({ length: 16 })}`;
+    const broadcastRetryTopic = resolveRetryTopicName(broadcastTopic, broadcastGroupId);
 
     const getBroadcastConsumer = (): KafkaConsumer => {
       const p = this.state.consumerPool.get(broadcastGroupId);
@@ -144,6 +172,9 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       return p.consumer;
     };
 
+    const broadcastOnMessageRef: {
+      current?: (p: KafkaEachMessagePayload) => Promise<void>;
+    } = {};
     const broadcastOnMessage = wrapKafkaConsumer(
       {
         prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
@@ -158,8 +189,18 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
         deadLetterManager: this.deadLetterManager,
         delayManager: this.delayManager,
         consumer: getBroadcastConsumer,
+        retryTopic: broadcastRetryTopic,
+        ensureRetryReady: () =>
+          ensureRetryTopicAttached({
+            state: this.state,
+            groupId: broadcastGroupId,
+            retryTopic: broadcastRetryTopic,
+            onMessage: broadcastOnMessageRef.current!,
+            logger: this.logger,
+          }),
       },
     );
+    broadcastOnMessageRef.current = broadcastOnMessage;
 
     const { consumerTag: mainConsumerTag } = await getOrCreatePooledConsumer({
       state: this.state,
@@ -207,23 +248,28 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       topic: options.topic,
       kafkaTopic,
       broadcastTopic,
+      mainRetryTopic,
+      broadcastRetryTopic,
       groupId,
       broadcastGroupId,
     });
   }
 
-  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
-    const tagKey = `${options.topic}:${options.queue ?? ""}`;
-    const sub = this.ownedSubscriptions.get(tagKey);
-
-    if (!sub) return;
-
+  private async releaseSubscription(sub: OwnedSubscription): Promise<void> {
     await releasePooledConsumer({
       state: this.state,
       groupId: sub.groupId,
       topic: sub.kafkaTopic,
       logger: this.logger,
     });
+
+    // Tear down a lazily-attached retry-topic consumer (M1) only once its group
+    // is fully released from the pool — a queue with other live workers on the
+    // same group must keep its shared retry consumer. A group that never retried
+    // has no attachment, so this is a no-op for the common case.
+    if (!this.state.consumerPool.has(sub.groupId)) {
+      await releaseRetryConsumer(this.state, sub.mainRetryTopic, this.logger);
+    }
 
     await releasePooledConsumer({
       state: this.state,
@@ -232,38 +278,31 @@ export class KafkaMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       logger: this.logger,
     });
 
+    if (!this.state.consumerPool.has(sub.broadcastGroupId)) {
+      await releaseRetryConsumer(this.state, sub.broadcastRetryTopic, this.logger);
+    }
+
     for (const tag of [sub.mainConsumerTag, sub.broadcastConsumerTag]) {
       const regIdx = this.state.consumerRegistrations.findIndex(
         (r) => r.consumerTag === tag,
       );
       if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
     }
+  }
 
+  async unsubscribe(options: { topic: string; queue?: string }): Promise<void> {
+    const tagKey = `${options.topic}:${options.queue ?? ""}`;
+    const sub = this.ownedSubscriptions.get(tagKey);
+
+    if (!sub) return;
+
+    await this.releaseSubscription(sub);
     this.ownedSubscriptions.delete(tagKey);
   }
 
   async unsubscribeAll(): Promise<void> {
     for (const [, sub] of this.ownedSubscriptions) {
-      await releasePooledConsumer({
-        state: this.state,
-        groupId: sub.groupId,
-        topic: sub.kafkaTopic,
-        logger: this.logger,
-      });
-
-      await releasePooledConsumer({
-        state: this.state,
-        groupId: sub.broadcastGroupId,
-        topic: sub.broadcastTopic,
-        logger: this.logger,
-      });
-
-      for (const tag of [sub.mainConsumerTag, sub.broadcastConsumerTag]) {
-        const regIdx = this.state.consumerRegistrations.findIndex(
-          (r) => r.consumerTag === tag,
-        );
-        if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
-      }
+      await this.releaseSubscription(sub);
     }
 
     this.ownedSubscriptions.clear();

@@ -58,6 +58,7 @@ const createMockState = (consumers?: Array<KafkaConsumerHandle>): KafkaSharedSta
   consumers: consumers ?? [],
   consumerRegistrations: [],
   consumerPool: new Map(),
+  retryConsumers: new Map(),
   inFlightCount: 0,
   prefetch: 10,
   sessionTimeoutMs: 30000,

@@ -2,13 +2,14 @@ import type { ILogger } from "@lindorm/logger";
 import type { KafkaSharedState } from "../types/kafka-types.js";
 
 /**
- * Best-effort delete of a topic this client created — an RPC reply topic.
+ * Best-effort delete of a topic this client created — an RPC reply topic, or a
+ * per-group retry topic (M1).
  *
- * Every Kafka RPC client mints a unique reply topic; without this, short-lived
- * clients accumulate orphan reply topics on the broker forever (redis tears its
- * reply stream down on close, kafka did not). The whole operation is wrapped so
- * a delete failure — broker down, topic already gone, deletion disabled on the
- * cluster — never throws out of `close()`.
+ * Both are unique, client-owned topics that would otherwise accumulate on the
+ * broker forever (redis tears its reply stream down on close, kafka did not).
+ * The whole operation is wrapped so a delete failure — broker down, topic
+ * already gone, deletion disabled on the cluster — never throws out of
+ * `close()`/unsubscribe.
  */
 export const deleteKafkaTopicFromState = async (
   state: KafkaSharedState,
@@ -23,9 +24,9 @@ export const deleteKafkaTopicFromState = async (
     await admin.connect();
     await admin.deleteTopics({ topics: [topic] });
     state.createdTopics.delete(topic);
-    logger.debug("Deleted RPC reply topic", { topic });
+    logger.debug("Deleted topic", { topic });
   } catch (error) {
-    logger.debug("Failed to delete RPC reply topic (ignored)", {
+    logger.debug("Failed to delete topic (ignored)", {
       topic,
       error: error instanceof Error ? error.message : String(error),
     });

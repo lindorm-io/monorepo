@@ -39,8 +39,9 @@ const factory: TckDriverFactory = {
     delay: true,
     retry: true,
     retryProducerAuthoritative: true,
-    // false until the kafka targeted-retry slice lands (M1 slice for kafka).
-    retryConsumerTargeted: false,
+    // Per-group retry topics route each retry to only the failing group (M1
+    // kafka slice), so kafka now satisfies the retry-fanout contract.
+    retryConsumerTargeted: true,
     deadLetter: true,
     broadcast: true,
     encryption: true,
@@ -136,5 +137,5 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: Kafka (stream)", () => {
-  runTck(factory, ["stream", "worker-queue", "rpc", "retry-dead-letter"]);
+  runTck(factory, ["stream", "worker-queue", "rpc", "retry-dead-letter", "retry-fanout"]);
 });

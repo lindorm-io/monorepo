@@ -15,7 +15,6 @@ import type {
   WrapKafkaConsumerOptions,
 } from "../types/kafka-types.js";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
-import { resolveTopicName } from "./resolve-topic-name.js";
 import { parseKafkaMessage } from "./parse-kafka-message.js";
 import { serializeKafkaMessage } from "./serialize-kafka-message.js";
 
@@ -56,16 +55,34 @@ export const wrapKafkaConsumer = <M extends IMessage>(
         }
       },
       retry: async (retryEnvelope: IrisEnvelope, _topic: string, retryDelay: number) => {
+        // Lazily attach this group's per-group retry-topic consumer on the FIRST
+        // retry (M1), memoized so later retries reuse it. Awaited BEFORE the
+        // retry is scheduled/published, so the retry consumer has joined and
+        // seeked to the retry topic's log end before the retry message lands
+        // there — for the delayed path too, since the delayed publish only fires
+        // after this schedule call. A message type that never fails pays no
+        // retry-topic cost at all.
+        await options.ensureRetryReady?.();
+
+        // Redeliver to THIS group's per-group retry topic (M1), never the shared
+        // topic — otherwise every other fan-out group re-consumes the retry and
+        // sees a spurious duplicate. Only this group consumes retryTopic (the
+        // dedicated consumer just attached), so the redelivery lands on it alone.
         if (retryDelay > 0 && options.delayManager) {
-          await options.delayManager.schedule(retryEnvelope, envelope.topic, retryDelay);
+          await options.delayManager.schedule(
+            retryEnvelope,
+            envelope.topic,
+            retryDelay,
+            options.retryTopic,
+          );
         } else if (state.producer) {
-          const topicName = resolveTopicName(state.prefix, envelope.topic);
           const kafkaMessage = serializeKafkaMessage(retryEnvelope);
           await state.producer.send({
-            topic: topicName,
+            topic: options.retryTopic,
             messages: [kafkaMessage],
             acks: state.acks,
           });
+          state.publishedTopics.add(options.retryTopic);
         } else {
           throw new IrisTransportError(
             "No retry mechanism available: both delay manager and producer are unavailable",

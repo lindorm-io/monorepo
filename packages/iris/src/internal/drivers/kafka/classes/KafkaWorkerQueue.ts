@@ -8,7 +8,11 @@ import type {
 import type { DriverBaseOptions } from "../../../classes/DriverBase.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
-import type { KafkaConsumer, KafkaSharedState } from "../types/kafka-types.js";
+import type {
+  KafkaConsumer,
+  KafkaEachMessagePayload,
+  KafkaSharedState,
+} from "../types/kafka-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { DriverWorkerQueueBase } from "../../../classes/DriverWorkerQueueBase.js";
 import { resolveConsumeTopic } from "../../../message/utils/resolve-consume-topic.js";
@@ -18,6 +22,11 @@ import { getOrCreatePooledConsumer } from "../utils/create-kafka-consumer.js";
 import { releasePooledConsumer } from "../utils/stop-kafka-consumer.js";
 import { resolveTopicName } from "../utils/resolve-topic-name.js";
 import { resolveGroupId } from "../utils/resolve-group-id.js";
+import { resolveRetryTopicName } from "../utils/resolve-retry-topic.js";
+import {
+  ensureRetryTopicAttached,
+  releaseRetryConsumer,
+} from "../utils/retry-topic-consumer.js";
 
 export type KafkaWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & {
   state: KafkaSharedState;
@@ -30,6 +39,8 @@ type OwnedConsumer = {
   broadcastConsumerTag?: string;
   kafkaTopic: string;
   broadcastTopic?: string;
+  mainRetryTopic: string;
+  broadcastRetryTopic?: string;
   groupId: string;
   broadcastGroupId?: string;
 };
@@ -119,6 +130,11 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       return p.consumer;
     };
 
+    const mainRetryTopic = resolveRetryTopicName(kafkaTopic, groupId);
+
+    // Lazy retry-topic attach (M1): the ref lets the retry closure reference the
+    // very onMessage it is wrapped in — only ever read at retry time.
+    const onMessageRef: { current?: (p: KafkaEachMessagePayload) => Promise<void> } = {};
     const onMessage = wrapKafkaConsumer(
       {
         prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
@@ -133,8 +149,18 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
         deadLetterManager: this.deadLetterManager,
         delayManager: this.delayManager,
         consumer: getConsumer,
+        retryTopic: mainRetryTopic,
+        ensureRetryReady: () =>
+          ensureRetryTopicAttached({
+            state: this.state,
+            groupId,
+            retryTopic: mainRetryTopic,
+            onMessage: onMessageRef.current!,
+            logger: this.logger,
+          }),
       },
     );
+    onMessageRef.current = onMessage;
 
     const { consumerTag: mainConsumerTag } = await getOrCreatePooledConsumer({
       state: this.state,
@@ -164,10 +190,12 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     // topic it would subscribe into) would be dead overhead.
     let broadcastConsumerTag: string | undefined;
     let broadcastTopic: string | undefined;
+    let broadcastRetryTopic: string | undefined;
     let broadcastGroupId: string | undefined;
     if (this.metadata.broadcast) {
       broadcastTopic = `${kafkaTopic}.broadcast`;
       broadcastGroupId = `${groupId}.bc.${randomId({ length: 16 })}`;
+      broadcastRetryTopic = resolveRetryTopicName(broadcastTopic, broadcastGroupId);
 
       const resolvedBroadcastGroupId = broadcastGroupId;
       const getBroadcastConsumer = (): KafkaConsumer => {
@@ -186,6 +214,10 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
         return p.consumer;
       };
 
+      const resolvedBroadcastRetryTopic = broadcastRetryTopic;
+      const broadcastOnMessageRef: {
+        current?: (p: KafkaEachMessagePayload) => Promise<void>;
+      } = {};
       const broadcastOnMessage = wrapKafkaConsumer(
         {
           prepareForConsume: (payload, headers) =>
@@ -201,8 +233,18 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
           deadLetterManager: this.deadLetterManager,
           delayManager: this.delayManager,
           consumer: getBroadcastConsumer,
+          retryTopic: broadcastRetryTopic,
+          ensureRetryReady: () =>
+            ensureRetryTopicAttached({
+              state: this.state,
+              groupId: resolvedBroadcastGroupId,
+              retryTopic: resolvedBroadcastRetryTopic,
+              onMessage: broadcastOnMessageRef.current!,
+              logger: this.logger,
+            }),
         },
       );
+      broadcastOnMessageRef.current = broadcastOnMessage;
 
       const result = await getOrCreatePooledConsumer({
         state: this.state,
@@ -230,10 +272,55 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       broadcastConsumerTag,
       kafkaTopic,
       broadcastTopic,
+      mainRetryTopic,
+      broadcastRetryTopic,
       groupId,
       broadcastGroupId,
     });
     this.ownedConsumers.set(queue, existing);
+  }
+
+  private async releaseConsumer(consumer: OwnedConsumer): Promise<void> {
+    await releasePooledConsumer({
+      state: this.state,
+      groupId: consumer.groupId,
+      topic: consumer.kafkaTopic,
+      logger: this.logger,
+    });
+
+    // Tear down a lazily-attached retry-topic consumer (M1) only once the worker
+    // group is fully released — other live workers competing on the same group
+    // still share its retry consumer. A group that never retried has no
+    // attachment, so this is a no-op in the common case.
+    if (!this.state.consumerPool.has(consumer.groupId)) {
+      await releaseRetryConsumer(this.state, consumer.mainRetryTopic, this.logger);
+    }
+
+    if (consumer.broadcastGroupId && consumer.broadcastTopic) {
+      await releasePooledConsumer({
+        state: this.state,
+        groupId: consumer.broadcastGroupId,
+        topic: consumer.broadcastTopic,
+        logger: this.logger,
+      });
+
+      if (
+        consumer.broadcastRetryTopic &&
+        !this.state.consumerPool.has(consumer.broadcastGroupId)
+      ) {
+        await releaseRetryConsumer(this.state, consumer.broadcastRetryTopic, this.logger);
+      }
+    }
+
+    const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
+      (t): t is string => Boolean(t),
+    );
+    for (const tag of tags) {
+      const regIdx = this.state.consumerRegistrations.findIndex(
+        (r) => r.consumerTag === tag,
+      );
+      if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
+    }
   }
 
   async unconsume(queue: string): Promise<void> {
@@ -241,31 +328,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     if (!consumers || consumers.length === 0) return;
 
     for (const consumer of consumers) {
-      await releasePooledConsumer({
-        state: this.state,
-        groupId: consumer.groupId,
-        topic: consumer.kafkaTopic,
-        logger: this.logger,
-      });
-
-      if (consumer.broadcastGroupId && consumer.broadcastTopic) {
-        await releasePooledConsumer({
-          state: this.state,
-          groupId: consumer.broadcastGroupId,
-          topic: consumer.broadcastTopic,
-          logger: this.logger,
-        });
-      }
-
-      const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
-        (t): t is string => Boolean(t),
-      );
-      for (const tag of tags) {
-        const regIdx = this.state.consumerRegistrations.findIndex(
-          (r) => r.consumerTag === tag,
-        );
-        if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
-      }
+      await this.releaseConsumer(consumer);
     }
 
     this.ownedConsumers.delete(queue);
@@ -274,31 +337,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
   async unconsumeAll(): Promise<void> {
     for (const [, consumers] of this.ownedConsumers) {
       for (const consumer of consumers) {
-        await releasePooledConsumer({
-          state: this.state,
-          groupId: consumer.groupId,
-          topic: consumer.kafkaTopic,
-          logger: this.logger,
-        });
-
-        if (consumer.broadcastGroupId && consumer.broadcastTopic) {
-          await releasePooledConsumer({
-            state: this.state,
-            groupId: consumer.broadcastGroupId,
-            topic: consumer.broadcastTopic,
-            logger: this.logger,
-          });
-        }
-
-        const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
-          (t): t is string => Boolean(t),
-        );
-        for (const tag of tags) {
-          const regIdx = this.state.consumerRegistrations.findIndex(
-            (r) => r.consumerTag === tag,
-          );
-          if (regIdx !== -1) this.state.consumerRegistrations.splice(regIdx, 1);
-        }
+        await this.releaseConsumer(consumer);
       }
     }
 

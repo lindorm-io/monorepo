@@ -95,6 +95,7 @@ export class KafkaDriver implements IIrisDriver {
       consumers: [],
       consumerRegistrations: [],
       consumerPool: new Map(),
+      retryConsumers: new Map(),
       inFlightCount: 0,
       prefetch: options.prefetch ?? DEFAULT_PREFETCH,
       sessionTimeoutMs: options.sessionTimeoutMs ?? DEFAULT_SESSION_TIMEOUT_MS,
@@ -167,14 +168,20 @@ export class KafkaDriver implements IIrisDriver {
             });
           }
 
-          // Route a delayed broadcast to the broadcast topic, exactly as the
-          // non-delayed publish path does — otherwise a delayed @Broadcast lands
-          // on the shared topic and only one consumer receives it.
-          const kafkaTopic = resolveBroadcastDestination(
-            resolveTopicName(this.state.prefix, entry.topic),
-            entry.envelope.broadcast,
-            ".",
-          );
+          // A targeted retry (M1) carries a fully-resolved destinationTopic —
+          // the failing group's per-group retry topic — and must go there
+          // verbatim, NOT be re-broadcast. For a normal delayed publish there is
+          // no destinationTopic, so route a delayed broadcast to the broadcast
+          // topic exactly as the non-delayed publish path does — otherwise a
+          // delayed @Broadcast lands on the shared topic and only one consumer
+          // receives it.
+          const kafkaTopic =
+            entry.destinationTopic ??
+            resolveBroadcastDestination(
+              resolveTopicName(this.state.prefix, entry.topic),
+              entry.envelope.broadcast,
+              ".",
+            );
           const kafkaMessage = serializeKafkaMessage(entry.envelope);
 
           await producer.send({
@@ -397,6 +404,11 @@ export class KafkaDriver implements IIrisDriver {
     // (each new consumer gets a fresh group that reads from latest).
 
     this.state.consumerRegistrations.length = 0;
+    // Drop any lazily-attached retry-topic memos (M1): their consumers were
+    // detached above, so a stale entry would wrongly memoize an attach that no
+    // longer exists. resetGeneration also renames future retry topics, so no
+    // name collision either way.
+    this.state.retryConsumers.clear();
     // Keep createdTopics so setup() doesn't try to re-create existing topics
     this.state.publishedTopics.clear();
     this._replyQueueActive = false;

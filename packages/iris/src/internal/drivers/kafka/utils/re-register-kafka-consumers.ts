@@ -75,6 +75,7 @@ export const reRegisterKafkaConsumers = async (
           kafka: state.kafka,
           groupId: reg.groupId,
           topic: reg.topic,
+          createdTopics: state.createdTopics,
           onMessage: reg.onMessage,
           sessionTimeoutMs: state.sessionTimeoutMs,
           logger,

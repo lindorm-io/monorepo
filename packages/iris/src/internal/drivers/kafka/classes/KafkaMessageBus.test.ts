@@ -31,6 +31,14 @@ vi.mock("../utils/stop-kafka-consumer.js", () => ({
   releasePooledConsumer: (...args: Array<unknown>) => mockReleasePooledConsumer(...args),
 }));
 
+const mockEnsureRetryTopicAttached = vi.fn().mockResolvedValue(undefined);
+const mockReleaseRetryConsumer = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/retry-topic-consumer.js", () => ({
+  ensureRetryTopicAttached: (...args: Array<unknown>) =>
+    mockEnsureRetryTopicAttached(...args),
+  releaseRetryConsumer: (...args: Array<unknown>) => mockReleaseRetryConsumer(...args),
+}));
+
 // --- Test message ---
 
 @Message({ name: "TckKafkaBusBasic" })
@@ -63,6 +71,7 @@ const createMockState = (): KafkaSharedState => ({
   consumers: [],
   consumerRegistrations: [],
   consumerPool: new Map(),
+  retryConsumers: new Map(),
   inFlightCount: 0,
   prefetch: 10,
   sessionTimeoutMs: 30000,
@@ -92,6 +101,8 @@ beforeEach(() => {
   mockWrapKafkaConsumer.mockClear();
   mockGetOrCreatePooledConsumer.mockClear();
   mockReleasePooledConsumer.mockClear();
+  mockEnsureRetryTopicAttached.mockClear();
+  mockReleaseRetryConsumer.mockClear();
 
   mockGetOrCreateResult = {
     consumerTag: "ctag-1",
@@ -126,6 +137,10 @@ describe("KafkaMessageBus", () => {
 
       const broadcastOpts = mockGetOrCreatePooledConsumer.mock.calls[1][0];
       expect(broadcastOpts.topic).toBe("iris.TckKafkaBusBasic.broadcast");
+
+      // Retry topics are attached LAZILY (M1) — on the first actual retry, not at
+      // subscribe time. A type that never fails pays no retry-topic cost.
+      expect(mockEnsureRetryTopicAttached).not.toHaveBeenCalled();
     });
 
     it("should create ephemeral group when no queue specified", async () => {
@@ -172,6 +187,10 @@ describe("KafkaMessageBus", () => {
 
       const broadcastOpts = mockReleasePooledConsumer.mock.calls[1][0];
       expect(broadcastOpts.topic).toBe("iris.TckKafkaBusBasic.broadcast");
+
+      // Both groups are checked for a lazily-attached retry consumer to tear down
+      // (M1) — main + broadcast. No-op here since neither ever retried.
+      expect(mockReleaseRetryConsumer).toHaveBeenCalledTimes(2);
     });
 
     it("should be a no-op for unknown subscription", async () => {
@@ -203,6 +222,8 @@ describe("KafkaMessageBus", () => {
 
       // 2 subscriptions x 2 consumers each (main + broadcast) = 4 releases
       expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(4);
+      // 2 subscriptions x 2 groups each = 4 retry-consumer teardown checks
+      expect(mockReleaseRetryConsumer).toHaveBeenCalledTimes(4);
     });
   });
 });

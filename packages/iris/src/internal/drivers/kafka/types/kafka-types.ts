@@ -6,6 +6,7 @@ export type CreateKafkaConsumerOptions = {
   kafka: KafkaClient;
   groupId: string;
   topic: string;
+  createdTopics?: Set<string>;
   onMessage: (payload: KafkaEachMessagePayload) => Promise<void>;
   sessionTimeoutMs?: number;
   logger: ILogger;
@@ -42,6 +43,22 @@ export type WrapKafkaConsumerOptions = {
   deadLetterManager?: DeadLetterManager;
   delayManager?: DelayManager;
   consumer: KafkaConsumer | (() => KafkaConsumer);
+  /**
+   * The per-group retry topic (`<topic>.retry.<groupId>`) this consumer's group
+   * ALSO consumes. Both the immediate and the delayed retry path publish here
+   * instead of the shared topic, so a redelivery reaches only the failing group
+   * — never the other fan-out subscribers (M1). Fully resolved (prefixed).
+   */
+  retryTopic: string;
+  /**
+   * Lazily attach the per-group retry-topic consumer on the FIRST retry for this
+   * group (M1), memoized so later retries skip straight to publishing. Called —
+   * and awaited — BEFORE the retry is scheduled/published, so the retry consumer
+   * has joined and seeked to the retry topic's log end before the retry message
+   * lands there (no join-window drop, 716127bd). Absent ⇒ no lazy attach (the
+   * retry topic must already be consumed some other way).
+   */
+  ensureRetryReady?: () => Promise<void>;
 };
 
 export type ReleasePooledConsumerOptions = {
@@ -175,6 +192,14 @@ export type KafkaSharedState = {
   consumers: Array<KafkaConsumerHandle>;
   consumerRegistrations: Array<KafkaConsumerRegistration>;
   consumerPool: Map<string, KafkaPooledConsumer>;
+  /**
+   * Lazily-attached per-group retry-topic consumers (M1), keyed by retry topic
+   * (`<topic>.retry.<groupId>`, unique per group). Populated on the FIRST retry
+   * for a group so a message type that never fails pays no retry-topic cost, and
+   * memoized so subsequent retries reuse the already-joined consumer. Torn down
+   * when the owning group is fully released.
+   */
+  retryConsumers: Map<string, RetryConsumerAttachment>;
   inFlightCount: number;
   prefetch: number;
   sessionTimeoutMs: number;
@@ -208,6 +233,24 @@ export type KafkaConsumerRegistration = {
    */
   pooled: boolean;
   fromBeginning?: boolean;
+};
+
+/**
+ * A lazily-attached per-group retry-topic consumer (M1). The retry topic is
+ * private to one subscriber (its name embeds the group id), so a dedicated
+ * consumer on a fresh group is the sole reader — a redelivery reaches only the
+ * failing subscriber, never the other fan-out groups. Created off the retry
+ * path (not the currently-running delivery consumer) so attaching never has to
+ * stop the in-flight consumer from inside its own handler.
+ */
+export type RetryConsumerAttachment = {
+  /** The retry consumer's own (fresh) group id. */
+  groupId: string;
+  retryTopic: string;
+  /** Tag of the dedicated consumer, set once the attach resolves. */
+  consumerTag?: string;
+  /** In-flight/settled attach; awaited by later retries to dedupe the attach. */
+  ready: Promise<void>;
 };
 
 export type KafkaPooledConsumer = {

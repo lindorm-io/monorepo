@@ -44,8 +44,9 @@ const factory: TckDriverFactory = {
     delay: true,
     retry: true,
     retryProducerAuthoritative: true,
-    // false until the kafka targeted-retry slice lands (M1 slice for kafka).
-    retryConsumerTargeted: false,
+    // Per-group retry topics route each retry to only the failing group (M1
+    // kafka slice), so kafka now satisfies the retry-fanout contract.
+    retryConsumerTargeted: true,
     deadLetter: true,
     broadcast: true,
     encryption: true,
@@ -200,8 +201,14 @@ describe("Kafka worker-queue broadcast gating (M14)", () => {
     await wq.consume("M14KafkaNonBroadcast", async () => {});
 
     const added = state().consumerRegistrations.slice(before);
+    // Exactly ONE delivery consumer. The per-group retry topic attaches lazily
+    // (M1) — only on the first actual retry — so a type that never fails
+    // registers no retry consumer here, and nothing broadcast-related.
     expect(added).toHaveLength(1);
-    expect(added[0].topic).toBe(`${prefix}.M14KafkaNonBroadcast`);
+    expect(added.some((r) => r.topic === `${prefix}.M14KafkaNonBroadcast`)).toBe(true);
+    expect(
+      added.some((r) => r.topic.startsWith(`${prefix}.M14KafkaNonBroadcast.retry.`)),
+    ).toBe(false);
     // No `.broadcast` topic is ever subscribed or auto-created for a
     // non-broadcast type.
     expect(added.some((r) => r.topic.endsWith(".broadcast"))).toBe(false);
@@ -219,11 +226,17 @@ describe("Kafka worker-queue broadcast gating (M14)", () => {
     await wq.consume("M14KafkaBroadcast", async () => {});
 
     const added = state().consumerRegistrations.slice(before);
+    // main + broadcast delivery consumers = 2. Retry topics attach lazily (M1),
+    // so neither group registers a retry consumer until it actually retries.
     expect(added).toHaveLength(2);
     expect(added.some((r) => r.topic === `${prefix}.M14KafkaBroadcast`)).toBe(true);
     expect(added.some((r) => r.topic === `${prefix}.M14KafkaBroadcast.broadcast`)).toBe(
       true,
     );
+    expect(
+      added.some((r) => r.topic.startsWith(`${prefix}.M14KafkaBroadcast.retry.`)),
+    ).toBe(false);
+    expect(added.some((r) => r.topic.includes(".retry."))).toBe(false);
 
     await wq.unconsumeAll();
   });

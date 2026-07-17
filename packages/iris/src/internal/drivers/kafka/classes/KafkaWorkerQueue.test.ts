@@ -32,6 +32,14 @@ vi.mock("../utils/stop-kafka-consumer.js", () => ({
   releasePooledConsumer: (...args: Array<unknown>) => mockReleasePooledConsumer(...args),
 }));
 
+const mockEnsureRetryTopicAttached = vi.fn().mockResolvedValue(undefined);
+const mockReleaseRetryConsumer = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/retry-topic-consumer.js", () => ({
+  ensureRetryTopicAttached: (...args: Array<unknown>) =>
+    mockEnsureRetryTopicAttached(...args),
+  releaseRetryConsumer: (...args: Array<unknown>) => mockReleaseRetryConsumer(...args),
+}));
+
 // --- Test message ---
 
 @Message({ name: "TckKafkaWqBasic" })
@@ -70,6 +78,7 @@ const createMockState = (): KafkaSharedState => ({
   consumers: [],
   consumerRegistrations: [],
   consumerPool: new Map(),
+  retryConsumers: new Map(),
   inFlightCount: 0,
   prefetch: 10,
   sessionTimeoutMs: 30000,
@@ -110,6 +119,8 @@ beforeEach(() => {
   mockWrapKafkaConsumer.mockClear();
   mockGetOrCreatePooledConsumer.mockClear();
   mockReleasePooledConsumer.mockClear();
+  mockEnsureRetryTopicAttached.mockClear();
+  mockReleaseRetryConsumer.mockClear();
   mockGetOrCreateResult = {
     consumerTag: "ctag-1",
   };
@@ -148,6 +159,10 @@ describe("KafkaWorkerQueue", () => {
         (c) => c[0].topic,
       );
       expect(subscribedTopics).not.toContain("iris.TckKafkaWqBasic.broadcast");
+
+      // Retry topics attach LAZILY (M1) — on the first actual retry, not at
+      // consume time.
+      expect(mockEnsureRetryTopicAttached).not.toHaveBeenCalled();
     });
 
     it("should create main + broadcast pooled consumers for a broadcast type", async () => {
@@ -163,6 +178,10 @@ describe("KafkaWorkerQueue", () => {
 
       const broadcastOpts = mockGetOrCreatePooledConsumer.mock.calls[1][0];
       expect(broadcastOpts.topic).toBe("iris.TckKafkaWqBroadcast.broadcast");
+
+      // Retry topics attach lazily (M1) — neither the main nor the broadcast
+      // group attaches one at consume time.
+      expect(mockEnsureRetryTopicAttached).not.toHaveBeenCalled();
     });
 
     it("should create a single pooled consumer with options object", async () => {
@@ -206,6 +225,10 @@ describe("KafkaWorkerQueue", () => {
       const mainOpts = mockReleasePooledConsumer.mock.calls[0][0];
       expect(mainOpts.groupId).toBe("iris.wq.my-queue");
       expect(mainOpts.topic).toBe("iris.TckKafkaWqBasic");
+
+      // The main group is checked for a lazily-attached retry consumer to tear
+      // down (M1) — no-op here since it never retried.
+      expect(mockReleaseRetryConsumer).toHaveBeenCalledTimes(1);
     });
 
     it("should release main + broadcast pooled consumers for a broadcast queue", async () => {
@@ -221,6 +244,10 @@ describe("KafkaWorkerQueue", () => {
 
       const broadcastOpts = mockReleasePooledConsumer.mock.calls[1][0];
       expect(broadcastOpts.topic).toBe("iris.TckKafkaWqBroadcast.broadcast");
+
+      // Both the main and broadcast groups are checked for a lazily-attached
+      // retry consumer to tear down (M1).
+      expect(mockReleaseRetryConsumer).toHaveBeenCalledTimes(2);
     });
 
     it("should be a no-op for unknown queue", async () => {
@@ -244,6 +271,8 @@ describe("KafkaWorkerQueue", () => {
 
       // 2 non-broadcast queues x 1 consumer each = 2 releases
       expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(2);
+      // 2 non-broadcast queues x 1 group each = 2 retry-consumer teardown checks
+      expect(mockReleaseRetryConsumer).toHaveBeenCalledTimes(2);
     });
   });
 });

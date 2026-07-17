@@ -10,9 +10,14 @@ import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
 import { resolveTopicName } from "../utils/resolve-topic-name.js";
+import { resolveRetryTopicName } from "../utils/resolve-retry-topic.js";
 import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
 import { createKafkaConsumer } from "../utils/create-kafka-consumer.js";
 import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
+import {
+  ensureRetryTopicAttached,
+  releaseRetryConsumer,
+} from "../utils/retry-topic-consumer.js";
 import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 import {
   DriverStreamPipelineBase,
@@ -27,6 +32,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
   private readonly state: KafkaSharedState;
   private consumerTag: string | null = null;
   private groupId: string | null = null;
+  private retryTopic: string | null = null;
 
   constructor(options: KafkaStreamPipelineOptions) {
     super({
@@ -67,12 +73,13 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     const subscribeTopic = this.inputTopic ?? resolveDefaultTopic(inputMetadata);
     const kafkaTopic = resolveTopicName(this.state.prefix, subscribeTopic);
     this.groupId = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
+    this.retryTopic = resolveRetryTopicName(kafkaTopic, this.groupId);
 
     this.running = true;
     this.paused = false;
 
     const consumerRef: { consumer?: KafkaConsumer } = {};
-    const onMessage = this.buildOnMessage(inputMetadata, () =>
+    const onMessage = this.buildOnMessage(inputMetadata, this.retryTopic, () =>
       this.resolveConsumer(consumerRef.consumer),
     );
 
@@ -80,6 +87,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       kafka: this.state.kafka,
       groupId: this.groupId,
       topic: kafkaTopic,
+      createdTopics: this.state.createdTopics,
       sessionTimeoutMs: this.state.sessionTimeoutMs,
       logger: this.logger,
       fromBeginning: false,
@@ -105,6 +113,15 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       this.deregisterConsumer(this.consumerTag);
       await stopKafkaConsumer(this.state, this.consumerTag);
       this.consumerTag = null;
+    }
+
+    // Tear down this pipeline's lazily-attached retry-topic consumer (M1), if a
+    // retry ever attached one — each start/resume mints a fresh ephemeral group,
+    // so an undeleted retry consumer/topic would leak one per pipeline
+    // lifecycle. No-op (and no topic to delete) if the pipeline never retried.
+    if (this.retryTopic) {
+      await releaseRetryConsumer(this.state, this.retryTopic, this.logger);
+      this.retryTopic = null;
     }
 
     this.groupId = null;
@@ -133,9 +150,10 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     // Create a new group so messages published during the pause window
     // are skipped — only new messages after resume are processed.
     this.groupId = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
+    this.retryTopic = resolveRetryTopicName(kafkaTopic, this.groupId);
 
     const consumerRef: { consumer?: KafkaConsumer } = {};
-    const onMessage = this.buildOnMessage(inputMetadata, () =>
+    const onMessage = this.buildOnMessage(inputMetadata, this.retryTopic, () =>
       this.resolveConsumer(consumerRef.consumer),
     );
 
@@ -143,6 +161,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       kafka: this.state.kafka,
       groupId: this.groupId,
       topic: kafkaTopic,
+      createdTopics: this.state.createdTopics,
       sessionTimeoutMs: this.state.sessionTimeoutMs,
       logger: this.logger,
       fromBeginning: false,
@@ -171,9 +190,12 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
   // queue uses. wrapKafkaConsumer owns the offset commit after processing.
   private buildOnMessage(
     inputMetadata: MessageMetadata,
+    retryTopic: string,
     getConsumer: () => KafkaConsumer,
   ): (payload: KafkaEachMessagePayload) => Promise<void> {
-    return wrapKafkaConsumer(
+    const groupId = this.groupId!;
+    const onMessageRef: { current?: (p: KafkaEachMessagePayload) => Promise<void> } = {};
+    const onMessage = wrapKafkaConsumer(
       this.buildInboundHost(inputMetadata),
       (message) => this.processStreamMessage(message),
       this.state,
@@ -183,8 +205,23 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
         deadLetterManager: this.deadLetterManager,
         delayManager: this.delayManager,
         consumer: getConsumer,
+        retryTopic,
+        // Lazily attach the pipeline's per-group retry-topic consumer on the
+        // first retry (M1). A dedicated consumer on a fresh group, so a
+        // redelivery reaches only this pipeline group — never another pipeline
+        // consuming the same input topic.
+        ensureRetryReady: () =>
+          ensureRetryTopicAttached({
+            state: this.state,
+            groupId,
+            retryTopic,
+            onMessage: onMessageRef.current!,
+            logger: this.logger,
+          }),
       },
     );
+    onMessageRef.current = onMessage;
+    return onMessage;
   }
 
   private resolveConsumer(consumer: KafkaConsumer | undefined): KafkaConsumer {
