@@ -15,7 +15,7 @@ export type AmphoraConfig = Partial<OpenIdConfiguration> & {
   trustMode?: "strict" | "lax";
 };
 
-export type AmphoraExternalOption = {
+export type AmphoraExternalSettings = {
   issuer?: string;
   jwksUri?: string;
   openIdConfiguration?: Partial<OpenIdConfiguration>;
@@ -24,13 +24,13 @@ export type AmphoraExternalOption = {
   trustMode?: "strict" | "lax";
 };
 
-export type AmphoraOptions = {
+export type AmphoraSettings = {
   domain?: string;
   // When set, keys whose leaf certificate declares a DIFFERENT Environment OU are
   // rejected on add (cross-environment guard). Keys without a cert, or with a
   // non-Environment (foreign) OU, are unrestricted.
   environment?: Environment;
-  external?: Array<AmphoraExternalOption>;
+  external?: Array<AmphoraExternalSettings>;
   logger: ILogger;
   maxExternalKeys?: number;
   refreshInterval?: number;

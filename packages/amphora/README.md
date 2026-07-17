@@ -58,14 +58,14 @@ new Amphora({
 });
 ```
 
-| Option            | Type                           | Default   | Description                                                                                                                                                                          |
-| ----------------- | ------------------------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `logger`          | `ILogger`                      | required  | Logger instance from `@lindorm/logger`.                                                                                                                                              |
-| `domain`          | `string`                       | `null`    | The server's domain. Used as the default `issuer` and `jwksUri` for added keys, and as the filter for which keys appear in `amphora.jwks`. Validated as a URL at construction time.  |
-| `environment`     | `Environment`                  | `null`    | Cross-environment guard. When set, a key whose leaf certificate declares a different `Environment` OU is rejected on `add`. See [Environment enforcement](#environment-enforcement). |
-| `external`        | `Array<AmphoraExternalOption>` | `[]`      | External OIDC providers to discover keys from.                                                                                                                                       |
-| `maxExternalKeys` | `number`                       | `100`     | Maximum number of keys accepted per external provider; excess keys are truncated.                                                                                                    |
-| `refreshInterval` | `number`                       | `300_000` | Milliseconds before externally-fetched keys are considered stale.                                                                                                                    |
+| Option            | Type                             | Default   | Description                                                                                                                                                                          |
+| ----------------- | -------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `logger`          | `ILogger`                        | required  | Logger instance from `@lindorm/logger`.                                                                                                                                              |
+| `domain`          | `string`                         | `null`    | The server's domain. Used as the default `issuer` and `jwksUri` for added keys, and as the filter for which keys appear in `amphora.jwks`. Validated as a URL at construction time.  |
+| `environment`     | `Environment`                    | `null`    | Cross-environment guard. When set, a key whose leaf certificate declares a different `Environment` OU is rejected on `add`. See [Environment enforcement](#environment-enforcement). |
+| `external`        | `Array<AmphoraExternalSettings>` | `[]`      | External OIDC providers to discover keys from.                                                                                                                                       |
+| `maxExternalKeys` | `number`                         | `100`     | Maximum number of keys accepted per external provider; excess keys are truncated.                                                                                                    |
+| `refreshInterval` | `number`                         | `300_000` | Milliseconds before externally-fetched keys are considered stale.                                                                                                                    |
 
 ## Adding Keys
 
@@ -350,7 +350,7 @@ The returned object implements `IAmphora`. Each method is a spy from the corresp
 
 ### `class Amphora`
 
-`new Amphora(options: AmphoraOptions)` — see [Constructor](#constructor).
+`new Amphora(options: AmphoraSettings)` — see [Constructor](#constructor).
 
 **Methods**
 
@@ -393,9 +393,9 @@ Public interface implemented by `Amphora` and the mock factories.
 ```typescript
 import type {
   AmphoraConfig,
-  AmphoraExternalOption,
+  AmphoraExternalSettings,
   AmphoraJwks,
-  AmphoraOptions,
+  AmphoraSettings,
   AmphoraPredicate,
   AmphoraQuery,
   IAmphora,

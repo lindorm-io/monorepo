@@ -12,9 +12,9 @@ import { AmphoraError } from "../errors/index.js";
 import type { IAmphora } from "../interfaces/index.js";
 import type {
   AmphoraConfig,
-  AmphoraExternalOption,
+  AmphoraExternalSettings,
   AmphoraJwks,
-  AmphoraOptions,
+  AmphoraSettings,
   AmphoraPredicate,
 } from "../types/index.js";
 import { isEnvironment } from "../utils/is-environment.js";
@@ -31,7 +31,7 @@ export class Amphora implements IAmphora {
   private readonly refreshInterval: number;
 
   private _config: Array<AmphoraConfig>;
-  private _external: Array<AmphoraExternalOption>;
+  private _external: Array<AmphoraExternalSettings>;
   private _jwks: Array<LindormJwk>;
   private _lastRefresh: Date | null = null;
   private _refreshPromise: Promise<void> | null = null;
@@ -39,7 +39,7 @@ export class Amphora implements IAmphora {
   private _setupPromise: Promise<void> | null = null;
   private _vault: Array<IKryptos>;
 
-  constructor(options: AmphoraOptions) {
+  constructor(options: AmphoraSettings) {
     this.logger = options.logger.child(["Amphora"]);
 
     this.conduit = new Conduit({
@@ -403,7 +403,7 @@ export class Amphora implements IAmphora {
 
   // private methods
 
-  private async addExternalConfig(options: AmphoraExternalOption): Promise<void> {
+  private async addExternalConfig(options: AmphoraExternalSettings): Promise<void> {
     this.logger.silly("Adding external config", { options });
 
     if (isUrlLike(options.openIdConfigurationUri)) {
@@ -665,7 +665,7 @@ export class Amphora implements IAmphora {
   }
 
   private mapExternalOptions(): void {
-    const result: Array<AmphoraExternalOption> = [];
+    const result: Array<AmphoraExternalSettings> = [];
 
     for (const item of this._external) {
       if (isUrlLike(item.openIdConfigurationUri)) {
