@@ -49,6 +49,7 @@ const createMockConsumer = (overrides?: Partial<KafkaConsumer>): KafkaConsumer =
     run: vi.fn().mockResolvedValue(undefined),
     pause: vi.fn(),
     resume: vi.fn(),
+    seek: vi.fn(),
     stop: vi.fn().mockResolvedValue(undefined),
     commitOffsets: vi.fn().mockResolvedValue(undefined),
     on,
@@ -62,7 +63,16 @@ const createMockKafka = (): { kafka: KafkaClient; created: Array<KafkaConsumer> 
   const created: Array<KafkaConsumer> = [];
   const kafka: KafkaClient = {
     producer: vi.fn() as any,
-    admin: vi.fn() as any,
+    admin: vi.fn(() => ({
+      connect: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn().mockResolvedValue(undefined),
+      listTopics: vi.fn().mockResolvedValue([]),
+      createTopics: vi.fn().mockResolvedValue(true),
+      deleteTopics: vi.fn().mockResolvedValue(undefined),
+      fetchTopicOffsets: vi
+        .fn()
+        .mockResolvedValue([{ partition: 0, offset: "0", high: "0", low: "0" }]),
+    })) as any,
     consumer: vi.fn(() => {
       const c = createMockConsumer();
       created.push(c);

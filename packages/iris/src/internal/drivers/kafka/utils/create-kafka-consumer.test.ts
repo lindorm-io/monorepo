@@ -54,6 +54,7 @@ const createMockConsumer = (overrides?: Partial<KafkaConsumer>): KafkaConsumer =
     run: vi.fn().mockResolvedValue(undefined),
     pause: vi.fn(),
     resume: vi.fn(),
+    seek: vi.fn(),
     stop: vi.fn().mockResolvedValue(undefined),
     commitOffsets: vi.fn().mockResolvedValue(undefined),
     on,
@@ -62,10 +63,21 @@ const createMockConsumer = (overrides?: Partial<KafkaConsumer>): KafkaConsumer =
   };
 };
 
+const createMockAdmin = () => ({
+  connect: vi.fn().mockResolvedValue(undefined),
+  disconnect: vi.fn().mockResolvedValue(undefined),
+  listTopics: vi.fn().mockResolvedValue([]),
+  createTopics: vi.fn().mockResolvedValue(true),
+  deleteTopics: vi.fn().mockResolvedValue(undefined),
+  fetchTopicOffsets: vi
+    .fn()
+    .mockResolvedValue([{ partition: 0, offset: "0", high: "0", low: "0" }]),
+});
+
 const createMockKafka = (consumer?: KafkaConsumer): KafkaClient => ({
   producer: vi.fn() as any,
   consumer: vi.fn().mockReturnValue(consumer ?? createMockConsumer()),
-  admin: vi.fn() as any,
+  admin: vi.fn().mockReturnValue(createMockAdmin()) as any,
 });
 
 const createMockState = (kafka?: KafkaClient): KafkaSharedState => ({
@@ -117,6 +129,64 @@ describe("createKafkaConsumer", () => {
     expect(handle.groupId).toBe("iris.wq.test");
     expect(handle.topic).toBe("iris.test-topic");
     expect(handle.consumer).toBe(mockConsumer);
+  });
+
+  it("seeks the consumer to each partition's log end (fromBeginning: false)", async () => {
+    const mockConsumer = createMockConsumer();
+    const admin = createMockAdmin();
+    admin.fetchTopicOffsets.mockResolvedValue([
+      { partition: 0, offset: "42", high: "42", low: "0" },
+      { partition: 1, offset: "17", high: "17", low: "0" },
+    ]);
+    const kafka: KafkaClient = {
+      producer: vi.fn() as any,
+      consumer: vi.fn().mockReturnValue(mockConsumer),
+      admin: vi.fn().mockReturnValue(admin) as any,
+    };
+
+    await createKafkaConsumer({
+      kafka,
+      groupId: "iris.wq.test",
+      topic: "iris.test-topic",
+      onMessage: vi.fn(),
+      logger: createMockLogger() as any,
+    });
+
+    // Pins the start offset deterministically so a message published right
+    // after we return can't slip through the join→first-fetch window.
+    expect(admin.fetchTopicOffsets).toHaveBeenCalledWith("iris.test-topic");
+    expect(mockConsumer.seek).toHaveBeenCalledWith({
+      topic: "iris.test-topic",
+      partition: 0,
+      offset: "42",
+    });
+    expect(mockConsumer.seek).toHaveBeenCalledWith({
+      topic: "iris.test-topic",
+      partition: 1,
+      offset: "17",
+    });
+  });
+
+  it("does not seek when fromBeginning is true (read from the start)", async () => {
+    const mockConsumer = createMockConsumer();
+    const admin = createMockAdmin();
+    const kafka: KafkaClient = {
+      producer: vi.fn() as any,
+      consumer: vi.fn().mockReturnValue(mockConsumer),
+      admin: vi.fn().mockReturnValue(admin) as any,
+    };
+
+    await createKafkaConsumer({
+      kafka,
+      groupId: "iris.wq.test",
+      topic: "iris.test-topic",
+      onMessage: vi.fn(),
+      fromBeginning: true,
+      logger: createMockLogger() as any,
+    });
+
+    expect(admin.fetchTopicOffsets).not.toHaveBeenCalled();
+    expect(mockConsumer.seek).not.toHaveBeenCalled();
   });
 
   it("should pass sessionTimeoutMs to kafka.consumer", async () => {

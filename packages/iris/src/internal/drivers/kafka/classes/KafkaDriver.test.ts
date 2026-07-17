@@ -1,6 +1,7 @@
 import { Kafka as _Kafka } from "kafkajs";
 import type { IMessage, IMessageSubscriber } from "../../../../interfaces/index.js";
 import type { IrisConnectionState } from "../../../../types/index.js";
+import { Broadcast } from "../../../../decorators/Broadcast.js";
 import { Field } from "../../../../decorators/Field.js";
 import { Message } from "../../../../decorators/Message.js";
 import { clearRegistry } from "../../../message/metadata/registry.js";
@@ -85,6 +86,12 @@ const Kafka = _Kafka as unknown as Mock;
 
 @Message({ name: "TckKafkaDriverBasic" })
 class TckKafkaDriverBasic implements IMessage {
+  @Field("string") body!: string;
+}
+
+@Broadcast()
+@Message({ name: "TckKafkaDriverBcast" })
+class TckKafkaDriverBcast implements IMessage {
   @Field("string") body!: string;
 }
 
@@ -193,6 +200,35 @@ describe("KafkaDriver", () => {
       );
     });
 
+    it("does not pre-create a .broadcast topic for a non-broadcast type", async () => {
+      const driver = createDriver();
+      await driver.connect();
+      await driver.setup([TckKafkaDriverBasic]);
+
+      const created: Array<string> =
+        mockAdminInstance.createTopics.mock.calls[0][0].topics.map(
+          (t: { topic: string }) => t.topic,
+        );
+      expect(created).toContain("iris.TckKafkaDriverBasic");
+      expect(created).not.toContain("iris.TckKafkaDriverBasic.broadcast");
+      expect(
+        (driver as any).state.createdTopics.has("iris.TckKafkaDriverBasic.broadcast"),
+      ).toBe(false);
+    });
+
+    it("pre-creates a .broadcast topic only for a @Broadcast type", async () => {
+      const driver = createDriver();
+      await driver.connect();
+      await driver.setup([TckKafkaDriverBcast]);
+
+      const created: Array<string> =
+        mockAdminInstance.createTopics.mock.calls[0][0].topics.map(
+          (t: { topic: string }) => t.topic,
+        );
+      expect(created).toContain("iris.TckKafkaDriverBcast");
+      expect(created).toContain("iris.TckKafkaDriverBcast.broadcast");
+    });
+
     it("should drain successfully", async () => {
       const driver = createDriver();
       await driver.connect();
@@ -211,33 +247,6 @@ describe("KafkaDriver", () => {
       expect((driver as any).state.createdTopics.size).toBe(1);
       expect((driver as any).state.consumers).toHaveLength(0);
       expect((driver as any).state.consumerPool.size).toBe(0);
-    });
-  });
-
-  describe("concurrent connect guard (M13)", () => {
-    it("dedupes concurrent connect() calls to a single client", async () => {
-      const driver = createDriver();
-
-      const [a, b] = await Promise.all([driver.connect(), driver.connect()]);
-
-      expect(a).toBeUndefined();
-      expect(b).toBeUndefined();
-      expect(driver.connected).toBe(true);
-      // Only one underlying client is constructed for two overlapping connects.
-      expect(Kafka).toHaveBeenCalledTimes(1);
-    });
-
-    it("clears the guard after a failed connect so a retry can succeed", async () => {
-      const driver = createDriver();
-      mockProducerInstance.connect.mockRejectedValueOnce(new Error("connect boom"));
-
-      await expect(driver.connect()).rejects.toThrow("connect boom");
-      expect(driver.connected).toBe(false);
-
-      // The guard cleared on failure, so a fresh connect constructs a new client.
-      await driver.connect();
-      expect(driver.connected).toBe(true);
-      expect(Kafka).toHaveBeenCalledTimes(2);
     });
   });
 

@@ -119,6 +119,11 @@ export type KafkaConsumer = {
   }) => Promise<void>;
   pause: (topics: Array<{ topic: string }>) => void;
   resume: (topics: Array<{ topic: string }>) => void;
+  seek: (topicPartitionOffset: {
+    topic: string;
+    partition: number;
+    offset: string;
+  }) => void;
   stop: () => Promise<void>;
   commitOffsets: (
     offsets: Array<{ topic: string; partition: number; offset: string }>,
@@ -140,6 +145,9 @@ export type KafkaAdmin = {
     waitForLeaders?: boolean;
   }) => Promise<boolean>;
   deleteTopics: (opts: { topics: Array<string> }) => Promise<void>;
+  fetchTopicOffsets: (
+    topic: string,
+  ) => Promise<Array<{ partition: number; offset: string; high: string; low: string }>>;
 };
 
 export type KafkaEachMessagePayload = {

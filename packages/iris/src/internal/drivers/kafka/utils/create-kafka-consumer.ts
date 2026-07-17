@@ -22,6 +22,41 @@ const DEFAULT_GROUP_JOIN_TIMEOUT_MS = 10_000;
 const resolvePartitionConcurrency = (prefetch: number | undefined): number =>
   Math.max(1, prefetch ?? 1);
 
+// Deterministically position a `fromBeginning: false` consumer at each topic's
+// log end BEFORE `consume()`/`resume()` returns.
+//
+// GROUP_JOIN is NOT a sufficient readiness signal: a brand-new consumer group
+// with no committed offset only resolves its start position (auto.offset.reset
+// → LATEST) LAZILY, on the first fetch that happens AFTER GROUP_JOIN. A message
+// published in that window — after the caller sees the consumer "ready" but
+// before the fetch loop has pinned its offset — is silently skipped. Awaiting
+// GROUP_JOIN alone therefore raced (masked for years by an incidental second
+// broadcast-consumer join, until M14 removed it for non-broadcast worker types).
+//
+// Seeking to the high watermark fetched here pins the start offset to a point
+// that is guaranteed <= the offset of any message the caller publishes next, so
+// nothing produced after we return is lost, while pre-existing messages are
+// still skipped (correct "consume from now" worker/stream semantics). This is
+// the canonical kafka pattern and needs no magic sleep.
+const seekConsumerToEnd = async (
+  kafka: KafkaClient,
+  consumer: KafkaConsumer,
+  topics: Iterable<string>,
+): Promise<void> => {
+  const admin = kafka.admin();
+  try {
+    await admin.connect();
+    for (const topic of topics) {
+      const partitionOffsets = await admin.fetchTopicOffsets(topic);
+      for (const { partition, offset } of partitionOffsets) {
+        consumer.seek({ topic, partition, offset });
+      }
+    }
+  } finally {
+    await admin.disconnect();
+  }
+};
+
 const isUnknownTopicError = (error: unknown): boolean => {
   if (!(error instanceof Error)) return false;
   const msg = error.message ?? "";
@@ -140,6 +175,12 @@ export const createKafkaConsumer = async (
 
   await readyPromise;
 
+  // Pin the start offset now that the group has joined, so a message published
+  // immediately after we return can't slip through the join→first-fetch window.
+  if (!fromBeginning) {
+    await seekConsumerToEnd(kafka, consumer, [topic]);
+  }
+
   const consumerTag = reuseConsumerTag ?? randomId({ namespace: "con", length: 16 });
 
   return {
@@ -211,6 +252,9 @@ export const getOrCreatePooledConsumer = async (
     });
 
     await readyPromise;
+    if (!fromBeginning) {
+      await seekConsumerToEnd(state.kafka, existing.consumer, existing.topics);
+    }
 
     return { consumerTag };
   }
@@ -256,6 +300,9 @@ export const getOrCreatePooledConsumer = async (
   });
 
   await readyPromise;
+  if (!fromBeginning) {
+    await seekConsumerToEnd(state.kafka, consumer, [topic]);
+  }
 
   state.consumerPool.set(groupId, pooled);
 

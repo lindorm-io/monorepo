@@ -17,6 +17,7 @@ const createMockConsumer = (): KafkaConsumer => ({
   run: vi.fn().mockResolvedValue(undefined),
   pause: vi.fn(),
   resume: vi.fn(),
+  seek: vi.fn(),
   stop: vi.fn().mockResolvedValue(undefined),
   commitOffsets: vi.fn().mockResolvedValue(undefined),
   on: vi.fn().mockReturnValue(() => {}),

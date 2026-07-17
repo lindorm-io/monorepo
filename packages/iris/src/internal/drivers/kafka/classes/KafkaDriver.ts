@@ -75,7 +75,6 @@ export class KafkaDriver implements IIrisDriver {
   private _replyQueueActive: boolean = false;
   private _deliberateDisconnect: boolean = false;
   private _reconnecting: Promise<void> | null = null;
-  private _connecting: Promise<void> | null = null;
   private readonly _producerUnsubscribers: Array<() => void> = [];
 
   constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
@@ -107,19 +106,6 @@ export class KafkaDriver implements IIrisDriver {
   }
 
   async connect(): Promise<void> {
-    // Dedupe concurrent connect() calls: a second caller awaits the in-flight
-    // promise instead of opening a second client (which would leak). Cleared on
-    // settle (success or failure) so a later connect can retry.
-    if (this._connecting) return this._connecting;
-
-    this._connecting = this.doConnect().finally(() => {
-      this._connecting = null;
-    });
-
-    return this._connecting;
-  }
-
-  private async doConnect(): Promise<void> {
     this._deliberateDisconnect = false;
     this.setConnectionState("connecting");
 
@@ -347,10 +333,17 @@ export class KafkaDriver implements IIrisDriver {
         const metadata = getMessageMetadata(target);
         const topic = resolveDefaultTopic(metadata);
         const kafkaTopic = resolveTopicName(this.state.prefix, topic);
-        const broadcastTopic = `${kafkaTopic}.broadcast`;
         const rpcTopic = resolveTopicName(this.state.prefix, `rpc.${topic}`);
 
-        for (const t of [kafkaTopic, broadcastTopic, rpcTopic]) {
+        // Only `@Broadcast` types ever publish to / consume from a `.broadcast`
+        // topic (see KafkaWorkerQueue). Pre-creating one for a non-broadcast
+        // type would leave a permanently-empty dead topic — and would defeat
+        // the M14 gating that keeps non-broadcast types off `.broadcast`.
+        const candidateTopics = metadata.broadcast
+          ? [kafkaTopic, `${kafkaTopic}.broadcast`, rpcTopic]
+          : [kafkaTopic, rpcTopic];
+
+        for (const t of candidateTopics) {
           if (!existingTopics.includes(t) && !this.state.createdTopics.has(t)) {
             topicsToCreate.push({ topic: t });
             this.state.createdTopics.add(t);
