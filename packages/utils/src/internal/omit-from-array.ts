@@ -10,15 +10,17 @@ export const omitFromArray = <T extends Array<any>>(
   const result: Array<any> = [];
 
   for (const value of array) {
-    if (isArray(value)) {
-      result.push(omitFromArray(value, predicate));
-    } else if (isObject(value)) {
-      result.push(omitFromObject(value, predicate));
-    } else if (predicate(value)) {
-      continue;
-    } else {
-      result.push(value);
-    }
+    // Recurse into containers first, THEN test the cleaned result — so an empty
+    // (or emptied) array/object element is dropped, matching the scalar rule.
+    const cleaned = isArray(value)
+      ? omitFromArray(value, predicate)
+      : isObject(value)
+        ? omitFromObject(value, predicate)
+        : value;
+
+    if (predicate(cleaned)) continue;
+
+    result.push(cleaned);
   }
 
   return result as T;
