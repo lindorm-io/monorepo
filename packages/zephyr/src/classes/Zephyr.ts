@@ -18,7 +18,7 @@ import { dedupPromise } from "../internal/utils/dedup-promise.js";
 import { unwrapAckResponse } from "../internal/utils/unwrap-ack-response.js";
 import type { AppContext, ZephyrContext, ZephyrMiddleware } from "../types/context.js";
 import type { EventIncoming, EventOutgoing, ZephyrEventMap } from "../types/event-map.js";
-import type { AdvancedOptions, ZephyrOptions } from "../types/options.js";
+import type { ZephyrAdvancedSettings, ZephyrSettings } from "../types/options.js";
 import { ZephyrRoom } from "./ZephyrRoom.js";
 
 const AUTH_EXPIRED_EVENT = "$pylon/auth/expired";
@@ -31,7 +31,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
   private readonly logger: ILogger | undefined;
   private readonly middleware: Array<ZephyrMiddleware>;
   private readonly namespace: string;
-  private readonly socketOptions: AdvancedOptions;
+  private readonly socketOptions: ZephyrAdvancedSettings;
   private readonly timeout: number;
 
   private socket: Socket | undefined;
@@ -43,7 +43,7 @@ export class Zephyr<E extends ZephyrEventMap = ZephyrEventMap> implements IZephy
   private readonly authExpiredHandlers: Set<AuthExpiredHandler>;
   private readonly refreshDedup: () => Promise<void>;
 
-  constructor(options: ZephyrOptions) {
+  constructor(options: ZephyrSettings) {
     this.app = {
       alias: options.alias ?? null,
       url: options.url,

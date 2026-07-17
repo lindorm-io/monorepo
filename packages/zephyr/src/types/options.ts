@@ -4,11 +4,11 @@ import type { ManagerOptions, SocketOptions } from "socket.io-client";
 import type { ZephyrAuthStrategy } from "../auth/zephyr-auth-strategy.js";
 import type { ZephyrMiddleware } from "./context.js";
 
-export type AdvancedOptions = DeepPartial<
+export type ZephyrAdvancedSettings = DeepPartial<
   Omit<ManagerOptions, "autoConnect" | "timeout"> & Omit<SocketOptions, "auth">
 >;
 
-export type ZephyrOptions = {
+export type ZephyrSettings = {
   url: string;
   alias?: string;
   auth?: ZephyrAuthStrategy;
@@ -18,6 +18,6 @@ export type ZephyrOptions = {
   logger?: ILogger;
   middleware?: Array<ZephyrMiddleware>;
   namespace?: string;
-  socketOptions?: AdvancedOptions;
+  socketOptions?: ZephyrAdvancedSettings;
   timeout?: number;
 };

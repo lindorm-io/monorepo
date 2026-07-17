@@ -13,7 +13,7 @@ const DPOP_HEADER = "DPoP";
 
 const HANDSHAKE_METHOD = "GET";
 
-export type DpopBearerAuthStrategyOptions = {
+export type DpopBearerAuthStrategyConfig = {
   getBearerCredentials: () => BearerCredentials | Promise<BearerCredentials>;
   privateKey: CryptoKey;
   publicJwk: JsonWebKey;
@@ -55,7 +55,7 @@ const injectDpopHeader = (socket: Socket, proof: string): void => {
 };
 
 export const createDpopBearerAuthStrategy = (
-  options: DpopBearerAuthStrategyOptions,
+  options: DpopBearerAuthStrategyConfig,
 ): ZephyrAuthStrategy => {
   const timeoutMs = options.refreshAckTimeoutMs ?? DEFAULT_REFRESH_ACK_TIMEOUT_MS;
 

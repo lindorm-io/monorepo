@@ -11,7 +11,7 @@ export type BearerCredentials = {
   expiresIn: number;
 };
 
-export type BearerAuthStrategyOptions = {
+export type BearerAuthStrategyConfig = {
   getBearerCredentials: () => BearerCredentials | Promise<BearerCredentials>;
   refreshAckTimeoutMs?: number;
 };
@@ -38,7 +38,7 @@ const isPylonAck = (value: unknown): value is RefreshAck =>
   (value as { __pylon?: unknown }).__pylon === true;
 
 export const createBearerAuthStrategy = (
-  options: BearerAuthStrategyOptions,
+  options: BearerAuthStrategyConfig,
 ): ZephyrAuthStrategy => {
   const timeoutMs = options.refreshAckTimeoutMs ?? DEFAULT_REFRESH_ACK_TIMEOUT_MS;
 

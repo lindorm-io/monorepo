@@ -84,10 +84,10 @@ const client = new Zephyr({
 });
 ```
 
-The full `ZephyrOptions` shape:
+The full `ZephyrSettings` shape:
 
 ```typescript
-type ZephyrOptions = {
+type ZephyrSettings = {
   url: string;
   alias?: string;
   auth?: ZephyrAuthStrategy;
@@ -97,12 +97,12 @@ type ZephyrOptions = {
   logger?: ILogger;
   middleware?: Array<ZephyrMiddleware>;
   namespace?: string;
-  socketOptions?: AdvancedOptions;
+  socketOptions?: ZephyrAdvancedSettings;
   timeout?: number; // default: 5000
 };
 ```
 
-`AdvancedOptions` is a `DeepPartial` of Socket.IO `ManagerOptions` and `SocketOptions`, with `autoConnect`, `timeout`, and `auth` excluded — those are managed by Zephyr itself.
+`ZephyrAdvancedSettings` is a `DeepPartial` of Socket.IO `ManagerOptions` and `SocketOptions`, with `autoConnect`, `timeout`, and `auth` excluded — those are managed by Zephyr itself.
 
 When `autoConnect` is `true`, the client begins connecting in the constructor. Listeners registered via `on`, `once`, `onConnect`, etc. before the underlying socket is created are queued and applied as soon as the socket is wired up.
 
@@ -609,12 +609,12 @@ Public exports from `@lindorm/zephyr`:
 | `IZephyr`, `IZephyrRoom`                                                    | types     | Client and room interfaces                                 |
 | `AuthExpiredEvent`, `AuthExpiredHandler`                                    | types     | Payload and handler for `$pylon/auth/expired`              |
 | `BearerCredentials`                                                         | type      | `{ bearer: string; expiresIn: number }`                    |
-| `BearerAuthStrategyOptions`                                                 | type      | Options for `createBearerAuthStrategy`                     |
-| `DpopBearerAuthStrategyOptions`                                             | type      | Options for `createDpopBearerAuthStrategy`                 |
-| `CookieAuthStrategyOptions`                                                 | type      | Options for `createCookieAuthStrategy`                     |
+| `BearerAuthStrategyConfig`                                                  | type      | Config for `createBearerAuthStrategy`                      |
+| `DpopBearerAuthStrategyConfig`                                              | type      | Config for `createDpopBearerAuthStrategy`                  |
+| `CookieAuthStrategyConfig`                                                  | type      | Config for `createCookieAuthStrategy`                      |
 | `SignDpopProofOptions`                                                      | type      | Options for `signDpopProof`                                |
 | `ZephyrAuthStrategy`                                                        | interface | `{ prepareHandshake(socket); refresh(socket) }`            |
-| `ZephyrOptions`, `AdvancedOptions`                                          | types     | Client options and Socket.IO subset                        |
+| `ZephyrSettings`, `ZephyrAdvancedSettings`                                  | types     | Client settings and Socket.IO subset                       |
 | `ZephyrContext`, `ZephyrMiddleware`                                         | types     | Middleware context and signature                           |
 | `AppContext`, `MetadataContext`, `IncomingContext`, `OutgoingContext`       | types     | `ZephyrContext` field types                                |
 | `ZephyrEventMap`, `ZephyrEventDefinition`, `EventOutgoing`, `EventIncoming` | types     | Typed event-map helpers                                    |

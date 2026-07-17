@@ -6,7 +6,7 @@ const DEFAULT_REFRESH_ACK_TIMEOUT_MS = 5000;
 
 const REFRESH_EVENT = "$pylon/auth/refresh";
 
-export type CookieAuthStrategyOptions = {
+export type CookieAuthStrategyConfig = {
   refreshUrl: string;
   refreshFetchInit?: RequestInit;
   refreshAckTimeoutMs?: number;
@@ -54,7 +54,7 @@ const readResponseBodySafely = async (
 };
 
 export const createCookieAuthStrategy = (
-  options: CookieAuthStrategyOptions,
+  options: CookieAuthStrategyConfig,
 ): ZephyrAuthStrategy => {
   const timeoutMs = options.refreshAckTimeoutMs ?? DEFAULT_REFRESH_ACK_TIMEOUT_MS;
 

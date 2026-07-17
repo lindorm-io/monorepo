@@ -1,6 +1,6 @@
 import { ZephyrError } from "../errors/ZephyrError.js";
 import type { ZephyrMiddleware } from "../types/context.js";
-import type { ZephyrOptions } from "../types/options.js";
+import type { ZephyrSettings } from "../types/options.js";
 import { io as _io } from "socket.io-client";
 import { Zephyr } from "./Zephyr.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
@@ -33,7 +33,7 @@ vi.mock("socket.io-client", () => ({
 
 const io = _io as unknown as Mock;
 
-const createOptions = (overrides?: Partial<ZephyrOptions>): ZephyrOptions => ({
+const createOptions = (overrides?: Partial<ZephyrSettings>): ZephyrSettings => ({
   url: "http://test.example.com",
   alias: "test-app",
   ...overrides,
