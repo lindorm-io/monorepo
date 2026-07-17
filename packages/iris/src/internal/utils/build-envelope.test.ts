@@ -142,4 +142,40 @@ describe("buildEnvelope", () => {
     expect(result.priority).toBe(7);
     expect(result.expiry).toBe(20000);
   });
+
+  describe("rpc mode", () => {
+    it("should read @Priority/@Expiry but pin broadcast/retry to neutral defaults", () => {
+      // M9: RPC folds onto this same builder. It must honor @Priority/@Expiry
+      // while ignoring @Broadcast/@Retry (RPC is single-shot, timeout-driven).
+      const metadata = {
+        priority: 6,
+        expiry: 12000,
+        broadcast: true,
+        retry: {
+          maxRetries: 3,
+          strategy: "exponential" as const,
+          delay: 500,
+          delayMax: 10000,
+          multiplier: 3,
+          jitter: true,
+        },
+      } as unknown as MessageMetadata;
+
+      const result = buildEnvelope(outbound, "rpc.topic", metadata, undefined, true);
+
+      expect(result).toMatchSnapshot({
+        payload: expect.any(Buffer),
+        timestamp: expect.any(Number),
+      });
+      expect(result.priority).toBe(6);
+      expect(result.expiry).toBe(12000);
+      expect(result.broadcast).toBe(false);
+      expect(result.maxRetries).toBe(0);
+      expect(result.retryStrategy).toBe("constant");
+      expect(result.retryDelay).toBe(1000);
+      expect(result.retryDelayMax).toBe(30000);
+      expect(result.retryMultiplier).toBe(2);
+      expect(result.retryJitter).toBe(false);
+    });
+  });
 });

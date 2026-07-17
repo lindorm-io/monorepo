@@ -11,7 +11,7 @@ import { prepareOutbound } from "../message/utils/prepare-outbound.js";
 import { prepareInbound } from "../message/utils/prepare-inbound.js";
 import { resolveDefaultTopic } from "../message/utils/resolve-default-topic.js";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
-import { createDefaultEnvelope } from "../utils/create-default-envelope.js";
+import { buildEnvelope } from "../utils/build-envelope.js";
 
 export type DriverRpcServerBaseOptions<Req extends IMessage, Res extends IMessage> = {
   logger: ILogger;
@@ -108,7 +108,13 @@ export abstract class DriverRpcServerBase<
       this.encryption,
     );
 
-    const responseEnvelope = createDefaultEnvelope(outbound, queue);
+    const responseEnvelope = buildEnvelope(
+      outbound,
+      queue,
+      this.responseMetadata,
+      undefined,
+      true,
+    );
     return { responseEnvelope };
   }
 
@@ -117,7 +123,7 @@ export abstract class DriverRpcServerBase<
     error: Error,
     correlationId: string | null,
   ): IrisEnvelope {
-    return createDefaultEnvelope(
+    const envelope = buildEnvelope(
       {
         payload: Buffer.from(JSON.stringify({ error: error.message })),
         headers: {
@@ -126,8 +132,12 @@ export abstract class DriverRpcServerBase<
         },
       },
       queue,
-      { correlationId },
+      this.responseMetadata,
+      undefined,
+      true,
     );
+    envelope.correlationId = correlationId;
+    return envelope;
   }
 
   protected abstract doServe(

@@ -1,5 +1,29 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`buildEnvelope > rpc mode > should read @Priority/@Expiry but pin broadcast/retry to neutral defaults 1`] = `
+{
+  "attempt": 0,
+  "broadcast": false,
+  "correlationId": null,
+  "expiry": 12000,
+  "headers": {
+    "x-iris-type": "TestMessage",
+  },
+  "identifierValue": null,
+  "maxRetries": 0,
+  "payload": Any<Buffer>,
+  "priority": 6,
+  "replyTo": null,
+  "retryDelay": 1000,
+  "retryDelayMax": 30000,
+  "retryJitter": false,
+  "retryMultiplier": 2,
+  "retryStrategy": "constant",
+  "timestamp": Any<Number>,
+  "topic": "rpc.topic",
+}
+`;
+
 exports[`buildEnvelope > should build envelope with default values when no retry or priority 1`] = `
 {
   "attempt": 0,

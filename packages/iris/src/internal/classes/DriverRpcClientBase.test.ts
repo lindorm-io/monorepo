@@ -1,9 +1,11 @@
 import type { Constructor } from "@lindorm/types";
 import { Default } from "../../decorators/Default.js";
+import { Expiry } from "../../decorators/Expiry.js";
 import { Field } from "../../decorators/Field.js";
 import { Generated } from "../../decorators/Generated.js";
 import { IdentifierField } from "../../decorators/IdentifierField.js";
 import { Message } from "../../decorators/Message.js";
+import { Priority } from "../../decorators/Priority.js";
 import { IrisTimeoutError } from "../../errors/IrisTimeoutError.js";
 import { IrisTransportError } from "../../errors/IrisTransportError.js";
 import type { IMessage } from "../../interfaces/index.js";
@@ -40,6 +42,18 @@ class RpcClientTestResponse {
   @Default(0)
   @Field("integer")
   code!: number;
+}
+
+@Message({ name: "RpcClientPriorityRequest" })
+@Priority(7)
+@Expiry(4500)
+class RpcClientPriorityRequest {
+  @IdentifierField()
+  @Generated()
+  id!: string;
+
+  @Field("string")
+  query!: string;
 }
 
 // --- Concrete test subclass ---
@@ -182,6 +196,29 @@ describe("DriverRpcClientBase", () => {
       const invalid = { id: 12345, query: "test" } as any;
 
       await expect(client.testPrepareRequestEnvelope(invalid)).rejects.toThrow();
+    });
+
+    it("should carry @Priority and @Expiry from the request message metadata", async () => {
+      // M9: RPC previously built its envelope with createDefaultEnvelope, which
+      // hardcoded priority:0/expiry:null — silently dropping @Priority/@Expiry.
+      // The shared buildEnvelope (rpc mode) must now read them from metadata.
+      const client = new TestRpcClient<RpcClientPriorityRequest, RpcClientTestResponse>({
+        requestTarget:
+          RpcClientPriorityRequest as unknown as Constructor<RpcClientPriorityRequest>,
+        responseTarget:
+          RpcClientTestResponse as unknown as Constructor<RpcClientTestResponse>,
+        logger: createMockLogger() as any,
+      });
+      const requestManager = (client as any).requestManager;
+      const req = requestManager.create({ query: "prioritised" });
+
+      const { envelope } = await client.testPrepareRequestEnvelope(req);
+
+      expect(envelope.priority).toBe(7);
+      expect(envelope.expiry).toBe(4500);
+      // RPC mode still pins the non-RPC concerns to their neutral defaults.
+      expect(envelope.broadcast).toBe(false);
+      expect(envelope.maxRetries).toBe(0);
     });
   });
 

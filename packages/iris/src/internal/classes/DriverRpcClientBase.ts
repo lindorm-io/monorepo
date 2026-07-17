@@ -13,7 +13,7 @@ import { prepareOutbound } from "../message/utils/prepare-outbound.js";
 import { prepareInbound } from "../message/utils/prepare-inbound.js";
 import { resolveDefaultTopic } from "../message/utils/resolve-default-topic.js";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
-import { createDefaultEnvelope } from "../utils/create-default-envelope.js";
+import { buildEnvelope } from "../utils/build-envelope.js";
 
 const DEFAULT_TIMEOUT_MS = 30_000;
 
@@ -78,7 +78,13 @@ export abstract class DriverRpcClientBase<
       this.encryption,
     );
     const topic = resolveDefaultTopic(this.requestMetadata);
-    const envelope = createDefaultEnvelope(outbound, topic);
+    const envelope = buildEnvelope(
+      outbound,
+      topic,
+      this.requestMetadata,
+      undefined,
+      true,
+    );
     return { envelope, topic };
   }
 
