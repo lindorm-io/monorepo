@@ -385,7 +385,7 @@ describe("DriverRpcClientBase", () => {
       expect(client.getPendingRequests().size).toBe(0);
     });
 
-    it("should reject with error message when x-iris-rpc-error header is present", async () => {
+    it("should reject with a typed IrisTransportError when x-iris-rpc-error header is present", async () => {
       const client = createClient();
 
       const { promise } = client.testRegisterPendingRequest(
@@ -399,10 +399,16 @@ describe("DriverRpcClientBase", () => {
         "x-iris-rpc-error-message": "Handler blew up",
       });
 
-      await expect(promise).rejects.toThrow("Handler blew up");
+      // M4: a remote handler failure must surface as IrisTransportError
+      // (code rpc_handler_error) carrying the remote message — not a bare Error —
+      // so an `instanceof IrisTransportError` caller branch fires on every driver.
+      const caught = await promise.catch((error: unknown) => error);
+      expect(caught).toBeInstanceOf(IrisTransportError);
+      expect((caught as IrisTransportError).message).toBe("Handler blew up");
+      expect((caught as IrisTransportError).code).toBe("rpc_handler_error");
     });
 
-    it("should reject with default message when x-iris-rpc-error header has no message", async () => {
+    it("should reject with a typed default message when x-iris-rpc-error header has no message", async () => {
       const client = createClient();
 
       const { promise } = client.testRegisterPendingRequest(
@@ -415,7 +421,10 @@ describe("DriverRpcClientBase", () => {
         "x-iris-rpc-error": "true",
       });
 
-      await expect(promise).rejects.toThrow("RPC handler error");
+      const caught = await promise.catch((error: unknown) => error);
+      expect(caught).toBeInstanceOf(IrisTransportError);
+      expect((caught as IrisTransportError).message).toBe("RPC handler error");
+      expect((caught as IrisTransportError).code).toBe("rpc_handler_error");
     });
 
     it("should reject when deserialization fails", async () => {

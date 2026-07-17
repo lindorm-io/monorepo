@@ -199,7 +199,7 @@ export class RabbitRpcClient<
           const errStr = Buffer.isBuffer(errorMessage)
             ? errorMessage.toString()
             : String(errorMessage);
-          pending.reject(new Error(errStr));
+          pending.reject(this.buildRemoteHandlerError(errStr, cid));
           return;
         }
 

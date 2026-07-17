@@ -139,7 +139,7 @@ export abstract class DriverRpcClientBase<
 
     if (headers["x-iris-rpc-error"] === "true") {
       const errorMessage = headers["x-iris-rpc-error-message"] ?? "RPC handler error";
-      pending.reject(new Error(errorMessage));
+      pending.reject(this.buildRemoteHandlerError(errorMessage, correlationId));
       return;
     }
 
@@ -161,6 +161,26 @@ export abstract class DriverRpcClientBase<
             }),
       );
     }
+  }
+
+  /**
+   * The typed error every driver rejects with when a remote RPC *handler*
+   * threw. Kept on the base so redis/kafka/memory (via {@link handleReplyPayload})
+   * and rabbit's inline reply consumer surface the SAME `IrisTransportError`
+   * (`rpc_handler_error`) — matching nats — instead of a bare `Error`.
+   */
+  protected buildRemoteHandlerError(
+    message: string,
+    correlationId: string | null,
+  ): IrisTransportError {
+    const topic = resolveDefaultTopic(this.requestMetadata);
+    return new IrisTransportError(message, {
+      code: "rpc_handler_error",
+      title: "RPC Handler Error",
+      details: `The remote RPC handler for topic "${topic}" returned an error response.`,
+      data: { topic },
+      debug: { correlationId },
+    });
   }
 
   protected rejectAllPending(): void {

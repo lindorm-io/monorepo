@@ -158,7 +158,7 @@ describe("MemoryRpcClient", () => {
   });
 
   describe("handler error", () => {
-    it("should reject with the handler error", async () => {
+    it("should reject with a typed IrisTransportError carrying the remote message", async () => {
       const { client, server } = createRpcSetup();
 
       await server.serve(async () => {
@@ -168,7 +168,13 @@ describe("MemoryRpcClient", () => {
       const req = new TckRpcReq();
       req.question = "will-fail";
 
-      await expect(client.request(req)).rejects.toThrow("handler exploded");
+      // M4: a remote handler failure surfaces as IrisTransportError
+      // (code rpc_handler_error) on the base path — identical to nats/rabbit —
+      // not a bare Error, so `instanceof IrisTransportError` callers fire.
+      const caught = await client.request(req).catch((error: unknown) => error);
+      expect(caught).toBeInstanceOf(IrisTransportError);
+      expect((caught as IrisTransportError).message).toBe("handler exploded");
+      expect((caught as IrisTransportError).code).toBe("rpc_handler_error");
     });
   });
 
