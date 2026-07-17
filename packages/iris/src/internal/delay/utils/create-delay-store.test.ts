@@ -35,7 +35,7 @@ describe("createDelayStore", () => {
   it("should return the custom store as-is", async () => {
     const custom: IDelayStore = {
       schedule: vi.fn(),
-      poll: vi.fn(),
+      peek: vi.fn(),
       cancel: vi.fn(),
       size: vi.fn(),
       clear: vi.fn(),
