@@ -549,6 +549,54 @@ describe("rabbit driver integration", () => {
       expect(driver.getConnectionState()).toBe("connected");
       expect(await driver.ping()).toBe(true);
     });
+
+    test("ping performs a real AMQP round-trip (opens a probe channel on the wire)", async () => {
+      // H7: ping must touch the wire, not just read socket state. Spy on the
+      // live connection's createChannel to prove the probe channel is opened
+      // against the broker (and returns true on a healthy connection).
+      const connection = (driver as any).state.connection;
+      const createChannelSpy = vi.spyOn(connection, "createChannel");
+
+      const result = await driver.ping();
+
+      expect(result).toBe(true);
+      expect(createChannelSpy).toHaveBeenCalledTimes(1);
+
+      createChannelSpy.mockRestore();
+    });
+
+    test("ping returns false on a half-open connection (non-null but dead)", async () => {
+      // Stand up an isolated source so killing its connection does not disturb
+      // the shared lifecycle driver used by the other tests.
+      const isolated = new IrisSource({
+        driver: "rabbit",
+        url: "amqp://localhost:5672",
+        exchange: `iris-integ-ping-${randomUUID().slice(0, 8)}`,
+        logger: createMockLogger() as any,
+        messages: [LifecycleMsg],
+      });
+      await isolated.connect();
+      await isolated.setup();
+      const isolatedDriver = (isolated as any)._driver as RabbitDriver;
+
+      expect(await isolatedDriver.ping()).toBe(true);
+
+      // Simulate the H7 failure mode: the broker goes away but `state.connection`
+      // is still a (now-dead) object. Suppress the reconnect handler, then close
+      // the underlying connection directly WITHOUT nulling the reference — so the
+      // old socket-state check (`connection !== null`) would still return true.
+      (isolatedDriver as any)._deliberateDisconnect = true;
+      const state = (isolatedDriver as any).state;
+      await state.connection.close();
+
+      // The reference is intact, so only a real wire round-trip can tell the
+      // connection is dead — ping must report false.
+      expect(state.connection).not.toBeNull();
+      expect(await isolatedDriver.ping()).toBe(false);
+
+      // Fully release resources (channels/connection already closed).
+      await isolated.disconnect().catch(() => {});
+    });
   });
 
   // ─── 5. Queue and exchange assertions ─────────────────────────────────────

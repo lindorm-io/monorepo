@@ -337,6 +337,53 @@ describe("RabbitDriver - reconnect logic", () => {
   });
 });
 
+describe("RabbitDriver - ping", () => {
+  beforeEach(() => {
+    mockConnectFn = vi.fn();
+  });
+
+  test("returns true and round-trips a channel open/close on a healthy connection", async () => {
+    const conn = createMockConnection();
+    mockConnectFn.mockResolvedValueOnce(conn);
+
+    const driver = new RabbitDriver(createDriverOptions());
+    await driver.connect();
+
+    // Dedicated probe channel so the wire round-trip is observable in isolation
+    // from the operational channels opened during connect().
+    const probeChannel = createMockChannel();
+    conn.createChannel.mockResolvedValueOnce(probeChannel);
+
+    const result = await driver.ping();
+
+    expect(result).toBe(true);
+    // The probe actually touched the wire: a channel was opened and closed.
+    expect(conn.createChannel).toHaveBeenCalled();
+    expect(probeChannel.close).toHaveBeenCalledTimes(1);
+  });
+
+  test("returns false when the channel-open RPC rejects (dead / half-open connection)", async () => {
+    const conn = createMockConnection();
+    mockConnectFn.mockResolvedValueOnce(conn);
+
+    const driver = new RabbitDriver(createDriverOptions());
+    await driver.connect();
+
+    // A broker that has silently gone away: the old `connection !== null`
+    // socket-state check would still pass, but the channel-open RPC rejects.
+    conn.createChannel.mockRejectedValueOnce(new Error("connection closed"));
+
+    expect(await driver.ping()).toBe(false);
+  });
+
+  test("returns false when there is no connection", async () => {
+    const driver = new RabbitDriver(createDriverOptions());
+
+    // Never connected — state.connection is null.
+    expect(await driver.ping()).toBe(false);
+  });
+});
+
 describe("RabbitDriver - return handler routes to DLX", () => {
   beforeEach(() => {
     mockConnectFn = vi.fn();

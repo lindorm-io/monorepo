@@ -136,6 +136,9 @@ export class MemoryDriver implements IIrisDriver {
   }
 
   async ping(): Promise<boolean> {
+    // Intentionally a no-op wire probe: the memory driver is fully in-process
+    // with no transport to round-trip against, so connection state IS the
+    // health signal. (Contrast the network drivers, which must touch the wire.)
     return this._connectionState === "connected";
   }
 

@@ -198,7 +198,22 @@ export class RabbitDriver implements IIrisDriver {
   }
 
   async ping(): Promise<boolean> {
-    return this.state.connection !== null && this.connected;
+    const connection = this.state.connection;
+    if (!connection) return false;
+
+    try {
+      // Open and immediately close a throwaway channel. `channel.open` is a real
+      // AMQP RPC: it round-trips to the broker and rejects on a dead or
+      // half-open connection — unlike a bare `connection !== null` socket-state
+      // check, which stays true against a broker that has silently gone away.
+      // Kept off the operational channels so a failed probe never disrupts
+      // publish/consume.
+      const channel = await connection.createChannel();
+      await channel.close();
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async reset(): Promise<void> {
