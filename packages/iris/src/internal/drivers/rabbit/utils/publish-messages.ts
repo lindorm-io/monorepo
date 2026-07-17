@@ -47,7 +47,7 @@ export const publishRabbitMessages = async <M extends IMessage>(
         exchange: state.exchange,
         topic,
         type: "delay",
-      })!;
+      });
 
       if (!state.assertedDelayQueues.has(delayQueueName)) {
         await state.publishChannel.assertQueue(delayQueueName, {

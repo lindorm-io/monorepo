@@ -73,7 +73,7 @@ export class RabbitMessageBus<M extends IMessage> extends DriverMessageBusBase<M
         topic: options.topic,
         queue: options.queue,
         type: "subscribe",
-      })!;
+      });
 
       if (!this.state.assertedQueues.has(queueName)) {
         await channel.assertQueue(queueName, {

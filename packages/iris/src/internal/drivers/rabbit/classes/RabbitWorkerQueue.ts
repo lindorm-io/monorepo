@@ -100,7 +100,7 @@ export class RabbitWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase
         topic: queue,
         queue,
         type: "worker",
-      })!;
+      });
 
       if (!this.state.assertedQueues.has(queueName)) {
         await channel.assertQueue(queueName, {

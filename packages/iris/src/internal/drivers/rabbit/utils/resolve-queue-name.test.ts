@@ -14,16 +14,6 @@ describe("resolveQueueName", () => {
       ).toMatchSnapshot();
     });
 
-    it("should return null for broadcast (no queue)", () => {
-      expect(
-        resolveQueueName({
-          exchange: "iris",
-          topic: "orders.created",
-          type: "subscribe",
-        }),
-      ).toBeNull();
-    });
-
     it("should sanitize topic in queue name", () => {
       expect(
         resolveQueueName({

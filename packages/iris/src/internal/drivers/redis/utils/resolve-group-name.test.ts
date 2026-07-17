@@ -13,16 +13,6 @@ describe("resolveGroupName", () => {
         }),
       ).toMatchSnapshot();
     });
-
-    it("should return sub group when no queue is provided", () => {
-      expect(
-        resolveGroupName({
-          prefix: "iris",
-          topic: "orders.created",
-          type: "subscribe",
-        }),
-      ).toMatchSnapshot();
-    });
   });
 
   describe("worker", () => {

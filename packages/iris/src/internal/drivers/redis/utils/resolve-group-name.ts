@@ -1,16 +1,12 @@
+import { resolveConsumerName } from "../../../utils/resolve-consumer-name.js";
 import type { GroupNameOptions } from "../types/redis-types.js";
 
 export type { GroupNameOptions };
 
-export const resolveGroupName = (options: GroupNameOptions): string => {
-  const { prefix, topic, queue, type } = options;
-
-  switch (type) {
-    case "subscribe":
-      return queue ? `${prefix}.${topic}.${queue}` : `${prefix}.sub.${topic}`;
-    case "worker":
-      return `${prefix}.wq.${queue ?? topic}`;
-    case "rpc":
-      return `${prefix}.rpc.${queue ?? topic}`;
-  }
-};
+export const resolveGroupName = ({
+  prefix,
+  topic,
+  queue,
+  type,
+}: GroupNameOptions): string =>
+  `${prefix}.${resolveConsumerName({ type, topic, queue })}`;

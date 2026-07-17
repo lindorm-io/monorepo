@@ -54,7 +54,7 @@ export class RabbitRpcServer<
       topic,
       queue,
       type: "rpc",
-    })!;
+    });
 
     if (!this.state.assertedQueues.has(queueName)) {
       await channel.assertQueue(queueName, { durable: true });

@@ -13,16 +13,6 @@ describe("resolveConsumerName", () => {
         }),
       ).toMatchSnapshot();
     });
-
-    it("should return topic-based consumer when no queue", () => {
-      expect(
-        resolveConsumerName({
-          prefix: "iris",
-          topic: "orders.created",
-          type: "subscribe",
-        }),
-      ).toMatchSnapshot();
-    });
   });
 
   describe("worker", () => {

@@ -1,17 +1,13 @@
+import { resolveConsumerName } from "../../../utils/resolve-consumer-name.js";
 import type { GroupIdOptions } from "../types/kafka-types.js";
 
 export type { GroupIdOptions };
 
-export const resolveGroupId = (options: GroupIdOptions): string => {
-  const { prefix, topic, queue, type, generation } = options;
-  const gen = generation ? `.g${generation}` : "";
-
-  switch (type) {
-    case "subscribe":
-      return queue ? `${prefix}.${topic}.${queue}${gen}` : `${prefix}.sub.${topic}${gen}`;
-    case "worker":
-      return `${prefix}.wq.${queue ?? topic}${gen}`;
-    case "rpc":
-      return `${prefix}.rpc.${queue ?? topic}${gen}`;
-  }
-};
+export const resolveGroupId = ({
+  prefix,
+  topic,
+  queue,
+  type,
+  generation,
+}: GroupIdOptions): string =>
+  `${prefix}.${resolveConsumerName({ type, topic, queue })}${generation ? `.g${generation}` : ""}`;
