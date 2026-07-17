@@ -1,6 +1,6 @@
-import type { SignKitOptions } from "../kit.js";
+import type { SignKitSettings } from "../kit.js";
 
-export type JwtKitOptions = SignKitOptions & {
+export type JwtKitSettings = SignKitSettings & {
   clockTolerance?: number;
   dpopMaxSkew?: number;
   issuer?: string;

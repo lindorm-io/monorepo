@@ -11,7 +11,7 @@ import { COSE_HEADER, COSE_TAG } from "../internal/cose/structures.js";
 import { CweKit } from "./CweKit.js";
 import { CwtKit, type CwtDecoded, type CwtVerifyResult } from "./CwtKit.js";
 
-export type CoseKitOptions = {
+export type CoseKitSettings = {
   logger: ILogger;
 };
 
@@ -47,7 +47,7 @@ const innerCose = (value: unknown): Tag | undefined => {
 export class CoseKit {
   private readonly logger: ILogger;
 
-  constructor(options: CoseKitOptions) {
+  constructor(options: CoseKitSettings) {
     this.logger = options.logger.child(["CoseKit"]);
   }
 

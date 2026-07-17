@@ -107,7 +107,7 @@ export type AegisVerifyKey = {
  */
 export type AegisDecryptKey = AmphoraKeySelector<AegisEncPredicate>;
 
-export type AegisOptions = {
+export type AegisSettings = {
   amphora: IAmphora;
   logger: ILogger;
   issuer?: string;

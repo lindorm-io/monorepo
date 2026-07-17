@@ -85,7 +85,7 @@ All four are accepted per call — as a **`key`** field on each operation's opti
 (`aegis.jws.sign`, `aegis.jwt.verify`, `aegis.aes.encrypt`, `aegis.aes.decrypt`,
 `aegis.jwe.encrypt`/`decrypt`, …); `aegis.mint` takes two keys, so it nests them under
 `sign` / `encrypt` sub-blocks (`{ sign: { key }, encrypt: { key } }`) — and as a
-deployment default on `AegisOptions` (the nested `sign` / `encrypt` / `verify` / `decrypt`
+deployment default on `AegisSettings` (the nested `sign` / `encrypt` / `verify` / `decrypt`
 above). The two merge shallowly, caller wins — except that an `undefined` caller value is
 stripped, never applied, so it falls back to the deployment default rather than matching
 every key.

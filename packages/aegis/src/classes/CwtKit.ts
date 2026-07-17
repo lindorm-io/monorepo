@@ -13,7 +13,7 @@ import {
 import { CwmKit } from "./CwmKit.js";
 import { CwsKit } from "./CwsKit.js";
 
-export type CwtKitOptions = {
+export type CwtKitSettings = {
   kryptos: IKryptos;
   logger: ILogger;
 };
@@ -57,7 +57,7 @@ export class CwtKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
 
-  constructor(options: CwtKitOptions) {
+  constructor(options: CwtKitSettings) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwtKit"]);
   }

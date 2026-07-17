@@ -38,7 +38,7 @@ import type {
   AegisDecryptKey,
   AegisEncKey,
   AegisIntrospection,
-  AegisOptions,
+  AegisSettings,
   AegisSignKey,
   AegisUserinfo,
   AegisVerifyKey,
@@ -118,7 +118,7 @@ export class Aegis implements IAegis {
   private readonly signKey: AegisSignKey;
   private readonly verifyKey: AegisVerifyKey;
 
-  constructor(options: AegisOptions) {
+  constructor(options: AegisSettings) {
     this.logger = options.logger.child(["AegisKit"]);
     this.amphora = options.amphora;
     this.issuer = options.issuer ?? this.amphora.domain;

@@ -9,7 +9,7 @@ import type { IJwsKit } from "../interfaces/index.js";
 import type {
   CertBindingMode,
   DecodedJws,
-  JwsKitOptions,
+  JwsKitSettings,
   ParsedJws,
   ParsedJwsHeader,
   SignJwsOptions,
@@ -35,7 +35,7 @@ export class JwsKit implements IJwsKit {
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
-  constructor(options: JwsKitOptions) {
+  constructor(options: JwsKitSettings) {
     this.logger = options.logger.child(["JwsKit"]);
     this.kryptos = options.kryptos;
     this.certBindingMode = options.certBindingMode ?? "strict";

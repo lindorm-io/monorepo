@@ -14,7 +14,7 @@ import type {
   DecryptedJweHeader,
   EncryptedJwe,
   JweEncryptOptions,
-  JweKitOptions,
+  JweKitSettings,
   TokenHeaderOptions,
 } from "../types/index.js";
 import {
@@ -35,7 +35,7 @@ export class JweKit implements IJweKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
 
-  constructor(options: JweKitOptions) {
+  constructor(options: JweKitSettings) {
     this.logger = options.logger.child(["JweKit"]);
     this.kryptos = options.kryptos;
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";

@@ -20,7 +20,7 @@ import { JweKit } from "./JweKit.js";
 import { JwsKit } from "./JwsKit.js";
 import { JwtKit } from "./JwtKit.js";
 
-export type JoseKitOptions = {
+export type JoseKitSettings = {
   certBindingMode: CertBindingMode;
   clockTolerance: number;
   dpopMaxSkew: number | undefined;
@@ -44,7 +44,7 @@ export class JoseKit {
   private readonly issuer: string | undefined;
   private readonly logger: ILogger;
 
-  constructor(options: JoseKitOptions) {
+  constructor(options: JoseKitSettings) {
     this.certBindingMode = options.certBindingMode;
     this.clockTolerance = options.clockTolerance;
     this.dpopMaxSkew = options.dpopMaxSkew;

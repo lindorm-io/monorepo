@@ -12,7 +12,7 @@ import {
 } from "../internal/cose/structures.js";
 import { SignatureKit } from "./SignatureKit.js";
 
-export type CwsKitOptions = {
+export type CwsKitSettings = {
   kryptos: IKryptos;
   logger: ILogger;
 };
@@ -56,7 +56,7 @@ export class CwsKit {
   private readonly kryptos: IKryptos;
   private readonly logger: ILogger;
 
-  constructor(options: CwsKitOptions) {
+  constructor(options: CwsKitSettings) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CwsKit"]);
   }

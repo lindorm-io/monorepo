@@ -16,7 +16,7 @@ import {
   encodeProtectedHeader,
 } from "../internal/cose/structures.js";
 
-export type CweKitOptions = {
+export type CweKitSettings = {
   kryptos: IKryptos;
   logger: ILogger;
   /**
@@ -61,7 +61,7 @@ export class CweKit {
   private readonly logger: ILogger;
   private readonly encryption: KryptosEncryption | undefined;
 
-  constructor(options: CweKitOptions) {
+  constructor(options: CweKitSettings) {
     this.kryptos = options.kryptos;
     this.logger = options.logger.child(["CweKit"]);
     this.encryption = options.encryption ?? options.kryptos.encryption ?? undefined;

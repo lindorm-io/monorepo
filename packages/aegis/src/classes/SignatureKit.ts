@@ -5,12 +5,12 @@ import { OkpKit } from "@lindorm/okp";
 import { RsaKit } from "@lindorm/rsa";
 import type { IKeyKit, KeyData } from "@lindorm/types";
 import { AegisError } from "../errors/index.js";
-import type { SignatureOptions } from "../types/index.js";
+import type { SignatureKitSettings } from "../types/index.js";
 
 export class SignatureKit implements IKeyKit {
   private readonly kit: IKeyKit;
 
-  constructor(options: SignatureOptions) {
+  constructor(options: SignatureKitSettings) {
     this.kit = this.getKit(options);
   }
 
@@ -34,7 +34,7 @@ export class SignatureKit implements IKeyKit {
 
   // private
 
-  private getKit(options: SignatureOptions): IKeyKit {
+  private getKit(options: SignatureKitSettings): IKeyKit {
     switch (options.kryptos.type) {
       case "AKP":
         return new AkpKit(options);

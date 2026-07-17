@@ -21,7 +21,7 @@ import type { IJwtKit } from "../interfaces/index.js";
 import type {
   CertBindingMode,
   DecodedJwt,
-  JwtKitOptions,
+  JwtKitSettings,
   ParsedJwt,
   ParsedJwtHeader,
   ParsedJwtPayload,
@@ -59,7 +59,7 @@ export class JwtKit implements IJwtKit {
   private readonly logger: ILogger;
   private readonly kryptos: IKryptos;
 
-  constructor(options: JwtKitOptions) {
+  constructor(options: JwtKitSettings) {
     this.logger = options.logger.child(["JwtKit"]);
     this.kryptos = options.kryptos;
 

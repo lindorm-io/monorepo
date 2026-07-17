@@ -35,7 +35,7 @@ import type { BuiltInProfiles } from "../internal/profiles/built-in-profiles.js"
 
 /**
  * The AES surface takes the SAME key selector as every other aegis operation:
- * the deployment default (`AegisOptions.encrypt` / `.decrypt`) merged with a
+ * the deployment default (`AegisSettings.encrypt` / `.decrypt`) merged with a
  * per-call `key`, resolved through the one resolver, floored like the rest.
  *
  * It exists because one Aegis serves a whole deployment: a pylon encrypts a
