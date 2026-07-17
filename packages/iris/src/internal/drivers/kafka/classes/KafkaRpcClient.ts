@@ -11,6 +11,7 @@ import { resolveTopicName } from "../utils/resolve-topic-name.js";
 import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
 import { parseKafkaMessage } from "../utils/parse-kafka-message.js";
 import { createKafkaConsumer } from "../utils/create-kafka-consumer.js";
+import { deleteKafkaTopicFromState } from "../utils/delete-kafka-topic.js";
 import { ensureKafkaTopicFromState } from "../utils/ensure-kafka-topic.js";
 import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
 
@@ -79,6 +80,10 @@ export class KafkaRpcClient<
       await stopKafkaConsumer(this.state, this.replyConsumerTag);
       this.replyConsumerTag = null;
     }
+
+    // Best-effort teardown of the client's unique reply topic so short-lived
+    // clients don't leak orphan topics on the broker (never throws out of close).
+    await deleteKafkaTopicFromState(this.state, this.replyTopic, this.logger);
 
     this.replyConsumerPromise = null;
     this.logger.debug("RPC client closed");

@@ -26,6 +26,12 @@ vi.mock("../utils/ensure-kafka-topic.js", () => ({
     mockEnsureKafkaTopicFromState(...args),
 }));
 
+const mockDeleteKafkaTopicFromState = vi.fn().mockResolvedValue(undefined);
+vi.mock("../utils/delete-kafka-topic.js", () => ({
+  deleteKafkaTopicFromState: (...args: Array<unknown>) =>
+    mockDeleteKafkaTopicFromState(...args),
+}));
+
 vi.mock("../utils/serialize-kafka-message.js", () => ({
   serializeKafkaMessage: vi
     .fn()
@@ -121,6 +127,7 @@ beforeEach(() => {
   mockCreateKafkaConsumer.mockClear();
   mockStopKafkaConsumer.mockClear();
   mockEnsureKafkaTopicFromState.mockClear();
+  mockDeleteKafkaTopicFromState.mockClear();
   mockCreateKafkaConsumerResult = {
     consumerTag: "reply-ctag",
     groupId: "reply-group",
@@ -178,6 +185,31 @@ describe("KafkaRpcClient", () => {
       "RPC client closed while request was pending",
     );
   }, 10000);
+
+  it("should delete its unique reply topic on close", async () => {
+    const state = createMockState();
+    const client = new KafkaRpcClient({
+      state,
+      logger: createMockLogger() as any,
+      requestTarget: TckKafkaRpcReq as any,
+      responseTarget: TckKafkaRpcRes as any,
+    });
+
+    // The reply topic is minted per-client in the constructor.
+    const replyTopic = client["replyTopic"];
+    expect(replyTopic).toMatch(/^iris\.rpc\.reply\./);
+
+    await client.close();
+
+    // M6: close() must best-effort tear the reply topic down, else short-lived
+    // clients leak orphan topics on the broker.
+    expect(mockDeleteKafkaTopicFromState).toHaveBeenCalledTimes(1);
+    expect(mockDeleteKafkaTopicFromState).toHaveBeenCalledWith(
+      state,
+      replyTopic,
+      expect.anything(),
+    );
+  });
 
   it("should start reply consumer on first request", async () => {
     const state = createMockState();

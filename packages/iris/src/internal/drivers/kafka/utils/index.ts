@@ -1,4 +1,5 @@
 export * from "./create-kafka-consumer.js";
+export * from "./delete-kafka-topic.js";
 export * from "./ensure-kafka-topic.js";
 export * from "./parse-kafka-message.js";
 export * from "./publish-kafka-messages.js";
