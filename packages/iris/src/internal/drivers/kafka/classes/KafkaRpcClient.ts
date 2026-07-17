@@ -123,6 +123,7 @@ export class KafkaRpcClient<
       sessionTimeoutMs: this.state.sessionTimeoutMs,
       logger: this.logger,
       abortSignal: this.state.abortController.signal,
+      prefetch: this.state.prefetch,
       onMessage: async (payload) => {
         const envelope = parseKafkaMessage(payload);
         const cid = envelope.correlationId;

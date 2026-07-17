@@ -16,6 +16,12 @@ export type { CreateKafkaConsumerOptions, GetOrCreatePooledConsumerOptions };
 
 const DEFAULT_GROUP_JOIN_TIMEOUT_MS = 10_000;
 
+// KafkaJS `partitionsConsumedConcurrently` must be >= 1 (0 / undefined would
+// disable fetching). Clamp the driver's `prefetch` so a bad config can never
+// stall the consumer.
+const resolvePartitionConcurrency = (prefetch: number | undefined): number =>
+  Math.max(1, prefetch ?? 1);
+
 const isUnknownTopicError = (error: unknown): boolean => {
   if (!(error instanceof Error)) return false;
   const msg = error.message ?? "";
@@ -77,6 +83,7 @@ export const createKafkaConsumer = async (
     logger,
     fromBeginning = false,
     abortSignal,
+    prefetch,
     consumerTag: reuseConsumerTag,
   } = options;
 
@@ -92,6 +99,7 @@ export const createKafkaConsumer = async (
 
   await consumer.run({
     autoCommit: false,
+    partitionsConsumedConcurrently: resolvePartitionConcurrency(prefetch),
     eachMessage: async (payload) => {
       try {
         // Race the handler against the abort signal so stuck handlers
@@ -193,6 +201,7 @@ export const getOrCreatePooledConsumer = async (
 
     await existing.consumer.run({
       autoCommit: false,
+      partitionsConsumedConcurrently: resolvePartitionConcurrency(state.prefetch),
       eachMessage: createPooledDispatcher(
         existing,
         logger,
@@ -237,6 +246,7 @@ export const getOrCreatePooledConsumer = async (
 
   await consumer.run({
     autoCommit: false,
+    partitionsConsumedConcurrently: resolvePartitionConcurrency(state.prefetch),
     eachMessage: createPooledDispatcher(
       pooled,
       logger,

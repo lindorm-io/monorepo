@@ -227,6 +227,55 @@ describe("createKafkaConsumer", () => {
     );
   });
 
+  it("should pass prefetch through as partitionsConsumedConcurrently (M3)", async () => {
+    const kafka = createMockKafka();
+    const logger = createMockLogger();
+
+    await createKafkaConsumer({
+      kafka,
+      groupId: "test-group",
+      topic: "test-topic",
+      onMessage: vi.fn(),
+      logger: logger as any,
+      prefetch: 8,
+    });
+
+    const consumer = (kafka.consumer as Mock).mock.results[0].value as KafkaConsumer;
+    expect(consumer.run).toHaveBeenCalledWith(
+      expect.objectContaining({ partitionsConsumedConcurrently: 8 }),
+    );
+  });
+
+  it("should clamp prefetch to a minimum of 1 when unset or below 1 (M3)", async () => {
+    const kafkaUnset = createMockKafka();
+    const kafkaZero = createMockKafka();
+    const logger = createMockLogger();
+
+    await createKafkaConsumer({
+      kafka: kafkaUnset,
+      groupId: "g1",
+      topic: "t1",
+      onMessage: vi.fn(),
+      logger: logger as any,
+    });
+
+    await createKafkaConsumer({
+      kafka: kafkaZero,
+      groupId: "g2",
+      topic: "t2",
+      onMessage: vi.fn(),
+      logger: logger as any,
+      prefetch: 0,
+    });
+
+    for (const kafka of [kafkaUnset, kafkaZero]) {
+      const consumer = (kafka.consumer as Mock).mock.results[0].value as KafkaConsumer;
+      expect(consumer.run).toHaveBeenCalledWith(
+        expect.objectContaining({ partitionsConsumedConcurrently: 1 }),
+      );
+    }
+  });
+
   it("should generate a unique consumerTag", async () => {
     const kafka = createMockKafka();
     const logger = createMockLogger();
@@ -360,6 +409,26 @@ describe("getOrCreatePooledConsumer", () => {
         logger: logger as any,
       }),
     ).rejects.toThrow("Cannot create pooled consumer: Kafka client is not connected");
+  });
+
+  it("should apply state.prefetch as partitionsConsumedConcurrently on the pooled consumer (M3)", async () => {
+    const mockConsumer = createMockConsumer();
+    const kafka = createMockKafka(mockConsumer);
+    const state = createMockState(kafka);
+    state.prefetch = 5;
+    const logger = createMockLogger();
+
+    await getOrCreatePooledConsumer({
+      state,
+      groupId: "test-group",
+      topic: "test-topic",
+      onMessage: vi.fn(),
+      logger: logger as any,
+    });
+
+    expect(mockConsumer.run).toHaveBeenCalledWith(
+      expect.objectContaining({ partitionsConsumedConcurrently: 5 }),
+    );
   });
 
   it("should add consumer handle to state.consumers on new pool entry", async () => {

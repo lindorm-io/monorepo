@@ -84,6 +84,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       logger: this.logger,
       fromBeginning: false,
       abortSignal: this.state.abortController.signal,
+      prefetch: this.state.prefetch,
       onMessage,
     });
     consumerRef.consumer = handle.consumer;
@@ -159,6 +160,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       logger: this.logger,
       fromBeginning: false,
       abortSignal: this.state.abortController.signal,
+      prefetch: this.state.prefetch,
       onMessage,
     });
     consumerRef.consumer = handle.consumer;

@@ -12,6 +12,16 @@ export type CreateKafkaConsumerOptions = {
   fromBeginning?: boolean;
   abortSignal?: AbortSignal;
   /**
+   * Upper bound on how many partitions the consumer processes concurrently
+   * (maps to KafkaJS `partitionsConsumedConcurrently`). This is the Kafka
+   * expression of the driver's `prefetch` setting — the other drivers bound
+   * consumer concurrency by prefetch, Kafka does it per-partition. Clamped to
+   * a minimum of 1. Ordering is unaffected: KafkaJS still processes each single
+   * partition serially, so per-key ordering (the `@IdentifierField` partition
+   * key) is preserved; only distinct partitions run in parallel.
+   */
+  prefetch?: number;
+  /**
    * Reuse an existing consumer tag instead of minting a new one. Used when
    * re-establishing a consumer on reconnect so the owning instance's cached
    * tag stays valid (see reRegisterKafkaConsumers).
@@ -105,6 +115,7 @@ export type KafkaConsumer = {
   run: (opts: {
     eachMessage: (payload: KafkaEachMessagePayload) => Promise<void>;
     autoCommit?: boolean;
+    partitionsConsumedConcurrently?: number;
   }) => Promise<void>;
   pause: (topics: Array<{ topic: string }>) => void;
   resume: (topics: Array<{ topic: string }>) => void;

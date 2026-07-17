@@ -80,6 +80,7 @@ export const reRegisterKafkaConsumers = async (
           logger,
           fromBeginning: reg.fromBeginning ?? false,
           abortSignal: state.abortController.signal,
+          prefetch: state.prefetch,
           // Reuse the tag so the owning instance's cached consumerTag (e.g. the
           // stream pipeline's) still matches the rebuilt consumer.
           consumerTag: reg.consumerTag,
