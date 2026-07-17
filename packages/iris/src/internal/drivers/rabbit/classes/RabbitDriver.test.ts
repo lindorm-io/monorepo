@@ -384,6 +384,42 @@ describe("RabbitDriver - ping", () => {
   });
 });
 
+describe("RabbitDriver - concurrent connect guard (M13)", () => {
+  beforeEach(() => {
+    mockConnectFn = vi.fn();
+  });
+
+  test("dedupes concurrent connect() calls to a single connection", async () => {
+    mockConnectFn.mockResolvedValue(createMockConnection());
+
+    const driver = new RabbitDriver(createDriverOptions());
+
+    const [a, b] = await Promise.all([driver.connect(), driver.connect()]);
+
+    expect(a).toBeUndefined();
+    expect(b).toBeUndefined();
+    expect(driver.getConnectionState()).toBe("connected");
+    // Only one underlying connection is opened for two overlapping connects.
+    expect(mockConnectFn).toHaveBeenCalledTimes(1);
+  });
+
+  test("clears the guard after a failed connect so a retry can succeed", async () => {
+    mockConnectFn
+      .mockRejectedValueOnce(new Error("connect boom"))
+      .mockResolvedValueOnce(createMockConnection());
+
+    const driver = new RabbitDriver(createDriverOptions());
+
+    await expect(driver.connect()).rejects.toThrow("connect boom");
+    expect(driver.getConnectionState()).toBe("disconnected");
+
+    // The guard cleared on failure, so a fresh connect opens a new connection.
+    await driver.connect();
+    expect(driver.getConnectionState()).toBe("connected");
+    expect(mockConnectFn).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe("RabbitDriver - return handler routes to DLX", () => {
   beforeEach(() => {
     mockConnectFn = vi.fn();

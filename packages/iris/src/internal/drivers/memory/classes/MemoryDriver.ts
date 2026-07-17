@@ -55,6 +55,7 @@ export class MemoryDriver implements IIrisDriver {
   private _connectionState: IrisConnectionState = "disconnected";
   private readonly _emitter = new EventEmitter();
   private _replyQueueActive: boolean = false;
+  private _connecting: Promise<void> | null = null;
 
   constructor(options: MemoryDriverOptions, store?: MemorySharedState) {
     this.logger = options.logger.child(["MemoryDriver"]);
@@ -67,6 +68,19 @@ export class MemoryDriver implements IIrisDriver {
   }
 
   async connect(): Promise<void> {
+    // Dedupe concurrent connect() calls for a uniform shape across drivers. The
+    // memory driver has no client to leak, but the guard keeps behaviour
+    // consistent. Cleared on settle so a later connect can retry.
+    if (this._connecting) return this._connecting;
+
+    this._connecting = this.doConnect().finally(() => {
+      this._connecting = null;
+    });
+
+    return this._connecting;
+  }
+
+  private async doConnect(): Promise<void> {
     this.setConnectionState("connecting");
 
     if (this.delayManager) {

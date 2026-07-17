@@ -4,6 +4,7 @@ import { Field } from "../../../../decorators/Field.js";
 import { Message } from "../../../../decorators/Message.js";
 import { clearRegistry } from "../../../message/metadata/registry.js";
 import type { RedisSharedState } from "../types/redis-types.js";
+import { Redis } from "ioredis";
 import { RedisDriver } from "./RedisDriver.js";
 import { RedisPublisher } from "./RedisPublisher.js";
 import { RedisMessageBus } from "./RedisMessageBus.js";
@@ -148,6 +149,35 @@ describe("RedisDriver", () => {
 
       expect((driver as any).state.createdGroups.size).toBe(0);
       expect((driver as any).state.consumerLoops).toHaveLength(0);
+    });
+  });
+
+  describe("concurrent connect guard (M13)", () => {
+    it("dedupes concurrent connect() calls to a single client", async () => {
+      const driver = createDriver();
+
+      const [a, b] = await Promise.all([driver.connect(), driver.connect()]);
+
+      expect(a).toBeUndefined();
+      expect(b).toBeUndefined();
+      expect(driver.connected).toBe(true);
+      // Only one underlying client is constructed for two overlapping connects.
+      expect(Redis as unknown as Mock).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears the guard after a failed connect so a retry can succeed", async () => {
+      const driver = createDriver();
+      (Redis as unknown as Mock).mockImplementationOnce(() => {
+        throw new Error("connect boom");
+      });
+
+      await expect(driver.connect()).rejects.toThrow("connect boom");
+      expect(driver.connected).toBe(false);
+
+      // The guard cleared on failure, so a fresh connect constructs a new client.
+      await driver.connect();
+      expect(driver.connected).toBe(true);
+      expect(Redis as unknown as Mock).toHaveBeenCalledTimes(2);
     });
   });
 

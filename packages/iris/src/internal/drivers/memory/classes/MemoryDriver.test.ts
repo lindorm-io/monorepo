@@ -72,6 +72,35 @@ describe("MemoryDriver", () => {
       expect(driver.connected).toBe(true);
     });
 
+    // M13: the memory driver has no client to leak, but keeps the same
+    // concurrent-connect guard shape as the broker drivers.
+    it("dedupes concurrent connect() calls (single connecting transition)", async () => {
+      const driver = createDriver();
+      const states: Array<string> = [];
+      driver.on("connection:state", (s) => states.push(s));
+
+      const [a, b] = await Promise.all([driver.connect(), driver.connect()]);
+
+      expect(a).toBeUndefined();
+      expect(b).toBeUndefined();
+      expect(driver.connected).toBe(true);
+      // doConnect ran once → exactly one "connecting" transition.
+      expect(states.filter((s) => s === "connecting")).toHaveLength(1);
+    });
+
+    it("clears the guard after connect settles so a later connect re-runs", async () => {
+      const driver = createDriver();
+      await driver.connect();
+
+      const states: Array<string> = [];
+      driver.on("connection:state", (s) => states.push(s));
+
+      // A sequential (non-concurrent) connect runs doConnect again — the guard
+      // only dedupes in-flight calls.
+      await driver.connect();
+      expect(states.filter((s) => s === "connecting")).toHaveLength(1);
+    });
+
     it("should disconnect and clear subscriptions", async () => {
       const driver = createDriver();
       await driver.connect();

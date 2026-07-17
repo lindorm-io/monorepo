@@ -75,6 +75,7 @@ export class KafkaDriver implements IIrisDriver {
   private _replyQueueActive: boolean = false;
   private _deliberateDisconnect: boolean = false;
   private _reconnecting: Promise<void> | null = null;
+  private _connecting: Promise<void> | null = null;
   private readonly _producerUnsubscribers: Array<() => void> = [];
 
   constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
@@ -106,6 +107,19 @@ export class KafkaDriver implements IIrisDriver {
   }
 
   async connect(): Promise<void> {
+    // Dedupe concurrent connect() calls: a second caller awaits the in-flight
+    // promise instead of opening a second client (which would leak). Cleared on
+    // settle (success or failure) so a later connect can retry.
+    if (this._connecting) return this._connecting;
+
+    this._connecting = this.doConnect().finally(() => {
+      this._connecting = null;
+    });
+
+    return this._connecting;
+  }
+
+  private async doConnect(): Promise<void> {
     this._deliberateDisconnect = false;
     this.setConnectionState("connecting");
 

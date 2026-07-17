@@ -234,6 +234,33 @@ describe("NatsDriver", () => {
     });
   });
 
+  describe("concurrent connect guard (M13)", () => {
+    it("dedupes concurrent connect() calls to a single connection", async () => {
+      const driver = createDriver();
+
+      const [a, b] = await Promise.all([driver.connect(), driver.connect()]);
+
+      expect(a).toBeUndefined();
+      expect(b).toBeUndefined();
+      expect(driver.connected).toBe(true);
+      // Only one underlying connection is opened for two overlapping connects.
+      expect(connect).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears the guard after a failed connect so a retry can succeed", async () => {
+      const driver = createDriver();
+      connect.mockRejectedValueOnce(new Error("connect boom"));
+
+      await expect(driver.connect()).rejects.toThrow("connect boom");
+      expect(driver.connected).toBe(false);
+
+      // The guard cleared on failure, so a fresh connect opens a new connection.
+      await driver.connect();
+      expect(driver.connected).toBe(true);
+      expect(connect).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe("state listeners", () => {
     it("should notify listeners on state change", async () => {
       const driver = createDriver();

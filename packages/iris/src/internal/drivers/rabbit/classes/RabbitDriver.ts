@@ -63,6 +63,7 @@ export class RabbitDriver implements IIrisDriver {
   private _deliberateDisconnect: boolean = false;
   private _reconnectAttempt: number = 0;
   private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private _connecting: Promise<void> | null = null;
   private _publishChannelOpen: boolean = false;
   private _consumeChannelOpen: boolean = false;
 
@@ -93,6 +94,19 @@ export class RabbitDriver implements IIrisDriver {
   }
 
   async connect(): Promise<void> {
+    // Dedupe concurrent connect() calls: a second caller awaits the in-flight
+    // promise instead of opening a second connection (which would leak). Cleared
+    // on settle (success or failure) so a later connect can retry.
+    if (this._connecting) return this._connecting;
+
+    this._connecting = this.doConnect().finally(() => {
+      this._connecting = null;
+    });
+
+    return this._connecting;
+  }
+
+  private async doConnect(): Promise<void> {
     this._deliberateDisconnect = false;
     this.setConnectionState("connecting");
 
