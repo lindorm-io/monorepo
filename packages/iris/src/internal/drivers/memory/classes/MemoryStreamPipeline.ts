@@ -3,9 +3,7 @@ import type { MemorySharedState } from "../types/memory-store.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
-import { prepareOutbound } from "../../../message/utils/prepare-outbound.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
-import { buildEnvelope } from "../../../utils/build-envelope.js";
 import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers.js";
 import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
 import {
@@ -116,18 +114,6 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
   ): Promise<void> {
     await dispatchToSubscribers(this.store, envelope);
     await dispatchToConsumers(this.store, envelope);
-  }
-
-  protected override async publishOutput(data: any): Promise<void> {
-    const metadata = this.outputManager.metadata;
-    const message = this.outputManager.hydrate(data as Record<string, unknown>);
-    this.outputManager.validate(message);
-    const topic = this.outputTopic ?? resolveDefaultTopic(this.outputManager.metadata);
-    const outbound = await prepareOutbound(message, metadata, this.encryption);
-    const outputEnvelope = buildEnvelope(outbound, topic, metadata);
-
-    await dispatchToSubscribers(this.store, outputEnvelope);
-    await dispatchToConsumers(this.store, outputEnvelope);
   }
 
   protected override resetBatchTimer(stage: { size: number; timeout?: number }): void {
