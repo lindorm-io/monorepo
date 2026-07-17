@@ -1073,6 +1073,57 @@ describe("IrisSource", () => {
     });
   });
 
+  describe("in-memory delay store durability warning", () => {
+    const warnedAboutInMemoryDelay = (logger: { warn: Mock }): boolean =>
+      logger.warn.mock.calls.some((call) =>
+        String(call[0]).includes("retries scheduled during backoff are held in memory"),
+      );
+
+    it("should warn once when a persistent driver falls back to the in-memory delay store", async () => {
+      const logger = createMockLogger();
+      const source = new IrisSource({
+        driver: "redis",
+        url: "redis://localhost:6379",
+        logger: logger as any,
+      } as any);
+
+      await (source as any)._createManagers();
+
+      expect(warnedAboutInMemoryDelay(logger)).toBe(true);
+    });
+
+    it("should NOT warn for the memory driver (in-memory by design)", async () => {
+      const logger = createMockLogger();
+      const source = new IrisSource(createMemoryOptions({ logger: logger as any }));
+
+      await (source as any)._createManagers();
+
+      expect(warnedAboutInMemoryDelay(logger)).toBe(false);
+    });
+
+    it("should NOT warn when a durable (custom) delay store is configured", async () => {
+      const logger = createMockLogger();
+      const customStore = {
+        schedule: vi.fn(),
+        peek: vi.fn(),
+        cancel: vi.fn(),
+        size: vi.fn(),
+        clear: vi.fn(),
+        close: vi.fn(),
+      };
+      const source = new IrisSource({
+        driver: "redis",
+        url: "redis://localhost:6379",
+        logger: logger as any,
+        persistence: { delay: { type: "custom", store: customStore as any } },
+      } as any);
+
+      await (source as any)._createManagers();
+
+      expect(warnedAboutInMemoryDelay(logger)).toBe(false);
+    });
+  });
+
   describe("abstract message filtering in setup (#9)", () => {
     it("should filter out abstract messages and pass only concrete ones to driver.setup", async () => {
       const mockDriver = createMockDriver();

@@ -966,6 +966,8 @@ new IrisSource({
 
 Configure where delayed deliveries and dead-lettered envelopes are kept. These are used by drivers that don't already provide native primitives for them.
 
+> **Durability note.** The delay store also holds **retries scheduled during a backoff window**. It defaults to an in-memory store. On a persistent broker (redis/kafka/nats) that means any delayed message or in-flight retry still pending when the process restarts is **lost** — the source logs a startup warning when it falls back to the in-memory default. Configure `persistence.delay` with a durable store (`redis` or a `custom` `IDelayStore`) for at-least-once delay/retry across restarts.
+
 ```typescript
 new IrisSource({
   driver: "kafka",

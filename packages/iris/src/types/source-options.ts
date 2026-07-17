@@ -28,6 +28,15 @@ export type IrisPersistenceDeadLetterConfig =
   | { type: "custom"; store: IDeadLetterStore };
 
 export type IrisPersistenceOptions = {
+  /**
+   * Where delayed deliveries AND retries-during-backoff are held.
+   *
+   * Defaults to an in-memory store. On a persistent broker (redis/kafka/nats)
+   * the in-memory default means any delayed message or retry still waiting when
+   * the process restarts is lost — the source logs a startup warning in that
+   * case. Configure a durable store (`{ type: "redis", url }` or a `custom`
+   * `IDelayStore`) for at-least-once delay/retry across restarts.
+   */
   delay?: IrisPersistenceDelayConfig;
   deadLetter?: IrisPersistenceDeadLetterConfig;
 };

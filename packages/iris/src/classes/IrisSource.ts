@@ -305,6 +305,20 @@ export class IrisSource implements IIrisSource {
     const delayStore = await createDelayStore(persistence?.delay);
     const deadLetterStore = await createDeadLetterStore(persistence?.deadLetter);
 
+    // The default delay store is in-memory. For the memory driver everything is
+    // in-memory by design, but for a persistent broker (redis/kafka/nats) the
+    // in-memory store means retries scheduled during a backoff window are lost
+    // on restart — warn once at startup so operators can opt into a durable store.
+    const usingInMemoryDelayDefault =
+      !persistence?.delay || persistence.delay.type === "memory";
+
+    if (usingInMemoryDelayDefault && this._options.driver !== "memory") {
+      this.logger.warn(
+        "Delay/retry store is in-memory: retries scheduled during backoff are held in memory and will not survive a process restart; configure persistence.delay with a durable delay store for at-least-once retry across restarts",
+        { driver: this._options.driver },
+      );
+    }
+
     this._delayManager = new DelayManagerClass({
       store: delayStore,
       logger: this.logger,
