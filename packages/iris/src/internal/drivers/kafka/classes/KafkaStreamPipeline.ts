@@ -169,11 +169,12 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     this.consumerTag = handle.consumerTag;
     this.registerConsumer(handle.consumerTag, this.groupId, kafkaTopic, onMessage);
 
-    // Brief delay to allow the consumer's fetch loop to initialize after GROUP_JOIN.
-    // Without this, messages published immediately after resume() may arrive before
-    // the consumer has started polling.
-    await new Promise((resolve) => setTimeout(resolve, 200));
-
+    // No magic sleep: createKafkaConsumer only resolves once the new group has
+    // genuinely joined (it awaits the GROUP_JOIN event before returning), so by
+    // the time we get here the consumer is joined and fetching. The old
+    // hardcoded 200ms guess both under-waited when GROUP_JOIN took longer
+    // (dropping messages published in the join window) and needlessly stalled
+    // resume() when it was faster.
     this.logger.debug("Stream pipeline resumed", { consumerTag: this.consumerTag });
   }
 

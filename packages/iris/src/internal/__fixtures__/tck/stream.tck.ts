@@ -519,6 +519,44 @@ export const streamSuite = (
       await pipeline.stop();
     });
 
+    test("resume then immediately publish: message is consumed, not dropped in the join window (M7)", async () => {
+      const handle = getHandle();
+      const { TckStreamInput, TckStreamOutput } = messages;
+
+      const bus = handle.messageBus(TckStreamOutput);
+      const outputReceived: Array<any> = [];
+
+      await bus.subscribe({
+        topic: "TckStreamOutput",
+        callback: async (msg) => {
+          outputReceived.push(msg);
+        },
+      });
+
+      const pipeline = handle.stream().from(TckStreamInput).to(TckStreamOutput);
+
+      await pipeline.start();
+      await wait(200);
+
+      await pipeline.pause();
+      await pipeline.resume();
+
+      // Publish with NO settling delay after resume() resolves. resume() must
+      // only return once the (new) consumer is genuinely joined and fetching —
+      // Kafka previously slept a hardcoded 200ms and dropped anything published
+      // inside the join window (M7). A message published right now must arrive.
+      const inputBus = handle.messageBus(TckStreamInput);
+      await inputBus.publish(inputBus.create({ value: "m7-immediate", score: 1 } as any));
+
+      await waitFor(
+        () => outputReceived.some((m) => m.value === "m7-immediate"),
+        timeoutMs,
+      );
+      expect(outputReceived.filter((m) => m.value === "m7-immediate")).toHaveLength(1);
+
+      await pipeline.stop();
+    });
+
     // ─── Error contract (H5) ─────────────────────────────────────────────────
     // A stage/handler failure must NOT silently drop the message (the old base
     // swallowed-and-logged, giving at-most-once). It must redeliver — bounded by

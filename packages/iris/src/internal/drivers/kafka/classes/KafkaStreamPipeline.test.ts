@@ -201,6 +201,32 @@ describe("KafkaStreamPipeline", () => {
     expect(mockCreateKafkaConsumer).toHaveBeenCalledTimes(2);
   });
 
+  it("should resume without a magic timer sleep — readiness comes from GROUP_JOIN (M7)", async () => {
+    const state = createMockState();
+    const pipeline = new KafkaStreamPipeline({
+      state,
+      logger: createMockLogger() as any,
+      stages: [],
+      inputClass: TckKafkaPlIn as any,
+      outputClass: TckKafkaPlOut as any,
+    });
+
+    await pipeline.start();
+    await pipeline.pause();
+
+    // resume() used to sleep a hardcoded 200ms after re-creating the consumer.
+    // It must instead rely on createKafkaConsumer resolving only once the new
+    // group has genuinely joined (GROUP_JOIN) — so resume() itself schedules no
+    // arbitrary timer.
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
+    await pipeline.resume();
+    expect(setTimeoutSpy).not.toHaveBeenCalled();
+    setTimeoutSpy.mockRestore();
+
+    expect(pipeline.isRunning()).toBe(true);
+    expect(mockCreateKafkaConsumer).toHaveBeenCalledTimes(2);
+  });
+
   it("should not double-start", async () => {
     const state = createMockState();
     const pipeline = new KafkaStreamPipeline({
