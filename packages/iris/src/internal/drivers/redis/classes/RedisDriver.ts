@@ -23,6 +23,7 @@ import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.j
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { RedisSharedState } from "../types/redis-types.js";
+import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { createConsumerLoop } from "../utils/create-consumer-loop.js";
 import { resolveStreamKey } from "../utils/resolve-stream-key.js";
 import { serializeStreamFields } from "../utils/serialize-stream-fields.js";
@@ -211,7 +212,14 @@ export class RedisDriver implements IIrisDriver {
             });
           }
 
-          const streamKey = resolveStreamKey(this.state.prefix, entry.topic);
+          // Route a delayed broadcast to the broadcast stream, exactly as the
+          // non-delayed publish path does — otherwise a delayed @Broadcast lands
+          // on the shared stream and only one consumer receives it.
+          const streamKey = resolveBroadcastDestination(
+            resolveStreamKey(this.state.prefix, entry.topic),
+            entry.envelope.broadcast,
+            ":",
+          );
           const fields = serializeStreamFields(entry.envelope);
 
           await xaddToStream(conn, streamKey, fields, this.state.maxStreamLength);

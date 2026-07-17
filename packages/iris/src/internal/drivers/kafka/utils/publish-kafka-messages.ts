@@ -10,6 +10,7 @@ import {
   preparePublishBatch,
   type PublishDriverLike,
 } from "../../../utils/prepare-publish-batch.js";
+import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { ensureKafkaTopicFromState } from "./ensure-kafka-topic.js";
 import { resolveTopicName } from "./resolve-topic-name.js";
 import { serializeKafkaMessage } from "./serialize-kafka-message.js";
@@ -44,8 +45,11 @@ export const publishKafkaMessages = async <M extends IMessage>(
       // Route broadcast messages to a separate broadcast topic so each
       // consumer's unique group receives them independently. Non-broadcast
       // messages go to the shared topic for competing-consumer distribution.
-      const baseTopic = resolveTopicName(state.prefix, topic);
-      const topicName = envelope.broadcast ? `${baseTopic}.broadcast` : baseTopic;
+      const topicName = resolveBroadcastDestination(
+        resolveTopicName(state.prefix, topic),
+        envelope.broadcast,
+        ".",
+      );
 
       await ensureKafkaTopicFromState(state, topicName, _logger);
 

@@ -10,6 +10,7 @@ import {
   preparePublishBatch,
   type PublishDriverLike,
 } from "../../../utils/prepare-publish-batch.js";
+import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { resolveStreamKey } from "./resolve-stream-key.js";
 import { serializeStreamFields } from "./serialize-stream-fields.js";
 import { xaddToStream } from "./xadd-to-stream.js";
@@ -45,8 +46,11 @@ export const publishRedisMessages = async <M extends IMessage>(
       // Route broadcast messages to a separate broadcast stream so each
       // consumer's unique group receives them independently. Non-broadcast
       // messages go to the shared stream for competing-consumer distribution.
-      const baseKey = resolveStreamKey(state.prefix, topic);
-      const streamKey = envelope.broadcast ? `${baseKey}:broadcast` : baseKey;
+      const streamKey = resolveBroadcastDestination(
+        resolveStreamKey(state.prefix, topic),
+        envelope.broadcast,
+        ":",
+      );
       const fields = serializeStreamFields(envelope);
 
       await xaddToStream(

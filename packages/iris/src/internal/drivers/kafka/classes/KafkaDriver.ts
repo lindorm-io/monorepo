@@ -23,6 +23,7 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { KafkaSharedState } from "../types/kafka-types.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
+import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { resolveTopicName } from "../utils/resolve-topic-name.js";
 import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
 import {
@@ -145,7 +146,14 @@ export class KafkaDriver implements IIrisDriver {
             });
           }
 
-          const kafkaTopic = resolveTopicName(this.state.prefix, entry.topic);
+          // Route a delayed broadcast to the broadcast topic, exactly as the
+          // non-delayed publish path does — otherwise a delayed @Broadcast lands
+          // on the shared topic and only one consumer receives it.
+          const kafkaTopic = resolveBroadcastDestination(
+            resolveTopicName(this.state.prefix, entry.topic),
+            entry.envelope.broadcast,
+            ".",
+          );
           const kafkaMessage = serializeKafkaMessage(entry.envelope);
 
           await producer.send({

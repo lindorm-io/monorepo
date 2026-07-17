@@ -7,6 +7,7 @@ import {
   preparePublishBatch,
   type PublishDriverLike,
 } from "../../../utils/prepare-publish-batch.js";
+import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { resolveSubject } from "./resolve-subject.js";
 import { serializeNatsMessage } from "./serialize-nats-message.js";
 
@@ -40,8 +41,11 @@ export const publishNatsMessages = async <M extends IMessage>(
     } else {
       // Broadcast messages use a separate subject so each consumer's unique
       // ephemeral consumer receives them independently.
-      const baseSubject = resolveSubject(state.prefix, topic);
-      const subject = envelope.broadcast ? `${baseSubject}.broadcast` : baseSubject;
+      const subject = resolveBroadcastDestination(
+        resolveSubject(state.prefix, topic),
+        envelope.broadcast,
+        ".",
+      );
       const { data } = serializeNatsMessage(envelope, state.headersInit);
 
       await state.js.publish(subject, data);

@@ -22,6 +22,7 @@ import type { MessageEncryptionContext } from "../../../message/types/encryption
 import type { NatsConnection, NatsSharedState } from "../types/nats-types.js";
 import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError.js";
+import { resolveBroadcastDestination } from "../../../utils/resolve-broadcast-destination.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
 import { ensureNatsStream } from "../utils/ensure-nats-stream.js";
 import { resolveSubject } from "../utils/resolve-subject.js";
@@ -139,10 +140,13 @@ export class NatsDriver implements IIrisDriver {
             });
           }
 
-          const baseSubject = resolveSubject(this.state.prefix, entry.topic);
-          const subject = entry.envelope.broadcast
-            ? `${baseSubject}.broadcast`
-            : baseSubject;
+          // Route a delayed broadcast to the broadcast subject, exactly as the
+          // non-delayed publish path does.
+          const subject = resolveBroadcastDestination(
+            resolveSubject(this.state.prefix, entry.topic),
+            entry.envelope.broadcast,
+            ".",
+          );
           const { data } = serializeNatsMessage(entry.envelope, hi);
 
           await js.publish(subject, data);

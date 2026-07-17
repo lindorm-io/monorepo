@@ -19,6 +19,7 @@ import { hooksSuite } from "./hooks.tck.js";
 import { topicResolutionSuite } from "./topic-resolution.tck.js";
 import { delaySuite } from "./delay.tck.js";
 import { broadcastSuite } from "./broadcast.tck.js";
+import { delayBroadcastSuite } from "./delay-broadcast.tck.js";
 import { compressionSuite } from "./compression.tck.js";
 import { encryptionSuite } from "./encryption.tck.js";
 import { expirySuite } from "./expiry.tck.js";
@@ -117,6 +118,10 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
   if (shouldRun("broadcast"))
     maybeDescribe(caps.broadcast, "broadcast", () =>
       broadcastSuite(getHandle, messages, timeoutMs),
+    );
+  if (shouldRun("delay-broadcast"))
+    maybeDescribe(caps.delay && caps.broadcast, "delay-broadcast", () =>
+      delayBroadcastSuite(getHandle, messages, timeoutMs),
     );
   if (shouldRun("encryption"))
     maybeDescribe(caps.encryption, "encryption", () =>
