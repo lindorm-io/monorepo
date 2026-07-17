@@ -41,6 +41,9 @@ const factory: TckDriverFactory = {
     stream: true,
     delay: true,
     retry: true,
+    // JetStream max_deliver is a consumer-side ceiling fixed at subscribe time —
+    // a higher producer maxRetries on the wire cannot raise it (see resolveMaxDeliver).
+    retryProducerAuthoritative: false,
     deadLetter: true,
     broadcast: true,
     encryption: true,

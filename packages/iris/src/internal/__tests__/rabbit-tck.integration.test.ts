@@ -37,6 +37,7 @@ const factory: TckDriverFactory = {
     stream: true,
     delay: true,
     retry: true,
+    retryProducerAuthoritative: true,
     deadLetter: true,
     broadcast: true,
     encryption: true,

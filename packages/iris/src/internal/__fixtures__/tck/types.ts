@@ -37,6 +37,24 @@ export type TckCapabilities = {
   delay: boolean;
   /** Retry with backoff */
   retry: boolean;
+  /**
+   * Retry policy is producer-authoritative: `maxRetries` travels on the wire and
+   * bounds redelivery on the consumer even when the consumer's own `@Retry`
+   * decorator declares a different value (the rolling-deploy skew scenario).
+   *
+   * True for drivers whose redelivery mechanism reconstructs the retry budget
+   * from the wire on every attempt — memory (in-process), Kafka/Redis/Rabbit (each
+   * re-publishes an envelope carrying the incremented wire `attempt`). For those,
+   * the consumer's local `@Retry` cannot override the producer's count.
+   *
+   * False for NATS JetStream: redelivery is server-driven (`msg.nak` → the server
+   * redelivers), bounded by the durable consumer's `max_deliver`. That ceiling is
+   * a consumer-side property fixed at SUBSCRIBE time from the consumer's local
+   * `@Retry`, before any producer's per-message wire policy is known — so the
+   * delivery ceiling is consumer-authoritative and a higher producer `maxRetries`
+   * cannot raise it. See `resolveMaxDeliver`.
+   */
+  retryProducerAuthoritative: boolean;
   /** Dead letter queue */
   deadLetter: boolean;
   /** Broadcast to all consumers */
