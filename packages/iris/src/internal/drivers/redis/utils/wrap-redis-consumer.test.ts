@@ -307,8 +307,8 @@ describe("wrapRedisConsumer", () => {
     });
   });
 
-  describe("callback error - retry", () => {
-    it("should republish with incremented attempt when retries remain (no delayManager)", async () => {
+  describe("callback error - retry (PEL-retain, M1 Option B)", () => {
+    it("returns 'retain' (leave in PEL) — never re-publishes to the shared stream — when retries remain", async () => {
       const host = createMockHost();
       const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
@@ -318,45 +318,16 @@ describe("wrapRedisConsumer", () => {
       const wrapped = wrapRedisConsumer(host, callback, state, metadata, logger as any);
 
       const entry = createEntry({ maxRetries: 3, retryDelay: 100 });
-      await wrapped(entry);
+      const outcome = await wrapped(entry);
 
       expect(host.onConsumeError).toHaveBeenCalled();
-      expect(state.publishConnection!.xadd).toHaveBeenCalledTimes(1);
-
-      const xaddArgs = (state.publishConnection!.xadd as Mock).mock.calls[0];
-      // Should contain "attempt" followed by "1"
-      const attemptIndex = xaddArgs.indexOf("attempt");
-      expect(attemptIndex).toBeGreaterThan(-1);
-      expect(xaddArgs[attemptIndex + 1]).toBe("1");
-    });
-
-    it("should schedule retry via delayManager when available", async () => {
-      const host = createMockHost();
-      const callback = vi.fn().mockRejectedValue(new Error("fail"));
-      const state = createState();
-      const metadata = createMetadata();
-      const logger = createMockLogger();
-      const delayManager = { schedule: vi.fn().mockResolvedValue("delay-id") } as any;
-
-      const wrapped = wrapRedisConsumer(host, callback, state, metadata, logger as any, {
-        delayManager,
-      });
-
-      const entry = createEntry({ maxRetries: 3, retryDelay: 100 });
-      await wrapped(entry);
-
-      expect(host.onConsumeError).toHaveBeenCalled();
-      expect(delayManager.schedule).toHaveBeenCalledTimes(1);
-      expect(delayManager.schedule).toHaveBeenCalledWith(
-        expect.objectContaining({ attempt: 1, topic: "test-topic" }),
-        "test-topic",
-        expect.any(Number),
-      );
-      // Should NOT have called xadd directly
+      // The retry is realized by leaving the entry pending — NOT by XADDing a new
+      // entry to the shared stream (which every fan-out group would re-read).
+      expect(outcome).toBe("retain");
       expect(state.publishConnection!.xadd).not.toHaveBeenCalled();
     });
 
-    it("should not retry when attempt >= maxRetries", async () => {
+    it("returns 'ack' when attempt >= maxRetries (retries exhausted, no retain)", async () => {
       const host = createMockHost();
       const callback = vi.fn().mockRejectedValue(new Error("fail"));
       const state = createState();
@@ -366,9 +337,24 @@ describe("wrapRedisConsumer", () => {
       const wrapped = wrapRedisConsumer(host, callback, state, metadata, logger as any);
 
       const entry = createEntry({ attempt: 3, maxRetries: 3 });
-      await wrapped(entry);
+      const outcome = await wrapped(entry);
 
+      expect(outcome).toBe("ack");
       expect(state.publishConnection!.xadd).not.toHaveBeenCalled();
+    });
+
+    it("returns 'ack' on a clean success", async () => {
+      const host = createMockHost();
+      const callback = vi.fn().mockResolvedValue(undefined);
+      const state = createState();
+      const metadata = createMetadata();
+      const logger = createMockLogger();
+
+      const wrapped = wrapRedisConsumer(host, callback, state, metadata, logger as any);
+
+      const outcome = await wrapped(createEntry());
+
+      expect(outcome).toBe("ack");
     });
   });
 
@@ -444,7 +430,8 @@ describe("wrapRedisConsumer", () => {
       const wrapped = wrapRedisConsumer(host, callback, state, metadata, logger as any);
 
       const entry = createEntry({ attempt: 3, maxRetries: 3 });
-      await expect(wrapped(entry)).resolves.toBeUndefined();
+      // Exhausted with no manager: no throw, and the entry is ACKed (dropped).
+      await expect(wrapped(entry)).resolves.toBe("ack");
     });
   });
 

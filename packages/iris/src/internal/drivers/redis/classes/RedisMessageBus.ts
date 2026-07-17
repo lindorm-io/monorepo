@@ -111,7 +111,7 @@ export class RedisMessageBus<M extends IMessage> extends DriverMessageBusBase<M>
       this.state,
       this.metadata,
       this.logger,
-      { deadLetterManager: this.deadLetterManager, delayManager: this.delayManager },
+      { deadLetterManager: this.deadLetterManager },
     );
 
     const loop = await createConsumerLoop({

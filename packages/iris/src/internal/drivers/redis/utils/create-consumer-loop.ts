@@ -1,4 +1,5 @@
 import { randomId } from "@lindorm/random";
+import { computeDelay } from "@lindorm/retry";
 import type {
   CreateConsumerLoopOptions,
   RedisConsumerLoop,
@@ -6,6 +7,15 @@ import type {
 import { parseStreamEntry } from "./parse-stream-entry.js";
 
 export type { CreateConsumerLoopOptions };
+
+// How many pending entries to inspect per reclaim pass.
+const RECLAIM_BATCH = 100;
+// When retries/recovery are in flight, cap the read block so the loop re-checks
+// the PEL frequently enough to honor short backoffs (and to catch an entry that
+// just failed again and is now backing off anew). Cheap: a couple of XPENDING
+// calls per backoff window. When nothing is pending, the loop blocks for the
+// full `blockMs` (no polling).
+const RECLAIM_POLL_MS = 25;
 
 export const createConsumerLoop = async (
   options: CreateConsumerLoopOptions,
@@ -64,12 +74,161 @@ export const createConsumerLoop = async (
     resolveReady = r;
   });
 
+  // Deliver one entry to the handler, then apply the ack contract (M1 Option B):
+  // XACK on "ack"/void; leave it PENDING on "retain" so ONLY this group's
+  // reclaim redelivers it. The handler is raced against the abort signal so a
+  // stuck handler never blocks shutdown.
+  const deliver = async (
+    id: string,
+    fields: Array<string>,
+    attempt: number,
+  ): Promise<void> => {
+    if (abortController.signal.aborted) return;
+
+    let onAbort: (() => void) | undefined;
+    const abortPromise = new Promise<never>((_, reject) => {
+      if (abortController.signal.aborted) {
+        reject(new Error("Consumer loop aborted"));
+        return;
+      }
+      onAbort = (): void => reject(new Error("Consumer loop aborted"));
+      abortController.signal.addEventListener("abort", onAbort, { once: true });
+    });
+
+    try {
+      const entry = parseStreamEntry(id, fields);
+      // Native delivery count drives the attempt (like nats' deliveryCount): the
+      // wire `attempt` is vestigial on this driver.
+      entry.attempt = attempt;
+
+      const outcome = await Promise.race([onEntry(entry), abortPromise]);
+
+      if (!abortController.signal.aborted && outcome !== "retain") {
+        await connection.xack(streamKey, groupName, id);
+      }
+    } catch (error) {
+      if (abortController.signal.aborted) return;
+
+      logger.error(
+        "Malformed or unprocessable stream entry — message data lost (ACKed to prevent redelivery)",
+        {
+          error: error instanceof Error ? error.message : String(error),
+          streamKey,
+          groupName,
+          entryId: id,
+        },
+      );
+      // Still ACK after error to avoid reprocessing a poison entry forever.
+      try {
+        await connection.xack(streamKey, groupName, id);
+      } catch {
+        // Connection may be closed during abort
+      }
+    } finally {
+      if (onAbort) {
+        abortController.signal.removeEventListener("abort", onAbort);
+      }
+    }
+  };
+
+  // Reclaim this group's retained (failed) / orphaned (crashed-consumer) pending
+  // entries whose backoff has elapsed, and redeliver them to THIS consumer only.
+  // Returns the block time to use for the next XREADGROUP: `blockMs` when the
+  // PEL is empty, else a short poll so short backoffs are honored.
+  const reclaimPass = async (): Promise<number> => {
+    const pending = await connection.xpending(
+      streamKey,
+      groupName,
+      "-",
+      "+",
+      RECLAIM_BATCH,
+    );
+
+    if (!pending || pending.length === 0) return blockMs;
+
+    let soonest = Infinity;
+
+    for (const row of pending) {
+      if (abortController.signal.aborted) break;
+
+      const [id, , idleRaw, deliveriesRaw] = row;
+      const idle = Number(idleRaw);
+      const deliveries = Number(deliveriesRaw);
+
+      // Read the retry config WITHOUT claiming (XRANGE touches neither the
+      // delivery count nor the idle timer).
+      const range = await connection.xrange(streamKey, id, id);
+      if (!range || range.length === 0) {
+        // Entry was trimmed out of the stream (MAXLEN) but lingers in the PEL —
+        // ACK it so it does not pend forever.
+        try {
+          await connection.xack(streamKey, groupName, id);
+        } catch {
+          // best-effort
+        }
+        continue;
+      }
+
+      const entry = parseStreamEntry(id, range[0][1]);
+      const required = Math.max(
+        0,
+        Math.round(
+          computeDelay(deliveries, {
+            strategy: entry.retryStrategy,
+            delay: entry.retryDelay,
+            delayMax: entry.retryDelayMax,
+            multiplier: entry.retryMultiplier,
+            jitter: entry.retryJitter,
+          }),
+        ),
+      );
+
+      if (idle < required) {
+        soonest = Math.min(soonest, required - idle);
+        continue;
+      }
+
+      // Claim to this consumer. min-idle-time = required makes the claim atomic
+      // across sibling loops in the same group (a competing consumer that just
+      // reclaimed reset idle to 0, so our XCLAIM matches nothing and we skip).
+      // The reclaimed entry is redelivered to THIS group only — a retry stays
+      // targeted to the consumer that failed, never fanning back out.
+      const claimed = await connection.xclaim(
+        streamKey,
+        groupName,
+        uniqueConsumerName,
+        required,
+        id,
+      );
+
+      if (!claimed || claimed.length === 0) continue;
+
+      // XCLAIM bumped the delivery count to `deliveries + 1`; the zero-based
+      // attempt for THIS delivery is `deliveries` (delivery N -> attempt N-1).
+      await deliver(claimed[0][0], claimed[0][1], deliveries);
+    }
+
+    // Something is in flight — poll soon (bounded by the nearest due backoff) so
+    // an entry that just failed again is picked up promptly.
+    return Math.max(1, Math.min(soonest, RECLAIM_POLL_MS));
+  };
+
   const loopPromise = (async (): Promise<void> => {
-    // Phase 1: Process pending messages (read "0") until none remain
-    let readId = "0";
+    let readySignalled = false;
 
     while (!abortController.signal.aborted) {
       try {
+        const nextBlock = await reclaimPass();
+
+        if (abortController.signal.aborted) break;
+
+        if (!readySignalled) {
+          resolveReady();
+          readySignalled = true;
+        }
+
+        // Read NEW (never-delivered) entries. A ">" read is always a first
+        // delivery, so attempt 0; retries/recoveries arrive via reclaimPass.
         const results = await connection.xreadgroup(
           "GROUP",
           groupName,
@@ -77,85 +236,20 @@ export const createConsumerLoop = async (
           "COUNT",
           count,
           "BLOCK",
-          readId === ">" ? blockMs : 0,
+          nextBlock,
           "STREAMS",
           streamKey,
-          readId,
+          ">",
         );
 
         if (abortController.signal.aborted) break;
-
-        if (!results) {
-          if (readId === ">") continue;
-          // No pending messages — switch to reading new
-          readId = ">";
-          resolveReady();
-          continue;
-        }
-
-        let hasEntries = false;
+        if (!results) continue;
 
         for (const [, entries] of results) {
-          if (entries.length === 0 && readId === "0") {
-            // No more pending messages, switch to new
-            readId = ">";
-            resolveReady();
-            continue;
-          }
-
-          hasEntries = entries.length > 0;
-
           for (const [id, fields] of entries) {
             if (abortController.signal.aborted) break;
-
-            try {
-              const entry = parseStreamEntry(id, fields);
-
-              // Race the handler against the abort signal so stuck handlers
-              // (e.g. RPC handlers that never respond) don't prevent shutdown.
-              let onAbort: (() => void) | undefined;
-              const abortPromise = new Promise<never>((_, reject) => {
-                if (abortController.signal.aborted) {
-                  reject(new Error("Consumer loop aborted"));
-                  return;
-                }
-                onAbort = (): void => reject(new Error("Consumer loop aborted"));
-                abortController.signal.addEventListener("abort", onAbort, { once: true });
-              });
-
-              try {
-                await Promise.race([onEntry(entry), abortPromise]);
-              } finally {
-                if (onAbort) {
-                  abortController.signal.removeEventListener("abort", onAbort);
-                }
-              }
-              await connection.xack(streamKey, groupName, id);
-            } catch (error) {
-              if (abortController.signal.aborted) break;
-
-              logger.error(
-                "Malformed or unprocessable stream entry — message data lost (ACKed to prevent redelivery)",
-                {
-                  error: error instanceof Error ? error.message : String(error),
-                  streamKey,
-                  groupName,
-                  entryId: id,
-                },
-              );
-              // Still ACK after error to avoid reprocessing
-              try {
-                await connection.xack(streamKey, groupName, id);
-              } catch {
-                // Connection may be closed during abort
-              }
-            }
+            await deliver(id, fields, 0);
           }
-        }
-
-        if (!hasEntries && readId === "0") {
-          readId = ">";
-          resolveReady();
         }
       } catch (error) {
         if (abortController.signal.aborted) break;
@@ -174,7 +268,7 @@ export const createConsumerLoop = async (
       }
     }
 
-    // Ensure ready resolves even if aborted before switching to ">"
+    // Ensure ready resolves even if aborted before the first read.
     resolveReady();
 
     // Close the dedicated connection when loop ends.

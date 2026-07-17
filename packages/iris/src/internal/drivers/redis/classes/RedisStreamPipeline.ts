@@ -1,5 +1,9 @@
 import { randomId } from "@lindorm/random";
-import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types.js";
+import type {
+  RedisConsumeOutcome,
+  RedisSharedState,
+  RedisStreamEntry,
+} from "../types/redis-types.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import type { MessageMetadata } from "../../../message/types/metadata.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
@@ -145,14 +149,14 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
   // by @Retry, then dead letter) — the SAME contract the Redis worker queue uses.
   private buildOnEntry(
     inputMetadata: MessageMetadata,
-  ): (entry: RedisStreamEntry) => Promise<void> {
+  ): (entry: RedisStreamEntry) => Promise<RedisConsumeOutcome> {
     return wrapRedisConsumer(
       this.buildInboundHost(inputMetadata),
       (message) => this.processStreamMessage(message),
       this.state,
       inputMetadata,
       this.logger,
-      { deadLetterManager: this.deadLetterManager, delayManager: this.delayManager },
+      { deadLetterManager: this.deadLetterManager },
     );
   }
 }

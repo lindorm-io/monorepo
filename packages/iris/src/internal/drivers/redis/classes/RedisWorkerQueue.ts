@@ -113,7 +113,7 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       this.state,
       this.metadata,
       this.logger,
-      { deadLetterManager: this.deadLetterManager, delayManager: this.delayManager },
+      { deadLetterManager: this.deadLetterManager },
     );
 
     // Main consumer loop: shared group for competing-consumer (non-broadcast)

@@ -43,8 +43,10 @@ const factory: TckDriverFactory = {
     delay: true,
     retry: true,
     retryProducerAuthoritative: true,
-    // false until the redis targeted-retry slice lands (M1 slice for redis).
-    retryConsumerTargeted: false,
+    // M1 slice 2: PEL-retain + native delivery-count retries keep a retry
+    // targeted to the failing consumer's group (see wrap-redis-consumer /
+    // create-consumer-loop), so redis now satisfies the retry-fanout contract.
+    retryConsumerTargeted: true,
     deadLetter: true,
     broadcast: true,
     encryption: true,
