@@ -2,16 +2,16 @@
 
 exports[`MemoryDeadLetterStore > list > should filter by topic 1`] = `
 [
-  "a",
   "c",
+  "a",
 ]
 `;
 
-exports[`MemoryDeadLetterStore > list > should list all entries sorted by timestamp 1`] = `
+exports[`MemoryDeadLetterStore > list > should list all entries sorted by timestamp (newest first) 1`] = `
 [
-  "a",
-  "b",
   "c",
+  "b",
+  "a",
 ]
 `;
 
@@ -19,7 +19,7 @@ exports[`MemoryDeadLetterStore > list > should return empty array when no entrie
 
 exports[`MemoryDeadLetterStore > list > should support pagination with limit and offset 1`] = `
 [
-  "b",
   "c",
+  "b",
 ]
 `;

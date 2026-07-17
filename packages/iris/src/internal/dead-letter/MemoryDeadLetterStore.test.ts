@@ -62,13 +62,22 @@ describe("MemoryDeadLetterStore", () => {
   });
 
   describe("list", () => {
-    it("should list all entries sorted by timestamp", async () => {
+    it("should list all entries sorted by timestamp (newest first)", async () => {
       await store.add(createDlEntry({ id: "c", timestamp: 3000 }));
       await store.add(createDlEntry({ id: "a", timestamp: 1000 }));
       await store.add(createDlEntry({ id: "b", timestamp: 2000 }));
 
       const result = await store.list();
       expect(result.map((e) => e.id)).toMatchSnapshot();
+    });
+
+    it("should return entries newest-first when pushed A then B then C", async () => {
+      await store.add(createDlEntry({ id: "A", timestamp: 1000 }));
+      await store.add(createDlEntry({ id: "B", timestamp: 2000 }));
+      await store.add(createDlEntry({ id: "C", timestamp: 3000 }));
+
+      const result = await store.list();
+      expect(result.map((e) => e.id)).toEqual(["C", "B", "A"]);
     });
 
     it("should filter by topic", async () => {

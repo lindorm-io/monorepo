@@ -95,6 +95,33 @@ describe("RedisDeadLetterStore", () => {
     });
   });
 
+  describe("list", () => {
+    const serialize = (entry: DeadLetterEntry): string =>
+      JSON.stringify({
+        ...entry,
+        envelope: {
+          ...entry.envelope,
+          payload: entry.envelope.payload.toString("base64"),
+        },
+      });
+
+    it("should return entries newest-first when pushed A then B then C", async () => {
+      const client = createMockClient();
+      // zrevrange yields newest-first ids; the store must preserve that order
+      // and must NOT re-sort ascending.
+      client.zrevrange.mockResolvedValue(["C", "B", "A"]);
+      client.hmget.mockResolvedValue([
+        serialize(createEntry({ id: "C", timestamp: 3000 })),
+        serialize(createEntry({ id: "B", timestamp: 2000 })),
+        serialize(createEntry({ id: "A", timestamp: 1000 })),
+      ]);
+      const store = new RedisDeadLetterStore(client, { ownedClient: true });
+
+      const result = await store.list();
+      expect(result.map((e) => e.id)).toEqual(["C", "B", "A"]);
+    });
+  });
+
   describe("remove", () => {
     it("should throw when pipeline returns an error tuple", async () => {
       const error = new Error("READONLY You can't write against a read only replica");

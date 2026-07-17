@@ -19,7 +19,10 @@ export class MemoryDeadLetterStore implements IDeadLetterStore {
       result = result.filter((e) => e.topic === options.topic);
     }
 
-    result.sort((a, b) => a.timestamp - b.timestamp);
+    // Canonical DLQ order is newest-first: the most recent failures are the
+    // useful default for an operator inspecting a dead-letter queue. Every store
+    // (memory + redis) agrees on this order.
+    result.sort((a, b) => b.timestamp - a.timestamp);
 
     const offset = options?.offset ?? 0;
     const limit = options?.limit ?? result.length;
