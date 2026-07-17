@@ -91,7 +91,7 @@ const source = await typewriter({
 type Options = {
   fileName?: string;
   input: Array<string>;
-  logger?: ILogger | LoggerOptions;
+  logger?: ILogger | LoggerSettings;
   output?: "typescript" | "typescript-zod";
   samples?: Array<string>;
   typeName: string;
@@ -111,7 +111,7 @@ Resolves with the generated source as a single string (lines joined with `\n`).
 | `samples`          | `Array<string>`                    | Additional JSON-encoded samples merged with files loaded from `input`.                                                                                                         |
 | `writeToDirectory` | `string`                           | If provided, the generated source is written to `<writeToDirectory>/<fileName ?? typeName>.typewriter.ts`. The directory is created if it does not exist.                      |
 | `fileName`         | `string`                           | File name (without extension) for the written file. Defaults to `typeName`.                                                                                                    |
-| `logger`           | `ILogger \| LoggerOptions`         | Either an existing `@lindorm/logger` instance (a child scoped to `Typewriter` is used) or options to construct a new one. Defaults to a fresh `Logger` scoped to `Typewriter`. |
+| `logger`           | `ILogger \| LoggerSettings`        | Either an existing `@lindorm/logger` instance (a child scoped to `Typewriter` is used) or options to construct a new one. Defaults to a fresh `Logger` scoped to `Typewriter`. |
 
 ## License
 

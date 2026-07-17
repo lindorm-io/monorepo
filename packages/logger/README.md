@@ -55,10 +55,10 @@ http.debug("Login attempt", {
 ### Constructor
 
 ```ts
-new Logger(options?: LoggerOptions);
+new Logger(options?: LoggerSettings);
 ```
 
-`LoggerOptions`:
+`LoggerSettings`:
 
 | Field         | Type             | Default  | Description                                                                                 |
 | ------------- | ---------------- | -------- | ------------------------------------------------------------------------------------------- |
@@ -199,7 +199,7 @@ Both factories return a fully-typed mocked `ILogger` with `child()` returning fu
 
 - `ILogger`, `ILoggerTimer` — interfaces
 - `Logger`, `LoggerTimer` — classes
-- `LoggerOptions`, `Log`, `LogContent`, `LogCorrelation`, `LogScope`, `LogFilters`, `LogLevel`
+- `LoggerSettings`, `Log`, `LogContent`, `LogCorrelation`, `LogScope`, `LogFilters`, `LogLevel`
 - `FilterCallback`, `StdLogger`, `TimerLogFn`
 
 Note: `LogLevel` is a string union (`"error" | "warn" | ... | "silly"`), not an enum.

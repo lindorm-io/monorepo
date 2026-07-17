@@ -18,7 +18,7 @@ export type KeyFilterRef = {
 // Shape passed up to LoggerBase by both Logger (root, after building winston)
 // and LoggerChild (inheriting refs from a parent). All shared infrastructure
 // is provided by the constructing class — LoggerBase doesn't construct any.
-export type LoggerBaseOptions = {
+export type LoggerBaseSettings = {
   correlation: LogCorrelation;
   filters: LogFilters;
   filterRef: FilterEntriesRef;

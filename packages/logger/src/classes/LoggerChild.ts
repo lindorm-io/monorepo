@@ -1,5 +1,5 @@
 import type { ILogger } from "../interfaces/index.js";
-import type { LoggerBaseOptions } from "../internal/types/logger-base-options.js";
+import type { LoggerBaseSettings } from "../internal/types/logger-base-options.js";
 import { LoggerBase } from "./LoggerBase.js";
 
 // Internal child logger returned by `Logger#child()` (and chained calls).
@@ -7,11 +7,11 @@ import { LoggerBase } from "./LoggerBase.js";
 // parent and carries its own merged scope/correlation. Not exported from
 // the package — consumers always see an `ILogger`.
 export class LoggerChild extends LoggerBase {
-  constructor(options: LoggerBaseOptions) {
+  constructor(options: LoggerBaseSettings) {
     super(options);
   }
 
-  protected spawnChild(options: LoggerBaseOptions): ILogger {
+  protected spawnChild(options: LoggerBaseSettings): ILogger {
     return new LoggerChild(options);
   }
 }

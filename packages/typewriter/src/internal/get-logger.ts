@@ -1,6 +1,6 @@
-import { type ILogger, Logger, type LoggerOptions } from "@lindorm/logger";
+import { type ILogger, Logger, type LoggerSettings } from "@lindorm/logger";
 
-export const getLogger = (options: ILogger | LoggerOptions | undefined): ILogger => {
+export const getLogger = (options: ILogger | LoggerSettings | undefined): ILogger => {
   const scope = ["Typewriter"];
 
   if (!options) {
@@ -11,5 +11,5 @@ export const getLogger = (options: ILogger | LoggerOptions | undefined): ILogger
     return (options as ILogger).child(scope);
   }
 
-  return new Logger({ ...options, scope } as LoggerOptions);
+  return new Logger({ ...options, scope } as LoggerSettings);
 };

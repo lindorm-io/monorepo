@@ -113,7 +113,7 @@ describe("LoggerChild", () => {
     expect(grandchild.__instanceof).toBe("Logger");
   });
 
-  test("should accept LoggerBaseOptions directly when constructed standalone", () => {
+  test("should accept LoggerBaseSettings directly when constructed standalone", () => {
     const direct = new LoggerChild({
       correlation: { direct: "yes" },
       filters: {},

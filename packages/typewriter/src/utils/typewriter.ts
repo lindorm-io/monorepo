@@ -1,10 +1,10 @@
-import type { ILogger, LoggerOptions } from "@lindorm/logger";
+import type { ILogger, LoggerSettings } from "@lindorm/logger";
 import { getLogger, getTypes, loadSamples, writeLinesToFile } from "../internal/index.js";
 
 type Options = {
   fileName?: string;
   input: Array<string>;
-  logger?: ILogger | LoggerOptions;
+  logger?: ILogger | LoggerSettings;
   output?: "typescript" | "typescript-zod";
   samples?: Array<string>;
   typeName: string;

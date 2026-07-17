@@ -17,7 +17,7 @@ import type {
 import type {
   FilterEntriesRef,
   KeyFilterRef,
-  LoggerBaseOptions,
+  LoggerBaseSettings,
 } from "../internal/types/logger-base-options.js";
 import type { InternalLog } from "../internal/types/internal-log.js";
 import { LoggerTimer } from "./LoggerTimer.js";
@@ -44,7 +44,7 @@ export abstract class LoggerBase implements ILogger {
   protected _correlation: LogCorrelation;
   protected _scope: LogScope;
 
-  protected constructor(options: LoggerBaseOptions) {
+  protected constructor(options: LoggerBaseSettings) {
     this._correlation = options.correlation;
     this._scope = options.scope;
     this.filters = options.filters;
@@ -56,7 +56,7 @@ export abstract class LoggerBase implements ILogger {
 
   // child spawning — concrete subclasses decide what class to instantiate
 
-  protected abstract spawnChild(options: LoggerBaseOptions): ILogger;
+  protected abstract spawnChild(options: LoggerBaseSettings): ILogger;
 
   // level
 

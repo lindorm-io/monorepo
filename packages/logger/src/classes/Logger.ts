@@ -1,9 +1,9 @@
 import pc from "picocolors";
 import winston from "winston";
 import type { ILogger, ILoggerRoot } from "../interfaces/index.js";
-import type { FilterCallback, LogLevel, LoggerOptions } from "../types/index.js";
+import type { FilterCallback, LogLevel, LoggerSettings } from "../types/index.js";
 import type { StdLogger } from "../types/index.js";
-import type { LoggerBaseOptions } from "../internal/types/logger-base-options.js";
+import type { LoggerBaseSettings } from "../internal/types/logger-base-options.js";
 import type { InternalLog } from "../internal/types/internal-log.js";
 import { defaultFilterCallback } from "../internal/utils/default-filter-callback.js";
 import { setProcessErrorRoute } from "../internal/utils/process-error-route.js";
@@ -21,7 +21,7 @@ export class Logger extends LoggerBase implements ILoggerRoot {
     debug: (msg: string) => console.debug(pc.blue(msg)),
   };
 
-  constructor(options: LoggerOptions = {}) {
+  constructor(options: LoggerSettings = {}) {
     const filters = options.filters ?? {};
     const winstonInstance = winston.createLogger();
     const logLevel = options.level ?? "info";
@@ -49,7 +49,7 @@ export class Logger extends LoggerBase implements ILoggerRoot {
     setProcessErrorRoute((error) => this.error(error));
   }
 
-  protected spawnChild(options: LoggerBaseOptions): ILogger {
+  protected spawnChild(options: LoggerBaseSettings): ILogger {
     return new LoggerChild(options);
   }
 
