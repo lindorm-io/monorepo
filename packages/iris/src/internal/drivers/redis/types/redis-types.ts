@@ -20,6 +20,14 @@ export type CreateConsumerLoopOptions = {
   createdGroups?: Set<string>;
   /** Consumer group start offset. "$" = only new messages (pub/sub), "0" = from beginning (worker queue). Default: "$". */
   startId?: string;
+  /**
+   * Reuse an existing consumer identity instead of minting a new one. Passed on
+   * re-registration (post-reconnect) so the fresh loop adopts the dead loop's
+   * consumer name and reclaims its orphaned PEL — messages delivered to the old
+   * consumer but never ACKed (it died mid-flight) would otherwise be stranded,
+   * since XREADGROUP ">" only ever returns never-delivered entries.
+   */
+  consumerTag?: string;
 };
 
 export type PublishRedisMessagesOptions = {

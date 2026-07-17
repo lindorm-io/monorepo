@@ -498,10 +498,16 @@ export class RedisDriver implements IIrisDriver {
           onEntry: reg.callback,
           logger: this.logger,
           createdGroups: this.state.createdGroups,
+          // Adopt the dead loop's identity so its pending (delivered-but-unACKed)
+          // entries are reclaimed on the "0" read instead of being stranded in
+          // the now-defunct consumer's PEL — otherwise a message in flight at the
+          // moment the connection dropped is never redelivered (data loss).
+          consumerTag: reg.consumerTag,
         });
         this.state.consumerLoops.push(loop);
 
-        // Update the registration's consumerTag to match the new loop
+        // consumerTag is preserved (reg.consumerTag === loop.consumerTag), but
+        // reassign defensively in case the reuse path ever changes.
         reg.consumerTag = loop.consumerTag;
       } catch (error) {
         this.logger.error("Failed to re-register consumer", {

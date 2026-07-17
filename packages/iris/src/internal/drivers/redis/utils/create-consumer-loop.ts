@@ -23,7 +23,9 @@ export const createConsumerLoop = async (
     startId = "$",
   } = options;
 
-  const consumerTag = randomId({ namespace: "con", length: 16 });
+  // Reuse the caller-supplied identity on re-registration (so the new loop
+  // reclaims the dead consumer's pending entries); otherwise mint a fresh one.
+  const consumerTag = options.consumerTag ?? randomId({ namespace: "con", length: 16 });
   // Each consumer loop needs a unique name within the group so Redis
   // distributes messages across them (not all to one logical consumer).
   const uniqueConsumerName = `${consumerName}:${consumerTag}`;
