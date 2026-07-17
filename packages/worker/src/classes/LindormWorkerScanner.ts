@@ -5,7 +5,7 @@ import { type IScanData, Scanner } from "@lindorm/scanner";
 import { LindormWorkerScannerError } from "../errors/index.js";
 import type { ILindormWorker } from "../interfaces/index.js";
 import type {
-  LindormWorkerOptions,
+  LindormWorkerSettings,
   LindormWorkerScannerInput,
   LindormWorkerScannerOutput,
 } from "../types/index.js";
@@ -102,7 +102,7 @@ export class LindormWorkerScanner {
       );
     }
 
-    const options: LindormWorkerOptions = {
+    const options: LindormWorkerSettings = {
       alias,
       callback: module.CALLBACK,
       logger,

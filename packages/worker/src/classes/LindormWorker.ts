@@ -15,7 +15,7 @@ import type {
   LindormWorkerEvent,
   LindormWorkerHealth,
   LindormWorkerListener,
-  LindormWorkerOptions,
+  LindormWorkerSettings,
 } from "../types/index.js";
 
 export class LindormWorker implements ILindormWorker {
@@ -46,7 +46,7 @@ export class LindormWorker implements ILindormWorker {
   private _started: boolean;
   private _timeout: NodeJS.Timeout | null;
 
-  constructor(options: LindormWorkerOptions) {
+  constructor(options: LindormWorkerSettings) {
     this.emitter = new EventEmitter();
     this.logger = options.logger.child(["LindormWorker", options.alias]);
 

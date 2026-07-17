@@ -39,7 +39,7 @@ export type LindormWorkerHealth = {
   latestTry: Date | null;
 };
 
-export type LindormWorkerOptions = {
+export type LindormWorkerSettings = {
   alias: string;
   callback: LindormWorkerCallback;
   callbackTimeout?: ReadableTime | number;
