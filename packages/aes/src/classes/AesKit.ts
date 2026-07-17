@@ -14,7 +14,7 @@ import type {
   AesDecryptionRecord,
   AesEncryptionMode,
   AesEncryptionRecord,
-  AesKitOptions,
+  AesKitSettings,
   ParsedAesDecryptionRecord,
   SerialisedAesDecryption,
   SerialisedAesEncryption,
@@ -35,7 +35,7 @@ export class AesKit implements IAesKit {
   private readonly encryption: KryptosEncryption;
   readonly kryptos: IKryptos;
 
-  constructor(options: AesKitOptions) {
+  constructor(options: AesKitSettings) {
     this.kryptos = options.kryptos;
     this.encryption = options.encryption ?? options.kryptos.encryption ?? "A256GCM";
   }

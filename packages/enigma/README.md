@@ -111,7 +111,7 @@ Methods (all async):
 
 | Field   | Type              | Required | Notes                                                                                         |
 | ------- | ----------------- | -------- | --------------------------------------------------------------------------------------------- |
-| `aes`   | `AesKitOptions`   | yes      | Forwarded to `AesKit` from `@lindorm/aes`. Must include a `kryptos` key suitable for AES.     |
+| `aes`   | `AesKitSettings`  | yes      | Forwarded to `AesKit` from `@lindorm/aes`. Must include a `kryptos` key suitable for AES.     |
 | `oct`   | `OctKitOptions`   | yes      | Forwarded to `OctKit` from `@lindorm/oct`. Must include a `kryptos` OCT key for HMAC signing. |
 | `argon` | `ArgonKitOptions` | no       | Forwarded to the inner `ArgonKit` (see above).                                                |
 

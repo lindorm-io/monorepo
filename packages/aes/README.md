@@ -291,7 +291,7 @@ type AesContentType = "application/json" | "application/octet-stream" | "text/pl
 
 type AesEncryptionMode = "cbor" | "record" | "serialised";
 
-type AesKitOptions = {
+type AesKitSettings = {
   encryption?: KryptosEncryption;
   kryptos: IKryptos;
 };
