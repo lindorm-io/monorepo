@@ -50,16 +50,8 @@ class TestStreamPipeline extends DriverStreamPipelineBase {
     this.paused = false;
   }
 
-  public async stop(): Promise<void> {
-    if (!this.running) return;
-
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-      this.batchTimer = null;
-    }
-
-    await this.flushBatchBuffer();
-    this.running = false;
+  protected async doStopConsumer(): Promise<void> {
+    // No real consumer to tear down in the test double.
   }
 
   public async pause(): Promise<void> {

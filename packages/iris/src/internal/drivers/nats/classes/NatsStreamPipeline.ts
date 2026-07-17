@@ -99,11 +99,7 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  async stop(): Promise<void> {
-    if (!this.running) return;
-
-    this.paused = false;
-
+  protected async doStopConsumer(): Promise<void> {
     if (this.consumerTag) {
       await stopNatsConsumer(this.state, this.consumerTag);
 
@@ -119,26 +115,12 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
       this.consumerTag = null;
       this.consumerName = null;
     }
-
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-      this.batchTimer = null;
-    }
-
-    await this.flushBatchBuffer();
-
-    this.running = false;
-
-    this.logger.debug("Stream pipeline stopped");
   }
 
   async pause(): Promise<void> {
     if (this.paused) return;
 
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-      this.batchTimer = null;
-    }
+    this.clearBatchTimer();
 
     await this.doFlushBatchBuffer();
 

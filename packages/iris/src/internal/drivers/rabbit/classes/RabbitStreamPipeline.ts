@@ -108,11 +108,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  async stop(): Promise<void> {
-    if (!this.running) return;
-
-    this.paused = false;
-
+  protected async doStopConsumer(): Promise<void> {
     if (this.consumerTag) {
       const channel = this.state.consumeChannel;
       if (channel) {
@@ -129,17 +125,6 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
       this.consumerTag = null;
       this.subscribedQueue = null;
     }
-
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-      this.batchTimer = null;
-    }
-
-    await this.flushBatchBuffer();
-
-    this.running = false;
-
-    this.logger.debug("Stream pipeline stopped");
   }
 
   async pause(): Promise<void> {

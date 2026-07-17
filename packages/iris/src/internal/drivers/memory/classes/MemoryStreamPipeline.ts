@@ -62,29 +62,22 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  async stop(): Promise<void> {
-    if (!this.running) return;
-
-    this.paused = false;
-
+  protected async doStopConsumer(): Promise<void> {
     if (this.consumerTag) {
       this.store.subscriptions = this.store.subscriptions.filter(
         (s) => s.consumerTag !== this.consumerTag,
       );
       this.consumerTag = null;
     }
+  }
 
+  // Memory tracks its timers in the shared store so teardown can drain them; the
+  // base clearBatchTimer is extended to also drop the store reference.
+  protected override clearBatchTimer(): void {
     if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
       this.store.timers.delete(this.batchTimer);
-      this.batchTimer = null;
     }
-
-    await this.flushBatchBuffer();
-
-    this.running = false;
-
-    this.logger.debug("Stream pipeline stopped");
+    super.clearBatchTimer();
   }
 
   async pause(): Promise<void> {

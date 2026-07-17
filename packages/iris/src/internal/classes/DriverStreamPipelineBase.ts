@@ -68,9 +68,30 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
   }
 
   abstract start(): Promise<void>;
-  abstract stop(): Promise<void>;
   abstract pause(): Promise<void>;
   abstract resume(): Promise<void>;
+
+  /**
+   * Shared stop sequence. Each driver only supplies {@link doStopConsumer} (its
+   * broker-specific consumer teardown); the base owns the ordering that every
+   * driver duplicated: tear the consumer down, clear the batch timer, flush any
+   * buffered batch, then mark stopped.
+   */
+  async stop(): Promise<void> {
+    if (!this.running) return;
+
+    this.paused = false;
+
+    await this.doStopConsumer();
+
+    this.clearBatchTimer();
+
+    await this.flushBatchBuffer();
+
+    this.running = false;
+
+    this.logger.debug("Stream pipeline stopped");
+  }
 
   isRunning(): boolean {
     return this.running && !this.paused;
@@ -80,6 +101,19 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
     envelope: IrisEnvelope,
     topic: string,
   ): Promise<void>;
+
+  /**
+   * Broker-specific teardown of the running consumer (cancel/close/deregister
+   * and clear the cached consumer identifiers). Called by {@link stop}.
+   */
+  protected abstract doStopConsumer(): Promise<void>;
+
+  protected clearBatchTimer(): void {
+    if (this.batchTimer) {
+      clearTimeout(this.batchTimer);
+      this.batchTimer = null;
+    }
+  }
 
   /**
    * Guard shared by every driver's `start()`: a pipeline cannot consume without

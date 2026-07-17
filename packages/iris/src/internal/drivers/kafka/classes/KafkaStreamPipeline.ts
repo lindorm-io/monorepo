@@ -99,11 +99,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  async stop(): Promise<void> {
-    if (!this.running) return;
-
-    this.paused = false;
-
+  protected async doStopConsumer(): Promise<void> {
     if (this.consumerTag) {
       this.deregisterConsumer(this.consumerTag);
       await stopKafkaConsumer(this.state, this.consumerTag);
@@ -111,26 +107,12 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     }
 
     this.groupId = null;
-
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-      this.batchTimer = null;
-    }
-
-    await this.flushBatchBuffer();
-
-    this.running = false;
-
-    this.logger.debug("Stream pipeline stopped");
   }
 
   async pause(): Promise<void> {
     if (this.paused) return;
 
-    if (this.batchTimer) {
-      clearTimeout(this.batchTimer);
-      this.batchTimer = null;
-    }
+    this.clearBatchTimer();
 
     await this.doFlushBatchBuffer();
 
