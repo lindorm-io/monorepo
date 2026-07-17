@@ -26,7 +26,10 @@ export class RabbitRpcServer<
   Res extends IMessage,
 > extends DriverRpcServerBase<Req, Res> {
   private readonly state: RabbitSharedState;
-  private readonly ownedConsumerTags: Map<string, string> = new Map();
+  private readonly ownedConsumers: Map<
+    string,
+    { consumerTag: string; queueName: string }
+  > = new Map();
 
   constructor(options: RabbitRpcServerOptions<Req, Res>) {
     super(options, "RabbitRpcServer");
@@ -56,8 +59,20 @@ export class RabbitRpcServer<
       type: "rpc",
     });
 
+    // autoDelete: the RPC request queue exists ONLY while a server is actively
+    // consuming it. When the last server unserves (or its connection drops), the
+    // broker deletes the queue and its binding — so a request to a topic that no
+    // server currently serves finds NO bound queue and is returned to the client
+    // via the `mandatory` flag (→ typed rpc_handler_not_found, fast). A plain
+    // durable queue would linger bound after unserve, keep the request routable,
+    // and defeat the mandatory-return fast-fail (RabbitRpcClient.onReturn).
+    // Kept `durable: true` (not transient): modern RabbitMQ rejects transient
+    // non-exclusive queues (`transient_nonexcl_queues` deprecated → connection
+    // INTERNAL_ERROR), and RPC queues must stay non-exclusive to support competing
+    // servers across connections. autoDelete alone gives the vanish-on-last-consumer
+    // behaviour; durability (broker-restart survival) is moot for an autoDelete queue.
     if (!this.state.assertedQueues.has(queueName)) {
-      await channel.assertQueue(queueName, { durable: true });
+      await channel.assertQueue(queueName, { durable: true, autoDelete: true });
       await channel.bindQueue(queueName, this.state.exchange, sanitizeRoutingKey(topic));
       this.state.assertedQueues.add(queueName);
     }
@@ -121,7 +136,7 @@ export class RabbitRpcServer<
 
     const { consumerTag } = await channel.consume(queueName, onMessage);
 
-    this.ownedConsumerTags.set(queue, consumerTag);
+    this.ownedConsumers.set(queue, { consumerTag, queueName });
 
     this.state.consumerRegistrations.push({
       queue: queueName,
@@ -129,24 +144,27 @@ export class RabbitRpcServer<
       onMessage,
       routingKey: sanitizeRoutingKey(topic),
       exchange: this.state.exchange,
-      queueOptions: { durable: true },
+      queueOptions: { durable: true, autoDelete: true },
     });
   }
 
   async unserve(options?: { queue?: string }): Promise<void> {
     const queue = options?.queue ?? this.getDefaultQueue();
-    const consumerTag = this.ownedConsumerTags.get(queue);
+    const owned = this.ownedConsumers.get(queue);
 
-    if (consumerTag) {
+    if (owned) {
       const channel = this.state.consumeChannel;
       if (channel) {
-        await channel.cancel(consumerTag);
+        await channel.cancel(owned.consumerTag);
       }
 
       this.state.consumerRegistrations = this.state.consumerRegistrations.filter(
-        (r) => r.consumerTag !== consumerTag,
+        (r) => r.consumerTag !== owned.consumerTag,
       );
-      this.ownedConsumerTags.delete(queue);
+      // Cancelling the last consumer lets the broker auto-delete the queue; drop
+      // our assertion so reset() doesn't try to purge a queue that's now gone.
+      this.state.assertedQueues.delete(owned.queueName);
+      this.ownedConsumers.delete(queue);
     }
     this.registeredQueues.delete(queue);
 
@@ -156,14 +174,15 @@ export class RabbitRpcServer<
   async unserveAll(): Promise<void> {
     const channel = this.state.consumeChannel;
 
-    for (const [queue, consumerTag] of this.ownedConsumerTags) {
+    for (const [queue, owned] of this.ownedConsumers) {
       if (channel) {
-        await channel.cancel(consumerTag);
+        await channel.cancel(owned.consumerTag);
       }
       this.state.consumerRegistrations = this.state.consumerRegistrations.filter(
-        (r) => r.consumerTag !== consumerTag,
+        (r) => r.consumerTag !== owned.consumerTag,
       );
-      this.ownedConsumerTags.delete(queue);
+      this.state.assertedQueues.delete(owned.queueName);
+      this.ownedConsumers.delete(queue);
     }
 
     this.registeredQueues.clear();

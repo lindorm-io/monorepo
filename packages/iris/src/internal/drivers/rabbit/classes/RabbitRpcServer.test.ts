@@ -105,7 +105,7 @@ describe("RabbitRpcServer", () => {
 
       expect(channel.assertQueue).toHaveBeenCalledWith(
         "test-exchange.rpc.TckRabbitRpcSrvReq",
-        { durable: true },
+        { durable: true, autoDelete: true },
       );
       expect(channel.bindQueue).toHaveBeenCalledWith(
         "test-exchange.rpc.TckRabbitRpcSrvReq",
@@ -160,6 +160,7 @@ describe("RabbitRpcServer", () => {
 
       expect(channel.assertQueue).toHaveBeenCalledWith("test-exchange.rpc.custom-queue", {
         durable: true,
+        autoDelete: true,
       });
     });
 

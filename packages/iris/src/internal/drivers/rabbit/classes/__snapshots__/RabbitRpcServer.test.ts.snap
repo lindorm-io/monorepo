@@ -7,6 +7,7 @@ exports[`RabbitRpcServer > serve > should register consumer in state.consumerReg
   "onMessage": [Function],
   "queue": "test-exchange.rpc.TckRabbitRpcSrvReq",
   "queueOptions": {
+    "autoDelete": true,
     "durable": true,
   },
   "routingKey": "TckRabbitRpcSrvReq",
