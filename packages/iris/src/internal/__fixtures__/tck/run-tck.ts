@@ -123,7 +123,7 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
       retrySkewSuite(getHandle, messages, timeoutMs, caps),
     );
   if (shouldRun("rpc"))
-    maybeDescribe(caps.rpc, "rpc", () => rpcSuite(getHandle, messages, timeoutMs));
+    maybeDescribe(caps.rpc, "rpc", () => rpcSuite(getHandle, messages, timeoutMs, caps));
   if (shouldRun("stream"))
     maybeDescribe(caps.stream, "stream", () =>
       streamSuite(getHandle, messages, timeoutMs, caps),

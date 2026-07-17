@@ -21,6 +21,16 @@ export type TckCapabilities = {
   workerQueue: boolean;
   /** RPC request/response */
   rpc: boolean;
+  /**
+   * The RPC client detects an unroutable request — no server registered for the
+   * topic — and rejects immediately with a typed `rpc_handler_not_found`,
+   * rather than hanging until the request timeout. memory/nats/rabbit can cheaply
+   * observe the missing destination (in-process lookup, NATS NO_RESPONDERS, the
+   * AMQP mandatory-return); Kafka and Redis Streams have no cheap
+   * unroutable-destination signal, so an unhandled request there rejects only
+   * when the timeout elapses (IrisTimeoutError).
+   */
+  rpcFastFail: boolean;
   /** Stream processor/pipeline */
   stream: boolean;
   /** Delayed publish */

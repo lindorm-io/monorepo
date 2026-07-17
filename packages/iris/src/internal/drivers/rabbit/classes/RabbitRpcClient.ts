@@ -45,6 +45,10 @@ export class RabbitRpcClient<
     pending.cleanup();
     pending.reject(
       new IrisTransportError(`No RPC handler registered for topic "${topic}"`, {
+        code: "rpc_handler_not_found",
+        title: "RPC Handler Not Found",
+        details: `The broker returned the RPC request for topic "${topic}" as undeliverable; no handler is bound.`,
+        data: { topic },
         debug: { correlationId: cid, topic },
       }),
     );

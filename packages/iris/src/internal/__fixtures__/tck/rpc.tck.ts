@@ -4,7 +4,7 @@
 
 import { IrisTimeoutError } from "../../../errors/IrisTimeoutError.js";
 import { IrisError } from "../../../errors/IrisError.js";
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckMessages } from "./create-tck-messages.js";
 import { wait } from "./wait.js";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -13,6 +13,7 @@ export const rpcSuite = (
   getHandle: () => TckDriverHandle,
   messages: TckMessages,
   _timeoutMs: number,
+  caps: TckCapabilities,
 ) => {
   describe("rpc", () => {
     beforeEach(async () => {
@@ -45,7 +46,7 @@ export const rpcSuite = (
       await client.close();
     });
 
-    test("should throw when no handler registered", async () => {
+    test("should reject when no handler registered (per fast-fail capability)", async () => {
       const handle = getHandle();
       const { TckRpcRequest, TckRpcResponse } = messages;
 
@@ -54,7 +55,31 @@ export const rpcSuite = (
       const req = new TckRpcRequest();
       req.question = "unhandled";
 
-      await expect(client.request(req, { timeout: 500 })).rejects.toThrow(IrisError);
+      if (caps.rpcFastFail) {
+        // memory/nats/rabbit can cheaply observe the missing destination and
+        // reject IMMEDIATELY with a typed rpc_handler_not_found — well before
+        // the request timeout would fire. Assert both the type and the speed so
+        // a regression to timeout-only behaviour is caught, not masked.
+        const timeout = 5000;
+        const start = Date.now();
+        const caught = await client
+          .request(req, { timeout })
+          .catch((error: unknown) => error);
+        const elapsed = Date.now() - start;
+
+        expect(caught).toBeInstanceOf(IrisError);
+        expect(caught).not.toBeInstanceOf(IrisTimeoutError);
+        expect((caught as IrisError).code).toBe("rpc_handler_not_found");
+        expect(elapsed).toBeLessThan(timeout / 2);
+      } else {
+        // kafka/redis have no cheap unroutable-destination signal, so an
+        // unhandled request can only reject once the timeout elapses. This is a
+        // documented capability difference, asserted here rather than pretended
+        // away.
+        await expect(client.request(req, { timeout: 500 })).rejects.toThrow(
+          IrisTimeoutError,
+        );
+      }
 
       await client.close();
     });

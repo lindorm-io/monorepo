@@ -31,6 +31,7 @@ const factory: TckDriverFactory = {
   capabilities: {
     workerQueue: true,
     rpc: true,
+    rpcFastFail: true,
     stream: true,
     delay: true,
     retry: true,
