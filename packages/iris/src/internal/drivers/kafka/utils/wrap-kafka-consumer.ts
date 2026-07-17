@@ -8,6 +8,7 @@ import {
   consumeMessageCore,
   type ConsumerCallbackHost,
 } from "../../../utils/consume-message-core.js";
+import { createSendToDeadLetter } from "../../../utils/create-send-to-dead-letter.js";
 import type {
   KafkaEachMessagePayload,
   KafkaSharedState,
@@ -30,19 +31,7 @@ export const wrapKafkaConsumer = <M extends IMessage>(
   logger: ILogger,
   options: WrapKafkaConsumerOptions,
 ): ((payload: KafkaEachMessagePayload) => Promise<void>) => {
-  const sendToDeadLetter = async (
-    envelope: IrisEnvelope,
-    _topic: string,
-    err: Error,
-  ): Promise<void> => {
-    if (options.deadLetterManager) {
-      await options.deadLetterManager
-        .send(envelope, envelope.topic, err)
-        .catch((dlErr) => {
-          logger.error("Failed to send to dead letter", { error: dlErr });
-        });
-    }
-  };
+  const sendToDeadLetter = createSendToDeadLetter(options.deadLetterManager, logger);
 
   const commitOffset = async (payload: KafkaEachMessagePayload): Promise<void> => {
     const consumer =

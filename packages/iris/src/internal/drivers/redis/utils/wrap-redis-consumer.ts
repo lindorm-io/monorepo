@@ -8,6 +8,7 @@ import {
   consumeMessageCore,
   type ConsumerCallbackHost,
 } from "../../../utils/consume-message-core.js";
+import { createSendToDeadLetter } from "../../../utils/create-send-to-dead-letter.js";
 import type {
   RedisSharedState,
   RedisStreamEntry,
@@ -30,19 +31,7 @@ export const wrapRedisConsumer = <M extends IMessage>(
   logger: ILogger,
   options?: WrapRedisConsumerOptions,
 ): ((entry: RedisStreamEntry) => Promise<void>) => {
-  const sendToDeadLetter = async (
-    envelope: IrisEnvelope,
-    _topic: string,
-    err: Error,
-  ): Promise<void> => {
-    if (options?.deadLetterManager) {
-      await options.deadLetterManager
-        .send(envelope, envelope.topic, err)
-        .catch((dlErr) => {
-          logger.error("Failed to send to dead letter", { error: dlErr });
-        });
-    }
-  };
+  const sendToDeadLetter = createSendToDeadLetter(options?.deadLetterManager, logger);
 
   return async (entry: RedisStreamEntry): Promise<void> => {
     const strategies: ConsumeStrategies = {

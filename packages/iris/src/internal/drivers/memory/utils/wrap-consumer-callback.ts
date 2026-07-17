@@ -3,11 +3,11 @@ import type { IMessage } from "../../../../interfaces/index.js";
 import type { ConsumeEnvelope } from "../../../../types/index.js";
 import type { MessageMetadata } from "../../../message/types/metadata.js";
 import type { ConsumeStrategies } from "../../../types/consume-strategies.js";
-import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import {
   consumeMessageCore,
   type ConsumerCallbackHost,
 } from "../../../utils/consume-message-core.js";
+import { createSendToDeadLetter } from "../../../utils/create-send-to-dead-letter.js";
 import type {
   MemoryEnvelope,
   MemorySharedState,
@@ -26,19 +26,7 @@ export const wrapConsumerCallback = <M extends IMessage>(
   logger: ILogger,
   options?: WrapConsumerCallbackOptions,
 ): ((envelope: MemoryEnvelope) => Promise<void>) => {
-  const sendToDeadLetter = async (
-    envelope: IrisEnvelope,
-    _topic: string,
-    err: Error,
-  ): Promise<void> => {
-    if (options?.deadLetterManager) {
-      await options.deadLetterManager
-        .send(envelope, envelope.topic, err)
-        .catch((dlErr) => {
-          logger.error("Failed to send to dead letter", { error: dlErr });
-        });
-    }
-  };
+  const sendToDeadLetter = createSendToDeadLetter(options?.deadLetterManager, logger);
 
   const wrappedCallback = async (envelope: MemoryEnvelope): Promise<void> => {
     const strategies: ConsumeStrategies = {
