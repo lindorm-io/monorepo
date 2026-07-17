@@ -3,8 +3,8 @@ import type { Middleware } from "@lindorm/middleware";
 import type { RetryOptions } from "@lindorm/retry";
 import type { Dict, Environment } from "@lindorm/types";
 import type { ConduitAdapter } from "./adapter.js";
-import type { AppContext, RequestContext } from "./context.js";
-import type { ConfigOptions } from "./overrides.js";
+import type { ConduitAppContext, ConduitRequestContext } from "./context.js";
+import type { ConduitAxiosOverrides } from "./overrides.js";
 import type { ConduitResponse } from "./response.js";
 import type { RetryCallback } from "./retry.js";
 
@@ -14,9 +14,9 @@ export type ConduitContext<
   RequestParams = Dict,
   RequestQuery = Dict,
 > = {
-  app: AppContext;
+  app: ConduitAppContext;
   logger?: ILogger;
-  req: RequestContext<RequestBody, RequestParams, RequestQuery>;
+  req: ConduitRequestContext<RequestBody, RequestParams, RequestQuery>;
   res: ConduitResponse<ResponseData>;
 };
 
@@ -27,7 +27,7 @@ export type ConduitMiddleware<
   RequestQuery = any,
 > = Middleware<ConduitContext<ResponseData, RequestBody, RequestParams, RequestQuery>>;
 
-export type ConduitOptions = {
+export type ConduitSettings = {
   /**
    * Axios adapter to use for requests. Defaults to `"http"`. Set to
    * `"fetch"` to use axios's native-fetch adapter.
@@ -35,7 +35,7 @@ export type ConduitOptions = {
   adapter?: ConduitAdapter;
   alias?: string;
   baseURL?: URL | string;
-  config?: ConfigOptions;
+  config?: ConduitAxiosOverrides;
   environment?: Environment;
   headers?: Dict;
   logger?: ILogger;

@@ -9,7 +9,7 @@ import type {
   OpenIdTokenResponse,
 } from "@lindorm/types";
 import { Conduit } from "../classes/index.js";
-import type { ConduitMiddleware, RequestOptions } from "../types/index.js";
+import type { ConduitMiddleware, ConduitRequestOptions } from "../types/index.js";
 import { conduitBasicAuthMiddleware } from "./conduit-basic-auth-middleware.js";
 import { conduitBearerAuthMiddleware } from "./conduit-bearer-auth-middleware.js";
 import { conduitChangeRequestBodyMiddleware } from "./conduit-change-request-body-middleware.js";
@@ -22,7 +22,7 @@ export type ClientCredentialsContentType =
   | "application/json"
   | "application/x-www-form-urlencoded";
 
-type Config = {
+export type ConduitClientCredentialsConfig = {
   authLocation?: ClientCredentialsAuthLocation;
   clientId: string;
   clientSecret: string;
@@ -35,7 +35,7 @@ type Config = {
   tokenUri?: string;
 };
 
-type Options = {
+export type ConduitClientCredentialsOptions = {
   audience?: string;
   scope?: Array<string>;
 };
@@ -53,7 +53,7 @@ type CacheItem = {
 export type ConduitClientCredentialsCache = Array<CacheItem>;
 
 export type ConduitClientCredentialsMiddlewareFactory = (
-  options?: Options,
+  options?: ConduitClientCredentialsOptions,
   logger?: ILogger,
 ) => Promise<ConduitMiddleware>;
 
@@ -80,7 +80,7 @@ const replaceInCache = (cache: ConduitClientCredentialsCache, item: CacheItem): 
 };
 
 export const conduitClientCredentialsMiddlewareFactory = (
-  config: Config,
+  config: ConduitClientCredentialsConfig,
   cache: ConduitClientCredentialsCache = [],
 ): ConduitClientCredentialsMiddlewareFactory => {
   const {
@@ -100,7 +100,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
       : conduitBearerAuthMiddleware(accessToken, tokenType);
 
   return async function conduitClientCredentialsMiddleware(
-    options?: Options,
+    options?: ConduitClientCredentialsOptions,
     logger?: ILogger,
   ): Promise<ConduitMiddleware> {
     const { audience = DEFAULT, scope = [] } = options ?? {};
@@ -156,7 +156,7 @@ export const conduitClientCredentialsMiddlewareFactory = (
         }
       }
 
-      const requestOptions: RequestOptions = {};
+      const requestOptions: ConduitRequestOptions = {};
 
       const requestContent: Dict<string> = {
         ...(audience && audience !== DEFAULT ? { audience } : {}),

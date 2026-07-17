@@ -21,29 +21,29 @@ import type { Dict, HttpMethod } from "@lindorm/types";
 import { extractSearchParams, getPlainUrl, getValidUrl } from "@lindorm/url";
 import type { IConduit } from "../interfaces/index.js";
 import type {
-  AppContext,
+  ConduitAppContext,
   ConduitContext,
   ConduitMiddleware,
-  ConduitOptions,
+  ConduitSettings,
   ConduitResponse,
-  ConfigContext,
-  MethodOptions,
-  RequestContext,
-  RequestOptions,
+  ConduitConfigContext,
+  ConduitMethodOptions,
+  ConduitRequestContext,
+  ConduitRequestOptions,
   RetryCallback,
 } from "../types/index.js";
 
 export class Conduit implements IConduit {
   private readonly baseURL: URL | undefined;
-  private readonly config: Partial<ConfigContext>;
-  private readonly context: AppContext;
+  private readonly config: Partial<ConduitConfigContext>;
+  private readonly context: ConduitAppContext;
   private readonly headers: Dict<string>;
   private readonly logger: ILogger | undefined;
   private readonly middleware: Array<ConduitMiddleware>;
   private readonly retryCallback: RetryCallback;
   private readonly retryConfig: RetryConfig;
 
-  constructor(options: ConduitOptions = {}) {
+  constructor(options: ConduitSettings = {}) {
     this.baseURL = options.baseURL ? getPlainUrl(options.baseURL) : undefined;
 
     this.config = {
@@ -79,7 +79,12 @@ export class Conduit implements IConduit {
     RequestQuery = Dict,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
+    options?: ConduitRequestOptions<
+      ResponseData,
+      RequestBody,
+      RequestParams,
+      RequestQuery
+    >,
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
@@ -95,7 +100,12 @@ export class Conduit implements IConduit {
     RequestQuery = Dict,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
+    options?: ConduitRequestOptions<
+      ResponseData,
+      RequestBody,
+      RequestParams,
+      RequestQuery
+    >,
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
@@ -111,7 +121,12 @@ export class Conduit implements IConduit {
     RequestQuery = Dict,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
+    options?: ConduitRequestOptions<
+      ResponseData,
+      RequestBody,
+      RequestParams,
+      RequestQuery
+    >,
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
@@ -127,7 +142,12 @@ export class Conduit implements IConduit {
     RequestQuery = Dict,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
+    options?: ConduitRequestOptions<
+      ResponseData,
+      RequestBody,
+      RequestParams,
+      RequestQuery
+    >,
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
@@ -143,7 +163,12 @@ export class Conduit implements IConduit {
     RequestQuery = Dict,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
+    options?: ConduitRequestOptions<
+      ResponseData,
+      RequestBody,
+      RequestParams,
+      RequestQuery
+    >,
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
@@ -159,7 +184,12 @@ export class Conduit implements IConduit {
     RequestQuery = Dict,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
+    options?: ConduitRequestOptions<
+      ResponseData,
+      RequestBody,
+      RequestParams,
+      RequestQuery
+    >,
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
@@ -175,7 +205,12 @@ export class Conduit implements IConduit {
     RequestQuery = Dict,
   >(
     pathOrUrl: URL | string,
-    options?: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
+    options?: ConduitRequestOptions<
+      ResponseData,
+      RequestBody,
+      RequestParams,
+      RequestQuery
+    >,
   ): Promise<ConduitResponse<ResponseData>> {
     return this.composeRequest<ResponseData, RequestBody, RequestParams, RequestQuery>(
       pathOrUrl,
@@ -190,8 +225,8 @@ export class Conduit implements IConduit {
     RequestParams = Dict,
     RequestQuery = Dict,
   >(
-    options: MethodOptions &
-      RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
+    options: ConduitMethodOptions &
+      ConduitRequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery>,
   ): Promise<ConduitResponse<ResponseData>> {
     const { method, path, url, ...rest } = options;
     const pathOrUrl = url ?? path;
@@ -222,7 +257,12 @@ export class Conduit implements IConduit {
   >(
     pathOrUrl: URL | string,
     method: HttpMethod,
-    options: RequestOptions<ResponseData, RequestBody, RequestParams, RequestQuery> = {},
+    options: ConduitRequestOptions<
+      ResponseData,
+      RequestBody,
+      RequestParams,
+      RequestQuery
+    > = {},
   ): Promise<ConduitResponse<ResponseData>> {
     const {
       adapter,
@@ -250,7 +290,7 @@ export class Conduit implements IConduit {
     const searchParams = extractSearchParams<RequestQuery>(valid);
     const url = getPlainUrl(valid).toString().replace(REPLACE_URL, "");
 
-    const req: RequestContext<RequestBody, RequestParams, RequestQuery> = {
+    const req: ConduitRequestContext<RequestBody, RequestParams, RequestQuery> = {
       body: body as RequestBody,
       config: {
         ...this.config,

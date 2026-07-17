@@ -1,7 +1,7 @@
 import {
   Conduit,
   type ConduitMiddleware,
-  type ConduitOptions,
+  type ConduitSettings,
   conduitChangeResponseDataMiddleware,
   conduitCorrelationMiddleware,
   conduitSessionMiddleware,
@@ -10,7 +10,7 @@ import { ServerError } from "@lindorm/errors";
 import { isArray } from "@lindorm/is";
 import type { PylonContext, PylonMiddleware } from "../../types/index.js";
 
-type Options = Omit<ConduitOptions, "alias" | "baseUrl" | "logger"> & {
+type Options = Omit<ConduitSettings, "alias" | "baseURL" | "logger"> & {
   alias: string;
   baseUrl: string;
 };

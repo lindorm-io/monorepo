@@ -652,7 +652,7 @@ Registering a subclass never changes what a _bare_ status resolves to. `UserSusp
 
 ### Types
 
-`AppContext`, `ConduitAdapter`, `ConduitCircuitBreakerCache`, `ConduitCircuitBreakerConfig`, `ConduitClientCredentialsCache`, `ConduitClientCredentialsMiddlewareFactory`, `ConduitContext`, `ConduitDpopAuthOptions`, `ConduitMiddleware`, `ConduitOptions`, `ConduitResponse`, `ConfigContext`, `ConfigOptions`, `ExpectedResponse`, `MethodOptions`, `OnRetryCallback`, `RequestContext`, `RequestMetadata`, `RequestOptions`, `RetryCallback`, `RetryStrategy` (re-exported from `@lindorm/retry`).
+`ConduitAdapter`, `ConduitAppContext`, `ConduitAxiosOverrides`, `ConduitCacheConfig`, `ConduitCircuitBreakerCache`, `ConduitCircuitBreakerConfig`, `ConduitClientCredentialsCache`, `ConduitClientCredentialsConfig`, `ConduitClientCredentialsMiddlewareFactory`, `ConduitClientCredentialsOptions`, `ConduitConfigContext`, `ConduitContext`, `ConduitDpopAuthOptions`, `ConduitMethodOptions`, `ConduitMiddleware`, `ConduitRateLimitConfig`, `ConduitRequestContext`, `ConduitRequestMetadata`, `ConduitRequestOptions`, `ConduitResponse`, `ConduitSettings`, `ExpectedResponse`, `OnRetryCallback`, `RetryCallback`, `RetryStrategy` (re-exported from `@lindorm/retry`).
 
 ## Full Example
 

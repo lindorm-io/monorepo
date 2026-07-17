@@ -1,5 +1,5 @@
 import type { RetryStrategy } from "@lindorm/retry";
-import type { RequestContext } from "../../types/index.js";
+import type { ConduitRequestContext } from "../../types/index.js";
 import { composeAxiosConfig } from "./compose-axios-config.js";
 import { beforeEach, describe, expect, test } from "vitest";
 
@@ -7,7 +7,7 @@ describe("composeAxiosConfig", () => {
   let ctx: any;
 
   beforeEach(() => {
-    const req: RequestContext = {
+    const req: ConduitRequestContext = {
       body: { body: "body" },
       config: {
         method: "GET",

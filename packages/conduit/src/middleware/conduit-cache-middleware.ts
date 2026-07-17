@@ -8,7 +8,7 @@ import type {
   ConduitResponse,
 } from "../types/index.js";
 
-type Config = {
+export type ConduitCacheConfig = {
   /** Cache driver; defaults to an in-memory LRU driver. */
   driver?: IConduitCacheDriver;
   /** Entry TTL in milliseconds. Omit for no expiry. */
@@ -21,7 +21,9 @@ type Config = {
   offline?: boolean;
 };
 
-export const createConduitCacheMiddleware = (config: Config = {}): ConduitMiddleware => {
+export const createConduitCacheMiddleware = (
+  config: ConduitCacheConfig = {},
+): ConduitMiddleware => {
   const driver = config.driver ?? createMemoryCacheDriver();
   const maxAge = config.maxAge;
   const methods = (config.methods ?? ["GET"]).map((m) => m.toUpperCase());

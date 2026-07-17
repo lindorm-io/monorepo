@@ -3,16 +3,16 @@ import type { Dict, HttpMethod, Param, Query } from "@lindorm/types";
 import type { Readable } from "stream";
 import type { ConduitAdapter, ExpectedResponse } from "../types/index.js";
 import type { ConduitMiddleware } from "./conduit.js";
-import type { ConfigOptions } from "./overrides.js";
+import type { ConduitAxiosOverrides } from "./overrides.js";
 import type { OnRetryCallback, RetryCallback } from "./retry.js";
 
-export type MethodOptions = {
+export type ConduitMethodOptions = {
   method: HttpMethod;
   path?: string;
   url?: URL | string;
 };
 
-export type RequestOptions<
+export type ConduitRequestOptions<
   ResponseData = any,
   RequestBody = Dict,
   RequestParams = Dict<Param>,
@@ -20,7 +20,7 @@ export type RequestOptions<
 > = {
   adapter?: ConduitAdapter;
   body?: RequestBody;
-  config?: ConfigOptions;
+  config?: ConduitAxiosOverrides;
   expectedResponse?: ExpectedResponse;
   filename?: string;
   form?: FormData;

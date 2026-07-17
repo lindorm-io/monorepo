@@ -1,28 +1,28 @@
 import type { RetryConfig } from "@lindorm/retry";
 import type { Dict, Environment } from "@lindorm/types";
 import type { Readable } from "stream";
-import type { ConfigContext } from "./overrides.js";
+import type { ConduitConfigContext } from "./overrides.js";
 import type { OnRetryCallback, RetryCallback } from "./retry.js";
 
-export type AppContext = {
+export type ConduitAppContext = {
   alias: string | null;
   baseURL: string | null;
   environment: Environment | null;
 };
 
-export type RequestMetadata = {
+export type ConduitRequestMetadata = {
   correlationId: string;
   requestId: string;
   sessionId: string | null;
 };
 
-export type RequestContext<Body = Dict, Params = Dict, Query = Dict> = {
+export type ConduitRequestContext<Body = Dict, Params = Dict, Query = Dict> = {
   body: Body | undefined;
-  config: ConfigContext;
+  config: ConduitConfigContext;
   filename: string | undefined;
   form: FormData | undefined;
   headers: Dict<string>;
-  metadata: RequestMetadata;
+  metadata: ConduitRequestMetadata;
   onDownloadProgress: ((event: { loaded: number; total?: number }) => void) | undefined;
   onRetry: OnRetryCallback | undefined;
   onUploadProgress: ((event: { loaded: number; total?: number }) => void) | undefined;

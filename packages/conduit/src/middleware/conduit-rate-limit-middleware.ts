@@ -1,7 +1,7 @@
 import { TooManyRequestsError } from "@lindorm/errors";
 import type { ConduitMiddleware } from "../types/index.js";
 
-type Config = {
+export type ConduitRateLimitConfig = {
   maxRequests?: number;
   windowMs?: number;
   perOrigin?: boolean;
@@ -13,7 +13,7 @@ type Bucket = {
 };
 
 export const createConduitRateLimitMiddleware = (
-  config: Config = {},
+  config: ConduitRateLimitConfig = {},
 ): ConduitMiddleware => {
   const maxRequests = config.maxRequests ?? 100;
   const windowMs = config.windowMs ?? 60000;

@@ -32,8 +32,8 @@ type RawAxiosRequestConfigContext = Omit<
   | "url"
 >;
 
-export type ConfigOptions = RawAxiosRequestConfigOptions;
+export type ConduitAxiosOverrides = RawAxiosRequestConfigOptions;
 
-export type ConfigContext = RawAxiosRequestConfigContext & {
+export type ConduitConfigContext = RawAxiosRequestConfigContext & {
   method: Uppercase<HttpMethod>;
 };
