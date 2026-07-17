@@ -268,7 +268,7 @@ describe("wrapRabbitConsumer", () => {
       );
     });
 
-    it("should nack to DLX on deserialization error when deadLetter is true", async () => {
+    it("should publish to DLX with error headers and ack on deserialization error when deadLetter is true", async () => {
       const host = createMockHost();
       (host.prepareForConsume as Mock).mockRejectedValue(new Error("bad data"));
       const callback = vi.fn();
@@ -287,7 +287,23 @@ describe("wrapRabbitConsumer", () => {
       await wrapped(msg);
 
       expect(callback).not.toHaveBeenCalled();
-      expect(state.consumeChannel!.nack).toHaveBeenCalledWith(msg, false, false);
+      // Poison pill: dead-letter to the DLX explicitly (consumer queues have no
+      // native DLX, so a bare nack would drop it), then ack the original — once,
+      // no loop, no drop.
+      expect(state.publishChannel!.publish).toHaveBeenCalledWith(
+        "iris.dlx",
+        "test-topic",
+        expect.any(Buffer),
+        expect.objectContaining({
+          headers: expect.objectContaining({
+            "x-iris-error": "bad data",
+            "x-iris-error-timestamp": expect.any(String),
+          }),
+        }),
+        expect.any(Function),
+      );
+      expect(state.consumeChannel!.ack).toHaveBeenCalledWith(msg);
+      expect(state.consumeChannel!.nack).not.toHaveBeenCalled();
     });
 
     it("should ack and discard non-Error deserialization failures when deadLetter is false", async () => {

@@ -35,13 +35,46 @@ export const wrapRabbitConsumer = <M extends IMessage>(
     const parsed = parseAmqpHeaders(msg);
     const envelope = buildRabbitEnvelope(parsed, metadata);
 
+    // Dead-letter to the DLX explicitly (then ack the original), rather than
+    // relying on a queue-level x-dead-letter-exchange. Consumer queues (worker,
+    // stream) are not declared with a native DLX, so a bare `nack(requeue=false)`
+    // would DROP the message instead of dead-lettering it. Publishing to the DLX
+    // routes it to the same DLQ the retry-exhaustion path uses — observed once,
+    // never looped, never dropped.
+    const sendToDeadLetter = async (error: Error): Promise<void> => {
+      try {
+        const dlxHeaders = {
+          ...msg.properties.headers,
+          "x-iris-error": error.message,
+          "x-iris-error-timestamp": String(Date.now()),
+        };
+        const dlxProperties = {
+          ...msg.properties,
+          headers: dlxHeaders,
+        };
+        await publishToExchange(
+          state.publishChannel!,
+          state.dlxExchange,
+          sanitizeRoutingKey(envelope.topic),
+          parsed.payload,
+          dlxProperties,
+        );
+        channel.ack(msg);
+      } catch (dlxError) {
+        logger.error("Failed to publish to DLX, nacking", { error: dlxError });
+        channel.nack(msg, false, false);
+      }
+    };
+
     const strategies: ConsumeStrategies = {
       onExpired: async () => {
         channel.ack(msg);
       },
-      onDeserializationError: async () => {
+      onDeserializationError: async (_env: IrisEnvelope, error: Error) => {
         if (metadata.deadLetter) {
-          channel.nack(msg, false, false);
+          // A parse error is a poison pill: retrying is futile, so dead-letter it
+          // straight away (once) — never loop, never silently drop.
+          await sendToDeadLetter(error);
         } else {
           logger.error(
             "Deserialization error, discarding message (no dead letter configured)",
@@ -96,28 +129,7 @@ export const wrapRabbitConsumer = <M extends IMessage>(
         channel.nack(msg, false, false);
       },
       deadLetter: async (_env: IrisEnvelope, _topic: string, err: Error) => {
-        try {
-          const dlxHeaders = {
-            ...msg.properties.headers,
-            "x-iris-error": err.message,
-            "x-iris-error-timestamp": String(Date.now()),
-          };
-          const dlxProperties = {
-            ...msg.properties,
-            headers: dlxHeaders,
-          };
-          await publishToExchange(
-            state.publishChannel!,
-            state.dlxExchange,
-            sanitizeRoutingKey(envelope.topic),
-            parsed.payload,
-            dlxProperties,
-          );
-          channel.ack(msg);
-        } catch (dlxError) {
-          logger.error("Failed to publish to DLX, nacking", { error: dlxError });
-          channel.nack(msg, false, false);
-        }
+        await sendToDeadLetter(err);
       },
       onExhaustedNoDeadLetter: async () => {
         channel.ack(msg);
