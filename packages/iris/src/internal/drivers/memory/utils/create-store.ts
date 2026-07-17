@@ -4,7 +4,6 @@ export const createStore = (): MemorySharedState => ({
   subscriptions: [],
   consumers: [],
   rpcHandlers: [],
-  replyCallbacks: new Map(),
   pendingRejects: new Map(),
   roundRobinIndexes: new Map(),
   timers: new Set(),

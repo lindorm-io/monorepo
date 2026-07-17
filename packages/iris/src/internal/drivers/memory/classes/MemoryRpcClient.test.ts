@@ -273,7 +273,7 @@ describe("MemoryRpcClient", () => {
       vi.useRealTimers();
     });
 
-    it("should clean up store.replyCallbacks after successful response", async () => {
+    it("should clean up store.pendingRejects after successful response", async () => {
       const { client, server, driver } = createRpcSetup();
       const store = (driver as any).store;
 
@@ -288,11 +288,10 @@ describe("MemoryRpcClient", () => {
 
       await client.request(req);
 
-      expect(store.replyCallbacks.size).toBe(0);
       expect(store.pendingRejects.size).toBe(0);
     });
 
-    it("should clean up store.replyCallbacks after timeout", async () => {
+    it("should clean up store.pendingRejects after timeout", async () => {
       vi.useFakeTimers();
 
       const { client, server, driver } = createRpcSetup();
@@ -308,12 +307,10 @@ describe("MemoryRpcClient", () => {
 
       for (let i = 0; i < 10; i++) await Promise.resolve();
 
-      expect(store.replyCallbacks.size).toBe(1);
       expect(store.pendingRejects.size).toBe(1);
 
       await vi.advanceTimersByTimeAsync(500);
 
-      expect(store.replyCallbacks.size).toBe(0);
       expect(store.pendingRejects.size).toBe(0);
 
       vi.useRealTimers();

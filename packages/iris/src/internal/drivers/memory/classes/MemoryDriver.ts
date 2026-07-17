@@ -97,7 +97,6 @@ export class MemoryDriver implements IIrisDriver {
     this.store.subscriptions.length = 0;
     this.store.consumers.length = 0;
     this.store.rpcHandlers.length = 0;
-    this.store.replyCallbacks.clear();
     this.store.roundRobinIndexes.clear();
     this._replyQueueActive = false;
     this.setConnectionState("disconnected");
@@ -144,7 +143,6 @@ export class MemoryDriver implements IIrisDriver {
     this.store.subscriptions.length = 0;
     this.store.consumers.length = 0;
     this.store.rpcHandlers.length = 0;
-    this.store.replyCallbacks.clear();
     this.store.roundRobinIndexes.clear();
 
     for (const timer of this.store.timers) {

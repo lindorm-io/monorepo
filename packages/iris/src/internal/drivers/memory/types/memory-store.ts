@@ -35,7 +35,6 @@ export type MemorySharedState = {
   subscriptions: Array<MemorySubscription>;
   consumers: Array<MemoryConsumer>;
   rpcHandlers: Array<MemoryRpcHandler>;
-  replyCallbacks: Map<string, (envelope: MemoryEnvelope) => void | Promise<void>>;
   pendingRejects: Map<string, (reason: Error) => void>;
   roundRobinIndexes: Map<string, number>;
   timers: Set<ReturnType<typeof setTimeout>>;

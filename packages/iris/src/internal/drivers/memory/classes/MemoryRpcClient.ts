@@ -53,7 +53,6 @@ export class MemoryRpcClient<
       topic,
       timeoutMs,
       () => {
-        this.store.replyCallbacks.delete(correlationId);
         this.store.pendingRejects.delete(correlationId);
       },
     );
@@ -64,21 +63,14 @@ export class MemoryRpcClient<
       this.store.pendingRejects.set(correlationId, pending.reject);
     }
 
-    this.store.replyCallbacks.set(correlationId, async (replyEnvelope) => {
-      await this.handleReplyPayload(
-        correlationId,
-        replyEnvelope.payload,
-        replyEnvelope.headers,
-      );
-    });
-
     handler
       .handler(envelope)
       .then(async (replyEnvelope) => {
-        const cb = this.store.replyCallbacks.get(correlationId);
-        if (cb) {
-          await cb(replyEnvelope);
-        }
+        await this.handleReplyPayload(
+          correlationId,
+          replyEnvelope.payload,
+          replyEnvelope.headers,
+        );
       })
       .catch((error) => {
         const p = this.pendingRequests.get(correlationId);

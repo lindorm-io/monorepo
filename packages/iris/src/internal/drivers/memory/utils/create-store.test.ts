@@ -8,8 +8,6 @@ describe("createStore", () => {
     expect(store.subscriptions).toEqual([]);
     expect(store.consumers).toEqual([]);
     expect(store.rpcHandlers).toEqual([]);
-    expect(store.replyCallbacks).toBeInstanceOf(Map);
-    expect(store.replyCallbacks.size).toBe(0);
     expect(store.roundRobinIndexes).toBeInstanceOf(Map);
     expect(store.roundRobinIndexes.size).toBe(0);
   });
