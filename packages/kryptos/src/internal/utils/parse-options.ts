@@ -1,7 +1,7 @@
 import { KryptosError } from "../../errors/index.js";
 import type {
   KryptosJwk,
-  KryptosOptions,
+  KryptosSettings,
   KryptosType,
   UnknownJwk,
 } from "../../types/index.js";
@@ -15,7 +15,7 @@ type LooseJwk = UnknownJwk &
 
 export const parseJwkOptions = (
   options: UnknownJwk & Partial<KryptosJwk>,
-): KryptosOptions => {
+): KryptosSettings => {
   const jwk = options as LooseJwk;
 
   if (!TYPES.includes(jwk.kty)) {
@@ -75,9 +75,9 @@ export const parseJwkOptions = (
   };
 };
 
-type Options = Omit<KryptosOptions, "curve" | "privateKey" | "publicKey">;
+type Options = Omit<KryptosSettings, "curve" | "privateKey" | "publicKey">;
 
-export const parseStdOptions = (options: Options): KryptosOptions => ({
+export const parseStdOptions = (options: Options): KryptosSettings => ({
   id: options.id,
   algorithm: options.algorithm,
   createdAt: options.createdAt,

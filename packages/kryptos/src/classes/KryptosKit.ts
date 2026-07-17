@@ -32,7 +32,7 @@ import type {
   KryptosGenerateRsaEnc,
   KryptosGenerateRsaSig,
   KryptosLike,
-  KryptosOptions,
+  KryptosSettings,
   KryptosType,
 } from "../types/index.js";
 import type { KryptosGenerate } from "../internal/types/generate.js";
@@ -321,7 +321,7 @@ export class KryptosKit {
   private static fromKryptos(
     format: KryptosFormat,
     arg: KryptosFrom,
-    overrides?: Partial<Pick<KryptosOptions, "internal">>,
+    overrides?: Partial<Pick<KryptosSettings, "internal">>,
   ): Kryptos {
     const options = { ...fromOptions(format, arg), ...overrides };
 

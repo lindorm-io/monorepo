@@ -2,10 +2,10 @@ import type { IKryptos } from "../interfaces/index.js";
 import type { KryptosAttributes } from "./attributes.js";
 import type { UnknownJwk } from "./jwk.js";
 import type { KryptosBuffer, KryptosJwk, KryptosString } from "./kryptos.js";
-import type { KryptosOptions } from "./options.js";
+import type { KryptosSettings } from "./options.js";
 
 type Std = Omit<
-  KryptosOptions,
+  KryptosSettings,
   "algorithm" | "curve" | "privateKey" | "publicKey" | "type" | "use"
 >;
 

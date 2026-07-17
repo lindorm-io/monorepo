@@ -41,7 +41,7 @@ import type {
   KryptosKey,
   KryptosKeys,
   KryptosOperation,
-  KryptosOptions,
+  KryptosSettings,
   KryptosPem,
   KryptosString,
   KryptosType,
@@ -75,7 +75,7 @@ export class Kryptos implements IKryptos {
   private _cache: ExportCache = {};
   private _disposed: boolean = false;
 
-  constructor(options: KryptosOptions) {
+  constructor(options: KryptosSettings) {
     this._algorithm = options.algorithm;
     this._createdAt = options.createdAt ?? new Date();
     this._curve = options.curve || null;
@@ -661,7 +661,7 @@ export class Kryptos implements IKryptos {
     }
   }
 
-  private generateKeys(options: KryptosOptions): KryptosKeys {
+  private generateKeys(options: KryptosSettings): KryptosKeys {
     const keys = createDerFromDer(options as KryptosBuffer);
 
     if (isOctDer(keys)) {

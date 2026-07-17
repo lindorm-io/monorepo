@@ -23,7 +23,7 @@ export type KryptosKeys = {
   publicKey?: Buffer;
 };
 
-export type KryptosOptions = StdOptions &
+export type KryptosSettings = StdOptions &
   KryptosKeys & {
     certificateChain?: string | Array<string> | null;
     modulus?: RsaModulus | null;

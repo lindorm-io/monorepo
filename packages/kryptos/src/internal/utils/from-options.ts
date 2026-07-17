@@ -1,5 +1,5 @@
 import { KryptosError } from "../../errors/index.js";
-import type { KryptosFormat, KryptosFrom, KryptosOptions } from "../../types/index.js";
+import type { KryptosFormat, KryptosFrom, KryptosSettings } from "../../types/index.js";
 import { createDerFromB64 } from "./from/der-from-b64.js";
 import { createDerFromDer } from "./from/der-from-der.js";
 import { createDerFromDerive } from "./from/der-from-derive.js";
@@ -9,7 +9,7 @@ import { createDerFromUtf } from "./from/der-from-utf.js";
 import { isB64, isDer, isDerive, isJwk, isPem, isUtf } from "./is.js";
 import { parseJwkOptions, parseStdOptions } from "./parse-options.js";
 
-export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosOptions => {
+export const fromOptions = (format: KryptosFormat, arg: KryptosFrom): KryptosSettings => {
   switch (format) {
     case "b64":
       if (!isB64(arg))
