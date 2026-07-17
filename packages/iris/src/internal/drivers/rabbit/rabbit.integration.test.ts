@@ -565,7 +565,7 @@ describe("rabbit driver integration", () => {
       createChannelSpy.mockRestore();
     });
 
-    test("ping returns false on a half-open connection (non-null but dead)", async () => {
+    test("ping returns false once the connection is gone", async () => {
       // Stand up an isolated source so killing its connection does not disturb
       // the shared lifecycle driver used by the other tests.
       const isolated = new IrisSource({
@@ -581,17 +581,23 @@ describe("rabbit driver integration", () => {
 
       expect(await isolatedDriver.ping()).toBe(true);
 
-      // Simulate the H7 failure mode: the broker goes away but `state.connection`
-      // is still a (now-dead) object. Suppress the reconnect handler, then close
-      // the underlying connection directly WITHOUT nulling the reference — so the
-      // old socket-state check (`connection !== null`) would still return true.
+      // Drop the broker connection. Suppress the auto-reconnect handler so the
+      // driver stays down, then ping against the REAL broker: with no live
+      // connection the wire probe cannot open a channel, so ping must report
+      // false.
+      //
+      // This test does NOT assert `state.connection` stays non-null after the
+      // close: amqplib emits a "close" event on any teardown (graceful close or
+      // a destroyed socket alike), and the driver's own close handler nulls
+      // `state.connection` on it — so a live-broker test cannot deterministically
+      // hold a "dead but non-null" connection without racing that handler. The
+      // H7 round-trip semantics (createChannel rejects while `state.connection`
+      // is still set ⇒ ping false) are proven deterministically by the unit test
+      // in RabbitDriver.test.ts. Here we only assert the reliable behaviour: once
+      // the connection is gone, ping reports false against a real broker.
       (isolatedDriver as any)._deliberateDisconnect = true;
-      const state = (isolatedDriver as any).state;
-      await state.connection.close();
+      await (isolatedDriver as any).state.connection.close();
 
-      // The reference is intact, so only a real wire round-trip can tell the
-      // connection is dead — ping must report false.
-      expect(state.connection).not.toBeNull();
       expect(await isolatedDriver.ping()).toBe(false);
 
       // Fully release resources (channels/connection already closed).
