@@ -12,6 +12,7 @@ import { KafkaWorkerQueue } from "./KafkaWorkerQueue.js";
 import { KafkaStreamProcessor } from "./KafkaStreamProcessor.js";
 import { KafkaRpcClient } from "./KafkaRpcClient.js";
 import { KafkaRpcServer } from "./KafkaRpcServer.js";
+import { reRegisterKafkaConsumers } from "../utils/re-register-kafka-consumers.js";
 import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 
 // --- Mock kafkajs ---
@@ -69,6 +70,13 @@ vi.mock("kafkajs", async () => ({
     };
   }),
   logLevel: { NOTHING: 0, ERROR: 1, WARN: 2, INFO: 4, DEBUG: 5 },
+}));
+
+// Stub the re-registration util so the driver tests can assert the reconnect
+// WIRING (that a broker bounce triggers a replay) without exercising the full
+// consumer-rebuild path — that path is covered in re-register-kafka-consumers.test.ts.
+vi.mock("../utils/re-register-kafka-consumers.js", () => ({
+  reRegisterKafkaConsumers: vi.fn().mockResolvedValue(undefined),
 }));
 
 const Kafka = _Kafka as unknown as Mock;
@@ -474,6 +482,79 @@ describe("KafkaDriver", () => {
 
       // Should not have added another "connected" state
       expect(states).toHaveLength(0);
+    });
+
+    it("should re-register consumers when producer reconnects after a drop", async () => {
+      const driver = createDriver();
+      await driver.connect();
+
+      // A broker bounce: producer drops, then reconnects.
+      for (const listener of producerEventListeners.get("producer.disconnect") ?? []) {
+        listener({});
+      }
+      for (const listener of producerEventListeners.get("producer.connect") ?? []) {
+        listener({});
+      }
+
+      await (driver as any)._reconnecting;
+
+      expect(reRegisterKafkaConsumers).toHaveBeenCalledTimes(1);
+      expect(reRegisterKafkaConsumers).toHaveBeenCalledWith(
+        (driver as any).state,
+        expect.anything(),
+      );
+    });
+
+    it("should NOT re-register consumers on a connect event without a prior drop", async () => {
+      const driver = createDriver();
+      await driver.connect();
+
+      // Initial connect (empty registry) must not replay.
+      expect(reRegisterKafkaConsumers).not.toHaveBeenCalled();
+
+      // A stray connect event while already connected is a no-op.
+      for (const listener of producerEventListeners.get("producer.connect") ?? []) {
+        listener({});
+      }
+
+      expect(reRegisterKafkaConsumers).not.toHaveBeenCalled();
+    });
+
+    it("should NOT re-register consumers after a deliberate disconnect", async () => {
+      const driver = createDriver();
+      await driver.connect();
+
+      const disconnectListeners = [
+        ...(producerEventListeners.get("producer.disconnect") ?? []),
+      ];
+      const connectListeners = [
+        ...(producerEventListeners.get("producer.connect") ?? []),
+      ];
+
+      await driver.disconnect();
+
+      // Late producer events after a deliberate disconnect must not replay.
+      for (const listener of disconnectListeners) listener({});
+      for (const listener of connectListeners) listener({});
+
+      expect(reRegisterKafkaConsumers).not.toHaveBeenCalled();
+    });
+
+    it("should replay a non-empty registry at the end of connect()", async () => {
+      const driver = createDriver();
+
+      // Simulate a reused driver whose registry survived a prior disconnect.
+      (driver as any).state.consumerRegistrations.push({
+        consumerTag: "con_reused",
+        groupId: "iris.worker.reused",
+        topic: "iris.reused",
+        onMessage: async () => {},
+        pooled: true,
+      });
+
+      await driver.connect();
+
+      expect(reRegisterKafkaConsumers).toHaveBeenCalledTimes(1);
     });
   });
 

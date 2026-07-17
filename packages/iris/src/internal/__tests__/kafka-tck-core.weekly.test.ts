@@ -12,6 +12,8 @@ import type { KafkaSharedState } from "../drivers/kafka/types/kafka-types.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { waitFor } from "../__fixtures__/tck/wait.js";
+import { stopAllKafkaConsumers } from "../drivers/kafka/utils/stop-kafka-consumer.js";
 import { describe, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 60_000 });
@@ -108,6 +110,21 @@ const factory: TckDriverFactory = {
         if (dlm) await dlm.purge();
       },
 
+      async forceReconnect() {
+        const driver = (source as any)._driver as KafkaDriver;
+        const state = (driver as any).state as KafkaSharedState;
+        // Simulate a broker bounce that kills the consumers, then cycle the
+        // producer so the driver's reconnect handler fires and re-registers
+        // every consumer from the registry. Without the fix the consumers stay
+        // dead and the post-reconnect publish is never consumed.
+        await stopAllKafkaConsumers(state);
+        await state.producer!.disconnect();
+        await state.producer!.connect();
+        await waitFor(() => driver.getConnectionState() === "connected", 20000);
+        const pending = (driver as any)._reconnecting;
+        if (pending) await pending;
+      },
+
       async teardown() {
         // Abort handlers immediately — prevents new message processing.
         // Skip graceful consumer stop (consumer.stop() triggers KafkaJS
@@ -147,5 +164,6 @@ describe("TCK: Kafka (core)", () => {
     "encryption",
     "compression",
     "expiry",
+    "reconnect",
   ]);
 });

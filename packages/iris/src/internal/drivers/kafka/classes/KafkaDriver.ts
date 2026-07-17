@@ -30,6 +30,7 @@ import {
   detachAllKafkaConsumers,
   stopAllKafkaConsumers,
 } from "../utils/stop-kafka-consumer.js";
+import { reRegisterKafkaConsumers } from "../utils/re-register-kafka-consumers.js";
 import { KafkaMessageBus } from "./KafkaMessageBus.js";
 import { KafkaPublisher } from "./KafkaPublisher.js";
 import { KafkaRpcClient } from "./KafkaRpcClient.js";
@@ -68,6 +69,7 @@ export class KafkaDriver implements IIrisDriver {
   private readonly _emitter = new EventEmitter();
   private _replyQueueActive: boolean = false;
   private _deliberateDisconnect: boolean = false;
+  private _reconnecting: Promise<void> | null = null;
   private readonly _producerUnsubscribers: Array<() => void> = [];
 
   constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
@@ -167,6 +169,13 @@ export class KafkaDriver implements IIrisDriver {
 
       this.setConnectionState("connected");
       this.logger.info("Connected");
+
+      // Replay any consumers registered before a disconnect/connect cycle so a
+      // reused driver resumes consuming. On a first connect the registry is
+      // empty, so this is a no-op.
+      if (this.state.consumerRegistrations.length > 0) {
+        await reRegisterKafkaConsumers(this.state, this.logger);
+      }
     } catch (error) {
       this.setConnectionState("disconnected");
       throw error;
@@ -526,6 +535,22 @@ export class KafkaDriver implements IIrisDriver {
       if (this._connectionState === "reconnecting") {
         this.logger.info("Kafka producer reconnected");
         this.setConnectionState("connected");
+
+        // Consumers can die on a broker bounce without KafkaJS restarting
+        // them, so re-establish every registered consumer. Guarded by the
+        // in-flight promise to avoid overlapping replays if CONNECT fires
+        // more than once.
+        if (!this._reconnecting) {
+          this._reconnecting = reRegisterKafkaConsumers(this.state, this.logger)
+            .catch((error) => {
+              this.logger.error("Failed to re-register consumers after reconnect", {
+                error: error instanceof Error ? error.message : String(error),
+              });
+            })
+            .finally(() => {
+              this._reconnecting = null;
+            });
+        }
       }
     });
 

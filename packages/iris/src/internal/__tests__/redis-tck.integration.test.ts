@@ -11,6 +11,7 @@ import type { RedisDriver } from "../drivers/redis/classes/RedisDriver.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { waitFor } from "../__fixtures__/tck/wait.js";
 import { describe, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 60_000 });
@@ -104,6 +105,19 @@ const factory: TckDriverFactory = {
         await driver.reset();
         const dlm = (source as any)._deadLetterManager;
         if (dlm) await dlm.purge();
+      },
+
+      async forceReconnect() {
+        const driver = (source as any)._driver as RedisDriver;
+        const state = (driver as any).state;
+        // Destroy the underlying socket to simulate a network drop; ioredis
+        // auto-reconnects and the driver re-registers consumers on "ready".
+        (state.publishConnection as any)?.stream?.destroy(
+          new Error("tck forced reconnect"),
+        );
+        await waitFor(() => driver.getConnectionState() === "connected", 15000);
+        const pending = (driver as any)._reconnecting;
+        if (pending) await pending;
       },
 
       async teardown() {

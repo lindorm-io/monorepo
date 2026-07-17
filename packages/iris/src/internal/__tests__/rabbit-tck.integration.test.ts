@@ -13,6 +13,7 @@ import type { RabbitDriver } from "../drivers/rabbit/classes/RabbitDriver.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
+import { waitFor } from "../__fixtures__/tck/wait.js";
 import { describe, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 60_000 });
@@ -175,6 +176,22 @@ const factory: TckDriverFactory = {
             // Queue may not exist yet
           }
         }
+      },
+
+      async forceReconnect() {
+        const driver = (source as any)._driver as RabbitDriver;
+        const state = (driver as any).state;
+        // Close the underlying connection WITHOUT going through
+        // driver.disconnect(), so the driver treats it as an unexpected drop
+        // and runs its reconnect + consumer re-registration path.
+        await state.connection.close();
+        await waitFor(
+          () =>
+            driver.getConnectionState() === "connected" &&
+            state.reconnecting === false &&
+            state.consumeChannel != null,
+          20000,
+        );
       },
 
       async teardown() {

@@ -77,6 +77,7 @@ export const createKafkaConsumer = async (
     logger,
     fromBeginning = false,
     abortSignal,
+    consumerTag: reuseConsumerTag,
   } = options;
 
   const consumer = kafka.consumer({
@@ -131,7 +132,7 @@ export const createKafkaConsumer = async (
 
   await readyPromise;
 
-  const consumerTag = randomId({ namespace: "con", length: 16 });
+  const consumerTag = reuseConsumerTag ?? randomId({ namespace: "con", length: 16 });
 
   return {
     consumerTag,

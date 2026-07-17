@@ -1,5 +1,5 @@
 import { randomId } from "@lindorm/random";
-import type { KafkaSharedState } from "../types/kafka-types.js";
+import type { KafkaEachMessagePayload, KafkaSharedState } from "../types/kafka-types.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
@@ -39,6 +39,9 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
 
       if (loopExists) return;
 
+      // The recorded consumer is gone (e.g. crashed) — drop its stale
+      // registration before we re-create below so it isn't replayed twice.
+      if (this.consumerTag) this.deregisterConsumer(this.consumerTag);
       this.running = false;
       this.consumerTag = null;
     }
@@ -73,6 +76,8 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     this.running = true;
     this.paused = false;
 
+    const onMessage = this.createInboundHandler();
+
     const handle = await createKafkaConsumer({
       kafka: this.state.kafka,
       groupId: this.groupId,
@@ -81,14 +86,12 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       logger: this.logger,
       fromBeginning: false,
       abortSignal: this.state.abortController.signal,
-      onMessage: async (payload) => {
-        const envelope = parseKafkaMessage(payload);
-        await this.processInboundData(envelope.payload, envelope.headers, envelope.topic);
-      },
+      onMessage,
     });
 
     this.state.consumers.push(handle);
     this.consumerTag = handle.consumerTag;
+    this.registerConsumer(handle.consumerTag, this.groupId, kafkaTopic, onMessage);
 
     this.logger.debug("Stream pipeline started", {
       consumerTag: this.consumerTag,
@@ -103,6 +106,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     this.paused = false;
 
     if (this.consumerTag) {
+      this.deregisterConsumer(this.consumerTag);
       await stopKafkaConsumer(this.state, this.consumerTag);
       this.consumerTag = null;
     }
@@ -137,6 +141,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     // when we resume we can create a new consumer group that starts from
     // the current end of the partition, skipping messages published during pause.
     if (this.consumerTag) {
+      this.deregisterConsumer(this.consumerTag);
       await stopKafkaConsumer(this.state, this.consumerTag);
       this.consumerTag = null;
     }
@@ -160,6 +165,8 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     // are skipped — only new messages after resume are processed.
     this.groupId = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
 
+    const onMessage = this.createInboundHandler();
+
     const handle = await createKafkaConsumer({
       kafka: this.state.kafka,
       groupId: this.groupId,
@@ -168,14 +175,12 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       logger: this.logger,
       fromBeginning: false,
       abortSignal: this.state.abortController.signal,
-      onMessage: async (payload) => {
-        const envelope = parseKafkaMessage(payload);
-        await this.processInboundData(envelope.payload, envelope.headers, envelope.topic);
-      },
+      onMessage,
     });
 
     this.state.consumers.push(handle);
     this.consumerTag = handle.consumerTag;
+    this.registerConsumer(handle.consumerTag, this.groupId, kafkaTopic, onMessage);
 
     // Brief delay to allow the consumer's fetch loop to initialize after GROUP_JOIN.
     // Without this, messages published immediately after resume() may arrive before
@@ -183,6 +188,40 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     await new Promise((resolve) => setTimeout(resolve, 200));
 
     this.logger.debug("Stream pipeline resumed", { consumerTag: this.consumerTag });
+  }
+
+  private createInboundHandler(): (payload: KafkaEachMessagePayload) => Promise<void> {
+    return async (payload: KafkaEachMessagePayload): Promise<void> => {
+      const envelope = parseKafkaMessage(payload);
+      await this.processInboundData(envelope.payload, envelope.headers, envelope.topic);
+    };
+  }
+
+  // Register the dedicated pipeline consumer in the driver's registry so it is
+  // re-established on reconnect. Marked pooled:false — the pipeline owns a
+  // dedicated (non-pooled) consumer, and the tag is reused on rebuild so this
+  // instance's cached consumerTag stays valid.
+  private registerConsumer(
+    consumerTag: string,
+    groupId: string,
+    topic: string,
+    onMessage: (payload: KafkaEachMessagePayload) => Promise<void>,
+  ): void {
+    this.state.consumerRegistrations.push({
+      consumerTag,
+      groupId,
+      topic,
+      onMessage,
+      pooled: false,
+      fromBeginning: false,
+    });
+  }
+
+  private deregisterConsumer(consumerTag: string): void {
+    const idx = this.state.consumerRegistrations.findIndex(
+      (r) => r.consumerTag === consumerTag,
+    );
+    if (idx !== -1) this.state.consumerRegistrations.splice(idx, 1);
   }
 
   protected async doPublishEnvelope(

@@ -11,6 +11,12 @@ export type CreateKafkaConsumerOptions = {
   logger: ILogger;
   fromBeginning?: boolean;
   abortSignal?: AbortSignal;
+  /**
+   * Reuse an existing consumer tag instead of minting a new one. Used when
+   * re-establishing a consumer on reconnect so the owning instance's cached
+   * tag stays valid (see reRegisterKafkaConsumers).
+   */
+  consumerTag?: string;
 };
 
 export type GetOrCreatePooledConsumerOptions = {
@@ -170,7 +176,19 @@ export type KafkaConsumerRegistration = {
   consumerTag: string;
   groupId: string;
   topic: string;
+  /**
+   * The real consumer handler, replayed verbatim on reconnect. Must NOT be a
+   * no-op: the registry is the sole source of truth for re-establishing this
+   * consumer after a broker bounce (see reRegisterKafkaConsumers).
+   */
   onMessage: (payload: KafkaEachMessagePayload) => Promise<void>;
+  /**
+   * `true` for consumers created via the shared consumer pool (message bus,
+   * worker queue, RPC server); `false` for dedicated consumers (stream
+   * pipeline). Decides which factory rebuilds the consumer on reconnect.
+   */
+  pooled: boolean;
+  fromBeginning?: boolean;
 };
 
 export type KafkaPooledConsumer = {

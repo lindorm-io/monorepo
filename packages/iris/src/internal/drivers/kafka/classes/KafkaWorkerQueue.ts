@@ -192,18 +192,25 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       fromBeginning: false,
     });
 
+    // Record the REAL handlers so the driver can rebuild these consumers on
+    // reconnect. Storing a no-op here would leave the driver "connected" but
+    // silently consuming nothing after a broker bounce (H6/D4).
     this.state.consumerRegistrations.push({
       consumerTag: mainConsumerTag,
       groupId,
       topic: kafkaTopic,
-      onMessage: async () => {},
+      onMessage,
+      pooled: true,
+      fromBeginning: false,
     });
 
     this.state.consumerRegistrations.push({
       consumerTag: broadcastConsumerTag,
       groupId: broadcastGroupId,
       topic: broadcastTopic,
-      onMessage: async () => {},
+      onMessage: broadcastOnMessage,
+      pooled: true,
+      fromBeginning: false,
     });
 
     const existing = this.ownedConsumers.get(queue) ?? [];

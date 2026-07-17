@@ -117,6 +117,7 @@ export class KafkaRpcServer<
       groupId,
       topic: kafkaTopic,
       onMessage,
+      pooled: true,
     });
 
     this.ownedConsumers.set(queue, {

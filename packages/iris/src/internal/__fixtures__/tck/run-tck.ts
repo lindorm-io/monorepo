@@ -26,6 +26,7 @@ import { expirySuite } from "./expiry.tck.js";
 import { headersSuite } from "./headers.tck.js";
 import { decoratorCoverageSuite } from "./decorator-coverage.tck.js";
 import { errorResilienceSuite } from "./error-resilience.tck.js";
+import { reconnectSuite } from "./reconnect.tck.js";
 import { afterAll, beforeAll, describe } from "vitest";
 
 const maybeDescribe = (flag: boolean, name: string, fn: () => void) => {
@@ -130,6 +131,13 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
   if (shouldRun("compression"))
     maybeDescribe(caps.compression, "compression", () =>
       compressionSuite(getHandle, messages, timeoutMs),
+    );
+
+  // Reconnect: gated on worker-queue support AND a driver-provided
+  // forceReconnect() (the suite self-skips when the handle lacks it).
+  if (shouldRun("reconnect"))
+    maybeDescribe(caps.workerQueue, "reconnect", () =>
+      reconnectSuite(getHandle, messages, timeoutMs),
     );
 
   // Always-on: expiry, headers, decorator coverage, and error resilience require no special driver support

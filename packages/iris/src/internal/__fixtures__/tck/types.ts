@@ -90,6 +90,13 @@ export type TckDriverHandle = {
   getDeadLetters(topic?: string): Promise<Array<DeadLetterEntry>>;
   clear(): Promise<void>;
   teardown(): Promise<void>;
+  /**
+   * Force a real broker reconnect (drop + restore the transport) and resolve
+   * once the driver has reconnected and re-established its consumers. Optional:
+   * only drivers that can deterministically force a reconnect implement it; the
+   * reconnect suite skips itself when it is absent.
+   */
+  forceReconnect?(): Promise<void>;
 };
 
 export type TckDriverFactory = {
