@@ -6,7 +6,7 @@ import {
 } from "@lindorm/kryptos";
 import type { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { RsaError } from "../errors/index.js";
-import type { RsaKitOptions } from "../types/index.js";
+import type { RsaKitSettings } from "../types/index.js";
 import {
   assertRsaSignature,
   createRsaSignature,
@@ -18,7 +18,7 @@ export class RsaKit implements IKeyKit {
   private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosRsa;
 
-  constructor(options: RsaKitOptions) {
+  constructor(options: RsaKitSettings) {
     this.dsa = options.dsa ?? "der";
     this.encoding = options.encoding ?? "base64";
 

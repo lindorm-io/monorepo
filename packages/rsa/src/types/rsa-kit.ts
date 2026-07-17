@@ -15,7 +15,7 @@ export type VerifyRsaSignatureOptions = {
   signature: KeyData;
 };
 
-export type RsaKitOptions = {
+export type RsaKitSettings = {
   dsa?: DsaEncoding;
   encoding?: BufferEncoding;
   kryptos: IKryptos;
