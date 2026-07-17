@@ -18,6 +18,5 @@ export type PublishOptions = {
   delay?: number;
   priority?: number;
   expiry?: number;
-  key?: string;
   headers?: Record<string, string>;
 };
