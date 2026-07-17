@@ -110,25 +110,12 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     this.groupId = null;
   }
 
-  async pause(): Promise<void> {
-    if (this.paused) return;
-
-    this.clearBatchTimer();
-
-    await this.doFlushBatchBuffer();
-
-    this.paused = true;
-
-    // Stop the consumer entirely on pause (not just Kafka pause) so that
-    // when we resume we can create a new consumer group that starts from
-    // the current end of the partition, skipping messages published during pause.
-    if (this.consumerTag) {
-      this.deregisterConsumer(this.consumerTag);
-      await stopKafkaConsumer(this.state, this.consumerTag);
-      this.consumerTag = null;
-    }
-
-    this.logger.debug("Stream pipeline paused");
+  // Stop the consumer entirely on pause (not just Kafka pause) so that when we
+  // resume we create a new consumer group starting at the current end of the
+  // partition, skipping messages published during pause. Identical to the stop
+  // teardown, so delegate. (The base owns the batch-flush + timer-clear.)
+  protected async doPauseConsumer(): Promise<void> {
+    await this.doStopConsumer();
   }
 
   async resume(): Promise<void> {

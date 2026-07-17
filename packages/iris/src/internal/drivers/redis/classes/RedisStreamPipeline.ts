@@ -85,21 +85,11 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
     this.groupName = null;
   }
 
-  async pause(): Promise<void> {
-    if (this.paused) return;
-
-    this.clearBatchTimer();
-
-    await this.doFlushBatchBuffer();
-
-    this.paused = true;
-
-    if (this.consumerTag) {
-      await stopConsumerLoop(this.state, this.consumerTag);
-      this.consumerTag = null;
-    }
-
-    this.logger.debug("Stream pipeline paused");
+  // Pause tears the consumer group down exactly as stop does (a fresh group at
+  // "$" is created on resume), so delegate. The base owns the batch-flush +
+  // timer-clear.
+  protected async doPauseConsumer(): Promise<void> {
+    await this.doStopConsumer();
   }
 
   async resume(): Promise<void> {

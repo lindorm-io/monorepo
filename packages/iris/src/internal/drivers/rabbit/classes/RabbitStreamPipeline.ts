@@ -127,38 +127,38 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     }
   }
 
-  async pause(): Promise<void> {
-    if (this.paused) return;
-    this.paused = true;
+  // On pause, unbind the exclusive queue (so no new messages arrive during the
+  // pause window) and cancel the consumer. The base owns the batch-flush +
+  // timer-clear — previously rabbit did neither, stranding buffered messages and
+  // leaking the batch timer (M8). subscribedRoutingKey is retained so resume can
+  // re-assert a fresh queue binding.
+  protected async doPauseConsumer(): Promise<void> {
+    if (!this.consumerTag) return;
 
-    if (this.consumerTag) {
-      const channel = this.state.consumeChannel;
-      if (channel) {
-        if (this.subscribedQueue && this.subscribedRoutingKey) {
-          try {
-            await channel.unbindQueue(
-              this.subscribedQueue,
-              this.state.exchange,
-              this.subscribedRoutingKey,
-            );
-          } catch {
-            // Queue may already be gone
-          }
-        }
+    const channel = this.state.consumeChannel;
+    if (channel) {
+      if (this.subscribedQueue && this.subscribedRoutingKey) {
         try {
-          await channel.cancel(this.consumerTag);
+          await channel.unbindQueue(
+            this.subscribedQueue,
+            this.state.exchange,
+            this.subscribedRoutingKey,
+          );
         } catch {
-          // Channel may already be closed
+          // Queue may already be gone
         }
       }
-
-      this.state.consumerRegistrations = this.state.consumerRegistrations.filter(
-        (r) => r.consumerTag !== this.consumerTag,
-      );
-      this.consumerTag = null;
+      try {
+        await channel.cancel(this.consumerTag);
+      } catch {
+        // Channel may already be closed
+      }
     }
 
-    this.logger.debug("Stream pipeline paused");
+    this.state.consumerRegistrations = this.state.consumerRegistrations.filter(
+      (r) => r.consumerTag !== this.consumerTag,
+    );
+    this.consumerTag = null;
   }
 
   async resume(): Promise<void> {

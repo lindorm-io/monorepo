@@ -40,6 +40,7 @@ const createMockLogger = () => ({
 class TestStreamPipeline extends DriverStreamPipelineBase {
   public readonly publishedEnvelopes: Array<{ envelope: IrisEnvelope; topic: string }> =
     [];
+  public doPauseConsumerCalls = 0;
 
   public constructor(options: DriverStreamPipelineBaseOptions) {
     super(options);
@@ -54,8 +55,10 @@ class TestStreamPipeline extends DriverStreamPipelineBase {
     // No real consumer to tear down in the test double.
   }
 
-  public async pause(): Promise<void> {
-    this.paused = true;
+  // Exercise the SHARED base pause() rather than overriding it — the base owns
+  // clear-timer + flush-partial-batch + paused, and calls this hook.
+  protected async doPauseConsumer(): Promise<void> {
+    this.doPauseConsumerCalls++;
   }
 
   public async resume(): Promise<void> {
@@ -364,6 +367,62 @@ describe("DriverStreamPipelineBase", () => {
 
       // Buffer should have been flushed
       expect(pipelineAny.batchBuffer).toHaveLength(0);
+    });
+  });
+
+  describe("pause()", () => {
+    const batchStages = [
+      { type: "batch" as const, size: 5 },
+      {
+        type: "map" as const,
+        transform: (batch: any) => ({ doubled: batch.length, label: "flushed" }),
+      },
+    ];
+
+    it("should flush a partial (under-size) batch and clear the batch timer (M8)", async () => {
+      const pipeline = new TestStreamPipeline({
+        logger: createMockLogger() as any,
+        stages: batchStages,
+        inputClass: TckPipeBaseIn as any,
+        outputClass: TckPipeBaseOut as any,
+      });
+
+      await pipeline.start();
+
+      const p = pipeline as any;
+      // Seed a partial batch (under size 5) and arm the flush timer.
+      p.batchBuffer.push({ doubled: 1, label: "a" });
+      p.resetBatchTimer({ size: 5, timeout: 10_000 });
+      expect(p.batchTimer).not.toBeNull();
+
+      await pipeline.pause();
+
+      // The armed timer must be cleared — rabbit previously leaked it on pause.
+      expect(p.batchTimer).toBeNull();
+      // The partial batch must be flushed, not stranded — rabbit/memory
+      // previously held it, diverging from kafka/nats/redis.
+      expect(p.batchBuffer).toHaveLength(0);
+      expect(pipeline.publishedEnvelopes).toHaveLength(1);
+      expect(pipeline.publishedEnvelopes[0].topic).toBe("TckPipeBaseOut");
+      // The broker-specific teardown hook ran exactly once.
+      expect(pipeline.doPauseConsumerCalls).toBe(1);
+      expect(pipeline.isRunning()).toBe(false);
+    });
+
+    it("should be idempotent (second pause is a no-op)", async () => {
+      const pipeline = new TestStreamPipeline({
+        logger: createMockLogger() as any,
+        stages: [],
+        inputClass: TckPipeBaseIn as any,
+        outputClass: TckPipeBaseOut as any,
+      });
+
+      await pipeline.start();
+      await pipeline.pause();
+      await pipeline.pause();
+
+      expect(pipeline.doPauseConsumerCalls).toBe(1);
+      expect(pipeline.isRunning()).toBe(false);
     });
   });
 

@@ -117,32 +117,11 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     }
   }
 
-  async pause(): Promise<void> {
-    if (this.paused) return;
-
-    this.clearBatchTimer();
-
-    await this.doFlushBatchBuffer();
-
-    this.paused = true;
-
-    if (this.consumerTag) {
-      await stopNatsConsumer(this.state, this.consumerTag);
-
-      if (this.consumerName && this.state.jsm) {
-        try {
-          await this.state.jsm.consumers.delete(this.state.streamName, this.consumerName);
-        } catch {
-          // ignore
-        }
-        this.state.ensuredConsumers.delete(this.consumerName);
-      }
-
-      this.consumerTag = null;
-      this.consumerName = null;
-    }
-
-    this.logger.debug("Stream pipeline paused");
+  // Pause tears the consumer down exactly as stop does (a fresh consumer at
+  // deliver-policy "new" is created on resume), so delegate. The base owns the
+  // batch-flush + timer-clear.
+  protected async doPauseConsumer(): Promise<void> {
+    await this.doStopConsumer();
   }
 
   async resume(): Promise<void> {

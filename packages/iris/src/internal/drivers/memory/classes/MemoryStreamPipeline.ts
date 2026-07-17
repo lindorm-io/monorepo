@@ -80,9 +80,12 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
     super.clearBatchTimer();
   }
 
-  async pause(): Promise<void> {
-    this.paused = true;
-    this.logger.debug("Stream pipeline paused");
+  // Memory keeps its subscription on pause — the base's `paused` flag gates
+  // delivery (processStreamMessage early-returns while paused) — so there is no
+  // consumer to tear down. The base still clears the batch timer and flushes any
+  // partial batch on pause (M8), matching every other driver.
+  protected async doPauseConsumer(): Promise<void> {
+    // No-op: nothing to tear down.
   }
 
   async resume(): Promise<void> {

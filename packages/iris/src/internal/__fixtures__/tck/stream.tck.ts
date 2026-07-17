@@ -519,6 +519,68 @@ export const streamSuite = (
       await pipeline.stop();
     });
 
+    test("pause flushes a partial (under-size) batch — identical across drivers (M8)", async () => {
+      const handle = getHandle();
+      const { TckStreamInput, TckStreamOutput } = messages;
+
+      const bus = handle.messageBus(TckStreamOutput);
+      const outputReceived: Array<any> = [];
+
+      await bus.subscribe({
+        topic: "TckStreamOutput",
+        callback: async (msg) => {
+          outputReceived.push(msg);
+        },
+      });
+
+      // A map BEFORE the batch records receipt so the test can deterministically
+      // wait until both messages are buffered (not a timing guess) before pausing.
+      const consumed: Array<string> = [];
+      const pipeline = handle
+        .stream()
+        .from(TckStreamInput)
+        .map((msg: any) => {
+          consumed.push(msg.value);
+          return msg;
+        })
+        .batch(5)
+        .map((batch: any) => ({
+          value: batch
+            .map((m: any) => m.value)
+            .sort()
+            .join(","),
+          score: batch.length,
+        }))
+        .to(TckStreamOutput);
+
+      await pipeline.start();
+      await wait(200);
+
+      const inputBus = handle.messageBus(TckStreamInput);
+      await inputBus.publish(inputBus.create({ value: "m8-a", score: 1 } as any));
+      await inputBus.publish(inputBus.create({ value: "m8-b", score: 2 } as any));
+
+      // Both consumed => both sit in the under-size (5) batch buffer. No batch
+      // timeout is configured, so nothing flushes on its own.
+      await waitFor(
+        () => consumed.includes("m8-a") && consumed.includes("m8-b"),
+        timeoutMs,
+      );
+      expect(outputReceived.filter((m) => m.score === 2)).toHaveLength(0);
+
+      // Pausing must flush the partial batch — a paused pipeline should never
+      // strand buffered messages. kafka/nats/redis already flushed on pause;
+      // rabbit/memory did not (and rabbit leaked its batch timer). Now identical.
+      await pipeline.pause();
+
+      await waitFor(() => outputReceived.some((m) => m.score === 2), timeoutMs);
+      const flushed = outputReceived.filter((m) => m.score === 2);
+      expect(flushed).toHaveLength(1);
+      expect(flushed[0].value).toBe("m8-a,m8-b");
+
+      await pipeline.stop();
+    });
+
     test("resume then immediately publish: message is consumed, not dropped in the join window (M7)", async () => {
       const handle = getHandle();
       const { TckStreamInput, TckStreamOutput } = messages;

@@ -68,8 +68,35 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
   }
 
   abstract start(): Promise<void>;
-  abstract pause(): Promise<void>;
   abstract resume(): Promise<void>;
+
+  /**
+   * Shared pause sequence. Each driver only supplies {@link doPauseConsumer}
+   * (its broker-specific consumer teardown); the base owns the ordering that
+   * drivers used to re-implement divergently (M8): clear the batch timer, flush
+   * any partially-buffered batch, mark paused, then tear the consumer down.
+   *
+   * The contract is **flush-then-pause**: a paused pipeline must never strand
+   * buffered messages, mirroring {@link stop}. Previously kafka/nats/redis
+   * flushed on pause but rabbit/memory did not — and rabbit additionally leaked
+   * its `batchTimer` (never cleared) — so the same input produced divergent
+   * output across drivers. Clearing the timer here fixes that leak everywhere.
+   */
+  async pause(): Promise<void> {
+    if (this.paused) return;
+
+    this.clearBatchTimer();
+
+    // Flush while still running+unpaused so flushBatchBuffer's guard permits it
+    // and the partial batch is delivered before input stops.
+    await this.flushBatchBuffer();
+
+    this.paused = true;
+
+    await this.doPauseConsumer();
+
+    this.logger.debug("Stream pipeline paused");
+  }
 
   /**
    * Shared stop sequence. Each driver only supplies {@link doStopConsumer} (its
@@ -107,6 +134,15 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
    * and clear the cached consumer identifiers). Called by {@link stop}.
    */
   protected abstract doStopConsumer(): Promise<void>;
+
+  /**
+   * Broker-specific teardown of the running consumer on {@link pause}. For most
+   * drivers this is identical to {@link doStopConsumer} (stop the consumer, drop
+   * its identifiers) — they simply delegate. Rabbit additionally unbinds its
+   * exclusive queue; memory keeps its subscription (its paused flag gates
+   * delivery), so its hook is a no-op.
+   */
+  protected abstract doPauseConsumer(): Promise<void>;
 
   protected clearBatchTimer(): void {
     if (this.batchTimer) {
