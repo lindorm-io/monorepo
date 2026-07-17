@@ -28,7 +28,6 @@ export type IrisPersistenceDeadLetterConfig =
   | { type: "custom"; store: IDeadLetterStore };
 
 export type IrisPersistenceOptions = {
-  redisUrl?: string;
   delay?: IrisPersistenceDelayConfig;
   deadLetter?: IrisPersistenceDeadLetterConfig;
 };
