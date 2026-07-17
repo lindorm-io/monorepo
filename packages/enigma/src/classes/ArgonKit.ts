@@ -1,6 +1,6 @@
 import { type IKryptosOct, KryptosKit } from "@lindorm/kryptos";
 import { ArgonError } from "../errors/index.js";
-import type { ArgonKitOptions } from "../types/index.js";
+import type { ArgonKitSettings } from "../types/index.js";
 import { assertArgonHash, createArgonHash, verifyArgonHash } from "../internal/index.js";
 
 export class ArgonKit {
@@ -10,7 +10,7 @@ export class ArgonKit {
   private readonly kryptos: IKryptosOct | undefined;
   private readonly timeCost: number | undefined;
 
-  constructor(options: ArgonKitOptions = {}) {
+  constructor(options: ArgonKitSettings = {}) {
     this.hashLength = options?.hashLength;
     this.memoryCost = options?.memoryCost;
     this.parallelism = options?.parallelism;

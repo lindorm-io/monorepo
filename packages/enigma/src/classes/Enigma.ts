@@ -1,7 +1,7 @@
 import { AesKit } from "@lindorm/aes";
 import { OctKit } from "@lindorm/oct";
 import { EnigmaError } from "../errors/index.js";
-import type { EnigmaOptions } from "../types/index.js";
+import type { EnigmaSettings } from "../types/index.js";
 import { ArgonKit } from "./ArgonKit.js";
 
 export class Enigma {
@@ -9,7 +9,7 @@ export class Enigma {
   private argon: ArgonKit;
   private oct: OctKit;
 
-  constructor(options: EnigmaOptions) {
+  constructor(options: EnigmaSettings) {
     this.aes = new AesKit(options.aes);
     this.argon = new ArgonKit(options.argon);
     this.oct = new OctKit(options.oct);

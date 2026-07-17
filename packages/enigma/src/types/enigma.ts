@@ -1,9 +1,9 @@
 import type { AesKitSettings } from "@lindorm/aes";
 import type { OctKitSettings } from "@lindorm/oct";
-import type { ArgonKitOptions } from "./argon-kit.js";
+import type { ArgonKitSettings } from "./argon-kit.js";
 
-export type EnigmaOptions = {
+export type EnigmaSettings = {
   aes: AesKitSettings;
-  argon?: ArgonKitOptions;
+  argon?: ArgonKitSettings;
   oct: OctKitSettings;
 };

@@ -15,7 +15,7 @@ export type VerifyArgonHashOptions = {
   kryptos?: IKryptosOct;
 };
 
-export type ArgonKitOptions = {
+export type ArgonKitSettings = {
   hashLength?: number;
   kryptos?: IKryptos;
   memoryCost?: number;

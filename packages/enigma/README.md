@@ -87,7 +87,7 @@ const enigma = new Enigma({
 
 ### `class ArgonKit`
 
-`new ArgonKit(options?: ArgonKitOptions)`.
+`new ArgonKit(options?: ArgonKitSettings)`.
 
 | Option        | Type          | Default | Notes                                                                              |
 | ------------- | ------------- | ------- | ---------------------------------------------------------------------------------- |
@@ -105,15 +105,15 @@ Methods (all async):
 
 ### `class Enigma`
 
-`new Enigma(options: EnigmaOptions)`.
+`new Enigma(options: EnigmaSettings)`.
 
-`EnigmaOptions`:
+`EnigmaSettings`:
 
-| Field   | Type              | Required | Notes                                                                                         |
-| ------- | ----------------- | -------- | --------------------------------------------------------------------------------------------- |
-| `aes`   | `AesKitSettings`  | yes      | Forwarded to `AesKit` from `@lindorm/aes`. Must include a `kryptos` key suitable for AES.     |
-| `oct`   | `OctKitSettings`  | yes      | Forwarded to `OctKit` from `@lindorm/oct`. Must include a `kryptos` OCT key for HMAC signing. |
-| `argon` | `ArgonKitOptions` | no       | Forwarded to the inner `ArgonKit` (see above).                                                |
+| Field   | Type               | Required | Notes                                                                                         |
+| ------- | ------------------ | -------- | --------------------------------------------------------------------------------------------- |
+| `aes`   | `AesKitSettings`   | yes      | Forwarded to `AesKit` from `@lindorm/aes`. Must include a `kryptos` key suitable for AES.     |
+| `oct`   | `OctKitSettings`   | yes      | Forwarded to `OctKit` from `@lindorm/oct`. Must include a `kryptos` OCT key for HMAC signing. |
+| `argon` | `ArgonKitSettings` | no       | Forwarded to the inner `ArgonKit` (see above).                                                |
 
 Methods (all async):
 
@@ -130,7 +130,7 @@ Both extend `LindormError` from `@lindorm/errors`.
 
 ### Exported types
 
-`ArgonKitOptions`, `EnigmaOptions`, `CreateArgonHashOptions`, and `VerifyArgonHashOptions` are exported from the package root.
+`ArgonKitSettings`, `EnigmaSettings`, `CreateArgonHashOptions`, and `VerifyArgonHashOptions` are exported from the package root.
 
 ## License
 
