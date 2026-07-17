@@ -13,7 +13,7 @@ export type VerifyOctSignatureOptions = {
   signature: KeyData;
 };
 
-export type OctKitOptions = {
+export type OctKitSettings = {
   encoding?: BufferEncoding;
   kryptos: IKryptos;
 };

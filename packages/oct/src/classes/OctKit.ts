@@ -6,7 +6,7 @@ import {
 } from "@lindorm/kryptos";
 import type { IKeyKit, KeyData } from "@lindorm/types";
 import { OctError } from "../errors/index.js";
-import type { OctKitOptions } from "../types/index.js";
+import type { OctKitSettings } from "../types/index.js";
 import {
   assertOctSignature,
   createOctSignature,
@@ -17,7 +17,7 @@ export class OctKit implements IKeyKit {
   private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosOct;
 
-  constructor(options: OctKitOptions) {
+  constructor(options: OctKitSettings) {
     this.encoding = options.encoding ?? "base64";
 
     if (!KryptosKit.isOct(options.kryptos)) {
