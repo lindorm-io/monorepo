@@ -13,7 +13,7 @@ export type VerifyAkpSignatureOptions = {
   signature: KeyData;
 };
 
-export type AkpKitOptions = {
+export type AkpKitSettings = {
   encoding?: BufferEncoding;
   kryptos: IKryptos;
 };

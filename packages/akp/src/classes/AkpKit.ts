@@ -1,7 +1,7 @@
 import { type IKryptosAkp, KryptosKit } from "@lindorm/kryptos";
 import type { IKeyKit, KeyData } from "@lindorm/types";
 import { AkpError } from "../errors/index.js";
-import type { AkpKitOptions } from "../types/index.js";
+import type { AkpKitSettings } from "../types/index.js";
 import {
   assertAkpSignature,
   createAkpSignature,
@@ -12,7 +12,7 @@ export class AkpKit implements IKeyKit {
   private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosAkp;
 
-  constructor(options: AkpKitOptions) {
+  constructor(options: AkpKitSettings) {
     this.encoding = options.encoding ?? "base64";
 
     if (!KryptosKit.isAkp(options.kryptos)) {

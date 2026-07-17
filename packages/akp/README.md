@@ -53,7 +53,7 @@ The constructor calls `KryptosKit.isAkp(...)` on the supplied key. Any non-AKP k
 
 ```typescript
 class AkpKit implements IKeyKit {
-  constructor(options: AkpKitOptions);
+  constructor(options: AkpKitSettings);
   sign(data: KeyData): Buffer;
   verify(data: KeyData, signature: KeyData): boolean;
   assert(data: KeyData, signature: KeyData): void;
@@ -77,7 +77,7 @@ If the kryptos key was created without a private half, calling `sign` throws `Ak
 ### Exported types
 
 ```typescript
-import type { AkpKitOptions } from "@lindorm/akp";
+import type { AkpKitSettings } from "@lindorm/akp";
 ```
 
 `CreateAkpSignatureOptions` and `VerifyAkpSignatureOptions` are also exported for consumers who need to mirror the underlying signature contract.
