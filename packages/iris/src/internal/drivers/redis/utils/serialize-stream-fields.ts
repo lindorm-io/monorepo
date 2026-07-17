@@ -1,40 +1,17 @@
+import { encodeScalarFields } from "../../../codec/flat-hash-codec.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 
-export const serializeStreamFields = (envelope: IrisEnvelope): Array<string> => {
-  return [
-    "payload",
-    envelope.payload.toString("base64"),
-    "headers",
-    JSON.stringify(envelope.headers),
-    "topic",
-    envelope.topic,
-    "attempt",
-    String(envelope.attempt),
-    "maxRetries",
-    String(envelope.maxRetries),
-    "retryStrategy",
-    envelope.retryStrategy,
-    "retryDelay",
-    String(envelope.retryDelay),
-    "retryDelayMax",
-    String(envelope.retryDelayMax),
-    "retryMultiplier",
-    String(envelope.retryMultiplier),
-    "retryJitter",
-    String(envelope.retryJitter),
-    "priority",
-    String(envelope.priority),
-    "timestamp",
-    String(envelope.timestamp),
-    "expiry",
-    envelope.expiry !== null ? String(envelope.expiry) : "",
-    "broadcast",
-    String(envelope.broadcast),
-    "replyTo",
-    envelope.replyTo ?? "",
-    "correlationId",
-    envelope.correlationId ?? "",
-    "identifierValue",
-    envelope.identifierValue ?? "",
-  ];
-};
+/**
+ * Flat-hash wire shape for Redis streams: `payload` (base64) and `headers`
+ * (JSON) as structural fields, then every scalar field/value pair (via the
+ * shared codec). `identifierValue` is deliberately NOT carried — it is
+ * Kafka-only ordering metadata that was dead payload here (see
+ * {@link IdentifierField}, M12).
+ */
+export const serializeStreamFields = (envelope: IrisEnvelope): Array<string> => [
+  "payload",
+  envelope.payload.toString("base64"),
+  "headers",
+  JSON.stringify(envelope.headers),
+  ...encodeScalarFields(envelope),
+];

@@ -62,6 +62,18 @@ describe("parseNatsMessage", () => {
     expect(parsed).toMatchSnapshot();
   });
 
+  // M12: identifierValue is Kafka-only ordering metadata and is NOT carried on
+  // the NATS wire — a producer that sets it is not readable by the consumer.
+  it("should never carry identifierValue on the wire (M12)", () => {
+    const { data } = serializeNatsMessage(
+      createEnvelope({ identifierValue: "id-456" }),
+      mockHeadersInit,
+    );
+    const json = JSON.parse(new TextDecoder().decode(data));
+    expect("identifierValue" in json).toBe(false);
+    expect(parseNatsMessage(data).identifierValue).toBeNull();
+  });
+
   it("should handle missing/empty fields gracefully", () => {
     const data = new TextEncoder().encode(JSON.stringify({ topic: "test" }));
     const result = parseNatsMessage(data);

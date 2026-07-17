@@ -33,7 +33,7 @@ export const wrapRabbitConsumer = <M extends IMessage>(
     if (!channel) return;
 
     const parsed = parseAmqpHeaders(msg);
-    const envelope = buildRabbitEnvelope(parsed, metadata);
+    const envelope = buildRabbitEnvelope(parsed);
 
     // Dead-letter to the DLX explicitly (then ack the original), rather than
     // relying on a queue-level x-dead-letter-exchange. Consumer queues (worker,

@@ -27,15 +27,9 @@ export const parseAmqpHeaders = (msg: ConsumeMessage): ParsedAmqpMessage => {
   return {
     payload: msg.content,
     headers: userHeaders,
-    envelope: {
-      topic: msg.fields.routingKey,
-      timestamp: msg.properties.timestamp ?? Date.now(),
-      attempt: Number(irisHeaders["x-iris-attempt"] ?? 0),
-      correlationId: irisHeaders["x-iris-correlation-id"] ?? null,
-      replyTo: irisHeaders["x-iris-reply-to"] ?? null,
-      expiry: irisHeaders["x-iris-expiry"] ? Number(irisHeaders["x-iris-expiry"]) : null,
-      broadcast: irisHeaders["x-iris-broadcast"] === "true",
-      priority: msg.properties.priority ?? 0,
-    },
+    irisHeaders,
+    priority: msg.properties.priority ?? 0,
+    timestamp: msg.properties.timestamp ?? Date.now(),
+    routingKey: msg.fields.routingKey,
   };
 };

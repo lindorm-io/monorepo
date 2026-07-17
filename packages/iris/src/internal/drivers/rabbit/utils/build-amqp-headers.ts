@@ -1,4 +1,6 @@
 import type { Options } from "amqplib";
+import { RABBIT_HEADER_SPECS } from "../../../codec/envelope-field-table.js";
+import { encodeScalarHeaders } from "../../../codec/header-map-codec.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import type { AmqpPublishConfig } from "../types/rabbit-types.js";
 import { sanitizeRoutingKey } from "./sanitize-routing-key.js";
@@ -15,13 +17,14 @@ export const buildAmqpHeaders = (
     type?: string;
   },
 ): AmqpPublishConfig => {
-  const headers: Record<string, string | number> = { ...userHeaders };
-
-  headers["x-iris-attempt"] = envelope.attempt;
-  if (envelope.correlationId) headers["x-iris-correlation-id"] = envelope.correlationId;
-  if (envelope.replyTo) headers["x-iris-reply-to"] = envelope.replyTo;
-  if (envelope.expiry !== null) headers["x-iris-expiry"] = envelope.expiry;
-  if (envelope.broadcast) headers["x-iris-broadcast"] = "true";
+  // Every scalar except topic/priority/timestamp travels as an `x-iris-*` header
+  // (via the shared codec) — including the full retry-policy set, so retry
+  // policy is producer-authoritative (M2). topic/priority/timestamp ride the
+  // AMQP-native slots below.
+  const headers: Record<string, string | number> = {
+    ...userHeaders,
+    ...encodeScalarHeaders(envelope, RABBIT_HEADER_SPECS),
+  };
 
   const properties: Options.Publish = {
     headers,

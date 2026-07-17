@@ -106,6 +106,12 @@ describe("serializeStreamFields", () => {
     }
   });
 
+  // M12: identifierValue is Kafka-only ordering metadata — never on the wire.
+  it("should not serialize identifierValue", () => {
+    const result = serializeStreamFields(createEnvelope({ identifierValue: "id-456" }));
+    expect(result).not.toContain("identifierValue");
+  });
+
   it("should serialize a fully populated envelope", () => {
     const result = serializeStreamFields(
       createEnvelope({

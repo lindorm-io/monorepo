@@ -61,4 +61,14 @@ describe("serializeNatsMessage", () => {
     const parsed = JSON.parse(new TextDecoder().decode(result.data));
     expect(parsed).toMatchSnapshot();
   });
+
+  // M12: identifierValue is Kafka-only ordering metadata — never on the wire.
+  it("should not serialize identifierValue", () => {
+    const result = serializeNatsMessage(
+      createEnvelope({ identifierValue: "id-456" }),
+      mockHeadersInit,
+    );
+    const parsed = JSON.parse(new TextDecoder().decode(result.data));
+    expect("identifierValue" in parsed).toBe(false);
+  });
 });

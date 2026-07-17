@@ -348,9 +348,12 @@ describe("wrapRabbitConsumer", () => {
 
       const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
 
+      // Retry policy is producer-authoritative — it must travel on the wire
+      // (x-iris headers), not be re-derived from the consumer metadata (M2).
       const msg = createConsumeMessage({
         headers: {
           "x-iris-attempt": "0",
+          "x-iris-max-retries": "3",
         },
       });
       await wrapped(msg);
@@ -395,7 +398,7 @@ describe("wrapRabbitConsumer", () => {
       const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
 
       const msg = createConsumeMessage({
-        headers: { "x-iris-attempt": "0" },
+        headers: { "x-iris-attempt": "0", "x-iris-max-retries": "2" },
       });
       await wrapped(msg);
 
@@ -423,7 +426,7 @@ describe("wrapRabbitConsumer", () => {
       const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
 
       const msg = createConsumeMessage({
-        headers: { "x-iris-attempt": "0" },
+        headers: { "x-iris-attempt": "0", "x-iris-max-retries": "3" },
       });
       await wrapped(msg);
 
@@ -453,13 +456,14 @@ describe("wrapRabbitConsumer", () => {
       const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
 
       const msg = createConsumeMessage({
-        headers: { "x-iris-attempt": "1" },
+        headers: { "x-iris-attempt": "1", "x-iris-max-retries": "5" },
       });
       await wrapped(msg);
 
       const publishCall = (state.publishChannel!.publish as Mock).mock.calls[0];
       const publishOptions = publishCall[3];
-      expect(publishOptions.headers["x-iris-attempt"]).toBe(2);
+      // The shared codec serializes scalars as strings on the wire.
+      expect(publishOptions.headers["x-iris-attempt"]).toBe("2");
     });
   });
 
@@ -483,8 +487,9 @@ describe("wrapRabbitConsumer", () => {
 
       const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
 
+      // attempt has reached the producer's wire maxRetries → retries exhausted.
       const msg = createConsumeMessage({
-        headers: { "x-iris-attempt": "3" },
+        headers: { "x-iris-attempt": "3", "x-iris-max-retries": "3" },
       });
       await wrapped(msg);
 
@@ -525,7 +530,7 @@ describe("wrapRabbitConsumer", () => {
       const wrapped = wrapRabbitConsumer(host, callback, state, metadata, logger as any);
 
       const msg = createConsumeMessage({
-        headers: { "x-iris-attempt": "3" },
+        headers: { "x-iris-attempt": "3", "x-iris-max-retries": "3" },
       });
       await wrapped(msg);
 

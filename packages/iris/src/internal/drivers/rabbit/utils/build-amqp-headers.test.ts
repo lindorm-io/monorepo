@@ -52,9 +52,40 @@ describe("buildAmqpHeaders", () => {
     expect(result).toMatchSnapshot();
   });
 
-  it("should not include max retries in headers (consumer-side policy only)", () => {
-    const result = buildAmqpHeaders(createEnvelope({ maxRetries: 5 }), {});
-    expect(result).toMatchSnapshot();
+  // M2: the full retry policy is now serialized on the wire so it is
+  // producer-authoritative — not re-derived from the consumer's local @Retry.
+  it("should serialize the full retry policy in x-iris headers (M2)", () => {
+    const { properties } = buildAmqpHeaders(
+      createEnvelope({
+        maxRetries: 5,
+        retryStrategy: "exponential",
+        retryDelay: 250,
+        retryDelayMax: 8000,
+        retryMultiplier: 4,
+        retryJitter: true,
+      }),
+      {},
+    );
+    const headers = properties.headers as Record<string, string>;
+    expect(headers["x-iris-max-retries"]).toBe("5");
+    expect(headers["x-iris-retry-strategy"]).toBe("exponential");
+    expect(headers["x-iris-retry-delay"]).toBe("250");
+    expect(headers["x-iris-retry-delay-max"]).toBe("8000");
+    expect(headers["x-iris-retry-multiplier"]).toBe("4");
+    expect(headers["x-iris-retry-jitter"]).toBe("true");
+  });
+
+  it("should NOT carry topic/priority/timestamp as x-iris headers (native slots)", () => {
+    const { properties } = buildAmqpHeaders(
+      createEnvelope({ priority: 7, timestamp: 1700000000000 }),
+      {},
+    );
+    const headers = properties.headers as Record<string, string>;
+    expect(headers["x-iris-topic"]).toBeUndefined();
+    expect(headers["x-iris-priority"]).toBeUndefined();
+    expect(headers["x-iris-timestamp"]).toBeUndefined();
+    expect(properties.priority).toBe(7);
+    expect(properties.timestamp).toBe(1700000000000);
   });
 
   it("should include broadcast header when true", () => {

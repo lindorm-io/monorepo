@@ -34,8 +34,6 @@ exports[`serializeStreamFields > should serialize a fully populated envelope 1`]
   "reply-queue",
   "correlationId",
   "corr-456",
-  "identifierValue",
-  "",
 ]
 `;
 
@@ -72,8 +70,6 @@ exports[`serializeStreamFields > should serialize a minimal envelope 1`] = `
   "replyTo",
   "",
   "correlationId",
-  "",
-  "identifierValue",
   "",
 ]
 `;

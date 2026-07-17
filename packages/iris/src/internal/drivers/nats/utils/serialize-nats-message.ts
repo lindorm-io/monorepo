@@ -1,29 +1,23 @@
+import { encodeScalarJson } from "../../../codec/json-body-codec.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 import type { NatsMsgHeaders, SerializedNatsMessage } from "../types/nats-types.js";
 
 export type { SerializedNatsMessage };
 
+/**
+ * JSON-body wire shape for NATS: the whole envelope is one JSON document —
+ * base64 payload, then the scalar fields (typed, via the shared codec), then
+ * the user headers. `identifierValue` is deliberately NOT carried: it is
+ * Kafka-only ordering metadata and was dead payload here (see
+ * {@link IdentifierField}, M12).
+ */
 export const serializeNatsMessage = (
   envelope: IrisEnvelope,
   _headersInit: () => NatsMsgHeaders,
 ): SerializedNatsMessage => {
   const json = JSON.stringify({
     payload: envelope.payload.toString("base64"),
-    topic: envelope.topic,
-    attempt: envelope.attempt,
-    maxRetries: envelope.maxRetries,
-    retryStrategy: envelope.retryStrategy,
-    retryDelay: envelope.retryDelay,
-    retryDelayMax: envelope.retryDelayMax,
-    retryMultiplier: envelope.retryMultiplier,
-    retryJitter: envelope.retryJitter,
-    priority: envelope.priority,
-    timestamp: envelope.timestamp,
-    expiry: envelope.expiry,
-    broadcast: envelope.broadcast,
-    replyTo: envelope.replyTo,
-    correlationId: envelope.correlationId,
-    identifierValue: envelope.identifierValue,
+    ...encodeScalarJson(envelope),
     headers: envelope.headers,
   });
 

@@ -13,6 +13,7 @@ import { publishSubscribeSuite } from "./publish-subscribe.tck.js";
 import { fanOutSuite } from "./fan-out.tck.js";
 import { workerQueueSuite } from "./worker-queue.tck.js";
 import { retryDeadLetterSuite } from "./retry-dead-letter.tck.js";
+import { retrySkewSuite } from "./retry-skew.tck.js";
 import { rpcSuite } from "./rpc.tck.js";
 import { streamSuite } from "./stream.tck.js";
 import { hooksSuite } from "./hooks.tck.js";
@@ -57,6 +58,8 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
     messages.TckBroadcastMessage,
     messages.TckExpiryMessage,
     messages.TckRetryNoDlqMessage,
+    messages.TckSkewProducerMessage,
+    messages.TckSkewConsumerMessage,
   ];
 
   if (caps.rpc) {
@@ -114,6 +117,10 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
   if (shouldRun("retry-dead-letter"))
     maybeDescribe(caps.retry, "retry", () =>
       retryDeadLetterSuite(getHandle, messages, timeoutMs, caps),
+    );
+  if (shouldRun("retry-skew"))
+    maybeDescribe(caps.retry, "retry-skew", () =>
+      retrySkewSuite(getHandle, messages, timeoutMs, caps),
     );
   if (shouldRun("rpc"))
     maybeDescribe(caps.rpc, "rpc", () => rpcSuite(getHandle, messages, timeoutMs));

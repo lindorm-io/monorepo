@@ -11,7 +11,6 @@ exports[`serializeNatsMessage > should include all envelope fields 1`] = `
   "headers": {
     "x-type": "TestMessage",
   },
-  "identifierValue": "id-456",
   "maxRetries": 3,
   "payload": "eyJib2R5IjoiaGVsbG8ifQ==",
   "priority": 0,

@@ -40,7 +40,7 @@ describe("parseAmqpHeaders", () => {
   it("should parse a minimal message", () => {
     const msg = createConsumeMessage();
     const result = parseAmqpHeaders(msg);
-    expect(result).toMatchSnapshot();
+    expect(result).toMatchSnapshot({ payload: expect.any(Buffer) });
   });
 
   it("should separate user headers from iris headers", () => {
@@ -54,10 +54,26 @@ describe("parseAmqpHeaders", () => {
     });
     const result = parseAmqpHeaders(msg);
     expect(result.headers).toMatchSnapshot();
-    expect(result.envelope).toMatchSnapshot();
+    expect(result.irisHeaders).toMatchSnapshot();
   });
 
-  it("should handle Buffer header values", () => {
+  it("should pass through encryption/compression iris headers to user headers", () => {
+    const msg = createConsumeMessage({
+      headers: {
+        "x-iris-encrypted": "true",
+        "x-iris-compression": "gzip",
+        "x-iris-attempt": "1",
+      },
+    });
+    const result = parseAmqpHeaders(msg);
+    expect(result.headers).toEqual({
+      "x-iris-encrypted": "true",
+      "x-iris-compression": "gzip",
+    });
+    expect(result.irisHeaders["x-iris-attempt"]).toBe("1");
+  });
+
+  it("should stringify Buffer header values", () => {
     const msg = createConsumeMessage({
       headers: {
         "x-trace-id": Buffer.from("trace-buf"),
@@ -66,30 +82,21 @@ describe("parseAmqpHeaders", () => {
       },
     });
     const result = parseAmqpHeaders(msg);
-    expect(result.headers).toMatchSnapshot();
-    expect(result.envelope.attempt).toBe(3);
-    expect(result.envelope.broadcast).toBe(true);
+    expect(result.headers["x-trace-id"]).toBe("trace-buf");
+    expect(result.irisHeaders["x-iris-attempt"]).toBe("3");
+    expect(result.irisHeaders["x-iris-broadcast"]).toBe("true");
   });
 
-  it("should parse all iris headers", () => {
+  it("should expose native priority, timestamp and routing key", () => {
     const msg = createConsumeMessage({
-      headers: {
-        "x-iris-attempt": "1",
-        "x-iris-correlation-id": "corr-1",
-        "x-iris-reply-to": "reply-q",
-        "x-iris-expiry": "30000",
-        "x-iris-broadcast": "true",
-      },
+      routingKey: "my-service.events",
       priority: 7,
+      timestamp: 1700000009000,
     });
     const result = parseAmqpHeaders(msg);
-    expect(result.envelope).toMatchSnapshot();
-  });
-
-  it("should use routing key as topic", () => {
-    const msg = createConsumeMessage({ routingKey: "my-service.events" });
-    const result = parseAmqpHeaders(msg);
-    expect(result.envelope.topic).toBe("my-service.events");
+    expect(result.routingKey).toBe("my-service.events");
+    expect(result.priority).toBe(7);
+    expect(result.timestamp).toBe(1700000009000);
   });
 
   it("should handle null/undefined header values", () => {
@@ -107,8 +114,8 @@ describe("parseAmqpHeaders", () => {
     const msg = createConsumeMessage();
     (msg.properties as any).headers = undefined;
     const result = parseAmqpHeaders(msg);
-    expect(result.headers).toMatchSnapshot();
-    expect(result.envelope.attempt).toBe(0);
+    expect(result.headers).toEqual({});
+    expect(result.irisHeaders).toEqual({});
   });
 
   it("should return content as payload buffer", () => {
@@ -122,12 +129,6 @@ describe("parseAmqpHeaders", () => {
     const msg = createConsumeMessage();
     (msg.properties as any).priority = undefined;
     const result = parseAmqpHeaders(msg);
-    expect(result.envelope.priority).toBe(0);
-  });
-
-  it("should default expiry to null when header is missing", () => {
-    const msg = createConsumeMessage();
-    const result = parseAmqpHeaders(msg);
-    expect(result.envelope.expiry).toBeNull();
+    expect(result.priority).toBe(0);
   });
 });

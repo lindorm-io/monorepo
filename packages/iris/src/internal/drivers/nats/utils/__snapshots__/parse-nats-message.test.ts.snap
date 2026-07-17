@@ -9,7 +9,7 @@ exports[`parseNatsMessage > should handle all fields 1`] = `
   "headers": {
     "x-type": "TestMessage",
   },
-  "identifierValue": "id-456",
+  "identifierValue": null,
   "maxRetries": 3,
   "payload": {
     "data": [

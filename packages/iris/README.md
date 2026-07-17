@@ -559,6 +559,8 @@ Marks the primary identifier. Non-nullable, non-optional. A pure marker — pair
 @IdentifierField() @Generated() id!: string;
 ```
 
+**Ordering is Kafka-only.** The value is carried solely as Kafka's partition key — messages sharing it land on the same partition and stay ordered. It is not put on the wire by nats, redis, rabbit or memory, and gives no per-identifier ordering there. Don't depend on `@IdentifierField` for ordering on any driver but Kafka.
+
 #### `@CorrelationField`
 
 Marks the id used to trace related messages across publish/consume chains. Non-nullable, non-optional. Same pairing as `@IdentifierField`.

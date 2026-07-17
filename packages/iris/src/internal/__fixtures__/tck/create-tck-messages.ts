@@ -100,6 +100,29 @@ export const createTckMessages = (hookLog: Array<string>) => {
     @Field("string") data!: string;
   }
 
+  // ─── Retry version-skew pair (M2) ──────────────────────────────────────────
+  // Two classes that resolve to the SAME topic but declare DIFFERENT @Retry.
+  // The producer publishes with maxRetries=4 (on the wire); the consumer's local
+  // @Retry says maxRetries=1. Retry policy must follow the producer's wire config
+  // (5 deliveries), not the consumer's local decorator (would be 2) — identical
+  // across every driver. Before M2, RabbitMQ re-derived policy from the consumer
+  // metadata and diverged.
+  @Retry({ maxRetries: 4, strategy: "constant", delay: 50 })
+  @DeadLetter()
+  @Topic(() => "iris.tck.retry.skew")
+  @Message({ name: "TckSkewProducerMessage" })
+  class TckSkewProducerMessage implements IMessage {
+    @Field("string") data!: string;
+  }
+
+  @Retry({ maxRetries: 1, strategy: "constant", delay: 50 })
+  @DeadLetter()
+  @Topic(() => "iris.tck.retry.skew")
+  @Message({ name: "TckSkewConsumerMessage" })
+  class TckSkewConsumerMessage implements IMessage {
+    @Field("string") data!: string;
+  }
+
   @Message({ name: "TckRpcRequest" })
   class TckRpcRequest implements IMessage {
     @Field("string") question!: string;
@@ -261,6 +284,8 @@ export const createTckMessages = (hookLog: Array<string>) => {
     TckExpiryMessage,
     TckHookMessage,
     TckRetryNoDlqMessage,
+    TckSkewProducerMessage,
+    TckSkewConsumerMessage,
     TckRpcRequest,
     TckRpcResponse,
     TckStreamInput,

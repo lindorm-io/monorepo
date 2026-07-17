@@ -1,5 +1,4 @@
 import type { Channel, ChannelModel, ConfirmChannel, Options } from "amqplib";
-import type { IrisEnvelope } from "../../../types/iris-envelope.js";
 
 export type AmqpPublishConfig = {
   properties: Options.Publish;
@@ -8,8 +7,16 @@ export type AmqpPublishConfig = {
 
 export type ParsedAmqpMessage = {
   payload: Buffer;
+  /** User (non-`x-iris-*`) headers. */
   headers: Record<string, string>;
-  envelope: Partial<IrisEnvelope>;
+  /** Raw `x-iris-*` headers (string values) — decoded by build-rabbit-envelope. */
+  irisHeaders: Record<string, string>;
+  /** AMQP-native priority (`properties.priority`). */
+  priority: number;
+  /** AMQP-native timestamp (`properties.timestamp`). */
+  timestamp: number;
+  /** AMQP routing key (`fields.routingKey`) — the envelope topic. */
+  routingKey: string;
 };
 
 export type QueueNameOptions = {
