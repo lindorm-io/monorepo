@@ -40,6 +40,7 @@ import {
   registerProfile as registerProfileFn,
   resolveProfile,
 } from "../internal/profiles/registry.js";
+import { applyOmit } from "../internal/utils/apply-omit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { enforceVerifyFloor } from "../internal/utils/enforce-verify-floor.js";
@@ -455,10 +456,13 @@ export class Aegis implements IAegis {
   // private sign tiers
 
   private async signRaw(input: RawSignInput): Promise<SignedJws> {
+    // A Buffer/string payload is opaque and passes through untouched; a plain
+    // object is pruned of empty claims at this emission boundary (default
+    // `"empty"`) before it is serialised, matching the JWT/CWT wires.
     const payload =
       isString(input.payload) || isBuffer(input.payload)
         ? input.payload
-        : JSON.stringify(input.payload);
+        : JSON.stringify(applyOmit(input.payload, input.omit));
 
     return this.jwsSign(payload, {
       bindCertificate: input.bindCertificate,
@@ -572,6 +576,8 @@ export class Aegis implements IAegis {
       signContent as SignJwtContent,
       {
         ...(options.sign ?? {}),
+        // mint's own `omit` controls the wire; a per-sign omit is a fallback.
+        omit: options.omit ?? options.sign?.omit,
         ...(profile.typ.presence !== "none" ? { typ: profile.typ.value } : {}),
       },
     );
@@ -655,6 +661,7 @@ export class Aegis implements IAegis {
     let token = this.coseKit.sign(kryptos, common, {
       typ: coseTyp(profile.typ),
       proprietary: options.proprietary,
+      omit: options.omit,
     });
 
     // Sign-then-encrypt: the inner secured CWT is the COSE_Encrypt0 plaintext.

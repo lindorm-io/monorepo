@@ -5,6 +5,7 @@ import { AegisError } from "../errors/index.js";
 import { coseLabelToAlg } from "../internal/cose/alg-labels.js";
 import { Tag, decodeCbor, encodeCbor } from "../internal/cose/cbor.js";
 import { encodeCwtClaims, decodeCwtClaims } from "../internal/cose/cwt-claims.js";
+import { applyOmit, type OmitMode } from "../internal/utils/apply-omit.js";
 import {
   COSE_HEADER,
   COSE_TAG,
@@ -22,6 +23,13 @@ export type CwtSignOptions = {
   typ?: string;
   /** Allow lindorm-proprietary COSE encodings (default true); see encodeCwtClaims. */
   proprietary?: boolean;
+  /**
+   * How empty claims are pruned before encoding. `"empty"` (default) drops
+   * null/empty-string/empty-array/empty-object recursively; `"undefined"` drops
+   * only undefined. Kept identical to the JOSE wire so a CWT and JWT minted from
+   * the same claims agree on what is present.
+   */
+  omit?: OmitMode;
 };
 
 export type CwtVerifyResult = {
@@ -66,8 +74,13 @@ export class CwtKit {
     const mac = this.kryptos.type === "oct";
     this.logger.debug(`Minting CWT (${mac ? "COSE_Mac0" : "COSE_Sign1"})`, { options });
 
+    // Emission boundary: prune empty claims off the domain dict just before it
+    // is encoded, so the CWT stays compact and byte-consistent with the JOSE
+    // wire, which prunes the same way (see applyOmit).
     const payload = encodeCbor(
-      encodeCwtClaims(common, { proprietary: options.proprietary }),
+      encodeCwtClaims(applyOmit(common, options.omit), {
+        proprietary: options.proprietary,
+      }),
     );
 
     const kit = { kryptos: this.kryptos, logger: this.logger };

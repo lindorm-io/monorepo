@@ -2,6 +2,7 @@ import type { Expiry } from "@lindorm/date";
 import type { Dict } from "@lindorm/types";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
 import type { TokenType } from "../../constants/token-type.js";
+import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { TokenFormat } from "../../internal/utils/select-encoder.js";
 import type { AegisSignKey } from "../aegis.js";
 import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.js";
@@ -247,6 +248,13 @@ export type ProfileMintOptions = {
    * only.)
    */
   proprietary?: boolean;
+  /**
+   * How empty claims are pruned before the token is emitted, threaded into both
+   * the JOSE and COSE wires so a single `mint` call controls both identically.
+   * `"empty"` (default) drops null/empty-string/empty-array/empty-object
+   * recursively; `"undefined"` drops only undefined.
+   */
+  omit?: OmitMode;
 };
 
 /**
@@ -278,5 +286,12 @@ export type RawSignInput = {
   payload: Buffer | string | Dict;
   /** Per-call signing key policy. */
   key?: AegisSignKey;
+  /**
+   * How empty claims are pruned before signing, applied only when `payload` is
+   * a plain object (a Buffer/string payload is opaque and passes through
+   * untouched). `"empty"` (default) drops null/empty-string/empty-array/
+   * empty-object recursively; `"undefined"` drops only undefined.
+   */
+  omit?: OmitMode;
   tokenType?: TokenType;
 };

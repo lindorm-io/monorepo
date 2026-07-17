@@ -121,7 +121,7 @@ export class JwtKit implements IJwtKit {
       options,
     });
 
-    const { payload, tokenId } = encodeClaimsPayload<C>(claims, content);
+    const { payload, tokenId } = encodeClaimsPayload<C>(claims, content, options.omit);
 
     const expiry =
       isFinite(claims.exp as number) && content.expires

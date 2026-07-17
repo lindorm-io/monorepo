@@ -8,6 +8,7 @@ import {
   computeCoseKeyThumbprintUri,
 } from "../internal/cose/cose-key-thumbprint.js";
 import { COSE_HEADER, COSE_TAG } from "../internal/cose/structures.js";
+import type { OmitMode } from "../internal/utils/apply-omit.js";
 import { CweKit } from "./CweKit.js";
 import { CwtKit, type CwtDecoded, type CwtVerifyResult } from "./CwtKit.js";
 
@@ -20,6 +21,12 @@ export type CoseMintOptions = {
   typ?: string;
   /** Allow lindorm-proprietary COSE encodings (default true); see encodeCwtClaims. */
   proprietary?: boolean;
+  /**
+   * How empty claims are pruned before encoding (threaded to CwtKit). `"empty"`
+   * (default) drops null/empty-string/empty-array/empty-object recursively;
+   * `"undefined"` drops only undefined.
+   */
+  omit?: OmitMode;
 };
 
 export type CoseEncryptOptions = {

@@ -13,6 +13,7 @@ import type {
   SignJwtOptions,
 } from "../../types/index.js";
 import { B64U } from "../constants/format.js";
+import { applyOmit, type OmitMode } from "./apply-omit.js";
 import { extractAegisProfile } from "./extract-aegis-profile.js";
 import { extractDomainClaims } from "./extract-claims.js";
 import { extractSensitiveIdentity } from "./extract-sensitive-identity.js";
@@ -40,6 +41,7 @@ type Result = {
 export const encodeClaimsPayload = <C extends Dict = Dict>(
   claims: Dict,
   content: Pick<SignJwtContent<C>, "claims" | "profile" | "sensitiveIdentity">,
+  omit?: OmitMode,
 ): { payload: string; tokenId: string | undefined } => {
   // AegisProfile fields are spread into the top-level JSON payload via
   // mechanical snake_case conversion. This keeps aegis-signed tokens
@@ -55,13 +57,21 @@ export const encodeClaimsPayload = <C extends Dict = Dict>(
     ? { sensitive_identity: snakeKeys(content.sensitiveIdentity) }
     : {};
 
+  // Emission boundary: the assembled wire dict is pruned of empty claims just
+  // before it is serialised, so the JWT stays compact and consistent with the
+  // COSE wire, which prunes the same way (see applyOmit). `"empty"` is default.
   const payload = B64.encode(
-    JSON.stringify({
-      ...claims,
-      ...profileWire,
-      ...sensitiveIdentityWire,
-      ...(content.claims ?? {}),
-    }),
+    JSON.stringify(
+      applyOmit(
+        {
+          ...claims,
+          ...profileWire,
+          ...sensitiveIdentityWire,
+          ...(content.claims ?? {}),
+        },
+        omit,
+      ),
+    ),
     B64U,
   );
 
@@ -81,7 +91,7 @@ export const encodeJwtPayload = <C extends Dict = Dict>(
 ): Result => {
   const claims = mapContentToClaims<C>({ algorithm: config.algorithm }, content, options);
 
-  const { payload, tokenId } = encodeClaimsPayload<C>(claims, content);
+  const { payload, tokenId } = encodeClaimsPayload<C>(claims, content, options.omit);
 
   const expiry = content.expires ? expires(content.expires) : undefined;
 

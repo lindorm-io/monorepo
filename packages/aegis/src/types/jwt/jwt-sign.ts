@@ -12,6 +12,7 @@ import type {
   SetClaims,
   StdClaims,
 } from "../claims/index.js";
+import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { AegisSignKey } from "../aegis.js";
 import type { BindCertificateMode, TokenEncryptOrSignOptions } from "../header.js";
 
@@ -50,6 +51,12 @@ export type SignJwtOptions = {
    * explicit key; consumed by `Aegis`, which resolves one.
    */
   key?: AegisSignKey;
+  /**
+   * How empty claims are pruned before signing. `"empty"` (default) drops
+   * null/empty-string/empty-array/empty-object recursively; `"undefined"` drops
+   * only undefined.
+   */
+  omit?: OmitMode;
   stateHash?: string;
   tokenId?: string;
   /**
