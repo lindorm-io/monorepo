@@ -8,13 +8,12 @@ export class MemoryDelayStore implements IDelayStore {
     this.entries.set(entry.id, entry);
   }
 
-  async poll(now: number): Promise<Array<DelayedEntry>> {
+  async peek(now: number): Promise<Array<DelayedEntry>> {
     const ready: Array<DelayedEntry> = [];
 
-    for (const [id, entry] of this.entries) {
+    for (const entry of this.entries.values()) {
       if (entry.deliverAt <= now) {
         ready.push(entry);
-        this.entries.delete(id);
       }
     }
 

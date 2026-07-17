@@ -93,7 +93,7 @@ describe("DelayManager", () => {
       expect(await store.size()).toBe(0);
     });
 
-    it("should not crash the loop when callback throws", async () => {
+    it("should not crash the loop when callback throws, and keep the failed entry for retry", async () => {
       await store.schedule({
         id: "fail-1",
         envelope: createEnvelope(),
@@ -119,8 +119,38 @@ describe("DelayManager", () => {
 
       await new Promise((r) => setTimeout(r, 50));
 
-      // Both should have been attempted; ok-1 should succeed
-      expect(delivered).toEqual(["ok-1"]);
+      // Both should have been attempted; ok-1 succeeds and is removed, while
+      // fail-1 survives (it is NOT lost — it stays for the next poll to retry).
+      expect(delivered).toContain("ok-1");
+      expect(await store.size()).toBe(1);
+      expect((await store.peek(Date.now())).map((e) => e.id)).toEqual(["fail-1"]);
+    });
+
+    it("should redeliver an entry whose first delivery failed (no data loss)", async () => {
+      await store.schedule({
+        id: "flaky-1",
+        envelope: createEnvelope(),
+        topic: "orders",
+        deliverAt: Date.now() - 1,
+      });
+
+      const attempts: Array<string> = [];
+      let failNext = true;
+
+      // Simulate a connection dropped at fire time: the first delivery throws,
+      // subsequent deliveries succeed.
+      manager.start(async (entry) => {
+        attempts.push(entry.id);
+        if (failNext) {
+          failNext = false;
+          throw new Error("connection dropped");
+        }
+      });
+
+      await new Promise((r) => setTimeout(r, 60));
+
+      // Delivered at least twice (one failure + one success) and finally removed.
+      expect(attempts.length).toBeGreaterThanOrEqual(2);
       expect(await store.size()).toBe(0);
     });
 

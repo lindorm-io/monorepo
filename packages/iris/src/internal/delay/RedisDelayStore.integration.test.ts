@@ -50,36 +50,51 @@ describe("RedisDelayStore (integration)", () => {
     await client.quit();
   });
 
-  describe("schedule + poll roundtrip", () => {
-    it("should schedule and poll entries", async () => {
+  describe("schedule + peek roundtrip", () => {
+    it("should schedule and peek entries", async () => {
       const entry = createEntry({ deliverAt: 100 });
       await store.schedule(entry);
 
-      const polled = await store.poll(200);
-      expect(polled).toHaveLength(1);
-      expect(polled[0].id).toBe(entry.id);
-      expect(polled[0].topic).toBe(entry.topic);
-      expect(polled[0].deliverAt).toBe(entry.deliverAt);
+      const peeked = await store.peek(200);
+      expect(peeked).toHaveLength(1);
+      expect(peeked[0].id).toBe(entry.id);
+      expect(peeked[0].topic).toBe(entry.topic);
+      expect(peeked[0].deliverAt).toBe(entry.deliverAt);
     });
 
-    it("should not poll entries scheduled in the future", async () => {
+    it("should not peek entries scheduled in the future", async () => {
       await store.schedule(createEntry({ deliverAt: 9999999999 }));
 
-      const polled = await store.poll(1000);
-      expect(polled).toHaveLength(0);
+      const peeked = await store.peek(1000);
+      expect(peeked).toHaveLength(0);
     });
   });
 
-  describe("poll atomicity", () => {
-    it("should remove entries after poll so second poll returns empty", async () => {
+  describe("peek is non-destructive (delivery-failure recovery)", () => {
+    it("should keep entries after peek so a failed delivery is not lost", async () => {
       await store.schedule(createEntry({ id: "a", deliverAt: 100 }));
       await store.schedule(createEntry({ id: "b", deliverAt: 200 }));
 
-      const first = await store.poll(300);
+      // Peeking does NOT remove — this is what lets the DelayManager retry an
+      // entry whose delivery failed (e.g. the connection dropped at fire time).
+      const first = await store.peek(300);
       expect(first).toHaveLength(2);
 
-      const second = await store.poll(300);
-      expect(second).toHaveLength(0);
+      const second = await store.peek(300);
+      expect(second).toHaveLength(2);
+      expect(await store.size()).toBe(2);
+    });
+
+    it("should stop returning an entry only once it is removed via cancel", async () => {
+      const entry = createEntry({ id: "delivered", deliverAt: 100 });
+      await store.schedule(entry);
+
+      // Simulate a successful delivery: peek, then remove.
+      expect(await store.peek(200)).toHaveLength(1);
+      await store.cancel(entry.id);
+
+      expect(await store.peek(200)).toHaveLength(0);
+      expect(await store.size()).toBe(0);
     });
   });
 
@@ -91,8 +106,8 @@ describe("RedisDelayStore (integration)", () => {
       const cancelled = await store.cancel(entry.id);
       expect(cancelled).toBe(true);
 
-      const polled = await store.poll(200);
-      expect(polled).toHaveLength(0);
+      const peeked = await store.peek(200);
+      expect(peeked).toHaveLength(0);
     });
 
     it("should return false for unknown id", async () => {
@@ -109,7 +124,11 @@ describe("RedisDelayStore (integration)", () => {
       await store.schedule(createEntry({ id: "b", deliverAt: 200 }));
       expect(await store.size()).toBe(2);
 
-      await store.poll(150);
+      // Peek is non-destructive, so size is unchanged until an entry is removed.
+      await store.peek(150);
+      expect(await store.size()).toBe(2);
+
+      await store.cancel("a");
       expect(await store.size()).toBe(1);
     });
   });
@@ -122,8 +141,8 @@ describe("RedisDelayStore (integration)", () => {
       await store.clear();
       expect(await store.size()).toBe(0);
 
-      const polled = await store.poll(999999);
-      expect(polled).toHaveLength(0);
+      const peeked = await store.peek(999999);
+      expect(peeked).toHaveLength(0);
     });
   });
 
@@ -136,7 +155,7 @@ describe("RedisDelayStore (integration)", () => {
       });
 
       await store.schedule(entry);
-      const polled = await store.poll(200);
+      const polled = await store.peek(200);
 
       expect(polled).toHaveLength(1);
       expect(Buffer.isBuffer(polled[0].envelope.payload)).toBe(true);
@@ -154,7 +173,7 @@ describe("RedisDelayStore (integration)", () => {
       const entry = createEntry({ deliverAt: 100, envelope });
 
       await store.schedule(entry);
-      const polled = await store.poll(200);
+      const polled = await store.peek(200);
 
       expect(polled[0].envelope.topic).toBe("my-topic");
       expect(polled[0].envelope.headers).toEqual({ "x-custom": "value" });

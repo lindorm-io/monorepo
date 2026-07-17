@@ -73,13 +73,16 @@ export class DelayManager {
     this.polling = true;
 
     try {
-      const entries = await this.store.poll(Date.now());
+      // Peek (do NOT delete) so a delivery failure leaves the entry behind for
+      // the next poll to retry. Only remove an entry once its delivery resolves.
+      const entries = await this.store.peek(Date.now());
 
       for (const entry of entries) {
         try {
           await this.callback(entry);
+          await this.store.cancel(entry.id);
         } catch (err) {
-          this.logger.error("Failed to deliver delayed entry", {
+          this.logger.error("Failed to deliver delayed entry; will retry", {
             id: entry.id,
             topic: entry.topic,
             error: err,

@@ -18,6 +18,7 @@ import type {
   IrisHookMeta,
   RedisConnectionOptions,
 } from "../../../../types/index.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
@@ -196,14 +197,25 @@ export class RedisDriver implements IIrisDriver {
 
       if (this.delayManager) {
         this.delayManager.start(async (entry) => {
+          // Throw (do NOT silently no-op) when the connection is unavailable at
+          // fire time, so the DelayManager keeps the entry and retries it on the
+          // next poll instead of dropping the delayed/retry message.
+          const conn = this.state.publishConnection;
+          if (!conn) {
+            throw new IrisPublishError("Redis connection not available", {
+              code: "publish_connection_unavailable",
+              title: "Publish Connection Unavailable",
+              details:
+                "The Redis publish connection is not established, so the delayed message cannot be delivered.",
+              data: { driver: "redis" },
+            });
+          }
+
           const streamKey = resolveStreamKey(this.state.prefix, entry.topic);
           const fields = serializeStreamFields(entry.envelope);
 
-          const conn = this.state.publishConnection;
-          if (conn) {
-            await xaddToStream(conn, streamKey, fields, this.state.maxStreamLength);
-            this.state.publishedStreams.add(streamKey);
-          }
+          await xaddToStream(conn, streamKey, fields, this.state.maxStreamLength);
+          this.state.publishedStreams.add(streamKey);
         });
       }
 

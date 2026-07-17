@@ -52,7 +52,7 @@ const createMockPipeline = (execResult: Array<[Error | null, unknown]> | null = 
 const createMockClient = (pipeline = createMockPipeline()) => ({
   pipeline: vi.fn().mockReturnValue(pipeline),
   defineCommand: vi.fn(),
-  irisDelayPoll: vi.fn().mockResolvedValue([]),
+  irisDelayPeek: vi.fn().mockResolvedValue([]),
   zcard: vi.fn().mockResolvedValue(0),
   quit: vi.fn().mockResolvedValue("OK"),
 });

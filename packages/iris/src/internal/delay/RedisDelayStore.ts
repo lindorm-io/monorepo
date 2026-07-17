@@ -6,7 +6,11 @@ import {
   serializeDelayedEntry,
 } from "./utils/serialize-helpers.js";
 
-const POLL_SCRIPT = `
+// Read-only: returns the data for every due entry WITHOUT removing it. The
+// DelayManager removes each entry (via cancel) only after delivery succeeds, so
+// a delivery failure leaves the entry for the next poll to retry. Removing here
+// (the old poll-and-delete) permanently lost any entry whose delivery failed.
+const PEEK_SCRIPT = `
 local zsetKey = KEYS[1]
 local hashKey = KEYS[2]
 local now = tonumber(ARGV[1])
@@ -16,13 +20,10 @@ if #ids == 0 then
   return {}
 end
 
-redis.call('ZREMRANGEBYSCORE', zsetKey, '-inf', now)
-
 local results = {}
 for i, id in ipairs(ids) do
   local data = redis.call('HGET', hashKey, id)
   if data then
-    redis.call('HDEL', hashKey, id)
     results[#results + 1] = data
   end
 end
@@ -43,9 +44,9 @@ export class RedisDelayStore implements IDelayStore {
     this.zsetKey = prefix;
     this.hashKey = `${prefix}:data`;
 
-    this.client.defineCommand("irisDelayPoll", {
+    this.client.defineCommand("irisDelayPeek", {
       numberOfKeys: 2,
-      lua: POLL_SCRIPT,
+      lua: PEEK_SCRIPT,
     });
   }
 
@@ -56,8 +57,8 @@ export class RedisDelayStore implements IDelayStore {
     checkPipelineResults(await pipeline.exec());
   }
 
-  async poll(now: number): Promise<Array<DelayedEntry>> {
-    const results: Array<string> = await this.client.irisDelayPoll(
+  async peek(now: number): Promise<Array<DelayedEntry>> {
+    const results: Array<string> = await this.client.irisDelayPeek(
       this.zsetKey,
       this.hashKey,
       now,

@@ -57,20 +57,21 @@ describe("MemoryDelayStore", () => {
     });
   });
 
-  describe("poll", () => {
-    it("should return entries with deliverAt <= now", async () => {
+  describe("peek", () => {
+    it("should return entries with deliverAt <= now WITHOUT removing them", async () => {
       await store.schedule(createEntry({ id: "a", deliverAt: 100 }));
       await store.schedule(createEntry({ id: "b", deliverAt: 200 }));
       await store.schedule(createEntry({ id: "c", deliverAt: 500 }));
 
-      const result = await store.poll(200);
+      const result = await store.peek(200);
       expect(result.map((e) => e.id)).toMatchSnapshot();
-      expect(await store.size()).toBe(1);
+      // Peek is non-destructive — all three entries remain until removed.
+      expect(await store.size()).toBe(3);
     });
 
     it("should return empty array when no entries are ready", async () => {
       await store.schedule(createEntry({ id: "a", deliverAt: 1000 }));
-      const result = await store.poll(500);
+      const result = await store.peek(500);
       expect(result).toMatchSnapshot();
       expect(await store.size()).toBe(1);
     });
@@ -80,19 +81,21 @@ describe("MemoryDelayStore", () => {
       await store.schedule(createEntry({ id: "a", deliverAt: 100 }));
       await store.schedule(createEntry({ id: "b", deliverAt: 200 }));
 
-      const result = await store.poll(500);
+      const result = await store.peek(500);
       expect(result.map((e) => e.id)).toMatchSnapshot();
     });
 
-    it("should remove polled entries atomically", async () => {
+    it("should keep returning a due entry until it is removed via cancel", async () => {
       await store.schedule(createEntry({ id: "a", deliverAt: 100 }));
       await store.schedule(createEntry({ id: "b", deliverAt: 200 }));
 
-      const first = await store.poll(150);
-      expect(first).toHaveLength(1);
+      // Repeated peeks are stable — nothing is consumed by peeking.
+      expect(await store.peek(150)).toHaveLength(1);
+      expect(await store.peek(150)).toHaveLength(1);
 
-      const second = await store.poll(150);
-      expect(second).toHaveLength(0);
+      // Only cancel removes the entry, so the next peek no longer sees it.
+      await store.cancel("a");
+      expect(await store.peek(150)).toHaveLength(0);
     });
   });
 

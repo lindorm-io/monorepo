@@ -1002,7 +1002,9 @@ class MyDelayStore implements IDelayStore {
   schedule = async (entry: DelayedEntry): Promise<void> => {
     /* ... */
   };
-  poll = async (now: number): Promise<Array<DelayedEntry>> => {
+  // Return due entries WITHOUT removing them — the manager removes each via
+  // cancel() only after its delivery succeeds, so a failed delivery is retried.
+  peek = async (now: number): Promise<Array<DelayedEntry>> => {
     /* ... */
   };
   cancel = async (id: string): Promise<boolean> => {

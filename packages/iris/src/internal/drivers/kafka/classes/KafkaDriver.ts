@@ -16,6 +16,7 @@ import type {
   IrisHookMeta,
   KafkaConnectionOptions,
 } from "../../../../types/index.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
@@ -130,17 +131,29 @@ export class KafkaDriver implements IIrisDriver {
 
       if (this.delayManager) {
         this.delayManager.start(async (entry) => {
+          // Throw (do NOT silently no-op) when the producer is unavailable at
+          // fire time, so the DelayManager keeps the entry and retries it on the
+          // next poll instead of dropping the delayed/retry message.
+          const producer = this.state.producer;
+          if (!producer) {
+            throw new IrisPublishError("Kafka producer not available", {
+              code: "publish_connection_unavailable",
+              title: "Publish Connection Unavailable",
+              details:
+                "The Kafka producer is not connected, so the delayed message cannot be delivered.",
+              data: { driver: "kafka" },
+            });
+          }
+
           const kafkaTopic = resolveTopicName(this.state.prefix, entry.topic);
           const kafkaMessage = serializeKafkaMessage(entry.envelope);
 
-          if (this.state.producer) {
-            await this.state.producer.send({
-              topic: kafkaTopic,
-              messages: [kafkaMessage],
-              acks: this.state.acks,
-            });
-            this.state.publishedTopics.add(kafkaTopic);
-          }
+          await producer.send({
+            topic: kafkaTopic,
+            messages: [kafkaMessage],
+            acks: this.state.acks,
+          });
+          this.state.publishedTopics.add(kafkaTopic);
         });
       }
 

@@ -20,6 +20,7 @@ import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.j
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { NatsConnection, NatsSharedState } from "../types/nats-types.js";
+import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
 import { ensureNatsStream } from "../utils/ensure-nats-stream.js";
@@ -123,9 +124,20 @@ export class NatsDriver implements IIrisDriver {
 
       if (this.delayManager) {
         this.delayManager.start(async (entry) => {
+          // Throw (do NOT silently no-op) when the JetStream connection is
+          // unavailable at fire time, so the DelayManager keeps the entry and
+          // retries it on the next poll instead of dropping the delayed message.
           const js = this.state.js;
           const hi = this.state.headersInit;
-          if (!js || !hi) return;
+          if (!js || !hi) {
+            throw new IrisPublishError("NATS JetStream connection not available", {
+              code: "publish_connection_unavailable",
+              title: "Publish Connection Unavailable",
+              details:
+                "The NATS JetStream connection is not established, so the delayed message cannot be delivered.",
+              data: { driver: "nats" },
+            });
+          }
 
           const baseSubject = resolveSubject(this.state.prefix, entry.topic);
           const subject = entry.envelope.broadcast
