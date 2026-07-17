@@ -224,62 +224,6 @@ describe("publishRedisMessages", () => {
     expect(state.publishConnection!.xadd).toHaveBeenCalledTimes(1);
   });
 
-  it("should set x-iris-priority header when priority is non-zero", async () => {
-    const state = createState();
-    const metadata = createMetadata({ priority: 5 });
-    const driver = createDriver(metadata);
-    const logger = createMockLogger();
-
-    await publishRedisMessages(
-      makeMessage("Test"),
-      undefined,
-      driver,
-      state,
-      logger as any,
-    );
-
-    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
-    const outbound = await prepared;
-    expect(outbound.headers["x-iris-priority"]).toBe("5");
-  });
-
-  it("should not set x-iris-priority header when priority is 0", async () => {
-    const state = createState();
-    const driver = createDriver(createMetadata());
-    const logger = createMockLogger();
-
-    await publishRedisMessages(
-      makeMessage("Test"),
-      undefined,
-      driver,
-      state,
-      logger as any,
-    );
-
-    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
-    const outbound = await prepared;
-    expect(outbound.headers["x-iris-priority"]).toBeUndefined();
-  });
-
-  it("should use publish options priority over metadata", async () => {
-    const state = createState();
-    const metadata = createMetadata({ priority: 3 });
-    const driver = createDriver(metadata);
-    const logger = createMockLogger();
-
-    await publishRedisMessages(
-      makeMessage("Test"),
-      { priority: 7 },
-      driver,
-      state,
-      logger as any,
-    );
-
-    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
-    const outbound = await prepared;
-    expect(outbound.headers["x-iris-priority"]).toBe("7");
-  });
-
   it("should use metadata delay when no publish options delay", async () => {
     const state = createState();
     const metadata = createMetadata({ delay: 3000 });

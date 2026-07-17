@@ -4,7 +4,7 @@ import type { OutboundPayload } from "../../../message/utils/prepare-outbound.js
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import { publishRabbitMessages, type RabbitPublishDriver } from "./publish-messages.js";
-import { describe, expect, it, vi, type Mock } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 const createMockLogger = () => ({
   child: vi.fn().mockReturnThis(),
@@ -193,62 +193,6 @@ describe("publishRabbitMessages", () => {
 
     expect(state.publishChannel!.assertQueue).toHaveBeenCalledTimes(1);
     expect(state.assertedDelayQueues.has("iris.delay.TestMessage")).toBe(true);
-  });
-
-  it("should set x-iris-priority header when priority is non-zero", async () => {
-    const state = createState();
-    const metadata = createMetadata({ priority: 5 });
-    const driver = createDriver(metadata);
-    const logger = createMockLogger();
-
-    await publishRabbitMessages(
-      makeMessage("Test"),
-      undefined,
-      driver,
-      state,
-      logger as any,
-    );
-
-    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
-    const outbound = await prepared;
-    expect(outbound.headers["x-iris-priority"]).toBe("5");
-  });
-
-  it("should not set x-iris-priority header when priority is 0", async () => {
-    const state = createState();
-    const driver = createDriver(createMetadata());
-    const logger = createMockLogger();
-
-    await publishRabbitMessages(
-      makeMessage("Test"),
-      undefined,
-      driver,
-      state,
-      logger as any,
-    );
-
-    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
-    const outbound = await prepared;
-    expect(outbound.headers["x-iris-priority"]).toBeUndefined();
-  });
-
-  it("should use publish options priority over metadata", async () => {
-    const state = createState();
-    const metadata = createMetadata({ priority: 3 });
-    const driver = createDriver(metadata);
-    const logger = createMockLogger();
-
-    await publishRabbitMessages(
-      makeMessage("Test"),
-      { priority: 7 },
-      driver,
-      state,
-      logger as any,
-    );
-
-    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
-    const outbound = await prepared;
-    expect(outbound.headers["x-iris-priority"]).toBe("7");
   });
 
   it("should use metadata delay when no publish options delay", async () => {

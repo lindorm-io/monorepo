@@ -78,23 +78,25 @@ describe("preparePublishBatch", () => {
     expect(result[0].delay).toBe(5000);
   });
 
-  it("should set x-iris-priority header when priority is non-zero", async () => {
+  it("should resolve non-zero priority onto the envelope without injecting a header", async () => {
     const metadata = makeMetadata("TestMessage", { priority: 5 });
     const driver = makeDriver(metadata);
     const msg = makeMessage("TestMessage");
 
     const result = await preparePublishBatch(msg, undefined, driver);
 
-    expect(result[0].outbound.headers["x-iris-priority"]).toBe("5");
+    expect(result[0].envelope.priority).toBe(5);
+    expect(result[0].outbound.headers["x-iris-priority"]).toBeUndefined();
   });
 
-  it("should not set x-iris-priority header when priority is 0", async () => {
+  it("should default envelope priority to 0", async () => {
     const metadata = makeMetadata("TestMessage");
     const driver = makeDriver(metadata);
     const msg = makeMessage("TestMessage");
 
     const result = await preparePublishBatch(msg, undefined, driver);
 
+    expect(result[0].envelope.priority).toBe(0);
     expect(result[0].outbound.headers["x-iris-priority"]).toBeUndefined();
   });
 
@@ -105,7 +107,7 @@ describe("preparePublishBatch", () => {
 
     const result = await preparePublishBatch(msg, { priority: 7 }, driver);
 
-    expect(result[0].outbound.headers["x-iris-priority"]).toBe("7");
+    expect(result[0].envelope.priority).toBe(7);
   });
 
   it("should use metadata delay when no publish options delay", async () => {

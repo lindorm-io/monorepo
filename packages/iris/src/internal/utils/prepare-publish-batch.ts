@@ -45,10 +45,6 @@ export const preparePublishBatch = async <M extends IMessage>(
       Object.assign(outbound.headers, options.headers);
     }
 
-    if (priority > 0) {
-      outbound.headers["x-iris-priority"] = String(priority);
-    }
-
     const identifierValue = resolveIdentifierValue(message, driver.metadata);
 
     const envelopeOverrides: EnvelopeOverrides = { priority, identifierValue };

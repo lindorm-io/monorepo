@@ -5,7 +5,7 @@ import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 import { createStore } from "./create-store.js";
 import { publishMessages, type PublishDriver } from "./publish-messages.js";
-import { beforeEach, describe, expect, it, vi, type Mock } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const makeMetadata = (name: string): MessageMetadata =>
   ({
@@ -145,69 +145,6 @@ describe("publishMessages", () => {
     await publishMessages(msg, { delay: 5000 }, driver, store);
 
     expect(dispatched).toMatchSnapshot();
-  });
-
-  it("should set x-iris-priority header when metadata has priority", async () => {
-    const priorityMetadata = makeMetadata("TestMessage");
-    (priorityMetadata as any).priority = 5;
-
-    const driver = makeDriver(priorityMetadata);
-    const msg = makeMessage("TestMessage");
-
-    store.consumers.push({
-      topic: "TestMessage",
-      queue: "TestMessage",
-      callback: async () => {},
-      consumerTag: "c1",
-    });
-
-    await publishMessages(msg, undefined, driver, store);
-
-    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
-    const outbound = await prepared;
-
-    expect(outbound.headers["x-iris-priority"]).toBe("5");
-  });
-
-  it("should set x-iris-priority header from publish options overriding metadata", async () => {
-    const priorityMetadata = makeMetadata("TestMessage");
-    (priorityMetadata as any).priority = 3;
-
-    const driver = makeDriver(priorityMetadata);
-    const msg = makeMessage("TestMessage");
-
-    store.consumers.push({
-      topic: "TestMessage",
-      queue: "TestMessage",
-      callback: async () => {},
-      consumerTag: "c1",
-    });
-
-    await publishMessages(msg, { priority: 7 }, driver, store);
-
-    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
-    const outbound = await prepared;
-
-    expect(outbound.headers["x-iris-priority"]).toBe("7");
-  });
-
-  it("should not set x-iris-priority header when priority is 0", async () => {
-    const driver = makeDriver(metadata);
-    const msg = makeMessage("TestMessage");
-
-    store.consumers.push({
-      topic: "TestMessage",
-      queue: "TestMessage",
-      callback: async () => {},
-      consumerTag: "c1",
-    });
-
-    await publishMessages(msg, undefined, driver, store);
-
-    const prepared = (driver.prepareForPublish as Mock).mock.results[0].value;
-    const outbound = await prepared;
-
-    expect(outbound.headers["x-iris-priority"]).toBeUndefined();
   });
 
   it("should use publish options expiry instead of metadata expiry", async () => {
