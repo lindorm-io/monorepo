@@ -2,7 +2,7 @@
 // Tests stream processor/pipeline: from, filter, map, to, start/stop.
 // Uses REAL timers for cross-driver portability.
 
-import type { TckDriverHandle } from "./types.js";
+import type { TckCapabilities, TckDriverHandle } from "./types.js";
 import type { TckMessages } from "./create-tck-messages.js";
 import { wait, waitFor } from "./wait.js";
 import { beforeEach, describe, expect, test } from "vitest";
@@ -11,6 +11,7 @@ export const streamSuite = (
   getHandle: () => TckDriverHandle,
   messages: TckMessages,
   timeoutMs: number,
+  caps?: TckCapabilities,
 ) => {
   describe("stream", () => {
     beforeEach(async () => {
@@ -514,6 +515,114 @@ export const streamSuite = (
         timeoutMs,
       );
       expect(outputReceived.filter((m) => m.value === "after-resume")).toHaveLength(1);
+
+      await pipeline.stop();
+    });
+
+    // ─── Error contract (H5) ─────────────────────────────────────────────────
+    // A stage/handler failure must NOT silently drop the message (the old base
+    // swallowed-and-logged, giving at-most-once). It must redeliver — bounded by
+    // the input's @Retry — and dead-letter on exhaustion, matching the
+    // worker-queue at-least-once contract.
+
+    test("processing error: a throwing stage redelivers then dead-letters (not silently lost)", async () => {
+      if (!caps?.retry || !caps?.deadLetter) return;
+
+      const handle = getHandle();
+      const { TckStreamRetryInput, TckStreamOutput } = messages;
+
+      const outputBus = handle.messageBus(TckStreamOutput);
+      const outputReceived: Array<any> = [];
+      await outputBus.subscribe({
+        topic: "TckStreamOutput",
+        callback: async (msg) => {
+          outputReceived.push(msg);
+        },
+      });
+
+      let attempts = 0;
+      const pipeline = handle
+        .stream()
+        .from(TckStreamRetryInput)
+        .map((_msg: any) => {
+          attempts++;
+          throw new Error("stage-boom");
+        })
+        .to(TckStreamOutput);
+
+      await pipeline.start();
+      await wait(200);
+
+      const inputBus = handle.messageBus(TckStreamRetryInput);
+      await inputBus.publish(inputBus.create({ value: "x", score: 1 } as any));
+
+      await waitFor(
+        async () => (await handle.getDeadLetters("TckStreamRetryInput")).length >= 1,
+        timeoutMs,
+      );
+
+      const deadLetters = await handle.getDeadLetters("TckStreamRetryInput");
+      expect(deadLetters.length).toBeGreaterThanOrEqual(1);
+      expect(deadLetters[0].error).toBe("stage-boom");
+
+      // Redelivered (bounded by @Retry maxRetries:2) before dead-lettering —
+      // proof the message was retried, not dropped on the first failure.
+      expect(attempts).toBeGreaterThan(1);
+
+      // The failed message must never have produced output.
+      expect(outputReceived).toHaveLength(0);
+
+      await pipeline.stop();
+    });
+
+    // A PARSE error (payload that cannot be deserialized) is a poison pill:
+    // retrying is futile, so it must go straight to the dead letter — never loop
+    // forever, never silently drop. Injected by consuming a plain payload with an
+    // @Encrypted input class (the payload is not encrypted, so deserialization
+    // throws before any transform runs).
+    test("poison pill: an undeserializable payload dead-letters once (not looped, not dropped)", async () => {
+      if (!caps?.deadLetter) return;
+
+      const handle = getHandle();
+      const { TckStreamPoisonInput, TckStreamPoisonFeed, TckStreamOutput } = messages;
+
+      const outputBus = handle.messageBus(TckStreamOutput);
+      const outputReceived: Array<any> = [];
+      await outputBus.subscribe({
+        topic: "TckStreamOutput",
+        callback: async (msg) => {
+          outputReceived.push(msg);
+        },
+      });
+
+      const pipeline = handle
+        .stream()
+        .from(TckStreamPoisonInput, { topic: "TckStreamPoisonFeed" })
+        .to(TckStreamOutput);
+
+      await pipeline.start();
+      await wait(200);
+
+      const feedBus = handle.messageBus(TckStreamPoisonFeed);
+      await feedBus.publish(feedBus.create({ value: "poison", score: 1 } as any));
+
+      await waitFor(
+        async () => (await handle.getDeadLetters("TckStreamPoisonFeed")).length >= 1,
+        timeoutMs,
+      );
+
+      const deadLetters = await handle.getDeadLetters("TckStreamPoisonFeed");
+      expect(deadLetters.length).toBeGreaterThanOrEqual(1);
+
+      // Not silently dropped and no output produced from a poison payload.
+      expect(outputReceived).toHaveLength(0);
+
+      // A poison pill dead-letters ONCE — give any (incorrect) redelivery loop a
+      // window to pile up more entries; the count must stay stable.
+      const countAfterFirst = deadLetters.length;
+      await wait(300);
+      const deadLettersLater = await handle.getDeadLetters("TckStreamPoisonFeed");
+      expect(deadLettersLater.length).toBe(countAfterFirst);
 
       await pipeline.stop();
     });

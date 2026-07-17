@@ -1,12 +1,13 @@
 import type { ConsumeMessage } from "amqplib";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
 import { buildAmqpHeaders } from "../utils/build-amqp-headers.js";
-import { parseAmqpHeaders } from "../utils/parse-amqp-headers.js";
 import { sanitizeRoutingKey } from "../utils/sanitize-routing-key.js";
+import { wrapRabbitConsumer } from "../utils/wrap-rabbit-consumer.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
@@ -44,17 +45,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
       this.subscribedQueue = null;
     }
 
-    if (!this.inputClass) {
-      throw new IrisDriverError(
-        "Stream pipeline requires an input class. Call .from() before .to().",
-        {
-          code: "pipeline_input_class_required",
-          title: "Pipeline Input Class Required",
-          details:
-            "The stream pipeline was started without an input class; call .from() before .to().",
-        },
-      );
-    }
+    this.assertInputClass();
 
     const channel = this.state.consumeChannel;
     if (!channel) {
@@ -85,20 +76,7 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     this.subscribedQueue = queueName;
     this.subscribedRoutingKey = routingKey;
 
-    const onMessage = async (msg: ConsumeMessage | null): Promise<void> => {
-      if (!msg) return;
-
-      try {
-        await this.processMessage(msg);
-        channel.ack(msg);
-      } catch (error) {
-        this.logger.warn("Stream pipeline processing error", {
-          error: error instanceof Error ? error.message : String(error),
-          topic: subscribeTopic,
-        });
-        channel.nack(msg, false, false);
-      }
-    };
+    const onMessage = this.buildOnMessage(inputMetadata);
 
     this.wrappedOnMessage = onMessage;
 
@@ -260,14 +238,19 @@ export class RabbitStreamPipeline extends DriverStreamPipelineBase {
     });
   }
 
-  private async processMessage(msg: ConsumeMessage): Promise<void> {
-    if (!this.running) return;
-
-    const parsed = parseAmqpHeaders(msg);
-    await this.processInboundData(
-      parsed.payload,
-      parsed.headers,
-      parsed.envelope.topic ?? "unknown",
+  // Shared inbound handler: deserialize (parse errors → dead letter via DLX)
+  // then run the transform stages (failures → retry via native delay-queue/TTL
+  // bounded by @Retry, then dead letter to the DLX) — the SAME contract the
+  // Rabbit worker queue uses. wrapRabbitConsumer owns ack/nack/DLX.
+  private buildOnMessage(
+    inputMetadata: MessageMetadata,
+  ): (msg: ConsumeMessage | null) => Promise<void> {
+    return wrapRabbitConsumer(
+      this.buildInboundHost(inputMetadata),
+      (message) => this.processStreamMessage(message),
+      this.state,
+      inputMetadata,
+      this.logger,
     );
   }
 }

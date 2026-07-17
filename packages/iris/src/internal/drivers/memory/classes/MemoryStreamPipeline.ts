@@ -1,11 +1,11 @@
 import { randomId } from "@lindorm/random";
-import type { MemorySharedState } from "../types/memory-store.js";
+import type { MemoryEnvelope, MemorySharedState } from "../types/memory-store.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
 import { dispatchToSubscribers } from "../utils/dispatch-to-subscribers.js";
 import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
+import { wrapConsumerCallback } from "../utils/wrap-consumer-callback.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
@@ -39,17 +39,7 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
       this.consumerTag = null;
     }
 
-    if (!this.inputClass) {
-      throw new IrisDriverError(
-        "Stream pipeline requires an input class. Call .from() before .to().",
-        {
-          code: "pipeline_input_class_required",
-          title: "Pipeline Input Class Required",
-          details:
-            "The stream pipeline was started without an input class; call .from() before .to().",
-        },
-      );
-    }
+    this.assertInputClass();
 
     const inputMetadata = getMessageMetadata(this.inputClass);
     const subscribeTopic = this.inputTopic ?? resolveDefaultTopic(inputMetadata);
@@ -61,8 +51,7 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
     this.store.subscriptions.push({
       topic: subscribeTopic,
       queue: null,
-      callback: async (envelope) =>
-        this.processInboundData(envelope.payload, envelope.headers, envelope.topic),
+      callback: this.buildInboundConsumer(inputMetadata),
       consumerTag: this.consumerTag,
     });
 
@@ -106,6 +95,22 @@ export class MemoryStreamPipeline extends DriverStreamPipelineBase {
   async resume(): Promise<void> {
     this.paused = false;
     this.logger.debug("Stream pipeline resumed");
+  }
+
+  // Route inbound stream messages through the SAME consume machinery as the
+  // memory worker queue: deserialize (parse errors → dead letter) then run the
+  // transform stages (failures → retry bounded by @Retry, then dead letter).
+  private buildInboundConsumer(
+    inputMetadata: ReturnType<typeof getMessageMetadata>,
+  ): (envelope: MemoryEnvelope) => Promise<void> {
+    return wrapConsumerCallback(
+      this.buildInboundHost(inputMetadata),
+      (message) => this.processStreamMessage(message),
+      this.store,
+      inputMetadata,
+      this.logger,
+      { deadLetterManager: this.deadLetterManager },
+    );
   }
 
   protected async doPublishEnvelope(

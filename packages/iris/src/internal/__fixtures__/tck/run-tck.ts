@@ -64,6 +64,13 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
   }
   if (caps.stream) {
     baseMessages.push(messages.TckStreamInput, messages.TckStreamOutput);
+    if (caps.deadLetter) {
+      baseMessages.push(
+        messages.TckStreamRetryInput,
+        messages.TckStreamPoisonInput,
+        messages.TckStreamPoisonFeed,
+      );
+    }
   }
   if (caps.encryption) {
     baseMessages.push(messages.TckEncryptedMessage);
@@ -112,7 +119,7 @@ export const runTck = (factory: TckDriverFactory, suites?: Array<string>) => {
     maybeDescribe(caps.rpc, "rpc", () => rpcSuite(getHandle, messages, timeoutMs));
   if (shouldRun("stream"))
     maybeDescribe(caps.stream, "stream", () =>
-      streamSuite(getHandle, messages, timeoutMs),
+      streamSuite(getHandle, messages, timeoutMs, caps),
     );
   if (shouldRun("delay"))
     maybeDescribe(caps.delay, "delay", () => delaySuite(getHandle, messages, timeoutMs));

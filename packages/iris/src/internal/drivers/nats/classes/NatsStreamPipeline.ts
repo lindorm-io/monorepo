@@ -1,14 +1,16 @@
 import { randomId } from "@lindorm/random";
-import type { NatsSharedState } from "../types/nats-types.js";
+import type { NatsJsMsg, NatsSharedState } from "../types/nats-types.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
 import { resolveSubject } from "../utils/resolve-subject.js";
 import { serializeNatsMessage } from "../utils/serialize-nats-message.js";
-import { parseNatsMessage } from "../utils/parse-nats-message.js";
 import { createNatsConsumer } from "../utils/create-nats-consumer.js";
 import { stopNatsConsumer } from "../utils/stop-nats-consumer.js";
+import { resolveMaxDeliver } from "../utils/resolve-max-deliver.js";
+import { wrapNatsConsumer } from "../utils/wrap-nats-consumer.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
@@ -43,17 +45,7 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
       this.consumerTag = null;
     }
 
-    if (!this.inputClass) {
-      throw new IrisDriverError(
-        "Stream pipeline requires an input class. Call .from() before .to().",
-        {
-          code: "pipeline_input_class_required",
-          title: "Pipeline Input Class Required",
-          details:
-            "The stream pipeline was started without an input class; call .from() before .to().",
-        },
-      );
-    }
+    this.assertInputClass();
 
     if (!this.state.js || !this.state.jsm) {
       throw new IrisDriverError(
@@ -87,14 +79,11 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
       consumerName,
       subject,
       prefetch: this.state.prefetch,
-      onMessage: async (msg) => {
-        const envelope = parseNatsMessage(msg.data);
-        await this.processInboundData(envelope.payload, envelope.headers, envelope.topic);
-        msg.ack();
-      },
+      onMessage: this.buildOnMessage(inputMetadata),
       logger: this.logger,
       ensuredConsumers: this.state.ensuredConsumers,
       deliverPolicy: "new",
+      maxDeliver: resolveMaxDeliver(inputMetadata),
     });
     this.state.consumerLoops.push(loop);
 
@@ -200,14 +189,11 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
       consumerName,
       subject,
       prefetch: this.state.prefetch,
-      onMessage: async (msg) => {
-        const envelope = parseNatsMessage(msg.data);
-        await this.processInboundData(envelope.payload, envelope.headers, envelope.topic);
-        msg.ack();
-      },
+      onMessage: this.buildOnMessage(inputMetadata),
       logger: this.logger,
       ensuredConsumers: this.state.ensuredConsumers,
       deliverPolicy: "new",
+      maxDeliver: resolveMaxDeliver(inputMetadata),
     });
     this.state.consumerLoops.push(loop);
 
@@ -217,6 +203,23 @@ export class NatsStreamPipeline extends DriverStreamPipelineBase {
     await loop.ready;
 
     this.logger.debug("Stream pipeline resumed", { consumerTag: this.consumerTag });
+  }
+
+  // Shared inbound handler: deserialize (parse errors → dead letter via term)
+  // then run the transform stages (failures → native nak retry bounded by
+  // maxDeliver / @Retry, then term to dead letter) — the SAME contract the
+  // NATS worker queue uses. wrapNatsConsumer owns ack/nak/term.
+  private buildOnMessage(
+    inputMetadata: MessageMetadata,
+  ): (msg: NatsJsMsg) => Promise<void> {
+    return wrapNatsConsumer(
+      this.buildInboundHost(inputMetadata),
+      (message) => this.processStreamMessage(message),
+      this.state,
+      inputMetadata,
+      this.logger,
+      { deadLetterManager: this.deadLetterManager },
+    );
   }
 
   protected async doPublishEnvelope(

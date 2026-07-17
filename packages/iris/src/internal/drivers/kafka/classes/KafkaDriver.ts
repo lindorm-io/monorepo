@@ -452,6 +452,8 @@ export class KafkaDriver implements IIrisDriver {
       logger: this.logger,
       meta: this.meta,
       encryption: this.encryption,
+      deadLetterManager: this.deadLetterManager,
+      delayManager: this.delayManager,
     });
   }
 

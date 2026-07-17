@@ -77,13 +77,12 @@ class TestStreamPipeline extends DriverStreamPipelineBase {
     this.publishedEnvelopes.push({ envelope, topic });
   }
 
-  // Expose protected methods for testing
-  public async testProcessInboundData(
-    payload: Buffer,
-    headers: Record<string, string>,
-    topic: string,
-  ): Promise<void> {
-    return this.processInboundData(payload, headers, topic);
+  // Expose protected methods for testing. processStreamMessage is the consume
+  // `callback` handed to consumeMessageCore via each driver's wrap*Consumer — it
+  // receives an ALREADY-deserialized message (deserialization happens in the
+  // host's prepareForConsume) and runs the transform stages + publish.
+  public async testProcessStreamMessage(message: any): Promise<void> {
+    return this.processStreamMessage(message);
   }
 
   public async testPublishOutput(data: any): Promise<void> {
@@ -174,16 +173,16 @@ describe("DriverStreamPipelineBase", () => {
     });
   });
 
-  describe("processInboundData()", () => {
+  describe("processStreamMessage()", () => {
+    const mapStage = {
+      type: "map" as const,
+      transform: (msg: any) => ({ doubled: msg.value * 2, label: msg.label }),
+    };
+
     it("should not process when paused", async () => {
       const pipeline = new TestStreamPipeline({
         logger: createMockLogger() as any,
-        stages: [
-          {
-            type: "map",
-            transform: (msg: any) => ({ doubled: msg.value * 2, label: msg.label }),
-          },
-        ],
+        stages: [mapStage],
         inputClass: TckPipeBaseIn as any,
         outputClass: TckPipeBaseOut as any,
       });
@@ -191,34 +190,95 @@ describe("DriverStreamPipelineBase", () => {
       await pipeline.start();
       await pipeline.pause();
 
-      const payload = Buffer.from(JSON.stringify({ value: 5, label: "test" }));
-      await pipeline.testProcessInboundData(payload, {}, "TckPipeBaseIn");
+      await pipeline.testProcessStreamMessage({ value: 5, label: "test" });
 
       expect(pipeline.publishedEnvelopes).toHaveLength(0);
     });
 
-    // TODO: add a happy-path processInboundData test that verifies data flows
-    // through filter/map stages. Requires full decorator metadata chain (prepareInbound)
-    // which makes it an integration-level concern — covered by the TCK suites instead.
-
     it("should not process when not running", async () => {
+      const pipeline = new TestStreamPipeline({
+        logger: createMockLogger() as any,
+        stages: [mapStage],
+        inputClass: TckPipeBaseIn as any,
+        outputClass: TckPipeBaseOut as any,
+      });
+
+      // Never started
+      await pipeline.testProcessStreamMessage({ value: 5, label: "test" });
+
+      expect(pipeline.publishedEnvelopes).toHaveLength(0);
+    });
+
+    it("should run stages and publish the output", async () => {
+      const pipeline = new TestStreamPipeline({
+        logger: createMockLogger() as any,
+        stages: [mapStage],
+        inputClass: TckPipeBaseIn as any,
+        outputClass: TckPipeBaseOut as any,
+      });
+
+      await pipeline.start();
+
+      await pipeline.testProcessStreamMessage({ value: 5, label: "test" });
+
+      expect(pipeline.publishedEnvelopes).toHaveLength(1);
+      expect(pipeline.publishedEnvelopes[0].topic).toBe("TckPipeBaseOut");
+    });
+
+    it("should PROPAGATE stage errors (not swallow them) so the driver can redeliver/dead-letter (H5)", async () => {
       const pipeline = new TestStreamPipeline({
         logger: createMockLogger() as any,
         stages: [
           {
             type: "map",
-            transform: (msg: any) => ({ doubled: msg.value * 2, label: msg.label }),
+            transform: () => {
+              throw new Error("stage-boom");
+            },
           },
         ],
         inputClass: TckPipeBaseIn as any,
         outputClass: TckPipeBaseOut as any,
       });
 
-      // Never started
-      const payload = Buffer.from(JSON.stringify({ value: 5, label: "test" }));
-      await pipeline.testProcessInboundData(payload, {}, "TckPipeBaseIn");
+      await pipeline.start();
+
+      // Before the H5 fix the base swallowed this error and resolved normally,
+      // giving at-most-once delivery. It must now reject so consumeMessageCore
+      // (via the driver's wrap*Consumer) triggers retry + dead-letter.
+      await expect(
+        pipeline.testProcessStreamMessage({ value: 5, label: "test" }),
+      ).rejects.toThrow("stage-boom");
 
       expect(pipeline.publishedEnvelopes).toHaveLength(0);
+    });
+
+    it("should keep the processing queue alive after an error (next message still flows)", async () => {
+      const pipeline = new TestStreamPipeline({
+        logger: createMockLogger() as any,
+        stages: [
+          {
+            type: "map",
+            transform: (msg: any) => {
+              if (msg.value < 0) throw new Error("negative");
+              return { doubled: msg.value * 2, label: msg.label };
+            },
+          },
+        ],
+        inputClass: TckPipeBaseIn as any,
+        outputClass: TckPipeBaseOut as any,
+      });
+
+      await pipeline.start();
+
+      await expect(
+        pipeline.testProcessStreamMessage({ value: -1, label: "bad" }),
+      ).rejects.toThrow("negative");
+
+      // A poisoned message must not wedge the serialization chain for good ones.
+      await pipeline.testProcessStreamMessage({ value: 3, label: "good" });
+
+      expect(pipeline.publishedEnvelopes).toHaveLength(1);
+      expect(pipeline.publishedEnvelopes[0].topic).toBe("TckPipeBaseOut");
     });
   });
 

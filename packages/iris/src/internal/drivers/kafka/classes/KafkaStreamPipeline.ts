@@ -1,14 +1,19 @@
 import { randomId } from "@lindorm/random";
-import type { KafkaEachMessagePayload, KafkaSharedState } from "../types/kafka-types.js";
+import type {
+  KafkaConsumer,
+  KafkaEachMessagePayload,
+  KafkaSharedState,
+} from "../types/kafka-types.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
 import { resolveTopicName } from "../utils/resolve-topic-name.js";
 import { serializeKafkaMessage } from "../utils/serialize-kafka-message.js";
-import { parseKafkaMessage } from "../utils/parse-kafka-message.js";
 import { createKafkaConsumer } from "../utils/create-kafka-consumer.js";
 import { stopKafkaConsumer } from "../utils/stop-kafka-consumer.js";
+import { wrapKafkaConsumer } from "../utils/wrap-kafka-consumer.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
@@ -46,17 +51,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       this.consumerTag = null;
     }
 
-    if (!this.inputClass) {
-      throw new IrisDriverError(
-        "Stream pipeline requires an input class. Call .from() before .to().",
-        {
-          code: "pipeline_input_class_required",
-          title: "Pipeline Input Class Required",
-          details:
-            "The stream pipeline was started without an input class; call .from() before .to().",
-        },
-      );
-    }
+    this.assertInputClass();
 
     if (!this.state.kafka) {
       throw new IrisDriverError("Cannot start pipeline: Kafka client is not connected", {
@@ -76,7 +71,10 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     this.running = true;
     this.paused = false;
 
-    const onMessage = this.createInboundHandler();
+    const consumerRef: { consumer?: KafkaConsumer } = {};
+    const onMessage = this.buildOnMessage(inputMetadata, () =>
+      this.resolveConsumer(consumerRef.consumer),
+    );
 
     const handle = await createKafkaConsumer({
       kafka: this.state.kafka,
@@ -88,6 +86,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       abortSignal: this.state.abortController.signal,
       onMessage,
     });
+    consumerRef.consumer = handle.consumer;
 
     this.state.consumers.push(handle);
     this.consumerTag = handle.consumerTag;
@@ -165,7 +164,10 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     // are skipped — only new messages after resume are processed.
     this.groupId = `${this.state.prefix}.pipeline.${randomId({ length: 16 })}`;
 
-    const onMessage = this.createInboundHandler();
+    const consumerRef: { consumer?: KafkaConsumer } = {};
+    const onMessage = this.buildOnMessage(inputMetadata, () =>
+      this.resolveConsumer(consumerRef.consumer),
+    );
 
     const handle = await createKafkaConsumer({
       kafka: this.state.kafka,
@@ -177,6 +179,7 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
       abortSignal: this.state.abortController.signal,
       onMessage,
     });
+    consumerRef.consumer = handle.consumer;
 
     this.state.consumers.push(handle);
     this.consumerTag = handle.consumerTag;
@@ -190,11 +193,39 @@ export class KafkaStreamPipeline extends DriverStreamPipelineBase {
     this.logger.debug("Stream pipeline resumed", { consumerTag: this.consumerTag });
   }
 
-  private createInboundHandler(): (payload: KafkaEachMessagePayload) => Promise<void> {
-    return async (payload: KafkaEachMessagePayload): Promise<void> => {
-      const envelope = parseKafkaMessage(payload);
-      await this.processInboundData(envelope.payload, envelope.headers, envelope.topic);
-    };
+  // Shared inbound handler: deserialize (parse errors → dead letter) then run
+  // the transform stages (failures → retry via delay manager / producer re-send
+  // bounded by @Retry, then dead letter) — the SAME contract the Kafka worker
+  // queue uses. wrapKafkaConsumer owns the offset commit after processing.
+  private buildOnMessage(
+    inputMetadata: MessageMetadata,
+    getConsumer: () => KafkaConsumer,
+  ): (payload: KafkaEachMessagePayload) => Promise<void> {
+    return wrapKafkaConsumer(
+      this.buildInboundHost(inputMetadata),
+      (message) => this.processStreamMessage(message),
+      this.state,
+      inputMetadata,
+      this.logger,
+      {
+        deadLetterManager: this.deadLetterManager,
+        delayManager: this.delayManager,
+        consumer: getConsumer,
+      },
+    );
+  }
+
+  private resolveConsumer(consumer: KafkaConsumer | undefined): KafkaConsumer {
+    if (!consumer) {
+      throw new IrisDriverError("Kafka stream consumer is not initialised yet", {
+        code: "connection_unavailable",
+        title: "Connection Unavailable",
+        details:
+          "The Kafka stream consumer is not available yet, so the offset cannot be committed.",
+        data: { driver: "kafka" },
+      });
+    }
+    return consumer;
   }
 
   // Register the dedicated pipeline consumer in the driver's registry so it is

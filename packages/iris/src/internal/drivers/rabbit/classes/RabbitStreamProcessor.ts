@@ -2,6 +2,8 @@ import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { PipelineStage } from "../../../types/pipeline-stage.js";
@@ -34,6 +36,10 @@ export class RabbitStreamProcessor<
     outputTopic?: string;
     meta?: IrisHookMeta;
     encryption?: MessageEncryptionContext;
+    // Accepted for override-compatibility with the base; RabbitMQ uses native
+    // DLX/TTL for retry + dead-letter, so no Iris managers are threaded through.
+    deadLetterManager?: DeadLetterManager;
+    delayManager?: DelayManager;
   }): RabbitStreamPipeline {
     return new RabbitStreamPipeline({
       state: options.state,

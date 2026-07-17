@@ -2,6 +2,8 @@ import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
+import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { RedisSharedState } from "../types/redis-types.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { PipelineStage } from "../../../types/pipeline-stage.js";
@@ -34,6 +36,8 @@ export class RedisStreamProcessor<
     outputTopic?: string;
     meta?: IrisHookMeta;
     encryption?: MessageEncryptionContext;
+    deadLetterManager?: DeadLetterManager;
+    delayManager?: DelayManager;
   }): RedisStreamPipeline {
     return new RedisStreamPipeline({
       state: options.state,
@@ -45,6 +49,8 @@ export class RedisStreamProcessor<
       outputTopic: options.outputTopic,
       meta: options.meta,
       encryption: options.encryption,
+      deadLetterManager: options.deadLetterManager,
+      delayManager: options.delayManager,
     });
   }
 }

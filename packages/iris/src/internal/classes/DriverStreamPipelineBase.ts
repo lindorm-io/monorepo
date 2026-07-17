@@ -1,10 +1,15 @@
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IIrisStreamPipeline, IMessage } from "../../interfaces/index.js";
+import { IrisDriverError } from "../../errors/IrisDriverError.js";
 import type { IrisHookMeta } from "../../types/iris-hook-meta.js";
+import type { DeadLetterManager } from "../dead-letter/DeadLetterManager.js";
+import type { DelayManager } from "../delay/DelayManager.js";
 import type { IrisEnvelope } from "../types/iris-envelope.js";
 import type { PipelineStage } from "../types/pipeline-stage.js";
 import type { MessageEncryptionContext } from "../message/types/encryption-context.js";
+import type { MessageMetadata } from "../message/types/metadata.js";
+import type { ConsumerCallbackHost } from "../utils/consume-message-core.js";
 import { applyStage } from "../message/utils/apply-stage.js";
 import { MessageManager } from "../message/classes/MessageManager.js";
 import { getMessageMetadata } from "../message/metadata/get-message-metadata.js";
@@ -22,6 +27,8 @@ export type DriverStreamPipelineBaseOptions = {
   outputTopic?: string;
   meta?: IrisHookMeta;
   encryption?: MessageEncryptionContext;
+  deadLetterManager?: DeadLetterManager;
+  delayManager?: DelayManager;
 };
 
 export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
@@ -33,6 +40,8 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
   protected readonly outputTopic: string | undefined;
   protected readonly meta: IrisHookMeta | undefined;
   protected readonly encryption: MessageEncryptionContext | undefined;
+  protected readonly deadLetterManager: DeadLetterManager | undefined;
+  protected readonly delayManager: DelayManager | undefined;
   protected readonly outputManager: MessageManager<IMessage>;
   protected running = false;
   protected paused = false;
@@ -49,6 +58,8 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
     this.outputTopic = options.outputTopic;
     this.meta = options.meta;
     this.encryption = options.encryption;
+    this.deadLetterManager = options.deadLetterManager;
+    this.delayManager = options.delayManager;
     this.outputManager = new MessageManager({
       target: this.outputClass,
       meta: this.meta,
@@ -70,71 +81,101 @@ export abstract class DriverStreamPipelineBase implements IIrisStreamPipeline {
     topic: string,
   ): Promise<void>;
 
-  protected processInboundData(
-    payload: Buffer,
-    headers: Record<string, string>,
-    sourceTopic: string,
-  ): Promise<void> {
-    if (!this.running || this.paused) return Promise.resolve();
-
-    this._processingQueue = this._processingQueue.then(() =>
-      this._doProcessInboundData(payload, headers, sourceTopic),
-    );
-
-    return this._processingQueue;
+  /**
+   * Guard shared by every driver's `start()`: a pipeline cannot consume without
+   * a `.from()` input class. Kept here so the (identical) error is raised once.
+   */
+  protected assertInputClass(): asserts this is this & {
+    inputClass: Constructor<IMessage>;
+  } {
+    if (!this.inputClass) {
+      throw new IrisDriverError(
+        "Stream pipeline requires an input class. Call .from() before .to().",
+        {
+          code: "pipeline_input_class_required",
+          title: "Pipeline Input Class Required",
+          details:
+            "The stream pipeline was started without an input class; call .from() before .to().",
+        },
+      );
+    }
   }
 
-  private async _doProcessInboundData(
-    payload: Buffer,
-    headers: Record<string, string>,
-    sourceTopic: string,
-  ): Promise<void> {
+  protected getInputMetadata(): MessageMetadata {
+    this.assertInputClass();
+    return getMessageMetadata(this.inputClass);
+  }
+
+  /**
+   * Consume host shared by every driver's `wrap*Consumer` wiring. Deserializing
+   * the inbound payload is the pipeline's PARSE step — a failure here is a poison
+   * pill routed to `onDeserializationError` (attempt-bounded → dead letter),
+   * exactly like a worker queue. Stage/publish failures propagate out of the
+   * `callback` (see {@link processStreamMessage}) into the retry/dead-letter path.
+   */
+  protected buildInboundHost(inputMetadata: MessageMetadata): ConsumerCallbackHost<any> {
+    return {
+      prepareForConsume: (payload, headers) =>
+        prepareInbound(payload, headers, inputMetadata, this.encryption),
+      afterConsumeSuccess: async () => {},
+      onConsumeError: async () => {},
+    };
+  }
+
+  /**
+   * The consume `callback` handed to `consumeMessageCore` via each driver's
+   * `wrap*Consumer`. Runs the transform stages and publishes the output(s).
+   *
+   * Errors are NOT swallowed — they propagate so the driver's ConsumeStrategies
+   * redeliver (bounded by the message's @Retry) and dead-letter on exhaustion,
+   * matching the worker-queue at-least-once contract (H5).
+   *
+   * NOTE on batching: a message that lands in a batch buffer completes its
+   * callback (and is therefore acknowledged) BEFORE the batch is flushed and
+   * published. Batched pipelines are consequently at-most-once across the
+   * buffering window — the flush is decoupled from delivery. Only non-batched
+   * pipelines carry the full redelivery/dead-letter guarantee.
+   */
+  protected processStreamMessage(message: any): Promise<void> {
+    if (!this.running || this.paused) return Promise.resolve();
+
+    const run = this._processingQueue.then(() => this.runStages(message));
+
+    // Keep the serialization chain alive but non-rejecting for the NEXT message,
+    // while the CURRENT `run` still rejects so consumeMessageCore can retry it.
+    this._processingQueue = run.then(
+      () => undefined,
+      () => undefined,
+    );
+
+    return run;
+  }
+
+  private async runStages(message: any): Promise<void> {
     if (!this.running || this.paused) return;
 
-    if (!this.inputClass) {
-      this.logger.error(
-        "Stream pipeline has no input class — call .from() before starting",
-      );
-      return;
+    let items: Array<any> = [message];
+
+    for (const stage of this.stages) {
+      if (stage.type === "batch") {
+        this.batchBuffer.push(...items);
+
+        if (this.batchBuffer.length >= stage.size) {
+          const batch = this.batchBuffer.splice(0, stage.size);
+          items = [batch];
+        } else {
+          this.resetBatchTimer(stage);
+          return;
+        }
+      } else {
+        items = applyStage(stage, items);
+      }
+
+      if (items.length === 0) return;
     }
 
-    try {
-      const inputMetadata = getMessageMetadata(this.inputClass);
-      const inboundData = await prepareInbound(
-        payload,
-        headers,
-        inputMetadata,
-        this.encryption,
-      );
-
-      let items: Array<any> = [inboundData];
-
-      for (const stage of this.stages) {
-        if (stage.type === "batch") {
-          this.batchBuffer.push(...items);
-
-          if (this.batchBuffer.length >= stage.size) {
-            const batch = this.batchBuffer.splice(0, stage.size);
-            items = [batch];
-          } else {
-            this.resetBatchTimer(stage);
-            return;
-          }
-        } else {
-          items = applyStage(stage, items);
-        }
-
-        if (items.length === 0) return;
-      }
-
-      for (const item of items) {
-        await this.publishOutput(item);
-      }
-    } catch (error) {
-      this.logger.error("Stream pipeline processing error", {
-        error,
-        topic: sourceTopic,
-      });
+    for (const item of items) {
+      await this.publishOutput(item);
     }
   }
 

@@ -122,6 +122,37 @@ export const createTckMessages = (hookLog: Array<string>) => {
     @Field("integer") score!: number;
   }
 
+  // Stream input that participates in retry + dead-letter. A pipeline stage that
+  // throws on this input must redeliver (bounded by @Retry) then dead-letter —
+  // it must NOT be silently dropped (H5, stream at-least-once contract).
+  @Retry({ maxRetries: 2, strategy: "constant", delay: 50 })
+  @DeadLetter()
+  @Message({ name: "TckStreamRetryInput" })
+  class TckStreamRetryInput implements IMessage {
+    @Field("string") value!: string;
+    @Field("integer") score!: number;
+  }
+
+  // Poison-pill injection pair for streams. The pipeline consumes with
+  // `TckStreamPoisonInput` (marked @Encrypted, so its deserialization REQUIRES an
+  // encrypted payload) but reads the topic that `TckStreamPoisonFeed` publishes
+  // PLAIN. The undeserializable (unencrypted-but-expected-encrypted) payload is a
+  // poison pill: retrying is futile, so it must go straight to the dead letter —
+  // never loop forever, never silently drop (H5).
+  @Encrypted({ predicate: { purpose: "message" } })
+  @DeadLetter()
+  @Message({ name: "TckStreamPoisonInput" })
+  class TckStreamPoisonInput implements IMessage {
+    @Field("string") value!: string;
+    @Field("integer") score!: number;
+  }
+
+  @Message({ name: "TckStreamPoisonFeed" })
+  class TckStreamPoisonFeed implements IMessage {
+    @Field("string") value!: string;
+    @Field("integer") score!: number;
+  }
+
   @Encrypted({ predicate: { purpose: "message" } })
   @Message({ name: "TckEncryptedMessage" })
   class TckEncryptedMessage implements IMessage {
@@ -234,6 +265,9 @@ export const createTckMessages = (hookLog: Array<string>) => {
     TckRpcResponse,
     TckStreamInput,
     TckStreamOutput,
+    TckStreamRetryInput,
+    TckStreamPoisonInput,
+    TckStreamPoisonFeed,
     TckEncryptedMessage,
     TckCompressedMessage,
     TckHeaderMessage,

@@ -1,7 +1,7 @@
 import { randomId } from "@lindorm/random";
 import type { RedisSharedState, RedisStreamEntry } from "../types/redis-types.js";
 import type { IrisEnvelope } from "../../../types/iris-envelope.js";
-import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
+import type { MessageMetadata } from "../../../message/types/metadata.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
 import { resolveStreamKey } from "../utils/resolve-stream-key.js";
@@ -9,6 +9,7 @@ import { serializeStreamFields } from "../utils/serialize-stream-fields.js";
 import { xaddToStream } from "../utils/xadd-to-stream.js";
 import { createConsumerLoop } from "../utils/create-consumer-loop.js";
 import { stopConsumerLoop } from "../utils/stop-consumer-loop.js";
+import { wrapRedisConsumer } from "../utils/wrap-redis-consumer.js";
 import {
   DriverStreamPipelineBase,
   type DriverStreamPipelineBaseOptions,
@@ -43,17 +44,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
       this.consumerTag = null;
     }
 
-    if (!this.inputClass) {
-      throw new IrisDriverError(
-        "Stream pipeline requires an input class. Call .from() before .to().",
-        {
-          code: "pipeline_input_class_required",
-          title: "Pipeline Input Class Required",
-          details:
-            "The stream pipeline was started without an input class; call .from() before .to().",
-        },
-      );
-    }
+    this.assertInputClass();
 
     const inputMetadata = getMessageMetadata(this.inputClass);
     const subscribeTopic = this.inputTopic ?? resolveDefaultTopic(inputMetadata);
@@ -70,7 +61,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
       consumerName: this.state.consumerName,
       blockMs: this.state.blockMs,
       count: this.state.prefetch,
-      onEntry: async (entry) => this.processEntry(entry),
+      onEntry: this.buildOnEntry(inputMetadata),
       logger: this.logger,
       createdGroups: this.state.createdGroups,
     });
@@ -150,7 +141,7 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
       consumerName: this.state.consumerName,
       blockMs: this.state.blockMs,
       count: this.state.prefetch,
-      onEntry: async (entry) => this.processEntry(entry),
+      onEntry: this.buildOnEntry(inputMetadata),
       logger: this.logger,
       createdGroups: this.state.createdGroups,
     });
@@ -177,7 +168,19 @@ export class RedisStreamPipeline extends DriverStreamPipelineBase {
     await xaddToStream(conn, streamKey, fields, this.state.maxStreamLength);
   }
 
-  private async processEntry(entry: RedisStreamEntry): Promise<void> {
-    await this.processInboundData(entry.payload, entry.headers, entry.topic);
+  // Shared inbound handler: deserialize (parse errors → dead letter) then run
+  // the transform stages (failures → retry via delay manager / re-xadd bounded
+  // by @Retry, then dead letter) — the SAME contract the Redis worker queue uses.
+  private buildOnEntry(
+    inputMetadata: MessageMetadata,
+  ): (entry: RedisStreamEntry) => Promise<void> {
+    return wrapRedisConsumer(
+      this.buildInboundHost(inputMetadata),
+      (message) => this.processStreamMessage(message),
+      this.state,
+      inputMetadata,
+      this.logger,
+      { deadLetterManager: this.deadLetterManager, delayManager: this.delayManager },
+    );
   }
 }
