@@ -27,7 +27,7 @@ export type RedisWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> &
 
 type OwnedConsumer = {
   mainConsumerTag: string;
-  broadcastConsumerTag: string;
+  broadcastConsumerTag?: string;
   streamKey: string;
   groupName: string;
 };
@@ -138,43 +138,50 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       callback: wrappedCallback,
     });
 
-    // Broadcast consumer loop: unique group per consumer on a separate broadcast
-    // stream so every consumer independently receives every broadcast message.
-    const broadcastStreamKey = `${streamKey}:broadcast`;
-    const broadcastGroupName = `${groupName}.bc.${randomId({ length: 16 })}`;
+    // Broadcast consumer loop: only for broadcast message types. A unique group
+    // per consumer on a separate broadcast stream lets every consumer receive
+    // every broadcast message. For non-broadcast types nothing is ever published
+    // to the broadcast stream, so the second loop would be dead overhead.
+    let broadcastLoop: Awaited<ReturnType<typeof createConsumerLoop>> | undefined;
+    if (this.metadata.broadcast) {
+      const broadcastStreamKey = `${streamKey}:broadcast`;
+      const broadcastGroupName = `${groupName}.bc.${randomId({ length: 16 })}`;
 
-    const broadcastLoop = await createConsumerLoop({
-      publishConnection: this.state.publishConnection,
-      streamKey: broadcastStreamKey,
-      groupName: broadcastGroupName,
-      consumerName: this.state.consumerName,
-      blockMs: this.state.blockMs,
-      count: this.state.prefetch,
-      onEntry: wrappedCallback,
-      logger: this.logger,
-      createdGroups: this.state.createdGroups,
-    });
-    this.state.consumerLoops.push(broadcastLoop);
-    this.state.consumerRegistrations.push({
-      consumerTag: broadcastLoop.consumerTag,
-      streamKey: broadcastStreamKey,
-      groupName: broadcastGroupName,
-      consumerName: this.state.consumerName,
-      callback: wrappedCallback,
-    });
+      broadcastLoop = await createConsumerLoop({
+        publishConnection: this.state.publishConnection,
+        streamKey: broadcastStreamKey,
+        groupName: broadcastGroupName,
+        consumerName: this.state.consumerName,
+        blockMs: this.state.blockMs,
+        count: this.state.prefetch,
+        onEntry: wrappedCallback,
+        logger: this.logger,
+        createdGroups: this.state.createdGroups,
+      });
+      this.state.consumerLoops.push(broadcastLoop);
+      this.state.consumerRegistrations.push({
+        consumerTag: broadcastLoop.consumerTag,
+        streamKey: broadcastStreamKey,
+        groupName: broadcastGroupName,
+        consumerName: this.state.consumerName,
+        callback: wrappedCallback,
+      });
+    }
 
     const existing = this.ownedConsumers.get(queue) ?? [];
     existing.push({
       mainConsumerTag: mainLoop.consumerTag,
-      broadcastConsumerTag: broadcastLoop.consumerTag,
+      broadcastConsumerTag: broadcastLoop?.consumerTag,
       streamKey,
       groupName,
     });
     this.ownedConsumers.set(queue, existing);
 
-    // Wait until both loops are blocking for new messages before returning,
+    // Wait until the loops are blocking for new messages before returning,
     // so callers can publish immediately after consume() resolves.
-    await Promise.all([mainLoop.ready, broadcastLoop.ready]);
+    const ready = [mainLoop.ready];
+    if (broadcastLoop) ready.push(broadcastLoop.ready);
+    await Promise.all(ready);
   }
 
   async unconsume(queue: string): Promise<void> {
@@ -182,10 +189,12 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
     if (!consumers || consumers.length === 0) return;
 
     for (const consumer of consumers) {
-      await stopConsumerLoop(this.state, consumer.mainConsumerTag);
-      await stopConsumerLoop(this.state, consumer.broadcastConsumerTag);
+      const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
+        (t): t is string => Boolean(t),
+      );
+      for (const tag of tags) {
+        await stopConsumerLoop(this.state, tag);
 
-      for (const tag of [consumer.mainConsumerTag, consumer.broadcastConsumerTag]) {
         const idx = this.state.consumerRegistrations.findIndex(
           (r) => r.consumerTag === tag,
         );
@@ -199,10 +208,12 @@ export class RedisWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
   async unconsumeAll(): Promise<void> {
     for (const [, consumers] of this.ownedConsumers) {
       for (const consumer of consumers) {
-        await stopConsumerLoop(this.state, consumer.mainConsumerTag);
-        await stopConsumerLoop(this.state, consumer.broadcastConsumerTag);
+        const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
+          (t): t is string => Boolean(t),
+        );
+        for (const tag of tags) {
+          await stopConsumerLoop(this.state, tag);
 
-        for (const tag of [consumer.mainConsumerTag, consumer.broadcastConsumerTag]) {
           const idx = this.state.consumerRegistrations.findIndex(
             (r) => r.consumerTag === tag,
           );

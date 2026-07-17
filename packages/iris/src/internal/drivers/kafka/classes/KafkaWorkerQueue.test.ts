@@ -1,4 +1,5 @@
 import type { IMessage } from "../../../../interfaces/index.js";
+import { Broadcast } from "../../../../decorators/Broadcast.js";
 import { Field } from "../../../../decorators/Field.js";
 import { Message } from "../../../../decorators/Message.js";
 import { clearRegistry } from "../../../message/metadata/registry.js";
@@ -35,6 +36,12 @@ vi.mock("../utils/stop-kafka-consumer.js", () => ({
 
 @Message({ name: "TckKafkaWqBasic" })
 class TckKafkaWqBasic implements IMessage {
+  @Field("string") data!: string;
+}
+
+@Broadcast()
+@Message({ name: "TckKafkaWqBroadcast" })
+class TckKafkaWqBroadcast implements IMessage {
   @Field("string") data!: string;
 }
 
@@ -84,6 +91,17 @@ const createQueue = () => {
   return { queue, state };
 };
 
+const createBroadcastQueue = () => {
+  const state = createMockState();
+  const queue = new KafkaWorkerQueue<TckKafkaWqBroadcast>({
+    target: TckKafkaWqBroadcast as any,
+    logger: createMockLogger() as any,
+    getSubscribers: () => [],
+    state,
+  });
+  return { queue, state };
+};
+
 // --- Tests ---
 
 beforeEach(() => {
@@ -108,25 +126,46 @@ describe("KafkaWorkerQueue", () => {
   });
 
   describe("consume", () => {
-    it("should create pooled consumer with string queue argument", async () => {
+    it("should create a single pooled consumer for a non-broadcast type", async () => {
       const { queue } = createQueue();
 
       await queue.consume("my-queue", async () => {});
 
-      // Creates 2 pooled consumers: main + broadcast.
+      // Non-broadcast worker-queue type: only the competing-consumer (main) pooled
+      // consumer is created. No dead broadcast consumer and no auto-created
+      // `.broadcast` topic (M14) — nothing is ever published there for a
+      // non-broadcast type.
       // The listen topic is derived from the message metadata (so it matches the
       // publish-side resolved topic), while the consumer group derives from the
       // queue identifier.
-      expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(2);
+      expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(1);
       const mainOpts = mockGetOrCreatePooledConsumer.mock.calls[0][0];
       expect(mainOpts.topic).toBe("iris.TckKafkaWqBasic");
       expect(mainOpts.groupId).toBe("iris.wq.my-queue");
 
-      const broadcastOpts = mockGetOrCreatePooledConsumer.mock.calls[1][0];
-      expect(broadcastOpts.topic).toBe("iris.TckKafkaWqBasic.broadcast");
+      // No `.broadcast` topic is ever subscribed for a non-broadcast type.
+      const subscribedTopics = mockGetOrCreatePooledConsumer.mock.calls.map(
+        (c) => c[0].topic,
+      );
+      expect(subscribedTopics).not.toContain("iris.TckKafkaWqBasic.broadcast");
     });
 
-    it("should create pooled consumer with options object", async () => {
+    it("should create main + broadcast pooled consumers for a broadcast type", async () => {
+      const { queue } = createBroadcastQueue();
+
+      await queue.consume("my-queue", async () => {});
+
+      // Broadcast type: main (competing consumer) + broadcast consumer.
+      expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(2);
+      const mainOpts = mockGetOrCreatePooledConsumer.mock.calls[0][0];
+      expect(mainOpts.topic).toBe("iris.TckKafkaWqBroadcast");
+      expect(mainOpts.groupId).toBe("iris.wq.my-queue");
+
+      const broadcastOpts = mockGetOrCreatePooledConsumer.mock.calls[1][0];
+      expect(broadcastOpts.topic).toBe("iris.TckKafkaWqBroadcast.broadcast");
+    });
+
+    it("should create a single pooled consumer with options object", async () => {
       const { queue } = createQueue();
 
       await queue.consume({
@@ -134,8 +173,8 @@ describe("KafkaWorkerQueue", () => {
         callback: async () => {},
       });
 
-      // Creates 2 pooled consumers: main + broadcast
-      expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(2);
+      // Non-broadcast: main only
+      expect(mockGetOrCreatePooledConsumer).toHaveBeenCalledTimes(1);
     });
 
     it("should throw when callback is missing", async () => {
@@ -156,20 +195,32 @@ describe("KafkaWorkerQueue", () => {
   });
 
   describe("unconsume", () => {
-    it("should release pooled consumer for specified queue", async () => {
+    it("should release the pooled consumer for a non-broadcast queue", async () => {
       const { queue } = createQueue();
       await queue.consume("my-queue", async () => {});
 
       await queue.unconsume("my-queue");
 
-      // Releases 2 pooled consumers: main + broadcast
-      expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(2);
+      // Non-broadcast: only the main pooled consumer is released
+      expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(1);
       const mainOpts = mockReleasePooledConsumer.mock.calls[0][0];
       expect(mainOpts.groupId).toBe("iris.wq.my-queue");
       expect(mainOpts.topic).toBe("iris.TckKafkaWqBasic");
+    });
+
+    it("should release main + broadcast pooled consumers for a broadcast queue", async () => {
+      const { queue } = createBroadcastQueue();
+      await queue.consume("my-queue", async () => {});
+
+      await queue.unconsume("my-queue");
+
+      // Broadcast: main + broadcast pooled consumers are released
+      expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(2);
+      const mainOpts = mockReleasePooledConsumer.mock.calls[0][0];
+      expect(mainOpts.topic).toBe("iris.TckKafkaWqBroadcast");
 
       const broadcastOpts = mockReleasePooledConsumer.mock.calls[1][0];
-      expect(broadcastOpts.topic).toBe("iris.TckKafkaWqBasic.broadcast");
+      expect(broadcastOpts.topic).toBe("iris.TckKafkaWqBroadcast.broadcast");
     });
 
     it("should be a no-op for unknown queue", async () => {
@@ -191,8 +242,8 @@ describe("KafkaWorkerQueue", () => {
 
       await queue.unconsumeAll();
 
-      // 2 queues x 2 consumers each (main + broadcast) = 4 releases
-      expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(4);
+      // 2 non-broadcast queues x 1 consumer each = 2 releases
+      expect(mockReleasePooledConsumer).toHaveBeenCalledTimes(2);
     });
   });
 });

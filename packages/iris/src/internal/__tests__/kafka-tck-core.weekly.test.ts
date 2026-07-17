@@ -7,6 +7,9 @@ import { randomUUID } from "@lindorm/random";
 import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../interfaces/index.js";
 import { IrisSource } from "../../classes/IrisSource.js";
+import { Broadcast } from "../../decorators/Broadcast.js";
+import { Field } from "../../decorators/Field.js";
+import { Message } from "../../decorators/Message.js";
 import type { KafkaDriver } from "../drivers/kafka/classes/KafkaDriver.js";
 import type { KafkaSharedState } from "../drivers/kafka/types/kafka-types.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
@@ -14,7 +17,7 @@ import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
 import { waitFor } from "../__fixtures__/tck/wait.js";
 import { stopAllKafkaConsumers } from "../drivers/kafka/utils/stop-kafka-consumer.js";
-import { describe, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -148,6 +151,80 @@ const factory: TckDriverFactory = {
     };
   },
 };
+
+// M14: a non-broadcast worker-queue type must open exactly ONE consumer group
+// and must NOT auto-create a `.broadcast` topic. A broadcast type still opens
+// its broadcast consumer.
+describe("Kafka worker-queue broadcast gating (M14)", () => {
+  @Message({ name: "M14KafkaNonBroadcast" })
+  class M14KafkaNonBroadcast implements IMessage {
+    @Field("string") body!: string;
+  }
+
+  @Broadcast()
+  @Message({ name: "M14KafkaBroadcast" })
+  class M14KafkaBroadcast implements IMessage {
+    @Field("string") body!: string;
+  }
+
+  const prefix = `iris-m14-${randomUUID().slice(0, 8)}`;
+  let m14Source: IrisSource;
+
+  beforeAll(async () => {
+    m14Source = new IrisSource({
+      driver: "kafka",
+      brokers: ["localhost:9092"],
+      prefix,
+      logger: createMockLogger() as any,
+      messages: [M14KafkaNonBroadcast, M14KafkaBroadcast],
+      sessionTimeoutMs: 15000,
+    });
+    await m14Source.connect();
+    await m14Source.setup();
+  });
+
+  afterAll(async () => {
+    await m14Source.disconnect();
+  });
+
+  const state = (): KafkaSharedState =>
+    (m14Source as any)._driver.state as KafkaSharedState;
+
+  test("non-broadcast type opens one consumer and no .broadcast topic", async () => {
+    const before = state().consumerRegistrations.length;
+
+    const wq = m14Source.workerQueue(M14KafkaNonBroadcast);
+    await wq.consume("M14KafkaNonBroadcast", async () => {});
+
+    const added = state().consumerRegistrations.slice(before);
+    expect(added).toHaveLength(1);
+    expect(added[0].topic).toBe(`${prefix}.M14KafkaNonBroadcast`);
+    // No `.broadcast` topic is ever subscribed or auto-created for a
+    // non-broadcast type.
+    expect(added.some((r) => r.topic.endsWith(".broadcast"))).toBe(false);
+    expect(state().createdTopics.has(`${prefix}.M14KafkaNonBroadcast.broadcast`)).toBe(
+      false,
+    );
+
+    await wq.unconsumeAll();
+  });
+
+  test("broadcast type opens main + broadcast consumers", async () => {
+    const before = state().consumerRegistrations.length;
+
+    const wq = m14Source.workerQueue(M14KafkaBroadcast);
+    await wq.consume("M14KafkaBroadcast", async () => {});
+
+    const added = state().consumerRegistrations.slice(before);
+    expect(added).toHaveLength(2);
+    expect(added.some((r) => r.topic === `${prefix}.M14KafkaBroadcast`)).toBe(true);
+    expect(added.some((r) => r.topic === `${prefix}.M14KafkaBroadcast.broadcast`)).toBe(
+      true,
+    );
+
+    await wq.unconsumeAll();
+  });
+});
 
 describe("TCK: Kafka (core)", () => {
   runTck(factory, [

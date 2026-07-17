@@ -27,11 +27,11 @@ export type KafkaWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> &
 
 type OwnedConsumer = {
   mainConsumerTag: string;
-  broadcastConsumerTag: string;
+  broadcastConsumerTag?: string;
   kafkaTopic: string;
-  broadcastTopic: string;
+  broadcastTopic?: string;
   groupId: string;
-  broadcastGroupId: string;
+  broadcastGroupId?: string;
 };
 
 export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M> {
@@ -136,44 +136,6 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       },
     );
 
-    // Broadcast consumer: unique group per consumer on a separate broadcast
-    // topic so every consumer independently receives every broadcast message.
-    const broadcastTopic = `${kafkaTopic}.broadcast`;
-    const broadcastGroupId = `${groupId}.bc.${randomId({ length: 16 })}`;
-
-    const getBroadcastConsumer = (): KafkaConsumer => {
-      const p = this.state.consumerPool.get(broadcastGroupId);
-      if (!p)
-        throw new IrisDriverError(
-          "Pooled consumer not found for group: " + broadcastGroupId,
-          {
-            code: "consumer_not_found",
-            title: "Consumer Not Found",
-            details:
-              "The pooled Kafka consumer for the worker broadcast consumer group was not found; it may have been stopped or evicted.",
-            data: { driver: "kafka", groupId: broadcastGroupId },
-          },
-        );
-      return p.consumer;
-    };
-
-    const broadcastOnMessage = wrapKafkaConsumer(
-      {
-        prepareForConsume: (payload, headers) => this.prepareForConsume(payload, headers),
-        afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
-        onConsumeError: (err, msg) => this.onConsumeError(err, msg),
-      },
-      cb,
-      this.state,
-      this.metadata,
-      this.logger,
-      {
-        deadLetterManager: this.deadLetterManager,
-        delayManager: this.delayManager,
-        consumer: getBroadcastConsumer,
-      },
-    );
-
     const { consumerTag: mainConsumerTag } = await getOrCreatePooledConsumer({
       state: this.state,
       groupId,
@@ -183,16 +145,7 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       fromBeginning: false,
     });
 
-    const { consumerTag: broadcastConsumerTag } = await getOrCreatePooledConsumer({
-      state: this.state,
-      groupId: broadcastGroupId,
-      topic: broadcastTopic,
-      onMessage: broadcastOnMessage,
-      logger: this.logger,
-      fromBeginning: false,
-    });
-
-    // Record the REAL handlers so the driver can rebuild these consumers on
+    // Record the REAL handler so the driver can rebuild this consumer on
     // reconnect. Storing a no-op here would leave the driver "connected" but
     // silently consuming nothing after a broker bounce (H6/D4).
     this.state.consumerRegistrations.push({
@@ -204,14 +157,72 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
       fromBeginning: false,
     });
 
-    this.state.consumerRegistrations.push({
-      consumerTag: broadcastConsumerTag,
-      groupId: broadcastGroupId,
-      topic: broadcastTopic,
-      onMessage: broadcastOnMessage,
-      pooled: true,
-      fromBeginning: false,
-    });
+    // Broadcast consumer: only for broadcast message types. A unique group per
+    // consumer on a separate broadcast topic lets every consumer receive every
+    // broadcast message. For non-broadcast types nothing is ever published to the
+    // broadcast topic, so the second consumer (and the auto-created `.broadcast`
+    // topic it would subscribe into) would be dead overhead.
+    let broadcastConsumerTag: string | undefined;
+    let broadcastTopic: string | undefined;
+    let broadcastGroupId: string | undefined;
+    if (this.metadata.broadcast) {
+      broadcastTopic = `${kafkaTopic}.broadcast`;
+      broadcastGroupId = `${groupId}.bc.${randomId({ length: 16 })}`;
+
+      const resolvedBroadcastGroupId = broadcastGroupId;
+      const getBroadcastConsumer = (): KafkaConsumer => {
+        const p = this.state.consumerPool.get(resolvedBroadcastGroupId);
+        if (!p)
+          throw new IrisDriverError(
+            "Pooled consumer not found for group: " + resolvedBroadcastGroupId,
+            {
+              code: "consumer_not_found",
+              title: "Consumer Not Found",
+              details:
+                "The pooled Kafka consumer for the worker broadcast consumer group was not found; it may have been stopped or evicted.",
+              data: { driver: "kafka", groupId: resolvedBroadcastGroupId },
+            },
+          );
+        return p.consumer;
+      };
+
+      const broadcastOnMessage = wrapKafkaConsumer(
+        {
+          prepareForConsume: (payload, headers) =>
+            this.prepareForConsume(payload, headers),
+          afterConsumeSuccess: (msg) => this.afterConsumeSuccess(msg),
+          onConsumeError: (err, msg) => this.onConsumeError(err, msg),
+        },
+        cb,
+        this.state,
+        this.metadata,
+        this.logger,
+        {
+          deadLetterManager: this.deadLetterManager,
+          delayManager: this.delayManager,
+          consumer: getBroadcastConsumer,
+        },
+      );
+
+      const result = await getOrCreatePooledConsumer({
+        state: this.state,
+        groupId: broadcastGroupId,
+        topic: broadcastTopic,
+        onMessage: broadcastOnMessage,
+        logger: this.logger,
+        fromBeginning: false,
+      });
+      broadcastConsumerTag = result.consumerTag;
+
+      this.state.consumerRegistrations.push({
+        consumerTag: broadcastConsumerTag,
+        groupId: broadcastGroupId,
+        topic: broadcastTopic,
+        onMessage: broadcastOnMessage,
+        pooled: true,
+        fromBeginning: false,
+      });
+    }
 
     const existing = this.ownedConsumers.get(queue) ?? [];
     existing.push({
@@ -237,14 +248,19 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
         logger: this.logger,
       });
 
-      await releasePooledConsumer({
-        state: this.state,
-        groupId: consumer.broadcastGroupId,
-        topic: consumer.broadcastTopic,
-        logger: this.logger,
-      });
+      if (consumer.broadcastGroupId && consumer.broadcastTopic) {
+        await releasePooledConsumer({
+          state: this.state,
+          groupId: consumer.broadcastGroupId,
+          topic: consumer.broadcastTopic,
+          logger: this.logger,
+        });
+      }
 
-      for (const tag of [consumer.mainConsumerTag, consumer.broadcastConsumerTag]) {
+      const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
+        (t): t is string => Boolean(t),
+      );
+      for (const tag of tags) {
         const regIdx = this.state.consumerRegistrations.findIndex(
           (r) => r.consumerTag === tag,
         );
@@ -265,14 +281,19 @@ export class KafkaWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<
           logger: this.logger,
         });
 
-        await releasePooledConsumer({
-          state: this.state,
-          groupId: consumer.broadcastGroupId,
-          topic: consumer.broadcastTopic,
-          logger: this.logger,
-        });
+        if (consumer.broadcastGroupId && consumer.broadcastTopic) {
+          await releasePooledConsumer({
+            state: this.state,
+            groupId: consumer.broadcastGroupId,
+            topic: consumer.broadcastTopic,
+            logger: this.logger,
+          });
+        }
 
-        for (const tag of [consumer.mainConsumerTag, consumer.broadcastConsumerTag]) {
+        const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
+          (t): t is string => Boolean(t),
+        );
+        for (const tag of tags) {
           const regIdx = this.state.consumerRegistrations.findIndex(
             (r) => r.consumerTag === tag,
           );

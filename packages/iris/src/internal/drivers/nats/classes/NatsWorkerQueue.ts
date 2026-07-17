@@ -28,8 +28,8 @@ export type NatsWorkerQueueOptions<M extends IMessage> = DriverBaseOptions<M> & 
 
 type OwnedConsumer = {
   mainConsumerTag: string;
-  broadcastConsumerTag: string;
-  broadcastConsumerName: string;
+  broadcastConsumerTag?: string;
+  broadcastConsumerName?: string;
   subject: string;
   consumerName: string;
 };
@@ -145,48 +145,58 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
       maxDeliver,
     });
 
-    // Broadcast consumer: unique ephemeral consumer on the broadcast subject
-    // so every worker instance independently receives broadcast messages.
-    const broadcastSubject = `${subject}.broadcast`;
-    const broadcastConsumerName =
-      `${consumerName}_bc_${randomId({ length: 16 })}`.replace(/[^a-zA-Z0-9_-]/g, "_");
+    // Broadcast consumer: only for broadcast message types. A unique ephemeral
+    // consumer on the broadcast subject lets every worker instance receive every
+    // broadcast message. For non-broadcast types nothing is ever published to the
+    // broadcast subject, so the second consumer would be dead overhead.
+    let broadcastLoop: Awaited<ReturnType<typeof createNatsConsumer>> | undefined;
+    let broadcastConsumerName: string | undefined;
+    if (this.metadata.broadcast) {
+      const broadcastSubject = `${subject}.broadcast`;
+      broadcastConsumerName = `${consumerName}_bc_${randomId({ length: 16 })}`.replace(
+        /[^a-zA-Z0-9_-]/g,
+        "_",
+      );
 
-    const broadcastLoop = await createNatsConsumer({
-      js: this.state.js,
-      jsm: this.state.jsm,
-      streamName: this.state.streamName,
-      consumerName: broadcastConsumerName,
-      subject: broadcastSubject,
-      prefetch: this.state.prefetch,
-      onMessage: wrappedCallback,
-      logger: this.logger,
-      ensuredConsumers: this.state.ensuredConsumers,
-      deliverPolicy: "new",
-      maxDeliver,
-    });
-    this.state.consumerLoops.push(broadcastLoop);
-    this.state.consumerRegistrations.push({
-      consumerTag: broadcastLoop.consumerTag,
-      streamName: this.state.streamName,
-      consumerName: broadcastConsumerName,
-      subject: broadcastSubject,
-      callback: wrappedCallback,
-      deliverPolicy: "new",
-      maxDeliver,
-    });
+      broadcastLoop = await createNatsConsumer({
+        js: this.state.js,
+        jsm: this.state.jsm,
+        streamName: this.state.streamName,
+        consumerName: broadcastConsumerName,
+        subject: broadcastSubject,
+        prefetch: this.state.prefetch,
+        onMessage: wrappedCallback,
+        logger: this.logger,
+        ensuredConsumers: this.state.ensuredConsumers,
+        deliverPolicy: "new",
+        maxDeliver,
+      });
+      this.state.consumerLoops.push(broadcastLoop);
+      this.state.consumerRegistrations.push({
+        consumerTag: broadcastLoop.consumerTag,
+        streamName: this.state.streamName,
+        consumerName: broadcastConsumerName,
+        subject: broadcastSubject,
+        callback: wrappedCallback,
+        deliverPolicy: "new",
+        maxDeliver,
+      });
+    }
 
     const existing = this.ownedConsumers.get(queue) ?? [];
     existing.push({
       mainConsumerTag: mainLoop.consumerTag,
-      broadcastConsumerTag: broadcastLoop.consumerTag,
+      broadcastConsumerTag: broadcastLoop?.consumerTag,
       broadcastConsumerName,
       subject,
       consumerName,
     });
     this.ownedConsumers.set(queue, existing);
 
-    // Wait until both consumers are ready before returning
-    await Promise.all([mainLoop.ready, broadcastLoop.ready]);
+    // Wait until the consumers are ready before returning
+    const ready = [mainLoop.ready];
+    if (broadcastLoop) ready.push(broadcastLoop.ready);
+    await Promise.all(ready);
   }
 
   async unconsume(queue: string): Promise<void> {
@@ -194,10 +204,14 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
     if (!consumers || consumers.length === 0) return;
 
     for (const consumer of consumers) {
-      await stopNatsConsumer(this.state, consumer.mainConsumerTag);
-      await stopNatsConsumer(this.state, consumer.broadcastConsumerTag);
+      const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
+        (t): t is string => Boolean(t),
+      );
+      for (const tag of tags) {
+        await stopNatsConsumer(this.state, tag);
+      }
 
-      if (this.state.jsm) {
+      if (this.state.jsm && consumer.broadcastConsumerName) {
         try {
           await this.state.jsm.consumers.delete(
             this.state.streamName,
@@ -209,7 +223,7 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
         this.state.ensuredConsumers.delete(consumer.broadcastConsumerName);
       }
 
-      for (const tag of [consumer.mainConsumerTag, consumer.broadcastConsumerTag]) {
+      for (const tag of tags) {
         const idx = this.state.consumerRegistrations.findIndex(
           (r) => r.consumerTag === tag,
         );
@@ -223,10 +237,14 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
   async unconsumeAll(): Promise<void> {
     for (const [, consumers] of this.ownedConsumers) {
       for (const consumer of consumers) {
-        await stopNatsConsumer(this.state, consumer.mainConsumerTag);
-        await stopNatsConsumer(this.state, consumer.broadcastConsumerTag);
+        const tags = [consumer.mainConsumerTag, consumer.broadcastConsumerTag].filter(
+          (t): t is string => Boolean(t),
+        );
+        for (const tag of tags) {
+          await stopNatsConsumer(this.state, tag);
+        }
 
-        if (this.state.jsm) {
+        if (this.state.jsm && consumer.broadcastConsumerName) {
           try {
             await this.state.jsm.consumers.delete(
               this.state.streamName,
@@ -238,7 +256,7 @@ export class NatsWorkerQueue<M extends IMessage> extends DriverWorkerQueueBase<M
           this.state.ensuredConsumers.delete(consumer.broadcastConsumerName);
         }
 
-        for (const tag of [consumer.mainConsumerTag, consumer.broadcastConsumerTag]) {
+        for (const tag of tags) {
           const idx = this.state.consumerRegistrations.findIndex(
             (r) => r.consumerTag === tag,
           );

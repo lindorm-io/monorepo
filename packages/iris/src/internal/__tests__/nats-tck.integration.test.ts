@@ -7,11 +7,15 @@ import { randomUUID } from "@lindorm/random";
 import type { Constructor } from "@lindorm/types";
 import type { IMessage } from "../../interfaces/index.js";
 import { IrisSource } from "../../classes/IrisSource.js";
+import { Broadcast } from "../../decorators/Broadcast.js";
+import { Field } from "../../decorators/Field.js";
+import { Message } from "../../decorators/Message.js";
 import type { NatsDriver } from "../drivers/nats/classes/NatsDriver.js";
+import type { NatsSharedState } from "../drivers/nats/types/nats-types.js";
 import type { TckDriverFactory, TckDriverHandle } from "../__fixtures__/tck/types.js";
 import { runTck } from "../__fixtures__/tck/run-tck.js";
 import { createTckAmphora } from "../__fixtures__/tck/create-tck-amphora.js";
-import { describe, vi } from "vitest";
+import { afterAll, beforeAll, describe, expect, test, vi } from "vitest";
 
 vi.setConfig({ testTimeout: 60_000 });
 
@@ -114,4 +118,73 @@ const factory: TckDriverFactory = {
 
 describe("TCK: NATS", () => {
   runTck(factory);
+});
+
+// M14: a non-broadcast worker-queue type must open exactly ONE consumer — no
+// dead broadcast consumer that can never receive. A broadcast type still opens
+// its broadcast consumer.
+describe("NATS worker-queue broadcast gating (M14)", () => {
+  @Message({ name: "M14NatsNonBroadcast" })
+  class M14NatsNonBroadcast implements IMessage {
+    @Field("string") body!: string;
+  }
+
+  @Broadcast()
+  @Message({ name: "M14NatsBroadcast" })
+  class M14NatsBroadcast implements IMessage {
+    @Field("string") body!: string;
+  }
+
+  const prefix = `iris-m14-${randomUUID().slice(0, 8)}`;
+  let m14Source: IrisSource;
+
+  beforeAll(async () => {
+    m14Source = new IrisSource({
+      driver: "nats",
+      servers: "localhost:4222",
+      prefix,
+      logger: createMockLogger() as any,
+      messages: [M14NatsNonBroadcast, M14NatsBroadcast],
+    });
+    await m14Source.connect();
+    await m14Source.setup();
+  });
+
+  afterAll(async () => {
+    await m14Source.disconnect();
+  });
+
+  const state = (): NatsSharedState =>
+    (m14Source as any)._driver.state as NatsSharedState;
+
+  test("non-broadcast type opens exactly one consumer", async () => {
+    const before = state().consumerRegistrations.length;
+
+    const wq = m14Source.workerQueue(M14NatsNonBroadcast);
+    await wq.consume("M14NatsNonBroadcast", async () => {});
+
+    const added = state().consumerRegistrations.slice(before);
+    expect(added).toHaveLength(1);
+    expect(added[0].subject).toBe(`${prefix}.M14NatsNonBroadcast`);
+    // No `.broadcast` subject is ever registered for a non-broadcast type.
+    expect(added.some((r) => r.subject.endsWith(".broadcast"))).toBe(false);
+
+    await wq.unconsumeAll();
+  });
+
+  test("broadcast type opens main + broadcast consumers", async () => {
+    const before = state().consumerRegistrations.length;
+
+    const wq = m14Source.workerQueue(M14NatsBroadcast);
+    await wq.consume("M14NatsBroadcast", async () => {});
+
+    const added = state().consumerRegistrations.slice(before);
+    expect(added).toHaveLength(2);
+    expect(added.some((r) => r.subject === `${prefix}.M14NatsBroadcast`)).toBe(true);
+    expect(added.some((r) => r.subject === `${prefix}.M14NatsBroadcast.broadcast`)).toBe(
+      true,
+    );
+
+    await wq.unconsumeAll();
+  });
 });

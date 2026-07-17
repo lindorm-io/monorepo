@@ -1,4 +1,5 @@
 import type { IMessage } from "../../../../interfaces/index.js";
+import { Broadcast } from "../../../../decorators/Broadcast.js";
 import { Field } from "../../../../decorators/Field.js";
 import { Message } from "../../../../decorators/Message.js";
 import { clearRegistry } from "../../../message/metadata/registry.js";
@@ -29,6 +30,12 @@ vi.mock("../utils/create-consumer-loop.js", () => ({
 
 @Message({ name: "TckRedisWqBasic" })
 class TckRedisWqBasic implements IMessage {
+  @Field("string") data!: string;
+}
+
+@Broadcast()
+@Message({ name: "TckRedisWqBroadcast" })
+class TckRedisWqBroadcast implements IMessage {
   @Field("string") data!: string;
 }
 
@@ -79,6 +86,17 @@ const createQueue = () => {
   return { queue, state };
 };
 
+const createBroadcastQueue = () => {
+  const state = createMockState();
+  const queue = new RedisWorkerQueue<TckRedisWqBroadcast>({
+    target: TckRedisWqBroadcast as any,
+    logger: createMockLogger() as any,
+    getSubscribers: () => [],
+    state,
+  });
+  return { queue, state };
+};
+
 // --- Tests ---
 
 beforeEach(() => {
@@ -108,26 +126,40 @@ describe("RedisWorkerQueue", () => {
   });
 
   describe("consume", () => {
-    it("should create consumer loop with string queue argument", async () => {
+    it("should create a single consumer loop for a non-broadcast type", async () => {
       const { queue } = createQueue();
 
       await queue.consume("my-queue", async () => {});
 
-      // Creates 2 loops: main (competing consumer) + broadcast.
+      // Non-broadcast worker-queue type: only the competing-consumer (main) loop
+      // is created. No dead broadcast loop (M14) — nothing is ever published to
+      // the `:broadcast` stream for a non-broadcast type.
       // The listen stream key is derived from the message metadata (matching the
       // publish-side resolved topic); the consumer group derives from the queue
       // identifier.
-      expect(mockCreateConsumerLoop).toHaveBeenCalledTimes(2);
+      expect(mockCreateConsumerLoop).toHaveBeenCalledTimes(1);
       const mainOpts = mockCreateConsumerLoop.mock.calls[0][0];
       expect(mainOpts.streamKey).toBe("iris:TckRedisWqBasic");
       expect(mainOpts.groupName).toBe("iris.wq.my-queue");
+    });
+
+    it("should create main + broadcast loops for a broadcast type", async () => {
+      const { queue } = createBroadcastQueue();
+
+      await queue.consume("my-queue", async () => {});
+
+      // Broadcast type: main (competing consumer) + broadcast loop.
+      expect(mockCreateConsumerLoop).toHaveBeenCalledTimes(2);
+      const mainOpts = mockCreateConsumerLoop.mock.calls[0][0];
+      expect(mainOpts.streamKey).toBe("iris:TckRedisWqBroadcast");
+      expect(mainOpts.groupName).toBe("iris.wq.my-queue");
 
       const broadcastOpts = mockCreateConsumerLoop.mock.calls[1][0];
-      expect(broadcastOpts.streamKey).toBe("iris:TckRedisWqBasic:broadcast");
+      expect(broadcastOpts.streamKey).toBe("iris:TckRedisWqBroadcast:broadcast");
       expect(broadcastOpts.groupName).toContain("iris.wq.my-queue.bc.");
     });
 
-    it("should create consumer loop with options object", async () => {
+    it("should create a single consumer loop with options object", async () => {
       const { queue } = createQueue();
 
       await queue.consume({
@@ -135,8 +167,8 @@ describe("RedisWorkerQueue", () => {
         callback: async () => {},
       });
 
-      // Creates 2 loops: main + broadcast
-      expect(mockCreateConsumerLoop).toHaveBeenCalledTimes(2);
+      // Non-broadcast: main only
+      expect(mockCreateConsumerLoop).toHaveBeenCalledTimes(1);
     });
 
     it("should throw when callback is missing", async () => {
@@ -170,13 +202,36 @@ describe("RedisWorkerQueue", () => {
         connection: { disconnect: dc } as any,
       };
 
-      const { queue, state } = createQueue();
+      const { queue } = createQueue();
       await queue.consume("my-queue", async () => {});
 
       await queue.unconsume("my-queue");
 
       expect(ac.signal.aborted).toBe(true);
-      // Called twice: main loop + broadcast loop (both share the mock)
+      // Non-broadcast: only the main loop is stopped
+      expect(dc).toHaveBeenCalledTimes(1);
+    });
+
+    it("should abort main + broadcast loops for a broadcast queue", async () => {
+      const ac = new AbortController();
+      const dc = vi.fn().mockResolvedValue(undefined);
+      mockCreateConsumerLoopResult = {
+        consumerTag: "ctag-wq",
+        groupName: "iris.wq.my-queue",
+        streamKey: "iris:my-queue",
+        callback: vi.fn(),
+        abortController: ac,
+        loopPromise: Promise.resolve(),
+        connection: { disconnect: dc } as any,
+      };
+
+      const { queue } = createBroadcastQueue();
+      await queue.consume("my-queue", async () => {});
+
+      await queue.unconsume("my-queue");
+
+      expect(ac.signal.aborted).toBe(true);
+      // Broadcast: main loop + broadcast loop (both share the mock)
       expect(dc).toHaveBeenCalledTimes(2);
     });
 
