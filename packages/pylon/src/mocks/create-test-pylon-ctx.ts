@@ -46,6 +46,15 @@ export type CreateTestPylonCtxOptions = {
   params?: Dict<string>;
   /** Deep-merged over the rich PylonState defaults. */
   state?: DeepPartial<PylonState>;
+  /**
+   * Override ctx.aegis with a REAL Aegis. The default mock returns canned values, which
+   * is right for a consumer that only needs a token-shaped answer — but a test of the
+   * mint/verify path itself needs a genuine signature over a genuine key, and a mock
+   * cannot give one. Not nullable: `ctx.aegis` is non-optional on the context.
+   */
+  aegis?: IAegis;
+  /** Override ctx.amphora with a real Amphora — same reasoning as `aegis`. */
+  amphora?: IAmphora;
   /** Override ctx.db: pass a session, or `null` to omit the mock session. */
   db?: IProteusSession | null;
   /** Override ctx.kv: pass a session, or `null` to omit the mock session. */
@@ -107,8 +116,8 @@ export const _createTestPylonCtx = (
   const headers: Dict<string> = {};
 
   const ctx: TestPylonCtx = {
-    aegis: deps.aegis,
-    amphora: deps.amphora,
+    aegis: options.aegis ?? deps.aegis,
+    amphora: options.amphora ?? deps.amphora,
     auth,
     conduits: { conduit: deps.conduit },
     entities: {},
