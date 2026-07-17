@@ -15,7 +15,7 @@ export type VerifyOkpSignatureOptions = {
   signature: KeyData;
 };
 
-export type OkpKitOptions = {
+export type OkpKitSettings = {
   dsa?: DsaEncoding;
   encoding?: BufferEncoding;
   kryptos: IKryptos;

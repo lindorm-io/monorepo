@@ -6,7 +6,7 @@ import {
 } from "@lindorm/kryptos";
 import type { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { OkpError } from "../errors/index.js";
-import type { OkpKitOptions } from "../types/index.js";
+import type { OkpKitSettings } from "../types/index.js";
 import {
   assertOkpSignature,
   createOkpSignature,
@@ -18,7 +18,7 @@ export class OkpKit implements IKeyKit {
   private readonly encoding: BufferEncoding;
   private readonly kryptos: IKryptosOkp;
 
-  constructor(options: OkpKitOptions) {
+  constructor(options: OkpKitSettings) {
     this.dsa = options.dsa ?? "der";
     this.encoding = options.encoding ?? "base64";
 
