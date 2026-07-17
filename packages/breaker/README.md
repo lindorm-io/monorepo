@@ -182,7 +182,7 @@ breaker.isHalfOpen; // boolean
 
 ```ts
 class CircuitBreaker implements ICircuitBreaker {
-  constructor(options: CircuitBreakerOptions);
+  constructor(options: CircuitBreakerSettings);
 
   readonly name: string;
   readonly state: CircuitBreakerState;
@@ -201,18 +201,18 @@ class CircuitBreaker implements ICircuitBreaker {
 }
 ```
 
-| Export                  | Kind      | Description                                                                     |
-| ----------------------- | --------- | ------------------------------------------------------------------------------- |
-| `CircuitBreaker`        | class     | Concrete circuit-breaker implementation.                                        |
-| `ICircuitBreaker`       | interface | Public contract implemented by `CircuitBreaker` and the test mocks.             |
-| `BreakerError`          | class     | Base error class for this package.                                              |
-| `CircuitOpenError`      | class     | Thrown by `execute()` when the circuit is open and probe delay has not elapsed. |
-| `CircuitBreakerOptions` | type      | Constructor options shape.                                                      |
-| `CircuitBreakerState`   | type      | `"closed" \| "open" \| "half-open"`.                                            |
-| `ErrorClassification`   | type      | `"transient" \| "permanent" \| "ignorable"`.                                    |
-| `ErrorClassifier`       | type      | `(error: Error) => ErrorClassification`.                                        |
-| `StateChangeEvent`      | type      | Payload passed to event listeners.                                              |
-| `StateChangeListener`   | type      | `(event: StateChangeEvent) => void`.                                            |
+| Export                   | Kind      | Description                                                                     |
+| ------------------------ | --------- | ------------------------------------------------------------------------------- |
+| `CircuitBreaker`         | class     | Concrete circuit-breaker implementation.                                        |
+| `ICircuitBreaker`        | interface | Public contract implemented by `CircuitBreaker` and the test mocks.             |
+| `BreakerError`           | class     | Base error class for this package.                                              |
+| `CircuitOpenError`       | class     | Thrown by `execute()` when the circuit is open and probe delay has not elapsed. |
+| `CircuitBreakerSettings` | type      | Constructor options shape.                                                      |
+| `CircuitBreakerState`    | type      | `"closed" \| "open" \| "half-open"`.                                            |
+| `ErrorClassification`    | type      | `"transient" \| "permanent" \| "ignorable"`.                                    |
+| `ErrorClassifier`        | type      | `(error: Error) => ErrorClassification`.                                        |
+| `StateChangeEvent`       | type      | Payload passed to event listeners.                                              |
+| `StateChangeListener`    | type      | `(event: StateChangeEvent) => void`.                                            |
 
 ## Testing
 

@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import type { IAmphora } from "@lindorm/amphora";
 import {
   CircuitBreaker,
-  type CircuitBreakerOptions,
+  type CircuitBreakerSettings,
   type ICircuitBreaker,
 } from "@lindorm/breaker";
 import { ms } from "@lindorm/date";
@@ -659,7 +659,7 @@ export class ProteusSource implements IProteusSource {
     const userOpts: ProteusBreakerOptions =
       typeof options.breaker === "object" ? options.breaker : {};
 
-    const breakerOptions: CircuitBreakerOptions = {
+    const breakerOptions: CircuitBreakerSettings = {
       name: `proteus:${options.driver}`,
       classifier: userOpts.classifier ?? resolveDefaultClassifier(options.driver),
       threshold: userOpts.threshold,
@@ -704,14 +704,14 @@ export class ProteusSource implements IProteusSource {
 
 Object.defineProperty(ProteusSource, PROTEUS_SOURCE_BRAND, { value: true });
 
-const driverClassifiers: Record<string, CircuitBreakerOptions["classifier"]> = {
+const driverClassifiers: Record<string, CircuitBreakerSettings["classifier"]> = {
   postgres: classifyPostgresError,
   mysql: classifyMysqlError,
   redis: classifyRedisError,
   mongo: classifyMongoError,
 };
 
-const resolveDefaultClassifier = (driver: string): CircuitBreakerOptions["classifier"] =>
+const resolveDefaultClassifier = (driver: string): CircuitBreakerSettings["classifier"] =>
   driverClassifiers[driver];
 
 /** A decorator factory (the exported `Encrypted`, …) matched by reference. */

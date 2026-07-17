@@ -1,9 +1,9 @@
-import type { CircuitBreakerOptions, ICircuitBreaker } from "@lindorm/breaker";
+import type { CircuitBreakerSettings, ICircuitBreaker } from "@lindorm/breaker";
 
 export type ConduitCircuitBreakerCache = Map<string, ICircuitBreaker>;
 
 export type ConduitCircuitBreakerConfig = Partial<
-  Omit<CircuitBreakerOptions, "name" | "classifier">
+  Omit<CircuitBreakerSettings, "name" | "classifier">
 > & {
-  classifier?: CircuitBreakerOptions["classifier"];
+  classifier?: CircuitBreakerSettings["classifier"];
 };

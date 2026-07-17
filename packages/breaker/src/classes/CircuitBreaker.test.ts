@@ -1,7 +1,7 @@
 import { CircuitBreaker } from "./CircuitBreaker.js";
 import { CircuitOpenError } from "../errors/CircuitOpenError.js";
 import type {
-  CircuitBreakerOptions,
+  CircuitBreakerSettings,
   ErrorClassification,
   StateChangeEvent,
 } from "../types/circuit-breaker.js";
@@ -18,7 +18,7 @@ describe("CircuitBreaker", () => {
     vi.restoreAllMocks();
   });
 
-  const makeBreaker = (overrides: Partial<CircuitBreakerOptions> = {}): CircuitBreaker =>
+  const makeBreaker = (overrides: Partial<CircuitBreakerSettings> = {}): CircuitBreaker =>
     new CircuitBreaker({
       name: "test-breaker",
       threshold: 3,

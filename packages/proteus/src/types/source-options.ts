@@ -1,5 +1,5 @@
 import type { IAmphora } from "@lindorm/amphora";
-import type { CircuitBreakerOptions } from "@lindorm/breaker";
+import type { CircuitBreakerSettings } from "@lindorm/breaker";
 import type { ReadableTime } from "@lindorm/date";
 import type { ILogger } from "@lindorm/logger";
 import type { ConnectionOptions } from "node:tls";
@@ -12,10 +12,10 @@ import type { EntityScannerInput } from "./scanner.js";
 /**
  * Circuit breaker configuration for ProteusSource.
  *
- * All fields from CircuitBreakerOptions are available except `name`
+ * All fields from CircuitBreakerSettings are available except `name`
  * (auto-generated from the driver type).
  */
-export type ProteusBreakerOptions = Partial<Omit<CircuitBreakerOptions, "name">>;
+export type ProteusBreakerOptions = Partial<Omit<CircuitBreakerSettings, "name">>;
 
 /**
  * Control how entity field names are transformed to database column names.

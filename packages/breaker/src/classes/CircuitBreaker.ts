@@ -3,7 +3,7 @@ import { CircuitOpenError } from "../errors/CircuitOpenError.js";
 import type { ICircuitBreaker } from "../interfaces/CircuitBreaker.js";
 import { calculateBackoff, SlidingWindow } from "../internal/index.js";
 import type {
-  CircuitBreakerOptions,
+  CircuitBreakerSettings,
   CircuitBreakerState,
   ErrorClassification,
   ErrorClassifier,
@@ -34,7 +34,7 @@ export class CircuitBreaker implements ICircuitBreaker {
   private probePromise: Promise<void> | null = null;
   private resolveProbe: (() => void) | null = null;
 
-  constructor(options: CircuitBreakerOptions) {
+  constructor(options: CircuitBreakerSettings) {
     this._name = options.name;
     this.classifier = options.classifier ?? DEFAULT_CLASSIFIER;
     this.emitter = new EventEmitter();

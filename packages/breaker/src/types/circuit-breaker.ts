@@ -14,7 +14,7 @@ export type StateChangeEvent = {
 
 export type StateChangeListener = (event: StateChangeEvent) => void;
 
-export type CircuitBreakerOptions = {
+export type CircuitBreakerSettings = {
   name: string;
   classifier?: ErrorClassifier;
   threshold?: number;
