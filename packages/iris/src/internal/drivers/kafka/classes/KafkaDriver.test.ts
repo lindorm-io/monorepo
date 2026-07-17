@@ -250,6 +250,33 @@ describe("KafkaDriver", () => {
     });
   });
 
+  describe("concurrent connect guard (M13)", () => {
+    it("dedupes concurrent connect() calls to a single client", async () => {
+      const driver = createDriver();
+
+      const [a, b] = await Promise.all([driver.connect(), driver.connect()]);
+
+      expect(a).toBeUndefined();
+      expect(b).toBeUndefined();
+      expect(driver.connected).toBe(true);
+      // Only one underlying client is constructed for two overlapping connects.
+      expect(Kafka).toHaveBeenCalledTimes(1);
+    });
+
+    it("clears the guard after a failed connect so a retry can succeed", async () => {
+      const driver = createDriver();
+      mockProducerInstance.connect.mockRejectedValueOnce(new Error("connect boom"));
+
+      await expect(driver.connect()).rejects.toThrow("connect boom");
+      expect(driver.connected).toBe(false);
+
+      // The guard cleared on failure, so a fresh connect constructs a new client.
+      await driver.connect();
+      expect(driver.connected).toBe(true);
+      expect(Kafka).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe("state listeners", () => {
     it("should notify listeners on state change", async () => {
       const driver = createDriver();
