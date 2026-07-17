@@ -6,7 +6,7 @@ import {
 } from "@lindorm/kryptos";
 import type { DsaEncoding, IKeyKit, KeyData } from "@lindorm/types";
 import { EcError } from "../errors/index.js";
-import type { EcKitOptions } from "../types/index.js";
+import type { EcKitSettings } from "../types/index.js";
 import {
   assertEcSignature,
   createEcSignature,
@@ -19,7 +19,7 @@ export class EcKit implements IKeyKit {
   private readonly kryptos: IKryptosEc;
   private readonly raw: boolean;
 
-  constructor(options: EcKitOptions) {
+  constructor(options: EcKitSettings) {
     this.dsa = options.dsa ?? "der";
     this.encoding = options.encoding ?? "base64";
     this.raw = options.raw ?? false;

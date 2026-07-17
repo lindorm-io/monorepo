@@ -17,7 +17,7 @@ export type VerifyEcSignatureOptions = {
   signature: KeyData;
 };
 
-export type EcKitOptions = {
+export type EcKitSettings = {
   dsa?: DsaEncoding;
   encoding?: BufferEncoding;
   kryptos: IKryptos;
