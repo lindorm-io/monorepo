@@ -88,6 +88,25 @@ describe("conduitCacheMiddleware", () => {
     expect(next).toHaveBeenCalled();
   });
 
+  test('field-scoped Cache-Control: no-cache="set-cookie" is still cached', async () => {
+    const mw = createConduitCacheMiddleware();
+
+    const a = makeCtx();
+    await mw(a, async () => {
+      a.res = { ...ok, headers: { "cache-control": 'no-cache="set-cookie"' } };
+    });
+
+    const b = makeCtx();
+    const next = vi.fn(async () => {
+      b.res = { ...ok };
+    });
+    await mw(b, next);
+
+    // Served FROM cache — a field-scoped no-cache marks only the named header
+    // uncacheable, not the body, so the response WAS stored (RFC 7234 §5.2.2.2).
+    expect(next).not.toHaveBeenCalled();
+  });
+
   test("offline: a miss throws instead of performing the request", async () => {
     const mw = createConduitCacheMiddleware({ offline: true });
 

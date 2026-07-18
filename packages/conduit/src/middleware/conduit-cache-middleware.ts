@@ -1,6 +1,7 @@
 import type { HttpMethod } from "@lindorm/types";
 import { createMemoryCacheDriver } from "../drivers/index.js";
 import { canonicalCacheKey } from "../internal/utils/canonical-cache-key.js";
+import { isCachingBlocked } from "../internal/utils/is-caching-blocked.js";
 import type { IConduitCacheDriver } from "../interfaces/index.js";
 import type {
   ConduitCacheKey,
@@ -85,9 +86,7 @@ export const createConduitCacheMiddleware = (
 
       const cacheControl = ctx.res.headers?.["cache-control"];
       const ccValue = typeof cacheControl === "string" ? cacheControl : "";
-      const blocked =
-        respectCacheControl &&
-        (ccValue.includes("no-store") || ccValue.includes("no-cache"));
+      const blocked = respectCacheControl && isCachingBlocked(ccValue);
 
       if (!blocked && ctx.res.status >= 200 && ctx.res.status < 300) {
         await driver.set(key, ctx.res, maxAge);
