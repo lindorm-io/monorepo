@@ -1,0 +1,40 @@
+# TCK naming-strategy coverage
+
+The behavioural TCK (`run-tck.ts`) can replay the entire suite under one or more
+naming strategies (`none` / `snake` / `camel`) via `runTck(factory, getSource, namings)`.
+Each strategy runs in its own `describe` block with a fresh set of entity classes.
+
+## Why one strategy per driver
+
+`applyNamingStrategy` is a **shared, driver-agnostic resolver**. It resolves
+entity / column / foreign-key names from metadata **before** any driver renders
+DDL or SQL — the same resolver output feeds every driver. Proving a strategy
+therefore only has to happen **once**: if `snake` resolves correctly, it resolves
+correctly for every driver, because the resolution step is identical across them.
+
+Replaying all three strategies on every driver was pure redundancy. Worse, on
+sqlite it was a resource problem: three strategy replays plus a cached replay meant
+**four full suite replays in a single worker**, which pushed the run into Node's
+heap ceiling and OOM'd. Redistributing to one strategy per driver drops sqlite to
+**two replays** (`none` + the cached `none` pass), well under the ceiling, while
+keeping full strategy coverage across the driver matrix.
+
+## Strategy → driver map
+
+| Strategy | Driver that proves it                   | Where the strategy is covered                |
+| -------- | --------------------------------------- | -------------------------------------------- |
+| `none`   | sqlite (+ cached), mongo, redis, memory | in-process sqlite/memory, docker mongo/redis |
+| `snake`  | postgres                                | docker postgres TCK                          |
+| `camel`  | mysql                                   | docker mysql TCK                             |
+
+All three strategies are exercised against a **real** driver rendering **real**
+names — `none` on four drivers, `snake` on postgres, `camel` on mysql.
+
+## Residual risk
+
+A driver-specific _rendering_ quirk under a strategy that driver is **not**
+assigned (e.g. how mysql quotes a `snake`-cased identifier) is **not** covered by
+this naming matrix. That surface is covered instead by each driver's own DDL /
+quoting / identifier cases (the `renamed-columns`, upsert-naming, and per-driver
+`quote-identifier` / `resolve-column-name` unit + integration tests). The naming
+matrix proves the shared _resolver_; the per-driver cases prove the _rendering_.

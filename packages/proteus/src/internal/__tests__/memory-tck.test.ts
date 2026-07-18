@@ -89,5 +89,6 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: Memory", () => {
+  // One strategy per driver — memory proves `none` (default). See ../__fixtures__/tck/NAMING.md.
   runTck(factory, () => source);
 });

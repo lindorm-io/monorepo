@@ -138,5 +138,6 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: Redis", () => {
+  // One strategy per driver — redis proves `none` (default). See ../__fixtures__/tck/NAMING.md.
   runTck(factory, () => source);
 });

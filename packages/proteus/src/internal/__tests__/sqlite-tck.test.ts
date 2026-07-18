@@ -2,6 +2,12 @@
 //
 // Runs the full TCK suite against the SQLite driver.
 // No external services required — uses a temp file database.
+//
+// Naming: sqlite proves the `none` strategy (one strategy per driver — the
+// resolver is shared/driver-agnostic; see ../__fixtures__/tck/NAMING.md). This
+// used to replay all three strategies (none/snake/camel) plus the cached pass =
+// FOUR full suite replays in one worker, which OOM'd at Node's heap ceiling.
+// It now does TWO replays (none + cached none), well under the ceiling.
 
 import { createMockLogger } from "@lindorm/logger/mocks/vitest";
 import { randomUUID } from "node:crypto";
@@ -127,7 +133,8 @@ const cachedFactory: TckDriverFactory = {
 };
 
 describe("TCK: SQLite", () => {
-  runTck(factory, () => source, ["none", "snake", "camel"]);
+  // One strategy per driver — sqlite proves `none`. See ../__fixtures__/tck/NAMING.md.
+  runTck(factory, () => source, ["none"]);
 });
 
 describe("TCK: SQLite (cached)", () => {

@@ -140,5 +140,6 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: PostgreSQL", () => {
-  runTck(factory, () => source, ["none", "snake", "camel"]);
+  // One strategy per driver — postgres proves `snake`. See ../__fixtures__/tck/NAMING.md.
+  runTck(factory, () => source, ["snake"]);
 });

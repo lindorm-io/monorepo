@@ -173,5 +173,6 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: MySQL", () => {
-  runTck(factory, () => source, ["none", "snake", "camel"]);
+  // One strategy per driver — mysql proves `camel`. See ../__fixtures__/tck/NAMING.md.
+  runTck(factory, () => source, ["camel"]);
 });

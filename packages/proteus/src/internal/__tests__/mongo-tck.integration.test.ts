@@ -117,5 +117,6 @@ const factory: TckDriverFactory = {
 };
 
 describe("TCK: MongoDB", () => {
+  // One strategy per driver — mongo proves `none` (default). See ../__fixtures__/tck/NAMING.md.
   runTck(factory, () => source);
 });
