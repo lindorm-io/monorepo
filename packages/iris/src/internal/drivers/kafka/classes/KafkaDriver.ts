@@ -1,4 +1,3 @@
-import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
@@ -12,8 +11,6 @@ import type {
 } from "../../../../interfaces/index.js";
 import type {
   IrisCapabilities,
-  IrisConnectionState,
-  IrisEvents,
   IrisHookMeta,
   KafkaConnectionOptions,
 } from "../../../../types/index.js";
@@ -27,6 +24,7 @@ import type {
   DeadLetterListOptions,
 } from "../../../../types/dead-letter.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
+import { ConnectionDriverBase } from "../../../classes/ConnectionDriverBase.js";
 import type { KafkaSharedState } from "../types/kafka-types.js";
 import { getMessageMetadata } from "../../../message/metadata/get-message-metadata.js";
 import { resolveDefaultTopic } from "../../../message/utils/resolve-default-topic.js";
@@ -64,28 +62,23 @@ export type KafkaDriverOptions = {
   deadLetterManager?: DeadLetterManager;
 };
 
-export class KafkaDriver implements IIrisDriver {
+export class KafkaDriver extends ConnectionDriverBase {
   readonly capabilities: IrisCapabilities = KAFKA_CAPABILITIES;
-  private readonly logger: ILogger;
-  private readonly meta: IrisHookMeta | undefined;
-  private readonly encryption: MessageEncryptionContext | undefined;
-  private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: KafkaSharedState;
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
-  private _connectionState: IrisConnectionState = "disconnected";
-  private readonly _emitter = new EventEmitter();
-  private _replyQueueActive: boolean = false;
   private _deliberateDisconnect: boolean = false;
-  private _reconnecting: Promise<void> | null = null;
-  private _connecting: Promise<void> | null = null;
   private readonly _producerUnsubscribers: Array<() => void> = [];
 
   constructor(options: KafkaDriverOptions, state?: KafkaSharedState) {
-    this.logger = options.logger.child(["KafkaDriver"]);
-    this.meta = options.meta;
-    this.encryption = options.encryption;
-    this.getSubscribers = options.getSubscribers;
+    super({
+      driverType: "kafka",
+      loggerLabel: "KafkaDriver",
+      logger: options.logger,
+      meta: options.meta,
+      encryption: options.encryption,
+      getSubscribers: options.getSubscribers,
+    });
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
 
@@ -110,20 +103,7 @@ export class KafkaDriver implements IIrisDriver {
     };
   }
 
-  async connect(): Promise<void> {
-    // Dedupe concurrent connect() calls: a second caller awaits the in-flight
-    // promise instead of opening a second client (which would leak). Cleared on
-    // settle (success or failure) so a later connect can retry.
-    if (this._connecting) return this._connecting;
-
-    this._connecting = this.doConnect().finally(() => {
-      this._connecting = null;
-    });
-
-    return this._connecting;
-  }
-
-  private async doConnect(): Promise<void> {
+  protected async doConnect(): Promise<void> {
     this._deliberateDisconnect = false;
     this.setConnectionState("connecting");
 
@@ -252,9 +232,11 @@ export class KafkaDriver implements IIrisDriver {
     this.logger.info("Disconnected");
   }
 
-  async drain(_timeout?: number): Promise<void> {
-    this.setConnectionState("draining");
+  protected getInFlightCount(): number {
+    return this.state.inFlightCount;
+  }
 
+  protected async beforeDrain(): Promise<void> {
     // Pause all pooled consumers (all topics at once)
     for (const [, pooled] of this.state.consumerPool) {
       try {
@@ -278,26 +260,9 @@ export class KafkaDriver implements IIrisDriver {
         // Consumer may already be paused
       }
     }
+  }
 
-    // Poll inFlightCount until 0
-    const timeout = _timeout ?? 5000;
-    const pollInterval = 10;
-    const deadline = Date.now() + timeout;
-
-    while (this.state.inFlightCount > 0 && Date.now() < deadline) {
-      await new Promise<void>((resolve) => {
-        const t = setTimeout(resolve, pollInterval);
-        t.unref();
-      });
-    }
-
-    if (this.state.inFlightCount > 0) {
-      this.logger.warn("Drain timeout reached with in-flight consumers remaining", {
-        inFlightCount: this.state.inFlightCount,
-        timeoutMs: timeout,
-      });
-    }
-
+  protected async afterDrain(): Promise<void> {
     // Resume all pooled consumers
     for (const [, pooled] of this.state.consumerPool) {
       try {
@@ -321,9 +286,6 @@ export class KafkaDriver implements IIrisDriver {
         // Consumer may already be resumed
       }
     }
-
-    this.setConnectionState("connected");
-    this.logger.debug("Drained");
   }
 
   async ping(): Promise<boolean> {
@@ -434,73 +396,39 @@ export class KafkaDriver implements IIrisDriver {
     return this.deadLetterManager.purge(options);
   }
 
-  getConnectionState(): IrisConnectionState {
-    return this._connectionState;
-  }
-
-  on<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.on(event, listener);
-  }
-
-  off<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.off(event, listener);
-  }
-
-  once<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.once(event, listener);
-  }
-
-  createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
+  protected buildPublisher<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisPublisher<M> {
     return new KafkaPublisher<M>({
-      target,
-      driverType: "kafka",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       state: this.state,
       delayManager: this.delayManager,
     });
   }
 
-  createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
+  protected buildMessageBus<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisMessageBus<M> {
     return new KafkaMessageBus<M>({
-      target,
-      driverType: "kafka",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       state: this.state,
       delayManager: this.delayManager,
       deadLetterManager: this.deadLetterManager,
     });
   }
 
-  createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
+  protected buildWorkerQueue<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisWorkerQueue<M> {
     return new KafkaWorkerQueue<M>({
-      target,
-      driverType: "kafka",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       state: this.state,
       delayManager: this.delayManager,
       deadLetterManager: this.deadLetterManager,
     });
   }
 
-  createStreamProcessor(): IIrisStreamProcessor {
+  protected buildStreamProcessor(): IIrisStreamProcessor {
     return new KafkaStreamProcessor({
       state: this.state,
       logger: this.logger,
@@ -511,7 +439,7 @@ export class KafkaDriver implements IIrisDriver {
     });
   }
 
-  createRpcClient<Req extends IMessage, Res extends IMessage>(
+  protected buildRpcClient<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): KafkaRpcClient<Req, Res> {
@@ -525,7 +453,7 @@ export class KafkaDriver implements IIrisDriver {
     });
   }
 
-  createRpcServer<Req extends IMessage, Res extends IMessage>(
+  protected buildRpcServer<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): KafkaRpcServer<Req, Res> {
@@ -537,16 +465,6 @@ export class KafkaDriver implements IIrisDriver {
       meta: this.meta,
       encryption: this.encryption,
     });
-  }
-
-  async setupReplyQueue(): Promise<void> {
-    this._replyQueueActive = true;
-    this.logger.debug("Reply queue active");
-  }
-
-  async teardownReplyQueue(): Promise<void> {
-    this._replyQueueActive = false;
-    this.logger.debug("Reply queue inactive");
   }
 
   cloneWithGetters(getSubscribers: () => Array<IMessageSubscriber>): IIrisDriver {
@@ -569,14 +487,6 @@ export class KafkaDriver implements IIrisDriver {
     );
   }
 
-  get connected(): boolean {
-    return this._connectionState === "connected" || this._connectionState === "draining";
-  }
-
-  get replyQueueActive(): boolean {
-    return this._replyQueueActive;
-  }
-
   private registerProducerHandlers(
     producer: import("../types/kafka-types.js").KafkaProducer,
   ): void {
@@ -588,7 +498,7 @@ export class KafkaDriver implements IIrisDriver {
 
     const unsubConnect = producer.on(producer.events.CONNECT, () => {
       if (this._deliberateDisconnect) return;
-      if (this._connectionState === "reconnecting") {
+      if (this.getConnectionState() === "reconnecting") {
         this.logger.info("Kafka producer reconnected");
         this.setConnectionState("connected");
 
@@ -596,25 +506,10 @@ export class KafkaDriver implements IIrisDriver {
         // them, so re-establish every registered consumer. Guarded by the
         // in-flight promise to avoid overlapping replays if CONNECT fires
         // more than once.
-        if (!this._reconnecting) {
-          this._reconnecting = reRegisterKafkaConsumers(this.state, this.logger)
-            .catch((error) => {
-              this.logger.error("Failed to re-register consumers after reconnect", {
-                error: error instanceof Error ? error.message : String(error),
-              });
-            })
-            .finally(() => {
-              this._reconnecting = null;
-            });
-        }
+        this.triggerReRegister(() => reRegisterKafkaConsumers(this.state, this.logger));
       }
     });
 
     this._producerUnsubscribers.push(unsubDisconnect, unsubConnect);
-  }
-
-  private setConnectionState(state: IrisConnectionState): void {
-    this._connectionState = state;
-    this._emitter.emit("connection:state", state);
   }
 }

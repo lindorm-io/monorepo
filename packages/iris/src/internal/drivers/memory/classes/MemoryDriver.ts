@@ -1,4 +1,3 @@
-import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
@@ -10,12 +9,7 @@ import type {
   IMessage,
   IMessageSubscriber,
 } from "../../../../interfaces/index.js";
-import type {
-  IrisCapabilities,
-  IrisConnectionState,
-  IrisEvents,
-  IrisHookMeta,
-} from "../../../../types/index.js";
+import type { IrisCapabilities, IrisHookMeta } from "../../../../types/index.js";
 import { MEMORY_CAPABILITIES } from "../memory-capabilities.js";
 import { IrisTransportError } from "../../../../errors/IrisTransportError.js";
 import type {
@@ -26,6 +20,7 @@ import type {
 import type { DeadLetterManager } from "../../../dead-letter/DeadLetterManager.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
+import { ConnectionDriverBase } from "../../../classes/ConnectionDriverBase.js";
 import type { MemorySharedState } from "../types/memory-store.js";
 import { createStore } from "../utils/create-store.js";
 import { dispatchToConsumers } from "../utils/dispatch-to-consumers.js";
@@ -46,44 +41,27 @@ export type MemoryDriverOptions = {
   deadLetterManager?: DeadLetterManager;
 };
 
-export class MemoryDriver implements IIrisDriver {
+export class MemoryDriver extends ConnectionDriverBase {
   readonly capabilities: IrisCapabilities = MEMORY_CAPABILITIES;
-  private readonly logger: ILogger;
-  private readonly meta: IrisHookMeta | undefined;
-  private readonly encryption: MessageEncryptionContext | undefined;
-  private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly store: MemorySharedState;
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
-  private _connectionState: IrisConnectionState = "disconnected";
-  private readonly _emitter = new EventEmitter();
-  private _replyQueueActive: boolean = false;
-  private _connecting: Promise<void> | null = null;
 
   constructor(options: MemoryDriverOptions, store?: MemorySharedState) {
-    this.logger = options.logger.child(["MemoryDriver"]);
-    this.meta = options.meta;
-    this.encryption = options.encryption;
-    this.getSubscribers = options.getSubscribers;
+    super({
+      driverType: "memory",
+      loggerLabel: "MemoryDriver",
+      logger: options.logger,
+      meta: options.meta,
+      encryption: options.encryption,
+      getSubscribers: options.getSubscribers,
+    });
     this.store = store ?? createStore();
     this.delayManager = options.delayManager;
     this.deadLetterManager = options.deadLetterManager;
   }
 
-  async connect(): Promise<void> {
-    // Dedupe concurrent connect() calls for a uniform shape across drivers. The
-    // memory driver has no client to leak, but the guard keeps behaviour
-    // consistent. Cleared on settle so a later connect can retry.
-    if (this._connecting) return this._connecting;
-
-    this._connecting = this.doConnect().finally(() => {
-      this._connecting = null;
-    });
-
-    return this._connecting;
-  }
-
-  private async doConnect(): Promise<void> {
+  protected async doConnect(): Promise<void> {
     this.setConnectionState("connecting");
 
     if (this.delayManager) {
@@ -124,43 +102,24 @@ export class MemoryDriver implements IIrisDriver {
     this.logger.info("Disconnected");
   }
 
-  async drain(_timeout?: number): Promise<void> {
-    this.setConnectionState("draining");
+  protected getInFlightCount(): number {
+    return this.store.inFlightCount;
+  }
 
-    // Pause dispatching — new messages go to the store but callbacks are suppressed
+  protected async beforeDrain(): Promise<void> {
+    // Pause dispatching — new messages go to the store but callbacks are suppressed.
     this.store.paused = true;
+  }
 
-    // Poll inFlightCount until 0
-    const timeout = _timeout ?? 5000;
-    const pollInterval = 10;
-    const deadline = Date.now() + timeout;
-
-    while (this.store.inFlightCount > 0 && Date.now() < deadline) {
-      await new Promise<void>((resolve) => {
-        const t = setTimeout(resolve, pollInterval);
-        t.unref();
-      });
-    }
-
-    if (this.store.inFlightCount > 0) {
-      this.logger.warn("Drain timeout reached with in-flight consumers remaining", {
-        inFlightCount: this.store.inFlightCount,
-        timeoutMs: timeout,
-      });
-    }
-
-    // Resume dispatching
+  protected async afterDrain(): Promise<void> {
     this.store.paused = false;
-
-    this.setConnectionState("connected");
-    this.logger.debug("Drained");
   }
 
   async ping(): Promise<boolean> {
     // Intentionally a no-op wire probe: the memory driver is fully in-process
     // with no transport to round-trip against, so connection state IS the
     // health signal. (Contrast the network drivers, which must touch the wire.)
-    return this._connectionState === "connected";
+    return this.getConnectionState() === "connected";
   }
 
   async reset(): Promise<void> {
@@ -184,73 +143,39 @@ export class MemoryDriver implements IIrisDriver {
     this.logger.debug("Setup (no-op for memory driver)");
   }
 
-  getConnectionState(): IrisConnectionState {
-    return this._connectionState;
-  }
-
-  on<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.on(event, listener);
-  }
-
-  off<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.off(event, listener);
-  }
-
-  once<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.once(event, listener);
-  }
-
-  createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
+  protected buildPublisher<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisPublisher<M> {
     return new MemoryPublisher<M>({
-      target,
-      driverType: "memory",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       store: this.store,
       delayManager: this.delayManager,
     });
   }
 
-  createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
+  protected buildMessageBus<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisMessageBus<M> {
     return new MemoryMessageBus<M>({
-      target,
-      driverType: "memory",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       store: this.store,
       delayManager: this.delayManager,
       deadLetterManager: this.deadLetterManager,
     });
   }
 
-  createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
+  protected buildWorkerQueue<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisWorkerQueue<M> {
     return new MemoryWorkerQueue<M>({
-      target,
-      driverType: "memory",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       store: this.store,
       delayManager: this.delayManager,
       deadLetterManager: this.deadLetterManager,
     });
   }
 
-  createStreamProcessor(): IIrisStreamProcessor {
+  protected buildStreamProcessor(): IIrisStreamProcessor {
     return new MemoryStreamProcessor({
       state: this.store,
       logger: this.logger,
@@ -261,7 +186,7 @@ export class MemoryDriver implements IIrisDriver {
     });
   }
 
-  createRpcClient<Req extends IMessage, Res extends IMessage>(
+  protected buildRpcClient<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): MemoryRpcClient<Req, Res> {
@@ -275,7 +200,7 @@ export class MemoryDriver implements IIrisDriver {
     });
   }
 
-  createRpcServer<Req extends IMessage, Res extends IMessage>(
+  protected buildRpcServer<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): MemoryRpcServer<Req, Res> {
@@ -287,16 +212,6 @@ export class MemoryDriver implements IIrisDriver {
       meta: this.meta,
       encryption: this.encryption,
     });
-  }
-
-  async setupReplyQueue(): Promise<void> {
-    this._replyQueueActive = true;
-    this.logger.debug("Reply queue active");
-  }
-
-  async teardownReplyQueue(): Promise<void> {
-    this._replyQueueActive = false;
-    this.logger.debug("Reply queue inactive");
   }
 
   cloneWithGetters(getSubscribers: () => Array<IMessageSubscriber>): IIrisDriver {
@@ -321,18 +236,5 @@ export class MemoryDriver implements IIrisDriver {
   async purgeDeadLetters(options?: DeadLetterFilterOptions): Promise<number> {
     if (!this.deadLetterManager) return 0;
     return this.deadLetterManager.purge(options);
-  }
-
-  get connected(): boolean {
-    return this._connectionState === "connected" || this._connectionState === "draining";
-  }
-
-  get replyQueueActive(): boolean {
-    return this._replyQueueActive;
-  }
-
-  private setConnectionState(state: IrisConnectionState): void {
-    this._connectionState = state;
-    this._emitter.emit("connection:state", state);
   }
 }

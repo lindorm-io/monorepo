@@ -1,4 +1,3 @@
-import { EventEmitter } from "node:events";
 import amqplib from "amqplib";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
@@ -13,8 +12,6 @@ import type {
 } from "../../../../interfaces/index.js";
 import type {
   IrisCapabilities,
-  IrisConnectionState,
-  IrisEvents,
   IrisHookMeta,
   RabbitConnectionOptions,
 } from "../../../../types/index.js";
@@ -25,6 +22,7 @@ import type {
   DeadLetterFilterOptions,
   DeadLetterListOptions,
 } from "../../../../types/dead-letter.js";
+import { ConnectionDriverBase } from "../../../classes/ConnectionDriverBase.js";
 import type { RabbitSharedState } from "../types/rabbit-types.js";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import { reconstructDeadLetterEntry } from "../utils/reconstruct-dead-letter-entry.js";
@@ -52,29 +50,25 @@ export type RabbitDriverOptions = {
   prefetch?: number;
 };
 
-export class RabbitDriver implements IIrisDriver {
+export class RabbitDriver extends ConnectionDriverBase {
   readonly capabilities: IrisCapabilities = RABBIT_CAPABILITIES;
-  private readonly logger: ILogger;
-  private readonly meta: IrisHookMeta | undefined;
-  private readonly encryption: MessageEncryptionContext | undefined;
-  private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly connectionConfig: { url: string } & RabbitConnectionOptions;
   private readonly state: RabbitSharedState;
-  private _connectionState: IrisConnectionState = "disconnected";
-  private readonly _emitter = new EventEmitter();
-  private _replyQueueActive: boolean = false;
   private _deliberateDisconnect: boolean = false;
   private _reconnectAttempt: number = 0;
   private _reconnectTimer: ReturnType<typeof setTimeout> | null = null;
-  private _connecting: Promise<void> | null = null;
   private _publishChannelOpen: boolean = false;
   private _consumeChannelOpen: boolean = false;
 
   constructor(options: RabbitDriverOptions, state?: RabbitSharedState) {
-    this.logger = options.logger.child(["RabbitDriver"]);
-    this.meta = options.meta;
-    this.encryption = options.encryption;
-    this.getSubscribers = options.getSubscribers;
+    super({
+      driverType: "rabbit",
+      loggerLabel: "RabbitDriver",
+      logger: options.logger,
+      meta: options.meta,
+      encryption: options.encryption,
+      getSubscribers: options.getSubscribers,
+    });
     this.connectionConfig = { url: options.url, ...options.connection };
 
     const exchange = options.exchange ?? DEFAULT_EXCHANGE;
@@ -96,20 +90,7 @@ export class RabbitDriver implements IIrisDriver {
     };
   }
 
-  async connect(): Promise<void> {
-    // Dedupe concurrent connect() calls: a second caller awaits the in-flight
-    // promise instead of opening a second connection (which would leak). Cleared
-    // on settle (success or failure) so a later connect can retry.
-    if (this._connecting) return this._connecting;
-
-    this._connecting = this.doConnect().finally(() => {
-      this._connecting = null;
-    });
-
-    return this._connecting;
-  }
-
-  private async doConnect(): Promise<void> {
+  protected async doConnect(): Promise<void> {
     this._deliberateDisconnect = false;
     this.setConnectionState("connecting");
 
@@ -191,33 +172,16 @@ export class RabbitDriver implements IIrisDriver {
     this.logger.info("Disconnected");
   }
 
-  async drain(_timeout?: number): Promise<void> {
-    this.setConnectionState("draining");
+  protected getInFlightCount(): number {
+    return this.state.inFlightCount;
+  }
 
+  protected async beforeDrain(): Promise<void> {
     await this.cancelAllConsumers();
+  }
 
-    const timeout = _timeout ?? 5000;
-    const pollInterval = 10;
-    const deadline = Date.now() + timeout;
-
-    while (this.state.inFlightCount > 0 && Date.now() < deadline) {
-      await new Promise<void>((resolve) => {
-        const t = setTimeout(resolve, pollInterval);
-        t.unref();
-      });
-    }
-
-    if (this.state.inFlightCount > 0) {
-      this.logger.warn("Drain timeout reached with in-flight consumers remaining", {
-        inFlightCount: this.state.inFlightCount,
-        timeoutMs: timeout,
-      });
-    }
-
+  protected async afterDrain(): Promise<void> {
     await this.reRegisterConsumers();
-
-    this.setConnectionState("connected");
-    this.logger.debug("Drained");
   }
 
   async ping(): Promise<boolean> {
@@ -377,68 +341,34 @@ export class RabbitDriver implements IIrisDriver {
     }
   }
 
-  getConnectionState(): IrisConnectionState {
-    return this._connectionState;
-  }
-
-  on<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.on(event, listener);
-  }
-
-  off<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.off(event, listener);
-  }
-
-  once<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.once(event, listener);
-  }
-
-  createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
+  protected buildPublisher<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisPublisher<M> {
     return new RabbitPublisher<M>({
-      target,
-      driverType: "rabbit",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       state: this.state,
     });
   }
 
-  createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
+  protected buildMessageBus<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisMessageBus<M> {
     return new RabbitMessageBus<M>({
-      target,
-      driverType: "rabbit",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       state: this.state,
     });
   }
 
-  createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
+  protected buildWorkerQueue<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisWorkerQueue<M> {
     return new RabbitWorkerQueue<M>({
-      target,
-      driverType: "rabbit",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       state: this.state,
     });
   }
 
-  createStreamProcessor(): IIrisStreamProcessor {
+  protected buildStreamProcessor(): IIrisStreamProcessor {
     return new RabbitStreamProcessor({
       state: this.state,
       logger: this.logger,
@@ -447,7 +377,7 @@ export class RabbitDriver implements IIrisDriver {
     });
   }
 
-  createRpcClient<Req extends IMessage, Res extends IMessage>(
+  protected buildRpcClient<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): RabbitRpcClient<Req, Res> {
@@ -461,7 +391,7 @@ export class RabbitDriver implements IIrisDriver {
     });
   }
 
-  createRpcServer<Req extends IMessage, Res extends IMessage>(
+  protected buildRpcServer<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): RabbitRpcServer<Req, Res> {
@@ -473,16 +403,6 @@ export class RabbitDriver implements IIrisDriver {
       meta: this.meta,
       encryption: this.encryption,
     });
-  }
-
-  async setupReplyQueue(): Promise<void> {
-    this._replyQueueActive = true;
-    this.logger.debug("Reply queue active");
-  }
-
-  async teardownReplyQueue(): Promise<void> {
-    this._replyQueueActive = false;
-    this.logger.debug("Reply queue inactive");
   }
 
   cloneWithGetters(getSubscribers: () => Array<IMessageSubscriber>): IIrisDriver {
@@ -499,19 +419,6 @@ export class RabbitDriver implements IIrisDriver {
       },
       this.state,
     );
-  }
-
-  get connected(): boolean {
-    return this._connectionState === "connected" || this._connectionState === "draining";
-  }
-
-  get replyQueueActive(): boolean {
-    return this._replyQueueActive;
-  }
-
-  private setConnectionState(state: IrisConnectionState): void {
-    this._connectionState = state;
-    this._emitter.emit("connection:state", state);
   }
 
   private registerConnectionHandlers(connection: amqplib.ChannelModel): void {

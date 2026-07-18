@@ -1,4 +1,3 @@
-import { EventEmitter } from "node:events";
 import type { ILogger } from "@lindorm/logger";
 import type { Constructor } from "@lindorm/types";
 import type { IIrisDriver } from "../../../../interfaces/IrisDriver.js";
@@ -12,8 +11,6 @@ import type {
 } from "../../../../interfaces/index.js";
 import type {
   IrisCapabilities,
-  IrisConnectionState,
-  IrisEvents,
   IrisHookMeta,
   NatsConnectionOptions,
 } from "../../../../types/index.js";
@@ -26,6 +23,7 @@ import type {
 } from "../../../../types/dead-letter.js";
 import type { DelayManager } from "../../../delay/DelayManager.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
+import { ConnectionDriverBase } from "../../../classes/ConnectionDriverBase.js";
 import type { NatsConnection, NatsSharedState } from "../types/nats-types.js";
 import { IrisPublishError } from "../../../../errors/IrisPublishError.js";
 import { IrisTimeoutError } from "../../../../errors/IrisTimeoutError.js";
@@ -62,30 +60,25 @@ export type NatsDriverOptions = {
   deadLetterManager?: DeadLetterManager;
 };
 
-export class NatsDriver implements IIrisDriver {
+export class NatsDriver extends ConnectionDriverBase {
   readonly capabilities: IrisCapabilities = NATS_CAPABILITIES;
-  private readonly logger: ILogger;
-  private readonly meta: IrisHookMeta | undefined;
-  private readonly encryption: MessageEncryptionContext | undefined;
-  private readonly getSubscribers: () => Array<IMessageSubscriber>;
   private readonly state: NatsSharedState;
   private readonly servers: string | Array<string>;
   private readonly connectionOptions: Record<string, unknown>;
   private readonly delayManager: DelayManager | undefined;
   private readonly deadLetterManager: DeadLetterManager | undefined;
-  private _connectionState: IrisConnectionState = "disconnected";
-  private readonly _emitter = new EventEmitter();
-  private _replyQueueActive: boolean = false;
   private _deliberateDisconnect: boolean = false;
   private _statusMonitorAbort: AbortController | null = null;
-  private _reconnecting: Promise<void> | null = null;
-  private _connecting: Promise<void> | null = null;
 
   constructor(options: NatsDriverOptions, state?: NatsSharedState) {
-    this.logger = options.logger.child(["NatsDriver"]);
-    this.meta = options.meta;
-    this.encryption = options.encryption;
-    this.getSubscribers = options.getSubscribers;
+    super({
+      driverType: "nats",
+      loggerLabel: "NatsDriver",
+      logger: options.logger,
+      meta: options.meta,
+      encryption: options.encryption,
+      getSubscribers: options.getSubscribers,
+    });
     this.servers = options.servers;
     this.connectionOptions = options.connection ?? {};
     this.delayManager = options.delayManager;
@@ -108,20 +101,7 @@ export class NatsDriver implements IIrisDriver {
     };
   }
 
-  async connect(): Promise<void> {
-    // Dedupe concurrent connect() calls: a second caller awaits the in-flight
-    // promise instead of opening a second connection (which would leak). Cleared
-    // on settle (success or failure) so a later connect can retry.
-    if (this._connecting) return this._connecting;
-
-    this._connecting = this.doConnect().finally(() => {
-      this._connecting = null;
-    });
-
-    return this._connecting;
-  }
-
-  private async doConnect(): Promise<void> {
+  protected async doConnect(): Promise<void> {
     this._deliberateDisconnect = false;
     this.setConnectionState("connecting");
 
@@ -214,34 +194,16 @@ export class NatsDriver implements IIrisDriver {
     this.logger.info("Disconnected");
   }
 
-  async drain(_timeout?: number): Promise<void> {
-    this.setConnectionState("draining");
+  protected getInFlightCount(): number {
+    return this.state.inFlightCount;
+  }
 
+  protected async beforeDrain(): Promise<void> {
     await stopAllNatsConsumers(this.state);
+  }
 
-    // Poll inFlightCount until 0
-    const timeout = _timeout ?? 5000;
-    const pollInterval = 10;
-    const deadline = Date.now() + timeout;
-
-    while (this.state.inFlightCount > 0 && Date.now() < deadline) {
-      await new Promise<void>((resolve) => {
-        const t = setTimeout(resolve, pollInterval);
-        t.unref();
-      });
-    }
-
-    if (this.state.inFlightCount > 0) {
-      this.logger.warn("Drain timeout reached with in-flight consumers remaining", {
-        inFlightCount: this.state.inFlightCount,
-        timeoutMs: timeout,
-      });
-    }
-
+  protected async afterDrain(): Promise<void> {
     await this.reRegisterConsumers();
-
-    this.setConnectionState("connected");
-    this.logger.debug("Drained");
   }
 
   async ping(): Promise<boolean> {
@@ -348,73 +310,39 @@ export class NatsDriver implements IIrisDriver {
     return this.deadLetterManager.purge(options);
   }
 
-  getConnectionState(): IrisConnectionState {
-    return this._connectionState;
-  }
-
-  on<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.on(event, listener);
-  }
-
-  off<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.off(event, listener);
-  }
-
-  once<K extends keyof IrisEvents>(
-    event: K,
-    listener: (...args: IrisEvents[K]) => void,
-  ): void {
-    this._emitter.once(event, listener);
-  }
-
-  createPublisher<M extends IMessage>(target: Constructor<M>): IIrisPublisher<M> {
+  protected buildPublisher<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisPublisher<M> {
     return new NatsPublisher<M>({
-      target,
-      driverType: "nats",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       state: this.state,
       delayManager: this.delayManager,
     });
   }
 
-  createMessageBus<M extends IMessage>(target: Constructor<M>): IIrisMessageBus<M> {
+  protected buildMessageBus<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisMessageBus<M> {
     return new NatsMessageBus<M>({
-      target,
-      driverType: "nats",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       state: this.state,
       delayManager: this.delayManager,
       deadLetterManager: this.deadLetterManager,
     });
   }
 
-  createWorkerQueue<M extends IMessage>(target: Constructor<M>): IIrisWorkerQueue<M> {
+  protected buildWorkerQueue<M extends IMessage>(
+    target: Constructor<M>,
+  ): IIrisWorkerQueue<M> {
     return new NatsWorkerQueue<M>({
-      target,
-      driverType: "nats",
-      logger: this.logger,
-      meta: this.meta,
-      encryption: this.encryption,
-      getSubscribers: this.getSubscribers,
+      ...this.sharedPatternOptions(target),
       state: this.state,
       delayManager: this.delayManager,
       deadLetterManager: this.deadLetterManager,
     });
   }
 
-  createStreamProcessor(): IIrisStreamProcessor {
+  protected buildStreamProcessor(): IIrisStreamProcessor {
     return new NatsStreamProcessor({
       state: this.state,
       logger: this.logger,
@@ -425,7 +353,7 @@ export class NatsDriver implements IIrisDriver {
     });
   }
 
-  createRpcClient<Req extends IMessage, Res extends IMessage>(
+  protected buildRpcClient<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): NatsRpcClient<Req, Res> {
@@ -439,7 +367,7 @@ export class NatsDriver implements IIrisDriver {
     });
   }
 
-  createRpcServer<Req extends IMessage, Res extends IMessage>(
+  protected buildRpcServer<Req extends IMessage, Res extends IMessage>(
     requestTarget: Constructor<Req>,
     responseTarget: Constructor<Res>,
   ): NatsRpcServer<Req, Res> {
@@ -451,16 +379,6 @@ export class NatsDriver implements IIrisDriver {
       meta: this.meta,
       encryption: this.encryption,
     });
-  }
-
-  async setupReplyQueue(): Promise<void> {
-    this._replyQueueActive = true;
-    this.logger.debug("Reply queue active");
-  }
-
-  async teardownReplyQueue(): Promise<void> {
-    this._replyQueueActive = false;
-    this.logger.debug("Reply queue inactive");
   }
 
   cloneWithGetters(getSubscribers: () => Array<IMessageSubscriber>): IIrisDriver {
@@ -479,14 +397,6 @@ export class NatsDriver implements IIrisDriver {
       },
       this.state,
     );
-  }
-
-  get connected(): boolean {
-    return this._connectionState === "connected" || this._connectionState === "draining";
-  }
-
-  get replyQueueActive(): boolean {
-    return this._replyQueueActive;
   }
 
   private async reRegisterConsumers(): Promise<void> {
@@ -553,28 +463,16 @@ export class NatsDriver implements IIrisDriver {
                 this.logger.info("NATS reconnected");
                 this.setConnectionState("connected");
 
-                if (!this._reconnecting) {
-                  this._reconnecting = stopAllNatsConsumers(this.state)
-                    .then(() => this.reRegisterConsumers())
-                    .catch((error) => {
-                      this.logger.error(
-                        "Failed to re-register consumers after reconnect",
-                        {
-                          error: error instanceof Error ? error.message : String(error),
-                        },
-                      );
-                    })
-                    .finally(() => {
-                      this._reconnecting = null;
-                    });
-                }
+                this.triggerReRegister(() =>
+                  stopAllNatsConsumers(this.state).then(() => this.reRegisterConsumers()),
+                );
               }
               break;
 
             case "disconnect":
               if (
                 !this._deliberateDisconnect &&
-                this._connectionState !== "reconnecting"
+                this.getConnectionState() !== "reconnecting"
               ) {
                 this.logger.warn("NATS disconnected unexpectedly");
                 this.setConnectionState("reconnecting");
@@ -599,10 +497,5 @@ export class NatsDriver implements IIrisDriver {
         });
       }
     })();
-  }
-
-  private setConnectionState(state: IrisConnectionState): void {
-    this._connectionState = state;
-    this._emitter.emit("connection:state", state);
   }
 }
