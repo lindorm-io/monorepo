@@ -16,6 +16,19 @@ const defaultFactory =
 let idCounter = 0;
 const nextId = (): string => `mock_id_${++idCounter}`;
 
+// Mirror the real EntityManager: create()/copy() mint the client-side IDENTITY
+// id (lindorm_id / uuid / string) app-side, so entity.id is populated before
+// insert. The mock has no entity metadata, so it treats `id` as that field —
+// matching the seeded write primitives, which already assume a string `id`.
+// A caller-supplied id is preserved (create()/copy() never overwrite it).
+const withCreateId = <E>(entity: E): E =>
+  entity != null && (entity as any).id == null
+    ? { ...(entity as any), id: nextId() }
+    : entity;
+
+// clone() drops the source id and mints a FRESH one, like the real clone().
+const withCloneId = <E>(entity: E): E => ({ ...(entity as any), id: nextId() });
+
 /**
  * Build a mock repository.
  *
@@ -98,8 +111,8 @@ export const _createMockRepository = <E extends IEntity = IEntity>(
 
   return {
     // Entity Handlers
-    create: impl((opts: any) => factory(opts)),
-    copy: impl((e: any) => factory(e)),
+    create: impl((opts: any) => withCreateId(factory(opts))),
+    copy: impl((e: any) => withCreateId(factory(e))),
     validate: mockFn(),
 
     // Queries — served from `rows` when seeded, else echo the factory.
@@ -155,7 +168,7 @@ export const _createMockRepository = <E extends IEntity = IEntity>(
     update: seeded
       ? impl(async (input: any) => mapInput(input, updateOne))
       : impl(async (e: any) => e),
-    clone: impl(async (e: any) => e),
+    clone: impl(async (e: any) => withCloneId(e)),
     destroy: seeded
       ? impl(async (input: any) => {
           forEachInput(input, destroyOne);

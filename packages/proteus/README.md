@@ -1453,6 +1453,19 @@ const users = await repo.insert([
 const result = await repo.save({ name: "Alice", age: 30 }); // upsert by PK
 ```
 
+`create()` mints the **client-side identity** fields immediately — a `@Generated`
+`lindorm_id` / `uuid` / `string` primary key is populated on return, so you can
+carry the id before persisting (e.g. mint a token that references the row, then
+insert it). A caller-supplied id is preserved. DB-assigned strategies
+(`increment` / `identity`), persist-time `date` fields (`@CreateDate`), and the
+`float` / `integer` strategies stay `null` until `insert()`. `copy()` follows the
+same rule; `clone()` always mints a fresh id.
+
+```typescript
+const user = repo.create({ name: "Alice" });
+user.id; // already set, e.g. "aB3…"  (lindorm_id / uuid / string PK)
+```
+
 ### Read
 
 ```typescript

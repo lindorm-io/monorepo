@@ -60,6 +60,20 @@ describe("defaultHydrateEntity", () => {
     expect((result as any).age).toBe(0);
   });
 
+  test("should never mint an id — hydrate keeps the row's id and adds none when absent", () => {
+    // The create-time identity generation lives in EntityManager.create()/copy()/
+    // clone(), NOT on the hydrate path. A row loaded from the DB must keep its
+    // stored id verbatim, and a row with no id column must not get a fresh one.
+    const withId = defaultHydrateEntity({ id: "db-id" }, metadata, { snapshot: false });
+    expect((withId as any).id).toBe("db-id");
+
+    const withoutId = defaultHydrateEntity({ name: "Alice" }, metadata, {
+      snapshot: false,
+    });
+    // id keeps the class default "" — hydrate assigns nothing for an absent column.
+    expect((withoutId as any).id).toBe("");
+  });
+
   test("should preserve null values as-is", () => {
     const result = defaultHydrateEntity(
       { id: "abc", name: null, deletedAt: null },

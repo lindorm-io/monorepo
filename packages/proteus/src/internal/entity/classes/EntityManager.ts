@@ -10,7 +10,7 @@ import type {
   UpdateStrategy,
 } from "../../types/types.js";
 import { EntityManagerError } from "../errors/EntityManagerError.js";
-import { generateValue } from "../utils/default-generate-entity.js";
+import { generateCreateEntity, generateValue } from "../utils/default-generate-entity.js";
 import { getEntityMetadata } from "../metadata/get-entity-metadata.js";
 import type {
   EntityMetadata,
@@ -105,6 +105,13 @@ export class EntityManager<
 
   create(options: O | E = {} as O): E {
     const entity = defaultCreateEntity(this.target, options);
+    // Mint the client-side IDENTITY fields (lindorm_id / uuid / string) now, so
+    // entity.id is populated on return — the sign-then-persist pattern needs the
+    // id before the row exists. defaultCreateEntity has already null'd any
+    // generated field the caller did not supply, so this null-then-generate step
+    // leaves a caller-supplied id untouched. date/increment/identity stay
+    // deferred to insert().
+    generateCreateEntity(this.target, entity);
     runHooksSync("OnCreate", this.metadata.hooks, entity, this.meta);
 
     this.logger?.silly("Created entity", {
@@ -116,6 +123,9 @@ export class EntityManager<
 
   copy(entity: E): E {
     const copy = defaultCreateEntity(this.target, entity);
+    // A copy that omits the id gets a FRESH one (like create()); a copy that
+    // carries the source id keeps it (generateCreateEntity is idempotent).
+    generateCreateEntity(this.target, copy);
     runHooksSync("OnCreate", this.metadata.hooks, copy, this.meta);
 
     this.logger?.silly("Copied entity", {
@@ -135,6 +145,10 @@ export class EntityManager<
 
   async clone(entity: E): Promise<E> {
     const clone = defaultCloneEntity(this.target, entity);
+    // defaultCloneEntity drops the source's generated fields (incl. the id);
+    // mint a FRESH client-side identity now so the clone has its own id before
+    // OnCreate/insert — the later generate() stays idempotent over it.
+    generateCreateEntity(this.target, clone);
     runHooksSync("OnCreate", this.metadata.hooks, clone, this.meta);
 
     // Set UpdateDate on clone (same as insert — CreateDate is handled by @Generated("date"))

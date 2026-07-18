@@ -229,6 +229,26 @@ describe("EntityManager", () => {
       manager.create({ name: "Test" });
       expect(emHookCb).toHaveBeenCalled();
     });
+
+    test("should populate a client-side identity PK (uuid) on create", () => {
+      const manager = makeOrderManager();
+      const entity = manager.create({ name: "Test" });
+      expect(entity.id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      );
+    });
+
+    test("should preserve a caller-supplied id on create", () => {
+      const manager = makeOrderManager();
+      const entity = manager.create({ id: "caller-id", name: "Test" } as any);
+      expect(entity.id).toBe("caller-id");
+    });
+
+    test("should leave a DB-assigned (increment) PK null on create", () => {
+      const manager = new EntityManager({ target: EMWithIncrement, driver: "postgres" });
+      const entity = manager.create({ name: "Test" });
+      expect(entity.id).toBeNull();
+    });
   });
 
   describe("copy", () => {
@@ -238,6 +258,24 @@ describe("EntityManager", () => {
       const copy = manager.copy(original);
       expect(copy).toBeInstanceOf(EMOrder);
       expect(copy.name).toBe("Original");
+    });
+
+    test("should keep the source id when the source carries one", () => {
+      const manager = makeOrderManager();
+      const original = manager.create({ id: "src-id", name: "Original" } as any);
+      const copy = manager.copy(original);
+      expect(copy.id).toBe("src-id");
+    });
+
+    test("should mint a FRESH id when the copied entity omits one", () => {
+      const manager = makeOrderManager();
+      // Construct a bare instance without an id (bypassing create()).
+      const bare = new EMOrder();
+      bare.name = "Original";
+      const copy = manager.copy(bare);
+      expect(copy.id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      );
     });
   });
 
@@ -274,6 +312,18 @@ describe("EntityManager", () => {
 
       expect(getNextIncrement).toHaveBeenCalledWith("id");
       expect(inserted.id).toBe(42);
+    });
+
+    test("should keep the create-time id (no double-generate on insert)", async () => {
+      const manager = makeOrderManager();
+      const entity = manager.create({ name: "Test" });
+      const createdId = entity.id;
+      expect(createdId).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      );
+
+      const inserted = await manager.insert(entity);
+      expect(inserted.id).toBe(createdId);
     });
 
     test("should not call getNextIncrement when field already has a positive value", async () => {
@@ -518,6 +568,16 @@ describe("EntityManager", () => {
       const clone = await manager.clone(entity);
       expect(clone).toBeInstanceOf(EMOrder);
       expect(clone.version).toBe(1);
+    });
+
+    test("should mint a FRESH id, dropping the source id", async () => {
+      const manager = makeOrderManager();
+      const entity = manager.create({ name: "Original", id: "original-id" } as any);
+      const clone = await manager.clone(entity);
+      expect(clone.id).not.toBe("original-id");
+      expect(clone.id).toMatch(
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+      );
     });
   });
 });

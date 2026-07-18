@@ -1,4 +1,9 @@
-import { defaultGenerateEntity } from "./default-generate-entity.js";
+import {
+  CLIENT_SIDE_CREATE_STRATEGIES,
+  defaultGenerateEntity,
+  generateCreateEntity,
+  isClientSideCreateStrategy,
+} from "./default-generate-entity.js";
 import { Entity } from "../../../decorators/Entity.js";
 import { Field } from "../../../decorators/Field.js";
 import { Generated } from "../../../decorators/Generated.js";
@@ -162,5 +167,83 @@ describe("defaultGenerateEntity", () => {
     const entity: any = { id: "user-provided", name: "test" };
     const result = defaultGenerateEntity(NaturalKeyEntity, entity);
     expect(result.id).toBe("user-provided");
+  });
+});
+
+describe("isClientSideCreateStrategy", () => {
+  test("classifies the three client-side IDENTITY strategies as create-time", () => {
+    expect(CLIENT_SIDE_CREATE_STRATEGIES).toEqual(["lindorm_id", "string", "uuid"]);
+    for (const strategy of CLIENT_SIDE_CREATE_STRATEGIES) {
+      expect(isClientSideCreateStrategy(strategy)).toBe(true);
+    }
+  });
+
+  test("classifies DB-assigned and persist-time strategies as deferred", () => {
+    expect(isClientSideCreateStrategy("date")).toBe(false);
+    expect(isClientSideCreateStrategy("increment")).toBe(false);
+    expect(isClientSideCreateStrategy("identity")).toBe(false);
+    // float/integer are client-computable but intentionally left at insert.
+    expect(isClientSideCreateStrategy("float")).toBe(false);
+    expect(isClientSideCreateStrategy("integer")).toBe(false);
+    expect(isClientSideCreateStrategy(null)).toBe(false);
+  });
+});
+
+describe("generateCreateEntity", () => {
+  test("generates a uuid PK at create time", () => {
+    const entity: any = { id: undefined, name: "test" };
+    generateCreateEntity(GenerateUuidEntity, entity);
+    expect(entity.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
+  });
+
+  test("generates a lindorm_id PK at create time", () => {
+    const entity: any = { id: undefined };
+    generateCreateEntity(GenerateLindormIdNamespaceEntity, entity);
+    expect(entity.id).toMatch(/^user_[A-Za-z0-9]{24}$/);
+  });
+
+  test("generates a string field at create time", () => {
+    const entity: any = { id: undefined, token: undefined };
+    generateCreateEntity(GenerateStringEntity, entity);
+    // uuid PK + string token are both client-side.
+    expect(entity.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/,
+    );
+    expect(typeof entity.token).toBe("string");
+    expect(entity.token.length).toBeGreaterThan(0);
+  });
+
+  test("does not overwrite a caller-supplied id", () => {
+    const entity: any = { id: "existing-uuid-value", name: "test" };
+    generateCreateEntity(GenerateUuidEntity, entity);
+    expect(entity.id).toBe("existing-uuid-value");
+  });
+
+  test("leaves increment PKs untouched (DB-assigned, deferred to insert)", () => {
+    const entity: any = { id: undefined, name: "test" };
+    generateCreateEntity(GenerateIncrementEntity, entity);
+    expect(entity.id).toBeUndefined();
+  });
+
+  test("leaves date fields untouched (persist-time, deferred to insert)", () => {
+    const entity: any = { id: undefined, generatedAt: undefined };
+    generateCreateEntity(GenerateDateEntity, entity);
+    // uuid PK is minted, the date field is not.
+    expect(typeof entity.id).toBe("string");
+    expect(entity.generatedAt).toBeUndefined();
+  });
+
+  test("leaves custom-generator fields to insert (strategy is not a client-side identity)", () => {
+    const entity: any = { id: undefined, slug: undefined };
+    generateCreateEntity(GenerateFunctionEntity, entity);
+    expect(typeof entity.id).toBe("string");
+    expect(entity.slug).toBeUndefined();
+  });
+
+  test("returns the same entity object", () => {
+    const entity: any = { id: undefined, name: "test" };
+    expect(generateCreateEntity(GenerateUuidEntity, entity)).toBe(entity);
   });
 });

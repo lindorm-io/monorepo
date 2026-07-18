@@ -12,10 +12,37 @@ describe("createMockRepository", () => {
     const repo = createMockRepository();
     const criteria = { id: "test-1" };
 
-    expect(repo.create({ name: "test" } as any)).toEqual({ name: "test" });
+    // create() mints a client-side identity id, mirroring the real repository.
+    expect(repo.create({ name: "test" } as any)).toEqual({
+      name: "test",
+      id: expect.any(String),
+    });
     expect(await repo.findOne(criteria as any)).toEqual(criteria);
     expect(await repo.find(criteria as any)).toEqual([criteria]);
     expect(await repo.findAndCount(criteria as any)).toEqual([[criteria], 1]);
+  });
+
+  test("create/copy mint an id when omitted and preserve a supplied id", () => {
+    const repo = createMockRepository();
+
+    const created = repo.create({ name: "x" } as any);
+    expect(created.id).toEqual(expect.any(String));
+
+    const copied = repo.copy({ name: "y" } as any);
+    expect(copied.id).toEqual(expect.any(String));
+
+    // A caller-supplied id is never overwritten.
+    expect(repo.create({ id: "keep-me", name: "z" } as any).id).toBe("keep-me");
+    expect(repo.copy({ id: "keep-me", name: "z" } as any).id).toBe("keep-me");
+  });
+
+  test("clone mints a fresh id, dropping the source id", async () => {
+    const repo = createMockRepository();
+
+    const cloned = await repo.clone({ id: "source", name: "c" } as any);
+    expect(cloned.id).toEqual(expect.any(String));
+    expect(cloned.id).not.toBe("source");
+    expect(cloned.name).toBe("c");
   });
 
   test("should accept a custom factory", async () => {

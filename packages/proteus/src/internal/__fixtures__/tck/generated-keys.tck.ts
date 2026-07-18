@@ -23,9 +23,14 @@ export const generatedKeysSuite = (
 
     test("lindorm_id PK is a 24-char base62 string and round-trips", async () => {
       const repo = getHandle().repository(TckHooked);
-      const inserted = await repo.insert({ name: "lindorm" });
 
-      expect(typeof inserted.id).toBe("string");
+      // create() mints the client-side identity id app-side (no DB round-trip),
+      // and insert() keeps it (no double-generate).
+      const built = repo.create({ name: "lindorm" });
+      expect(built.id).toMatch(LINDORM_ID);
+
+      const inserted = await repo.insert(built);
+      expect(inserted.id).toBe(built.id);
       expect(inserted.id).toMatch(LINDORM_ID);
 
       const found = await repo.findOne({ id: inserted.id });
@@ -34,9 +39,12 @@ export const generatedKeysSuite = (
 
     test("uuid PK is a uuid string and round-trips", async () => {
       const repo = getHandle().repository(TckSimpleUser);
-      const inserted = await repo.insert({ name: "uuid" });
 
-      expect(typeof inserted.id).toBe("string");
+      const built = repo.create({ name: "uuid" });
+      expect(built.id).toMatch(UUID);
+
+      const inserted = await repo.insert(built);
+      expect(inserted.id).toBe(built.id);
       expect(inserted.id).toMatch(UUID);
 
       const found = await repo.findOne({ id: inserted.id });
@@ -45,10 +53,13 @@ export const generatedKeysSuite = (
 
     test("string PK is a non-empty string and round-trips", async () => {
       const repo = getHandle().repository(TckPkString);
-      const inserted = await repo.insert({ label: "string" });
 
-      expect(typeof inserted.id).toBe("string");
-      expect(inserted.id.length).toBeGreaterThan(0);
+      const built = repo.create({ label: "string" });
+      expect(typeof built.id).toBe("string");
+      expect(built.id.length).toBeGreaterThan(0);
+
+      const inserted = await repo.insert(built);
+      expect(inserted.id).toBe(built.id);
 
       const found = await repo.findOne({ id: inserted.id });
       expect(found!.id).toBe(inserted.id);
@@ -57,7 +68,12 @@ export const generatedKeysSuite = (
 
     test("increment PK is a number assigned by the driver and round-trips", async () => {
       const repo = getHandle().repository(TckPkIncrement);
-      const first = await repo.insert({ label: "first" });
+
+      // increment is DB-assigned — create() must NOT mint it (stays null).
+      const built = repo.create({ label: "first" });
+      expect(built.id).toBeNull();
+
+      const first = await repo.insert(built);
       const second = await repo.insert({ label: "second" });
 
       expect(typeof first.id).toBe("number");
@@ -71,8 +87,13 @@ export const generatedKeysSuite = (
 
     test("integer PK is a client-side random number and round-trips", async () => {
       const repo = getHandle().repository(TckPkInteger);
-      const inserted = await repo.insert({ label: "integer" });
 
+      // integer is client-computable but intentionally deferred to insert()
+      // (only the three identity strategies are minted at create()).
+      const built = repo.create({ label: "integer" });
+      expect(built.id).toBeNull();
+
+      const inserted = await repo.insert(built);
       expect(typeof inserted.id).toBe("number");
       expect(Number.isInteger(inserted.id)).toBe(true);
 
