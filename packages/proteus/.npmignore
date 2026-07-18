@@ -2,8 +2,16 @@
 /node_modules
 /src
 
+docker-compose.mongo.yml
+docker-compose.mysql.yml
+docker-compose.postgres.yml
+docker-compose.redis.yml
 docker-compose.yml
-jest.config.mjs
+
 tsconfig.build.json
 tsconfig.build.tsbuildinfo
 tsconfig.json
+
+vitest.config.mjs
+vitest.setup.ts
+vitest.tck.mjs

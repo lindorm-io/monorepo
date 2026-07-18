@@ -21,14 +21,24 @@ keeping full strategy coverage across the driver matrix.
 
 ## Strategy → driver map
 
-| Strategy | Driver that proves it                   | Where the strategy is covered                |
-| -------- | --------------------------------------- | -------------------------------------------- |
-| `none`   | sqlite (+ cached), mongo, redis, memory | in-process sqlite/memory, docker mongo/redis |
-| `snake`  | postgres                                | docker postgres TCK                          |
-| `camel`  | mysql                                   | docker mysql TCK                             |
+| Strategy | Driver that proves it                   | Harness file (`__tests__/`)                                                          |
+| -------- | --------------------------------------- | ------------------------------------------------------------------------------------ |
+| `none`   | sqlite (+ cached), mongo, redis, memory | `sqlite.tck.test.ts`, `memory.tck.test.ts`, `mongo.tck.test.ts`, `redis.tck.test.ts` |
+| `snake`  | postgres                                | `postgres.tck.test.ts`                                                               |
+| `camel`  | mysql                                   | `mysql.tck.test.ts`                                                                  |
 
 All three strategies are exercised against a **real** driver rendering **real**
 names — `none` on four drivers, `snake` on postgres, `camel` on mysql.
+
+## Test taxonomy
+
+TCK harnesses use the dedicated `*.tck.test.ts` suffix so the three test buckets
+fall out of the filename: `*.test.ts` (unit), `*.integration.test.ts`
+(integration), `*.tck.test.ts` (per-driver conformance). The `test:tck:<driver>`
+scripts run through `vitest.tck.mjs` (which includes only `**/*.tck.test.ts`), so
+a bare driver-name filter selects exactly that driver's harness(es): e.g.
+`postgres` → `postgres.tck.test.ts` + `postgres-migration.tck.test.ts`, `redis` →
+`redis.tck.test.ts` (never `redis-cache-adapter.integration.test.ts`).
 
 ## Residual risk
 
