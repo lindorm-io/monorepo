@@ -171,20 +171,24 @@ describe("defaultGenerateEntity", () => {
 });
 
 describe("isClientSideCreateStrategy", () => {
-  test("classifies the three client-side IDENTITY strategies as create-time", () => {
-    expect(CLIENT_SIDE_CREATE_STRATEGIES).toEqual(["lindorm_id", "string", "uuid"]);
+  test("classifies every app-side-computable strategy as create-time", () => {
+    expect(CLIENT_SIDE_CREATE_STRATEGIES).toEqual([
+      "float",
+      "integer",
+      "lindorm_id",
+      "string",
+      "uuid",
+    ]);
     for (const strategy of CLIENT_SIDE_CREATE_STRATEGIES) {
       expect(isClientSideCreateStrategy(strategy)).toBe(true);
     }
   });
 
-  test("classifies DB-assigned and persist-time strategies as deferred", () => {
+  test("classifies only DB-assigned and persist-time strategies as deferred", () => {
+    // date = persist-time (createdAt = when written); increment/identity = DB-assigned.
     expect(isClientSideCreateStrategy("date")).toBe(false);
     expect(isClientSideCreateStrategy("increment")).toBe(false);
     expect(isClientSideCreateStrategy("identity")).toBe(false);
-    // float/integer are client-computable but intentionally left at insert.
-    expect(isClientSideCreateStrategy("float")).toBe(false);
-    expect(isClientSideCreateStrategy("integer")).toBe(false);
     expect(isClientSideCreateStrategy(null)).toBe(false);
   });
 });

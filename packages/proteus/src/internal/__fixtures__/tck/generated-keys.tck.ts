@@ -88,14 +88,14 @@ export const generatedKeysSuite = (
     test("integer PK is a client-side random number and round-trips", async () => {
       const repo = getHandle().repository(TckPkInteger);
 
-      // integer is client-computable but intentionally deferred to insert()
-      // (only the three identity strategies are minted at create()).
+      // integer is client-computable, so create() mints it immediately (it is
+      // NOT DB-assigned); insert() is idempotent over the create-time value.
       const built = repo.create({ label: "integer" });
-      expect(built.id).toBeNull();
+      expect(typeof built.id).toBe("number");
+      expect(Number.isInteger(built.id)).toBe(true);
 
       const inserted = await repo.insert(built);
-      expect(typeof inserted.id).toBe("number");
-      expect(Number.isInteger(inserted.id)).toBe(true);
+      expect(inserted.id).toBe(built.id);
 
       const found = await repo.findOne({ id: inserted.id });
       expect(found!.id).toBe(inserted.id);

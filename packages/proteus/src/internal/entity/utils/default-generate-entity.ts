@@ -56,14 +56,16 @@ export const generateValue = (config: MetaGenerated): any => {
  * immediately (the sign-then-persist pattern mints a token carrying the id,
  * THEN inserts the row, so the id must exist before the write).
  *
- * The remaining strategies are deferred to `insert()`:
+ * Everything computable app-side is done here (`lindorm_id` / `uuid` / `string` /
+ * `float` / `integer`) — the only strategies deferred to `insert()` are the two
+ * that genuinely cannot exist before the write:
  *   - `date`               : persist-time — createdAt = when the row is WRITTEN,
  *                            not when the entity is constructed.
- *   - `increment` / `identity` : DB-assigned — cannot exist before the row.
- *   - `float` / `integer`  : client-side generatable, but not part of the
- *                            identity contract — left at insert by default.
+ *   - `increment` / `identity` : DB-assigned by a sequence / auto-column.
  */
 export const CLIENT_SIDE_CREATE_STRATEGIES: ReadonlyArray<MetaGeneratedStrategy> = [
+  "float",
+  "integer",
   "lindorm_id",
   "string",
   "uuid",
