@@ -6,3 +6,4 @@ export * from "./DriverRpcServerBase.js";
 export * from "./DriverStreamPipelineBase.js";
 export * from "./DriverStreamProcessorBase.js";
 export * from "./DriverWorkerQueueBase.js";
+export * from "./SharedReplyConsumerRpcClientBase.js";

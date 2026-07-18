@@ -4,7 +4,7 @@ import type { Constructor } from "@lindorm/types";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
-import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
+import { SharedReplyConsumerRpcClientBase } from "../../../classes/SharedReplyConsumerRpcClientBase.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { KafkaSharedState } from "../types/kafka-types.js";
 import { createKafkaConsumer } from "../utils/create-kafka-consumer.js";
@@ -27,10 +27,9 @@ export type KafkaRpcClientOptions<Req extends IMessage, Res extends IMessage> = 
 export class KafkaRpcClient<
   Req extends IMessage,
   Res extends IMessage,
-> extends DriverRpcClientBase<Req, Res> {
+> extends SharedReplyConsumerRpcClientBase<Req, Res> {
   private readonly state: KafkaSharedState;
   private readonly replyTopic: string;
-  private replyConsumerPromise: Promise<void> | null = null;
   private replyConsumerTag: string | null = null;
 
   constructor(options: KafkaRpcClientOptions<Req, Res>) {
@@ -85,19 +84,11 @@ export class KafkaRpcClient<
     // clients don't leak orphan topics on the broker (never throws out of close).
     await deleteKafkaTopicFromState(this.state, this.replyTopic, this.logger);
 
-    this.replyConsumerPromise = null;
+    this.resetReplyConsumer();
     this.logger.debug("RPC client closed");
   }
 
-  private async ensureReplyConsumer(): Promise<void> {
-    this.replyConsumerPromise ??= this.doEnsureReplyConsumer().catch((err) => {
-      this.replyConsumerPromise = null;
-      throw err;
-    });
-    await this.replyConsumerPromise;
-  }
-
-  private async doEnsureReplyConsumer(): Promise<void> {
+  protected async createReplyConsumer(): Promise<void> {
     if (!this.state.kafka) {
       throw new IrisDriverError(
         "Cannot create reply consumer: Kafka client is not connected",

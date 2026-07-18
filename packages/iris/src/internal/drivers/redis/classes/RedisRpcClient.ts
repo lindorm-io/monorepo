@@ -4,7 +4,7 @@ import type { Constructor } from "@lindorm/types";
 import { IrisDriverError } from "../../../../errors/IrisDriverError.js";
 import type { IMessage } from "../../../../interfaces/index.js";
 import type { IrisHookMeta } from "../../../../types/index.js";
-import { DriverRpcClientBase } from "../../../classes/DriverRpcClientBase.js";
+import { SharedReplyConsumerRpcClientBase } from "../../../classes/SharedReplyConsumerRpcClientBase.js";
 import type { MessageEncryptionContext } from "../../../message/types/encryption-context.js";
 import type { RedisSharedState } from "../types/redis-types.js";
 import { createConsumerLoop } from "../utils/create-consumer-loop.js";
@@ -25,10 +25,9 @@ export type RedisRpcClientOptions<Req extends IMessage, Res extends IMessage> = 
 export class RedisRpcClient<
   Req extends IMessage,
   Res extends IMessage,
-> extends DriverRpcClientBase<Req, Res> {
+> extends SharedReplyConsumerRpcClientBase<Req, Res> {
   private readonly state: RedisSharedState;
   private readonly replyStreamKey: string;
-  private replyConsumerPromise: Promise<void> | null = null;
   private replyGroupName: string | null = null;
 
   constructor(options: RedisRpcClientOptions<Req, Res>) {
@@ -97,20 +96,12 @@ export class RedisRpcClient<
       }
     }
 
-    this.replyConsumerPromise = null;
+    this.resetReplyConsumer();
     this.replyGroupName = null;
     this.logger.debug("RPC client closed");
   }
 
-  private async ensureReplyConsumer(): Promise<void> {
-    this.replyConsumerPromise ??= this.doEnsureReplyConsumer().catch((err) => {
-      this.replyConsumerPromise = null;
-      throw err;
-    });
-    await this.replyConsumerPromise;
-  }
-
-  private async doEnsureReplyConsumer(): Promise<void> {
+  protected async createReplyConsumer(): Promise<void> {
     this.replyGroupName = `${this.state.prefix}.rpc.reply.${lindormId({ length: 16 })}`;
 
     const loop = await createConsumerLoop({
