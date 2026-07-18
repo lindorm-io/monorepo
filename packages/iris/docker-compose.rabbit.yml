@@ -1,0 +1,18 @@
+services:
+  rabbitmq:
+    image: rabbitmq:4
+    ports:
+      - "5672:5672"
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        echo 'iris-test-cookie' > /var/lib/rabbitmq/.erlang.cookie
+        chmod 400 /var/lib/rabbitmq/.erlang.cookie
+        chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
+        exec docker-entrypoint.sh rabbitmq-server
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 1s
+      timeout: 3s
+      retries: 10
