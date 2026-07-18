@@ -5,16 +5,17 @@
  * JOSE- or COSE-specific assumptions. The format selected here is the only
  * place a concrete wire format is bound, dispatched by mintProfile/verifyProfile.
  */
-export type TokenFormat = "jwt" | "cose";
+export type TokenFormat = "jws" | "jwt" | "cws" | "cwt";
 
 export type SelectedEncoder = {
   format: TokenFormat;
 };
 
 /**
- * Pure format resolver: defaults to `"jwt"`. The actual dispatch (JOSE path vs
- * the COSE path) happens in mintProfile/verifyProfile on this result — the
- * COSE path currently throws `cose_not_supported` until the encoder lands.
+ * Pure format resolver: defaults to `"jwt"`. The actual dispatch happens on this
+ * result in signRaw (raw JWS `"jws"` vs raw COSE_Sign1 `"cws"`) and
+ * mintProfile/verifyProfile (profiled JWT `"jwt"` vs profiled CWT `"cwt"`). The
+ * `cws`/`cwt` namespaces are the ergonomic surface over the same mechanism.
  */
 export const selectEncoder = (format: TokenFormat = "jwt"): SelectedEncoder => ({
   format,

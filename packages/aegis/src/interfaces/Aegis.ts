@@ -9,8 +9,16 @@ import type { Dict } from "@lindorm/types";
 import type {
   AesDecryptOptions,
   AesEncryptOptions,
+  CweContent,
+  CweDecryptOptions,
+  CweEncryptOptions,
+  CwsContent,
+  DecryptedCwe,
   DecryptedJwe,
+  EncryptedCwe,
   EncryptedJwe,
+  ParsedCws,
+  ParsedCwt,
   JweDecryptOptions,
   JweEncryptOptions,
   JwsContent,
@@ -22,12 +30,19 @@ import type {
   ProfileVerifyOptions,
   RawSignInput,
   SignContent,
+  SignCwsOptions,
+  SignCwtContent,
+  SignCwtOptions,
+  SignedCws,
+  SignedCwt,
   SignJwsOptions,
   SignJwtContent,
   SignJwtOptions,
   SignedJws,
   SignedJwt,
   TokenProfile,
+  VerifyCwsOptions,
+  VerifyCwtOptions,
   VerifyJwsOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
@@ -68,6 +83,34 @@ export interface IAegisJwe {
   decrypt(token: string, options?: JweDecryptOptions): Promise<DecryptedJwe>;
 }
 
+// The COSE namespace family — the wire-for-wire COSE counterpart of the JOSE
+// namespaces. `cwe` mirrors `jwe` (COSE_Encrypt0), `cws` mirrors `jws` (raw
+// COSE_Sign1), `cwt` mirrors `jwt` (generic CWT with standard claims). Same
+// ergonomic surface, same key resolution; only the wire encoding differs.
+export interface IAegisCwe {
+  encrypt(data: CweContent, options?: CweEncryptOptions): Promise<EncryptedCwe>;
+  decrypt(token: string, options?: CweDecryptOptions): Promise<DecryptedCwe>;
+}
+
+export interface IAegisCws {
+  sign(data: CwsContent, options?: SignCwsOptions): Promise<SignedCws>;
+  verify<T extends Dict = Dict>(
+    token: string,
+    options?: VerifyCwsOptions,
+  ): Promise<ParsedCws<T>>;
+}
+
+export interface IAegisCwt {
+  sign<C extends Dict = Dict>(
+    content: SignCwtContent<C>,
+    options?: SignCwtOptions,
+  ): Promise<SignedCwt>;
+  verify<C extends Dict = Dict>(
+    token: string,
+    verify?: VerifyCwtOptions,
+  ): Promise<ParsedCwt<C>>;
+}
+
 export interface IAegisJws {
   sign<T extends JwsContent>(data: T, options?: SignJwsOptions): Promise<SignedJws>;
   verify<T extends JwsContent>(
@@ -91,6 +134,10 @@ export interface IAegis {
   issuer: string | null;
 
   aes: IAegisAes;
+
+  cwe: IAegisCwe;
+  cws: IAegisCws;
+  cwt: IAegisCwt;
 
   jwe: IAegisJwe;
   jws: IAegisJws;
@@ -124,4 +171,6 @@ export interface IAegis {
   verify(token: string): Promise<ParsedJwt | ParsedJws<any>>;
   verify<T extends ParsedJws<any>>(token: string): Promise<T>;
   verify<T extends ParsedJwt>(token: string, options?: VerifyJwtOptions): Promise<T>;
+  verify<T extends ParsedCws<any>>(token: string): Promise<T>;
+  verify<T extends ParsedCwt>(token: string, options?: VerifyCwtOptions): Promise<T>;
 }

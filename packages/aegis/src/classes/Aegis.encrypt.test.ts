@@ -159,7 +159,7 @@ describe("Aegis encryption (T5) and COSE seam (T6)", () => {
     // The COSE seam is now implemented (a signed CWT) — full round-trip coverage
     // lives in Aegis.cose.test.ts. Here we only assert the dispatch routes to it.
     test("mint with format cose produces a COSE token, not a JWT", async () => {
-      const { token } = await aegis.mint("access_token", content, { format: "cose" });
+      const { token } = await aegis.mint("access_token", content, { format: "cwt" });
       // CBOR (CWT tag 61 = 0xd83d), not a base64url JWT header.
       expect(Buffer.from(token, "base64url").subarray(0, 2).toString("hex")).toBe("d83d");
     });

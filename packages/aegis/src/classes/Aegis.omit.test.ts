@@ -61,7 +61,7 @@ describe("Aegis — omit (compact-by-default)", () => {
     });
 
     test("CWT (COSE): empty array/string/object dropped, real claim kept", async () => {
-      const { token } = await aegis.mint("access_token", CONTENT, { format: "cose" });
+      const { token } = await aegis.mint("access_token", CONTENT, { format: "cwt" });
       const claims = await coseClaims(token);
 
       expect(claims).not.toHaveProperty("empty_list");
@@ -72,7 +72,7 @@ describe("Aegis — omit (compact-by-default)", () => {
 
     test("JOSE and COSE agree on which claims are present", async () => {
       const jwt = await aegis.mint("access_token", CONTENT);
-      const cwt = await aegis.mint("access_token", CONTENT, { format: "cose" });
+      const cwt = await aegis.mint("access_token", CONTENT, { format: "cwt" });
 
       const wire = joseWire(jwt.token);
       const claims = await coseClaims(cwt.token);
@@ -98,7 +98,7 @@ describe("Aegis — omit (compact-by-default)", () => {
 
     test("CWT (COSE): empty array/string/object preserved verbatim", async () => {
       const { token } = await aegis.mint("access_token", CONTENT, {
-        format: "cose",
+        format: "cwt",
         omit: "undefined",
       });
       const claims = await coseClaims(token);
@@ -112,7 +112,7 @@ describe("Aegis — omit (compact-by-default)", () => {
     test("JOSE and COSE agree on which claims are present", async () => {
       const jwt = await aegis.mint("access_token", CONTENT, { omit: "undefined" });
       const cwt = await aegis.mint("access_token", CONTENT, {
-        format: "cose",
+        format: "cwt",
         omit: "undefined",
       });
 
@@ -192,7 +192,7 @@ describe("Aegis — omit (compact-by-default)", () => {
     const cwt = await aegis.mint(
       "logout_token",
       { audience: ["client-1"], subject: "user-1", events },
-      { format: "cose" },
+      { format: "cwt" },
     );
     const verified = (await aegis.verify("logout_token", cwt.token, {
       audience: "client-1",

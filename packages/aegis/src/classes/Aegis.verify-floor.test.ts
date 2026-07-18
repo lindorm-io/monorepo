@@ -193,7 +193,7 @@ describe("Aegis profiled verify floor (§4.4)", () => {
           subjectId: { format: "iss_sub", iss: ISSUER, sub: "user-1" },
           events: { "urn:lindorm:event:test": {} },
         },
-        { format: "cose" },
+        { format: "cwt" },
       );
 
       await expect(

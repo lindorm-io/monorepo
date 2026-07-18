@@ -157,6 +157,28 @@ const jwe = await aegis.jwe.encrypt("secret");
 const decrypted = await aegis.jwe.decrypt(jwe.token);
 ```
 
+The COSE namespaces `cws` / `cwe` / `cwt` are the wire-for-wire COSE counterparts of `jws` / `jwe` / `jwt` — same surface, same key resolution, CBOR wire (see [COSE / CWT](#cose--cwt)):
+
+```typescript
+// cws — raw COSE_Sign1, the COSE mirror of jws (secures a CBOR claims map)
+const cws = await aegis.cws.sign({ tid: "at_abc" }, { tokenType: "access_token" });
+const parsedCws = await aegis.cws.verify(cws.token);
+
+// cwe — COSE_Encrypt0, the COSE mirror of jwe (direct AEAD to a symmetric enc key)
+const cwe = await aegis.cwe.encrypt("secret");
+const decryptedCwe = await aegis.cwe.decrypt(cwe.token); // { payload: Buffer }
+
+// cwt — generic CWT with standard claims, the COSE mirror of jwt
+const cwt = await aegis.cwt.sign({
+  subject: "user-123",
+  audience: ["https://api.example.com"],
+  expires: "1h",
+});
+const parsedCwt = await aegis.cwt.verify(cwt.token, {
+  audience: "https://api.example.com",
+});
+```
+
 ### AES helpers
 
 ```typescript
@@ -334,13 +356,21 @@ const formatted = kit.format(signature); // string
 
 ## COSE / CWT
 
-Every token profile can be issued as a CBOR Web Token (CWT, RFC 8392) instead of a JWT by passing `format: "cose"` — the same profile, the same domain claims, the same validation floor, only the wire encoding differs. The token is returned as a base64url string.
+COSE mirrors JOSE across the board. The `cws` / `cwe` / `cwt` namespaces are the wire-for-wire counterparts of `jws` / `jwe` / `jwt`, and every token profile can be issued as a CBOR Web Token (CWT, RFC 8392) instead of a JWT by passing `format: "cwt"` to `mint` — the same profile, the same domain claims, the same validation floor, only the wire encoding differs. The token is returned as a base64url string.
+
+| JOSE         | COSE         | What                                      |
+| ------------ | ------------ | ----------------------------------------- |
+| `jws`        | `cws`        | Raw signature over a payload (COSE_Sign1) |
+| `jwe`        | `cwe`        | Encryption (COSE_Encrypt0, direct AEAD)   |
+| `jwt`        | `cwt`        | Standard-claim token (CWT)                |
+| `mint` `jwt` | `mint` `cwt` | Profiled token (`format: "cwt"`)          |
+| `sign` `jws` | `sign` `cws` | Opaque handle (`format: "cws"`)           |
 
 ```typescript
 const { token } = await aegis.mint(
   "access_token",
   { subject: "user-123", audience: ["https://api.example.com"], clientId: "app-1" },
-  { format: "cose" },
+  { format: "cwt" },
 );
 
 // Verify never needs to be told the wire format — it detects COSE vs JOSE from
@@ -368,21 +398,39 @@ The COSE `typ` header carries the CWT media type — `application/at+cwt`, `appl
 By default the claims use lindorm-proprietary compact encodings (integer-keyed `act` / `sub_id`, private-use labels for lindorm-only claims). Pass `proprietary: false` to emit a fully interoperable, string-keyed payload that a stock COSE/CWT verifier reads, at the cost of larger tokens:
 
 ```typescript
-await aegis.mint("access_token", content, { format: "cose", proprietary: false });
+await aegis.mint("access_token", content, { format: "cwt", proprietary: false });
 ```
 
 Either way the signature itself is plain RFC 9052 — verified in interop tests against `@auth0/cose` and `cose-js`.
 
-### Opaque handles (raw COSE sign)
+### Opaque handles (raw COSE sign — `cws`)
 
-`aegis.sign({ format: "cose", payload })` is the profile-less sibling of the raw JWS `sign` — it secures an arbitrary CBOR claims map as a `COSE_Sign1` CWT. Because the token is base64url CBOR with no JOSE dot structure, a consumer cannot split it and read it as a JWT: it is an **opaque handle** (e.g. an internal reference `{ tid, sec }` signed with an unpublished key). The payload MUST be a plain object — a pre-serialised string/Buffer is a JWS-only shape and is rejected (`cose_payload_not_object`); `typ` derives from the bare `tokenType`. `verify` auto-detects it like any COSE token.
+`aegis.cws.sign(payload, options)` (equivalently `aegis.sign({ format: "cws", payload })`) is the profile-less sibling of the raw JWS `sign` — it secures an arbitrary CBOR claims map as a `COSE_Sign1` CWT. Because the token is base64url CBOR with no JOSE dot structure, a consumer cannot split it and read it as a JWT: it is an **opaque handle** (e.g. an internal reference `{ tid, sec }` signed with an unpublished key). The payload MUST be a plain object — a pre-serialised string/Buffer is a JWS-only shape and is rejected (`cose_payload_not_object`); `typ` derives from the bare `tokenType`. `verify` auto-detects it like any COSE token.
 
 ```typescript
-const { token } = await aegis.sign({
-  format: "cose",
-  payload: { tid: "ref-1", sec: "…" },
-  tokenType: "access_token",
+const { token } = await aegis.cws.sign(
+  { tid: "ref-1", sec: "…" },
+  { tokenType: "access_token" },
+);
+const parsed = await aegis.cws.verify(token); // { claims, header, token }
+```
+
+### Generic CWT and COSE encryption (`cwt` / `cwe`)
+
+`cwt` is the COSE mirror of the generic `jwt`: `cwt.sign` secures a standard-claim CWT (no profile floor, no auto-injection), and `cwt.verify` validates the standard claims (`exp`/`nbf`/`iss`/`aud`) exactly as `jwt.verify` validates a JWT. `cwe` is the COSE mirror of `jwe` — direct AEAD to a symmetric `use:"enc"` key (`COSE_Encrypt0`), returning the plaintext as raw bytes.
+
+```typescript
+const cwt = await aegis.cwt.sign({
+  subject: "user-123",
+  audience: ["https://api.example.com"],
+  expires: "1h",
 });
+const parsed = await aegis.cwt.verify(cwt.token, {
+  audience: "https://api.example.com",
+}); // rejects an expired or wrong-audience CWT
+
+const cwe = await aegis.cwe.encrypt("secret"); // string or Buffer
+const { payload } = await aegis.cwe.decrypt(cwe.token); // Buffer
 ```
 
 ### CoseKit

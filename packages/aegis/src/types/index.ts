@@ -1,4 +1,7 @@
 export * from "./claims/index.js";
+export * from "./cwe/index.js";
+export * from "./cws/index.js";
+export * from "./cwt/index.js";
 export * from "./jwe/index.js";
 export * from "./jws/index.js";
 export * from "./jwt/index.js";

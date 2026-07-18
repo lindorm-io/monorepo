@@ -19,6 +19,7 @@ import { getUnixTime } from "@lindorm/date";
 import { isBuffer, isDate, isString } from "@lindorm/is";
 import type {
   IKryptos,
+  KryptosAlgorithm,
   KryptosEncAlgorithm,
   KryptosEncryption,
   KryptosSigAlgorithm,
@@ -30,6 +31,9 @@ import { AegisError } from "../errors/index.js";
 import type {
   IAegis,
   IAegisAes,
+  IAegisCwe,
+  IAegisCws,
+  IAegisCwt,
   IAegisJwe,
   IAegisJws,
   IAegisJwt,
@@ -43,6 +47,7 @@ import {
 } from "../internal/profiles/registry.js";
 import { applyOmit } from "../internal/utils/apply-omit.js";
 import { assembleCommonClaims } from "../internal/utils/assemble-common-claims.js";
+import { assembleCwtClaims } from "../internal/utils/assemble-cwt-claims.js";
 import { buildProfileClaims } from "../internal/utils/build-profile-claims.js";
 import { enforceVerifyFloor } from "../internal/utils/enforce-verify-floor.js";
 import { extractDomainClaims } from "../internal/utils/extract-claims.js";
@@ -58,6 +63,7 @@ import {
 } from "../internal/utils/parse-userinfo.js";
 import { resolveKey } from "../internal/utils/resolve-key.js";
 import { selectEncoder } from "../internal/utils/select-encoder.js";
+import { validateCwtClaims } from "../internal/utils/validate-cwt-claims.js";
 import { validateProfileClaims } from "../internal/utils/validate-profile-claims.js";
 import { validate as validateClaims } from "../internal/utils/validate.js";
 import type {
@@ -71,15 +77,23 @@ import type {
   AesDecryptOptions,
   AesEncryptOptions,
   CertBindingMode,
+  CweContent,
+  CweDecryptOptions,
+  CweEncryptOptions,
+  CwsContent,
   DecodedJwe,
   DecodedJws,
   DecodedJwt,
+  DecryptedCwe,
   DecryptedJwe,
+  EncryptedCwe,
   EncryptedJwe,
   JweDecryptOptions,
   JweEncryptOptions,
   JwsContent,
   NarrowedJwt,
+  ParsedCws,
+  ParsedCwt,
   ParsedJws,
   ParsedJwt,
   ProfileContent,
@@ -87,6 +101,11 @@ import type {
   ProfileVerifyOptions,
   RawSignInput,
   SignContent,
+  SignCwsOptions,
+  SignCwtContent,
+  SignCwtOptions,
+  SignedCws,
+  SignedCwt,
   SignedJws,
   SignedJwt,
   SignJwsOptions,
@@ -95,6 +114,8 @@ import type {
   TokenHeaderClaims,
   TokenProfile,
   ValidateJwtOptions,
+  VerifyCwsOptions,
+  VerifyCwtOptions,
   VerifyJwsOptions,
   VerifyJwtOptions,
 } from "../types/index.js";
@@ -154,6 +175,27 @@ export class Aegis implements IAegis {
     return {
       encrypt: this.aesEncrypt.bind(this) as IAegisAes["encrypt"],
       decrypt: this.aesDecrypt.bind(this),
+    };
+  }
+
+  get cwe(): IAegisCwe {
+    return {
+      encrypt: this.cweEncrypt.bind(this),
+      decrypt: this.cweDecrypt.bind(this),
+    };
+  }
+
+  get cws(): IAegisCws {
+    return {
+      sign: this.cwsSign.bind(this),
+      verify: this.cwsVerify.bind(this),
+    };
+  }
+
+  get cwt(): IAegisCwt {
+    return {
+      sign: this.cwtSign.bind(this),
+      verify: this.cwtVerify.bind(this),
     };
   }
 
@@ -250,12 +292,27 @@ export class Aegis implements IAegis {
 
     // A COSE token is base64url CBOR with no JOSE dot structure. Verify its
     // integrity (decrypting a COSE_Encrypt0 if needed) and return the domain
-    // claims; like the profile-less JWT path, no profile floor is applied.
+    // claims; like the profile-less JWT path, no profile floor is applied. With
+    // no options it types as a ParsedCws (raw COSE_Sign1); with verify options
+    // the standard claims are validated exactly as jwt.verify validates a JWT,
+    // typing as a ParsedCwt.
     if (!token.includes(".")) {
       const bytes = Buffer.from(token, "base64url");
       if (this.coseKit.isCose(bytes)) {
         const { claims, decoded } = await this.coseVerifyCore(bytes);
-        return { claims, header: decoded } as unknown as T;
+        if (options) {
+          validateCwtClaims(
+            claims,
+            decoded.algorithm as KryptosAlgorithm,
+            options,
+            this.clockTolerance,
+          );
+        }
+        return {
+          claims,
+          header: { alg: decoded.algorithm, kid: decoded.kid, typ: decoded.typ },
+          token,
+        } as unknown as T;
       }
     }
 
@@ -486,13 +543,143 @@ export class Aegis implements IAegis {
     return this.joseKit.signJwt(kryptos, content, options);
   }
 
+  // private cwe — the COSE_Encrypt0 mirror of jwe. Resolves the recipient key
+  // exactly as jweEncrypt/jweDecrypt do; COSE_Encrypt0 is direct AEAD, so the key
+  // is a symmetric enc key (no key-wrapping).
+
+  private async cweEncrypt(
+    data: CweContent,
+    options: CweEncryptOptions = {},
+  ): Promise<EncryptedCwe> {
+    const kryptos = await this.resolveEncryptKey(options.key);
+
+    const inner = isBuffer(data) ? data : Buffer.from(data, "utf8");
+    const token = this.coseKit.encrypt(kryptos, inner, {
+      typ: options.typ,
+      encryption: options.key?.encryption ?? this.encryption,
+    });
+
+    return { token: token.toString("base64url") };
+  }
+
+  private async cweDecrypt(
+    token: string,
+    options: CweDecryptOptions = {},
+  ): Promise<DecryptedCwe> {
+    const bytes = Buffer.from(token, "base64url");
+
+    const kryptos = await this.resolveDecryptKey(
+      this.coseKit.decodeEncryptedKid(bytes),
+      undefined,
+      options.key,
+    );
+
+    return { payload: this.coseKit.decrypt(kryptos, bytes), token };
+  }
+
+  // private cws — the raw COSE_Sign1 mirror of jws. `cwsSign` reuses the SAME raw
+  // COSE signer the `sign({ format: "cws" })` mechanism dispatches to; the
+  // namespace is the ergonomic surface over it (as jws coexists with sign).
+  // `cwsVerify` mirrors jwsVerify: decode the kid, resolve the verify key, verify.
+
+  private cwsSign(data: CwsContent, options: SignCwsOptions = {}): Promise<SignedCws> {
+    return this.signRawCose({
+      payload: data,
+      key: options.key,
+      objectId: options.objectId,
+      omit: options.omit,
+      tokenType: options.tokenType,
+    });
+  }
+
+  private async cwsVerify<T extends Dict = Dict>(
+    token: string,
+    options: VerifyCwsOptions = {},
+  ): Promise<ParsedCws<T>> {
+    const bytes = Buffer.from(token, "base64url");
+    const decoded = this.coseKit.decode(bytes);
+
+    const kryptos = await this.resolveVerifyKey(
+      decoded.kid,
+      decoded.algorithm as KryptosSigAlgorithm,
+      options.key,
+    );
+
+    const { claims } = this.coseKit.verify(kryptos, bytes);
+
+    return {
+      claims: claims as T,
+      header: { alg: decoded.algorithm, kid: decoded.kid, typ: decoded.typ },
+      token,
+    };
+  }
+
+  // private cwt — the generic-CWT mirror of the generic jwt (jwt.sign /
+  // joseKit.signJwt). Policy-free: it maps the standard-claim content to the
+  // domain-keyed claims (via the shared claim registry) and secures them with
+  // coseKit.sign — the SAME primitive mintCose uses, minus the profile floor and
+  // auto-injection. Verify mirrors jwtVerify: decode, resolve, verify, then
+  // validate the standard claims (exp/nbf/iss/aud) with the JOSE verify matcher.
+
+  private async cwtSign<C extends Dict = Dict>(
+    content: SignCwtContent<C>,
+    options: SignCwtOptions = {},
+  ): Promise<SignedCwt> {
+    const kryptos = await this.resolveSignKey({ key: options.key });
+
+    const common = assembleCwtClaims({ issuer: this.issuer }, content, options);
+
+    const token = this.coseKit.sign(kryptos, common, {
+      typ: options.typ ?? coseTypFromTokenType(content.tokenType),
+      proprietary: options.proprietary,
+      omit: options.omit,
+    });
+
+    const expiresAt = isDate(common.expiresAt) ? common.expiresAt : undefined;
+    const expiresOn = expiresAt ? getUnixTime(expiresAt) : undefined;
+
+    return {
+      token: token.toString("base64url"),
+      expiresAt,
+      expiresIn: expiresOn ? expiresOn - getUnixTime(new Date()) : undefined,
+      expiresOn,
+      objectId: options.objectId,
+      tokenId: isString(common.tokenId) ? common.tokenId : undefined,
+    };
+  }
+
+  private async cwtVerify<C extends Dict = Dict>(
+    token: string,
+    verify: VerifyCwtOptions = {},
+  ): Promise<ParsedCwt<C>> {
+    const bytes = Buffer.from(token, "base64url");
+    const decoded = this.coseKit.decode(bytes);
+
+    const kryptos = await this.resolveVerifyKey(
+      decoded.kid,
+      decoded.algorithm as KryptosSigAlgorithm,
+      verify.key,
+    );
+
+    const { claims } = this.coseKit.verify(kryptos, bytes);
+
+    validateCwtClaims(claims, kryptos.algorithm, verify, this.clockTolerance);
+
+    return {
+      claims: claims as C,
+      header: { alg: decoded.algorithm, kid: decoded.kid, typ: decoded.typ },
+      token,
+    };
+  }
+
   // private sign tiers
 
   private async signRaw(input: RawSignInput): Promise<SignedJws> {
-    // Encoding seam, mirroring mintProfile: the COSE path is a separate encoder
-    // that secures the payload as a CBOR CWT instead of a JWS. Everything above
-    // is encoding-neutral.
-    if (selectEncoder(input.format).format === "cose") {
+    // Encoding seam, mirroring mintProfile: the raw COSE path (`cws`) is a
+    // separate encoder that secures the payload as a CBOR CWT (COSE_Sign1)
+    // instead of a JWS. Everything above is encoding-neutral. The `cws` namespace
+    // is the ergonomic surface over this same mechanism.
+    if (selectEncoder(input.format).format === "cws") {
       return this.signRawCose(input);
     }
 
@@ -548,10 +735,10 @@ export class Aegis implements IAegis {
     content: SignContent,
     options: ProfileMintOptions,
   ): Promise<SignedJwt> {
-    // Encoding seam: dispatch on the per-call format. The COSE path is a
-    // separate encoder (P4) that consumes the same domain-keyed common claims;
-    // everything above this branch stays encoding-neutral.
-    if (selectEncoder(options.format).format === "cose") {
+    // Encoding seam: dispatch on the per-call format. The profiled COSE path
+    // (`cwt`) is a separate encoder that consumes the same domain-keyed common
+    // claims; everything above this branch stays encoding-neutral.
+    if (selectEncoder(options.format).format === "cwt") {
       return this.mintCose(name, content, options);
     }
 

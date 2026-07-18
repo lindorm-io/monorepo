@@ -1,6 +1,6 @@
 import type { Expiry } from "@lindorm/date";
-import type { Dict } from "@lindorm/types";
 import type { KryptosAlgClass } from "@lindorm/kryptos";
+import type { Dict } from "@lindorm/types";
 import type { TokenType } from "../../constants/token-type.js";
 import type { OmitMode } from "../../internal/utils/apply-omit.js";
 import type { TokenFormat } from "../../internal/utils/select-encoder.js";
@@ -235,8 +235,9 @@ export type ProfileMintOptions = {
   encrypt?: JweEncryptOptions;
   context?: SignContext;
   /**
-   * Per-call wire encoder. Defaults to `"jwt"`; `"cose"` mints a signed CWT.
-   * Applies to the whole pipeline.
+   * Per-call wire encoder. Defaults to `"jwt"` (a signed JWT); `"cwt"` mints the
+   * COSE counterpart — a signed CWT (COSE_Sign1 / COSE_Mac0), optionally wrapped
+   * in a COSE_Encrypt0. Applies to the whole pipeline.
    */
   format?: TokenFormat;
   /**
@@ -280,10 +281,11 @@ export type RawSignInput = {
   bindCertificate?: BindCertificateMode;
   contentType?: string;
   /**
-   * Wire encoding. `"jwt"` (default) signs a JWS — the payload passes through as bytes.
-   * `"cose"` signs a secured CWT (COSE_Sign1) over the CBOR-encoded payload, which MUST
-   * then be a plain object; the token is base64url CBOR with no JOSE dot structure, so it
-   * cannot be mistaken for — or parsed as — a JWT. `verify` auto-detects either format.
+   * Wire encoding. `"jws"`/`"jwt"` (default) signs a JWS — the payload passes through as
+   * bytes. `"cws"` signs a secured CWT (COSE_Sign1) over the CBOR-encoded payload, which
+   * MUST then be a plain object; the token is base64url CBOR with no JOSE dot structure, so
+   * it cannot be mistaken for — or parsed as — a JWT. `verify` auto-detects either format.
+   * The `cws` namespace is the ergonomic surface over `sign({ format: "cws" })`.
    */
   format?: TokenFormat;
   header?: TokenEncryptOrSignOptions;

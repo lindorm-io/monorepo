@@ -33,7 +33,7 @@ describe("Aegis — COSE", () => {
         clientId: "client-1",
         scope: ["read", "write"],
       },
-      { format: "cose" },
+      { format: "cwt" },
     );
 
     // The token is a base64url string carrying real CBOR: the CWT tag (61 =
@@ -63,7 +63,7 @@ describe("Aegis — COSE", () => {
     const { token } = await macAegis.mint(
       "id_token",
       { subject: "user-1", audience: ["client-1"], clientId: "client-1" },
-      { format: "cose" },
+      { format: "cwt" },
     );
 
     const bytes = Buffer.from(token, "base64url");
@@ -92,7 +92,7 @@ describe("Aegis — COSE", () => {
       .mint(
         "access_token",
         { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
-        { format: "cose" },
+        { format: "cwt" },
       )
       .catch((err: Error) => err);
 
@@ -112,7 +112,7 @@ describe("Aegis — COSE", () => {
     const { token } = await macAegis.mint(
       "id_token",
       { subject: "u", audience: ["client-1"] },
-      { format: "cose" },
+      { format: "cwt" },
     );
 
     expect(CwtKit.decode(Buffer.from(token, "base64url")).algorithm).toBe("HS256");
@@ -134,7 +134,7 @@ describe("Aegis — COSE", () => {
     const { token } = await encAegis.mint(
       "id_token",
       { subject: "user-1", audience: ["client-1"], clientId: "client-1" },
-      { format: "cose", encrypt: {} },
+      { format: "cwt", encrypt: {} },
     );
 
     // The outer COSE structure is a COSE_Encrypt0 (CBOR tag 16 = 0xd0), not a
@@ -155,7 +155,7 @@ describe("Aegis — COSE", () => {
       aegis.mint(
         "access_token",
         { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
-        { format: "cose", encrypt: {} },
+        { format: "cwt", encrypt: {} },
       ),
     ).rejects.toThrow();
   });
@@ -164,7 +164,7 @@ describe("Aegis — COSE", () => {
     const { token } = await aegis.mint(
       "access_token",
       { subject: "user-1", audience: ["https://rs.lindorm.io/"], clientId: "client-1" },
-      { format: "cose" },
+      { format: "cwt" },
     );
 
     // Single-arg verify: no profile, no `format` — verifySmart sniffs the CBOR
@@ -181,7 +181,7 @@ describe("Aegis — COSE", () => {
     const { token } = await aegis.mint(
       "access_token",
       { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
-      { format: "cose" },
+      { format: "cwt" },
     );
 
     await expect(
@@ -196,7 +196,7 @@ describe("Aegis — COSE", () => {
       const { token } = await aegis.sign({
         payload: { tid: "at_abc", sec: "s3cr3t" },
         tokenType: "access_token",
-        format: "cose",
+        format: "cws",
       });
 
       // The whole point: no JOSE dot structure, so a consumer cannot split it
@@ -213,7 +213,7 @@ describe("Aegis — COSE", () => {
       const { token } = await aegis.sign({
         payload: { tid: "at_abc", sec: "s3cr3t" },
         tokenType: "access_token",
-        format: "cose",
+        format: "cws",
       });
 
       const verified = (await aegis.verify(token)) as unknown as {
@@ -229,7 +229,7 @@ describe("Aegis — COSE", () => {
       const { token } = await aegis.sign({
         payload: { cid: "rtc_abc", gen: 1, sec: "s3cr3t" },
         tokenType: "refresh_token",
-        format: "cose",
+        format: "cws",
       });
 
       expect(CwtKit.decode(Buffer.from(token, "base64url")).typ).toBe(
@@ -239,7 +239,7 @@ describe("Aegis — COSE", () => {
 
     test("rejects a string payload — a CWT secures a claims map", async () => {
       await expect(
-        aegis.sign({ payload: "not-a-map", tokenType: "access_token", format: "cose" }),
+        aegis.sign({ payload: "not-a-map", tokenType: "access_token", format: "cws" }),
       ).rejects.toThrow(AegisError);
     });
 
@@ -259,7 +259,7 @@ describe("Aegis — COSE", () => {
       const { token } = await aegis.sign({
         payload: { tid: "at_abc", sec: "s3cr3t" },
         tokenType: "access_token",
-        format: "cose",
+        format: "cws",
       });
       return token;
     };
@@ -314,7 +314,7 @@ describe("Aegis — COSE", () => {
       const { token } = await aegis.mint(
         "access_token",
         { subject: "u", audience: ["https://rs.lindorm.io/"], clientId: "c" },
-        { format: "cose" },
+        { format: "cwt" },
       );
 
       // The whole point: the caller does NOT pass a format — verify reads it off the token.
